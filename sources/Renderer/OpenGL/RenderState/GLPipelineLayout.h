@@ -48,7 +48,7 @@ class GLPipelineLayout final : public PipelineLayout
         // Binds the static samplers of this pipeline layout.
         void BindStaticSamplers(GLStateManager& stateMngr) const;
 
-        // Returns the copied list of binding descriptors.
+        // Returns the copied list of heap binding descriptors.
         inline const std::vector<BindingDescriptor>& GetHeapBindings() const
         {
             return heapBindings_;
@@ -92,8 +92,8 @@ class GLPipelineLayout final : public PipelineLayout
 
     private:
 
-        void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindings);
-        void BuildStaticSamplers(const std::vector<StaticSamplerDescriptor>& staticSamplers);
+        void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);
+        void BuildStaticSamplers(const std::vector<StaticSamplerDescriptor>& staticSamplerDescs);
 
     private:
 

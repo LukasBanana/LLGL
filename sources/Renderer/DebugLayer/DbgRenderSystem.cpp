@@ -1347,7 +1347,7 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create resource heap with empty pipeline layout"
+                "cannot create resource heap with empty list of heap bindings"
             );
         }
         else if (numResourceViews == 0)

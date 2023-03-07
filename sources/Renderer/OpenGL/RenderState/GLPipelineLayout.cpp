@@ -128,24 +128,24 @@ static GLResourceType ToGLResourceType(const BindingDescriptor& desc)
     return GLResourceType_Invalid;
 }
 
-void GLPipelineLayout::BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindings)
+void GLPipelineLayout::BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs)
 {
-    bindings_.reserve(bindings.size());
-    for (const auto& desc : bindings)
+    bindings_.reserve(bindingDescs.size());
+    for (const auto& desc : bindingDescs)
     {
         bindings_.push_back(GLPipelineResourceBinding{ ToGLResourceType(desc), static_cast<GLuint>(desc.slot) });
         resourceNames_.push_back(desc.name);
     }
 }
 
-void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescriptor>& staticSamplers)
+void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescriptor>& staticSamplerDescs)
 {
-    staticSamplerSlots_.reserve(staticSamplers.size());
+    staticSamplerSlots_.reserve(staticSamplerDescs.size());
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasNativeSamplers())
     {
-        staticSamplersGL2X_.reserve(staticSamplers.size());
-        for (const auto& desc : staticSamplers)
+        staticSamplersGL2X_.reserve(staticSamplerDescs.size());
+        for (const auto& desc : staticSamplerDescs)
         {
             /* Create GL2.x sampler and store slot and name separately */
             auto sampler = MakeUnique<GL2XSampler>();
@@ -158,8 +158,8 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
     else
     #endif
     {
-        staticSamplers_.reserve(staticSamplers.size());
-        for (const auto& desc : staticSamplers)
+        staticSamplers_.reserve(staticSamplerDescs.size());
+        for (const auto& desc : staticSamplerDescs)
         {
             /* Create GL3+ sampler and store slot and name separately */
             auto sampler = MakeUnique<GLSampler>();

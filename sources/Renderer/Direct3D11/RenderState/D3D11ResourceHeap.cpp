@@ -7,6 +7,7 @@
 
 #include "D3D11ResourceHeap.h"
 #include "D3D11PipelineLayout.h"
+#include "D3D11ResourceType.h"
 #include "../Buffer/D3D11Buffer.h"
 #include "../Buffer/D3D11BufferWithRV.h"
 #include "../Texture/D3D11Sampler.h"
@@ -58,15 +59,6 @@ Offset      Attribute                              Value   Description          
 0x00000032  uavIndex[1]                                1   Index to subresource UAV list                        /
 
 */
-
-// Internal enumeration for D3D resource heap segments.
-enum D3DResourceType : std::uint32_t
-{
-    D3DResourceType_CBV = 0,
-    D3DResourceType_SRV,
-    D3DResourceType_UAV,
-    D3DResourceType_Sampler,
-};
 
 // Resource segment flags. Bits can be shared as they are only used for certain segment types.
 enum D3DResourceFlags : std::uint32_t
@@ -122,7 +114,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
-    const auto& bindings            = pipelineLayoutD3D->GetBindings();
+    const auto& bindings            = pipelineLayoutD3D->GetHeapBindings();
     const auto  numBindings         = static_cast<std::uint32_t>(bindings.size());
     const auto  numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 

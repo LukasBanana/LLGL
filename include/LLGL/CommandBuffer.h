@@ -533,6 +533,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         - BlendOp::InvBlendFactor
         \remarks This must only be used if the currently bound graphics pipeline state was created with \c blendFactorDynamic set to true. Otherwise, the behavior is undefined.
         \see BlendDescriptor::blendFactorDynamic
+        \todo Replace ColorRGBAf with const float (&color)[4] or const float*
         */
         virtual void SetBlendFactor(const ColorRGBAf& color) = 0;
 

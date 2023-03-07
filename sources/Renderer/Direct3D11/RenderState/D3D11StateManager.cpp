@@ -1,11 +1,12 @@
 /*
  * D3D11StateManager.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "D3D11StateManager.h"
+#include "../Texture/D3D11Sampler.h"
 #include "../../../Core/HelperMacros.h"
 #include <algorithm>
 #include <cstddef>
@@ -326,20 +327,6 @@ void D3D11StateManager::SetShaderResources(
     if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetShaderResources(startSlot, count, views); }
 }
 
-void D3D11StateManager::SetSamplers(
-    UINT                        startSlot,
-    UINT                        count,
-    ID3D11SamplerState* const*  samplers,
-    long                        stageFlags)
-{
-    if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetSamplers(startSlot, count, samplers); }
-    if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetSamplers(startSlot, count, samplers); }
-    if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetSamplers(startSlot, count, samplers); }
-    if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetSamplers(startSlot, count, samplers); }
-    if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetSamplers(startSlot, count, samplers); }
-    if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetSamplers(startSlot, count, samplers); }
-}
-
 void D3D11StateManager::SetUnorderedAccessViews(
     UINT                                startSlot,
     UINT                                count,
@@ -366,6 +353,40 @@ void D3D11StateManager::SetUnorderedAccessViews(
         /* Set UAVs for compute shader stage */
         context_->CSSetUnorderedAccessViews(startSlot, count, views, initialCounts);
     }
+}
+
+void D3D11StateManager::SetSamplers(
+    UINT                        startSlot,
+    UINT                        count,
+    ID3D11SamplerState* const*  samplers,
+    long                        stageFlags)
+{
+    if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetSamplers(startSlot, count, samplers); }
+    if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetSamplers(startSlot, count, samplers); }
+}
+
+void D3D11StateManager::SetGraphicsStaticSampler(const D3D11StaticSampler& staticSamplerD3D)
+{
+    if (LLGL_VS_STAGE(staticSamplerD3D.stageFlags))
+        context_->VSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
+    if (LLGL_HS_STAGE(staticSamplerD3D.stageFlags))
+        context_->HSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
+    if (LLGL_DS_STAGE(staticSamplerD3D.stageFlags))
+        context_->DSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
+    if (LLGL_GS_STAGE(staticSamplerD3D.stageFlags))
+        context_->GSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
+    if (LLGL_PS_STAGE(staticSamplerD3D.stageFlags))
+        context_->PSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
+}
+
+void D3D11StateManager::SetComputeStaticSampler(const D3D11StaticSampler& staticSamplerD3D)
+{
+    if (LLGL_CS_STAGE(staticSamplerD3D.stageFlags))
+        context_->CSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
 }
 
 void D3D11StateManager::SetConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags)

@@ -10,6 +10,7 @@
 #include "GLCommandExecutor.h"
 #include <LLGL/StaticLimits.h>
 #include <LLGL/TypeInfo.h>
+#include <LLGL/Misc/ForRange.h>
 
 #include "../../TextureUtils.h"
 #include "../GLSwapChain.h"
@@ -211,7 +212,7 @@ void GLImmediateCommandBuffer::SetViewports(std::uint32_t numViewports, const Vi
     /* Setup GL viewports and depth-ranges */
     auto count = static_cast<GLsizei>(std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
 
-    for (GLsizei i = 0; i < count; ++i)
+    for_range(i, count)
     {
         /* Copy GL viewport data */
         viewportsGL[i].x        = viewports[i].x;
@@ -243,7 +244,7 @@ void GLImmediateCommandBuffer::SetScissors(std::uint32_t numScissors, const Scis
     /* Setup GL scissors */
     auto count = static_cast<GLsizei>(std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
 
-    for (GLsizei i = 0; i < count; ++i)
+    for_range(i, count)
     {
         /* Copy GL scissor data */
         scissorsGL[i].x         = static_cast<GLint>(scissors[i].x);
@@ -569,7 +570,7 @@ void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffe
     GLuint soTargets[LLGL_MAX_NUM_SO_BUFFERS];
     numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
 
-    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    for_range(i, numBuffers)
     {
         auto bufferGL = LLGL_CAST(GLBuffer*, buffers[i]);
         soTargets[i] = bufferGL->GetID();

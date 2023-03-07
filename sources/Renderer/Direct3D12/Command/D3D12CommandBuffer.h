@@ -283,7 +283,6 @@ class D3D12CommandBuffer final : public CommandBuffer
         D3D12RenderTarget*              boundRenderTarget_      = nullptr;
         const D3D12PipelineLayout*      boundPipelineLayout_    = nullptr;
         D3D12PipelineState*             boundPipelineState_     = nullptr;
-        bool                            isGraphicsPSOBound_     = false;
 
 };
 

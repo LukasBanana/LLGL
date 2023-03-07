@@ -1,6 +1,6 @@
 /*
  * D3D11Sampler.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -18,6 +18,14 @@ namespace LLGL
 {
 
 
+// Container structure for D3D11 static sampler with slot and stage flags.
+struct D3D11StaticSampler
+{
+    UINT                        slot;
+    long                        stageFlags;
+    ComPtr<ID3D11SamplerState>  native;
+};
+
 class D3D11Sampler final : public Sampler
 {
 
@@ -34,6 +42,11 @@ class D3D11Sampler final : public Sampler
         {
             return native_.Get();
         }
+
+    public:
+
+        // Converts the input sampler into a native D3D11 sampler descriptor.
+        static void ConvertDesc(D3D11_SAMPLER_DESC& outDesc, const SamplerDescriptor& inDesc);
 
     private:
 

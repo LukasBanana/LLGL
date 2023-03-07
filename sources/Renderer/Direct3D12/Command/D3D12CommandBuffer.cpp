@@ -531,7 +531,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
     if (boundPipelineLayout_ == nullptr || boundPipelineState_ == nullptr)
-        return;
+        return /*E_POINTER*/;
 
     auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
 
@@ -579,27 +579,30 @@ static D3D12_GPU_VIRTUAL_ADDRESS GetD3DResourceGPUAddr(Resource& resource)
 
 void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
 {
-    if (boundPipelineLayout_ != nullptr && descriptor < boundPipelineLayout_->GetNumBindings())
+    if (boundPipelineLayout_ == nullptr)
+        return /*E_POINTER*/;
+
+    if (!(descriptor < boundPipelineLayout_->GetNumBindings()))
+        return /*E_INVALIDARG*/;
+
+    const auto& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
+    if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
     {
-        const auto& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
-        if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
+        D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr = GetD3DResourceGPUAddr(resource);
+        if (gpuVirtualAddr != 0)
         {
-            D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr = GetD3DResourceGPUAddr(resource);
-            if (gpuVirtualAddr != 0)
-            {
-                /* Root parameter can only be raw or structured buffers, so only handle CBV, SRV, and UAV */
-                if (boundPipelineState_ != nullptr && boundPipelineState_->IsGraphicsPSO())
-                    commandContext_.SetGraphicsRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
-                else
-                    commandContext_.SetComputeRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
-            }
+            /* Root parameter can only be raw or structured buffers, so only handle CBV, SRV, and UAV */
+            if (boundPipelineState_ != nullptr && boundPipelineState_->IsGraphicsPSO())
+                commandContext_.SetGraphicsRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
+            else
+                commandContext_.SetComputeRootParameter(rootParameterLocation.index, rootParameterLocation.type, gpuVirtualAddr);
         }
-        else
-        {
-            /* Bind resource with staging descriptor heap */
-            const auto& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
-            commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
-        }
+    }
+    else
+    {
+        /* Bind resource with staging descriptor heap */
+        const auto& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
+        commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
     }
 }
 
@@ -610,11 +613,9 @@ void D3D12CommandBuffer::ResetResourceSlots(
     long                bindFlags,
     long                stageFlags)
 {
-
+    //TODO
     const D3D12_STREAM_OUTPUT_BUFFER_VIEW nullViews[1] = {};
     commandList_->SOSetTargets(0, 1, nullViews);
-
-    // dummy
 }
 
 /* ----- Render Passes ----- */
@@ -710,11 +711,11 @@ void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std:
 {
     /* Data size must be a multiple of 4 bytes */
     if (dataSize == 0 || dataSize % 4 != 0 || data == nullptr)
-        return /*E_FAIL*/;
+        return /*E_INVALIDARG*/;
 
     /* Check if a valid pipeline layout and PSO is bound and validate uniform  */
     if (boundPipelineLayout_ == nullptr || boundPipelineState_ == nullptr)
-        return /*E_FAIL*/;
+        return /*E_POINTER*/;
 
     const std::uint32_t dataSizeInWords = dataSize / 4;
     const std::uint32_t maxNumUniforms  = boundPipelineLayout_->GetNumUniforms();
@@ -723,7 +724,7 @@ void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std:
     for (auto words = reinterpret_cast<const UINT*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
     {
         if (first >= maxNumUniforms)
-            return /*E_FAIL*/;
+            return /*E_INVALIDARG*/;
 
         const auto& rootConstantLocation = rootConstantMap[first];
         UINT wordOffset = rootConstantLocation.wordOffset;

@@ -6,11 +6,19 @@
  */
 
 #include "D3D11PipelineState.h"
+#include "D3D11PipelineLayout.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL
 {
 
+
+D3D11PipelineState::D3D11PipelineState(bool isGraphicsPSO, const PipelineLayout* pipelineLayout) :
+    isGraphicsPSO_  { isGraphicsPSO                                         },
+    pipelineLayout_ { LLGL_CAST(const D3D11PipelineLayout*, pipelineLayout) }
+{
+}
 
 const Report* D3D11PipelineState::GetReport() const
 {

@@ -1,6 +1,6 @@
 /*
  * D3D11CommandBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -23,7 +23,9 @@
 
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11PipelineState.h"
+#include "RenderState/D3D11PipelineLayout.h"
 #include "RenderState/D3D11QueryHeap.h"
+#include "RenderState/D3D11ResourceType.h"
 #include "RenderState/D3D11ResourceHeap.h"
 #include "RenderState/D3D11RenderPass.h"
 
@@ -84,6 +86,7 @@ void D3D11CommandBuffer::End()
         /* Encode commands from deferred context into command list */
         context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
     }
+    ResetRenderState();
 }
 
 void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -752,46 +755,93 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
 
 /* ----- Resources ----- */
 
-void D3D11CommandBuffer::SetResourceHeap(
-    ResourceHeap&           resourceHeap,
-    std::uint32_t           descriptorSet,
-    const PipelineBindPoint bindPoint)
+void D3D11CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
+    if (boundPipelineState_ == nullptr)
+        return /*E_POINTER*/;
+
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (context1_.Get() != nullptr)
     {
-        if (bindPoint != PipelineBindPoint::Compute)
+        if (boundPipelineState_->IsGraphicsPSO())
             resourceHeapD3D.BindForGraphicsPipeline1(context1_.Get(), descriptorSet);
-        if (bindPoint != PipelineBindPoint::Graphics)
+        else
             resourceHeapD3D.BindForComputePipeline1(context1_.Get(), descriptorSet);
     }
     else
     #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
     {
-        if (bindPoint != PipelineBindPoint::Compute)
+        if (boundPipelineState_->IsGraphicsPSO())
             resourceHeapD3D.BindForGraphicsPipeline(context_.Get(), descriptorSet);
-        if (bindPoint != PipelineBindPoint::Graphics)
+        else
             resourceHeapD3D.BindForComputePipeline(context_.Get(), descriptorSet);
     }
 }
 
-void D3D11CommandBuffer::SetResource(Resource& resource, std::uint32_t slot, long bindFlags, long stageFlags)
+void D3D11CommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
 {
-    switch (resource.GetResourceType())
+    if (boundPipelineLayout_ == nullptr)
+        return /*E_POINTER*/;
+
+    const auto& bindingList = boundPipelineLayout_->GetBindings();
+    if (!(descriptor < bindingList.size()))
+        return /*E_INVALIDARG*/;
+
+    const auto& binding = bindingList[descriptor];
+    switch (binding.type)
     {
-        case ResourceType::Undefined:
-            break;
-        case ResourceType::Buffer:
-            SetBuffer(LLGL_CAST(Buffer&, resource), slot, bindFlags, stageFlags);
-            break;
-        case ResourceType::Texture:
-            SetTexture(LLGL_CAST(Texture&, resource), slot, bindFlags, stageFlags);
-            break;
-        case ResourceType::Sampler:
-            SetSampler(LLGL_CAST(Sampler&, resource), slot, stageFlags);
-            break;
+        case D3DResourceType_CBV:
+        {
+            auto& bufferD3D = LLGL_CAST(D3D11Buffer&, resource);
+            ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
+            stateMngr_->SetConstantBuffers(binding.slot, 1, cbv, binding.stageFlags);
+        }
+        break;
+
+        case D3DResourceType_BufferSRV:
+        {
+            auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, resource);
+            ID3D11ShaderResourceView* srv[] = { bufferD3D.GetSRV() };
+            stateMngr_->SetShaderResources(binding.slot, 1, srv, binding.stageFlags);
+        }
+        break;
+
+        case D3DResourceType_BufferUAV:
+        {
+            auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, resource);
+            ID3D11UnorderedAccessView* uav[] = { bufferD3D.GetUAV() };
+            UINT auvCounts[] = { bufferD3D.GetInitialCount() };
+            stateMngr_->SetUnorderedAccessViews(binding.slot, 1, uav, auvCounts, binding.stageFlags);
+        }
+        break;
+
+        case D3DResourceType_TextureSRV:
+        {
+            auto& textureD3D = LLGL_CAST(D3D11Texture&, resource);
+            ID3D11ShaderResourceView* srv[] = { textureD3D.GetSRV() };
+            stateMngr_->SetShaderResources(binding.slot, 1, srv, binding.stageFlags);
+        }
+        break;
+
+        case D3DResourceType_TextureUAV:
+        {
+            auto& textureD3D = LLGL_CAST(D3D11Texture&, resource);
+            ID3D11UnorderedAccessView* uav[] = { textureD3D.GetUAV() };
+            UINT auvCounts[] = { 0 };
+            stateMngr_->SetUnorderedAccessViews(binding.slot, 1, uav, auvCounts, binding.stageFlags);
+        }
+        break;
+
+        case D3DResourceType_Sampler:
+        {
+            /* Set sampler state object to all shader stages */
+            auto& samplerD3D = LLGL_CAST(D3D11Sampler&, resource);
+            ID3D11SamplerState* samplerStates[] = { samplerD3D.GetNative() };
+            stateMngr_->SetSamplers(binding.slot, 1, samplerStates, binding.stageFlags);
+        }
+        break;
     }
 }
 
@@ -917,8 +967,9 @@ void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 
 void D3D11CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto& pipelineStateD3D = LLGL_CAST(D3D11PipelineState&, pipelineState);
-    pipelineStateD3D.Bind(*stateMngr_);
+    boundPipelineState_ = LLGL_CAST(D3D11PipelineState*, &pipelineState);
+    boundPipelineState_->Bind(*stateMngr_);
+    boundPipelineLayout_ = boundPipelineState_->GetPipelineLayout();
 }
 
 void D3D11CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
@@ -931,21 +982,9 @@ void D3D11CommandBuffer::SetStencilReference(std::uint32_t reference, const Sten
     stateMngr_->SetStencilRef(reference);
 }
 
-void D3D11CommandBuffer::SetUniform(
-    UniformLocation location,
-    const void*     data,
-    std::uint32_t   dataSize)
+void D3D11CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    // dummy
-}
-
-void D3D11CommandBuffer::SetUniforms(
-    UniformLocation location,
-    std::uint32_t   count,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    // dummy
+    //TODO
 }
 
 /* ----- Queries ----- */
@@ -1146,76 +1185,6 @@ void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std
  * ======= Private: =======
  */
 
-void D3D11CommandBuffer::SetBuffer(Buffer& buffer, std::uint32_t slot, long bindFlags, long stageFlags)
-{
-    if (DXBindFlagsNeedBufferWithRV(buffer.GetBindFlags()))
-    {
-        auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, buffer);
-
-        /* Set constant buffer resource to all shader stages */
-        if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-        {
-            ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
-            stateMngr_->SetConstantBuffers(slot, 1, cbv, stageFlags);
-        }
-
-        /* Set SRVs to specified shader stages */
-        if ((bindFlags & BindFlags::Sampled) != 0)
-        {
-            ID3D11ShaderResourceView* srv[] = { bufferD3D.GetSRV() };
-            stateMngr_->SetShaderResources(slot, 1, srv, stageFlags);
-        }
-
-        /* Set UAVs to specified shader stages */
-        if ((bindFlags & BindFlags::Storage) != 0)
-        {
-            ID3D11UnorderedAccessView* uav[] = { bufferD3D.GetUAV() };
-            UINT auvCounts[] = { bufferD3D.GetInitialCount() };
-            stateMngr_->SetUnorderedAccessViews(slot, 1, uav, auvCounts, stageFlags);
-        }
-    }
-    else
-    {
-        auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-
-        /* Set constant buffer resource to all shader stages */
-        if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-        {
-            ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
-            stateMngr_->SetConstantBuffers(slot, 1, cbv, stageFlags);
-        }
-    }
-}
-
-void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long bindFlags, long stageFlags)
-{
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-
-    /* Set texture SRV to all shader stages */
-    if ((bindFlags & BindFlags::Sampled) != 0)
-    {
-        ID3D11ShaderResourceView* srv[] = { textureD3D.GetSRV() };
-        stateMngr_->SetShaderResources(slot, 1, srv, stageFlags);
-    }
-
-    /* Set texture UAV to all shader stages */
-    if ((bindFlags & BindFlags::Storage) != 0)
-    {
-        ID3D11UnorderedAccessView* uav[] = { textureD3D.GetUAV() };
-        UINT auvCounts[] = { 0 };
-        stateMngr_->SetUnorderedAccessViews(slot, 1, uav, auvCounts, stageFlags);
-    }
-}
-
-void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
-{
-    /* Set sampler state object to all shader stages */
-    auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
-
-    ID3D11SamplerState* samplerStates[] = { samplerD3D.GetNative() };
-    stateMngr_->SetSamplers(slot, 1, samplerStates, stageFlags);
-}
-
 void D3D11CommandBuffer::ResetBufferResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags)
 {
     /* Reset vertex buffer slots */
@@ -1347,7 +1316,7 @@ void D3D11CommandBuffer::ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uin
 
 void D3D11CommandBuffer::ResolveBoundRenderTarget()
 {
-    if (boundRenderTarget_)
+    if (boundRenderTarget_ != nullptr)
         boundRenderTarget_->ResolveSubresources(context_.Get());
 }
 
@@ -1538,6 +1507,13 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
         }
         device->CreateUnorderedAccessView(*bufferOutput, &uavDesc, uavOutput);
     }
+}
+
+void D3D11CommandBuffer::ResetRenderState()
+{
+    boundRenderTarget_      = nullptr;
+    boundPipelineLayout_    = nullptr;
+    boundPipelineState_     = nullptr;
 }
 
 

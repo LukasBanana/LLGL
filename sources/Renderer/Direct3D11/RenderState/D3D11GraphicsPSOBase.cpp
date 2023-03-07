@@ -7,6 +7,7 @@
 
 #include "D3D11GraphicsPSOBase.h"
 #include "D3D11StateManager.h"
+#include "D3D11PipelineLayout.h"
 #include "../D3D11Types.h"
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
@@ -27,7 +28,7 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
     stateMngr.SetPrimitiveTopology(primitiveTopology_);
     stateMngr.SetInputLayout(inputLayout_.Get());
 
-    /* Set shader states */
+    /* Set shader stages */
     stateMngr.SetVertexShader   (vs_.Get());
     stateMngr.SetHullShader     (hs_.Get());
     stateMngr.SetDomainShader   (ds_.Get());
@@ -36,6 +37,10 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
 
     /* Set static viewports and scissors */
     SetStaticViewportsAndScissors(stateMngr);
+
+    /* Set static samplers */
+    if (const auto* pipelineLayoutD3D = GetPipelineLayout())
+        pipelineLayoutD3D->BindGraphicsStaticSamplers(stateMngr);
 }
 
 
@@ -43,7 +48,8 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
  * ======= Protected: =======
  */
 
-D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& desc)
+D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& desc) :
+    D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout }
 {
     /* Validate pointers and get D3D shader objects */
     if (auto vertexShaderD3D = LLGL_CAST(const D3D11Shader*, desc.vertexShader))

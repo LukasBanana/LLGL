@@ -1,6 +1,6 @@
 /*
  * D3D11StateManager.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -21,6 +21,8 @@
 namespace LLGL
 {
 
+
+struct D3D11StaticSampler;
 
 class D3D11StateManager
 {
@@ -79,13 +81,6 @@ class D3D11StateManager
             long                                stageFlags
         );
 
-        void SetSamplers(
-            UINT                        startSlot,
-            UINT                        count,
-            ID3D11SamplerState* const*  samplers,
-            long                        stageFlags
-        );
-
         void SetUnorderedAccessViews(
             UINT                                startSlot,
             UINT                                count,
@@ -93,6 +88,16 @@ class D3D11StateManager
             const UINT*                         initialCounts,
             long                                stageFlags
         );
+
+        void SetSamplers(
+            UINT                        startSlot,
+            UINT                        count,
+            ID3D11SamplerState* const*  samplers,
+            long                        stageFlags
+        );
+
+        void SetGraphicsStaticSampler(const D3D11StaticSampler& staticSamplerD3D);
+        void SetComputeStaticSampler(const D3D11StaticSampler& staticSamplerD3D);
 
         // Binds an intermediate constant buffer and updates its content with the specified data.
         void SetConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags);

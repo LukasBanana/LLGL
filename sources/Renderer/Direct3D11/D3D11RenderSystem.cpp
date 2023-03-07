@@ -377,7 +377,7 @@ void D3D11RenderSystem::Release(Shader& shader)
 
 PipelineLayout* D3D11RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D11PipelineLayout>(pipelineLayoutDesc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D11PipelineLayout>(device_.Get(), pipelineLayoutDesc));
 }
 
 void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
