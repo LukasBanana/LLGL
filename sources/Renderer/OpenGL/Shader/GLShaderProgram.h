@@ -55,9 +55,6 @@ class GLShaderProgram final : public GLShaderPipeline
         // Simply links the GL program.
         static void LinkProgram(GLuint program);
 
-        // Returns the location of the specified program uniform.
-        static UniformLocation FindUniformLocation(GLuint program, const char* name);
-
         // Queries the shader reflection for the specified program.
         static void QueryReflection(GLuint program, ShaderReflection& reflection);
 

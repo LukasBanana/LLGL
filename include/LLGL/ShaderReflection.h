@@ -24,10 +24,6 @@ namespace LLGL
 {
 
 
-//! Shader uniform location type, as zero-based index in 32-bit signed integer format.
-using UniformLocation = std::int32_t;
-
-
 /* ----- Enumerations ----- */
 
 /**

@@ -92,15 +92,6 @@ int main(int argc, char* argv[])
         auto vShader = CreateSeparateShader(LLGL::ShaderType::Vertex,   "SeparateShaderTest.vert");
         auto fShader = CreateSeparateShader(LLGL::ShaderType::Fragment, "SeparateShaderTest.frag");
 
-        #if 0
-        // Shader reflection
-        LLGL::ShaderReflection reflection;
-        shaderProgram->Reflect(reflection);
-
-        auto colorMapALoc = shaderProgram->FindUniformLocation("colorMapA");
-        auto colorMapBLoc = shaderProgram->FindUniformLocation("colorMapB");
-        #endif
-
         // PSO
         LLGL::GraphicsPipelineDescriptor psoDesc;
         {

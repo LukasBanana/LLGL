@@ -45,12 +45,6 @@ constexpr std::uint32_t ignoreOffset    = -1;
 constexpr std::uint32_t invalidSlot     = -1;
 
 /**
-\brief Specifies an invalid shader uniform location.
-\see Shader::FindUniformLocation
-*/
-constexpr std::uint32_t invalidLocation = -1;
-
-/**
 \brief Specifies to use the whole size of a resource.
 \see CommandBuffer::FillBuffer
 */

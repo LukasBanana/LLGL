@@ -355,10 +355,10 @@ int main()
                         static_cast<Gs::Real>(swapChain->GetResolution().width),
                         static_cast<Gs::Real>(swapChain->GetResolution().height)
                     );
-                    commands->SetUniform(vertShader->FindUniformLocation("projection"), projection.Ptr(), sizeof(projection));
+                    commands->SetUniforms(0, projection.Ptr(), sizeof(projection));
 
                     const LLGL::ColorRGBAf color{ 1.0f, 1.0f, 1.0f, 1.0f };
-                    commands->SetUniform(fragShader->FindUniformLocation("color"), &color, sizeof(color));
+                    commands->SetUniforms(1, &color, sizeof(color));
                     #endif
 
                     if (renderTarget && renderTargetTex)

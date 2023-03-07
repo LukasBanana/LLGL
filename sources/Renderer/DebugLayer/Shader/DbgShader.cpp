@@ -37,11 +37,6 @@ bool DbgShader::Reflect(ShaderReflection& reflection) const
     return instance.Reflect(reflection);
 }
 
-UniformLocation DbgShader::FindUniformLocation(const char* name) const
-{
-    return instance.FindUniformLocation(name);
-}
-
 bool DbgShader::IsPostTessellationVertex() const
 {
     return instance.IsPostTessellationVertex();

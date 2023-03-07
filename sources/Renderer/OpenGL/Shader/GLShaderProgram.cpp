@@ -340,14 +340,6 @@ void GLShaderProgram::LinkProgram(GLuint program)
     glLinkProgram(program);
 }
 
-UniformLocation GLShaderProgram::FindUniformLocation(GLuint program, const char* name)
-{
-    if (program != 0)
-        return static_cast<UniformLocation>(glGetUniformLocation(program, name));
-    else
-        return Constants::invalidLocation;
-}
-
 static bool GLQueryActiveAttribs(
     GLuint              program,
     GLenum              attribCountType,

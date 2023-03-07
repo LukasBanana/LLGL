@@ -66,17 +66,6 @@ class LLGL_EXPORT Shader : public RenderSystemChild
     public:
 
         /**
-        \brief Returns the location of a single shader uniform by its name.
-        \returns Uniform location of the specified uniform, or -1 if there is no such uniform in the shader program.
-        \remarks This is a helper function when only one or a few number of uniform locations are meant to be determined.
-        If more uniforms are involved, use the Reflect function.
-        \remarks Default implementation always returns Constants::invalidLocation.
-        \see Reflect
-        \note Only supported with: OpenGL.
-        */
-        virtual UniformLocation FindUniformLocation(const char* name) const;
-
-        /**
         \brief Returns true if this is a post-tessellation vertex shader.
         \remarks This is only used for the Metal backend to determine whether a post-tessellation vertex shader is used in conjunction with a compute kernel.
         \remarks Default implementation always returns false.

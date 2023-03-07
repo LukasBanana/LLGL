@@ -32,11 +32,6 @@ long Shader::GetStageFlags() const
     return 0;
 }
 
-UniformLocation Shader::FindUniformLocation(const char* name) const
-{
-    return Constants::invalidLocation; // dummy
-}
-
 bool Shader::IsPostTessellationVertex() const
 {
     return false; // dummy

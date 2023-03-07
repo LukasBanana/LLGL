@@ -55,6 +55,8 @@ struct DisplayModeDescriptor;
 struct DrawIndexedIndirectArguments;
 struct DrawIndirectArguments;
 struct DstImageDescriptor;
+struct Extent2D;
+struct Extent3D;
 struct FragmentAttribute;
 struct GraphicsPipelineDescriptor;
 struct MetalDependentStateDescriptor;
