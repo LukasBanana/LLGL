@@ -14,7 +14,6 @@
 #include "../../../Core/Exception.h"
 #include <LLGL/Misc/ForRange.h>
 #include <vector>
-#include <sstream>
 #include <stdexcept>
 #include <algorithm>
 

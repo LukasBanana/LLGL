@@ -14,7 +14,7 @@
 #include "../../TextureUtils.h"
 #include "../GLSwapChain.h"
 #include "../Ext/GLExtensions.h"
-#include "../Ext/GLExtensionLoader.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../GLProfile.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"

@@ -1,6 +1,6 @@
 /*
  * MacOSGLSwapChainContext.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -41,7 +41,7 @@ MacOSGLSwapChainContext::MacOSGLSwapChainContext(MacOSGLContext& context, Surfac
     /* Get native window handle */
     NativeHandle nativeHandle = {};
     if (surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
-        wnd_ = nativeHandle.window;
+        view_ = [nativeHandle.window contentView];
     else
         throw std::runtime_error("failed to get NSWindow from swap-chain surface");
 }
@@ -74,7 +74,7 @@ bool MacOSGLSwapChainContext::MakeCurrentNSGLContext(MacOSGLSwapChainContext* co
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-        [context->ctx_ setView:[context->wnd_ contentView]];
+        [context->ctx_ setView:context->view_];
 
         #pragma clang diagnostic pop
 

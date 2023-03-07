@@ -1,6 +1,6 @@
 /*
  * GLCore.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,7 +8,6 @@
 #include "GLCore.h"
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
-#include <sstream>
 
 
 namespace LLGL

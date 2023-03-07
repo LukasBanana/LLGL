@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
-#include "Ext/GLExtensionLoader.h"
+#include "Ext/GLExtensionRegistry.h"
 #include "../ContainerTypes.h"
 
 #include "Command/GLCommandQueue.h"

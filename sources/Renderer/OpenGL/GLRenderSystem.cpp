@@ -28,6 +28,7 @@
 #include "Command/GLDeferredCommandBuffer.h"
 #include "RenderState/GLGraphicsPSO.h"
 #include "RenderState/GLComputePSO.h"
+#include <LLGL/Misc/ForRange.h>
 
 #ifdef LLGL_OPENGL
 #   include "Shader/GLSeparableShader.h"
@@ -199,7 +200,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
 // Returns true if at least one of the buffers in the specified array has a VertexBuffer binding flag.
 static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    for (std::uint32_t i = 0; i < numBuffers; ++i)
+    for_range(i, numBuffers)
     {
         if ((bufferArray[i]->GetBindFlags() & BindFlags::VertexBuffer) != 0)
             return true;
@@ -351,20 +352,22 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
-    /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
     if (!HasNativeSamplers())
     {
+        /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
         auto samplerGL2X = MakeUnique<GL2XSampler>();
         samplerGL2X->SetDesc(samplerDesc);
         return TakeOwnership(samplersGL2X_, std::move(samplerGL2X));
     }
+    else
     #endif
-
-    /* Create native GL sampler state */
-    LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
-    auto sampler = MakeUnique<GLSampler>();
-    sampler->SetDesc(samplerDesc);
-    return TakeOwnership(samplers_, std::move(sampler));
+    {
+        /* Create native GL sampler state */
+        LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
+        auto sampler = MakeUnique<GLSampler>();
+        sampler->SetDesc(samplerDesc);
+        return TakeOwnership(samplers_, std::move(sampler));
+    }
 }
 
 void GLRenderSystem::Release(Sampler& sampler)
@@ -565,17 +568,19 @@ void APIENTRY GLDebugCallback(
     GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
     /* Generate output stream */
-    std::stringstream typeStr;
+    std::string typeStr;
 
-    typeStr
-        << "OpenGL debug callback ("
-        << GLDebugSourceToStr(source) << ", "
-        << GLDebugTypeToStr(type) << ", "
-        << GLDebugSeverityToStr(severity) << ")";
+    typeStr = "OpenGL debug callback (";
+    typeStr += GLDebugSourceToStr(source);
+    typeStr += ", ";
+    typeStr += GLDebugTypeToStr(type);
+    typeStr += ", ";
+    typeStr += GLDebugSeverityToStr(severity);
+    typeStr += ")";
 
     /* Call debug callback */
     auto debugCallback = reinterpret_cast<const DebugCallback*>(userParam);
-    (*debugCallback)(typeStr.str(), message);
+    (*debugCallback)(typeStr, message);
 }
 
 #endif // /GL_KHR_debug
