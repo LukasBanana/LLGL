@@ -9,38 +9,18 @@
 #define LLGL_GL_EXTENSION_LOADER_H
 
 
-#include "GLExtensionRegistry.h"
-#include <string>
-#include <array>
-#include <map>
-
-
 namespace LLGL
 {
 
 
-//! OpenGL extension map type.
-using GLExtensionList = std::map<std::string, bool>;
-
-/* --- Common extension loading functions --- */
-
 /*
-Returns a hash-map with all supported OpenGL extensions.
-The hash-map can be used for faster single-extension queries.
-Parameter <coreProfile> specifies whether the extension are to be loaded via GL core profile or not.
+Loads all suported OpenGL extensions (suported by both the OpenGL server and LLGL) and returns true on success.
+Otherwise, at least one extension was erroneously reported as available while their respective procedures could not be loaded.
 */
-GLExtensionList QueryExtensions(bool coreProfile);
-
-/*
-Loads all available extensions and prints errors if an extension is available,
-but their respective functions could not be loaded.
-Parameter <extensions> specifies the extension map. This can be queried by the "QueryExtensions" function.
-The respective entry will be set to true if all its functions have been loaded successfully.
-*/
-void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile);
+bool LoadSupportedOpenGLExtensions(bool isCoreProfile);
 
 // Returns true if all available extensions have been loaded.
-bool AreExtensionsLoaded();
+bool AreOpenGLExtensionsLoaded();
 
 /* --- Common GL extensions --- */
 

@@ -1,6 +1,6 @@
 /*
  * GLContextManager.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,6 +8,7 @@
 #include "GLContextManager.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionLoader.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
 
@@ -81,7 +82,7 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
 
     /* Load GL extensions for the very first context */
     const bool hasGLCoreProfile = (profile_.contextProfile == OpenGLContextProfile::CoreProfile);
-    LoadGLExtensions(hasGLCoreProfile);
+    LoadSupportedOpenGLExtensions(hasGLCoreProfile);
 
     /* Initialize state manager for new GL context */
     auto& stateMngr = context->GetStateManager();
@@ -137,18 +138,6 @@ void GLContextManager::InitRenderStates(GLStateManager& stateMngr)
     */
     stateMngr.SetPixelStorePack(0, 0, 1);
     stateMngr.SetPixelStoreUnpack(0, 0, 1);
-}
-
-
-void GLContextManager::LoadGLExtensions(bool hasGLCoreProfile)
-{
-    /* Load OpenGL extensions if not already done */
-    if (!AreExtensionsLoaded())
-    {
-        /* Query extensions and load all of them */
-        auto extensions = QueryExtensions(hasGLCoreProfile);
-        LoadAllExtensions(extensions, hasGLCoreProfile);
-    }
 }
 
 

@@ -6,15 +6,22 @@
  */
 
 #include "../Ext/GLExtensionLoader.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "GLCoreExtensions.h"
 #include "GLCoreExtensionsProxy.h"
 #include <LLGL/Log.h>
+#include <LLGL/Misc/ForRange.h>
 #include <functional>
+#include <string>
+#include <map>
 
 
 namespace LLGL
 {
 
+
+// OpenGL extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successully.
+using GLExtensionMap = std::map<std::string, bool>;
 
 /* --- Internal functions --- */
 
@@ -44,7 +51,7 @@ bool LoadGLProc(T& procAddr, const char* procName)
     return true;
 }
 
-static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::string& extString)
+static void ExtractExtensionsFromString(GLExtensionMap& extensions, const std::string& extString)
 {
     size_t first = 0, last = 0;
 
@@ -881,14 +888,14 @@ static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 
 /* --- Common extension loading functions --- */
 
-GLExtensionList QueryExtensions(bool coreProfile)
+static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
 {
-    GLExtensionList extensions;
+    GLExtensionMap extensions;
 
     const char* extString = nullptr;
 
     /* Filter standard GL extensions */
-    if (coreProfile)
+    if (isCoreProfile)
     {
         #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
 
@@ -900,7 +907,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
             GLint numExtensions = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
 
-            for (int i = 0; i < numExtensions; ++i)
+            for_range(i, numExtensions)
             {
                 /* Get current extension string */
                 extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
@@ -937,7 +944,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
 #ifndef __APPLE__
 
 // Includes all GL extensions that are considered default for core profiles
-static void IncludeDefaultCoreProfileExtensions(GLExtensionList& extensions)
+static void IncludeDefaultCoreProfileExtensions(GLExtensionMap& extensions)
 {
     static const std::string coreProfileDefaultExtenions[] =
     {
@@ -957,7 +964,7 @@ static void IncludeDefaultCoreProfileExtensions(GLExtensionList& extensions)
 }
 
 // Includes all GL extensions that are implied by other extensions
-static void IncludeImpliedExtensions(GLExtensionList& extensions)
+static void IncludeImpliedExtensions(GLExtensionMap& extensions)
 {
     auto ImplyExtension = [&extensions](const char* originExtension, const std::initializer_list<const char*>& impliedExtensions)
     {
@@ -974,13 +981,15 @@ static void IncludeImpliedExtensions(GLExtensionList& extensions)
 #endif // /__APPLE__
 
 // Global member to store if the extension have already been loaded
-static bool g_extAlreadyLoaded = false;
+static bool g_OpenGLExtensionsLoaded = false;
 
-void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
+bool LoadSupportedOpenGLExtensions(bool isCoreProfile)
 {
     /* Only load GL extensions once */
-    if (g_extAlreadyLoaded)
-        return;
+    if (g_OpenGLExtensionsLoaded)
+        return true;
+
+    GLExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
 
     #ifdef __APPLE__
 
@@ -1094,7 +1103,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
         EnableExtension("GL_" + std::string(#NAME), GLExt::NAME)
 
     /* Add standard extensions */
-    if (coreProfile)
+    if (isCoreProfile)
         IncludeDefaultCoreProfileExtensions(extensions);
 
     IncludeImpliedExtensions(extensions);
@@ -1200,12 +1209,14 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     #endif // /__APPLE__
 
-    g_extAlreadyLoaded = true;
+    g_OpenGLExtensionsLoaded = true;
+
+    return true;
 }
 
-bool AreExtensionsLoaded()
+bool AreOpenGLExtensionsLoaded()
 {
-    return g_extAlreadyLoaded;
+    return g_OpenGLExtensionsLoaded;
 }
 
 
