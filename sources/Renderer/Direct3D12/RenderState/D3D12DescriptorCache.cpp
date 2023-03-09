@@ -12,18 +12,22 @@
 #include "../Texture/D3D12Sampler.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
-
 #include <thread>
 #include <chrono>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
 
+static constexpr UINT g_dhIndexCbvSrvUav    = 0;
+static constexpr UINT g_dhIndexSampler      = 1;
+static constexpr UINT g_dhMinCacheSizes[]   = { 64, 16 };
+
 D3D12DescriptorCache::D3D12DescriptorCache()
 {
-    dirtyBits_.bits = ~0u;
+    Clear();
 }
 
 void D3D12DescriptorCache::Create(
@@ -32,26 +36,31 @@ void D3D12DescriptorCache::Create(
     UINT            initialNumSamplers)
 {
     device_ = device;
-    descriptorHeaps_[0].Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, initialNumResources);
-    descriptorHeaps_[1].Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, initialNumSamplers);
+    descriptorHeaps_[g_dhIndexCbvSrvUav].Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, std::max(g_dhMinCacheSizes[g_dhIndexCbvSrvUav], initialNumResources));
+    descriptorHeaps_[g_dhIndexSampler  ].Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,     std::max(g_dhMinCacheSizes[g_dhIndexSampler  ], initialNumSamplers ));
 }
 
 void D3D12DescriptorCache::Reset(UINT numResources, UINT numSamplers)
 {
     /* Store new strides and resize descriptor heaps if necessary */
-    currentStrides_[0] = numResources;
-    if (descriptorHeaps_[0].GetSize() < numResources)
+    currentStrides_[g_dhIndexCbvSrvUav] = numResources;
+    if (descriptorHeaps_[g_dhIndexCbvSrvUav].GetSize() < numResources)
     {
-        descriptorHeaps_[0].Reset(numResources);
+        descriptorHeaps_[g_dhIndexCbvSrvUav].Reset(numResources);
         dirtyBits_.descHeapCbvSrvUav = 1;
     }
 
-    currentStrides_[1] = numSamplers;
-    if (descriptorHeaps_[1].GetSize() < numSamplers)
+    currentStrides_[g_dhIndexSampler] = numSamplers;
+    if (descriptorHeaps_[g_dhIndexSampler].GetSize() < numSamplers)
     {
-        descriptorHeaps_[1].Reset(numSamplers);
+        descriptorHeaps_[g_dhIndexSampler].Reset(numSamplers);
         dirtyBits_.descHeapSampler = 1;
     }
+}
+
+void D3D12DescriptorCache::Clear()
+{
+    dirtyBits_.bits = ~0u;
 }
 
 void D3D12DescriptorCache::EmplaceDescriptor(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType)
@@ -59,20 +68,20 @@ void D3D12DescriptorCache::EmplaceDescriptor(Resource& resource, UINT location, 
     switch (resource.GetResourceType())
     {
         case ResourceType::Buffer:
-            LLGL_ASSERT(location < currentStrides_[0]);
-            if (EmplaceBufferDescriptor(LLGL_CAST(D3D12Buffer&, resource), descriptorHeaps_[0].GetCpuHandleWithOffset(location), descRangeType))
+            LLGL_ASSERT(location < currentStrides_[g_dhIndexCbvSrvUav]);
+            if (EmplaceBufferDescriptor(LLGL_CAST(D3D12Buffer&, resource), descriptorHeaps_[g_dhIndexCbvSrvUav].GetCpuHandleWithOffset(location), descRangeType))
                 dirtyBits_.descHeapCbvSrvUav = 1;
             break;
 
         case ResourceType::Texture:
-            LLGL_ASSERT(location < currentStrides_[0]);
-            if (EmplaceTextureDescriptor(LLGL_CAST(D3D12Texture&, resource), descriptorHeaps_[0].GetCpuHandleWithOffset(location), descRangeType))
+            LLGL_ASSERT(location < currentStrides_[g_dhIndexCbvSrvUav]);
+            if (EmplaceTextureDescriptor(LLGL_CAST(D3D12Texture&, resource), descriptorHeaps_[g_dhIndexCbvSrvUav].GetCpuHandleWithOffset(location), descRangeType))
                 dirtyBits_.descHeapCbvSrvUav = 1;
             break;
 
         case ResourceType::Sampler:
-            LLGL_ASSERT(location < currentStrides_[1]);
-            if (EmplaceSamplerDescriptor(LLGL_CAST(D3D12Sampler&, resource), descriptorHeaps_[1].GetCpuHandleWithOffset(location), descRangeType))
+            LLGL_ASSERT(location < currentStrides_[g_dhIndexSampler]);
+            if (EmplaceSamplerDescriptor(LLGL_CAST(D3D12Sampler&, resource), descriptorHeaps_[g_dhIndexSampler].GetCpuHandleWithOffset(location), descRangeType))
                 dirtyBits_.descHeapSampler = 1;
             break;
 
@@ -86,7 +95,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12DescriptorCache::FlushCbvSrvUavDescriptors(D3D1
     if (dirtyBits_.descHeapCbvSrvUav)
     {
         dirtyBits_.descHeapCbvSrvUav = 0;
-        return descHeapPool.CopyDescriptors(descriptorHeaps_[0].GetCpuHandleStart(), 0, currentStrides_[0]);
+        return descHeapPool.CopyDescriptors(descriptorHeaps_[g_dhIndexCbvSrvUav].GetCpuHandleStart(), 0, currentStrides_[g_dhIndexCbvSrvUav]);
     }
     return {};
 }
@@ -96,7 +105,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12DescriptorCache::FlushSamplerDescriptors(D3D12S
     if (dirtyBits_.descHeapSampler)
     {
         dirtyBits_.descHeapSampler = 0;
-        return descHeapPool.CopyDescriptors(descriptorHeaps_[1].GetCpuHandleStart(), 0, currentStrides_[1]);
+        return descHeapPool.CopyDescriptors(descriptorHeaps_[g_dhIndexSampler].GetCpuHandleStart(), 0, currentStrides_[g_dhIndexSampler]);
     }
     return {};
 }

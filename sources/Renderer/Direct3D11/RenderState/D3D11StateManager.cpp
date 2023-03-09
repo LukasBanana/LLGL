@@ -8,6 +8,7 @@
 #include "D3D11StateManager.h"
 #include "../Texture/D3D11Sampler.h"
 #include "../../../Core/HelperMacros.h"
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 #include <cstddef>
 
@@ -24,7 +25,7 @@ D3D11StateManager::D3D11StateManager(
     ID3D11DeviceContext*                cbufferPoolDeviceContext)
 :
     context_ { context },
-    intermediateCbufferPool_
+    stagingCbufferPool_
     {
         device,
         (cbufferPoolDeviceContext != nullptr ? cbufferPoolDeviceContext : context.Get()),
@@ -274,7 +275,7 @@ void D3D11StateManager::SetConstantBuffers(
     if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
 }
 
-void D3D11StateManager::SetConstantBuffersRange(
+void D3D11StateManager::SetGraphicsConstantBuffersRange(
     UINT                    startSlot,
     UINT                    count,
     ID3D11Buffer* const*    buffers,
@@ -291,17 +292,18 @@ void D3D11StateManager::SetConstantBuffersRange(
         if (LLGL_DS_STAGE(stageFlags)) { context1_->DSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
         if (LLGL_GS_STAGE(stageFlags)) { context1_->GSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
         if (LLGL_PS_STAGE(stageFlags)) { context1_->PSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
-        if (LLGL_CS_STAGE(stageFlags)) { context1_->CSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants); }
     }
     else
     #endif
     {
         /* Buffer range is not supported for D3D 11.0 */
-        for (UINT i = 0; i < count; ++i)
+        #ifdef LLGL_DEBUG
+        for_range(i, count)
         {
             if (firstConstants[i] > 0)
                 throw std::runtime_error("constant buffer range is only supported with Direct3D 11.1 or later");
         }
+        #endif
 
         /* Bind buffer to shader stage */
         if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
@@ -309,7 +311,36 @@ void D3D11StateManager::SetConstantBuffersRange(
         if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
         if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
         if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
-        if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
+    }
+}
+
+void D3D11StateManager::SetComputeConstantBuffersRange(
+    UINT                    startSlot,
+    UINT                    count,
+    ID3D11Buffer* const*    buffers,
+    const UINT*             firstConstants,
+    const UINT*             numConstants)
+{
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    if (context1_ != nullptr)
+    {
+        /* Bind buffer range to shader stage */
+        context1_->CSSetConstantBuffers1(startSlot, count, buffers, firstConstants, numConstants);
+    }
+    else
+    #endif
+    {
+        /* Buffer range is not supported for D3D 11.0 */
+        #ifdef LLGL_DEBUG
+        for_range(i, count)
+        {
+            if (firstConstants[i] > 0)
+                throw std::runtime_error("constant buffer range is only supported with Direct3D 11.1 or later");
+        }
+        #endif
+
+        /* Bind buffer to shader stage */
+        context_->CSSetConstantBuffers(startSlot, count, buffers);
     }
 }
 
@@ -389,16 +420,28 @@ void D3D11StateManager::SetComputeStaticSampler(const D3D11StaticSampler& static
         context_->CSSetSamplers(staticSamplerD3D.slot, 1, staticSamplerD3D.native.GetAddressOf());
 }
 
-void D3D11StateManager::SetConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags)
+void D3D11StateManager::SetGraphicsConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags)
 {
     /* Write data to intermediate constant buffer */
-    auto bufferRange = intermediateCbufferPool_.Write(data, dataSize);
+    auto bufferRange = stagingCbufferPool_.Write(data, dataSize);
 
     /* Bind intermediate buffer to buffer range */
     const UINT firstConstants[] = { bufferRange.offset / 16 };
     const UINT numConstants[]   = { bufferRange.size / 16 };
 
-    SetConstantBuffersRange(slot, 1, &(bufferRange.native), firstConstants, numConstants, stageFlags);
+    SetGraphicsConstantBuffersRange(slot, 1, &(bufferRange.native), firstConstants, numConstants, stageFlags);
+}
+
+void D3D11StateManager::SetComputeConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize)
+{
+    /* Write data to intermediate constant buffer */
+    auto bufferRange = stagingCbufferPool_.Write(data, dataSize);
+
+    /* Bind intermediate buffer to buffer range */
+    const UINT firstConstants[] = { bufferRange.offset / 16 };
+    const UINT numConstants[]   = { bufferRange.size / 16 };
+
+    SetComputeConstantBuffersRange(slot, 1, &(bufferRange.native), firstConstants, numConstants);
 }
 
 void D3D11StateManager::DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
@@ -408,9 +451,9 @@ void D3D11StateManager::DispatchBuiltin(const D3D11BuiltinShader builtinShader, 
     context_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
-void D3D11StateManager::ResetIntermediateBufferPools()
+void D3D11StateManager::ResetStagingBufferPools()
 {
-    intermediateCbufferPool_.Reset();
+    stagingCbufferPool_.Reset();
 }
 
 

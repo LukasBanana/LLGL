@@ -76,7 +76,7 @@ D3D11CommandBuffer::D3D11CommandBuffer(
 
 void D3D11CommandBuffer::Begin()
 {
-    // dummy
+    stateMngr_->ResetStagingBufferPools();
 }
 
 void D3D11CommandBuffer::End()
@@ -349,7 +349,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
         cbufferData.rowStride           = rowStride;
         cbufferData.layerStride         = layerStride;
     }
-    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
+    stateMngr_->SetComputeConstants(0, &cbufferData, sizeof(cbufferData));
 
     /* Store currently bound resource views */
     ID3D11UnorderedAccessView* prevUAVs[1];
@@ -616,7 +616,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         cbufferData.rowStride           = rowStride;
         cbufferData.layerStride         = layerStride;
     }
-    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
+    stateMngr_->SetComputeConstants(0, &cbufferData, sizeof(cbufferData));
 
     /* Store currently bound resource views */
     ID3D11UnorderedAccessView* prevUAVs[1];

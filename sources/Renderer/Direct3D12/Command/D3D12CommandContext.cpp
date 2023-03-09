@@ -26,8 +26,6 @@ static constexpr D3D12_DESCRIPTOR_HEAP_TYPE g_descriptorHeapTypes[] =
     D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
 };
 
-static constexpr UINT g_descriptorCacheSizes[] = { 64, 16, };
-
 const UINT D3D12CommandContext::g_maxNumAllocators;
 const UINT D3D12CommandContext::g_maxNumResourceBarrieres;
 const UINT D3D12CommandContext::g_maxNumDescriptorHeaps;
@@ -66,7 +64,7 @@ void D3D12CommandContext::Create(
         commandAllocators_[i] = device.CreateDXCommandAllocator(commandListType);
         for_range(j, D3D12CommandContext::g_maxNumDescriptorHeaps)
             stagingDescriptorPools_[i][j].InitializeDevice(device.GetNative(), g_descriptorHeapTypes[j]);
-        descriptorCaches_[i].Create(device.GetNative(), g_descriptorCacheSizes[0], g_descriptorCacheSizes[1]);
+        descriptorCaches_[i].Create(device.GetNative());
     }
 
     /* Create graphics command list and close it (they are created in recording mode) */
@@ -390,38 +388,44 @@ void D3D12CommandContext::EmplaceDescriptorForStaging(
 // private
 void D3D12CommandContext::FlushGraphicsStagingDescriptorTables()
 {
-    auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
     auto& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
-    if (stagingDescriptorSetLayout_.numResourceViews > 0)
+    if (descriptorCache.IsInvalidated())
     {
-        D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
-        if (gpuDescHandle.ptr != 0)
-            commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
-    }
-    if (stagingDescriptorSetLayout_.numSamplers > 0)
-    {
-        D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
-        if (gpuDescHandle.ptr != 0)
-            commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
+        auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
+        if (stagingDescriptorSetLayout_.numResourceViews > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
+        }
+        if (stagingDescriptorSetLayout_.numSamplers > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
+        }
     }
 }
 
 // private
 void D3D12CommandContext::FlushComputeStagingDescriptorTables()
 {
-    auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
     auto& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
-    if (stagingDescriptorSetLayout_.numResourceViews > 0)
+    if (descriptorCache.IsInvalidated())
     {
-        D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
-        if (gpuDescHandle.ptr != 0)
-            commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
-    }
-    if (stagingDescriptorSetLayout_.numSamplers > 0)
-    {
-        D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
-        if (gpuDescHandle.ptr != 0)
-            commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
+        auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
+        if (stagingDescriptorSetLayout_.numResourceViews > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
+        }
+        if (stagingDescriptorSetLayout_.numSamplers > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
+        }
     }
 }
 
@@ -493,6 +497,9 @@ D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
 
 void D3D12CommandContext::NextCommandAllocator()
 {
+    /* Clear descriptor cache */
+    descriptorCaches_[currentAllocatorIndex_].Clear();
+
     /* Get next command allocator */
     currentAllocatorIndex_ = ((currentAllocatorIndex_ + 1) % numAllocators_);
 

@@ -1,15 +1,15 @@
 /*
- * D3D11IntermediateBufferPool.h
- * 
+ * D3D11StagingBufferPool.h
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D11_INTERMEDIATE_BUFFER_POOL_H
-#define LLGL_D3D11_INTERMEDIATE_BUFFER_POOL_H
+#ifndef LLGL_D3D11_STAGING_BUFFER_POOL_H
+#define LLGL_D3D11_STAGING_BUFFER_POOL_H
 
 
-#include "D3D11IntermediateBuffer.h"
+#include "D3D11StagingBuffer.h"
 #include <d3d12.h>
 #include <vector>
 
@@ -26,12 +26,12 @@ struct D3D11BufferRange
     UINT            size;
 };
 
-class D3D11IntermediateBufferPool
+class D3D11StagingBufferPool
 {
 
     public:
 
-        D3D11IntermediateBufferPool(
+        D3D11StagingBufferPool(
             ID3D11Device*           device,
             ID3D11DeviceContext*    context,
             UINT                    chunkSize,
@@ -52,15 +52,15 @@ class D3D11IntermediateBufferPool
 
     private:
 
-        ID3D11Device*                           device_             = nullptr;
-        ID3D11DeviceContext*                    context_            = nullptr;
+        ID3D11Device*                   device_             = nullptr;
+        ID3D11DeviceContext*            context_            = nullptr;
 
-        std::vector<D3D11IntermediateBuffer>    chunks_;
-        std::size_t                             chunkIdx_           = 0;
-        UINT                                    chunkSize_          = 0;
-        UINT                                    bindFlags_          = 0;
-        UINT                                    miscFlags_          = 0;
-        bool                                    incrementOffsets_   = false;
+        std::vector<D3D11StagingBuffer> chunks_;
+        std::size_t                     chunkIdx_           = 0;
+        UINT                            chunkSize_          = 0;
+        UINT                            bindFlags_          = 0;
+        UINT                            miscFlags_          = 0;
+        bool                            incrementOffsets_   = false;
 
 };
 

@@ -34,12 +34,15 @@ class D3D12DescriptorCache
         // Creates the internal native D3D descriptor heaps. These are always a shader-visible descriptor heap.
         void Create(
             ID3D12Device*   device,
-            UINT            initialNumResources,
-            UINT            initialNumSamplers
+            UINT            initialNumResources = 0,
+            UINT            initialNumSamplers  = 0
         );
 
         // Resets the descriptor heap if the size must be increased and invalidates the cache.
         void Reset(UINT numResources, UINT numSamplers);
+
+        // Clears the cache.
+        void Clear();
 
         // Emplaces a descriptor into the cache for the specified resource.
         void EmplaceDescriptor(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType);
@@ -49,6 +52,12 @@ class D3D12DescriptorCache
 
         // Flushes any invalidated sampler descriptors into the specified descriptor heap pools.
         D3D12_GPU_DESCRIPTOR_HANDLE FlushSamplerDescriptors(D3D12StagingDescriptorHeapPool& descHeapPool);
+
+        // Returns true if any cache entries are invalidated and need to be flushed again.
+        inline bool IsInvalidated() const
+        {
+            return (dirtyBits_.bits != 0);
+        }
 
     private:
 

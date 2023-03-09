@@ -1,15 +1,13 @@
 /*
- * D3D11IntermediateBuffer.cpp
- * 
+ * D3D11StagingBuffer.cpp
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D11IntermediateBuffer.h"
+#include "D3D11StagingBuffer.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
-//#include "../../../Core/Helper.h"
-//#include "../../../Core/Assertion.h"
 
 
 namespace LLGL
@@ -24,7 +22,7 @@ static D3D11_USAGE DXGetOptimalUsageForBindFlags(UINT bindFlags)
         return D3D11_USAGE_DEFAULT;
 }
 
-D3D11IntermediateBuffer::D3D11IntermediateBuffer(
+D3D11StagingBuffer::D3D11StagingBuffer(
     ID3D11Device*   device,
     UINT            size,
     UINT            bindFlags,
@@ -47,14 +45,14 @@ D3D11IntermediateBuffer::D3D11IntermediateBuffer(
     DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for CPU-access buffer");
 }
 
-D3D11IntermediateBuffer::D3D11IntermediateBuffer(D3D11IntermediateBuffer&& rhs) :
+D3D11StagingBuffer::D3D11StagingBuffer(D3D11StagingBuffer&& rhs) :
     native_ { std::move(rhs.native_) },
     size_   { rhs.size_              },
     offset_ { rhs.offset_            }
 {
 }
 
-D3D11IntermediateBuffer& D3D11IntermediateBuffer::operator = (D3D11IntermediateBuffer&& rhs)
+D3D11StagingBuffer& D3D11StagingBuffer::operator = (D3D11StagingBuffer&& rhs)
 {
     if (this != &rhs)
     {
@@ -65,17 +63,17 @@ D3D11IntermediateBuffer& D3D11IntermediateBuffer::operator = (D3D11IntermediateB
     return *this;
 }
 
-void D3D11IntermediateBuffer::Reset()
+void D3D11StagingBuffer::Reset()
 {
     offset_ = 0;
 }
 
-bool D3D11IntermediateBuffer::Capacity(UINT dataSize) const
+bool D3D11StagingBuffer::Capacity(UINT dataSize) const
 {
     return (offset_ + dataSize <= size_);
 }
 
-void D3D11IntermediateBuffer::Write(
+void D3D11StagingBuffer::Write(
     ID3D11DeviceContext*    context,
     const void*             data,
     UINT                    dataSize)
@@ -101,7 +99,7 @@ void D3D11IntermediateBuffer::Write(
     }
 }
 
-void D3D11IntermediateBuffer::WriteAndIncrementOffset(
+void D3D11StagingBuffer::WriteAndIncrementOffset(
     ID3D11DeviceContext*    context,
     const void*             data,
     UINT                    dataSize)

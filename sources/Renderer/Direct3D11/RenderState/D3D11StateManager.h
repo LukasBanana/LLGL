@@ -11,7 +11,7 @@
 
 #include "../../DXCommon/ComPtr.h"
 #include "../Shader/D3D11BuiltinShaderFactory.h"
-#include "../Buffer/D3D11IntermediateBufferPool.h"
+#include "../Buffer/D3D11StagingBufferPool.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <vector>
 #include <cstdint>
@@ -65,13 +65,21 @@ class D3D11StateManager
             long                    stageFlags
         );
 
-        void SetConstantBuffersRange(
+        void SetGraphicsConstantBuffersRange(
             UINT                    startSlot,
             UINT                    count,
             ID3D11Buffer* const*    buffers,
             const UINT*             firstConstants,
             const UINT*             numConstants,
             long                    stageFlags
+        );
+
+        void SetComputeConstantBuffersRange(
+            UINT                    startSlot,
+            UINT                    count,
+            ID3D11Buffer* const*    buffers,
+            const UINT*             firstConstants,
+            const UINT*             numConstants
         );
 
         void SetShaderResources(
@@ -100,13 +108,14 @@ class D3D11StateManager
         void SetComputeStaticSampler(const D3D11StaticSampler& staticSamplerD3D);
 
         // Binds an intermediate constant buffer and updates its content with the specified data.
-        void SetConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags);
+        void SetGraphicsConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags);
+        void SetComputeConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize);
 
         // Executes the specified builtin compute shader.
         void DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
 
-        // Must be called in D3D11CommandBuffer::Begin
-        void ResetIntermediateBufferPools();
+        // Must be called in D3D11CommandBuffer::Begin().
+        void ResetStagingBufferPools();
 
         // Returns the ID3D11DeviceContext that this state manager is associated with.
         inline ID3D11DeviceContext* GetContext() const
@@ -124,12 +133,12 @@ class D3D11StateManager
 
         struct D3DShaderState
         {
-            ID3D11VertexShader*     vs = nullptr;
-            ID3D11HullShader*       hs = nullptr;
-            ID3D11DomainShader*     ds = nullptr;
-            ID3D11GeometryShader*   gs = nullptr;
-            ID3D11PixelShader*      ps = nullptr;
-            ID3D11ComputeShader*    cs = nullptr;
+            ID3D11VertexShader*         vs                  = nullptr;
+            ID3D11HullShader*           hs                  = nullptr;
+            ID3D11DomainShader*         ds                  = nullptr;
+            ID3D11GeometryShader*       gs                  = nullptr;
+            ID3D11PixelShader*          ps                  = nullptr;
+            ID3D11ComputeShader*        cs                  = nullptr;
         };
 
         struct D3DRenderState
@@ -150,7 +159,7 @@ class D3D11StateManager
         ComPtr<ID3D11DeviceContext1>    context1_;
         #endif
 
-        D3D11IntermediateBufferPool     intermediateCbufferPool_;
+        D3D11StagingBufferPool          stagingCbufferPool_;
 
         D3DInputAssemblyState           inputAssemblyState_;
         D3DShaderState                  shaderState_;

@@ -1,12 +1,12 @@
 /*
- * D3D11IntermediateBuffer.h
- * 
+ * D3D11StagingBuffer.h
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_D3D11_INTERMEDIATE_BUFFER_H
-#define LLGL_D3D11_INTERMEDIATE_BUFFER_H
+#ifndef LLGL_D3D11_STAGING_BUFFER_H
+#define LLGL_D3D11_STAGING_BUFFER_H
 
 
 #include <LLGL/Buffer.h>
@@ -19,23 +19,23 @@ namespace LLGL
 
 
 // Intermediate buffer with a writing offset to be used for both immediate and deferred contexts.
-class D3D11IntermediateBuffer
+class D3D11StagingBuffer
 {
 
     public:
 
-        D3D11IntermediateBuffer(
+        D3D11StagingBuffer(
             ID3D11Device*   device,
             UINT            size,
             UINT            bindFlags   = 0,
             UINT            miscFlags   = 0
         );
 
-        D3D11IntermediateBuffer(D3D11IntermediateBuffer&& rhs);
-        D3D11IntermediateBuffer& operator = (D3D11IntermediateBuffer&& rhs);
+        D3D11StagingBuffer(D3D11StagingBuffer&& rhs);
+        D3D11StagingBuffer& operator = (D3D11StagingBuffer&& rhs);
 
-        D3D11IntermediateBuffer(const D3D11IntermediateBuffer&) = delete;
-        D3D11IntermediateBuffer& operator = (const D3D11IntermediateBuffer&) = delete;
+        D3D11StagingBuffer(const D3D11StagingBuffer&) = delete;
+        D3D11StagingBuffer& operator = (const D3D11StagingBuffer&) = delete;
 
         // Resets the writing offset.
         void Reset();
