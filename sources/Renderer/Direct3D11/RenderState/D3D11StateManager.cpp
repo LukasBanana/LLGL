@@ -7,7 +7,7 @@
 
 #include "D3D11StateManager.h"
 #include "../Texture/D3D11Sampler.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../../Core/MacroUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 #include <cstddef>

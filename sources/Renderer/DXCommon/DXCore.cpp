@@ -1,14 +1,14 @@
 /*
  * DXCore.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "DXCore.h"
 #include "ComPtr.h"
-#include "../../Core/Helper.h"
-#include "../../Core/HelperMacros.h"
+#include "../../Core/StringUtils.h"
+#include "../../Core/MacroUtils.h"
 #include "../../Core/Vendor.h"
 #include <LLGL/Shader.h>
 #include <stdexcept>
@@ -127,10 +127,7 @@ static void DXThrowFailure(const HRESULT hr, const char* info)
     if (auto err = DXErrorToStr(hr))
         s += err;
     else
-    {
-        s += "0x";
-        s += ToHex(hr);
-    }
+        s += IntToHex(hr);
 
     s += ")";
 

@@ -1,12 +1,12 @@
 /*
- * HelperMacros.h
- * 
+ * MacroUtils.h
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_HELPER_MACROS_H
-#define LLGL_HELPER_MACROS_H
+#ifndef LLGL_MACRO_UTILS_H
+#define LLGL_MACRO_UTILS_H
 
 
 #define LLGL_COMPARE_SEPARATE_MEMBERS_SWO(LHS, RHS) \

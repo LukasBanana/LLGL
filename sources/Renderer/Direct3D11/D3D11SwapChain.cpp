@@ -1,6 +1,6 @@
 /*
  * D3D11SwapChain.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,7 +9,7 @@
 #include "D3D11RenderSystem.h"
 #include "D3D11ObjectUtils.h"
 #include "../DXCommon/DXTypes.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 
@@ -147,8 +147,7 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
     NativeHandle wndHandle = {};
     GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
 
-    DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    InitMemory(swapChainDesc);
+    DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     {
         swapChainDesc.BufferDesc.Width          = resolution.width;
         swapChainDesc.BufferDesc.Height         = resolution.height;

@@ -1,6 +1,6 @@
 /*
  * GLDepthStencilState.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,7 +10,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLCore.h"
 #include "../GLTypes.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../../Core/MacroUtils.h"
 #include "GLStateManager.h"
 #include <LLGL/PipelineStateFlags.h>
 

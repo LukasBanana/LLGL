@@ -13,7 +13,7 @@
 #include "../RenderSystemUtils.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../../Core/Vendor.h"
 #include "VKCore.h"
 #include "VKTypes.h"

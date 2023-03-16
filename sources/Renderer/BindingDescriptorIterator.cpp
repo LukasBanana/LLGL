@@ -9,7 +9,7 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
-#include "../Core/Helper.h"
+#include "../Core/StringUtils.h"
 #include <algorithm>
 
 
@@ -95,8 +95,8 @@ static void ErrBindFlagsMismatch(ResourceType resourceType, long expectedBindFla
 {
     throw std::invalid_argument(
         "binding flags mismatch of resource object (LLGL::ResourceType::" +
-        std::string(ResourceTypeToString(resourceType)) + ") used as binding point: expected 0x" +
-        ToHex(expectedBindFlags) + ", but got 0x" + ToHex(actualBindFlags)
+        std::string(ResourceTypeToString(resourceType)) + ") used as binding point: expected " +
+        IntToHex(expectedBindFlags) + ", but got " + IntToHex(actualBindFlags)
     );
 }
 

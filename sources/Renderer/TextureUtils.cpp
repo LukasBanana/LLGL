@@ -1,14 +1,14 @@
 /*
  * TextureUtils.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "TextureUtils.h"
 #include <LLGL/StaticLimits.h>
-#include "../Core/Helper.h"
-#include "../Core/HelperMacros.h"
+#include "../Core/CoreUtils.h"
+#include "../Core/MacroUtils.h"
 
 
 namespace LLGL
@@ -91,7 +91,7 @@ LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)
 
 LLGL_EXPORT std::uint32_t GetClampedSamples(std::uint32_t samples)
 {
-    return Clamp(samples, 1u, LLGL_MAX_NUM_SAMPLES);
+    return std::max(1u, std::min(samples, LLGL_MAX_NUM_SAMPLES));
 }
 
 // Compresses the specified texture swizzle parameter into 3 bits

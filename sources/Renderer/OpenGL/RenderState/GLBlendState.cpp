@@ -1,6 +1,6 @@
 /*
  * GLBlendState.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -12,7 +12,7 @@
 #include "../GLTypes.h"
 #include "../GLProfile.h"
 #include "../../PipelineStateUtils.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../../Core/MacroUtils.h"
 #include "../Texture/GLRenderTarget.h"
 #include "GLStateManager.h"
 #include <LLGL/PipelineStateFlags.h>

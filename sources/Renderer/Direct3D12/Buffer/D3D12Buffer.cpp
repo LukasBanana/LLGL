@@ -13,7 +13,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../BufferUtils.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <stdexcept>
 
 

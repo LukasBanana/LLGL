@@ -11,7 +11,7 @@
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL

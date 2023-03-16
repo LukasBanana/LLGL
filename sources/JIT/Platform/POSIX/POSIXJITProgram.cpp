@@ -1,12 +1,12 @@
 /*
  * POSIXJITProgram.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "POSIXJITProgram.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <cstdlib>
 #include <stdexcept>
 #include <unistd.h> // sysconf
@@ -34,10 +34,10 @@ POSIXJITProgram::POSIXJITProgram(const void* code, std::size_t size) :
         -1, // must be -1 if MAP_ANONYMOUS is used
         0
     );
-    
+
     if (addr_ == MAP_FAILED)
         throw std::runtime_error("failed to map executable virtual memory with read/write protection mode");
-    
+
     /* Copy code into executable memory space */
     ::memcpy(addr_, code, size);
 

@@ -13,7 +13,7 @@
 #include <thread>
 #include <cstring>
 #include "ImageUtils.h"
-#include "../Core/Helper.h"
+#include "../Core/CoreUtils.h"
 #include "../Core/Assertion.h"
 #include "Float16Compressor.h"
 #include "BCDecompressor.h"

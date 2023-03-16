@@ -17,7 +17,8 @@
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
+#include "../../../Core/StringUtils.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Misc/ForRange.h>
 #include <map>
@@ -138,8 +139,8 @@ std::uint32_t VKResourceHeap::UpdateDescriptors(
 
             default:
                 throw std::invalid_argument(
-                    "invalid descriptor type in Vulkan descriptor set: 0x" +
-                    ToHex(static_cast<std::uint32_t>(binding.descriptorType))
+                    "invalid descriptor type in Vulkan descriptor set: " +
+                    IntToHex(static_cast<std::uint32_t>(binding.descriptorType))
                 );
                 break;
         }

@@ -7,8 +7,8 @@
 
 #include "D3D12DescriptorHeap.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../../Core/Helper.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../../Core/CoreUtils.h"
+#include "../../../Core/MacroUtils.h"
 #include "../../../Core/Assertion.h"
 
 

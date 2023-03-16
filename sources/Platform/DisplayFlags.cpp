@@ -1,12 +1,12 @@
 /*
  * DisplayFlags.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include <LLGL/DisplayFlags.h>
-#include "../Core/HelperMacros.h"
+#include "../Core/MacroUtils.h"
 
 
 namespace LLGL

@@ -1,12 +1,12 @@
 /*
  * Win32Module.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "Win32Module.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 
 
 namespace LLGL

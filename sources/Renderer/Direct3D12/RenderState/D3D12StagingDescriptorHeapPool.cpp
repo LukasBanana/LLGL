@@ -8,7 +8,7 @@
 #include "D3D12StagingDescriptorHeapPool.h"
 #include "../D3D12Device.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <algorithm>
 
 

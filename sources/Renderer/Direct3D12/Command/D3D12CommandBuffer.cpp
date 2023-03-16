@@ -14,7 +14,7 @@
 #include "../../TextureUtils.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 
 #include "../Buffer/D3D12Buffer.h"
 #include "../Buffer/D3D12BufferArray.h"

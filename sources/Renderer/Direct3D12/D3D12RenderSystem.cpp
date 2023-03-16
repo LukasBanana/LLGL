@@ -12,7 +12,7 @@
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
 #include "../../Core/Vendor.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
 #include <limits.h>

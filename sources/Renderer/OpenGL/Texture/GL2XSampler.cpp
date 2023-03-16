@@ -8,7 +8,7 @@
 #include "GL2XSampler.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../../Core/MacroUtils.h"
 #include <algorithm>
 
 

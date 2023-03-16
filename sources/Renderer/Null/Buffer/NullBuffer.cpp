@@ -7,7 +7,7 @@
 
 #include "NullBuffer.h"
 #include "../../ResourceUtils.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <algorithm>
 #include <string.h>
 

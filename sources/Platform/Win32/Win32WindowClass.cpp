@@ -1,13 +1,12 @@
 /*
  * Win32WindowClass.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "Win32WindowClass.h"
 #include "Win32WindowCallback.h"
-#include "../../Core/Helper.h"
 #include <LLGL/Platform/Platform.h>
 
 #include <string>
@@ -21,8 +20,7 @@ namespace LLGL
 Win32WindowClass::Win32WindowClass()
 {
     /* Setup window class information */
-    WNDCLASS wc;
-    InitMemory(wc);
+    WNDCLASS wc = {};
 
     wc.style            = (CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS);
     wc.hInstance        = GetModuleHandle(nullptr);

@@ -9,7 +9,7 @@
 #include "NullCommandExecutor.h"
 #include "NullCommand.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/TypeInfo.h>
 
 #include "../NullSwapChain.h"

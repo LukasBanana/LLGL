@@ -7,7 +7,8 @@
 
 #include "GLPipelineSignature.h"
 #include "GLShader.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../CheckedCast.h"
+#include "../../../Core/MacroUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <LLGL/Misc/TypeNames.h>
 #include <stdexcept>

@@ -7,7 +7,7 @@
 
 #include "D3D12StagingBuffer.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../D3DX12/d3dx12.h"
 #include <string.h>
 

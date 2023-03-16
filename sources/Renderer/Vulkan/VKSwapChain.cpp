@@ -1,6 +1,6 @@
 /*
  * VKSwapChain.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,7 +10,7 @@
 #include "VKTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
 #include <LLGL/Platform/NativeHandle.h>
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../TextureUtils.h"
 #include <limits.h>
 #include <set>

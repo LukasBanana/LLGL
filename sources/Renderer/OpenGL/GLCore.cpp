@@ -6,8 +6,8 @@
  */
 
 #include "GLCore.h"
-#include "../../Core/Helper.h"
-#include "../../Core/HelperMacros.h"
+#include "../../Core/StringUtils.h"
+#include "../../Core/MacroUtils.h"
 
 
 namespace LLGL
@@ -61,10 +61,7 @@ void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const cha
         if (auto err = GLErrorToStr(status))
             s += err;
         else
-        {
-            s += "0x";
-            s += ToHex(status);
-        }
+            s += IntToHex(status);
 
         s += ")";
 

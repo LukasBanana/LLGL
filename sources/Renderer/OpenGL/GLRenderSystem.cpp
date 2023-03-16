@@ -21,7 +21,7 @@
 #include "../CheckedCast.h"
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
 #include "GLRenderingCaps.h"
 #include "Command/GLImmediateCommandBuffer.h"

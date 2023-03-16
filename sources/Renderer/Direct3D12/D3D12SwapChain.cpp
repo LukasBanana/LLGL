@@ -14,7 +14,7 @@
 #include "Buffer/D3D12Buffer.h"
 #include "RenderState/D3D12DescriptorHeap.h"
 #include "../CheckedCast.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../DXCommon/DXTypes.h"
 
 #include <LLGL/Platform/NativeHandle.h>

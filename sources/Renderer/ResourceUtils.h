@@ -79,7 +79,7 @@ inline std::uint32_t GetNumResourceViewsOrThrow(
     if (numResourceViews % numBindings != 0)
     {
         throw std::invalid_argument(
-            "cannot create resource heap due because number of resources (" + std::to_string(numResourceViews) +
+            "cannot create resource heap because number of resources (" + std::to_string(numResourceViews) +
             ") is not a multiple of bindings (" + std::to_string(numBindings) + ")"
         );
     }

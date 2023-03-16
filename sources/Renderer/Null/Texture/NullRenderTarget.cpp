@@ -8,7 +8,7 @@
 #include "NullRenderTarget.h"
 #include "NullTexture.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL

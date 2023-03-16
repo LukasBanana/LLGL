@@ -6,7 +6,7 @@
  */
 
 #include "NullRenderSystem.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <limits.h>
 

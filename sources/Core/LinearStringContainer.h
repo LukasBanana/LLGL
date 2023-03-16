@@ -1,6 +1,6 @@
 /*
  * LinearStringContainer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -9,7 +9,7 @@
 #define LLGL_LINEAR_STRING_CONTAINER_H
 
 
-#include "Helper.h"
+#include "StringUtils.h"
 #include <vector>
 #include <string>
 

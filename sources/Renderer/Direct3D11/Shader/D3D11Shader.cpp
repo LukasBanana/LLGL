@@ -10,7 +10,7 @@
 #include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include <LLGL/Misc/TypeNames.h>
 #include <LLGL/Misc/ForRange.h>

@@ -9,7 +9,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
-#include "../../../Core/HelperMacros.h"
+#include "../../../Core/MacroUtils.h"
 #include <LLGL/Misc/ForRange.h>
 
 

@@ -13,7 +13,7 @@
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <stdexcept>

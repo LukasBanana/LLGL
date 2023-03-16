@@ -1,13 +1,13 @@
 /*
  * VKCore.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "VKCore.h"
-#include "../../Core/Helper.h"
-#include "../../Core/HelperMacros.h"
+#include "../../Core/StringUtils.h"
+#include "../../Core/MacroUtils.h"
 
 
 namespace LLGL
@@ -109,10 +109,7 @@ void VKThrowIfFailed(const VkResult result, const char* info)
         if (auto err = VKErrorToStr(result))
             s += err;
         else
-        {
-            s += "0x";
-            s += ToHex(static_cast<int>(result));
-        }
+            s += IntToHex(static_cast<int>(result));
 
         s += ")";
 

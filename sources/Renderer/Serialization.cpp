@@ -1,13 +1,13 @@
 /*
  * Serialization.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "Serialization.h"
 #include "../Core/Assertion.h"
-#include "../Core/Helper.h"
+#include "../Core/StringUtils.h"
 
 
 namespace LLGL
@@ -136,8 +136,8 @@ Segment Deserializer::Begin(IdentType ident)
     if (seg.ident != ident)
     {
         throw std::runtime_error(
-            "mismatch in serialization segment identifier: read 0x" +
-            ToHex(seg.ident) + ", but expected 0x" + ToHex(ident)
+            "mismatch in serialization segment identifier: read " +
+            IntToHex(seg.ident) + ", but expected " + IntToHex(ident)
         );
     }
     return seg;

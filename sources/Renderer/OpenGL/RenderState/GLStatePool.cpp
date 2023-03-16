@@ -1,6 +1,6 @@
 /*
  * GLStatePool.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,6 +8,7 @@
 #include "GLStatePool.h"
 #include "GLStateManager.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../../CheckedCast.h"
 #include "../../../Core/ContainerUtils.h"
 #include <functional>
 

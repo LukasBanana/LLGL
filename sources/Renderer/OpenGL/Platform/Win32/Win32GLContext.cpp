@@ -10,7 +10,7 @@
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../../CheckedCast.h"
 #include "../../../TextureUtils.h"
-#include "../../../../Core/Helper.h"
+#include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>

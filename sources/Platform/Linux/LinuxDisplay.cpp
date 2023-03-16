@@ -1,12 +1,12 @@
 /*
  * LinuxDisplay.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "LinuxDisplay.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include <X11/extensions/Xrandr.h>
 
 

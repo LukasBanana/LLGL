@@ -6,7 +6,7 @@
  */
 
 #include "D3D11StagingBufferPool.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL

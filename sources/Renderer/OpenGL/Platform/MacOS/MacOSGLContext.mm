@@ -1,13 +1,13 @@
 /*
  * MacOSGLContext.mm
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "MacOSGLContext.h"
 #include "../../../../Platform/MacOS/MacOSWindow.h"
-#include "../../../../Core/Helper.h"
+#include "../../../../Core/CoreUtils.h"
 #include "../../../CheckedCast.h"
 #include "../../../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>

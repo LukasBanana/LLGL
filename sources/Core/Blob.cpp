@@ -1,6 +1,6 @@
 /*
  * Blob.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,7 +8,7 @@
 #include <LLGL/Blob.h>
 #include <LLGL/ImageFlags.h>
 #include <fstream>
-#include "Helper.h"
+#include "CoreUtils.h"
 
 
 namespace LLGL

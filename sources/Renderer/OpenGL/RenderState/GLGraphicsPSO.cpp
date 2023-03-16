@@ -13,7 +13,7 @@
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/StaticLimits.h>

@@ -1,12 +1,13 @@
 /*
  * RenderSystem.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "../Platform/Module.h"
-#include "../Core/Helper.h"
+#include "../Core/CoreUtils.h"
+#include "../Core/StringUtils.h"
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Format.h>
 #include <LLGL/ImageFlags.h>
@@ -328,12 +329,7 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
     );
 
     if ((bufferDesc.bindFlags & (~validBindFlags)) != 0)
-    {
-        throw std::invalid_argument(
-            "cannot create buffer with invalid binding flags: "
-            "0x" + ToHex(static_cast<std::uint32_t>(bufferDesc.bindFlags))
-        );
-    }
+        throw std::invalid_argument("cannot create buffer with invalid binding flags: " + IntToHex(bufferDesc.bindFlags));
 }
 
 static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* const * resourceArray, const std::string& resourceName)

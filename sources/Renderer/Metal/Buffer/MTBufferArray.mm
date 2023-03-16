@@ -9,7 +9,7 @@
 #include "MTBuffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL

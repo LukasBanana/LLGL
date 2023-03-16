@@ -8,7 +8,7 @@
 #include "D3D12StagingDescriptorHeap.h"
 #include "../D3D12Device.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL

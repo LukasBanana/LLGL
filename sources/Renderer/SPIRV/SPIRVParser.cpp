@@ -1,13 +1,13 @@
 /*
  * SPIRVParser.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "SPIRVParser.h"
 #include "SPIRVLookup.h"
-#include "../../Core/Helper.h"
+#include "../../Core/StringUtils.h"
 #include <stdexcept>
 
 
@@ -107,8 +107,8 @@ void SPIRVParser::OnParseHeader(const SPIRVHeader& header)
     if (header.spirvMagic != spv::MagicNumber)
     {
         throw std::invalid_argument(
-            "invalid magic number in SPIR-V shader module (expected 0x" +
-            ToHex(spv::MagicNumber) + ", but got 0x" + ToHex(header.spirvMagic) + ")"
+            "invalid magic number in SPIR-V shader module (expected " +
+            IntToHex(spv::MagicNumber) + ", but got " + IntToHex(header.spirvMagic) + ")"
         );
     }
 }

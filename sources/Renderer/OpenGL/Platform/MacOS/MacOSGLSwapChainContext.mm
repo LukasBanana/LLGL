@@ -7,7 +7,7 @@
 
 #include "MacOSGLSwapChainContext.h"
 #include "MacOSGLContext.h"
-#include "../../../../Core/Helper.h"
+#include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 

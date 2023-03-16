@@ -9,7 +9,7 @@
 #include <LLGL/Display.h>
 #include "LinuxWindow.h"
 #include "MapKey.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include <exception>
 
 

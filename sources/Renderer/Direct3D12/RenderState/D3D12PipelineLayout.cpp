@@ -13,7 +13,7 @@
 #include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <string>
 #include <algorithm>

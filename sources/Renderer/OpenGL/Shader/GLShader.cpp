@@ -1,6 +1,6 @@
 /*
  * GLShader.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -10,7 +10,7 @@
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Exception.h"
 #include <LLGL/Misc/ForRange.h>
 #include <vector>

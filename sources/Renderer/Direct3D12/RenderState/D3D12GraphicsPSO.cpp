@@ -17,7 +17,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>

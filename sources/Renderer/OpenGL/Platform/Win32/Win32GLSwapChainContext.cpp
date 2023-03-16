@@ -7,7 +7,7 @@
 
 #include "Win32GLSwapChainContext.h"
 #include "Win32GLContext.h"
-#include "../../../../Core/Helper.h"
+#include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 

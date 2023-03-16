@@ -14,8 +14,8 @@
 #include "../ResourceUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/TypeInfo.h>
-#include "../../Core/Helper.h"
-#include "../../Core/HelperMacros.h"
+#include "../../Core/CoreUtils.h"
+#include "../../Core/MacroUtils.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
 #include "../TextureUtils.h"

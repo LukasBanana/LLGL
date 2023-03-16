@@ -19,7 +19,7 @@
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
 #include "../../StaticAssertions.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
@@ -123,7 +123,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(
 
     /* Build buffer segments (stage after stage, so the internal buffer is constructed in the correct order) */
     BindingDescriptorIterator bindingIter{ bindings };
-    InitMemory(segmentation_);
+    MemsetZero(segmentation_);
 
     /* Build resource view segments for GRAPHICS stages in current descriptor set */
     AllocStageSegments(bindingIter, StageFlags::VertexStage);

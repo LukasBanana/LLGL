@@ -9,7 +9,7 @@
 #include "../D3D12Types.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 #include <stdexcept>

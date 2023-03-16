@@ -14,7 +14,7 @@
 #include "../CheckedCast.h"
 #include "../TextureUtils.h"
 #include "../../Core/Vendor.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
 #include <sstream>

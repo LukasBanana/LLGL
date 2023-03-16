@@ -10,7 +10,8 @@
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
+#include "../../Core/StringUtils.h"
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
 #include <LLGL/Misc/TypeNames.h>
@@ -728,7 +729,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
             if (auto formatName = ToString(bufferDesc.format))
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(bufferDesc.format)));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + IntToHex(static_cast<std::uint32_t>(bufferDesc.format)));
         }
 
         /* Validate buffer size for specified index format */

@@ -1,6 +1,6 @@
 /*
  * D3D12StagingBufferPool.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,7 +8,7 @@
 #include "D3D12StagingBufferPool.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../D3D12Resource.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <algorithm>
 
 

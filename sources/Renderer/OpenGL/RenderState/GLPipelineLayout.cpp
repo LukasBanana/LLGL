@@ -8,7 +8,7 @@
 #include "GLPipelineLayout.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionRegistry.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 

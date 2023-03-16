@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/VertexAttribute.h>
-#include "../Core/HelperMacros.h"
+#include "../Core/MacroUtils.h"
 
 
 namespace LLGL

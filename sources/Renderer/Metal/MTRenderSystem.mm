@@ -8,7 +8,7 @@
 #include "MTRenderSystem.h"
 #include "../CheckedCast.h"
 #include "../TextureUtils.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include "../../Core/Vendor.h"
 #include "MTFeatureSet.h"
 #include "MTTypes.h"

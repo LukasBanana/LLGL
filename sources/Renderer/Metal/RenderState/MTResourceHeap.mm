@@ -15,7 +15,7 @@
 #include "../../CheckedCast.h"
 #include "../../BindingDescriptorIterator.h"
 #include "../../ResourceUtils.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Misc/ForRange.h>
@@ -107,7 +107,7 @@ MTResourceHeap::MTResourceHeap(
     constexpr long kernelStages     = (StageFlags::ComputeStage | StageFlags::TessControlStage);
 
     BindingDescriptorIterator bindingIter{ bindings };
-    InitMemory(segmentation_);
+    MemsetZero(segmentation_);
 
     /* Build vertex resource segments */
     segmentation_.numVertexBufferSegments       = AllocBufferSegments(bindingIter, vertexStages);

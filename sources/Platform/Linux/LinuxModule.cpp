@@ -6,7 +6,7 @@
  */
 
 #include "LinuxModule.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include <dlfcn.h>
 #include <unistd.h>
 

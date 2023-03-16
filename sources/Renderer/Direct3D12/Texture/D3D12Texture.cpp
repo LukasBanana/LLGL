@@ -1,6 +1,6 @@
 /*
  * D3D12Texture.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,7 +13,7 @@
 #include "../Buffer/D3D12Buffer.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../TextureUtils.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 

@@ -1,6 +1,6 @@
 /*
  * JITCompiler.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -11,7 +11,6 @@
 
 #include "JITProgram.h"
 #include "AssemblyTypes.h"
-#include "../Core/Helper.h"
 #include <LLGL/NonCopyable.h>
 #include <iostream>
 #include <vector>
@@ -44,6 +43,20 @@ struct JITStackPtr
 {
     std::uint8_t index;
 };
+
+// Returns the raw function pointer of the specified member function, e.g. GetMemberFuncPtr(&Foo::Bar).
+template <typename T>
+inline const void* GetMemberFuncPtr(T pfn)
+{
+    union
+    {
+        T           func;
+        const void* addr;
+    }
+    ptr;
+    ptr.func = pfn;
+    return ptr.addr;
+}
 
 // IA-32 (a.k.a. x86) assembly code generator.
 class LLGL_EXPORT JITCompiler : public NonCopyable

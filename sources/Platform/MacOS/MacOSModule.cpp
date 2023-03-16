@@ -6,7 +6,7 @@
  */
 
 #include "MacOSModule.h"
-#include "../../Core/Helper.h"
+#include "../../Core/CoreUtils.h"
 #include <dlfcn.h>
 
 

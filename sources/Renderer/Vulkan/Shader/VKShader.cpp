@@ -1,6 +1,6 @@
 /*
  * VKShader.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,7 +8,8 @@
 #include "VKShader.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
-#include "../../../Core/Helper.h"
+#include "../../../Core/CoreUtils.h"
+#include "../../../Core/StringUtils.h"
 #include <LLGL/Misc/TypeNames.h>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
