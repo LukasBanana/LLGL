@@ -484,38 +484,17 @@ void VKCommandBuffer::BindResourceHeap(
     );
 }
 
-void VKCommandBuffer::SetResourceHeap(
-    ResourceHeap&           resourceHeap,
-    std::uint32_t           descriptorSet,
-    const PipelineBindPoint bindPoint)
+void VKCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
+    /* Bind resource heap to pipeline bind point and insert resource barrier into command buffer */
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-
-    /* Bind resource heap to pipelines */
-    if (bindPoint == PipelineBindPoint::Undefined)
-    {
-        if (resourceHeapVK.GetBindPoint() == VK_PIPELINE_BIND_POINT_MAX_ENUM)
-        {
-            BindResourceHeap(resourceHeapVK, descriptorSet, VK_PIPELINE_BIND_POINT_GRAPHICS);
-            BindResourceHeap(resourceHeapVK, descriptorSet, VK_PIPELINE_BIND_POINT_COMPUTE);
-        }
-        else
-            BindResourceHeap(resourceHeapVK, descriptorSet, resourceHeapVK.GetBindPoint());
-    }
-    else
-        BindResourceHeap(resourceHeapVK, descriptorSet, VKTypes::Map(bindPoint));
-
-    /* Insert resource barrier into command buffer */
+    BindResourceHeap(resourceHeapVK, descriptorSet, pipelineBindPoint_);
     resourceHeapVK.SubmitPipelineBarrier(commandBuffer_, descriptorSet);
 }
 
-void VKCommandBuffer::SetResource(
-    Resource&       /*resource*/,
-    std::uint32_t   /*slot*/,
-    long            /*bindFlags*/,
-    long            /*stageFlags*/)
+void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    // dummy
+    //TODO
 }
 
 void VKCommandBuffer::ResetResourceSlots(
@@ -721,7 +700,8 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     vkCmdBindPipeline(commandBuffer_, pipelineStateVK.GetBindPoint(), pipelineStateVK.GetVkPipeline());
 
     /* Handle special case for graphics PSOs */
-    if (pipelineStateVK.GetBindPoint() == VK_PIPELINE_BIND_POINT_GRAPHICS)
+    pipelineBindPoint_ = pipelineStateVK.GetBindPoint();
+    if (pipelineBindPoint_ == VK_PIPELINE_BIND_POINT_GRAPHICS)
     {
         auto& graphicsPSO = LLGL_CAST(VKGraphicsPSO&, pipelineStateVK);
 
@@ -748,19 +728,7 @@ void VKCommandBuffer::SetStencilReference(std::uint32_t reference, const Stencil
     vkCmdSetStencilReference(commandBuffer_, VKTypes::Map(stencilFace), reference);
 }
 
-void VKCommandBuffer::SetUniform(
-    UniformLocation location,
-    const void*     data,
-    std::uint32_t   dataSize)
-{
-    VKCommandBuffer::SetUniforms(location, 1, data, dataSize);
-}
-
-void VKCommandBuffer::SetUniforms(
-    UniformLocation location,
-    std::uint32_t   count,
-    const void*     data,
-    std::uint32_t   dataSize)
+void VKCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     //TODO
 }

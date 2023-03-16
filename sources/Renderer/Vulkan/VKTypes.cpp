@@ -1,6 +1,6 @@
 /*
  * VKTypes.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -369,17 +369,6 @@ VkStencilFaceFlags Map(const StencilFace stencilFace)
         case StencilFace::Back:         return VK_STENCIL_FACE_BACK_BIT;
     }
     MapFailed("StencilFace", "VkStencilFaceFlags");
-}
-
-VkPipelineBindPoint Map(const PipelineBindPoint pipelineBindPoint)
-{
-    switch (pipelineBindPoint)
-    {
-        case PipelineBindPoint::Undefined:  return VK_PIPELINE_BIND_POINT_MAX_ENUM;
-        case PipelineBindPoint::Graphics:   return VK_PIPELINE_BIND_POINT_GRAPHICS;
-        case PipelineBindPoint::Compute:    return VK_PIPELINE_BIND_POINT_COMPUTE;
-    }
-    VKTypes::MapFailed("PipelineBindPoint", "VkPipelineBindPoint");
 }
 
 VkIndexType ToVkIndexType(const Format format)

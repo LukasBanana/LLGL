@@ -347,7 +347,7 @@ int main()
                     commands->SetVertexBuffer(*vertexBuffer);
 
                     //#ifndef __linux__
-                    commands->SetResource(sampler, 1);
+                    commands->SetResource(1, sampler);
                     //#endif
 
                     #if 0//TODO
@@ -395,7 +395,7 @@ int main()
 
                     #endif
 
-                    commands->SetResource(texture, 1);
+                    commands->SetResource(1, texture);
                     commands->Draw(4, 0);
 
                     #ifdef TEST_STORAGE_BUFFER
@@ -443,7 +443,7 @@ int main()
                     {
                         commands->EndRenderPass();
                         commands->BeginRenderPass(*swapChain);
-                        commands->SetResource(*renderTargetTex, 0);
+                        commands->SetResource(0, *renderTargetTex);
                         commands->Draw(4, 0);
                     }
                 }

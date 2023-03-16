@@ -96,7 +96,7 @@ int main()
         // Set resources
         commands->Begin();
         {
-            commands->SetResource(*storageBuffer, 0);
+            commands->SetResource(0, *storageBuffer);
             commands->SetPipelineState(*pipeline);
 
             // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query

@@ -269,7 +269,7 @@ private:
     void DrawModel(const Model& mdl)
     {
         // Set texture for current model
-        commands->SetResource(*colorMaps[mdl.colorMapIndex], 0);
+        commands->SetResource(0, *colorMaps[mdl.colorMapIndex]);
 
         // Set instance ID for model
         commands->SetUniforms(instanceUniform, &(mdl.instance), sizeof(mdl.instance));

@@ -21,7 +21,7 @@
 #define ENABLE_CBUFFER_RANGE
 
 // Enables the resource heap. Otherwise, all resources are bound to the graphics pipeline individually.
-#define ENABLE_RESOURCE_HEAP
+//#define ENABLE_RESOURCE_HEAP
 
 
 #if defined ENABLE_CUSTOM_MULTISAMPLING && !defined ENABLE_MULTISAMPLING
@@ -432,9 +432,9 @@ private:
             #endif // /ENABLE_RESOURCE_HEAP
             {
                 // Set resource directly
-                commands->SetResource(*constantBuffer, 0);
-                commands->SetResource(*samplerState, 1);
-                commands->SetResource(*colorMap, 2);
+                commands->SetResource(0, *constantBuffer);
+                commands->SetResource(1, *samplerState);
+                commands->SetResource(2, *colorMap);
             }
 
             // Draw scene
@@ -481,7 +481,7 @@ private:
             #endif // /ENABLE_RESOURCE_HEAP
             {
                 // Set render-target texture
-                commands->SetResource(*renderTargetTex, 2);
+                commands->SetResource(2, *renderTargetTex);
             }
 
             // Draw scene

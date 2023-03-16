@@ -275,7 +275,7 @@ private:
                 commands->SetPipelineState(*pipeline[showWireframe ? 1 : 0]);
 
                 // Bind constant buffer to graphics pipeline
-                commands->SetResource(*constantBuffer, 0);
+                commands->SetResource(0, *constantBuffer);
 
                 // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
                 commands->DrawIndexed(24, 0);

@@ -1,6 +1,6 @@
 /*
  * VKTypes.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -49,7 +49,6 @@ VkQueryType             Map( const QueryType            queryType         );
 VkAttachmentLoadOp      Map( const AttachmentLoadOp     loadOp            );
 VkAttachmentStoreOp     Map( const AttachmentStoreOp    storeOp           );
 VkStencilFaceFlags      Map( const StencilFace          stencilFace       );
-VkPipelineBindPoint     Map( const PipelineBindPoint    pipelineBindPoint );
 
 VkIndexType             ToVkIndexType(const Format format);
 VkSampleCountFlagBits   ToVkSampleCountBits(std::uint32_t samples);

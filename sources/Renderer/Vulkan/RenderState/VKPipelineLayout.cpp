@@ -124,9 +124,24 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     }
 }
 
-std::uint32_t VKPipelineLayout::GetNumBindings() const
+std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
 {
     return static_cast<std::uint32_t>(bindings_.size());
+}
+
+std::uint32_t VKPipelineLayout::GetNumBindings() const
+{
+    return static_cast<std::uint32_t>(0); //TODO
+}
+
+std::uint32_t VKPipelineLayout::GetNumStaticSamplers() const
+{
+    return static_cast<std::uint32_t>(0); //TODO
+}
+
+std::uint32_t VKPipelineLayout::GetNumUniforms() const
+{
+    return static_cast<std::uint32_t>(0); //TODO
 }
 
 
