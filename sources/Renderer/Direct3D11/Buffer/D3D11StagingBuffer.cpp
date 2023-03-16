@@ -8,6 +8,7 @@
 #include "D3D11StagingBuffer.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -28,8 +29,8 @@ D3D11StagingBuffer::D3D11StagingBuffer(
     UINT            bindFlags,
     UINT            miscFlags)
 :
-    usage_ { DXGetOptimalUsageForBindFlags(bindFlags) },
-    size_  { size                                     }
+    usage_     { DXGetOptimalUsageForBindFlags(bindFlags) },
+    size_      { size                                     }
 {
     /* Create new D3D11 hardware buffer (for CPU access) */
     D3D11_BUFFER_DESC descD3D;
@@ -102,10 +103,11 @@ void D3D11StagingBuffer::Write(
 void D3D11StagingBuffer::WriteAndIncrementOffset(
     ID3D11DeviceContext*    context,
     const void*             data,
-    UINT                    dataSize)
+    UINT                    dataSize,
+    UINT                    stride)
 {
     Write(context, data, dataSize);
-    offset_ += dataSize;
+    offset_ += std::max(dataSize, stride);
 }
 
 

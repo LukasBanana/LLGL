@@ -29,11 +29,7 @@ class D3D11StateManager
 
     public:
 
-        D3D11StateManager(
-            ID3D11Device*                       device,
-            const ComPtr<ID3D11DeviceContext>&  context,
-            ID3D11DeviceContext*                cbufferPoolDeviceContext = nullptr
-        );
+        D3D11StateManager(ID3D11Device* device, const ComPtr<ID3D11DeviceContext>& context);
 
         void SetViewports(std::uint32_t numViewports, const Viewport* viewportArray);
         void SetScissors(std::uint32_t numScissors, const Scissor* scissorArray);
@@ -65,21 +61,13 @@ class D3D11StateManager
             long                    stageFlags
         );
 
-        void SetGraphicsConstantBuffersRange(
+        void SetConstantBuffersRange(
             UINT                    startSlot,
             UINT                    count,
             ID3D11Buffer* const*    buffers,
             const UINT*             firstConstants,
             const UINT*             numConstants,
             long                    stageFlags
-        );
-
-        void SetComputeConstantBuffersRange(
-            UINT                    startSlot,
-            UINT                    count,
-            ID3D11Buffer* const*    buffers,
-            const UINT*             firstConstants,
-            const UINT*             numConstants
         );
 
         void SetShaderResources(
@@ -108,8 +96,7 @@ class D3D11StateManager
         void SetComputeStaticSampler(const D3D11StaticSampler& staticSamplerD3D);
 
         // Binds an intermediate constant buffer and updates its content with the specified data.
-        void SetGraphicsConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize, long stageFlags);
-        void SetComputeConstants(std::uint32_t slot, const void* data, std::uint16_t dataSize);
+        void SetConstants(UINT slot, const void* data, UINT dataSize, long stageFlags);
 
         // Executes the specified builtin compute shader.
         void DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);

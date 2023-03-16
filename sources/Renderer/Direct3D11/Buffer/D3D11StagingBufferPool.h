@@ -43,7 +43,7 @@ class D3D11StagingBufferPool
         void Reset();
 
         // Writes the specified data to the destination buffer using the staging pool.
-        D3D11BufferRange Write(const void* data, UINT dataSize);
+        D3D11BufferRange Write(const void* data, UINT dataSize, UINT alignment = 0);
 
     private:
 

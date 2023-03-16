@@ -715,7 +715,7 @@ struct BlendDescriptor
 struct TessellationDescriptor
 {
     //! Specifies the partition mode of the tessellator stage. By default TessellationPartition::Undefined.
-    TessellationPartition   partition       = TessellationPartition::Undefined;
+    TessellationPartition   partition           = TessellationPartition::Undefined;
 
     /**
     \brief Specifies the index buffer format. By default
@@ -723,7 +723,7 @@ struct TessellationDescriptor
     \see CommandBuffer::DrawIndexed
     \see CommandBuffer::DrawIndexedInstanced
     */
-    Format                  indexFormat     = Format::Undefined;
+    Format                  indexFormat         = Format::Undefined;
 
     /**
     \brief Specifies the maximum tessellation factor. By default 64.

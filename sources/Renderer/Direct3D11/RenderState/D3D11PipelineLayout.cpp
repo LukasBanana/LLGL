@@ -17,7 +17,8 @@ namespace LLGL
 
 
 D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLayoutDescriptor& desc) :
-    heapBindings_ { desc.heapBindings }
+    heapBindings_ { desc.heapBindings },
+    uniforms_     { desc.uniforms     }
 {
     BuildDynamicResourceBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);
@@ -40,7 +41,7 @@ std::uint32_t D3D11PipelineLayout::GetNumStaticSamplers() const
 
 std::uint32_t D3D11PipelineLayout::GetNumUniforms() const
 {
-    return 0;//todo
+    return static_cast<std::uint32_t>(uniforms_.size());
 }
 
 void D3D11PipelineLayout::BindGraphicsStaticSamplers(D3D11StateManager& stateMngr) const

@@ -79,23 +79,19 @@ The llgl port in vcpkg is kept up to date by Microsoft team members and communit
 CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex);
 
 // OpenGL Implementation:
-void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    const GLintptr indices = (renderState_.indexBufferOffset + firstIndex * renderState_.indexBufferStride);
-    glDrawElements(
-        renderState_.drawMode,
-        static_cast<GLsizei>(numIndices),
-        renderState_.indexBufferDataType,
-        reinterpret_cast<const GLvoid*>(indices)
-    );
+void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+    glDrawElements(GetDrawMode(), static_cast<GLsizei>(numIndices), GetIndexType(), GetIndicesOffset(firstIndex));
 }
 
 // Direct3D 11 Implementation
 void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+    FlushConstantsCache();
     context_->DrawIndexed(numIndices, firstIndex, 0);
 }
 
 // Direct3D 12 Implementation
 void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+    FlushGraphicsStagingDescriptorTables();
     commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, 0, 0);
 }
 

@@ -10,7 +10,10 @@
 
 
 #include <LLGL/PipelineState.h>
+#include <LLGL/Container/ArrayView.h>
+#include "D3D11ConstantsCache.h"
 #include "../../../Core/BasicReport.h"
+#include <memory>
 
 
 namespace LLGL
@@ -43,9 +46,19 @@ class D3D11PipelineState : public PipelineState
             return pipelineLayout_;
         }
 
+        // Returns a pointer to the constants cache for this PSO or null if this PSO was created without global uniforms.
+        inline D3D11ConstantsCache* GetConstantsCache() const
+        {
+            return constantsCache_.get();
+        }
+
     protected:
 
-        D3D11PipelineState(bool isGraphicsPSO, const PipelineLayout* pipelineLayout);
+        D3D11PipelineState(
+            bool                        isGraphicsPSO,
+            const PipelineLayout*       pipelineLayout,
+            const ArrayView<Shader*>&   shaders
+        );
 
         // Writes the report with the specified message and error bit.
         void ResetReport(std::string&& text, bool hasErrors = false);
@@ -55,6 +68,7 @@ class D3D11PipelineState : public PipelineState
         const bool                  isGraphicsPSO_  = false;
         const D3D11PipelineLayout*  pipelineLayout_ = nullptr;
         BasicReport                 report_;
+        D3D11ConstantsCachePtr      constantsCache_;
 
 };
 

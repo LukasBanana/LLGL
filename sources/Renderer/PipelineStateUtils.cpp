@@ -58,27 +58,28 @@ LLGL_EXPORT bool IsStaticBlendFactorEnabled(const BlendDescriptor& desc)
     return false;
 }
 
+template <std::size_t N>
+inline void AddShaderIfSet(SmallVector<Shader*, N>& shaders, Shader* sh)
+{
+    if (sh != nullptr)
+        shaders.push_back(sh);
+};
+
 LLGL_EXPORT SmallVector<Shader*, 5> GetShadersAsArray(const GraphicsPipelineDescriptor& desc)
 {
     SmallVector<Shader*, 5> shaders;
-    auto AddShaderIfSet = [&shaders](Shader* sh)
-    {
-        if (sh != nullptr)
-            shaders.push_back(sh);
-    };
-    AddShaderIfSet(desc.vertexShader);
-    AddShaderIfSet(desc.tessControlShader);
-    AddShaderIfSet(desc.tessEvaluationShader);
-    AddShaderIfSet(desc.geometryShader);
-    AddShaderIfSet(desc.fragmentShader);
+    AddShaderIfSet(shaders, desc.vertexShader);
+    AddShaderIfSet(shaders, desc.tessControlShader);
+    AddShaderIfSet(shaders, desc.tessEvaluationShader);
+    AddShaderIfSet(shaders, desc.geometryShader);
+    AddShaderIfSet(shaders, desc.fragmentShader);
     return shaders;
 }
 
 LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescriptor& desc)
 {
     SmallVector<Shader*, 1> shaders;
-    if (auto* sh = desc.computeShader)
-        shaders.push_back(sh);
+    AddShaderIfSet(shaders, desc.computeShader);
     return shaders;
 }
 

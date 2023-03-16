@@ -9,7 +9,7 @@
 #include "DbgCore.h"
 #include "../CheckedCast.h"
 #include "../ResourceUtils.h"
-#include "../../Core/Helper.h"
+#include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
 
 #include "DbgSwapChain.h"
@@ -516,7 +516,7 @@ void DbgCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t
     profile_.resourceHeapBindings++;
 }
 
-void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void DbgCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     const BindingDescriptor* bindingDesc = nullptr;
 
@@ -528,7 +528,7 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
         if (auto* pso = bindings_.pipelineState)
         {
             if (auto* psoLayout = pso->pipelineLayout)
-                bindingDesc = GetAndValidateResourceDescFromPipeline(*psoLayout, resource, descriptor);
+                bindingDesc = GetAndValidateResourceDescFromPipeline(*psoLayout, descriptor, resource);
         }
         else
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot bind resource without pipeline state");
@@ -554,7 +554,7 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
                 );
             }
 
-            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(bufferDbg.instance, descriptor) );
+            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(descriptor, bufferDbg.instance) );
 
             /* Record binding for profiling */
             if (bindingDesc != nullptr)
@@ -584,7 +584,7 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
                 );
             }
 
-            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(textureDbg.instance, descriptor) );
+            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(descriptor, textureDbg.instance) );
 
             /* Record binding for profiling */
             if (bindingDesc != nullptr)
@@ -605,7 +605,7 @@ void DbgCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
                 ValidateBindFlags(0, bindingDesc->bindFlags, 0, "LLGL::Sampler");
 
             /* Forward sampler resource to wrapped instance */
-            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(resource, descriptor) );
+            LLGL_DBG_COMMAND( "SetResource", instance.SetResource(descriptor, resource) );
 
             /* Record binding for profiling */
             profile_.samplerBindings++;
@@ -1660,10 +1660,7 @@ static std::string BindFlagsToStringList(long bindFlags)
                 s += flagStr;
             }
             else
-            {
-                s += "0x";
-                s += ToHex(bitmask);
-            }
+                s += IntToHex(bitmask);
         }
     }
 
@@ -1722,7 +1719,7 @@ void DbgCommandBuffer::ValidateIndexType(const Format format)
         if (auto formatName = ToString(format))
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
         else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x" + ToHex(static_cast<std::uint32_t>(format)));
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + IntToHex(static_cast<std::uint32_t>(format)));
     }
 }
 
@@ -1840,7 +1837,7 @@ void DbgCommandBuffer::ValidateStreamOutputs(std::uint32_t numBuffers)
     }
 }
 
-const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipeline(const DbgPipelineLayout& pipelineLayoutDbg, Resource& resource, std::uint32_t descriptor)
+const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipeline(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t descriptor, Resource& resource)
 {
     if (descriptor >= pipelineLayoutDbg.desc.bindings.size())
     {

@@ -11,6 +11,7 @@
 #include "../D3D11Types.h"
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/ByteBufferIterator.h"
@@ -49,7 +50,7 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
  */
 
 D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& desc) :
-    D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout }
+    D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
     /* Validate pointers and get D3D shader objects */
     if (auto vertexShaderD3D = LLGL_CAST(const D3D11Shader*, desc.vertexShader))

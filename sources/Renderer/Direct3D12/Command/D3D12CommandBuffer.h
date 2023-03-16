@@ -126,7 +126,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         /* ----- Resources ----- */
 
         void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
-        void SetResource(Resource& resource, std::uint32_t descriptor) override;
+        void SetResource(std::uint32_t descriptor, Resource& resource) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,

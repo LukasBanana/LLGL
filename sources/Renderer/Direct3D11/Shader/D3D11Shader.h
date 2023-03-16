@@ -53,6 +53,19 @@ union D3D11NativeShader
     ComPtr<ID3D11ComputeShader>     cs;
 };
 
+struct D3D11ConstantReflection
+{
+    std::string name;   // Name of the constant buffer field.
+    UINT        offset; // Offset (in bytes) within the constant buffer.
+    UINT        size;   // Size (in bytes) of this uniform.
+};
+
+struct D3D11ConstantBufferReflection
+{
+    UINT                                    slot;
+    UINT                                    size;
+    std::vector<D3D11ConstantReflection>    fields;
+};
 
 class D3D11Shader final : public Shader
 {
@@ -68,6 +81,9 @@ class D3D11Shader final : public Shader
     public:
 
         D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
+
+        // Returns a list of all reflected constant buffers including their fields.
+        HRESULT ReflectAndCacheConstantBuffers(const std::vector<D3D11ConstantBufferReflection>** outConstantBuffers);
 
         // Returns the native D3D shader object.
         inline const D3D11NativeShader& GetNative() const
@@ -116,14 +132,19 @@ class D3D11Shader final : public Shader
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;
 
+        HRESULT ReflectConstantBuffers(std::vector<D3D11ConstantBufferReflection>& outConstantBuffers) const;
+
     private:
 
-        D3D11NativeShader           native_;
+        D3D11NativeShader                           native_;
 
-        ComPtr<ID3DBlob>            byteCode_;
-        DXReport                    report_;
+        ComPtr<ID3DBlob>                            byteCode_;
+        DXReport                                    report_;
 
-        ComPtr<ID3D11InputLayout>   inputLayout_;
+        ComPtr<ID3D11InputLayout>                   inputLayout_;
+
+        HRESULT                                     cbufferReflectionResult_    = S_FALSE;
+        std::vector<D3D11ConstantBufferReflection>  cbufferReflections_;
 
 };
 

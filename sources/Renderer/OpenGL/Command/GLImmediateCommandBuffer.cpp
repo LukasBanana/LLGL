@@ -328,7 +328,7 @@ void GLImmediateCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::
     resourceHeapGL.Bind(*stateMngr_, descriptorSet);
 }
 
-void GLImmediateCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     auto* pipelineLayoutGL = GetBoundPipelineLayout();
     if (pipelineLayoutGL == nullptr)

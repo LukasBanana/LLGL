@@ -299,7 +299,7 @@ void NullCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_
     //todo
 }
 
-void NullCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void NullCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     //todo
 }

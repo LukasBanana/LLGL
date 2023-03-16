@@ -29,6 +29,7 @@ class D3D11SwapChain;
 class D3D11RenderPass;
 class D3D11PipelineState;
 class D3D11PipelineLayout;
+class D3D11ConstantsCache;
 
 class D3D11CommandBuffer final : public CommandBuffer
 {
@@ -123,7 +124,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         /* ----- Resources ----- */
 
         void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
-        void SetResource(Resource& resource, std::uint32_t descriptor) override;
+        void SetResource(std::uint32_t descriptor, Resource& resource) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -277,6 +278,8 @@ class D3D11CommandBuffer final : public CommandBuffer
             D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
         );
 
+        void FlushConstantsCache();
+
         void ResetRenderState();
 
     private:
@@ -307,6 +310,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         D3D11RenderTarget*                  boundRenderTarget_      = nullptr;
         const D3D11PipelineLayout*          boundPipelineLayout_    = nullptr;
         D3D11PipelineState*                 boundPipelineState_     = nullptr;
+        D3D11ConstantsCache*                boundConstantsCache_    = nullptr;
 
 };
 

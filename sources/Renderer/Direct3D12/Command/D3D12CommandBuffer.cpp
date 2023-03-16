@@ -577,7 +577,7 @@ static D3D12_GPU_VIRTUAL_ADDRESS GetD3DResourceGPUAddr(Resource& resource)
     return 0;
 }
 
-void D3D12CommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     if (boundPipelineLayout_ == nullptr)
         return /*E_POINTER*/;

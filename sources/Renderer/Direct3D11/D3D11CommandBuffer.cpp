@@ -16,6 +16,7 @@
 #include <LLGL/TypeInfo.h>
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
+#include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
 #include "../TextureUtils.h"
 #include <algorithm>
@@ -24,6 +25,7 @@
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11PipelineState.h"
 #include "RenderState/D3D11PipelineLayout.h"
+#include "RenderState/D3D11ConstantsCache.h"
 #include "RenderState/D3D11QueryHeap.h"
 #include "RenderState/D3D11ResourceType.h"
 #include "RenderState/D3D11ResourceHeap.h"
@@ -349,7 +351,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
         cbufferData.rowStride           = rowStride;
         cbufferData.layerStride         = layerStride;
     }
-    stateMngr_->SetComputeConstants(0, &cbufferData, sizeof(cbufferData));
+    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
 
     /* Store currently bound resource views */
     ID3D11UnorderedAccessView* prevUAVs[1];
@@ -616,7 +618,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         cbufferData.rowStride           = rowStride;
         cbufferData.layerStride         = layerStride;
     }
-    stateMngr_->SetComputeConstants(0, &cbufferData, sizeof(cbufferData));
+    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
 
     /* Store currently bound resource views */
     ID3D11UnorderedAccessView* prevUAVs[1];
@@ -780,7 +782,7 @@ void D3D11CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
     }
 }
 
-void D3D11CommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void D3D11CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     if (boundPipelineLayout_ == nullptr)
         return /*E_POINTER*/;
@@ -967,9 +969,16 @@ void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 
 void D3D11CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    boundPipelineState_ = LLGL_CAST(D3D11PipelineState*, &pipelineState);
-    boundPipelineState_->Bind(*stateMngr_);
-    boundPipelineLayout_ = boundPipelineState_->GetPipelineLayout();
+    auto pipelineStateD3D = LLGL_CAST(D3D11PipelineState*, &pipelineState);
+    if (boundPipelineState_ != pipelineStateD3D)
+    {
+        boundPipelineState_ = pipelineStateD3D;
+        boundPipelineState_->Bind(*stateMngr_);
+        boundPipelineLayout_ = boundPipelineState_->GetPipelineLayout();
+        boundConstantsCache_ = boundPipelineState_->GetConstantsCache();
+        if (boundConstantsCache_ != nullptr)
+            boundConstantsCache_->Reset();
+    }
 }
 
 void D3D11CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
@@ -984,7 +993,8 @@ void D3D11CommandBuffer::SetStencilReference(std::uint32_t reference, const Sten
 
 void D3D11CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    //TODO
+    if (boundConstantsCache_ != nullptr)
+        boundConstantsCache_->SetUniforms(first, data, dataSize);
 }
 
 /* ----- Queries ----- */
@@ -1069,52 +1079,62 @@ void D3D11CommandBuffer::EndStreamOutput()
 
 void D3D11CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
+    FlushConstantsCache();
     context_->Draw(numVertices, firstVertex);
 }
 
 void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
+    FlushConstantsCache();
     context_->DrawIndexed(numIndices, firstIndex, 0);
 }
 
 void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    FlushConstantsCache();
     context_->DrawIndexed(numIndices, firstIndex, vertexOffset);
 }
 
 void D3D11CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
+    FlushConstantsCache();
     context_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D11CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
+    FlushConstantsCache();
     context_->DrawInstanced(numVertices, numInstances, firstVertex, firstInstance);
 }
 
 void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
+    FlushConstantsCache();
     context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    FlushConstantsCache();
     context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
+    FlushConstantsCache();
     context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
 void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    FlushConstantsCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
     context_->DrawInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
 void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    FlushConstantsCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
     while (numCommands-- > 0)
     {
@@ -1125,12 +1145,14 @@ void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std:
 
 void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    FlushConstantsCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
     context_->DrawIndexedInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
 void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    FlushConstantsCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
     while (numCommands-- > 0)
     {
@@ -1143,11 +1165,13 @@ void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
 
 void D3D11CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
+    FlushConstantsCache();
     context_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    FlushConstantsCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
     context_->DispatchIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
@@ -1509,11 +1533,18 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
     }
 }
 
+void D3D11CommandBuffer::FlushConstantsCache()
+{
+    if (boundConstantsCache_ != nullptr)
+        boundConstantsCache_->Flush(*stateMngr_);
+}
+
 void D3D11CommandBuffer::ResetRenderState()
 {
     boundRenderTarget_      = nullptr;
     boundPipelineLayout_    = nullptr;
     boundPipelineState_     = nullptr;
+    boundConstantsCache_    = nullptr;
 }
 
 

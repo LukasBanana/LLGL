@@ -7,17 +7,32 @@
 
 #include "D3D11PipelineState.h"
 #include "D3D11PipelineLayout.h"
+#include "D3D11ConstantsCache.h"
+#include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
 {
 
 
-D3D11PipelineState::D3D11PipelineState(bool isGraphicsPSO, const PipelineLayout* pipelineLayout) :
+D3D11PipelineState::D3D11PipelineState(
+    bool                        isGraphicsPSO,
+    const PipelineLayout*       pipelineLayout,
+    const ArrayView<Shader*>&   shaders)
+:
     isGraphicsPSO_  { isGraphicsPSO                                         },
     pipelineLayout_ { LLGL_CAST(const D3D11PipelineLayout*, pipelineLayout) }
 {
+    if (!pipelineLayout_->GetUniforms().empty())
+    {
+        constantsCache_ = MakeUnique<D3D11ConstantsCache>(
+            CastShaderArray<D3D11Shader>(shaders),
+            pipelineLayout_->GetUniforms()
+        );
+    }
 }
 
 const Report* D3D11PipelineState::GetReport() const

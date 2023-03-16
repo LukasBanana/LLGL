@@ -152,7 +152,7 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         return { nullptr, nullptr };
     };
 
-    for (D3D12Shader* shader : shaders)
+    for (auto* shader : shaders)
     {
         LLGL_ASSERT_PTR(shader);
 

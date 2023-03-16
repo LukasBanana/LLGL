@@ -402,7 +402,7 @@ void GLDeferredCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::u
     cmd->descriptorSet  = descriptorSet;
 }
 
-void GLDeferredCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     auto* pipelineLayoutGL = GetBoundPipelineLayout();
     if (pipelineLayoutGL == nullptr)

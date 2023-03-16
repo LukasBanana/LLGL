@@ -130,7 +130,7 @@ class DbgCommandBuffer final : public CommandBuffer
         /* ----- Resources ----- */
 
         void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
-        void SetResource(Resource& resource, std::uint32_t descriptor) override;
+        void SetResource(std::uint32_t descriptor, Resource& resource) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -261,7 +261,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void ValidateStreamOutputs(std::uint32_t numBuffers);
 
-        const BindingDescriptor* GetAndValidateResourceDescFromPipeline(const DbgPipelineLayout& pipelineLayoutDbg, Resource& resource, std::uint32_t descriptor);
+        const BindingDescriptor* GetAndValidateResourceDescFromPipeline(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t descriptor, Resource& resource);
 
         void ValidateUniforms(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t first, std::uint16_t dataSize);
 

@@ -361,12 +361,12 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Binds the specified resource as root parameter to the respective pipeline.
-        \param[in] resource Specifies the resource that is to be bound to the shader pipeline.
         \param[in] descriptor Specifies the zero-based index of the descriptor in the currently bound pipeline layout.
         This \b must be in the half-open range <code>[0, PipelineLayout::GetNumBindings)</code>.
+        \param[in] resource Specifies the resource that is to be bound to the shader pipeline.
         \see PipelineLayoutDescriptor::bindings
         */
-        virtual void SetResource(Resource& resource, std::uint32_t descriptor) = 0;
+        virtual void SetResource(std::uint32_t descriptor, Resource& resource) = 0;
 
         /**
         \brief Resets the binding slots for the specified resources.
@@ -555,6 +555,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] data Raw pointer to the data that is to be copied to the uniform.
         \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
         This \b must be a multiple of 4 since 32-bits are the smallest granularity to update shader uniforms.
+        This parameter also determines the number of uniforms that are to be updated.
         \remarks This function must only be called after a pipeline state object (PSO) has been bound.
         \see PipelineLayoutDescriptor::uniforms
         \see SetPipelineState

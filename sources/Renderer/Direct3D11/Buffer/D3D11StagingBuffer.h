@@ -54,7 +54,8 @@ class D3D11StagingBuffer
         void WriteAndIncrementOffset(
             ID3D11DeviceContext*    context,
             const void*             data,
-            UINT                    dataSize
+            UINT                    dataSize,
+            UINT                    stride = 0
         );
 
         // Returns the native ID3D11Buffer object.
@@ -78,9 +79,9 @@ class D3D11StagingBuffer
     private:
 
         ComPtr<ID3D11Buffer>    native_;
-        D3D11_USAGE             usage_  = D3D11_USAGE_DEFAULT;
-        UINT                    size_   = 0;
-        UINT                    offset_ = 0;
+        D3D11_USAGE             usage_      = D3D11_USAGE_DEFAULT;
+        UINT                    size_       = 0;
+        UINT                    offset_     = 0;
 
 };
 

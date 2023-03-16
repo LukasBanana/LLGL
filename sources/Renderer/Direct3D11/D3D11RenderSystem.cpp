@@ -15,6 +15,7 @@
 #include "../TextureUtils.h"
 #include "../../Core/Vendor.h"
 #include "../../Core/Helper.h"
+#include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
 #include <sstream>
 #include <iomanip>
@@ -116,7 +117,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         DXThrowIfCreateFailed(hr, "ID3D11DeviceContext", "for deferred command buffer");
 
         /* Create state manager dedicated to deferred context */
-        auto deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext, context_.Get());
+        auto deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext);
 
         /* Create command buffer with deferred context and dedicated state manager */
         return TakeOwnership(

@@ -6,11 +6,19 @@
  */
 
 #include "D3D11StagingBufferPool.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
 {
 
+
+// Returns true if the specified D3D context requires separate segments for staging buffers
+static bool IsSegmentedStagingRequired(ID3D11DeviceContext* context)
+{
+    return false;
+    //return (context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED);
+}
 
 D3D11StagingBufferPool::D3D11StagingBufferPool(
     ID3D11Device*           device,
@@ -19,12 +27,12 @@ D3D11StagingBufferPool::D3D11StagingBufferPool(
     UINT                    bindFlags,
     UINT                    miscFlags)
 :
-    device_           { device                                                },
-    context_          { context                                               },
-    chunkSize_        { chunkSize                                             },
-    bindFlags_        { bindFlags                                             },
-    miscFlags_        { miscFlags                                             },
-    incrementOffsets_ { (context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED) }
+    device_           { device                              },
+    context_          { context                             },
+    chunkSize_        { chunkSize                           },
+    bindFlags_        { bindFlags                           },
+    miscFlags_        { miscFlags                           },
+    incrementOffsets_ { IsSegmentedStagingRequired(context) }
 {
 }
 
@@ -35,24 +43,26 @@ void D3D11StagingBufferPool::Reset()
     chunkIdx_ = 0;
 }
 
-D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize)
+D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize, UINT alignment)
 {
+    const auto alignedSize = GetAlignedSize(dataSize, alignment);
+
     /* Check if a new chunk must be allocated */
     if (chunkIdx_ == chunks_.size())
-        AllocChunk(dataSize);
-    else if (!chunks_[chunkIdx_].Capacity(dataSize))
+        AllocChunk(alignedSize);
+    else if (!chunks_[chunkIdx_].Capacity(alignedSize))
     {
         ++chunkIdx_;
         if (chunkIdx_ == chunks_.size())
-            AllocChunk(dataSize);
+            AllocChunk(alignedSize);
     }
 
     /* Write data to current chunk */
     auto& chunk = chunks_[chunkIdx_];
-    D3D11BufferRange range = { chunk.GetNative(), chunk.GetOffset(), dataSize };
+    D3D11BufferRange range = { chunk.GetNative(), chunk.GetOffset(), alignedSize };
     {
         if (incrementOffsets_)
-            chunk.WriteAndIncrementOffset(context_, data, dataSize);
+            chunk.WriteAndIncrementOffset(context_, data, dataSize, alignedSize);
         else
             chunk.Write(context_, data, dataSize);
     }

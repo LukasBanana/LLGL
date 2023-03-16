@@ -10,6 +10,7 @@
 #include "D3D11PipelineLayout.h"
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
 #include <LLGL/PipelineStateFlags.h>
 
 
@@ -18,7 +19,7 @@ namespace LLGL
 
 
 D3D11ComputePSO::D3D11ComputePSO(const ComputePipelineDescriptor& desc) :
-    D3D11PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout }
+    D3D11PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
     /* Convert shader state */
     if (auto computeShaderD3D = LLGL_CAST(const D3D11Shader*, desc.computeShader))

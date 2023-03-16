@@ -1,0 +1,198 @@
+/*
+ * D3D11ConstantsCache.cpp
+ *
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#include "D3D11ConstantsCache.h"
+#include "D3D11StateManager.h"
+#include "../Shader/D3D11Shader.h"
+#include "../../DXCommon/DXCore.h"
+#include "../../../Core/Assertion.h"
+#include "../../../Core/Helper.h"
+#include <LLGL/Misc/ForRange.h>
+#include <algorithm>
+#include <string.h>
+
+
+namespace LLGL
+{
+
+
+D3D11ConstantsCache::D3D11ConstantsCache(
+    const ArrayView<D3D11Shader*>&      shaders,
+    const ArrayView<UniformDescriptor>& uniforms)
+{
+    /* Reflect all constant buffers from all shaders */
+    std::vector<const D3D11ConstantBufferReflection*> cbufferReflections;
+
+    auto FindCbufferField = [&cbufferReflections](const std::string& name) -> std::pair<const D3D11ConstantBufferReflection*, const D3D11ConstantReflection*>
+    {
+        for (const auto* cbuffer : cbufferReflections)
+        {
+            for (const auto& field : cbuffer->fields)
+            {
+                if (field.name == name)
+                    return { cbuffer, &field };
+            }
+        }
+        return { nullptr, nullptr };
+    };
+
+    std::uint8_t cbufferSlotMap[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT];
+    ::memset(cbufferSlotMap, ~0, sizeof(cbufferSlotMap));
+
+    long cbufferStageFlags[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT] = {};
+
+    for (auto* shader : shaders)
+    {
+        LLGL_ASSERT_PTR(shader);
+
+        /* Get cached cbuffer reflection from shader */
+        const std::vector<D3D11ConstantBufferReflection>* currentCbufferReflections = nullptr;
+        HRESULT hr = shader->ReflectAndCacheConstantBuffers(&currentCbufferReflections);
+        DXThrowIfFailed(hr, "failed to reflect constant buffers in D3D11 shader");
+        LLGL_ASSERT_PTR(currentCbufferReflections);
+
+        cbufferReflections.reserve(cbufferReflections.size() + currentCbufferReflections->size());
+        for (const auto& cbufferReflection : *currentCbufferReflections)
+        {
+            cbufferReflections.push_back(&cbufferReflection);
+            LLGL_ASSERT(cbufferReflection.slot < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT);
+            cbufferStageFlags[cbufferReflection.slot] |= shader->GetStageFlags();
+        }
+    }
+
+    /* Create root signature copy and append parameters to permutation */
+    constantsMap_.resize(uniforms.size());
+
+    for_range(i, uniforms.size())
+    {
+        /* Find constant buffer field for specified uniform name */
+        auto field = FindCbufferField(uniforms[i].name);
+        const auto* cbufferReflection = field.first;
+        const auto* fieldReflection = field.second;
+        LLGL_ASSERT_PTR(cbufferReflection);
+        LLGL_ASSERT_PTR(fieldReflection);
+
+        /* Allocate cache for constant buffer and assgin index to cbuffer-slot map */
+        auto& cbufferIndex = cbufferSlotMap[cbufferReflection->slot];
+        if (cbufferIndex == 0xFF)
+        {
+            cbufferIndex = AllocateConstantBuffer(
+                cbufferReflection->slot,
+                cbufferReflection->size,
+                cbufferStageFlags[cbufferReflection->slot]
+            );
+        }
+
+        /* Build root constant map for current uniform descriptor */
+        auto& location = constantsMap_[i];
+        {
+            location.index  = cbufferIndex;
+            location.size   = fieldReflection->size;
+            location.offset = fieldReflection->offset;
+        }
+    }
+
+    /* Allocate bit-vector for cbuffer invalidation states */
+    invalidatedBuffers_.resize(constantBuffers_.size());
+}
+
+HRESULT D3D11ConstantsCache::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    for (auto dataByteAligned = reinterpret_cast<const char*>(data); dataSize > 0; ++first)
+    {
+        if (first >= constantsMap_.size())
+            return E_INVALIDARG;
+
+        /* Get current uniform location with its cbuffer */
+        const auto& location = constantsMap_[first];
+        auto& cbuffer = constantBuffers_[location.index];
+        const auto chunkSize = std::min(dataSize, static_cast<decltype(dataSize)>(location.size));
+
+        /* Copy input data into cbuffer data and move to next uniform */
+        ::memcpy(reinterpret_cast<char*>(cbuffer.constants.data()) + location.offset, dataByteAligned, chunkSize);
+
+        dataByteAligned += chunkSize;
+        dataSize -= chunkSize;
+
+        /* Invalidate cache for current cbuffer */
+        if (!invalidatedBuffers_[location.index])
+        {
+            invalidatedBuffers_[location.index] = true;
+            invalidatedBuffersRange_[0] = std::min<std::uint8_t>(invalidatedBuffersRange_[0], location.index);
+            invalidatedBuffersRange_[1] = std::max<std::uint8_t>(invalidatedBuffersRange_[1], location.index + 1u);
+        }
+    }
+    return S_OK;
+}
+
+void D3D11ConstantsCache::Reset()
+{
+    /* Reset range to special value to indicate that all cbuffers have to be bound again */
+    invalidatedBuffersRange_[0] = 0x00;
+    invalidatedBuffersRange_[1] = 0xFF;
+}
+
+void D3D11ConstantsCache::Flush(D3D11StateManager& stateMngr)
+{
+    /* Check for special range to indicate that all cbuffers have to be bound again */
+    if (invalidatedBuffersRange_[0] == 0x00 &&
+        invalidatedBuffersRange_[1] == 0xFF)
+    {
+        for_range(i, static_cast<std::uint8_t>(constantBuffers_.size()))
+            FlushConstantBuffer(i, stateMngr);
+    }
+    else if (invalidatedBuffersRange_[0] < invalidatedBuffersRange_[1])
+    {
+        for_subrange(i, invalidatedBuffersRange_[0], invalidatedBuffersRange_[1])
+        {
+            if (invalidatedBuffers_[i])
+                FlushConstantBuffer(i, stateMngr);
+        }
+    }
+
+    /* Clear cached range */
+    invalidatedBuffersRange_[0] = 0xFF;
+    invalidatedBuffersRange_[1] = 0x00;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+std::uint8_t D3D11ConstantsCache::AllocateConstantBuffer(UINT slot, UINT size, long stageFlags)
+{
+    const auto nextIndex    = constantBuffers_.size();
+    const auto numConstants = DivideCeil<UINT>(size, sizeof(ConstantRegister));
+    constantBuffers_.resize(nextIndex + 1);
+    auto& cbuffer = constantBuffers_.back();
+    {
+        cbuffer.shaderRegister  = slot;
+        cbuffer.stageFlags      = stageFlags;
+        cbuffer.constants.resize(numConstants);
+    }
+    return static_cast<std::uint8_t>(nextIndex);
+}
+
+void D3D11ConstantsCache::FlushConstantBuffer(std::uint8_t index, D3D11StateManager& stateMngr)
+{
+    invalidatedBuffers_[index] = false;
+    const auto& cbuffer = constantBuffers_[index];
+    stateMngr.SetConstants(
+        cbuffer.shaderRegister,
+        cbuffer.constants.data(),
+        cbuffer.constants.size() * sizeof(ConstantRegister),
+        cbuffer.stageFlags
+    );
+}
+
+
+} // /namespace LLGL
+
+
+
+// ================================================================================

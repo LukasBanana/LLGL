@@ -10,7 +10,9 @@
 
 
 #include <LLGL/BufferFlags.h>
+#include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
+#include "CheckedCast.h"
 
 
 namespace LLGL
@@ -36,6 +38,16 @@ LLGL_EXPORT SmallVector<Shader*, 5> GetShadersAsArray(const GraphicsPipelineDesc
 
 // Returns the set of compute PSO shaders as array.
 LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescriptor& desc);
+
+// Casts the specified array of shaders to their backend implementation.
+template <typename T>
+inline SmallVector<T*, 5> CastShaderArray(const ArrayView<Shader*>& shaders)
+{
+    SmallVector<T*, 5> outShaders;
+    for (auto* sh : shaders)
+        outShaders.push_back(LLGL_CAST(T*, sh));
+    return outShaders;
+}
 
 
 } // /namespace LLGL

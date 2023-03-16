@@ -61,6 +61,12 @@ class D3D11PipelineLayout final : public PipelineLayout
             return bindings_;
         }
 
+        // Returns the list of uniform descritpors this pipeline layout was created with.
+        inline const std::vector<UniformDescriptor>& GetUniforms() const
+        {
+            return uniforms_;
+        }
+
     private:
 
         void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);
@@ -71,7 +77,7 @@ class D3D11PipelineLayout final : public PipelineLayout
         std::vector<BindingDescriptor>              heapBindings_;
         std::vector<D3D11PipelineResourceBinding>   bindings_;
         std::vector<D3D11StaticSampler>             staticSamplers_;
-      //std::vector<D3D11UniformLocation>           uniforms_;
+        std::vector<UniformDescriptor>              uniforms_;
 
 };
 
