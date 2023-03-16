@@ -730,7 +730,7 @@ else()
     set(SUMMARY_LIBRARY_TYPE "Shared")
     add_library(LLGL SHARED ${FilesLLGL})
 endif()
-set(all_targets LLGL)
+set(LLGL_ALL_TARGETS LLGL)
 
 include(GNUInstallDirs)
 target_include_directories(LLGL INTERFACE
@@ -769,7 +769,7 @@ if(LLGL_BUILD_RENDERER_NULL)
     
     ADD_DEFINE(LLGL_BUILD_RENDERER_NULL)
 
-    list(APPEND all_targets LLGL_Null)
+    list(APPEND LLGL_ALL_TARGETS LLGL_Null)
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
@@ -796,7 +796,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGLES3)
         ADD_PROJECT_DEFINE(LLGL_OpenGLES3 LLGL_OPENGLES3)
 
-        list(APPEND all_targets LLGL_OpenGLES3)
+        list(APPEND LLGL_ALL_TARGETS LLGL_OpenGLES3)
     else()
         message("Missing OpenGLES -> LLGL_OpenGLES3 renderer will be excluded from project")
     endif()
@@ -826,7 +826,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGL)
         ADD_PROJECT_DEFINE(LLGL_OpenGL LLGL_OPENGL)
 
-        list(APPEND all_targets LLGL_OpenGL)
+        list(APPEND LLGL_ALL_TARGETS LLGL_OpenGL)
     else()
         message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
     endif()
@@ -850,7 +850,7 @@ if(NOT APPLE AND LLGL_BUILD_RENDERER_VULKAN)
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_VULKAN)
         
-        list(APPEND all_targets LLGL_Vulkan)
+        list(APPEND LLGL_ALL_TARGETS LLGL_Vulkan)
     else()
         message("Missing Vulkan -> LLGL_Vulkan renderer will be excluded from project")
     endif()
@@ -883,7 +883,7 @@ if(APPLE AND LLGL_BUILD_RENDERER_METAL)
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_METAL)
         
-        list(APPEND all_targets LLGL_Metal)
+        list(APPEND LLGL_ALL_TARGETS LLGL_Metal)
     else()
         message("Missing Metal/MetalKit -> LLGL_Metal renderer will be excluded from project")
     endif()
@@ -904,7 +904,7 @@ if(WIN32)
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_DIRECT3D11)
         
-        list(APPEND all_targets LLGL_Direct3D11)
+        list(APPEND LLGL_ALL_TARGETS LLGL_Direct3D11)
     endif()
     
     if(LLGL_BUILD_RENDERER_DIRECT3D12)
@@ -922,7 +922,7 @@ if(WIN32)
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_DIRECT3D12)
         
-        list(APPEND all_targets LLGL_Direct3D12)
+        list(APPEND LLGL_ALL_TARGETS LLGL_Direct3D12)
     endif()
 endif()
 
@@ -1014,20 +1014,18 @@ if(WIN32 AND LLGL_BUILD_WRAPPER_CSHARP)
     add_subdirectory(Wrapper/CSharp)
 endif()
 
-# Install targets
-install(TARGETS ${all_targets} EXPORT LLGLTargets RUNTIME LIBRARY ARCHIVE)
-# Install headers
+# Install targets, headers, and CMake config files
+install(TARGETS ${LLGL_ALL_TARGETS} EXPORT LLGLTargets RUNTIME LIBRARY ARCHIVE)
 install(DIRECTORY "${PROJECT_INCLUDE_DIR}/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-# Install CMake config files
 install(EXPORT LLGLTargets NAMESPACE LLGL:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LLGL")
 include(CMakePackageConfigHelpers)
-configure_package_config_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/LLGLConfig.cmake"
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LLGL
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/LLGLConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LLGL
 )
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LLGLConfig.cmake"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LLGL"
-)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LLGLConfig.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LLGL")
+
 # Summary Information
 message("~~~ Build Summary ~~~")
 

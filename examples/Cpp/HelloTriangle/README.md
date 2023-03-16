@@ -128,6 +128,7 @@ for (LLGL::Shader* shader : { myVertexShader, myFragmentShader }) {
         }
     }
 }
+```
 
 
 ## Graphics Pipeline & Command Buffer
