@@ -633,7 +633,6 @@ void D3D11RenderSystem::QueryRenderingCaps()
         /* Set extended attributes */
         const auto minorVersion = GetMinorVersion();
 
-        caps.features.hasDirectResourceBinding      = true;
         caps.features.hasConservativeRasterization  = (minorVersion >= 3);
 
         caps.limits.maxViewports                    = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;

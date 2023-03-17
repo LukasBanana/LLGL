@@ -134,7 +134,6 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
 {
     /* Query all boolean capabilies by their respective OpenGL extension */
-    features.hasDirectResourceBinding       = true;
     features.hasRenderTargets               = true;             // GLES 2.0
     features.has3DTextures                  = true;             // GLES 2.0
     features.hasCubeTextures                = true;             // GLES 2.0

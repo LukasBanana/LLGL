@@ -39,7 +39,6 @@ static void InitNullRendererTextureFormats(std::vector<Format>& textureFormats)
 
 static void InitNullRendererFeatures(RenderingFeatures& features)
 {
-    features.hasDirectResourceBinding       = true;
     features.hasRenderTargets               = true;
     features.has3DTextures                  = true;
     features.hasCubeTextures                = true;

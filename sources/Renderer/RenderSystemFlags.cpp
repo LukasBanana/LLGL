@@ -75,7 +75,6 @@ LLGL_EXPORT bool ValidateRenderingCaps(
             LLGL_CONTINUE_VALIDATION_IF(continueValidation);                \
         }
 
-    LLGL_VALIDATE_FEATURE( hasDirectResourceBinding,     "direct resource binding"    );
     LLGL_VALIDATE_FEATURE( hasRenderTargets,             "render targets"             );
     LLGL_VALIDATE_FEATURE( has3DTextures,                "3D textures"                );
     LLGL_VALIDATE_FEATURE( hasCubeTextures,              "cube textures"              );

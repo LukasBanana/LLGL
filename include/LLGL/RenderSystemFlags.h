@@ -357,15 +357,6 @@ struct RenderSystemDescriptor
 */
 struct RenderingFeatures
 {
-    /**
-    \brief Specifies whether the render system supports binding individual resources directly instead of a resource heap.
-    This does not exclude support of resource heaps, because these are always supported.
-    \see CommandBuffer::SetResource
-    \see CommandBuffer::ResetResourceSlots
-    \todo Remove this as now all backends have to support this feature
-    */
-    bool hasDirectResourceBinding       = false;
-
     //! Specifies whether render targets (also "framebuffer objects") are supported.
     bool hasRenderTargets               = false;
 

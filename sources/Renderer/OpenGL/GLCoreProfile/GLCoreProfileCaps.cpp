@@ -179,7 +179,6 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 static void GLGetSupportedFeatures(RenderingFeatures& features)
 {
     /* Query all boolean capabilies by their respective OpenGL extension */
-    features.hasDirectResourceBinding       = true;
     features.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
     features.has3DTextures                  = HasExtension(GLExt::EXT_texture3D);
     features.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);

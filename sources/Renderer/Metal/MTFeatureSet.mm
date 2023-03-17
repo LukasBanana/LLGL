@@ -92,7 +92,6 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     /* Specify features */
     auto& features = caps.features;
 
-    features.hasDirectResourceBinding       = false;//true; //TODO: not supported yet
     features.hasRenderTargets               = true;
     features.has3DTextures                  = true;
     features.hasCubeTextures                = true;

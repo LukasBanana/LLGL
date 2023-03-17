@@ -384,7 +384,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see BindFlags
         \see StageFlags
-        \see RenderingFeatures::hasDirectResourceBinding
         */
         virtual void ResetResourceSlots(
             const ResourceType  resourceType,
