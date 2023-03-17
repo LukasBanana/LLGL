@@ -25,7 +25,7 @@
 #include "../../StaticAssertions.h"
 #include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
-#include "../../../Core/ContainerUtils.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Misc/ForRange.h>
@@ -549,7 +549,7 @@ void GLResourceHeap::AllocSegmentsGL2XSampler(BindingDescriptorIterator& binding
         for (auto& samplerBinding : samplerBindingSlots)
         {
             /* Find corresponding texture binding */
-            const auto* textureBinding = Utils::FindInSortedArray<GLResourceBinding>(
+            const auto* textureBinding = FindInSortedArray<GLResourceBinding>(
                 textureBindingSlots.data(),
                 textureBindingSlots.size(),
                 [&samplerBinding](const GLResourceBinding& entry) -> int

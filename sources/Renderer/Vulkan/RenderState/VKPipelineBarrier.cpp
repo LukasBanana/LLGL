@@ -9,7 +9,7 @@
 #include "../Buffer/VKBuffer.h"
 //#include "../Texture/VKTexture.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/ContainerUtils.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/ShaderFlags.h>
 
 
@@ -42,7 +42,7 @@ bool VKPipelineBarrier::Emplace(std::uint32_t slot, Resource* resource, VkPipeli
 {
     /* Emplace resource binding into sorted array */
     std::size_t index = 0;
-    auto* entry = Utils::FindInSortedArray<ResourceBinding>(
+    auto* entry = FindInSortedArray<ResourceBinding>(
         bindings_.data(),
         bindings_.size(),
         [slot](const ResourceBinding& binding) -> int
@@ -79,7 +79,7 @@ bool VKPipelineBarrier::Emplace(std::uint32_t slot, Resource* resource, VkPipeli
 bool VKPipelineBarrier::Remove(std::uint32_t slot)
 {
     /* Only clear resource entry, don't reallocate array */
-    auto* entry = Utils::FindInSortedArray<ResourceBinding>(
+    auto* entry = FindInSortedArray<ResourceBinding>(
         bindings_.data(),
         bindings_.size(),
         [slot](const ResourceBinding& binding) -> int

@@ -13,7 +13,6 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/ContainerUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/MacroUtils.h"
 #include <algorithm>
@@ -64,7 +63,7 @@ GLuint GLTextureViewPool::CreateTextureView(GLuint sourceTexID, const TextureVie
 
     /* Try to find texture view with same parameters */
     std::size_t insertionIndex = 0;
-    auto* sharedTexView = Utils::FindInSortedArray<GLTextureView>(
+    auto* sharedTexView = FindInSortedArray<GLTextureView>(
         textureViews_.data(),
         textureViews_.size(),
         [&texView](const GLTextureView& rhs)
@@ -98,7 +97,7 @@ void GLTextureViewPool::ReleaseTextureView(GLuint texID)
 {
     /* Try to find texture by GL texture ID only */
     std::size_t insertionIndex = 0;
-    auto* sharedTexView = Utils::FindInSortedArray<GLTextureView>(
+    auto* sharedTexView = FindInSortedArray<GLTextureView>(
         textureViews_.data(),
         textureViews_.size(),
         [texID](const GLTextureView& rhs)

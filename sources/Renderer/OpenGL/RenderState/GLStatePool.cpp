@@ -9,7 +9,7 @@
 #include "GLStateManager.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/ContainerUtils.h"
+#include "../../../Core/CoreUtils.h"
 #include <functional>
 
 #include "../Shader/GLLegacyShader.h"
@@ -36,7 +36,7 @@ std::shared_ptr<T> FindCompatibleStateObject(
     const TCompare&                         compareObject,
     std::size_t&                            index)
 {
-    auto* entry = Utils::FindInSortedArray<std::shared_ptr<TBase>>(
+    auto* entry = FindInSortedArray<std::shared_ptr<TBase>>(
         container.data(),
         container.size(),
         [&compareObject](const std::shared_ptr<TBase>& entry) -> int
