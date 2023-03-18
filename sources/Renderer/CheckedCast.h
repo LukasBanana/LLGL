@@ -1,6 +1,6 @@
 /*
  * CheckedCast.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -8,6 +8,8 @@
 #ifndef LLGL_CHECKED_CAST_H
 #define LLGL_CHECKED_CAST_H
 
+
+#include "../Platform/Debug.h"
 
 #ifdef LLGL_ENABLE_CHECKED_CAST
 #   include <typeinfo>
@@ -20,50 +22,50 @@ namespace LLGL
 
 #ifdef LLGL_ENABLE_CHECKED_CAST
 
-template <typename DstT, typename SrcT>
-DstT& CheckedCast(SrcT& obj)
+template <typename TDst, typename TSrc>
+inline TDst& ObjectCast(TSrc& obj)
 {
     try
     {
-        return dynamic_cast<DstT&>(obj);
+        return dynamic_cast<TDst&>(obj);
     }
     catch (const std::bad_cast&)
     {
-        #if defined _WIN32 && defined _DEBUG
-        __debugbreak();
-        #endif
+        LLGL_DEBUG_BREAK();
         throw;
     }
 }
 
-template <typename DstT, typename SrcT>
-DstT CheckedCast(SrcT* obj)
+template <typename TDst, typename TSrc>
+inline TDst ObjectCast(TSrc* obj)
 {
     if (obj == nullptr)
         return nullptr;
     try
     {
-        DstT casted = dynamic_cast<DstT>(obj);
-        if (!casted)
+        TDst objInstance = dynamic_cast<TDst>(obj);
+        if (!objInstance)
             throw std::bad_cast();
-        return casted;
+        return objInstance;
     }
     catch (const std::bad_cast&)
     {
-        #if defined _WIN32 && defined _DEBUG
-        __debugbreak();
-        #endif
+        LLGL_DEBUG_BREAK();
         throw;
     }
 }
 
-#define LLGL_CAST(TYPE, OBJ) CheckedCast<TYPE>(OBJ)
-
 #else
 
-#define LLGL_CAST(TYPE, OBJ) static_cast<TYPE>(OBJ)
+template <typename TDst, typename TSrc>
+inline TDst ObjectCast(TSrc&& obj)
+{
+    return static_cast<TDst>(obj);
+}
 
 #endif
+
+#define LLGL_CAST(TYPE, OBJ) ObjectCast<TYPE>(OBJ)
 
 
 } // /namespace LLGL

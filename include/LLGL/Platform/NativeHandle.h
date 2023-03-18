@@ -9,18 +9,18 @@
 #define LLGL_NATIVE_HANDLE_H
 
 
-#include "Platform.h"
+#include <LLGL/Platform/Platform.h>
 
 #if defined(LLGL_OS_WIN32)
-#   include "Win32/Win32NativeHandle.h"
+#   include <LLGL/Platform/Win32/Win32NativeHandle.h>
 #elif defined(LLGL_OS_MACOS)
-#   include "MacOS/MacOSNativeHandle.h"
+#   include <LLGL/Platform/MacOS/MacOSNativeHandle.h>
 #elif defined(LLGL_OS_LINUX)
-#   include "Linux/LinuxNativeHandle.h"
+#   include <LLGL/Platform/Linux/LinuxNativeHandle.h>
 #elif defined(LLGL_OS_IOS)
-#   include "IOS/IOSNativeHandle.h"
+#   include <LLGL/Platform/IOS/IOSNativeHandle.h>
 #elif defined(LLGL_OS_ANDROID)
-#   include "Android/AndroidNativeHandle.h"
+#   include <LLGL/Platform/Android/AndroidNativeHandle.h>
 #endif
 
 

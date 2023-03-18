@@ -11,6 +11,23 @@
 
 #include <LLGL/Export.h>
 
+#ifdef LLGL_DEBUG
+#   include <LLGL/Platform/Platform.h>
+#   if defined(LLGL_OS_WIN32)
+#      include "Win32/Win32Debug.h"
+#   elif defined(LLGL_OS_MACOS)
+#      include "MacOS/MacOSDebug.h"
+#   elif defined(LLGL_OS_LINUX)
+#      include "Linux/LinuxDebug.h"
+#   elif defined(LLGL_OS_IOS)
+#      include "IOS/IOSDebug.h"
+#   elif defined(LLGL_OS_ANDROID)
+#      include "Android/AndroidDebug.h"
+#   endif
+#else
+#   define LLGL_DEBUG_BREAK()
+#endif
+
 
 namespace LLGL
 {
