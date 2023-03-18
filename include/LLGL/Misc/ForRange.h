@@ -17,12 +17,12 @@
     ( INDEX ## _End )
 
 // Range based for-loop over the half-open range [BEGIN, END).
-#define for_subrange(INDEX, BEGIN, END)                                                                                             \
-    for                                                                                                                             \
-    (                                                                                                                               \
-        typename std::remove_cv<typename std::remove_reference<decltype(END)>::type>::type INDEX ## _End = (END), INDEX = (BEGIN);  \
-        INDEX < for_range_end(INDEX);                                                                                               \
-        ++INDEX                                                                                                                     \
+#define for_subrange(INDEX, BEGIN, END)                                                                         \
+    for                                                                                                         \
+    (                                                                                                           \
+        typename LLGL::Utils::ForRangeTypeTraits<decltype(END)>::type INDEX ## _End = (END), INDEX = (BEGIN);   \
+        INDEX < for_range_end(INDEX);                                                                           \
+        ++INDEX                                                                                                 \
     )
 
 // Range based for-loop over the half-open range [0, END).
@@ -33,7 +33,7 @@
 #define for_subrange_reverse(INDEX, START, END)                                                                             \
     for                                                                                                                     \
     (                                                                                                                       \
-        typename std::remove_cv<typename std::remove_reference<decltype(END)>::type>::type INDEX ## _End = (END),           \
+        typename LLGL::Utils::ForRangeTypeTraits<decltype(END)>::type INDEX ## _End = (END),                                \
         INDEX ## _Start = (START),                                                                                          \
         INDEX ## _Iter = (INDEX ## _Start),                                                                                 \
         INDEX;                                                                                                              \
@@ -48,6 +48,44 @@
 // Iterator of the reverse range based for-loop.
 #define for_range_reverse_iter(INDEX) \
     (INDEX ## _Iter)
+
+
+namespace LLGL
+{
+
+namespace Utils
+{
+
+
+//! Utility template to deduce range-based for loop iterator type. This is the base structure and should not be used directly.
+template <typename T, bool IsEnum>
+struct ForRangeTypeTraitsBase {};
+
+//! Utility template to deduce range-based for loop iterator type for non-enumeration types.
+template <typename T>
+struct ForRangeTypeTraitsBase<T, false>
+{
+    using type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+};
+
+//! Utility template to deduce range-based for loop iterator type for enumeration types.
+template <typename T>
+struct ForRangeTypeTraitsBase<T, true>
+{
+    using type = typename std::underlying_type<T>::type;
+};
+
+//! Utility template to deduce range-based for loop iterator type.
+template <typename T>
+struct ForRangeTypeTraits
+{
+    using type = typename ForRangeTypeTraitsBase<T, std::is_enum<T>::value>::type;
+};
+
+
+} // /namespace Utils
+
+} // /namespace LLGL
 
 
 #endif

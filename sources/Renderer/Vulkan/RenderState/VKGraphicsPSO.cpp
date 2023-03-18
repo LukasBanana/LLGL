@@ -31,21 +31,15 @@ VKGraphicsPSO::VKGraphicsPSO(
     const GraphicsPipelineDescriptor&   desc,
     const VKGraphicsPipelineLimits&     limits)
 :
-    VKPipelineState    { device, VK_PIPELINE_BIND_POINT_GRAPHICS },
-    scissorEnabled_    { desc.rasterizer.scissorTestEnabled      },
-    hasDynamicScissor_ { desc.scissors.empty()                   }
+    VKPipelineState    { device, VK_PIPELINE_BIND_POINT_GRAPHICS, desc.pipelineLayout },
+    scissorEnabled_    { desc.rasterizer.scissorTestEnabled                           },
+    hasDynamicScissor_ { desc.scissors.empty()                                        }
 {
     if (auto renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass))
     {
         /* Create Vulkan graphics pipeline object */
         auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
-        CreateVkPipeline(
-            device,
-            GetVkPipelineLayoutOrDefault(desc.pipelineLayout, defaultPipelineLayout),
-            *renderPassVK,
-            limits,
-            desc
-        );
+        CreateVkPipeline(device, GetVkPipelineLayoutOrDefault(defaultPipelineLayout), *renderPassVK, limits, desc);
     }
     else
         throw std::invalid_argument("cannot create Vulkan graphics pipeline without render pass");
@@ -406,7 +400,7 @@ void VKGraphicsPSO::CreateVkPipeline(
         createInfo.basePipelineHandle           = VK_NULL_HANDLE;
         createInfo.basePipelineIndex            = 0;
     }
-    auto result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &createInfo, nullptr, GetVkPipelineAddress());
+    auto result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan graphics pipeline");
 }
 

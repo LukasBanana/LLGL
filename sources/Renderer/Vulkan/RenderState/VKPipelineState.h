@@ -19,15 +19,25 @@ namespace LLGL
 
 
 class PipelineLayout;
+class VKPipelineLayout;
 
 class VKPipelineState : public PipelineState
 {
 
     public:
 
-        VKPipelineState(const VKPtr<VkDevice>& device, VkPipelineBindPoint bindPoint);
+        VKPipelineState(
+            const VKPtr<VkDevice>&  device,
+            VkPipelineBindPoint     bindPoint,
+            const PipelineLayout*   pipelineLayout = nullptr
+        );
 
         const Report* GetReport() const override;
+
+    public:
+
+        // Binds this pipeline state to the specified Vulkan command buffer.
+        void BindPipeline(VkCommandBuffer commandBuffer);
 
         // Returns the native PSO.
         inline VkPipeline GetVkPipeline() const
@@ -41,20 +51,25 @@ class VKPipelineState : public PipelineState
             return bindPoint_;
         }
 
+        // Returns the pipeline layout this PSO was created with.
+        inline const VKPipelineLayout* GetPipelineLayout() const
+        {
+            return pipelineLayout_;
+        }
+
     protected:
 
-        static VkPipelineLayout GetVkPipelineLayoutOrDefault(
-            const PipelineLayout*   pipelineLayout,
-            VkPipelineLayout        defaultPipelineLayout
-        );
-
         // Releases the native PSO and returns its address.
-        VkPipeline* GetVkPipelineAddress();
+        VkPipeline* ReleaseAndGetAddressOfVkPipeline();
+
+        // Returns the native Vulkan pipeline layout this PSO was created with or the specified layout if there was no layout specified.
+        VkPipelineLayout GetVkPipelineLayoutOrDefault(VkPipelineLayout defaultPipelineLayout) const;
 
     private:
 
-        VKPtr<VkPipeline>   pipeline_;
-        VkPipelineBindPoint bindPoint_  = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        VKPtr<VkPipeline>       pipeline_;
+        const VKPipelineLayout* pipelineLayout_ = nullptr;
+        VkPipelineBindPoint     bindPoint_      = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 
 };
 

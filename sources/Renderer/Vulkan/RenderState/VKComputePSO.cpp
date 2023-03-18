@@ -1,6 +1,6 @@
 /*
  * VKComputePSO.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -23,14 +23,10 @@ VKComputePSO::VKComputePSO(
     const ComputePipelineDescriptor&    desc,
     VkPipelineLayout                    defaultPipelineLayout)
 :
-    VKPipelineState { device, VK_PIPELINE_BIND_POINT_COMPUTE }
+    VKPipelineState { device, VK_PIPELINE_BIND_POINT_COMPUTE, desc.pipelineLayout }
 {
     /* Create Vulkan compute pipeline object */
-    CreateVkPipeline(
-        device,
-        GetVkPipelineLayoutOrDefault(desc.pipelineLayout, defaultPipelineLayout),
-        desc
-    );
+    CreateVkPipeline(device, GetVkPipelineLayoutOrDefault(defaultPipelineLayout), desc);
 }
 
 
@@ -63,7 +59,7 @@ void VKComputePSO::CreateVkPipeline(
         createInfo.basePipelineHandle   = VK_NULL_HANDLE;
         createInfo.basePipelineIndex    = 0;
     }
-    auto result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &createInfo, nullptr, GetVkPipelineAddress());
+    auto result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan compute pipeline");
 }
 

@@ -18,23 +18,87 @@ namespace LLGL
 {
 
 
+VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
+    pipelineLayout_       { device, vkDestroyPipelineLayout          },
+    descriptorSetLayouts_ { { device, vkDestroyDescriptorSetLayout },
+                            { device, vkDestroyDescriptorSetLayout },
+                            { device, vkDestroyDescriptorSetLayout } },
+    staticDescriptorPool_ { device, vkDestroyDescriptorPool          },
+    uniformDescs_         { desc.uniforms                            }
+{
+    /* Create Vulkan descriptor set layouts */
+    if (!desc.heapBindings.empty())
+        CreateHeapBindingSetLayout(device, desc.heapBindings);
+    if (!desc.bindings.empty())
+        CreateDynamicBindingSetLayout(device, desc.bindings);
+    if (!desc.staticSamplers.empty())
+        CreateImmutableSamplers(device, desc.staticSamplers);
+
+    /* Don't create a VkPipelineLayout object if this instance only has push constants as those are part of the permutations for each PSO */
+    if (!desc.heapBindings.empty() || !desc.bindings.empty() || !desc.staticSamplers.empty())
+        pipelineLayout_ = CreateVkPipelineLayout(device);
+
+    /* Create static descriptor set for immutable samplers */
+    if (!desc.staticSamplers.empty())
+    {
+        CreateStaticDescriptorPool(device);
+        CreateStaticDescriptorSet(device, descriptorSetLayouts_[SetLayoutType_ImmutableSamplers].Get());
+    }
+}
+
+std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
+{
+    return static_cast<std::uint32_t>(heapBindings_.size());
+}
+
+std::uint32_t VKPipelineLayout::GetNumBindings() const
+{
+    return static_cast<std::uint32_t>(0); //TODO
+}
+
+std::uint32_t VKPipelineLayout::GetNumStaticSamplers() const
+{
+    return static_cast<std::uint32_t>(immutableSamplers_.size());
+}
+
+std::uint32_t VKPipelineLayout::GetNumUniforms() const
+{
+    return static_cast<std::uint32_t>(uniformDescs_.size());
+}
+
+void VKPipelineLayout::BindStaticDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const
+{
+    if (staticDescriptorSet_ != VK_NULL_HANDLE)
+    {
+        vkCmdBindDescriptorSets(
+            /*commandBuffer:*/      commandBuffer,
+            /*pipelineBindPoint:*/  bindPoint,
+            /*layout:*/             pipelineLayout_.Get(),
+            /*firstSet:*/           descriptorSetBindSlots_[SetLayoutType_ImmutableSamplers],
+            /*descriptorSetCount:*/ 1,
+            /*pDescriptorSets:*/    &staticDescriptorSet_,
+            /*dynamicOffsetCount:*/ 0,
+            /*pDynamicOffsets*/     nullptr
+        );
+    }
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 // Converts the bitmask of LLGL::StageFlags to VkShaderStageFlags
 static VkShaderStageFlags GetVkShaderStageFlags(long flags)
 {
     VkShaderStageFlags bitmask = 0;
 
-    if ((flags & StageFlags::VertexStage) != 0)
-        bitmask |= VK_SHADER_STAGE_VERTEX_BIT;
-    if ((flags & StageFlags::TessControlStage) != 0)
-        bitmask |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-    if ((flags & StageFlags::TessEvaluationStage) != 0)
-        bitmask |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-    if ((flags & StageFlags::GeometryStage) != 0)
-        bitmask |= VK_SHADER_STAGE_GEOMETRY_BIT;
-    if ((flags & StageFlags::FragmentStage) != 0)
-        bitmask |= VK_SHADER_STAGE_FRAGMENT_BIT;
-    if ((flags & StageFlags::ComputeStage) != 0)
-        bitmask |= VK_SHADER_STAGE_COMPUTE_BIT;
+    if ((flags & StageFlags::VertexStage        ) != 0) { bitmask |= VK_SHADER_STAGE_VERTEX_BIT;                  }
+    if ((flags & StageFlags::TessControlStage   ) != 0) { bitmask |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;    }
+    if ((flags & StageFlags::TessEvaluationStage) != 0) { bitmask |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; }
+    if ((flags & StageFlags::GeometryStage      ) != 0) { bitmask |= VK_SHADER_STAGE_GEOMETRY_BIT;                }
+    if ((flags & StageFlags::FragmentStage      ) != 0) { bitmask |= VK_SHADER_STAGE_FRAGMENT_BIT;                }
+    if ((flags & StageFlags::ComputeStage       ) != 0) { bitmask |= VK_SHADER_STAGE_COMPUTE_BIT;                 }
 
     return bitmask;
 }
@@ -59,51 +123,6 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
     }
     VKTypes::MapFailed("ResourceType", "VkDescriptorType");
 }
-
-VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
-    pipelineLayout_       { device, vkDestroyPipelineLayout          },
-    descriptorSetLayouts_ { { device, vkDestroyDescriptorSetLayout },
-                            { device, vkDestroyDescriptorSetLayout },
-                            { device, vkDestroyDescriptorSetLayout } },
-    uniformDescs_         { desc.uniforms                            }
-{
-    /* Create Vulkan descriptor set layouts */
-    if (!desc.heapBindings.empty())
-        CreateHeapBindingSetLayout(device, desc.heapBindings);
-    if (!desc.bindings.empty())
-        CreateDynamicBindingSetLayout(device, desc.bindings);
-    if (!desc.staticSamplers.empty())
-        CreateImmutableSamplers(device, desc.staticSamplers);
-
-    /* Don't create a VkPipelineLayout object if this instance only has push constants as those are part of the permutations for each PSO */
-    if (!desc.heapBindings.empty() || !desc.bindings.empty() || !desc.staticSamplers.empty())
-        pipelineLayout_ = CreateVkPipelineLayout(device);
-}
-
-std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
-{
-    return static_cast<std::uint32_t>(heapBindings_.size());
-}
-
-std::uint32_t VKPipelineLayout::GetNumBindings() const
-{
-    return static_cast<std::uint32_t>(0); //TODO
-}
-
-std::uint32_t VKPipelineLayout::GetNumStaticSamplers() const
-{
-    return static_cast<std::uint32_t>(immutableSamplers_.size());
-}
-
-std::uint32_t VKPipelineLayout::GetNumUniforms() const
-{
-    return static_cast<std::uint32_t>(uniformDescs_.size());
-}
-
-
-/*
- * ======= Private: =======
- */
 
 void VKPipelineLayout::CreateVkDescriptorSetLayout(
     VkDevice                                        device,
@@ -193,12 +212,16 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(
     const ArrayView<VkPushConstantRange>&   pushConstantRanges)
 {
     /* Create native Vulkan pipeline layout with up to 3 descriptor sets */
-    SmallVector<VkDescriptorSetLayout, 3> setLayoutsVK;
+    SmallVector<VkDescriptorSetLayout, SetLayoutType_Num> setLayoutsVK;
 
-    for (const auto& setLayout : descriptorSetLayouts_)
+    for_range(i, SetLayoutType_Num)
     {
-        if (setLayout.Get() != VK_NULL_HANDLE)
-            setLayoutsVK.push_back(setLayout.Get());
+        if (descriptorSetLayouts_[i].Get() != VK_NULL_HANDLE)
+        {
+            /* Add descriptor set layout and assign binding slot, i.e. 'layout(set = N)' for SPIR-V code */
+            descriptorSetBindSlots_[i] = static_cast<std::uint32_t>(setLayoutsVK.size());
+            setLayoutsVK.push_back(descriptorSetLayouts_[i].Get());
+        }
     }
 
     VkPipelineLayoutCreateInfo layoutCreateInfo;
@@ -223,6 +246,42 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(
     auto result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
     return pipelineLayout;
+}
+
+void VKPipelineLayout::CreateStaticDescriptorPool(const VKPtr<VkDevice>& device)
+{
+    /* Create Vulkan descriptor pool */
+    VkDescriptorPoolSize poolSizeInfo;
+    {
+        poolSizeInfo.type               = VK_DESCRIPTOR_TYPE_SAMPLER;
+        poolSizeInfo.descriptorCount    = static_cast<std::uint32_t>(immutableSamplers_.size());
+    }
+    VkDescriptorPoolCreateInfo poolCreateInfo;
+    {
+        poolCreateInfo.sType            = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolCreateInfo.pNext            = nullptr;
+        poolCreateInfo.flags            = 0;
+        poolCreateInfo.maxSets          = 1;
+        poolCreateInfo.poolSizeCount    = 1;
+        poolCreateInfo.pPoolSizes       = &poolSizeInfo;
+    }
+    auto result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, staticDescriptorPool_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan descriptor pool for static samplers");
+}
+
+void VKPipelineLayout::CreateStaticDescriptorSet(const VKPtr<VkDevice>& device, VkDescriptorSet setLayout)
+{
+    /* Allocate descriptor set for immutable samplers */
+    VkDescriptorSetAllocateInfo allocInfo;
+    {
+        allocInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.pNext                 = nullptr;
+        allocInfo.descriptorPool        = staticDescriptorPool_.Get();
+        allocInfo.descriptorSetCount    = 1;
+        allocInfo.pSetLayouts           = &setLayout;
+    }
+    auto result = vkAllocateDescriptorSets(device, &allocInfo, &staticDescriptorSet_);
+    VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 
 

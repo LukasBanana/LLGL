@@ -696,7 +696,7 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     /* Bind native PSO */
     auto& pipelineStateVK = LLGL_CAST(VKPipelineState&, pipelineState);
-    vkCmdBindPipeline(commandBuffer_, pipelineStateVK.GetBindPoint(), pipelineStateVK.GetVkPipeline());
+    pipelineStateVK.BindPipeline(commandBuffer_);
 
     /* Handle special case for graphics PSOs */
     pipelineBindPoint_ = pipelineStateVK.GetBindPoint();

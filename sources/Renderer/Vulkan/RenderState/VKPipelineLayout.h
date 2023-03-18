@@ -41,6 +41,9 @@ class VKPipelineLayout final : public PipelineLayout
 
         VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc);
 
+        // Binds the descriptor sets that are statically bound to this pipeline layout, such as immutable samplers.
+        void BindStaticDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const;
+
         // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
@@ -94,10 +97,18 @@ class VKPipelineLayout final : public PipelineLayout
             const ArrayView<VkPushConstantRange>&   pushConstantRanges = {}
         );
 
+        void CreateStaticDescriptorPool(const VKPtr<VkDevice>& device);
+        void CreateStaticDescriptorSet(const VKPtr<VkDevice>& device, VkDescriptorSet setLayout);
+
     private:
 
         VKPtr<VkPipelineLayout>         pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>    descriptorSetLayouts_[SetLayoutType_Num];
+        std::uint32_t                   descriptorSetBindSlots_[SetLayoutType_Num]  = {};
+
+        VKPtr<VkDescriptorPool>         staticDescriptorPool_;
+        VkDescriptorSet                 staticDescriptorSet_    = VK_NULL_HANDLE;
+
         std::vector<VKLayoutBinding>    heapBindings_;
       //std::vector<VKLayoutBinding>    bindings_;
         std::vector<VKPtr<VkSampler>>   immutableSamplers_;
