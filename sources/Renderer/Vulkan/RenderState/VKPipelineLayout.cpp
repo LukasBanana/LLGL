@@ -8,7 +8,9 @@
 #include "VKPipelineLayout.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
+#include "../Texture/VKSampler.h"
 #include <LLGL/Misc/ForRange.h>
+#include <LLGL/Container/SmallVector.h>
 #include <algorithm>
 
 
@@ -58,75 +60,29 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
     VKTypes::MapFailed("ResourceType", "VkDescriptorType");
 }
 
-static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
-{
-    dst.binding             = src.slot;
-    dst.descriptorType      = GetVkDescriptorType(src);
-    dst.descriptorCount     = std::max(1u, src.arraySize);
-    dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
-    dst.pImmutableSamplers  = nullptr;
-}
-
 VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
-    pipelineLayout_      { device, vkDestroyPipelineLayout      },
-    descriptorSetLayout_ { device, vkDestroyDescriptorSetLayout }
+    pipelineLayout_       { device, vkDestroyPipelineLayout          },
+    descriptorSetLayouts_ { { device, vkDestroyDescriptorSetLayout },
+                            { device, vkDestroyDescriptorSetLayout },
+                            { device, vkDestroyDescriptorSetLayout } },
+    uniformDescs_         { desc.uniforms                            }
 {
-    /* Initialize all descriptor-set layout bindings */
-    const auto numBindings = desc.bindings.size();
-    std::vector<VkDescriptorSetLayoutBinding> layoutBindings(numBindings);
+    /* Create Vulkan descriptor set layouts */
+    if (!desc.heapBindings.empty())
+        CreateHeapBindingSetLayout(device, desc.heapBindings);
+    if (!desc.bindings.empty())
+        CreateDynamicBindingSetLayout(device, desc.bindings);
+    if (!desc.staticSamplers.empty())
+        CreateImmutableSamplers(device, desc.staticSamplers);
 
-    for_range(i, numBindings)
-        Convert(layoutBindings[i], desc.bindings[i]);
-
-    /* Create descriptor set layout */
-    VkDescriptorSetLayoutCreateInfo descSetCreateInfo;
-    {
-        descSetCreateInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descSetCreateInfo.pNext         = nullptr;
-        descSetCreateInfo.flags         = 0;
-        descSetCreateInfo.bindingCount  = static_cast<std::uint32_t>(layoutBindings.size());
-        descSetCreateInfo.pBindings     = layoutBindings.data();
-    }
-    auto result = vkCreateDescriptorSetLayout(device, &descSetCreateInfo, nullptr, descriptorSetLayout_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan descriptor set layout");
-
-    /* Create pipeline layout */
-    VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout_.Get() };
-
-    VkPipelineLayoutCreateInfo layoutCreateInfo;
-    {
-        layoutCreateInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.pNext                  = nullptr;
-        layoutCreateInfo.flags                  = 0;
-        layoutCreateInfo.setLayoutCount         = 1;
-        layoutCreateInfo.pSetLayouts            = setLayouts;
-        layoutCreateInfo.pushConstantRangeCount = 0;
-        layoutCreateInfo.pPushConstantRanges    = nullptr;
-    }
-    result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
-
-    /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
-    bindings_.reserve(numBindings);
-    for_range(i, numBindings)
-    {
-        /* Append binding with slot, stage flags, and Vulkan descriptor type */
-        bindings_.push_back(
-            {
-                desc.bindings[i].slot,
-                desc.bindings[i].stageFlags,
-                layoutBindings[i].descriptorType
-            }
-        );
-
-        /* Consolidate all binding stage flags */
-        consolidatedStageFlags_ |= desc.bindings[i].stageFlags;
-    }
+    /* Don't create a VkPipelineLayout object if this instance only has push constants as those are part of the permutations for each PSO */
+    if (!desc.heapBindings.empty() || !desc.bindings.empty() || !desc.staticSamplers.empty())
+        pipelineLayout_ = CreateVkPipelineLayout(device);
 }
 
 std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
 {
-    return static_cast<std::uint32_t>(bindings_.size());
+    return static_cast<std::uint32_t>(heapBindings_.size());
 }
 
 std::uint32_t VKPipelineLayout::GetNumBindings() const
@@ -136,12 +92,137 @@ std::uint32_t VKPipelineLayout::GetNumBindings() const
 
 std::uint32_t VKPipelineLayout::GetNumStaticSamplers() const
 {
-    return static_cast<std::uint32_t>(0); //TODO
+    return static_cast<std::uint32_t>(immutableSamplers_.size());
 }
 
 std::uint32_t VKPipelineLayout::GetNumUniforms() const
 {
-    return static_cast<std::uint32_t>(0); //TODO
+    return static_cast<std::uint32_t>(uniformDescs_.size());
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void VKPipelineLayout::CreateVkDescriptorSetLayout(
+    VkDevice                                        device,
+    SetLayoutType                                   setLayoutType,
+    const ArrayView<VkDescriptorSetLayoutBinding>&  setLayoutBindings)
+{
+    VkDescriptorSetLayoutCreateInfo createInfo;
+    {
+        createInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        createInfo.pNext        = nullptr;
+        createInfo.flags        = 0;
+        createInfo.bindingCount = static_cast<std::uint32_t>(setLayoutBindings.size());
+        createInfo.pBindings    = setLayoutBindings.data();
+    }
+    auto result = vkCreateDescriptorSetLayout(device, &createInfo, nullptr, descriptorSetLayouts_[setLayoutType].ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan descriptor set layout");
+}
+
+static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
+{
+    dst.binding             = src.slot;
+    dst.descriptorType      = GetVkDescriptorType(src);
+    dst.descriptorCount     = std::max(1u, src.arraySize);
+    dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
+    dst.pImmutableSamplers  = nullptr;
+}
+
+void VKPipelineLayout::CreateHeapBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& heapBindings)
+{
+    /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
+    const auto numBindings = heapBindings.size();
+    std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
+
+    for_range(i, numBindings)
+        Convert(setLayoutBindings[i], heapBindings[i]);
+
+    CreateVkDescriptorSetLayout(device, SetLayoutType_HeapBindings, setLayoutBindings);
+
+    /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
+    heapBindings_.reserve(numBindings);
+    for_range(i, numBindings)
+    {
+        heapBindings_.push_back(
+            VKLayoutBinding
+            {
+                heapBindings[i].slot,
+                heapBindings[i].stageFlags,
+                setLayoutBindings[i].descriptorType
+            }
+        );
+    }
+}
+
+void VKPipelineLayout::CreateDynamicBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& bindings)
+{
+    //todo
+}
+
+static void Convert(VkDescriptorSetLayoutBinding& dst, const StaticSamplerDescriptor& src, const VkSampler* immutableSamplerVK)
+{
+    dst.binding             = src.slot;
+    dst.descriptorType      = VK_DESCRIPTOR_TYPE_SAMPLER;
+    dst.descriptorCount     = 1u;
+    dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
+    dst.pImmutableSamplers  = immutableSamplerVK;
+}
+
+void VKPipelineLayout::CreateImmutableSamplers(const VKPtr<VkDevice>& device, const std::vector<StaticSamplerDescriptor>& staticSamplers)
+{
+    /* Create all immutable Vulkan samplers */
+    immutableSamplers_.reserve(staticSamplers.size());
+    for (const auto& staticSamplerDesc : staticSamplers)
+        immutableSamplers_.push_back(VKSampler::CreateVkSampler(device, staticSamplerDesc.sampler));
+
+    /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
+    const auto numBindings = staticSamplers.size();
+    std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
+
+    for_range(i, numBindings)
+        Convert(setLayoutBindings[i], staticSamplers[i], &(immutableSamplers_[i]));
+
+    CreateVkDescriptorSetLayout(device, SetLayoutType_ImmutableSamplers, setLayoutBindings);
+}
+
+VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(
+    const VKPtr<VkDevice>&                  device,
+    const ArrayView<VkPushConstantRange>&   pushConstantRanges)
+{
+    /* Create native Vulkan pipeline layout with up to 3 descriptor sets */
+    SmallVector<VkDescriptorSetLayout, 3> setLayoutsVK;
+
+    for (const auto& setLayout : descriptorSetLayouts_)
+    {
+        if (setLayout.Get() != VK_NULL_HANDLE)
+            setLayoutsVK.push_back(setLayout.Get());
+    }
+
+    VkPipelineLayoutCreateInfo layoutCreateInfo;
+    {
+        layoutCreateInfo.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        layoutCreateInfo.pNext                      = nullptr;
+        layoutCreateInfo.flags                      = 0;
+        layoutCreateInfo.setLayoutCount             = static_cast<std::uint32_t>(setLayoutsVK.size());
+        layoutCreateInfo.pSetLayouts                = setLayoutsVK.data();
+        if (pushConstantRanges.empty())
+        {
+            layoutCreateInfo.pushConstantRangeCount = 0;
+            layoutCreateInfo.pPushConstantRanges    = nullptr;
+        }
+        else
+        {
+            layoutCreateInfo.pushConstantRangeCount = static_cast<std::uint32_t>(pushConstantRanges.size());
+            layoutCreateInfo.pPushConstantRanges    = pushConstantRanges.data();
+        }
+    }
+    VKPtr<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
+    auto result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
+    return pipelineLayout;
 }
 
 

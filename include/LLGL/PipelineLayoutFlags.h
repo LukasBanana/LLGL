@@ -237,7 +237,7 @@ struct StaticSamplerDescriptor
 
     /**
     \brief Specifies the static sampler state.
-    \remarks Static samplers can use one of three predefined border colors:
+    \remarks Static samplers can only use one of three predefined border colors:
     - Transparent black: <code>{0,0,0,0}</code>
     - Opaque black: <code>{0,0,0,1}</code>
     - Opaque white: <code>{1,1,1,1}</code>

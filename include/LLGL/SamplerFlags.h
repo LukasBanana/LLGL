@@ -151,7 +151,7 @@ struct LLGL_EXPORT SamplerDescriptor
 
     /**
     \brief Border color vector with four components: red, green, blue, and alpha. By default transparent-black (0, 0, 0, 0).
-    \note For Vulkan and Metal as well as static sampler in general, only three predefined border colors are supported:
+    \note For Vulkan and Metal as well as static samplers in general, only three predefined border colors are supported:
     - Transparent black: <code>{0,0,0,0}</code>
     - Opaque black: <code>{0,0,0,1}</code>
     - Opaque white: <code>{1,1,1,1}</code>

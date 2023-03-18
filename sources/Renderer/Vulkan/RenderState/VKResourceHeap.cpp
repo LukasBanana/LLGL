@@ -28,21 +28,6 @@ namespace LLGL
 {
 
 
-/*
-Returns the optimal pipeline binding point for the specified layout,
-or VK_PIPELINE_BIND_POINT_MAX_ENUM if there are multiple pipelines in use.
-*/
-static VkPipelineBindPoint FindPipelineBindPoint(long stageFlags)
-{
-    const bool hasGraphicsStages    = ((stageFlags & StageFlags::AllGraphicsStages) != 0);
-    const bool hasComputeStages     = ((stageFlags & StageFlags::ComputeStage) != 0);
-    if (hasGraphicsStages && !hasComputeStages)
-        return VK_PIPELINE_BIND_POINT_GRAPHICS;
-    if (!hasGraphicsStages && hasComputeStages)
-        return VK_PIPELINE_BIND_POINT_COMPUTE;
-    return VK_PIPELINE_BIND_POINT_MAX_ENUM;
-}
-
 VKResourceHeap::VKResourceHeap(
     const VKPtr<VkDevice>&                      device,
     const ResourceHeapDescriptor&               desc,
@@ -56,10 +41,9 @@ VKResourceHeap::VKResourceHeap(
         throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
 
     pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
-    bindPoint_      = FindPipelineBindPoint(pipelineLayoutVK->GetConsolidatedStageFlags());
 
     /* Get and validate number of bindings and resource views */
-    CopyLayoutBindings(pipelineLayoutVK->GetBindings());
+    CopyLayoutBindings(pipelineLayoutVK->GetHeapBindings());
 
     const auto numBindings      = static_cast<std::uint32_t>(bindings_.size());
     const auto numResourceViews = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
@@ -67,7 +51,7 @@ VKResourceHeap::VKResourceHeap(
     /* Create descriptor pool and array of descriptor sets */
     const auto numDescriptorSets = (numResourceViews / numBindings);
     CreateDescriptorPool(device, numDescriptorSets);
-    CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetVkDescriptorSetLayout());
+    CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetVkHeapBindingsSetLayout());
 
     /* Allocate array for descriptor set barriers */
     if ((desc.barrierFlags & BarrierFlags::Storage) != 0)
@@ -75,7 +59,7 @@ VKResourceHeap::VKResourceHeap(
 
     /* Write initial resource views */
     if (!initialResourceViews.empty())
-        UpdateDescriptors(device, 0, initialResourceViews);
+        WriteResourceViews(device, 0, initialResourceViews);
 }
 
 std::uint32_t VKResourceHeap::GetNumDescriptorSets() const
@@ -83,7 +67,7 @@ std::uint32_t VKResourceHeap::GetNumDescriptorSets() const
     return static_cast<std::uint32_t>(descriptorSets_.size());
 }
 
-std::uint32_t VKResourceHeap::UpdateDescriptors(
+std::uint32_t VKResourceHeap::WriteResourceViews(
     const VKPtr<VkDevice>&                      device,
     std::uint32_t                               firstDescriptor,
     const ArrayView<ResourceViewDescriptor>&    resourceViews)

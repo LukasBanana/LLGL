@@ -46,7 +46,7 @@ class VKResourceHeap final : public ResourceHeap
             const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
         );
 
-        std::uint32_t UpdateDescriptors(
+        std::uint32_t WriteResourceViews(
             const VKPtr<VkDevice>&                      device,
             std::uint32_t                               firstDescriptor,
             const ArrayView<ResourceViewDescriptor>&    resourceViews
@@ -71,15 +71,6 @@ class VKResourceHeap final : public ResourceHeap
         inline const std::vector<VkDescriptorSet>& GetVkDescriptorSets() const
         {
             return descriptorSets_;
-        }
-
-        /*
-        Returns the pipeline binding point for this resource heap.
-        Note: for Vulkan, currently only one binding point is supported for each resource heap.
-        */
-        inline VkPipelineBindPoint GetBindPoint() const
-        {
-            return bindPoint_;
         }
 
     private:
@@ -157,7 +148,6 @@ class VKResourceHeap final : public ResourceHeap
         std::uint32_t                       numBufferViewsPerSet_   = 0;
 
         std::vector<VKPipelineBarrierPtr>   barriers_;
-        VkPipelineBindPoint                 bindPoint_              = VK_PIPELINE_BIND_POINT_MAX_ENUM;
 
 };
 

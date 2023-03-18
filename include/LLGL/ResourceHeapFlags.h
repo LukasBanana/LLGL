@@ -158,10 +158,10 @@ struct ResourceHeapDescriptor
 
     /**
     \brief Specifies the number of resource views.
-    \remarks If the number of resource views is non-zero, it \b must a multiple of the bindings in the pipeline layout.
+    \remarks If the number of resource views is non-zero, it \b must a multiple of the heap-bindings in the pipeline layout.
     \remarks If the number of resource views is zero, the number will be determined by the initial resource views
-    and they must \e not be empty and they \b must be a multiple of the bindings in the pipeline layout.
-    \see PipelineLayoutDescriptor::bindings
+    and they must \e not be empty and they \b must be a multiple of the heap-bindings in the pipeline layout.
+    \see PipelineLayoutDescriptor::heapBindings
     \see RenderSystem::CreateResourceHeap
     */
     std::uint32_t   numResourceViews    = 0;

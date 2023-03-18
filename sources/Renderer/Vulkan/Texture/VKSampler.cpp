@@ -15,6 +15,11 @@ namespace LLGL
 {
 
 
+VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc) :
+    sampler_ { VKSampler::CreateVkSampler(device, desc) }
+{
+}
+
 static VkFilter GetVkFilter(const SamplerFilter filter)
 {
     return (filter == SamplerFilter::Linear ? VK_FILTER_LINEAR : VK_FILTER_NEAREST);
@@ -36,47 +41,53 @@ static VkBorderColor GetVkBorderColor(const float (&color)[4])
     }
 }
 
-VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc) :
-    sampler_ { device, vkDestroySampler }
+void VKSampler::ConvertDesc(VkSamplerCreateInfo& outDesc, const SamplerDescriptor& inDesc)
+{
+    outDesc.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    outDesc.pNext                   = nullptr;
+    outDesc.flags                   = 0;
+    outDesc.magFilter               = GetVkFilter(inDesc.magFilter);
+    outDesc.minFilter               = GetVkFilter(inDesc.minFilter);
+    outDesc.addressModeU            = VKTypes::Map(inDesc.addressModeU);
+    outDesc.addressModeV            = VKTypes::Map(inDesc.addressModeV);
+    outDesc.addressModeW            = VKTypes::Map(inDesc.addressModeW);
+    outDesc.mipLodBias              = inDesc.mipMapLODBias;
+    outDesc.anisotropyEnable        = VKBoolean(inDesc.maxAnisotropy > 1);
+    outDesc.maxAnisotropy           = static_cast<float>(inDesc.maxAnisotropy);
+    outDesc.compareEnable           = VKBoolean(inDesc.compareEnabled);
+    outDesc.compareOp               = VKTypes::Map(inDesc.compareOp);
+    outDesc.borderColor             = GetVkBorderColor(inDesc.borderColor);
+    outDesc.unnormalizedCoordinates = VK_FALSE;
+
+    if (inDesc.mipMapEnabled)
+    {
+        outDesc.mipmapMode  = GetVkSamplerMipmapMode(inDesc.mipMapFilter);
+        outDesc.minLod      = inDesc.minLOD;
+        outDesc.maxLod      = inDesc.maxLOD;
+    }
+    else
+    {
+        /*
+        Set MIP-map mode to fixed values.
+        see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkSamplerCreateInfo.html
+        */
+        outDesc.mipmapMode  = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        outDesc.minLod      = 0.0f;
+        outDesc.maxLod      = 0.25f;
+    }
+}
+
+VKPtr<VkSampler> VKSampler::CreateVkSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc)
 {
     /* Create sampler state */
-    VkSamplerCreateInfo createInfo;
+    VKPtr<VkSampler> sampler{ device, vkDestroySampler };
     {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.magFilter                = GetVkFilter(desc.magFilter);
-        createInfo.minFilter                = GetVkFilter(desc.minFilter);
-        createInfo.addressModeU             = VKTypes::Map(desc.addressModeU);
-        createInfo.addressModeV             = VKTypes::Map(desc.addressModeV);
-        createInfo.addressModeW             = VKTypes::Map(desc.addressModeW);
-        createInfo.mipLodBias               = desc.mipMapLODBias;
-        createInfo.anisotropyEnable         = VKBoolean(desc.maxAnisotropy > 1);
-        createInfo.maxAnisotropy            = static_cast<float>(desc.maxAnisotropy);
-        createInfo.compareEnable            = VKBoolean(desc.compareEnabled);
-        createInfo.compareOp                = VKTypes::Map(desc.compareOp);
-        createInfo.borderColor              = GetVkBorderColor(desc.borderColor);
-        createInfo.unnormalizedCoordinates  = VK_FALSE;
-
-        if (desc.mipMapEnabled)
-        {
-            createInfo.mipmapMode   = GetVkSamplerMipmapMode(desc.mipMapFilter);
-            createInfo.minLod       = desc.minLOD;
-            createInfo.maxLod       = desc.maxLOD;
-        }
-        else
-        {
-            /*
-            Set MIP-map mode to fixed values.
-            see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkSamplerCreateInfo.html
-            */
-            createInfo.mipmapMode   = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-            createInfo.minLod       = 0.0f;
-            createInfo.maxLod       = 0.25f;
-        }
+        VkSamplerCreateInfo createInfo;
+        VKSampler::ConvertDesc(createInfo, desc);
+        VkResult result = vkCreateSampler(device, &createInfo, nullptr, sampler.ReleaseAndGetAddressOf());
+        VKThrowIfFailed(result, "failed to create Vulkan sampler");
     }
-    VkResult result = vkCreateSampler(device, &createInfo, nullptr, sampler_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan sampler");
+    return sampler;
 }
 
 

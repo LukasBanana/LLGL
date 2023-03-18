@@ -20,7 +20,7 @@
 #include "VKInitializers.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "RenderState/VKComputePSO.h"
-#include <LLGL/Log.h>
+#include "../../Platform/Debug.h"
 #include <LLGL/ImageFlags.h>
 #include <limits>
 
@@ -601,7 +601,7 @@ void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 std::uint32_t VKRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-    return resourceHeapVK.UpdateDescriptors(device_, firstDescriptor, resourceViews);
+    return resourceHeapVK.WriteResourceViews(device_, firstDescriptor, resourceViews);
 }
 
 /* ----- Render Passes ----- */
@@ -809,17 +809,6 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     VKLoadInstanceExtensions(instance_);
 }
 
-static Log::ReportType ToReportType(VkDebugReportFlagsEXT flags)
-{
-    if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0)
-        return Log::ReportType::Error;
-    if ((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0)
-        return Log::ReportType::Warning;
-    if ((flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0)
-        return Log::ReportType::Performance;
-    return Log::ReportType::Information;
-}
-
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     VkDebugReportFlagsEXT       flags,
     VkDebugReportObjectTypeEXT  objectType,
@@ -830,8 +819,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     const char*                 message,
     void*                       userData)
 {
-    //auto renderSystemVK = reinterpret_cast<VKRenderSystem*>(userData);
-    Log::PostReport(ToReportType(flags), message, "vkDebugReportCallback");
+    DebugPuts(message);
     return VK_FALSE;
 }
 

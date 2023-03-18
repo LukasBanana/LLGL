@@ -11,9 +11,9 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
-#include <LLGL/Container/SmallVector.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include <vector>
 
 
 namespace LLGL
@@ -47,30 +47,61 @@ class VKPipelineLayout final : public PipelineLayout
             return pipelineLayout_.Get();
         }
 
-        // Returns the native VkDescriptorSetLayout object.
-        inline VkDescriptorSetLayout GetVkDescriptorSetLayout() const
+        // Returns the native VkDescriptorSetLayout object for heap bindings.
+        inline VkDescriptorSetLayout GetVkHeapBindingsSetLayout() const
         {
-            return descriptorSetLayout_.Get();
+            return descriptorSetLayouts_[SetLayoutType_HeapBindings].Get();
         }
 
         // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
-        inline const SmallVector<VKLayoutBinding>& GetBindings() const
+        inline const std::vector<VKLayoutBinding>& GetHeapBindings() const
         {
-            return bindings_;
+            return heapBindings_;
         }
 
-        // Returns the consolidated bitmask of all binding stage flags.
-        inline long GetConsolidatedStageFlags() const
+        // Returns true if this instance provides permutations for the native Vulkan pipeline layout.
+        inline bool HasVkPipelineLayoutPermutations() const
         {
-            return consolidatedStageFlags_;
+            return !uniformDescs_.empty();
         }
 
     private:
 
+        // Enumeration of descriptor set layout types.
+        enum SetLayoutType
+        {
+            SetLayoutType_HeapBindings = 0,
+            SetLayoutType_DynamicBindings,
+            SetLayoutType_ImmutableSamplers,
+
+            SetLayoutType_Num,
+        };
+
+    private:
+
+        void CreateVkDescriptorSetLayout(
+            VkDevice                                        device,
+            SetLayoutType                                   setLayoutType,
+            const ArrayView<VkDescriptorSetLayoutBinding>&  setLayoutBindings
+        );
+
+        void CreateHeapBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& heapBindings);
+        void CreateDynamicBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& bindings);
+        void CreateImmutableSamplers(const VKPtr<VkDevice>& device, const std::vector<StaticSamplerDescriptor>& staticSamplers);
+
+        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(
+            const VKPtr<VkDevice>&                  device,
+            const ArrayView<VkPushConstantRange>&   pushConstantRanges = {}
+        );
+
+    private:
+
         VKPtr<VkPipelineLayout>         pipelineLayout_;
-        VKPtr<VkDescriptorSetLayout>    descriptorSetLayout_;
-        SmallVector<VKLayoutBinding>    bindings_;
-        long                            consolidatedStageFlags_;
+        VKPtr<VkDescriptorSetLayout>    descriptorSetLayouts_[SetLayoutType_Num];
+        std::vector<VKLayoutBinding>    heapBindings_;
+      //std::vector<VKLayoutBinding>    bindings_;
+        std::vector<VKPtr<VkSampler>>   immutableSamplers_;
+        std::vector<UniformDescriptor>  uniformDescs_;
 
 };
 

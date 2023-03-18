@@ -1,6 +1,6 @@
 /*
  * VKSampler.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -30,6 +30,14 @@ class VKSampler final : public Sampler
         {
             return sampler_.Get();
         }
+
+    public:
+
+        // Converts the specified sampler descriptor to the native Vulkan descriptor.
+        static void ConvertDesc(VkSamplerCreateInfo& outDesc, const SamplerDescriptor& inDesc);
+
+        // Creates a native Vulkan sampler.
+        static VKPtr<VkSampler> CreateVkSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc);
 
     private:
 
