@@ -25,7 +25,7 @@ class GL2XSampler final : public Sampler
     public:
 
         // Converts and stores the sampler descriptor to GL states.
-        void SetDesc(const SamplerDescriptor& desc);
+        void SamplerParameters(const SamplerDescriptor& desc);
 
         // Binds all attributes of this sampler to the specified GL texture object.
         void BindTexParameters(GLenum target, const GL2XSampler* prevSampler = nullptr) const;

@@ -356,7 +356,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
     {
         /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
         auto samplerGL2X = MakeUnique<GL2XSampler>();
-        samplerGL2X->SetDesc(samplerDesc);
+        samplerGL2X->SamplerParameters(samplerDesc);
         return TakeOwnership(samplersGL2X_, std::move(samplerGL2X));
     }
     else
@@ -365,7 +365,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
         /* Create native GL sampler state */
         LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
         auto sampler = MakeUnique<GLSampler>();
-        sampler->SetDesc(samplerDesc);
+        sampler->SamplerParameters(samplerDesc);
         return TakeOwnership(samplers_, std::move(sampler));
     }
 }

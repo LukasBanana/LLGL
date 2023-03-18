@@ -30,7 +30,7 @@ static bool IsGLTextureWrapUsingBorder(GLenum mode)
     return (mode == GL_CLAMP || mode == GL_CLAMP_TO_BORDER);
 }
 
-void GL2XSampler::SetDesc(const SamplerDescriptor& desc)
+void GL2XSampler::SamplerParameters(const SamplerDescriptor& desc)
 {
     /* Store texture coordinate wrap modes */
     wrapS_              = GLTypes::Map(desc.addressModeU);

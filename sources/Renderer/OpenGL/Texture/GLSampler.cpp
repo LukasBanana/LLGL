@@ -40,7 +40,7 @@ static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
         return GLTypes::Map(desc.minFilter);
 }
 
-void GLSampler::SetDesc(const SamplerDescriptor& desc)
+void GLSampler::SamplerParameters(const SamplerDescriptor& desc)
 {
     /* Set texture coordinate wrap modes */
     glSamplerParameteri(id_, GL_TEXTURE_WRAP_S, GLTypes::Map(desc.addressModeU));

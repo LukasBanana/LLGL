@@ -149,7 +149,7 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
         {
             /* Create GL2.x sampler and store slot and name separately */
             auto sampler = MakeUnique<GL2XSampler>();
-            sampler->SetDesc(desc.sampler);
+            sampler->SamplerParameters(desc.sampler);
             staticSamplersGL2X_.push_back(std::move(sampler));
             staticSamplerSlots_.push_back(desc.slot);
             resourceNames_.push_back(desc.name);
@@ -163,7 +163,7 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
         {
             /* Create GL3+ sampler and store slot and name separately */
             auto sampler = MakeUnique<GLSampler>();
-            sampler->SetDesc(desc.sampler);
+            sampler->SamplerParameters(desc.sampler);
             staticSamplers_.push_back(std::move(sampler));
             staticSamplerSlots_.push_back(desc.slot);
             resourceNames_.push_back(desc.name);

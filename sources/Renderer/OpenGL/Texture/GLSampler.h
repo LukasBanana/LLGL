@@ -30,9 +30,10 @@ class GLSampler final : public Sampler
         GLSampler();
         ~GLSampler();
 
-        void SetDesc(const SamplerDescriptor& desc);
+        // Sets the GL sampler parameters with the specified descriptor, i.e. glSamplerParameter*.
+        void SamplerParameters(const SamplerDescriptor& desc);
 
-        //! Returns the hardware sampler ID.
+        // Returns the hardware sampler ID.
         inline GLuint GetID() const
         {
             return id_;
