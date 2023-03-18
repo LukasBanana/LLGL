@@ -9,6 +9,7 @@
 #include "VKRenderSystem.h"
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
+#include "Ext/VKExtensionRegistry.h"
 #include "Memory/VKDeviceMemory.h"
 #include "../RenderSystemUtils.h"
 #include "../TextureUtils.h"
@@ -742,9 +743,20 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     auto extensionProperties = VKQueryInstanceExtensionProperties();
     std::vector<const char*> extensionNames;
 
+    auto IsVKExtSupportIncluded = [this](VKExtSupport extSupport)
+    {
+        return
+        (
+            extSupport == VKExtSupport::Required ||
+            extSupport == VKExtSupport::Optional ||
+            (this->debugLayerEnabled_ && extSupport == VKExtSupport::DebugOnly)
+        );
+    };
+
     for (const auto& prop : extensionProperties)
     {
-        if (IsExtensionRequired(prop.extensionName))
+        const auto extSupport = GetVulkanInstanceExtensionSupport(prop.extensionName);
+        if (IsVKExtSupportIncluded(extSupport))
             extensionNames.push_back(prop.extensionName);
     }
 
@@ -907,21 +919,6 @@ bool VKRenderSystem::IsLayerRequired(const char* name, const RendererConfigurati
     }
 
     return false;
-}
-
-bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
-{
-    return
-    (
-        name == VK_KHR_SURFACE_EXTENSION_NAME
-        #ifdef LLGL_OS_WIN32
-        || name == VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-        #endif
-        #ifdef LLGL_OS_LINUX
-        || name == VK_KHR_XLIB_SURFACE_EXTENSION_NAME
-        #endif
-        || (debugLayerEnabled_ && name == VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
-    );
 }
 
 VKDeviceBuffer VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& createInfo)

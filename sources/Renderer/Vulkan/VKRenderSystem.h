@@ -163,7 +163,6 @@ class VKRenderSystem final : public RenderSystem
         void CreateDefaultPipelineLayout();
 
         bool IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const;
-        bool IsExtensionRequired(const std::string& name) const;
 
         VKDeviceBuffer CreateStagingBuffer(const VkBufferCreateInfo& createInfo);
 

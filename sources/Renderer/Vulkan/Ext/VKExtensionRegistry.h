@@ -1,6 +1,6 @@
 /*
  * VKExtensionRegistry.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -33,6 +33,15 @@ enum class VKExt
     Count,
 };
 
+// Vulkan extension support enumeration.
+enum class VKExtSupport
+{
+    Unsupported,    // Vulkan extension is unsupported and will not be loaded.
+    Optional,       // Vulkan extension is supported but optional.
+    DebugOnly,      // Vulkan extension is supported but only used for debugging.
+    Required,       // Vulkan extension is supported and required.
+};
+
 
 // Registers the specified Vulkan extension support.
 void RegisterExtension(VKExt extension);
@@ -45,6 +54,9 @@ void AssertExtension(const VKExt extension, const char* extensionName, const cha
 
 // Returns the null-terminated list of optional extensions.
 const char** GetOptionalExtensions();
+
+// Returns the type of support for the specified Vulkan instance extension.
+VKExtSupport GetVulkanInstanceExtensionSupport(const char* extensionName);
 
 
 } // /namespace LLGL
