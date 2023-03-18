@@ -235,9 +235,9 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
-        void CreateCommandPool(std::uint32_t queueFamilyIndex);
-        void CreateCommandBuffers(std::uint32_t bufferCount);
-        void CreateRecordingFences(VkQueue commandQueue, std::uint32_t numFences);
+        void CreateVkCommandPool(std::uint32_t queueFamilyIndex);
+        void CreateVkCommandBuffers();
+        void CreateVkRecordingFences();
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
@@ -280,18 +280,20 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
+        static const std::uint32_t maxNumCommandBuffers = 3;
+
         VKDevice&                       device_;
 
         VkQueue                         commandQueue_               = VK_NULL_HANDLE;
 
         VKPtr<VkCommandPool>            commandPool_;
 
-        std::vector<VkCommandBuffer>    commandBufferList_;
-        VkCommandBuffer                 commandBuffer_;
-        std::size_t                     commandBufferIndex_         = 0;
-
-        std::vector<VKPtr<VkFence>>     recordingFenceList_;
-        VkFence                         recordingFence_;
+        VKPtr<VkFence>                  recordingFenceArray_[maxNumCommandBuffers];
+        VkFence                         recordingFence_             = VK_NULL_HANDLE;
+        VkCommandBuffer                 commandBufferArray_[maxNumCommandBuffers];
+        VkCommandBuffer                 commandBuffer_              = VK_NULL_HANDLE;
+        std::uint32_t                   commandBufferIndex_         = 0;
+        std::uint32_t                   numCommandBuffers_          = 2;
 
         RecordState                     recordState_                = RecordState::Undefined;
 
