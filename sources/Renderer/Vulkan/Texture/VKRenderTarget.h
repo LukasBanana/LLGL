@@ -79,7 +79,7 @@ class VKRenderTarget final : public RenderTarget
             VkDevice                        device,
             const RenderTargetDescriptor&   desc,
             VKRenderPass&                   renderPass,
-            bool                            loadContent
+            VkAttachmentLoadOp              attachmentsLoadOp
         );
 
         void CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc);

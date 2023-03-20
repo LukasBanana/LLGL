@@ -14,6 +14,7 @@
 #include "../VKTypes.h"
 #include <vector>
 #include <algorithm>
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -126,53 +127,79 @@ void VKRenderTarget::CreateDepthStencilForAttachment(VKDeviceMemoryManager& devi
         ErrDepthAttachmentFailed();
 }
 
-static void Convert(
+static bool IsVkFormatDepthStencil(VkFormat format)
+{
+    switch (format)
+    {
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_X8_D24_UNORM_PACK32:
+        case VK_FORMAT_D32_SFLOAT:
+        case VK_FORMAT_S8_UINT:
+        case VK_FORMAT_D16_UNORM_S8_UINT:
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static VkImageLayout GetFinalLayoutForAttachment(VkFormat format, long bindFlags)
+{
+    if ((bindFlags & BindFlags::Sampled) != 0)
+        return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    else
+        return (IsVkFormatDepthStencil(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+}
+
+static void SetVkAttachmentDesc(
     VkAttachmentDescription&    dst,
     const AttachmentDescriptor& src,
     VkFormat                    format,
+    long                        bindFlags,
     VkSampleCountFlagBits       sampleCountBits,
-    bool                        loadContent)
+    VkAttachmentLoadOp          loadOp)
 {
     dst.flags           = 0;
     dst.format          = format;
     dst.samples         = sampleCountBits;
-    dst.loadOp          = (loadContent ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+    dst.loadOp          = loadOp;
     dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
-    dst.stencilLoadOp   = (loadContent && HasStencilComponent(src.type) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+    dst.stencilLoadOp   = (HasStencilComponent(src.type) ? loadOp : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
     dst.stencilStoreOp  = (HasStencilComponent(src.type) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE);
-    dst.initialLayout   = (loadContent ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED);
-    dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    dst.initialLayout   = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? GetFinalLayoutForAttachment(format, bindFlags) : VK_IMAGE_LAYOUT_UNDEFINED);
+    dst.finalLayout     = GetFinalLayoutForAttachment(format, bindFlags);
 }
 
-static void SetVkAttachmentDescForColor(
+static void SetVkAttachmentDescForMsaaColorOnly(
     VkAttachmentDescription&    dst,
     VkFormat                    format,
     VkSampleCountFlagBits       sampleCountBits,
-    bool                        loadContent)
+    VkAttachmentLoadOp          loadOp)
 {
     dst.flags           = 0;
     dst.format          = format;
     dst.samples         = sampleCountBits;
-    dst.loadOp          = (loadContent ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_DONT_CARE);
+    dst.loadOp          = loadOp;
     dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
     dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     dst.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    dst.initialLayout   = (loadContent ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED);
-    dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    dst.initialLayout   = (loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED);
+    dst.finalLayout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 }
 
 void VKRenderTarget::CreateRenderPass(
     VkDevice                        device,
     const RenderTargetDescriptor&   desc,
     VKRenderPass&                   renderPass,
-    bool                            loadContent)
+    VkAttachmentLoadOp              attachmentsLoadOp)
 {
     /* Initialize attachment descriptors */
     std::uint32_t numAttachments        = static_cast<std::uint32_t>(desc.attachments.size());
     std::uint32_t numColorAttachments   = 0;
 
-    std::vector<VkAttachmentDescription> attachmentDescs(numAttachments);
-    std::vector<VkFormat> colorFormats(numAttachments);
+    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    VkFormat colorFormats[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     for (const auto& attachment : desc.attachments)
     {
@@ -182,12 +209,13 @@ void VKRenderTarget::CreateRenderPass(
             auto textureVK = LLGL_CAST(VKTexture*, texture);
 
             /* Write attachment descriptor */
-            Convert(
+            SetVkAttachmentDesc(
                 attachmentDescs[numColorAttachments],
                 attachment,
                 textureVK->GetVkFormat(),
+                textureVK->GetBindFlags(),
                 VK_SAMPLE_COUNT_1_BIT, // target texture always has 1 sample only
-                loadContent
+                attachmentsLoadOp
             );
 
             if (attachment.type == AttachmentType::Color)
@@ -196,12 +224,13 @@ void VKRenderTarget::CreateRenderPass(
         else
         {
             /* Write attachment descriptor */
-            Convert(
+            SetVkAttachmentDesc(
                 attachmentDescs[numAttachments - 1],
                 attachment,
                 GetDepthAttachmentVkFormat(attachment.type),
+                BindFlags::DepthStencilAttachment,
                 sampleCountBits_,
-                loadContent
+                attachmentsLoadOp
             );
         }
     }
@@ -209,42 +238,34 @@ void VKRenderTarget::CreateRenderPass(
     /* Initialize attachment descriptors for multi-sampled color attachments */
     if (HasMultiSampling())
     {
-        attachmentDescs.resize(numAttachments + numColorAttachments);
-
         /* Take color attachment format descriptors for multi-sampled attachemnts */
-        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        for_range(i, numColorAttachments)
         {
-            SetVkAttachmentDescForColor(
+            SetVkAttachmentDescForMsaaColorOnly(
                 attachmentDescs[numAttachments + i],
                 colorFormats[i],
                 sampleCountBits_,
-                loadContent
+                attachmentsLoadOp
             );
         }
 
         /* Modify original attachment descriptors */
-        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        for_range(i, numColorAttachments)
             attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     }
 
     /* Create native Vulkan render pass with attachment descriptors */
-    renderPass.CreateVkRenderPassWithDescriptors(
-        device,
-        numAttachments,
-        numColorAttachments,
-        attachmentDescs.data(),
-        sampleCountBits_
-    );
+    renderPass.CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits_);
 }
 
 void VKRenderTarget::CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
 {
-    CreateRenderPass(device, desc, defaultRenderPass_, false);
+    CreateRenderPass(device, desc, defaultRenderPass_, VK_ATTACHMENT_LOAD_OP_DONT_CARE);
 }
 
 void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc)
 {
-    CreateRenderPass(device, desc, secondaryRenderPass_, true);
+    CreateRenderPass(device, desc, secondaryRenderPass_, VK_ATTACHMENT_LOAD_OP_LOAD);
 }
 
 void VKRenderTarget::CreateFramebuffer(
@@ -315,7 +336,7 @@ void VKRenderTarget::CreateFramebuffer(
         colorBuffers_.reserve(numColorAttachments_);
         imageViewRefs.reserve(numAttachments + numColorAttachments_);
 
-        for (std::uint32_t i = 0; i < numColorAttachments_; ++i)
+        for_range(i, numColorAttachments_)
         {
             /* Create new multi-sampled color buffer and store reference to image view in primary attachment container */
             auto colorBuffer = MakeUnique<VKColorBuffer>(device);

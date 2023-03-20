@@ -9,6 +9,7 @@
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include "../../RenderPassUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Misc/ForRange.h>
 #include <limits>
 
@@ -106,7 +107,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
 
     /* Initialize attachment descriptors */
     const auto sampleCountBits = VKTypes::ToVkSampleCountBits(desc.samples);
-    std::vector<VkAttachmentDescription> attachmentDescs(desc.samples > 1 ? numAttachments + numColorAttachments : numAttachments);
+    VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     for_range(i, numColorAttachments)
         Convert(attachmentDescs[i], desc.colorAttachments[i], VK_SAMPLE_COUNT_1_BIT);
@@ -126,13 +127,7 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     }
 
     /* Create render pass with native attachment descriptors */
-    CreateVkRenderPassWithDescriptors(
-        device,
-        numAttachments,
-        numColorAttachments,
-        attachmentDescs.data(),
-        sampleCountBits
-    );
+    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs, sampleCountBits);
 }
 
 void VKRenderPass::CreateVkRenderPassWithDescriptors(
@@ -142,12 +137,15 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     const VkAttachmentDescription*  attachmentDescs,
     VkSampleCountFlagBits           sampleCountBits)
 {
+    LLGL_ASSERT(numAttachments <= LLGL_MAX_NUM_ATTACHMENTS);
+    LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+
     /* Store sample count bits */
     sampleCountBits_ = sampleCountBits;
     const bool multiSampleEnabled = (sampleCountBits > VK_SAMPLE_COUNT_1_BIT);
 
-    std::vector<VkAttachmentReference> rtvAttachmentsRefs(numAttachments);
-    std::vector<VkAttachmentReference> rtvMsaaAttachmentsRefs;
+    VkAttachmentReference rtvAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    VkAttachmentReference rtvMsaaAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
     VkAttachmentReference dsvAttachmentRef = {};
 
     /* Store index for depth-stencil attachment */
@@ -161,7 +159,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
 
-    for (std::uint32_t i = 0; i < numAttachments; ++i)
+    for_range(i, numAttachments)
     {
         if (attachmentDescs[multiSampleEnabled && i + 1 < numAttachments ? numAttachments + i : i].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
@@ -171,7 +169,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     }
 
     /* Initialize attachment reference */
-    for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+    for_range(i, numColorAttachments)
     {
         rtvAttachmentsRefs[i].attachment    = i;
         rtvAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -185,8 +183,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
 
     if (multiSampleEnabled)
     {
-        rtvMsaaAttachmentsRefs.resize(numColorAttachments);
-        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        for_range(i, numColorAttachments)
         {
             rtvMsaaAttachmentsRefs[i].attachment    = numAttachments + i;
             rtvMsaaAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -201,16 +198,16 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         subpassDesc.inputAttachmentCount    = 0;
         subpassDesc.pInputAttachments       = nullptr;
         subpassDesc.colorAttachmentCount    = numColorAttachments;
-        if (rtvMsaaAttachmentsRefs.empty())
+        if (multiSampleEnabled && numColorAttachments > 0)
         {
-            subpassDesc.pColorAttachments   = rtvAttachmentsRefs.data();
-            subpassDesc.pResolveAttachments = nullptr;
+            /* Swap color and resolve attachments */
+            subpassDesc.pColorAttachments   = rtvMsaaAttachmentsRefs;
+            subpassDesc.pResolveAttachments = rtvAttachmentsRefs;
         }
         else
         {
-            /* Swap color and resolve attachments */
-            subpassDesc.pColorAttachments   = rtvMsaaAttachmentsRefs.data();
-            subpassDesc.pResolveAttachments = rtvAttachmentsRefs.data();
+            subpassDesc.pColorAttachments   = rtvAttachmentsRefs;
+            subpassDesc.pResolveAttachments = nullptr;
         }
         subpassDesc.pDepthStencilAttachment = (hasDepthStencil ? &dsvAttachmentRef : nullptr);
         subpassDesc.preserveAttachmentCount = 0;
@@ -220,27 +217,27 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     /* Initialize sub-pass dependency */
     VkSubpassDependency subpassDep;
     {
-        subpassDep.srcSubpass               = VK_SUBPASS_EXTERNAL;
-        subpassDep.dstSubpass               = 0;
-        subpassDep.srcStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; //VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-        subpassDep.dstStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDep.srcAccessMask            = 0;
-        subpassDep.dstAccessMask            = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        subpassDep.dependencyFlags          = 0;
+        subpassDep.srcSubpass       = VK_SUBPASS_EXTERNAL;
+        subpassDep.dstSubpass       = 0;
+        subpassDep.srcStageMask     = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; //VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
+        subpassDep.dstStageMask     = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDep.srcAccessMask    = 0;
+        subpassDep.dstAccessMask    = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDep.dependencyFlags  = 0;
     }
 
     /* Create swap-chain render pass */
     VkRenderPassCreateInfo createInfo;
     {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.attachmentCount          = (multiSampleEnabled ? numAttachments + numColorAttachments : numAttachments);
-        createInfo.pAttachments             = attachmentDescs;
-        createInfo.subpassCount             = 1;
-        createInfo.pSubpasses               = (&subpassDesc);
-        createInfo.dependencyCount          = 1;
-        createInfo.pDependencies            = (&subpassDep);
+        createInfo.sType            = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        createInfo.pNext            = nullptr;
+        createInfo.flags            = 0;
+        createInfo.attachmentCount  = (multiSampleEnabled ? numAttachments + numColorAttachments : numAttachments);
+        createInfo.pAttachments     = attachmentDescs;
+        createInfo.subpassCount     = 1;
+        createInfo.pSubpasses       = (&subpassDesc);
+        createInfo.dependencyCount  = 1;
+        createInfo.pDependencies    = (&subpassDep);
     }
     auto result = vkCreateRenderPass(device, &createInfo, nullptr, renderPass_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan render pass");
