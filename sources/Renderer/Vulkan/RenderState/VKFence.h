@@ -1,6 +1,6 @@
 /*
  * VKFence.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -24,7 +24,7 @@ class VKFence final : public Fence
 
     public:
 
-        VKFence(const VKPtr<VkDevice>& device);
+        VKFence(VkDevice device);
 
         void Reset(VkDevice device);
         bool Wait(VkDevice device, std::uint64_t timeout);

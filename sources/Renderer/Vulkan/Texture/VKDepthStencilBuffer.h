@@ -1,6 +1,6 @@
 /*
  * VKDepthStencilBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -21,7 +21,7 @@ class VKDepthStencilBuffer final : private VKRenderBuffer
 
     public:
 
-        VKDepthStencilBuffer(const VKPtr<VkDevice>& device);
+        VKDepthStencilBuffer(VkDevice device);
 
         void Create(
             VKDeviceMemoryManager&  deviceMemoryMngr,

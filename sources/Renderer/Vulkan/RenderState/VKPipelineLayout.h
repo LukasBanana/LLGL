@@ -39,7 +39,7 @@ class VKPipelineLayout final : public PipelineLayout
 
     public:
 
-        VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc);
+        VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc);
 
         // Binds the descriptor sets that are statically bound to this pipeline layout, such as immutable samplers.
         void BindStaticDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const;
@@ -88,17 +88,19 @@ class VKPipelineLayout final : public PipelineLayout
             const ArrayView<VkDescriptorSetLayoutBinding>&  setLayoutBindings
         );
 
-        void CreateHeapBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& heapBindings);
-        void CreateDynamicBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& bindings);
-        void CreateImmutableSamplers(const VKPtr<VkDevice>& device, const std::vector<StaticSamplerDescriptor>& staticSamplers);
-
-        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(
-            const VKPtr<VkDevice>&                  device,
-            const ArrayView<VkPushConstantRange>&   pushConstantRanges = {}
+        void CreateBindingSetLayout(
+            VkDevice                                device,
+            const std::vector<BindingDescriptor>&   inBindings,
+            std::vector<VKLayoutBinding>&           outBindings,
+            SetLayoutType                           setLayoutType
         );
 
-        void CreateStaticDescriptorPool(const VKPtr<VkDevice>& device);
-        void CreateStaticDescriptorSet(const VKPtr<VkDevice>& device, VkDescriptorSet setLayout);
+        void CreateImmutableSamplers(VkDevice device, const ArrayView<StaticSamplerDescriptor>& staticSamplers);
+
+        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(VkDevice device, const ArrayView<VkPushConstantRange>& pushConstantRanges = {});
+
+        void CreateStaticDescriptorPool(VkDevice device);
+        void CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout);
 
     private:
 
@@ -110,7 +112,7 @@ class VKPipelineLayout final : public PipelineLayout
         VkDescriptorSet                 staticDescriptorSet_    = VK_NULL_HANDLE;
 
         std::vector<VKLayoutBinding>    heapBindings_;
-      //std::vector<VKLayoutBinding>    bindings_;
+        std::vector<VKLayoutBinding>    bindings_;
         std::vector<VKPtr<VkSampler>>   immutableSamplers_;
         std::vector<UniformDescriptor>  uniformDescs_;
 

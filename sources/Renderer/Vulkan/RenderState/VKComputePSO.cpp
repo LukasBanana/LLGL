@@ -19,7 +19,7 @@ namespace LLGL
 
 
 VKComputePSO::VKComputePSO(
-    const VKPtr<VkDevice>&              device,
+    VkDevice                            device,
     const ComputePipelineDescriptor&    desc,
     VkPipelineLayout                    defaultPipelineLayout)
 :

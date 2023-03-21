@@ -22,7 +22,7 @@ namespace LLGL
 {
 
 
-VKShader::VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc) :
+VKShader::VKShader(VkDevice device, const ShaderDescriptor& desc) :
     Shader        { desc.type                     },
     device_       { device                        },
     shaderModule_ { device, vkDestroyShaderModule }

@@ -17,7 +17,7 @@ namespace LLGL
 
 
 VKTexture::VKTexture(
-    const VKPtr<VkDevice>&      device,
+    VkDevice                    device,
     VKDeviceMemoryManager&      deviceMemoryMngr,
     const TextureDescriptor&    desc)
 :

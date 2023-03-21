@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-VKDeviceImage::VKDeviceImage(const VKPtr<VkDevice>& device) :
+VKDeviceImage::VKDeviceImage(VkDevice device) :
     image_ { device, vkDestroyImage }
 {
 }

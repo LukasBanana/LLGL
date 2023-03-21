@@ -24,7 +24,7 @@ class VKComputePSO final : public VKPipelineState
     public:
 
         VKComputePSO(
-            const VKPtr<VkDevice>&              device,
+            VkDevice                            device,
             const ComputePipelineDescriptor&    desc,
             VkPipelineLayout                    defaultPipelineLayout
         );

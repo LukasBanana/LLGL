@@ -33,9 +33,9 @@ class VKSwapChain final : public SwapChain
     public:
 
         VKSwapChain(
-            const VKPtr<VkInstance>&        instance,
+            VkInstance                      instance,
             VkPhysicalDevice                physicalDevice,
-            const VKPtr<VkDevice>&          device,
+            VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface
@@ -118,7 +118,7 @@ class VKSwapChain final : public SwapChain
 
         VkInstance              instance_                                   = VK_NULL_HANDLE;
         VkPhysicalDevice        physicalDevice_                             = VK_NULL_HANDLE;
-        const VKPtr<VkDevice>&  device_;
+        VkDevice                device_;
 
         VKDeviceMemoryManager&  deviceMemoryMngr_;
 

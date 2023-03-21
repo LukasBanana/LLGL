@@ -29,7 +29,7 @@ class VKTexture final : public Texture
     public:
 
         VKTexture(
-            const VKPtr<VkDevice>&      device,
+            VkDevice                    device,
             VKDeviceMemoryManager&      deviceMemoryMngr,
             const TextureDescriptor&    desc
         );

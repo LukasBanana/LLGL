@@ -1,6 +1,6 @@
 /*
  * VKBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -29,7 +29,7 @@ class VKBuffer : public Buffer
 
     public:
 
-        VKBuffer(const VKPtr<VkDevice>& device, const BufferDescriptor& desc);
+        VKBuffer(VkDevice device, const BufferDescriptor& desc);
 
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
         void TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer);

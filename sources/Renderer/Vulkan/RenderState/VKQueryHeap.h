@@ -24,7 +24,7 @@ class VKQueryHeap : public QueryHeap
 
     public:
 
-        VKQueryHeap(const VKPtr<VkDevice>& device, const QueryHeapDescriptor& desc);
+        VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc);
 
         // Returns the Vulkan VkQueryPool object.
         inline VkQueryPool GetVkQueryPool() const

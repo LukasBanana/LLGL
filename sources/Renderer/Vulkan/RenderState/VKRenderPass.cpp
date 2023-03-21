@@ -18,12 +18,12 @@ namespace LLGL
 {
 
 
-VKRenderPass::VKRenderPass(const VKPtr<VkDevice>& device) :
+VKRenderPass::VKRenderPass(VkDevice device) :
     renderPass_ { device, vkDestroyRenderPass }
 {
 }
 
-VKRenderPass::VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc) :
+VKRenderPass::VKRenderPass(VkDevice device, const RenderPassDescriptor& desc) :
     VKRenderPass { device }
 {
     CreateVkRenderPass(device, desc);

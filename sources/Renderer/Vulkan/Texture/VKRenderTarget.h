@@ -28,7 +28,7 @@ class VKRenderTarget final : public RenderTarget
     public:
 
         VKRenderTarget(
-            const VKPtr<VkDevice>&          device,
+            VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const RenderTargetDescriptor&   desc
         );
@@ -86,7 +86,7 @@ class VKRenderTarget final : public RenderTarget
         void CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
 
         void CreateFramebuffer(
-            const VKPtr<VkDevice>&          device,
+            VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const RenderTargetDescriptor&   desc
         );

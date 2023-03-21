@@ -1,6 +1,6 @@
 /*
  * VKRenderBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-VKRenderBuffer::VKRenderBuffer(const VKPtr<VkDevice>& device) :
+VKRenderBuffer::VKRenderBuffer(VkDevice device) :
     VKDeviceImage { device                     },
     imageView_    { device, vkDestroyImageView }
 {

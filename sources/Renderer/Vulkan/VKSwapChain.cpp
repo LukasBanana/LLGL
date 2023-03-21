@@ -30,25 +30,25 @@ static const std::vector<const char*> g_deviceExtensions
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-static VKPtr<VkImageView> NullVkImageView(const VKPtr<VkDevice>& device)
+static VKPtr<VkImageView> NullVkImageView(VkDevice device)
 {
     return VKPtr<VkImageView>{ device, vkDestroyImageView };
 }
 
-static VKPtr<VkFramebuffer> NullVkFramebuffer(const VKPtr<VkDevice>& device)
+static VKPtr<VkFramebuffer> NullVkFramebuffer(VkDevice device)
 {
     return VKPtr<VkFramebuffer>{ device, vkDestroyFramebuffer };
 }
 
-static VKPtr<VkSemaphore> NullVkSemaphore(const VKPtr<VkDevice>& device)
+static VKPtr<VkSemaphore> NullVkSemaphore(VkDevice device)
 {
     return VKPtr<VkSemaphore>{ device, vkDestroySemaphore };
 }
 
 VKSwapChain::VKSwapChain(
-    const VKPtr<VkInstance>&        instance,
+    VkInstance                      instance,
     VkPhysicalDevice                physicalDevice,
-    const VKPtr<VkDevice>&          device,
+    VkDevice                        device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface)

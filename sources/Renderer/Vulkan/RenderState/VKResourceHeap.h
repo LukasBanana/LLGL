@@ -41,13 +41,13 @@ class VKResourceHeap final : public ResourceHeap
     public:
 
         VKResourceHeap(
-            const VKPtr<VkDevice>&                      device,
+            VkDevice                                    device,
             const ResourceHeapDescriptor&               desc,
             const ArrayView<ResourceViewDescriptor>&    initialResourceViews = {}
         );
 
         std::uint32_t WriteResourceViews(
-            const VKPtr<VkDevice>&                      device,
+            VkDevice                                    device,
             std::uint32_t                               firstDescriptor,
             const ArrayView<ResourceViewDescriptor>&    resourceViews
         );
@@ -91,10 +91,10 @@ class VKResourceHeap final : public ResourceHeap
         void CopyLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
         void CopyLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src);
 
-        void CreateDescriptorPool(const VKPtr<VkDevice>& device, std::uint32_t numDescriptorSets);
+        void CreateDescriptorPool(VkDevice device, std::uint32_t numDescriptorSets);
 
         void CreateDescriptorSets(
-            const VKPtr<VkDevice>&  device,
+            VkDevice                device,
             std::uint32_t           numDescriptorSets,
             VkDescriptorSetLayout   globalSetLayout
         );
@@ -107,7 +107,7 @@ class VKResourceHeap final : public ResourceHeap
         );
 
         void FillWriteDescriptorWithImageView(
-            const VKPtr<VkDevice>&          device,
+            VkDevice                        device,
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
             const VKDescriptorBinding&      binding,
@@ -115,7 +115,7 @@ class VKResourceHeap final : public ResourceHeap
         );
 
         void FillWriteDescriptorWithBufferRange(
-            const VKPtr<VkDevice>&          device,
+            VkDevice                        device,
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
             const VKDescriptorBinding&      binding,
@@ -128,7 +128,7 @@ class VKResourceHeap final : public ResourceHeap
 
         // Returns the image view for the specified texture or creates one if the texture-view is enabled.
         VkImageView GetOrCreateImageView(
-            const VKPtr<VkDevice>&          device,
+            VkDevice                        device,
             VKTexture&                      textureVK,
             const ResourceViewDescriptor&   desc,
             std::size_t                     imageViewIndex

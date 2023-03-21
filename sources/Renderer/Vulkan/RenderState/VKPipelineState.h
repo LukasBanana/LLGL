@@ -27,7 +27,7 @@ class VKPipelineState : public PipelineState
     public:
 
         VKPipelineState(
-            const VKPtr<VkDevice>&  device,
+            VkDevice                device,
             VkPipelineBindPoint     bindPoint,
             const PipelineLayout*   pipelineLayout = nullptr
         );

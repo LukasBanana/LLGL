@@ -22,7 +22,7 @@ namespace LLGL
 
 
 VKRenderTarget::VKRenderTarget(
-    const VKPtr<VkDevice>&          device,
+    VkDevice                        device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const RenderTargetDescriptor&   desc)
 :
@@ -269,7 +269,7 @@ void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTarg
 }
 
 void VKRenderTarget::CreateFramebuffer(
-    const VKPtr<VkDevice>&          device,
+    VkDevice                        device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const RenderTargetDescriptor&   desc)
 {

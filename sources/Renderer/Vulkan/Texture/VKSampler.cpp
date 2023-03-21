@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc) :
+VKSampler::VKSampler(VkDevice device, const SamplerDescriptor& desc) :
     sampler_ { VKSampler::CreateVkSampler(device, desc) }
 {
 }
@@ -77,7 +77,7 @@ void VKSampler::ConvertDesc(VkSamplerCreateInfo& outDesc, const SamplerDescripto
     }
 }
 
-VKPtr<VkSampler> VKSampler::CreateVkSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc)
+VKPtr<VkSampler> VKSampler::CreateVkSampler(VkDevice device, const SamplerDescriptor& desc)
 {
     /* Create sampler state */
     VKPtr<VkSampler> sampler{ device, vkDestroySampler };

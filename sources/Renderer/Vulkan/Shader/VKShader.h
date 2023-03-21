@@ -33,7 +33,7 @@ class VKShader final : public Shader
 
     public:
 
-        VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
+        VKShader(VkDevice device, const ShaderDescriptor& desc);
 
         bool ReflectLocalSize(Extent3D& localSize) const;
 

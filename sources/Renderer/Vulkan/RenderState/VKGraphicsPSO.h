@@ -33,7 +33,7 @@ class VKGraphicsPSO final : public VKPipelineState
     public:
 
         VKGraphicsPSO(
-            const VKPtr<VkDevice>&              device,
+            VkDevice                            device,
             VkPipelineLayout                    defaultPipelineLayout,
             const RenderPass*                   defaultRenderPass,
             const GraphicsPipelineDescriptor&   desc,

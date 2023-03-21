@@ -1,6 +1,6 @@
 /*
  * VKColorBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-VKColorBuffer::VKColorBuffer(const VKPtr<VkDevice>& device) :
+VKColorBuffer::VKColorBuffer(VkDevice device) :
     VKRenderBuffer { device }
 {
 }

@@ -1,6 +1,6 @@
 /*
  * VKFence.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-VKFence::VKFence(const VKPtr<VkDevice>& device) :
+VKFence::VKFence(VkDevice device) :
     fence_ { device, vkDestroyFence }
 {
     VkFenceCreateInfo createInfo;

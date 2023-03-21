@@ -25,7 +25,7 @@ namespace LLGL
 
 
 VKGraphicsPSO::VKGraphicsPSO(
-    const VKPtr<VkDevice>&              device,
+    VkDevice                            device,
     VkPipelineLayout                    defaultPipelineLayout,
     const RenderPass*                   defaultRenderPass,
     const GraphicsPipelineDescriptor&   desc,

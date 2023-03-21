@@ -1,6 +1,6 @@
 /*
  * VKDepthStencilBuffer.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-VKDepthStencilBuffer::VKDepthStencilBuffer(const VKPtr<VkDevice>& device) :
+VKDepthStencilBuffer::VKDepthStencilBuffer(VkDevice device) :
     VKRenderBuffer { device }
 {
 }

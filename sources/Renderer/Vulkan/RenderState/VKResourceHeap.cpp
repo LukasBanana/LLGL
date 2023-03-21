@@ -29,7 +29,7 @@ namespace LLGL
 
 
 VKResourceHeap::VKResourceHeap(
-    const VKPtr<VkDevice>&                      device,
+    VkDevice                                    device,
     const ResourceHeapDescriptor&               desc,
     const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
 :
@@ -68,7 +68,7 @@ std::uint32_t VKResourceHeap::GetNumDescriptorSets() const
 }
 
 std::uint32_t VKResourceHeap::WriteResourceViews(
-    const VKPtr<VkDevice>&                      device,
+    VkDevice                                    device,
     std::uint32_t                               firstDescriptor,
     const ArrayView<ResourceViewDescriptor>&    resourceViews)
 {
@@ -244,7 +244,7 @@ static std::uint32_t GetDescriptorPoolIndex(VkDescriptorType type)
         return -1;
 }
 
-void VKResourceHeap::CreateDescriptorPool(const VKPtr<VkDevice>& device, std::uint32_t numDescriptorSets)
+void VKResourceHeap::CreateDescriptorPool(VkDevice device, std::uint32_t numDescriptorSets)
 {
     /* Determine descriptor pool sizes per descriptor type */
     constexpr auto numDescriptorTypes = (static_cast<std::uint32_t>(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) + 1);
@@ -288,7 +288,7 @@ void VKResourceHeap::CreateDescriptorPool(const VKPtr<VkDevice>& device, std::ui
 }
 
 void VKResourceHeap::CreateDescriptorSets(
-    const VKPtr<VkDevice>&  device,
+    VkDevice                device,
     std::uint32_t           numDescriptorSets,
     VkDescriptorSetLayout   globalSetLayout)
 {
@@ -343,7 +343,7 @@ void VKResourceHeap::FillWriteDescriptorWithSampler(
 }
 
 void VKResourceHeap::FillWriteDescriptorWithImageView(
-    const VKPtr<VkDevice>&          device,
+    VkDevice                        device,
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKDescriptorBinding&      binding,
@@ -375,7 +375,7 @@ void VKResourceHeap::FillWriteDescriptorWithImageView(
 }
 
 void VKResourceHeap::FillWriteDescriptorWithBufferRange(
-    const VKPtr<VkDevice>&          /*device*/,
+    VkDevice                        /*device*/,
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKDescriptorBinding&      binding,
@@ -458,7 +458,7 @@ bool VKResourceHeap::RemoveBarrier(std::uint32_t descriptorSet, std::uint32_t sl
 }
 
 VkImageView VKResourceHeap::GetOrCreateImageView(
-    const VKPtr<VkDevice>&          device,
+    VkDevice                        device,
     VKTexture&                      textureVK,
     const ResourceViewDescriptor&   desc,
     std::size_t                     imageViewIndex)

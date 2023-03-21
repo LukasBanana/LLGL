@@ -28,12 +28,12 @@ class VKDeviceBuffer
 
         /* ----- Common ----- */
 
-        VKDeviceBuffer(const VKPtr<VkDevice>& device);
+        VKDeviceBuffer(VkDevice device);
 
-        VKDeviceBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
+        VKDeviceBuffer(VkDevice device, const VkBufferCreateInfo& createInfo);
 
         VKDeviceBuffer(
-            const VKPtr<VkDevice>&      device,
+            VkDevice                    device,
             const VkBufferCreateInfo&   createInfo,
             VKDeviceMemoryManager&      deviceMemoryMngr,
             VkMemoryPropertyFlags       memoryProperties
@@ -47,13 +47,10 @@ class VKDeviceBuffer
 
         /* ----- Native buffer ----- */
 
-        void CreateVkBuffer(
-            const VKPtr<VkDevice>&      device,
-            const VkBufferCreateInfo&   createInfo
-        );
+        void CreateVkBuffer(VkDevice device, const VkBufferCreateInfo& createInfo);
 
         void CreateVkBufferAndMemoryRegion(
-            const VKPtr<VkDevice>&      device,
+            VkDevice                    device,
             const VkBufferCreateInfo&   createInfo,
             VKDeviceMemoryManager&      deviceMemoryMngr,
             VkMemoryPropertyFlags       memoryProperties

@@ -15,7 +15,7 @@ namespace LLGL
 
 
 VKPipelineState::VKPipelineState(
-    const VKPtr<VkDevice>&  device,
+    VkDevice                device,
     VkPipelineBindPoint     bindPoint,
     const PipelineLayout*   pipelineLayout)
 :

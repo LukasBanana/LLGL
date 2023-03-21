@@ -34,7 +34,7 @@ class VKDeviceMemoryManager
     public:
 
         VKDeviceMemoryManager(
-            const VKPtr<VkDevice>&                  device,
+            VkDevice                                device,
             const VkPhysicalDeviceMemoryProperties& memoryProperties,
             VkDeviceSize                            minAllocationSize,
             bool                                    reduceFragmentation
@@ -88,7 +88,7 @@ class VKDeviceMemoryManager
 
     private:
 
-        const VKPtr<VkDevice>&                          device_;
+        VkDevice                                        device_;
         VkPhysicalDeviceMemoryProperties                memoryProperties_;
 
         VkDeviceSize                                    minAllocationSize_      = 1024*1024;

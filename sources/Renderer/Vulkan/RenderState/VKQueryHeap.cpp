@@ -52,7 +52,7 @@ static VkQueryControlFlags GetQueryControlFlags(const QueryHeapDescriptor& desc)
     return flags;
 }
 
-VKQueryHeap::VKQueryHeap(const VKPtr<VkDevice>& device, const QueryHeapDescriptor& desc) :
+VKQueryHeap::VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc) :
     QueryHeap      { desc.type                    },
     queryPool_     { device, vkDestroyQueryPool   },
     controlFlags_  { GetQueryControlFlags(desc)   },

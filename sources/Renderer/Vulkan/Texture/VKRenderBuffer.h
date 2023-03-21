@@ -1,6 +1,6 @@
 /*
  * VKRenderBuffer.h
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -22,7 +22,7 @@ class VKRenderBuffer : private VKDeviceImage
 
     public:
 
-        VKRenderBuffer(const VKPtr<VkDevice>& device);
+        VKRenderBuffer(VkDevice device);
         ~VKRenderBuffer();
 
         // Explicit default move constructors required for GCC (to be used in VKSwapChain c'tor)

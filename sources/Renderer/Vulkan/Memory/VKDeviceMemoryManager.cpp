@@ -15,7 +15,7 @@ namespace LLGL
 
 
 VKDeviceMemoryManager::VKDeviceMemoryManager(
-    const VKPtr<VkDevice>&                  device,
+    VkDevice                                device,
     const VkPhysicalDeviceMemoryProperties& memoryProperties,
     VkDeviceSize                            minAllocationSize,
     bool                                    reduceFragmentation)

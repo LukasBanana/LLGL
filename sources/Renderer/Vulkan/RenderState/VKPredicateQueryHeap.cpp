@@ -1,6 +1,6 @@
 /*
  * VKPredicateQueryHeap.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -18,7 +18,7 @@ namespace LLGL
 
 
 VKPredicateQueryHeap::VKPredicateQueryHeap(
-    const VKPtr<VkDevice>&      device,
+    VkDevice                    device,
     VKDeviceMemoryManager&      deviceMemoryManager,
     const QueryHeapDescriptor&  desc)
 :

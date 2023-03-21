@@ -26,8 +26,8 @@ class VKRenderPass final : public RenderPass
 
     public:
 
-        VKRenderPass(const VKPtr<VkDevice>& device);
-        VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc);
+        VKRenderPass(VkDevice device);
+        VKRenderPass(VkDevice device, const RenderPassDescriptor& desc);
 
         // (Re-)creates the render pass object.
         void CreateVkRenderPass(

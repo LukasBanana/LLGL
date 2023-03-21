@@ -41,7 +41,7 @@ class VKDeviceMemory
 
     public:
 
-        VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, std::uint32_t memoryTypeIndex);
+        VKDeviceMemory(VkDevice device, VkDeviceSize size, std::uint32_t memoryTypeIndex);
 
         VKDeviceMemory(const VKDeviceMemory&) = delete;
         VKDeviceMemory& operator = (const VKDeviceMemory&) = delete;

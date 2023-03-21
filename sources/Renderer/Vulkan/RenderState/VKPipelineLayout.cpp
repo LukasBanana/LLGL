@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
+VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc) :
     pipelineLayout_       { device, vkDestroyPipelineLayout          },
     descriptorSetLayouts_ { { device, vkDestroyDescriptorSetLayout },
                             { device, vkDestroyDescriptorSetLayout },
@@ -28,9 +28,9 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
 {
     /* Create Vulkan descriptor set layouts */
     if (!desc.heapBindings.empty())
-        CreateHeapBindingSetLayout(device, desc.heapBindings);
+        CreateBindingSetLayout(device, desc.heapBindings, heapBindings_, SetLayoutType_HeapBindings);
     if (!desc.bindings.empty())
-        CreateDynamicBindingSetLayout(device, desc.bindings);
+        CreateBindingSetLayout(device, desc.bindings, bindings_, SetLayoutType_DynamicBindings);
     if (!desc.staticSamplers.empty())
         CreateImmutableSamplers(device, desc.staticSamplers);
 
@@ -150,35 +150,34 @@ static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& 
     dst.pImmutableSamplers  = nullptr;
 }
 
-void VKPipelineLayout::CreateHeapBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& heapBindings)
+void VKPipelineLayout::CreateBindingSetLayout(
+    VkDevice                                device,
+    const std::vector<BindingDescriptor>&   inBindings,
+    std::vector<VKLayoutBinding>&           outBindings,
+    SetLayoutType                           setLayoutType)
 {
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
-    const auto numBindings = heapBindings.size();
+    const auto numBindings = inBindings.size();
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
-        Convert(setLayoutBindings[i], heapBindings[i]);
+        Convert(setLayoutBindings[i], inBindings[i]);
 
-    CreateVkDescriptorSetLayout(device, SetLayoutType_HeapBindings, setLayoutBindings);
+    CreateVkDescriptorSetLayout(device, setLayoutType, setLayoutBindings);
 
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
-    heapBindings_.reserve(numBindings);
+    outBindings.reserve(numBindings);
     for_range(i, numBindings)
     {
-        heapBindings_.push_back(
+        outBindings.push_back(
             VKLayoutBinding
             {
-                heapBindings[i].slot,
-                heapBindings[i].stageFlags,
+                inBindings[i].slot,
+                inBindings[i].stageFlags,
                 setLayoutBindings[i].descriptorType
             }
         );
     }
-}
-
-void VKPipelineLayout::CreateDynamicBindingSetLayout(const VKPtr<VkDevice>& device, const std::vector<BindingDescriptor>& bindings)
-{
-    //todo
 }
 
 static void Convert(VkDescriptorSetLayoutBinding& dst, const StaticSamplerDescriptor& src, const VkSampler* immutableSamplerVK)
@@ -190,7 +189,7 @@ static void Convert(VkDescriptorSetLayoutBinding& dst, const StaticSamplerDescri
     dst.pImmutableSamplers  = immutableSamplerVK;
 }
 
-void VKPipelineLayout::CreateImmutableSamplers(const VKPtr<VkDevice>& device, const std::vector<StaticSamplerDescriptor>& staticSamplers)
+void VKPipelineLayout::CreateImmutableSamplers(VkDevice device, const ArrayView<StaticSamplerDescriptor>& staticSamplers)
 {
     /* Create all immutable Vulkan samplers */
     immutableSamplers_.reserve(staticSamplers.size());
@@ -207,9 +206,7 @@ void VKPipelineLayout::CreateImmutableSamplers(const VKPtr<VkDevice>& device, co
     CreateVkDescriptorSetLayout(device, SetLayoutType_ImmutableSamplers, setLayoutBindings);
 }
 
-VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(
-    const VKPtr<VkDevice>&                  device,
-    const ArrayView<VkPushConstantRange>&   pushConstantRanges)
+VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(VkDevice device, const ArrayView<VkPushConstantRange>& pushConstantRanges)
 {
     /* Create native Vulkan pipeline layout with up to 3 descriptor sets */
     SmallVector<VkDescriptorSetLayout, SetLayoutType_Num> setLayoutsVK;
@@ -248,7 +245,7 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(
     return pipelineLayout;
 }
 
-void VKPipelineLayout::CreateStaticDescriptorPool(const VKPtr<VkDevice>& device)
+void VKPipelineLayout::CreateStaticDescriptorPool(VkDevice device)
 {
     /* Create Vulkan descriptor pool */
     VkDescriptorPoolSize poolSizeInfo;
@@ -269,7 +266,7 @@ void VKPipelineLayout::CreateStaticDescriptorPool(const VKPtr<VkDevice>& device)
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool for static samplers");
 }
 
-void VKPipelineLayout::CreateStaticDescriptorSet(const VKPtr<VkDevice>& device, VkDescriptorSet setLayout)
+void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout)
 {
     /* Allocate descriptor set for immutable samplers */
     VkDescriptorSetAllocateInfo allocInfo;

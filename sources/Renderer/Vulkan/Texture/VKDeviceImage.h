@@ -28,7 +28,7 @@ class VKDeviceImage
 
     public:
 
-        VKDeviceImage(const VKPtr<VkDevice>& device);
+        VKDeviceImage(VkDevice device);
         virtual ~VKDeviceImage() = default;
 
         // Explicit default move constructors required for GCC (to be used in VKSwapChain c'tor)

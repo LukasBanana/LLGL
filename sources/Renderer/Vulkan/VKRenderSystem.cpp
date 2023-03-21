@@ -30,39 +30,8 @@ namespace LLGL
 {
 
 
-/* ----- Internal functions ----- */
-
-static VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* createInfo, const VkAllocationCallbacks* allocator, VkDebugReportCallbackEXT* callback)
-{
-    auto func = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
-    if (func != nullptr)
-        return func(instance, createInfo, allocator, callback);
-    else
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-}
-
-static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* allocator)
-{
-    auto func = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
-    if (func != nullptr)
-        func(instance, callback, allocator);
-}
-
-static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long cpuAccessFlags)
-{
-    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
-        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    else
-        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-}
-
-
-/* ----- Common ----- */
-
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    instance_              { vkDestroyInstance                        },
-    debugReportCallback_   { instance_, DestroyDebugReportCallbackEXT },
-    defaultPipelineLayout_ { device_, vkDestroyPipelineLayout         }
+    instance_ { vkDestroyInstance }
 {
     /* Extract optional renderer configuartion */
     auto rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
@@ -131,6 +100,14 @@ void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 }
 
 /* ----- Buffers ------ */
+
+static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long cpuAccessFlags)
+{
+    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
+        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    else
+        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+}
 
 Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
@@ -814,6 +791,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     VkResult result = vkCreateInstance(&instanceInfo, nullptr, instance_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan instance");
 
+    /* Create debug report callback */
     if (debugLayerEnabled_)
         CreateDebugReportCallback();
 
@@ -833,6 +811,29 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
 {
     DebugPuts(message);
     return VK_FALSE;
+}
+
+static VkResult CreateDebugReportCallbackEXT(
+    VkInstance                                  instance,
+    const VkDebugReportCallbackCreateInfoEXT*   createInfo,
+    const VkAllocationCallbacks*                allocator,
+    VkDebugReportCallbackEXT*                   callback)
+{
+    auto func = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
+    if (func != nullptr)
+        return func(instance, createInfo, allocator, callback);
+    else
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+}
+
+static void DestroyDebugReportCallbackEXT(
+    VkInstance                      instance,
+    VkDebugReportCallbackEXT        callback,
+    const VkAllocationCallbacks*    allocator)
+{
+    auto func = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
+    if (func != nullptr)
+        func(instance, callback, allocator);
 }
 
 void VKRenderSystem::CreateDebugReportCallback()
@@ -855,6 +856,7 @@ void VKRenderSystem::CreateDebugReportCallback()
         createInfo.pfnCallback  = VKDebugCallback;
         createInfo.pUserData    = reinterpret_cast<void*>(this);
     }
+    debugReportCallback_ = VKPtr<VkDebugReportCallbackEXT>{ instance_, DestroyDebugReportCallbackEXT };
     auto result = CreateDebugReportCallbackEXT(instance_, &createInfo, nullptr, debugReportCallback_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
 }
@@ -897,6 +899,7 @@ void VKRenderSystem::CreateDefaultPipelineLayout()
     {
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     }
+    defaultPipelineLayout_ = VKPtr<VkPipelineLayout>{ device_, vkDestroyPipelineLayout };
     auto result = vkCreatePipelineLayout(device_, &layoutCreateInfo, nullptr, defaultPipelineLayout_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
 }

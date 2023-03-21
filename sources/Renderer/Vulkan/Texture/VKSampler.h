@@ -23,7 +23,7 @@ class VKSampler final : public Sampler
 
     public:
 
-        VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc);
+        VKSampler(VkDevice device, const SamplerDescriptor& desc);
 
         // Returns the Vulkan sampler object.
         inline VkSampler GetVkSampler() const
@@ -37,7 +37,7 @@ class VKSampler final : public Sampler
         static void ConvertDesc(VkSamplerCreateInfo& outDesc, const SamplerDescriptor& inDesc);
 
         // Creates a native Vulkan sampler.
-        static VKPtr<VkSampler> CreateVkSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc);
+        static VKPtr<VkSampler> CreateVkSampler(VkDevice device, const SamplerDescriptor& desc);
 
     private:
 

@@ -44,10 +44,10 @@ class VKPtr
 
         // Constructs the handler with the specified deleter function and the Vulkan instance.
         VKPtr(
-            const VKPtr<VkInstance>&                                            instance,
+            VkInstance                                                          instance,
             const std::function<void(VkInstance, T, VkAllocationCallbacks*)>&   deleter)
         {
-            deleter_ = [&instance, deleter](T obj)
+            deleter_ = [instance, deleter](T obj)
             {
                 deleter(instance, obj, nullptr);
             };
@@ -55,10 +55,10 @@ class VKPtr
 
         // Constructs the handler with the specified deleter function and the Vulkan device.
         VKPtr(
-            const VKPtr<VkDevice>&                                          device,
+            VkDevice                                                        device,
             const std::function<void(VkDevice, T, VkAllocationCallbacks*)>& deleter)
         {
-            deleter_ = [&device, deleter](T obj)
+            deleter_ = [device, deleter](T obj)
             {
                 deleter(device, obj, nullptr);
             };
@@ -132,7 +132,9 @@ class VKPtr
         {
             Release();
             object_ = rhs.object_;
+            deleter_ = rhs.deleter_;
             rhs.object_ = VK_NULL_HANDLE;
+            rhs.deleter_ = nullptr;
             return *this;
         }
 

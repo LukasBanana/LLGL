@@ -17,19 +17,19 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-VKDeviceBuffer::VKDeviceBuffer(const VKPtr<VkDevice>& device) :
+VKDeviceBuffer::VKDeviceBuffer(VkDevice device) :
     buffer_ { device, vkDestroyBuffer }
 {
 }
 
-VKDeviceBuffer::VKDeviceBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo) :
+VKDeviceBuffer::VKDeviceBuffer(VkDevice device, const VkBufferCreateInfo& createInfo) :
     VKDeviceBuffer { device }
 {
     CreateVkBuffer(device, createInfo);
 }
 
 VKDeviceBuffer::VKDeviceBuffer(
-    const VKPtr<VkDevice>&      device,
+    VkDevice                    device,
     const VkBufferCreateInfo&   createInfo,
     VKDeviceMemoryManager&      deviceMemoryMngr,
     VkMemoryPropertyFlags       memoryProperties)
@@ -58,7 +58,7 @@ VKDeviceBuffer& VKDeviceBuffer::operator = (VKDeviceBuffer&& rhs)
 
 /* ----- Native buffer ----- */
 
-void VKDeviceBuffer::CreateVkBuffer(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo)
+void VKDeviceBuffer::CreateVkBuffer(VkDevice device, const VkBufferCreateInfo& createInfo)
 {
     /* Create Vulkan buffer object and query memory requirements */
     auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer_.ReleaseAndGetAddressOf());
@@ -67,7 +67,7 @@ void VKDeviceBuffer::CreateVkBuffer(const VKPtr<VkDevice>& device, const VkBuffe
 }
 
 void VKDeviceBuffer::CreateVkBufferAndMemoryRegion(
-    const VKPtr<VkDevice>&      device,
+    VkDevice                    device,
     const VkBufferCreateInfo&   createInfo,
     VKDeviceMemoryManager&      deviceMemoryMngr,
     VkMemoryPropertyFlags       memoryProperties)
