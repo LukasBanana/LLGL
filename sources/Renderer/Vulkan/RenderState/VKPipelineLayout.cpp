@@ -201,7 +201,7 @@ void VKPipelineLayout::CreateImmutableSamplers(VkDevice device, const ArrayView<
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
-        Convert(setLayoutBindings[i], staticSamplers[i], &(immutableSamplers_[i]));
+        Convert(setLayoutBindings[i], staticSamplers[i], immutableSamplers_[i].GetAddressOf());
 
     CreateVkDescriptorSetLayout(device, SetLayoutType_ImmutableSamplers, setLayoutBindings);
 }

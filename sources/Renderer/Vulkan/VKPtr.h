@@ -70,6 +70,7 @@ class VKPtr
             deleter_ { rhs.deleter_ }
         {
             rhs.object_ = VK_NULL_HANDLE;
+            rhs.deleter_ = nullptr;
         }
 
         // Releases the native Vulkan object.
@@ -79,13 +80,13 @@ class VKPtr
         }
 
         // Returns a constant pointer to the native Vulkan object.
-        const T* operator & () const
+        const T* GetAddressOf() const
         {
             return &object_;
         }
 
         // Returns a pointer to the native Vulkan object.
-        T* operator & ()
+        T* GetAddressOf()
         {
             return &object_;
         }
@@ -130,11 +131,14 @@ class VKPtr
         // Moves the specified VKPtr handler into this handler.
         VKPtr<T>& operator = (VKPtr&& rhs)
         {
-            Release();
-            object_ = rhs.object_;
-            deleter_ = rhs.deleter_;
-            rhs.object_ = VK_NULL_HANDLE;
-            rhs.deleter_ = nullptr;
+            if (this != &rhs)
+            {
+                Release();
+                object_ = rhs.object_;
+                deleter_ = rhs.deleter_;
+                rhs.object_ = VK_NULL_HANDLE;
+                rhs.deleter_ = nullptr;
+            }
             return *this;
         }
 

@@ -28,12 +28,12 @@ VKFence::VKFence(VkDevice device) :
 
 void VKFence::Reset(VkDevice device)
 {
-    vkResetFences(device, 1, &fence_);
+    vkResetFences(device, 1, fence_.GetAddressOf());
 }
 
 bool VKFence::Wait(VkDevice device, std::uint64_t timeout)
 {
-    return (vkWaitForFences(device, 1, &fence_, VK_TRUE, timeout) == VK_SUCCESS);
+    return (vkWaitForFences(device, 1, fence_.GetAddressOf(), VK_TRUE, timeout) == VK_SUCCESS);
 }
 
 
