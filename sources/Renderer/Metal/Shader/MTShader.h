@@ -31,9 +31,13 @@ class MTShader final : public Shader
 
         bool Reflect(ShaderReflection& reflection) const override;
 
-        bool IsPostTessellationVertex() const override;
-
     public:
+
+        /*
+        Returns true if the MTLFunction is a vertex shader with a valid patch type (i.e. other than MTLPatchTypeNone).
+        Such a shader is used as a post-tessellation vertex shader in conjunction with a compute kernel.
+        */
+        bool IsPostTessellationVertex() const;
 
         // Returns the number of patch control points for a post-tessellation vertex shader or 0 if this is not a vertex shader.
         NSUInteger GetNumPatchControlPoints() const;

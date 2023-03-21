@@ -66,14 +66,6 @@ class LLGL_EXPORT Shader : public RenderSystemChild
     public:
 
         /**
-        \brief Returns true if this is a post-tessellation vertex shader.
-        \remarks This is only used for the Metal backend to determine whether a post-tessellation vertex shader is used in conjunction with a compute kernel.
-        \remarks Default implementation always returns false.
-        \note Only supported with: Metal.
-        */
-        virtual bool IsPostTessellationVertex() const;
-
-        /**
         \brief Returns the shader stage bitmask for this shader object.
         \see StageFlags
         */

@@ -37,11 +37,6 @@ bool DbgShader::Reflect(ShaderReflection& reflection) const
     return instance.Reflect(reflection);
 }
 
-bool DbgShader::IsPostTessellationVertex() const
-{
-    return instance.IsPostTessellationVertex();
-}
-
 const char* DbgShader::GetVertexID() const
 {
     return (vertexID_.empty() ? nullptr : vertexID_.c_str());

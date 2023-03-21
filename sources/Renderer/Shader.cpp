@@ -1,6 +1,6 @@
 /*
  * Shader.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
@@ -30,11 +30,6 @@ long Shader::GetStageFlags() const
         case ShaderType::Compute:           return StageFlags::ComputeStage;
     }
     return 0;
-}
-
-bool Shader::IsPostTessellationVertex() const
-{
-    return false; // dummy
 }
 
 
