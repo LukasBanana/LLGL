@@ -60,7 +60,7 @@ D3D11ConstantsCache::D3D11ConstantsCache(
         {
             cbufferReflections.push_back(&cbufferReflection);
             LLGL_ASSERT(cbufferReflection.slot < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT);
-            cbufferStageFlags[cbufferReflection.slot] |= shader->GetStageFlags();
+            cbufferStageFlags[cbufferReflection.slot] |= GetStageFlags(shader->GetType());
         }
     }
 

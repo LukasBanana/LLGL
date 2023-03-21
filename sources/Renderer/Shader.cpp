@@ -17,21 +17,6 @@ Shader::Shader(const ShaderType type) :
 {
 }
 
-long Shader::GetStageFlags() const
-{
-    switch (GetType())
-    {
-        case ShaderType::Undefined:         break;
-        case ShaderType::Vertex:            return StageFlags::VertexStage;
-        case ShaderType::TessControl:       return StageFlags::TessControlStage;
-        case ShaderType::TessEvaluation:    return StageFlags::TessEvaluationStage;
-        case ShaderType::Geometry:          return StageFlags::GeometryStage;
-        case ShaderType::Fragment:          return StageFlags::FragmentStage;
-        case ShaderType::Compute:           return StageFlags::ComputeStage;
-    }
-    return 0;
-}
-
 
 } // /namespace LLGL
 

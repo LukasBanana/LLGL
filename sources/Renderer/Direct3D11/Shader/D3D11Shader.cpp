@@ -592,7 +592,7 @@ HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     }
 
     /* Get input bindings */
-    hr = ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(), reflection);
+    hr = ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(GetType()), reflection);
     if (FAILED(hr))
         return hr;
 

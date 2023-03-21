@@ -65,12 +65,6 @@ class LLGL_EXPORT Shader : public RenderSystemChild
 
     public:
 
-        /**
-        \brief Returns the shader stage bitmask for this shader object.
-        \see StageFlags
-        */
-        long GetStageFlags() const;
-
         //! Returns the type of this shader.
         inline ShaderType GetType() const
         {

@@ -22,6 +22,21 @@ LLGL_EXPORT bool IsShaderSourceBinary(const ShaderSourceType type)
     return (type == ShaderSourceType::BinaryBuffer || type == ShaderSourceType::BinaryFile);
 }
 
+LLGL_EXPORT long GetStageFlags(const ShaderType type)
+{
+    switch (type)
+    {
+        case ShaderType::Undefined:         break;
+        case ShaderType::Vertex:            return StageFlags::VertexStage;
+        case ShaderType::TessControl:       return StageFlags::TessControlStage;
+        case ShaderType::TessEvaluation:    return StageFlags::TessEvaluationStage;
+        case ShaderType::Geometry:          return StageFlags::GeometryStage;
+        case ShaderType::Fragment:          return StageFlags::FragmentStage;
+        case ShaderType::Compute:           return StageFlags::ComputeStage;
+    }
+    return 0;
+}
+
 
 } // /namespace LLGL
 

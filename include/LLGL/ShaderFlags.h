@@ -401,6 +401,14 @@ LLGL_EXPORT bool IsShaderSourceCode(const ShaderSourceType type);
 */
 LLGL_EXPORT bool IsShaderSourceBinary(const ShaderSourceType type);
 
+/**
+\brief Returns the StageFlags bitmask for the specified shader type.
+\return Bitmask of the StageFlags enumeration entries for the specified input shader type, e.g. StageFlags::VertexStage for the input ShaderType::Vertex.
+\see StageFlags
+\see ShaderType
+*/
+LLGL_EXPORT long GetStageFlags(const ShaderType type);
+
 
 } // /namespace LLGL
 
