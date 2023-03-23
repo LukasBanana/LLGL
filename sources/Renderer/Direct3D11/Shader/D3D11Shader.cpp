@@ -44,7 +44,7 @@ void D3D11Shader::SetName(const char* name)
 
 const Report* D3D11Shader::GetReport() const
 {
-    return &report_;
+    return (report_ ? &report_ : nullptr);
 }
 
 bool D3D11Shader::Reflect(ShaderReflection& reflection) const

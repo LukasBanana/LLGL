@@ -28,7 +28,7 @@ class D3D12DescriptorCache
 
     public:
 
-        // Initializes the cache as invaldiated.
+        // Initializes the cache as invalidated.
         D3D12DescriptorCache();
 
         // Creates the internal native D3D descriptor heaps. These are always a shader-visible descriptor heap.

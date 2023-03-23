@@ -100,12 +100,6 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12StagingDescriptorHeapPool::CopyDescriptors(
     return GetGpuHandleWithOffset();
 }
 
-void D3D12StagingDescriptorHeapPool::IncrementOffset(UINT stride)
-{
-    if (chunkIdx_ < chunks_.size())
-        chunks_[chunkIdx_].IncrementOffset(stride);
-}
-
 ID3D12DescriptorHeap* D3D12StagingDescriptorHeapPool::GetDescriptorHeap() const
 {
     return (chunkIdx_ < chunks_.size() ? chunks_.back().GetNative() : nullptr);
@@ -145,6 +139,12 @@ void D3D12StagingDescriptorHeapPool::ResetChunks()
     for (auto& chunk : chunks_)
         chunk.ResetOffset();
     chunkIdx_ = 0;
+}
+
+void D3D12StagingDescriptorHeapPool::IncrementOffset(UINT stride)
+{
+    if (chunkIdx_ < chunks_.size())
+        chunks_[chunkIdx_].IncrementOffset(stride);
 }
 
 
