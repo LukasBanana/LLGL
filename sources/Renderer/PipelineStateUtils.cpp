@@ -13,9 +13,33 @@ namespace LLGL
 {
 
 
+static bool HasAnyStencilOpReplace(const StencilFaceDescriptor& desc)
+{
+    return
+    (
+        desc.stencilFailOp == StencilOp::Replace ||
+        desc.depthFailOp   == StencilOp::Replace ||
+        desc.depthPassOp   == StencilOp::Replace
+    );
+}
+
+static bool HasAnyStencilOpReplace(const StencilDescriptor& desc)
+{
+    return
+    (
+        HasAnyStencilOpReplace(desc.front) ||
+        HasAnyStencilOpReplace(desc.back)
+    );
+}
+
+LLGL_EXPORT bool IsStencilRefEnabled(const StencilDescriptor& desc)
+{
+    return (desc.testEnabled && HasAnyStencilOpReplace(desc));
+}
+
 LLGL_EXPORT bool IsStaticStencilRefEnabled(const StencilDescriptor& desc)
 {
-    return (desc.testEnabled && !desc.referenceDynamic);
+    return (!desc.referenceDynamic && IsStencilRefEnabled(desc));
 }
 
 static bool IsBlendOpUsingBlendFactor(const BlendOp op)
@@ -37,25 +61,27 @@ static bool IsTargetUsingBlendFactor(const BlendTargetDescriptor& desc)
     );
 }
 
-LLGL_EXPORT bool IsStaticBlendFactorEnabled(const BlendDescriptor& desc)
+LLGL_EXPORT bool IsBlendFactorEnabled(const BlendDescriptor& desc)
 {
-    if (!desc.blendFactorDynamic)
+    if (desc.independentBlendEnabled)
     {
-        if (desc.independentBlendEnabled)
+        for (const auto& target : desc.targets)
         {
-            for (const auto& target : desc.targets)
-            {
-                if (IsTargetUsingBlendFactor(target))
-                    return true;
-            }
-        }
-        else
-        {
-            if (IsTargetUsingBlendFactor(desc.targets[0]))
+            if (IsTargetUsingBlendFactor(target))
                 return true;
         }
     }
+    else
+    {
+        if (IsTargetUsingBlendFactor(desc.targets[0]))
+            return true;
+    }
     return false;
+}
+
+LLGL_EXPORT bool IsStaticBlendFactorEnabled(const BlendDescriptor& desc)
+{
+    return (!desc.blendFactorDynamic && IsBlendFactorEnabled(desc));
 }
 
 template <std::size_t N>

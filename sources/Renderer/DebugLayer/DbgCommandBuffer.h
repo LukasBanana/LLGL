@@ -265,6 +265,8 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void ValidateUniforms(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t first, std::uint16_t dataSize);
 
+        void ValidateDynamicStates();
+
         DbgPipelineState* AssertAndGetGraphicsPSO();
         DbgPipelineState* AssertAndGetComputePSO();
 
@@ -274,6 +276,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void AssertComputePipelineBound();
         void AssertVertexBufferBound();
         void AssertIndexBufferBound();
+        void AssertViewportBound();
 
         void AssertInstancingSupported();
         void AssertOffsetInstancingSupported();
@@ -283,8 +286,6 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
-        void ResetFrameProfile();
-        void ResetBindings();
         void ResetStates();
 
         void StartTimer(const char* annotation);
@@ -313,8 +314,12 @@ class DbgCommandBuffer final : public CommandBuffer
 
         struct Bindings
         {
+            // Framebuffers
             DbgSwapChain*           swapChain                               = nullptr;
             DbgRenderTarget*        renderTarget                            = nullptr;
+            std::uint32_t           numViewports                            = 0;
+
+            // Stream inputs/outputs
             DbgBuffer*              vertexBufferStore[1]                    = {};
             DbgBuffer* const *      vertexBuffers                           = nullptr;
             std::uint32_t           numVertexBuffers                        = 0;
@@ -325,8 +330,12 @@ class DbgCommandBuffer final : public CommandBuffer
             std::uint64_t           indexBufferOffset                       = 0;
             DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
             std::uint32_t           numStreamOutputs                        = 0;
+
+            // PSO
             DbgPipelineState*       pipelineState                           = nullptr;
             const DbgShader*        vertexShader                            = nullptr;
+            bool                    blendFactorSet                          = false;
+            bool                    stencilRefSet                           = false;
         }
         bindings_;
 

@@ -27,6 +27,7 @@
 #include <LLGL/IndirectArguments.h>
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
 
@@ -81,8 +82,6 @@ DbgCommandBuffer::DbgCommandBuffer(
 void DbgCommandBuffer::Begin()
 {
     /* Reset previous states */
-    ResetFrameProfile();
-    ResetBindings();
     ResetStates();
 
     /* Enable performance profiler if it was scheduled */
@@ -332,6 +331,9 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateViewport(viewport);
+
+        /* Store information how many viewports are bound since at least one must be active when Draw* commands are issued */
+        bindings_.numViewports = 1;
     }
 
     LLGL_DBG_COMMAND( "SetViewport", instance.SetViewport(viewport) );
@@ -349,14 +351,12 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         /* Validate all viewports in array */
         if (viewports)
         {
-            for (std::uint32_t i = 0; i < numViewports; ++i)
+            for_range(i, numViewports)
                 ValidateViewport(viewports[i]);
         }
 
         /* Validate array size */
-        if (numViewports == 0)
-            LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
-        else if (numViewports > limits_.maxViewports)
+        if (numViewports > limits_.maxViewports)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
@@ -364,6 +364,11 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
                 std::to_string(numViewports) + " specified but limit is " + std::to_string(limits_.maxViewports)
             );
         }
+        else if (numViewports == 0)
+            LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
+
+        /* Store information how many viewports are bound since at least one must be active when Draw* commands are issued */
+        bindings_.numViewports = numViewports;
     }
 
     LLGL_DBG_COMMAND( "SetViewports", instance.SetViewports(numViewports, viewports) );
@@ -739,6 +744,14 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
                 //TODO: store bound vertex shader
                 bindings_.anyShaderAttributes = !(vertexShaderDbg->desc.vertex.inputAttribs.empty());
             }
+
+            /* Store dynamic states */
+            bindings_.blendFactorSet = !pipelineStateDbg.HasDynamicBlendFactor();
+            bindings_.stencilRefSet = !pipelineStateDbg.HasDynamicStencilRef();
+
+            /* If the PSO was created with static viewports, this PSO dictates the number of bound viewports */
+            if (!pipelineStateDbg.graphicsDesc.viewports.empty())
+                bindings_.numViewports = static_cast<std::uint32_t>(pipelineStateDbg.graphicsDesc.viewports.size());
         }
         else
         {
@@ -762,7 +775,6 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         profile_.computePipelineBindings++;
 }
 
-//TODO: add check of opposite state to Draw* commands
 void DbgCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
 {
     if (debugger_)
@@ -770,7 +782,9 @@ void DbgCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
         LLGL_DBG_SOURCE;
         if (auto pipelineStateDbg = AssertAndGetGraphicsPSO())
         {
-            if (!pipelineStateDbg->graphicsDesc.blend.blendFactorDynamic)
+            if (pipelineStateDbg->graphicsDesc.blend.blendFactorDynamic)
+                bindings_.blendFactorSet = true;
+            else
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline was not created with 'blendFactorDynamic' enabled");
         }
     }
@@ -778,7 +792,6 @@ void DbgCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
     LLGL_DBG_COMMAND( "SetBlendFactor", instance.SetBlendFactor(color) );
 }
 
-//TODO: add check of opposite state to Draw* commands
 void DbgCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
 {
     if (debugger_)
@@ -786,7 +799,9 @@ void DbgCommandBuffer::SetStencilReference(std::uint32_t reference, const Stenci
         LLGL_DBG_SOURCE;
         if (auto pipelineStateDbg = AssertAndGetGraphicsPSO())
         {
-            if (!pipelineStateDbg->graphicsDesc.stencil.referenceDynamic)
+            if (pipelineStateDbg->graphicsDesc.stencil.referenceDynamic)
+                bindings_.stencilRefSet = true;
+            else
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics pipeline was not created with 'referenceDynamic' enabled");
         }
     }
@@ -1526,6 +1541,8 @@ void DbgCommandBuffer::ValidateDrawCmd(
     AssertInsideRenderPass();
     AssertGraphicsPipelineBound();
     AssertVertexBufferBound();
+    AssertViewportBound();
+    ValidateDynamicStates();
     ValidateVertexLayout();
     ValidateNumVertices(numVertices);
     ValidateNumInstances(numInstances);
@@ -1544,6 +1561,8 @@ void DbgCommandBuffer::ValidateDrawIndexedCmd(
     AssertGraphicsPipelineBound();
     AssertVertexBufferBound();
     AssertIndexBufferBound();
+    AssertViewportBound();
+    ValidateDynamicStates();
     ValidateVertexLayout();
     ValidateNumVertices(numVertices);
     ValidateNumInstances(numInstances);
@@ -1966,11 +1985,31 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
     }
 }
 
+void DbgCommandBuffer::ValidateDynamicStates()
+{
+    if (!bindings_.blendFactorSet)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidState,
+            "blend factor is not set; missing call to <LLGL::CommandBuffer::SetBlendFactor>"
+            " or PSO must be created with 'LLGL::BlendDescriptor::blendFactorDynamic' being disabled"
+        );
+    }
+    if (!bindings_.stencilRefSet)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidState,
+            "stencil reference blend factor is not set; missing call to <LLGL::CommandBuffer::SetStencilReference>"
+            " or PSO must be created with 'LLGL::StencilDescriptor::referenceDynamic' being disabled"
+        );
+    }
+}
+
 DbgPipelineState* DbgCommandBuffer::AssertAndGetGraphicsPSO()
 {
     if (bindings_.pipelineState == nullptr)
     {
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound; missing call to <LLGL::CommandBuffer::SetPipelineState>");
         return nullptr;
     }
     else if (!bindings_.pipelineState->isGraphicsPSO)
@@ -1985,7 +2024,7 @@ DbgPipelineState* DbgCommandBuffer::AssertAndGetComputePSO()
 {
     if (bindings_.pipelineState == nullptr)
     {
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound: missing call to <LLGL::CommandBuffer::SetPipelineState>");
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound; missing call to <LLGL::CommandBuffer::SetPipelineState>");
         return nullptr;
     }
     else if (bindings_.pipelineState->isGraphicsPSO)
@@ -1999,13 +2038,13 @@ DbgPipelineState* DbgCommandBuffer::AssertAndGetComputePSO()
 void DbgCommandBuffer::AssertRecording()
 {
     if (!states_.recording)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer must be in record mode: missing call to <LLGL::CommandQueue::Begin>");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer must be in record mode; missing call to <LLGL::CommandBuffer::Begin>");
 }
 
 void DbgCommandBuffer::AssertInsideRenderPass()
 {
     if (!states_.insideRenderPass)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "operation is only allowed inside a render pass: missing call to <LLGL::CommandBuffer::BeginRenderPass>");
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "operation is only allowed inside a render pass; missing call to <LLGL::CommandBuffer::BeginRenderPass>");
 }
 
 void DbgCommandBuffer::AssertGraphicsPipelineBound()
@@ -2049,6 +2088,12 @@ void DbgCommandBuffer::AssertIndexBufferBound()
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound");
 }
 
+void DbgCommandBuffer::AssertViewportBound()
+{
+    if (bindings_.numViewports == 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no viewports are bound");
+}
+
 void DbgCommandBuffer::AssertInstancingSupported()
 {
     if (!features_.hasInstancing)
@@ -2087,19 +2132,11 @@ void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std
     );
 }
 
-void DbgCommandBuffer::ResetFrameProfile()
-{
-    /* Reset all counters of frame profile */
-    ::memset(profile_.values, 0, sizeof(profile_.values));
-}
-
-void DbgCommandBuffer::ResetBindings()
-{
-    ::memset(&bindings_, 0, sizeof(bindings_));
-}
-
 void DbgCommandBuffer::ResetStates()
 {
+    /* Reset all counters of frame profile, bindings, and other command buffer states */
+    ::memset(profile_.values, 0, sizeof(profile_.values));
+    ::memset(&bindings_, 0, sizeof(bindings_));
     ::memset(&states_, 0, sizeof(states_));
 }
 

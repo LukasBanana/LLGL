@@ -34,6 +34,12 @@ class DbgPipelineState final : public PipelineState
         DbgPipelineState(PipelineState& instance, const ComputePipelineDescriptor& desc);
         ~DbgPipelineState();
 
+        // Returns true if this PSO has a dynamic blend factor, i.e. BlendDescriptor::blendFactorDynamic is effectively enabled.
+        bool HasDynamicBlendFactor() const;
+
+        // Returns true if this PSO has a dynamic stencil reference, i.e. StencilDescriptor::referenceDynamic is effectively enabled.
+        bool HasDynamicStencilRef() const;
+
     public:
 
         PipelineState&                  instance;

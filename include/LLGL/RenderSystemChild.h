@@ -31,7 +31,7 @@ class LLGL_EXPORT RenderSystemChild : public Interface
         The implementation of this function may alter the actual name depending on how many internal objects need to be labeled.
         \remarks This is used for debugging purposes only and the implementation is undefined,
         i.e. if the respective render system does not support debug labels this function call will be ignored silently.
-        \remarks This function is especially useful in conjunction with diagnistoc tools (such as <a href="https://renderdoc.org">RenderDoc</a>) to better identify objects in the event history.
+        \remarks This function is especially useful in conjunction with diagnostic tools (such as <a href="https://renderdoc.org">RenderDoc</a>) to better identify objects in the event history.
         \remarks The default implementation has no effect.
         \see CommandBuffer::PushDebugGroup
         \see CommandBuffer::PopDebugGroup

@@ -27,8 +27,14 @@ class Shader;
 
 /* ----- Functions ----- */
 
+// Returns true if the stencil reference will be used by a PSO with the specified stencil descriptor.
+LLGL_EXPORT bool IsStencilRefEnabled(const StencilDescriptor& desc);
+
 // Returns true if the stencil reference will be used for a static pipeline state.
 LLGL_EXPORT bool IsStaticStencilRefEnabled(const StencilDescriptor& desc);
+
+// Returns true if the blend factor will be used by a PSO with the specified blending descriptor.
+LLGL_EXPORT bool IsBlendFactorEnabled(const BlendDescriptor& desc);
 
 // Returns true if any of the enabled blend targets makes use the blending factor (RGBA) for a static pipeline state.
 LLGL_EXPORT bool IsStaticBlendFactorEnabled(const BlendDescriptor& desc);

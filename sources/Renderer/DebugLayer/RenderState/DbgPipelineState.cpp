@@ -7,6 +7,7 @@
 
 #include "DbgPipelineState.h"
 #include "DbgPipelineLayout.h"
+#include "../../PipelineStateUtils.h"
 #include "../DbgCore.h"
 #include "../../CheckedCast.h"
 
@@ -34,6 +35,16 @@ DbgPipelineState::DbgPipelineState(PipelineState& instance, const ComputePipelin
 DbgPipelineState::~DbgPipelineState()
 {
     // dummy
+}
+
+bool DbgPipelineState::HasDynamicBlendFactor() const
+{
+    return (isGraphicsPSO && graphicsDesc.blend.blendFactorDynamic && IsBlendFactorEnabled(graphicsDesc.blend));
+}
+
+bool DbgPipelineState::HasDynamicStencilRef() const
+{
+    return (isGraphicsPSO && graphicsDesc.stencil.referenceDynamic && IsStencilRefEnabled(graphicsDesc.stencil));
 }
 
 void DbgPipelineState::SetName(const char* name)

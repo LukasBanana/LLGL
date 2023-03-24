@@ -97,6 +97,7 @@ void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t fir
 
 // Vulkan Implementation
 void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
+    FlushDescriptorCache();
     vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, 0, 0);
 }
 
