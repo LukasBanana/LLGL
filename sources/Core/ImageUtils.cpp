@@ -1,14 +1,15 @@
 /*
  * ImageUtils.cpp
- * 
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "ImageUtils.h"
 #include <LLGL/Types.h>
+#include <LLGL/Misc/ForRange.h>
 #include <cstdint>
-#include <cstring>
+#include <string.h>
 
 
 namespace LLGL
@@ -38,7 +39,7 @@ void BitBlit(
         else
         {
             /* Copy region directly into output data */
-            for (std::uint32_t z = 0; z < extent.depth; ++z)
+            for_range(z, extent.depth)
             {
                 /* Copy current slice */
                 ::memcpy(dst, src, depthStride);
@@ -55,10 +56,10 @@ void BitBlit(
         srcDepthStride -= srcRowStride * extent.height;
 
         /* Copy region directly into output data */
-        for (std::uint32_t z = 0; z < extent.depth; ++z)
+        for_range(z, extent.depth)
         {
             /* Copy current slice */
-            for (std::uint32_t y = 0; y < extent.height; ++y)
+            for_range(y, extent.height)
             {
                 /* Copy current row */
                 ::memcpy(dst, src, rowStride);

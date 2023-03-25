@@ -82,7 +82,7 @@ ByteBuffer DecompressBC1ToRGBA8UNorm(
         for_range(x, extent.width / 4u)
         {
             /* Decompress two 16 bit colors */
-            for (int i = 0; i < 2; ++i)
+            for_range(i, 2)
             {
                 compressedColor[i] = *reinterpret_cast<const std::uint16_t*>(data);
                 DecompressRGBColor16Bit(decompressedColor[i], compressedColor[i]);
