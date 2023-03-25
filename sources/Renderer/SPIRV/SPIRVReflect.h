@@ -1,5 +1,5 @@
 /*
- * SPIRVReflect.h
+ * SpirvReflect.h
  *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -9,7 +9,8 @@
 #define LLGL_SPIRV_REFLECT_H
 
 
-#include "SPIRVParser.h"
+#include "SpirvIterator.h"
+#include "SpirvModule.h"
 #include <vector>
 #include <map>
 
@@ -18,17 +19,72 @@ namespace LLGL
 {
 
 
-// SPIR-V shader module parser.
-class SPIRVReflect final : public SPIRVParser
+// Helper class to hold SPIR-V name decorations.
+class SpirvNameDecorations
 {
 
     public:
 
+        SpirvNameDecorations() = default;
+
+        inline SpirvNameDecorations(std::uint32_t idBound)
+        {
+            Reset(idBound);
+        }
+
+        inline void Reset(std::uint32_t idBound)
+        {
+            names_.clear();
+            names_.resize(idBound);
+        }
+
+        inline const char* Get(spv::Id id) const
+        {
+            return (id < names_.size() ? names_[id] : "");
+        }
+
+        inline void Set(spv::Id id, const char* name)
+        {
+            if (id < names_.size())
+                names_[id] = name;
+        }
+
+    public:
+
+        inline const char* operator [] (spv::Id id) const
+        {
+            return Get(id);
+        }
+
+    private:
+
+        std::vector<const char*> names_;
+
+};
+
+// SPIR-V shader module parser.
+class SpirvReflect
+{
+
+    public:
+
+        // Execution mode container.
+        struct SpvExecutionMode
+        {
+            bool            earlyFragmentTest   = false;
+            bool            originUpperLeft     = false;
+            bool            depthGreater        = false;
+            bool            depthLess           = false;
+            std::uint32_t   localSizeX          = 0;
+            std::uint32_t   localSizeY          = 0;
+            std::uint32_t   localSizeZ          = 0;
+        };
+
         // General purpose structure for all SPIR-V module types.
         struct SpvType
         {
-            const SpvType* DereferencePtr() const;
-            const SpvType* DereferencePtr(const spv::Op opcodeType) const;
+            const SpvType* Deref() const;
+            const SpvType* Deref(const spv::Op opcodeType) const;
             bool RefersToType(const spv::Op opcodeType) const;
 
             spv::Op                     opcode      = spv::Op::Max;             // Opcode for this type (e.g. spv::Op::OpTypeFloat).
@@ -85,7 +141,24 @@ class SPIRVReflect final : public SPIRVParser
             bool            input       = false;
         };
 
+        // Block field for a single push constant field.
+        struct SpvBlockField
+        {
+            const char*     name    = nullptr;
+            std::uint32_t   offset  = 0;
+        };
+
+        // Block reflection for push constants.
+        struct SpvBlock
+        {
+            const char*                 name    = nullptr;
+            std::vector<SpvBlockField>  fields;
+        };
+
     public:
+
+        // Parse all instructions in the specified SPIR-V module.
+        SpirvResult Parse(const SpirvModuleView& module);
 
         inline const std::map<spv::Id, SpvRecord>& GetRecords() const
         {
@@ -102,19 +175,31 @@ class SPIRVReflect final : public SPIRVParser
             return varyings_;
         }
 
+    public:
+
+        // Parses the specified SPIR-V module only for the execution mode.
+        static SpirvResult ParseExecutionMode(const SpirvModuleView& module, SpvExecutionMode& outExecutionMode);
+
+        // Parses the specified SPIR-V module only for push constants.
+        static SpirvResult ParsePushConstants(const SpirvModuleView& module, SpvBlock& outBlock);
+
     private:
 
-        using Instr = SPIRVInstruction;
+        using Instr = SpirvInstruction;
 
-        void OnParseHeader(const SPIRVHeader& header) override;
-        void OnParseInstruction(const SPIRVInstruction& instr) override;
+        SpirvResult ParseInstruction(const SpirvInstruction& instr);
 
-        void OpName(const Instr& instr);
-        void OpDecorate(const Instr& instr);
-        void OpDecorateBinding(const Instr& instr);
-        void OpDecorateLocation(const Instr& instr);
-        void OpDecorateBuiltin(const Instr& instr);
-        void OpType(const Instr& instr);
+        SpirvResult OpName(const Instr& instr);
+
+        SpirvResult OpDecorate(const Instr& instr);
+        void OpDecorateBinding(const Instr& instr, spv::Id id);
+        void OpDecorateLocation(const Instr& instr, spv::Id id);
+        void OpDecorateBuiltin(const Instr& instr, spv::Id id);
+
+        SpirvResult OpVariable(const Instr& instr);
+        SpirvResult OpConstant(const Instr& instr);
+
+        SpirvResult OpType(const Instr& instr);
         void OpTypeVoid(const Instr& instr, SpvType& type);
         void OpTypeBool(const Instr& instr, SpvType& type);
         void OpTypeInt(const Instr& instr, SpvType& type);
@@ -130,15 +215,6 @@ class SPIRVReflect final : public SPIRVParser
         void OpTypeOpaque(const Instr& instr, SpvType& type);
         void OpTypePointer(const Instr& instr, SpvType& type);
         void OpTypeFunction(const Instr& instr, SpvType& type);
-        void OpVariable(const Instr& instr);
-        void OpConstant(const Instr& instr);
-
-    private:
-
-        void SetName(spv::Id id, const char* name);
-        const char* GetName(spv::Id id) const;
-
-        void AssertIdBound(spv::Id id) const;
 
         const SpvType* FindType(spv::Id id) const;
         const SpvConstant* FindConstant(spv::Id id) const;
@@ -146,7 +222,7 @@ class SPIRVReflect final : public SPIRVParser
     private:
 
         std::uint32_t                   idBound_    = 0;
-        std::vector<const char*>        names_;
+        SpirvNameDecorations            names_;
 
         std::map<spv::Id, SpvType>      types_;
         std::map<spv::Id, SpvConstant>  constants_;

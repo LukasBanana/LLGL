@@ -1,23 +1,20 @@
 /*
- * SPIRVLookup.cpp
- * 
+ * SpirvInstructionInfo.cpp
+ *
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "SPIRVLookup.h"
+#include "SpirvInstructionInfo.h"
 
 
 namespace LLGL
 {
 
-namespace SPIRVHelper
-{
-
 
 using Op = spv::Op;
 
-static bool HasTypeId(const Op opCode)
+static bool HasSpirvInstructionTypeId(const Op opCode)
 {
     switch (opCode)
     {
@@ -256,7 +253,7 @@ static bool HasTypeId(const Op opCode)
     }
 }
 
-static bool HasResultId(const Op opCode)
+static bool HasSpirvInstructionResultId(const Op opCode)
 {
     switch (opCode)
     {
@@ -519,23 +516,19 @@ static bool HasResultId(const Op opCode)
     }
 }
 
-
-} // /namespace SPIRVHelper
-
-
-SPIRVLookup GetSPIRVLookup(spv::Op opCode)
+SpirvInstructionInfo GetSpirvInstructionInfo(spv::Op opCode)
 {
-    SPIRVLookup lookup;
+    SpirvInstructionInfo lookup;
     {
-        lookup.hasType      = SPIRVHelper::HasTypeId(opCode);
-        lookup.hasResult    = SPIRVHelper::HasResultId(opCode);
+        lookup.hasType      = HasSpirvInstructionTypeId(opCode);
+        lookup.hasResult    = HasSpirvInstructionResultId(opCode);
     }
     return lookup;
 }
 
 // SPIR-V generator magic numbers
 // see https://www.khronos.org/registry/spir-v/api/spir-v.xml
-const char* GetSPIRVBuilderName(std::uint32_t builderMagic)
+const char* GetSpirvBuilderName(std::uint32_t builderMagic)
 {
     switch (builderMagic)
     {
@@ -555,7 +548,7 @@ const char* GetSPIRVBuilderName(std::uint32_t builderMagic)
     }
 }
 
-const char* GetSPIRVVersionString(std::uint32_t version)
+const char* GetSpirvVersionString(std::uint32_t version)
 {
     switch (version)
     {
