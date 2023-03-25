@@ -85,6 +85,42 @@ enum class UniformType
 /* ----- Structures ----- */
 
 /**
+\brief Resource binding slot structure.
+\remarks This is used to unify the description of resource binding slots and sets.
+\see BindingDescriptor::slot
+*/
+struct BindingSlot
+{
+    BindingSlot() = default;
+    BindingSlot(const BindingSlot&) = default;
+
+    //! Constructs the binding slot with an index and an optional set (for Vulkan).
+    inline BindingSlot(std::uint32_t index, std::uint32_t set = 0) :
+        index { index },
+        set   { set   }
+    {
+    }
+
+    /**
+    \brief Specifies the zero-based binding index. By default 0.
+    \remarks For Vulkan, each binding must have a unique slot within the same pipeline layout unless they are in different descriptor sets.
+    \see set
+    */
+    std::uint32_t index = 0;
+
+    /**
+    \brief Specifies the zero-based descriptor set.
+    \remarks For Vulkan, each binding must have a unique slot within the same pipeline layout unless they are in different descriptor sets.
+    LLGL will also re-assign these descriptor set indices according to the internal binding layout for the Vulkan backend,
+    i.e. modify <code>OpDecorate ID DescriptorSet SET</code> SPIR-V instructions.
+    \remarks This field is silently ignored by backends that do not support binding sets, aka. register spaces.
+    \note Only supported with: Vulkan, Direct3D 12.
+    \see slot
+    */
+    std::uint32_t set   = 0;
+};
+
+/**
 \brief Layout structure for a single binding point of the pipeline layout descriptor.
 \see PipelineLayoutDescriptor::bindings
 */
@@ -95,11 +131,11 @@ struct BindingDescriptor
 
     //! Constructors with all primary attributes and a default value for a uniform array.
     inline BindingDescriptor(
-        ResourceType    type,
-        long            bindFlags,
-        long            stageFlags,
-        std::uint32_t   slot,
-        std::uint32_t   arraySize = 0)
+        ResourceType        type,
+        long                bindFlags,
+        long                stageFlags,
+        const BindingSlot&  slot,
+        std::uint32_t       arraySize = 0)
     :
         type       { type       },
         bindFlags  { bindFlags  },
@@ -115,7 +151,7 @@ struct BindingDescriptor
         ResourceType        type,
         long                bindFlags,
         long                stageFlags,
-        std::uint32_t       slot,
+        const BindingSlot&  slot,
         std::uint32_t       arraySize = 0)
     :
         name       { name.begin(), name.end() },
@@ -158,11 +194,8 @@ struct BindingDescriptor
     */
     long            stageFlags  = 0;
 
-    /**
-    \brief Specifies the zero-based binding slot. By default 0.
-    \note For Vulkan, each binding must have a unique slot within the same pipeline layout.
-    */
-    std::uint32_t   slot        = 0;
+    //! Specifies the binding slot for the resource.
+    BindingSlot     slot;
 
     /**
     \brief Specifies the number of binding slots for an array resource. By default 0.
@@ -187,7 +220,7 @@ struct StaticSamplerDescriptor
     //! Initializes the static sampler with stage flags, binding slot, and sampler state.
     inline StaticSamplerDescriptor(
         long                        stageFlags,
-        std::uint32_t               slot,
+        const BindingSlot&          slot,
         const SamplerDescriptor&    sampler)
     :
         stageFlags { stageFlags },
@@ -200,7 +233,7 @@ struct StaticSamplerDescriptor
     inline StaticSamplerDescriptor(
         const StringView&           name,
         long                        stageFlags,
-        std::uint32_t               slot,
+        const BindingSlot&          slot,
         const SamplerDescriptor&    sampler)
     :
         name       { name.begin(), name.end() },
@@ -229,11 +262,8 @@ struct StaticSamplerDescriptor
     */
     long                stageFlags  = 0;
 
-    /**
-    \brief Specifies the zero-based binding slot. By default 0.
-    \note For Vulkan, each binding must have a unique slot within the same pipeline layout.
-    */
-    std::uint32_t       slot        = 0;
+    //! Specifies the binding slot of the static sampler.
+    BindingSlot         slot;
 
     /**
     \brief Specifies the static sampler state.
@@ -326,6 +356,21 @@ struct PipelineLayoutDescriptor
     */
     std::vector<UniformDescriptor>          uniforms;
 };
+
+
+/* ----- Operators ----- */
+
+//! Returns true if the specified binding slots are equal, i.e. \c index and \c set are equal.
+inline bool operator == (const BindingSlot& lhs, const BindingSlot& rhs)
+{
+    return (lhs.index == rhs.index && lhs.set == rhs.set);
+}
+
+//! Returns true if the specified binding slots are not equal, i.e. \c index and \c set are not equal.
+inline bool operator != (const BindingSlot& lhs, const BindingSlot& rhs)
+{
+    return !(lhs == rhs);
+}
 
 
 } // /namespace LLGL

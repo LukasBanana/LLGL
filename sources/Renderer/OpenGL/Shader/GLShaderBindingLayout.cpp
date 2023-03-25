@@ -121,7 +121,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Sampler || binding.type == ResourceType::Texture)
-                AppendUniformBinding(binding.name, binding.slot);
+                AppendUniformBinding(binding.name, binding.slot.index);
         }
     }
 
@@ -159,7 +159,7 @@ void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pi
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Buffer && (binding.bindFlags & BindFlags::ConstantBuffer) != 0)
-                AppendUniformBlockBinding(binding.name, binding.slot);
+                AppendUniformBlockBinding(binding.name, binding.slot.index);
         }
     }
 
@@ -184,7 +184,7 @@ void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& p
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0)
-                AppendShaderStorageBinding(binding.name, binding.slot);
+                AppendShaderStorageBinding(binding.name, binding.slot.index);
         }
     }
 

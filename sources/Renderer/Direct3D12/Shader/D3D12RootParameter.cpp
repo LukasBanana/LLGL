@@ -7,6 +7,7 @@
 
 #include "D3D12RootParameter.h"
 #include <LLGL/ShaderFlags.h>
+#include <LLGL/PipelineLayoutFlags.h>
 
 
 namespace LLGL
@@ -34,27 +35,32 @@ void D3D12RootParameter::InitAsConstants(UINT shaderRegister, UINT num32BitValue
     managedRootParam_->ShaderVisibility             = visibility;
 }
 
-void D3D12RootParameter::InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE paramType, UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility)
+void D3D12RootParameter::InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE paramType, UINT shaderRegister, UINT registerSpace, D3D12_SHADER_VISIBILITY visibility)
 {
     managedRootParam_->ParameterType                = paramType;
     managedRootParam_->Descriptor.ShaderRegister    = shaderRegister;
-    managedRootParam_->Descriptor.RegisterSpace     = 0;
+    managedRootParam_->Descriptor.RegisterSpace     = registerSpace;
     managedRootParam_->ShaderVisibility             = visibility;
 }
 
-void D3D12RootParameter::InitAsDescriptorCBV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility)
+void D3D12RootParameter::InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE paramType, const BindingSlot& slot, D3D12_SHADER_VISIBILITY visibility)
 {
-    InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, shaderRegister, visibility);
+    InitAsDescriptor(paramType, slot.index, slot.set, visibility);
 }
 
-void D3D12RootParameter::InitAsDescriptorSRV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility)
+void D3D12RootParameter::InitAsDescriptorCBV(const BindingSlot& slot, D3D12_SHADER_VISIBILITY visibility)
 {
-    InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE_SRV, shaderRegister, visibility);
+    InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, slot, visibility);
 }
 
-void D3D12RootParameter::InitAsDescriptorUAV(UINT shaderRegister, D3D12_SHADER_VISIBILITY visibility)
+void D3D12RootParameter::InitAsDescriptorSRV(const BindingSlot& slot, D3D12_SHADER_VISIBILITY visibility)
 {
-    InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE_UAV, shaderRegister, visibility);
+    InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE_SRV, slot, visibility);
+}
+
+void D3D12RootParameter::InitAsDescriptorUAV(const BindingSlot& slot, D3D12_SHADER_VISIBILITY visibility)
+{
+    InitAsDescriptor(D3D12_ROOT_PARAMETER_TYPE_UAV, slot, visibility);
 }
 
 void D3D12RootParameter::InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT shaderRegister, UINT numDescriptors, D3D12_SHADER_VISIBILITY visibility)
@@ -87,6 +93,11 @@ void D3D12RootParameter::AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE 
 
     /* Increment descriptor range count */
     managedRootParam_->DescriptorTable.NumDescriptorRanges++;
+}
+
+void D3D12RootParameter::AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, const BindingSlot& slot, UINT numDescriptors)
+{
+    AppendDescriptorTableRange(rangeType, slot.index, numDescriptors, slot.set);
 }
 
 void D3D12RootParameter::Clear()

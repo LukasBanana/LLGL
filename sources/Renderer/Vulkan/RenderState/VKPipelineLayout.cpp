@@ -56,7 +56,7 @@ std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
 
 std::uint32_t VKPipelineLayout::GetNumBindings() const
 {
-    return static_cast<std::uint32_t>(0); //TODO
+    return static_cast<std::uint32_t>(bindings_.size());
 }
 
 std::uint32_t VKPipelineLayout::GetNumStaticSamplers() const
@@ -163,7 +163,7 @@ void VKPipelineLayout::CreateVkDescriptorSetLayout(
 
 static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
 {
-    dst.binding             = src.slot;
+    dst.binding             = src.slot.index;
     dst.descriptorType      = GetVkDescriptorType(src);
     dst.descriptorCount     = std::max(1u, src.arraySize);
     dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
@@ -192,7 +192,7 @@ void VKPipelineLayout::CreateBindingSetLayout(
         outBindings.push_back(
             VKLayoutBinding
             {
-                inBindings[i].slot,
+                inBindings[i].slot.index,
                 inBindings[i].stageFlags,
                 setLayoutBindings[i].descriptorType
             }
@@ -202,7 +202,7 @@ void VKPipelineLayout::CreateBindingSetLayout(
 
 static void Convert(VkDescriptorSetLayoutBinding& dst, const StaticSamplerDescriptor& src, const VkSampler* immutableSamplerVK)
 {
-    dst.binding             = src.slot;
+    dst.binding             = src.slot.index;
     dst.descriptorType      = VK_DESCRIPTOR_TYPE_SAMPLER;
     dst.descriptorCount     = 1u;
     dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);

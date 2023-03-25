@@ -841,6 +841,20 @@ static std::uint64_t GetMinAlignmentForBufferBinding(const BindingDescriptor& bi
     return alignment;
 }
 
+static std::string BindingSlotToString(const BindingSlot& slot)
+{
+    std::string s;
+    s += "slot ";
+    s += std::to_string(slot.index);
+    if (slot.set != 0)
+    {
+        s += " (set ";
+        s += std::to_string(slot.set);
+        s += ')';
+    }
+    return s;
+}
+
 void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc)
 {
     const auto minAlignment = GetMinAlignmentForBufferBinding(bindingDesc, limits_);
@@ -848,7 +862,7 @@ void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewD
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "buffer view '" + bindingDesc.name + "' at slot " + std::to_string(bindingDesc.slot) +
+            "buffer view '" + bindingDesc.name + "' at " + BindingSlotToString(bindingDesc.slot) +
             " does not satisfy minimum alignment of " + std::to_string(minAlignment) + " bytes"
         );
     }
@@ -1461,8 +1475,8 @@ void DbgRenderSystem::ValidateBufferForBinding(const DbgBuffer& bufferDbg, const
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "binding flags mismatch between buffer resource (slot = " +
-            std::to_string(bindingDesc.slot) + ") and binding descriptor"
+            "binding flags mismatch between buffer resource at " +
+            BindingSlotToString(bindingDesc.slot) + " and binding descriptor"
         );
     }
 }
@@ -1473,8 +1487,8 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "binding flags mismatch between texture resource (slot = " +
-            std::to_string(bindingDesc.slot) + ") and binding descriptor"
+            "binding flags mismatch between texture resource at " +
+            BindingSlotToString(bindingDesc.slot) + " and binding descriptor"
         );
     }
 }

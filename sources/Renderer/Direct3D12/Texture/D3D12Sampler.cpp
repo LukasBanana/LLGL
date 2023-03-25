@@ -79,8 +79,8 @@ void D3D12Sampler::ConvertDesc(D3D12_STATIC_SAMPLER_DESC& outDesc, const StaticS
     outDesc.BorderColor         = GetD3DBorderColor(inDesc.sampler.borderColor);
 
     /* Set static sampler binding point */
-    outDesc.ShaderRegister      = inDesc.slot;
-    outDesc.RegisterSpace       = 0;
+    outDesc.ShaderRegister      = inDesc.slot.index;
+    outDesc.RegisterSpace       = inDesc.slot.set;
     outDesc.ShaderVisibility    = D3D12RootParameter::FindSuitableVisibility(inDesc.stageFlags);
 }
 

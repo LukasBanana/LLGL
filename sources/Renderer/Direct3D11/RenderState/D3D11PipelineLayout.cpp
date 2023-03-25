@@ -96,7 +96,7 @@ void D3D11PipelineLayout::BuildDynamicResourceBindings(const std::vector<Binding
 {
     bindings_.reserve(bindingDescs.size());
     for (const auto& desc : bindingDescs)
-        bindings_.push_back(D3D11PipelineResourceBinding{ ToD3DResourceType(desc), desc.slot, desc.stageFlags });
+        bindings_.push_back(D3D11PipelineResourceBinding{ ToD3DResourceType(desc), desc.slot.index, desc.stageFlags });
 }
 
 static ComPtr<ID3D11SamplerState> DXCreateSamplerState(ID3D11Device* device, const D3D11_SAMPLER_DESC& desc)
@@ -114,7 +114,7 @@ void D3D11PipelineLayout::BuildStaticSamplers(ID3D11Device* device, const std::v
     for (const auto& desc : staticSamplerDescs)
     {
         D3D11Sampler::ConvertDesc(nativeDesc, desc.sampler);
-        staticSamplers_.push_back(D3D11StaticSampler{ desc.slot, desc.stageFlags, DXCreateSamplerState(device, nativeDesc) });
+        staticSamplers_.push_back(D3D11StaticSampler{ desc.slot.index, desc.stageFlags, DXCreateSamplerState(device, nativeDesc) });
     }
 }
 

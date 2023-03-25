@@ -847,7 +847,7 @@ std::vector<GLResourceHeap::GLResourceBinding> GLResourceHeap::FilterAndSortGLBi
     resourceBindings.reserve(bindingIter.GetCount());
 
     for (std::size_t index = 0; const auto* bindingDesc = bindingIter.Next(&index);)
-        resourceBindings.push_back({ static_cast<GLuint>(bindingDesc->slot), index });
+        resourceBindings.push_back({ static_cast<GLuint>(bindingDesc->slot.index), index });
 
     /* Sort resources by slot index */
     std::sort(

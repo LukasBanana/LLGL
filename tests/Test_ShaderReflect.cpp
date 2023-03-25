@@ -40,7 +40,7 @@ int main()
         std::cout << "Resources:" << std::endl;
         for (const LLGL::ShaderResourceReflection& resc : reflect.resources)
         {
-            std::cout << "  " << resc.binding.name << " @ " << resc.binding.slot << std::endl;
+            std::cout << "  " << resc.binding.name << " @ " << resc.binding.slot.index << std::endl;
         }
 
         std::cout << "Uniforms:" << std::endl;

@@ -133,7 +133,7 @@ void GLPipelineLayout::BuildDynamicResourceBindings(const std::vector<BindingDes
     bindings_.reserve(bindingDescs.size());
     for (const auto& desc : bindingDescs)
     {
-        bindings_.push_back(GLPipelineResourceBinding{ ToGLResourceType(desc), static_cast<GLuint>(desc.slot) });
+        bindings_.push_back(GLPipelineResourceBinding{ ToGLResourceType(desc), static_cast<GLuint>(desc.slot.index) });
         resourceNames_.push_back(desc.name);
     }
 }
@@ -151,7 +151,7 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
             auto sampler = MakeUnique<GL2XSampler>();
             sampler->SamplerParameters(desc.sampler);
             staticSamplersGL2X_.push_back(std::move(sampler));
-            staticSamplerSlots_.push_back(desc.slot);
+            staticSamplerSlots_.push_back(desc.slot.index);
             resourceNames_.push_back(desc.name);
         }
     }
@@ -165,7 +165,7 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
             auto sampler = MakeUnique<GLSampler>();
             sampler->SamplerParameters(desc.sampler);
             staticSamplers_.push_back(std::move(sampler));
-            staticSamplerSlots_.push_back(desc.slot);
+            staticSamplerSlots_.push_back(desc.slot.index);
             resourceNames_.push_back(desc.name);
         }
     }

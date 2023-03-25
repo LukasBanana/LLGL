@@ -653,7 +653,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
             D3D12ConstantBufferReflection cbufferInfo;
             {
                 cbufferInfo.rootConstants.ShaderRegister    = inputBindDesc.BindPoint;
-                cbufferInfo.rootConstants.RegisterSpace     = 0;
+                cbufferInfo.rootConstants.RegisterSpace     = inputBindDesc.Space;
                 cbufferInfo.rootConstants.Num32BitValues    = shaderBufferDesc.Size / 4;
                 cbufferInfo.fields                          = fieldsInfo;
             }

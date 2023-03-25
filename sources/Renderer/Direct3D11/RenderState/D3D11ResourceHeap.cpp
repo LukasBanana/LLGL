@@ -327,7 +327,7 @@ std::vector<D3D11ResourceHeap::D3DResourceBinding> D3D11ResourceHeap::FilterAndS
         {
             D3DResourceBinding resourceBinding;
             {
-                resourceBinding.slot    = bindingDesc->slot;
+                resourceBinding.slot    = bindingDesc->slot.index;
                 resourceBinding.stages  = affectedStage;
                 resourceBinding.index   = index;
             }
