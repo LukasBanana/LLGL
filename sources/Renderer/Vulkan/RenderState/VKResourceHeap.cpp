@@ -7,12 +7,13 @@
 
 #include "VKResourceHeap.h"
 #include "VKPipelineLayout.h"
+#include "VKDescriptorSetWriter.h"
+#include "VKPoolSizeAccumulator.h"
 #include "../Buffer/VKBuffer.h"
 #include "../Texture/VKSampler.h"
 #include "../Texture/VKTexture.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
-#include "../VKContainers.h"
 #include "../../ResourceUtils.h"
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
@@ -43,7 +44,7 @@ VKResourceHeap::VKResourceHeap(
     pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
 
     /* Get and validate number of bindings and resource views */
-    CopyLayoutBindings(pipelineLayoutVK->GetHeapBindings());
+    CopyLayoutBindings(pipelineLayoutVK->GetLayoutHeapBindings());
 
     const auto numBindings      = static_cast<std::uint32_t>(bindings_.size());
     const auto numResourceViews = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
@@ -51,7 +52,7 @@ VKResourceHeap::VKResourceHeap(
     /* Create descriptor pool and array of descriptor sets */
     const auto numDescriptorSets = (numResourceViews / numBindings);
     CreateDescriptorPool(device, numDescriptorSets);
-    CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetVkHeapBindingsSetLayout());
+    CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetSetLayoutForHeapBindings());
 
     /* Allocate array for descriptor set barriers */
     if ((desc.barrierFlags & BarrierFlags::Storage) != 0)
@@ -86,7 +87,9 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
     if (firstDescriptor + resourceViews.size() > numDescriptors)
         return 0;
 
-    VKWriteDescriptorContainer container{ resourceViews.size() };
+    const auto numResourceViewWrites = static_cast<std::uint32_t>(resourceViews.size());
+    VKDescriptorSetWriter setWriter{ numResourceViewWrites, numResourceViewWrites };
+    VKDescriptorBarrierWriter barrierWriter;
 
     for (const auto& desc : resourceViews)
     {
@@ -102,23 +105,23 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
         switch (binding.descriptorType)
         {
             case VK_DESCRIPTOR_TYPE_SAMPLER:
-                FillWriteDescriptorWithSampler(desc, descriptorSet, binding, container);
+                FillWriteDescriptorWithSampler(desc, descriptorSet, binding, setWriter);
                 break;
 
             #if 0
             case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-                FillWriteDescriptorWithCombinedImageSampler(device, desc, descriptorSet, binding, container);
+                FillWriteDescriptorWithCombinedImageSampler(device, desc, descriptorSet, binding, setWriter);
                 break;
             #endif
 
             case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
             case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-                FillWriteDescriptorWithImageView(device, desc, descriptorSet, binding, container);
+                FillWriteDescriptorWithImageView(device, desc, descriptorSet, binding, setWriter);
                 break;
 
             case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
             case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-                FillWriteDescriptorWithBufferRange(device, desc, descriptorSet, binding, container);
+                FillWriteDescriptorWithBufferRange(device, desc, descriptorSet, binding, setWriter, barrierWriter);
                 break;
 
             default:
@@ -132,23 +135,15 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
         ++firstDescriptor;
     }
 
-    if (container.numWriteDescriptors > 0)
+    if (setWriter.GetNumWrites() > 0)
     {
         /* All command buffers must have finished execution before any affected descriptor set can be updated */
         vkDeviceWaitIdle(device);
-
-        /* Update Vulkan descriptor sets */
-        vkUpdateDescriptorSets(
-            device,
-            container.numWriteDescriptors,      // Number of write descriptor
-            container.writeDescriptors.data(),  // Descriptors to be written
-            0,                                  // No copy descriptors
-            nullptr                             // No descriptors to be copied
-        );
+        setWriter.UpdateDescriptorSets(device);
     }
 
     /* Update pipeline barriers */
-    for_subrange(i, container.barrierChangeRanges[0], container.barrierChangeRanges[1])
+    for_subrange(i, barrierWriter.barrierChangeRanges[0], barrierWriter.barrierChangeRanges[1])
     {
         if (auto* buffer = barriers_[i].get())
         {
@@ -157,7 +152,7 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
         }
     }
 
-    return container.numWriteDescriptors;
+    return setWriter.GetNumWrites();
 }
 
 void VKResourceHeap::SubmitPipelineBarrier(VkCommandBuffer commandBuffer, std::uint32_t descriptorSet)
@@ -235,43 +230,13 @@ void VKResourceHeap::CopyLayoutBinding(VKDescriptorBinding& dst, const VKLayoutB
     dst.bufferViewIndex = (IsDescriptorTypeBufferView(src.descriptorType) ? numBufferViewsPerSet_++ : VKResourceHeap::invalidViewIndex);
 }
 
-// Returns the zero-based index of a descriptor pool for the specified descriptor type
-static std::uint32_t GetDescriptorPoolIndex(VkDescriptorType type)
-{
-    if (type >= VK_DESCRIPTOR_TYPE_SAMPLER && type <= VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT)
-        return static_cast<std::uint32_t>(type);
-    else
-        return -1;
-}
-
 void VKResourceHeap::CreateDescriptorPool(VkDevice device, std::uint32_t numDescriptorSets)
 {
-    /* Determine descriptor pool sizes per descriptor type */
-    constexpr auto numDescriptorTypes = (static_cast<std::uint32_t>(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) + 1);
-    std::uint32_t descritporPoolSizes[numDescriptorTypes] = {};
-
+    /* Accumulate descriptor pool sizes */
+    VKPoolSizeAccumulator poolSizeAccum;
     for (const auto& binding : bindings_)
-    {
-        const auto descriptorType       = binding.descriptorType;
-        const auto descriptorPoolIndex  = GetDescriptorPoolIndex(binding.descriptorType);
-        descritporPoolSizes[descriptorPoolIndex] += numDescriptorSets;
-    }
-
-    /* Initialize Vulkan descriptor pool sizes */
-    SmallVector<VkDescriptorPoolSize, numDescriptorTypes> poolSizeInfos;
-
-    for_range(i, numDescriptorTypes)
-    {
-        if (descritporPoolSizes[i] > 0)
-        {
-            VkDescriptorPoolSize poolSizeInfo;
-            {
-                poolSizeInfo.type               = static_cast<VkDescriptorType>(i);
-                poolSizeInfo.descriptorCount    = descritporPoolSizes[i];
-            }
-            poolSizeInfos.push_back(poolSizeInfo);
-        }
-    }
+        poolSizeAccum.Accumulate(binding.descriptorType, numDescriptorSets);
+    poolSizeAccum.Finalize();
 
     /* Create Vulkan descriptor pool */
     VkDescriptorPoolCreateInfo poolCreateInfo;
@@ -280,8 +245,8 @@ void VKResourceHeap::CreateDescriptorPool(VkDevice device, std::uint32_t numDesc
         poolCreateInfo.pNext            = nullptr;
         poolCreateInfo.flags            = 0;
         poolCreateInfo.maxSets          = numDescriptorSets;
-        poolCreateInfo.poolSizeCount    = static_cast<std::uint32_t>(poolSizeInfos.size());
-        poolCreateInfo.pPoolSizes       = poolSizeInfos.data();
+        poolCreateInfo.poolSizeCount    = poolSizeAccum.Size();
+        poolCreateInfo.pPoolSizes       = poolSizeAccum.Data();
     }
     auto result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool");
@@ -316,12 +281,12 @@ void VKResourceHeap::FillWriteDescriptorWithSampler(
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKDescriptorBinding&      binding,
-    VKWriteDescriptorContainer&     container)
+    VKDescriptorSetWriter&          setWriter)
 {
     auto samplerVK = LLGL_CAST(VKSampler*, desc.resource);
 
     /* Initialize image information */
-    auto imageInfo = container.NextImageInfo();
+    auto imageInfo = setWriter.NextImageInfo();
     {
         imageInfo->sampler          = samplerVK->GetVkSampler();
         imageInfo->imageView        = VK_NULL_HANDLE;
@@ -329,7 +294,7 @@ void VKResourceHeap::FillWriteDescriptorWithSampler(
     }
 
     /* Initialize write descriptor */
-    auto writeDesc = container.NextWriteDescriptor();
+    auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSets_[descriptorSet];
         writeDesc->dstBinding       = binding.dstBinding;
@@ -347,13 +312,13 @@ void VKResourceHeap::FillWriteDescriptorWithImageView(
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKDescriptorBinding&      binding,
-    VKWriteDescriptorContainer&     container)
+    VKDescriptorSetWriter&          setWriter)
 {
     auto textureVK = LLGL_CAST(VKTexture*, desc.resource);
 
     /* Initialize image information */
     const std::size_t imageViewIndex = descriptorSet * numImageViewsPerSet_ + binding.imageViewIndex;
-    auto imageInfo = container.NextImageInfo();
+    auto imageInfo = setWriter.NextImageInfo();
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
         imageInfo->imageView     = GetOrCreateImageView(device, *textureVK, desc, imageViewIndex);
@@ -361,7 +326,7 @@ void VKResourceHeap::FillWriteDescriptorWithImageView(
     }
 
     /* Initialize write descriptor */
-    auto writeDesc = container.NextWriteDescriptor();
+    auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSets_[descriptorSet];
         writeDesc->dstBinding       = binding.dstBinding;
@@ -379,12 +344,13 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKDescriptorBinding&      binding,
-    VKWriteDescriptorContainer&     container)
+    VKDescriptorSetWriter&          setWriter,
+    VKDescriptorBarrierWriter&      barrierWriter)
 {
     auto bufferVK = LLGL_CAST(VKBuffer*, desc.resource);
 
     /* Initialize buffer information */
-    auto bufferInfo = container.NextBufferInfo();
+    auto bufferInfo = setWriter.NextBufferInfo();
     {
         bufferInfo->buffer = bufferVK->GetVkBuffer();
         if (desc.bufferView.size == Constants::wholeSize)
@@ -400,7 +366,7 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
     }
 
     /* Initialize write descriptor */
-    auto writeDesc = container.NextWriteDescriptor();
+    auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSets_[descriptorSet];
         writeDesc->dstBinding       = binding.dstBinding;
@@ -415,8 +381,8 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
     /* Emplace pipeline barrier for storage buffer */
     if (ExchangeBufferBarrier(descriptorSet, bufferVK, binding))
     {
-        container.barrierChangeRanges[0] = std::min(container.barrierChangeRanges[0], descriptorSet);
-        container.barrierChangeRanges[1] = std::max(container.barrierChangeRanges[1], descriptorSet + 1);
+        barrierWriter.barrierChangeRanges[0] = std::min(barrierWriter.barrierChangeRanges[0], descriptorSet);
+        barrierWriter.barrierChangeRanges[1] = std::max(barrierWriter.barrierChangeRanges[1], descriptorSet + 1);
     }
 }
 

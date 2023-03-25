@@ -1,0 +1,80 @@
+/*
+ * VKStagingDescriptorPool.h
+ *
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#ifndef LLGL_VK_STAGING_DESCRIPTOR_POOL_H
+#define LLGL_VK_STAGING_DESCRIPTOR_POOL_H
+
+
+#include "../Vulkan.h"
+#include "../VKPtr.h"
+#include <vector>
+
+
+namespace LLGL
+{
+
+
+// Pool of Vulkan staging descriptor sets.
+class VKStagingDescriptorPool
+{
+
+    public:
+
+        // Number of descriptor types.
+        static constexpr int numDescriptorTypes = (static_cast<int>(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT) + 1);
+
+    public:
+
+        VKStagingDescriptorPool(VkDevice device);
+
+        VKStagingDescriptorPool(const VKStagingDescriptorPool&) = delete;
+        VKStagingDescriptorPool& operator = (const VKStagingDescriptorPool&) = delete;
+
+        VKStagingDescriptorPool(VKStagingDescriptorPool&& rhs);
+        VKStagingDescriptorPool& operator = (VKStagingDescriptorPool&& rhs);
+
+        // Allocates the native Vulkan descriptor pool.
+        void Initialize(
+            std::uint32_t               setCapacity,
+            std::uint32_t               numPoolSizes,
+            const VkDescriptorPoolSize* poolSizes
+        );
+
+        // Resets all previously allocated descriptor sets and frees all memory of this descriptor pool.
+        void Reset();
+
+        // Returns true if this pool can allocate another descriptor set with the specified sizes.
+        bool Capacity(std::uint32_t numSizes, const VkDescriptorPoolSize* sizes) const;
+
+        // Copies the specified source descriptors into the native D3D descriptor heap.
+        // Returns VK_NULL_HANDLE if the specified descriptor set cannot fit into the remaining space of this descriptor pool.
+        VkDescriptorSet AllocateDescriptorSet(
+            VkDescriptorSetLayout       setLayout,
+            std::uint32_t               numSizes,
+            const VkDescriptorPoolSize* sizes
+        );
+
+    private:
+
+        VkDevice                device_                             = VK_NULL_HANDLE;
+        VKPtr<VkDescriptorPool> descriptorPool_;
+        std::uint32_t           poolCapacities_[numDescriptorTypes] = {};
+        std::uint32_t           poolSizes_[numDescriptorTypes]      = {};
+        std::uint32_t           setCapacity_                        = 0;
+        std::uint32_t           setSize_                            = 0;
+
+};
+
+
+} // /namespace LLGL
+
+
+#endif
+
+
+
+// ================================================================================

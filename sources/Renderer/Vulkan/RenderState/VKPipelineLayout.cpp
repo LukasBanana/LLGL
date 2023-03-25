@@ -6,9 +6,11 @@
  */
 
 #include "VKPipelineLayout.h"
+#include "VKPoolSizeAccumulator.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../Texture/VKSampler.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Misc/ForRange.h>
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
@@ -23,7 +25,7 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     descriptorSetLayouts_ { { device, vkDestroyDescriptorSetLayout },
                             { device, vkDestroyDescriptorSetLayout },
                             { device, vkDestroyDescriptorSetLayout } },
-    staticDescriptorPool_ { device, vkDestroyDescriptorPool          },
+    descriptorPool_       { device, vkDestroyDescriptorPool          },
     uniformDescs_         { desc.uniforms                            }
 {
     /* Create Vulkan descriptor set layouts */
@@ -34,16 +36,17 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     if (!desc.staticSamplers.empty())
         CreateImmutableSamplers(device, desc.staticSamplers);
 
+    /* Create descriptor pool for dynamic descriptors and immutable samplers */
+    if (!desc.bindings.empty() || !desc.staticSamplers.empty())
+        CreateDescriptorPool(device);
+    if (!desc.bindings.empty())
+        CreateDescriptorCache(device, descriptorSetLayouts_[SetLayoutType_DynamicBindings]);
+    if (!desc.staticSamplers.empty())
+        CreateStaticDescriptorSet(device, descriptorSetLayouts_[SetLayoutType_ImmutableSamplers].Get());
+
     /* Don't create a VkPipelineLayout object if this instance only has push constants as those are part of the permutations for each PSO */
     if (!desc.heapBindings.empty() || !desc.bindings.empty() || !desc.staticSamplers.empty())
         pipelineLayout_ = CreateVkPipelineLayout(device);
-
-    /* Create static descriptor set for immutable samplers */
-    if (!desc.staticSamplers.empty())
-    {
-        CreateStaticDescriptorPool(device);
-        CreateStaticDescriptorSet(device, descriptorSetLayouts_[SetLayoutType_ImmutableSamplers].Get());
-    }
 }
 
 std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
@@ -66,7 +69,7 @@ std::uint32_t VKPipelineLayout::GetNumUniforms() const
     return static_cast<std::uint32_t>(uniformDescs_.size());
 }
 
-void VKPipelineLayout::BindStaticDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const
+void VKPipelineLayout::BindStaticDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const
 {
     if (staticDescriptorSet_ != VK_NULL_HANDLE)
     {
@@ -77,6 +80,23 @@ void VKPipelineLayout::BindStaticDescriptorSets(VkCommandBuffer commandBuffer, V
             /*firstSet:*/           descriptorSetBindSlots_[SetLayoutType_ImmutableSamplers],
             /*descriptorSetCount:*/ 1,
             /*pDescriptorSets:*/    &staticDescriptorSet_,
+            /*dynamicOffsetCount:*/ 0,
+            /*pDynamicOffsets*/     nullptr
+        );
+    }
+}
+
+void VKPipelineLayout::BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint, VkDescriptorSet descriptorSet) const
+{
+    if (descriptorSet != VK_NULL_HANDLE)
+    {
+        vkCmdBindDescriptorSets(
+            /*commandBuffer:*/      commandBuffer,
+            /*pipelineBindPoint:*/  bindPoint,
+            /*layout:*/             pipelineLayout_.Get(),
+            /*firstSet:*/           descriptorSetBindSlots_[SetLayoutType_DynamicBindings],
+            /*descriptorSetCount:*/ 1,
+            /*pDescriptorSets:*/    &descriptorSet,
             /*dynamicOffsetCount:*/ 0,
             /*pDynamicOffsets*/     nullptr
         );
@@ -245,25 +265,46 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(VkDevice device
     return pipelineLayout;
 }
 
-void VKPipelineLayout::CreateStaticDescriptorPool(VkDevice device)
+void VKPipelineLayout::CreateDescriptorPool(VkDevice device)
 {
+    /* Accumulate descriptor pool sizes for all dynamic resources and immutable samplers */
+    VKPoolSizeAccumulator poolSizeAccum;
+
+    for (const auto binding : bindings_)
+        poolSizeAccum.Accumulate(binding.descriptorType);
+
+    if (!immutableSamplers_.empty())
+        poolSizeAccum.Accumulate(VK_DESCRIPTOR_TYPE_SAMPLER, static_cast<std::uint32_t>(immutableSamplers_.size()));
+
+    poolSizeAccum.Finalize();
+
     /* Create Vulkan descriptor pool */
-    VkDescriptorPoolSize poolSizeInfo;
-    {
-        poolSizeInfo.type               = VK_DESCRIPTOR_TYPE_SAMPLER;
-        poolSizeInfo.descriptorCount    = static_cast<std::uint32_t>(immutableSamplers_.size());
-    }
     VkDescriptorPoolCreateInfo poolCreateInfo;
     {
         poolCreateInfo.sType            = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolCreateInfo.pNext            = nullptr;
         poolCreateInfo.flags            = 0;
-        poolCreateInfo.maxSets          = 1;
-        poolCreateInfo.poolSizeCount    = 1;
-        poolCreateInfo.pPoolSizes       = &poolSizeInfo;
+        poolCreateInfo.maxSets          = 2;
+        poolCreateInfo.poolSizeCount    = poolSizeAccum.Size();
+        poolCreateInfo.pPoolSizes       = poolSizeAccum.Data();
     }
-    auto result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, staticDescriptorPool_.ReleaseAndGetAddressOf());
+    auto result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool for static samplers");
+}
+
+void VKPipelineLayout::CreateDescriptorCache(VkDevice device, VkDescriptorSet setLayout)
+{
+    /*
+    Don't account descriptors in the dynamic cache for immutable samplers,
+    so accumulate pool sizes only for dynamiuc resources here
+    */
+    VKPoolSizeAccumulator poolSizeAccum;
+    for (const auto binding : bindings_)
+        poolSizeAccum.Accumulate(binding.descriptorType);
+    poolSizeAccum.Finalize();
+
+    /* Allocate unique descriptor cache */
+    descriptorCache_ = MakeUnique<VKDescriptorCache>(device, descriptorPool_, setLayout, poolSizeAccum.Size(), poolSizeAccum.Data(), bindings_);
 }
 
 void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout)
@@ -273,7 +314,7 @@ void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSe
     {
         allocInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.pNext                 = nullptr;
-        allocInfo.descriptorPool        = staticDescriptorPool_.Get();
+        allocInfo.descriptorPool        = descriptorPool_.Get();
         allocInfo.descriptorSetCount    = 1;
         allocInfo.pSetLayouts           = &setLayout;
     }

@@ -13,7 +13,8 @@
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "VKCore.h"
-
+#include "RenderState/VKStagingDescriptorSetPool.h"
+#include "RenderState/VKDescriptorCache.h"
 #include <vector>
 
 
@@ -270,6 +271,8 @@ class VKCommandBuffer final : public CommandBuffer
             VkPipelineStageFlags    dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_ALL_COMMANDS_BIT
         );
 
+        void FlushDescriptorCache();
+
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();
 
@@ -313,8 +316,13 @@ class VKCommandBuffer final : public CommandBuffer
         bool                            scissorEnabled_             = false;
         bool                            scissorRectInvalidated_     = true;
         VkPipelineBindPoint             pipelineBindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        const VKPipelineLayout*         boundPipelineLayout_        = nullptr;
 
         std::uint32_t                   maxDrawIndirectCount_       = 0;
+
+        VKStagingDescriptorSetPool      descriptorSetPoolArray_[maxNumCommandBuffers];
+        VKStagingDescriptorSetPool*     descriptorSetPool_          = nullptr;
+        VKDescriptorCache*              descriptorCache_            = nullptr;
 
         #if 1//TODO: optimize usage of query pools
         std::vector<VKQueryHeap*>       queryHeapsInFlight_;

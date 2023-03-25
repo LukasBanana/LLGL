@@ -59,14 +59,15 @@ VKCommandBuffer::VKCommandBuffer(
     const QueueFamilyIndices&       queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
-    device_               { device                                   },
-    commandQueue_         { commandQueue                             },
-    commandPool_          { device, vkDestroyCommandPool             },
-    queuePresentFamily_   { queueFamilyIndices.presentFamily         },
-    maxDrawIndirectCount_ { GetMaxDrawIndirectCount(physicalDevice)  },
-    recordingFenceArray_  { VKPtr<VkFence>{ device, vkDestroyFence },
-                            VKPtr<VkFence>{ device, vkDestroyFence },
-                            VKPtr<VkFence>{ device, vkDestroyFence } }
+    device_                 { device                                   },
+    commandQueue_           { commandQueue                             },
+    commandPool_            { device, vkDestroyCommandPool             },
+    queuePresentFamily_     { queueFamilyIndices.presentFamily         },
+    maxDrawIndirectCount_   { GetMaxDrawIndirectCount(physicalDevice)  },
+    recordingFenceArray_    { VKPtr<VkFence>{ device, vkDestroyFence },
+                              VKPtr<VkFence>{ device, vkDestroyFence },
+                              VKPtr<VkFence>{ device, vkDestroyFence } },
+    descriptorSetPoolArray_ { device, device, device                   }
 {
     /* Translate creation flags */
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
@@ -493,7 +494,11 @@ void VKCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t 
 
 void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    //TODO
+    if (boundPipelineLayout_ != nullptr && descriptor < boundPipelineLayout_->GetLayoutDynamicBindings().size())
+    {
+        const auto& binding = boundPipelineLayout_->GetLayoutDynamicBindings()[descriptor];
+        descriptorCache_->EmplaceDescriptor(resource, binding);
+    }
 }
 
 void VKCommandBuffer::ResetResourceSlots(
@@ -715,6 +720,17 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             scissorRectInvalidated_ = false;
         }
     }
+
+    /* Keep reference to bound piepline layout (can be null) */
+    boundPipelineLayout_ = pipelineStateVK.GetPipelineLayout();
+
+    /* Reset descriptor cache for dynamic resources */
+    if (boundPipelineLayout_ != nullptr)
+    {
+        descriptorCache_ = boundPipelineLayout_->GetDescriptorCache();
+        if (descriptorCache_ != nullptr)
+            descriptorCache_->Reset();
+    }
 }
 
 void VKCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
@@ -855,52 +871,62 @@ void VKCommandBuffer::EndStreamOutput()
 
 void VKCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
+    FlushDescriptorCache();
     vkCmdDraw(commandBuffer_, numVertices, 1, firstVertex, 0);
 }
 
 void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
+    FlushDescriptorCache();
     vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, 0, 0);
 }
 
 void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    FlushDescriptorCache();
     vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, vertexOffset, 0);
 }
 
 void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
+    FlushDescriptorCache();
     vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, 0);
 }
 
 void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
+    FlushDescriptorCache();
     vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, firstInstance);
 }
 
 void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
+    FlushDescriptorCache();
     vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, 0, 0);
 }
 
 void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    FlushDescriptorCache();
     vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
+    FlushDescriptorCache();
     vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
 void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    FlushDescriptorCache();
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     vkCmdDrawIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
 }
 
 void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    FlushDescriptorCache();
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     if (maxDrawIndirectCount_ < numCommands)
     {
@@ -919,12 +945,14 @@ void VKCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::ui
 
 void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    FlushDescriptorCache();
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, 1, 0);
 }
 
 void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    FlushDescriptorCache();
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     if (maxDrawIndirectCount_ < numCommands)
     {
@@ -945,11 +973,13 @@ void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
 
 void VKCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
+    FlushDescriptorCache();
     vkCmdDispatch(commandBuffer_, numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
 void VKCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    FlushDescriptorCache();
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     vkCmdDispatchIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset);
 }
@@ -1165,16 +1195,27 @@ void VKCommandBuffer::BufferPipelineBarrier(
     vkCmdPipelineBarrier(commandBuffer_, srcStageMask, dstStageMask, 0, 0, nullptr, 1, &barrier, 0, nullptr);
 }
 
+void VKCommandBuffer::FlushDescriptorCache()
+{
+    if (descriptorCache_ != nullptr && descriptorCache_->IsInvalidated())
+    {
+        VkDescriptorSet descriptorSet = descriptorCache_->FlushDescriptorSet(*descriptorSetPool_);
+        boundPipelineLayout_->BindDynamicDescriptorSet(commandBuffer_, pipelineBindPoint_, descriptorSet);
+    }
+}
+
 void VKCommandBuffer::AcquireNextBuffer()
 {
     commandBufferIndex_ = (commandBufferIndex_ + 1) % numCommandBuffers_;
     commandBuffer_      = commandBufferArray_[commandBufferIndex_];
     recordingFence_     = recordingFenceArray_[commandBufferIndex_].Get();
+    descriptorSetPool_  = &(descriptorSetPoolArray_[commandBufferIndex_]);
+    descriptorSetPool_->Reset();
 }
 
 void VKCommandBuffer::ResetQueryPoolsInFlight()
 {
-    for (std::size_t i = 0; i < numQueryHeapsInFlight_; ++i)
+    for_range(i, numQueryHeapsInFlight_)
     {
         auto& queryHeapVK = *(queryHeapsInFlight_[0]);
         vkCmdResetQueryPool(

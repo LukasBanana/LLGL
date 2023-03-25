@@ -127,6 +127,8 @@ class VKDeviceMemory
         // Increases the maximal fragmented block size.
         void IncMaxFragmentedBlockSize(VkDeviceSize size);
 
+    private:
+
         VKPtr<VkDeviceMemory>                               deviceMemory_;
         VkDeviceSize                                        size_                   = 0;
         std::uint32_t                                       memoryTypeIndex_        = 0;

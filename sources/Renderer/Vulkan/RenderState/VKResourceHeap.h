@@ -26,7 +26,7 @@ namespace LLGL
 class Buffer;
 class VKBuffer;
 class VKTexture;
-struct VKWriteDescriptorContainer;
+class VKDescriptorSetWriter;
 struct ResourceHeapDescriptor;
 struct ResourceViewDescriptor;
 struct TextureViewDescriptor;
@@ -86,6 +86,11 @@ class VKResourceHeap final : public ResourceHeap
             std::uint32_t           bufferViewIndex : 16; // Index (per descriptor set) to the intermediate VkBufferView or 0xFFFF if unused.
         };
 
+        struct VKDescriptorBarrierWriter
+        {
+            std::uint32_t barrierChangeRanges[2] = {};
+        };
+
     private:
 
         void CopyLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
@@ -103,7 +108,7 @@ class VKResourceHeap final : public ResourceHeap
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
             const VKDescriptorBinding&      binding,
-            VKWriteDescriptorContainer&     container
+            VKDescriptorSetWriter&          setWriter
         );
 
         void FillWriteDescriptorWithImageView(
@@ -111,7 +116,7 @@ class VKResourceHeap final : public ResourceHeap
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
             const VKDescriptorBinding&      binding,
-            VKWriteDescriptorContainer&     container
+            VKDescriptorSetWriter&          setWriter
         );
 
         void FillWriteDescriptorWithBufferRange(
@@ -119,7 +124,8 @@ class VKResourceHeap final : public ResourceHeap
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
             const VKDescriptorBinding&      binding,
-            VKWriteDescriptorContainer&     container
+            VKDescriptorSetWriter&          setWriter,
+            VKDescriptorBarrierWriter&      barrierWriter
         );
 
         bool ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* resource, const VKDescriptorBinding& binding);

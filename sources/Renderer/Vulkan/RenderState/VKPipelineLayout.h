@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include "VKDescriptorCache.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>
@@ -19,6 +20,9 @@
 namespace LLGL
 {
 
+
+class VKDescriptorCache;
+class VKPoolSizeAccumulator;
 
 struct VKLayoutBinding
 {
@@ -41,8 +45,11 @@ class VKPipelineLayout final : public PipelineLayout
 
         VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc);
 
-        // Binds the descriptor sets that are statically bound to this pipeline layout, such as immutable samplers.
-        void BindStaticDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const;
+        // Binds the descriptor set that is statically bound to this pipeline layout, such as immutable samplers.
+        void BindStaticDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const;
+
+        // Binds the specified descriptor set to the dynamic descriptor set binding point.
+        void BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint, VkDescriptorSet descriptorSet) const;
 
         // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
@@ -51,15 +58,33 @@ class VKPipelineLayout final : public PipelineLayout
         }
 
         // Returns the native VkDescriptorSetLayout object for heap bindings.
-        inline VkDescriptorSetLayout GetVkHeapBindingsSetLayout() const
+        inline VkDescriptorSetLayout GetSetLayoutForHeapBindings() const
         {
             return descriptorSetLayouts_[SetLayoutType_HeapBindings].Get();
         }
 
+        // Returns the native VkDescriptorSetLayout object for dynamic bindings.
+        inline VkDescriptorSetLayout GetSetLayoutForDynamicBindings() const
+        {
+            return descriptorSetLayouts_[SetLayoutType_DynamicBindings].Get();
+        }
+
         // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
-        inline const std::vector<VKLayoutBinding>& GetHeapBindings() const
+        inline const std::vector<VKLayoutBinding>& GetLayoutHeapBindings() const
         {
             return heapBindings_;
+        }
+
+        // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
+        inline const std::vector<VKLayoutBinding>& GetLayoutDynamicBindings() const
+        {
+            return bindings_;
+        }
+
+        // Returns the descriptor cache for dynamic resources or null if there is none.
+        inline VKDescriptorCache* GetDescriptorCache() const
+        {
+            return descriptorCache_.get();
         }
 
         // Returns true if this instance provides permutations for the native Vulkan pipeline layout.
@@ -99,22 +124,24 @@ class VKPipelineLayout final : public PipelineLayout
 
         VKPtr<VkPipelineLayout> CreateVkPipelineLayout(VkDevice device, const ArrayView<VkPushConstantRange>& pushConstantRanges = {});
 
-        void CreateStaticDescriptorPool(VkDevice device);
+        void CreateDescriptorPool(VkDevice device);
+        void CreateDescriptorCache(VkDevice device, VkDescriptorSet setLayout);
         void CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout);
 
     private:
 
-        VKPtr<VkPipelineLayout>         pipelineLayout_;
-        VKPtr<VkDescriptorSetLayout>    descriptorSetLayouts_[SetLayoutType_Num];
-        std::uint32_t                   descriptorSetBindSlots_[SetLayoutType_Num]  = {};
+        VKPtr<VkPipelineLayout>             pipelineLayout_;
+        VKPtr<VkDescriptorSetLayout>        descriptorSetLayouts_[SetLayoutType_Num];
+        std::uint32_t                       descriptorSetBindSlots_[SetLayoutType_Num]  = {};
 
-        VKPtr<VkDescriptorPool>         staticDescriptorPool_;
-        VkDescriptorSet                 staticDescriptorSet_    = VK_NULL_HANDLE;
+        VKPtr<VkDescriptorPool>             descriptorPool_;
+        std::unique_ptr<VKDescriptorCache>  descriptorCache_;
+        VkDescriptorSet                     staticDescriptorSet_                        = VK_NULL_HANDLE;
 
-        std::vector<VKLayoutBinding>    heapBindings_;
-        std::vector<VKLayoutBinding>    bindings_;
-        std::vector<VKPtr<VkSampler>>   immutableSamplers_;
-        std::vector<UniformDescriptor>  uniformDescs_;
+        std::vector<VKLayoutBinding>        heapBindings_;
+        std::vector<VKLayoutBinding>        bindings_;
+        std::vector<VKPtr<VkSampler>>       immutableSamplers_;
+        std::vector<UniformDescriptor>      uniformDescs_;
 
 };
 

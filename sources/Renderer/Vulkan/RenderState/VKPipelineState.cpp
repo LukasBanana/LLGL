@@ -35,7 +35,7 @@ void VKPipelineState::BindPipeline(VkCommandBuffer commandBuffer)
 {
     vkCmdBindPipeline(commandBuffer, GetBindPoint(), GetVkPipeline());
     if (pipelineLayout_ != nullptr)
-        pipelineLayout_->BindStaticDescriptorSets(commandBuffer, GetBindPoint());
+        pipelineLayout_->BindStaticDescriptorSet(commandBuffer, GetBindPoint());
 }
 
 
