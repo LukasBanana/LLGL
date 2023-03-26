@@ -10,7 +10,10 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../Texture/VKSampler.h"
+#include "../Shader/VKShader.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
+#include <LLGL/StaticLimits.h>
 #include <LLGL/Misc/ForRange.h>
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
@@ -19,6 +22,8 @@
 namespace LLGL
 {
 
+
+VKPtr<VkPipelineLayout> VKPipelineLayout::defaultPipelineLayout_;
 
 VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc) :
     pipelineLayout_       { device, vkDestroyPipelineLayout          },
@@ -46,7 +51,10 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
 
     /* Don't create a VkPipelineLayout object if this instance only has push constants as those are part of the permutations for each PSO */
     if (!desc.heapBindings.empty() || !desc.bindings.empty() || !desc.staticSamplers.empty())
+    {
+        AssignDescriptorSetBindingSlots();
         pipelineLayout_ = CreateVkPipelineLayout(device);
+    }
 }
 
 std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
@@ -69,38 +77,97 @@ std::uint32_t VKPipelineLayout::GetNumUniforms() const
     return static_cast<std::uint32_t>(uniformDescs_.size());
 }
 
-void VKPipelineLayout::BindStaticDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const
+// Builds one push-constant range for each uniform but with convoluted stage flags.
+static void BuildPushConstantRanges(
+    const ArrayView<Shader*>&           shaders,
+    const ArrayView<UniformDescriptor>& uniformDescs,
+    std::vector<VkPushConstantRange>&   outStageRanges,
+    std::vector<VkPushConstantRange>&   outUniformRanges)
 {
-    if (staticDescriptorSet_ != VK_NULL_HANDLE)
+    /* Reflect all push constant ranges */
+    SmallVector<std::vector<VKUniformRange>, LLGL_MAX_NUM_SHADER_STAGES_PER_PIPELINE> uniformRanges;
+    uniformRanges.resize(shaders.size());
+
+    for_range(i, shaders.size())
     {
-        vkCmdBindDescriptorSets(
-            /*commandBuffer:*/      commandBuffer,
-            /*pipelineBindPoint:*/  bindPoint,
-            /*layout:*/             pipelineLayout_.Get(),
-            /*firstSet:*/           descriptorSetBindSlots_[SetLayoutType_ImmutableSamplers],
-            /*descriptorSetCount:*/ 1,
-            /*pDescriptorSets:*/    &staticDescriptorSet_,
-            /*dynamicOffsetCount:*/ 0,
-            /*pDynamicOffsets*/     nullptr
-        );
+        auto* shaderVK = LLGL_CAST(VKShader*, shaders[i]);
+        shaderVK->ReflectPushConstants(uniformDescs, uniformRanges[i]);
     }
+
+    /* Consolidate push constant ranges across all shader stages */
+    SmallVector<VKUniformRange, LLGL_MAX_NUM_SHADER_STAGES_PER_PIPELINE> pushConstantBlockRanges;
+
+    outUniformRanges.resize(uniformDescs.size());
+    outStageRanges.resize(shaders.size());
+    pushConstantBlockRanges.resize(shaders.size());
+
+    for_range(i, shaders.size())
+    {
+        outStageRanges[i].stageFlags = VKTypes::Map(shaders[i]->GetType());
+
+        pushConstantBlockRanges[i].offset = ~0u;
+
+        LLGL_ASSERT(uniformRanges[i].size() == outUniformRanges.size());
+        for_range(j, outUniformRanges.size())
+        {
+            outUniformRanges[j].stageFlags |= outStageRanges[i].stageFlags;
+
+            //TODO: shader permutations must be generated if uniforms have different offsets between stages
+            outUniformRanges[j].offset  = uniformRanges[i][j].offset;
+            outUniformRanges[j].size    = uniformRanges[i][j].size;
+
+            /* Use offset and size as start and end pointers and resolve size after all elements are inserted into the range */
+            pushConstantBlockRanges[i].offset   = std::min(outUniformRanges[j].offset, pushConstantBlockRanges[i].offset);
+            pushConstantBlockRanges[i].size     = std::max(outUniformRanges[j].offset + outUniformRanges[j].size, pushConstantBlockRanges[i].size);
+        }
+
+        outStageRanges[i].offset    = pushConstantBlockRanges[i].offset;
+        outStageRanges[i].size      = pushConstantBlockRanges[i].size;
+    }
+
+    /* Remove empty stage ranges */
+    RemoveFromListIf(
+        outStageRanges,
+        [](const VkPushConstantRange& range) -> bool
+        {
+            return (range.size == 0);
+        }
+    );
 }
 
-void VKPipelineLayout::BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint, VkDescriptorSet descriptorSet) const
+VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayoutPermutation(
+    VkDevice                            device,
+    const ArrayView<Shader*>&           shaders,
+    std::vector<VkPushConstantRange>&   outUniformRanges) const
 {
-    if (descriptorSet != VK_NULL_HANDLE)
+    if (!uniformDescs_.empty())
     {
-        vkCmdBindDescriptorSets(
-            /*commandBuffer:*/      commandBuffer,
-            /*pipelineBindPoint:*/  bindPoint,
-            /*layout:*/             pipelineLayout_.Get(),
-            /*firstSet:*/           descriptorSetBindSlots_[SetLayoutType_DynamicBindings],
-            /*descriptorSetCount:*/ 1,
-            /*pDescriptorSets:*/    &descriptorSet,
-            /*dynamicOffsetCount:*/ 0,
-            /*pDynamicOffsets*/     nullptr
-        );
+        std::vector<VkPushConstantRange> pushConstantRangesPerStage;
+        BuildPushConstantRanges(shaders, uniformDescs_, pushConstantRangesPerStage, outUniformRanges);
+        return CreateVkPipelineLayout(device, pushConstantRangesPerStage);
     }
+    return {};
+}
+
+void VKPipelineLayout::CreateDefault(VkDevice device)
+{
+    VkPipelineLayoutCreateInfo layoutCreateInfo = {};
+    {
+        layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    }
+    VKPipelineLayout::defaultPipelineLayout_ = VKPtr<VkPipelineLayout>{ device, vkDestroyPipelineLayout };
+    auto result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, VKPipelineLayout::defaultPipelineLayout_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
+}
+
+void VKPipelineLayout::ReleaseDefault()
+{
+    VKPipelineLayout::defaultPipelineLayout_.Release();
+}
+
+VkPipelineLayout VKPipelineLayout::GetDefault()
+{
+    return VKPipelineLayout::defaultPipelineLayout_.Get();
 }
 
 
@@ -226,7 +293,18 @@ void VKPipelineLayout::CreateImmutableSamplers(VkDevice device, const ArrayView<
     CreateVkDescriptorSetLayout(device, SetLayoutType_ImmutableSamplers, setLayoutBindings);
 }
 
-VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(VkDevice device, const ArrayView<VkPushConstantRange>& pushConstantRanges)
+void VKPipelineLayout::AssignDescriptorSetBindingSlots()
+{
+    /* Assign binding slots for all descrioptor set layouts, i.e. 'layout(set = N)' in SPIR-V code */
+    std::uint32_t counter = 0;
+    for_range(i, SetLayoutType_Num)
+    {
+        if (descriptorSetLayouts_[i].Get() != VK_NULL_HANDLE)
+            descriptorSetBindSlots_[i] = counter++;
+    }
+}
+
+VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(VkDevice device, const ArrayView<VkPushConstantRange>& pushConstantRanges) const
 {
     /* Create native Vulkan pipeline layout with up to 3 descriptor sets */
     SmallVector<VkDescriptorSetLayout, SetLayoutType_Num> setLayoutsVK;
@@ -234,11 +312,7 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(VkDevice device
     for_range(i, SetLayoutType_Num)
     {
         if (descriptorSetLayouts_[i].Get() != VK_NULL_HANDLE)
-        {
-            /* Add descriptor set layout and assign binding slot, i.e. 'layout(set = N)' for SPIR-V code */
-            descriptorSetBindSlots_[i] = static_cast<std::uint32_t>(setLayoutsVK.size());
             setLayoutsVK.push_back(descriptorSetLayouts_[i].Get());
-        }
     }
 
     VkPipelineLayoutCreateInfo layoutCreateInfo;

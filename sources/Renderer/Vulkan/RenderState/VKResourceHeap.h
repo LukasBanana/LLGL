@@ -55,12 +55,6 @@ class VKResourceHeap final : public ResourceHeap
         // Inserts a pipeline barrier command into the command buffer if this resource heap requires it.
         void SubmitPipelineBarrier(VkCommandBuffer commandBuffer, std::uint32_t descriptorSet);
 
-        // Returns the native Vulkan pipeline layout.
-        inline VkPipelineLayout GetVkPipelineLayout() const
-        {
-            return pipelineLayout_;
-        }
-
         // Returns the native Vulkan descritpor pool.
         inline VkDescriptorPool GetVkDescriptorPool() const
         {
@@ -141,8 +135,6 @@ class VKResourceHeap final : public ResourceHeap
         );
 
     private:
-
-        VkPipelineLayout                    pipelineLayout_         = VK_NULL_HANDLE;
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
         std::vector<VkDescriptorSet>        descriptorSets_;

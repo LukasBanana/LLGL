@@ -12,6 +12,7 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
+#include <LLGL/PipelineLayoutFlags.h>
 #include "CheckedCast.h"
 
 
@@ -44,6 +45,9 @@ LLGL_EXPORT SmallVector<Shader*, 5> GetShadersAsArray(const GraphicsPipelineDesc
 
 // Returns the set of compute PSO shaders as array.
 LLGL_EXPORT SmallVector<Shader*, 1> GetShadersAsArray(const ComputePipelineDescriptor& desc);
+
+// Returns the size (in bytes) of the specified uniform with optional array size. This includes padding between array elements.
+LLGL_EXPORT std::uint32_t GetUniformTypeSize(UniformType type, std::uint32_t arraySize = 0);
 
 // Casts the specified array of shaders to their backend implementation.
 template <typename T>

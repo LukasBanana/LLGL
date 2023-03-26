@@ -10,15 +10,19 @@
 
 
 #include <LLGL/PipelineState.h>
+#include <LLGL/Container/ArrayView.h>
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
+#include <vector>
 
 
 namespace LLGL
 {
 
 
+class Shader;
 class PipelineLayout;
+class VKShader;
 class VKPipelineLayout;
 
 class VKPipelineState : public PipelineState
@@ -27,17 +31,27 @@ class VKPipelineState : public PipelineState
     public:
 
         VKPipelineState(
-            VkDevice                device,
-            VkPipelineBindPoint     bindPoint,
-            const PipelineLayout*   pipelineLayout = nullptr
+            VkDevice                    device,
+            VkPipelineBindPoint         bindPoint,
+            const ArrayView<Shader*>&   shaders,
+            const PipelineLayout*       pipelineLayout = nullptr
         );
 
         const Report* GetReport() const override;
 
     public:
 
-        // Binds this pipeline state to the specified Vulkan command buffer.
-        void BindPipeline(VkCommandBuffer commandBuffer);
+        // Binds this pipeline state and optional static descriptor sets (for immutable samplers) to the specified Vulkan command buffer.
+        void BindPipelineAndStaticDescriptorSet(VkCommandBuffer commandBuffer);
+
+        // Binds the specified descriptor set to the dynamic descriptor set binding point.
+        void BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet);
+
+        // Binds the specified descriptor set to teh heap descriptor set binding point.
+        void BindHeapDescriptorSet(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet);
+
+        // Pushes the specified values to the command buffer as push-constants.
+        void PushConstants(VkCommandBuffer commandBuffer, std::uint32_t first, const char* data, std::uint32_t size);
 
         // Returns the native PSO.
         inline VkPipeline GetVkPipeline() const
@@ -63,13 +77,32 @@ class VKPipelineState : public PipelineState
         VkPipeline* ReleaseAndGetAddressOfVkPipeline();
 
         // Returns the native Vulkan pipeline layout this PSO was created with or the specified layout if there was no layout specified.
-        VkPipelineLayout GetVkPipelineLayoutOrDefault(VkPipelineLayout defaultPipelineLayout) const;
+        VkPipelineLayout GetVkPipelineLayout() const;
+
+        /*
+        Fills the native shader stage descriptor for the specified shader:
+        - If the pipeline layout constaints uniforms, the shader module will be parsed for push constants.
+        - If the shader module has a binding set mismatch with the pipeline layout,
+          a permutation of the shader module will be created to match the internal binding set layout of the Vulkan backend.
+        */
+        void FillShaderStageCreateInfo(VKShader& shaderVK, VkPipelineShaderStageCreateInfo& createInfo);
 
     private:
 
-        VKPtr<VkPipeline>       pipeline_;
-        const VKPipelineLayout* pipelineLayout_ = nullptr;
-        VkPipelineBindPoint     bindPoint_      = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        void BindDescriptorSets(
+            VkCommandBuffer         commandBuffer,
+            std::uint32_t           firstSet,
+            std::uint32_t           descriptorSetCount,
+            const VkDescriptorSet*  descriptorSets
+        );
+
+    private:
+
+        VKPtr<VkPipeline>                   pipeline_;
+        VKPtr<VkPipelineLayout>             pipelineLayoutPerm_;
+        const VKPipelineLayout*             pipelineLayout_     = nullptr;
+        VkPipelineBindPoint                 bindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        std::vector<VkPushConstantRange>    uniformRanges_;     // Push constant ranges; One range for each uniform descriptor. See UniformDescriptor.
 
 };
 

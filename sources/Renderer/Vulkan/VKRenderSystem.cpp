@@ -46,7 +46,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     CreateLogicalDevice();
 
     /* Create default resources */
-    CreateDefaultPipelineLayout();
+    VKPipelineLayout::CreateDefault(device_);
 
     /* Create device memory manager */
     deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
@@ -60,6 +60,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
 VKRenderSystem::~VKRenderSystem()
 {
     device_.WaitIdle();
+    VKPipelineLayout::ReleaseDefault();
 }
 
 /* ----- Swap-chain ----- */
@@ -647,7 +648,6 @@ PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescrip
         pipelineStates_,
         MakeUnique<VKGraphicsPSO>(
             device_,
-            defaultPipelineLayout_,
             (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
             pipelineStateDesc,
             gfxPipelineLimits_
@@ -659,7 +659,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescript
 {
     return TakeOwnership(
         pipelineStates_,
-        MakeUnique<VKComputePSO>(device_, pipelineStateDesc, defaultPipelineLayout_)
+        MakeUnique<VKComputePSO>(device_, pipelineStateDesc)
     );
 }
 
@@ -891,17 +891,6 @@ void VKRenderSystem::CreateLogicalDevice()
 
     /* Load Vulkan device extensions */
     VKLoadDeviceExtensions(device_, physicalDevice_.GetExtensionNames());
-}
-
-void VKRenderSystem::CreateDefaultPipelineLayout()
-{
-    VkPipelineLayoutCreateInfo layoutCreateInfo = {};
-    {
-        layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    }
-    defaultPipelineLayout_ = VKPtr<VkPipelineLayout>{ device_, vkDestroyPipelineLayout };
-    auto result = vkCreatePipelineLayout(device_, &layoutCreateInfo, nullptr, defaultPipelineLayout_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
 }
 
 bool VKRenderSystem::IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const

@@ -10,11 +10,14 @@
 #include "../VKTypes.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
+#include "../../PipelineStateUtils.h"
 #include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Misc/ForRange.h>
+#include <string.h>
+#include <algorithm>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
-#   include "../../SPIRV/SPIRVReflect.h"
-#   include "../../SPIRV/SPIRVReflectExecutionMode.h"
+#   include "../../SPIRV/SpirvReflect.h"
 #endif
 
 
@@ -98,7 +101,7 @@ static long ShaderTypeToStageFlags(const ShaderType type)
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 
-static Format SpvVectorTypeToFormat(const SPIRVReflect::SpvType* type, std::uint32_t count)
+static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t count)
 {
     if (type->opcode == spv::Op::OpTypeFloat)
     {
@@ -159,7 +162,7 @@ static Format SpvVectorTypeToFormat(const SPIRVReflect::SpvType* type, std::uint
     return Format::Undefined;
 }
 
-static Format SpvTypeToFormat(const SPIRVReflect::SpvType* type, std::uint32_t* count = nullptr)
+static Format SpvTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t* count = nullptr)
 {
     /* Return number of semantics to default value of 1 element */
     if (count != nullptr)
@@ -223,11 +226,11 @@ static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
 }
 
 // Reflects the SPIR-V type to the output binding descriptor and returns the dereferenced type
-static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding, const SPIRVReflect::SpvType* varType)
+static const SpirvReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding, const SpirvReflect::SpvType* varType)
 {
     if (varType != nullptr)
     {
-        if (auto derefType = varType->DereferencePtr())
+        if (auto derefType = varType->Deref())
         {
             switch (derefType->opcode)
             {
@@ -263,7 +266,7 @@ static const SPIRVReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
     return nullptr;
 }
 
-static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& reflection, const SPIRVReflect::SpvUniform& var)
+static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& reflection, const SpirvReflect::SpvUniform& var)
 {
     /* Check if there already is a resource at the specified binding slot */
     for (auto& resource : reflection.resources)
@@ -302,8 +305,8 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
 bool VKShader::Reflect(ShaderReflection& reflection) const
 {
     /* Parse shader module */
-    SPIRVReflect spvReflect;
-    spvReflect.Parse(shaderModuleData_.data(), shaderModuleData_.size());
+    SpirvReflect spvReflect;
+    spvReflect.Parse(SpirvModuleView{ shaderCode_ });
 
     /* Gather input/output attributes */
     for (const auto& it : spvReflect.GetVaryings())
@@ -357,23 +360,56 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     return true;
 }
 
-bool VKShader::ReflectLocalSize(Extent3D& localSize) const
+bool VKShader::ReflectLocalSize(Extent3D& outLocalSize) const
 {
-    if (GetType() == ShaderType::Compute)
+    if (GetType() != ShaderType::Compute)
+        return false;
+
+    /* Parse shader module for execution mode */
+    SpirvReflect::SpvExecutionMode executionMode;
+    SpirvReflect::ParseExecutionMode(SpirvModuleView{ shaderCode_ }, executionMode);
+
+    /* Return local work group size */
+    outLocalSize.width  = executionMode.localSizeX;
+    outLocalSize.height = executionMode.localSizeY;
+    outLocalSize.depth  = executionMode.localSizeZ;
+
+    return true;
+}
+
+bool VKShader::ReflectPushConstants(
+    const ArrayView<UniformDescriptor>& inUniformDescs,
+    std::vector<VKUniformRange>&        outUniformRanges) const
+{
+    /* Initialize output container with zero-ranges */
+    outUniformRanges.resize(inUniformDescs.size());
+
+    /* Parse shader module for push-constants */
+    SpirvReflect::SpvBlock block;
+    auto result = SpirvReflect::ParsePushConstants(SpirvModuleView{ shaderCode_ }, block);
+    if (result != SpirvResult::Success)
+        return false;
+
+    /* Build push constant ranges */
+    for_range(i, inUniformDescs.size())
     {
-        /* Parse shader module */
-        SPIRVReflectExecutionMode spvReflect;
-        spvReflect.Parse(shaderModuleData_.data(), shaderModuleData_.size());
-
-        /* Return local work group size */
-        const auto& mode = spvReflect.GetMode();
-        localSize.width     = mode.localSizeX;
-        localSize.height    = mode.localSizeY;
-        localSize.depth     = mode.localSizeZ;
-
-        return true;
+        /* Find name of uniform descriptor in push-constant block fields */
+        const auto& uniformDesc = inUniformDescs[i];
+        for (const auto& field : block.fields)
+        {
+            if (field.name != nullptr && ::strcmp(field.name, uniformDesc.name.c_str()) == 0)
+            {
+                auto& range = outUniformRanges[i];
+                {
+                    range.offset    = field.offset;
+                    range.size      = GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize);
+                }
+                break;
+            }
+        }
     }
-    return false;
+
+    return true;
 }
 
 #else
@@ -384,6 +420,13 @@ bool VKShader::Reflect(ShaderReflection& /*reflection*/) const
 }
 
 bool VKShader::ReflectLocalSize(Extent3D& /*workGroupSize*/) const
+{
+    return false; // dummy
+}
+
+bool VKShader::ReflectPushConstants(
+    const ArrayView<UniformDescriptor>& uniformDescs,
+    std::vector<VkPushConstantRange>    outPushConstantRanges) const
 {
     return false; // dummy
 }
@@ -513,11 +556,14 @@ bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
     if (binaryBuffer == nullptr || binaryLength % 4 != 0)
     {
         loadBinaryResult_ = LoadBinaryResult::InvalidCodeSize;
-        shaderModuleData_.clear();
+        shaderCode_.clear();
         return false;
     }
     else
-        shaderModuleData_ = std::vector<char>(binaryBuffer, binaryBuffer + binaryLength);
+    {
+        auto* words = reinterpret_cast<const std::uint32_t*>(binaryBuffer);
+        shaderCode_ = std::vector<std::uint32_t>(words, words + binaryLength/sizeof(std::uint32_t));
+    }
 
     /* Store shader entry point (by default "main" for GLSL) */
     if (shaderDesc.entryPoint == nullptr || *shaderDesc.entryPoint == '\0')
@@ -531,8 +577,8 @@ bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
         createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createInfo.pNext    = nullptr;
         createInfo.flags    = 0;
-        createInfo.codeSize = binaryLength;
-        createInfo.pCode    = reinterpret_cast<const std::uint32_t*>(binaryBuffer);
+        createInfo.codeSize = shaderCode_.size() * sizeof(std::uint32_t);
+        createInfo.pCode    = shaderCode_.data();
     }
     auto result = vkCreateShaderModule(device_, &createInfo, nullptr, shaderModule_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan shader module");

@@ -34,7 +34,6 @@ class VKGraphicsPSO final : public VKPipelineState
 
         VKGraphicsPSO(
             VkDevice                            device,
-            VkPipelineLayout                    defaultPipelineLayout,
             const RenderPass*                   defaultRenderPass,
             const GraphicsPipelineDescriptor&   desc,
             const VKGraphicsPipelineLimits&     limits
@@ -56,7 +55,6 @@ class VKGraphicsPSO final : public VKPipelineState
 
         void CreateVkPipeline(
             VkDevice                            device,
-            VkPipelineLayout                    pipelineLayout,
             const VKRenderPass&                 renderPass,
             const VKGraphicsPipelineLimits&     limits,
             const GraphicsPipelineDescriptor&   desc

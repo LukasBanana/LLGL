@@ -23,6 +23,12 @@ namespace LLGL
 struct ShaderReflection;
 struct Extent3D;
 
+struct VKUniformRange
+{
+    std::uint32_t offset;
+    std::uint32_t size;
+};
+
 class VKShader final : public Shader
 {
 
@@ -35,7 +41,16 @@ class VKShader final : public Shader
 
         VKShader(VkDevice device, const ShaderDescriptor& desc);
 
-        bool ReflectLocalSize(Extent3D& localSize) const;
+        bool ReflectLocalSize(Extent3D& outLocalSize) const;
+
+        /*
+        Reflects the push constants of this shader module and returns their byte ranges.
+        The output container has the same number of elements as the input container, but inaccessible uniforms have a zero-range.
+        */
+        bool ReflectPushConstants(
+            const ArrayView<UniformDescriptor>& inUniformDescs,
+            std::vector<VKUniformRange>&        outUniformRanges
+        ) const;
 
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
@@ -76,14 +91,14 @@ class VKShader final : public Shader
 
     private:
 
-        VkDevice                device_             = VK_NULL_HANDLE;
-        VKPtr<VkShaderModule>   shaderModule_;
-        std::vector<char>       shaderModuleData_;
-        LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
-        VertexInputLayout       inputLayout_;
+        VkDevice                    device_             = VK_NULL_HANDLE;
+        VKPtr<VkShaderModule>       shaderModule_;
+        std::vector<std::uint32_t>  shaderCode_;
+        LoadBinaryResult            loadBinaryResult_   = LoadBinaryResult::Undefined;
+        VertexInputLayout           inputLayout_;
 
-        std::string             entryPoint_;
-        BasicReport             report_;
+        std::string                 entryPoint_;
+        BasicReport                 report_;
 
 };
 

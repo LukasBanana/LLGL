@@ -160,7 +160,6 @@ class VKRenderSystem final : public RenderSystem
         void CreateDebugReportCallback();
         void PickPhysicalDevice();
         void CreateLogicalDevice();
-        void CreateDefaultPipelineLayout();
 
         bool IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const;
 
@@ -182,7 +181,6 @@ class VKRenderSystem final : public RenderSystem
         VKDevice                                device_;
 
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
-        VKPtr<VkPipelineLayout>                 defaultPipelineLayout_;
 
         bool                                    debugLayerEnabled_      = false;
 

@@ -27,6 +27,7 @@ class VKPhysicalDevice;
 class VKResourceHeap;
 class VKRenderPass;
 class VKQueryHeap;
+class VKPipelineState;
 
 class VKCommandBuffer final : public CommandBuffer
 {
@@ -255,12 +256,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         bool IsInsideRenderPass() const;
 
-        void BindResourceHeap(
-            VKResourceHeap&     resourceHeapVK,
-            std::uint32_t       descriptorSet,
-            VkPipelineBindPoint pipelineBindPoint
-        );
-
         void BufferPipelineBarrier(
             VkBuffer                buffer,
             VkDeviceSize            offset,
@@ -275,6 +270,8 @@ class VKCommandBuffer final : public CommandBuffer
 
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();
+
+        void ResetBindingStates();
 
         #if 1//TODO: optimize
         void ResetQueryPoolsInFlight();
@@ -309,7 +306,7 @@ class VKCommandBuffer final : public CommandBuffer
         VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE; // active framebuffer handle
         VkRect2D                        framebufferRenderArea_      = { { 0, 0 }, { 0, 0 } };
         std::uint32_t                   numColorAttachments_        = 0;
-        bool                            hasDSVAttachment_           = false;
+        bool                            hasDepthStencilAttachment_  = false;
 
         std::uint32_t                   queuePresentFamily_         = 0;
 
@@ -317,6 +314,7 @@ class VKCommandBuffer final : public CommandBuffer
         bool                            scissorRectInvalidated_     = true;
         VkPipelineBindPoint             pipelineBindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
         const VKPipelineLayout*         boundPipelineLayout_        = nullptr;
+        VKPipelineState*                boundPipelineState_         = nullptr;
 
         std::uint32_t                   maxDrawIndirectCount_       = 0;
 

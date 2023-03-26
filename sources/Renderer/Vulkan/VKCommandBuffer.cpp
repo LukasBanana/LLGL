@@ -149,6 +149,8 @@ void VKCommandBuffer::End()
         auto result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFence());
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
+
+    ResetBindingStates();
 }
 
 void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -465,30 +467,17 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 /* ----- Resources ----- */
 
-//private
-void VKCommandBuffer::BindResourceHeap(
-    VKResourceHeap&     resourceHeapVK,
-    std::uint32_t       descriptorSet,
-    VkPipelineBindPoint pipelineBindPoint)
-{
-    const VkDescriptorSet descriptorSets[1] = { resourceHeapVK.GetVkDescriptorSets()[descriptorSet] };
-    vkCmdBindDescriptorSets(
-        commandBuffer_,
-        pipelineBindPoint,
-        resourceHeapVK.GetVkPipelineLayout(),   // Pipeline lauyout
-        0,                                      // First set in SPIR-V (always 0 atm.)
-        1,                                      // Number of descriptor sets (always 1 atm.)
-        descriptorSets,                         // Descriptor sets
-        0,                                      // No dynamic offsets
-        nullptr
-    );
-}
-
 void VKCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
+    if (boundPipelineState_ == nullptr)
+        return /*No PSO bound*/;
+
     /* Bind resource heap to pipeline bind point and insert resource barrier into command buffer */
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-    BindResourceHeap(resourceHeapVK, descriptorSet, pipelineBindPoint_);
+    if (!(descriptorSet < resourceHeapVK.GetVkDescriptorSets().size()))
+        return /*Descriptor set out of bounds*/;
+
+    boundPipelineState_->BindHeapDescriptorSet(commandBuffer_, resourceHeapVK.GetVkDescriptorSets()[descriptorSet]);
     resourceHeapVK.SubmitPipelineBarrier(commandBuffer_, descriptorSet);
 }
 
@@ -530,7 +519,7 @@ void VKCommandBuffer::BeginRenderPass(
         framebuffer_                    = swapChainVK.GetVkFramebuffer();
         framebufferRenderArea_.extent   = swapChainVK.GetVkExtent();
         numColorAttachments_            = swapChainVK.GetNumColorAttachments();
-        hasDSVAttachment_               = (swapChainVK.HasDepthAttachment() || swapChainVK.HasStencilAttachment());
+        hasDepthStencilAttachment_      = (swapChainVK.HasDepthAttachment() || swapChainVK.HasStencilAttachment());
     }
     else
     {
@@ -543,7 +532,7 @@ void VKCommandBuffer::BeginRenderPass(
         framebuffer_                    = renderTargetVK.GetVkFramebuffer();
         framebufferRenderArea_.extent   = renderTargetVK.GetVkExtent();
         numColorAttachments_            = renderTargetVK.GetNumColorAttachments();
-        hasDSVAttachment_               = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+        hasDepthStencilAttachment_      = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
     }
 
     scissorRectInvalidated_ = true;
@@ -624,7 +613,7 @@ void VKCommandBuffer::Clear(long flags, const ClearValue& clearValue)
         ToVkClearColor(clearColor, clearValue.color);
 
         numAttachments = std::min(numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
-        for (std::uint32_t i = 0; i < numAttachments; ++i)
+        for_range(i, numAttachments)
         {
             auto& attachment = attachments[i];
             {
@@ -636,7 +625,7 @@ void VKCommandBuffer::Clear(long flags, const ClearValue& clearValue)
     }
 
     /* Fill clear descriptor for depth-stencil attachment */
-    if ((flags & ClearFlags::DepthStencil) != 0 && hasDSVAttachment_)
+    if ((flags & ClearFlags::DepthStencil) != 0 && hasDepthStencilAttachment_)
     {
         auto& attachment = attachments[numAttachments++];
         {
@@ -658,7 +647,7 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 
     std::uint32_t numAttachmentsVK = 0;
 
-    for (std::uint32_t i = 0, n = std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS); i < n; ++i)
+    for_range(i, std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS))
     {
         auto& dst = attachmentsVK[numAttachmentsVK];
         const auto& src = attachments[i];
@@ -671,7 +660,7 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
             ToVkClearColor(dst.clearValue.color, src.clearValue.color);
             ++numAttachmentsVK;
         }
-        else if (hasDSVAttachment_)
+        else if (hasDepthStencilAttachment_)
         {
             /* Convert depth-stencil clear command */
             dst.aspectMask      = 0;
@@ -701,7 +690,7 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     /* Bind native PSO */
     auto& pipelineStateVK = LLGL_CAST(VKPipelineState&, pipelineState);
-    pipelineStateVK.BindPipeline(commandBuffer_);
+    pipelineStateVK.BindPipelineAndStaticDescriptorSet(commandBuffer_);
 
     /* Handle special case for graphics PSOs */
     pipelineBindPoint_ = pipelineStateVK.GetBindPoint();
@@ -722,7 +711,8 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 
     /* Keep reference to bound piepline layout (can be null) */
-    boundPipelineLayout_ = pipelineStateVK.GetPipelineLayout();
+    boundPipelineState_     = &pipelineStateVK;
+    boundPipelineLayout_    = pipelineStateVK.GetPipelineLayout();
 
     /* Reset descriptor cache for dynamic resources */
     if (boundPipelineLayout_ != nullptr)
@@ -731,6 +721,8 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         if (descriptorCache_ != nullptr)
             descriptorCache_->Reset();
     }
+    else
+        descriptorCache_ = nullptr;
 }
 
 void VKCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
@@ -745,7 +737,8 @@ void VKCommandBuffer::SetStencilReference(std::uint32_t reference, const Stencil
 
 void VKCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    //TODO
+    if (boundPipelineState_ != nullptr)
+        boundPipelineState_->PushConstants(commandBuffer_, first, reinterpret_cast<const char*>(data), dataSize);
 }
 
 /* ----- Queries ----- */
@@ -1200,7 +1193,7 @@ void VKCommandBuffer::FlushDescriptorCache()
     if (descriptorCache_ != nullptr && descriptorCache_->IsInvalidated())
     {
         VkDescriptorSet descriptorSet = descriptorCache_->FlushDescriptorSet(*descriptorSetPool_);
-        boundPipelineLayout_->BindDynamicDescriptorSet(commandBuffer_, pipelineBindPoint_, descriptorSet);
+        boundPipelineState_->BindDynamicDescriptorSet(commandBuffer_, descriptorSet);
     }
 }
 
@@ -1211,6 +1204,13 @@ void VKCommandBuffer::AcquireNextBuffer()
     recordingFence_     = recordingFenceArray_[commandBufferIndex_].Get();
     descriptorSetPool_  = &(descriptorSetPoolArray_[commandBufferIndex_]);
     descriptorSetPool_->Reset();
+}
+
+void VKCommandBuffer::ResetBindingStates()
+{
+    boundPipelineLayout_    = nullptr;
+    boundPipelineState_     = nullptr;
+    descriptorCache_        = nullptr;
 }
 
 void VKCommandBuffer::ResetQueryPoolsInFlight()

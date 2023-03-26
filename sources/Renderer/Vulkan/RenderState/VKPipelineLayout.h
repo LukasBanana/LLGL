@@ -45,11 +45,15 @@ class VKPipelineLayout final : public PipelineLayout
 
         VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc);
 
-        // Binds the descriptor set that is statically bound to this pipeline layout, such as immutable samplers.
-        void BindStaticDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint) const;
-
-        // Binds the specified descriptor set to the dynamic descriptor set binding point.
-        void BindDynamicDescriptorSet(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint, VkDescriptorSet descriptorSet) const;
+        /*
+        Creates a permutation of this pipeline layout for the specified shaders with push constants.
+        If this pipeline layout does not have any push constants (i.e. uniform descriptors), no permutation is created and the return value is VK_NULL_HANDLE.
+        */
+        VKPtr<VkPipelineLayout> CreateVkPipelineLayoutPermutation(
+            VkDevice                            device,
+            const ArrayView<Shader*>&           shaders,
+            std::vector<VkPushConstantRange>&   outUniformRanges
+        ) const;
 
         // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
@@ -67,6 +71,30 @@ class VKPipelineLayout final : public PipelineLayout
         inline VkDescriptorSetLayout GetSetLayoutForDynamicBindings() const
         {
             return descriptorSetLayouts_[SetLayoutType_DynamicBindings].Get();
+        }
+
+        // Returns the descriptor set binding point for dynamic resource bindings.
+        inline std::uint32_t GetBindPointForHeapBindings() const
+        {
+            return descriptorSetBindSlots_[SetLayoutType_HeapBindings];
+        }
+
+        // Returns the descriptor set binding point for dynamic resource bindings.
+        inline std::uint32_t GetBindPointForDynamicBindings() const
+        {
+            return descriptorSetBindSlots_[SetLayoutType_DynamicBindings];
+        }
+
+        // Returns the descriptor set binding point for immutable samplers.
+        inline std::uint32_t GetBindPointForImmutableSamplers() const
+        {
+            return descriptorSetBindSlots_[SetLayoutType_ImmutableSamplers];
+        }
+
+        // Returns a Vulkan handle of the static descriptor. May also be VK_NULL_HANLDE.
+        inline VkDescriptorSet GetStaticDescriptorSet() const
+        {
+            return staticDescriptorSet_;
         }
 
         // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
@@ -92,6 +120,17 @@ class VKPipelineLayout final : public PipelineLayout
         {
             return !uniformDescs_.empty();
         }
+
+    public:
+
+        // Creates the default VkPipelineLayout object.
+        static void CreateDefault(VkDevice device);
+
+        // Destroys the default VkPipelineLayout object.
+        static void ReleaseDefault();
+
+        // Returns the default VkPipelineLayout object.
+        static VkPipelineLayout GetDefault();
 
     private:
 
@@ -120,15 +159,25 @@ class VKPipelineLayout final : public PipelineLayout
             SetLayoutType                           setLayoutType
         );
 
-        void CreateImmutableSamplers(VkDevice device, const ArrayView<StaticSamplerDescriptor>& staticSamplers);
+        void CreateImmutableSamplers(
+            VkDevice                                    device,
+            const ArrayView<StaticSamplerDescriptor>&   staticSamplers
+        );
 
-        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(VkDevice device, const ArrayView<VkPushConstantRange>& pushConstantRanges = {});
+        void AssignDescriptorSetBindingSlots();
+
+        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(
+            VkDevice                                device,
+            const ArrayView<VkPushConstantRange>&   pushConstantRanges = {}
+        ) const;
 
         void CreateDescriptorPool(VkDevice device);
         void CreateDescriptorCache(VkDevice device, VkDescriptorSet setLayout);
         void CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout);
 
     private:
+
+        static VKPtr<VkPipelineLayout>      defaultPipelineLayout_;
 
         VKPtr<VkPipelineLayout>             pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>        descriptorSetLayouts_[SetLayoutType_Num];

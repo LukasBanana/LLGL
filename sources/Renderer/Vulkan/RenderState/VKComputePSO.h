@@ -23,19 +23,11 @@ class VKComputePSO final : public VKPipelineState
 
     public:
 
-        VKComputePSO(
-            VkDevice                            device,
-            const ComputePipelineDescriptor&    desc,
-            VkPipelineLayout                    defaultPipelineLayout
-        );
+        VKComputePSO(VkDevice device, const ComputePipelineDescriptor& desc);
 
     private:
 
-        void CreateVkPipeline(
-            VkDevice                            device,
-            VkPipelineLayout                    pipelineLayout,
-            const ComputePipelineDescriptor&    desc
-        );
+        void CreateVkPipeline(VkDevice device, const ComputePipelineDescriptor& desc);
 
 };
 

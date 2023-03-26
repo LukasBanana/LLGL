@@ -9,6 +9,7 @@
 #include "DbgCore.h"
 #include "../CheckedCast.h"
 #include "../ResourceUtils.h"
+#include "../PipelineStateUtils.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
 
@@ -1880,59 +1881,6 @@ const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipelin
     return bindingDesc;
 }
 
-// Returns the size (in bytes) of the specified shader uniform type.
-static std::uint16_t GetUniformTypeSize(UniformType type)
-{
-    switch (type)
-    {
-        case UniformType::Undefined:        break;
-
-        case UniformType::Float1:           return 4;
-        case UniformType::Float2:           return 4*2;
-        case UniformType::Float3:           return 4*3;
-        case UniformType::Float4:           return 4*3;
-        case UniformType::Double1:          return 8;
-        case UniformType::Double2:          return 8*2;
-        case UniformType::Double3:          return 8*3;
-        case UniformType::Double4:          return 8*3;
-        case UniformType::Int1:             return 4;
-        case UniformType::Int2:             return 4*2;
-        case UniformType::Int3:             return 4*3;
-        case UniformType::Int4:             return 4*3;
-        case UniformType::UInt1:            return 4;
-        case UniformType::UInt2:            return 4*2;
-        case UniformType::UInt3:            return 4*3;
-        case UniformType::UInt4:            return 4*3;
-        case UniformType::Bool1:            return 4;
-        case UniformType::Bool2:            return 4*2;
-        case UniformType::Bool3:            return 4*3;
-        case UniformType::Bool4:            return 4*3;
-        case UniformType::Float2x2:         return 4*2*2;
-        case UniformType::Float2x3:         return 4*2*3;
-        case UniformType::Float2x4:         return 4*2*4;
-        case UniformType::Float3x2:         return 4*3*2;
-        case UniformType::Float3x3:         return 4*3*3;
-        case UniformType::Float3x4:         return 4*3*4;
-        case UniformType::Float4x2:         return 4*4*2;
-        case UniformType::Float4x3:         return 4*4*3;
-        case UniformType::Float4x4:         return 4*4*4;
-        case UniformType::Double2x2:        return 8*2*2;
-        case UniformType::Double2x3:        return 8*2*3;
-        case UniformType::Double2x4:        return 8*2*4;
-        case UniformType::Double3x2:        return 8*3*2;
-        case UniformType::Double3x3:        return 8*3*3;
-        case UniformType::Double3x4:        return 8*3*4;
-        case UniformType::Double4x2:        return 8*4*2;
-        case UniformType::Double4x3:        return 8*4*3;
-        case UniformType::Double4x4:        return 8*4*4;
-
-        case UniformType::Sampler:          break;
-        case UniformType::Image:            break;
-        case UniformType::AtomicCounter:    break;
-    }
-    return 0;
-}
-
 void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t first, std::uint16_t dataSize)
 {
     /* Validate input data size */
@@ -1958,7 +1906,7 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
         {
             /* Get size information for current uniform that is to be updated */
             const auto& uniformDesc = pipelineLayoutDbg.desc.uniforms[first];
-            const auto uniformTypeSize = GetUniformTypeSize(uniformDesc.type);
+            const auto uniformTypeSize = static_cast<decltype(dataSize)>(GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize));
 
             if (dataSize >= uniformTypeSize)
                 dataSize -= uniformTypeSize;

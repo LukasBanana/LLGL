@@ -10,6 +10,7 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
+#include "../../PipelineStateUtils.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <cstddef>
 
@@ -18,15 +19,12 @@ namespace LLGL
 {
 
 
-VKComputePSO::VKComputePSO(
-    VkDevice                            device,
-    const ComputePipelineDescriptor&    desc,
-    VkPipelineLayout                    defaultPipelineLayout)
+VKComputePSO::VKComputePSO(VkDevice device, const ComputePipelineDescriptor& desc)
 :
-    VKPipelineState { device, VK_PIPELINE_BIND_POINT_COMPUTE, desc.pipelineLayout }
+    VKPipelineState { device, VK_PIPELINE_BIND_POINT_COMPUTE, GetShadersAsArray(desc), desc.pipelineLayout }
 {
     /* Create Vulkan compute pipeline object */
-    CreateVkPipeline(device, GetVkPipelineLayoutOrDefault(defaultPipelineLayout), desc);
+    CreateVkPipeline(device, desc);
 }
 
 
@@ -34,19 +32,16 @@ VKComputePSO::VKComputePSO(
  * ======= Private: =======
  */
 
-void VKComputePSO::CreateVkPipeline(
-    VkDevice                            device,
-    VkPipelineLayout                    pipelineLayout,
-    const ComputePipelineDescriptor&    desc)
+void VKComputePSO::CreateVkPipeline(VkDevice device, const ComputePipelineDescriptor& desc)
 {
     /* Get compute shader */
-    auto computeShaderVK = LLGL_CAST(const VKShader*, desc.computeShader);
+    auto computeShaderVK = LLGL_CAST(VKShader*, desc.computeShader);
     if (!computeShaderVK)
         throw std::invalid_argument("cannot create Vulkan compute pipeline without compute shader");
 
     /* Get shader stages */
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
-    computeShaderVK->FillShaderStageCreateInfo(shaderStageCreateInfo);
+    FillShaderStageCreateInfo(*computeShaderVK, shaderStageCreateInfo);
 
     /* Create graphics pipeline state object */
     VkComputePipelineCreateInfo createInfo;
@@ -55,7 +50,7 @@ void VKComputePSO::CreateVkPipeline(
         createInfo.pNext                = nullptr;
         createInfo.flags                = 0;
         createInfo.stage                = shaderStageCreateInfo;
-        createInfo.layout               = pipelineLayout;
+        createInfo.layout               = GetVkPipelineLayout();
         createInfo.basePipelineHandle   = VK_NULL_HANDLE;
         createInfo.basePipelineIndex    = 0;
     }

@@ -41,8 +41,6 @@ VKResourceHeap::VKResourceHeap(
     if (!pipelineLayoutVK)
         throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
 
-    pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
-
     /* Get and validate number of bindings and resource views */
     CopyLayoutBindings(pipelineLayoutVK->GetLayoutHeapBindings());
 
