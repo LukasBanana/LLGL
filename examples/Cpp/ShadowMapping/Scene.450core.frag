@@ -12,7 +12,7 @@ layout(std140, binding = 1) uniform Settings
 };
 
 layout(binding = 2) uniform texture2D shadowMap;
-layout(binding = 3) uniform samplerShadow shadowMapSampler;
+layout(binding = 3, set = 1) uniform samplerShadow shadowMapSampler;
 
 layout(location = 0) in vec4 vWorldPos;
 layout(location = 1) in vec4 vNormal;
