@@ -231,6 +231,9 @@ void MTResourceHeap::BindGraphicsResources(id<MTLRenderCommandEncoder> renderEnc
 
 void MTResourceHeap::BindComputeResources(id<MTLComputeCommandEncoder> computeEncoder, std::uint32_t descriptorSet)
 {
+    if (descriptorSet >= heap_.NumSets())
+        return;
+
     if (segmentation_.hasKernelResources)
     {
         auto heapPtr = heap_.SegmentData(descriptorSet) + heapOffsetKernel_;

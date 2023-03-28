@@ -88,6 +88,12 @@ class BasicSpirvForwardIterator
             return static_cast<spv::Op>(ptr_[0] & spv::OpCodeMask);
         }
 
+        // Returns the raw pointer of this iterator.
+        pointer Ptr() const
+        {
+            return ptr_;
+        }
+
         // Returns the instruction this iterator points to.
         SpirvInstruction Get() const
         {

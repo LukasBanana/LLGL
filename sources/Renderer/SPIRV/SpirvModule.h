@@ -44,6 +44,21 @@ class SpirvModule
         // Reads the SPIR-V module header.
         SpirvResult ReadHeader(SpirvHeader& outHeader) const;
 
+        // Returns the word offset for the specified iterator.
+        std::uint32_t WordOffset(const const_iterator& iter) const;
+
+        // Returns the container of 32-bit words.
+        inline std::vector<value_type>& Words()
+        {
+            return words_;
+        }
+
+        // Returns the container of 32-bit words.
+        inline const std::vector<value_type>& Words() const
+        {
+            return words_;
+        }
+
     public:
 
         inline iterator begin()
@@ -74,16 +89,6 @@ class SpirvModule
         inline const_iterator cend() const
         {
             return const_iterator{ words_.data() + words_.size() };
-        }
-
-        inline std::vector<value_type>& words()
-        {
-            return words_;
-        }
-
-        inline const std::vector<value_type>& words() const
-        {
-            return words_;
         }
 
     private:
@@ -118,6 +123,15 @@ class SpirvModuleView
         // Reads the SPIR-V module header.
         SpirvResult ReadHeader(SpirvHeader& outHeader) const;
 
+        // Returns the word offset for the specified iterator.
+        std::uint32_t WordOffset(const const_iterator& iter) const;
+
+        // Returns the container of 32-bit words.
+        inline const ArrayView<value_type>& Words() const
+        {
+            return words_;
+        }
+
     public:
 
         inline const_iterator begin() const
@@ -138,11 +152,6 @@ class SpirvModuleView
         inline const_iterator cend() const
         {
             return const_iterator{ words_.data() + words_.size() };
-        }
-
-        inline const ArrayView<value_type>& words() const
-        {
-            return words_;
         }
 
     private:

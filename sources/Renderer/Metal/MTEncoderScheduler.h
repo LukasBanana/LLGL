@@ -57,13 +57,13 @@ class MTEncoderScheduler
         void SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset);
         void SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount);
         void SetGraphicsPSO(MTGraphicsPSO* pipelineState);
-        void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet);
+        void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet);
         void SetBlendColor(const float* blendColor);
         void SetStencilRef(std::uint32_t ref, const StencilFace face);
 
         // Converts, binds, and stores the respective state in the internal compute encoder state.
         void SetComputePSO(MTComputePSO* pipelineState);
-        void SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet);
+        void SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet);
 
         // Rebinds the currently bounds resource heap to the specified compute encoder (used for tessellation encoding).
         void RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder);

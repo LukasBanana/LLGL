@@ -177,10 +177,10 @@ void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
     }
 }
 
-void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet)
+void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
 {
     renderEncoderState_.graphicsResourceHeap    = resourceHeap;
-    renderEncoderState_.graphicsResourceSet     = firstSet;
+    renderEncoderState_.graphicsResourceSet     = descriptorSet;
     renderDirtyBits_.graphicsResourceHeap       = 1;
 }
 
@@ -217,10 +217,10 @@ void MTEncoderScheduler::SetComputePSO(MTComputePSO* pipelineState)
     computeDirtyBits_.computePSO = 1;
 }
 
-void MTEncoderScheduler::SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t firstSet)
+void MTEncoderScheduler::SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
 {
     computeEncoderState_.computeResourceHeap    = resourceHeap;
-    computeEncoderState_.computeResourceSet     = firstSet;
+    computeEncoderState_.computeResourceSet     = descriptorSet;
     computeDirtyBits_.computeResourceHeap       = 1;
 }
 

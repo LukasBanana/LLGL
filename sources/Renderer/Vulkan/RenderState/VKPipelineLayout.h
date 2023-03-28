@@ -12,6 +12,7 @@
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include "VKDescriptorCache.h"
+#include "../Shader/VKShader.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>
@@ -55,6 +56,9 @@ class VKPipelineLayout final : public PipelineLayout
             std::vector<VkPushConstantRange>&   outUniformRanges
         ) const;
 
+        // Creates a permutation of the specified shader.
+        VKPtr<VkShaderModule> CreateVkShaderModulePermutation(VKShader& shaderVK) const;
+
         // Returns the native VkPipelineLayout object.
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
@@ -64,31 +68,31 @@ class VKPipelineLayout final : public PipelineLayout
         // Returns the native VkDescriptorSetLayout object for heap bindings.
         inline VkDescriptorSetLayout GetSetLayoutForHeapBindings() const
         {
-            return descriptorSetLayouts_[SetLayoutType_HeapBindings].Get();
+            return setLayouts_[SetLayoutType_HeapBindings].Get();
         }
 
         // Returns the native VkDescriptorSetLayout object for dynamic bindings.
         inline VkDescriptorSetLayout GetSetLayoutForDynamicBindings() const
         {
-            return descriptorSetLayouts_[SetLayoutType_DynamicBindings].Get();
+            return setLayouts_[SetLayoutType_DynamicBindings].Get();
         }
 
         // Returns the descriptor set binding point for dynamic resource bindings.
         inline std::uint32_t GetBindPointForHeapBindings() const
         {
-            return descriptorSetBindSlots_[SetLayoutType_HeapBindings];
+            return setBindingTables_[SetLayoutType_HeapBindings].dstSet;
         }
 
         // Returns the descriptor set binding point for dynamic resource bindings.
         inline std::uint32_t GetBindPointForDynamicBindings() const
         {
-            return descriptorSetBindSlots_[SetLayoutType_DynamicBindings];
+            return setBindingTables_[SetLayoutType_DynamicBindings].dstSet;
         }
 
         // Returns the descriptor set binding point for immutable samplers.
         inline std::uint32_t GetBindPointForImmutableSamplers() const
         {
-            return descriptorSetBindSlots_[SetLayoutType_ImmutableSamplers];
+            return setBindingTables_[SetLayoutType_ImmutableSamplers].dstSet;
         }
 
         // Returns a Vulkan handle of the static descriptor. May also be VK_NULL_HANLDE.
@@ -144,6 +148,13 @@ class VKPipelineLayout final : public PipelineLayout
             SetLayoutType_Num,
         };
 
+        // Container for binding slots that must be re-assigned to a new descriptor set in the SPIR-V shader modules.
+        struct DescriptorSetBindingTable
+        {
+            std::uint32_t               dstSet      = ~0u;
+            std::vector<BindingSlot>    srcSlots;
+        };
+
     private:
 
         void CreateVkDescriptorSetLayout(
@@ -164,8 +175,6 @@ class VKPipelineLayout final : public PipelineLayout
             const ArrayView<StaticSamplerDescriptor>&   staticSamplers
         );
 
-        void AssignDescriptorSetBindingSlots();
-
         VKPtr<VkPipelineLayout> CreateVkPipelineLayout(
             VkDevice                                device,
             const ArrayView<VkPushConstantRange>&   pushConstantRanges = {}
@@ -175,17 +184,24 @@ class VKPipelineLayout final : public PipelineLayout
         void CreateDescriptorCache(VkDevice device, VkDescriptorSet setLayout);
         void CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout);
 
+        void BuildDescriptorSetBindingTables(const PipelineLayoutDescriptor& desc);
+
+    private:
+
+        template <typename TContainer>
+        void BuildDescriptorSetBindingSlots(DescriptorSetBindingTable& dst, const TContainer& src);
+
     private:
 
         static VKPtr<VkPipelineLayout>      defaultPipelineLayout_;
 
         VKPtr<VkPipelineLayout>             pipelineLayout_;
-        VKPtr<VkDescriptorSetLayout>        descriptorSetLayouts_[SetLayoutType_Num];
-        std::uint32_t                       descriptorSetBindSlots_[SetLayoutType_Num]  = {};
+        VKPtr<VkDescriptorSetLayout>        setLayouts_[SetLayoutType_Num];
+        DescriptorSetBindingTable           setBindingTables_[SetLayoutType_Num];
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
         std::unique_ptr<VKDescriptorCache>  descriptorCache_;
-        VkDescriptorSet                     staticDescriptorSet_                        = VK_NULL_HANDLE;
+        VkDescriptorSet                     staticDescriptorSet_                = VK_NULL_HANDLE;
 
         std::vector<VKLayoutBinding>        heapBindings_;
         std::vector<VKLayoutBinding>        bindings_;

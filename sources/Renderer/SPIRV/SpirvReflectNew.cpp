@@ -19,7 +19,7 @@ namespace LLGL
  * SpirvReflect class
  */
 
-SpirvResult SpirvReflect::Parse(const SpirvModuleView& module)
+SpirvResult SpirvReflect::Reflect(const SpirvModuleView& module)
 {
     /* Parse SPIR-V header */
     SpirvHeader header;
@@ -79,7 +79,7 @@ static void ParseSpvExecutionMode(const SpirvInstruction& instr, SpirvReflect::S
     }
 }
 
-SpirvResult SpirvReflect::ParseExecutionMode(const SpirvModuleView& module, SpvExecutionMode& outExecutionMode)
+SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflect::SpvExecutionMode& outExecutionMode)
 {
     /* Parse SPIR-V header */
     SpirvHeader header;
@@ -151,7 +151,7 @@ static spv::Id FindPointerTypeSubtype(const SpirvModuleView& module, spv::Id poi
     return 0;
 }
 
-SpirvResult SpirvReflect::ParsePushConstants(const SpirvModuleView& module, SpvBlock& outBlock)
+SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflect::SpvBlock& outBlock)
 {
     /* Parse SPIR-V header */
     SpirvHeader header;
@@ -169,7 +169,7 @@ SpirvResult SpirvReflect::ParsePushConstants(const SpirvModuleView& module, SpvB
     if (pushConstantTypeId == 0)
         return SpirvResult::IdTypeMismatch;
 
-    auto GetOrMakeBlockField = [&outBlock](std::uint32_t index) -> SpvBlockField&
+    auto GetOrMakeBlockField = [&outBlock](std::uint32_t index) -> SpirvReflect::SpvBlockField&
     {
         if (index >= outBlock.fields.size())
             outBlock.fields.resize(index + 1);
@@ -221,6 +221,85 @@ SpirvResult SpirvReflect::ParsePushConstants(const SpirvModuleView& module, SpvB
 
             default:
                 break;
+        }
+    }
+
+    return SpirvResult::Success;
+}
+
+static SpirvReflect::SpvBindingPoint* FindOrInsertBindingPoint(std::vector<SpirvReflect::SpvBindingPoint>& bindingPoints, spv::Id varId)
+{
+    /* Try to find binding point for specified variable ID */
+    std::size_t insertionPos = 0;
+    auto* bindingPoint = FindInSortedArray<SpirvReflect::SpvBindingPoint>(
+        bindingPoints.data(), bindingPoints.size(),
+        [varId](const SpirvReflect::SpvBindingPoint& entry) -> int
+        {
+            return (static_cast<int>(varId) - static_cast<int>(entry.id));
+        },
+        &insertionPos
+    );
+    if (bindingPoint == nullptr)
+    {
+        /* Insert new binding point */
+        bindingPoints.insert(bindingPoints.begin() + insertionPos, SpirvReflect::SpvBindingPoint{});
+        bindingPoint = &(bindingPoints[insertionPos]);
+    }
+    return bindingPoint;
+}
+
+SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector<SpirvReflect::SpvBindingPoint>& outBindingPoints)
+{
+    /* Parse SPIR-V header */
+    SpirvHeader header;
+    SpirvResult result = module.ReadHeader(header);
+    if (result != SpirvResult::Success)
+        return result;
+
+    /* Now parse SPIR-V module for binding and descriptor set decorations */
+    const auto estimatedNumBindingPoints = header.idBound / 16u;
+
+    outBindingPoints.clear();
+    outBindingPoints.reserve(estimatedNumBindingPoints);
+
+    for (auto it = module.begin(); it != module.end(); ++it)
+    {
+        SpirvInstruction instr = it.Get();
+
+        if (instr.opcode == spv::Op::OpFunction)
+        {
+            /* No more declarations and decorations after first OpFunction instruction */
+            break;
+        }
+
+        if (instr.opcode == spv::Op::OpDecorate)
+        {
+            /* OpDecorate Target[0] Decoration[1] Value[2] */
+            if (instr.numOperands < 2)
+                return SpirvResult::OperandOutOfBounds;
+            const spv::Id varId = instr.GetUInt32(0);
+
+            /* Add entry for either binding or descriptor set */
+            const auto decoration = static_cast<spv::Decoration>(instr.GetUInt32(1));
+            if (decoration == spv::Decoration::DescriptorSet ||
+                decoration == spv::Decoration::Binding)
+            {
+                if (instr.numOperands < 3)
+                    return SpirvResult::OperandOutOfBounds;
+
+                auto* binding = FindOrInsertBindingPoint(outBindingPoints, varId);
+                binding->id = varId;
+                if (decoration == spv::Decoration::DescriptorSet)
+                {
+                    binding->set                = instr.GetUInt32(2);
+                    binding->setWordOffset      = module.WordOffset(it) + 3;
+                }
+                else
+                {
+                    binding->binding            = instr.GetUInt32(2);
+                    binding->bindingWordOffset  = module.WordOffset(it) + 3;
+                }
+            }
         }
     }
 

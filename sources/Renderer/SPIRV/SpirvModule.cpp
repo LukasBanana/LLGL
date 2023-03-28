@@ -47,7 +47,12 @@ SpirvModule::SpirvModule(const ArrayView<value_type>& words) :
 
 SpirvResult SpirvModule::ReadHeader(SpirvHeader& outHeader) const
 {
-    return ReadSpirvHeader(words().data(), words().size(), outHeader);
+    return ReadSpirvHeader(Words().data(), Words().size(), outHeader);
+}
+
+std::uint32_t SpirvModule::WordOffset(const const_iterator& iter) const
+{
+    return std::distance(Words().data(), iter.Ptr());
 }
 
 
@@ -67,7 +72,12 @@ SpirvModuleView::SpirvModuleView(const void* data, std::size_t size) :
 
 SpirvResult SpirvModuleView::ReadHeader(SpirvHeader& outHeader) const
 {
-    return ReadSpirvHeader(words().data(), words().size(), outHeader);
+    return ReadSpirvHeader(Words().data(), Words().size(), outHeader);
+}
+
+std::uint32_t SpirvModuleView::WordOffset(const const_iterator& iter) const
+{
+    return std::distance(Words().data(), iter.Ptr());
 }
 
 

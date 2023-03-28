@@ -41,7 +41,7 @@ void VKComputePSO::CreateVkPipeline(VkDevice device, const ComputePipelineDescri
 
     /* Get shader stages */
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
-    FillShaderStageCreateInfo(*computeShaderVK, shaderStageCreateInfo);
+    GetShaderCreateInfoAndOptionalPermutation(*computeShaderVK, shaderStageCreateInfo, shaderModulePermutation_);
 
     /* Create graphics pipeline state object */
     VkComputePipelineCreateInfo createInfo;

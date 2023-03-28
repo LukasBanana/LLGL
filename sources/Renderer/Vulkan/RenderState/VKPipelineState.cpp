@@ -133,10 +133,18 @@ VkPipelineLayout VKPipelineState::GetVkPipelineLayout() const
     return VKPipelineLayout::GetDefault();
 }
 
-void VKPipelineState::FillShaderStageCreateInfo(VKShader& shaderVK, VkPipelineShaderStageCreateInfo& createInfo)
+void VKPipelineState::GetShaderCreateInfoAndOptionalPermutation(
+    VKShader&                           shaderVK,
+    VkPipelineShaderStageCreateInfo&    outCreateInfo,
+    VKPtr<VkShaderModule>&              outShaderModulePermutation)
 {
-    //TODO: create permutation with binding index/set re-assignment
-    shaderVK.FillShaderStageCreateInfo(createInfo);
+    shaderVK.FillShaderStageCreateInfo(outCreateInfo);
+    if (pipelineLayout_ != nullptr)
+    {
+        outShaderModulePermutation = pipelineLayout_->CreateVkShaderModulePermutation(shaderVK);
+        if (outShaderModulePermutation.Get() != VK_NULL_HANDLE)
+            outCreateInfo.module = outShaderModulePermutation.Get();
+    }
 }
 
 

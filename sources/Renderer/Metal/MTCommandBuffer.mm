@@ -420,15 +420,13 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 /* ----- Resources ----- */
 
-void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t wdescriptorSet)
+void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
-    #if 0//TODO
     if (resourceHeapMT.HasGraphicsResources() && bindPoint != PipelineBindPoint::Compute)
-        encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT, firstSet);
+        encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT, descriptorSet);
     if (resourceHeapMT.HasComputeResources() && bindPoint != PipelineBindPoint::Graphics)
-        encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT, firstSet);
-    #endif
+        encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT, descriptorSet);
 }
 
 void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)

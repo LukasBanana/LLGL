@@ -29,6 +29,10 @@ class VKComputePSO final : public VKPipelineState
 
         void CreateVkPipeline(VkDevice device, const ComputePipelineDescriptor& desc);
 
+    private:
+
+        VKPtr<VkShaderModule> shaderModulePermutation_;
+
 };
 
 

@@ -10,10 +10,12 @@
 
 
 #include <LLGL/Shader.h>
-#include <vector>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include "VKShaderBindingLayout.h"
 #include "../../../Core/BasicReport.h"
+#include <vector>
+#include <functional>
 
 
 namespace LLGL
@@ -31,6 +33,11 @@ struct VKUniformRange
 
 class VKShader final : public Shader
 {
+
+    public:
+
+        // Function interface which returns a binding slot ierator to re-assign bindings slots for a permuation of the SPIR-V module.
+        using PermutationBindingFunc = std::function<bool(unsigned index, ConstFieldRangeIterator<BindingSlot>& iter, std::uint32_t& dstSet)>;
 
     public:
 
@@ -55,6 +62,13 @@ class VKShader final : public Shader
         void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
+        /*
+        Creates a shader module permutation with re-assigned binding slots using the specified function callback.
+        Re-assigned descriptor sets for [0, N) invocations of the callback until 'permutationBindingFunc' returns false.
+        Returns VK_NULL_HANDLE if no permutation was created.
+        */
+        VKPtr<VkShaderModule> CreateVkShaderModulePermutation(const PermutationBindingFunc& permutationBindingFunc);
+
         // Returns the Vulkan shader module.
         inline const VKPtr<VkShaderModule>& GetShaderModule() const
         {
@@ -76,6 +90,7 @@ class VKShader final : public Shader
 
         bool BuildShader(const ShaderDescriptor& shaderDesc);
         void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+        void BuildBindingLayout();
         void BuildReport();
 
         bool CompileSource(const ShaderDescriptor& shaderDesc);
@@ -92,8 +107,11 @@ class VKShader final : public Shader
     private:
 
         VkDevice                    device_             = VK_NULL_HANDLE;
+
         VKPtr<VkShaderModule>       shaderModule_;
         std::vector<std::uint32_t>  shaderCode_;
+        VKShaderBindingLayout       bindingLayout_;
+
         LoadBinaryResult            loadBinaryResult_   = LoadBinaryResult::Undefined;
         VertexInputLayout           inputLayout_;
 

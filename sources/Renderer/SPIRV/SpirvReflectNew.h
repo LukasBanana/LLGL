@@ -113,14 +113,6 @@ class SpirvReflect
             };
         };
 
-        // SPIR-V structures (a.k.a. records).
-        struct SpvRecord
-        {
-            const char*     name    = nullptr;
-            std::uint32_t   size    = 0;
-            std::uint32_t   padding = 0;
-        };
-
         // Global uniform objects.
         struct SpvUniform
         {
@@ -155,33 +147,46 @@ class SpirvReflect
             std::vector<SpvBlockField>  fields;
         };
 
+        // Binding point including descriptor set.
+        struct SpvBindingPoint
+        {
+            spv::Id         id                  = 0; // Resource ID.
+            std::uint32_t   set                 = 0; // Descriptor set
+            std::uint32_t   setWordOffset       = 0; // Word offset within the SPIR-V module of the descriptor set.
+            std::uint32_t   binding             = 0; // Binding point
+            std::uint32_t   bindingWordOffset   = 0; // Word offset within the SPIR-V module of the binding point.
+        };
+
     public:
 
         // Parse all instructions in the specified SPIR-V module.
-        SpirvResult Parse(const SpirvModuleView& module);
+        SpirvResult Reflect(const SpirvModuleView& module);
 
-        inline const std::map<spv::Id, SpvRecord>& GetRecords() const
+    public:
+
+        // Returns the container that maps a SPIR-V ID to its type definition.
+        inline const std::map<spv::Id, SpvType>& GetTypes() const
         {
-            return records_;
+            return types_;
         }
 
+        // Returns the container that maps a SPIR-V ID to its constant definition.
+        inline const std::map<spv::Id, SpvConstant>& GetConstants() const
+        {
+            return constants_;
+        }
+
+        // Returns the container that maps a SPIR-V ID to its uniform definition.
         inline const std::map<spv::Id, SpvUniform>& GetUniforms() const
         {
             return uniforms_;
         }
 
+        // Returns the container that maps a SPIR-V ID to its varying definition.
         inline const std::map<spv::Id, SpvVarying>& GetVaryings() const
         {
             return varyings_;
         }
-
-    public:
-
-        // Parses the specified SPIR-V module only for the execution mode.
-        static SpirvResult ParseExecutionMode(const SpirvModuleView& module, SpvExecutionMode& outExecutionMode);
-
-        // Parses the specified SPIR-V module only for push constants.
-        static SpirvResult ParsePushConstants(const SpirvModuleView& module, SpvBlock& outBlock);
 
     private:
 
@@ -226,11 +231,20 @@ class SpirvReflect
 
         std::map<spv::Id, SpvType>      types_;
         std::map<spv::Id, SpvConstant>  constants_;
-        std::map<spv::Id, SpvRecord>    records_;
         std::map<spv::Id, SpvUniform>   uniforms_;
         std::map<spv::Id, SpvVarying>   varyings_;
 
 };
+
+
+// Reflect the specified SPIR-V module only for the execution mode.
+SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflect::SpvExecutionMode& outExecutionMode);
+
+// Reflect the specified SPIR-V module only for push constants.
+SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflect::SpvBlock& outBlock);
+
+// Reflect the specified SPIR-V module only for binding points (including their descriptor sets).
+SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector<SpirvReflect::SpvBindingPoint>& outBindingPoints);
 
 
 } // /namespace LLGL
