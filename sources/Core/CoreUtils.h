@@ -92,6 +92,14 @@ void RemoveAllFromListIf(Container& cont, UnaryPredicate pred)
     );
 }
 
+template <class Container, class UnaryPredicate>
+void RemoveAllConsecutiveFromListIf(Container& cont, UnaryPredicate pred)
+{
+    auto first = std::find_if(std::begin(cont), std::end(cont), pred);
+    auto last = std::find_if_not(first, std::end(cont), pred);
+    cont.erase(first, last);
+}
+
 template <class Container, typename T>
 void AddOnceToSharedList(Container& cont, const std::shared_ptr<T>& entry)
 {

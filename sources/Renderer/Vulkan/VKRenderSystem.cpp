@@ -21,6 +21,7 @@
 #include "VKInitializers.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "RenderState/VKComputePSO.h"
+#include "Shader/VKShaderModulePool.h"
 #include "../../Platform/Debug.h"
 #include <LLGL/ImageFlags.h>
 #include <limits>
@@ -60,6 +61,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
 VKRenderSystem::~VKRenderSystem()
 {
     device_.WaitIdle();
+    VKShaderModulePool::Get().Clear();
     VKPipelineLayout::ReleaseDefault();
 }
 

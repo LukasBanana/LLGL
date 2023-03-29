@@ -85,11 +85,7 @@ class VKPipelineState : public PipelineState
         - If the shader module has a binding set mismatch with the pipeline layout,
           a permutation of the shader module will be created to match the internal binding set layout of the Vulkan backend.
         */
-        void GetShaderCreateInfoAndOptionalPermutation(
-            VKShader&                           shaderVK,
-            VkPipelineShaderStageCreateInfo&    outCreateInfo,
-            VKPtr<VkShaderModule>&              outShaderModulePermutation
-        );
+        void GetShaderCreateInfoAndOptionalPermutation(VKShader& shaderVK, VkPipelineShaderStageCreateInfo& outCreateInfo);
 
     private:
 

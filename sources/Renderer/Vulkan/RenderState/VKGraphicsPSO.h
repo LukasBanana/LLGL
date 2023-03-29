@@ -63,9 +63,8 @@ class VKGraphicsPSO final : public VKPipelineState
 
     private:
 
-        bool                    scissorEnabled_    = false;
-        bool                    hasDynamicScissor_ = false;
-        VKPtr<VkShaderModule>   shaderModulePermutations_[LLGL_MAX_NUM_SHADER_STAGES_PER_PIPELINE];
+        bool scissorEnabled_    = false;
+        bool hasDynamicScissor_ = false;
 
 };
 

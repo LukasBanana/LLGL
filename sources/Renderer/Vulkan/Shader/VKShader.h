@@ -47,6 +47,7 @@ class VKShader final : public Shader
     public:
 
         VKShader(VkDevice device, const ShaderDescriptor& desc);
+        ~VKShader();
 
         bool ReflectLocalSize(Extent3D& outLocalSize) const;
 
@@ -65,7 +66,7 @@ class VKShader final : public Shader
         /*
         Creates a shader module permutation with re-assigned binding slots using the specified function callback.
         Re-assigned descriptor sets for [0, N) invocations of the callback until 'permutationBindingFunc' returns false.
-        Returns VK_NULL_HANDLE if no permutation was created.
+        Returns VK_NULL_HANDLE if no permutation was created. Should only be used by VKPipelineLayout.
         */
         VKPtr<VkShaderModule> CreateVkShaderModulePermutation(const PermutationBindingFunc& permutationBindingFunc);
 

@@ -11,6 +11,7 @@
 #include "../VKCore.h"
 #include "../Texture/VKSampler.h"
 #include "../Shader/VKShader.h"
+#include "../Shader/VKShaderModulePool.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/StaticLimits.h>
@@ -55,6 +56,11 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
         BuildDescriptorSetBindingTables(desc);
         pipelineLayout_ = CreateVkPipelineLayout(device);
     }
+}
+
+VKPipelineLayout::~VKPipelineLayout()
+{
+    VKShaderModulePool::Get().NotifyReleasePipelineLayout(this);
 }
 
 std::uint32_t VKPipelineLayout::GetNumHeapBindings() const

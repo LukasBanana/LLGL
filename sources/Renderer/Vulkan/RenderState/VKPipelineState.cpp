@@ -8,6 +8,7 @@
 #include "VKPipelineState.h"
 #include "VKPipelineLayout.h"
 #include "../Shader/VKShader.h"
+#include "../Shader/VKShaderModulePool.h"
 #include "../../CheckedCast.h"
 
 
@@ -133,17 +134,14 @@ VkPipelineLayout VKPipelineState::GetVkPipelineLayout() const
     return VKPipelineLayout::GetDefault();
 }
 
-void VKPipelineState::GetShaderCreateInfoAndOptionalPermutation(
-    VKShader&                           shaderVK,
-    VkPipelineShaderStageCreateInfo&    outCreateInfo,
-    VKPtr<VkShaderModule>&              outShaderModulePermutation)
+void VKPipelineState::GetShaderCreateInfoAndOptionalPermutation(VKShader& shaderVK, VkPipelineShaderStageCreateInfo& outCreateInfo)
 {
     shaderVK.FillShaderStageCreateInfo(outCreateInfo);
     if (pipelineLayout_ != nullptr)
     {
-        outShaderModulePermutation = pipelineLayout_->CreateVkShaderModulePermutation(shaderVK);
-        if (outShaderModulePermutation.Get() != VK_NULL_HANDLE)
-            outCreateInfo.module = outShaderModulePermutation.Get();
+        VkShaderModule shaderModulePermutation = VKShaderModulePool::Get().GetOrCreateVkShaderModulePermutation(shaderVK, *pipelineLayout_);
+        if (shaderModulePermutation != VK_NULL_HANDLE)
+            outCreateInfo.module = shaderModulePermutation;
     }
 }
 

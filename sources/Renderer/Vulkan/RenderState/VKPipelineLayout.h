@@ -45,6 +45,7 @@ class VKPipelineLayout final : public PipelineLayout
     public:
 
         VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc);
+        ~VKPipelineLayout();
 
         /*
         Creates a permutation of this pipeline layout for the specified shaders with push constants.
@@ -56,7 +57,7 @@ class VKPipelineLayout final : public PipelineLayout
             std::vector<VkPushConstantRange>&   outUniformRanges
         ) const;
 
-        // Creates a permutation of the specified shader.
+        // Creates a permutation of the specified shader. Should only be used by VKShaderModulePool.
         VKPtr<VkShaderModule> CreateVkShaderModulePermutation(VKShader& shaderVK) const;
 
         // Returns the native VkPipelineLayout object.

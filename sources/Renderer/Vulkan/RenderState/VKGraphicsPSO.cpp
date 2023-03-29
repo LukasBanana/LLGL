@@ -308,11 +308,7 @@ void VKGraphicsPSO::CreateVkPipeline(
             auto shaderIndex = createInfos.size();
             auto& shaderVK = LLGL_CAST(VKShader&, *shader);
             createInfos.resize(shaderIndex + 1);
-            this->GetShaderCreateInfoAndOptionalPermutation(
-                shaderVK,
-                createInfos.back(),
-                shaderModulePermutations_[shaderIndex]
-            );
+            this->GetShaderCreateInfoAndOptionalPermutation(shaderVK, createInfos.back());
         }
     };
 

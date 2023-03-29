@@ -6,6 +6,7 @@
  */
 
 #include "VKShader.h"
+#include "VKShaderModulePool.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include "../../../Core/CoreUtils.h"
@@ -49,6 +50,11 @@ VKShader::VKShader(VkDevice device, const ShaderDescriptor& desc) :
     BuildInputLayout(desc.vertex.inputAttribs.size(), desc.vertex.inputAttribs.data());
     BuildBindingLayout();
     BuildReport();
+}
+
+VKShader::~VKShader()
+{
+    VKShaderModulePool::Get().NotifyReleaseShader(this);
 }
 
 const Report* VKShader::GetReport() const
