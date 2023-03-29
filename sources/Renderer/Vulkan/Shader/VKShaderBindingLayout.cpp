@@ -70,6 +70,54 @@ bool VKShaderBindingLayout::BuildFromSpirvModule(const void* data, std::size_t s
 }
 
 //private
+bool VKShaderBindingLayout::MatchesBindingSlot(
+    const ModuleBinding&    binding,
+    const BindingSlot&      slot,
+    std::uint32_t           dstSet,
+    std::uint32_t*          dstBinding) const
+{
+    if (binding.dstDescriptorSet != dstSet)
+        return false;
+
+    if (dstBinding != nullptr)
+    {
+        if (binding.dstBinding != *dstBinding)
+            return false;
+        ++(*dstBinding);
+    }
+
+    return true;
+}
+
+bool VKShaderBindingLayout::MatchesBindingSlots(
+    ConstFieldRangeIterator<BindingSlot>    iter,
+    std::uint32_t                           dstSet,
+    bool                                    dstBindingInAscendingOrder) const
+{
+    std::uint32_t dstBinding = 0;
+
+    while (auto slot = iter.Next())
+    {
+        const auto* binding = FindInSortedArray<const ModuleBinding>(
+            bindings_.data(), bindings_.size(),
+            [slot](const ModuleBinding& entry) -> int
+            {
+                LLGL_COMPARE_SEPARATE_MEMBERS_SWO(slot->set  , entry.srcDescriptorSet);
+                LLGL_COMPARE_SEPARATE_MEMBERS_SWO(slot->index, entry.srcBinding      );
+                return 0;
+            }
+        );
+        if (binding != nullptr)
+        {
+            if (!MatchesBindingSlot(*binding, *slot, dstSet, (dstBindingInAscendingOrder ? &dstBinding : nullptr)))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+//private
 bool VKShaderBindingLayout::AssignBindingSlot(
     ModuleBinding&      binding,
     const BindingSlot&  slot,
@@ -84,10 +132,14 @@ bool VKShaderBindingLayout::AssignBindingSlot(
         modified = true;
     }
 
-    if (dstBinding != nullptr && binding.dstBinding != *dstBinding)
+    if (dstBinding != nullptr)
     {
-        binding.dstBinding = *dstBinding++;
-        modified = true;
+        if (binding.dstBinding != *dstBinding)
+        {
+            binding.dstBinding = *dstBinding;
+            modified = true;
+        }
+        ++(*dstBinding);
     }
 
     return modified;

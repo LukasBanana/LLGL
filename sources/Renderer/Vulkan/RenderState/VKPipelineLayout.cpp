@@ -155,29 +155,33 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayoutPermutation(
     return {};
 }
 
+//private
+bool VKPipelineLayout::GetBindingSlotsAssignment(
+    unsigned                                index,
+    ConstFieldRangeIterator<BindingSlot>&   iter,
+    std::uint32_t&                          dstSet) const
+{
+    if (index < layoutTypeOrder_.Count())
+    {
+        const auto& bindingTable = setBindingTables_[layoutTypeOrder_[index]];
+        dstSet  = bindingTable.dstSet;
+        iter    = ConstFieldRangeIterator<BindingSlot>{ bindingTable.srcSlots.data(), bindingTable.srcSlots.size() };
+        return true;
+    }
+    return false;
+}
+
+bool VKPipelineLayout::NeedsShaderModulePermutation(const VKShader& shaderVK) const
+{
+    return shaderVK.NeedsShaderModulePermutation(
+        std::bind(&VKPipelineLayout::GetBindingSlotsAssignment, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+    );
+}
+
 VKPtr<VkShaderModule> VKPipelineLayout::CreateVkShaderModulePermutation(VKShader& shaderVK) const
 {
-    int layoutTypeOrder[SetLayoutType_Num];
-    unsigned numLayoutTypes = 0;
-
-    for_range(i, SetLayoutType_Num)
-    {
-        if (setBindingTables_[i].dstSet != ~0u)
-            layoutTypeOrder[numLayoutTypes++] = i;
-    }
-
     return shaderVK.CreateVkShaderModulePermutation(
-        [this, &layoutTypeOrder, numLayoutTypes](unsigned index, ConstFieldRangeIterator<BindingSlot>& iter, std::uint32_t& dstSet) -> bool
-        {
-            if (index < numLayoutTypes)
-            {
-                const auto& bindingTable = this->setBindingTables_[layoutTypeOrder[index]];
-                dstSet  = bindingTable.dstSet;
-                iter    = ConstFieldRangeIterator<BindingSlot>{ bindingTable.srcSlots.data(), bindingTable.srcSlots.size() };
-                return true;
-            }
-            return false;
-        }
+        std::bind(&VKPipelineLayout::GetBindingSlotsAssignment, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
     );
 }
 
@@ -420,11 +424,13 @@ void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSe
 void VKPipelineLayout::BuildDescriptorSetBindingTables(const PipelineLayoutDescriptor& desc)
 {
     /* Assign binding slots for all descrioptor set layouts, i.e. 'layout(set = N)' in SPIR-V code */
-    std::uint32_t counter = 0;
     for_range(i, SetLayoutType_Num)
     {
         if (setLayouts_[i].Get() != VK_NULL_HANDLE)
-            setBindingTables_[i].dstSet = counter++;
+        {
+            setBindingTables_[i].dstSet = layoutTypeOrder_.Count();
+            layoutTypeOrder_.Append(static_cast<std::uint8_t>(i));
+        }
     }
 
     /* Build binding table slots */

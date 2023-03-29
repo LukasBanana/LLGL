@@ -64,6 +64,12 @@ class VKShader final : public Shader
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 
         /*
+        Returns true if a shader permutation is needed for the specified binding functor.
+        Call this before 'CreateVkShaderModulePermutation' to determine whether a permutation is necessary.
+        */
+        bool NeedsShaderModulePermutation(const PermutationBindingFunc& permutationBindingFunc) const;
+
+        /*
         Creates a shader module permutation with re-assigned binding slots using the specified function callback.
         Re-assigned descriptor sets for [0, N) invocations of the callback until 'permutationBindingFunc' returns false.
         Returns VK_NULL_HANDLE if no permutation was created. Should only be used by VKPipelineLayout.

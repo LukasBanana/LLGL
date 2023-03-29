@@ -137,12 +137,8 @@ VkPipelineLayout VKPipelineState::GetVkPipelineLayout() const
 void VKPipelineState::GetShaderCreateInfoAndOptionalPermutation(VKShader& shaderVK, VkPipelineShaderStageCreateInfo& outCreateInfo)
 {
     shaderVK.FillShaderStageCreateInfo(outCreateInfo);
-    if (pipelineLayout_ != nullptr)
-    {
-        VkShaderModule shaderModulePermutation = VKShaderModulePool::Get().GetOrCreateVkShaderModulePermutation(shaderVK, *pipelineLayout_);
-        if (shaderModulePermutation != VK_NULL_HANDLE)
-            outCreateInfo.module = shaderModulePermutation;
-    }
+    if (pipelineLayout_ != nullptr && pipelineLayout_->NeedsShaderModulePermutation(shaderVK))
+        outCreateInfo.module = VKShaderModulePool::Get().GetOrCreateVkShaderModulePermutation(shaderVK, *pipelineLayout_);
 }
 
 

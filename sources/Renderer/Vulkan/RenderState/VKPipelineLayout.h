@@ -15,6 +15,7 @@
 #include "../Shader/VKShader.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include "../../../Core/PackedPermutation.h"
 #include <vector>
 
 
@@ -56,6 +57,9 @@ class VKPipelineLayout final : public PipelineLayout
             const ArrayView<Shader*>&           shaders,
             std::vector<VkPushConstantRange>&   outUniformRanges
         ) const;
+
+        // Returns true if a permutation is required for the specified shader.
+        bool NeedsShaderModulePermutation(const VKShader& shaderVK) const;
 
         // Creates a permutation of the specified shader. Should only be used by VKShaderModulePool.
         VKPtr<VkShaderModule> CreateVkShaderModulePermutation(VKShader& shaderVK) const;
@@ -187,6 +191,12 @@ class VKPipelineLayout final : public PipelineLayout
 
         void BuildDescriptorSetBindingTables(const PipelineLayoutDescriptor& desc);
 
+        bool GetBindingSlotsAssignment(
+            unsigned                                index,
+            ConstFieldRangeIterator<BindingSlot>&   iter,
+            std::uint32_t&                          dstSet
+        ) const;
+
     private:
 
         template <typename TContainer>
@@ -199,6 +209,7 @@ class VKPipelineLayout final : public PipelineLayout
         VKPtr<VkPipelineLayout>             pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>        setLayouts_[SetLayoutType_Num];
         DescriptorSetBindingTable           setBindingTables_[SetLayoutType_Num];
+        PackedPermutation3                  layoutTypeOrder_;
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
         std::unique_ptr<VKDescriptorCache>  descriptorCache_;

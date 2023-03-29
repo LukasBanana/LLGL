@@ -102,6 +102,24 @@ void VKShader::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateIn
     }
 }
 
+bool VKShader::NeedsShaderModulePermutation(const PermutationBindingFunc& permutationBindingFunc) const
+{
+    if (!permutationBindingFunc)
+        return false;
+
+    /* Re-assign binding slots with a permutation of the binding layout */
+    ConstFieldRangeIterator<BindingSlot> bindingSlotIter;
+    std::uint32_t dstSet;
+
+    for (unsigned index = 0; permutationBindingFunc(index, bindingSlotIter, dstSet); ++index)
+    {
+        if (!bindingLayout_.MatchesBindingSlots(bindingSlotIter, dstSet))
+            return true;
+    }
+
+    return false;
+}
+
 VKPtr<VkShaderModule> VKShader::CreateVkShaderModulePermutation(const PermutationBindingFunc& permutationBindingFunc)
 {
     if (!permutationBindingFunc)

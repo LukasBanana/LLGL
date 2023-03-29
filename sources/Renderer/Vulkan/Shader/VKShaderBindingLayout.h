@@ -27,6 +27,13 @@ class VKShaderBindingLayout
         // Builds the internal binding table from the specified SPIR-V module.
         bool BuildFromSpirvModule(const void* data, std::size_t size);
 
+        // Returns true if the binding layout already matches the layout as is assigned by 'AssignBindingSlots'.
+        bool MatchesBindingSlots(
+            ConstFieldRangeIterator<BindingSlot>    iter,
+            std::uint32_t                           dstSet,
+            bool                                    dstBindingInAscendingOrder = false
+        ) const;
+
         /*
         Assigns new binding slots for all resource bindings in the specified range and returns the number of updated bindings.
         Parameter 'dstBindingInAscendingOrder' specifies whether binding indices are to be re-assigned as well, in which case they are assigned from [0, N).
@@ -58,6 +65,13 @@ class VKShaderBindingLayout
         };
 
     private:
+
+        bool MatchesBindingSlot(
+            const ModuleBinding&    binding,
+            const BindingSlot&      slot,
+            std::uint32_t           dstSet,
+            std::uint32_t*          dstBinding
+        ) const;
 
         bool AssignBindingSlot(
             ModuleBinding&      binding,
