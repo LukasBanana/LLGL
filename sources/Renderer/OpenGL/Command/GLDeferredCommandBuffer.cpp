@@ -453,14 +453,14 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         }
         break;
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
         case GLResourceType_GL2XSampler:
         {
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
             auto& samplerGL2X = LLGL_CAST(GL2XSampler&, resource);
             BindGL2XSampler(samplerGL2X, binding.slot);
+            #endif // /LLGL_GL_ENABLE_OPENGL2X
         }
         break;
-        #endif // /LLGL_GL_ENABLE_OPENGL2X
     }
 }
 

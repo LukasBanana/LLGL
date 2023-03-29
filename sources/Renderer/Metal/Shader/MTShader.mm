@@ -312,7 +312,7 @@ static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection
     auto resourceType = ToResourceType(arg.type);
     if (resourceType != ResourceType::Undefined)
     {
-        ShaderResource resource;
+        ShaderResourceReflection resource;
         {
             resource.binding.name       = [arg.name UTF8String];
             resource.binding.type       = resourceType;

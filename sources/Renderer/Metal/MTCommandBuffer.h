@@ -27,6 +27,7 @@ class MTBuffer;
 class MTTexture;
 class MTSampler;
 class MTRenderTarget;
+class MTPipelineState;
 
 class MTCommandBuffer final : public CommandBuffer
 {
@@ -117,7 +118,7 @@ class MTCommandBuffer final : public CommandBuffer
         /* ----- Resources ----- */
 
         void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
-        void SetResource(Resource& resource, std::uint32_t descriptor) override;
+        void SetResource(std::uint32_t descriptor, Resource& resource) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -234,6 +235,8 @@ class MTCommandBuffer final : public CommandBuffer
             NSUInteger                      numThreads
         );
 
+        void ResetRenderStates();
+
     private:
 
         id<MTLDevice>                   device_                 = nil;
@@ -251,6 +254,7 @@ class MTCommandBuffer final : public CommandBuffer
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
         const MTLSize*                  numThreadsPerGroup_     = nullptr;
+        MTPipelineState*                boundPipelineState_     = nullptr;
 
         MTStagingBufferPool             stagingBufferPool_;
 

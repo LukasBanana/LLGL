@@ -35,7 +35,7 @@ for smaller buffers an emulated CPU copy operation will be used.
 static const NSUInteger g_minFillBufferForKernel = 64;
 
 // Default value when no compute PSO is bound.
-static const MTLSize g_defaultNumThreadsPerGroup { 1, 1, 1 };
+static const MTLSize g_defaultNumThreadsPerGroup{ 1, 1, 1 };
 
 MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue, const CommandBufferDescriptor& desc) :
     device_            { device                                                    },
@@ -77,9 +77,7 @@ void MTCommandBuffer::Begin()
     stagingBufferPool_.Reset();
 
     /* Reset references */
-    numThreadsPerGroup_     = &g_defaultNumThreadsPerGroup;
-    numPatchControlPoints_  = 0;
-    tessPipelineState_      = nil;
+    numThreadsPerGroup_ = &g_defaultNumThreadsPerGroup;
 }
 
 void MTCommandBuffer::End()
@@ -90,6 +88,8 @@ void MTCommandBuffer::End()
     /* Commit native buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
         [cmdBuffer_ commit];
+
+    ResetRenderStates();
 }
 
 void MTCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -422,14 +422,23 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
+    if (boundPipelineState_ != nullptr)
+        return /*Invalid state*/;
+
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
-    if (resourceHeapMT.HasGraphicsResources() && bindPoint != PipelineBindPoint::Compute)
-        encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT, descriptorSet);
-    if (resourceHeapMT.HasComputeResources() && bindPoint != PipelineBindPoint::Graphics)
-        encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT, descriptorSet);
+    if (boundPipelineState_->IsGraphicsPSO())
+    {
+        if (resourceHeapMT.HasGraphicsResources())
+            encoderScheduler_.SetGraphicsResourceHeap(&resourceHeapMT, descriptorSet);
+    }
+    else
+    {
+        if (resourceHeapMT.HasComputeResources())
+            encoderScheduler_.SetComputeResourceHeap(&resourceHeapMT, descriptorSet);
+    }
 }
 
-void MTCommandBuffer::SetResource(Resource& resource, std::uint32_t descriptor)
+void MTCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     #if 0//TODO: store direct binding in <MTEncoderScheduler>
     switch (resource.GetResourceType())
@@ -589,6 +598,7 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
     /* Set graphics pipeline with encoder scheduler */
     auto& pipelineStateMT = LLGL_CAST(MTPipelineState&, pipelineState);
+    boundPipelineState_ = &pipelineStateMT;
     if (pipelineStateMT.IsGraphicsPSO())
     {
         /* Schedule graphics pipeline and store primitive type for draw commands */
@@ -1283,6 +1293,13 @@ void MTCommandBuffer::DispatchThreads1D(
             ];
         }
     }
+}
+
+void MTCommandBuffer::ResetRenderStates()
+{
+    numPatchControlPoints_  = 0;
+    tessPipelineState_      = nil;
+    boundPipelineState_     = nullptr;
 }
 
 

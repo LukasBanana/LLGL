@@ -22,6 +22,7 @@ static void DecompressRGBColor16Bit(std::uint8_t* dst, std::uint16_t src)
     dst[2] = ((src >>  1) & 0x000F) * 0xFF / 0x0F;
 }
 
+#if 0 //UNUSED
 static void DecompressRGBAColor16Bit(std::uint8_t* dst, std::uint16_t src)
 {
     DecompressRGBColor16Bit(dst, src);
@@ -43,6 +44,7 @@ static void Decompress16AlphaChannels4Bit(std::uint8_t* dst, std::uint32_t src0,
         dst[i + 8] = DecompressAlphaChannel4Bit(src1);
     }
 }
+#endif
 
 static std::uint8_t InterpolateColorComponent(std::uint16_t a, std::uint16_t b)
 {

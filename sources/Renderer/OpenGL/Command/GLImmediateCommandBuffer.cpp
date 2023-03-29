@@ -380,14 +380,14 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
         }
         break;
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
         case GLResourceType_GL2XSampler:
         {
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
             auto& samplerGL2X = LLGL_CAST(GL2XSampler&, resource);
             stateMngr_->BindGL2XSampler(binding.slot, samplerGL2X);
+            #endif // /LLGL_GL_ENABLE_OPENGL2X
         }
         break;
-        #endif // /LLGL_GL_ENABLE_OPENGL2X
     }
 }
 

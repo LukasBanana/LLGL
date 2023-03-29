@@ -9,14 +9,39 @@
 #define LLGL_MT_PIPELINE_LAYOUT_H
 
 
-#include "../../BasicPipelineLayout.h"
+#include <LLGL/PipelineLayout.h>
+#include <LLGL/PipelineLayoutFlags.h>
+#include <vector>
 
 
 namespace LLGL
 {
 
 
-using MTPipelineLayout = BasicPipelineLayout;
+class MTPipelineLayout final : public PipelineLayout
+{
+
+    public:
+
+        std::uint32_t GetNumHeapBindings() const override;
+        std::uint32_t GetNumBindings() const override;
+        std::uint32_t GetNumStaticSamplers() const override;
+        std::uint32_t GetNumUniforms() const override;
+
+    public:
+
+        MTPipelineLayout(const PipelineLayoutDescriptor& desc);
+
+        inline const std::vector<BindingDescriptor>& GetHeapBindings() const
+        {
+            return heapBindings_;
+        }
+
+    private:
+
+        std::vector<BindingDescriptor> heapBindings_;
+
+};
 
 
 } // /namespace LLGL

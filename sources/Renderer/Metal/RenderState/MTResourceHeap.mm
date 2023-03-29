@@ -94,7 +94,7 @@ MTResourceHeap::MTResourceHeap(
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Validate binding descriptors */
-    const auto& bindings            = pipelineLayoutMT->GetBindings();
+    const auto& bindings            = pipelineLayoutMT->GetHeapBindings();
     const auto  numBindings         = static_cast<std::uint32_t>(bindings.size());
     const auto  numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 
@@ -280,7 +280,7 @@ std::vector<MTResourceHeap::MTResourceBinding> MTResourceHeap::FilterAndSortMTBi
     {
         MTResourceBinding resourceBinding;
         {
-            resourceBinding.slot    = bindingDesc->slot;
+            resourceBinding.slot    = bindingDesc->slot.index;
             resourceBinding.stages  = affectedStage;
             resourceBinding.index   = index;
         }
