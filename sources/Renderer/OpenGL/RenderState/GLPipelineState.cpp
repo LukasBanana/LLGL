@@ -68,7 +68,8 @@ void GLPipelineState::Bind(GLStateManager& stateMngr)
         shaderPipeline_->BindResourceSlots(*shaderBindingLayout_);
 
     /* Bind static samplers */
-    pipelineLayout_->BindStaticSamplers(stateMngr);
+    if (pipelineLayout_ != nullptr)
+        pipelineLayout_->BindStaticSamplers(stateMngr);
 }
 
 

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <functional>
+#include <string.h>
 
 
 namespace LLGL

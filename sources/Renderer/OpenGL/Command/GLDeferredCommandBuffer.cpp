@@ -415,6 +415,9 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
     const auto& binding = bindingList[descriptor];
     switch (binding.type)
     {
+        case GLResourceType_Invalid:
+        break;
+
         case GLResourceType_UBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);

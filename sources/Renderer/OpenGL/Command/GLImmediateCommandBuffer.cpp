@@ -341,6 +341,9 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
     const auto& binding = bindingList[descriptor];
     switch (binding.type)
     {
+        case GLResourceType_Invalid:
+        break;
+
         case GLResourceType_UBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);

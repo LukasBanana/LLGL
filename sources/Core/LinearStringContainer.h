@@ -12,6 +12,7 @@
 #include "StringUtils.h"
 #include <vector>
 #include <string>
+#include <string.h>
 
 
 namespace LLGL

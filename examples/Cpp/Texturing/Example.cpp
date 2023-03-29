@@ -93,7 +93,7 @@ public:
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
-            layoutDesc.bindings =
+            layoutDesc.heapBindings =
             {
                 LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, 0 },
                 LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, (IsOpenGL() ? 0u : 1u) },

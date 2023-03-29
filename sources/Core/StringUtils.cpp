@@ -8,6 +8,7 @@
 #include "StringUtils.h"
 #include <fstream>
 #include <codecvt>
+#include <locale>
 
 
 namespace LLGL

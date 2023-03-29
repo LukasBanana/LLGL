@@ -8,6 +8,7 @@
 #include "Serialization.h"
 #include "../Core/Assertion.h"
 #include "../Core/StringUtils.h"
+#include <string.h>
 
 
 namespace LLGL

@@ -8,6 +8,7 @@
 #include "GLCore.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
+#include <stdexcept>
 
 
 namespace LLGL

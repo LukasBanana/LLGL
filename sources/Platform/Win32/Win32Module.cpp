@@ -7,6 +7,7 @@
 
 #include "Win32Module.h"
 #include "../../Core/CoreUtils.h"
+#include <stdexcept>
 
 
 namespace LLGL

@@ -7,6 +7,7 @@
 
 #include "IOSModule.h"
 #include <dlfcn.h>
+#include <stdexcept>
 
 
 namespace LLGL

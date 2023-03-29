@@ -9,6 +9,7 @@
 #include "../../Core/CoreUtils.h"
 #include <dlfcn.h>
 #include <unistd.h>
+#include <stdexcept>
 
 
 namespace LLGL

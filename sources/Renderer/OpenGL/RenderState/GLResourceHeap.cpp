@@ -208,6 +208,9 @@ std::uint32_t GLResourceHeap::WriteResourceViews(std::uint32_t firstDescriptor, 
         /* Write descriptor into respective heap segment */
         switch (segment->type)
         {
+            case GLResourceType_Invalid:
+                /* Ignore */
+                break;
             case GLResourceType_UBO:
                 WriteResourceViewUBO(desc, heapPtr, binding.descriptorIndex);
                 break;
