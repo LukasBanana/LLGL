@@ -7,6 +7,7 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Misc/VertexFormat.h>
+#include <iostream>
 
 
 #if 0 // TESTING
@@ -193,7 +194,7 @@ int main()
 {
     try
     {
-        LLGL::Log::SetReportCallbackStd();
+        LLGL::Log::SetReportCallbackStd(&std::cout);
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Metal");

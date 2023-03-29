@@ -38,7 +38,7 @@ MTLTessellationControlPointIndexType    ToMTLPatchIndexType         ( const Form
 MTLTessellationPartitionMode            ToMTLPartitionMode          ( const TessellationPartition   partitionMode     );
 MTLTextureType                          ToMTLTextureType            ( const TextureType             textureType       );
 MTLPrimitiveType                        ToMTLPrimitiveType          ( const PrimitiveTopology       primitiveTopology );
-MTLPrimitiveTopologyClass               ToMTLPrimitiveTopologyClass ( const PrimitiveTopology       primitiveTopology );
+MTLPrimitiveTopologyClass               ToMTLPrimitiveTopologyClass ( const PrimitiveTopology       primitiveTopology ) API_AVAILABLE(macos(10.11), ios(12.0));
 MTLCullMode                             ToMTLCullMode               ( const CullMode                cullMode          );
 MTLCompareFunction                      ToMTLCompareFunction        ( const CompareOp               compareOp         );
 MTLSamplerAddressMode                   ToMTLSamplerAddressMode     ( const SamplerAddressMode      addressMode       );

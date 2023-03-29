@@ -64,6 +64,15 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
     };
 }
 
+static NSUInteger GetMaxMTBufferSize(id<MTLDevice> device)
+{
+    constexpr NSUInteger minBufferSize256MB = 268435456;
+    if (@available(iOS 12.0, macOS 10.14, *))
+        return [device maxBufferLength];
+    else
+        return minBufferSize256MB;
+}
+
 // see https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf
 void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapabilities& caps)
 {
@@ -120,7 +129,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     /* Specify limits */
     auto& limits = caps.limits;
 
-    limits.maxBufferSize                    = [device maxBufferLength];
+    limits.maxBufferSize                    = GetMaxMTBufferSize(device);
     limits.maxConstantBufferSize            = 65536u;
     limits.max1DTextureSize                 = 16384u;
     limits.max2DTextureSize                 = 16384u;
