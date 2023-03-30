@@ -6,6 +6,7 @@
  */
 
 #include "MTComputePSO.h"
+#include "MTPipelineLayout.h"
 #include "../MTCore.h"
 #include "../Shader/MTShader.h"
 #include "../../CheckedCast.h"
@@ -19,7 +20,7 @@ namespace LLGL
 
 
 MTComputePSO::MTComputePSO(id<MTLDevice> device, const ComputePipelineDescriptor& desc) :
-    MTPipelineState { /*isGraphicsPSO:*/ false }
+    MTPipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout }
 {
     /* Get native shader functions */
     computeShader_  = LLGL_CAST(const MTShader*, desc.computeShader);
@@ -40,6 +41,9 @@ MTComputePSO::MTComputePSO(id<MTLDevice> device, const ComputePipelineDescriptor
 void MTComputePSO::Bind(id<MTLComputeCommandEncoder> computeEncoder)
 {
     [computeEncoder setComputePipelineState:computePipelineState_];
+
+    if (auto* pipelineLayout = GetPipelineLayout())
+        pipelineLayout->SetStaticKernelSamplers(computeEncoder);
 }
 
 

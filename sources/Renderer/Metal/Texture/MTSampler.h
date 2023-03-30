@@ -32,6 +32,14 @@ class MTSampler final : public Sampler
             return native_;
         }
 
+    public:
+
+        // Converts the specified sampler descriptor to a native Metal descriptor.
+        static void ConvertDesc(MTLSamplerDescriptor* dst, const SamplerDescriptor& src);
+
+        // Creates a native Metal sampler state from the specified descriptor.
+        static id<MTLSamplerState> CreateNative(id<MTLDevice> device, const SamplerDescriptor& desc);
+
     private:
 
         id<MTLSamplerState> native_;

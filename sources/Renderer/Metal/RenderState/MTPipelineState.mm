@@ -6,15 +6,19 @@
  */
 
 #include "MTPipelineState.h"
+#include "MTPipelineLayout.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL
 {
 
 
-MTPipelineState::MTPipelineState(bool isGraphicsPSO/*, const ShaderProgram* shaderProgram*/) :
+MTPipelineState::MTPipelineState(bool isGraphicsPSO, const PipelineLayout* pipelineLayout) :
     isGraphicsPSO_ { isGraphicsPSO }
 {
+    if (pipelineLayout != nullptr)
+        pipelineLayout_ = LLGL_CAST(const MTPipelineLayout*, pipelineLayout);
 }
 
 const Report* MTPipelineState::GetReport() const

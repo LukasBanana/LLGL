@@ -19,12 +19,15 @@ namespace LLGL
 {
 
 
+class PipelineLayout;
+class MTPipelineLayout;
+
 class MTPipelineState : public PipelineState
 {
 
     public:
 
-        MTPipelineState(bool isGraphicsPSO);
+        MTPipelineState(bool isGraphicsPSO, const PipelineLayout* pipelineLayout);
 
         const Report* GetReport() const override final;
 
@@ -38,11 +41,18 @@ class MTPipelineState : public PipelineState
 
         // Writes the report with the specified message and error bit.
         void ResetReport(std::string&& text, bool hasErrors = false);
-        
+
+        // Returns the pipeline layout this PSO was created with. May also be null.
+        inline const MTPipelineLayout* GetPipelineLayout() const
+        {
+            return pipelineLayout_;
+        }
+
     private:
 
-        const bool  isGraphicsPSO_ = false;
-        BasicReport report_;
+        const bool              isGraphicsPSO_ = false;
+        const MTPipelineLayout* pipelineLayout_ = nullptr;
+        BasicReport             report_;
 
 };
 

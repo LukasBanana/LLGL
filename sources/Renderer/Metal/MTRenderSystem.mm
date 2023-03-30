@@ -244,7 +244,7 @@ void MTRenderSystem::Release(Shader& shader)
 
 PipelineLayout* MTRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<MTPipelineLayout>(pipelineLayoutDesc));
+    return TakeOwnership(pipelineLayouts_, MakeUnique<MTPipelineLayout>(device_, pipelineLayoutDesc));
 }
 
 void MTRenderSystem::Release(PipelineLayout& pipelineLayout)

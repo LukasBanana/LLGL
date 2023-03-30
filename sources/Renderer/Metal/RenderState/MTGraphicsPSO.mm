@@ -7,6 +7,7 @@
 
 #include "MTGraphicsPSO.h"
 #include "MTRenderPass.h"
+#include "MTPipelineLayout.h"
 #include "../Shader/MTShader.h"
 #include "../MTEncoderScheduler.h"
 #include "../MTTypes.h"
@@ -47,7 +48,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     const GraphicsPipelineDescriptor&   desc,
     const MTRenderPass*                 defaultRenderPass)
 :
-    MTPipelineState { /*isGraphicsPSO:*/ true }
+    MTPipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout }
 {
     /* Convert standalone parameters */
     cullMode_       	= MTTypes::ToMTLCullMode(desc.rasterizer.cullMode);
@@ -103,6 +104,12 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
             blue:               blendColor_[2]
             alpha:              blendColor_[3]
         ];
+    }
+
+    if (auto* pipelineLayout = GetPipelineLayout())
+    {
+        pipelineLayout->SetStaticVertexSamplers(renderEncoder);
+        pipelineLayout->SetStaticFragmentSamplers(renderEncoder);
     }
 }
 

@@ -9,8 +9,12 @@
 #define LLGL_MT_PIPELINE_LAYOUT_H
 
 
+#import <MetalKit/MetalKit.h>
+
+#include "../MTStaticLimits.h"
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Container/ArrayView.h>
 #include <vector>
 
 
@@ -30,7 +34,12 @@ class MTPipelineLayout final : public PipelineLayout
 
     public:
 
-        MTPipelineLayout(const PipelineLayoutDescriptor& desc);
+        MTPipelineLayout(id<MTLDevice> device, const PipelineLayoutDescriptor& desc);
+        ~MTPipelineLayout();
+
+        void SetStaticVertexSamplers(id<MTLRenderCommandEncoder> renderEncoder) const;
+        void SetStaticFragmentSamplers(id<MTLRenderCommandEncoder> renderEncoder) const;
+        void SetStaticKernelSamplers(id<MTLComputeCommandEncoder> computeEncoder) const;
 
         inline const std::vector<BindingDescriptor>& GetHeapBindings() const
         {
@@ -39,7 +48,25 @@ class MTPipelineLayout final : public PipelineLayout
 
     private:
 
-        std::vector<BindingDescriptor> heapBindings_;
+        void BuildStaticSamplers(
+            id<MTLDevice>                               device,
+            const ArrayView<StaticSamplerDescriptor>&   staticSamplerDescs
+        );
+
+        std::size_t BuildStaticSamplersForStage(
+            id<MTLDevice>                               device,
+            const ArrayView<StaticSamplerDescriptor>&   staticSamplerDescs,
+            long                                        stageFlags
+        );
+
+    private:
+
+        std::vector<BindingDescriptor>      heapBindings_;
+
+        std::vector<id<MTLSamplerState>>    staticSamplerStates_;
+        std::vector<NSUInteger>             staticSamplerIndices_;
+        std::uint32_t                       numStaticSamplerPerStage_[LLGL_MT_NUM_SHADER_STAGES];
+        std::uint32_t                       numStaticSamplers_                                      = 0;
 
 };
 

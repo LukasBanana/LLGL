@@ -422,7 +422,7 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 
 void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
-    if (boundPipelineState_ != nullptr)
+    if (boundPipelineState_ == nullptr)
         return /*Invalid state*/;
 
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);

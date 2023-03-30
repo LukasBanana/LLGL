@@ -16,6 +16,16 @@ namespace LLGL
 {
 
 
+MTSampler::MTSampler(id<MTLDevice> device, const SamplerDescriptor& desc) :
+    native_ { MTSampler::CreateNative(device, desc) }
+{
+}
+
+MTSampler::~MTSampler()
+{
+    [native_ release];
+}
+
 #ifndef LLGL_OS_IOS
 
 static MTLSamplerBorderColor GetBorderColor(const float (&color)[4])
@@ -31,7 +41,7 @@ static MTLSamplerBorderColor GetBorderColor(const float (&color)[4])
 
 #endif // /LLGL_OS_IOS
 
-static void Convert(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
+void MTSampler::ConvertDesc(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
 {
     dst.sAddressMode    = MTTypes::ToMTLSamplerAddressMode(src.addressModeU);
     dst.tAddressMode    = MTTypes::ToMTLSamplerAddressMode(src.addressModeV);
@@ -49,17 +59,13 @@ static void Convert(MTLSamplerDescriptor* dst, const SamplerDescriptor& src)
     #endif // /LLGL_OS_IOS
 }
 
-MTSampler::MTSampler(id<MTLDevice> device, const SamplerDescriptor& desc)
+id<MTLSamplerState> MTSampler::CreateNative(id<MTLDevice> device, const SamplerDescriptor& desc)
 {
-    MTLSamplerDescriptor* samplerDesc = [[MTLSamplerDescriptor alloc] init];
-    Convert(samplerDesc, desc);
-    native_ = [device newSamplerStateWithDescriptor:samplerDesc];
-    [samplerDesc release];
-}
-
-MTSampler::~MTSampler()
-{
-    [native_ release];
+    MTLSamplerDescriptor* samplerStateDesc = [[MTLSamplerDescriptor alloc] init];
+    MTSampler::ConvertDesc(samplerStateDesc, desc);
+    id<MTLSamplerState> samplerState = [device newSamplerStateWithDescriptor:samplerStateDesc];
+    [samplerStateDesc release];
+    return samplerState;
 }
 
 
