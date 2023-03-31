@@ -14,6 +14,7 @@
 #include "RenderState/MTComputePSO.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTBuiltinPSOFactory.h"
+#include "RenderState/MTDescriptorCache.h"
 #include "Shader/MTShader.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
@@ -440,22 +441,8 @@ void MTCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t 
 
 void MTCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    #if 0//TODO: store direct binding in <MTEncoderScheduler>
-    switch (resource.GetResourceType())
-    {
-        case ResourceType::Undefined:
-            break;
-        case ResourceType::Buffer:
-            SetBuffer(LLGL_CAST(MTBuffer&, resource), slot, stageFlags);
-            break;
-        case ResourceType::Texture:
-            SetTexture(LLGL_CAST(MTTexture&, resource), slot, stageFlags);
-            break;
-        case ResourceType::Sampler:
-            SetSampler(LLGL_CAST(MTSampler&, resource), slot, stageFlags);
-            break;
-    }
-    #endif
+    if (descriptorCache_ != nullptr)
+        descriptorCache_->SetResource(descriptor, resource);
 }
 
 void MTCommandBuffer::ResetResourceSlots(
@@ -599,6 +586,10 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     /* Set graphics pipeline with encoder scheduler */
     auto& pipelineStateMT = LLGL_CAST(MTPipelineState&, pipelineState);
     boundPipelineState_ = &pipelineStateMT;
+
+    /* Store and reset descriptor cache */
+    descriptorCache_ = pipelineStateMT.GetDescriptorCache();
+
     if (pipelineStateMT.IsGraphicsPSO())
     {
         /* Schedule graphics pipeline and store primitive type for draw commands */
@@ -1066,104 +1057,6 @@ void MTCommandBuffer::PresentDrawables()
     drawables_.clear();
 }
 
-#if 0//TODO: store direct binding in <MTEncoderScheduler>
-void MTCommandBuffer::SetBuffer(MTBuffer& bufferMT, std::uint32_t slot, long stageFlags)
-{
-    if (auto renderEncoder = encoderScheduler_.GetRenderEncoder())
-    {
-        if ((stageFlags & StageFlags::VertexStage) != 0)
-        {
-            [renderEncoder
-                setVertexBuffer:    bufferMT.GetNative()
-                offset:             0
-                atIndex:            static_cast<NSUInteger>(slot)
-            ];
-        }
-        if ((stageFlags & StageFlags::FragmentStage) != 0)
-        {
-            [renderEncoder
-                setFragmentBuffer:  bufferMT.GetNative()
-                offset:             0
-                atIndex:            static_cast<NSUInteger>(slot)
-            ];
-        }
-    }
-    else if (auto computeEncoder = encoderScheduler_.GetComputeEncoder())
-    {
-        if ((stageFlags & StageFlags::ComputeStage) != 0)
-        {
-            [computeEncoder
-                setBuffer:  bufferMT.GetNative()
-                offset:     0
-                atIndex:    static_cast<NSUInteger>(slot)
-            ];
-        }
-    }
-}
-
-void MTCommandBuffer::SetTexture(MTTexture& textureMT, std::uint32_t slot, long stageFlags)
-{
-    if (auto renderEncoder = encoderScheduler_.GetRenderEncoder())
-    {
-        if ((stageFlags & StageFlags::VertexStage) != 0)
-        {
-            [renderEncoder
-                setVertexTexture:   textureMT.GetNative()
-                atIndex:            static_cast<NSUInteger>(slot)
-            ];
-        }
-        if ((stageFlags & StageFlags::FragmentStage) != 0)
-        {
-            [renderEncoder
-                setFragmentTexture: textureMT.GetNative()
-                atIndex:            static_cast<NSUInteger>(slot)
-            ];
-        }
-    }
-    else if (auto computeEncoder = encoderScheduler_.GetComputeEncoder())
-    {
-        if ((stageFlags & StageFlags::ComputeStage) != 0)
-        {
-            [computeEncoder
-                setTexture: textureMT.GetNative()
-                atIndex:    static_cast<NSUInteger>(slot)
-            ];
-        }
-    }
-}
-
-void MTCommandBuffer::SetSampler(MTSampler& samplerMT, std::uint32_t slot, long stageFlags)
-{
-    if (auto renderEncoder  = encoderScheduler_.GetRenderEncoder())
-    {
-        if ((stageFlags & StageFlags::VertexStage) != 0)
-        {
-            [renderEncoder
-                setVertexSamplerState:      samplerMT.GetNative()
-                atIndex:                    static_cast<NSUInteger>(slot)
-            ];
-        }
-        if ((stageFlags & StageFlags::FragmentStage) != 0)
-        {
-            [renderEncoder
-                setFragmentSamplerState:    samplerMT.GetNative()
-                atIndex:                    static_cast<NSUInteger>(slot)
-            ];
-        }
-    }
-    else if (auto computeEncoder = encoderScheduler_.GetComputeEncoder())
-    {
-        if ((stageFlags & StageFlags::ComputeStage) != 0)
-        {
-            [computeEncoder
-                setSamplerState:    samplerMT.GetNative()
-                atIndex:            static_cast<NSUInteger>(slot)
-            ];
-        }
-    }
-}
-#endif
-
 void MTCommandBuffer::FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value)
 {
     encoderScheduler_.PauseRenderEncoder();
@@ -1300,6 +1193,7 @@ void MTCommandBuffer::ResetRenderStates()
     numPatchControlPoints_  = 0;
     tessPipelineState_      = nil;
     boundPipelineState_     = nullptr;
+    descriptorCache_        = nullptr;
 }
 
 

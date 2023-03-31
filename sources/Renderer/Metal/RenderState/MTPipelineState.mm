@@ -8,6 +8,7 @@
 #include "MTPipelineState.h"
 #include "MTPipelineLayout.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
@@ -18,7 +19,11 @@ MTPipelineState::MTPipelineState(bool isGraphicsPSO, const PipelineLayout* pipel
     isGraphicsPSO_ { isGraphicsPSO }
 {
     if (pipelineLayout != nullptr)
+    {
         pipelineLayout_ = LLGL_CAST(const MTPipelineLayout*, pipelineLayout);
+        if (!pipelineLayout_->GetDynamicBindings().empty())
+            descriptorCache_ = MakeUnique<MTDescriptorCache>(pipelineLayout_->GetDynamicBindings());
+    }
 }
 
 const Report* MTPipelineState::GetReport() const

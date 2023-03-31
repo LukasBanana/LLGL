@@ -16,6 +16,7 @@
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
+#include "../Shader/MTShaderStage.h"
 #include "../../SegmentedBuffer.h"
 #include <vector>
 #include <functional>
@@ -66,15 +67,6 @@ class MTResourceHeap final : public ResourceHeap
 
         using SegmentationSizeType  = std::uint8_t;
         using AllocSegmentFunc      = std::function<void(const MTResourceBinding* first, NSUInteger count)>;
-
-        enum MTShaderStage : std::uint32_t
-        {
-            MTShaderStage_Vertex = 0,
-            MTShaderStage_Fragment,
-            MTShaderStage_Kernel,
-
-            MTShaderStage_Count,
-        };
 
         // Header structure to describe all segments within the raw buffer.
         struct BufferSegmentation
@@ -184,8 +176,6 @@ class MTResourceHeap final : public ResourceHeap
             const ArrayView<MTResourceBinding>& bindingSlots,
             const AllocSegmentFunc&             allocSegmentFunc
         );
-
-        static MTShaderStage StageFlagsToMTShaderStage(long stage);
 
     private:
 

@@ -12,7 +12,9 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/PipelineState.h>
+#include "MTDescriptorCache.h"
 #include "../../../Core/BasicReport.h"
+#include <memory>
 
 
 namespace LLGL
@@ -37,6 +39,12 @@ class MTPipelineState : public PipelineState
             return isGraphicsPSO_;
         }
 
+        // Returns the descriptor cache for this PSO or null if there is none.
+        inline MTDescriptorCache* GetDescriptorCache() const
+        {
+            return descriptorCache_.get();
+        }
+
     protected:
 
         // Writes the report with the specified message and error bit.
@@ -50,9 +58,10 @@ class MTPipelineState : public PipelineState
 
     private:
 
-        const bool              isGraphicsPSO_ = false;
-        const MTPipelineLayout* pipelineLayout_ = nullptr;
-        BasicReport             report_;
+        const bool                          isGraphicsPSO_      = false;
+        const MTPipelineLayout*             pipelineLayout_     = nullptr;
+        std::unique_ptr<MTDescriptorCache>  descriptorCache_;
+        BasicReport                         report_;
 
 };
 

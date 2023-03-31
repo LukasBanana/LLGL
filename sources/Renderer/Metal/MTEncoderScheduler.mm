@@ -6,6 +6,7 @@
  */
 
 #include "MTEncoderScheduler.h"
+#include "RenderState/MTDescriptorCache.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTGraphicsPSO.h"
 #include "RenderState/MTComputePSO.h"
@@ -57,6 +58,10 @@ id<MTLRenderCommandEncoder> MTEncoderScheduler::BindRenderEncoder(MTLRenderPassD
     /* A new render command encoder forces all pipeline states to be reset */
     renderDirtyBits_.bits = ~0;
 
+    /* Invalidate descriptor cache */
+    if (descriptorCache_ != nullptr)
+        descriptorCache_->Reset();
+
     return renderEncoder_;
 }
 
@@ -69,6 +74,10 @@ id<MTLComputeCommandEncoder> MTEncoderScheduler::BindComputeEncoder()
 
         /* A new compute command encoder forces all pipeline states to be reset */
         computeDirtyBits_.bits = ~0;
+
+        /* Invalidate descriptor cache */
+        if (descriptorCache_ != nullptr)
+            descriptorCache_->Reset();
     }
     return computeEncoder_;
 }
@@ -93,6 +102,7 @@ void MTEncoderScheduler::ResumeRenderEncoder()
 {
     if (isRenderEncoderPaused_)
     {
+        /* Bind new render command encoder with previous render pass */
         auto renderPassDesc = CopyRenderPassDesc();
         {
             for (NSUInteger i = 0; i < 8; ++i)
@@ -168,12 +178,15 @@ void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NS
 
 void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 {
-    if (pipelineState != nullptr)
+    if (pipelineState != nullptr && renderEncoderState_.graphicsPSO != pipelineState)
     {
         renderEncoderState_.graphicsPSO         = pipelineState;
         renderEncoderState_.blendColorDynamic   = pipelineState->IsBlendColorDynamic();
         renderEncoderState_.stencilRefDynamic   = pipelineState->IsStencilRefDynamic();
         renderDirtyBits_.graphicsPSO = 1;
+        descriptorCache_                        = pipelineState->GetDescriptorCache();
+        if (descriptorCache_ != nullptr)
+            descriptorCache_->Reset();
     }
 }
 
@@ -213,8 +226,14 @@ void MTEncoderScheduler::SetStencilRef(std::uint32_t ref, const StencilFace face
 
 void MTEncoderScheduler::SetComputePSO(MTComputePSO* pipelineState)
 {
-    computeEncoderState_.computePSO = pipelineState;
-    computeDirtyBits_.computePSO = 1;
+    if (pipelineState != nullptr && computeEncoderState_.computePSO != pipelineState)
+    {
+        computeEncoderState_.computePSO = pipelineState;
+        computeDirtyBits_.computePSO    = 1;
+        descriptorCache_                = pipelineState->GetDescriptorCache();
+        if (descriptorCache_ != nullptr)
+            descriptorCache_->Reset();
+    }
 }
 
 void MTEncoderScheduler::SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
@@ -233,12 +252,16 @@ void MTEncoderScheduler::RebindResourceHeap(id<MTLComputeCommandEncoder> compute
             computeEncoderState_.computeResourceSet
         );
     }
+    if (descriptorCache_ != nullptr)
+        descriptorCache_->FlushComputeResources(computeEncoder, /*invalidateAll:*/ true);
 }
 
 id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushState()
 {
     if (renderDirtyBits_.bits != 0)
         SubmitRenderEncoderState();
+    if (descriptorCache_ != nullptr)
+        descriptorCache_->FlushGraphicsResources(GetRenderEncoder());
     return GetRenderEncoder();
 }
 
@@ -248,6 +271,8 @@ id<MTLComputeCommandEncoder> MTEncoderScheduler::GetComputeEncoderAndFlushState(
     BindComputeEncoder();
     if (computeDirtyBits_.bits != 0)
         SubmitComputeEncoderState();
+    if (descriptorCache_ != nullptr)
+        descriptorCache_->FlushComputeResources(GetComputeEncoder());
     return GetComputeEncoder();
 }
 

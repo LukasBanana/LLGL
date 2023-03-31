@@ -28,6 +28,7 @@ class MTTexture;
 class MTSampler;
 class MTRenderTarget;
 class MTPipelineState;
+class MTDescriptorCache;
 
 class MTCommandBuffer final : public CommandBuffer
 {
@@ -216,10 +217,6 @@ class MTCommandBuffer final : public CommandBuffer
         void QueueDrawable(id<MTLDrawable> drawable);
         void PresentDrawables();
 
-        void SetBuffer(MTBuffer& bufferMT, std::uint32_t slot, long stageFlags);
-        void SetTexture(MTTexture& textureMT, std::uint32_t slot, long stageFlags);
-        void SetSampler(MTSampler& samplerMT, std::uint32_t slot, long stageFlags);
-
         void FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value);
         void FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
         void FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
@@ -255,6 +252,7 @@ class MTCommandBuffer final : public CommandBuffer
         NSUInteger                      numPatchControlPoints_  = 0;
         const MTLSize*                  numThreadsPerGroup_     = nullptr;
         MTPipelineState*                boundPipelineState_     = nullptr;
+        MTDescriptorCache*              descriptorCache_        = nullptr;
 
         MTStagingBufferPool             stagingBufferPool_;
 

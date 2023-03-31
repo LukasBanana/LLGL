@@ -480,6 +480,10 @@ private:
             else
             #endif // /ENABLE_RESOURCE_HEAP
             {
+                // Set previous resources again since we invalidated them via SetPipelineState()
+                commands->SetResource(0, *constantBuffer);
+                commands->SetResource(1, *samplerState);
+
                 // Set render-target texture
                 commands->SetResource(2, *renderTargetTex);
             }

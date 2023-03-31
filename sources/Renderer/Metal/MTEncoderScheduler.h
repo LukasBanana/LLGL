@@ -25,6 +25,7 @@ struct Scissor;
 class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
+class MTDescriptorCache;
 
 class MTEncoderScheduler
 {
@@ -148,6 +149,7 @@ class MTEncoderScheduler
         MTComputeEncoderState           computeEncoderState_;
 
         bool                            isRenderEncoderPaused_  = false;
+        MTDescriptorCache*              descriptorCache_        = nullptr;
 
         union
         {

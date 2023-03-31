@@ -17,6 +17,7 @@ namespace LLGL
 MTPipelineLayout::MTPipelineLayout(id<MTLDevice> device, const PipelineLayoutDescriptor& desc) :
     heapBindings_ { desc.heapBindings }
 {
+    BuildDynamicBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);
 }
 
@@ -49,7 +50,7 @@ std::uint32_t MTPipelineLayout::GetNumUniforms() const
 
 void MTPipelineLayout::SetStaticVertexSamplers(id<MTLRenderCommandEncoder> renderEncoder) const
 {
-    for_range(i, numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_VERTEX])
+    for_range(i, numStaticSamplerPerStage_[MTShaderStage_Vertex])
     {
         [renderEncoder
             setVertexSamplerState:  staticSamplerStates_[i]
@@ -60,8 +61,8 @@ void MTPipelineLayout::SetStaticVertexSamplers(id<MTLRenderCommandEncoder> rende
 
 void MTPipelineLayout::SetStaticFragmentSamplers(id<MTLRenderCommandEncoder> renderEncoder) const
 {
-    const auto offset = numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_FRAGMENT - 1];
-    for_subrange(i, offset, offset + numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_FRAGMENT])
+    const auto offset = numStaticSamplerPerStage_[MTShaderStage_Fragment - 1];
+    for_subrange(i, offset, offset + numStaticSamplerPerStage_[MTShaderStage_Fragment])
     {
         [renderEncoder
             setFragmentSamplerState:    staticSamplerStates_[i]
@@ -72,8 +73,8 @@ void MTPipelineLayout::SetStaticFragmentSamplers(id<MTLRenderCommandEncoder> ren
 
 void MTPipelineLayout::SetStaticKernelSamplers(id<MTLComputeCommandEncoder> computeEncoder) const
 {
-    const auto offset = numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_KERNEL - 1];
-    for_subrange(i, offset, offset + numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_KERNEL])
+    const auto offset = numStaticSamplerPerStage_[MTShaderStage_Kernel - 1];
+    for_subrange(i, offset, offset + numStaticSamplerPerStage_[MTShaderStage_Kernel])
     {
         [computeEncoder
             setSamplerState:    staticSamplerStates_[i]
@@ -87,6 +88,20 @@ void MTPipelineLayout::SetStaticKernelSamplers(id<MTLComputeCommandEncoder> comp
  * ======= Private: =======
  */
 
+static void Convert(MTDynamicResourceLayout& dst, const BindingDescriptor& src)
+{
+    dst.type    = src.type;
+    dst.slot    = src.slot.index;
+    dst.stages  = src.stageFlags;
+}
+
+void MTPipelineLayout::BuildDynamicBindings(const ArrayView<BindingDescriptor>& bindings)
+{
+    dynamicBindings_.resize(bindings.size());
+    for_range(i, bindings.size())
+        Convert(dynamicBindings_[i], bindings[i]);
+}
+
 void MTPipelineLayout::BuildStaticSamplers(
     id<MTLDevice>                               device,
     const ArrayView<StaticSamplerDescriptor>&   staticSamplerDescs)
@@ -94,9 +109,9 @@ void MTPipelineLayout::BuildStaticSamplers(
     numStaticSamplers_ = static_cast<std::uint32_t>(staticSamplerDescs.size());
     staticSamplerStates_.reserve(staticSamplerDescs.size());
     staticSamplerIndices_.reserve(staticSamplerDescs.size());
-    numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_VERTEX  ] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::VertexStage);
-    numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_FRAGMENT] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::FragmentStage);
-    numStaticSamplerPerStage_[LLGL_MT_SHADER_STAGE_KERNEL  ] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::ComputeStage);
+    numStaticSamplerPerStage_[MTShaderStage_Vertex  ] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::VertexStage);
+    numStaticSamplerPerStage_[MTShaderStage_Fragment] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::FragmentStage);
+    numStaticSamplerPerStage_[MTShaderStage_Kernel  ] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::ComputeStage);
 }
 
 std::size_t MTPipelineLayout::BuildStaticSamplersForStage(

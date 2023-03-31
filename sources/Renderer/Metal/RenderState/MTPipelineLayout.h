@@ -11,7 +11,8 @@
 
 #import <MetalKit/MetalKit.h>
 
-#include "../MTStaticLimits.h"
+#include "../Shader/MTShaderStage.h"
+#include "MTDescriptorCache.h"
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/ArrayView.h>
@@ -46,7 +47,14 @@ class MTPipelineLayout final : public PipelineLayout
             return heapBindings_;
         }
 
+        inline const std::vector<MTDynamicResourceLayout>& GetDynamicBindings() const
+        {
+            return dynamicBindings_;
+        }
+
     private:
+
+        void BuildDynamicBindings(const ArrayView<BindingDescriptor>& bindings);
 
         void BuildStaticSamplers(
             id<MTLDevice>                               device,
@@ -61,12 +69,13 @@ class MTPipelineLayout final : public PipelineLayout
 
     private:
 
-        std::vector<BindingDescriptor>      heapBindings_;
+        std::vector<BindingDescriptor>          heapBindings_;
+        std::vector<MTDynamicResourceLayout>    dynamicBindings_;
 
-        std::vector<id<MTLSamplerState>>    staticSamplerStates_;
-        std::vector<NSUInteger>             staticSamplerIndices_;
-        std::uint32_t                       numStaticSamplerPerStage_[LLGL_MT_NUM_SHADER_STAGES];
-        std::uint32_t                       numStaticSamplers_                                      = 0;
+        std::vector<id<MTLSamplerState>>        staticSamplerStates_;
+        std::vector<NSUInteger>                 staticSamplerIndices_;
+        std::uint32_t                           numStaticSamplerPerStage_[MTShaderStage_Count];
+        std::uint32_t                           numStaticSamplers_                              = 0;
 
 };
 

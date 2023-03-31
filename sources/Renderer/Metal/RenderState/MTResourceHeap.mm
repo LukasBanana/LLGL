@@ -256,15 +256,26 @@ bool MTResourceHeap::HasComputeResources() const
  * ======= Private: =======
  */
 
-#define BIND_SEGMENT_ALLOCATOR(FUNC, STAGE, TYPE, ...)      \
-    std::bind(                                              \
-        &FUNC,                                              \
-        this,                                               \
-        MTResourceHeap::StageFlagsToMTShaderStage(STAGE),   \
-        TYPE,                                               \
-        std::placeholders::_1, std::placeholders::_2,       \
-        __VA_ARGS__                                         \
+#define BIND_SEGMENT_ALLOCATOR(FUNC, STAGE, TYPE, ...)  \
+    std::bind(                                          \
+        &FUNC,                                          \
+        this,                                           \
+        StageFlagsToMTShaderStage(STAGE),               \
+        TYPE,                                           \
+        std::placeholders::_1, std::placeholders::_2,   \
+        __VA_ARGS__                                     \
     )
+
+static MTShaderStage StageFlagsToMTShaderStage(long stage)
+{
+    if ((stage & StageFlags::VertexStage) != 0)
+        return MTShaderStage_Vertex;
+    if ((stage & StageFlags::FragmentStage) != 0)
+        return MTShaderStage_Fragment;
+    if ((stage & StageFlags::ComputeStage) != 0)
+        return MTShaderStage_Kernel;
+    return MTShaderStage_Count;
+}
 
 std::vector<MTResourceHeap::MTResourceBinding> MTResourceHeap::FilterAndSortMTBindingSlots(
     BindingDescriptorIterator&  bindingIter,
@@ -670,17 +681,6 @@ MTResourceHeap::SegmentationSizeType MTResourceHeap::ConsolidateSegments(
             return entry.slot;
         }
     );
-}
-
-MTResourceHeap::MTShaderStage MTResourceHeap::StageFlagsToMTShaderStage(long stage)
-{
-    if ((stage & StageFlags::VertexStage) != 0)
-        return MTShaderStage_Vertex;
-    if ((stage & StageFlags::FragmentStage) != 0)
-        return MTShaderStage_Fragment;
-    if ((stage & StageFlags::ComputeStage) != 0)
-        return MTShaderStage_Kernel;
-    return MTShaderStage_Count;
 }
 
 #undef MTRESOURCEHEAP_SEGMENT
