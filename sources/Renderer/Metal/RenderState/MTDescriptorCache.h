@@ -48,8 +48,10 @@ class MTDescriptorCache
         void SetResource(std::uint32_t descriptor, Resource& resource);
 
         // Flushes the pending descriptors to the specified command encoder.
-        void FlushGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, bool invalidateAll = false);
-        void FlushComputeResources(id<MTLComputeCommandEncoder> computeEncoder, bool invalidateAll = false);
+        void FlushGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder);
+        void FlushGraphicsResourcesForced(id<MTLRenderCommandEncoder> renderEncoder);
+        void FlushComputeResources(id<MTLComputeCommandEncoder> computeEncoder);
+        void FlushComputeResourcesForced(id<MTLComputeCommandEncoder> computeEncoder);
 
         // Returns true if this cache has been invalidated.
         inline bool IsInvalidated() const

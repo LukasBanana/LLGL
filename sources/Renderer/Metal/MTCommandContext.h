@@ -1,12 +1,12 @@
 /*
- * MTEncoderScheduler.h
+ * MTCommandContext.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_MT_ENCODER_SCHEDULER_H
-#define LLGL_MT_ENCODER_SCHEDULER_H
+#ifndef LLGL_MT_COMMAND_CONTEXT_H
+#define LLGL_MT_COMMAND_CONTEXT_H
 
 
 #import <Metal/Metal.h>
@@ -27,7 +27,8 @@ class MTGraphicsPSO;
 class MTComputePSO;
 class MTDescriptorCache;
 
-class MTEncoderScheduler
+// Metal commadn context: Manages the scheduling between render and compute command encoders.
+class MTCommandContext
 {
 
     public:
@@ -72,10 +73,10 @@ class MTEncoderScheduler
     public:
 
         // Returns the current render command encoder and flushes the queued render states and render pass.
-        id<MTLRenderCommandEncoder> GetRenderEncoderAndFlushState();
+        id<MTLRenderCommandEncoder> FlushAndGetRenderEncoder();
 
         // Returns the current compute command encoder and flushes the stored compute states.
-        id<MTLComputeCommandEncoder> GetComputeEncoderAndFlushState();
+        id<MTLComputeCommandEncoder> FlushAndGetComputeEncoder();
 
         // Returns the current render command encoder.
         inline id<MTLRenderCommandEncoder> GetRenderEncoder() const

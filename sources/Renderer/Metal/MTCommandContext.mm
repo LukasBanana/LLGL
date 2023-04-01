@@ -1,17 +1,18 @@
 /*
- * MTEncoderScheduler.mm
+ * MTCommandContext.mm
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "MTEncoderScheduler.h"
+#include "MTCommandContext.h"
 #include "RenderState/MTDescriptorCache.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTGraphicsPSO.h"
 #include "RenderState/MTComputePSO.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
 
@@ -19,7 +20,7 @@ namespace LLGL
 {
 
     
-void MTEncoderScheduler::Reset(id<MTLCommandBuffer> cmdBuffer)
+void MTCommandContext::Reset(id<MTLCommandBuffer> cmdBuffer)
 {
     cmdBuffer_ = cmdBuffer;
     isRenderEncoderPaused_ = false;
@@ -27,7 +28,7 @@ void MTEncoderScheduler::Reset(id<MTLCommandBuffer> cmdBuffer)
     ResetComputeEncoderState();
 }
 
-void MTEncoderScheduler::Flush()
+void MTCommandContext::Flush()
 {
     if (renderEncoder_ != nil)
     {
@@ -46,7 +47,7 @@ void MTEncoderScheduler::Flush()
     }
 }
 
-id<MTLRenderCommandEncoder> MTEncoderScheduler::BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool primaryRenderPass)
+id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool primaryRenderPass)
 {
     Flush();
     renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
@@ -65,7 +66,7 @@ id<MTLRenderCommandEncoder> MTEncoderScheduler::BindRenderEncoder(MTLRenderPassD
     return renderEncoder_;
 }
 
-id<MTLComputeCommandEncoder> MTEncoderScheduler::BindComputeEncoder()
+id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
 {
     if (computeEncoder_ == nil)
     {
@@ -82,7 +83,7 @@ id<MTLComputeCommandEncoder> MTEncoderScheduler::BindComputeEncoder()
     return computeEncoder_;
 }
 
-id<MTLBlitCommandEncoder> MTEncoderScheduler::BindBlitEncoder()
+id<MTLBlitCommandEncoder> MTCommandContext::BindBlitEncoder()
 {
     if (blitEncoder_ == nil)
     {
@@ -92,20 +93,20 @@ id<MTLBlitCommandEncoder> MTEncoderScheduler::BindBlitEncoder()
     return blitEncoder_;
 }
 
-void MTEncoderScheduler::PauseRenderEncoder()
+void MTCommandContext::PauseRenderEncoder()
 {
     if (renderEncoder_ != nil && !isRenderEncoderPaused_)
         isRenderEncoderPaused_ = true;
 }
 
-void MTEncoderScheduler::ResumeRenderEncoder()
+void MTCommandContext::ResumeRenderEncoder()
 {
     if (isRenderEncoderPaused_)
     {
         /* Bind new render command encoder with previous render pass */
         auto renderPassDesc = CopyRenderPassDesc();
         {
-            for (NSUInteger i = 0; i < 8; ++i)
+            for_range(i, 8u)
                 renderPassDesc.colorAttachments[i].loadAction = MTLLoadActionLoad;
             renderPassDesc.depthAttachment.loadAction = MTLLoadActionLoad;
             renderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
@@ -116,7 +117,7 @@ void MTEncoderScheduler::ResumeRenderEncoder()
     }
 }
 
-MTLRenderPassDescriptor* MTEncoderScheduler::CopyRenderPassDesc()
+MTLRenderPassDescriptor* MTCommandContext::CopyRenderPassDesc()
 {
     return (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
 }
@@ -132,10 +133,10 @@ static void Convert(MTLViewport& dst, const Viewport& src)
     dst.zfar    = static_cast<double>(src.maxDepth);
 }
 
-void MTEncoderScheduler::SetViewports(const Viewport* viewports, NSUInteger viewportCount)
+void MTCommandContext::SetViewports(const Viewport* viewports, NSUInteger viewportCount)
 {
     renderEncoderState_.viewportCount = std::min(viewportCount, NSUInteger(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
-    for (std::uint32_t i = 0; i < renderEncoderState_.viewportCount; ++i)
+    for_range(i, renderEncoderState_.viewportCount)
         Convert(renderEncoderState_.viewports[i], viewports[i]);
     renderDirtyBits_.viewports = 1;
 }
@@ -148,15 +149,15 @@ static void Convert(MTLScissorRect& dst, const Scissor& scissor)
     dst.height  = static_cast<NSUInteger>(std::max(0, scissor.height));
 }
 
-void MTEncoderScheduler::SetScissorRects(const Scissor* scissors, NSUInteger scissorCount)
+void MTCommandContext::SetScissorRects(const Scissor* scissors, NSUInteger scissorCount)
 {
     renderEncoderState_.scissorRectCount = std::min(scissorCount, NSUInteger(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
-    for (std::uint32_t i = 0; i < renderEncoderState_.scissorRectCount; ++i)
+    for_range(i, renderEncoderState_.scissorRectCount)
         Convert(renderEncoderState_.scissorRects[i], scissors[i]);
     renderDirtyBits_.scissors = 1;
 }
 
-void MTEncoderScheduler::SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset)
+void MTCommandContext::SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset)
 {
     renderEncoderState_.vertexBuffers[0]            = buffer;
     renderEncoderState_.vertexBufferOffsets[0]      = offset;
@@ -165,7 +166,7 @@ void MTEncoderScheduler::SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset
     renderDirtyBits_.vertexBuffers = 1;
 }
 
-void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount)
+void MTCommandContext::SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount)
 {
     std::copy(buffers, buffers + bufferCount, renderEncoderState_.vertexBuffers);
     std::copy(offsets, offsets + bufferCount, renderEncoderState_.vertexBufferOffsets);
@@ -176,7 +177,7 @@ void MTEncoderScheduler::SetVertexBuffers(const id<MTLBuffer>* buffers, const NS
     renderDirtyBits_.vertexBuffers = 1;
 }
 
-void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
+void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 {
     if (pipelineState != nullptr && renderEncoderState_.graphicsPSO != pipelineState)
     {
@@ -190,14 +191,14 @@ void MTEncoderScheduler::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
     }
 }
 
-void MTEncoderScheduler::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
+void MTCommandContext::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
 {
     renderEncoderState_.graphicsResourceHeap    = resourceHeap;
     renderEncoderState_.graphicsResourceSet     = descriptorSet;
     renderDirtyBits_.graphicsResourceHeap       = 1;
 }
 
-void MTEncoderScheduler::SetBlendColor(const float* blendColor)
+void MTCommandContext::SetBlendColor(const float* blendColor)
 {
     renderEncoderState_.blendColor[0] = blendColor[0];
     renderEncoderState_.blendColor[1] = blendColor[1];
@@ -206,7 +207,7 @@ void MTEncoderScheduler::SetBlendColor(const float* blendColor)
     renderDirtyBits_.blendColor = 1;
 }
 
-void MTEncoderScheduler::SetStencilRef(std::uint32_t ref, const StencilFace face)
+void MTCommandContext::SetStencilRef(std::uint32_t ref, const StencilFace face)
 {
     switch (face)
     {
@@ -224,7 +225,7 @@ void MTEncoderScheduler::SetStencilRef(std::uint32_t ref, const StencilFace face
     renderDirtyBits_.stencilRef = 1;
 }
 
-void MTEncoderScheduler::SetComputePSO(MTComputePSO* pipelineState)
+void MTCommandContext::SetComputePSO(MTComputePSO* pipelineState)
 {
     if (pipelineState != nullptr && computeEncoderState_.computePSO != pipelineState)
     {
@@ -236,14 +237,14 @@ void MTEncoderScheduler::SetComputePSO(MTComputePSO* pipelineState)
     }
 }
 
-void MTEncoderScheduler::SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
+void MTCommandContext::SetComputeResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet)
 {
     computeEncoderState_.computeResourceHeap    = resourceHeap;
     computeEncoderState_.computeResourceSet     = descriptorSet;
     computeDirtyBits_.computeResourceHeap       = 1;
 }
 
-void MTEncoderScheduler::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder)
+void MTCommandContext::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder)
 {
     if (computeEncoderState_.computeResourceHeap != nullptr)
     {
@@ -253,10 +254,10 @@ void MTEncoderScheduler::RebindResourceHeap(id<MTLComputeCommandEncoder> compute
         );
     }
     if (descriptorCache_ != nullptr)
-        descriptorCache_->FlushComputeResources(computeEncoder, /*invalidateAll:*/ true);
+        descriptorCache_->FlushComputeResourcesForced(computeEncoder);
 }
 
-id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushState()
+id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
 {
     if (renderDirtyBits_.bits != 0)
         SubmitRenderEncoderState();
@@ -265,7 +266,7 @@ id<MTLRenderCommandEncoder> MTEncoderScheduler::GetRenderEncoderAndFlushState()
     return GetRenderEncoder();
 }
 
-id<MTLComputeCommandEncoder> MTEncoderScheduler::GetComputeEncoderAndFlushState()
+id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
 {
     /* Always compute encoder here, because there is no section like with Begin/EndRenderPass */
     BindComputeEncoder();
@@ -281,7 +282,7 @@ id<MTLComputeCommandEncoder> MTEncoderScheduler::GetComputeEncoderAndFlushState(
  * ======= Private: =======
  */
 
-void MTEncoderScheduler::SubmitRenderEncoderState()
+void MTCommandContext::SubmitRenderEncoderState()
 {
     if (renderEncoder_ == nil)
         return;
@@ -362,7 +363,7 @@ void MTEncoderScheduler::SubmitRenderEncoderState()
     renderDirtyBits_.bits = 0;
 }
 
-void MTEncoderScheduler::ResetRenderEncoderState()
+void MTCommandContext::ResetRenderEncoderState()
 {
     renderEncoderState_.viewportCount             = 0;
     renderEncoderState_.scissorRectCount          = 0;
@@ -371,7 +372,7 @@ void MTEncoderScheduler::ResetRenderEncoderState()
     renderEncoderState_.graphicsResourceHeap      = nullptr;
 }
 
-void MTEncoderScheduler::SubmitComputeEncoderState()
+void MTCommandContext::SubmitComputeEncoderState()
 {
     if (computeEncoder_ == nil)
         return;
@@ -394,7 +395,7 @@ void MTEncoderScheduler::SubmitComputeEncoderState()
     computeDirtyBits_.bits = 0;
 }
 
-void MTEncoderScheduler::ResetComputeEncoderState()
+void MTCommandContext::ResetComputeEncoderState()
 {
     computeEncoderState_.computeResourceHeap = nullptr;
 }

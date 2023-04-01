@@ -15,7 +15,7 @@
 #include <LLGL/StaticLimits.h>
 #include "Buffer/MTStagingBufferPool.h"
 #include "Buffer/MTTessFactorBuffer.h"
-#include "MTEncoderScheduler.h"
+#include "MTCommandContext.h"
 #include <vector>
 
 
@@ -241,7 +241,7 @@ class MTCommandBuffer final : public CommandBuffer
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
         dispatch_semaphore_t            cmdBufferSemaphore_     = nil;
 
-        MTEncoderScheduler              encoderScheduler_;
+        MTCommandContext                context_;
         std::vector<id<MTLDrawable>>    drawables_;
 
         MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;

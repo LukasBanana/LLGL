@@ -8,6 +8,7 @@
 #include "MTShader.h"
 #include "../MTTypes.h"
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Misc/ForRange.h>
 #include <cstring>
 #include <set>
 
@@ -247,7 +248,7 @@ void MTShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
     /* Convert vertex attributes to Metal vertex buffer layouts and attribute descriptors */
     std::set<std::uint32_t> slotOccupied;
 
-    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
     {
         const auto& attr = vertexAttribs[i];
 

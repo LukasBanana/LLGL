@@ -88,15 +88,9 @@ void MTDescriptorCache::SetResource(std::uint32_t descriptor, Resource& resource
     InvalidateBinding(static_cast<std::uint8_t>(descriptor));
 }
 
-void MTDescriptorCache::FlushGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder, bool invalidateAll)
+void MTDescriptorCache::FlushGraphicsResources(id<MTLRenderCommandEncoder> renderEncoder)
 {
-    if (invalidateAll)
-    {
-        for (const auto& binding : bindings_)
-            BindGraphicsResource(renderEncoder, binding);
-        Clear();
-    }
-    else if (dirtyRange_[0] < dirtyRange_[1])
+    if (dirtyRange_[0] < dirtyRange_[1])
     {
         for_subrange(i, dirtyRange_[0], dirtyRange_[1])
         {
@@ -107,15 +101,16 @@ void MTDescriptorCache::FlushGraphicsResources(id<MTLRenderCommandEncoder> rende
     }
 }
 
-void MTDescriptorCache::FlushComputeResources(id<MTLComputeCommandEncoder> computeEncoder, bool invalidateAll)
+void MTDescriptorCache::FlushGraphicsResourcesForced(id<MTLRenderCommandEncoder> renderEncoder)
 {
-    if (invalidateAll)
-    {
-        for (const auto& binding : bindings_)
-            BindComputeResource(computeEncoder, binding);
-        Clear();
-    }
-    else if (dirtyRange_[0] < dirtyRange_[1])
+    for (const auto& binding : bindings_)
+        BindGraphicsResource(renderEncoder, binding);
+    Clear();
+}
+
+void MTDescriptorCache::FlushComputeResources(id<MTLComputeCommandEncoder> computeEncoder)
+{
+    if (dirtyRange_[0] < dirtyRange_[1])
     {
         for_subrange(i, dirtyRange_[0], dirtyRange_[1])
         {
@@ -124,6 +119,13 @@ void MTDescriptorCache::FlushComputeResources(id<MTLComputeCommandEncoder> compu
         }
         Clear();
     }
+}
+
+void MTDescriptorCache::FlushComputeResourcesForced(id<MTLComputeCommandEncoder> computeEncoder)
+{
+    for (const auto& binding : bindings_)
+        BindComputeResource(computeEncoder, binding);
+    Clear();
 }
 
 

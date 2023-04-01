@@ -18,7 +18,7 @@ class Example_ResourceBinding : public ExampleBase
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
 
     LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Buffer*               constantBuffer      = nullptr;
+    LLGL::Buffer*               sceneBuffer         = nullptr;
     LLGL::Buffer*               transformBuffer     = nullptr;
 
     LLGL::Texture*              colorMaps[3]        = {};
@@ -42,7 +42,6 @@ class Example_ResourceBinding : public ExampleBase
     {
         TriangleMesh            mesh;
         int                     colorMapIndex       = 0;
-        bool                    nearestSampling     = false;
         std::uint32_t           instance            = 0;
     };
 
@@ -66,7 +65,7 @@ public:
         vertexShader->SetName("VertexShader");
         fragmentShader->SetName("FragmentShader");
         vertexBuffer->SetName("Vertices");
-        constantBuffer->SetName("Constants");
+        sceneBuffer->SetName("Scene");
         transformBuffer->SetName("Transforms");
         pipeline->SetName("PSO");
         pipelineLayout->SetName("PipelineLayout");
@@ -85,7 +84,7 @@ public:
 
 private:
 
-    void LoadModel(const std::string& filename, const Gs::Vector3f& position, int colorMapIndex, const float scale = 1.0f, bool nearestSampling = false)
+    void LoadModel(const std::string& filename, const Gs::Vector3f& position, int colorMapIndex, const float scale = 1.0f)
     {
         static std::uint32_t instanceCounter;
         Model mdl;
@@ -96,7 +95,6 @@ private:
             Gs::Translate(mdl.mesh.transform, position);
             Gs::Scale(mdl.mesh.transform, Gs::Vector3f{ scale });
             mdl.colorMapIndex = colorMapIndex;
-            mdl.nearestSampling = nearestSampling;
             mdl.instance = instanceCounter++;
         }
         models.push_back(mdl);
@@ -105,7 +103,7 @@ private:
     void LoadModels()
     {
         LoadModel("UVSphere.obj", Gs::Vector3f{ -2.0f, 0.0f, 5.0f }, 0, /*scale:*/ 0.5f);
-        LoadModel("UVSphere.obj"/*"WiredBox.obj"*/, Gs::Vector3f{  0.0f, 0.0f, 5.0f }, 1, /*scale:*/ 0.5f, /*nearestSampling:*/ true);
+        LoadModel("UVSphere.obj"/*"WiredBox.obj"*/, Gs::Vector3f{  0.0f, 0.0f, 5.0f }, 1, /*scale:*/ 0.5f);
         LoadModel("UVSphere.obj"/*"Pyramid.obj"*/,  Gs::Vector3f{ +2.0f, 0.0f, 5.0f }, 2, /*scale:*/ 0.5f);
     }
 
@@ -127,13 +125,13 @@ private:
         }
         vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices.data());
 
-        // Create constant buffer with two sections
+        // Create constant buffer for scene constants
         LLGL::BufferDescriptor cbufferDesc;
         {
             cbufferDesc.size        = sizeof(Scene);
             cbufferDesc.bindFlags   = LLGL::BindFlags::ConstantBuffer;
         }
-        constantBuffer = renderer->CreateBuffer(cbufferDesc, &scene);
+        sceneBuffer = renderer->CreateBuffer(cbufferDesc, &scene);
 
         // Create transform buffer
         LLGL::BufferDescriptor transformBufferDesc;
@@ -189,7 +187,7 @@ private:
 
         constexpr auto resBuffer    = LLGL::ResourceType::Buffer;
         constexpr auto resTexture   = LLGL::ResourceType::Texture;
-        constexpr auto resSampler   = LLGL::ResourceType::Sampler;
+        //constexpr auto resSampler   = LLGL::ResourceType::Sampler;
 
         /*auto layoutDescTEST = LLGL::PipelineLayoutDesc(
             "heap{"
@@ -211,7 +209,7 @@ private:
         {
             layoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ "Model",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, 0 },
+                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, (IsMetal() ? 3 : 0) },
                 LLGL::BindingDescriptor{ "transforms",  resBuffer,  LLGL::BindFlags::Sampled,        vertStage,             1 },
             };
             layoutDesc.bindings =
@@ -237,7 +235,7 @@ private:
         // Create resource view heap
         const LLGL::ResourceViewDescriptor resourceViews[] =
         {
-            constantBuffer, transformBuffer,
+            sceneBuffer, transformBuffer,
         };
         resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
 
@@ -292,7 +290,7 @@ private:
     {
         scene.vpMatrix = projection;
 
-        // Update scene animationa and user input
+        // Update scene animation and user input
         UpdateAnimation();
 
         // Update transform GPU buffer with updated animations
@@ -301,7 +299,7 @@ private:
         commands->Begin();
         {
             // Update scene constant buffer
-            commands->UpdateBuffer(*constantBuffer, 0, &scene, sizeof(scene));
+            commands->UpdateBuffer(*sceneBuffer, 0, &scene, sizeof(scene));
 
             // Bind vertex input stream
             commands->SetVertexBuffer(*vertexBuffer);
