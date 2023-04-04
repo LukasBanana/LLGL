@@ -34,51 +34,51 @@ enum class UniformType
     Undefined,      //!< Undefined uniform type.
 
     /* ----- Scalars & Vectors ----- */
-    Float1,         //!< float uniform.
-    Float2,         //!< float2/ vec2 uniform.
-    Float3,         //!< float3/ vec3 uniform.
-    Float4,         //!< float4/ vec4 uniform.
-    Double1,        //!< double uniform.
-    Double2,        //!< double2/ dvec2 uniform.
-    Double3,        //!< double3/ dvec3 uniform.
-    Double4,        //!< double4/ dvec4 uniform.
-    Int1,           //!< int uniform.
-    Int2,           //!< int2/ ivec2 uniform.
-    Int3,           //!< int3/ ivec3 uniform.
-    Int4,           //!< int4/ ivec4 uniform.
-    UInt1,          //!< uint uniform.
-    UInt2,          //!< uint2/ uvec2 uniform.
-    UInt3,          //!< uint3/ uvec3 uniform.
-    UInt4,          //!< uint4/ uvec4 uniform.
-    Bool1,          //!< bool uniform.
-    Bool2,          //!< bool2/ bvec2 uniform.
-    Bool3,          //!< bool3/ bvec3 uniform.
-    Bool4,          //!< bool4/ bvec4 uniform.
+    Float1,         //!< \c float uniform.
+    Float2,         //!< \c float2/ \c vec2 uniform.
+    Float3,         //!< \c float3/ \c vec3 uniform.
+    Float4,         //!< \c float4/ \c vec4 uniform.
+    Double1,        //!< \c double uniform.
+    Double2,        //!< \c double2/ \c dvec2 uniform.
+    Double3,        //!< \c double3/ \c dvec3 uniform.
+    Double4,        //!< \c double4/ \c dvec4 uniform.
+    Int1,           //!< \c int uniform.
+    Int2,           //!< \c int2/ \c ivec2 uniform.
+    Int3,           //!< \c int3/ \c ivec3 uniform.
+    Int4,           //!< \c int4/ \c ivec4 uniform.
+    UInt1,          //!< \c uint uniform.
+    UInt2,          //!< \c uint2/ \c uvec2 uniform.
+    UInt3,          //!< \c uint3/ \c uvec3 uniform.
+    UInt4,          //!< \c uint4/ \c uvec4 uniform.
+    Bool1,          //!< \c bool uniform.
+    Bool2,          //!< \c bool2/ \c bvec2 uniform.
+    Bool3,          //!< \c bool3/ \c bvec3 uniform.
+    Bool4,          //!< \c bool4/ \c bvec4 uniform.
 
     /* ----- Matrices ----- */
-    Float2x2,       //!< float2x2/ mat2 uniform.
-    Float2x3,       //!< float2x3/ mat2x3 uniform.
-    Float2x4,       //!< float2x4/ mat2x4 uniform.
-    Float3x2,       //!< float3x2/ mat3x2 uniform.
-    Float3x3,       //!< float3x3/ mat3 uniform.
-    Float3x4,       //!< float3x4/ mat3x4 uniform.
-    Float4x2,       //!< float4x2/ mat4x2 uniform.
-    Float4x3,       //!< float4x3/ mat4x3 uniform.
-    Float4x4,       //!< float4x4/ mat4 uniform.
-    Double2x2,      //!< double2x2/ dmat2 uniform.
-    Double2x3,      //!< double2x3/ dmat2x3 uniform.
-    Double2x4,      //!< double2x4/ dmat2x4 uniform.
-    Double3x2,      //!< double3x2/ dmat3x2 uniform.
-    Double3x3,      //!< double3x3/ dmat3 uniform.
-    Double3x4,      //!< double3x4/ dmat3x4 uniform.
-    Double4x2,      //!< double4x2/ dmat4x2 uniform.
-    Double4x3,      //!< double4x3/ dmat4x3 uniform.
-    Double4x4,      //!< double4x4/ dmat4 uniform.
+    Float2x2,       //!< \c float2x2/ \c mat2 uniform.
+    Float2x3,       //!< \c float2x3/ \c mat2x3 uniform.
+    Float2x4,       //!< \c float2x4/ \c mat2x4 uniform.
+    Float3x2,       //!< \c float3x2/ \c mat3x2 uniform.
+    Float3x3,       //!< \c float3x3/ \c mat3 uniform.
+    Float3x4,       //!< \c float3x4/ \c mat3x4 uniform.
+    Float4x2,       //!< \c float4x2/ \c mat4x2 uniform.
+    Float4x3,       //!< \c float4x3/ \c mat4x3 uniform.
+    Float4x4,       //!< \c float4x4/ \c mat4 uniform.
+    Double2x2,      //!< \c double2x2/ \c dmat2 uniform.
+    Double2x3,      //!< \c double2x3/ \c dmat2x3 uniform.
+    Double2x4,      //!< \c double2x4/ \c dmat2x4 uniform.
+    Double3x2,      //!< \c double3x2/ \c dmat3x2 uniform.
+    Double3x3,      //!< \c double3x3/ \c dmat3 uniform.
+    Double3x4,      //!< \c double3x4/ \c dmat3x4 uniform.
+    Double4x2,      //!< \c double4x2/ \c dmat4x2 uniform.
+    Double4x3,      //!< \c double4x3/ \c dmat4x3 uniform.
+    Double4x4,      //!< \c double4x4/ \c dmat4 uniform.
 
     /* ----- Resources ----- */
-    Sampler,        //!< Sampler uniform (e.g. "sampler2D").
-    Image,          //!< Image uniform (e.g. "image2D").
-    AtomicCounter,  //!< Atomic counter uniform (e.g. "atomic_uint").
+    Sampler,        //!< Sampler uniform (e.g. \c sampler2D).
+    Image,          //!< Image uniform (e.g. \c image2D).
+    AtomicCounter,  //!< Atomic counter uniform (e.g. \c atomic_uint).
 };
 
 
@@ -299,7 +299,7 @@ struct UniformDescriptor
     }
 
     /**
-    \brief Specifies the name of an individual shader uniform.
+    \brief Specifies the name of an individual shader uniform. This <b>must not</b> be empty.
     \remarks This describes the name of the constant itself and not its encloding constant buffer.
     */
     std::string     name;
@@ -326,7 +326,6 @@ struct PipelineLayoutDescriptor
     \brief List of layout resource heap bindings.
     \remarks These bindings refer to the resource descriptors that are all bound at once with a single ResourceHeap.
     \remarks Only heap bindings can have subresource views as opposed to individual bindings that can only bind the entire resource.
-    \remarks Only heap bindings can contain sampler states as opposed to individual bindings. This is due to a restriction of root parameters in Direct3D 12.
     \remarks In Direct3D 12 they are called "descriptor tables" and in Vulkan they are called "descriptor sets".
     \see CommandBuffer::SetResourceHeap
     \see ResourceViewDescriptor
@@ -336,7 +335,7 @@ struct PipelineLayoutDescriptor
 
     /**
     \brief List of individual layout resource bindings.
-    \remarks These bindings refer to individual resource descriptor that are bound separately.
+    \remarks These bindings refer to individual resource descriptors that are bound separately from a ResourceHeap.
     \remarks Individual bindings are limited to binding the entire resource as opposed to heap bindigs that can also bind a subresource view.
     \see CommandBuffer::SetResource
     */
@@ -351,7 +350,16 @@ struct PipelineLayoutDescriptor
     /**
     \brief List of shader uniforms that can be written dynamically.
     \remarks In Vulkan they are called "push constants", in OpenGL they are called "uniforms", and in Direct3D they are called "shader constants".
-    \see CommandBuffer::SetUniform
+    \remarks Uniforms are not described by their binding slot, but solely by their name and type.
+    They represent a small range within one or more constant buffers or push constant ranges and therefore don't have individual binding slots.
+    Their offests within these buffers are determined by LLGL when a PipelineState object (POS )is created with a PipelineLayout that contains uniform descriptors.
+    This process is highly dependent on the backend, the shaders used within the PSO, and other factors.
+    It is advised to keep the number of uniforms small as there is only a very limited amount of space for uniforms:
+    - Vulkan only guarantees a minimum of 128 bytes for the push constant ranges which is shared across all shader stages within a single PSO.
+    That's just enough for two UniformType::Float4x4 matrices.
+    - Metal has a limit of 4KB of on-demand block data in its command encoders which is utilized for uniforms in this backend.
+    - Direct3D 12 has a fixed limit of 64 DWORDS (= 256 bytes) per root signature, which are claimed by all root parameters, including root constants (aka. uniforms).
+    Only static samplers are not counted towards root parameters.
     \see CommandBuffer::SetUniforms
     */
     std::vector<UniformDescriptor>          uniforms;

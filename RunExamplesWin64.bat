@@ -22,6 +22,7 @@ echo  15.) Volume Rendering
 echo  16.) Cloth Physics
 echo  17.) Mapping
 echo  18.) Animation
+echo  19.) Resource Binding
 
 :Prompt
 set /p "Input="
@@ -116,6 +117,11 @@ if "%Input%" EQU "17" (
 if "%Input%" EQU "18" (
     cd %~dp0\examples\Cpp\Animation
     %~dp0\%BUILD_DIR%\Debug\Example_AnimationD.exe
+)
+
+if "%Input%" EQU "18" (
+    cd %~dp0\examples\Cpp\ResourceBinding
+    %~dp0\%BUILD_DIR%\Debug\Example_ResourceBindingD.exe
 )
 
 goto Start

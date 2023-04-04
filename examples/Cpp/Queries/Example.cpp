@@ -91,7 +91,7 @@ public:
     void CreatePipelines()
     {
         // Create pipeline layout
-        pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert:frag"));
+        pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("heap{cbuffer(0):vert:frag}"));
 
         // Create graphics pipeline for occlusion query
         LLGL::GraphicsPipelineDescriptor pipelineDesc;

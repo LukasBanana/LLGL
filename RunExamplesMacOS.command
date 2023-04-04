@@ -31,6 +31,7 @@ options=(
     "Animation"
     "Cloth Physics"
     "Primitive Restart"
+    "Resource Binding"
 )
 select opt in "${options[@]}"
 do
@@ -79,6 +80,9 @@ do
         ;;
     "${options[14]}")
         (cd "$SOURCE_DIR/examples/Cpp/PrimitiveRestart"; ../../../$BUILD_DIR/Example_PrimitiveRestart.app/Contents/MacOS/Example_PrimitiveRestart)
+        ;;
+    "${options[15]}")
+        (cd "$SOURCE_DIR/examples/Cpp/ResourceBinding"; ../../../$BUILD_DIR/Example_ResourceBinding.app/Contents/MacOS/Example_ResourceBinding)
         ;;
     *)
         echo "invalid selection"

@@ -10,22 +10,19 @@
 
 
 //! Maximum number of color attachments allowed for render targets.
-#define LLGL_MAX_NUM_COLOR_ATTACHMENTS          (8u)
+#define LLGL_MAX_NUM_COLOR_ATTACHMENTS      (8u)
 
 //! Maximum number of attachments allowed for render targets (color attachments and depth-stencil attachment).
-#define LLGL_MAX_NUM_ATTACHMENTS                ((LLGL_MAX_NUM_COLOR_ATTACHMENTS) + 1u)
+#define LLGL_MAX_NUM_ATTACHMENTS            ((LLGL_MAX_NUM_COLOR_ATTACHMENTS) + 1u)
 
 //! Maximum number of viewports and scissors.
-#define LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS     (16u)
+#define LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS (16u)
 
 //! Maximum number of samples for multi-sampled rendering.
-#define LLGL_MAX_NUM_SAMPLES                    (64u)
+#define LLGL_MAX_NUM_SAMPLES                (64u)
 
 //! Maximum number of stream-output buffers.
-#define LLGL_MAX_NUM_SO_BUFFERS                 (4u)
-
-//! Maximum number of shader stages per pipeline state object (PSO).
-#define LLGL_MAX_NUM_SHADER_STAGES_PER_PIPELINE (5u)
+#define LLGL_MAX_NUM_SO_BUFFERS             (4u)
 
 
 #endif

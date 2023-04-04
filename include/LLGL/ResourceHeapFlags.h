@@ -65,7 +65,7 @@ struct BarrierFlags
 
 /**
 \brief Resource view descriptor structure.
-\see ResourceHeapDescriptor::resourceViews
+\see RenderSystem::CreateResourceHeap
 \see RenderSystem::WriteResourceHeap
 */
 struct ResourceViewDescriptor

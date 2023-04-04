@@ -102,9 +102,9 @@ private:
 
     void LoadModels()
     {
-        LoadModel("UVSphere.obj", Gs::Vector3f{ -2.0f, 0.0f, 5.0f }, 0, /*scale:*/ 0.5f);
-        LoadModel("UVSphere.obj"/*"WiredBox.obj"*/, Gs::Vector3f{  0.0f, 0.0f, 5.0f }, 1, /*scale:*/ 0.5f);
-        LoadModel("UVSphere.obj"/*"Pyramid.obj"*/,  Gs::Vector3f{ +2.0f, 0.0f, 5.0f }, 2, /*scale:*/ 0.5f);
+        LoadModel("UVSphere.obj", Gs::Vector3f{ -1.5f, 0.0f, 5.0f }, 0, /*scale:*/ 0.5f);
+        LoadModel("UVSphere.obj", Gs::Vector3f{  0.0f, 0.0f, 5.0f }, 1, /*scale:*/ 0.5f);
+        LoadModel("UVSphere.obj", Gs::Vector3f{ +1.5f, 0.0f, 5.0f }, 2, /*scale:*/ 0.5f);
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -196,14 +196,12 @@ private:
             "  sampler(colorMapSampler@0):frag,"
             "},"
             "texture(colorMap@0):frag,"
-            "sampler{ u=clamp, v=clamp, min=linear, mag=linear, mip=linear, anisotropy=8 }:frag,"
+            "sampler{ U=Clamp, V=Clamp, Min=Linear, Mag=Linear, Mip=Linear, Anisotropy=8 }:frag,"
         );*/
 
-        LLGL::SamplerDescriptor mipBiasedSamplerDesc;
+        LLGL::SamplerDescriptor colorMapSamplerDesc;
         {
-            mipBiasedSamplerDesc.minFilter      = LLGL::SamplerFilter::Nearest;
-            mipBiasedSamplerDesc.magFilter      = LLGL::SamplerFilter::Nearest;
-            mipBiasedSamplerDesc.mipMapLODBias  = 2;
+            colorMapSamplerDesc.mipMapLODBias = 1;
         }
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
@@ -218,7 +216,7 @@ private:
             };
             layoutDesc.staticSamplers =
             {
-                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, (IsOpenGL() ? 3u : 2u), mipBiasedSamplerDesc }
+                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, (IsOpenGL() ? 3u : 2u), colorMapSamplerDesc }
             };
             layoutDesc.uniforms =
             {

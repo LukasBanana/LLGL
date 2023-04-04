@@ -178,7 +178,7 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         bool ResetDisplayFullscreenMode();
 
         /**
-        \breif Primary function to resize all swap buffers.
+        \brief Primary function to resize all swap buffers.
         \see ResizeBuffers
         */
         virtual bool ResizeBuffersPrimary(const Extent2D& resolution) = 0;

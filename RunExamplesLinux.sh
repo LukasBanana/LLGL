@@ -29,6 +29,7 @@ options=(
 	"Animation"
 	"Stencil Buffer"
 	"Volume Rendering"
+	"Resource Binding"
 )
 select opt in "${options[@]}"
 do
@@ -77,6 +78,9 @@ do
 		;;
 	"${options[14]}")
 		(cd examples/Cpp/VolumeRendering; ../../../$BUILD_DIR/Example_VolumeRendering)
+		;;
+	"${options[15]}")
+		(cd examples/Cpp/ResourceBinding; ../../../$BUILD_DIR/Example_ResourceBinding)
 		;;
 	*)
 		echo "invalid selection";;

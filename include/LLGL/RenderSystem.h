@@ -83,7 +83,7 @@ class RenderSystemDeleter
         inline RenderSystemDeleter(RenderSystemDeleterFuncPtr deleterFuncPtr);
 
         /**
-        \breif Deletes the specified render system using the function pointer this deleter was initialized with.
+        \brief Deletes the specified render system using the function pointer this deleter was initialized with.
         \remarks If no function pointer was provided, the deleter uses the C++ \c delete operator by default.
         */
         inline void operator()(RenderSystem* ptr) const;

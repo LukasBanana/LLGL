@@ -9,12 +9,12 @@
 #include "VKPoolSizeAccumulator.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
+#include "../VKStaticLimits.h"
 #include "../Texture/VKSampler.h"
 #include "../Shader/VKShader.h"
 #include "../Shader/VKShaderModulePool.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
-#include <LLGL/StaticLimits.h>
 #include <LLGL/Misc/ForRange.h>
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
@@ -91,7 +91,7 @@ static void BuildPushConstantRanges(
     std::vector<VkPushConstantRange>&   outUniformRanges)
 {
     /* Reflect all push constant ranges */
-    SmallVector<std::vector<VKUniformRange>, LLGL_MAX_NUM_SHADER_STAGES_PER_PIPELINE> uniformRanges;
+    SmallVector<std::vector<VKUniformRange>, LLGL_VK_MAX_NUM_PSO_SHADER_STAGES> uniformRanges;
     uniformRanges.resize(shaders.size());
 
     for_range(i, shaders.size())
@@ -101,7 +101,7 @@ static void BuildPushConstantRanges(
     }
 
     /* Consolidate push constant ranges across all shader stages */
-    SmallVector<VKUniformRange, LLGL_MAX_NUM_SHADER_STAGES_PER_PIPELINE> pushConstantBlockRanges;
+    SmallVector<VKUniformRange, LLGL_VK_MAX_NUM_PSO_SHADER_STAGES> pushConstantBlockRanges;
 
     outUniformRanges.resize(uniformDescs.size());
     outStageRanges.resize(shaders.size());
