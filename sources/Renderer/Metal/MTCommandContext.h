@@ -26,6 +26,7 @@ class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
 class MTDescriptorCache;
+class MTConstantsCache;
 
 // Metal commadn context: Manages the scheduling between render and compute command encoders.
 class MTCommandContext
@@ -151,6 +152,7 @@ class MTCommandContext
 
         bool                            isRenderEncoderPaused_  = false;
         MTDescriptorCache*              descriptorCache_        = nullptr;
+        MTConstantsCache*               constantsCache_         = nullptr;
 
         union
         {

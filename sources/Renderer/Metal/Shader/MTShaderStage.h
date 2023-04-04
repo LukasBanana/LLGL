@@ -24,6 +24,7 @@ enum MTShaderStage : std::uint32_t
     MTShaderStage_Kernel,
 
     MTShaderStage_Count,
+    MTShaderStage_CountPerPSO = 2,
 };
 
 

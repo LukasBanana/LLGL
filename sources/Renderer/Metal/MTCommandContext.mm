@@ -7,6 +7,7 @@
 
 #include "MTCommandContext.h"
 #include "RenderState/MTDescriptorCache.h"
+#include "RenderState/MTConstantsCache.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTGraphicsPSO.h"
 #include "RenderState/MTComputePSO.h"
@@ -59,9 +60,11 @@ id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDes
     /* A new render command encoder forces all pipeline states to be reset */
     renderDirtyBits_.bits = ~0;
 
-    /* Invalidate descriptor cache */
+    /* Invalidate descriptor and constant caches */
     if (descriptorCache_ != nullptr)
         descriptorCache_->Reset();
+    if (constantsCache_ != nullptr)
+        constantsCache_->Reset();
 
     return renderEncoder_;
 }
@@ -76,9 +79,11 @@ id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
         /* A new compute command encoder forces all pipeline states to be reset */
         computeDirtyBits_.bits = ~0;
 
-        /* Invalidate descriptor cache */
+        /* Invalidate descriptor and constant caches */
         if (descriptorCache_ != nullptr)
             descriptorCache_->Reset();
+        if (constantsCache_ != nullptr)
+            constantsCache_->Reset();
     }
     return computeEncoder_;
 }
@@ -185,9 +190,8 @@ void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
         renderEncoderState_.blendColorDynamic   = pipelineState->IsBlendColorDynamic();
         renderEncoderState_.stencilRefDynamic   = pipelineState->IsStencilRefDynamic();
         renderDirtyBits_.graphicsPSO = 1;
-        descriptorCache_                        = pipelineState->GetDescriptorCache();
-        if (descriptorCache_ != nullptr)
-            descriptorCache_->Reset();
+        descriptorCache_                        = pipelineState->ResetAndGetDescriptorCache();
+        constantsCache_                         = pipelineState->ResetAndGetConstantsCache();
     }
 }
 
@@ -231,9 +235,8 @@ void MTCommandContext::SetComputePSO(MTComputePSO* pipelineState)
     {
         computeEncoderState_.computePSO = pipelineState;
         computeDirtyBits_.computePSO    = 1;
-        descriptorCache_                = pipelineState->GetDescriptorCache();
-        if (descriptorCache_ != nullptr)
-            descriptorCache_->Reset();
+        descriptorCache_                = pipelineState->ResetAndGetDescriptorCache();
+        constantsCache_                 = pipelineState->ResetAndGetConstantsCache();
     }
 }
 
@@ -255,6 +258,8 @@ void MTCommandContext::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEn
     }
     if (descriptorCache_ != nullptr)
         descriptorCache_->FlushComputeResourcesForced(computeEncoder);
+    if (constantsCache_ != nullptr)
+        constantsCache_->FlushComputeResourcesForced(computeEncoder);
 }
 
 id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
@@ -263,6 +268,8 @@ id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
         SubmitRenderEncoderState();
     if (descriptorCache_ != nullptr)
         descriptorCache_->FlushGraphicsResources(GetRenderEncoder());
+    if (constantsCache_ != nullptr)
+        constantsCache_->FlushGraphicsResources(GetRenderEncoder());
     return GetRenderEncoder();
 }
 
@@ -274,6 +281,8 @@ id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
         SubmitComputeEncoderState();
     if (descriptorCache_ != nullptr)
         descriptorCache_->FlushComputeResources(GetComputeEncoder());
+    if (constantsCache_ != nullptr)
+        constantsCache_->FlushComputeResources(GetComputeEncoder());
     return GetComputeEncoder();
 }
 

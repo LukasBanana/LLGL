@@ -42,11 +42,9 @@ struct Transform
 vertex VSOutput VSMain(
     VSInput                 inp         [[stage_in]],
     constant Scene&         scene       [[buffer(3)]],
-    //constant Model&         model       [[buffer(2)]],
+    constant Model&         model       [[buffer(2)]],
     device const Transform* transforms  [[buffer(1)]])
 {
-	Model model = { float3(0, 0, -1), 0 }; //TEST
-
     VSOutput outp;
 	Transform transform = transforms[model.instance];
 	outp.worldPos = transform.wMatrix * float4(inp.position, 1);
@@ -61,12 +59,10 @@ vertex VSOutput VSMain(
 
 fragment float4 PSMain(
     VSOutput            inp             [[stage_in]],
-    //constant Model&     model           [[buffer(2)]],
+    constant Model&     model           [[buffer(2)]],
     texture2d<float>    colorMap        [[texture(3)]],
     sampler             colorMapSampler [[sampler(2)]])
 {
-	Model model = { float3(0, 0, -1), 0 }; //TEST
-
 	// Sample color map
 	float4 color = colorMap.sample(colorMapSampler, inp.texCoord);
 

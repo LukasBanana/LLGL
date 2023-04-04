@@ -29,6 +29,7 @@ class MTSampler;
 class MTRenderTarget;
 class MTPipelineState;
 class MTDescriptorCache;
+class MTConstantsCache;
 
 class MTCommandBuffer final : public CommandBuffer
 {
@@ -253,6 +254,7 @@ class MTCommandBuffer final : public CommandBuffer
         const MTLSize*                  numThreadsPerGroup_     = nullptr;
         MTPipelineState*                boundPipelineState_     = nullptr;
         MTDescriptorCache*              descriptorCache_        = nullptr;
+        MTConstantsCache*               constantsCache_         = nullptr;
 
         MTStagingBufferPool             stagingBufferPool_;
 

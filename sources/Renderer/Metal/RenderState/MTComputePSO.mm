@@ -33,7 +33,7 @@ MTComputePSO::MTComputePSO(id<MTLDevice> device, const ComputePipelineDescriptor
 
     /* Create native compute pipeline state */
     NSError* error = nullptr;
-    computePipelineState_ = [device newComputePipelineStateWithFunction:kernelFunc error:&error];
+    computePipelineState_ = CreateNativeComputePipelineState(device, kernelFunc, error);
     if (!computePipelineState_)
         MTThrowIfCreateFailed(error, "MTLComputePipelineState");
 }
@@ -44,6 +44,33 @@ void MTComputePSO::Bind(id<MTLComputeCommandEncoder> computeEncoder)
 
     if (auto* pipelineLayout = GetPipelineLayout())
         pipelineLayout->SetStaticKernelSamplers(computeEncoder);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+id<MTLComputePipelineState> MTComputePSO::CreateNativeComputePipelineState(
+    id<MTLDevice>   device,
+    id<MTLFunction> function,
+    NSError*&       error)
+{
+    if (NeedsConstantsCache())
+    {
+        /* Create PSO with reflection to generate constants cache */
+        MTLAutoreleasedComputePipelineReflection reflection = nil;
+        id<MTLComputePipelineState> pso = [device
+            newComputePipelineStateWithFunction:    function
+            options:                                (MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo)
+            reflection:                             &reflection
+            error:                                  &error
+        ];
+        CreateConstantsCacheForComputePipeline(reflection);
+        return pso;
+    }
+    else
+        return [device newComputePipelineStateWithFunction:function error:&error];
 }
 
 

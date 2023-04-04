@@ -15,6 +15,7 @@
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTBuiltinPSOFactory.h"
 #include "RenderState/MTDescriptorCache.h"
+#include "RenderState/MTConstantsCache.h"
 #include "Shader/MTShader.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
@@ -588,7 +589,8 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     boundPipelineState_ = &pipelineStateMT;
 
     /* Store and reset descriptor cache */
-    descriptorCache_ = pipelineStateMT.GetDescriptorCache();
+    descriptorCache_    = pipelineStateMT.GetDescriptorCache();
+    constantsCache_     = pipelineStateMT.GetConstantsCache();
 
     if (pipelineStateMT.IsGraphicsPSO())
     {
@@ -628,7 +630,8 @@ void MTCommandBuffer::SetStencilReference(std::uint32_t reference, const Stencil
 
 void MTCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    // dummy
+    if (constantsCache_ != nullptr)
+        constantsCache_->SetUniforms(first, data, dataSize);
 }
 
 /* ----- Queries ----- */
@@ -1194,6 +1197,7 @@ void MTCommandBuffer::ResetRenderStates()
     tessPipelineState_      = nil;
     boundPipelineState_     = nullptr;
     descriptorCache_        = nullptr;
+    constantsCache_         = nullptr;
 }
 
 

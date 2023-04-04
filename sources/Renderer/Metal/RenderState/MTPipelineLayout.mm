@@ -15,7 +15,8 @@ namespace LLGL
 
 
 MTPipelineLayout::MTPipelineLayout(id<MTLDevice> device, const PipelineLayoutDescriptor& desc) :
-    heapBindings_ { desc.heapBindings }
+    heapBindings_ { desc.heapBindings },
+    uniforms_     { desc.uniforms     }
 {
     BuildDynamicBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);
@@ -35,7 +36,7 @@ std::uint32_t MTPipelineLayout::GetNumHeapBindings() const
 
 std::uint32_t MTPipelineLayout::GetNumBindings() const
 {
-    return 0; //TODO
+    return static_cast<std::uint32_t>(dynamicBindings_.size());
 }
 
 std::uint32_t MTPipelineLayout::GetNumStaticSamplers() const
@@ -45,7 +46,7 @@ std::uint32_t MTPipelineLayout::GetNumStaticSamplers() const
 
 std::uint32_t MTPipelineLayout::GetNumUniforms() const
 {
-    return 0; //TODO
+    return static_cast<std::uint32_t>(uniforms_.size());
 }
 
 void MTPipelineLayout::SetStaticVertexSamplers(id<MTLRenderCommandEncoder> renderEncoder) const

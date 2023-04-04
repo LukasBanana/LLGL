@@ -246,11 +246,10 @@ void MTGraphicsPSO::CreateRenderPipelineState(
         }
     }
     NSError* error = nullptr;
-    renderPipelineState_ = [device newRenderPipelineStateWithDescriptor:psoDesc error:&error];
-    [psoDesc release];
-
+    renderPipelineState_ = CreateNativeRenderPipelineState(device, psoDesc, error);
     if (!renderPipelineState_)
         MTThrowIfCreateFailed(error, "MTLRenderPipelineState");
+    [psoDesc release];
 
     /* Create compute PSO for tessellation stage */
     if (numPatchControlPoints_ > 0)
@@ -264,6 +263,28 @@ void MTGraphicsPSO::CreateRenderPipelineState(
         else
             throw std::invalid_argument("cannot create Metal tessellation pipeline without tessellation compute shader");
     }
+}
+
+id<MTLRenderPipelineState> MTGraphicsPSO::CreateNativeRenderPipelineState(
+    id<MTLDevice>                   device,
+    MTLRenderPipelineDescriptor*    desc,
+    NSError*&                       error)
+{
+    if (NeedsConstantsCache())
+    {
+        /* Create PSO with reflection to generate constants cache */
+        MTLAutoreleasedRenderPipelineReflection reflection = nil;
+        id<MTLRenderPipelineState> pso = [device
+            newRenderPipelineStateWithDescriptor:   desc
+            options:                                (MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo)
+            reflection:                             &reflection
+            error:                                  &error
+        ];
+        CreateConstantsCacheForRenderPipeline(reflection);
+        return pso;
+    }
+    else
+        return [device newRenderPipelineStateWithDescriptor:desc error:&error];
 }
 
 void MTGraphicsPSO::CreateDepthStencilState(

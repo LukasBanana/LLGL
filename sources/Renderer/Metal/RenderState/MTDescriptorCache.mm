@@ -257,8 +257,8 @@ void MTDescriptorCache::BindComputeResource(id<MTLComputeCommandEncoder> compute
 void MTDescriptorCache::InvalidateBinding(std::uint8_t index)
 {
     dirtyBindings_[index / 64] |= (1u << (index % 64));
-    dirtyRange_[0] = std::min(dirtyRange_[0], index);
-    dirtyRange_[1] = std::max(dirtyRange_[1], index);
+    dirtyRange_[0] = std::min<std::uint8_t>(dirtyRange_[0], index);
+    dirtyRange_[1] = std::max<std::uint8_t>(dirtyRange_[1], index + 1u);
 }
 
 

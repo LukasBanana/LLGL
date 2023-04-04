@@ -81,6 +81,12 @@ class MTGraphicsPSO final : public MTPipelineState
             const MTRenderPass*                 defaultRenderPass
         );
 
+        id<MTLRenderPipelineState> CreateNativeRenderPipelineState(
+            id<MTLDevice>                   device,
+            MTLRenderPipelineDescriptor*    desc,
+            NSError*&                       error
+        );
+
         void CreateDepthStencilState(
             id<MTLDevice>                       device,
             const GraphicsPipelineDescriptor&   desc

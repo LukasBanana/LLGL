@@ -52,6 +52,11 @@ class MTPipelineLayout final : public PipelineLayout
             return dynamicBindings_;
         }
 
+        inline const std::vector<UniformDescriptor>& GetUniforms() const
+        {
+            return uniforms_;
+        }
+
     private:
 
         void BuildDynamicBindings(const ArrayView<BindingDescriptor>& bindings);
@@ -71,6 +76,7 @@ class MTPipelineLayout final : public PipelineLayout
 
         std::vector<BindingDescriptor>          heapBindings_;
         std::vector<MTDynamicResourceLayout>    dynamicBindings_;
+        std::vector<UniformDescriptor>          uniforms_;
 
         std::vector<id<MTLSamplerState>>        staticSamplerStates_;
         std::vector<NSUInteger>                 staticSamplerIndices_;

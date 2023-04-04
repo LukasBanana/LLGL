@@ -37,6 +37,14 @@ class MTComputePSO final : public MTPipelineState
 
     private:
 
+        id<MTLComputePipelineState> CreateNativeComputePipelineState(
+            id<MTLDevice>   device,
+            id<MTLFunction> function,
+            NSError*&       error
+        );
+
+    private:
+
         id<MTLComputePipelineState> computePipelineState_   = nil;
         const MTShader*             computeShader_          = nullptr;
 

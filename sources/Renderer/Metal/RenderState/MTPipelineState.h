@@ -13,7 +13,9 @@
 
 #include <LLGL/PipelineState.h>
 #include "MTDescriptorCache.h"
+#include "MTConstantsCache.h"
 #include "../../../Core/BasicReport.h"
+#include <LLGL/Container/ArrayView.h>
 #include <memory>
 
 
@@ -21,6 +23,7 @@ namespace LLGL
 {
 
 
+class Shader;
 class PipelineLayout;
 class MTPipelineLayout;
 
@@ -45,10 +48,29 @@ class MTPipelineState : public PipelineState
             return descriptorCache_.get();
         }
 
+        // Resets and returns the descriptor cache for this PSO or null if there is none.
+        MTDescriptorCache* ResetAndGetDescriptorCache() const;
+
+        // Returns the constants cache for this PSO or null if there is none.
+        inline MTConstantsCache* GetConstantsCache() const
+        {
+            return constantsCache_.get();
+        }
+
+        // Resets and returns the constants cache for this PSO or null if there is none.
+        MTConstantsCache* ResetAndGetConstantsCache() const;
+
     protected:
 
         // Writes the report with the specified message and error bit.
         void ResetReport(std::string&& text, bool hasErrors = false);
+
+        // Returns true if this PSO needs a constants cache.
+        bool NeedsConstantsCache() const;
+
+        // Creates the constants cache for the specified PSO reflection.
+        void CreateConstantsCacheForRenderPipeline(MTLRenderPipelineReflection* reflection);
+        void CreateConstantsCacheForComputePipeline(MTLComputePipelineReflection* reflection);
 
         // Returns the pipeline layout this PSO was created with. May also be null.
         inline const MTPipelineLayout* GetPipelineLayout() const
@@ -61,6 +83,7 @@ class MTPipelineState : public PipelineState
         const bool                          isGraphicsPSO_      = false;
         const MTPipelineLayout*             pipelineLayout_     = nullptr;
         std::unique_ptr<MTDescriptorCache>  descriptorCache_;
+        std::unique_ptr<MTConstantsCache>   constantsCache_;
         BasicReport                         report_;
 
 };
