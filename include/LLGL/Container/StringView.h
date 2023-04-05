@@ -47,7 +47,11 @@ class LLGL_EXPORT BasicStringView
 
     public:
 
-        static const size_type npos = -1;
+        /**
+        \brief Constant value for an invalid position. This is the largest possible value for \c size_type.
+        \see substr
+        */
+        static constexpr size_type npos = -1;
 
     public:
 
@@ -81,36 +85,65 @@ class LLGL_EXPORT BasicStringView
 
     public:
 
+        /**
+        \brief Returns true if this string view is empty, i.e. \c size() and \c length() return 0.
+        \see size
+        \see length
+        */
         bool empty() const
         {
             return (size_ == 0);
         }
 
+        /**
+        \brief Returns the length of this string. This is equivalent to \c length().
+        \see length
+        */
         size_type size() const
         {
             return size_;
         }
 
+        /**
+        \brief Returns the length of this string. This is equivalent to \c size().
+        */
         size_type length() const
         {
             return size_;
         }
 
+        /**
+        \brief Returns the raw pointer of this string view.
+        \remarks This does not necessarily point to a NUL-terminated string like \c std::string does.
+        A string view only covers a range from the first to the last character of a string whose memory is managed elsewhere.
+        */
         const_pointer data() const
         {
             return data_;
         }
 
+        /**
+        \brief Returns a constant reference to the character at the specified zero-based position.
+        \remarks If the string is empty, the behavior of this function is undefined.
+        */
         const_reference at(size_type pos) const
         {
             return data_[pos];
         }
 
+        /**
+        \brief Returns a constant reference to the first character of this string.
+        \remarks If the string is empty, the behavior of this function is undefined.
+        */
         const_reference front() const
         {
             return data_[0];
         }
 
+        /**
+        \brief Returns a constant reference to the last character of this string.
+        \remarks If the string is empty, the behavior of this function is undefined.
+        */
         const_reference back() const
         {
             return data_[size_ - 1];
@@ -118,41 +151,61 @@ class LLGL_EXPORT BasicStringView
 
     public:
 
+        //! \see cbegin
         const_iterator begin() const
         {
             return data_;
         }
 
+        /**
+        \brief Returns constant iterator to the beginning of this string.
+        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        */
         const_iterator cbegin() const
         {
             return data_;
         }
 
+        //! \see crbegin
         const_reverse_iterator rbegin() const
         {
             return const_reverse_iterator{ end() };
         }
 
+        /**
+        \brief Returns constant reverse iterator to the end of this string.
+        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        */
         const_reverse_iterator crbegin() const
         {
             return const_reverse_iterator{ cend() };
         }
 
+        //! \see cend
         const_iterator end() const
         {
             return data_ + size_;
         }
 
+        /**
+        \brief Returns constant iterator to the end of this string.
+        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        */
         const_iterator cend() const
         {
             return data_ + size_;
         }
 
+        //! \see crend
         const_reverse_iterator rend() const
         {
             return const_reverse_iterator{ begin() };
         }
 
+        /**
+        \brief Returns constant reverse iterator to the beginning of this string.
+        \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
+        */
         const_reverse_iterator crend() const
         {
             return const_reverse_iterator{ cbegin() };
@@ -160,6 +213,12 @@ class LLGL_EXPORT BasicStringView
 
     public:
 
+        /**
+        \brief Returns a sub-view of this string view.
+        \param[in] pos Optional zero-based position to the beginning of this string. By default 0.
+        \param[in] count Optional length of the sub-view. This will be clamped to the size of this string minus the input position \c pos. By default \c npos.
+        \throws std::out_of_range If \c pos is out of bounds.
+        */
         BasicStringView substr(size_type pos = 0, size_type count = npos) const
         {
             if (pos > size())
@@ -167,6 +226,12 @@ class LLGL_EXPORT BasicStringView
             return BasicStringView{ data() + pos, (std::min)(count, size() - pos) };
         }
 
+        /**
+        \brief Compares this string with the specified string in a strict-weak-order (SWO).
+        \returns -1 if this string is considered to be ordered \e before the other string,
+        +1 if this string is considered to be ordered \e after the other string,
+        and 0 otherwise.
+        */
         int compare(const BasicStringView& str) const
         {
             size_type n = (std::min)(size(), str.size());
@@ -182,11 +247,19 @@ class LLGL_EXPORT BasicStringView
             return result;
         }
 
+        /**
+        \brief Compares a sub-view of this string with the specified string.
+        \see compare(const BasicStringView&)
+        */
         int compare(size_type pos1, size_type count1, const BasicStringView& str) const
         {
             return substr(pos1, count1).compare(str);
         }
 
+        /**
+        \brief Compares a sub-view of this string with a sub-view of the specified string.
+        \see compare(const BasicStringView&)
+        */
         int compare(size_type pos1, size_type count1, const BasicStringView& str, size_type pos2, size_type count2 = npos) const
         {
             return substr(pos1, count1).compare(str.substr(pos2, count2));
@@ -194,6 +267,7 @@ class LLGL_EXPORT BasicStringView
 
     public:
 
+        //! \see at
         const_reference operator [] (size_type pos) const
         {
             return data_[pos];
