@@ -146,7 +146,7 @@ void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
     else
     #endif
     {
-        ThrowNotSupportedExcept(__FUNCTION__, "loading binary shader");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("loading binary shader");
     }
 }
 

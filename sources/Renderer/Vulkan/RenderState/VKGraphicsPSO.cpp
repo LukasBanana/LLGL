@@ -152,7 +152,7 @@ static void CreateRasterizerState(
 
     if (desc.conservativeRasterization)
     {
-        LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conservative_rasterization, "VK_EXT_conservative_rasterization");
+        LLGL_ASSERT_VK_EXT(EXT_conservative_rasterization);
 
         createInfo.pNext = &createInfoConservativeRasterExt;
         {

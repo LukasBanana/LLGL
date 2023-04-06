@@ -1,12 +1,19 @@
 /*
  * GLExtensionRegistry.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #ifndef LLGL_GL_EXTENSION_REGISTRY_H
 #define LLGL_GL_EXTENSION_REGISTRY_H
+
+
+#define LLGL_ASSERT_GL_EXT_PRIMARY(EXT, ...) \
+    if (!LLGL::HasExtension(LLGL::GLExt::EXT)) { LLGL::TrapGLExtensionNotSupported(__FUNCTION__, __VA_ARGS__); }
+
+#define LLGL_ASSERT_GL_EXT(EXT, ...) \
+    LLGL_ASSERT_GL_EXT_PRIMARY(EXT, "GL_" #EXT, __VA_ARGS__)
 
 
 namespace LLGL

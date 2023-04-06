@@ -691,11 +691,8 @@ void GLDeferredCommandBuffer::EndRenderCondition()
 
 #ifndef __APPLE__
 
-[[noreturn]]
-static void ErrTransformFeedbackNotSupported(const char* funcName)
-{
-    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
-}
+#define LLGL_TRAP_TRANSFORM_FEEDBACK_NOT_SUPPORTED() \
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)")
 
 #endif
 
@@ -721,7 +718,7 @@ void GLDeferredCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer
         cmd->primitiveMove = GetPrimitiveMode();
     }
     else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
+        LLGL_TRAP_TRANSFORM_FEEDBACK_NOT_SUPPORTED();
     #endif
 }
 
@@ -735,7 +732,7 @@ void GLDeferredCommandBuffer::EndStreamOutput()
     else if (HasExtension(GLExt::NV_transform_feedback))
         AllocOpcode(GLOpcodeEndTransformFeedbackNV);
     else
-        ErrTransformFeedbackNotSupported(__FUNCTION__);
+        LLGL_TRAP_TRANSFORM_FEEDBACK_NOT_SUPPORTED();
     #endif
 }
 

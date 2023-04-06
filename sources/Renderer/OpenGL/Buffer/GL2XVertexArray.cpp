@@ -1,6 +1,6 @@
 /*
  * GL2XVertexArray.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -21,19 +21,19 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
 {
     /* Check if instance divisor is used */
     if (attribute.instanceDivisor > 0)
-        ThrowNotSupportedExcept(__FUNCTION__, "per-instance vertex attributes");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("per-instance vertex attributes");
 
     /* Check if integral vertex attribute is used */
     auto isNormalizedFormat = IsNormalizedFormat(attribute.format);
     auto isFloatFormat      = IsFloatFormat(attribute.format);
 
     if (!isNormalizedFormat && !isFloatFormat)
-        ThrowNotSupportedExcept(__FUNCTION__, "integral vertex attributes");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("integral vertex attributes");
 
     /* Get data type and components of vector type */
     const auto& formatAttribs = GetFormatAttribs(attribute.format);
     if ((formatAttribs.flags & FormatFlags::SupportsVertex) == 0)
-        ThrowNotSupportedExcept(__FUNCTION__, "specified vertex attribute");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("specified vertex attribute");
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
     auto dataType       = GLTypes::Map(formatAttribs.dataType);

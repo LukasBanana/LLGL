@@ -82,10 +82,8 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
         if ((GetBindFlags() & BindFlags::ConstantBuffer) != 0)
         {
             /* Update entire subresource */
-            if (dataSize == GetSize())
-                context->UpdateSubresource(GetNative(), 0, nullptr, data, 0, 0);
-            else
-                throw std::out_of_range(LLGL_ASSERT_INFO("cannot update D3D11 buffer partially when it is created with static usage"));
+            LLGL_ASSERT(dataSize == GetSize(), "cannot update D3D11 buffer partially when it is created with static usage");
+            context->UpdateSubresource(GetNative(), 0, nullptr, data, 0, 0);
         }
         else
         {

@@ -7,7 +7,6 @@
 
 #include "VKExtensionRegistry.h"
 #include "../Vulkan.h"
-#include "../../../Core/Exception.h"
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Platform/Platform.h>
 
@@ -37,12 +36,6 @@ void RegisterExtension(VKExt extension)
 bool HasExtension(const VKExt extension)
 {
     return g_VKRegisteredExtensions[static_cast<std::size_t>(extension)];
-}
-
-void AssertExtension(const VKExt extension, const char* extensionName, const char* funcName)
-{
-    if (!HasExtension(extension))
-        ThrowVKExtensionNotSupportedExcept(funcName, extensionName);
 }
 
 const char** GetOptionalExtensions()

@@ -1,6 +1,6 @@
 /*
  * GLQueryHeap.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -10,7 +10,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLTypes.h"
-#include "../../../Core/Exception.h"
+#include "../../../Core/Assertion.h"
 
 
 namespace LLGL
@@ -67,10 +67,8 @@ GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
     if (desc.type == QueryType::PipelineStatistics)
     {
         /* Allocate IDs for all pipeline statistics queries or throw error on failure */
-        if (HasExtension(GLExt::ARB_pipeline_statistics_query))
-            groupSize_ = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
-        else
-            ThrowGLExtensionNotSupportedExcept(__func__, "GL_ARB_pipeline_statistics_query");
+        LLGL_ASSERT_GL_EXT(ARB_pipeline_statistics_query);
+        groupSize_ = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
     }
     else
     #endif

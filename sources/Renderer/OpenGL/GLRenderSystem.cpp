@@ -287,29 +287,29 @@ void GLRenderSystem::ValidateGLTextureType(const TextureType type)
             break;
 
         case TextureType::Texture3D:
-            LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(has3DTextures);
             break;
 
         case TextureType::TextureCube:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasCubeTextures);
             break;
 
         case TextureType::Texture1DArray:
         case TextureType::Texture2DArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasArrayTextures);
             break;
 
         case TextureType::TextureCubeArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasCubeArrayTextures);
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasMultiSampleTextures);
             break;
 
         default:
-            throw std::invalid_argument("failed to create texture with invalid texture type");
+            LLGL_TRAP("failed to create texture with invalid texture type");
             break;
     }
 }
@@ -363,7 +363,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
     #endif
     {
         /* Create native GL sampler state */
-        LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
+        LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasSamplers);
         auto sampler = MakeUnique<GLSampler>();
         sampler->SamplerParameters(samplerDesc);
         return TakeOwnership(samplers_, std::move(sampler));
@@ -417,7 +417,7 @@ void GLRenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    LLGL_ASSERT_FEATURE_SUPPORT(hasRenderTargets);
+    LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasRenderTargets);
     AssertCreateRenderTarget(renderTargetDesc);
     return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(renderTargetDesc));
 }
@@ -437,14 +437,14 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
     switch (shaderDesc.type)
     {
         case ShaderType::Geometry:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasGeometryShaders);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasGeometryShaders);
             break;
         case ShaderType::TessControl:
         case ShaderType::TessEvaluation:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasTessellationShaders);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasTessellationShaders);
             break;
         case ShaderType::Compute:
-            LLGL_ASSERT_FEATURE_SUPPORT(hasComputeShaders);
+            LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasComputeShaders);
             break;
         default:
             break;

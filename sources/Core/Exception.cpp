@@ -1,145 +1,159 @@
 /*
  * Exception.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include "Exception.h"
+#include "CoreUtils.h"
+#include "../Platform/Debug.h"
 #include <stdexcept>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 
 namespace LLGL
 {
 
 
-static void AddFuncName(std::string& s, const char* funcName)
+static void AddOptionalOrigin(std::string& s, const char* origin)
 {
-    s += "in '";
-    s += funcName;
-    s += "': ";
+    if (origin != nullptr && *origin != '\0')
+    {
+        s += "in '";
+        s += origin;
+        s += "': ";
+    }
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowAssertion(const char* funcName, const char* expr)
+static void ThrowRuntimeError(const std::string& report, const char* origin = nullptr)
 {
-    std::string s;
+    if (origin != nullptr)
     {
-        AddFuncName(s, funcName);
-        s += "assertion failed: '";
-        s += expr;
-        s += '\'';
+        std::string s;
+        {
+            AddOptionalOrigin(s, origin);
+            s += report;
+        }
+        throw std::runtime_error(s);
     }
-    throw std::runtime_error(s);
+    throw std::runtime_error(report);
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowNotSupportedExcept(const char* funcName, const char* featureName)
+LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
 {
-    std::string s;
+    /* Build full report string */
+    std::string report;
+    AddOptionalOrigin(report, origin);
+
+    va_list args;
+    va_start(args, format);
+
+    int len = ::vsnprintf(nullptr, 0, format, args);
+
+    if (len > 0)
     {
-        AddFuncName(s, funcName);
-        s += featureName;
-        s += " not supported";
+        const auto formatLen = static_cast<std::size_t>(len);
+        auto formatStr = MakeUniqueArray<char>(formatLen + 1);
+        ::vsnprintf(formatStr.get(), formatLen + 1, format, args);
+        report.append(formatStr.get(), formatLen);
     }
-    throw std::runtime_error(s);
+
+    va_end(args);
+
+    #ifdef LLGL_EXCEPTIONS_ENABLED
+
+    /* Throw exception with report and optional origin */
+    throw std::runtime_error(report, origin);
+
+    #else
+
+    #   ifdef LLGL_DEBUG
+
+    /* Print debug report */
+    DebugPuts(report.c_str());
+
+    /* Break execution if there's a debugger attached */
+    LLGL_DEBUG_BREAK();
+
+    #   else
+
+    /* Print report to standard error output */
+    ::fprintf(stderr, "%s\n", report.c_str());
+
+    #   endif
+
+    /* Abort execution as LLGL is trapped in an unrecoverable state */
+    ::abort();
+
+    #endif
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowRenderingFeatureNotSupportedExcept(const char* funcName, const char* featureName)
+LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const char* details)
 {
-    std::string s;
-    {
-        AddFuncName(s, funcName);
-        s += "LLGL::RenderingFeatures::";
-        s += featureName;
-        s += " not supported";
-    }
-    throw std::runtime_error(s);
+    if (details != nullptr && *details != '\0')
+        Trap("assertion failed: '%s'; %s", expr, details);
+    else
+        Trap("assertion failed: '%s'", expr);
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowGLExtensionNotSupportedExcept(const char* funcName, const char* extensionName)
+LLGL_EXPORT void TrapFeatureNotSupported(const char* origin, const char* featureName)
 {
-    std::string s;
-    {
-        AddFuncName(s, funcName);
-        s += "OpenGL extension '";
-        s += extensionName;
-        s += "' not supported";
-    }
-    throw std::runtime_error(s);
+    Trap(origin, "%s not supported", featureName);
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowVKExtensionNotSupportedExcept(const char* funcName, const char* extensionName)
+LLGL_EXPORT void TrapRenderingFeatureNotSupported(const char* origin, const char* featureName)
 {
-    std::string s;
-    {
-        AddFuncName(s, funcName);
-        s += "Vulkan extension '";
-        s += extensionName;
-        s += "' not supported";
-    }
-    throw std::runtime_error(s);
+    Trap(origin, "LLGL::RenderingFeatures::%s not supported", featureName);
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowNotImplementedExcept(const char* funcName)
+LLGL_EXPORT void TrapGLExtensionNotSupported(const char* origin, const char* extensionName, const char* useCase)
 {
-    std::string s;
-    {
-        AddFuncName(s, funcName);
-        s += "not implemented yet";
-    }
-    throw std::runtime_error(std::string(funcName) + ": not implemented yet");
+    if (useCase != nullptr && *useCase != '\0')
+        Trap(origin, "OpenGL extension '%s' not supported; required for %s", extensionName, useCase);
+    else
+        Trap(origin, "OpenGL extension '%s' not supported", extensionName);
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowNullPointerExcept(const char* funcName, const char* paramName)
+LLGL_EXPORT void TrapVKExtensionNotSupported(const char* origin, const char* extensionName, const char* useCase)
 {
-    std::string s;
-    {
-        AddFuncName(s, funcName);
-        s += "parameter '";
-        s += paramName;
-        s += "' must not be a null pointer";
-    }
-    throw std::invalid_argument(s);
+    if (useCase != nullptr && *useCase != '\0')
+        Trap(origin, "Vulkan extension '%s' not supported; required for %s", extensionName, useCase);
+    else
+        Trap(origin, "Vulkan extension '%s' not supported", extensionName);
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowExceededUpperBoundExcept(const char* funcName, const char* paramName, int value, int upperBound)
+LLGL_EXPORT void TrapNotImplemented(const char* origin)
 {
-    std::string s;
-    {
-        AddFuncName(s, funcName);
-        s += "parameter '";
-        s += paramName;
-        s += " = ";
-        s += std::to_string(value);
-        s += "' out of half-open range [0, ";
-        s += std::to_string(upperBound);
-        s += ")";
-    }
-    throw std::out_of_range(s);
+    Trap(origin, "not implemented yet");
 }
 
 [[noreturn]]
-LLGL_EXPORT void ThrowExceededMaximumExcept(const char* funcName, const char* paramName, int value, int maximum)
+LLGL_EXPORT void TrapParamNullPointer(const char* origin, const char* paramName)
 {
-    std::string s = funcName;
-    {
-        AddFuncName(s, funcName);
-        s += "parameter '";
-        s += paramName;
-        s += " = ";
-        s += std::to_string(value);
-        s += "' out of range [0, ";
-        s += std::to_string(maximum);
-        s += "]";
-    }
-    throw std::out_of_range(s);
+    Trap(origin, "parameter '%s' must not be null", paramName);
+}
+
+[[noreturn]]
+LLGL_EXPORT void TrapParamExceededUpperBound(const char* origin, const char* paramName, int value, int upperBound)
+{
+    Trap(origin, "parameter '%s = %d' out of half-open range [0, %d)", paramName, value, upperBound);
+}
+
+[[noreturn]]
+LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramName, int value, int maximum)
+{
+    Trap(origin, "parameter '%s = %d' out of range [0, %d]", paramName, value, maximum);
 }
 
 

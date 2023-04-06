@@ -792,7 +792,7 @@ void VKCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
 void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
-    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+    LLGL_ASSERT_VK_EXT(EXT_conditional_rendering);
 
     auto& queryHeapVK = LLGL_CAST(VKPredicateQueryHeap&, queryHeap);
 
@@ -824,7 +824,7 @@ void VKCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t q
 void VKCommandBuffer::EndRenderCondition()
 {
     /* Ensure "VK_EXT_conditional_rendering" is supported */
-    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_conditional_rendering, VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+    LLGL_ASSERT_VK_EXT(EXT_conditional_rendering);
 
     /* End conditional rendering block */
     vkCmdEndConditionalRenderingEXT(commandBuffer_);
@@ -835,7 +835,7 @@ void VKCommandBuffer::EndRenderCondition()
 #if 0
 void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
-    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_transform_feedback, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+    LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
 
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
 
@@ -849,14 +849,14 @@ void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 
 void VKCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
-    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_transform_feedback, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+    LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
     //TODO: bind buffers
     vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
 }
 
 void VKCommandBuffer::EndStreamOutput()
 {
-    LLGL_ASSERT_VK_EXTENSION(VKExt::EXT_transform_feedback, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
+    LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
     vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
 }
 

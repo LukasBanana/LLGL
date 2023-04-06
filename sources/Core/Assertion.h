@@ -10,42 +10,25 @@
 
 
 #include "Exception.h"
-#include <stdexcept>
-#include <string>
 
 
-namespace LLGL
-{
+#define LLGL_ASSERT_PRIMARY(EXPR, ...) \
+    if (!(EXPR)) { LLGL::TrapAssertionFailed(__FUNCTION__, __VA_ARGS__); }
 
+#define LLGL_ASSERT(EXPR, ...) \
+    LLGL_ASSERT_PRIMARY(EXPR, #EXPR, __VA_ARGS__)
 
-#ifdef _MSC_VER
-#   define LLGL_ASSERT_INFO(INFO) (__FUNCTION__ ": " INFO)
-#else
-#   define LLGL_ASSERT_INFO(INFO) (std::string(__FUNCTION__) + std::string(": ") + std::string(INFO))
-#endif
+#define LLGL_ASSERT_PTR(PARAM) \
+    if (!(PARAM)) { LLGL::TrapParamNullPointer(__FUNCTION__, #PARAM); }
 
-#define LLGL_ASSERT(EXPR)                   \
-    if (!(EXPR))                            \
-        ThrowAssertion(__FUNCTION__, #EXPR)
+#define LLGL_ASSERT_UPPER_BOUND(PARAM, UPPER_BOUND) \
+    if ((PARAM) >= (UPPER_BOUND)) { LLGL::TrapParamExceededUpperBound(__FUNCTION__, #PARAM, static_cast<int>(PARAM), static_cast<int>(UPPER_BOUND)); }
 
-#define LLGL_ASSERT_PTR(PARAM)                          \
-    if (!(PARAM))                                       \
-        ThrowNullPointerExcept(__FUNCTION__, #PARAM)
+#define LLGL_ASSERT_RANGE(PARAM, MAXIMUM) \
+    if ((PARAM) > (MAXIMUM)) { LLGL::TrapParamExceededMaximum(__FUNCTION__, #PARAM, static_cast<int>(PARAM), static_cast<int>(MAXIMUM)); }
 
-#define LLGL_ASSERT_UPPER_BOUND(PARAM, UPPER_BOUND)                                                                 \
-    if ((PARAM) >= (UPPER_BOUND))                                                                                   \
-        ThrowExceededUpperBoundExcept(__FUNCTION__, #PARAM, static_cast<int>(PARAM), static_cast<int>(UPPER_BOUND))
-
-#define LLGL_ASSERT_RANGE(PARAM, MAXIMUM)                                                                       \
-    if ((PARAM) > (MAXIMUM))                                                                                    \
-        ThrowExceededMaximumExcept(__FUNCTION__, #PARAM, static_cast<int>(PARAM), static_cast<int>(MAXIMUM))
-
-#define LLGL_ASSERT_FEATURE_SUPPORT(FEATURE)                            \
-    if (!GetRenderingCaps().features.FEATURE)                           \
-        ThrowRenderingFeatureNotSupportedExcept(__FUNCTION__, #FEATURE)
-
-
-} // /namespace LLGL
+#define LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(FEATURE) \
+    if (!GetRenderingCaps().features.FEATURE) { LLGL::TrapRenderingFeatureNotSupported(__FUNCTION__, #FEATURE); }
 
 
 #endif
