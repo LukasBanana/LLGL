@@ -46,7 +46,6 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
-    device_              { renderSystem.GetDXDevice()                                },
     cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                     },
     stagingBufferPool_   { renderSystem.GetDevice().GetNative(), USHRT_MAX           },
     immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) }
@@ -155,9 +154,9 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
         if (alignedRowStride != rowStride)
         {
             /* Copy each row individually due to unalgined row pitch */
-            for (UINT z = 0; z < srcExtent.depth; ++z)
+            for_range(z, srcExtent.depth)
             {
-                for (UINT y = 0; y < srcExtent.height; ++y)
+                for_range(y, srcExtent.height)
                 {
                     commandList_->CopyTextureRegion(
                         &dstLocationD3D,    // pDst
@@ -223,7 +222,7 @@ void D3D12CommandBuffer::CopyTexture(
     auto& srcTextureD3D = LLGL_CAST(D3D12Texture&, srcTexture);
 
     const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = dstTextureD3D.CalcCopyLocation(dstLocation);
-    const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = srcTextureD3D.CalcCopyLocation(dstLocation);
+    const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = srcTextureD3D.CalcCopyLocation(srcLocation);
 
     const D3D12_BOX srcBox = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
 
@@ -276,9 +275,9 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
         if (alignedRowStride != rowStride)
         {
             /* Copy each row individually due to unalgined row pitch */
-            for (UINT z = 0; z < dstExtent.depth; ++z)
+            for_range(z, dstExtent.depth)
             {
-                for (UINT y = 0; y < dstExtent.height; ++y)
+                for_range(y, dstExtent.height)
                 {
                     commandList_->CopyTextureRegion(
                         &dstLocationD3D,                            // pDst

@@ -8,6 +8,7 @@
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
 #include "D3D12Serialization.h"
+#include "D3D12SubresourceContext.h"
 #include "../DXCommon/DXCore.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
@@ -174,18 +175,6 @@ void D3D12RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* d
     /* No ExecuteCommandListAndSync() here as it has already been flushed by the staging buffer pool */
 }
 
-//private
-void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size)
-{
-    void* mappedData = nullptr;
-    const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(size) };
-
-    if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
-        return mappedData;
-
-    return nullptr;
-}
-
 void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
@@ -206,88 +195,24 @@ void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-//private
-void D3D12RenderSystem::UpdateGpuTexture(
-    D3D12Texture&               textureD3D,
-    const TextureRegion&        region,
-    const SrcImageDescriptor&   imageDesc,
-    ComPtr<ID3D12Resource>&     uploadBuffer)
-{
-    /* Validate subresource range */
-    const auto& subresource = region.subresource;
-    if (subresource.baseMipLevel + subresource.numMipLevels     > textureD3D.GetNumMipLevels() ||
-        subresource.baseArrayLayer + subresource.numArrayLayers > textureD3D.GetNumArrayLayers())
-    {
-        throw std::invalid_argument("texture subresource out of range for image upload");
-    }
-
-    /* Check if image data conversion is necessary */
-    auto format = textureD3D.GetFormat();
-    const auto& formatAttribs = GetFormatAttribs(format);
-    auto dataLayout = CalcSubresourceLayout(format, region.extent);
-
-    ByteBuffer intermediateData;
-    const void* initialData = imageDesc.data;
-
-    if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
-        (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
-    {
-        /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
-        initialData         = intermediateData.get();
-    }
-    else
-    {
-        /* Validate input data is large enough */
-        if (imageDesc.dataSize < dataLayout.dataSize)
-        {
-            throw std::invalid_argument(
-                "image data size is too small to update subresource of D3D12 texture (" +
-                std::to_string(dataLayout.dataSize) + " is required but only " + std::to_string(imageDesc.dataSize) + " was specified)"
-            );
-        }
-    }
-
-    /* Upload image data to subresource */
-    D3D12_SUBRESOURCE_DATA subresourceData;
-    {
-        subresourceData.pData       = initialData;
-        subresourceData.RowPitch    = dataLayout.rowStride;
-        subresourceData.SlicePitch  = dataLayout.layerStride;
-    }
-    textureD3D.UpdateSubresource(
-        device_.GetNative(),
-        commandContext_->GetCommandList(),
-        uploadBuffer,
-        subresourceData,
-        region.subresource.baseMipLevel,
-        region.subresource.baseArrayLayer,
-        region.subresource.numArrayLayers
-    );
-}
-
 Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     auto textureD3D = MakeUnique<D3D12Texture>(device_.GetNative(), textureDesc);
 
     if (imageDesc != nullptr)
     {
-        ComPtr<ID3D12Resource> uploadBuffer;
-
-        /* Update first MIP-map */
+        /* Update base MIP-map */
         TextureRegion region;
         {
             region.subresource.numArrayLayers   = textureDesc.arrayLayers;
             region.extent                       = textureDesc.extent;
         }
-        UpdateGpuTexture(*textureD3D, region, *imageDesc, uploadBuffer);
+        D3D12SubresourceContext subresourceContext{ *commandContext_ };
+        UpdateTextureSubresourceFromImage(*textureD3D, region, *imageDesc, subresourceContext);
 
         /* Generate MIP-maps if enabled */
         if (MustGenerateMipsOnCreate(textureDesc))
             D3D12MipGenerator::Get().GenerateMips(*commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
-
-        /* Execute upload commands and wait for GPU to finish execution */
-        ExecuteCommandListAndSync();
     }
 
     return TakeOwnership(textures_, std::move(textureD3D));
@@ -304,11 +229,8 @@ void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    ComPtr<ID3D12Resource> uploadBuffer;
-    UpdateGpuTexture(textureD3D, textureRegion, imageDesc, uploadBuffer);
-
-    /* Execute upload commands and wait for GPU to finish execution */
-    ExecuteCommandListAndSync();
+    D3D12SubresourceContext subresourceContext{ *commandContext_ };
+    UpdateTextureSubresourceFromImage(textureD3D, textureRegion, imageDesc, subresourceContext);
 }
 
 void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
@@ -447,7 +369,7 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const Blob& serializedCach
     }
     #endif
 
-    throw std::runtime_error("serialized cache does not denote a D3D12 graphics or compute PSO");
+    LLGL_TRAP("serialized cache does not denote a D3D12 graphics or compute PSO");
 }
 
 PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
@@ -693,6 +615,88 @@ void D3D12RenderSystem::ExecuteCommandList()
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
     commandContext_->Finish(true);
+}
+
+void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size)
+{
+    void* mappedData = nullptr;
+    const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(size) };
+
+    if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
+        return mappedData;
+
+    return nullptr;
+}
+
+HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
+    D3D12Texture&               textureD3D,
+    const TextureRegion&        region,
+    const SrcImageDescriptor&   imageDesc,
+    D3D12SubresourceContext&    subresourceContext)
+{
+    /* Validate subresource range */
+    const auto& subresource = region.subresource;
+    if (subresource.baseMipLevel + subresource.numMipLevels     > textureD3D.GetNumMipLevels() ||
+        subresource.baseArrayLayer + subresource.numArrayLayers > textureD3D.GetNumArrayLayers())
+    {
+        return E_INVALIDARG;
+    }
+
+    /* Check if image data conversion is necessary */
+    auto format = textureD3D.GetFormat();
+    const auto& formatAttribs = GetFormatAttribs(format);
+    auto dataLayout = CalcSubresourceLayout(format, region.extent);
+
+    ByteBuffer intermediateData;
+    const void* initialData = imageDesc.data;
+
+    if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
+        (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
+    {
+        /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
+        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+        initialData         = intermediateData.get();
+    }
+    else
+    {
+        /* Validate input data is large enough */
+        if (imageDesc.dataSize < dataLayout.dataSize)
+            return E_INVALIDARG;
+    }
+
+    /* Upload image data to subresource */
+    D3D12_SUBRESOURCE_DATA subresourceData;
+    {
+        subresourceData.pData       = initialData;
+        subresourceData.RowPitch    = dataLayout.rowStride;
+        subresourceData.SlicePitch  = dataLayout.layerStride;
+    }
+
+    const bool isFullRegion = (region.offset == Offset3D{} && region.extent == textureD3D.GetMipExtent(region.subresource.baseMipLevel));
+    if (isFullRegion)
+    {
+        textureD3D.UpdateSubresource(
+            subresourceContext,
+            subresourceData,
+            region.subresource.baseMipLevel,
+            region.subresource.baseArrayLayer,
+            region.subresource.numArrayLayers
+        );
+    }
+    else
+    {
+        textureD3D.UpdateSubresourceRegion(
+            subresourceContext,
+            subresourceData,
+            region.offset,
+            region.extent,
+            region.subresource.baseMipLevel,
+            region.subresource.baseArrayLayer,
+            region.subresource.numArrayLayers
+        );
+    }
+
+    return S_OK;
 }
 
 const D3D12RenderPass* D3D12RenderSystem::GetDefaultRenderPass() const

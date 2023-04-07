@@ -7,6 +7,7 @@
 
 #include "DXCore.h"
 #include "ComPtr.h"
+#include "../../Core/Exception.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
 #include "../../Core/Vendor.h"
@@ -111,33 +112,28 @@ static const char* DXErrorToStr(const HRESULT hr)
     return nullptr;
 }
 
-[[noreturn]]
-static void DXThrowFailure(const HRESULT hr, const char* info)
+static std::string DXErrorToStrOrHex(const HRESULT hr)
 {
-    std::string s;
-
-    if (info)
-    {
-        s += info;
-        s += " (error code = ";
-    }
-    else
-        s += "Direct3D operation failed (error code = ";
-
     if (auto err = DXErrorToStr(hr))
-        s += err;
+        return err;
     else
-        s += IntToHex(hr);
+        return IntToHex(hr);
+}
 
-    s += ")";
-
-    throw std::runtime_error(s);
+[[noreturn]]
+static void TrapDXErrorCode(const HRESULT hr, const char* details)
+{
+    std::string errCode = DXErrorToStrOrHex(hr);
+    if (details != nullptr && *details != '\0')
+        LLGL_TRAP("%s (error code = %s)", details, errCode.c_str());
+    else
+        LLGL_TRAP("Direct3D operation failed (error code = %s)", errCode.c_str());
 }
 
 void DXThrowIfFailed(const HRESULT hr, const char* info)
 {
     if (FAILED(hr))
-        DXThrowFailure(hr, info);
+        TrapDXErrorCode(hr, info);
 }
 
 void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
@@ -155,7 +151,7 @@ void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const ch
                 s += contextInfo;
             }
         }
-        DXThrowFailure(hr, s.c_str());
+        TrapDXErrorCode(hr, s.c_str());
     }
 }
 
@@ -174,7 +170,7 @@ void DXThrowIfInvocationFailed(const HRESULT hr, const char* funcName, const cha
                 s += contextInfo;
             }
         }
-        DXThrowFailure(hr, s.c_str());
+        TrapDXErrorCode(hr, s.c_str());
     }
 }
 
@@ -584,7 +580,7 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
         default:
         break;
     }
-    throw std::runtime_error("failed to map Direct3D signature parameter to LLGL::Format");
+    LLGL_TRAP("failed to map Direct3D signature parameter to LLGL::Format");
 }
 
 DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)

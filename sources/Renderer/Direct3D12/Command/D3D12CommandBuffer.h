@@ -260,8 +260,6 @@ class D3D12CommandBuffer final : public CommandBuffer
 
     private:
 
-        ID3D12Device*                   device_                 = nullptr;
-
         D3D12CommandContext             commandContext_;
         ID3D12GraphicsCommandList*      commandList_            = nullptr;
         const D3D12SignatureFactory*    cmdSignatureFactory_    = nullptr;

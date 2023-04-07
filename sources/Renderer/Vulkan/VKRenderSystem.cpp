@@ -454,7 +454,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
             cmdBuffer,
             image,
             textureVK.GetVkFormat(),
-            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             subresource
         );

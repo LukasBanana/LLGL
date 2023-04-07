@@ -53,8 +53,7 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
     va_list args;
     va_start(args, format);
 
-    int len = ::vsnprintf(nullptr, 0, format, args);
-
+    const int len = ::vsnprintf(nullptr, 0, format, args);
     if (len > 0)
     {
         const auto formatLen = static_cast<std::size_t>(len);
@@ -94,12 +93,28 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
 }
 
 [[noreturn]]
-LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const char* details)
+LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const char* details, ...)
 {
     if (details != nullptr && *details != '\0')
-        Trap("assertion failed: '%s'; %s", expr, details);
+    {
+        va_list args;
+        va_start(args, details);
+
+        const int len = ::vsnprintf(nullptr, 0, details, args);
+        if (len > 0)
+        {
+            const auto detailsLen = static_cast<std::size_t>(len);
+            auto formattedDetails = MakeUniqueArray<char>(detailsLen + 1);
+            ::vsnprintf(formattedDetails.get(), detailsLen + 1, details, args);
+            Trap(origin, "assertion failed: '%s'; %s", expr, formattedDetails.get());
+        }
+        else
+            Trap(origin, "assertion failed: '%s'", expr);
+
+        va_end(args);
+    }
     else
-        Trap("assertion failed: '%s'", expr);
+        Trap(origin, "assertion failed: '%s'", expr);
 }
 
 [[noreturn]]

@@ -34,7 +34,7 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...);
 
 // Throws an std::runtime_error exception with the message, that the specified assertion that failed.
 [[noreturn]]
-LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const char* details = nullptr);
+LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const char* details = nullptr, ...);
 
 // Throws an std::runtime_error exception with the message, that the specified feature is not supported.
 [[noreturn]]

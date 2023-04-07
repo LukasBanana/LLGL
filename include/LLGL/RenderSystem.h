@@ -619,7 +619,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         void AssertCreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc);
 
         //! Validates the specified image data size against the required size (in bytes).
-        void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);
+        void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase = nullptr);
 
         /**
         \brief Copies the specified source data (i.e. \c data) to the destination image.

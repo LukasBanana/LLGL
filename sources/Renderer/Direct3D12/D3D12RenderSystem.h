@@ -45,6 +45,8 @@ namespace LLGL
 {
 
 
+class D3D12SubresourceContext;
+
 class D3D12RenderSystem final : public RenderSystem
 {
 
@@ -167,17 +169,6 @@ class D3D12RenderSystem final : public RenderSystem
         void SyncGPU(UINT64& fenceValue);
         void SyncGPU();
 
-        // Updates the image data of the specified texture region.
-        void UpdateGpuTexture(
-            D3D12Texture&               textureD3D,
-            const TextureRegion&        region,
-            const SrcImageDescriptor&   imageDesc,
-            ComPtr<ID3D12Resource>&     uploadBuffer
-        );
-
-        // Maps the range of the specified D3D buffer between GPU and CPU memory space.
-        void* MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size);
-
         // Returns the feature level of the D3D device.
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
@@ -226,6 +217,17 @@ class D3D12RenderSystem final : public RenderSystem
         void ExecuteCommandListAndSync();
 
         std::unique_ptr<D3D12Buffer> CreateGpuBuffer(const BufferDescriptor& bufferDesc, const void* initialData);
+
+        // Maps the range of the specified D3D buffer between GPU and CPU memory space.
+        void* MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size);
+
+        // Updates the image data of the specified texture region and converts the source image on-the-fly.
+        HRESULT UpdateTextureSubresourceFromImage(
+            D3D12Texture&               textureD3D,
+            const TextureRegion&        region,
+            const SrcImageDescriptor&   imageDesc,
+            D3D12SubresourceContext&    subresourceContext
+        );
 
         const D3D12RenderPass* GetDefaultRenderPass() const;
 

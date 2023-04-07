@@ -8,7 +8,9 @@
 #include "../Platform/Module.h"
 #include "../Core/CoreUtils.h"
 #include "../Core/StringUtils.h"
+#include "../Core/Assertion.h"
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Misc/ForRange.h>
 #include <LLGL/Format.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
@@ -16,6 +18,7 @@
 #include "BuildID.h"
 
 #include <LLGL/RenderSystem.h>
+#include <inttypes.h>
 #include <string>
 #include <map>
 
@@ -305,14 +308,10 @@ void RenderSystem::SetRenderingCaps(const RenderingCapabilities& caps)
 
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize)
 {
-    /* Validate size */
-    if (bufferDesc.size > maxSize)
-    {
-        throw std::runtime_error(
-            "cannot create buffer with size of " + std::to_string(bufferDesc.size) +
-            " byte(s) while limit is " + std::to_string(maxSize)
-        );
-    }
+    LLGL_ASSERT(
+        (bufferDesc.size <= maxSize),
+        "buffer descriptor with size of 0x%016" PRIX64 " exceeded limit of 0x%016" PRIX64, bufferDesc.size, maxSize
+    );
 
     /* Validate binding flags */
     const long validBindFlags =
@@ -328,26 +327,23 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
         BindFlags::CopyDst
     );
 
-    if ((bufferDesc.bindFlags & (~validBindFlags)) != 0)
-        throw std::invalid_argument("cannot create buffer with invalid binding flags: " + IntToHex(bufferDesc.bindFlags));
+    LLGL_ASSERT(
+        ((bufferDesc.bindFlags & (~validBindFlags)) == 0),
+        "buffer descriptor with invalid binding flags 0x%08X", bufferDesc.bindFlags
+    );
 }
 
 static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* const * resourceArray, const std::string& resourceName)
 {
     /* Validate number of buffers */
-    if (numResources == 0)
-        throw std::invalid_argument("cannot create " + resourceName + " array with zero " + resourceName + "s");
+    LLGL_ASSERT(!(numResources == 0), "cannot create %s array with zero elements", resourceName);
 
     /* Validate array pointer */
-    if (resourceArray == nullptr)
-        throw std::invalid_argument("cannot create " + resourceName + " array with invalid array pointer");
+    LLGL_ASSERT(!(resourceArray == nullptr), "cannot create %s array with null pointer for array", resourceName);
 
     /* Validate pointers in array */
-    for (std::uint32_t i = 0; i < numResources; ++i)
-    {
-        if (resourceArray[i] == nullptr)
-            throw std::invalid_argument("cannot create " + resourceName + " array with invalid pointer in array");
-    }
+    for_range(i, numResources)
+        LLGL_ASSERT(!(resourceArray[i] == nullptr), "cannot create %s array with null pointer for array element [%u]", resourceName, i);
 }
 
 void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -358,59 +354,72 @@ void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* con
 
 void RenderSystem::AssertCreateShader(const ShaderDescriptor& shaderDesc)
 {
-    if (shaderDesc.source == nullptr)
-        throw std::invalid_argument("cannot create shader with <source> being a null pointer");
-    if (shaderDesc.sourceType == ShaderSourceType::BinaryBuffer && shaderDesc.sourceSize == 0)
-        throw std::invalid_argument("cannot create shader from binary buffer with <sourceSize> being zero");
+    LLGL_ASSERT(
+        !(shaderDesc.source == nullptr),
+        "cannot create shader with <source> being a null pointer"
+    );
+    LLGL_ASSERT(
+        !(shaderDesc.sourceType == ShaderSourceType::BinaryBuffer && shaderDesc.sourceSize == 0),
+        "cannot create shader from binary buffer with <sourceSize> being zero"
+    );
 }
 
-[[noreturn]]
-static void ErrTooManyColorAttachments(const char* contextInfo)
+// Returns the number of color attachments in the specified render target descriptor
+static std::size_t CountColorAttachments(const RenderTargetDescriptor& renderTargetDesc)
 {
-    throw std::invalid_argument(
-        "too many color attachments for " + std::string(contextInfo) +
-        " (exceeded limits of " + std::to_string(LLGL_MAX_NUM_COLOR_ATTACHMENTS) + ")"
-    );
+    std::size_t n = 0;
+    for (const auto& attachment : renderTargetDesc.attachments)
+    {
+        if (attachment.type == AttachmentType::Color)
+            ++n;
+    }
+    return n;
+}
+
+// Returns the number of depth-stencil attachments in the specified render target descriptor
+static std::size_t CountDepthStencilAttachments(const RenderTargetDescriptor& renderTargetDesc)
+{
+    std::size_t n = 0;
+    for (const auto& attachment : renderTargetDesc.attachments)
+    {
+        if (attachment.type != AttachmentType::Color)
+            ++n;
+    }
+    return n;
 }
 
 void RenderSystem::AssertCreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    if (renderTargetDesc.attachments.size() == LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
+    if (renderTargetDesc.attachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         /* Check if there is one depth-stencil attachment */
-        for (const auto& attachment : renderTargetDesc.attachments)
-        {
-            if (attachment.type != AttachmentType::Color)
-                return;
-        }
-        ErrTooManyColorAttachments("render target");
+        const auto numColorAttachments = CountColorAttachments(renderTargetDesc);
+        LLGL_ASSERT(
+            !(numColorAttachments > LLGL_MAX_NUM_COLOR_ATTACHMENTS),
+            "render target descriptor with %zu color attachments exceeded limit of %u", numColorAttachments, LLGL_MAX_NUM_COLOR_ATTACHMENTS
+        );
     }
-    else if (renderTargetDesc.attachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
-        ErrTooManyColorAttachments("render target");
+    else if (renderTargetDesc.attachments.size() > 1)
+    {
+        /* Check there are not more than one depth-stencil attachment */
+        const auto numDepthStencilAttachments = CountDepthStencilAttachments(renderTargetDesc);
+        LLGL_ASSERT(
+            !(numDepthStencilAttachments > 1),
+            "render target descriptor with %zu depth-stencil attachments exceeded limit of 1", numDepthStencilAttachments
+        );
+    }
 }
 
-void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)
+void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase)
 {
-    if (dataSize < requiredDataSize)
-    {
-        std::string s;
-
-        /* Build error message */
-        s += "image data size is too small";
-        if (info)
-        {
-            s += " for ";
-            s += info;
-        }
-
-        s += " (";
-        s += std::to_string(requiredDataSize);
-        s += " byte(s) are required, but only ";
-        s += std::to_string(dataSize);
-        s += " is specified)";
-
-        throw std::invalid_argument(s);
-    }
+    LLGL_ASSERT(
+        !(dataSize < requiredDataSize),
+        "image data size is too small%s%s; %zu byte(s) are required, but only %zu is specified",
+        (useCase != nullptr && *useCase != '\0' ? " for" : ""),
+        (useCase != nullptr && *useCase != '\0' ? useCase : ""),
+        requiredDataSize,
+        dataSize
+    );
 }
 
 static void CopyRowAlignedData(void* dstData, const void* srcData, std::size_t dstSize, std::size_t dstStride, std::size_t srcStride)

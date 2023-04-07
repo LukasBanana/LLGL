@@ -7,6 +7,7 @@
 
 #include "D3D12Texture.h"
 #include "../Command/D3D12CommandContext.h"
+#include "../D3D12SubresourceContext.h"
 #include "../D3D12ObjectUtils.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12Types.h"
@@ -26,7 +27,8 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     Texture         { desc.type, desc.bindFlags          },
     format_         { DXTypes::ToDXGIFormat(desc.format) },
     numMipLevels_   { NumMipLevels(desc)                 },
-    numArrayLayers_ { std::max(1u, desc.arrayLayers)     }
+    numArrayLayers_ { std::max(1u, desc.arrayLayers)     },
+    extent_         { desc.extent                        }
 {
     CreateNativeTexture(device, desc);
     if (SupportsGenerateMips())
@@ -140,63 +142,131 @@ Format D3D12Texture::GetFormat() const
     return D3D12Types::Unmap(GetDXFormat());
 }
 
-//TODO: make use of <D3D12StagingBufferPool> instead of <uploadBuffer>
+static D3D12_TEXTURE_COPY_LOCATION GetD3DTextureSubresourceLocation(ID3D12Resource* resource, UINT subresource)
+{
+    D3D12_TEXTURE_COPY_LOCATION copyDesc;
+    {
+        copyDesc.pResource          = resource;
+        copyDesc.Type               = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        copyDesc.SubresourceIndex   = subresource;
+    }
+    return copyDesc;
+}
+
+static void UpdateD3DTextureSubresource(
+    ID3D12Resource*             dstTexture,
+    D3D12SubresourceContext&    context,
+    D3D12_SUBRESOURCE_DATA&     subresourceData,
+    UINT                        mipLevel,
+    UINT                        numMipLevels,
+    UINT                        firstArrayLayer,
+    UINT                        numArrayLayers)
+{
+    /* Clamp arguments */
+    firstArrayLayer = std::min(firstArrayLayer, numArrayLayers - 1u);
+    numArrayLayers  = std::min(numArrayLayers, numArrayLayers - firstArrayLayer);
+
+    /* Create the GPU upload buffer */
+    UINT64          srcBufferOffset = 0;
+    UINT64          srcBufferSize   = GetRequiredIntermediateSize(dstTexture, 0, 1) * numArrayLayers;
+    ID3D12Resource* srcBuffer       = context.CreateUploadBuffer(srcBufferSize);
+
+    /* Upload subresource for each array layer */
+    for_subrange(arrayLayer, firstArrayLayer, firstArrayLayer + numArrayLayers)
+    {
+        /* Update subresource for current array layer */
+        const UINT subresourceIndex = D3D12CalcSubresource(mipLevel, firstArrayLayer, /*planeSlice:*/ 0, numMipLevels, numArrayLayers);
+
+        UpdateSubresources<1>(
+            context.GetCommandList(),   // pCmdList
+            dstTexture,                 // pDestinationResource
+            srcBuffer,                  // pIntermediate
+            srcBufferOffset,            // IntermediateOffset
+            subresourceIndex,           // FirstSubresource
+            1,                          // NumSubresources
+            &subresourceData            // pSrcData
+        );
+
+        /* Move to next buffer region */
+        subresourceData.pData = (reinterpret_cast<const std::int8_t*>(subresourceData.pData) + subresourceData.SlicePitch);
+        srcBufferOffset += subresourceData.SlicePitch;
+    }
+}
+
 void D3D12Texture::UpdateSubresource(
-    ID3D12Device*               device,
-    ID3D12GraphicsCommandList*  commandList,
-    ComPtr<ID3D12Resource>&     uploadBuffer,
+    D3D12SubresourceContext&    context,
     D3D12_SUBRESOURCE_DATA&     subresourceData,
     UINT                        mipLevel,
     UINT                        firstArrayLayer,
     UINT                        numArrayLayers)
 {
-    /* Clamp arguments */
-    firstArrayLayer = std::min(firstArrayLayer, numArrayLayers_ - 1u);
-    numArrayLayers  = std::min(numArrayLayers, numArrayLayers_ - firstArrayLayer);
-
-    /* Create the GPU upload buffer */
-    UINT64 uploadBufferSize     = GetRequiredIntermediateSize(resource_.native.Get(), 0, 1) * numArrayLayers;
-    UINT64 uploadBufferOffset   = 0;
-
-    auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())
+    /* Update native resource of this texture with the specified subresource data */
+    UpdateD3DTextureSubresource(
+        resource_.native.Get(),
+        context,
+        subresourceData,
+        mipLevel,
+        numMipLevels_,
+        firstArrayLayer,
+        numArrayLayers
     );
-    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for texture upload buffer");
-
-    /* Upload subresource for each array layer */
-    for (UINT arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
-    {
-        /* Update subresource for current array layer */
-        UINT subresourceIndex = CalcSubresource(mipLevel, firstArrayLayer + arrayLayer);
-
-        UpdateSubresources(
-            commandList,            // pCmdList
-            resource_.native.Get(), // pDestinationResource
-            uploadBuffer.Get(),     // pIntermediate
-            uploadBufferOffset,     // IntermediateOffset
-            subresourceIndex,       // FirstSubresource
-            1,                      // NumSubresources
-            &subresourceData        // pSrcData
-        );
-
-        /* Move to next buffer region */
-        subresourceData.pData = (reinterpret_cast<const std::int8_t*>(subresourceData.pData) + subresourceData.SlicePitch);
-        uploadBufferOffset += subresourceData.SlicePitch;
-    }
 
     /* Transition texture resource for shader access */
-    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource_.native.Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        resource_.usageState
+    context.GetCommandContext().TransitionResource(GetResource(), GetResource().usageState, true);
+}
+
+void D3D12Texture::UpdateSubresourceRegion(
+    D3D12SubresourceContext&    context,
+    D3D12_SUBRESOURCE_DATA&     subresourceData,
+    const Offset3D&             offset,
+    const Extent3D&             extent,
+    UINT                        mipLevel,
+    UINT                        firstArrayLayer,
+    UINT                        numArrayLayers)
+{
+    /* Create intermediate texture with region size */
+    D3D12_RESOURCE_DESC texDesc = resource_.native->GetDesc();
+    {
+        texDesc.Width               = extent.width;
+        texDesc.Height              = extent.height;
+        texDesc.DepthOrArraySize    = static_cast<UINT16>(GetType() == TextureType::Texture3D ? extent.depth : numArrayLayers);
+        texDesc.MipLevels           = 1;
+    }
+    ID3D12Resource* intermediateTexture = context.CreateTexture(texDesc);
+
+    /* Update native resource of this texture with the specified subresource data */
+    UpdateD3DTextureSubresource(
+        intermediateTexture,
+        context,
+        subresourceData,
+        0, // mipLevel
+        1, // numMipLevels
+        firstArrayLayer,
+        numArrayLayers
     );
 
-    commandList->ResourceBarrier(1, &resourceBarrier);
+    const D3D12_BOX srcBox = CalcRegion(Offset3D{}, extent);
+
+    /* Transition texture resource for shader access */
+    context.GetCommandContext().TransitionResource(intermediateTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+    context.GetCommandContext().TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, true);
+    {
+        for_subrange(arrayLayer, firstArrayLayer, firstArrayLayer + numArrayLayers)
+        {
+            const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = GetD3DTextureSubresourceLocation(GetNative(), CalcSubresource(mipLevel, arrayLayer));
+            const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = GetD3DTextureSubresourceLocation(intermediateTexture, D3D12CalcSubresource(0, arrayLayer, 0, 1, numArrayLayers));
+
+            context.GetCommandList()->CopyTextureRegion(
+                &dstLocationD3D,                // pDst
+                static_cast<UINT>(offset.x),    // DstX
+                static_cast<UINT>(offset.y),    // DstY
+                static_cast<UINT>(offset.z),    // DstZ
+                &srcLocationD3D,                // pSrc
+                &srcBox                         // pSrcBox
+            );
+        }
+    }
+    context.GetCommandContext().TransitionResource(GetResource(), GetResource().usageState, true);
 }
 
 // Returns the memory footprint of a texture with row alignment
@@ -367,6 +437,7 @@ void D3D12Texture::CreateShaderResourceViewPrimary(
 
 void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
+    LLGL_DEBUG_BREAK();
     CreateUnorderedAccessViewPrimary(
         device,
         D3D12Types::MapUavDimension(GetType()),
@@ -378,6 +449,7 @@ void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DES
 
 void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const TextureViewDescriptor& desc)
 {
+    LLGL_DEBUG_BREAK();
     CreateUnorderedAccessViewPrimary(
         device,
         D3D12Types::MapUavDimension(desc.type),
@@ -439,7 +511,7 @@ void D3D12Texture::CreateUnorderedAccessViewPrimary(
 
 UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
 {
-    return D3D12CalcSubresource(mipLevel, arrayLayer, /*planeSlice: */0, numMipLevels_, numArrayLayers_);
+    return D3D12CalcSubresource(mipLevel, arrayLayer, /*planeSlice:*/ 0, numMipLevels_, numArrayLayers_);
 }
 
 UINT D3D12Texture::CalcSubresource(const TextureLocation& location) const
@@ -450,13 +522,7 @@ UINT D3D12Texture::CalcSubresource(const TextureLocation& location) const
 
 D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const TextureLocation& location) const
 {
-    D3D12_TEXTURE_COPY_LOCATION copyDesc;
-    {
-        copyDesc.pResource          = GetNative();
-        copyDesc.Type               = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        copyDesc.SubresourceIndex   = CalcSubresource(location);
-    }
-    return copyDesc;
+    return GetD3DTextureSubresourceLocation(GetNative(), CalcSubresource(location));
 }
 
 D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const D3D12Buffer& srcBuffer, UINT64 srcOffset, const Extent3D& extent, UINT rowPitch) const
@@ -621,7 +687,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     Convert(descD3D, desc);
 
     /* Get optimal clear value (if specified) */
-    bool useClearValue = ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0);
+    const bool useClearValue = ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0);
 
     D3D12_CLEAR_VALUE optClearValue;
     if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
@@ -738,7 +804,7 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
                 device,
                 uavDimension,
                 format_,
-                TextureSubresource{ 0, static_cast<UINT>(resourceDesc.DepthOrArraySize) >> i, i, 1 },
+                TextureSubresource{ 0, std::max(1u, static_cast<UINT>(resourceDesc.DepthOrArraySize) >> i), i, 1 },
                 cpuDescHandle
             );
             cpuDescHandle.ptr += descSize;

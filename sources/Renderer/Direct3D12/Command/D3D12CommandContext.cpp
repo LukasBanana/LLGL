@@ -49,8 +49,9 @@ void D3D12CommandContext::Create(
     UINT                    numAllocators,
     bool                    initialClose)
 {
-    /* Store reference to command queue */
-    commandQueue_ = &commandQueue;
+    /* Store reference to device and command queue */
+    device_         = device.GetNative();
+    commandQueue_   = &commandQueue;
 
     /* Create fence for command allocators */
     allocatorFence_.Create(device.GetNative());
@@ -123,45 +124,15 @@ void D3D12CommandContext::Finish(bool waitIdle)
     Reset();
 }
 
-void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
-{
-    auto oldState = resource.transitionState;
-    if (oldState != newState)
-    {
-        auto& barrier = NextResourceBarrier();
-
-        /* Initialize resource barrier for resource transition */
-        barrier.Type                    = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barrier.Flags                   = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.Transition.pResource    = resource.native.Get();
-        barrier.Transition.Subresource  = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        barrier.Transition.StateBefore  = oldState;
-        barrier.Transition.StateAfter   = newState;
-
-        /* Store new state in resource */
-        resource.transitionState = newState;
-    }
-
-    /* Flush resource barrieres if required */
-    if (flushImmediate)
-        FlushResourceBarrieres();
-}
-
-#if 0 //TODO: not used yey
-void D3D12CommandContext::TransitionSubresource(
-    D3D12Resource&          resource,
-    UINT                    subresource,
-    D3D12_RESOURCE_STATES   oldState,
-    D3D12_RESOURCE_STATES   newState,
-    bool                    flushImmediate)
+void D3D12CommandContext::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES newState, D3D12_RESOURCE_STATES oldState, bool flushImmediate)
 {
     auto& barrier = NextResourceBarrier();
 
     /* Initialize resource barrier for resource transition */
     barrier.Type                    = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier.Flags                   = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource    = resource.native.Get();
-    barrier.Transition.Subresource  = subresource;
+    barrier.Transition.pResource    = resource;
+    barrier.Transition.Subresource  = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
     barrier.Transition.StateBefore  = oldState;
     barrier.Transition.StateAfter   = newState;
 
@@ -169,7 +140,29 @@ void D3D12CommandContext::TransitionSubresource(
     if (flushImmediate)
         FlushResourceBarrieres();
 }
-#endif
+
+void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
+{
+    if (resource.transitionState != newState)
+    {
+        auto& barrier = NextResourceBarrier();
+
+        /* Initialize resource barrier for resource transition */
+        barrier.Type                    = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Flags                   = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrier.Transition.pResource    = resource.Get();
+        barrier.Transition.Subresource  = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        barrier.Transition.StateBefore  = resource.transitionState;
+        barrier.Transition.StateAfter   = newState;
+
+        /* Store new transition state */
+        resource.transitionState = newState;
+    }
+
+    /* Flush resource barrieres if required */
+    if (flushImmediate)
+        FlushResourceBarrieres();
+}
 
 void D3D12CommandContext::InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate)
 {

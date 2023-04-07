@@ -77,18 +77,8 @@ class D3D12CommandContext
         }
 
         // Transition all subresources to the specified new state.
+        void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES newState, D3D12_RESOURCE_STATES oldState, bool flushImmediate = false);
         void TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate = false);
-
-        #if 0 //TODO: not used yet
-        // Transition the specified subresource to the specified new state.
-        void TransitionSubresource(
-            D3D12Resource&          resource,
-            UINT                    subresource,
-            D3D12_RESOURCE_STATES   oldState,
-            D3D12_RESOURCE_STATES   newState,
-            bool                    flushImmediate = false
-        );
-        #endif
 
         // Insert a resource barrier for an unordered access view (UAV).
         void InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate = false);
@@ -174,6 +164,14 @@ class D3D12CommandContext
             UINT64                  countBufferOffset
         );
 
+    public:
+
+        // Returns the native D3D12 device this command context was created with.
+        inline ID3D12Device* GetDevice() const
+        {
+            return device_;
+        }
+
     private:
 
         static const UINT g_maxNumAllocators        = 3;
@@ -226,6 +224,7 @@ class D3D12CommandContext
 
     private:
 
+        ID3D12Device*                       device_                                         = nullptr;
         D3D12CommandQueue*                  commandQueue_                                   = nullptr;
 
         ComPtr<ID3D12CommandAllocator>      commandAllocators_[g_maxNumAllocators];

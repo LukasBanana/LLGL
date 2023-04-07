@@ -20,6 +20,7 @@ namespace LLGL
 
 class D3D12Buffer;
 class D3D12CommandContext;
+class D3D12SubresourceContext;
 
 class D3D12Texture final : public Texture
 {
@@ -38,14 +39,24 @@ class D3D12Texture final : public Texture
 
         D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
 
+        // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
         void UpdateSubresource(
-            ID3D12Device*               device,
-            ID3D12GraphicsCommandList*  commandList,
-            ComPtr<ID3D12Resource>&     uploadBuffer,
+            D3D12SubresourceContext&    context,
             D3D12_SUBRESOURCE_DATA&     subresourceData,
             UINT                        mipLevel        = 0,
             UINT                        firstArrayLayer = 0,
-            UINT                        numArrayLayers  = ~0
+            UINT                        numArrayLayers  = ~0u
+        );
+
+        // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
+        void UpdateSubresourceRegion(
+            D3D12SubresourceContext&    context,
+            D3D12_SUBRESOURCE_DATA&     subresourceData,
+            const Offset3D&             offset,
+            const Extent3D&             extent,
+            UINT                        mipLevel        = 0,
+            UINT                        firstArrayLayer = 0,
+            UINT                        numArrayLayers  = ~0u
         );
 
         // Creates a CPU accessible readback buffer for this texture resource.
@@ -119,6 +130,12 @@ class D3D12Texture final : public Texture
             return numArrayLayers_;
         }
 
+        // Returns the extent this texture was created with, i.e. the extent of the base MIP level.
+        inline const Extent3D& GetExtent() const
+        {
+            return extent_;
+        }
+
         // Returns the entire texture subresource.
         inline TextureSubresource GetWholeSubresource() const
         {
@@ -161,6 +178,7 @@ class D3D12Texture final : public Texture
         DXGI_FORMAT                     format_         = DXGI_FORMAT_UNKNOWN;
         UINT                            numMipLevels_   = 0;
         UINT                            numArrayLayers_ = 0;
+        Extent3D                        extent_;
 
         ComPtr<ID3D12DescriptorHeap>    mipDescHeap_;
 
