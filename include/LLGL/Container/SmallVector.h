@@ -371,8 +371,8 @@ class LLGL_EXPORT SmallVector
         {
             if (size_ > 0)
             {
-                Allocator{}.destroy(end());
                 --size_;
+                Allocator{}.destroy(end());
             }
         }
 
