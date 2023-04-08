@@ -15,6 +15,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 
@@ -153,18 +154,54 @@ static D3D12_TEXTURE_COPY_LOCATION GetD3DTextureSubresourceLocation(ID3D12Resour
     return copyDesc;
 }
 
+static void ConvertD3DTextureExtent(D3D12_RESOURCE_DESC& outDesc, TextureType type, const Extent3D& extent, std::uint32_t arrayLayers)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            outDesc.Width               = extent.width;
+            outDesc.Height              = 1;
+            outDesc.DepthOrArraySize    = std::max(1u, arrayLayers);
+            break;
+
+        case TextureType::Texture2D:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            outDesc.Width               = extent.width;
+            outDesc.Height              = extent.height;
+            outDesc.DepthOrArraySize    = std::max(1u, arrayLayers);
+            break;
+
+        case TextureType::Texture3D:
+            outDesc.Width               = extent.width;
+            outDesc.Height              = extent.height;
+            outDesc.DepthOrArraySize    = extent.depth;
+            break;
+
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            outDesc.Width               = extent.width;
+            outDesc.Height              = extent.height;
+            outDesc.DepthOrArraySize    = arrayLayers;
+            break;
+    }
+}
+
 static void UpdateD3DTextureSubresource(
     ID3D12Resource*             dstTexture,
     D3D12SubresourceContext&    context,
-    D3D12_SUBRESOURCE_DATA&     subresourceData,
+    D3D12_SUBRESOURCE_DATA      subresourceData,
     UINT                        mipLevel,
-    UINT                        numMipLevels,
     UINT                        firstArrayLayer,
-    UINT                        numArrayLayers)
+    UINT                        numArrayLayers,
+    UINT                        maxNumMipLevels,
+    UINT                        maxNumArrayLayers)
 {
     /* Clamp arguments */
-    firstArrayLayer = std::min(firstArrayLayer, numArrayLayers - 1u);
-    numArrayLayers  = std::min(numArrayLayers, numArrayLayers - firstArrayLayer);
+    firstArrayLayer = std::min(firstArrayLayer, maxNumArrayLayers - 1u);
+    numArrayLayers  = std::min(numArrayLayers, maxNumArrayLayers - firstArrayLayer);
 
     /* Create the GPU upload buffer */
     UINT64          srcBufferOffset = 0;
@@ -175,7 +212,7 @@ static void UpdateD3DTextureSubresource(
     for_subrange(arrayLayer, firstArrayLayer, firstArrayLayer + numArrayLayers)
     {
         /* Update subresource for current array layer */
-        const UINT subresourceIndex = D3D12CalcSubresource(mipLevel, firstArrayLayer, /*planeSlice:*/ 0, numMipLevels, numArrayLayers);
+        const UINT subresourceIndex = D3D12CalcSubresource(mipLevel, firstArrayLayer, /*planeSlice:*/ 0, maxNumMipLevels, maxNumArrayLayers);
 
         UpdateSubresources<1>(
             context.GetCommandList(),   // pCmdList
@@ -194,21 +231,22 @@ static void UpdateD3DTextureSubresource(
 }
 
 void D3D12Texture::UpdateSubresource(
-    D3D12SubresourceContext&    context,
-    D3D12_SUBRESOURCE_DATA&     subresourceData,
-    UINT                        mipLevel,
-    UINT                        firstArrayLayer,
-    UINT                        numArrayLayers)
+    D3D12SubresourceContext&        context,
+    const D3D12_SUBRESOURCE_DATA&   subresourceData,
+    const TextureSubresource&       subresource)
 {
+    LLGL_ASSERT(subresource.numArrayLayers == 1);
+
     /* Update native resource of this texture with the specified subresource data */
     UpdateD3DTextureSubresource(
-        resource_.native.Get(),
-        context,
-        subresourceData,
-        mipLevel,
-        numMipLevels_,
-        firstArrayLayer,
-        numArrayLayers
+        /*dstTexture:*/         resource_.native.Get(),
+        /*context:*/            context,
+        /*subresourceData:*/    subresourceData,
+        /*mipLevel:*/           subresource.baseMipLevel,
+        /*firstArrayLayer:*/    subresource.baseArrayLayer,
+        /*numArrayLayers:*/     subresource.numArrayLayers,
+        /*maxNumMipLevels:*/    GetNumMipLevels(),
+        /*maxNumArrayLayers:*/  GetNumArrayLayers()
     );
 
     /* Transition texture resource for shader access */
@@ -216,51 +254,51 @@ void D3D12Texture::UpdateSubresource(
 }
 
 void D3D12Texture::UpdateSubresourceRegion(
-    D3D12SubresourceContext&    context,
-    D3D12_SUBRESOURCE_DATA&     subresourceData,
-    const Offset3D&             offset,
-    const Extent3D&             extent,
-    UINT                        mipLevel,
-    UINT                        firstArrayLayer,
-    UINT                        numArrayLayers)
+    D3D12SubresourceContext&        context,
+    const D3D12_SUBRESOURCE_DATA&   subresourceData,
+    const TextureRegion&            region)
 {
+    const auto& subresource = region.subresource;
+    LLGL_ASSERT(subresource.numArrayLayers == 1);
+
     /* Create intermediate texture with region size */
     D3D12_RESOURCE_DESC texDesc = resource_.native->GetDesc();
     {
-        texDesc.Width               = extent.width;
-        texDesc.Height              = extent.height;
-        texDesc.DepthOrArraySize    = static_cast<UINT16>(GetType() == TextureType::Texture3D ? extent.depth : numArrayLayers);
-        texDesc.MipLevels           = 1;
+        ConvertD3DTextureExtent(texDesc, GetType(), region.extent, subresource.numArrayLayers);
+        texDesc.MipLevels = 1;
     }
     ID3D12Resource* intermediateTexture = context.CreateTexture(texDesc);
 
     /* Update native resource of this texture with the specified subresource data */
     UpdateD3DTextureSubresource(
-        intermediateTexture,
-        context,
-        subresourceData,
-        0, // mipLevel
-        1, // numMipLevels
-        firstArrayLayer,
-        numArrayLayers
+        /*dstTexture:*/         intermediateTexture,
+        /*context:*/            context,
+        /*subresourceData:*/    subresourceData,
+        /*mipLevel:*/           0,
+        /*firstArrayLayer:*/    0,
+        /*numArrayLayers:*/     subresource.numArrayLayers,
+        /*maxNumMipLevels:*/    1,
+        /*maxNumArrayLayers:*/  subresource.numArrayLayers
     );
 
-    const D3D12_BOX srcBox = CalcRegion(Offset3D{}, extent);
+    const Offset3D  dstOffset   = CalcTextureOffset(GetType(), region.offset, region.subresource.baseArrayLayer);
+    const Extent3D  srcExtent   = CalcTextureExtent(GetType(), region.extent, region.subresource.numArrayLayers);
+    const D3D12_BOX srcBox      = CalcRegion(Offset3D{}, srcExtent);
 
     /* Transition texture resource for shader access */
     context.GetCommandContext().TransitionResource(intermediateTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
     context.GetCommandContext().TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
-        for_subrange(arrayLayer, firstArrayLayer, firstArrayLayer + numArrayLayers)
+        for_subrange(arrayLayer, subresource.baseArrayLayer, subresource.baseArrayLayer + subresource.numArrayLayers)
         {
-            const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = GetD3DTextureSubresourceLocation(GetNative(), CalcSubresource(mipLevel, arrayLayer));
-            const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = GetD3DTextureSubresourceLocation(intermediateTexture, D3D12CalcSubresource(0, arrayLayer, 0, 1, numArrayLayers));
+            const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = GetD3DTextureSubresourceLocation(GetNative(), CalcSubresource(subresource.baseMipLevel, arrayLayer));
+            const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = GetD3DTextureSubresourceLocation(intermediateTexture, D3D12CalcSubresource(0, arrayLayer, 0, 1, subresource.numArrayLayers));
 
             context.GetCommandList()->CopyTextureRegion(
                 &dstLocationD3D,                // pDst
-                static_cast<UINT>(offset.x),    // DstX
-                static_cast<UINT>(offset.y),    // DstY
-                static_cast<UINT>(offset.z),    // DstZ
+                static_cast<UINT>(dstOffset.x), // DstX
+                static_cast<UINT>(dstOffset.y), // DstY
+                static_cast<UINT>(dstOffset.z), // DstZ
                 &srcLocationD3D,                // pSrc
                 &srcBox                         // pSrcBox
             );
@@ -278,55 +316,45 @@ static void GetMemoryFootprintWithAlignment(const Format format, const Extent3D&
 }
 
 void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
-    ID3D12Device*           device,
-    D3D12CommandContext&    commandContext,
-    const TextureRegion&    region,
-    ComPtr<ID3D12Resource>& readbackBuffer,
-    UINT&                   rowStride)
+    D3D12SubresourceContext&    context,
+    const TextureRegion&        region,
+    UINT&                       rowStride)
 {
     /* Determine required buffer size for texture subresource */
     const auto offset = CalcTextureOffset(GetType(), region.offset, region.subresource.baseArrayLayer);
     const auto extent = CalcTextureExtent(GetType(), region.extent, region.subresource.numArrayLayers);
     const auto format = GetFormat();
 
-    UINT64 bufferSize = 0;
-    GetMemoryFootprintWithAlignment(format, extent, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT, rowStride, bufferSize);
+    UINT64 dstBufferSize = 0;
+    GetMemoryFootprintWithAlignment(format, extent, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT, rowStride, dstBufferSize);
 
     /* Create readback buffer with texture resource descriptor */
-    auto hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(readbackBuffer.ReleaseAndGetAddressOf())
-    );
-    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for texture readback buffer");
+    ID3D12Resource* dstBuffer = context.CreateReadbackBuffer(dstBufferSize);
 
     /* Copy host visible resource to CPU accessible resource */
-    D3D12_PLACED_SUBRESOURCE_FOOTPRINT bufferFootprint;
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT dstBufferFootprint;
     {
-        bufferFootprint.Offset              = 0;
-        bufferFootprint.Footprint.Format    = GetDXFormat();
-        bufferFootprint.Footprint.Width     = extent.width;
-        bufferFootprint.Footprint.Height    = extent.height;
-        bufferFootprint.Footprint.Depth     = extent.depth;
-        bufferFootprint.Footprint.RowPitch  = rowStride;
+        dstBufferFootprint.Offset               = 0;
+        dstBufferFootprint.Footprint.Format     = GetDXFormat();
+        dstBufferFootprint.Footprint.Width      = extent.width;
+        dstBufferFootprint.Footprint.Height     = extent.height;
+        dstBufferFootprint.Footprint.Depth      = extent.depth;
+        dstBufferFootprint.Footprint.RowPitch   = rowStride;
     }
 
     const auto srcBox = CalcRegion(offset, extent);
 
-    commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+    context.GetCommandContext().TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
     {
         const UINT srcSubresource = CalcSubresource(region.subresource.baseMipLevel, 0/*region.subresource.baseArrayLayer*/);
-        commandContext.GetCommandList()->CopyTextureRegion(
-            &CD3DX12_TEXTURE_COPY_LOCATION(readbackBuffer.Get(), bufferFootprint),
+        context.GetCommandList()->CopyTextureRegion(
+            &CD3DX12_TEXTURE_COPY_LOCATION(dstBuffer, dstBufferFootprint),
             0, 0, 0,
             &CD3DX12_TEXTURE_COPY_LOCATION(GetNative(), srcSubresource),
             &srcBox
         );
     }
-    commandContext.TransitionResource(resource_, resource_.usageState, true);
+    context.GetCommandContext().TransitionResource(resource_, resource_.usageState, true);
 }
 
 void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
@@ -619,43 +647,11 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     dst.Alignment           = 0;
     dst.MipLevels           = NumMipLevels(src);
     dst.Format              = DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(src.format));
-    dst.SampleDesc.Count    = 1;
+    dst.SampleDesc.Count    = (IsMultiSampleTexture(src.type) ? std::max(1u, src.samples) : 1u);
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     dst.Flags               = GetD3DTextureResourceFlags(src.bindFlags, dst.MipLevels);
-
-    switch (src.type)
-    {
-        case TextureType::Texture1D:
-        case TextureType::Texture1DArray:
-            dst.Width               = src.extent.width;
-            dst.Height              = 1;
-            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
-            break;
-
-        case TextureType::Texture2D:
-        case TextureType::Texture2DArray:
-        case TextureType::TextureCube:
-        case TextureType::TextureCubeArray:
-            dst.Width               = src.extent.width;
-            dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
-            break;
-
-        case TextureType::Texture3D:
-            dst.Width               = src.extent.width;
-            dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = src.extent.depth;
-            break;
-
-        case TextureType::Texture2DMS:
-        case TextureType::Texture2DMSArray:
-            dst.Width               = src.extent.width;
-            dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = src.arrayLayers;
-            dst.SampleDesc.Count    = std::max(1u, src.samples);
-            break;
-    }
+    ConvertD3DTextureExtent(dst, src.type, src.extent, src.arrayLayers);
 }
 
 //TODO: incomplete

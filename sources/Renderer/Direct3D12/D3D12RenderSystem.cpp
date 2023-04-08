@@ -240,9 +240,11 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     /* Create CPU accessible readback buffer for texture and execute command list */
     ComPtr<ID3D12Resource> readbackBuffer;
     UINT rowStride = 0;
-
-    textureD3D.CreateSubresourceCopyAsReadbackBuffer(device_.GetNative(), *commandContext_, textureRegion, readbackBuffer, rowStride);
-    ExecuteCommandListAndSync();
+    {
+        D3D12SubresourceContext subresourceContext{ *commandContext_ };
+        textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, rowStride);
+        readbackBuffer = subresourceContext.TakeResource();
+    }
 
     /* Map readback buffer to CPU memory space */
     void* mappedData = nullptr;
@@ -637,7 +639,8 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     /* Validate subresource range */
     const auto& subresource = region.subresource;
     if (subresource.baseMipLevel + subresource.numMipLevels     > textureD3D.GetNumMipLevels() ||
-        subresource.baseArrayLayer + subresource.numArrayLayers > textureD3D.GetNumArrayLayers())
+        subresource.baseArrayLayer + subresource.numArrayLayers > textureD3D.GetNumArrayLayers() ||
+        subresource.numMipLevels != 1)
     {
         return E_INVALIDARG;
     }
@@ -674,27 +677,9 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
 
     const bool isFullRegion = (region.offset == Offset3D{} && region.extent == textureD3D.GetMipExtent(region.subresource.baseMipLevel));
     if (isFullRegion)
-    {
-        textureD3D.UpdateSubresource(
-            subresourceContext,
-            subresourceData,
-            region.subresource.baseMipLevel,
-            region.subresource.baseArrayLayer,
-            region.subresource.numArrayLayers
-        );
-    }
+        textureD3D.UpdateSubresource(subresourceContext, subresourceData, region.subresource);
     else
-    {
-        textureD3D.UpdateSubresourceRegion(
-            subresourceContext,
-            subresourceData,
-            region.offset,
-            region.extent,
-            region.subresource.baseMipLevel,
-            region.subresource.baseArrayLayer,
-            region.subresource.numArrayLayers
-        );
-    }
+        textureD3D.UpdateSubresourceRegion(subresourceContext, subresourceData, region);
 
     return S_OK;
 }

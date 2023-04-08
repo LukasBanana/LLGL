@@ -28,9 +28,17 @@ class D3D12SubresourceContext
         D3D12SubresourceContext(D3D12CommandContext& commandContext);
         ~D3D12SubresourceContext();
 
-        ID3D12Resource* CreateUploadBuffer(UINT64 size);
+        // Creates a buffer resource in the upload heap (D3D12_HEAP_TYPE_UPLOAD).
+        ID3D12Resource* CreateUploadBuffer(UINT64 size, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_GENERIC_READ);
 
+        // Creates a buffer resource in the readback heap (D3D12_HEAP_TYPE_READBACK).
+        ID3D12Resource* CreateReadbackBuffer(UINT64 size, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
+
+        // Creates a texture resource in the default heap (D3D12_HEAP_TYPE_DEFAULT).
         ID3D12Resource* CreateTexture(const D3D12_RESOURCE_DESC& desc, D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST);
+
+        // Returns ownership of the most recently added resource.
+        ComPtr<ID3D12Resource> TakeResource();
 
         inline D3D12CommandContext& GetCommandContext()
         {

@@ -41,31 +41,23 @@ class D3D12Texture final : public Texture
 
         // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
         void UpdateSubresource(
-            D3D12SubresourceContext&    context,
-            D3D12_SUBRESOURCE_DATA&     subresourceData,
-            UINT                        mipLevel        = 0,
-            UINT                        firstArrayLayer = 0,
-            UINT                        numArrayLayers  = ~0u
+            D3D12SubresourceContext&        context,
+            const D3D12_SUBRESOURCE_DATA&   subresourceData,
+            const TextureSubresource&       subresource
         );
 
         // Updates the specified subresource, i.e. a single MIP-map level but one or more array layers.
         void UpdateSubresourceRegion(
-            D3D12SubresourceContext&    context,
-            D3D12_SUBRESOURCE_DATA&     subresourceData,
-            const Offset3D&             offset,
-            const Extent3D&             extent,
-            UINT                        mipLevel        = 0,
-            UINT                        firstArrayLayer = 0,
-            UINT                        numArrayLayers  = ~0u
+            D3D12SubresourceContext&        context,
+            const D3D12_SUBRESOURCE_DATA&   subresourceData,
+            const TextureRegion&            region
         );
 
         // Creates a CPU accessible readback buffer for this texture resource.
         void CreateSubresourceCopyAsReadbackBuffer(
-            ID3D12Device*           device,
-            D3D12CommandContext&    commandContext,
-            const TextureRegion&    region,
-            ComPtr<ID3D12Resource>& readbackBuffer,
-            UINT&                   rowStride
+            D3D12SubresourceContext&    context,
+            const TextureRegion&        region,
+            UINT&                       rowStride
         );
 
         // Creates either the default SRV for the entire resource or a subresource.
