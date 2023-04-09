@@ -58,7 +58,7 @@ SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChain
         commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
     }
 
-    return TakeOwnership(swapChains_, MakeUnique<DbgSwapChain>(*swapChainInstance));
+    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance);
 }
 
 void DbgRenderSystem::Release(SwapChain& swapChain)
@@ -78,17 +78,14 @@ CommandQueue* DbgRenderSystem::GetCommandQueue()
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
     ValidateCommandBufferDesc(commandBufferDesc);
-    return TakeOwnership(
-        commandBuffers_,
-        MakeUnique<DbgCommandBuffer>(
-            *instance_,
-            commandQueue_->instance,
-            *instance_->CreateCommandBuffer(commandBufferDesc),
-            debugger_,
-            profiler_,
-            commandBufferDesc,
-            GetRenderingCaps()
-        )
+    return commandBuffers_.emplace<DbgCommandBuffer>(
+        *instance_,
+        commandQueue_->instance,
+        *instance_->CreateCommandBuffer(commandBufferDesc),
+        debugger_,
+        profiler_,
+        commandBufferDesc,
+        GetRenderingCaps()
     );
 }
 
@@ -111,13 +108,12 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
     }
 
     /* Create buffer object */
-    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(bufferDesc, initialData), bufferDesc);
-
-    /* Store settings */
-    bufferDbg->elements     = (formatSize > 0 ? bufferDesc.size / formatSize : 0);
-    bufferDbg->initialized  = (initialData != nullptr);
-
-    return TakeOwnership(buffers_, std::move(bufferDbg));
+    auto* bufferDbg = buffers_.emplace<DbgBuffer>(*instance_->CreateBuffer(bufferDesc, initialData), bufferDesc);
+    {
+        bufferDbg->elements     = (formatSize > 0 ? bufferDesc.size / formatSize : 0);
+        bufferDbg->initialized  = (initialData != nullptr);
+    }
+    return bufferDbg;
 }
 
 BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -136,10 +132,8 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
     }
 
     /* Create native buffer and debug buffer */
-    auto bufferArrayInstance    = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
-    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(numBuffers, bufferArray), std::move(bufferDbgArray));
-
-    return TakeOwnership(bufferArrays_, std::move(bufferArrayDbg));
+    auto* bufferArrayInstance = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
+    return bufferArrays_.emplace<DbgBufferArray>(*bufferArrayInstance, GetCombinedBindFlags(numBuffers, bufferArray), std::move(bufferDbgArray));
 }
 
 void DbgRenderSystem::Release(Buffer& buffer)
@@ -269,7 +263,7 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
         LLGL_DBG_SOURCE;
         ValidateTextureDesc(textureDesc, imageDesc);
     }
-    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
+    return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc);
 }
 
 void DbgRenderSystem::Release(Texture& texture)
@@ -316,7 +310,7 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
 Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
     return instance_->CreateSampler(samplerDesc);
-    //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
+    //return samplers_.emplace<DbgSampler>();
 }
 
 void DbgRenderSystem::Release(Sampler& sampler)
@@ -394,18 +388,15 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
         auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
         instanceDesc.pipelineLayout = &(pipelineLayoutDbg->instance);
     }
-    return TakeOwnership(
-        resourceHeaps_,
-        MakeUnique<DbgResourceHeap>(
-            *instance_->CreateResourceHeap(instanceDesc, instanceResourceViews),
-            resourceHeapDesc
-        )
+    return resourceHeaps_.emplace<DbgResourceHeap>(
+        *instance_->CreateResourceHeap(instanceDesc, instanceResourceViews),
+        resourceHeapDesc
     );
 }
 
 void DbgRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    return instance_->Release(resourceHeap);
+    ReleaseDbg(resourceHeaps_, resourceHeap);
 }
 
 std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
@@ -453,10 +444,7 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
         }
     }
 
-    return TakeOwnership(
-        renderTargets_,
-        MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, renderTargetDesc)
-    );
+    return renderTargets_.emplace<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, renderTargetDesc);
 }
 
 void DbgRenderSystem::Release(RenderTarget& renderTarget)
@@ -468,10 +456,7 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    return TakeOwnership(
-        shaders_,
-        MakeUnique<DbgShader>(*instance_->CreateShader(shaderDesc), shaderDesc)
-    );
+    return shaders_.emplace<DbgShader>(*instance_->CreateShader(shaderDesc), shaderDesc);
 }
 
 static Shader* GetInstanceShader(Shader* shader)
@@ -493,10 +478,7 @@ void DbgRenderSystem::Release(Shader& shader)
 
 PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(
-        pipelineLayouts_,
-        MakeUnique<DbgPipelineLayout>(*instance_->CreatePipelineLayout(pipelineLayoutDesc), pipelineLayoutDesc)
-    );
+    return pipelineLayouts_.emplace<DbgPipelineLayout>(*instance_->CreatePipelineLayout(pipelineLayoutDesc), pipelineLayoutDesc);
 }
 
 void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
@@ -529,10 +511,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
         instanceDesc.geometryShader         = GetInstanceShader(pipelineStateDesc.geometryShader);
         instanceDesc.fragmentShader         = GetInstanceShader(pipelineStateDesc.fragmentShader);
     }
-    return TakeOwnership(
-        pipelineStates_,
-        MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc)
-    );
+    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
 }
 
 PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
@@ -549,10 +528,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescrip
 
         instanceDesc.computeShader = GetInstanceShader(pipelineStateDesc.computeShader);
     }
-    return TakeOwnership(
-        pipelineStates_,
-        MakeUnique<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc)
-    );
+    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
 }
 
 void DbgRenderSystem::Release(PipelineState& pipelineState)
@@ -564,10 +540,7 @@ void DbgRenderSystem::Release(PipelineState& pipelineState)
 
 QueryHeap* DbgRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(
-        queryHeaps_,
-        MakeUnique<DbgQueryHeap>(*instance_->CreateQueryHeap(queryHeapDesc), queryHeapDesc)
-    );
+    return queryHeaps_.emplace<DbgQueryHeap>(*instance_->CreateQueryHeap(queryHeapDesc), queryHeapDesc);
 }
 
 void DbgRenderSystem::Release(QueryHeap& queryHeap)
@@ -1674,11 +1647,11 @@ void DbgRenderSystem::AssertMultiSampleTextures()
 }
 
 template <typename T, typename TBase>
-void DbgRenderSystem::ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry)
+void DbgRenderSystem::ReleaseDbg(HWObjectContainer<T>& cont, TBase& entry)
 {
     auto& entryDbg = LLGL_CAST(T&, entry);
     instance_->Release(entryDbg.instance);
-    RemoveFromUniqueSet(cont, &entry);
+    cont.erase(&entry);
 }
 
 

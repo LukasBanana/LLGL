@@ -22,18 +22,12 @@
 #include "../Texture/GLTexSubImage.h"
 #include "../Texture/GLTextureSubImage.h"
 #include "../../TextureUtils.h"
+#include "../../../Core/Exception.h"
 
 
 namespace LLGL
 {
 
-
-#ifdef LLGL_OPENGLES3
-
-#define LLGL_GLES3_NOT_IMPLEMENTED \
-    throw std::runtime_error("not implemented for GLES3: " + std::string(__FUNCTION__))
-
-#endif // /LLGL_OPENGLES3
 
 // Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
 static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
@@ -810,7 +804,7 @@ void GLTexture::GetTextureSubImage(const TextureRegion& region, const DstImageDe
         #else
 
         //TODO: copy texture to unpack buffer, then map buffer range to CPU memory
-        LLGL_GLES3_NOT_IMPLEMENTED;
+        LLGL_TRAP_NOT_IMPLEMENTED();
 
         #endif // /LLGL_OPENGL
     }

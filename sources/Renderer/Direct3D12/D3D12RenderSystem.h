@@ -20,6 +20,7 @@
 #include "Command/D3D12SignatureFactory.h"
 
 #include "Buffer/D3D12Buffer.h"
+#include "Buffer/D3D12BufferArray.h"
 #include "Buffer/D3D12StagingBufferPool.h"
 
 #include "Texture/D3D12Texture.h"
@@ -216,7 +217,13 @@ class D3D12RenderSystem final : public RenderSystem
         void ExecuteCommandList();
         void ExecuteCommandListAndSync();
 
-        std::unique_ptr<D3D12Buffer> CreateGpuBuffer(const BufferDescriptor& bufferDesc, const void* initialData);
+        void UpdateBufferAndSync(
+            D3D12Buffer&    bufferD3D,
+            std::uint64_t   offset,
+            const void*     data,
+            std::uint64_t   dataSize,
+            std::uint64_t   alignment   = 256u
+        );
 
         // Maps the range of the specified D3D buffer between GPU and CPU memory space.
         void* MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size);
@@ -248,7 +255,7 @@ class D3D12RenderSystem final : public RenderSystem
         HWObjectInstance<D3D12CommandQueue>     commandQueue_;
         HWObjectContainer<D3D12CommandBuffer>   commandBuffers_;
         HWObjectContainer<D3D12Buffer>          buffers_;
-        HWObjectContainer<BufferArray>          bufferArrays_;
+        HWObjectContainer<D3D12BufferArray>     bufferArrays_;
         HWObjectContainer<D3D12Texture>         textures_;
         HWObjectContainer<D3D12Sampler>         samplers_;
         HWObjectContainer<D3D12RenderPass>      renderPasses_;

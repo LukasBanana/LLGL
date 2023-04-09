@@ -158,6 +158,8 @@ option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 option(LLGL_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
 option(LLGL_ENABLE_JIT_COMPILER "Enable Just-in-Time (JIT) compilation for emulated deferred command buffers (experimental)" OFF)
 
+option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
+
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_DSA_EXT "Enable OpenGL direct state access (DSA) extension if available" ON)
@@ -232,6 +234,10 @@ endif()
 
 if(LLGL_BUILD_STATIC_LIB)
     ADD_DEFINE(LLGL_BUILD_STATIC_LIB)
+endif()
+
+if(LLGL_PREFER_STL_CONTAINERS)
+    ADD_DEFINE(LLGL_PREFER_STL_CONTAINERS)
 endif()
 
 if(WIN32)

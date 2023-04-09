@@ -156,10 +156,6 @@ class GLRenderSystem final : public RenderSystem
 
         void Release(Fence& fence) override;
 
-    protected:
-
-        SwapChain* AddSwapChain(std::unique_ptr<GLSwapChain>&& swapChain);
-
     private:
 
         void CreateGLContextDependentDevices(GLStateManager& stateManager);

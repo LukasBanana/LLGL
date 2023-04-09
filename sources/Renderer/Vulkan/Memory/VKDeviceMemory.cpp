@@ -7,7 +7,7 @@
 
 #include "VKDeviceMemory.h"
 #include "../VKCore.h"
-#include "../../../Core/CoreUtils.h"
+#include "../../ContainerTypes.h"
 
 
 namespace LLGL

@@ -39,11 +39,6 @@ namespace LLGL
 {
 
 
-#ifdef LLGL_OPENGLES3
-#define LLGL_GLES3_NOT_IMPLEMENTED \
-    throw std::runtime_error("not implemented for GLES3: " + std::string(__FUNCTION__))
-#endif
-
 /* ----- Common ----- */
 
 static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescriptor& renderSystemDesc)
@@ -71,12 +66,19 @@ GLRenderSystem::~GLRenderSystem()
 
 SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return AddSwapChain(MakeUnique<GLSwapChain>(swapChainDesc, surface, contextMngr_));
+    const bool isFirstSwapChain = swapChains_.empty();
+    auto* swapChainGL = swapChains_.emplace<GLSwapChain>(swapChainDesc, surface, contextMngr_);
+
+    /* Create devices that require an active GL context */
+    if (isFirstSwapChain)
+        CreateGLContextDependentDevices(swapChainGL->GetStateManager());
+
+    return swapChainGL;
 }
 
 void GLRenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(swapChains_, &swapChain);
+    swapChains_.erase(&swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -93,30 +95,19 @@ CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor
     /* Get state manager from swap-chain with shared GL context */
     if (auto currentGLContext = contextMngr_.AllocContext())
     {
+        /* Create deferred or immediate command buffer */
         if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
-        {
-            /* Create immediate command buffer */
-            return TakeOwnership(
-                commandBuffers_,
-                MakeUnique<GLImmediateCommandBuffer>(currentGLContext->GetStateManager())
-            );
-        }
+            return commandBuffers_.emplace<GLImmediateCommandBuffer>(currentGLContext->GetStateManager());
         else
-        {
-            /* Create deferred command buffer */
-            return TakeOwnership(
-                commandBuffers_,
-                MakeUnique<GLDeferredCommandBuffer>(commandBufferDesc.flags)
-            );
-        }
+            return commandBuffers_.emplace<GLDeferredCommandBuffer>(commandBufferDesc.flags);
     }
     else
-        throw std::runtime_error("cannot create OpenGL command buffer without active render context");
+        LLGL_TRAP("cannot create OpenGL command buffer without active render context");
 }
 
 void GLRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+    commandBuffers_.erase(&commandBuffer);
 }
 
 /* ----- Buffers ------ */
@@ -179,21 +170,21 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
-        auto bufferGL = MakeUnique<GLBufferWithVAO>(bufferDesc.bindFlags);
+        auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc.bindFlags);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
             bufferGL->BuildVertexArray(bufferDesc.vertexAttribs.size(), bufferDesc.vertexAttribs.data());
         }
-        return TakeOwnership(buffers_, std::move(bufferGL));
+        return bufferGL;
     }
     else
     {
         /* Create generic buffer */
-        auto bufferGL = MakeUnique<GLBuffer>(bufferDesc.bindFlags);
+        auto* bufferGL = buffers_.emplace<GLBuffer>(bufferDesc.bindFlags);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
         }
-        return TakeOwnership(buffers_, std::move(bufferGL));
+        return bufferGL;
     }
 }
 
@@ -212,24 +203,21 @@ BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer*
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
 
+    /* Create vertex buffer array and build VAO if there is at least one buffer with VertexBuffer binding */
     if (IsBufferArrayWithVertexBufferBinding(numBuffers, bufferArray))
-    {
-        /* Create vertex buffer array and build VAO */
-        auto vertexBufferArray = MakeUnique<GLBufferArrayWithVAO>(numBuffers, bufferArray);
-        return TakeOwnership(bufferArrays_, std::move(vertexBufferArray));
-    }
-
-    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>(numBuffers, bufferArray));
+        return bufferArrays_.emplace<GLBufferArrayWithVAO>(numBuffers, bufferArray);
+    else
+        return bufferArrays_.emplace<GLBufferArray>(numBuffers, bufferArray);
 }
 
 void GLRenderSystem::Release(Buffer& buffer)
 {
-    RemoveFromUniqueSet(buffers_, &buffer);
+    buffers_.erase(&buffer);
 }
 
 void GLRenderSystem::Release(BufferArray& bufferArray)
 {
-    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    bufferArrays_.erase(&bufferArray);
 }
 
 void GLRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
@@ -319,17 +307,17 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     ValidateGLTextureType(textureDesc.type);
 
     /* Create <GLTexture> object; will result in a GL renderbuffer or texture instance */
-    auto texture = MakeUnique<GLTexture>(textureDesc);
+    auto* textureGL = textures_.emplace<GLTexture>(textureDesc);
 
     /* Initialize either renderbuffer or texture image storage */
-    texture->BindAndAllocStorage(textureDesc, imageDesc);
+    textureGL->BindAndAllocStorage(textureDesc, imageDesc);
 
-    return TakeOwnership(textures_, std::move(texture));
+    return textureGL;
 }
 
 void GLRenderSystem::Release(Texture& texture)
 {
-    RemoveFromUniqueSet(textures_, &texture);
+    textures_.erase(&texture);
 }
 
 void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
@@ -355,18 +343,18 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
     if (!HasNativeSamplers())
     {
         /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
-        auto samplerGL2X = MakeUnique<GL2XSampler>();
+        auto* samplerGL2X = samplersGL2X_.emplace<GL2XSampler>();
         samplerGL2X->SamplerParameters(samplerDesc);
-        return TakeOwnership(samplersGL2X_, std::move(samplerGL2X));
+        return samplerGL2X;
     }
     else
     #endif
     {
         /* Create native GL sampler state */
         LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasSamplers);
-        auto sampler = MakeUnique<GLSampler>();
-        sampler->SamplerParameters(samplerDesc);
-        return TakeOwnership(samplers_, std::move(sampler));
+        auto* samplerGL = samplers_.emplace<GLSampler>();
+        samplerGL->SamplerParameters(samplerDesc);
+        return samplerGL;
     }
 }
 
@@ -375,11 +363,11 @@ void GLRenderSystem::Release(Sampler& sampler)
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* If GL_ARB_sampler_objects is not supported, release emulated sampler states */
     if (!HasNativeSamplers())
-        RemoveFromUniqueSet(samplersGL2X_, &sampler);
+        samplersGL2X_.erase(&sampler);
     else
-        RemoveFromUniqueSet(samplers_, &sampler);
+        samplers_.erase(&sampler);
     #else
-    RemoveFromUniqueSet(samplers_, &sampler);
+    samplers_.erase(&sampler);
     #endif
 }
 
@@ -387,12 +375,12 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(resourceHeapDesc, initialResourceViews));
+    return resourceHeaps_.emplace<GLResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
 
 void GLRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+    resourceHeaps_.erase(&resourceHeap);
 }
 
 std::uint32_t GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
@@ -405,12 +393,12 @@ std::uint32_t GLRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std:
 
 RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(renderPassDesc));
+    return renderPasses_.emplace<GLRenderPass>(renderPassDesc);
 }
 
 void GLRenderSystem::Release(RenderPass& renderPass)
 {
-    RemoveFromUniqueSet(renderPasses_, &renderPass);
+    renderPasses_.erase(&renderPass);
 }
 
 /* ----- Render Targets ----- */
@@ -419,12 +407,12 @@ RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& r
 {
     LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasRenderTargets);
     AssertCreateRenderTarget(renderTargetDesc);
-    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(renderTargetDesc));
+    return renderTargets_.emplace<GLRenderTarget>(renderTargetDesc);
 }
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
 {
-    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    renderTargets_.erase(&renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -455,31 +443,31 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
     if (HasExtension(GLExt::ARB_separate_shader_objects) && (shaderDesc.flags & ShaderCompileFlags::SeparateShader) != 0)
     {
         /* Create separable shader for program pipeline */
-        return TakeOwnership(shaders_, MakeUnique<GLSeparableShader>(shaderDesc));
+        return shaders_.emplace<GLSeparableShader>(shaderDesc);
     }
     else
     #endif
     {
         /* Create legacy shader for combined program */
-        return TakeOwnership(shaders_, MakeUnique<GLLegacyShader>(shaderDesc));
+        return shaders_.emplace<GLLegacyShader>(shaderDesc);
     }
 }
 
 void GLRenderSystem::Release(Shader& shader)
 {
-    RemoveFromUniqueSet(shaders_, &shader);
+    shaders_.erase(&shader);
 }
 
 /* ----- Pipeline Layouts ----- */
 
 PipelineLayout* GLRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<GLPipelineLayout>(pipelineLayoutDesc));
+    return pipelineLayouts_.emplace<GLPipelineLayout>(pipelineLayoutDesc);
 }
 
 void GLRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+    pipelineLayouts_.erase(&pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */
@@ -491,56 +479,41 @@ PipelineState* GLRenderSystem::CreatePipelineState(const Blob& /*serializedCache
 
 PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<GLGraphicsPSO>(pipelineStateDesc, GetRenderingCaps().limits));
+    return pipelineStates_.emplace<GLGraphicsPSO>(pipelineStateDesc, GetRenderingCaps().limits);
 }
 
 PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<GLComputePSO>(pipelineStateDesc));
+    return pipelineStates_.emplace<GLComputePSO>(pipelineStateDesc);
 }
 
 void GLRenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
+    pipelineStates_.erase(&pipelineState);
 }
 
 /* ----- Queries ----- */
 
 QueryHeap* GLRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& quertHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<GLQueryHeap>(quertHeapDesc));
+    return queryHeaps_.emplace<GLQueryHeap>(quertHeapDesc);
 }
 
 void GLRenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
+    queryHeaps_.erase(&queryHeap);
 }
 
 /* ----- Fences ----- */
 
 Fence* GLRenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<GLFence>());
+    return fences_.emplace<GLFence>();
 }
 
 void GLRenderSystem::Release(Fence& fence)
 {
-    RemoveFromUniqueSet(fences_, &fence);
-}
-
-
-/*
- * ======= Protected: =======
- */
-
-SwapChain* GLRenderSystem::AddSwapChain(std::unique_ptr<GLSwapChain>&& swapChain)
-{
-    /* Create devices that require an active GL context */
-    if (swapChains_.empty())
-        CreateGLContextDependentDevices(swapChain->GetStateManager());
-
-    /* Take ownership and return raw pointer */
-    return TakeOwnership(swapChains_, std::move(swapChain));
+    fences_.erase(&fence);
 }
 
 

@@ -69,15 +69,12 @@ VKRenderSystem::~VKRenderSystem()
 
 SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(
-        swapChains_,
-        MakeUnique<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface)
-    );
+    return swapChains_.emplace<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface);
 }
 
 void VKRenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(swapChains_, &swapChain);
+    swapChains_.erase(&swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -91,15 +88,12 @@ CommandQueue* VKRenderSystem::GetCommandQueue()
 
 CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return TakeOwnership(
-        commandBuffers_,
-        MakeUnique<VKCommandBuffer>(physicalDevice_, device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), commandBufferDesc)
-    );
+    return commandBuffers_.emplace<VKCommandBuffer>(physicalDevice_, device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), commandBufferDesc);
 }
 
 void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+    commandBuffers_.erase(&commandBuffer);
 }
 
 /* ----- Buffers ------ */
@@ -127,22 +121,22 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, bufferDesc.size);
 
     /* Create primary buffer object */
-    auto buffer = TakeOwnership(buffers_, MakeUnique<VKBuffer>(device_, bufferDesc));
+    auto* bufferVK = buffers_.emplace<VKBuffer>(device_, bufferDesc);
 
     /* Allocate device memory */
     auto memoryRegion = deviceMemoryMngr_->Allocate(
-        buffer->GetDeviceBuffer().GetRequirements(),
+        bufferVK->GetDeviceBuffer().GetRequirements(),
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
-    buffer->BindMemoryRegion(device_, memoryRegion);
+    bufferVK->BindMemoryRegion(device_, memoryRegion);
 
     /* Copy staging buffer into hardware buffer */
-    device_.CopyBuffer(stagingBuffer.GetVkBuffer(), buffer->GetVkBuffer(), static_cast<VkDeviceSize>(bufferDesc.size));
+    device_.CopyBuffer(stagingBuffer.GetVkBuffer(), bufferVK->GetVkBuffer(), static_cast<VkDeviceSize>(bufferDesc.size));
 
     if (bufferDesc.cpuAccessFlags != 0 || (bufferDesc.miscFlags & MiscFlags::DynamicUsage) != 0)
     {
         /* Store ownership of staging buffer */
-        buffer->TakeStagingBuffer(std::move(stagingBuffer));
+        bufferVK->TakeStagingBuffer(std::move(stagingBuffer));
     }
     else
     {
@@ -150,13 +144,13 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
         stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
     }
 
-    return buffer;
+    return bufferVK;
 }
 
 BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeUnique<VKBufferArray>(numBuffers, bufferArray));
+    return bufferArrays_.emplace<VKBufferArray>(numBuffers, bufferArray);
 }
 
 void VKRenderSystem::Release(Buffer& buffer)
@@ -165,12 +159,12 @@ void VKRenderSystem::Release(Buffer& buffer)
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     bufferVK.GetDeviceBuffer().ReleaseMemoryRegion(*deviceMemoryMngr_);
     bufferVK.GetStagingDeviceBuffer().ReleaseMemoryRegion(*deviceMemoryMngr_);
-    RemoveFromUniqueSet(buffers_, &buffer);
+    buffers_.erase(&buffer);
 }
 
 void VKRenderSystem::Release(BufferArray& bufferArray)
 {
-    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    bufferArrays_.erase(&bufferArray);
 }
 
 void VKRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
@@ -326,7 +320,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize);
 
     /* Create device texture */
-    auto textureVK  = MakeUnique<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
+    auto* textureVK  = textures_.emplace<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto cmdBuffer = device_.AllocCommandBuffer();
@@ -381,7 +375,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     /* Create image view for texture */
     textureVK->CreateInternalImageView(device_);
 
-    return TakeOwnership(textures_, std::move(textureVK));
+    return textureVK;
 }
 
 void VKRenderSystem::Release(Texture& texture)
@@ -389,7 +383,7 @@ void VKRenderSystem::Release(Texture& texture)
     /* Release device memory region, then release texture object */
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
     deviceMemoryMngr_->Release(textureVK.GetMemoryRegion());
-    RemoveFromUniqueSet(textures_, &texture);
+    textures_.erase(&texture);
 }
 
 void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
@@ -556,27 +550,24 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<VKSampler>(device_, samplerDesc));
+    return samplers_.emplace<VKSampler>(device_, samplerDesc);
 }
 
 void VKRenderSystem::Release(Sampler& sampler)
 {
-    RemoveFromUniqueSet(samplers_, &sampler);
+    samplers_.erase(&sampler);
 }
 
 /* ----- Resource Heaps ----- */
 
 ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(
-        resourceHeaps_,
-        MakeUnique<VKResourceHeap>(device_, resourceHeapDesc, initialResourceViews)
-    );
+    return resourceHeaps_.emplace<VKResourceHeap>(device_, resourceHeapDesc, initialResourceViews);
 }
 
 void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+    resourceHeaps_.erase(&resourceHeap);
 }
 
 std::uint32_t VKRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
@@ -589,12 +580,12 @@ std::uint32_t VKRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std:
 
 RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, renderPassDesc));
+    return renderPasses_.emplace<VKRenderPass>(device_, renderPassDesc);
 }
 
 void VKRenderSystem::Release(RenderPass& renderPass)
 {
-    RemoveFromUniqueSet(renderPasses_, &renderPass);
+    renderPasses_.erase(&renderPass);
 }
 
 /* ----- Render Targets ----- */
@@ -602,14 +593,12 @@ void VKRenderSystem::Release(RenderPass& renderPass)
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
     AssertCreateRenderTarget(renderTargetDesc);
-    return TakeOwnership(renderTargets_, MakeUnique<VKRenderTarget>(device_, *deviceMemoryMngr_, renderTargetDesc));
+    return renderTargets_.emplace<VKRenderTarget>(device_, *deviceMemoryMngr_, renderTargetDesc);
 }
 
 void VKRenderSystem::Release(RenderTarget& renderTarget)
 {
-    /* Release device memory region, then release texture object */
-    auto& renderTargetVL = LLGL_CAST(VKRenderTarget&, renderTarget);
-    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    renderTargets_.erase(&renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -617,24 +606,24 @@ void VKRenderSystem::Release(RenderTarget& renderTarget)
 Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     AssertCreateShader(shaderDesc);
-    return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, shaderDesc));
+    return shaders_.emplace<VKShader>(device_, shaderDesc);
 }
 
 void VKRenderSystem::Release(Shader& shader)
 {
-    RemoveFromUniqueSet(shaders_, &shader);
+    shaders_.erase(&shader);
 }
 
 /* ----- Pipeline Layouts ----- */
 
 PipelineLayout* VKRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<VKPipelineLayout>(device_, pipelineLayoutDesc));
+    return pipelineLayouts_.emplace<VKPipelineLayout>(device_, pipelineLayoutDesc);
 }
 
 void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+    pipelineLayouts_.erase(&pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */
@@ -646,28 +635,22 @@ PipelineState* VKRenderSystem::CreatePipelineState(const Blob& /*serializedCache
 
 PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(
-        pipelineStates_,
-        MakeUnique<VKGraphicsPSO>(
-            device_,
-            (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
-            pipelineStateDesc,
-            gfxPipelineLimits_
-        )
+    return pipelineStates_.emplace<VKGraphicsPSO>(
+        device_,
+        (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
+        pipelineStateDesc,
+        gfxPipelineLimits_
     );
 }
 
 PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(
-        pipelineStates_,
-        MakeUnique<VKComputePSO>(device_, pipelineStateDesc)
-    );
+    return pipelineStates_.emplace<VKComputePSO>(device_, pipelineStateDesc);
 }
 
 void VKRenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
+    pipelineStates_.erase(&pipelineState);
 }
 
 /* ----- Queries ----- */
@@ -675,26 +658,26 @@ void VKRenderSystem::Release(PipelineState& pipelineState)
 QueryHeap* VKRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
     if (queryHeapDesc.renderCondition)
-        return TakeOwnership(queryHeaps_, MakeUnique<VKPredicateQueryHeap>(device_, *deviceMemoryMngr_, queryHeapDesc));
+        return queryHeaps_.emplace<VKPredicateQueryHeap>(device_, *deviceMemoryMngr_, queryHeapDesc);
     else
-        return TakeOwnership(queryHeaps_, MakeUnique<VKQueryHeap>(device_, queryHeapDesc));
+        return queryHeaps_.emplace<VKQueryHeap>(device_, queryHeapDesc);
 }
 
 void VKRenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
+    queryHeaps_.erase(&queryHeap);
 }
 
 /* ----- Fences ----- */
 
 Fence* VKRenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<VKFence>(device_));
+    return fences_.emplace<VKFence>(device_);
 }
 
 void VKRenderSystem::Release(Fence& fence)
 {
-    RemoveFromUniqueSet(fences_, &fence);
+    fences_.erase(&fence);
 }
 
 

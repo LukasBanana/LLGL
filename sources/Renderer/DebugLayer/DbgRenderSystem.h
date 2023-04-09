@@ -194,7 +194,7 @@ class DbgRenderSystem final : public RenderSystem
         void AssertMultiSampleTextures();
 
         template <typename T, typename TBase>
-        void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
+        void ReleaseDbg(HWObjectContainer<T>& cont, TBase& entry);
 
         std::vector<ResourceViewDescriptor> GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews);
 

@@ -83,12 +83,12 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
 SwapChain* D3D12RenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(swapChains_, MakeUnique<D3D12SwapChain>(*this, swapChainDesc, surface));
+    return swapChains_.emplace<D3D12SwapChain>(*this, swapChainDesc, surface);
 }
 
 void D3D12RenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(swapChains_, &swapChain);
+    swapChains_.erase(&swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -102,70 +102,48 @@ CommandQueue* D3D12RenderSystem::GetCommandQueue()
 
 CommandBuffer* D3D12RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this, commandBufferDesc));
+    return commandBuffers_.emplace<D3D12CommandBuffer>(*this, commandBufferDesc);
 }
 
 void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 {
     SyncGPU();
-    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+    commandBuffers_.erase(&commandBuffer);
 }
 
 /* ----- Buffers ------ */
 
-// private
-std::unique_ptr<D3D12Buffer> D3D12RenderSystem::CreateGpuBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
-{
-    auto bufferD3D = MakeUnique<D3D12Buffer>(device_.GetNative(), bufferDesc);
-
-    if (initialData)
-    {
-        /* Write initial data to GPU buffer */
-        stagingBufferPool_.WriteImmediate(
-            *commandContext_,
-            bufferD3D->GetResource(),
-            0,
-            initialData,
-            bufferDesc.size,
-            bufferD3D->GetAlignment()
-        );
-
-        /* Execute upload commands and wait for GPU to finish execution */
-        ExecuteCommandListAndSync();
-    }
-
-    return bufferD3D;
-}
-
 Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
     AssertCreateBuffer(bufferDesc, ULLONG_MAX);
-    return TakeOwnership(buffers_, CreateGpuBuffer(bufferDesc, initialData));
+    D3D12Buffer* bufferD3D = buffers_.emplace<D3D12Buffer>(device_.GetNative(), bufferDesc);
+    if (initialData != nullptr)
+        UpdateBufferAndSync(*bufferD3D, 0, initialData, bufferDesc.size, bufferD3D->GetAlignment());
+    return bufferD3D;
 }
 
 BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeUnique<D3D12BufferArray>(numBuffers, bufferArray));
+    return bufferArrays_.emplace<D3D12BufferArray>(numBuffers, bufferArray);
 }
 
 void D3D12RenderSystem::Release(Buffer& buffer)
 {
     SyncGPU();
-    RemoveFromUniqueSet(buffers_, &buffer);
+    buffers_.erase(&buffer);
 }
 
 void D3D12RenderSystem::Release(BufferArray& bufferArray)
 {
     SyncGPU();
-    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    bufferArrays_.erase(&bufferArray);
 }
 
 void D3D12RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    stagingBufferPool_.WriteImmediate(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize);
-    ExecuteCommandListAndSync();
+    UpdateBufferAndSync(bufferD3D, offset, data, dataSize);
 }
 
 void D3D12RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
@@ -197,7 +175,7 @@ void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    auto textureD3D = MakeUnique<D3D12Texture>(device_.GetNative(), textureDesc);
+    auto* textureD3D = textures_.emplace<D3D12Texture>(device_.GetNative(), textureDesc);
 
     if (imageDesc != nullptr)
     {
@@ -215,13 +193,13 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             D3D12MipGenerator::Get().GenerateMips(*commandContext_, *textureD3D, textureD3D->GetWholeSubresource());
     }
 
-    return TakeOwnership(textures_, std::move(textureD3D));
+    return textureD3D;
 }
 
 void D3D12RenderSystem::Release(Texture& texture)
 {
     SyncGPU();
-    RemoveFromUniqueSet(textures_, &texture);
+    textures_.erase(&texture);
 }
 
 void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
@@ -267,29 +245,26 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 
 Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<D3D12Sampler>(samplerDesc));
+    return samplers_.emplace<D3D12Sampler>(samplerDesc);
 }
 
 void D3D12RenderSystem::Release(Sampler& sampler)
 {
     SyncGPU();
-    RemoveFromUniqueSet(samplers_, &sampler);
+    samplers_.erase(&sampler);
 }
 
 /* ----- Resource Heaps ----- */
 
 ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(
-        resourceHeaps_,
-        MakeUnique<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc, initialResourceViews)
-    );
+    return resourceHeaps_.emplace<D3D12ResourceHeap>(device_.GetNative(), resourceHeapDesc, initialResourceViews);
 }
 
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 {
     SyncGPU();
-    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+    resourceHeaps_.erase(&resourceHeap);
 }
 
 std::uint32_t D3D12RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
@@ -302,26 +277,26 @@ std::uint32_t D3D12RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, s
 
 RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(device_, renderPassDesc));
+    return renderPasses_.emplace<D3D12RenderPass>(device_, renderPassDesc);
 }
 
 void D3D12RenderSystem::Release(RenderPass& renderPass)
 {
     SyncGPU();
-    RemoveFromUniqueSet(renderPasses_, &renderPass);
+    renderPasses_.erase(&renderPass);
 }
 
 /* ----- Render Targets ----- */
 
 RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(device_, renderTargetDesc));
+    return renderTargets_.emplace<D3D12RenderTarget>(device_, renderTargetDesc);
 }
 
 void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 {
     SyncGPU();
-    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    renderTargets_.erase(&renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -329,25 +304,25 @@ void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     AssertCreateShader(shaderDesc);
-    return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(shaderDesc));
+    return shaders_.emplace<D3D12Shader>(shaderDesc);
 }
 
 void D3D12RenderSystem::Release(Shader& shader)
 {
-    RemoveFromUniqueSet(shaders_, &shader);
+    shaders_.erase(&shader);
 }
 
 /* ----- Pipeline Layouts ----- */
 
 PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D12PipelineLayout>(device_.GetNative(), pipelineLayoutDesc));
+    return pipelineLayouts_.emplace<D3D12PipelineLayout>(device_.GetNative(), pipelineLayoutDesc);
 }
 
 void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
 {
     SyncGPU();
-    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+    pipelineLayouts_.erase(&pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */
@@ -361,13 +336,13 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const Blob& serializedCach
     if (seg.ident == Serialization::D3D12Ident_GraphicsPSOIdent)
     {
         /* Create graphics PSO from cache */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D12GraphicsPSO>(device_, reader));
+        return pipelineStates_.emplace<D3D12GraphicsPSO>(device_, reader);
     }
     #if 0//TODO
     else if (seg.ident == Serialization::D3D12Ident_ComputePSOIdent)
     {
         /* Create compute PSO from cache */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D12ComputePSO>(device_, reader));
+        return pipelineStates_.emplace<D3D12ComputePSO>(device_, reader);
     }
     #endif
 
@@ -378,15 +353,12 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
 {
     Serialization::Serializer writer;
 
-    auto pipelineState = TakeOwnership(
-        pipelineStates_,
-        MakeUnique<D3D12GraphicsPSO>(
-            device_,
-            defaultPipelineLayout_,
-            pipelineStateDesc,
-            GetDefaultRenderPass(),
-            (serializedCache != nullptr ? &writer : nullptr)
-        )
+    D3D12GraphicsPSO* pipelineState = pipelineStates_.emplace<D3D12GraphicsPSO>(
+        device_,
+        defaultPipelineLayout_,
+        pipelineStateDesc,
+        GetDefaultRenderPass(),
+        (serializedCache != nullptr ? &writer : nullptr)
     );
 
     if (serializedCache != nullptr)
@@ -397,42 +369,39 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
 
 PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(
-        pipelineStates_,
-        MakeUnique<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc)
-    );
+    return pipelineStates_.emplace<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc);
 }
 
 void D3D12RenderSystem::Release(PipelineState& pipelineState)
 {
     SyncGPU();
-    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
+    pipelineStates_.erase(&pipelineState);
 }
 
 /* ----- Queries ----- */
 
 QueryHeap* D3D12RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<D3D12QueryHeap>(device_, queryHeapDesc));
+    return queryHeaps_.emplace<D3D12QueryHeap>(device_, queryHeapDesc);
 }
 
 void D3D12RenderSystem::Release(QueryHeap& queryHeap)
 {
     SyncGPU();
-    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
+    queryHeaps_.erase(&queryHeap);
 }
 
 /* ----- Fences ----- */
 
 Fence* D3D12RenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<D3D12Fence>(device_.GetNative(), 0));
+    return fences_.emplace<D3D12Fence>(device_.GetNative(), 0);
 }
 
 void D3D12RenderSystem::Release(Fence& fence)
 {
     SyncGPU();
-    RemoveFromUniqueSet(fences_, &fence);
+    fences_.erase(&fence);
 }
 
 /* ----- Extended internal functions ----- */
@@ -617,6 +586,17 @@ void D3D12RenderSystem::ExecuteCommandList()
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
     commandContext_->Finish(true);
+}
+
+void D3D12RenderSystem::UpdateBufferAndSync(
+    D3D12Buffer&    bufferD3D,
+    std::uint64_t   offset,
+    const void*     data,
+    std::uint64_t   dataSize,
+    std::uint64_t   alignment)
+{
+    stagingBufferPool_.WriteImmediate(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize, alignment);
+    ExecuteCommandListAndSync();
 }
 
 void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size)

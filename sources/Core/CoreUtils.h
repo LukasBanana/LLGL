@@ -123,45 +123,6 @@ void RemoveFromSharedList(Container& cont, const T* entry)
     }
 }
 
-template <typename T, typename TBase>
-void RemoveFromUniqueSet(std::set<std::unique_ptr<T>>& cont, const TBase* entry)
-{
-    if (entry)
-    {
-        RemoveFromListIf(
-            cont,
-            [entry](const std::unique_ptr<T>& e)
-            {
-                return (e.get() == entry);
-            }
-        );
-    }
-}
-
-template <typename BaseType, typename SubType>
-SubType* TakeOwnership(std::set<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
-{
-    auto ref = object.get();
-    objectSet.emplace(std::forward<std::unique_ptr<SubType>>(object));
-    return ref;
-}
-
-template <typename BaseType, typename SubType>
-SubType* TakeOwnership(std::vector<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
-{
-    auto ref = object.get();
-    objectSet.emplace_back(std::forward<std::unique_ptr<SubType>>(object));
-    return ref;
-}
-
-template <typename BaseType, typename SubType>
-SubType* TakeOwnership(std::list<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
-{
-    auto ref = object.get();
-    objectSet.emplace_back(std::forward<std::unique_ptr<SubType>>(object));
-    return ref;
-}
-
 /*
 \brief Returns the next resource from the specified resource array.
 \param[in,out] numResources Specifies the remaining number of resources in the array.

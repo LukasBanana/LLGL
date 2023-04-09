@@ -7,7 +7,7 @@
 
 #include "VKDeviceMemoryManager.h"
 #include "../VKCore.h"
-#include "../../../Core/CoreUtils.h"
+#include "../../ContainerTypes.h"
 
 
 namespace LLGL
@@ -66,15 +66,7 @@ void VKDeviceMemoryManager::Release(VKDeviceMemoryRegion* region)
 
             /* Release chunk if it's empty */
             if (chunk->IsEmpty())
-            {
-                RemoveFromListIf(
-                    chunks_,
-                    [chunk](std::unique_ptr<VKDeviceMemory>& entry)
-                    {
-                        return (entry.get() == chunk);
-                    }
-                );
-            }
+                chunks_.erase(chunk);
         }
     }
 }
@@ -129,7 +121,7 @@ std::uint32_t VKDeviceMemoryManager::FindMemoryType(std::uint32_t memoryTypeBits
 
 VKDeviceMemory* VKDeviceMemoryManager::AllocChunk(VkDeviceSize size, std::uint32_t memoryTypeIndex)
 {
-    return TakeOwnership(chunks_, MakeUnique<VKDeviceMemory>(device_, size, memoryTypeIndex));
+    return chunks_.emplace<VKDeviceMemory>(device_, size, memoryTypeIndex);
 }
 
 VKDeviceMemory* VKDeviceMemoryManager::FindOrAllocChunk(VkDeviceSize allocationSize, std::uint32_t memoryTypeIndex, VkDeviceSize minFreeBlockSize)

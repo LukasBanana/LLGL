@@ -12,6 +12,7 @@
 //#include "../Vulkan.h"
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
+#include "../../ContainerTypes.h"
 #include "VKDeviceMemory.h"
 #include "VKDeviceMemoryRegion.h"
 #include <vector>
@@ -88,13 +89,13 @@ class VKDeviceMemoryManager
 
     private:
 
-        VkDevice                                        device_;
-        VkPhysicalDeviceMemoryProperties                memoryProperties_;
+        VkDevice                                    device_;
+        VkPhysicalDeviceMemoryProperties            memoryProperties_;
 
-        VkDeviceSize                                    minAllocationSize_      = 1024*1024;
-        bool                                            reduceFragmentation_    = false;
+        VkDeviceSize                                minAllocationSize_      = 1024*1024;
+        bool                                        reduceFragmentation_    = false;
 
-        std::vector<std::unique_ptr<VKDeviceMemory>>    chunks_;
+        UnorderedUniquePtrVector<VKDeviceMemory>    chunks_;
 
 };
 

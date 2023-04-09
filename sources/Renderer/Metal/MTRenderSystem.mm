@@ -41,12 +41,12 @@ MTRenderSystem::~MTRenderSystem()
 
 SwapChain* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(swapChains_, MakeUnique<MTSwapChain>(device_, swapChainDesc, surface));
+    return swapChains_.emplace<MTSwapChain>(device_, swapChainDesc, surface);
 }
 
 void MTRenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(swapChains_, &swapChain);
+    swapChains_.erase(&swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -60,35 +60,35 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(device_, commandQueue_->GetNative(), commandBufferDesc));
+    return commandBuffers_.emplace<MTCommandBuffer>(device_, commandQueue_->GetNative(), commandBufferDesc);
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+    commandBuffers_.erase(&commandBuffer);
 }
 
 /* ----- Buffers ------ */
 
 Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    return TakeOwnership(buffers_, MakeUnique<MTBuffer>(device_, bufferDesc, initialData));
+    return buffers_.emplace<MTBuffer>(device_, bufferDesc, initialData);
 }
 
 BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeUnique<MTBufferArray>(numBuffers, bufferArray));
+    return bufferArrays_.emplace<MTBufferArray>(numBuffers, bufferArray);
 }
 
 void MTRenderSystem::Release(Buffer& buffer)
 {
-    RemoveFromUniqueSet(buffers_, &buffer);
+    buffers_.erase(&buffer);
 }
 
 void MTRenderSystem::Release(BufferArray& bufferArray)
 {
-    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    bufferArrays_.erase(&bufferArray);
 }
 
 void MTRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
@@ -125,7 +125,7 @@ void MTRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    auto textureMT = MakeUnique<MTTexture>(device_, textureDesc);
+    auto* textureMT = textures_.emplace<MTTexture>(device_, textureDesc);
 
     if (imageDesc)
     {
@@ -153,12 +153,12 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         }
     }
 
-    return TakeOwnership(textures_, std::move(textureMT));
+    return textureMT;
 }
 
 void MTRenderSystem::Release(Texture& texture)
 {
-    RemoveFromUniqueSet(textures_, &texture);
+    textures_.erase(&texture);
 }
 
 void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
@@ -177,24 +177,24 @@ void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 Sampler* MTRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<MTSampler>(device_, samplerDesc));
+    return samplers_.emplace<MTSampler>(device_, samplerDesc);
 }
 
 void MTRenderSystem::Release(Sampler& sampler)
 {
-    RemoveFromUniqueSet(samplers_, &sampler);
+    samplers_.erase(&sampler);
 }
 
 /* ----- Resource Heaps ----- */
 
 ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<MTResourceHeap>(resourceHeapDesc, initialResourceViews));
+    return resourceHeaps_.emplace<MTResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
 
 void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+    resourceHeaps_.erase(&resourceHeap);
 }
 
 std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
@@ -207,24 +207,24 @@ std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std:
 
 RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(renderPassDesc));
+    return renderPasses_.emplace<MTRenderPass>(renderPassDesc);
 }
 
 void MTRenderSystem::Release(RenderPass& renderPass)
 {
-    RemoveFromUniqueSet(renderPasses_, &renderPass);
+    renderPasses_.erase(&renderPass);
 }
 
 /* ----- Render Targets ----- */
 
 RenderTarget* MTRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<MTRenderTarget>(device_, renderTargetDesc));
+    return renderTargets_.emplace<MTRenderTarget>(device_, renderTargetDesc);
 }
 
 void MTRenderSystem::Release(RenderTarget& renderTarget)
 {
-    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    renderTargets_.erase(&renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -232,24 +232,24 @@ void MTRenderSystem::Release(RenderTarget& renderTarget)
 Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     AssertCreateShader(shaderDesc);
-    return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, shaderDesc));
+    return shaders_.emplace<MTShader>(device_, shaderDesc);
 }
 
 void MTRenderSystem::Release(Shader& shader)
 {
-    RemoveFromUniqueSet(shaders_, &shader);
+    shaders_.erase(&shader);
 }
 
 /* ----- Pipeline Layouts ----- */
 
 PipelineLayout* MTRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<MTPipelineLayout>(device_, pipelineLayoutDesc));
+    return pipelineLayouts_.emplace<MTPipelineLayout>(device_, pipelineLayoutDesc);
 }
 
 void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+    pipelineLayouts_.erase(&pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */
@@ -261,17 +261,17 @@ PipelineState* MTRenderSystem::CreatePipelineState(const Blob& /*serializedCache
 
 PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<MTGraphicsPSO>(device_, pipelineStateDesc, GetDefaultRenderPass()));
+    return pipelineStates_.emplace<MTGraphicsPSO>(device_, pipelineStateDesc, GetDefaultRenderPass());
 }
 
 PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<MTComputePSO>(device_, pipelineStateDesc));
+    return pipelineStates_.emplace<MTComputePSO>(device_, pipelineStateDesc);
 }
 
 void MTRenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
+    pipelineStates_.erase(&pipelineState);
 }
 
 /* ----- Queries ----- */
@@ -284,19 +284,19 @@ QueryHeap* MTRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapD
 void MTRenderSystem::Release(QueryHeap& queryHeap)
 {
     //todo
-    //RemoveFromUniqueSet(queryHeaps_, &queryHeap);
+    //queryHeaps_.erase(&queryHeap);
 }
 
 /* ----- Fences ----- */
 
 Fence* MTRenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<MTFence>(device_));
+    return fences_.emplace<MTFence>(device_);
 }
 
 void MTRenderSystem::Release(Fence& fence)
 {
-    RemoveFromUniqueSet(fences_, &fence);
+    fences_.erase(&fence);
 }
 
 

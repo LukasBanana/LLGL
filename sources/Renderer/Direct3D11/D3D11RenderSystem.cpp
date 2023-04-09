@@ -79,15 +79,12 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 SwapChain* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(
-        swapChains_,
-        MakeUnique<D3D11SwapChain>(factory_.Get(), device_, swapChainDesc, surface)
-    );
+    return swapChains_.emplace<D3D11SwapChain>(factory_.Get(), device_, swapChainDesc, surface);
 }
 
 void D3D11RenderSystem::Release(SwapChain& swapChain)
 {
-    RemoveFromUniqueSet(swapChains_, &swapChain);
+    swapChains_.erase(&swapChain);
 }
 
 /* ----- Command queues ----- */
@@ -104,10 +101,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
     if ((commandBufferDesc.flags & (CommandBufferFlags::ImmediateSubmit)) != 0)
     {
         /* Create command buffer with immediate context */
-        return TakeOwnership(
-            commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, commandBufferDesc)
-        );
+        return commandBuffers_.emplace<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, commandBufferDesc);
     }
     else
     {
@@ -120,49 +114,40 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         auto deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext);
 
         /* Create command buffer with deferred context and dedicated state manager */
-        return TakeOwnership(
-            commandBuffers_,
-            MakeUnique<D3D11CommandBuffer>(device_.Get(), deferredContext, deferredStateMngr, commandBufferDesc)
-        );
+        return commandBuffers_.emplace<D3D11CommandBuffer>(device_.Get(), deferredContext, deferredStateMngr, commandBufferDesc);
     }
 }
 
 void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+    commandBuffers_.erase(&commandBuffer);
 }
 
 /* ----- Buffers ------ */
 
-static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& bufferDesc, const void* initialData)
-{
-    /* Make respective buffer type */
-    if (DXBindFlagsNeedBufferWithRV(bufferDesc.bindFlags))
-        return MakeUnique<D3D11BufferWithRV>(device, bufferDesc, initialData);
-    else
-        return MakeUnique<D3D11Buffer>(device, bufferDesc, initialData);
-}
-
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
     AssertCreateBuffer(bufferDesc, UINT_MAX);
-    return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), bufferDesc, initialData));
+    if (DXBindFlagsNeedBufferWithRV(bufferDesc.bindFlags))
+        return buffers_.emplace<D3D11BufferWithRV>(device_.Get(), bufferDesc, initialData);
+    else
+        return buffers_.emplace<D3D11Buffer>(device_.Get(), bufferDesc, initialData);
 }
 
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(numBuffers, bufferArray));
+    return bufferArrays_.emplace<D3D11BufferArray>(numBuffers, bufferArray);
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)
 {
-    RemoveFromUniqueSet(buffers_, &buffer);
+    buffers_.erase(&buffer);
 }
 
 void D3D11RenderSystem::Release(BufferArray& bufferArray)
 {
-    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    bufferArrays_.erase(&bufferArray);
 }
 
 void D3D11RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
@@ -200,21 +185,21 @@ void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Create texture object */
-    auto texture = MakeUnique<D3D11Texture>(device_.Get(), textureDesc);
+    auto* textureD3D = textures_.emplace<D3D11Texture>(device_.Get(), textureDesc);
 
     /* Initialize texture data with or without initial image data */
-    InitializeGpuTexture(*texture, textureDesc, imageDesc);
+    InitializeGpuTexture(*textureD3D, textureDesc, imageDesc);
 
     /* Generate MIP-maps if enabled */
     if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
-        D3D11MipGenerator::Get().GenerateMips(context_.Get(), *texture);
+        D3D11MipGenerator::Get().GenerateMips(context_.Get(), *textureD3D);
 
-    return TakeOwnership(textures_, std::move(texture));
+    return textureD3D;
 }
 
 void D3D11RenderSystem::Release(Texture& texture)
 {
-    RemoveFromUniqueSet(textures_, &texture);
+    textures_.erase(&texture);
 }
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
@@ -311,24 +296,24 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 
 Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
-    return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), samplerDesc));
+    return samplers_.emplace<D3D11Sampler>(device_.Get(), samplerDesc);
 }
 
 void D3D11RenderSystem::Release(Sampler& sampler)
 {
-    RemoveFromUniqueSet(samplers_, &sampler);
+    samplers_.erase(&sampler);
 }
 
 /* ----- Resource Heaps ----- */
 
 ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(resourceHeapDesc, initialResourceViews));
+    return resourceHeaps_.emplace<D3D11ResourceHeap>(resourceHeapDesc, initialResourceViews);
 }
 
 void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+    resourceHeaps_.erase(&resourceHeap);
 }
 
 std::uint32_t D3D11RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews)
@@ -341,24 +326,24 @@ std::uint32_t D3D11RenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, s
 
 RenderPass* D3D11RenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(renderPassDesc));
+    return renderPasses_.emplace<D3D11RenderPass>(renderPassDesc);
 }
 
 void D3D11RenderSystem::Release(RenderPass& renderPass)
 {
-    RemoveFromUniqueSet(renderPasses_, &renderPass);
+    renderPasses_.erase(&renderPass);
 }
 
 /* ----- Render Targets ----- */
 
 RenderTarget* D3D11RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), renderTargetDesc));
+    return renderTargets_.emplace<D3D11RenderTarget>(device_.Get(), renderTargetDesc);
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 {
-    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    renderTargets_.erase(&renderTarget);
 }
 
 /* ----- Shader ----- */
@@ -366,24 +351,24 @@ void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     AssertCreateShader(shaderDesc);
-    return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), shaderDesc));
+    return shaders_.emplace<D3D11Shader>(device_.Get(), shaderDesc);
 }
 
 void D3D11RenderSystem::Release(Shader& shader)
 {
-    RemoveFromUniqueSet(shaders_, &shader);
+    shaders_.erase(&shader);
 }
 
 /* ----- Pipeline Layouts ----- */
 
 PipelineLayout* D3D11RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D11PipelineLayout>(device_.Get(), pipelineLayoutDesc));
+    return pipelineLayouts_.emplace<D3D11PipelineLayout>(device_.Get(), pipelineLayoutDesc);
 }
 
 void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+    pipelineLayouts_.erase(&pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */
@@ -399,7 +384,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     if (device3_)
     {
         /* Create graphics pipeline for Direct3D 11.3 */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO3>(device3_.Get(), pipelineStateDesc));
+        return pipelineStates_.emplace<D3D11GraphicsPSO3>(device3_.Get(), pipelineStateDesc);
     }
     #endif
 
@@ -407,7 +392,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     if (device2_)
     {
         /* Create graphics pipeline for Direct3D 11.1 (there is no dedicated class for 11.2) */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device2_.Get(), pipelineStateDesc));
+        return pipelineStates_.emplace<D3D11GraphicsPSO1>(device2_.Get(), pipelineStateDesc);
     }
     #endif
 
@@ -415,46 +400,46 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     if (device1_)
     {
         /* Create graphics pipeline for Direct3D 11.1 */
-        return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO1>(device1_.Get(), pipelineStateDesc));
+        return pipelineStates_.emplace<D3D11GraphicsPSO1>(device1_.Get(), pipelineStateDesc);
     }
     #endif
 
     /* Create graphics pipeline for Direct3D 11.0 */
-    return TakeOwnership(pipelineStates_, MakeUnique<D3D11GraphicsPSO>(device_.Get(), pipelineStateDesc));
+    return pipelineStates_.emplace<D3D11GraphicsPSO>(device_.Get(), pipelineStateDesc);
 }
 
 PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
 {
-    return TakeOwnership(pipelineStates_, MakeUnique<D3D11ComputePSO>(pipelineStateDesc));
+    return pipelineStates_.emplace<D3D11ComputePSO>(pipelineStateDesc);
 }
 
 void D3D11RenderSystem::Release(PipelineState& pipelineState)
 {
-    RemoveFromUniqueSet(pipelineStates_, &pipelineState);
+    pipelineStates_.erase(&pipelineState);
 }
 
 /* ----- Queries ----- */
 
 QueryHeap* D3D11RenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return TakeOwnership(queryHeaps_, MakeUnique<D3D11QueryHeap>(device_.Get(), queryHeapDesc));
+    return queryHeaps_.emplace<D3D11QueryHeap>(device_.Get(), queryHeapDesc);
 }
 
 void D3D11RenderSystem::Release(QueryHeap& queryHeap)
 {
-    RemoveFromUniqueSet(queryHeaps_, &queryHeap);
+    queryHeaps_.erase(&queryHeap);
 }
 
 /* ----- Fences ----- */
 
 Fence* D3D11RenderSystem::CreateFence()
 {
-    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(device_.Get()));
+    return fences_.emplace<D3D11Fence>(device_.Get());
 }
 
 void D3D11RenderSystem::Release(Fence& fence)
 {
-    RemoveFromUniqueSet(fences_, &fence);
+    fences_.erase(&fence);
 }
 
 /* ----- Internal functions ----- */

@@ -7,8 +7,10 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Misc/VertexFormat.h>
+#include <LLGL/Timer.h>
 #include <Gauss/Gauss.h>
 #include <iostream>
+
 
 int main()
 {
@@ -121,7 +123,7 @@ int main()
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
-            layoutDesc.bindings =
+            layoutDesc.heapBindings =
             {
                 LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
             };
