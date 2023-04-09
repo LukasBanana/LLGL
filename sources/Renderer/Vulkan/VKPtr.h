@@ -33,6 +33,12 @@ class VKPtr
         {
         }
 
+        // Constructs a default VKPtr object when initialized with a VK_NULL_HANDLE.
+        VKPtr(std::nullptr_t) :
+            VKPtr { [](T, VkAllocationCallbacks*) {} }
+        {
+        }
+
         // Constructs the handler with the specified deleter function.
         VKPtr(const std::function<void(T, VkAllocationCallbacks*)>& deleter)
         {

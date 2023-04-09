@@ -46,7 +46,7 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
     if (!desc.bindings.empty() || !desc.staticSamplers.empty())
         CreateDescriptorPool(device);
     if (!desc.bindings.empty())
-        CreateDescriptorCache(device, setLayouts_[SetLayoutType_DynamicBindings]);
+        CreateDescriptorCache(device, setLayouts_[SetLayoutType_DynamicBindings].Get());
     if (!desc.staticSamplers.empty())
         CreateStaticDescriptorSet(device, setLayouts_[SetLayoutType_ImmutableSamplers].Get());
 
@@ -391,7 +391,7 @@ void VKPipelineLayout::CreateDescriptorPool(VkDevice device)
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool for static samplers");
 }
 
-void VKPipelineLayout::CreateDescriptorCache(VkDevice device, VkDescriptorSet setLayout)
+void VKPipelineLayout::CreateDescriptorCache(VkDevice device, VkDescriptorSetLayout setLayout)
 {
     /*
     Don't account descriptors in the dynamic cache for immutable samplers,
@@ -406,7 +406,7 @@ void VKPipelineLayout::CreateDescriptorCache(VkDevice device, VkDescriptorSet se
     descriptorCache_ = MakeUnique<VKDescriptorCache>(device, descriptorPool_, setLayout, poolSizeAccum.Size(), poolSizeAccum.Data(), bindings_);
 }
 
-void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout)
+void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSetLayout setLayout)
 {
     /* Allocate descriptor set for immutable samplers */
     VkDescriptorSetAllocateInfo allocInfo;

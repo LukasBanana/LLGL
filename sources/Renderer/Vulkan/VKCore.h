@@ -59,7 +59,7 @@ struct SurfaceSupportDetails
 /* ----- Basic Functions ----- */
 
 // Throws an std::runtime_error exception if 'result' is not VK_SUCCESS.
-void VKThrowIfFailed(const VkResult result, const char* info);
+void VKThrowIfFailed(const VkResult result, const char* details);
 
 // Throws an std::runtime_error exception if 'result' is not VK_SUCCESS, with an info about the failed interface creation.
 void VKThrowIfCreateFailed(const VkResult result, const char* interfaceName, const char* contextInfo = nullptr);

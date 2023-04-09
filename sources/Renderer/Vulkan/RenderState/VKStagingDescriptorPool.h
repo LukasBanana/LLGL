@@ -12,6 +12,7 @@
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL

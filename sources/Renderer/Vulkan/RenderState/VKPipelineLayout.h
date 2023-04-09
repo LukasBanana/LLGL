@@ -186,8 +186,8 @@ class VKPipelineLayout final : public PipelineLayout
         ) const;
 
         void CreateDescriptorPool(VkDevice device);
-        void CreateDescriptorCache(VkDevice device, VkDescriptorSet setLayout);
-        void CreateStaticDescriptorSet(VkDevice device, VkDescriptorSet setLayout);
+        void CreateDescriptorCache(VkDevice device, VkDescriptorSetLayout setLayout);
+        void CreateStaticDescriptorSet(VkDevice device, VkDescriptorSetLayout setLayout);
 
         void BuildDescriptorSetBindingTables(const PipelineLayoutDescriptor& desc);
 

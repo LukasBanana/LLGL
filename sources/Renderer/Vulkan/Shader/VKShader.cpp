@@ -492,14 +492,14 @@ bool VKShader::Reflect(ShaderReflection& /*reflection*/) const
     return false; // dummy
 }
 
-bool VKShader::ReflectLocalSize(Extent3D& /*workGroupSize*/) const
+bool VKShader::ReflectLocalSize(Extent3D& /*outLocalSize*/) const
 {
     return false; // dummy
 }
 
 bool VKShader::ReflectPushConstants(
-    const ArrayView<UniformDescriptor>& uniformDescs,
-    std::vector<VkPushConstantRange>    outPushConstantRanges) const
+    const ArrayView<UniformDescriptor>& inUniformDescs,
+    std::vector<VKUniformRange>&        outUniformRanges) const
 {
     return false; // dummy
 }

@@ -67,7 +67,9 @@ VKCommandBuffer::VKCommandBuffer(
     recordingFenceArray_    { VKPtr<VkFence>{ device, vkDestroyFence },
                               VKPtr<VkFence>{ device, vkDestroyFence },
                               VKPtr<VkFence>{ device, vkDestroyFence } },
-    descriptorSetPoolArray_ { device, device, device                   }
+    descriptorSetPoolArray_ { device.GetVkDevice().Get(),
+                              device.GetVkDevice().Get(),
+                              device.GetVkDevice().Get()               }
 {
     /* Translate creation flags */
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)

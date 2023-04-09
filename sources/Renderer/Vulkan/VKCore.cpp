@@ -8,6 +8,8 @@
 #include "VKCore.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
+#include "../../Core/Exception.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -16,10 +18,10 @@ namespace LLGL
 
 /* ----- Basic Functions ----- */
 
-static const char* VKErrorToStr(const VkResult errorCode)
+static const char* VKResultToStr(const VkResult result)
 {
     // see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkResult.html
-    switch (errorCode)
+    switch (result)
     {
         LLGL_CASE_TO_STR( VK_SUCCESS );
         LLGL_CASE_TO_STR( VK_NOT_READY );
@@ -92,28 +94,23 @@ static const char* VKErrorToStr(const VkResult errorCode)
     return nullptr;
 }
 
-void VKThrowIfFailed(const VkResult result, const char* info)
+static std::string VKResultToStrOrHex(const VkResult result)
+{
+    if (auto err = VKResultToStr(result))
+        return err;
+    else
+        return IntToHex(static_cast<int>(result));
+}
+
+void VKThrowIfFailed(const VkResult result, const char* details)
 {
     if (result != VK_SUCCESS)
     {
-        std::string s;
-
-        if (info)
-        {
-            s += info;
-            s += " (error code = ";
-        }
+        std::string resultStr = VKResultToStrOrHex(result);
+        if (details != nullptr && *details != '\0')
+            LLGL_TRAP("%s (error code = %s)", details, resultStr.c_str());
         else
-            s += "Vulkan operation failed (error code = ";
-
-        if (auto err = VKErrorToStr(result))
-            s += err;
-        else
-            s += IntToHex(static_cast<int>(result));
-
-        s += ")";
-
-        throw std::runtime_error(s);
+            LLGL_TRAP("Vulkan operation failed (error code = %s)", resultStr.c_str());
     }
 }
 
@@ -297,7 +294,7 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
 
 VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* candidates, std::size_t numCandidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
-    for (std::size_t i = 0; i < numCandidates; ++i)
+    for_range(i, numCandidates)
     {
         auto format = candidates[i];
 
@@ -311,17 +308,17 @@ VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* can
         if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & features) == features)
             return format;
     }
-    throw std::runtime_error("failed to find suitable image format");
+    LLGL_TRAP("failed to find suitable image format");
 }
 
 std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
 {
-    for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
+    for_range(i, memoryProperties.memoryTypeCount)
     {
         if ((memoryTypeBits & (1 << i)) != 0 && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
             return i;
     }
-    throw std::runtime_error("failed to find suitable Vulkan memory type");
+    LLGL_TRAP("failed to find suitable Vulkan memory type");
 }
 
 
