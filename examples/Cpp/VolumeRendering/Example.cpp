@@ -204,20 +204,20 @@ private:
     {
         // Create pipeline layout with only a single constnat buffer for depth-range pass and Z-pre pass
         pipelineLayoutCbuffer = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(Settings@1):frag:vert")
+            LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@1):frag:vert}")
         );
 
         // Create pipeline layout for final scene rendering
         if (IsOpenGL())
         {
             pipelineLayoutFinalPass = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(Settings@1):frag:vert, texture(noiseTexture@2):frag, texture(depthRangeTexture@3):frag, sampler(2):frag, sampler(3):frag")
+                LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@1):frag:vert, texture(noiseTexture@2):frag, texture(depthRangeTexture@3):frag, sampler(2):frag, sampler(3):frag}")
             );
         }
         else
         {
             pipelineLayoutFinalPass = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(Settings@1):frag:vert, texture(noiseTexture@2):frag, texture(depthRangeTexture@3):frag, sampler(linearSampler@4):frag")
+                LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@1):frag:vert, texture(noiseTexture@2):frag, texture(depthRangeTexture@3):frag, sampler(linearSampler@4):frag}")
             );
         }
     }

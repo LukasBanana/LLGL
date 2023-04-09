@@ -130,7 +130,7 @@ private:
     {
         // Create pipeline layouts for shadow-map and scene rendering
         pipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(Settings@1):frag:vert")
+            LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@1):frag:vert}")
         );
     }
 

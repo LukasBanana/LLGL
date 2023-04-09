@@ -115,7 +115,7 @@ public:
     {
         // Create compute pipeline layout
         computePipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("texture(tex@0):comp, rwtexture(texOut@1):comp")
+            LLGL::PipelineLayoutDesc("heap{texture(tex@0):comp, rwtexture(texOut@1):comp}")
         );
 
         // Create compute pipeline
@@ -129,8 +129,8 @@ public:
         // Create graphics pipeline layout
         graphicsPipelineLayout = renderer->CreatePipelineLayout(
             IsVulkan()
-                ? LLGL::PipelineLayoutDesc("texture(tex@0):frag, sampler(texSampler@1):frag")
-                : LLGL::PipelineLayoutDesc("texture(tex@0):frag, sampler(texSampler@0):frag")
+                ? LLGL::PipelineLayoutDesc("heap{texture(tex@0):frag, sampler(texSampler@1):frag}")
+                : LLGL::PipelineLayoutDesc("heap{texture(tex@0):frag, sampler(texSampler@0):frag}")
         );
 
         // Create graphics pipeline
