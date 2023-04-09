@@ -28,7 +28,6 @@ class Example_ShadowMapping : public ExampleBase
     LLGL::Buffer*               constantBuffer          = nullptr;
 
     LLGL::Texture*              shadowMap               = nullptr;
-    LLGL::Sampler*              shadowMapSampler        = nullptr;
     const LLGL::Extent2D        shadowMapResolution     = { 256, 256 };
     LLGL::RenderTarget*         shadowMapRenderTarget   = nullptr;
 
@@ -164,48 +163,55 @@ private:
             renderTargetDesc.resolution     = shadowMapResolution;
             renderTargetDesc.attachments    =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, shadowMap }
+                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth, shadowMap }
             };
         }
         shadowMapRenderTarget = renderer->CreateRenderTarget(renderTargetDesc);
-
-        // Create texture sampler
-        LLGL::SamplerDescriptor samplerDesc;
-        {
-            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.addressModeW    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.borderColor[0]  = 1.0f;
-            samplerDesc.borderColor[1]  = 1.0f;
-            samplerDesc.borderColor[2]  = 1.0f;
-            samplerDesc.borderColor[3]  = 1.0f;
-            samplerDesc.compareEnabled  = true;
-            samplerDesc.mipMapEnabled   = false;
-        }
-        shadowMapSampler = renderer->CreateSampler(samplerDesc);
     }
 
     void CreatePipelineLayouts()
     {
-        // Create pipeline layouts for shadow-map and scene rendering
-        if (IsOpenGL())
+        // Initialize shadow-map sampler
+        LLGL::SamplerDescriptor shadowSamplerDesc;
         {
-            pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(0):vert")
-            );
-            pipelineLayoutScene = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(0):frag:vert, texture(0):frag, sampler(0):frag")
-            );
+            shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Border;
+            shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Border;
+            shadowSamplerDesc.addressModeW      = LLGL::SamplerAddressMode::Border;
+            shadowSamplerDesc.borderColor[0]    = 1.0f;
+            shadowSamplerDesc.borderColor[1]    = 1.0f;
+            shadowSamplerDesc.borderColor[2]    = 1.0f;
+            shadowSamplerDesc.borderColor[3]    = 1.0f;
+            shadowSamplerDesc.compareEnabled    = true;
+            shadowSamplerDesc.mipMapEnabled     = false;
         }
-        else
+
+        // Create pipeline layouts for shadow-map rendering
+        LLGL::PipelineLayoutDescriptor shadowLayoutDesc;
         {
-            pipelineLayoutShadowMap = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(1):vert")
-            );
-            pipelineLayoutScene = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("cbuffer(1):frag:vert, texture(2):frag, sampler(3):frag")
-            );
+            shadowLayoutDesc.heapBindings =
+            {
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, (IsOpenGL() ? 0u : 1u) }
+            };
         }
+        pipelineLayoutShadowMap = renderer->CreatePipelineLayout(shadowLayoutDesc);
+
+        // Create pipeline layout for scene rendering
+        LLGL::PipelineLayoutDescriptor sceneLayoutDesc;
+        {
+            sceneLayoutDesc.heapBindings =
+            {
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, (IsOpenGL() ? 0u : 1u) },
+                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 (IsOpenGL() ? 0u : 2u) },
+            };
+            sceneLayoutDesc.staticSamplers =
+            {
+                LLGL::StaticSamplerDescriptor
+                {
+                    LLGL::StageFlags::FragmentStage, (IsOpenGL() ? 0u : 3u), shadowSamplerDesc
+                }
+            };
+        }
+        pipelineLayoutScene = renderer->CreatePipelineLayout(sceneLayoutDesc);
     }
 
     void CreatePipelines()
@@ -251,7 +257,7 @@ private:
         resourceHeapShadowMap = renderer->CreateResourceHeap(pipelineLayoutShadowMap, { constantBuffer });
 
         // Create resource heap for scene rendering
-        resourceHeapScene = renderer->CreateResourceHeap(pipelineLayoutScene, { constantBuffer, shadowMap, shadowMapSampler });
+        resourceHeapScene = renderer->CreateResourceHeap(pipelineLayoutScene, { constantBuffer, shadowMap });
     }
 
     void UpdateScene()
