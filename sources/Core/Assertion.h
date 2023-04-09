@@ -12,11 +12,8 @@
 #include "Exception.h"
 
 
-#define LLGL_ASSERT_PRIMARY(EXPR, ...) \
-    if (!(EXPR)) { LLGL::TrapAssertionFailed(__FUNCTION__, __VA_ARGS__); }
-
 #define LLGL_ASSERT(EXPR, ...) \
-    LLGL_ASSERT_PRIMARY(EXPR, #EXPR, __VA_ARGS__)
+    if (!(EXPR)) { LLGL::TrapAssertionFailed(__FUNCTION__, #EXPR LLGL_VA_ARGS(__VA_ARGS__)); }
 
 #define LLGL_ASSERT_PTR(PARAM) \
     if (!(PARAM)) { LLGL::TrapParamNullPointer(__FUNCTION__, #PARAM); }

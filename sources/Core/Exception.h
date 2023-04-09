@@ -14,8 +14,11 @@
 #include <string>
 
 
+#define LLGL_VA_ARGS(...) \
+    , ## __VA_ARGS__
+
 #define LLGL_TRAP(FORMAT, ...) \
-    LLGL::Trap(__FUNCTION__, (FORMAT), __VA_ARGS__)
+    LLGL::Trap(__FUNCTION__, (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
 
 #define LLGL_TRAP_NOT_IMPLEMENTED() \
     LLGL::TrapNotImplemented(__FUNCTION__)

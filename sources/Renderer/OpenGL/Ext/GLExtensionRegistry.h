@@ -9,11 +9,11 @@
 #define LLGL_GL_EXTENSION_REGISTRY_H
 
 
-#define LLGL_ASSERT_GL_EXT_PRIMARY(EXT, ...) \
-    if (!LLGL::HasExtension(LLGL::GLExt::EXT)) { LLGL::TrapGLExtensionNotSupported(__FUNCTION__, __VA_ARGS__); }
+#include "../../../Core/Exception.h"
+
 
 #define LLGL_ASSERT_GL_EXT(EXT, ...) \
-    LLGL_ASSERT_GL_EXT_PRIMARY(EXT, "GL_" #EXT, __VA_ARGS__)
+    if (!LLGL::HasExtension(LLGL::GLExt::EXT)) { LLGL::TrapGLExtensionNotSupported(__FUNCTION__, "GL_" #EXT LLGL_VA_ARGS(__VA_ARGS__)); }
 
 
 namespace LLGL
