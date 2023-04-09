@@ -30,23 +30,23 @@ MTDescriptorCache::MTDescriptorCache(const ArrayView<MTDynamicResourceLayout>& b
 void MTDescriptorCache::Reset()
 {
     /* Invalidate all resources */
-    dirtyRange_[0] = 0;
-    dirtyRange_[1] = static_cast<std::uint8_t>(bindings_.size());
-    dirtyBindings_[0] = ~0ull;
-    dirtyBindings_[1] = ~0ull;
-    dirtyBindings_[2] = ~0ull;
-    dirtyBindings_[3] = ~0ull;
+    dirtyBindings_[0]   = ~0ull;
+    dirtyBindings_[1]   = ~0ull;
+    dirtyBindings_[2]   = ~0ull;
+    dirtyBindings_[3]   = ~0ull;
+    dirtyRange_[0]      = 0;
+    dirtyRange_[1]      = static_cast<std::uint8_t>(bindings_.size());
 }
 
 void MTDescriptorCache::Clear()
 {
     /* Clear dirty range and resource bits */
-    dirtyRange_[0] = ~0u;
-    dirtyRange_[1] = 0;
-    dirtyBindings_[0] = 0;
-    dirtyBindings_[1] = 0;
-    dirtyBindings_[2] = 0;
-    dirtyBindings_[3] = 0;
+    dirtyBindings_[0]   = 0;
+    dirtyBindings_[1]   = 0;
+    dirtyBindings_[2]   = 0;
+    dirtyBindings_[3]   = 0;
+    dirtyRange_[0]      = 0xFF;
+    dirtyRange_[1]      = 0;
 }
 
 void MTDescriptorCache::SetResource(std::uint32_t descriptor, Resource& resource)

@@ -655,7 +655,10 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
         subresourceData.SlicePitch  = dataLayout.layerStride;
     }
 
-    const bool isFullRegion = (region.offset == Offset3D{} && region.extent == textureD3D.GetMipExtent(region.subresource.baseMipLevel));
+    const auto texExtent = textureD3D.GetMipExtent(region.subresource.baseMipLevel);
+    const auto srcExtent = CalcTextureExtent(textureD3D.GetType(), region.extent, region.subresource.numArrayLayers);
+
+    const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == texExtent);
     if (isFullRegion)
         textureD3D.UpdateSubresource(subresourceContext, subresourceData, region.subresource);
     else

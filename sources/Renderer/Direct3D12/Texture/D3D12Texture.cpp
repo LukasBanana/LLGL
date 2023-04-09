@@ -212,7 +212,7 @@ static void UpdateD3DTextureSubresource(
     for_subrange(arrayLayer, firstArrayLayer, firstArrayLayer + numArrayLayers)
     {
         /* Update subresource for current array layer */
-        const UINT subresourceIndex = D3D12CalcSubresource(mipLevel, firstArrayLayer, /*planeSlice:*/ 0, maxNumMipLevels, maxNumArrayLayers);
+        const UINT subresourceIndex = D3D12CalcSubresource(mipLevel, arrayLayer, /*planeSlice:*/ 0, maxNumMipLevels, maxNumArrayLayers);
 
         UpdateSubresources<1>(
             context.GetCommandList(),   // pCmdList
@@ -235,7 +235,7 @@ void D3D12Texture::UpdateSubresource(
     const D3D12_SUBRESOURCE_DATA&   subresourceData,
     const TextureSubresource&       subresource)
 {
-    LLGL_ASSERT(subresource.numArrayLayers == 1);
+    LLGL_ASSERT(subresource.numMipLevels == 1);
 
     /* Update native resource of this texture with the specified subresource data */
     UpdateD3DTextureSubresource(
@@ -259,7 +259,7 @@ void D3D12Texture::UpdateSubresourceRegion(
     const TextureRegion&            region)
 {
     const auto& subresource = region.subresource;
-    LLGL_ASSERT(subresource.numArrayLayers == 1);
+    LLGL_ASSERT(subresource.numMipLevels == 1);
 
     /* Create intermediate texture with region size */
     D3D12_RESOURCE_DESC texDesc = resource_.native->GetDesc();
