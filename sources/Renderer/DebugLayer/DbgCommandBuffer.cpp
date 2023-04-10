@@ -408,10 +408,9 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
         AssertRecording();
         ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
 
-        bindings_.vertexBufferStore[0]      = (&bufferDbg);
-        bindings_.vertexBuffers             = bindings_.vertexBufferStore;
-        bindings_.numVertexBuffers          = 1;
-        bindings_.anyNonEmptyVertexBuffer   = (bufferDbg.elements > 0);
+        bindings_.vertexBufferStore[0]  = (&bufferDbg);
+        bindings_.vertexBuffers         = bindings_.vertexBufferStore;
+        bindings_.numVertexBuffers      = 1;
     }
 
     LLGL_DBG_COMMAND( "SetVertexBuffer", instance.SetVertexBuffer(bufferDbg.instance) );
@@ -429,19 +428,8 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
         AssertRecording();
         ValidateBindFlags(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, BindFlags::VertexBuffer, "LLGL::BufferArray");
 
-        bindings_.vertexBuffers         = bufferArrayDbg.buffers.data();
-        bindings_.numVertexBuffers      = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
-
-        /* Check if all vertex buffers are empty */
-        bindings_.anyNonEmptyVertexBuffer = false;
-        for (auto buffer : bufferArrayDbg.buffers)
-        {
-            if (buffer->elements > 0)
-            {
-                bindings_.anyNonEmptyVertexBuffer = true;
-                break;
-            }
-        }
+        bindings_.vertexBuffers     = bufferArrayDbg.buffers.data();
+        bindings_.numVertexBuffers  = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
     }
 
     LLGL_DBG_COMMAND( "SetVertexBufferArray", instance.SetVertexBufferArray(bufferArrayDbg.instance) );
@@ -1402,8 +1390,6 @@ void DbgCommandBuffer::ValidateVertexLayout()
                 const auto& inputAttribs = vertexShaderDbg->desc.vertex.inputAttribs;
                 if (!inputAttribs.empty())
                     ValidateVertexLayoutAttributes(inputAttribs, bindings_.vertexBuffers, bindings_.numVertexBuffers);
-                else if (bindings_.anyNonEmptyVertexBuffer)
-                    LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in graphics PSO while bound vertex buffers are non-empty");
             }
         }
     }

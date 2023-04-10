@@ -133,7 +133,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(
     AllocStageSegments(bindingIter, StageFlags::FragmentStage);
 
     /* Store offset to compute stage segments */
-    heapOffsetCS_ = heap_.Size();
+    heapOffsetCS_ = static_cast<std::uint32_t>(heap_.Size());
     AllocStageSegments(bindingIter, StageFlags::ComputeStage);
 
     /* Store resource usage bits in segmentation header */

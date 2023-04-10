@@ -185,7 +185,7 @@ void D3D11ConstantsCache::FlushConstantBuffer(std::uint8_t index, D3D11StateMana
     stateMngr.SetConstants(
         cbuffer.shaderRegister,
         cbuffer.constants.data(),
-        cbuffer.constants.size() * sizeof(ConstantRegister),
+        static_cast<UINT>(cbuffer.constants.size() * sizeof(ConstantRegister)),
         cbuffer.stageFlags
     );
 }

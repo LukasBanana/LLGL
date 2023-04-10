@@ -323,7 +323,6 @@ class DbgCommandBuffer final : public CommandBuffer
             DbgBuffer*              vertexBufferStore[1]                    = {};
             DbgBuffer* const *      vertexBuffers                           = nullptr;
             std::uint32_t           numVertexBuffers                        = 0;
-            bool                    anyNonEmptyVertexBuffer                 = false;
             bool                    anyShaderAttributes                     = false;
             DbgBuffer*              indexBuffer                             = nullptr;
             std::uint64_t           indexBufferFormatSize                   = 0;

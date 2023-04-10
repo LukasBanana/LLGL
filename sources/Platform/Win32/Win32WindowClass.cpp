@@ -7,10 +7,8 @@
 
 #include "Win32WindowClass.h"
 #include "Win32WindowCallback.h"
+#include "../../Core/Exception.h"
 #include <LLGL/Platform/Platform.h>
-
-#include <string>
-#include <exception>
 
 
 namespace LLGL
@@ -39,7 +37,7 @@ Win32WindowClass::Win32WindowClass()
 
     /* Register window class */
     if (!RegisterClass(&wc))
-        throw std::runtime_error("failed to register window class");
+        LLGL_TRAP("failed to register window class");
 }
 
 Win32WindowClass::~Win32WindowClass()

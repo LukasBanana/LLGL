@@ -8,6 +8,7 @@
 #include "Win32Window.h"
 #include "Win32WindowClass.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/Assertion.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Platform/Platform.h>
 
@@ -396,8 +397,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
         nullptr
     );
 
-    if (!wnd)
-        throw std::runtime_error("failed to create window");
+    LLGL_ASSERT(wnd != nullptr, "failed to create Win32 window");
 
     #ifndef LLGL_ARCH_ARM
     /* Set additional flags */

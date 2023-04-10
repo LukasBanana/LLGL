@@ -207,7 +207,7 @@ private:
         {
             layoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, (IsMetal() ? 3 : 0) },
+                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, (IsMetal() ? 3u : 0u) },
                 LLGL::BindingDescriptor{ "transforms",  resBuffer,  LLGL::BindFlags::Sampled,        vertStage,             1 },
             };
             layoutDesc.bindings =

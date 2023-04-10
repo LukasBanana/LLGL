@@ -52,7 +52,7 @@ SpirvResult SpirvModule::ReadHeader(SpirvHeader& outHeader) const
 
 std::uint32_t SpirvModule::WordOffset(const const_iterator& iter) const
 {
-    return std::distance(Words().data(), iter.Ptr());
+    return static_cast<std::uint32_t>(std::distance(Words().data(), iter.Ptr()));
 }
 
 
@@ -77,7 +77,7 @@ SpirvResult SpirvModuleView::ReadHeader(SpirvHeader& outHeader) const
 
 std::uint32_t SpirvModuleView::WordOffset(const const_iterator& iter) const
 {
-    return std::distance(Words().data(), iter.Ptr());
+    return static_cast<std::uint32_t>(std::distance(Words().data(), iter.Ptr()));
 }
 
 

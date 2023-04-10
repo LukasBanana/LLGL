@@ -6,13 +6,13 @@
 
 The first thing we need for LLGL is an instance of the `RenderSystem` interface. This instannce will take care of all objects used for rendering:
 ```cpp
-std::unique_ptr<LLGL::RenderSystem> myRenderer = LLGL::RenderSystem::Load("Vulkan");
+LLGL::RenderSystemPtr myRenderer = LLGL::RenderSystem::Load("Vulkan");
 ```
 This is one of the few functions that takes a string rather than an enumeration to select something. This is because LLGL loads a render system dynamically at runtime from a module (i.e. a shared library, **.dll** on Windows, **.so** on GNU/Linux, and **.dylib** on macOS). On the one hand, we only need to link our project against **LLGL.lib**, and on the other hand we can catch an exception if our desired Vulkan renderer is not supported on the target platform. In this case we can load another renderer (e.g. "OpenGL") rather than disturbing the user with an error message such as "vulkan-1.dll could not be loaded".
 
 The exception handling to find a suitable render system can look like this:
 ```cpp
-std::unique_ptr<LLGL::RenderSystem> myRenderer;
+LLGL::RenderSystemPtr myRenderer;
 for (const char* module : { "Direct3D12", "Direct3D11", "Metal", "Vulkan", "OpenGL" }) {
     try {
         myRenderer = LLGL::RenderSystem::Load(module);
