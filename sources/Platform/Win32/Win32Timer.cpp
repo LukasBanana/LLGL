@@ -10,6 +10,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include <atomic>
+#include <mutex>
 
 
 namespace LLGL
@@ -37,6 +38,15 @@ LLGL_EXPORT std::uint64_t Frequency()
     return static_cast<std::uint64_t>(GetPerformanceFrequencyQuadPart());
 }
 
+static ULONGLONG GetWin32TickCount()
+{
+    #if WINVER >= 0x0600
+    return GetTickCount64();
+    #else
+    return GetTickCount();
+    #endif
+}
+
 LLGL_EXPORT std::uint64_t Tick()
 {
     LARGE_INTEGER highResTick;
@@ -44,41 +54,38 @@ LLGL_EXPORT std::uint64_t Tick()
 
     #ifdef LLGL_LEAP_FORWARD_ADJUSTMENT
 
-    static std::atomic<DWORD> lastLowResTick;
-    static std::atomic<LONGLONG> lastHighResTick;
-    static std::atomic<LONGLONG> lastHighResElapsedTime;
-
     /* Check for unexpected leaps */
-    const DWORD     lowResTick          = GetTickCount();
+    static std::mutex tickMutex;
+    std::lock_guard<std::mutex> guard{ tickMutex };
 
-    const DWORD     prevLowResTick      = lastLowResTick.exchange(lowResTick);
-    const LONGLONG  prevHighResTick     = lastHighResTick.exchange(highResTick.QuadPart);
+    static ULONGLONG lastLowResTick;
+    static LONGLONG lastHighResTick;
+    static LONGLONG lastHighResElapsedTime;
 
     static const LONGLONG frequency = GetPerformanceFrequencyQuadPart();
 
-    const DWORD     elapsedLowResMS     = (lowResTick - prevLowResTick);
-    LONGLONG        elapsedHighResMS    = (highResTick.QuadPart - prevHighResTick) * 1000 / frequency;
+    const ULONGLONG lowResTick          = GetWin32TickCount();
+
+    const ULONGLONG elapsedLowResMS     = (lowResTick - lastLowResTick);
+    LONGLONG        elapsedHighResMS    = (highResTick.QuadPart - lastHighResTick) * 1000 / frequency;
 
     const LONGLONG  millisecondsOff     = elapsedHighResMS - elapsedLowResMS;
 
-    if (std::abs(millisecondsOff) > 100 && prevLowResTick > 0)
+    if (std::abs(millisecondsOff) > 100 && lastLowResTick > 0)
     {
         /* Adjust leap by difference */
-        const LONGLONG prevElapsedTime = lastHighResElapsedTime.load();
-
         const LONGLONG adjustment = (std::min)(
             (millisecondsOff * frequency / 1000),
-            (elapsedHighResMS - prevElapsedTime)
+            (elapsedHighResMS - lastHighResElapsedTime)
         );
         highResTick.QuadPart -= adjustment;
         elapsedHighResMS -= adjustment;
-
-        /* Update last state of timer */
-        lastHighResTick.store(highResTick.QuadPart);
     }
 
     /* Store last elapsed time */
-    lastHighResElapsedTime.store(elapsedHighResMS);
+    lastLowResTick          = lowResTick;
+    lastHighResTick         = highResTick.QuadPart;
+    lastHighResElapsedTime  = elapsedHighResMS;
 
     #endif // /LLGL_LEAP_FORWARD_ADJUSTMENT
 
