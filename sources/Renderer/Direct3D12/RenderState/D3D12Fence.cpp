@@ -1,12 +1,13 @@
 /*
  * D3D12Fence.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include "D3D12Fence.h"
 #include "../D3D12ObjectUtils.h"
+#include "../../../Core/Assertion.h"
 #include "../../DXCommon/DXCore.h"
 #include <algorithm>
 
@@ -15,35 +16,64 @@ namespace LLGL
 {
 
 
-D3D12Fence::D3D12Fence(ID3D12Device* device, UINT64 initialValue) :
-    value_ { initialValue }
+/*
+ * D3D12NativeFence
+ */
+
+D3D12NativeFence::D3D12NativeFence(ID3D12Device* device, UINT64 initialValue)
 {
-    Create(device);
+    Create(device, initialValue);
 }
 
-D3D12Fence::~D3D12Fence()
+D3D12NativeFence::~D3D12NativeFence()
 {
     CloseHandle(event_);
 }
 
-void D3D12Fence::SetName(const char* name)
+void D3D12NativeFence::Create(ID3D12Device* device, UINT64 initialValue)
 {
-    D3D12SetObjectName(native_.Get(), name);
-}
+    LLGL_ASSERT(native_.Get() == nullptr);
 
-void D3D12Fence::Create(ID3D12Device* device)
-{
     /* Create D3D12 fence */
-    auto hr = device->CreateFence(value_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(native_.ReleaseAndGetAddressOf()));
+    auto hr = device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(native_.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12Fence");
 
     /* Create Win32 event handle */
     event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!event_)
         DXThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()), "failed to create Win32 event object for D3D12 fence");
+}
 
-    /* Initialize first next value */
-    ++value_;
+bool D3D12NativeFence::WaitForSignal(UINT64 signal, DWORD timeoutMillisecs)
+{
+    /* Wait until the fence has been crossed */
+    auto hr = native_->SetEventOnCompletion(signal, event_);
+    DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
+    return (WaitForSingleObjectEx(event_, timeoutMillisecs, FALSE) == WAIT_OBJECT_0);
+}
+
+bool D3D12NativeFence::WaitForHigherSignal(UINT64 signal, DWORD timeoutMillisecs)
+{
+    if (GetCompletedValue() < signal)
+        return WaitForSignal(signal, timeoutMillisecs);
+    else
+        return true;
+}
+
+
+/*
+ * D3D12Fence
+ */
+
+D3D12Fence::D3D12Fence(ID3D12Device* device, UINT64 initialValue) :
+    native_ { device, initialValue },
+    value_  { initialValue + 1     }
+{
+}
+
+void D3D12Fence::SetName(const char* name)
+{
+    D3D12SetObjectName(native_.Get(), name);
 }
 
 // Converts the specified amount of nanoseconds into milliseconds (rounded up)
@@ -55,37 +85,19 @@ static DWORD NanosecsToMillisecs(UINT64 t)
         return static_cast<DWORD>((t + 999999) / 1000000);
 }
 
-bool D3D12Fence::Wait(UINT64 timeoutNanosecs)
+UINT64 D3D12Fence::Signal()
 {
-    return WaitForValue(GetNextValue(), NanosecsToMillisecs(timeoutNanosecs));
+    return ++value_;
 }
 
-bool D3D12Fence::WaitForValue(UINT64 value, DWORD timeoutMillisecs)
+bool D3D12Fence::Wait(UINT64 timeout)
 {
-    /* Store next value */
-    value_ = std::max(value_, value) + 1;
-
-    /* Wait until the fence has been crossed */
-    const UINT64 signaledValue = native_->GetCompletedValue();
-
-    if (signaledValue < value)
+    if (value_ > native_.GetCompletedValue())
     {
-        auto hr = native_->SetEventOnCompletion(value, event_);
-        DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
-        return (WaitForSingleObjectEx(event_, timeoutMillisecs, FALSE) == WAIT_OBJECT_0);
+        native_.WaitForSignal(value_, NanosecsToMillisecs(timeout));
+        value_ = native_.GetCompletedValue();
     }
-
     return true;
-}
-
-bool D3D12Fence::WaitForValueAndUpdate(UINT64& value, DWORD timeoutMillisecs)
-{
-    if (WaitForValue(value, timeoutMillisecs))
-    {
-        value = GetNextValue();
-        return true;
-    }
-    return false;
 }
 
 

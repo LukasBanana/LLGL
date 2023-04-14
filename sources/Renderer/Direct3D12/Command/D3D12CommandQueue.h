@@ -1,6 +1,6 @@
 /*
  * D3D12CommandQueue.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -60,7 +60,11 @@ class D3D12CommandQueue final : public CommandQueue
     public:
 
         // Submits the specified fence with a custom value.
-        void SignalFence(D3D12Fence& fenceD3D, UINT64 value);
+        void SignalFence(ID3D12Fence* fence, UINT64 value);
+
+        // Executes the specified command lists.
+        void ExecuteCommandLists(UINT numCommandsLists, ID3D12CommandList* const* commandLists);
+        void ExecuteCommandList(ID3D12CommandList* commandList);
 
         // Returns the native ID3D12CommandQueue object.
         inline ID3D12CommandQueue* GetNative() const
@@ -72,18 +76,6 @@ class D3D12CommandQueue final : public CommandQueue
         inline D3D12CommandContext& GetContext()
         {
             return commandContext_;
-        }
-
-        // Returns the global fence object for this queue.
-        inline D3D12Fence& GetGlobalFence()
-        {
-            return globalFence_;
-        }
-
-        // Returns the global fence object for this queue as constant reference.
-        inline const D3D12Fence& GetGlobalFence() const
-        {
-            return globalFence_;
         }
 
     private:
@@ -125,9 +117,11 @@ class D3D12CommandQueue final : public CommandQueue
 
         ComPtr<ID3D12CommandQueue>  native_;
         D3D12CommandContext         commandContext_;
-        D3D12Fence                  globalFence_;
+        D3D12NativeFence            queueFence_;
+        UINT64                      queueFenceValue_        = 0;
         double                      timestampScale_         = 1.0;  // Frequency to nanoseconds scale
         bool                        isTimestampNanosecs_    = true; // True, if timestamps are in nanoseconds unit
+        bool                        busy_                   = false;
 
 };
 

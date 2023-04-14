@@ -232,7 +232,7 @@ class D3D12CommandContext
         UINT                                numAllocators_                                  = g_maxNumAllocators;
 
         UINT64                              allocatorFenceValues_[g_maxNumAllocators]       = {};
-        D3D12Fence                          allocatorFence_;
+        D3D12NativeFence                    allocatorFence_;
 
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 

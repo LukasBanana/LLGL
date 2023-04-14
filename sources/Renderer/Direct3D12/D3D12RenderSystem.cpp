@@ -416,24 +416,6 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
     return swapChain;
 }
 
-void D3D12RenderSystem::SignalFenceValue(UINT64& fenceValue)
-{
-    auto& fence = commandQueue_->GetGlobalFence();
-    fenceValue = fence.GetNextValue();
-    commandQueue_->SignalFence(fence, fenceValue);
-}
-
-void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
-{
-    commandQueue_->GetGlobalFence().WaitForValue(fenceValue);
-}
-
-void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
-{
-    SignalFenceValue(fenceValue);
-    WaitForFenceValue(fenceValue);
-}
-
 void D3D12RenderSystem::SyncGPU()
 {
     commandQueue_->WaitIdle();

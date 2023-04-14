@@ -1,6 +1,6 @@
 /*
  * D3D12CommandQueue.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -23,8 +23,8 @@ D3D12CommandQueue::D3D12CommandQueue(
     D3D12Device&            device,
     D3D12_COMMAND_LIST_TYPE type)
 :
-    native_      { device.CreateDXCommandQueue(type) },
-    globalFence_ { device.GetNative()                }
+    native_     { device.CreateDXCommandQueue(type) },
+    queueFence_ { device.GetNative()                }
 {
     commandContext_.Create(device, *this);
     DetermineTimestampFrequency();
@@ -100,7 +100,7 @@ void D3D12CommandQueue::Submit(Fence& fence)
 {
     /* Schedule signal command into the queue */
     auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence);
-    SignalFence(fenceD3D, fenceD3D.GetNextValue());
+    SignalFence(fenceD3D.GetNative(), fenceD3D.Signal());
 }
 
 bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
@@ -112,16 +112,34 @@ bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 void D3D12CommandQueue::WaitIdle()
 {
     /* Submit intermediate fence and wait for it to be signaled */
-    SignalFence(globalFence_, globalFence_.GetNextValue());
-    globalFence_.Wait(~0ull);
+    if (busy_)
+    {
+        ++queueFenceValue_;
+        SignalFence(queueFence_.Get(), queueFenceValue_);
+        queueFence_.WaitForHigherSignal(queueFenceValue_);
+        busy_ = false;
+    }
 }
 
 /* ----- Internal ----- */
 
-void D3D12CommandQueue::SignalFence(D3D12Fence& fenceD3D, UINT64 value)
+void D3D12CommandQueue::SignalFence(ID3D12Fence* fence, UINT64 value)
 {
-    auto hr = native_->Signal(fenceD3D.GetNative(), value);
+    auto hr = native_->Signal(fence, value);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
+    busy_ = true;
+}
+
+void D3D12CommandQueue::ExecuteCommandLists(UINT numCommandsLists, ID3D12CommandList* const* commandLists)
+{
+    native_->ExecuteCommandLists(numCommandsLists, commandLists);
+    busy_ = true;
+}
+
+void D3D12CommandQueue::ExecuteCommandList(ID3D12CommandList* commandList)
+{
+    native_->ExecuteCommandLists(1, &commandList);
+    busy_ = true;
 }
 
 

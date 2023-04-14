@@ -175,7 +175,7 @@ bool D3D12SwapChain::HasDepthBuffer() const
 
 void D3D12SwapChain::SyncGPU()
 {
-    renderSystem_.SyncGPU(frameFenceValues_[currentFrame_]);
+    renderSystem_.SyncGPU();
 }
 
 
@@ -216,7 +216,7 @@ void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resoluti
     SyncGPU();
 
     /* Release previous window size dependent resources, and reset fence values to current value */
-    for (UINT i = 0; i < numFrames_; ++i)
+    for_range(i, numFrames_)
     {
         colorBuffers_[i].native.Reset();
         colorBuffersMS_[i].native.Reset();
@@ -395,14 +395,15 @@ void D3D12SwapChain::CreateDepthStencil(const Extent2D& resolution)
 void D3D12SwapChain::MoveToNextFrame()
 {
     /* Schedule signal command into the queue */
-    commandQueue_->SignalFence(frameFence_, frameFenceValues_[currentFrame_]);
+    const UINT64 currentFenceValue = frameFenceValues_[currentFrame_];
+    commandQueue_->SignalFence(frameFence_.Get(), currentFenceValue);
 
     /* Advance frame index */
     currentFrame_ = swapChainDXGI_->GetCurrentBackBufferIndex();
 
     /* Wait until the fence value of the next frame is signaled, so we know the next frame is ready to start */
-    frameFence_.WaitForValue(frameFenceValues_[currentFrame_]);
-    frameFenceValues_[currentFrame_] = frameFence_.GetNextValue();
+    frameFence_.WaitForHigherSignal(frameFenceValues_[currentFrame_]);
+    frameFenceValues_[currentFrame_] = currentFenceValue + 1;
 }
 
 

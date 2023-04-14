@@ -110,7 +110,7 @@ class D3D12SwapChain final : public SwapChain
         DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
 
         UINT64                          frameFenceValues_[maxSwapBuffers]   = {};
-        D3D12Fence                      frameFence_;
+        D3D12NativeFence                frameFence_;
 
         UINT                            numFrames_                          = 0;
         UINT                            currentFrame_                       = 0;

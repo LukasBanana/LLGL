@@ -90,12 +90,9 @@ void D3D12CommandContext::Close()
 
 void D3D12CommandContext::Execute()
 {
-    /* Submit command list to queue */
-    ID3D12CommandList* cmdLists[] = { GetCommandList() };
-    commandQueue_->GetNative()->ExecuteCommandLists(1, cmdLists);
-
-    /* Signal current allocator fence value */
-    commandQueue_->SignalFence(allocatorFence_, allocatorFenceValues_[currentAllocatorIndex_]);
+    /* Submit command list to queue and signal current allocator fence */
+    commandQueue_->ExecuteCommandList(GetCommandList());
+    commandQueue_->SignalFence(allocatorFence_.Get(), allocatorFenceValues_[currentAllocatorIndex_]);
 }
 
 void D3D12CommandContext::Reset()
@@ -494,10 +491,12 @@ void D3D12CommandContext::NextCommandAllocator()
     descriptorCaches_[currentAllocatorIndex_].Clear();
 
     /* Get next command allocator */
+    const UINT64 currentFenceValue = allocatorFenceValues_[currentAllocatorIndex_];
     currentAllocatorIndex_ = ((currentAllocatorIndex_ + 1) % numAllocators_);
 
     /* Wait until fence value of next allocator has been signaled */
-    allocatorFence_.WaitForValueAndUpdate(allocatorFenceValues_[currentAllocatorIndex_]);
+    allocatorFence_.WaitForHigherSignal(allocatorFenceValues_[currentAllocatorIndex_]);
+    allocatorFenceValues_[currentAllocatorIndex_] = currentFenceValue + 1;
 
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
     auto hr = GetCommandAllocator()->Reset();
