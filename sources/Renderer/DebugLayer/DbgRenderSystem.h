@@ -20,6 +20,7 @@
 #include "RenderState/DbgPipelineState.h"
 #include "RenderState/DbgQueryHeap.h"
 #include "RenderState/DbgResourceHeap.h"
+#include "RenderState/DbgRenderPass.h"
 #include "Shader/DbgShader.h"
 #include "Texture/DbgTexture.h"
 #include "Texture/DbgRenderTarget.h"
@@ -186,6 +187,9 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc);
         void ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc);
+        void ValidateFragmentShaderOutput(DbgShader& fragmentShaderDbg, const RenderPass* renderPass);
+        void ValidateFragmentShaderOutputWithRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, const DbgRenderPass& renderPass);
+        void ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs);
 
         void Assert3DTextures();
         void AssertCubeTextures();
@@ -219,7 +223,7 @@ class DbgRenderSystem final : public RenderSystem
         HWObjectContainer<DbgBuffer>            buffers_;
         HWObjectContainer<DbgBufferArray>       bufferArrays_;
         HWObjectContainer<DbgTexture>           textures_;
-        //HWObjectContainer<DbgRenderPass>        renderPasses_;
+        HWObjectContainer<DbgRenderPass>        renderPasses_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgPipelineLayout>    pipelineLayouts_;

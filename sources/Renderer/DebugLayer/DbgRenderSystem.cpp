@@ -417,12 +417,18 @@ std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std
 
 RenderPass* DbgRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return instance_->CreateRenderPass(renderPassDesc);
+    return renderPasses_.emplace<DbgRenderPass>(*instance_->CreateRenderPass(renderPassDesc), renderPassDesc);
 }
 
 void DbgRenderSystem::Release(RenderPass& renderPass)
 {
-    instance_->Release(renderPass);
+    /* Render passes have to be deleted manually with an explicitly multable instance, because they can be queried from RenderTarget::GetRenderPass() */
+    auto& renderPassDbg = LLGL_CAST(DbgRenderPass&, renderPass);
+    if (auto instance = renderPassDbg.mutableInstance)
+    {
+        instance_->Release(*instance);
+        renderPasses_.erase(&renderPass);
+    }
 }
 
 /* ----- Render Targets ----- */
@@ -432,18 +438,16 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
     LLGL_DBG_SOURCE;
 
     auto instanceDesc = renderTargetDesc;
-
-    for (auto& attachment : instanceDesc.attachments)
     {
-        if (debugger_)
-            ValidateAttachmentDesc(attachment);
-        if (auto texture = attachment.texture)
+        instanceDesc.renderPass = DbgGetInstance<DbgRenderPass>(renderTargetDesc.renderPass);
+
+        for (auto& attachment : instanceDesc.attachments)
         {
-            auto textureDbg = LLGL_CAST(DbgTexture*, texture);
-            attachment.texture = &(textureDbg->instance);
+            if (debugger_)
+                ValidateAttachmentDesc(attachment);
+            attachment.texture = DbgGetInstance<DbgTexture>(attachment.texture);
         }
     }
-
     return renderTargets_.emplace<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, renderTargetDesc);
 }
 
@@ -457,16 +461,6 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     return shaders_.emplace<DbgShader>(*instance_->CreateShader(shaderDesc), shaderDesc);
-}
-
-static Shader* GetInstanceShader(Shader* shader)
-{
-    if (shader)
-    {
-        auto shaderDbg = LLGL_CAST(DbgShader*, shader);
-        return &(shaderDbg->instance);
-    }
-    return nullptr;
 }
 
 void DbgRenderSystem::Release(Shader& shader)
@@ -505,11 +499,12 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
         if (pipelineStateDesc.pipelineLayout != nullptr)
             instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
 
-        instanceDesc.vertexShader           = GetInstanceShader(pipelineStateDesc.vertexShader);
-        instanceDesc.tessControlShader      = GetInstanceShader(pipelineStateDesc.tessControlShader);
-        instanceDesc.tessEvaluationShader   = GetInstanceShader(pipelineStateDesc.tessEvaluationShader);
-        instanceDesc.geometryShader         = GetInstanceShader(pipelineStateDesc.geometryShader);
-        instanceDesc.fragmentShader         = GetInstanceShader(pipelineStateDesc.fragmentShader);
+        instanceDesc.renderPass             = DbgGetInstance<DbgRenderPass>(pipelineStateDesc.renderPass);
+        instanceDesc.vertexShader           = DbgGetInstance<DbgShader>(pipelineStateDesc.vertexShader);
+        instanceDesc.tessControlShader      = DbgGetInstance<DbgShader>(pipelineStateDesc.tessControlShader);
+        instanceDesc.tessEvaluationShader   = DbgGetInstance<DbgShader>(pipelineStateDesc.tessEvaluationShader);
+        instanceDesc.geometryShader         = DbgGetInstance<DbgShader>(pipelineStateDesc.geometryShader);
+        instanceDesc.fragmentShader         = DbgGetInstance<DbgShader>(pipelineStateDesc.fragmentShader);
     }
     return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
 }
@@ -526,7 +521,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescrip
         if (pipelineStateDesc.pipelineLayout != nullptr)
             instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
 
-        instanceDesc.computeShader = GetInstanceShader(pipelineStateDesc.computeShader);
+        instanceDesc.computeShader = DbgGetInstance<DbgShader>(pipelineStateDesc.computeShader);
     }
     return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
 }
@@ -1539,11 +1534,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     /* Validate shader pipeline stages */
     bool hasSeparableShaders = false;
-    if (auto vertexShader = pipelineStateDesc.vertexShader)
-    {
-        auto vertexShaderDbg = LLGL_CAST(DbgShader*, vertexShader);
+    if (auto vertexShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.vertexShader))
         hasSeparableShaders = ((vertexShaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
-    }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO without vertex shader");
 
@@ -1552,17 +1544,17 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     if ((pipelineStateDesc.tessControlShader != nullptr) != (pipelineStateDesc.tessEvaluationShader != nullptr))
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO with incomplete tessellation shader stages");
 
-    struct ExpectedShaderTypePair
+    struct ShaderTypePair
     {
         Shader*     shader;
         ShaderType  expectedType;
     };
 
-    for (auto pair : { ExpectedShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
-                       ExpectedShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
-                       ExpectedShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
-                       ExpectedShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
-                       ExpectedShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
+    for (auto pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
+                       ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
+                       ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
+                       ShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
+                       ShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
     {
         if (auto shader = pair.shader)
         {
@@ -1595,6 +1587,9 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         }
     }
 
+    if (auto fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
+        ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass);
+
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader);
 }
 
@@ -1614,6 +1609,112 @@ void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescripto
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create compute PSO without compute shader");
+}
+
+void DbgRenderSystem::ValidateFragmentShaderOutput(DbgShader& fragmentShaderDbg, const RenderPass* renderPass)
+{
+    ShaderReflection reflection;
+    if (fragmentShaderDbg.instance.Reflect(reflection))
+    {
+        if (auto renderPassDbg = DbgGetWrapper<DbgRenderPass>(renderPass))
+            ValidateFragmentShaderOutputWithRenderPass(fragmentShaderDbg, reflection.fragment, *renderPassDbg);
+        else
+            ValidateFragmentShaderOutputWithoutRenderPass(fragmentShaderDbg, reflection.fragment);
+    }
+}
+
+static bool AreFragmentOutputFormatsCompatible(const Format attachmentFormat, const Format attribFormat)
+{
+    if (attachmentFormat == Format::Undefined || attribFormat == Format::Undefined)
+        return false;
+    if (IsDepthStencilFormat(attachmentFormat) != IsDepthStencilFormat(attribFormat))
+        return false;
+    if (GetFormatAttribs(attachmentFormat).components != GetFormatAttribs(attribFormat).components)
+        return false;
+    return true;
+}
+
+void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, const DbgRenderPass& renderPass)
+{
+    const auto numColorAttachments = renderPass.NumEnabledColorAttachments();
+    std::uint32_t numColorOutputAttribs = 0u;
+
+    for (const auto& attrib : fragmentAttribs.outputAttribs)
+    {
+        if (attrib.systemValue == SystemValue::Color)
+        {
+            if (numColorOutputAttribs >= LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+            {
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many color output attributes in fragment shader");
+                break;
+            }
+            const Format attachmentFormat = renderPass.desc.colorAttachments[numColorOutputAttribs].format;
+            if (attachmentFormat == Format::Undefined)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use render pass with undefined color attachment [" + std::to_string(numColorOutputAttribs) +
+                    "] in conjunction with fragment shader that writes to that color target"
+                );
+            }
+            else if (!AreFragmentOutputFormatsCompatible(attachmentFormat, attrib.format))
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "render pass attachment [" + std::to_string(numColorOutputAttribs) + "] format (" + std::string(ToString(attachmentFormat)) +
+                    ") is incompatible with fragment shader output format (" + std::string(ToString(attrib.format)) + ")"
+                );
+            }
+            ++numColorOutputAttribs;
+        }
+        else if (attrib.systemValue == SystemValue::Depth        ||
+                 attrib.systemValue == SystemValue::DepthGreater ||
+                 attrib.systemValue == SystemValue::DepthLess)
+        {
+            if (renderPass.desc.depthAttachment.format == Format::Undefined)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use render pass with undefined depth attachment in conjunction with fragment shader that writes to the depth buffer"
+                );
+            }
+        }
+    }
+
+    if (numColorAttachments != numColorOutputAttribs)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "mismatch between number of color attachments in render pass (" + std::to_string(numColorAttachments) +
+            ") and fragment shader color outputs (" + std::to_string(numColorOutputAttribs) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs)
+{
+    std::uint32_t numColorOutputAttribs = 0u;
+
+    for (const auto& attrib : fragmentAttribs.outputAttribs)
+    {
+        if (attrib.systemValue == SystemValue::Color)
+        {
+            if (numColorOutputAttribs >= LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+            {
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many color output attributes in fragment shader");
+                break;
+            }
+            ++numColorOutputAttribs;
+        }
+    }
+
+    if (numColorOutputAttribs > 1)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot use fragment shader with " + std::to_string(numColorOutputAttribs) + " color outputs for PSO without render pass"
+        );
+    }
 }
 
 void DbgRenderSystem::Assert3DTextures()

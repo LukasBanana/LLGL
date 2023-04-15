@@ -644,6 +644,8 @@ void DbgCommandBuffer::BeginRenderPass(
         states_.insideRenderPass = true;
     }
 
+    renderPass = DbgGetInstance<DbgRenderPass>(renderPass);
+
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         auto& swapChainDbg = LLGL_CAST(DbgSwapChain&, renderTarget);

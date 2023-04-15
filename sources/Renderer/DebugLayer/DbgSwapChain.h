@@ -1,6 +1,6 @@
 /*
  * DbgSwapChain.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -10,6 +10,9 @@
 
 
 #include <LLGL/SwapChain.h>
+#include "RenderState/DbgRenderPass.h"
+#include <string>
+#include <memory>
 
 
 namespace LLGL
@@ -48,6 +51,10 @@ class DbgSwapChain final : public SwapChain
     private:
 
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
+
+    private:
+
+        std::unique_ptr<DbgRenderPass> renderPass_;
 
 };
 
