@@ -48,6 +48,9 @@ DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format);
 // Returns the specified DXGI_FORMAT as typeless format or DXGI_FORMAT_UNKNOWN if the format cannot be converted to a typeless format.
 DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format);
 
+// Returns a DXGI_FORMAT for the specified texture format or a compatible typeless format if the bind flags include subresource views (i.e. Sampled or Storage).
+DXGI_FORMAT SelectTextureDXGIFormat(const Format format, long bindFlags);
+
 bool IsTypelessDXGIFormat(const DXGI_FORMAT format);
 
 D3D_PRIMITIVE_TOPOLOGY  ToD3DPrimitiveTopology(const PrimitiveTopology topology);

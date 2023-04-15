@@ -1,6 +1,6 @@
 /*
  * D3D11Texture.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -853,18 +853,9 @@ DXGI_FORMAT D3D11Texture::GetBaseDXFormat() const
  * ====== Private: ======
  */
 
-static DXGI_FORMAT SelectDXTextureFormat(const TextureDescriptor& desc)
+static DXGI_FORMAT SelectTextureDXGIFormat(const TextureDescriptor& desc)
 {
-    /* Select typeless format if the texture might be used for subresource views */
-    const auto format = DXTypes::ToDXGIFormat(desc.format);
-    if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-    {
-        /* Compressed formats cannot be typelss, so ignore these */
-        const auto typelessFormat = DXTypes::ToDXGIFormatTypeless(format);
-        if (typelessFormat != DXGI_FORMAT_UNKNOWN)
-            return typelessFormat;
-    }
-    return format;
+    return DXTypes::SelectTextureDXGIFormat(desc.format, desc.bindFlags);
 }
 
 void D3D11Texture::CreateTexture1D(
@@ -878,7 +869,7 @@ void D3D11Texture::CreateTexture1D(
         descD3D.Width           = desc.extent.width;
         descD3D.MipLevels       = NumMipLevels(desc);
         descD3D.ArraySize       = desc.arrayLayers;
-        descD3D.Format          = SelectDXTextureFormat(desc);
+        descD3D.Format          = SelectTextureDXGIFormat(desc);
         descD3D.Usage           = DXGetTextureUsage(desc);
         descD3D.BindFlags       = DXGetTextureBindFlags(desc);
         descD3D.CPUAccessFlags  = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
@@ -903,7 +894,7 @@ void D3D11Texture::CreateTexture2D(
         descD3D.Height              = desc.extent.height;
         descD3D.MipLevels           = NumMipLevels(desc);
         descD3D.ArraySize           = desc.arrayLayers;
-        descD3D.Format              = SelectDXTextureFormat(desc);
+        descD3D.Format              = SelectTextureDXGIFormat(desc);
         descD3D.SampleDesc.Count    = (IsMultiSampleTexture(desc.type) ? std::max(1u, desc.samples) : 1u);
         descD3D.SampleDesc.Quality  = 0;//(desc.miscFlags & MiscFlags::FixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
         descD3D.Usage               = DXGetTextureUsage(desc);
@@ -930,7 +921,7 @@ void D3D11Texture::CreateTexture3D(
         descD3D.Height          = desc.extent.height;
         descD3D.Depth           = desc.extent.depth;
         descD3D.MipLevels       = NumMipLevels(desc);
-        descD3D.Format          = SelectDXTextureFormat(desc);
+        descD3D.Format          = SelectTextureDXGIFormat(desc);
         descD3D.Usage           = DXGetTextureUsage(desc);
         descD3D.BindFlags       = DXGetTextureBindFlags(desc);
         descD3D.CPUAccessFlags  = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);

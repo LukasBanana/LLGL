@@ -83,6 +83,9 @@ class D3D12Texture final : public Texture
         // Returns the texture region for the specified offset and extent with respect to the type of this texture (i.e. whether or not array layers are handled by the subresource index).
         D3D12_BOX CalcRegion(const Offset3D& offset, const Extent3D& extent) const;
 
+        // Returns the DXGI format of the texture's base format, i.e. GetBaseFormat() converted to DXGI format.
+        DXGI_FORMAT GetBaseDXFormat() const;
+
         // Returns true if MIP-maps can be generated for this texture .
         bool SupportsGenerateMips() const;
 
@@ -102,6 +105,12 @@ class D3D12Texture final : public Texture
         inline ID3D12Resource* GetNative() const
         {
             return resource_.native.Get();
+        }
+
+        // Returns the base texture format. Equivalent of GetFormat().
+        inline Format GetBaseFormat() const
+        {
+            return baseFormat_;
         }
 
         // Returns the hardware resource format.
@@ -167,6 +176,7 @@ class D3D12Texture final : public Texture
 
         D3D12Resource                   resource_;
 
+        Format                          baseFormat_     = Format::Undefined;
         DXGI_FORMAT                     format_         = DXGI_FORMAT_UNKNOWN;
         UINT                            numMipLevels_   = 0;
         UINT                            numArrayLayers_ = 0;

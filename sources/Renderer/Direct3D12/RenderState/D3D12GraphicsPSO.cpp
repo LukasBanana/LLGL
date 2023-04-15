@@ -22,6 +22,7 @@
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Container/SmallVector.h>
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 #include <limits>
 
@@ -207,7 +208,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         /* Enable independent blend states when multiple targets are specified */
         dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
 
-        for (UINT i = 0; i < 8u; ++i)
+        for_range(i, 8u)
         {
             if (i < numAttachments)
             {
@@ -236,7 +237,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         dstColorFormats[0] = DXGI_FORMAT_R8G8B8A8_UINT;
 
         /* Initialize remaining blend target to default values */
-        for (int i = 1; i < 8; ++i)
+        for_subrange(i, 1u, 8u)
         {
             SetBlendDescToDefault(dst.RenderTarget[i]);
             dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
@@ -253,7 +254,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         /* Enable independent blend states when multiple targets are specified */
         dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
 
-        for (UINT i = 0; i < 8u; ++i)
+        for_range(i, 8u)
         {
             if (i < renderPass.GetNumColorAttachments())
             {
@@ -286,7 +287,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
             dstColorFormats[0] = DXGI_FORMAT_UNKNOWN;
 
         /* Initialize remaining blend target to default values */
-        for (int i = 1; i < 8; ++i)
+        for_subrange(i, 1u, 8u)
         {
             SetBlendDescToDefault(dst.RenderTarget[i]);
             dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
@@ -489,7 +490,7 @@ void D3D12GraphicsPSO::SerializePSO(
         /* Write input semantic names */
         writer.Begin(Serialization::D3D12Ident_InputSemanticNames);
         {
-            for (UINT i = 0; i < stateDesc.InputLayout.NumElements; ++i)
+            for_range(i, stateDesc.InputLayout.NumElements)
                 writer.WriteCString(stateDesc.InputLayout.pInputElementDescs[i].SemanticName);
         }
         writer.End();
@@ -508,7 +509,7 @@ void D3D12GraphicsPSO::SerializePSO(
         /* Write output semantic names */
         writer.Begin(Serialization::D3D12Ident_SOSemanticNames);
         {
-            for (UINT i = 0; i < stateDesc.StreamOutput.NumEntries; ++i)
+            for_range(i, stateDesc.StreamOutput.NumEntries)
                 writer.WriteCString(stateDesc.StreamOutput.pSODeclaration[i].SemanticName);
         }
         writer.End();
@@ -577,7 +578,7 @@ void D3D12GraphicsPSO::DeserializePSO(
         /* Write input semantic names */
         reader.Begin(Serialization::D3D12Ident_InputSemanticNames);
         {
-            for (UINT i = 0; i < stateDesc.InputLayout.NumElements; ++i)
+            for_range(i, stateDesc.InputLayout.NumElements)
                 inputElements[i].SemanticName = reader.ReadCString();
         }
         reader.End();
@@ -601,7 +602,7 @@ void D3D12GraphicsPSO::DeserializePSO(
         /* Write semantic names */
         reader.Begin(Serialization::D3D12Ident_SOSemanticNames);
         {
-            for (UINT i = 0; i < stateDesc.StreamOutput.NumEntries; ++i)
+            for_range(i, stateDesc.StreamOutput.NumEntries)
                 soDeclEntries[i].SemanticName = reader.ReadCString();
         }
         reader.End();
@@ -653,7 +654,7 @@ void D3D12GraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& 
     const auto bufferSize = GetStaticStateBufferSize(desc.viewports.size(), desc.scissors.size());
     staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
 
-    ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
+    ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
 
     /* Build static viewports in raw buffer */
     if (!desc.viewports.empty())
@@ -678,7 +679,7 @@ void D3D12GraphicsPSO::BuildStaticViewports(std::size_t numViewports, const View
     }
 
     /* Build <D3D12_VIEWPORT> entries */
-    for (std::size_t i = 0; i < numViewports; ++i)
+    for_range(i, numViewports)
     {
         auto dst = byteBufferIter.Next<D3D12_VIEWPORT>();
         {
@@ -706,7 +707,7 @@ void D3D12GraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scisso
     }
 
     /* Build <D3D12_RECT> entries */
-    for (std::size_t i = 0; i < numScissors; ++i)
+    for_range(i, numScissors)
     {
         auto dst = byteBufferIter.Next<D3D12_RECT>();
         {
@@ -722,7 +723,7 @@ void D3D12GraphicsPSO::SetStaticViewportsAndScissors(ID3D12GraphicsCommandList* 
 {
     if (staticStateBuffer_)
     {
-        ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
+        ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
         if (numStaticViewports_ > 0)
         {
             commandList->RSSetViewports(

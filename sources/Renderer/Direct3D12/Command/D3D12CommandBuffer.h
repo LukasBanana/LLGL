@@ -232,7 +232,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
         void BindSwapChain(D3D12SwapChain& swapChainD3D);
 
-        void ClearAttachmentsWithRenderPass(
+        std::uint32_t ClearAttachmentsWithRenderPass(
             const D3D12RenderPass&  renderPassD3D,
             std::uint32_t           numClearValues,
             const ClearValue*       clearValues,
@@ -240,11 +240,11 @@ class D3D12CommandBuffer final : public CommandBuffer
             const D3D12_RECT*       rects           = nullptr
         );
 
-        void ClearRenderTargetViews(
+        std::uint32_t ClearRenderTargetViews(
             const std::uint8_t* colorBuffers,
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues,
-            std::uint32_t&      idx,
+            std::uint32_t       clearValueIndex,
             UINT                numRects,
             const D3D12_RECT*   rects
         );
@@ -253,7 +253,7 @@ class D3D12CommandBuffer final : public CommandBuffer
             D3D12_CLEAR_FLAGS   clearFlags,
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues,
-            std::uint32_t       idx,
+            std::uint32_t       clearValueIndex,
             UINT                numRects,
             const D3D12_RECT*   rects
         );

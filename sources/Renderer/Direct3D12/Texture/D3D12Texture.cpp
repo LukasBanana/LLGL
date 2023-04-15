@@ -26,6 +26,7 @@ namespace LLGL
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type, desc.bindFlags          },
+    baseFormat_     { desc.format                        },
     format_         { DXTypes::ToDXGIFormat(desc.format) },
     numMipLevels_   { NumMipLevels(desc)                 },
     numArrayLayers_ { std::max(1u, desc.arrayLayers)     },
@@ -99,7 +100,7 @@ TextureDescriptor D3D12Texture::GetDesc() const
     texDesc.type        = GetType();
     texDesc.bindFlags   = 0;
     texDesc.miscFlags   = 0;
-    texDesc.format      = D3D12Types::Unmap(desc.Format);
+    texDesc.format      = GetBaseFormat();
     texDesc.mipLevels   = desc.MipLevels;
 
     switch (GetType())
@@ -140,7 +141,7 @@ TextureDescriptor D3D12Texture::GetDesc() const
 
 Format D3D12Texture::GetFormat() const
 {
-    return D3D12Types::Unmap(GetDXFormat());
+    return GetBaseFormat();
 }
 
 static D3D12_TEXTURE_COPY_LOCATION GetD3DTextureSubresourceLocation(ID3D12Resource* resource, UINT subresource)
@@ -611,6 +612,11 @@ static bool DXTextureSupportsGenerateMips(long bindFlags, UINT numMipLevels)
     return ((bindFlags & BindFlags::ColorAttachment) != 0 && numMipLevels > 1);
 }
 
+DXGI_FORMAT D3D12Texture::GetBaseDXFormat() const
+{
+    return DXTypes::ToDXGIFormat(GetBaseFormat());
+}
+
 bool D3D12Texture::SupportsGenerateMips() const
 {
     return DXTextureSupportsGenerateMips(GetBindFlags(), GetNumMipLevels());
@@ -646,7 +652,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
     dst.Alignment           = 0;
     dst.MipLevels           = NumMipLevels(src);
-    dst.Format              = DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(src.format));
+    dst.Format              = DXTypes::SelectTextureDXGIFormat(src.format, src.bindFlags);
     dst.SampleDesc.Count    = (IsMultiSampleTexture(src.type) ? std::max(1u, src.samples) : 1u);
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -688,7 +694,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     D3D12_CLEAR_VALUE optClearValue;
     if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
     {
-        optClearValue.Format    = descD3D.Format;
+        optClearValue.Format    = DXTypes::ToDXGIFormatSRV(DXTypes::ToDXGIFormat(desc.format));
         optClearValue.Color[0]  = desc.clearValue.color.r;
         optClearValue.Color[1]  = desc.clearValue.color.g;
         optClearValue.Color[2]  = desc.clearValue.color.b;
@@ -696,7 +702,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     }
     else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
     {
-        optClearValue.Format                = descD3D.Format;
+        optClearValue.Format                = DXTypes::ToDXGIFormatDSV(descD3D.Format);
         optClearValue.DepthStencil.Depth    = desc.clearValue.depth;
         optClearValue.DepthStencil.Stencil  = static_cast<UINT8>(desc.clearValue.stencil);
     }

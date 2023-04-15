@@ -601,6 +601,20 @@ DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format)
     return DXGI_FORMAT_UNKNOWN;
 }
 
+DXGI_FORMAT SelectTextureDXGIFormat(const Format format, long bindFlags)
+{
+    /* Select typeless format if the texture might be used for subresource views */
+    const auto formatDX = DXTypes::ToDXGIFormat(format);
+    if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
+    {
+        /* Compressed formats cannot be typelss, so ignore these */
+        const auto typelessFormat = DXTypes::ToDXGIFormatTypeless(formatDX);
+        if (typelessFormat != DXGI_FORMAT_UNKNOWN)
+            return typelessFormat;
+    }
+    return formatDX;
+}
+
 bool IsTypelessDXGIFormat(const DXGI_FORMAT format)
 {
     switch (format)

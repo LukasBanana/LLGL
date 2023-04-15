@@ -97,7 +97,7 @@ class D3D12RenderPass final : public RenderPass
     private:
 
         void SetDSVFormat(DXGI_FORMAT format);
-        void SetRTVFormat(UINT colorAttachment, DXGI_FORMAT format);
+        void SetRTVFormat(DXGI_FORMAT format, UINT colorAttachment);
 
     private:
 

@@ -30,7 +30,7 @@ LLGL_EXPORT void ResetClearColorAttachmentIndices(
     std::uint8_t*   outClearIndices
 );
 
-// Fills the array of indices for the color attachments that are meant to be cleared.
+// Fills the array of indices for the color attachments that are meant to be cleared. Unused indices are filled with 0xFF.
 LLGL_EXPORT std::uint32_t FillClearColorAttachmentIndices(
     std::uint32_t               numClearIndices,
     std::uint8_t*               outClearIndices,

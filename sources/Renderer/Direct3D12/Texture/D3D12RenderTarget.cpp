@@ -1,6 +1,6 @@
 /*
  * D3D12RenderTarget.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -353,7 +353,7 @@ void D3D12RenderTarget::CreateSubresourceRTV(
 {
     /* Initialize D3D12 RTV descriptor */
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
-    rtvDesc.Format = format;
+    rtvDesc.Format = DXTypes::ToDXGIFormatSRV(format);
 
     switch (type)
     {

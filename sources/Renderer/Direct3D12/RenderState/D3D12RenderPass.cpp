@@ -32,9 +32,6 @@ void D3D12RenderPass::BuildAttachments(
     const D3D12Device&          device,
     const RenderPassDescriptor& desc)
 {
-    /* Reset flags and depth-stencil format */
-    SetDSVFormat(DXGI_FORMAT_UNKNOWN);
-
     /* Check which color attachment must be cleared */
     numColorAttachments_    = FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
     clearFlagsDSV_          = 0;
@@ -48,13 +45,10 @@ void D3D12RenderPass::BuildAttachments(
         clearFlagsDSV_ |= D3D12_CLEAR_FLAG_STENCIL;
 
     /* Store native color formats */
-    for (UINT i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
-    {
-        if (i < numColorAttachments_)
-            SetRTVFormat(i, DXTypes::ToDXGIFormat(desc.colorAttachments[i].format));
-        else
-            SetRTVFormat(i, DXGI_FORMAT_UNKNOWN);
-    }
+    for_range(i, numColorAttachments_)
+        SetRTVFormat(DXTypes::ToDXGIFormat(desc.colorAttachments[i].format), i);
+    for_subrange(i, numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        SetRTVFormat(DXGI_FORMAT_UNKNOWN, i);
 
     /* Store native depth-stencil format */
     if (desc.depthAttachment.format   != desc.stencilAttachment.format &&
@@ -68,6 +62,8 @@ void D3D12RenderPass::BuildAttachments(
         SetDSVFormat(DXTypes::ToDXGIFormat(desc.depthAttachment.format));
     else if (desc.stencilAttachment.format != Format::Undefined)
         SetDSVFormat(DXTypes::ToDXGIFormat(desc.stencilAttachment.format));
+    else
+        SetDSVFormat(DXGI_FORMAT_UNKNOWN);
 
     /* Store sample descriptor */
     sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));
@@ -87,7 +83,7 @@ void D3D12RenderPass::BuildAttachments(
     /* Check which color attachment must be cleared */
     UINT colorAttachment = 0;
 
-    for (UINT i = 0; i < numAttachmentDescs; ++i)
+    for_range(i, numAttachmentDescs)
     {
         const auto& attachment = attachmentDescs[i];
 
@@ -99,7 +95,7 @@ void D3D12RenderPass::BuildAttachments(
                 if (colorAttachment < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
                 {
                     /* Store texture color format and attachment index */
-                    SetRTVFormat(colorAttachment++, textureD3D->GetDXFormat());
+                    SetRTVFormat(textureD3D->GetDXFormat(), colorAttachment++);
                 }
             }
             else
@@ -118,8 +114,8 @@ void D3D12RenderPass::BuildAttachments(
     numColorAttachments_ = colorAttachment;
 
     /* Reset remaining color formats */
-    for (UINT i = numColorAttachments_; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
-        SetRTVFormat(i, DXGI_FORMAT_UNKNOWN);
+    for_subrange(i, numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        SetRTVFormat(DXGI_FORMAT_UNKNOWN, i);
 
     /* Store sample descriptor */
     sampleDesc_ = sampleDesc;
@@ -137,8 +133,8 @@ void D3D12RenderPass::BuildAttachments(
 
     /* Store color attachment formats */
     numColorAttachments_ = numColorFormats;
-    for (UINT i = 0; i < numColorFormats; ++i)
-        SetRTVFormat(i, colorFormats[i]);
+    for_range(i, numColorFormats)
+        SetRTVFormat(colorFormats[i], i);
 
     /* Store depth-stencil attachment format */
     SetDSVFormat(depthStencilFormat);
@@ -157,7 +153,7 @@ void D3D12RenderPass::SetDSVFormat(DXGI_FORMAT format)
     dsvFormat_ = DXTypes::ToDXGIFormatDSV(format);
 }
 
-void D3D12RenderPass::SetRTVFormat(UINT colorAttachment, DXGI_FORMAT format)
+void D3D12RenderPass::SetRTVFormat(DXGI_FORMAT format, UINT colorAttachment)
 {
     rtvFormats_[colorAttachment] = format;
 }

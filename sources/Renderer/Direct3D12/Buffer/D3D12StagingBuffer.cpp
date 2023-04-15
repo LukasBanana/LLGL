@@ -58,6 +58,9 @@ void D3D12StagingBuffer::Create(
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for staging buffer");
 
+    /* Set name for debugging/diagnostics */
+    native_->SetName(L"LLGL::D3D12StagingBuffer");
+
     /* Store new size and reset write offset */
     size_   = size;
     offset_ = 0;

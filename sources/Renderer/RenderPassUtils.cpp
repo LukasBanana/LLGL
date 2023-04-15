@@ -23,7 +23,7 @@ LLGL_EXPORT std::uint32_t NumEnabledColorAttachments(const RenderPassDescriptor&
 }
 
 LLGL_EXPORT void ResetClearColorAttachmentIndices(
-    std::uint32_t     numClearIndices,
+    std::uint32_t   numClearIndices,
     std::uint8_t*   outClearIndices)
 {
     for_range(i, numClearIndices)
