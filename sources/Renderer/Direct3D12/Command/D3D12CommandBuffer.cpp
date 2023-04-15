@@ -690,10 +690,13 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
     boundPipelineLayout_ = pipelineStateD3D.GetPipelineLayout();
 
     /* Prepare staging descriptor heaps for bound pipeline layout */
-    commandContext_.PrepareStagingDescriptorHeaps(
-        boundPipelineLayout_->GetDescriptorHeapSetLayout(),
-        boundPipelineLayout_->GetRootParameterIndices()
-    );
+    if (boundPipelineLayout_ != nullptr)
+    {
+        commandContext_.PrepareStagingDescriptorHeaps(
+            boundPipelineLayout_->GetDescriptorHeapSetLayout(),
+            boundPipelineLayout_->GetRootParameterIndices()
+        );
+    }
 }
 
 void D3D12CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
