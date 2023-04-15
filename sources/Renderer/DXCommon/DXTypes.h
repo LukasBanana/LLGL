@@ -42,6 +42,12 @@ DXGI_FORMAT ToDXGIFormatDSV(const DXGI_FORMAT format);
 DXGI_FORMAT ToDXGIFormatSRV(const DXGI_FORMAT format);
 DXGI_FORMAT ToDXGIFormatUAV(const DXGI_FORMAT format);
 
+// Forwards the call to ToDXGIFormatSRV as they share the same formats.
+inline DXGI_FORMAT ToDXGIFormatRTV(const DXGI_FORMAT format)
+{
+    return ToDXGIFormatSRV(format);
+}
+
 // Returns the specified DXGI_FORMAT as typeless format or DXGI_FORMAT_UNKNOWN if the format cannot be converted to a typeless format.
 DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format);
 

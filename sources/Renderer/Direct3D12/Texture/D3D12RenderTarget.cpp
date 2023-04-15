@@ -353,7 +353,7 @@ void D3D12RenderTarget::CreateSubresourceRTV(
 {
     /* Initialize D3D12 RTV descriptor */
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
-    rtvDesc.Format = DXTypes::ToDXGIFormatSRV(format);
+    rtvDesc.Format = DXTypes::ToDXGIFormatRTV(format);
 
     switch (type)
     {

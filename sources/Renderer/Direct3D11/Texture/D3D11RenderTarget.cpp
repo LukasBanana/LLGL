@@ -278,7 +278,7 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
     /* Initialize RTV descriptor with attachment procedure and create RTV */
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 
-    rtvDesc.Format = DXTypes::ToDXGIFormatSRV(textureD3D.GetBaseDXFormat());
+    rtvDesc.Format = DXTypes::ToDXGIFormatRTV(textureD3D.GetBaseDXFormat());
 
     /*
     If this is a multi-sample render target, but the target texture is not a multi-sample texture,

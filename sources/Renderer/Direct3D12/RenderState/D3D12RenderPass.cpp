@@ -33,8 +33,10 @@ void D3D12RenderPass::BuildAttachments(
     const RenderPassDescriptor& desc)
 {
     /* Check which color attachment must be cleared */
-    numColorAttachments_    = FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
+    numColorAttachments_    = NumEnabledColorAttachments(desc);
     clearFlagsDSV_          = 0;
+
+    FillClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_, desc);
 
     /* Check if depth attachment must be cleared */
     if (desc.depthAttachment.loadOp == AttachmentLoadOp::Clear)
@@ -155,7 +157,7 @@ void D3D12RenderPass::SetDSVFormat(DXGI_FORMAT format)
 
 void D3D12RenderPass::SetRTVFormat(DXGI_FORMAT format, UINT colorAttachment)
 {
-    rtvFormats_[colorAttachment] = format;
+    rtvFormats_[colorAttachment] = DXTypes::ToDXGIFormatRTV(format);
 }
 
 

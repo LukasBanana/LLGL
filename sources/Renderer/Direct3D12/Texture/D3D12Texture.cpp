@@ -694,7 +694,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     D3D12_CLEAR_VALUE optClearValue;
     if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
     {
-        optClearValue.Format    = DXTypes::ToDXGIFormatSRV(DXTypes::ToDXGIFormat(desc.format));
+        optClearValue.Format    = DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(desc.format));
         optClearValue.Color[0]  = desc.clearValue.color.r;
         optClearValue.Color[1]  = desc.clearValue.color.g;
         optClearValue.Color[2]  = desc.clearValue.color.b;
