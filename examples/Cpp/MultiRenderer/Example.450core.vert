@@ -5,18 +5,22 @@
 #version 450
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 texCoord;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec2 texCoord;
 
-layout(location = 0) out vec2 xsv_TEXCOORD0;
+layout(location = 0) out vec3 xsv_NORMAL0;
+layout(location = 1) out vec2 xsv_TEXCOORD0;
 
-layout(std140, row_major, binding = 0) uniform Matrices
+layout(std140, binding = 0) uniform Matrices
 {
     mat4 wvpMatrix;
+    mat4 wMatrix;
 };
 
 void main()
 {
-    gl_Position = (vec4(position, 1) * wvpMatrix);
+    gl_Position = wvpMatrix * vec4(position, 1);
+    xsv_NORMAL0 = normalize((wMatrix * vec4(normal, 0)).xyz);
     xsv_TEXCOORD0 = texCoord;
 }
 

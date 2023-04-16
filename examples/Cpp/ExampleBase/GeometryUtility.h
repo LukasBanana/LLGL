@@ -34,12 +34,6 @@ struct TangentSpaceVertex
     Gs::Vector2f texCoord;
 };
 
-struct VertexPos3Tex2
-{
-    Gs::Vector3f position;
-    Gs::Vector2f texCoord;
-};
-
 struct TriangleMesh
 {
     std::uint32_t       firstVertex = 0;
@@ -71,7 +65,7 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices();
 std::vector<std::uint32_t> GenerateCubeQuadIndices();
 
 // Generates 24 vertices for a unit cube with texture coordinates.
-std::vector<VertexPos3Tex2> GenerateTexturedCubeVertices();
+std::vector<TexturedVertex> GenerateTexturedCubeVertices();
 
 // Generates 36 indices for a unit cube of 24 vertices
 std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices();

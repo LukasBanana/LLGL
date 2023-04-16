@@ -8,6 +8,7 @@ out vec4 SV_Target0;
 
 in OutputVS
 {
+    vec3 normal;
     vec2 texCoord;
 }
 inp;
@@ -17,6 +18,15 @@ uniform sampler2D colorMap;
 void main()
 {
     vec4 color = texture(colorMap, inp.texCoord);
-    SV_Target0 = mix(vec4(1), color, color.a);
+    
+	// Sanitize texture sample
+    color = mix(vec4(1), color, color.a);
+    
+	// Apply lambert factor for simple shading
+	const vec3 lightVec = vec3(0, 0, -1);
+	float NdotL = dot(lightVec, normalize(inp.normal));
+	color.rgb *= mix(0.2, 1.0, NdotL);
+    
+    SV_Target0 = color;
 }
 

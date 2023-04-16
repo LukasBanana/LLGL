@@ -4,7 +4,8 @@
 
 #version 450
 
-layout(location = 0) in vec2 xsv_TEXCOORD0;
+layout(location = 0) in vec3 xsv_NORMAL0;
+layout(location = 1) in vec2 xsv_TEXCOORD0;
 
 layout(location = 0) out vec4 SV_Target0;
 
@@ -15,6 +16,15 @@ layout(binding = 2) uniform sampler colorMapSampler;
 void main()
 {
     vec4 color = texture(sampler2D(colorMap, colorMapSampler), xsv_TEXCOORD0);
-    SV_Target0 = mix(vec4(1), color, vec4(color.a));
+    
+	// Sanitize texture sample
+    color = mix(vec4(1), color, color.a);
+    
+	// Apply lambert factor for simple shading
+	const vec3 lightVec = vec3(0, 0, -1);
+	float NdotL = dot(lightVec, normalize(xsv_NORMAL0));
+	color.rgb *= mix(0.2, 1.0, NdotL);
+    
+    SV_Target0 = color;
 }
 

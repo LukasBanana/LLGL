@@ -5,6 +5,7 @@
 layout(std140, binding = 3) uniform Settings
 {
 	mat4 wvpMatrix;
+	mat4 wMatrix;
 	int useTexture2DMS;
 };
 
@@ -12,11 +13,12 @@ layout(binding = 1) uniform sampler colorMapSampler;
 layout(binding = 2) uniform texture2D colorMap;
 //layout(binding = 3) uniform sampler2DMS colorMapMS;
 
-layout(location = 0) in vec2 vTexCoord;
+layout(location = 0) in vec3 vNormal;
+layout(location = 1) in vec2 vTexCoord;
 
 layout(location = 0) out vec4 fragColor;
 
-void main()
+vec4 SampleColorMap(vec2 texCoord)
 {
     #if 0
 	if (useTexture2DMS != 0)
@@ -26,8 +28,8 @@ void main()
 		int numSamples = textureSamples(colorMapMS);
 		
 		ivec2 tc = ivec2(
-			int(vTexCoord.x * float(size.x)),
-			int(vTexCoord.y * float(size.y))
+			int(texCoord.x * float(size.x)),
+			int(texCoord.y * float(size.y))
 		);
 		
 		// Compute average of all samples
@@ -38,12 +40,24 @@ void main()
 		
 		c /= numSamples;
 		
-		fragColor = c;
+		return c;
 	}
 	else
     #endif
 	{
 		// Sample texel from standard texture
-		fragColor = texture(sampler2D(colorMap, colorMapSampler), vTexCoord);
+		return texture(sampler2D(colorMap, colorMapSampler), texCoord);
 	}
+}
+
+void main()
+{
+    vec4 color = SampleColorMap(vTexCoord);
+    
+	// Apply lambert factor for simple shading
+	const vec3 lightVec = vec3(0, 0, -1);
+	float NdotL = dot(lightVec, normalize(vNormal));
+	color.rgb *= mix(0.2, 1.0, NdotL);
+    
+    fragColor = color;
 }

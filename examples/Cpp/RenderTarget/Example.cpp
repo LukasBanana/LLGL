@@ -77,6 +77,7 @@ class Example_RenderTarget : public ExampleBase
     struct alignas(16) Settings
     {
         Gs::Matrix4f        wvpMatrix;
+        Gs::Matrix4f        wMatrix;
         int                 useTexture2DMS = 0;
     };
 
@@ -108,13 +109,15 @@ private:
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
         vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
         // Initialize vertices (scale texture-coordiantes a little bit, to show the texture border)
         auto vertices = GenerateTexturedCubeVertices();
 
+        constexpr float borderSize = 0.02f;
         for (auto& v : vertices)
-            v.texCoord = (v.texCoord - Gs::Vector2f(0.5f))*1.05f + Gs::Vector2f(0.5f);
+            v.texCoord = (v.texCoord - Gs::Vector2f(0.5f))*(1.0f + borderSize) + Gs::Vector2f(0.5f);
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
@@ -344,9 +347,9 @@ private:
 
     void UpdateModelTransform(Settings& settings, const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
     {
-        settings.wvpMatrix = proj;
-        Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
-        Gs::RotateFree(settings.wvpMatrix, axis.Normalized(), rotation);
+        Gs::Translate(settings.wMatrix, { 0, 0, 5 });
+        Gs::RotateFree(settings.wMatrix, axis.Normalized(), rotation);
+        settings.wvpMatrix = proj * settings.wMatrix;
     }
 
     static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;

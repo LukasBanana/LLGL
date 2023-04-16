@@ -12,6 +12,12 @@
 #include <LLGL/Platform/NativeHandle.h>
 
 
+struct Matrices
+{
+    Gs::Matrix4f wvpMatrix;
+    Gs::Matrix4f wMatrix;
+};
+
 /*
  * MyRenderer class
  */
@@ -50,12 +56,12 @@ public:
     );
 
     void CreateResources(
-        const LLGL::ArrayView<VertexPos3Tex2>&  vertices,
+        const LLGL::ArrayView<TexturedVertex>&  vertices,
         const LLGL::ArrayView<std::uint32_t>&   indices
     );
 
     // Renders the scene from the specified view.
-    void Render(const Gs::Matrix4f& wvpMatrix);
+    void Render(const Gs::Matrix4f& vpMatrix, const Gs::Matrix4f& wMatrix);
 
     // Builds a perspective projection matrix for this renderer.
     Gs::Matrix4f BuildPerspectiveProjection(float aspectRatio, float nearPlane, float farPlane, float fieldOfView) const;
@@ -109,16 +115,17 @@ MyRenderer::MyRenderer(
     swapChain->SetVsyncInterval(1);
 }
 
-void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices, const LLGL::ArrayView<std::uint32_t>& indices)
+void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices, const LLGL::ArrayView<std::uint32_t>& indices)
 {
     // Vertex format
     LLGL::VertexFormat vertexFormat;
     vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+    vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
     vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
     // Create vertex buffer
     vertexBuffer = renderer->CreateBuffer(
-        LLGL::VertexBufferDesc(sizeof(VertexPos3Tex2) * vertices.size(), vertexFormat),
+        LLGL::VertexBufferDesc(sizeof(TexturedVertex) * vertices.size(), vertexFormat),
         vertices.data()
     );
 
@@ -129,7 +136,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
     );
 
     // Create constant buffer
-    constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Gs::Matrix4f)));
+    constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Matrices)));
 
     // Create textures
     const std::string texturePath = "../../Media/Textures/";
@@ -187,9 +194,9 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
     bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
 
     if (compiledSampler)
-        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert, texture(0):frag, sampler(0):frag"));
+        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("heap{cbuffer(0):vert, texture(0):frag, sampler(0):frag}"));
     else
-        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert, texture(1):frag, sampler(2):frag"));
+        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("heap{cbuffer(0):vert, texture(1):frag, sampler(2):frag}"));
 
     // Create resource heap
     resourceHeap = renderer->CreateResourceHeap(layout, { constantBuffer, texture, sampler });
@@ -219,12 +226,17 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<VertexPos3Tex2>& vertices
     cmdBuffer = renderer->CreateCommandBuffer();
 }
 
-void MyRenderer::Render(const Gs::Matrix4f& wvpMatrix)
+void MyRenderer::Render(const Gs::Matrix4f& vpMatrix, const Gs::Matrix4f& wMatrix)
 {
     // Update constant buffer
     cmdBuffer->Begin();
     {
-        cmdBuffer->UpdateBuffer(*constantBuffer, 0, &wvpMatrix, sizeof(wvpMatrix));
+        Matrices matrices;
+        {
+            matrices.wvpMatrix  = vpMatrix * wMatrix;
+            matrices.wMatrix    = wMatrix;
+        }
+        cmdBuffer->UpdateBuffer(*constantBuffer, 0, &matrices, sizeof(matrices));
 
         cmdBuffer->SetVertexBuffer(*vertexBuffer);
         cmdBuffer->SetIndexBuffer(*indexBuffer);
@@ -348,7 +360,7 @@ int main(int argc, char* argv[])
 
             // Draw scene for all renderers
             for (int i = 0; i < 4; ++i)
-                myRenderers[i].Render(projMatrices[i] * viewMatrix * worldMatrix);
+                myRenderers[i].Render(projMatrices[i] * viewMatrix, worldMatrix);
         }
     }
     catch (const std::exception& e)
