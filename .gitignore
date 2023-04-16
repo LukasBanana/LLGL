@@ -5,4 +5,5 @@ build*/
 *.aps
 Screenshot.*
 *.cache
+*.spvasm
 Makefile

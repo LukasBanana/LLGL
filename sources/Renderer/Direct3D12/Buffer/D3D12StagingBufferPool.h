@@ -36,7 +36,7 @@ class D3D12StagingBufferPool
         void Reset();
 
         // Writes the specified data to the destination buffer using the staging pool.
-        void WriteStaged(
+        HRESULT WriteStaged(
             D3D12CommandContext&    commandContext,
             D3D12Resource&          dstBuffer,
             UINT64                  dstOffset,
@@ -45,7 +45,7 @@ class D3D12StagingBufferPool
         );
 
         // Writes the specified data to the destination buffer using the global upload buffer.
-        void WriteImmediate(
+        HRESULT WriteImmediate(
             D3D12CommandContext&    commandContext,
             D3D12Resource&          dstBuffer,
             UINT64                  dstOffset,
@@ -55,7 +55,7 @@ class D3D12StagingBufferPool
         );
 
         // Copies the specified subresource region into the global readback buffer and writes it into the output data.
-        void ReadSubresourceRegion(
+        HRESULT ReadSubresourceRegion(
             D3D12CommandContext&    commandContext,
             D3D12Resource&          srcBuffer,
             UINT64                  srcOffset,

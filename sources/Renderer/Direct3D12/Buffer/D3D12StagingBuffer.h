@@ -52,7 +52,7 @@ class D3D12StagingBuffer
         bool Capacity(UINT64 dataSize) const;
 
         // Writes the specified data to the native D3D upload buffer.
-        void Write(
+        HRESULT Write(
             ID3D12GraphicsCommandList*  commandList,
             ID3D12Resource*             dstBuffer,
             UINT64                      dstOffset,
@@ -61,7 +61,7 @@ class D3D12StagingBuffer
         );
 
         // Writes the specified data to the native D3D upload buffer and increments the write offset.
-        void WriteAndIncrementOffset(
+        HRESULT WriteAndIncrementOffset(
             ID3D12GraphicsCommandList*  commandList,
             ID3D12Resource*             dstBuffer,
             UINT64                      dstOffset,

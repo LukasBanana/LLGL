@@ -76,7 +76,7 @@ bool D3D12StagingBuffer::Capacity(UINT64 dataSize) const
     return (offset_ + dataSize <= size_);
 }
 
-void D3D12StagingBuffer::Write(
+HRESULT D3D12StagingBuffer::Write(
     ID3D12GraphicsCommandList*  commandList,
     ID3D12Resource*             dstBuffer,
     UINT64                      dstOffset,
@@ -89,7 +89,7 @@ void D3D12StagingBuffer::Write(
 
     HRESULT hr = native_->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
     if (FAILED(hr))
-        return;
+        return hr;
 
     /* Copy input data to staging buffer */
     ::memcpy(mappedData + offset_, data, static_cast<std::size_t>(dataSize));
@@ -104,17 +104,20 @@ void D3D12StagingBuffer::Write(
 
     /* Encode copy buffer command */
     commandList->CopyBufferRegion(dstBuffer, dstOffset, native_.Get(), offset_, dataSize);
+
+    return S_OK;
 }
 
-void D3D12StagingBuffer::WriteAndIncrementOffset(
+HRESULT D3D12StagingBuffer::WriteAndIncrementOffset(
     ID3D12GraphicsCommandList*  commandList,
     ID3D12Resource*             dstBuffer,
     UINT64                      dstOffset,
     const void*                 data,
     UINT64                      dataSize)
 {
-    Write(commandList, dstBuffer, dstOffset, data, dataSize);
+    HRESULT hr = Write(commandList, dstBuffer, dstOffset, data, dataSize);
     offset_ += dataSize;
+    return hr;
 }
 
 
