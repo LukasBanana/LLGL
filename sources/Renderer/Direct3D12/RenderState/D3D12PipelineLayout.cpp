@@ -321,7 +321,9 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
         rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
 
         /* Store root parameter index */
-        rootParameterIndices_.rootParamDescriptorHeaps[GetDescriptorTypeShift(descRangeType)] = rootParamIndex;
+        UINT8& rootParamIndexStored = rootParameterIndices_.rootParamDescriptorHeaps[GetDescriptorTypeShift(descRangeType)];
+        LLGL_ASSERT(rootParamIndexStored == D3D12RootParameterIndices::invalidIndex || rootParamIndexStored == rootParamIndex);
+        rootParamIndexStored = rootParamIndex;
     }
 
     /* Cache binding flags in the same order root parameters are build */
@@ -368,9 +370,9 @@ void D3D12PipelineLayout::BuildRootParameterTables(
 static UINT GetRootParameterIndexAfterHeapResources(const D3D12RootParameterIndices& indices)
 {
     return std::max(
-        (indices.rootParamDescriptorHeaps[0] == D3D12RootParameterIndices::invalidIndex ? 0u : indices.rootParamDescriptorHeaps[0]),
-        (indices.rootParamDescriptorHeaps[1] == D3D12RootParameterIndices::invalidIndex ? 0u : indices.rootParamDescriptorHeaps[1])
-    ) + 1u;
+        (indices.rootParamDescriptorHeaps[0] == D3D12RootParameterIndices::invalidIndex ? 0u : indices.rootParamDescriptorHeaps[0] + 1u),
+        (indices.rootParamDescriptorHeaps[1] == D3D12RootParameterIndices::invalidIndex ? 0u : indices.rootParamDescriptorHeaps[1] + 1u)
+    );
 }
 
 void D3D12PipelineLayout::BuildRootParameterTableEntry(
@@ -396,7 +398,9 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
         rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
 
         /* Store root parameter index */
-        rootParameterIndices_.rootParamDescriptors[GetDescriptorTypeShift(descRangeType)] = rootParamIndex;
+        UINT8& rootParamIndexStored = rootParameterIndices_.rootParamDescriptors[GetDescriptorTypeShift(descRangeType)];
+        LLGL_ASSERT(rootParamIndexStored == D3D12RootParameterIndices::invalidIndex || rootParamIndexStored == rootParamIndex);
+        rootParamIndexStored = rootParamIndex;
     }
 
     /* Cache binding flags in the same order root parameters are build */
