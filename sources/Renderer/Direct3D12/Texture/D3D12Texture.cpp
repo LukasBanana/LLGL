@@ -205,9 +205,9 @@ static void UpdateD3DTextureSubresource(
     numArrayLayers  = std::min(numArrayLayers, maxNumArrayLayers - firstArrayLayer);
 
     /* Create the GPU upload buffer */
-    UINT64          srcBufferOffset = 0;
-    UINT64          srcBufferSize   = GetRequiredIntermediateSize(dstTexture, 0, 1) * numArrayLayers;
-    ID3D12Resource* srcBuffer       = context.CreateUploadBuffer(srcBufferSize);
+    UINT64          srcBufferOffset             = 0;
+    UINT64          srcBufferSubresourceSize    = GetAlignedSize<UINT64>(GetRequiredIntermediateSize(dstTexture, 0, 1), D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+    ID3D12Resource* srcBuffer                   = context.CreateUploadBuffer(srcBufferSubresourceSize * numArrayLayers);
 
     /* Upload subresource for each array layer */
     for_subrange(arrayLayer, firstArrayLayer, firstArrayLayer + numArrayLayers)
@@ -226,8 +226,8 @@ static void UpdateD3DTextureSubresource(
         );
 
         /* Move to next buffer region */
-        subresourceData.pData = (reinterpret_cast<const std::int8_t*>(subresourceData.pData) + subresourceData.SlicePitch);
-        srcBufferOffset += subresourceData.SlicePitch;
+        subresourceData.pData = (reinterpret_cast<const char*>(subresourceData.pData) + subresourceData.SlicePitch);
+        srcBufferOffset += srcBufferSubresourceSize;
     }
 }
 

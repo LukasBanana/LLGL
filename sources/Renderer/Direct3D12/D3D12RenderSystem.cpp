@@ -608,9 +608,13 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     }
 
     /* Check if image data conversion is necessary */
-    auto format = textureD3D.GetFormat();
-    const auto& formatAttribs = GetFormatAttribs(format);
-    auto dataLayout = CalcSubresourceLayout(format, region.extent);
+    const auto  format          = textureD3D.GetFormat();
+    const auto& formatAttribs   = GetFormatAttribs(format);
+
+    const auto  texExtent       = textureD3D.GetMipExtent(region.subresource.baseMipLevel);
+    const auto  srcExtent       = CalcTextureExtent(textureD3D.GetType(), region.extent, region.subresource.numArrayLayers);
+
+    const auto  dataLayout      = CalcSubresourceLayout(format, srcExtent);
 
     ByteBuffer intermediateData;
     const void* initialData = imageDesc.data;
@@ -636,9 +640,6 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
         subresourceData.RowPitch    = dataLayout.rowStride;
         subresourceData.SlicePitch  = dataLayout.layerStride;
     }
-
-    const auto texExtent = textureD3D.GetMipExtent(region.subresource.baseMipLevel);
-    const auto srcExtent = CalcTextureExtent(textureD3D.GetType(), region.extent, region.subresource.numArrayLayers);
 
     const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == texExtent);
     if (isFullRegion)
