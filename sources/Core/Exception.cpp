@@ -67,7 +67,7 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
     #ifdef LLGL_EXCEPTIONS_ENABLED
 
     /* Throw exception with report and optional origin */
-    throw std::runtime_error(report, origin);
+    throw std::runtime_error(report);
 
     #else
 

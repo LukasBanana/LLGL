@@ -174,7 +174,7 @@ static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint
 {
     if (type->opcode == spv::Op::OpTypeFloat)
     {
-        if (type->size == 16)
+        if (type->size == 2)
         {
             switch (count)
             {
@@ -184,7 +184,7 @@ static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint
                 case 4: return Format::RGBA16Float;
             }
         }
-        else if (type->size == 32)
+        else if (type->size == 4)
         {
             switch (count)
             {
@@ -194,7 +194,7 @@ static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint
                 case 4: return Format::RGBA32Float;
             }
         }
-        else if (type->size == 64)
+        else if (type->size == 8)
         {
             switch (count)
             {
@@ -292,6 +292,12 @@ static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
         case spv::BuiltIn::ViewportIndex:       return SystemValue::ViewportIndex;
         default:                                return SystemValue::Undefined;
     }
+}
+
+static SystemValue SpvBuiltinToFragmentOutputSV(spv::BuiltIn type)
+{
+    auto sv = SpvBuiltinToSystemValue(type);
+    return (sv == SystemValue::Undefined ? SystemValue::Color : sv);
 }
 
 // Reflects the SPIR-V type to the output binding descriptor and returns the dereferenced type
@@ -413,7 +419,7 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
                 attrib.name         = GetOptString(var.name);
                 attrib.format       = SpvTypeToFormat(var.type);
                 attrib.location     = var.location;
-                attrib.systemValue  = SpvBuiltinToSystemValue(var.builtin);
+                attrib.systemValue  = SpvBuiltinToFragmentOutputSV(var.builtin);
             }
             reflection.fragment.outputAttribs.push_back(attrib);
         }

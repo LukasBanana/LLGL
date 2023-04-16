@@ -136,7 +136,7 @@ static UINT8 GetColorWriteMask(std::uint8_t colorMask)
     return mask;
 }
 
-static void Convert(D3D12_DEPTH_STENCILOP_DESC& dst, const StencilFaceDescriptor& src)
+static void ConvertStencilOpDesc(D3D12_DEPTH_STENCILOP_DESC& dst, const StencilFaceDescriptor& src)
 {
     dst.StencilFailOp       = D3D12Types::Map(src.stencilFailOp);
     dst.StencilDepthFailOp  = D3D12Types::Map(src.depthFailOp);
@@ -144,7 +144,7 @@ static void Convert(D3D12_DEPTH_STENCILOP_DESC& dst, const StencilFaceDescriptor
     dst.StencilFunc         = D3D12Types::Map(src.compareOp);
 }
 
-static void Convert(D3D12_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil)
+static void ConvertDepthStencilDesc(D3D12_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil)
 {
     dst.DepthEnable         = DXBoolean(srcDepth.testEnabled);
     dst.DepthWriteMask      = (srcDepth.writeEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO);
@@ -153,11 +153,11 @@ static void Convert(D3D12_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDep
     dst.StencilReadMask     = static_cast<UINT8>(srcStencil.front.readMask);
     dst.StencilWriteMask    = static_cast<UINT8>(srcStencil.front.writeMask);
 
-    Convert(dst.FrontFace, srcStencil.front);
-    Convert(dst.BackFace, srcStencil.back);
+    ConvertStencilOpDesc(dst.FrontFace, srcStencil.front);
+    ConvertStencilOpDesc(dst.BackFace, srcStencil.back);
 }
 
-static void Convert(D3D12_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescriptor& src)
+static void ConvertTargetBlendDesc(D3D12_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescriptor& src)
 {
     dst.BlendEnable             = DXBoolean(src.blendEnabled);
     dst.LogicOpEnable           = FALSE;
@@ -199,7 +199,11 @@ static void SetBlendDescToLogicOp(D3D12_RENDER_TARGET_BLEND_DESC& dst, D3D12_LOG
     dst.RenderTargetWriteMask   = D3D12_COLOR_WRITE_ENABLE_ALL;
 }
 
-static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], const BlendDescriptor& src, UINT numAttachments)
+static void ConvertBlendDesc(
+    D3D12_BLEND_DESC&       dst,
+    DXGI_FORMAT             (&dstColorFormats)[LLGL_MAX_NUM_COLOR_ATTACHMENTS],
+    const BlendDescriptor&  src,
+    UINT                    numAttachments)
 {
     dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);
 
@@ -208,12 +212,12 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         /* Enable independent blend states when multiple targets are specified */
         dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
 
-        for_range(i, 8u)
+        for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
         {
             if (i < numAttachments)
             {
                 /* Convert blend target descriptor */
-                Convert(dst.RenderTarget[i], src.targets[i]);
+                ConvertTargetBlendDesc(dst.RenderTarget[i], src.targets[i]);
                 dstColorFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
             }
             else
@@ -237,7 +241,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         dstColorFormats[0] = DXGI_FORMAT_R8G8B8A8_UINT;
 
         /* Initialize remaining blend target to default values */
-        for_subrange(i, 1u, 8u)
+        for_subrange(i, 1u, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
         {
             SetBlendDescToDefault(dst.RenderTarget[i]);
             dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
@@ -245,7 +249,11 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
     }
 }
 
-static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], const BlendDescriptor& src, const D3D12RenderPass& renderPass)
+static void ConvertBlendDesc(
+    D3D12_BLEND_DESC&       dst,
+    DXGI_FORMAT             (&dstColorFormats)[LLGL_MAX_NUM_COLOR_ATTACHMENTS],
+    const BlendDescriptor&  src,
+    const D3D12RenderPass&  renderPass)
 {
     dst.AlphaToCoverageEnable = DXBoolean(src.alphaToCoverageEnabled);
 
@@ -254,12 +262,12 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
         /* Enable independent blend states when multiple targets are specified */
         dst.IndependentBlendEnable = DXBoolean(src.independentBlendEnabled);
 
-        for_range(i, 8u)
+        for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
         {
             if (i < renderPass.GetNumColorAttachments())
             {
                 /* Convert blend target descriptor */
-                Convert(dst.RenderTarget[i], src.targets[i]);
+                ConvertTargetBlendDesc(dst.RenderTarget[i], src.targets[i]);
                 dstColorFormats[i] = renderPass.GetRTVFormats()[i];
             }
             else
@@ -287,7 +295,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
             dstColorFormats[0] = DXGI_FORMAT_UNKNOWN;
 
         /* Initialize remaining blend target to default values */
-        for_subrange(i, 1u, 8u)
+        for_subrange(i, 1u, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
         {
             SetBlendDescToDefault(dst.RenderTarget[i]);
             dstColorFormats[i] = DXGI_FORMAT_UNKNOWN;
@@ -295,7 +303,7 @@ static void Convert(D3D12_BLEND_DESC& dst, DXGI_FORMAT (&dstColorFormats)[8], co
     }
 }
 
-static void Convert(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
+static void ConvertRasterizerDesc(D3D12_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
 {
     dst.FillMode                = D3D12Types::Map(src.polygonMode);
     dst.CullMode                = D3D12Types::Map(src.cullMode);
@@ -379,19 +387,19 @@ void D3D12GraphicsPSO::CreateNativePSOFromDesc(
     if (renderPass != nullptr)
     {
         stateDesc.DSVFormat = renderPass->GetDSVFormat();
-        Convert(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, *renderPass);
+        ConvertBlendDesc(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, *renderPass);
     }
     else
     {
         stateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        Convert(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, numAttachments);
+        ConvertBlendDesc(stateDesc.BlendState, stateDesc.RTVFormats, desc.blend, numAttachments);
     }
 
     /* Convert rasterizer state */
-    Convert(stateDesc.RasterizerState, desc.rasterizer);
+    ConvertRasterizerDesc(stateDesc.RasterizerState, desc.rasterizer);
 
     /* Convert depth-stencil state */
-    Convert(stateDesc.DepthStencilState, desc.depth, desc.stencil);
+    ConvertDepthStencilDesc(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
     /* Convert other states */
     stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
