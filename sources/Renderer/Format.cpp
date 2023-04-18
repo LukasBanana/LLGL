@@ -238,15 +238,21 @@ LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
     return (imageFormat >= ImageFormat::BC1 && imageFormat <= ImageFormat::BC5);
 }
 
-LLGL_EXPORT bool IsDepthStencilFormat(const Format format)
+LLGL_EXPORT bool IsDepthOrStencilFormat(const Format format)
 {
     const auto& formatAttribs = GetFormatAttribs(format);
     return ((formatAttribs.flags & (FormatFlags::HasDepth | FormatFlags::HasStencil)) != 0);
 }
 
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat)
+LLGL_EXPORT bool IsDepthOrStencilFormat(const ImageFormat imageFormat)
 {
     return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil);
+}
+
+LLGL_EXPORT bool IsDepthAndStencilFormat(const Format format)
+{
+    const auto& formatAttribs = GetFormatAttribs(format);
+    return ((formatAttribs.flags & (FormatFlags::HasDepth | FormatFlags::HasStencil)) == (FormatFlags::HasDepth | FormatFlags::HasStencil));
 }
 
 LLGL_EXPORT bool IsDepthFormat(const Format format)
@@ -257,6 +263,12 @@ LLGL_EXPORT bool IsDepthFormat(const Format format)
 LLGL_EXPORT bool IsStencilFormat(const Format format)
 {
     return ((GetFormatAttribs(format).flags & FormatFlags::HasStencil) != 0);
+}
+
+LLGL_EXPORT bool IsColorFormat(const Format format)
+{
+    const auto& formatAttribs = GetFormatAttribs(format);
+    return (format != Format::Undefined && (formatAttribs.flags & (FormatFlags::HasDepth | FormatFlags::HasStencil)) == 0);
 }
 
 LLGL_EXPORT bool IsNormalizedFormat(const Format format)

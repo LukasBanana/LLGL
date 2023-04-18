@@ -643,6 +643,95 @@ int D3D11RenderSystem::GetMinorVersion() const
     return 0;
 }
 
+static void InitializeD3DDepthStencilTextureWithDSV(
+    ID3D11Device*           device,
+    ID3D11DeviceContext*    context,
+    D3D11Texture&           textureD3D,
+    const ClearValue&       clearValue)
+{
+    /* Create intermediate depth-stencil view for texture */
+    ComPtr<ID3D11DepthStencilView> dsv;
+    textureD3D.CreateSubresourceDSV(
+        device,
+        dsv.ReleaseAndGetAddressOf(),
+        textureD3D.GetType(),
+        textureD3D.GetDXFormat(),
+        0,
+        0,
+        textureD3D.GetNumArrayLayers()
+    );
+
+    /* Clear view with depth-stencil values */
+    context->ClearDepthStencilView(
+        dsv.Get(),
+        D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+        clearValue.depth,
+        static_cast<UINT8>(clearValue.stencil)
+    );
+}
+
+static void InitializeD3DColorTextureWithRTV(
+    ID3D11Device*           device,
+    ID3D11DeviceContext*    context,
+    D3D11Texture&           textureD3D,
+    const ClearValue&       clearValue)
+{
+    /* Create intermediate depth-stencil view for texture */
+    ComPtr<ID3D11RenderTargetView> rtv;
+    textureD3D.CreateSubresourceRTV(
+        device,
+        rtv.ReleaseAndGetAddressOf(),
+        textureD3D.GetType(),
+        textureD3D.GetBaseDXFormat(),
+        0,
+        0,
+        textureD3D.GetNumArrayLayers()
+    );
+
+    /* Clear view with depth-stencil values */
+    const FLOAT clearColor[4] = { clearValue.color.r, clearValue.color.g, clearValue.color.b, clearValue.color.a };
+    context->ClearRenderTargetView(rtv.Get(), clearColor);
+}
+
+static void InitializeD3DColorTextureWithUploadBuffer(
+    ID3D11DeviceContext*    context,
+    D3D11Texture&           textureD3D,
+    const Extent3D&         extent,
+    const ClearValue&       clearValue)
+{
+    /* Find suitable image format for texture hardware format */
+    SrcImageDescriptor imageDescDefault;
+
+    const auto& formatDesc = GetFormatAttribs(textureD3D.GetBaseFormat());
+    if (formatDesc.bitSize > 0)
+    {
+        /* Copy image format and data type from descriptor */
+        imageDescDefault.format     = formatDesc.format;
+        imageDescDefault.dataType   = formatDesc.dataType;
+
+        /* Generate default image buffer */
+        const auto fillColor = clearValue.color.Cast<double>();
+        const auto imageSize = extent.width * extent.height * extent.depth;
+
+        auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
+
+        /* Update only the first MIP-map level for each array slice */
+        imageDescDefault.data       = imageBuffer.get();
+        imageDescDefault.dataSize   = GetMemoryFootprint(imageDescDefault.format, imageDescDefault.dataType, imageSize);
+
+        for_range(layer, textureD3D.GetNumArrayLayers())
+        {
+            textureD3D.UpdateSubresource(
+                context,
+                0,
+                layer,
+                CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
+                imageDescDefault
+            );
+        }
+    }
+}
+
 void D3D11RenderSystem::InitializeGpuTexture(
     D3D11Texture&               textureD3D,
     const TextureDescriptor&    textureDesc,
@@ -661,14 +750,46 @@ void D3D11RenderSystem::InitializeGpuTexture(
     }
     else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
     {
-        /* Initialize texture with default image data */
-        InitializeGpuTextureWithClearValue(
-            textureD3D,
-            textureDesc.format,
-            textureDesc.extent,
-            textureDesc.arrayLayers,
-            textureDesc.clearValue
-        );
+        /* Initialize texture with clear value using hardware accelerated clear function or CPU upload buffer */
+        if (IsDepthOrStencilFormat(textureDesc.format))
+        {
+            const bool hasDSVBinding = ((textureDesc.bindFlags & BindFlags::DepthStencilAttachment) != 0);
+            if (hasDSVBinding)
+            {
+                InitializeD3DDepthStencilTextureWithDSV(
+                    device_.Get(),
+                    context_.Get(),
+                    textureD3D,
+                    textureDesc.clearValue
+                );
+            }
+            else
+            {
+                //LLGL_TRAP_NOT_IMPLEMENTED("initialize depth-stencil texture without DepthStencilAttachment binding"); //TODO
+            }
+        }
+        else
+        {
+            const bool hasRTVBinding = ((textureDesc.bindFlags & BindFlags::ColorAttachment) != 0);
+            if (hasRTVBinding)
+            {
+                InitializeD3DColorTextureWithRTV(
+                    device_.Get(),
+                    context_.Get(),
+                    textureD3D,
+                    textureDesc.clearValue
+                );
+            }
+            else
+            {
+                InitializeD3DColorTextureWithUploadBuffer(
+                    context_.Get(),
+                    textureD3D,
+                    textureDesc.extent,
+                    textureDesc.clearValue
+                );
+            }
+        }
     }
 }
 
@@ -708,53 +829,6 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
 
         /* Move to next region of initial data */
         imageDesc.data = (reinterpret_cast<const std::int8_t*>(imageDesc.data) + bytesPerLayer);
-    }
-}
-
-void D3D11RenderSystem::InitializeGpuTextureWithClearValue(
-    D3D11Texture&       textureD3D,
-    const Format        format,
-    const Extent3D&     extent,
-    std::uint32_t       arrayLayers,
-    const ClearValue&   clearValue)
-{
-    if (IsDepthStencilFormat(format))
-    {
-        //TODO
-    }
-    else
-    {
-        /* Find suitable image format for texture hardware format */
-        SrcImageDescriptor imageDescDefault;
-
-        const auto& formatDesc = GetFormatAttribs(format);
-        if (formatDesc.bitSize > 0)
-        {
-            /* Copy image format and data type from descriptor */
-            imageDescDefault.format     = formatDesc.format;
-            imageDescDefault.dataType   = formatDesc.dataType;
-
-            /* Generate default image buffer */
-            const auto fillColor = clearValue.color.Cast<double>();
-            const auto imageSize = extent.width * extent.height * extent.depth;
-
-            auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
-
-            /* Update only the first MIP-map level for each array slice */
-            imageDescDefault.data       = imageBuffer.get();
-            imageDescDefault.dataSize   = GetMemoryFootprint(imageDescDefault.format, imageDescDefault.dataType, imageSize);
-
-            for_range(layer, arrayLayers)
-            {
-                textureD3D.UpdateSubresource(
-                    context_.Get(),
-                    0,
-                    layer,
-                    CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
-                    imageDescDefault
-                );
-            }
-        }
     }
 }
 

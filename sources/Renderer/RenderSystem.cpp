@@ -9,6 +9,7 @@
 #include "../Core/CoreUtils.h"
 #include "../Core/StringUtils.h"
 #include "../Core/Assertion.h"
+#include "RenderTargetUtils.h"
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Misc/ForRange.h>
 #include <LLGL/Format.h>
@@ -370,7 +371,7 @@ static std::size_t CountColorAttachments(const RenderTargetDescriptor& renderTar
     std::size_t n = 0;
     for (const auto& attachment : renderTargetDesc.attachments)
     {
-        if (attachment.type == AttachmentType::Color)
+        if (IsColorFormat(GetAttachmentFormat(attachment)))
             ++n;
     }
     return n;
@@ -382,7 +383,7 @@ static std::size_t CountDepthStencilAttachments(const RenderTargetDescriptor& re
     std::size_t n = 0;
     for (const auto& attachment : renderTargetDesc.attachments)
     {
-        if (attachment.type != AttachmentType::Color)
+        if (IsDepthOrStencilFormat(GetAttachmentFormat(attachment)))
             ++n;
     }
     return n;

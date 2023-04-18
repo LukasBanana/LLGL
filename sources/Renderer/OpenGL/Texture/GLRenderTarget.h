@@ -60,21 +60,21 @@ class GLRenderTarget final : public RenderTarget
         void CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc);
         void CreateFramebufferWithNoAttachments(const RenderTargetDescriptor& desc);
 
-        void AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* internalFormats);
+        void AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* outInternalFormats);
         void AttachAllDepthStencilBuffers(const std::vector<AttachmentDescriptor>& attachmentDescs);
 
         void AttachDepthBuffer();
         void AttachStencilBuffer();
         void AttachDepthStencilBuffer();
-        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& internalFormat);
+        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& outInternalFormat);
 
         void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
 
         void CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment);
 
-        GLenum MakeFramebufferAttachment(const AttachmentType type);
+        GLenum MakeFramebufferAttachment(const Format format);
         GLenum MakeFramebufferColorAttachment();
-        GLenum MakeFramebufferDepthStencilAttachment(bool depth, bool stencil);
+        GLenum MakeFramebufferDepthStencilAttachment(const Format format);
 
         void CreateRenderbuffersMS(const GLenum* internalFormats);
         void CreateRenderbufferMS(GLenum attachment, GLenum internalFormat);

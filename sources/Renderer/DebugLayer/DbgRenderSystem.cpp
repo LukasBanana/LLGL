@@ -10,6 +10,7 @@
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
+#include "../RenderTargetUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include <LLGL/ImageFlags.h>
@@ -1263,7 +1264,8 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         auto textureDbg = LLGL_CAST(DbgTexture*, texture);
 
         /* Validate attachment type for this texture */
-        if (attachmentDesc.type == AttachmentType::Color)
+        const Format format = GetAttachmentFormat(attachmentDesc);
+        if (IsColorFormat(format))
         {
             if ((textureDbg->desc.bindFlags & BindFlags::ColorAttachment) == 0)
             {
@@ -1306,7 +1308,14 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
     }
     else
     {
-        if (attachmentDesc.type == AttachmentType::Color)
+        if (attachmentDesc.format == Format::Undefined)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "cannot have attachment with undefined format"
+            );
+        }
+        else if (IsColorFormat(attachmentDesc.format))
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
@@ -1627,7 +1636,7 @@ static bool AreFragmentOutputFormatsCompatible(const Format attachmentFormat, co
 {
     if (attachmentFormat == Format::Undefined || attribFormat == Format::Undefined)
         return false;
-    if (IsDepthStencilFormat(attachmentFormat) != IsDepthStencilFormat(attribFormat))
+    if (IsDepthOrStencilFormat(attachmentFormat) != IsDepthOrStencilFormat(attribFormat))
         return false;
     if (GetFormatAttribs(attachmentFormat).components != GetFormatAttribs(attribFormat).components)
         return false;

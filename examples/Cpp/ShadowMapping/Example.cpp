@@ -163,7 +163,7 @@ private:
             renderTargetDesc.resolution     = shadowMapResolution;
             renderTargetDesc.attachments    =
             {
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth, shadowMap }
+                LLGL::AttachmentDescriptor{ shadowMap }
             };
         }
         shadowMapRenderTarget = renderer->CreateRenderTarget(renderTargetDesc);

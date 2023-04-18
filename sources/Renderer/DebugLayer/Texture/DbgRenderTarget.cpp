@@ -9,22 +9,13 @@
 #include "DbgTexture.h"
 #include "../DbgCore.h"
 #include "../../CheckedCast.h"
+#include "../../RenderTargetUtils.h"
 #include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
 {
 
-
-static Format GetAttachmentFormat(const AttachmentDescriptor& desc)
-{
-    if (auto texture = desc.texture)
-        return texture->GetFormat(); // Color or depth
-    else if (desc.type == AttachmentType::Color)
-        return Format::RGBA8UNorm; // Color
-    else
-        return Format::D24UNormS8UInt; // Depth
-}
 
 static void Convert(AttachmentFormatDescriptor& dst, const AttachmentDescriptor& src)
 {
@@ -38,16 +29,17 @@ static void Convert(RenderPassDescriptor& dst, const RenderTargetDescriptor& src
     std::uint32_t numColorAttachments = 0;
     for (const auto& attachment : src.attachments)
     {
-        if (attachment.type == AttachmentType::DepthStencil)
+        const Format format = GetAttachmentFormat(attachment);
+        if (IsDepthAndStencilFormat(format))
         {
             Convert(dst.depthAttachment, attachment);
             Convert(dst.stencilAttachment, attachment);
         }
-        else if (attachment.type == AttachmentType::Depth)
+        else if (IsDepthFormat(format))
             Convert(dst.depthAttachment, attachment);
-        else if (attachment.type == AttachmentType::Stencil)
+        else if (IsStencilFormat(format))
             Convert(dst.stencilAttachment, attachment);
-        else if (attachment.type == AttachmentType::Color && numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        else if (numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
             Convert(dst.colorAttachments[numColorAttachments++], attachment);
     }
     dst.samples = src.samples;

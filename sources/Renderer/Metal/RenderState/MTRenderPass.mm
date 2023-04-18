@@ -16,6 +16,7 @@
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
 #include "../../RenderPassUtils.h"
+#include "../../RenderTargetUtils.h"
 #include "../../../Core/Assertion.h"
 
 
@@ -30,22 +31,12 @@ static void Convert(MTAttachmentFormat& dst, const AttachmentFormatDescriptor& s
     dst.storeAction = MTTypes::ToMTLStoreAction(src.storeOp);
 }
 
-static MTAttachmentFormat MakeMTAttachmentFormat(
-    const AttachmentDescriptor& desc,
-    MTLPixelFormat              defaultPixelFormat = MTLPixelFormatInvalid)
+static MTAttachmentFormat MakeMTAttachmentFormat(const Format format)
 {
     MTAttachmentFormat fmt;
     {
-        /* Set pixel format for attachment */
-        if (auto texture = desc.texture)
-        {
-            auto textureMT = LLGL_CAST(const MTTexture*, texture);
-            fmt.pixelFormat = [textureMT->GetNative() pixelFormat];
-        }
-        else
-            fmt.pixelFormat = defaultPixelFormat;
-
-        /* Set default load and store actions */
+        /* Set pixel format and default load and store actions */
+        fmt.pixelFormat = MTTypes::ToMTLPixelFormat(format);
         fmt.loadAction  = MTLLoadActionDontCare;
         fmt.storeAction = MTLStoreActionStore;
     }
@@ -82,22 +73,15 @@ MTRenderPass::MTRenderPass(const RenderTargetDescriptor& desc) :
         /* Create default render pass for render target */
         for (const auto& attachment : desc.attachments)
         {
-            switch (attachment.type)
-            {
-                case AttachmentType::Color:
-                    colorAttachments_.push_back(MakeMTAttachmentFormat(attachment));
-                    break;
-                case AttachmentType::Depth:
-                    depthAttachment_    = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth32Float);
-                    break;
-                case AttachmentType::DepthStencil:
-                    depthAttachment_    = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth32Float_Stencil8);
-                    stencilAttachment_  = MakeMTAttachmentFormat(attachment, MTLPixelFormatDepth32Float_Stencil8);
-                    break;
-                case AttachmentType::Stencil:
-                    stencilAttachment_  = MakeMTAttachmentFormat(attachment, MTLPixelFormatStencil8);
-                    break;
-            }
+            const Format format = GetAttachmentFormat(attachment);
+            if (IsDepthAndStencilFormat(format))
+                depthAttachment_ = stencilAttachment_ = MakeMTAttachmentFormat(format);
+            else if (IsDepthFormat(format))
+                depthAttachment_ = MakeMTAttachmentFormat(format);
+            else if (IsStencilFormat(format))
+                stencilAttachment_ = MakeMTAttachmentFormat(format);
+            else if (IsColorFormat(format))
+                colorAttachments_.push_back(MakeMTAttachmentFormat(format));
         }
     }
 }

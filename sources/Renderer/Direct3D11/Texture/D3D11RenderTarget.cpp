@@ -12,7 +12,9 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
+#include "../../RenderTargetUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Misc/ForRange.h>
 
 
@@ -38,7 +40,10 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     {
         /* Initialize all attachments */
         for (const auto& attachment : desc.attachments)
+        {
+            LLGL_ASSERT(IsAttachmentEnabled(attachment));
             Attach(attachment);
+        }
     }
 }
 
@@ -142,29 +147,8 @@ void D3D11RenderTarget::FindSuitableSampleDesc(const RenderTargetDescriptor& des
     for_range(i, numFormats)
     {
         const auto& attachment = desc.attachments[i];
-        if (auto texture = attachment.texture)
-        {
-            /* Get format from texture */
-            auto textureD3D = LLGL_CAST(D3D11Texture*, texture);
-            formats[i] = textureD3D->GetBaseDXFormat();
-        }
-        else
-        {
-            /* Get format by type */
-            switch (attachment.type)
-            {
-                case AttachmentType::Depth:
-                    formats[i] = DXGI_FORMAT_D32_FLOAT;
-                    break;
-                case AttachmentType::DepthStencil:
-                case AttachmentType::Stencil:
-                    formats[i] = DXGI_FORMAT_D24_UNORM_S8_UINT;
-                    break;
-                default:
-                    formats[i] = DXGI_FORMAT_UNKNOWN;
-                    break;
-            }
-        }
+        const Format format = GetAttachmentFormat(attachment);
+        formats[i] = DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(format));
     }
 
     /* Find least common denominator of suitable sample descriptor for all attachment formats */
@@ -181,20 +165,14 @@ void D3D11RenderTarget::Attach(const AttachmentDescriptor& attachmentDesc)
     else
     {
         /* Attach (and create) depth-stencil buffer */
-        switch (attachmentDesc.type)
-        {
-            case AttachmentType::Color:
-                throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
-            case AttachmentType::Depth:
-                AttachDepthBuffer();
-                break;
-            case AttachmentType::DepthStencil:
-                AttachDepthStencilBuffer();
-                break;
-            case AttachmentType::Stencil:
-                AttachStencilBuffer();
-                break;
-        }
+        if (IsDepthAndStencilFormat(attachmentDesc.format))
+            AttachDepthStencilBuffer();
+        else if (IsDepthFormat(attachmentDesc.format))
+            AttachDepthBuffer();
+        else if (IsStencilFormat(attachmentDesc.format))
+            AttachStencilBuffer();
+        else
+            throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
     }
 }
 
@@ -267,18 +245,21 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     ValidateMipResolution(texture, attachmentDesc.mipLevel);
 
-    if (attachmentDesc.type == AttachmentType::Color)
-        AttachTextureColor(textureD3D, attachmentDesc);
+    const Format format = GetAttachmentFormat(attachmentDesc);
+    if (IsDepthOrStencilFormat(format))
+        AttachTextureDepthStencil(textureD3D, format, attachmentDesc);
     else
-        AttachTextureDepthStencil(textureD3D, attachmentDesc);
+        AttachTextureColor(textureD3D, format, attachmentDesc);
 }
 
-void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc)
+void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Format format, const AttachmentDescriptor& attachmentDesc)
 {
     /* Initialize RTV descriptor with attachment procedure and create RTV */
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 
-    rtvDesc.Format = DXTypes::ToDXGIFormatRTV(textureD3D.GetBaseDXFormat());
+    const DXGI_FORMAT baseFormatDXGI = DXTypes::ToDXGIFormat(format);
+
+    rtvDesc.Format = DXTypes::ToDXGIFormatRTV(baseFormatDXGI);
 
     /*
     If this is a multi-sample render target, but the target texture is not a multi-sample texture,
@@ -310,7 +291,7 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
             tex2DMSDesc.Height          = (tex2DDesc.Height << attachmentDesc.mipLevel);
             tex2DMSDesc.MipLevels       = 1;
             tex2DMSDesc.ArraySize       = 1;
-            tex2DMSDesc.Format          = textureD3D.GetBaseDXFormat();
+            tex2DMSDesc.Format          = baseFormatDXGI;
             tex2DMSDesc.SampleDesc      = sampleDesc_;
             tex2DMSDesc.Usage           = D3D11_USAGE_DEFAULT;
             tex2DMSDesc.BindFlags       = D3D11_BIND_RENDER_TARGET;
@@ -369,14 +350,15 @@ void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Attac
     }
 }
 
-void D3D11RenderTarget::AttachTextureDepthStencil(D3D11Texture& textureD3D, const AttachmentDescriptor& attachmentDesc)
+void D3D11RenderTarget::AttachTextureDepthStencil(D3D11Texture& textureD3D, const Format format, const AttachmentDescriptor& attachmentDesc)
 {
     /* Create DSV for texture */
+    const DXGI_FORMAT baseFormatDXGI = DXTypes::ToDXGIFormat(format);
     textureD3D.CreateSubresourceDSV(
         device_,
         depthStencilView_.ReleaseAndGetAddressOf(),
         textureD3D.GetType(),
-        textureD3D.GetDXFormat(),
+        baseFormatDXGI,
         attachmentDesc.mipLevel,
         attachmentDesc.arrayLayer,
         1

@@ -9,6 +9,7 @@
 #define LLGL_RENDER_TARGET_FLAGS_H
 
 
+#include <LLGL/Format.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/PipelineStateFlags.h>
@@ -18,41 +19,6 @@
 
 namespace LLGL
 {
-
-
-/* ----- Enumerations ----- */
-
-/**
-\brief Render target attachment type enumeration.
-\see AttachmentDescriptor
-\todo Remove this enum and use Format instead.
-*/
-enum class AttachmentType
-{
-    /**
-    \brief Attachment is used for color output.
-    \remarks A texture attached to a render target with this attachment type must have been created with binding flag BindFlags::ColorAttachment.
-    */
-    Color,
-
-    /**
-    \brief Attachment is used for depth component output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the binding flag BindFlags::DepthStencilAttachment.
-    */
-    Depth,
-
-    /**
-    \brief Attachment is used for depth component and stencil index output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the binding flag BindFlags::DepthStencilAttachment.
-    */
-    DepthStencil,
-
-    /**
-    \brief Attachment is used for stencil index output.
-    \remarks A texture attached to a render target with this attachment type must have been created with the binding flag BindFlags::DepthStencilAttachment.
-    */
-    Stencil,
-};
 
 
 /* ----- Structures ----- */
@@ -67,42 +33,29 @@ struct AttachmentDescriptor
     AttachmentDescriptor(const AttachmentDescriptor&) = default;
 
     //! Constructor for the specified depth-, or stencil attachment.
-    inline AttachmentDescriptor(AttachmentType type) :
-        type { type }
+    inline AttachmentDescriptor(Format format) :
+        format { format }
     {
     }
 
     //! Constructor for the specified depth-, stencil-, or color attachment.
-    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0) :
-        type       { type       },
+    inline AttachmentDescriptor(Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0) :
         texture    { texture    },
         mipLevel   { mipLevel   },
         arrayLayer { arrayLayer }
     {
     }
 
-    #if 1//TODO: replace this by \c format
-
     /**
-    \brief Specifies for which output information the texture attachment is to be used,
-    e.g. for color or depth information. By default AttachmentType::Color.
-    */
-    AttachmentType  type        = AttachmentType::Color;
-
-    #else
-
-    /**
-    \brief Specifies the secondary attachment format if \c texture is null.
-    \remarks If \c texture <b>is</b> specified, this attribute is ignored and the attachment format is determined by that texture.
-    \remarks If \c texture <b>is not</b> specified, this attribute determines the attachment format or disables the attachment if this attributes is Format::Undefined.
+    \brief Specifies the render-target attachment format. By default Format::Undefined.
+    \remarks If this is undefined, the \c texture <b>must not</b> be null and the format will be determined by texture's format.
+    \see Texture::GetFormat
     */
     Format          format      = Format::Undefined;
 
-    #endif
-
     /**
     \brief Pointer to the texture which is to be used as target output. By default null.
-    \remarks If this is null, the attribute \c type <b>must not</b> be AttachmentType::Color.
+    \remarks If this is null, the attribute \c format <b>must not</b> be Format::Undefined.
     The texture must also have been created either with the binding flag BindFlags::ColorAttachment or BindFlags::DepthStencilAttachment.
     \see AttachmentDescriptor::type
     \see TextureDescriptor::bindFlags
@@ -140,8 +93,8 @@ auto myRenderTargetSize = myColorTexture->GetMipExtent(0);
 myRenderTargetDesc.resolution = { myRenderTargetSize.width, myRenderTargetSize.height };
 
 myRenderTargetDesc.attachments = {
-    LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, myColorTexture },
-    LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth },
+    LLGL::AttachmentDescriptor{ myColorTexture },
+    LLGL::AttachmentDescriptor{ LLGL::Format::D32Float },
 };
 
 auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
@@ -193,6 +146,7 @@ struct RenderTargetDescriptor
     \remarks This container can also be empty, if the respective fragment shader has no direct output but writes into a storage texture instead
     (e.g. \c image3D in GLSL, or <code>RWTexture3D<float4></code> in HLSL).
     If the respective rendering API does not support render targets without any attachments, LLGL will generate a dummy texture.
+    \todo Replace this attribute by a fixed number of for color, resolve, and depth-stencil attachments.
     */
     std::vector<AttachmentDescriptor>   attachments;
 

@@ -202,14 +202,6 @@ class D3D11RenderSystem final : public RenderSystem
             SrcImageDescriptor  imageDesc
         );
 
-        void InitializeGpuTextureWithClearValue(
-            D3D11Texture&       textureD3D,
-            const Format        format,
-            const Extent3D&     extent,
-            std::uint32_t       arrayLayers,
-            const ClearValue&   clearValue
-        );
-
     private:
 
         /* ----- Common objects ----- */

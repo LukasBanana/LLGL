@@ -300,11 +300,11 @@ private:
             renderTargetDesc.attachments =
             {
                 #ifdef ENABLE_DEPTH_TEXTURE
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth, renderTargetDepthTex },
+                LLGL::AttachmentDescriptor{ renderTargetDepthTex },
                 #else
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth },
+                LLGL::AttachmentDescriptor{ LLGL::Format::D32Float },
                 #endif
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, renderTargetTex }
+                LLGL::AttachmentDescriptor{ renderTargetTex }
             };
         }
         renderTarget = renderer->CreateRenderTarget(renderTargetDesc);

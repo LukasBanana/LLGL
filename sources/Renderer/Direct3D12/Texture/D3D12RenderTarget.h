@@ -61,9 +61,8 @@ class D3D12RenderTarget final : public RenderTarget
 
         void CreateSubresource(
             ID3D12Device*                   device,
-            const AttachmentType            attachmentType,
             D3D12Resource&                  resource,
-            DXGI_FORMAT                     format,
+            const Format                    format,
             const TextureType               textureType,
             UINT                            mipLevel,
             UINT                            arrayLayer,

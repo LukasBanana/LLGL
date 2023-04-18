@@ -148,9 +148,12 @@ LLGL_EXPORT void TrapVKExtensionNotSupported(const char* origin, const char* ext
 }
 
 [[noreturn]]
-LLGL_EXPORT void TrapNotImplemented(const char* origin)
+LLGL_EXPORT void TrapNotImplemented(const char* origin, const char* useCase)
 {
-    Trap(origin, "not implemented yet");
+    if (useCase != nullptr && *useCase != '\0')
+        Trap(origin, "not implemented yet: %s", useCase);
+    else
+        Trap(origin, "not implemented yet");
 }
 
 [[noreturn]]

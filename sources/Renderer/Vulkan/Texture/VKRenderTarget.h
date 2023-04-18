@@ -73,7 +73,7 @@ class VKRenderTarget final : public RenderTarget
 
     private:
 
-        void CreateDepthStencilForAttachment(VKDeviceMemoryManager& deviceMemoryMngr, const AttachmentDescriptor& attachmentDesc);
+        void CreateDepthStencilAttachment(VKDeviceMemoryManager& deviceMemoryMngr, VkFormat format);
 
         void CreateRenderPass(
             VkDevice                        device,

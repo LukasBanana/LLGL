@@ -686,6 +686,70 @@ void D3D11Texture::CreateSubresourceDSV(
     DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView", "for texture subresource");
 }
 
+void D3D11Texture::CreateSubresourceRTV(
+    ID3D11Device*               device,
+    ID3D11RenderTargetView**    rtvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
+{
+    /* Create depth-stencil-view (DSV) for subresource */
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+    {
+        rtvDesc.Format = DXTypes::ToDXGIFormatRTV(format);
+
+        switch (type)
+        {
+            case TextureType::Texture1D:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE1D;
+                rtvDesc.Texture1D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture2D:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2D;
+                rtvDesc.Texture2D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture1DArray:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
+                rtvDesc.Texture1DArray.MipSlice             = baseMipLevel;
+                rtvDesc.Texture1DArray.FirstArraySlice      = baseArrayLayer;
+                rtvDesc.Texture1DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DArray:
+            case TextureType::TextureCube:
+            case TextureType::TextureCubeArray:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+                rtvDesc.Texture2DArray.MipSlice             = baseMipLevel;
+                rtvDesc.Texture2DArray.FirstArraySlice      = baseArrayLayer;
+                rtvDesc.Texture2DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DMS:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+                break;
+
+            case TextureType::Texture2DMSArray:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
+                rtvDesc.Texture2DMSArray.FirstArraySlice    = baseArrayLayer;
+                rtvDesc.Texture2DMSArray.ArraySize          = numArrayLayers;
+                break;
+
+            case TextureType::Texture3D:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE3D;
+                rtvDesc.Texture3D.MipSlice                  = baseMipLevel;
+                rtvDesc.Texture3D.FirstWSlice               = baseArrayLayer;
+                rtvDesc.Texture3D.WSize                     = numArrayLayers;
+                break;
+        }
+    }
+    auto hr = device->CreateRenderTargetView(native_.resource.Get(), &rtvDesc, rtvOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11RenderTargetView", "for texture subresource");
+}
+
 void D3D11Texture::CreateSubresourceSRV(
     ID3D11Device*               device,
     ID3D11ShaderResourceView**  srvOutput,
@@ -945,7 +1009,7 @@ void D3D11Texture::CreateDefaultResourceViews(ID3D11Device* device, long bindFla
 void D3D11Texture::CreateDefaultSRV(ID3D11Device* device)
 {
     const bool hasTypelessFormat        = DXTypes::IsTypelessDXGIFormat(GetDXFormat());
-    const bool hasDepthStencilFormat    = IsDepthStencilFormat(GetBaseFormat());
+    const bool hasDepthStencilFormat    = IsDepthOrStencilFormat(GetBaseFormat());
     if (hasTypelessFormat || hasDepthStencilFormat)
     {
         /* Create SRV with parameters for entire texture resource */
@@ -962,7 +1026,7 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device)
 void D3D11Texture::CreateDefaultUAV(ID3D11Device* device)
 {
     const bool hasTypelessFormat        = DXTypes::IsTypelessDXGIFormat(GetDXFormat());
-    const bool hasDepthStencilFormat    = IsDepthStencilFormat(GetBaseFormat());
+    const bool hasDepthStencilFormat    = IsDepthOrStencilFormat(GetBaseFormat());
     if (hasTypelessFormat || hasDepthStencilFormat)
     {
         /* Create UAV with parameters for entire texture resource */

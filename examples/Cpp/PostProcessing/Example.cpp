@@ -13,7 +13,7 @@
 #endif
 
 // Enables custom render pass to clear at the begin of a render pass section (more efficient)
-//#define ENABLE_CUSTOM_RENDER_PASS
+#define ENABLE_CUSTOM_RENDER_PASS
 
 
 class Example_PostProcessing : public ExampleBase
@@ -238,9 +238,9 @@ public:
             renderTargetDesc.resolution = resolution;
             renderTargetDesc.attachments =
             {
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth },
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, colorMap },
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, glossMap },
+                LLGL::AttachmentDescriptor{ LLGL::Format::D32Float },
+                LLGL::AttachmentDescriptor{ colorMap },
+                LLGL::AttachmentDescriptor{ glossMap },
             };
             renderTargetDesc.samples = GetSampleCount();
         }
@@ -255,7 +255,7 @@ public:
             renderTargetBlurXDesc.resolution = resolution;
             renderTargetBlurXDesc.attachments =
             {
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, glossMapBlurX }
+                LLGL::AttachmentDescriptor{ glossMapBlurX }
             };
         }
         renderTargetBlurX = renderer->CreateRenderTarget(renderTargetBlurXDesc);
@@ -266,7 +266,7 @@ public:
             renderTargetBlurYDesc.resolution = resolution;
             renderTargetBlurYDesc.attachments =
             {
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Color, glossMapBlurY }
+                LLGL::AttachmentDescriptor{ glossMapBlurY }
             };
         }
         renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
@@ -279,8 +279,8 @@ public:
         //TODO: should be able to query depth-stencil format from <RenderTarget> just like with <SwapChain>
         LLGL::RenderPassDescriptor renderPassDesc;
         {
-            renderPassDesc.colorAttachments[0]  = LLGL::AttachmentFormatDescriptor{ colorMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear };
-            renderPassDesc.colorAttachments[1]  = LLGL::AttachmentFormatDescriptor{ glossMap->GetDesc().format, LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.colorAttachments[0]  = LLGL::AttachmentFormatDescriptor{ colorMap->GetFormat(),  LLGL::AttachmentLoadOp::Clear };
+            renderPassDesc.colorAttachments[1]  = LLGL::AttachmentFormatDescriptor{ glossMap->GetFormat(),  LLGL::AttachmentLoadOp::Clear };
             renderPassDesc.depthAttachment      = LLGL::AttachmentFormatDescriptor{ LLGL::Format::D32Float, LLGL::AttachmentLoadOp::Clear };
             renderPassDesc.samples              = GetSampleCount();
         }

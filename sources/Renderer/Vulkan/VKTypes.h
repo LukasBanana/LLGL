@@ -57,7 +57,11 @@ VkExtent3D              ToVkExtent(const Extent3D& extent);
 VkComponentSwizzle      ToVkComponentSwizzle(const TextureSwizzle swizzle);
 VkColorComponentFlags   ToVkColorComponentFlags(std::uint8_t colorMask);
 
-Format                  Unmap( const VkFormat format );
+Format Unmap( const VkFormat format );
+
+bool IsVkFormatDepthStencil(const VkFormat format);
+bool IsVkFormatStencil(const VkFormat format);
+bool IsVkFormatColor(const VkFormat format);
 
 
 /* ----- Convert functions ----- */

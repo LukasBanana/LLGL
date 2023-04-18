@@ -92,7 +92,7 @@ void D3D12RenderPass::BuildAttachments(
         if (auto texture = attachment.texture)
         {
             auto textureD3D = LLGL_CAST(D3D12Texture*, texture);
-            if (attachment.type == AttachmentType::Color)
+            if (IsColorFormat(textureD3D->GetBaseFormat()))
             {
                 if (colorAttachment < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
                 {
@@ -106,7 +106,7 @@ void D3D12RenderPass::BuildAttachments(
                 SetDSVFormat(textureD3D->GetDXFormat());
             }
         }
-        else if (attachment.type != AttachmentType::Color)
+        else if (IsDepthOrStencilFormat(attachment.format))
         {
             /* Use default depth-stencil format */
             SetDSVFormat(defaultDepthStencilFormat);

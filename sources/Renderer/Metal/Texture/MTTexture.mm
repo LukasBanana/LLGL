@@ -1,6 +1,6 @@
 /*
  * MTTexture.mm
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -43,7 +43,7 @@ static MTLResourceOptions GetResourceOptions(const TextureDescriptor& desc)
 {
     MTLResourceOptions opt = 0;
 
-    if (IsDepthStencilFormat(desc.format))
+    if (IsDepthOrStencilFormat(desc.format))
         opt |= MTLResourceStorageModePrivate;
     #ifndef LLGL_OS_IOS
     else

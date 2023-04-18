@@ -59,6 +59,8 @@ DXGI_FORMAT SelectTextureDXGIFormat(const Format format, long bindFlags);
 
 bool IsTypelessDXGIFormat(const DXGI_FORMAT format);
 
+bool IsDepthStencilDXGIFormat(const DXGI_FORMAT format);
+
 D3D_PRIMITIVE_TOPOLOGY  ToD3DPrimitiveTopology(const PrimitiveTopology topology);
 
 Format                  Unmap( const DXGI_FORMAT            format    );

@@ -188,7 +188,7 @@ void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
 static VkImageAspectFlags GetImageAspectForVkFormat(VkFormat format)
 {
     const Format fmt = VKTypes::Unmap(format);
-    if (IsDepthStencilFormat(fmt))
+    if (IsDepthOrStencilFormat(fmt))
     {
         if (IsStencilFormat(fmt))
             return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;

@@ -1,6 +1,6 @@
 /*
  * MTRenderTarget.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -62,11 +62,7 @@ class MTRenderTarget final : public RenderTarget
             NSUInteger      sampleCount = 1u
         );
 
-        id<MTLTexture> CreateRenderTargetTexture(
-            id<MTLDevice>                   device,
-            const AttachmentType            type,
-            id<MTLTexture>                  resolveTexture      = nil
-        );
+        id<MTLTexture> CreateAttachmentTexture(id<MTLDevice> device, MTLPixelFormat pixelFormat);
 
     private:
 

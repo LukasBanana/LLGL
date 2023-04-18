@@ -1,13 +1,15 @@
 /*
  * MTRenderTarget.mm
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include "MTRenderTarget.h"
 #include "MTTexture.h"
+#include "../MTTypes.h"
 #include "../../CheckedCast.h"
+#include "../../RenderTargetUtils.h"
 #include <string>
 
 
@@ -35,53 +37,52 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
 
     for (const auto& attachment : desc.attachments)
     {
-        switch (attachment.type)
+        const Format format = GetAttachmentFormat(attachment);
+        if (IsColorFormat(format))
         {
-            case AttachmentType::Color:
-                /* Create color attachment */
-                CreateAttachment(
-                    device,
-                    native_.colorAttachments[numColorAttachments_],
-                    attachment,
-                    renderPass_.GetColorAttachments()[numColorAttachments_],
-                    numColorAttachments_
-                );
-                ++numColorAttachments_;
-                break;
-
-            case AttachmentType::Depth:
-                /* Create depth attachment */
-                CreateAttachment(
-                    device,
-                    native_.depthAttachment,
-                    attachment,
-                    renderPass_.GetDepthAttachment(),
-                    0
-                );
-                break;
-
-            case AttachmentType::DepthStencil:
-                /* Create depth-stencil attachment */
-                CreateAttachment(
-                    device,
-                    native_.depthAttachment,
-                    attachment,
-                    renderPass_.GetDepthAttachment(),
-                    0
-                );
-                Copy(native_.stencilAttachment, native_.depthAttachment);
-                break;
-
-            case AttachmentType::Stencil:
-                /* Create stencil attachment */
-                CreateAttachment(
-                    device,
-                    native_.stencilAttachment,
-                    attachment,
-                    renderPass_.GetStencilAttachment(),
-                    0
-                );
-                break;
+            /* Create color attachment */
+            CreateAttachment(
+                device,
+                native_.colorAttachments[numColorAttachments_],
+                attachment,
+                renderPass_.GetColorAttachments()[numColorAttachments_],
+                numColorAttachments_
+            );
+            ++numColorAttachments_;
+        }
+        else if (IsDepthAndStencilFormat(format))
+        {
+            /* Create depth-stencil attachment */
+            CreateAttachment(
+                device,
+                native_.depthAttachment,
+                attachment,
+                renderPass_.GetDepthAttachment(),
+                0
+            );
+            Copy(native_.stencilAttachment, native_.depthAttachment);
+        }
+        else if (IsDepthFormat(format))
+        {
+            /* Create depth attachment */
+            CreateAttachment(
+                device,
+                native_.depthAttachment,
+                attachment,
+                renderPass_.GetDepthAttachment(),
+                0
+            );
+        }
+        else if (IsStencilFormat(format))
+        {
+            /* Create stencil attachment */
+            CreateAttachment(
+                device,
+                native_.stencilAttachment,
+                attachment,
+                renderPass_.GetStencilAttachment(),
+                0
+            );
         }
     }
 }
@@ -153,7 +154,7 @@ void MTRenderTarget::CreateAttachment(
         if (renderPass_.GetSampleCount() > 1)
         {
             /* Create resolve texture if multi-sampling is enabled */
-            attachment.texture          = CreateRenderTargetTexture(device, desc.type, tex);
+            attachment.texture          = CreateAttachmentTexture(device, [tex pixelFormat]);
             attachment.resolveTexture   = tex;
         }
         else
@@ -162,10 +163,10 @@ void MTRenderTarget::CreateAttachment(
             attachment.texture = tex;
         }
     }
-    else if (desc.type != AttachmentType::Color)
+    else if (IsDepthAndStencilFormat(desc.format))
     {
         /* Create native texture for depth-stencil attachments */
-        attachment.texture = CreateRenderTargetTexture(device, desc.type);
+        attachment.texture = CreateAttachmentTexture(device, MTTypes::ToMTLPixelFormat(desc.format));
     }
     else
     {
@@ -186,18 +187,6 @@ void MTRenderTarget::CreateAttachment(
         attachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
 }
 
-static MTLPixelFormat SelectPixelFormat(const AttachmentType type)
-{
-    switch (type)
-    {
-        case AttachmentType::Color:         return MTLPixelFormatRGBA8Unorm;
-        case AttachmentType::Depth:         return MTLPixelFormatDepth32Float;
-        case AttachmentType::DepthStencil:  return MTLPixelFormatDepth32Float_Stencil8;
-        case AttachmentType::Stencil:       return MTLPixelFormatStencil8;
-    }
-    return MTLPixelFormatInvalid;
-}
-
 MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
     id<MTLDevice>   device,
     MTLPixelFormat  pixelFormat,
@@ -216,16 +205,9 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
     return texDesc;
 }
 
-id<MTLTexture> MTRenderTarget::CreateRenderTargetTexture(
-    id<MTLDevice>                   device,
-    const AttachmentType            type,
-    id<MTLTexture>                  resolveTexture)
+id<MTLTexture> MTRenderTarget::CreateAttachmentTexture(id<MTLDevice> device, MTLPixelFormat pixelFormat)
 {
-    auto texDesc = CreateTextureDesc(
-        device,
-        (resolveTexture != nil ? [resolveTexture pixelFormat] : SelectPixelFormat(type)),
-        renderPass_.GetSampleCount()
-    );
+    auto texDesc = CreateTextureDesc(device, pixelFormat, renderPass_.GetSampleCount());
 
     id<MTLTexture> texture = [device newTextureWithDescriptor:texDesc];
     [texDesc release];

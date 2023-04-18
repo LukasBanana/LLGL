@@ -3,17 +3,20 @@
 cbuffer Matrices : register(b0)
 {
 	float4x4 wvpMatrix;
+	float4x4 wMatrix;
 };
 
 struct InputVS
 {
 	float3 position : POSITION;
+	float3 normal   : NORMAL;
 	float2 texCoord : TEXCOORD;
 };
 
 struct OutputVS
 {
 	float4 position : SV_Position;
+	float3 normal   : NORMAL;
 	float2 texCoord : TEXCOORD;
 };
 
@@ -22,6 +25,7 @@ OutputVS VS(InputVS inp)
 {
 	OutputVS outp;
 	outp.position = mul(wvpMatrix, float4(inp.position, 1));
+	outp.normal   = normalize(mul(wMatrix, float4(inp.normal, 0)).xyz);
 	outp.texCoord = inp.texCoord;
 	return outp;
 }
@@ -33,6 +37,15 @@ SamplerState colorMapSampler : register(s2);
 float4 PS(OutputVS inp) : SV_Target
 {
 	float4 color = colorMap.Sample(colorMapSampler, inp.texCoord);
-	return lerp((float4)1, color, color.a);
+
+	// Sanitize texture sample
+	color = lerp((float4)1, color, color.a);
+
+	// Apply lambert factor for simple shading
+	const float3 lightVec = float3(0, 0, -1);
+	float NdotL = dot(lightVec, normalize(inp.normal));
+	color.rgb *= lerp(0.2, 1.0, NdotL);
+
+	return color;
 };
 

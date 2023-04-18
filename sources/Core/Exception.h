@@ -20,8 +20,8 @@
 #define LLGL_TRAP(FORMAT, ...) \
     LLGL::Trap(__FUNCTION__, (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
 
-#define LLGL_TRAP_NOT_IMPLEMENTED() \
-    LLGL::TrapNotImplemented(__FUNCTION__)
+#define LLGL_TRAP_NOT_IMPLEMENTED(...) \
+    LLGL::TrapNotImplemented(__FUNCTION__ LLGL_VA_ARGS(__VA_ARGS__))
 
 #define LLGL_TRAP_FEATURE_NOT_SUPPORTED(FEATURE) \
     LLGL::TrapFeatureNotSupported(__FUNCTION__, FEATURE)
@@ -57,7 +57,7 @@ LLGL_EXPORT void TrapVKExtensionNotSupported(const char* origin, const char* ext
 
 // Throws an std::runtime_error exception with the message, that the specified interface function is not implemented yet.
 [[noreturn]]
-LLGL_EXPORT void TrapNotImplemented(const char* origin);
+LLGL_EXPORT void TrapNotImplemented(const char* origin, const char* useCase = nullptr);
 
 // Throws an std::invalid_argument exception with the message, that a null pointer was passed.
 [[noreturn]]

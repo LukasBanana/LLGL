@@ -157,7 +157,7 @@ private:
             //rtDesc.multiSampling    = GetMultiSampleDesc();
             rtDesc.attachments      =
             {
-                LLGL::AttachmentDescriptor{ LLGL::AttachmentType::Depth, depthRangeTexture }
+                LLGL::AttachmentDescriptor{ depthRangeTexture }
             };
         }
         depthRangeRenderTarget = renderer->CreateRenderTarget(rtDesc);

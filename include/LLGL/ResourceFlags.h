@@ -119,7 +119,7 @@ struct BindFlags
         \remarks This can only be used for Texture resources.
         \note This cannot be used together with the BindFlags::DepthStencilAttachment flag.
         \see AttachmentDescriptor::texture
-        \see AttachmentType::Color
+        \see AttachmentDescriptor::format
         */
         ColorAttachment         = (1 << 7),
 
@@ -128,7 +128,7 @@ struct BindFlags
         \remarks This can only be used for Texture resources.
         \note This cannot be used together with the BindFlags::ColorAttachment flag.
         \see AttachmentDescriptor::texture
-        \see AttachmentType::DepthStencil
+        \see AttachmentDescriptor::format
         */
         DepthStencilAttachment  = (1 << 8),
 

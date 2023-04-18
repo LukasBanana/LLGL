@@ -599,30 +599,19 @@ LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& re
         for (const auto& attachment : renderTargetDesc.attachments)
         {
             /* First try to get format from texture */
-            auto format = Format::Undefined;
-            if (auto texture = attachment.texture)
-                format = texture->GetDesc().format;
+            const Format format = (attachment.texture != nullptr ? attachment.texture->GetFormat() : attachment.format);
 
-            switch (attachment.type)
+            if (IsDepthAndStencilFormat(format))
             {
-                case AttachmentType::Color:
-                    if (numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-                        renderPassDesc.colorAttachments[numColorAttachments++] = { format };
-                    break;
-
-                case AttachmentType::Depth:
-                    renderPassDesc.depthAttachment      = { format != Format::Undefined ? format : Format::D32Float };
-                    break;
-
-                case AttachmentType::DepthStencil:
-                    renderPassDesc.depthAttachment      = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
-                    renderPassDesc.stencilAttachment    = renderPassDesc.depthAttachment;
-                    break;
-
-                case AttachmentType::Stencil:
-                    renderPassDesc.depthAttachment      = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
-                    break;
+                renderPassDesc.depthAttachment      = { format };
+                renderPassDesc.stencilAttachment    = { format };
             }
+            else if (IsDepthFormat(format))
+                renderPassDesc.depthAttachment      = { format };
+            else if (IsStencilFormat(format))
+                renderPassDesc.depthAttachment      = { format };
+            else if (numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+                renderPassDesc.colorAttachments[numColorAttachments++] = { format };
         }
     }
     return renderPassDesc;

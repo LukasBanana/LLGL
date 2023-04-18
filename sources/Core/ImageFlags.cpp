@@ -563,7 +563,7 @@ static void ValidateImageConversionParams(
 {
     if (IsCompressedFormat(srcImageDesc.format) || IsCompressedFormat(dstFormat))
         throw std::invalid_argument("cannot convert compressed image formats");
-    if (IsDepthStencilFormat(srcImageDesc.format) || IsDepthStencilFormat(dstFormat))
+    if (IsDepthOrStencilFormat(srcImageDesc.format) || IsDepthOrStencilFormat(dstFormat))
         throw std::invalid_argument("cannot convert depth-stencil image formats");
 }
 

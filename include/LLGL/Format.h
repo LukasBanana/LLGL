@@ -481,15 +481,24 @@ LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat);
 \brief Returns true if the specified hardware format is a depth or depth-stencil format,
 i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
 \see Format
+\see IsDepthAndStencilFormat
 */
-LLGL_EXPORT bool IsDepthStencilFormat(const Format format);
+LLGL_EXPORT bool IsDepthOrStencilFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a depth and stencil format,
+i.e. Format::D24UNormS8UInt or Format::D32FloatS8X24UInt.
+\see Format
+\see IsDepthOrStencilFormat
+*/
+LLGL_EXPORT bool IsDepthAndStencilFormat(const Format format);
 
 /**
 \brief Returns true if the specified color format is a depth-stencil format,
 i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
 \see ImageFormat
 */
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat);
+LLGL_EXPORT bool IsDepthOrStencilFormat(const ImageFormat imageFormat);
 
 /**
 \brief Returns true if the specified hardware format is a depth format,
@@ -506,9 +515,16 @@ i.e. Format::D24UNormS8UInt or Format::D32FloatS8X24UInt.
 LLGL_EXPORT bool IsStencilFormat(const Format format);
 
 /**
+\brief Returns true if the specified hardware format is a color format.
+\remarks This is equivalent to <code>(format != Format::Undefined && !IsDepthOrStencilFormat(format))</code>.
+\see Format
+*/
+LLGL_EXPORT bool IsColorFormat(const Format format);
+
+/**
 \brief Returns true if the specified hardware format is a normalized format (like Format::RGBA8UNorm, Format::R8SNorm etc.).
 \remarks This does not include depth-stencil formats or compressed formats.
-\see IsDepthStencilFormat
+\see IsDepthOrStencilFormat
 \see IsCompressedFormat
 \see Format
 */
@@ -525,7 +541,7 @@ LLGL_EXPORT bool IsIntegralFormat(const Format format);
 /**
 \brief Returns true if the specified hardware format is a floating-point format (like Format::RGBA32Float, Format::R32Float etc.).
 \remarks This does not include depth-stencil formats or compressed formats.
-\see IsDepthStencilFormat
+\see IsDepthOrStencilFormat
 \see IsCompressedFormat
 \see Format
 */

@@ -8,6 +8,7 @@
 #include "NullRenderTarget.h"
 #include "NullTexture.h"
 #include "../../CheckedCast.h"
+#include "../../RenderTargetUtils.h"
 #include "../../../Core/CoreUtils.h"
 
 
@@ -64,26 +65,12 @@ const RenderPass* NullRenderTarget::GetRenderPass() const
  * ======= Private: =======
  */
 
-static Format PickDepthStencilAttachmentFormat(AttachmentType type)
-{
-    switch (type)
-    {
-        case AttachmentType::Depth:
-            return Format::D32Float;
-        case AttachmentType::DepthStencil:
-            return Format::D32FloatS8X24UInt;
-        case AttachmentType::Stencil:
-            return Format::D24UNormS8UInt;
-        default:
-            return Format::Undefined;
-    }
-}
-
 void NullRenderTarget::BuildAttachmentArray()
 {
     for (const auto& attachment : desc.attachments)
     {
-        if (attachment.type == AttachmentType::Color)
+        const Format format = GetAttachmentFormat(attachment);
+        if (IsColorFormat(format))
         {
             /* Cache color attachment */
             if (auto texture = attachment.texture)
@@ -99,11 +86,12 @@ void NullRenderTarget::BuildAttachmentArray()
             /* Cache depth-stencil attachment */
             if (auto texture = attachment.texture)
             {
-                depthStencilAttachment_ = LLGL_CAST(NullTexture*, texture);
-                depthStencilFormat_     = depthStencilAttachment_->desc.format;
+                auto textureNull = LLGL_CAST(NullTexture*, texture);
+                depthStencilAttachment_ = textureNull;
+                depthStencilFormat_     = textureNull->desc.format;
             }
             else
-                depthStencilFormat_ = PickDepthStencilAttachmentFormat(attachment.type);
+                depthStencilFormat_ = attachment.format;
         }
     }
 }
@@ -115,6 +103,7 @@ NullTexture* NullRenderTarget::MakeIntermediateAttachment(const AttachmentDescri
         textureDesc.type            = (desc.samples > 1 ? TextureType::Texture2DMS : TextureType::Texture2D);
         textureDesc.bindFlags       = BindFlags::ColorAttachment;
         textureDesc.miscFlags       = MiscFlags::FixedSamples;
+        textureDesc.format          = attachmentDesc.format;
         textureDesc.extent.width    = desc.resolution.width;
         textureDesc.extent.height   = desc.resolution.height;
         textureDesc.mipLevels       = 1;
