@@ -266,6 +266,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateUniforms(const DbgPipelineLayout& pipelineLayoutDbg, std::uint32_t first, std::uint16_t dataSize);
 
         void ValidateDynamicStates();
+        void ValidateBindingTable();
 
         DbgPipelineState* AssertAndGetGraphicsPSO();
         DbgPipelineState* AssertAndGetComputePSO();
@@ -287,6 +288,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
         void ResetStates();
+        void ResetBindingTable(const DbgPipelineLayout* pipelineLayoutDbg);
 
         void StartTimer(const char* annotation);
         void EndTimer();
@@ -335,6 +337,14 @@ class DbgCommandBuffer final : public CommandBuffer
             const DbgShader*        vertexShader                            = nullptr;
             bool                    blendFactorSet                          = false;
             bool                    stencilRefSet                           = false;
+
+            struct BindingTable
+            {
+                ResourceHeap*           resourceHeap;
+                std::vector<Resource*>  resources;
+                std::vector<bool>       uniforms;
+            }
+            bindingTable;
         }
         bindings_;
 

@@ -503,6 +503,7 @@ void DbgCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateDescriptorSetIndex(descriptorSet, resourceHeapDbg.GetNumDescriptorSets(), resourceHeapDbg.label.c_str());
+        bindings_.bindingTable.resourceHeap = &resourceHeap;
     }
 
     LLGL_DBG_COMMAND( "SetResourceHeap", instance.SetResourceHeap(resourceHeapDbg.instance, descriptorSet) );
@@ -526,6 +527,9 @@ void DbgCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
         }
         else
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot bind resource without pipeline state");
+
+        if (descriptor < bindings_.bindingTable.resources.size())
+            bindings_.bindingTable.resources[descriptor] = &resource;
     }
 
     switch (resource.GetResourceType())
@@ -751,6 +755,8 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
                 //TODO: store bound compute shader
             }
         }
+
+        ResetBindingTable(bindings_.pipelineState->pipelineLayout);
     }
 
     /* Store primitive topology used in graphics pipeline */
@@ -1169,6 +1175,7 @@ void DbgCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numW
         ValidateThreadGroupLimit(numWorkGroupsX, limits_.maxComputeShaderWorkGroups[0]);
         ValidateThreadGroupLimit(numWorkGroupsY, limits_.maxComputeShaderWorkGroups[1]);
         ValidateThreadGroupLimit(numWorkGroupsZ, limits_.maxComputeShaderWorkGroups[2]);
+        ValidateBindingTable();
     }
 
     LLGL_DBG_COMMAND( "Dispatch", instance.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ) );
@@ -1186,6 +1193,7 @@ void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DispatchIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
+        ValidateBindingTable();
     }
 
     LLGL_DBG_COMMAND( "DispatchIndirect", instance.DispatchIndirect(bufferDbg.instance, offset) );
@@ -1537,6 +1545,7 @@ void DbgCommandBuffer::ValidateDrawCmd(
     ValidateNumInstances(numInstances);
     ValidateVertexID(firstVertex);
     ValidateInstanceID(firstInstance);
+    ValidateBindingTable();
 
     if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
         ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
@@ -1556,6 +1565,7 @@ void DbgCommandBuffer::ValidateDrawIndexedCmd(
     ValidateNumVertices(numVertices);
     ValidateNumInstances(numInstances);
     ValidateInstanceID(firstInstance);
+    ValidateBindingTable();
 
     if (bindings_.indexBuffer)
     {
@@ -1941,6 +1951,69 @@ void DbgCommandBuffer::ValidateDynamicStates()
     }
 }
 
+// Returns a descriptive string for the specified binding
+static std::string GetBindingDescStr(const BindingDescriptor& binding)
+{
+    std::string s;
+
+    s = "slot ";
+    s += std::to_string(binding.slot.index);
+
+    if (binding.slot.set != 0)
+    {
+        s += ", set ";
+        s += std::to_string(binding.slot.set);
+    }
+
+    if (!binding.name.empty())
+    {
+        s += ", name '";
+        s += binding.name;
+        s += "'";
+    }
+
+    return s;
+}
+
+static std::string GetPipelineBindingDescStr(const DbgPipelineState& pso, const PipelineLayoutDescriptor& layoutDesc, std::size_t bindingIndex)
+{
+    std::string s;
+
+    s = "missing descriptor [";
+    s += std::to_string(bindingIndex);
+    s += "] in pipeline state ";
+    if (!pso.label.empty())
+    {
+        s += "'";
+        s += pso.label;
+        s += "' ";
+    }
+    s += "for binding (";
+    s += GetBindingDescStr(layoutDesc.bindings[bindingIndex]);
+    s += ")";
+
+    return s;
+}
+
+void DbgCommandBuffer::ValidateBindingTable()
+{
+    auto ValidateBindingTableWithLayout = [this](const DbgPipelineState& pso, const Bindings::BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
+    {
+        LLGL_ASSERT(table.resources.size() == layoutDesc.bindings.size());
+        for_range(i, table.resources.size())
+        {
+            if (table.resources[i] == nullptr)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, GetPipelineBindingDescStr(pso, layoutDesc, i));
+        }
+    };
+
+    if (auto pso = bindings_.pipelineState)
+    {
+        if (auto pipelineLayout = pso->pipelineLayout)
+            ValidateBindingTableWithLayout(*pso, bindings_.bindingTable, pipelineLayout->desc);
+    }
+}
+
 DbgPipelineState* DbgCommandBuffer::AssertAndGetGraphicsPSO()
 {
     if (bindings_.pipelineState == nullptr)
@@ -2074,6 +2147,30 @@ void DbgCommandBuffer::ResetStates()
     ::memset(profile_.values, 0, sizeof(profile_.values));
     ::memset(&bindings_, 0, sizeof(bindings_));
     ::memset(&states_, 0, sizeof(states_));
+}
+
+void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayoutDbg)
+{
+    auto ResetBindingTableWithLayout = [](Bindings::BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
+    {
+        table.resourceHeap = nullptr;
+        table.resources.clear();
+        table.resources.resize(layoutDesc.bindings.size(), nullptr);
+        table.uniforms.clear();
+        table.uniforms.resize(layoutDesc.uniforms.size(), false);
+    };
+
+    auto ResetBindingTableZero = [](Bindings::BindingTable& table)
+    {
+        table.resourceHeap = nullptr;
+        table.resources.clear();
+        table.uniforms.clear();
+    };
+
+    if (pipelineLayoutDbg != nullptr)
+        ResetBindingTableWithLayout(bindings_.bindingTable, pipelineLayoutDbg->desc);
+    else
+        ResetBindingTableZero(bindings_.bindingTable);
 }
 
 void DbgCommandBuffer::StartTimer(const char* annotation)

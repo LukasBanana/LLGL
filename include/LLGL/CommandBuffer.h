@@ -351,9 +351,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Binds the specified resource heap to the respective pipeline.
         \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
-        \param[in] descriptorSet Specifies the zero-based index of the first set of resource descriptors.
+        \param[in] descriptorSet Specifies the zero-based index of the set of resource descriptors.
         This \b must be in the half-open range <code>[0, ResourceHeap::GetNumDescriptorSets)</code>. By default 0.
-        \remarks Any previous resource bindings are invalid after this call.
+        \remarks Any previous heap resource bindings are invalid after this call.
         \see ResourceHeap::GetNumDescriptorSets
         \see PipelineLayoutDescriptor::heapBindings
         */
