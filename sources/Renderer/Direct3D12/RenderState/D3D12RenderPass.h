@@ -46,7 +46,6 @@ class D3D12RenderPass final : public RenderPass
         void BuildAttachments(
             UINT                        numAttachmentDescs,
             const AttachmentDescriptor* attachmentDescs,
-            const DXGI_FORMAT           defaultDepthStencilFormat,
             const DXGI_SAMPLE_DESC&     sampleDesc
         );
 

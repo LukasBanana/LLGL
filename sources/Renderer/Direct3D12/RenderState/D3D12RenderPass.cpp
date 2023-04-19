@@ -10,6 +10,7 @@
 #include "../D3D12Types.h"
 #include "../Texture/D3D12Texture.h"
 #include "../../RenderPassUtils.h"
+#include "../../RenderTargetUtils.h"
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
 #include <LLGL/RenderTargetFlags.h>
@@ -74,7 +75,6 @@ void D3D12RenderPass::BuildAttachments(
 void D3D12RenderPass::BuildAttachments(
     UINT                        numAttachmentDescs,
     const AttachmentDescriptor* attachmentDescs,
-    const DXGI_FORMAT           defaultDepthStencilFormat,
     const DXGI_SAMPLE_DESC&     sampleDesc)
 {
     /* Reset clear flags and depth-stencil format */
@@ -89,27 +89,21 @@ void D3D12RenderPass::BuildAttachments(
     {
         const auto& attachment = attachmentDescs[i];
 
-        if (auto texture = attachment.texture)
+        const Format format = GetAttachmentFormat(attachment);
+        const DXGI_FORMAT formatDXGI = DXTypes::ToDXGIFormat(format);
+
+        if (IsColorFormat(format))
         {
-            auto textureD3D = LLGL_CAST(D3D12Texture*, texture);
-            if (IsColorFormat(textureD3D->GetBaseFormat()))
+            if (colorAttachment < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
             {
-                if (colorAttachment < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-                {
-                    /* Store texture color format and attachment index */
-                    SetRTVFormat(textureD3D->GetDXFormat(), colorAttachment++);
-                }
-            }
-            else
-            {
-                /* Use texture depth-stencil format */
-                SetDSVFormat(textureD3D->GetDXFormat());
+                /* Store texture color format and attachment index */
+                SetRTVFormat(formatDXGI, colorAttachment++);
             }
         }
-        else if (IsDepthOrStencilFormat(attachment.format))
+        else
         {
-            /* Use default depth-stencil format */
-            SetDSVFormat(defaultDepthStencilFormat);
+            /* Use texture depth-stencil format */
+            SetDSVFormat(formatDXGI);
         }
     }
 
