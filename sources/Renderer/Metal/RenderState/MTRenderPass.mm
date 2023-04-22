@@ -8,6 +8,7 @@
 #include "MTRenderPass.h"
 #include <LLGL/RenderPassFlags.h>
 #include <LLGL/RenderTargetFlags.h>
+#include <LLGL/CommandBufferFlags.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Misc/ForRange.h>
@@ -24,7 +25,7 @@ namespace LLGL
 {
 
 
-static void Convert(MTAttachmentFormat& dst, const AttachmentFormatDescriptor& src)
+static void ConvertAttachmentFormat(MTAttachmentFormat& dst, const AttachmentFormatDescriptor& src)
 {
     dst.pixelFormat = MTTypes::ToMTLPixelFormat(src.format);
     dst.loadAction  = MTTypes::ToMTLLoadAction(src.loadOp);
@@ -51,9 +52,9 @@ MTRenderPass::MTRenderPass(const RenderPassDescriptor& desc) :
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
     colorAttachments_.resize(numColorAttachments);
     for_range(i, numColorAttachments)
-        Convert(colorAttachments_[i], desc.colorAttachments[i]);
-    Convert(depthAttachment_, desc.depthAttachment);
-    Convert(stencilAttachment_, desc.stencilAttachment);
+        ConvertAttachmentFormat(colorAttachments_[i], desc.colorAttachments[i]);
+    ConvertAttachmentFormat(depthAttachment_, desc.depthAttachment);
+    ConvertAttachmentFormat(stencilAttachment_, desc.stencilAttachment);
 }
 
 // Default initializer
@@ -144,6 +145,123 @@ MTLPixelFormat MTRenderPass::GetDepthStencilFormat() const
         return depthAttachment_.pixelFormat;
     else
         return stencilAttachment_.pixelFormat;
+}
+
+static void SetMTColorAttachmentClearValue(
+    MTLRenderPassColorAttachmentDescriptor* dst,
+    const MTAttachmentFormat&               fmt,
+    const ClearValue&                       clearValue)
+{
+    dst.loadAction  = fmt.loadAction;
+    dst.clearColor  = MTTypes::ToMTLClearColor(clearValue.color);
+}
+
+static void SetMTDepthAttachmentClearValue(
+    MTLRenderPassDepthAttachmentDescriptor* dst,
+    const MTAttachmentFormat&               fmt,
+    const ClearValue&                       clearValue)
+{
+    dst.loadAction  = fmt.loadAction;
+    dst.clearDepth  = clearValue.depth;
+}
+
+static void SetMTStencilAttachmentClearValue(
+    MTLRenderPassStencilAttachmentDescriptor* dst,
+    const MTAttachmentFormat&               fmt,
+    const ClearValue&                       clearValue)
+{
+    dst.loadAction      = fmt.loadAction;
+    dst.clearStencil    = clearValue.stencil;
+}
+
+std::uint32_t MTRenderPass::UpdateNativeRenderPass(
+    MTLRenderPassDescriptor*    nativeRenderPass,
+    std::uint32_t               numClearValues,
+    const ClearValue*           clearValues) const
+{
+    if (nativeRenderPass == nullptr)
+        return 0;
+
+    /* Update clear value for color attachments */
+    std::uint32_t clearValueIndex = 0;
+
+    const ClearValue defaultClearValue;
+
+    for_range(i, colorAttachments_.size())
+    {
+        const auto& attachment = colorAttachments_[i];
+        if (attachment.loadAction == MTLLoadActionClear)
+        {
+            /* Clear color attachment with input or default value */
+            if (clearValueIndex < numClearValues)
+            {
+                SetMTColorAttachmentClearValue(
+                    nativeRenderPass.colorAttachments[i],
+                    attachment,
+                    clearValues[clearValueIndex]
+                );
+                ++clearValueIndex;
+            }
+            else
+            {
+                SetMTColorAttachmentClearValue(
+                    nativeRenderPass.colorAttachments[i],
+                    attachment,
+                    defaultClearValue
+                );
+            }
+        }
+    }
+
+    /* Update clear value for depth attachment */
+    std::uint32_t numDepthStencilAttachments = 0;
+
+    if (depthAttachment_.loadAction == MTLLoadActionClear)
+    {
+        /* Clear depth attachment with input or default value */
+        if (clearValueIndex < numClearValues)
+        {
+            SetMTDepthAttachmentClearValue(
+                nativeRenderPass.depthAttachment,
+                depthAttachment_,
+                clearValues[clearValueIndex]
+            );
+            numDepthStencilAttachments = 1;
+        }
+        else
+        {
+            SetMTDepthAttachmentClearValue(
+                nativeRenderPass.depthAttachment,
+                depthAttachment_,
+                defaultClearValue
+            );
+        }
+    }
+
+    /* Update clear value for stencil attachment */
+    if (stencilAttachment_.loadAction == MTLLoadActionClear)
+    {
+        /* Clear stencil attachment with input or default value */
+        if (clearValueIndex < numClearValues)
+        {
+            SetMTStencilAttachmentClearValue(
+                nativeRenderPass.stencilAttachment,
+                stencilAttachment_,
+                clearValues[clearValueIndex]
+            );
+            numDepthStencilAttachments = 1;
+        }
+        else
+        {
+            SetMTStencilAttachmentClearValue(
+                nativeRenderPass.stencilAttachment,
+                stencilAttachment_,
+                defaultClearValue
+            );
+        }
+    }
+
+    return (clearValueIndex + numDepthStencilAttachments);
 }
 
 

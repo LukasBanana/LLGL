@@ -29,21 +29,6 @@ static void AddOptionalOrigin(std::string& s, const char* origin)
 }
 
 [[noreturn]]
-static void ThrowRuntimeError(const std::string& report, const char* origin = nullptr)
-{
-    if (origin != nullptr)
-    {
-        std::string s;
-        {
-            AddOptionalOrigin(s, origin);
-            s += report;
-        }
-        throw std::runtime_error(s);
-    }
-    throw std::runtime_error(report);
-}
-
-[[noreturn]]
 LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
 {
     /* Build full report string */

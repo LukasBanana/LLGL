@@ -7,6 +7,7 @@
 
 #include "MTSwapChain.h"
 #include "MTTypes.h"
+#include "RenderState/MTRenderPass.h"
 #include "../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
@@ -109,6 +110,22 @@ bool MTSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
         view_.preferredFramesPerSecond = defaultRefreshRate;
     }
     return true;
+}
+
+MTLRenderPassDescriptor* MTSwapChain::GetAndUpdateNativeRenderPass(
+    const MTRenderPass& renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
+{
+    /* Create copy of native render pass descriptor for the first time */
+    if (nativeMutableRenderPass_ == nil)
+        nativeMutableRenderPass_ = [GetNativeRenderPass() copy];
+
+    /* Update mutable render pass with clear values */
+    if (renderPass.GetColorAttachments().size() == 1)
+        renderPass.UpdateNativeRenderPass(nativeMutableRenderPass_, numClearValues, clearValues);
+
+    return nativeMutableRenderPass_;
 }
 
 

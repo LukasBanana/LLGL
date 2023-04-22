@@ -22,6 +22,7 @@
 #include "Texture/MTRenderTarget.h"
 #include "../CheckedCast.h"
 #include <LLGL/TypeInfo.h>
+#include <LLGL/Misc/ForRange.h>
 #include <algorithm>
 #include <limits.h>
 
@@ -472,30 +473,31 @@ void MTCommandBuffer::BeginRenderPass(
         QueueDrawable(swapChainMT.GetMTKView().currentDrawable);
 
         /* Get next render pass descriptor from MetalKit view */
-        MTKView* view = swapChainMT.GetMTKView();
-        context_.BindRenderEncoder(view.currentRenderPassDescriptor, true);
+        if (renderPass != nullptr)
+        {
+            auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
+            context_.BindRenderEncoder(swapChainMT.GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), true);
+        }
+        else
+            context_.BindRenderEncoder(swapChainMT.GetNativeRenderPass(), true);
     }
     else
     {
         /* Get render pass descriptor from render target */
         auto& renderTargetMT = LLGL_CAST(MTRenderTarget&, renderTarget);
-        context_.BindRenderEncoder(renderTargetMT.GetNative(), true);
+        if (renderPass != nullptr)
+        {
+            auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
+            context_.BindRenderEncoder(renderTargetMT.GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), true);
+        }
+        else
+            context_.BindRenderEncoder(renderTargetMT.GetNativeRenderPass(), true);
     }
 }
 
 void MTCommandBuffer::EndRenderPass()
 {
     context_.Flush();
-}
-
-static MTLClearColor ToMTLClearColor(const ColorRGBAf& color)
-{
-    return MTLClearColorMake(
-        static_cast<double>(color.r),
-        static_cast<double>(color.g),
-        static_cast<double>(color.b),
-        static_cast<double>(color.a)
-    );
 }
 
 void MTCommandBuffer::Clear(long flags, const ClearValue& clearValue)
@@ -508,7 +510,7 @@ void MTCommandBuffer::Clear(long flags, const ClearValue& clearValue)
         if ((flags & ClearFlags::Color) != 0)
         {
             renderPassDesc.colorAttachments[0].loadAction   = MTLLoadActionClear;
-            renderPassDesc.colorAttachments[0].clearColor   = ToMTLClearColor(clearValue.color);
+            renderPassDesc.colorAttachments[0].clearColor   = MTTypes::ToMTLClearColor(clearValue.color);
         }
 
         if ((flags & ClearFlags::Depth) != 0)
@@ -537,7 +539,7 @@ static void FillMTRenderPassDesc(MTLRenderPassDescriptor* renderPassDesc, const 
         /* Clear color buffer */
         auto colorBuffer = attachment.colorAttachment;
         renderPassDesc.colorAttachments[colorBuffer].loadAction = MTLLoadActionClear;
-        renderPassDesc.colorAttachments[colorBuffer].clearColor = ToMTLClearColor(attachment.clearValue.color);
+        renderPassDesc.colorAttachments[colorBuffer].clearColor = MTTypes::ToMTLClearColor(attachment.clearValue.color);
     }
     else if ((attachment.flags & ClearFlags::Depth) != 0)
     {
@@ -560,7 +562,7 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         /* Make new render pass descriptor with current clear values */
         auto renderPassDesc = context_.CopyRenderPassDesc();
 
-        for (std::uint32_t i = 0; i < numAttachments; ++i)
+        for_range(i, numAttachments)
             FillMTRenderPassDesc(renderPassDesc, attachments[i]);
 
         /* Begin with new render pass to clear buffers */

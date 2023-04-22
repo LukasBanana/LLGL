@@ -47,10 +47,23 @@ class MTSwapChain final : public SwapChain
 
     public:
 
+        // Updates the native render pass descriptor with the specified clear values. Returns null on failure.
+        MTLRenderPassDescriptor* GetAndUpdateNativeRenderPass(
+            const MTRenderPass& renderPass,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues
+        );
+
         // Returns the native MTKView object.
         inline MTKView* GetMTKView() const
         {
             return view_;
+        }
+
+        // Returns the native render pass descriptor <MTLRenderPassDescriptor>.
+        inline MTLRenderPassDescriptor* GetNativeRenderPass() const
+        {
+            return view_.currentRenderPassDescriptor;
         }
 
     private:
@@ -59,11 +72,13 @@ class MTSwapChain final : public SwapChain
 
     private:
 
-        MTKView*        view_       = nullptr;
+        MTKView*                    view_                       = nullptr;
         #ifdef LLGL_OS_IOS
-        CAMetalLayer*   metalLayer_ = nullptr;
+        CAMetalLayer*               metalLayer_                 = nullptr;
         #endif
-        MTRenderPass    renderPass_;
+
+        MTLRenderPassDescriptor*    nativeMutableRenderPass_    = nullptr; // Cannot be id<>
+        MTRenderPass                renderPass_;
 
 };
 

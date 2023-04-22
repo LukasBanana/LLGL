@@ -21,6 +21,8 @@ namespace LLGL
 {
 
 
+struct ClearValue;
+
 struct MTAttachmentFormat
 {
     MTLPixelFormat  pixelFormat = MTLPixelFormatInvalid;
@@ -44,6 +46,17 @@ class MTRenderPass final : public RenderPass
 
         // Returns the combined depth-stencil format.
         MTLPixelFormat GetDepthStencilFormat() const;
+
+        /*
+        Updates the native render pass descriptor with the specified clear values.
+        The input render pass descriptor must have the same number of attachments as this render pass.
+        Returns the number of read clear values.
+        */
+        std::uint32_t UpdateNativeRenderPass(
+            MTLRenderPassDescriptor*    nativeRenderPass,
+            std::uint32_t               numClearValues,
+            const ClearValue*           clearValues
+        ) const;
 
         inline const MTColorAttachmentFormatVector& GetColorAttachments() const
         {

@@ -476,6 +476,16 @@ MTLBlendFactor ToMTLBlendFactor(const BlendOp blendOp)
     MapFailed("BlendOp", "MTLBlendFactor");
 }
 
+MTLClearColor ToMTLClearColor(const ColorRGBAf& color)
+{
+    return MTLClearColorMake(
+        static_cast<double>(color.r),
+        static_cast<double>(color.g),
+        static_cast<double>(color.b),
+        static_cast<double>(color.a)
+    );
+}
+
 API_AVAILABLE(macos(10.15), ios(13.0))
 MTLTextureSwizzle ToMTLTextureSwizzle(const TextureSwizzle swizzle)
 {

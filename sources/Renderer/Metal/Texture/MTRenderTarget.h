@@ -20,6 +20,7 @@ namespace LLGL
 
 
 struct MTAttachmentFormat;
+class MTRenderPass;
 
 class MTRenderTarget final : public RenderTarget
 {
@@ -38,12 +39,19 @@ class MTRenderTarget final : public RenderTarget
 
         const RenderPass* GetRenderPass() const override;
 
+        // Updates the native render pass descriptor with the specified clear values. Returns null on failure.
+        MTLRenderPassDescriptor* GetAndUpdateNativeRenderPass(
+            const MTRenderPass& renderPass,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues
+        );
+
     public:
 
-        // Returns the native render pass descritpor (of type <MTLRenderPassDescriptor>).
-        inline MTLRenderPassDescriptor* GetNative() const
+        // Returns the native render pass descriptor <MTLRenderPassDescriptor>.
+        inline MTLRenderPassDescriptor* GetNativeRenderPass() const
         {
-            return native_;
+            return nativeRenderPass_;
         }
 
     private:
@@ -67,8 +75,9 @@ class MTRenderTarget final : public RenderTarget
     private:
 
         Extent2D                    resolution_;
-        MTLRenderPassDescriptor*    native_                 = nullptr;
-        std::uint32_t               numColorAttachments_    = 0;
+        MTLRenderPassDescriptor*    nativeRenderPass_           = nullptr; // Cannot be id<>
+        MTLRenderPassDescriptor*    nativeMutableRenderPass_    = nullptr; // Cannot be id<>
+        std::uint32_t               numColorAttachments_        = 0;
         MTRenderPass                renderPass_;
 
 };

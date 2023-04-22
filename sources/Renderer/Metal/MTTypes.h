@@ -51,6 +51,8 @@ MTLStoreAction                          ToMTLStoreAction            ( const Atta
 MTLBlendOperation                       ToMTLBlendOperation         ( const BlendArithmetic         blendArithmetic   );
 MTLBlendFactor                          ToMTLBlendFactor            ( const BlendOp                 blendOp           );
 
+MTLClearColor                           ToMTLClearColor             ( const ColorRGBAf&             color             );
+
 API_AVAILABLE(macos(10.15), ios(13.0))
 MTLTextureSwizzle                       ToMTLTextureSwizzle         ( const TextureSwizzle          swizzle           );
 
