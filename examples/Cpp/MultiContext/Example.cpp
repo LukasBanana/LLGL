@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
             LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
         };
 
-        const LLGL::ColorRGBAf backgroundColor[2] =
+        const float backgroundColor[2][4] =
         {
             { 0.2f, 0.2f, 0.5f, 1 },
             { 0.5f, 0.2f, 0.2f, 1 },

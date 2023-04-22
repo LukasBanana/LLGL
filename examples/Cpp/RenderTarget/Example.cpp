@@ -416,7 +416,7 @@ private:
         commands->BeginRenderPass(*renderTarget);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.2f, 0.7f, 0.1f } });
+            commands->Clear(LLGL::ClearFlags::ColorDepth, { 0.2f, 0.7f, 0.1f, 1.0f });
 
             // Bind graphics pipeline for render target
             commands->SetPipelineState(*pipelines[0]);

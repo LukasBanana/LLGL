@@ -20,7 +20,6 @@ namespace LLGL
 
 
 struct GLRenderState;
-struct GLClearValue;
 
 class GLCommandBuffer : public CommandBuffer
 {

@@ -689,8 +689,7 @@ static void InitializeD3DColorTextureWithRTV(
     );
 
     /* Clear view with depth-stencil values */
-    const FLOAT clearColor[4] = { clearValue.color.r, clearValue.color.g, clearValue.color.b, clearValue.color.a };
-    context->ClearRenderTargetView(rtv.Get(), clearColor);
+    context->ClearRenderTargetView(rtv.Get(), clearValue.color);
 }
 
 static void InitializeD3DColorTextureWithUploadBuffer(
@@ -710,7 +709,7 @@ static void InitializeD3DColorTextureWithUploadBuffer(
         imageDescDefault.dataType   = formatDesc.dataType;
 
         /* Generate default image buffer */
-        const auto fillColor = clearValue.color.Cast<double>();
+        const auto fillColor = ColorRGBAf{ clearValue.color[0], clearValue.color[1], clearValue.color[2], clearValue.color[3] }.Cast<double>();
         const auto imageSize = extent.width * extent.height * extent.depth;
 
         auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);

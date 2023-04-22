@@ -551,10 +551,7 @@ void GLDeferredCommandBuffer::Clear(long flags, const ClearValue& clearValue)
         if ((flags & ClearFlags::Color) != 0)
         {
             auto cmd = AllocCommand<GLCmdClearColor>(GLOpcodeClearColor);
-            cmd->color[0] = clearValue.color.r;
-            cmd->color[1] = clearValue.color.g;
-            cmd->color[2] = clearValue.color.b;
-            cmd->color[3] = clearValue.color.a;
+            ::memcpy(cmd->color, clearValue.color, sizeof(float[4]));
         }
 
         if ((flags & ClearFlags::Depth) != 0)

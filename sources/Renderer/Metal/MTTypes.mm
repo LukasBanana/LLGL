@@ -1,6 +1,6 @@
 /*
  * MTTypes.mm
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -476,13 +476,13 @@ MTLBlendFactor ToMTLBlendFactor(const BlendOp blendOp)
     MapFailed("BlendOp", "MTLBlendFactor");
 }
 
-MTLClearColor ToMTLClearColor(const ColorRGBAf& color)
+MTLClearColor ToMTLClearColor(const float color[4])
 {
     return MTLClearColorMake(
-        static_cast<double>(color.r),
-        static_cast<double>(color.g),
-        static_cast<double>(color.b),
-        static_cast<double>(color.a)
+        static_cast<double>(color[0]),
+        static_cast<double>(color[1]),
+        static_cast<double>(color[2]),
+        static_cast<double>(color[3])
     );
 }
 

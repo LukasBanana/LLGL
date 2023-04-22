@@ -1,6 +1,6 @@
 /*
  * MTTypes.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -51,7 +51,7 @@ MTLStoreAction                          ToMTLStoreAction            ( const Atta
 MTLBlendOperation                       ToMTLBlendOperation         ( const BlendArithmetic         blendArithmetic   );
 MTLBlendFactor                          ToMTLBlendFactor            ( const BlendOp                 blendOp           );
 
-MTLClearColor                           ToMTLClearColor             ( const ColorRGBAf&             color             );
+MTLClearColor                           ToMTLClearColor             ( const float                   color[4]          );
 
 API_AVAILABLE(macos(10.15), ios(13.0))
 MTLTextureSwizzle                       ToMTLTextureSwizzle         ( const TextureSwizzle          swizzle           );

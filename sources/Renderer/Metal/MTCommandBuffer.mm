@@ -459,7 +459,6 @@ void MTCommandBuffer::ResetResourceSlots(
 
 /* ----- Render Passes ----- */
 
-//TODO: process <clearValues>!!!
 void MTCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,

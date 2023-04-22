@@ -327,7 +327,7 @@ private:
             // Render everything directly into the swap-chain
             commands->BeginRenderPass(*swapChain);
             {
-                commands->Clear(LLGL::ClearFlags::All, { backgroundColor });
+                commands->Clear(LLGL::ClearFlags::All, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
                 RenderScene();
             }

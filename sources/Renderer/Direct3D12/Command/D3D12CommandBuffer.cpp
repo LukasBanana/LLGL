@@ -429,7 +429,7 @@ void D3D12CommandBuffer::Clear(long flags, const ClearValue& clearValue)
             auto rtvDescHandle = rtvDescHandle_;
             for_range(i, numColorBuffers_)
             {
-                commandList_->ClearRenderTargetView(rtvDescHandle, clearValue.color.Ptr(), 0, nullptr);
+                commandList_->ClearRenderTargetView(rtvDescHandle, clearValue.color, 0, nullptr);
                 rtvDescHandle.ptr += rtvDescSize_;
             }
         }
@@ -465,7 +465,7 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
             {
                 auto rtvDescHandle = rtvDescHandle_;
                 rtvDescHandle.ptr += (rtvDescSize_ * clearOp.colorAttachment);
-                commandList_->ClearRenderTargetView(rtvDescHandle, clearOp.clearValue.color.Ptr(), 0, nullptr);
+                commandList_->ClearRenderTargetView(rtvDescHandle, clearOp.clearValue.color, 0, nullptr);
             }
         }
 
@@ -1103,7 +1103,7 @@ std::uint32_t D3D12CommandBuffer::ClearRenderTargetViews(
         if (targetIndex < numColorBuffers_)
         {
             rtvDescHandle.ptr = rtvDescHandle_.ptr + rtvDescSize_ * targetIndex;
-            commandList_->ClearRenderTargetView(rtvDescHandle, clearValues[clearValueIndex].color.Ptr(), numRects, rects);
+            commandList_->ClearRenderTargetView(rtvDescHandle, clearValues[clearValueIndex].color, numRects, rects);
         }
 
         ++clearValueIndex;

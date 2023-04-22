@@ -1,6 +1,6 @@
 /*
  * GLStaticAssertions.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -21,7 +21,6 @@ LLGL_ASSERT_POD_TYPE( GLScissor );
 
 // GLState.h
 LLGL_ASSERT_STDLAYOUT_STRUCT( GLRenderState );
-LLGL_ASSERT_STDLAYOUT_STRUCT( GLClearValue );
 
 // GLCommand.h
 LLGL_ASSERT_STDLAYOUT_STRUCT( GLCmdBufferSubData );

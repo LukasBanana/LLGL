@@ -695,10 +695,10 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
     {
         optClearValue.Format    = DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(desc.format));
-        optClearValue.Color[0]  = desc.clearValue.color.r;
-        optClearValue.Color[1]  = desc.clearValue.color.g;
-        optClearValue.Color[2]  = desc.clearValue.color.b;
-        optClearValue.Color[3]  = desc.clearValue.color.a;
+        optClearValue.Color[0]  = desc.clearValue.color[0];
+        optClearValue.Color[1]  = desc.clearValue.color[1];
+        optClearValue.Color[2]  = desc.clearValue.color[2];
+        optClearValue.Color[3]  = desc.clearValue.color[3];
     }
     else if ((desc.bindFlags & BindFlags::DepthStencilAttachment) != 0)
     {

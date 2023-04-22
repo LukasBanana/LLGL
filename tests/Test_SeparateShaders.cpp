@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
         auto resources = renderer->CreateResourceHeap(layout, resourceViews);
 
         // Main loop
-        const LLGL::ColorRGBAf backgroundColor{ 0.2f, 0.2f, 0.4f };
+        const float backgroundColor[4] = { 0.2f, 0.2f, 0.4f, 1.0f };
 
         auto queue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);

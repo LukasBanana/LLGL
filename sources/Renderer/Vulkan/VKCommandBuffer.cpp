@@ -582,12 +582,12 @@ void VKCommandBuffer::EndRenderPass()
     recordState_ = RecordState::OutsideRenderPass;
 }
 
-static void ToVkClearColor(VkClearColorValue& dst, const ColorRGBAf& src)
+static void ToVkClearColor(VkClearColorValue& dst, const float (&src)[4])
 {
-    dst.float32[0] = src.r;
-    dst.float32[1] = src.g;
-    dst.float32[2] = src.b;
-    dst.float32[3] = src.a;
+    dst.float32[0] = src[0];
+    dst.float32[1] = src[1];
+    dst.float32[2] = src[2];
+    dst.float32[3] = src[3];
 }
 
 static VkImageAspectFlags GetDepthStencilAspectMask(long flags)

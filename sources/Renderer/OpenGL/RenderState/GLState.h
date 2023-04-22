@@ -151,13 +151,6 @@ struct GLRenderState
     const GLPipelineState*  boundPipelineState  = nullptr;
 };
 
-struct GLClearValue
-{
-    GLfloat color[4]    = { 0.0f, 0.0f, 0.0f, 0.0f };
-    GLfloat depth       = 1.0f;
-    GLint   stencil     = 0;
-};
-
 struct GLPixelStore
 {
     GLint rowLength     = 0;

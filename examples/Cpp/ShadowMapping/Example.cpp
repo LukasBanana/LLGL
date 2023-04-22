@@ -339,7 +339,7 @@ private:
         // Render scene onto screen
         commands->BeginRenderPass(*swapChain);
         {
-            commands->Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
+            commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
             commands->SetViewport(swapChain->GetResolution());
             commands->SetPipelineState(*pipelineScene);
             commands->SetResourceHeap(*resourceHeapScene);

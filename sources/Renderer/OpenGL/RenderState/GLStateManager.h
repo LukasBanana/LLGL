@@ -341,8 +341,7 @@ class GLStateManager
             const std::uint8_t*             colorBuffers,
             std::uint32_t                   numClearValues,
             const ClearValue*               clearValues,
-            std::uint32_t&                  idx,
-            const GLClearValue&             defaultClearValue,
+            const ClearValue&               defaultClearValue,
             GLIntermediateBufferWriteMasks& intermediateMasks
         );
 

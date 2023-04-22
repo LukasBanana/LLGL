@@ -519,9 +519,12 @@ private:
 
             // Clear scene render target with render pass and initial clear values
             LLGL::ClearValue clearValues[3];
-            clearValues[0].color = backgroundColor;
-            clearValues[1].color = LLGL::ColorRGBAf{ 0, 0, 0, 1 };
-            clearValues[2].depth = 1.0f;
+            clearValues[0].color[0] = backgroundColor[0];
+            clearValues[0].color[1] = backgroundColor[1];
+            clearValues[0].color[2] = backgroundColor[2];
+            clearValues[0].color[3] = backgroundColor[3];
+            clearValues[1].color[3] = 1.0f;
+            clearValues[2].depth    = 1.0f;
 
             // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
             commands->BeginRenderPass(*renderTargetScene, renderPassScene, 3, clearValues);

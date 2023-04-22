@@ -918,8 +918,8 @@ void D3D11CommandBuffer::Clear(long flags, const ClearValue& clearValue)
     /* Clear color buffers */
     if ((flags & ClearFlags::Color) != 0)
     {
-        for (UINT i = 0; i < framebufferView_.numRenderTargetViews; ++i)
-            context_->ClearRenderTargetView(framebufferView_.renderTargetViews[i], clearValue.color.Ptr());
+        for_range(i, framebufferView_.numRenderTargetViews)
+            context_->ClearRenderTargetView(framebufferView_.renderTargetViews[i], clearValue.color);
     }
 
     /* Clear depth-stencil buffer */
@@ -943,10 +943,13 @@ void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
     {
         if ((attachments->flags & ClearFlags::Color) != 0)
         {
+            /* Clear color attachment */
             if (attachments->colorAttachment < framebufferView_.numRenderTargetViews)
             {
-                /* Clear color attachment */
-                ClearColorBuffer(attachments->colorAttachment, attachments->clearValue.color);
+                context_->ClearRenderTargetView(
+                    framebufferView_.renderTargetViews[attachments->colorAttachment],
+                    attachments->clearValue.color
+                );
             }
         }
         else if (framebufferView_.depthStencilView != nullptr)
@@ -1405,8 +1408,7 @@ void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(
     const ClearValue*       clearValues)
 {
     /* Clear color attachments */
-    std::uint32_t idx = 0;
-    ClearColorBuffers(renderPassD3D.GetClearColorAttachments(), numClearValues, clearValues, idx);
+    std::uint32_t clearValueIndex = ClearColorBuffers(renderPassD3D.GetClearColorAttachments(), numClearValues, clearValues);
 
     /* Clear depth-stencil attachment */
     if (framebufferView_.depthStencilView != nullptr)
@@ -1417,10 +1419,10 @@ void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(
             FLOAT depth     = 1.0f;
             UINT8 stencil   = 0;
 
-            if (idx < numClearValues)
+            if (clearValueIndex < numClearValues)
             {
-                depth   = clearValues[idx].depth;
-                stencil = static_cast<UINT8>(clearValues[idx].stencil & 0xff);
+                depth   = clearValues[clearValueIndex].depth;
+                stencil = static_cast<UINT8>(clearValues[clearValueIndex].stencil & 0xff);
             }
 
             /* Clear depth-stencil view */
@@ -1429,41 +1431,44 @@ void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(
     }
 }
 
-void D3D11CommandBuffer::ClearColorBuffer(std::uint32_t idx, const ColorRGBAf& color)
-{
-    context_->ClearRenderTargetView(framebufferView_.renderTargetViews[idx], color.Ptr());
-}
-
-void D3D11CommandBuffer::ClearColorBuffers(
+std::uint32_t D3D11CommandBuffer::ClearColorBuffers(
     const std::uint8_t* colorBuffers,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues,
-    std::uint32_t&      idx)
+    const ClearValue*   clearValues)
 {
-    std::uint32_t i = 0;
-
     numClearValues = std::min(numClearValues, framebufferView_.numRenderTargetViews);
 
+    std::uint32_t clearValueIndex = 0;
+
     /* Use specified clear values */
-    for (; i < numClearValues; ++i)
+    for_range(i, numClearValues)
     {
         /* Check if attachment list has ended */
-        if (colorBuffers[i] != 0xFF)
-            ClearColorBuffer(colorBuffers[i], clearValues[idx++].color);
-        else
-            return;
+        if (colorBuffers[i] == 0xFF)
+            return clearValueIndex;
+
+        context_->ClearRenderTargetView(
+            framebufferView_.renderTargetViews[colorBuffers[i]],
+            clearValues[clearValueIndex].color
+        );
+        ++clearValueIndex;
     }
 
     /* Use default clear values */
-    const ColorRGBAf defaultClearColor;
-    for (; i < framebufferView_.numRenderTargetViews; ++i)
+    const float defaultClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    for_subrange(i, numClearValues, framebufferView_.numRenderTargetViews)
     {
         /* Check if attachment list has ended */
-        if (colorBuffers[i] != 0xFF)
-            ClearColorBuffer(colorBuffers[i], defaultClearColor);
-        else
-            return;
+        if (colorBuffers[i] == 0xFF)
+            return clearValueIndex;
+
+        context_->ClearRenderTargetView(
+            framebufferView_.renderTargetViews[colorBuffers[i]],
+            defaultClearColor
+        );
     }
+
+    return clearValueIndex;
 }
 
 /*

@@ -256,13 +256,10 @@ class D3D11CommandBuffer final : public CommandBuffer
             const ClearValue*       clearValues
         );
 
-        void ClearColorBuffer(std::uint32_t idx, const ColorRGBAf& color);
-
-        void ClearColorBuffers(
+        std::uint32_t ClearColorBuffers(
             const std::uint8_t* colorBuffers,
             std::uint32_t       numClearValues,
-            const ClearValue*   clearValues,
-            std::uint32_t&      idx
+            const ClearValue*   clearValues
         );
 
         void ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4]);

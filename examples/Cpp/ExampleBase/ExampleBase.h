@@ -144,19 +144,19 @@ protected:
     friend class ResizeEventHandler;
 
     // Default background color for all tutorials
-    const LLGL::ColorRGBAf                      backgroundColor = { 0.1f, 0.1f, 0.4f };
+    const float                                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f };
 
     // Render system
     LLGL::RenderSystemPtr                       renderer;
 
     // Main swap-chain
-    LLGL::SwapChain*                            swapChain       = nullptr;
+    LLGL::SwapChain*                            swapChain           = nullptr;
 
     // Main command buffer
-    LLGL::CommandBuffer*                        commands        = nullptr;
+    LLGL::CommandBuffer*                        commands            = nullptr;
 
     // Command queue
-    LLGL::CommandQueue*                         commandQueue    = nullptr;
+    LLGL::CommandQueue*                         commandQueue        = nullptr;
 
     // User input event listener
     LLGL::Input                                 input;

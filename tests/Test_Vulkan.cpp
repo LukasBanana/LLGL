@@ -249,7 +249,7 @@ int main()
                 commands->BeginRenderPass(*swapChain);
                 {
                     commands->SetViewport(swapChain->GetResolution());
-                    commands->Clear(LLGL::ClearFlags::ColorDepth, { LLGL::ColorRGBAf{ 0.2f, 0.2f, 0.4f, 1.0f } });
+                    commands->Clear(LLGL::ClearFlags::ColorDepth, { 0.2f, 0.2f, 0.4f, 1.0f });
 
                     // Draw scene
                     #ifdef TEST_QUERY

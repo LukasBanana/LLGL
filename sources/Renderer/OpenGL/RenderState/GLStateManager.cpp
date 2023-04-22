@@ -1555,7 +1555,7 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
             glClearBufferfv(
                 GL_COLOR,
                 static_cast<GLint>(attachments->colorAttachment),
-                attachments->clearValue.color.Ptr()
+                attachments->clearValue.color
             );
         }
         else if ((attachments->flags & ClearFlags::DepthStencil) == ClearFlags::DepthStencil)
@@ -1822,15 +1822,15 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    const GLClearValue defaultClearValue;
+    const ClearValue defaultClearValue;
     auto mask = renderPassGL.GetClearMask();
 
     GLIntermediateBufferWriteMasks intermediateMasks;
 
     /* Clear color attachments */
-    std::uint32_t idx = 0;
+    std::uint32_t clearValueIndex = 0;
     if ((mask & GL_COLOR_BUFFER_BIT) != 0)
-        ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, idx, defaultClearValue, intermediateMasks);
+        clearValueIndex = ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, defaultClearValue, intermediateMasks);
 
     /* Clear depth-stencil attachment */
     switch (mask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT))
@@ -1842,8 +1842,8 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
             PrepareStencilMaskForClear(intermediateMasks);
 
             /* Clear depth and stencil buffer simultaneously */
-            if (idx < numClearValues)
-                glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
+            if (clearValueIndex < numClearValues)
+                glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[clearValueIndex].depth, static_cast<GLint>(clearValues[clearValueIndex].stencil));
             else
                 glClearBufferfi(GL_DEPTH_STENCIL, 0, defaultClearValue.depth, defaultClearValue.stencil);
         }
@@ -1855,8 +1855,8 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
             PrepareDepthMaskForClear(intermediateMasks);
 
             /* Clear only depth buffer */
-            if (idx < numClearValues)
-                glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
+            if (clearValueIndex < numClearValues)
+                glClearBufferfv(GL_DEPTH, 0, &(clearValues[clearValueIndex].depth));
             else
                 glClearBufferfv(GL_DEPTH, 0, &(defaultClearValue.depth));
         }
@@ -1868,13 +1868,16 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
             PrepareStencilMaskForClear(intermediateMasks);
 
             /* Clear only stencil buffer */
-            if (idx < numClearValues)
+            if (clearValueIndex < numClearValues)
             {
-                GLint stencil = static_cast<GLint>(clearValues[idx].stencil);
+                const GLint stencil = static_cast<GLint>(clearValues[clearValueIndex].stencil);
                 glClearBufferiv(GL_STENCIL, 0, &stencil);
             }
             else
-                glClearBufferiv(GL_STENCIL, 0, &(defaultClearValue.stencil));
+            {
+                const GLint stencil = static_cast<GLint>(defaultClearValue.stencil);
+                glClearBufferiv(GL_STENCIL, 0, &stencil);
+            }
         }
         break;
     }
@@ -1887,41 +1890,35 @@ std::uint32_t GLStateManager::ClearColorBuffers(
     const std::uint8_t*             colorBuffers,
     std::uint32_t                   numClearValues,
     const ClearValue*               clearValues,
-    std::uint32_t&                  idx,
-    const GLClearValue&             defaultClearValue,
+    const ClearValue&               defaultClearValue,
     GLIntermediateBufferWriteMasks& intermediateMasks)
 {
-    std::uint32_t i = 0, n = 0;
+    std::uint32_t clearValueIndex = 0;
 
     /* Use specified clear values */
-    for (; i < numClearValues; ++i)
+    for_range(i, numClearValues)
     {
         /* Check if attachment list has ended */
-        if (colorBuffers[i] != 0xFF)
-        {
-            PrepareColorMaskForClear(intermediateMasks);
-            glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValues[idx++].color.Ptr());
-            ++n;
-        }
-        else
-            return n;
+        if (colorBuffers[i] == 0xFF)
+            return clearValueIndex;
+
+        PrepareColorMaskForClear(intermediateMasks);
+        glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValues[clearValueIndex].color);
+        ++clearValueIndex;
     }
 
     /* Use default clear values */
-    for (; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
+    for_subrange(i, numClearValues, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         /* Check if attachment list has ended */
-        if (colorBuffers[i] != 0xFF)
-        {
-            PrepareColorMaskForClear(intermediateMasks);
-            glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), defaultClearValue.color);
-            ++n;
-        }
-        else
-            return n;
+        if (colorBuffers[i] == 0xFF)
+            return clearValueIndex;
+
+        PrepareColorMaskForClear(intermediateMasks);
+        glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), defaultClearValue.color);
     }
 
-    return n;
+    return clearValueIndex;
 }
 
 

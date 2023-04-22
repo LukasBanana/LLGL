@@ -468,10 +468,10 @@ void GLImmediateCommandBuffer::Clear(long flags, const ClearValue& clearValue)
     if ((flags & ClearFlags::Color) != 0)
     {
         glClearColor(
-            clearValue.color.r,
-            clearValue.color.g,
-            clearValue.color.b,
-            clearValue.color.a
+            clearValue.color[0],
+            clearValue.color[1],
+            clearValue.color[2],
+            clearValue.color[3]
         );
     }
 

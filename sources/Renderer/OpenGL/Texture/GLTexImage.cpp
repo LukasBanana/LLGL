@@ -1,6 +1,6 @@
 /*
  * GLTexImage.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -19,9 +19,9 @@ namespace LLGL
 
 
 // Generates an image buffer with floating-points for RGBA components.
-static std::vector<ColorRGBAf> GenImageDataRGBAf(std::uint32_t numPixels, const ColorRGBAf& color)
+static std::vector<ColorRGBAf> GenImageDataRGBAf(std::uint32_t numPixels, const float (&color)[4])
 {
-    return std::vector<ColorRGBAf>(static_cast<std::size_t>(numPixels), color);
+    return std::vector<ColorRGBAf>(static_cast<std::size_t>(numPixels), ColorRGBAf{ color[0], color[1], color[2], color[3] });
 }
 
 // Generates an image buffer with floating-points for the Red component.

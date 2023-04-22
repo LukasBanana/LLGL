@@ -251,7 +251,7 @@ private:
     void RenderScene()
     {
         // Clear entire framebuffer, i.e. color, depth, and stencil buffers
-        commands->Clear(LLGL::ClearFlags::All, { backgroundColor });
+        commands->Clear(LLGL::ClearFlags::All, backgroundColor);
 
         // Render scene background
         commands->SetPipelineState(*pipelineScene);

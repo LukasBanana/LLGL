@@ -188,7 +188,7 @@ int main()
             {
                 commands->BeginRenderPass(*swapChain);
                 {
-                    commands->Clear(LLGL::ClearFlags::Color, { LLGL::ColorRGBAf{ 0.1f, 0.1f, 0.4f } });
+                    commands->Clear(LLGL::ClearFlags::Color, { 0.1f, 0.1f, 0.4f, 1.0f });
                     commands->SetViewport(swapChain->GetResolution());
 
                     commands->SetPipelineState(*pipeline);
