@@ -14,7 +14,6 @@
 #include <LLGL/Tags.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/TextureFlags.h>
-#include <LLGL/ColorRGBA.h>
 #include <memory>
 #include <cstdint>
 
@@ -188,11 +187,11 @@ LLGL_EXPORT ByteBuffer DecompressImageBufferToRGBA8UNorm(
 \param[out] dstImageDesc Specifies the destination image descriptor.
 \param[in] dstOffset Specifies the 3D offset of the destination image.
 \param[in] dstRowStride Specifies the number of pixels for each row in the destination image.
-\param[in] dstSliceStride Specifies the number of pixels for each slice in the destination image.
+\param[in] dstLayerStride Specifies the number of pixels for each slice in the destination image.
 \param[in] srcImageDesc Specifies the source image descriptor.
 \param[in] srcOffset Specifies the 3D offset of the source image.
 \param[in] srcRowStride Specifies the number of pixels for each row in the source image.
-\param[in] srcSliceStride Specifies the number of pixels for each slice in the source image.
+\param[in] srcLayerStride Specifies the number of pixels for each slice in the source image.
 \param[in] extent Specifies the region extent to be copied.
 \remarks Only performs a bitwise copy. No blending or other operation is performed.
 \throw std::invalid_argument If the destination buffer is a null pointer.
@@ -208,13 +207,13 @@ LLGL_EXPORT void CopyImageBufferRegion(
     const DstImageDescriptor&   dstImageDesc,
     const Offset3D&             dstOffset,
     std::uint32_t               dstRowStride,
-    std::uint32_t               dstSliceStride,
+    std::uint32_t               dstLayerStride,
 
     // Source
     const SrcImageDescriptor&   srcImageDesc,
     const Offset3D&             srcOffset,
     std::uint32_t               srcRowStride,
-    std::uint32_t               srcSliceStride,
+    std::uint32_t               srcLayerStride,
 
     // Region
     const Extent3D&             extent
@@ -231,19 +230,20 @@ LLGL_EXPORT void CopyImageBufferRegion(
 Usage example for a 2D image:
 \code
 // Generate 2D image of size 512 x 512 with a half-transparent yellow color
+const float fillColor[4] = { 1.0f, 1.0f, 0.0f, 0.5f };
 auto imageBuffer = LLGL::GenerateImageBuffer(
     LLGL::ImageFormat::RGBA,
     LLGL::DataType::UInt8,
     512 * 512,
-    LLGL::ColorRGBAd{ 1.0, 1.0, 0.0, 0.5 }
+    fillColor
 );
 \endcode
 */
 LLGL_EXPORT ByteBuffer GenerateImageBuffer(
-    ImageFormat         format,
-    DataType            dataType,
-    std::size_t         imageSize,
-    const ColorRGBAd&   fillColor
+    ImageFormat format,
+    DataType    dataType,
+    std::size_t imageSize,
+    const float fillColor[4]
 );
 
 /**

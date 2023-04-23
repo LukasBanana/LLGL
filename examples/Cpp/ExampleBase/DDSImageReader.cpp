@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <type_traits>
+#include <algorithm>
 
 
 static const std::uint32_t ddsMagicNumber = 0x20534444;

@@ -709,10 +709,8 @@ static void InitializeD3DColorTextureWithUploadBuffer(
         imageDescDefault.dataType   = formatDesc.dataType;
 
         /* Generate default image buffer */
-        const auto fillColor = ColorRGBAf{ clearValue.color[0], clearValue.color[1], clearValue.color[2], clearValue.color[3] }.Cast<double>();
         const auto imageSize = extent.width * extent.height * extent.depth;
-
-        auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
+        auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, clearValue.color);
 
         /* Update only the first MIP-map level for each array slice */
         imageDescDefault.data       = imageBuffer.get();

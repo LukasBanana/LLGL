@@ -18,32 +18,32 @@ namespace Internal
 
 
 // Shortcuts for the format flags
-static const long Depth     = FormatFlags::HasDepth;
-static const long Stencil   = FormatFlags::HasStencil;
-static const long sRGB      = FormatFlags::IsColorSpace_sRGB;
-static const long Compr     = FormatFlags::IsCompressed;
-static const long Norm      = FormatFlags::IsNormalized;
-static const long Integer   = FormatFlags::IsInteger;
-static const long Unsigned  = FormatFlags::IsUnsigned;
-static const long Packed    = FormatFlags::IsPacked;
-static const long RTV       = FormatFlags::SupportsRenderTarget;
-static const long Mips      = FormatFlags::SupportsMips;
-static const long GenMips   = FormatFlags::SupportsGenerateMips | Mips | RTV;
-static const long Dim1D     = FormatFlags::SupportsTexture1D;
-static const long Dim2D     = FormatFlags::SupportsTexture2D;
-static const long Dim3D     = FormatFlags::SupportsTexture3D;
-static const long DimCube   = FormatFlags::SupportsTextureCube;
-static const long Vertex    = FormatFlags::SupportsVertex;
+static constexpr long Depth         = FormatFlags::HasDepth;
+static constexpr long Stencil       = FormatFlags::HasStencil;
+static constexpr long sRGB          = FormatFlags::IsColorSpace_sRGB;
+static constexpr long Compr         = FormatFlags::IsCompressed;
+static constexpr long Norm          = FormatFlags::IsNormalized;
+static constexpr long Integer       = FormatFlags::IsInteger;
+static constexpr long Unsigned      = FormatFlags::IsUnsigned;
+static constexpr long Packed        = FormatFlags::IsPacked;
+static constexpr long RTV           = FormatFlags::SupportsRenderTarget;
+static constexpr long Mips          = FormatFlags::SupportsMips;
+static constexpr long GenMips       = FormatFlags::SupportsGenerateMips | Mips | RTV;
+static constexpr long Dim1D         = FormatFlags::SupportsTexture1D;
+static constexpr long Dim2D         = FormatFlags::SupportsTexture2D;
+static constexpr long Dim3D         = FormatFlags::SupportsTexture3D;
+static constexpr long DimCube       = FormatFlags::SupportsTextureCube;
+static constexpr long Vertex        = FormatFlags::SupportsVertex;
 
-static const long Dim1D_2D      = Dim1D | Dim2D;
-static const long Dim2D_3D      = Dim2D | Dim3D;
-static const long Dim1D_2D_3D   = Dim1D | Dim2D | Dim3D;
-static const long UInt          = Integer | Unsigned;
-static const long SInt          = Integer;
-static const long UNorm         = UInt | Norm;
-static const long SNorm         = SInt | Norm;
-static const long SFloat        = 0;
-static const long UFloat        = Unsigned;
+static constexpr long Dim1D_2D      = Dim1D | Dim2D;
+static constexpr long Dim2D_3D      = Dim2D | Dim3D;
+static constexpr long Dim1D_2D_3D   = Dim1D | Dim2D | Dim3D;
+static constexpr long UInt          = Integer | Unsigned;
+static constexpr long SInt          = Integer;
+static constexpr long UNorm         = UInt | Norm;
+static constexpr long SNorm         = SInt | Norm;
+static constexpr long SFloat        = 0;
+static constexpr long UFloat        = Unsigned;
 
 // Declaration of all hardware format descriptors
 static const FormatAttributes g_formatAttribs[] =
@@ -183,12 +183,12 @@ LLGL_EXPORT const FormatAttributes& GetFormatAttribs(const Format format)
         return Internal::g_formatAttribs[0];
 }
 
-std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t numTexels)
+std::uint32_t GetMemoryFootprint(const Format format, std::uint32_t count)
 {
     const auto& formatDesc = GetFormatAttribs(format);
     const auto blockSize = formatDesc.blockWidth * formatDesc.blockHeight;
-    if (blockSize > 0 && numTexels % blockSize == 0)
-        return ((numTexels / blockSize * formatDesc.bitSize) / 8);
+    if (blockSize > 0 && count % blockSize == 0)
+        return ((count / blockSize * formatDesc.bitSize) / 8);
     else
         return 0;
 }

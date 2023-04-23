@@ -299,11 +299,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         /* Allocate default image data */
         const auto& formatAttribs = GetFormatAttribs(textureDesc.format);
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
-        {
-            const float* clearColor = textureDesc.clearValue.color;
-            const ColorRGBAf fillColor{ clearColor[0], clearColor[1], clearColor[2], clearColor[3] };
-            intermediateData = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, fillColor.Cast<double>());
-        }
+            intermediateData = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, textureDesc.clearValue.color);
         else
             intermediateData = AllocateByteBuffer(static_cast<std::size_t>(initialDataSize), UninitializeTag{});
 

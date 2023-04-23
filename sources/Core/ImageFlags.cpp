@@ -15,8 +15,10 @@
 #include "ImageUtils.h"
 #include "../Core/CoreUtils.h"
 #include "../Core/Assertion.h"
+#include "../Core/Threading.h"
 #include "Float16Compressor.h"
 #include "BCDecompressor.h"
+#include <LLGL/Misc/ForRange.h>
 
 
 namespace LLGL
@@ -171,14 +173,14 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
 
 // Worker thread procedure for the "ConvertImageBufferDataType" function
 static void ConvertImageBufferDataTypeWorker(
-    DataType                    srcDataType,
-    const VariantConstBuffer&   srcBuffer,
-    DataType                    dstDataType,
-    VariantBuffer&              dstBuffer,
-    std::size_t                 idxBegin,
-    std::size_t                 idxEnd)
+    DataType            srcDataType,
+    VariantConstBuffer  srcBuffer,
+    DataType            dstDataType,
+    VariantBuffer       dstBuffer,
+    std::size_t         idxBegin,
+    std::size_t         idxEnd)
 {
-    for (auto i = idxBegin; i < idxEnd; ++i)
+    for_subrange(i, idxBegin, idxEnd)
     {
         /* Read normalized variant from source buffer */
         double value = ReadNormalizedTypedVariant(srcDataType, srcBuffer, i);
@@ -187,9 +189,6 @@ static void ConvertImageBufferDataTypeWorker(
         WriteNormalizedTypedVariant(dstDataType, dstBuffer, i, value);
     }
 }
-
-// Minimal number of entries each worker thread shall process
-static const std::size_t g_threadMinWorkSize = 64;
 
 static void ConvertImageBufferDataType(
     DataType    srcDataType,
@@ -208,48 +207,19 @@ static void ConvertImageBufferDataType(
         throw std::invalid_argument("cannot convert image data type with destination buffer size mismatch");
 
     /* Get variant buffer for source and destination images */
-    VariantConstBuffer src { srcBuffer };
-    VariantBuffer dst { dstBuffer };
-
-    threadCount = std::min(threadCount, static_cast<unsigned>(imageSize / g_threadMinWorkSize));
-
-    if (threadCount > 1)
-    {
-        /* Create worker threads */
-        std::vector<std::thread> workers(threadCount);
-
-        auto workSize       = imageSize / threadCount;
-        auto workSizeRemain = imageSize % threadCount;
-
-        std::size_t offset = 0;
-
-        for (unsigned i = 0; i < threadCount; ++i)
-        {
-            workers[i] = std::thread(
-                ConvertImageBufferDataTypeWorker,
-                srcDataType,
-                std::ref(src),
-                dstDataType,
-                std::ref(dst),
-                offset,
-                offset + workSize
-            );
-            offset += workSize;
-        }
-
-        /* Execute conversion of remaining work on main thread */
-        if (workSizeRemain > 0)
-            ConvertImageBufferDataTypeWorker(srcDataType, src, dstDataType, dst, offset, offset + workSizeRemain);
-
-        /* Join worker threads */
-        for (auto& w : workers)
-            w.join();
-    }
-    else
-    {
-        /* Execute conversion only on main thread */
-        ConvertImageBufferDataTypeWorker(srcDataType, src, dstDataType, dst, 0, imageSize);
-    }
+    DoConcurrentRange(
+        std::bind(
+            ConvertImageBufferDataTypeWorker,
+            srcDataType,
+            srcBuffer,
+            dstDataType,
+            dstBuffer,
+            std::placeholders::_1,
+            std::placeholders::_2
+        ),
+        imageSize,
+        threadCount
+    );
 }
 
 static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
@@ -428,17 +398,17 @@ static void WriteRGBAFormattedVariant(
 
 // Worker thread procedure for the "ConvertImageBufferFormat" function
 static void ConvertImageBufferFormatWorker(
-    ImageFormat                 srcFormat,
-    DataType                    srcDataType,
-    const VariantConstBuffer&   srcBuffer,
-    ImageFormat                 dstFormat,
-    VariantBuffer&              dstBuffer,
-    std::size_t                 idxBegin,
-    std::size_t                 idxEnd)
+    ImageFormat         srcFormat,
+    DataType            srcDataType,
+    VariantConstBuffer  srcBuffer,
+    ImageFormat         dstFormat,
+    VariantBuffer       dstBuffer,
+    std::size_t         begin,
+    std::size_t         end)
 {
     /* Get size for source and destination formats */
-    auto srcFormatSize  = ImageFormatSize(srcFormat);
-    auto dstFormatSize  = ImageFormatSize(dstFormat);
+    auto srcFormatSize = ImageFormatSize(srcFormat);
+    auto dstFormatSize = ImageFormatSize(dstFormat);
 
     /* Initialize default variant color (0, 0, 0, 1) */
     VariantColor value{ UninitializeTag{} };
@@ -448,7 +418,7 @@ static void ConvertImageBufferFormatWorker(
     SetVariantMinMax(srcDataType, value.b, true);
     SetVariantMinMax(srcDataType, value.a, false);
 
-    for (auto i = idxBegin; i < idxEnd; ++i)
+    for_subrange(i, begin, end)
     {
         /* Read RGBA variant from source buffer */
         ReadRGBAFormattedVariant(srcFormat, srcDataType, srcBuffer, i*srcFormatSize, value);
@@ -479,67 +449,20 @@ static void ConvertImageBufferFormat(
     imageSize /= dataTypeSize;
 
     /* Get variant buffer for source and destination images */
-    VariantConstBuffer src { srcImageDesc.data };
-    VariantBuffer dst { dstImageDesc.data };
-
-    threadCount = std::min(threadCount, static_cast<unsigned>(imageSize / g_threadMinWorkSize));
-
-    if (threadCount > 1)
-    {
-        /* Create worker threads */
-        std::vector<std::thread> workers(threadCount);
-
-        auto workSize       = imageSize / threadCount;
-        auto workSizeRemain = imageSize % threadCount;
-
-        std::size_t offset = 0;
-
-        for (unsigned i = 0; i < threadCount; ++i)
-        {
-            workers[i] = std::thread(
-                ConvertImageBufferFormatWorker,
-                srcImageDesc.format,
-                srcImageDesc.dataType,
-                std::ref(src),
-                dstImageDesc.format,
-                std::ref(dst),
-                offset,
-                offset + workSize
-            );
-            offset += workSize;
-        }
-
-        /* Execute conversion of remaining work on main thread */
-        if (workSizeRemain > 0)
-        {
-            ConvertImageBufferFormatWorker(
-                srcImageDesc.format,
-                srcImageDesc.dataType,
-                src,
-                dstImageDesc.format,
-                dst,
-                offset,
-                offset + workSizeRemain
-            );
-        }
-
-        /* Join worker threads */
-        for (auto& w : workers)
-            w.join();
-    }
-    else
-    {
-        /* Execute conversion only on main thread */
-        ConvertImageBufferFormatWorker(
+    DoConcurrentRange(
+        std::bind(
+            ConvertImageBufferFormatWorker,
             srcImageDesc.format,
             srcImageDesc.dataType,
-            src,
+            srcImageDesc.data,
             dstImageDesc.format,
-            dst,
-            0,
-            imageSize
-        );
-    }
+            dstImageDesc.data,
+            std::placeholders::_1,
+            std::placeholders::_2
+        ),
+        imageSize,
+        threadCount
+    );
 }
 
 static void ValidateSourceImageDesc(const SrcImageDescriptor& imageDesc)
@@ -747,17 +670,17 @@ static std::size_t GetFlattenedImageBufferPos(
     std::uint32_t y,
     std::uint32_t z,
     std::uint32_t rows,
-    std::uint32_t slices,
+    std::uint32_t layers,
     std::uint32_t bpp)
 {
-    return static_cast<std::size_t>(z * slices + y * rows + x) * bpp;
+    return static_cast<std::size_t>(z * layers + y * rows + x) * bpp;
 }
 
 static std::size_t GetFlattenedImageBufferPosEnd(
     const Offset3D& offset,
     const Extent3D& extent,
     std::uint32_t   rows,
-    std::uint32_t   slices,
+    std::uint32_t   layers,
     std::uint32_t   bpp)
 {
     /* Subtract 1 from extent dimensions and add <bpp> again to get the excluding iterator end */
@@ -766,7 +689,7 @@ static std::size_t GetFlattenedImageBufferPosEnd(
         static_cast<std::uint32_t>(offset.y) + extent.height - 1u,
         static_cast<std::uint32_t>(offset.z) + extent.depth  - 1u,
         rows,
-        slices,
+        layers,
         bpp
     ) + bpp;
 }
@@ -775,11 +698,11 @@ LLGL_EXPORT void CopyImageBufferRegion(
     const DstImageDescriptor&   dstImageDesc,
     const Offset3D&             dstOffset,
     std::uint32_t               dstRowStride,
-    std::uint32_t               dstSliceStride,
+    std::uint32_t               dstLayerStride,
     const SrcImageDescriptor&   srcImageDesc,
     const Offset3D&             srcOffset,
     std::uint32_t               srcRowStride,
-    std::uint32_t               srcSliceStride,
+    std::uint32_t               srcLayerStride,
     const Extent3D&             extent)
 {
     /* Validate input parameters */
@@ -792,15 +715,15 @@ LLGL_EXPORT void CopyImageBufferRegion(
     const auto bpp = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, 1);
 
     /* Validate destination image boundaries */
-    const auto dstPos       = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstSliceStride, bpp);
-    const auto dstPosEnd    = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstSliceStride, bpp);
+    const auto dstPos       = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstLayerStride, bpp);
+    const auto dstPosEnd    = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstLayerStride, bpp);
 
     if (dstPosEnd > dstImageDesc.dataSize)
         throw std::out_of_range("destination image buffer region out of range");
 
     /* Validate source image boundaries */
-    const auto srcPos       = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcSliceStride, bpp);
-    const auto srcPosEnd    = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcSliceStride, bpp);
+    const auto srcPos       = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcLayerStride, bpp);
+    const auto srcPosEnd    = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcLayerStride, bpp);
 
     if (srcPosEnd > srcImageDesc.dataSize)
         throw std::out_of_range("source image buffer region out of range");
@@ -811,27 +734,27 @@ LLGL_EXPORT void CopyImageBufferRegion(
         bpp,
         (reinterpret_cast<char*>(dstImageDesc.data) + dstPos),
         dstRowStride * bpp,
-        dstSliceStride * bpp,
+        dstLayerStride * bpp,
         (reinterpret_cast<const char*>(srcImageDesc.data) + srcPos),
         srcRowStride * bpp,
-        srcSliceStride * bpp
+        srcLayerStride * bpp
     );
 }
 
 LLGL_EXPORT ByteBuffer GenerateImageBuffer(
-    ImageFormat         format,
-    DataType            dataType,
-    std::size_t         imageSize,
-    const ColorRGBAd&   fillColor)
+    ImageFormat format,
+    DataType    dataType,
+    std::size_t imageSize,
+    const float fillColor[4])
 {
     /* Convert fill color data type */
     VariantColor fillColor0{ UninitializeTag{} };
     VariantBuffer fillBuffer0{ &fillColor0 };
 
-    WriteNormalizedTypedVariant(dataType, fillBuffer0, 0, fillColor.r);
-    WriteNormalizedTypedVariant(dataType, fillBuffer0, 1, fillColor.g);
-    WriteNormalizedTypedVariant(dataType, fillBuffer0, 2, fillColor.b);
-    WriteNormalizedTypedVariant(dataType, fillBuffer0, 3, fillColor.a);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 0, fillColor[0]);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 1, fillColor[1]);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 2, fillColor[2]);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 3, fillColor[3]);
 
     /* Convert fill color format */
     VariantColor fillColor1{ UninitializeTag{} };
@@ -846,8 +769,14 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     auto imageBuffer = MakeUniqueArray<char>(bytesPerPixel * imageSize);
 
     /* Initialize image buffer with fill color */
-    for (std::size_t i = 0; i < imageSize; ++i)
-        ::memcpy(imageBuffer.get() + bytesPerPixel * i, fillBuffer1.raw, bytesPerPixel);
+    DoConcurrentRange(
+        [dst = imageBuffer.get(), bytesPerPixel, src = fillBuffer1.raw](std::size_t begin, std::size_t end)
+        {
+            for_subrange(i, begin, end)
+                ::memcpy(dst + bytesPerPixel * i, src, bytesPerPixel);
+        },
+        imageSize
+    );
 
     return imageBuffer;
 }

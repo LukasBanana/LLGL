@@ -26,10 +26,10 @@ void BitBlit(
     std::uint32_t   bpp,
     char*           dst,
     std::uint32_t   dstRowStride,
-    std::uint32_t   dstDepthStride,
+    std::uint32_t   dstLayerStride,
     const char*     src,
     std::uint32_t   srcRowStride,
-    std::uint32_t   srcDepthStride
+    std::uint32_t   srcLayerStride
 );
 
 

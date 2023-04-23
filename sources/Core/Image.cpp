@@ -25,11 +25,11 @@ Image::Image(const Extent3D& extent, const ImageFormat format, const DataType da
 {
 }
 
-Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAd& fillColor) :
-    extent_   { extent                                                           },
-    format_   { format                                                           },
-    dataType_ { dataType                                                         },
-    data_     { GenerateImageBuffer(format, dataType, GetNumPixels(), fillColor) }
+Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAf& fillColor) :
+    extent_   { extent                                                                 },
+    format_   { format                                                                 },
+    dataType_ { dataType                                                               },
+    data_     { GenerateImageBuffer(format, dataType, GetNumPixels(), fillColor.Ptr()) }
 {
 }
 
@@ -101,22 +101,22 @@ void Image::Resize(const Extent3D& extent)
         data_.reset();
 }
 
-void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor)
+void Image::Resize(const Extent3D& extent, const ColorRGBAf& fillColor)
 {
     if (extent_ != extent)
     {
         /* Generate new image buffer with fill color */
         extent_ = extent;
-        data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor);
+        data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor.Ptr());
     }
     else
     {
         /* Clear image by fill color */
-        Fill({ 0, 0, 0 }, extent, fillColor);
+        //Fill({ 0, 0, 0 }, extent, fillColor);
     }
 }
 
-void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset3D& offset)
+void Image::Resize(const Extent3D& extent, const ColorRGBAf& fillColor, const Offset3D& offset)
 {
     if (extent != GetExtent())
     {
@@ -134,7 +134,7 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Of
         {
             /* Resize image buffer with fill color */
             extent_ = extent;
-            data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor);
+            data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor.Ptr());
         }
         else
         {

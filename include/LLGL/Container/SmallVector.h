@@ -118,10 +118,10 @@ template
 class LLGL_EXPORT SmallVector
 {
 
-    public:
-
         static_assert(std::is_copy_assignable<T>::value, "SmallVector<T>: T must be copy assignable");
         static_assert(std::is_copy_constructible<T>::value, "SmallVector<T>: T must be copy constructible");
+
+    public:
 
         using value_type                = T;
         using size_type                 = std::size_t;
@@ -191,6 +191,20 @@ class LLGL_EXPORT SmallVector
         SmallVector(const OtherContainer<T, OtherAllocator>& other) :
             SmallVector { other.begin(), other.end() }
         {
+        }
+
+        //! Initializes the vector with the specified number of elements and initial default value.
+        explicit SmallVector(size_type count) :
+            SmallVector {}
+        {
+            resize(count);
+        }
+
+        //! Initializes the vector with the specified number of elements and initial value.
+        explicit SmallVector(size_type count, const value_type& value) :
+            SmallVector {}
+        {
+            resize(count, value);
         }
 
         //! Destroys all elements in this vector.

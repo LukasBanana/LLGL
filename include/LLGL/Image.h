@@ -13,6 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/SamplerFlags.h>
+#include <LLGL/ColorRGBA.h>
 
 
 namespace LLGL
@@ -50,7 +51,7 @@ class LLGL_EXPORT Image
         \brief Constructor to initialize the image with a format, data type, and extent. The image buffer will be filled with the specified color.
         \see GenerateImageBuffer
         */
-        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAd& fillColor);
+        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAf& fillColor);
 
         /**
         \brief Constructor to initialize the image with all atributes, including the image buffer specified by the 'data' parameter.
@@ -94,7 +95,7 @@ class LLGL_EXPORT Image
         \param[in] fillColor Specifies the color to fill the pixels with.
         \see GenerateImageBuffer
         */
-        void Resize(const Extent3D& extent, const ColorRGBAd& fillColor);
+        void Resize(const Extent3D& extent, const ColorRGBAf& fillColor);
 
         /**
         \brief Resizes the image, moves the previous pixels by an offset, and initializes the new pixels outside the previous extent with the specified color.
@@ -103,7 +104,7 @@ class LLGL_EXPORT Image
         \param[in] offset Specifies the offset to move the previous pixels to. This will be clamped if it exceeds the image area.
         \see GenerateImageBuffer
         */
-        void Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset3D& offset);
+        void Resize(const Extent3D& extent, const ColorRGBAf& fillColor, const Offset3D& offset);
 
         //! Swaps all attributes with the specified image.
         void Swap(Image& rhs);
