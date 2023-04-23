@@ -92,7 +92,7 @@ class LLGL_EXPORT Image
         \brief Resizes the image and initializes the new pixels with the specified color.
         \param[in] extent Specifies the new image size.
         \param[in] fillColor Specifies the color to fill the pixels with.
-        \brief GenerateImageBuffer
+        \see GenerateImageBuffer
         */
         void Resize(const Extent3D& extent, const ColorRGBAd& fillColor);
 
@@ -101,18 +101,9 @@ class LLGL_EXPORT Image
         \param[in] extent Specifies the new image size.
         \param[in] fillColor Specifies the color to fill the pixels with that are outside the previous extent.
         \param[in] offset Specifies the offset to move the previous pixels to. This will be clamped if it exceeds the image area.
-        \brief GenerateImageBuffer
+        \see GenerateImageBuffer
         */
         void Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset3D& offset);
-
-        /**
-        \brief Resizes the image and resamples the pixels from the previous image buffer.
-        \param[in] extent Specifies the new image size.
-        \param[in] filter Specifies the sampling filter.
-        \brief GenerateImageBuffer
-        \todo Not implemented yet.
-        */
-        void Resize(const Extent3D& extent, const SamplerFilter filter);
 
         //! Swaps all attributes with the specified image.
         void Swap(Image& rhs);
@@ -145,15 +136,6 @@ class LLGL_EXPORT Image
         \see ConvertImageBuffer
         */
         void Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent);
-
-        /**
-        \brief Fills a region of this image by the specified color.
-        \param[in] offset Specifies the offset where the region begins.
-        \param[in] extent Specifies the extent of the region.
-        \param[in] fillColor Specifies the color to fill the region with.
-        \todo Not implemented yet.
-        */
-        void Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor);
 
         /**
         \brief Reads a region of pixels from this image into the destination image buffer specified by 'imageDesc'.
@@ -189,24 +171,6 @@ class LLGL_EXPORT Image
         \see ConvertImageBuffer
         */
         void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, unsigned threadCount = 0);
-
-        /**
-        \brief Mirrors the image at the YZ plane.
-        \todo Not implemented yet
-        */
-        void MirrorYZPlane();
-
-        /**
-        \brief Mirrors the image at the XZ plane.
-        \todo Not implemented yet
-        */
-        void MirrorXZPlane();
-
-        /**
-        \brief Mirrors the image at the XY plane.
-        \todo Not implemented yet
-        */
-        void MirrorXYPlane();
 
         /* ----- Attributes ----- */
 

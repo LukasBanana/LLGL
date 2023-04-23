@@ -148,11 +148,6 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Of
     }
 }
 
-void Image::Resize(const Extent3D& extent, const SamplerFilter filter)
-{
-    //todo
-}
-
 void Image::Swap(Image& rhs)
 {
     std::swap(extent_,   rhs.extent_  );
@@ -283,13 +278,6 @@ void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRe
     }
 }
 
-void Image::Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor)
-{
-    //ClampRegion(offset, extent);
-
-    //TODO
-}
-
 static std::size_t GetRequiredImageDataSize(const Extent3D& extent, const ImageFormat format, const DataType dataType)
 {
     return static_cast<std::size_t>(ImageFormatSize(format) * DataTypeSize(dataType) * extent.width * extent.height * extent.depth);
@@ -410,21 +398,6 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
             );
         }
     }
-}
-
-void Image::MirrorYZPlane()
-{
-    //TODO
-}
-
-void Image::MirrorXZPlane()
-{
-    //TODO
-}
-
-void Image::MirrorXYPlane()
-{
-    //TODO
 }
 
 /* ----- Attributes ----- */
