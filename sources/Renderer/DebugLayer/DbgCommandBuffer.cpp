@@ -772,7 +772,7 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         profile_.computePipelineBindings++;
 }
 
-void DbgCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void DbgCommandBuffer::SetBlendFactor(const float color[4])
 {
     if (debugger_)
     {

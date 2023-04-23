@@ -699,9 +699,9 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 }
 
-void D3D12CommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void D3D12CommandBuffer::SetBlendFactor(const float color[4])
 {
-    commandList_->OMSetBlendFactor(color.Ptr());
+    commandList_->OMSetBlendFactor(color);
 }
 
 void D3D12CommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)

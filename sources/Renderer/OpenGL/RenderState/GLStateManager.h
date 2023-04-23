@@ -158,7 +158,7 @@ class GLStateManager
 
         void BindBlendState(GLBlendState* blendState);
 
-        void SetBlendColor(const GLfloat* color);
+        void SetBlendColor(const GLfloat color[4]);
         void SetLogicOp(GLenum opcode);
 
         /* ----- Buffer ----- */

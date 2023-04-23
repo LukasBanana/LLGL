@@ -728,7 +728,7 @@ void GLStateManager::BindBlendState(GLBlendState* blendState)
     }
 }
 
-void GLStateManager::SetBlendColor(const GLfloat* color)
+void GLStateManager::SetBlendColor(const GLfloat color[4])
 {
     if ( color[0] != contextState_.blendColor[0] ||
          color[1] != contextState_.blendColor[1] ||

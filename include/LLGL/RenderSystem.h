@@ -380,14 +380,14 @@ class LLGL_EXPORT RenderSystem : public Interface
         auto myTextureExtent = myTexture->GetMipExtent(0);
 
         // Allocate image buffer with elements in all dimensions
-        std::vector<LLGL::ColorRGBAub> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth);
+        std::vector<std::uint8_t> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth * 4);
 
         // Initialize destination image descriptor
         const DstImageDescriptor myImageDesc {
-            LLGL::ImageFormat::RGBA,                    // RGBA image format, since we used LLGL::ColorRGBAub
-            LLGL::DataType::UInt8,                      // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
-            myImage.data(),                             // Output image buffer
-            myImage.size() * sizeof(LLGL::ColorRGBAub)  // Image buffer size: number of color elements and size of each color element
+            LLGL::ImageFormat::RGBA,                // RGBA image format, since the size of 'myImage' is a multiple of 4
+            LLGL::DataType::UInt8,                  // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
+            myImage.data(),                         // Output image buffer
+            myImage.size() * sizeof(std::uint8_t)   // Image buffer size: number of color elements and size of each color element
         };
 
         // Read texture data from first MIP-map level (index 0)

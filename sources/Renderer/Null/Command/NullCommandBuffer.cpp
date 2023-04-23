@@ -357,7 +357,7 @@ void NullCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     //todo
 }
 
-void NullCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void NullCommandBuffer::SetBlendFactor(const float color[4])
 {
     //todo
 }

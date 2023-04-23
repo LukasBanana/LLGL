@@ -727,9 +727,9 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         descriptorCache_ = nullptr;
 }
 
-void VKCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void VKCommandBuffer::SetBlendFactor(const float color[4])
 {
-    vkCmdSetBlendConstants(commandBuffer_, color.Ptr());
+    vkCmdSetBlendConstants(commandBuffer_, color);
 }
 
 void VKCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)

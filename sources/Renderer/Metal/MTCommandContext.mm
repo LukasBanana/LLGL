@@ -1,6 +1,6 @@
 /*
  * MTCommandContext.mm
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -20,7 +20,7 @@
 namespace LLGL
 {
 
-    
+
 void MTCommandContext::Reset(id<MTLCommandBuffer> cmdBuffer)
 {
     cmdBuffer_ = cmdBuffer;
@@ -202,7 +202,7 @@ void MTCommandContext::SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std
     renderDirtyBits_.graphicsResourceHeap       = 1;
 }
 
-void MTCommandContext::SetBlendColor(const float* blendColor)
+void MTCommandContext::SetBlendColor(const float blendColor[4])
 {
     renderEncoderState_.blendColor[0] = blendColor[0];
     renderEncoderState_.blendColor[1] = blendColor[1];

@@ -619,9 +619,9 @@ void MTCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     }
 }
 
-void MTCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void MTCommandBuffer::SetBlendFactor(const float color[4])
 {
-    context_.SetBlendColor(color.Ptr());
+    context_.SetBlendColor(color);
 }
 
 void MTCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)

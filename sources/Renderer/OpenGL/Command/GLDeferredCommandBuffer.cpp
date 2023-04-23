@@ -592,14 +592,14 @@ void GLDeferredCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     SetPipelineRenderState(*(cmd->pipelineState));
 }
 
-void GLDeferredCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void GLDeferredCommandBuffer::SetBlendFactor(const float color[4])
 {
     auto cmd = AllocCommand<GLCmdSetBlendColor>(GLOpcodeSetBlendColor);
     {
-        cmd->color[0] = color.r;
-        cmd->color[1] = color.g;
-        cmd->color[2] = color.b;
-        cmd->color[3] = color.a;
+        cmd->color[0] = color[0];
+        cmd->color[1] = color[1];
+        cmd->color[2] = color[2];
+        cmd->color[3] = color[3];
     }
 }
 

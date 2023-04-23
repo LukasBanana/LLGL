@@ -61,7 +61,7 @@ class MTCommandContext
         void SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount);
         void SetGraphicsPSO(MTGraphicsPSO* pipelineState);
         void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet);
-        void SetBlendColor(const float* blendColor);
+        void SetBlendColor(const float blendColor[4]);
         void SetStencilRef(std::uint32_t ref, const StencilFace face);
 
         // Converts, binds, and stores the respective state in the internal compute encoder state.

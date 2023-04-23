@@ -499,9 +499,9 @@ void GLImmediateCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     SetPipelineRenderState(pipelineStateGL);
 }
 
-void GLImmediateCommandBuffer::SetBlendFactor(const ColorRGBAf& color)
+void GLImmediateCommandBuffer::SetBlendFactor(const float color[4])
 {
-    stateMngr_->SetBlendColor(color.Ptr());
+    stateMngr_->SetBlendColor(color);
 }
 
 void GLImmediateCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)

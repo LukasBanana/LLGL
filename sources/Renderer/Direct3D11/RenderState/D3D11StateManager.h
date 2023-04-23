@@ -51,8 +51,8 @@ class D3D11StateManager
         void SetStencilRef(UINT stencilRef);
 
         void SetBlendState(ID3D11BlendState* blendState, UINT sampleMask);
-        void SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask);
-        void SetBlendFactor(const FLOAT* blendFactor);
+        void SetBlendState(ID3D11BlendState* blendState, const FLOAT blendFactor[4], UINT sampleMask);
+        void SetBlendFactor(const FLOAT blendFactor[4]);
 
         void SetConstantBuffers(
             UINT                    startSlot,

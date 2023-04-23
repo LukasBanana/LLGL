@@ -210,7 +210,7 @@ void D3D11StateManager::SetStencilRef(UINT stencilRef)
     }
 }
 
-static bool EqualsBlendFactors(const FLOAT* lhs, const FLOAT* rhs)
+static bool EqualsBlendFactors(const FLOAT lhs[4], const FLOAT rhs[4])
 {
     return
     (
@@ -231,7 +231,7 @@ void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, UINT sampleM
     }
 }
 
-void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask)
+void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT blendFactor[4], UINT sampleMask)
 {
     if (renderState_.blendState != blendState || !EqualsBlendFactors(renderState_.blendFactor, blendFactor) || renderState_.sampleMask != sampleMask)
     {
@@ -245,7 +245,7 @@ void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT*
     }
 }
 
-void D3D11StateManager::SetBlendFactor(const FLOAT* blendFactor)
+void D3D11StateManager::SetBlendFactor(const FLOAT blendFactor[4])
 {
     if (!EqualsBlendFactors(renderState_.blendFactor, blendFactor))
     {

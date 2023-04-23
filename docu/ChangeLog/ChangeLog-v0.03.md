@@ -28,6 +28,7 @@
 - [Stream-output interface](#stream-output-interface)
 - [Pipeline state interface](#pipeline-state-interface)
 - [Clear attachments interface](#clear-attachments-interface)
+- [`Color` template](#color-template)
 - [Removed features](#removed-features)
 
 
@@ -967,6 +968,33 @@ void Clear(long flags, const ClearValue& clearValue = {});
 
 // Usage:
 myCmdBuffer->Clear(LLGL::ClearFlags::Color, { backgroundColor });
+```
+
+## `Color` template
+
+The `Color` template class has been changed to a utility class. It is no longer used in any mandatory interface. It is only used for `Image`, which itself is a utility class.
+For all interfaces using colors the `Color` template has been replaced by `const float[4]` array.
+
+Before:
+```cpp
+// Interface:
+LLGL::ColorRGBAf LLGL::SamplerDescriptor::borderColor   = { 0, 0, 0, 0 };
+LLGL::ColorRGBAf LLGL::ClearValue::color                = { 0, 0, 0, 0 };
+LLGL::ColorRGBAf LLGL::BlendDescriptor::blendFactor     = { 0, 0, 0, 0 };
+LLGL::ColorRGBAb LLGL::BlendTargetDescriptor::colorMask = { true, true, true, true };
+
+void LLGL::CommandBuffer::SetBlendFactor(const LLGL::ColorRGBAf& color);
+```
+
+After:
+```cpp
+// Interface:
+float           LLGL::SamplerDescriptor::borderColor[4] = { 0, 0, 0, 0 };
+float           LLGL::ClearValue::color[4]              = { 0, 0, 0, 0 };
+float           LLGL::BlendDescriptor::blendFactor[4]   = { 0, 0, 0, 0 };
+std::uint32_t   LLGL::BlendTargetDescriptor::colorMask  = LLGL::ColorMaskFlags::All;
+
+void LLGL::CommandBuffer::SetBlendFactor(const float color[4]);
 ```
 
 
