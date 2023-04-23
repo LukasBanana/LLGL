@@ -24,7 +24,7 @@
 #include "Buffer/VKBufferArray.h"
 #include "../CheckedCast.h"
 #include "../../Core/Exception.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <LLGL/StaticLimits.h>
 #include <LLGL/TypeInfo.h>
 #include <cstddef>

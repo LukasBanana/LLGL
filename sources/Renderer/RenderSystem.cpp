@@ -11,7 +11,7 @@
 #include "../Core/Assertion.h"
 #include "RenderTargetUtils.h"
 #include <LLGL/Platform/Platform.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <LLGL/Format.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>

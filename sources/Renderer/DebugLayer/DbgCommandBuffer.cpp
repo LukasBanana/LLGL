@@ -27,8 +27,8 @@
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/IndirectArguments.h>
 #include <LLGL/TypeInfo.h>
-#include <LLGL/Misc/TypeNames.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 

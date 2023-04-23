@@ -17,7 +17,7 @@
 #include "../../CheckedCast.h"
 #include "../../RenderTargetUtils.h"
 #include "../D3DX12/d3dx12.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

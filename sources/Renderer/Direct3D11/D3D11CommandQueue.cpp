@@ -10,7 +10,7 @@
 #include "RenderState/D3D11Fence.h"
 #include "RenderState/D3D11QueryHeap.h"
 #include "../CheckedCast.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

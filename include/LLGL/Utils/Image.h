@@ -13,7 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/ImageFlags.h>
 #include <LLGL/SamplerFlags.h>
-#include <LLGL/ColorRGBA.h>
+#include <LLGL/Utils/ColorRGBA.h>
 
 
 namespace LLGL

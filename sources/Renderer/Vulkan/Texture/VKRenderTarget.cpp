@@ -15,7 +15,7 @@
 #include "../VKTypes.h"
 #include <vector>
 #include <algorithm>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

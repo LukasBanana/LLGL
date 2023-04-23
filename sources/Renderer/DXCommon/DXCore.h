@@ -9,7 +9,7 @@
 #define LLGL_DX_CORE_H
 
 
-#include <LLGL/ColorRGBA.h>
+#include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/VideoAdapter.h>
 #include <LLGL/ImageFlags.h>

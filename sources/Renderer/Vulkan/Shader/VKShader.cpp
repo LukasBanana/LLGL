@@ -12,8 +12,8 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../PipelineStateUtils.h"
-#include <LLGL/Misc/TypeNames.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 #include <string.h>
 #include <algorithm>
 

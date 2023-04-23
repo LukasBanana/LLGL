@@ -10,8 +10,8 @@
 
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Misc/Utility.h>
-#include <LLGL/Misc/VertexFormat.h>
+#include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>

@@ -279,7 +279,7 @@ set(FilesMsvcNatvis ${PROJECT_SOURCE_DIR}/LLGL.natvis)
 # Common files
 file(GLOB FilesInclude                      ${PROJECT_INCLUDE_DIR}/LLGL/*.*)
 file(GLOB FilesIncludeContainer             ${PROJECT_INCLUDE_DIR}/LLGL/Container/*.*)
-file(GLOB FilesIncludeMisc                  ${PROJECT_INCLUDE_DIR}/LLGL/Misc/*.*)
+file(GLOB FilesIncludeUtils                 ${PROJECT_INCLUDE_DIR}/LLGL/Utils/*.*)
 file(GLOB FilesIncludePlatformBase          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/*.*)
 file(GLOB FilesCore                         ${PROJECT_SOURCE_DIR}/sources/Core/*.*)
 file(GLOB FilesPlatformBase                 ${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
@@ -510,7 +510,7 @@ source_group("NatVis" FILES ${FilesMsvcNatvis})
 
 source_group("Include" FILES ${FilesInclude})
 source_group("Include\\Container" FILES ${FilesIncludeContainer})
-source_group("Include\\Misc" FILES ${FilesIncludeMisc})
+source_group("Include\\Utils" FILES ${FilesIncludeUtils})
 source_group("Sources\\Core" FILES ${FilesCore})
 
 if(LLGL_ENABLE_JIT_COMPILER)
@@ -607,7 +607,7 @@ set(
     FilesLLGL
     ${FilesInclude}
     ${FilesIncludeContainer}
-    ${FilesIncludeMisc}
+    ${FilesIncludeUtils}
     ${FilesIncludePlatformBase}
     ${FilesIncludePlatform}
     ${FilesCore}

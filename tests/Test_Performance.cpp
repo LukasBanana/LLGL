@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Image.h>
+#include <LLGL/Utils/Image.h>
 #include <vector>
 #include <functional>
 #include <iostream>

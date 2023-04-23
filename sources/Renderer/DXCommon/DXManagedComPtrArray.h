@@ -10,7 +10,7 @@
 
 
 #include "ComPtr.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>

@@ -31,7 +31,7 @@
 #include "../RenderState/D3D12ComputePSO.h"
 
 #include <LLGL/TypeInfo.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 #include "../D3DX12/d3dx12.h"
 #include <pix.h>

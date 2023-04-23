@@ -15,8 +15,8 @@
 #include "../../Core/StringUtils.h"
 #include <LLGL/ImageFlags.h>
 #include <LLGL/StaticLimits.h>
-#include <LLGL/Misc/TypeNames.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

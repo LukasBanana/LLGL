@@ -5,7 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Utils/TypeNames.h>
 
 
 namespace LLGL

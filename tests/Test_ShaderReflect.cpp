@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Misc/Utility.h>
+#include <LLGL/Utils/Utility.h>
 #include <iostream>
 
 int main()

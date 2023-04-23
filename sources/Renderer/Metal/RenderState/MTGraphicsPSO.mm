@@ -16,7 +16,7 @@
 #include "../../PipelineStateUtils.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

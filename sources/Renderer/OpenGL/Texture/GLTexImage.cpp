@@ -10,7 +10,7 @@
 #include "../GLProfile.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
-#include <LLGL/ColorRGBA.h>
+#include <LLGL/Utils/ColorRGBA.h>
 #include <array>
 #include <algorithm>
 

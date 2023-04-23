@@ -10,7 +10,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/MacroUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

@@ -10,7 +10,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/CommandQueue.h>
 #include <LLGL/QueryHeap.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <thread>
 
 

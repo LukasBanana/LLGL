@@ -7,7 +7,7 @@
 
 #include "ImageUtils.h"
 #include <LLGL/Types.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <cstdint>
 #include <algorithm>
 #include <string.h>

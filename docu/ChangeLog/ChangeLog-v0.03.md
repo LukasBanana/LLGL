@@ -29,6 +29,7 @@
 - [Pipeline state interface](#pipeline-state-interface)
 - [Clear attachments interface](#clear-attachments-interface)
 - [`Color` template](#color-template)
+- [Utility headers](#utility-headers)
 - [Removed features](#removed-features)
 
 
@@ -996,6 +997,17 @@ std::uint32_t   LLGL::BlendTargetDescriptor::colorMask  = LLGL::ColorMaskFlags::
 
 void LLGL::CommandBuffer::SetBlendFactor(const float color[4]);
 ```
+
+
+## Utility headers
+
+All utility header files have been moved into `include/LLGL/Utils/` folder:
+- Input.h
+- Image.h
+- ColorRGB.h
+- ColorRGBA.h
+- VertexFormat.h
+- Utility.h
 
 
 ## Removed features

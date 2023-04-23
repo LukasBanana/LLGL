@@ -15,7 +15,7 @@
 #include "../Shader/VKShaderModulePool.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/SmallVector.h>
 #include <algorithm>
 

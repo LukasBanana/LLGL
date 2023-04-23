@@ -8,7 +8,7 @@
 #include "VKStagingDescriptorPool.h"
 #include "../VKCore.h"
 #include "../../../Core/Assertion.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <string.h>
 
 

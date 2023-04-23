@@ -9,7 +9,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
-#include <LLGL/Input.h>
+#include <LLGL/Utils/Input.h>
 #include <LLGL/Display.h>
 
 

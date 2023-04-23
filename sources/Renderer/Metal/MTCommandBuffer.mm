@@ -22,7 +22,7 @@
 #include "Texture/MTRenderTarget.h"
 #include "../CheckedCast.h"
 #include <LLGL/TypeInfo.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <limits.h>
 

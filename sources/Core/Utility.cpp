@@ -7,9 +7,9 @@
 
 #ifdef LLGL_ENABLE_UTILITY
 
-#include <LLGL/Misc/Utility.h>
-#include <LLGL/Misc/VertexFormat.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/VertexFormat.h>
+#include <LLGL/Utils/ForRange.h>
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>

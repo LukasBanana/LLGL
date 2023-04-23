@@ -11,7 +11,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <string.h>
 

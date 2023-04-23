@@ -24,7 +24,7 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/TypeInfo.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <functional>
 
 #ifdef LLGL_OPENGL

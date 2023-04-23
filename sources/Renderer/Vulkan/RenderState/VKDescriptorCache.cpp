@@ -12,7 +12,7 @@
 #include "../Texture/VKTexture.h"
 #include "../Texture/VKSampler.h"
 #include "../../CheckedCast.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <algorithm>
 

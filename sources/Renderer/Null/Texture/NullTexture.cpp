@@ -7,7 +7,7 @@
 
 #include "NullTexture.h"
 #include <LLGL/TextureFlags.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 

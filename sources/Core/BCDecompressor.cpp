@@ -7,7 +7,7 @@
 
 #include "BCDecompressor.h"
 #include <LLGL/Types.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <cstring>
 
 

@@ -11,7 +11,7 @@
 #include "../Texture/MTSampler.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <string.h>
 

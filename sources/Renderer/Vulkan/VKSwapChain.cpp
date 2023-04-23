@@ -12,7 +12,7 @@
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <limits.h>
 #include <set>
 

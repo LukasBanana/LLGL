@@ -10,7 +10,7 @@
 #include "GLCommandExecutor.h"
 #include <LLGL/StaticLimits.h>
 #include <LLGL/TypeInfo.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 #include "../../TextureUtils.h"
 #include "../GLSwapChain.h"

@@ -8,7 +8,7 @@
 #include "MTShader.h"
 #include "../MTTypes.h"
 #include <LLGL/Platform/Platform.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <cstring>
 #include <set>
 

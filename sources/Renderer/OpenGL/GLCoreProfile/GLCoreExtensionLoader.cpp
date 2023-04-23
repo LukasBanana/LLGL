@@ -10,7 +10,7 @@
 #include "GLCoreExtensions.h"
 #include "GLCoreExtensionsProxy.h"
 #include <LLGL/Log.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <functional>
 #include <string>
 #include <map>

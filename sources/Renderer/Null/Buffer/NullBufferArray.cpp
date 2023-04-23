@@ -9,7 +9,7 @@
 #include "NullBuffer.h"
 #include "../../CheckedCast.h"
 #include "../../BufferUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

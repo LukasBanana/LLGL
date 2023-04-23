@@ -6,7 +6,7 @@
  */
 
 #include "RenderPassUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include "../Core/Assertion.h"
 
 

@@ -1,15 +1,15 @@
 /*
- * ColorRGB.h
+ * ColorRGBA.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_COLOR_RGB_H
-#define LLGL_COLOR_RGB_H
+#ifndef LLGL_COLOR_RGBA_H
+#define LLGL_COLOR_RGBA_H
 
 
-#include <LLGL/Color.h>
+#include <LLGL/Utils/Color.h>
 
 
 namespace LLGL
@@ -17,19 +17,19 @@ namespace LLGL
 
 
 /**
-\brief RGB color class with components: r, g, and b.
+\brief RGBA color class with components: r, g, b, and a.
 \remarks Color components are default initialized with their maximal value,
 i.e. for floating-points, the initial value is 1.0, because this its maximal color value,
 but for unsigned-bytes, the initial value is 255.
 */
 template <typename T>
-class LLGL_EXPORT Color<T, 3u>
+class LLGL_EXPORT Color<T, 4u>
 {
 
     public:
 
         //! Specifies the number of color components.
-        static constexpr std::size_t components = 3;
+        static constexpr std::size_t components = 4;
 
         /**
         \brief Constructors all attributes with the default color value.
@@ -39,15 +39,17 @@ class LLGL_EXPORT Color<T, 3u>
         Color() :
             r { MaxColorValue<T>() },
             g { MaxColorValue<T>() },
-            b { MaxColorValue<T>() }
+            b { MaxColorValue<T>() },
+            a { MaxColorValue<T>() }
         {
         }
 
         //! Copy constructor.
-        Color(const Color<T, 3>& rhs) :
+        Color(const Color<T, 4>& rhs) :
             r { rhs.r },
             g { rhs.g },
-            b { rhs.b }
+            b { rhs.b },
+            a { rhs.a }
         {
         }
 
@@ -55,15 +57,43 @@ class LLGL_EXPORT Color<T, 3u>
         explicit Color(const T& scalar) :
             r { scalar },
             g { scalar },
-            b { scalar }
+            b { scalar },
+            a { scalar }
         {
         }
 
-        //! Constructs all attributes with the specified color values r (red), g (green), b (blue).
+        /**
+        \brief Constructs the RGB attributes with the specified RGB color, and the default value for alpha.
+        \remarks For default color values the 'MaxColorValue' template is used.
+        \see MaxColorValue
+        */
+        explicit Color(const Color<T, 3u>& rhs) :
+            r { rhs.r              },
+            g { rhs.g              },
+            b { rhs.b              },
+            a { MaxColorValue<T>() }
+        {
+        }
+
+        /**
+        \brief Constructs the RGB attributes with the specified color values r (red), g (green), b (blue), and the default value for alpha.
+        \remarks For default color values the 'MaxColorValue' template is used.
+        \see MaxColorValue
+        */
         Color(const T& r, const T& g, const T& b) :
+            r { r                  },
+            g { g                  },
+            b { b                  },
+            a { MaxColorValue<T>() }
+        {
+        }
+
+        //! Constructs all attributes with the specified color values r (red), g (green), b (blue), a (alpha).
+        Color(const T& r, const T& g, const T& b, const T& a) :
             r { r },
             g { g },
-            b { b }
+            b { b },
+            a { a }
         {
         }
 
@@ -77,97 +107,103 @@ class LLGL_EXPORT Color<T, 3u>
         }
 
         //! Adds the specified color (component wise) to this color.
-        Color<T, 3>& operator += (const Color<T, 3>& rhs)
+        Color<T, 4>& operator += (const Color<T, 4>& rhs)
         {
             r += rhs.r;
             g += rhs.g;
             b += rhs.b;
+            a += rhs.a;
             return *this;
         }
 
         //! Substracts the specified color (component wise) from this color.
-        Color<T, 3>& operator -= (const Color<T, 3>& rhs)
+        Color<T, 4>& operator -= (const Color<T, 4>& rhs)
         {
             r -= rhs.r;
             g -= rhs.g;
             b -= rhs.b;
+            a -= rhs.a;
             return *this;
         }
 
         //! Multiplies the specified color (component wise) with this color.
-        Color<T, 3>& operator *= (const Color<T, 3>& rhs)
+        Color<T, 4>& operator *= (const Color<T, 4>& rhs)
         {
             r *= rhs.r;
             g *= rhs.g;
             b *= rhs.b;
+            a *= rhs.a;
             return *this;
         }
 
         //! Divides the specified color (component wise) with this color.
-        Color<T, 3>& operator /= (const Color<T, 3>& rhs)
+        Color<T, 4>& operator /= (const Color<T, 4>& rhs)
         {
             r /= rhs.r;
             g /= rhs.g;
             b /= rhs.b;
+            a /= rhs.a;
             return *this;
         }
 
         //! Multiplies the specified scalar value (component wise) with this color.
-        Color<T, 3>& operator *= (const T rhs)
+        Color<T, 4>& operator *= (const T rhs)
         {
             r *= rhs;
             g *= rhs;
             b *= rhs;
+            a *= rhs;
             return *this;
         }
 
         //! Divides the specified scalar value (component wise) with this color.
-        Color<T, 3>& operator /= (const T rhs)
+        Color<T, 4>& operator /= (const T rhs)
         {
             r /= rhs;
             g /= rhs;
             b /= rhs;
+            a /= rhs;
             return *this;
         }
 
         //! Returns the negation of this color.
-        Color<T, 3> operator - () const
+        Color<T, 4> operator - () const
         {
-            return Color<T, 3>(-r, -g, -b);
+            return Color<T, 4>(-r, -g, -b, -a);
         }
 
         /**
         \brief Returns the specified color component.
-        \param[in] component Specifies the color component index. This must be 0, 1, or 2.
+        \param[in] component Specifies the color component index. This must be 0, 1, 2, or 3.
         \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         T& operator [] (std::size_t component)
         {
             #ifdef LLGL_DEBUG
-            if (component >= Color<T, 3>::components)
-                throw std::out_of_range("color component index out of range (must be 0, 1, or 2)");
+            if (component >= Color<T, 4>::components)
+                throw std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
             #endif
             return *((&r) + component);
         }
 
         /**
         \brief Returns the specified color component.
-        \param[in] component Specifies the color component index. This must be 0, 1, or 2.
+        \param[in] component Specifies the color component index. This must be 0, 1, 2, or 3.
         \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         const T& operator [] (std::size_t component) const
         {
             #ifdef LLGL_DEBUG
-            if (component >= Color<T, 3>::components)
-                throw std::out_of_range("color component index out of range (must be 0, 1, or 2)");
+            if (component >= Color<T, 4>::components)
+                throw std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
             #endif
             return *((&r) + component);
         }
 
-        //! Returns this RGB color as RGBA color.
-        Color<T, 4> ToRGBA() const
+        //! Returns this RGBA color as RGB color.
+        Color<T, 3> ToRGB() const
         {
-            return Color<T, 4>(r, g, b);
+            return Color<T, 3>(r, g, b);
         }
 
         /**
@@ -176,12 +212,13 @@ class LLGL_EXPORT Color<T, 3u>
         \tparam Dst Specifies the destination type.
         */
         template <typename Dst>
-        Color<Dst, 3> Cast() const
+        Color<Dst, 4> Cast() const
         {
-            return Color<Dst, 3>(
+            return Color<Dst, 4>(
                 CastColorValue<Dst>(r),
                 CastColorValue<Dst>(g),
-                CastColorValue<Dst>(b)
+                CastColorValue<Dst>(b),
+                CastColorValue<Dst>(a)
             );
         }
 
@@ -197,7 +234,7 @@ class LLGL_EXPORT Color<T, 3u>
             return &r;
         }
 
-        T r, g, b;
+        T r, g, b, a;
 
 };
 
@@ -205,12 +242,12 @@ class LLGL_EXPORT Color<T, 3u>
 /* --- Type Alias --- */
 
 template <typename T>
-using ColorRGB = Color<T, 3>;
+using ColorRGBA = Color<T, 4>;
 
-using ColorRGBb     = ColorRGB<bool>;
-using ColorRGBf     = ColorRGB<float>;
-using ColorRGBd     = ColorRGB<double>;
-using ColorRGBub    = ColorRGB<std::uint8_t>;
+using ColorRGBAb  = ColorRGBA<bool>;
+using ColorRGBAf  = ColorRGBA<float>;
+using ColorRGBAd  = ColorRGBA<double>;
+using ColorRGBAub = ColorRGBA<std::uint8_t>;
 
 
 } // /namespace LLGL

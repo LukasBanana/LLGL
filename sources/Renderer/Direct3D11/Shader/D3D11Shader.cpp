@@ -12,8 +12,8 @@
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
-#include <LLGL/Misc/TypeNames.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>

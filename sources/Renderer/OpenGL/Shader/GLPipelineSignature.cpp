@@ -9,8 +9,8 @@
 #include "GLShader.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/MacroUtils.h"
-#include <LLGL/Misc/ForRange.h>
-#include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <stdexcept>
 
 

@@ -9,7 +9,7 @@
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/CoreUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 

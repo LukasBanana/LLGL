@@ -10,7 +10,7 @@
 
 
 #include "../Core/Assertion.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <string.h>
 #include <vector>
 #include <type_traits>

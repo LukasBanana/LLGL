@@ -10,7 +10,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/MacroUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT

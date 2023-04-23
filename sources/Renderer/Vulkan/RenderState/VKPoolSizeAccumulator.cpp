@@ -6,7 +6,7 @@
  */
 
 #include "VKPoolSizeAccumulator.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

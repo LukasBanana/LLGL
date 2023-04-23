@@ -21,7 +21,7 @@
 #include "../../StaticAssertions.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/ResourceHeapFlags.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <string.h>
 

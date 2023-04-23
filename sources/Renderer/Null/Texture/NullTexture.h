@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Texture.h>
-#include <LLGL/Image.h>
+#include <LLGL/Utils/Image.h>
 #include <string>
 #include <vector>
 

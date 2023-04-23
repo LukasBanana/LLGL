@@ -20,7 +20,7 @@
 #include "../../../Core/Assertion.h"
 #include <LLGL/Resource.h>
 #include <LLGL/ResourceHeapFlags.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <functional>
 #include <algorithm>
 

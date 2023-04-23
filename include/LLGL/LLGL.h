@@ -13,15 +13,15 @@
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
 #include <LLGL/Display.h>
-#include <LLGL/Input.h>
 #include <LLGL/Timer.h>
 #include <LLGL/TypeInfo.h>
-#include <LLGL/ColorRGB.h>
-#include <LLGL/ColorRGBA.h>
 #include <LLGL/RenderSystem.h>
 #include <LLGL/Log.h>
 #include <LLGL/IndirectArguments.h>
 #include <LLGL/ImageFlags.h>
+#include <LLGL/Utils/Input.h>
+#include <LLGL/Utils/ColorRGB.h>
+#include <LLGL/Utils/ColorRGBA.h>
 
 
 //DOXYGEN MAIN PAGE

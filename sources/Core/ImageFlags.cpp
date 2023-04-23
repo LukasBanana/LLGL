@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/ImageFlags.h>
-#include <LLGL/ColorRGBA.h>
+#include <LLGL/Utils/ColorRGBA.h>
 #include <limits>
 #include <algorithm>
 #include <cstdint>
@@ -18,7 +18,7 @@
 #include "../Core/Threading.h"
 #include "Float16Compressor.h"
 #include "BCDecompressor.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

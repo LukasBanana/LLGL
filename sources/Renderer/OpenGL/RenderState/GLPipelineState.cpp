@@ -12,7 +12,7 @@
 #include "../Shader/GLShaderProgram.h"
 #include "../Ext/GLExtensions.h"
 #include "../../CheckedCast.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

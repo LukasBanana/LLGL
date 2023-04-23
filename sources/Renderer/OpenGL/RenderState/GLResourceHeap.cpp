@@ -28,7 +28,7 @@
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Container/ArrayView.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <string.h>
 #include <limits.h>
 

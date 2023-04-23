@@ -7,7 +7,7 @@
 
 #include "D3D12RootSignature.h"
 #include "../../DXCommon/DXCore.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <stdint.h>
 
 

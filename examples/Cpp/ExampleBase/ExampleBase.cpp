@@ -6,7 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION

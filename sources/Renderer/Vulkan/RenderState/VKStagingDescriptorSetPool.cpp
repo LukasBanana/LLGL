@@ -6,7 +6,7 @@
  */
 
 #include "VKStagingDescriptorSetPool.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 

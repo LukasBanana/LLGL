@@ -6,7 +6,7 @@
  */
 
 #include "Threading.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <thread>
 #include <vector>
 #include <algorithm>

@@ -12,7 +12,7 @@
 #include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Assertion.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 

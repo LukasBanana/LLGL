@@ -11,7 +11,7 @@
 #include <LLGL/CommandBufferFlags.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Platform/Platform.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include "../MTTypes.h"
 #include "../Texture/MTTexture.h"
 #include "../../CheckedCast.h"

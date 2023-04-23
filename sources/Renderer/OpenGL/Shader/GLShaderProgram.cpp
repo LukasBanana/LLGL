@@ -18,7 +18,7 @@
 #include "../../../Core/BasicReport.h"
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Constants.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <stdexcept>
 

@@ -28,7 +28,7 @@
 #include "Command/GLDeferredCommandBuffer.h"
 #include "RenderState/GLGraphicsPSO.h"
 #include "RenderState/GLComputePSO.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 #ifdef LLGL_OPENGL
 #   include "Shader/GLSeparableShader.h"

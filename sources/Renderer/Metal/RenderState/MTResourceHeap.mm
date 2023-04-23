@@ -18,7 +18,7 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/ResourceHeapFlags.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

@@ -12,7 +12,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/BasicReport.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

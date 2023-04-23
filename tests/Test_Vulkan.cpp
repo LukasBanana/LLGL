@@ -6,8 +6,8 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Misc/Utility.h>
-#include <LLGL/Misc/VertexFormat.h>
+#include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <chrono>
 #include <iostream>

@@ -7,7 +7,7 @@
 
 #include "MTPipelineLayout.h"
 #include "../Texture/MTSampler.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

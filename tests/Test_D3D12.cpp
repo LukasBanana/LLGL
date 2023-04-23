@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Misc/VertexFormat.h>
+#include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Timer.h>
 #include <Gauss/Gauss.h>
 #include <iostream>

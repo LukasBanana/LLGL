@@ -10,7 +10,7 @@
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/MacroUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <string.h>
 

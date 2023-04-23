@@ -12,7 +12,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Exception.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>

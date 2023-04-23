@@ -9,7 +9,7 @@
 #include "NullPipelineLayout.h"
 #include "../../CheckedCast.h"
 #include "../../ResourceUtils.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 

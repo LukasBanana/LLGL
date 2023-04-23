@@ -12,7 +12,7 @@
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../../../Core/Exception.h"
-#include <LLGL/Misc/TypeNames.h>
+#include <LLGL/Utils/TypeNames.h>
 
 
 namespace LLGL

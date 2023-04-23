@@ -5,7 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include <LLGL/Input.h>
+#include <LLGL/Utils/Input.h>
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>

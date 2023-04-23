@@ -9,7 +9,7 @@
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
 #include "../../Core/Exception.h"
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL

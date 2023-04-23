@@ -19,7 +19,7 @@
 
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
-#include <LLGL/Misc/ForRange.h>
+#include <LLGL/Utils/ForRange.h>
 #include "D3DX12/d3dx12.h"
 #include <algorithm>
 
