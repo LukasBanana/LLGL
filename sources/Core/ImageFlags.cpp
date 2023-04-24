@@ -770,10 +770,10 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 
     /* Initialize image buffer with fill color */
     DoConcurrentRange(
-        [dst = imageBuffer.get(), bytesPerPixel, src = fillBuffer1.raw](std::size_t begin, std::size_t end)
+        [&imageBuffer, bytesPerPixel, &fillBuffer1](std::size_t begin, std::size_t end)
         {
             for_subrange(i, begin, end)
-                ::memcpy(dst + bytesPerPixel * i, src, bytesPerPixel);
+                ::memcpy(imageBuffer.get() + bytesPerPixel * i, fillBuffer1.raw, bytesPerPixel);
         },
         imageSize
     );

@@ -945,7 +945,7 @@ myCmdBuffer->SetPipelineState(*myGfxPipeline);
 
 ## Clear attachments interface
 
-The command buffer does not longer carry any state, i.e. `SetClearColor`, `SetClearDepth`, and `SetClearStencil` have been removed
+The command buffer does no longer carry any state, i.e. `SetClearColor`, `SetClearDepth`, and `SetClearStencil` have been removed
 and replaced by a new parameter to specify the clear value at the `Clear` function. Otherwise, the `ClearAttachments` function can be used.
 
 Before:
