@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/AlignedArray.h>
 #include <memory>
 #include <cstddef>
 #include <iterator>
@@ -139,7 +140,7 @@ class LLGL_EXPORT SmallVector
 
         //! Default initializes an empty vector.
         SmallVector() :
-            data_ { local_data() }
+            data_ { local_.data() }
         {
         }
 
@@ -245,11 +246,13 @@ class LLGL_EXPORT SmallVector
             return data_;
         }
 
+    public:
+
         /**
         \brief Returns a reference to the element at the specified position in this vector.
         \remarks This must \e not be called on an empty vector!
         */
-        reference at(size_type pos) noexcept
+        reference at(size_type pos)
         {
             return data_[pos];
         }
@@ -258,7 +261,7 @@ class LLGL_EXPORT SmallVector
         \brief Returns a constant reference to the element at the specified position in this vector.
         \remarks This must \e not be called on an empty vector!
         */
-        const_reference at(size_type pos) const noexcept
+        const_reference at(size_type pos) const
         {
             return data_[pos];
         }
@@ -267,7 +270,7 @@ class LLGL_EXPORT SmallVector
         \brief Returns a reference to first element in this vector. This must \e not be called on an empty vector!
         \remarks This must \e not be called on an empty vector!
         */
-        reference front() noexcept
+        reference front()
         {
             return data_[0];
         }
@@ -276,7 +279,7 @@ class LLGL_EXPORT SmallVector
         \brief Returns a constant reference to first element in this vector. This must \e not be called on an empty vector!
         \remarks This must \e not be called on an empty vector!
         */
-        const_reference front() const noexcept
+        const_reference front() const
         {
             return data_[0];
         }
@@ -285,7 +288,7 @@ class LLGL_EXPORT SmallVector
         \brief Returns a reference to last element in this vector. This must \e not be called on an empty vector!
         \remarks This must \e not be called on an empty vector!
         */
-        reference back() noexcept
+        reference back()
         {
             return data_[size_ - 1];
         }
@@ -294,7 +297,7 @@ class LLGL_EXPORT SmallVector
         \brief Returns a constant reference to last element in this vector. This must \e not be called on an empty vector!
         \remarks This must \e not be called on an empty vector!
         */
-        const_reference back() const noexcept
+        const_reference back() const
         {
             return data_[size_ - 1];
         }
@@ -473,20 +476,20 @@ class LLGL_EXPORT SmallVector
             else if (is_dynamic())
             {
                 /* Copy local buffer of other container into local buffer of this container */
-                move_range(local_data(), other.begin(), other.end());
+                move_range(local_.data(), other.begin(), other.end());
                 std::swap(cap_, other.cap_);
                 std::swap(size_, other.size_);
                 other.data_ = data_;
-                data_ = local_data();
+                data_ = local_.data();
             }
             else if (other.is_dynamic())
             {
                 /* Copy local buffer of this container into local buffer of other container */
-                move_range(other.local_data(), begin(), end());
+                move_range(other.local_.data(), begin(), end());
                 std::swap(cap_, other.cap_);
                 std::swap(size_, other.size_);
                 data_ = other.data_;
-                other.data_ = other.local_data();
+                other.data_ = other.local_.data();
             }
             else
             {
@@ -606,7 +609,7 @@ class LLGL_EXPORT SmallVector
                 else
                 {
                     /* Copy local buffer */
-                    data_ = local_data();
+                    data_ = local_.data();
                     construct_range(begin(), rhs.begin(), rhs.end());
                     rhs.destroy_range(rhs.begin(), rhs.end());
                 }
@@ -615,7 +618,7 @@ class LLGL_EXPORT SmallVector
                 size_   = rhs.size_;
 
                 /* Drop old container */
-                rhs.data_   = rhs.local_data();
+                rhs.data_   = rhs.local_.data();
                 rhs.cap_    = LocalCapacity;
                 rhs.size_   = 0;
             }
@@ -674,7 +677,7 @@ class LLGL_EXPORT SmallVector
             if (is_dynamic())
             {
                 Allocator{}.deallocate(data_, cap_);
-                data_   = local_data();
+                data_   = local_.data();
                 cap_    = LocalCapacity;
             }
         }
@@ -705,10 +708,10 @@ class LLGL_EXPORT SmallVector
             else
             {
                 /* Move all elements into local buffer */
-                move_all(local_data());
+                move_all(local_.data());
 
                 /* Use local buffer */
-                data_   = local_data();
+                data_   = local_.data();
                 cap_    = cap;
             }
         }
@@ -784,27 +787,17 @@ class LLGL_EXPORT SmallVector
             return begin() + offset;
         }
 
-        pointer local_data()
-        {
-            return reinterpret_cast<pointer>(local_);
-        }
-
-        const_pointer local_data() const
-        {
-            return reinterpret_cast<const_pointer>(local_);
-        }
-
         bool is_dynamic() const
         {
-            return (data_ != local_data());
+            return (data_ != local_.data() || LocalCapacity == 0);
         }
 
     private:
 
-        char        local_[LocalCapacity * sizeof(T)];
-        pointer     data_   = nullptr;
-        size_type   cap_    = LocalCapacity;
-        size_type   size_   = 0;
+        AlignedArray<T, LocalCapacity>  local_;
+        pointer                         data_   = nullptr;
+        size_type                       cap_    = LocalCapacity;
+        size_type                       size_   = 0;
 
 };
 
