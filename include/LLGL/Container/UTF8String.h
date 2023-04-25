@@ -75,35 +75,37 @@ class LLGL_EXPORT UTF8String
 
     public:
 
-        inline bool empty() const
+        inline bool empty() const noexcept
         {
             return (size() == 0);
         }
 
-        inline size_type size() const
+        inline size_type size() const noexcept
         {
             return (data_.size() - 1);
         }
 
-        inline size_type length() const
+        inline size_type length() const noexcept
         {
             return size();
         }
 
-        inline size_type capacity() const
+        inline size_type capacity() const noexcept
         {
             return (data_.capacity() - 1);
         }
 
-        inline const_pointer data() const
+        inline const_pointer data() const noexcept
         {
             return data_.data();
         }
 
-        inline const_pointer c_str() const
+        inline const_pointer c_str() const noexcept
         {
             return data_.data();
         }
+
+    public:
 
         inline const_reference at(size_type pos) const
         {
@@ -117,17 +119,17 @@ class LLGL_EXPORT UTF8String
 
         inline const_reference back() const
         {
-            return *(rbegin() + 1);
+            return *rbegin();
         }
 
     public:
 
-        inline const_iterator begin() const
+        inline const_iterator begin() const noexcept
         {
             return data_.begin();
         }
 
-        inline const_iterator cbegin() const
+        inline const_iterator cbegin() const noexcept
         {
             return data_.begin();
         }
@@ -142,12 +144,12 @@ class LLGL_EXPORT UTF8String
             return const_reverse_iterator{ cend() };
         }
 
-        inline const_iterator end() const
+        inline const_iterator end() const noexcept
         {
             return (data_.end() - 1);
         }
 
-        inline const_iterator cend() const
+        inline const_iterator cend() const noexcept
         {
             return (data_.end() - 1);
         }
@@ -176,7 +178,8 @@ class LLGL_EXPORT UTF8String
 
     public:
 
-        SmallVector<wchar_t> ToWCharArray() const;
+        //! Convert this string to a NUL-terminated UTF-16 string.
+        SmallVector<wchar_t> to_utf16() const;
 
     public:
 

@@ -1,6 +1,6 @@
 /*
  * UTF8String.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -296,7 +296,7 @@ int UTF8String::compare(size_type pos1, size_type count1, const WStringView& str
     return compare(pos1, count1, StringView{ utf8String.data(), utf8String.size() });
 }
 
-SmallVector<wchar_t> UTF8String::ToWCharArray() const
+SmallVector<wchar_t> UTF8String::to_utf16() const
 {
     return ConvertToUTF16WCharArray(StringView{ c_str(), size() });
 }

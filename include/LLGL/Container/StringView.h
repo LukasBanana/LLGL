@@ -90,7 +90,7 @@ class LLGL_EXPORT BasicStringView
         \see size
         \see length
         */
-        bool empty() const
+        bool empty() const noexcept
         {
             return (size_ == 0);
         }
@@ -99,7 +99,7 @@ class LLGL_EXPORT BasicStringView
         \brief Returns the length of this string. This is equivalent to \c length().
         \see length
         */
-        size_type size() const
+        size_type size() const noexcept
         {
             return size_;
         }
@@ -107,7 +107,7 @@ class LLGL_EXPORT BasicStringView
         /**
         \brief Returns the length of this string. This is equivalent to \c size().
         */
-        size_type length() const
+        size_type length() const noexcept
         {
             return size_;
         }
@@ -117,10 +117,12 @@ class LLGL_EXPORT BasicStringView
         \remarks This does not necessarily point to a NUL-terminated string like \c std::string does.
         A string view only covers a range from the first to the last character of a string whose memory is managed elsewhere.
         */
-        const_pointer data() const
+        const_pointer data() const noexcept
         {
             return data_;
         }
+
+    public:
 
         /**
         \brief Returns a constant reference to the character at the specified zero-based position.
@@ -152,7 +154,7 @@ class LLGL_EXPORT BasicStringView
     public:
 
         //! \see cbegin
-        const_iterator begin() const
+        const_iterator begin() const noexcept
         {
             return data_;
         }
@@ -161,7 +163,7 @@ class LLGL_EXPORT BasicStringView
         \brief Returns constant iterator to the beginning of this string.
         \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
         */
-        const_iterator cbegin() const
+        const_iterator cbegin() const noexcept
         {
             return data_;
         }
@@ -182,7 +184,7 @@ class LLGL_EXPORT BasicStringView
         }
 
         //! \see cend
-        const_iterator end() const
+        const_iterator end() const noexcept
         {
             return data_ + size_;
         }
@@ -191,7 +193,7 @@ class LLGL_EXPORT BasicStringView
         \brief Returns constant iterator to the end of this string.
         \remarks This can also be used on an empty string as long as it's not dereferenced on such a string.
         */
-        const_iterator cend() const
+        const_iterator cend() const noexcept
         {
             return data_ + size_;
         }
@@ -217,13 +219,14 @@ class LLGL_EXPORT BasicStringView
         \brief Returns a sub-view of this string view.
         \param[in] pos Optional zero-based position to the beginning of this string. By default 0.
         \param[in] count Optional length of the sub-view. This will be clamped to the size of this string minus the input position \c pos. By default \c npos.
-        \throws std::out_of_range If \c pos is out of bounds.
+        \return Empty string view if \c pos is out of bounds.
         */
         BasicStringView substr(size_type pos = 0, size_type count = npos) const
         {
             if (pos > size())
-                throw std::out_of_range("LLGL::BasicStringView::substr: pos is out of range");
-            return BasicStringView{ data() + pos, (std::min)(count, size() - pos) };
+                return BasicStringView{};
+            else
+                return BasicStringView{ data() + pos, (std::min)(count, size() - pos) };
         }
 
         /**

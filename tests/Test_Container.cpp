@@ -46,7 +46,7 @@ int main()
 
         std::wstring sc_orig = L"\u3053\u3093\u306B\u3061\u306F\u4E16\u754C\u3002";
         sc = sc_orig.c_str();
-        LLGL::SmallVector<wchar_t> sc_array = sc.ToWCharArray();
+        LLGL::SmallVector<wchar_t> sc_array = sc.to_utf16();
         std::wstring sc_back = sc_array.data();
 
         sa = "Hello";
@@ -55,7 +55,7 @@ int main()
 
         std::string s = sd.c_str();
 
-        LLGL::SmallVector<wchar_t> wsd = sd.ToWCharArray();
+        LLGL::SmallVector<wchar_t> wsd = sd.to_utf16();
         std::wstring ws = wsd.data();
 
         std::cout << s.c_str() << std::endl;

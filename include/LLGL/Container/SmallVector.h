@@ -511,17 +511,17 @@ class LLGL_EXPORT SmallVector
 
     public:
 
-        iterator begin()
+        iterator begin() noexcept
         {
             return data_;
         }
 
-        const_iterator begin() const
+        const_iterator begin() const noexcept
         {
             return data_;
         }
 
-        const_iterator cbegin() const
+        const_iterator cbegin() const noexcept
         {
             return data_;
         }
@@ -541,17 +541,17 @@ class LLGL_EXPORT SmallVector
             return const_reverse_iterator{ cend() };
         }
 
-        iterator end()
+        iterator end() noexcept
         {
             return data_ + size_;
         }
 
-        const_iterator end() const
+        const_iterator end() const noexcept
         {
             return data_ + size_;
         }
 
-        const_iterator cend() const
+        const_iterator cend() const noexcept
         {
             return data_ + size_;
         }

@@ -218,7 +218,7 @@ Extent2D Win32Window::GetSize(bool useClientArea) const
 void Win32Window::SetTitle(const UTF8String& title)
 {
     #ifdef UNICODE
-    auto titleUTF16 = title.ToWCharArray();
+    auto titleUTF16 = title.to_utf16();
     SetWindowText(wnd_, titleUTF16.data());
     #else
     SetWindowText(wnd_, title.c_str());
@@ -377,7 +377,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     }
 
     #ifdef UNICODE
-    auto title = desc.title.ToWCharArray();
+    auto title = desc.title.to_utf16();
     #else
     const auto& title = desc.title;
     #endif
