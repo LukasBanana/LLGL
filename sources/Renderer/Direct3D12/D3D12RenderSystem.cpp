@@ -469,14 +469,14 @@ void D3D12RenderSystem::QueryVideoAdapters()
 void D3D12RenderSystem::CreateDevice()
 {
     /* Use default adapter (null) and try all feature levels */
-    ComPtr<IDXGIAdapter> adapter;
     auto featureLevels = DXGetFeatureLevels(D3D_FEATURE_LEVEL_12_1);
 
     /* Try to create a feature level with an hardware adapter */
     HRESULT hr = 0;
-    if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
+    if (!device_.CreateDXDevice(hr, nullptr, featureLevels))
     {
         /* Use software adapter as fallback */
+        ComPtr<IDXGIAdapter> adapter;
         factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
         if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
             DXThrowIfFailed(hr, "failed to create D3D12 device");

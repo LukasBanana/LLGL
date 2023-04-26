@@ -145,8 +145,8 @@ class D3D12CommandContext
             UINT                    maxCommandCount,
             ID3D12Resource*         argumentBuffer,
             UINT64                  argumentBufferOffset,
-            ID3D12Resource*         countBuffer,
-            UINT64                  countBufferOffset
+            ID3D12Resource*         countBuffer             = nullptr,
+            UINT64                  countBufferOffset       = 0
         );
 
         void Dispatch(
@@ -160,8 +160,8 @@ class D3D12CommandContext
             UINT                    maxCommandCount,
             ID3D12Resource*         argumentBuffer,
             UINT64                  argumentBufferOffset,
-            ID3D12Resource*         countBuffer,
-            UINT64                  countBufferOffset
+            ID3D12Resource*         countBuffer             = nullptr,
+            UINT64                  countBufferOffset       = 0
         );
 
     public:

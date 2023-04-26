@@ -109,7 +109,7 @@ std::uint32_t D3D12ResourceHeap::CreateResourceViewHandles(
 
     /* Write each resource view into respective descriptor heap */
     std::uint32_t numWritten = 0;
-    std::uint32_t uavChangeSetRange[2] = {};
+    std::uint32_t uavChangeSetRange[2] = { UINT32_MAX, 0 };
 
     for (const auto& desc : resourceViews)
     {
