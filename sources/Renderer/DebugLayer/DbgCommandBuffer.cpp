@@ -2157,7 +2157,7 @@ void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayout
         table.resources.clear();
         table.resources.resize(layoutDesc.bindings.size(), nullptr);
         table.uniforms.clear();
-        table.uniforms.resize(layoutDesc.uniforms.size(), false);
+        table.uniforms.resize(layoutDesc.uniforms.size(), 0);
     };
 
     auto ResetBindingTableZero = [](Bindings::BindingTable& table)

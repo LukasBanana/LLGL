@@ -342,7 +342,7 @@ class DbgCommandBuffer final : public CommandBuffer
             {
                 ResourceHeap*           resourceHeap;
                 std::vector<Resource*>  resources;
-                std::vector<bool>       uniforms;
+                std::vector<char>       uniforms;
             }
             bindingTable;
         }
