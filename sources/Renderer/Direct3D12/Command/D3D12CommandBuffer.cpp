@@ -39,7 +39,6 @@
 
 #include <algorithm>
 #include <codecvt>
-#include <limits.h>
 
 
 namespace LLGL
@@ -48,7 +47,6 @@ namespace LLGL
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
     cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                     },
-    stagingBufferPool_   { renderSystem.GetDevice().GetNative(), USHRT_MAX           },
     immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) }
 {
     CreateCommandContext(renderSystem, desc);
@@ -65,7 +63,6 @@ void D3D12CommandBuffer::Begin()
 {
     /* Reset command list using the next command allocator */
     commandContext_.Reset();
-    stagingBufferPool_.Reset();
 }
 
 void D3D12CommandBuffer::End()
@@ -100,7 +97,7 @@ void D3D12CommandBuffer::UpdateBuffer(
     std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    stagingBufferPool_.WriteStaged(commandContext_, dstBufferD3D.GetResource(), dstOffset, data, dataSize);
+    commandContext_.UpdateSubresource(dstBufferD3D.GetResource(), dstOffset, data, dataSize);
 }
 
 void D3D12CommandBuffer::CopyBuffer(

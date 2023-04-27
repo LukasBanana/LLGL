@@ -14,6 +14,7 @@
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
+#include <limits.h>
 
 
 namespace LLGL
@@ -66,6 +67,7 @@ void D3D12CommandContext::Create(
         for_range(j, D3D12CommandContext::g_maxNumDescriptorHeaps)
             stagingDescriptorPools_[i][j].InitializeDevice(device.GetNative(), g_descriptorHeapTypes[j]);
         descriptorCaches_[i].Create(device.GetNative());
+        stagingBufferPools_[i].InitializeDevice(device.GetNative(), USHRT_MAX);
     }
 
     /* Create graphics command list and close it (they are created in recording mode) */
@@ -205,6 +207,15 @@ void D3D12CommandContext::ResolveRenderTarget(
     /* Transition both resources */
     TransitionResource(dstResource, dstResource.usageState);
     TransitionResource(srcResource, srcResource.usageState, true);
+}
+
+void D3D12CommandContext::UpdateSubresource(
+    D3D12Resource&  dstResource,
+    UINT64          dstOffset,
+    const void*     data,
+    UINT64          dataSize)
+{
+    stagingBufferPools_[currentAllocatorIndex_].WriteStaged(*this, dstResource, dstOffset, data, dataSize);
 }
 
 void D3D12CommandContext::SetGraphicsRootSignature(ID3D12RootSignature* rootSignature)
@@ -487,8 +498,9 @@ D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
 
 void D3D12CommandContext::NextCommandAllocator()
 {
-    /* Clear descriptor cache */
+    /* Clear descriptor cache and reset staging buffer pool */
     descriptorCaches_[currentAllocatorIndex_].Clear();
+    stagingBufferPools_[currentAllocatorIndex_].Reset();
 
     /* Get next command allocator */
     const UINT64 currentFenceValue = allocatorFenceValues_[currentAllocatorIndex_];

@@ -14,6 +14,7 @@
 #include "../RenderState/D3D12PipelineLayout.h"
 #include "../RenderState/D3D12StagingDescriptorHeapPool.h"
 #include "../RenderState/D3D12DescriptorCache.h"
+#include "../Buffer/D3D12StagingBufferPool.h"
 #include <d3d12.h>
 #include <cstddef>
 #include <cstdint>
@@ -92,6 +93,13 @@ class D3D12CommandContext
             D3D12Resource&  srcResource,
             UINT            srcSubresource,
             DXGI_FORMAT     format
+        );
+
+        void UpdateSubresource(
+            D3D12Resource&  dstResource,
+            UINT64          dstOffset,
+            const void*     data,
+            UINT64          dataSize
         );
 
         void SetGraphicsRootSignature(ID3D12RootSignature* rootSignature);
@@ -243,6 +251,8 @@ class D3D12CommandContext
         D3D12DescriptorHeapSetLayout        stagingDescriptorSetLayout_;
         D3D12RootParameterIndices           stagingDescriptorIndices_;
         D3D12DescriptorCache                descriptorCaches_[g_maxNumAllocators];
+
+        D3D12StagingBufferPool              stagingBufferPools_[g_maxNumAllocators];
 
         StateCache                          stateCache_;
 

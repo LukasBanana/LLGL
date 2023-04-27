@@ -264,8 +264,6 @@ class D3D12CommandBuffer final : public CommandBuffer
         ID3D12GraphicsCommandList*      commandList_            = nullptr;
         const D3D12SignatureFactory*    cmdSignatureFactory_    = nullptr;
 
-        D3D12StagingBufferPool          stagingBufferPool_;
-
         bool                            immediateSubmit_        = false;
 
         D3D12_CPU_DESCRIPTOR_HANDLE     rtvDescHandle_          = {};
