@@ -281,7 +281,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
             static_cast<UINT>(srcOffset.z) + srcExtent.depth
         };
 
-        for (std::uint32_t i = 0; i < subresource.numArrayLayers; ++i)
+        for_range(i, subresource.numArrayLayers)
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
             context_->CopySubresourceRegion(
@@ -361,11 +361,8 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
     context_->CSGetShaderResources(0, 1, prevSRVs);
 
     /* Bind destination texture and source buffer resourves */
-    ID3D11UnorderedAccessView* intermediateUAVs[1] = { intermediateUAV.Get() };
-    ID3D11ShaderResourceView* intermediateSRVs[1] = { intermediateSRV.Get() };
-
-    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAVs, nullptr);
-    context_->CSSetShaderResources(0, 1, intermediateSRVs);
+    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAV.GetAddressOf(), nullptr);
+    context_->CSSetShaderResources(0, 1, intermediateSRV.GetAddressOf());
 
     /* Dispatch compute kernels with builtin shader */
     switch (textureArrayType)
@@ -628,11 +625,8 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     context_->CSGetShaderResources(0, 1, prevSRVs);
 
     /* Bind destination texture and source buffer resourves */
-    ID3D11UnorderedAccessView* intermediateUAVs[1] = { intermediateUAV.Get() };
-    ID3D11ShaderResourceView* intermediateSRVs[1] = { intermediateSRV.Get() };
-
-    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAVs, nullptr);
-    context_->CSSetShaderResources(0, 1, intermediateSRVs);
+    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAV.GetAddressOf(), nullptr);
+    context_->CSSetShaderResources(0, 1, intermediateSRV.GetAddressOf());
 
     /* Dispatch compute kernels with builtin shader */
     switch (textureArrayType)
@@ -1509,32 +1503,35 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
     auto hr = device->CreateBuffer(&descD3D, nullptr, bufferOutput);
     DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for byte addressable copy");
 
-    /* Create shader-resource-view (SRV) */
-    if (srvOutput != nullptr)
+    if (ID3D11Resource* resource = *bufferOutput)
     {
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+        /* Create shader-resource-view (SRV) */
+        if (srvOutput != nullptr)
         {
-            srvDesc.Format                  = DXGI_FORMAT_R32_TYPELESS;
-            srvDesc.ViewDimension           = D3D11_SRV_DIMENSION_BUFFEREX;
-            srvDesc.BufferEx.FirstElement   = 0;
-            srvDesc.BufferEx.NumElements    = size / 4;
-            srvDesc.BufferEx.Flags          = D3D11_BUFFEREX_SRV_FLAG_RAW;
+            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+            {
+                srvDesc.Format                  = DXGI_FORMAT_R32_TYPELESS;
+                srvDesc.ViewDimension           = D3D11_SRV_DIMENSION_BUFFEREX;
+                srvDesc.BufferEx.FirstElement   = 0;
+                srvDesc.BufferEx.NumElements    = size / 4;
+                srvDesc.BufferEx.Flags          = D3D11_BUFFEREX_SRV_FLAG_RAW;
+            }
+            device->CreateShaderResourceView(resource, &srvDesc, srvOutput);
         }
-        device->CreateShaderResourceView(*bufferOutput, &srvDesc, srvOutput);
-    }
 
-    /* Create optional unordered-access-view (UAV) */
-    if (uavOutput != nullptr)
-    {
-        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+        /* Create optional unordered-access-view (UAV) */
+        if (uavOutput != nullptr)
         {
-            uavDesc.Format              = DXGI_FORMAT_R32_TYPELESS;
-            uavDesc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
-            uavDesc.Buffer.FirstElement = 0;
-            uavDesc.Buffer.NumElements  = size / 4;
-            uavDesc.Buffer.Flags        = D3D11_BUFFER_UAV_FLAG_RAW;
+            D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+            {
+                uavDesc.Format              = DXGI_FORMAT_R32_TYPELESS;
+                uavDesc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
+                uavDesc.Buffer.FirstElement = 0;
+                uavDesc.Buffer.NumElements  = size / 4;
+                uavDesc.Buffer.Flags        = D3D11_BUFFER_UAV_FLAG_RAW;
+            }
+            device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
         }
-        device->CreateUnorderedAccessView(*bufferOutput, &uavDesc, uavOutput);
     }
 }
 

@@ -43,7 +43,7 @@ LLGL_EXPORT void DoConcurrentRange(
             offset += workSize;
         }
 
-        /* Execute conversion of remaining work on main thread */
+        /* Execute task of remaining work on main thread */
         if (workSizeRemain > 0)
             task(offset, offset + workSizeRemain);
 

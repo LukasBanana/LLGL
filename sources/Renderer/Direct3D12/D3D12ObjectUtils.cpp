@@ -29,7 +29,7 @@ void D3D12SetObjectName(ID3D12Object* obj, const char* name)
         if (name != nullptr)
             D3D12SetObjectNameUTF8toUTF16(obj, name);
         else
-            obj->SetName(nullptr);
+            obj->SetName(L"");
     }
 }
 
@@ -44,20 +44,24 @@ void D3D12SetObjectNameSubscript(ID3D12Object* obj, const char* name, const char
             D3D12SetObjectNameUTF8toUTF16(obj, nameWithSubscript.c_str());
         }
         else
-            obj->SetName(nullptr);
+            obj->SetName(L"");
     }
 }
 
 void D3D12SetObjectNameIndexed(ID3D12Object* obj, const char* name, std::uint32_t index)
 {
-    if (name != nullptr)
+    if (obj != nullptr)
     {
-        /* Append subscript to label */
-        std::string subscript = std::to_string(index);
-        D3D12SetObjectNameSubscript(obj, name, subscript.c_str());
+        if (name != nullptr)
+        {
+            /* Append subscript to label */
+            std::string nameWithSubscript = name;
+            nameWithSubscript += std::to_string(index);
+            D3D12SetObjectNameUTF8toUTF16(obj, nameWithSubscript.c_str());
+        }
+        else
+            obj->SetName(L"");
     }
-    else
-        obj->SetName(nullptr);
 }
 
 
