@@ -160,7 +160,6 @@ option(LLGL_ENABLE_JIT_COMPILER "Enable Just-in-Time (JIT) compilation for emula
 
 option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
 
-option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_DSA_EXT "Enable OpenGL direct state access (DSA) extension if available" ON)
 option(LLGL_GL_ENABLE_OPENGL2X "Enable support for OpenGL 2.x compatibility profile" OFF)
@@ -214,10 +213,6 @@ endif()
 
 if(LLGL_ENABLE_JIT_COMPILER)
     ADD_DEFINE(LLGL_ENABLE_JIT_COMPILER)
-endif()
-
-if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
-    ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 endif()
 
 if(LLGL_GL_ENABLE_VENDOR_EXT)

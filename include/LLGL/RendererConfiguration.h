@@ -106,21 +106,28 @@ struct RendererConfigurationVulkan
 struct RendererConfigurationOpenGL
 {
     //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CoreProfile.
-    OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CoreProfile;
+    OpenGLContextProfile    contextProfile              = OpenGLContextProfile::CoreProfile;
 
     /**
     \brief Specifies the requested OpenGL context major version. By default 0.
     \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be choosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
-    int                     majorVersion    = 0;
+    int                     majorVersion                = 0;
 
     /**
     \brief Specifies the requested OpenGL context minor version. By default 0.
     \remarks If both \c majorVersion and \c minorVersion are 0, the highest OpenGL version that is available on the host system will be choosen.
     \remarks This member is ignored if \c contextProfile is OpenGLContextProfile::CompatibilityProfile.
     */
-    int                     minorVersion    = 0;
+    int                     minorVersion                = 0;
+
+    /**
+    \brief Specifies whether to suppress failures when loading OpenGL extensions. By default false.
+    \remarks If this is false, failed GL extensions will abort the current application and
+    the repesctive extension and procedure name is printed to standard error output.
+    */
+    bool                    suppressFailedExtensions    = false;
 };
 
 /**

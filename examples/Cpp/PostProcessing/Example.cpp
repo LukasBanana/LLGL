@@ -541,10 +541,11 @@ private:
                 #ifndef ENABLE_CUSTOM_RENDER_PASS
 
                 // Clear individual buffers in render target (color, glossiness, depth)
+                constexpr float glossinessColor[4] = { 0, 0, 0, 0 };
                 LLGL::AttachmentClear clearCmds[3] =
                 {
                     LLGL::AttachmentClear{ backgroundColor, 0 },
-                    LLGL::AttachmentClear{ LLGL::ColorRGBAf{ 0, 0, 0, 0 }, 1 },
+                    LLGL::AttachmentClear{ glossinessColor, 1 },
                     LLGL::AttachmentClear{ 1.0f }
                 };
                 commands->ClearAttachments(3, clearCmds);

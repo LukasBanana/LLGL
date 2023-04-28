@@ -17,7 +17,7 @@ namespace LLGL
 Loads all suported OpenGL extensions (suported by both the OpenGL server and LLGL) and returns true on success.
 Otherwise, at least one extension was erroneously reported as available while their respective procedures could not be loaded.
 */
-bool LoadSupportedOpenGLExtensions(bool isCoreProfile);
+bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure = false);
 
 // Returns true if all available extensions have been loaded.
 bool AreOpenGLExtensionsLoaded();

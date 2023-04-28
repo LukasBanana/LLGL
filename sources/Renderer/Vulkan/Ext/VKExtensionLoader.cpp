@@ -1,6 +1,6 @@
 /*
  * VKExtensionLoader.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -8,7 +8,7 @@
 #include "VKExtensionLoader.h"
 #include "VKExtensions.h"
 #include "VKExtensionRegistry.h"
-#include <LLGL/Log.h>
+#include "../../../Core/Exception.h"
 #include <functional>
 #include <cstring>
 
@@ -24,15 +24,7 @@ bool LoadVKProc(VkInstance instance, T& procAddr, const char* procName)
 {
     /* Load Vulkan procedure address */
     procAddr = reinterpret_cast<T>(vkGetInstanceProcAddr(instance, procName));
-
-    /* Check for errors */
-    if (!procAddr)
-    {
-        Log::PostReport(Log::ReportType::Error, "failed to load Vulkan instance procedure: " + std::string(procName));
-        return false;
-    }
-
-    return true;
+    return (procAddr != nullptr);
 }
 
 template <typename T>
@@ -40,26 +32,34 @@ bool LoadVKProc(VkDevice device, T& procAddr, const char* procName)
 {
     /* Load Vulkan procedure address */
     procAddr = reinterpret_cast<T>(vkGetDeviceProcAddr(device, procName));
-
-    /* Check for errors */
-    if (!procAddr)
-    {
-        Log::PostReport(Log::ReportType::Error, "failed to load Vulkan device procedure: " + std::string(procName));
-        return false;
-    }
-
-    return true;
+    return (procAddr != nullptr);
 }
 
 /* --- Hardware buffer extensions --- */
 
-#define LOAD_VKPROC(NAME)                   \
-    if (!LoadVKProc(handle, NAME, #NAME))   \
-        return false
+using LoadVKExtensionInstanceProc   = std::function<bool(VkInstance instance, const char* extName, bool abortOnFailure)>;
+using LoadVKExtensionDeviceProc     = std::function<bool(VkDevice   device  , const char* extName, bool abortOnFailure)>;
+
+#define DECL_LOADVKEXT_PROC_BASE(EXTNAME, HNDL) \
+    Load_VK_ ## EXTNAME(HNDL handle, const char* extName, bool abortOnFailure)
+
+#define DECL_LOADVKEXT_PROC_INSTANCE(EXTNAME) \
+    DECL_LOADVKEXT_PROC_BASE(EXTNAME, VkInstance)
+
+#define DECL_LOADVKEXT_PROC(EXTNAME) \
+    DECL_LOADVKEXT_PROC_BASE(EXTNAME, VkDevice)
+
+#define LOAD_VKPROC(NAME)                                                               \
+    if (!LoadVKProc(handle, NAME, #NAME))                                               \
+    {                                                                                   \
+        if (abortOnFailure)                                                             \
+            LLGL_TRAP("failed to load Vulkan procedure: %s ( %s )", #NAME, extName);    \
+        return false;                                                                   \
+    }
 
 #ifdef LLGL_OS_WIN32
 
-static bool Load_VK_KHR_win32_surface(VkInstance handle)
+static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_win32_surface)
 {
     LOAD_VKPROC( vkCreateWin32SurfaceKHR );
     return true;
@@ -67,7 +67,7 @@ static bool Load_VK_KHR_win32_surface(VkInstance handle)
 
 #endif // /LLGL_OS_WIN32
 
-static bool Load_VK_EXT_debug_marker(VkDevice handle)
+static bool DECL_LOADVKEXT_PROC(EXT_debug_marker)
 {
     LOAD_VKPROC( vkDebugMarkerSetObjectTagEXT  );
     LOAD_VKPROC( vkDebugMarkerSetObjectNameEXT );
@@ -77,14 +77,14 @@ static bool Load_VK_EXT_debug_marker(VkDevice handle)
     return true;
 }
 
-static bool Load_VK_EXT_conditional_rendering(VkDevice handle)
+static bool DECL_LOADVKEXT_PROC(EXT_conditional_rendering)
 {
     LOAD_VKPROC( vkCmdBeginConditionalRenderingEXT );
     LOAD_VKPROC( vkCmdEndConditionalRenderingEXT   );
     return true;
 }
 
-static bool Load_VK_EXT_transform_feedback(VkDevice handle)
+static bool DECL_LOADVKEXT_PROC(EXT_transform_feedback)
 {
     LOAD_VKPROC( vkCmdBindTransformFeedbackBuffersEXT );
     LOAD_VKPROC( vkCmdBeginTransformFeedbackEXT       );
@@ -95,7 +95,7 @@ static bool Load_VK_EXT_transform_feedback(VkDevice handle)
     return true;
 }
 
-static bool Load_VK_KHR_get_physical_device_properties2(VkDevice handle)
+static bool DECL_LOADVKEXT_PROC(KHR_get_physical_device_properties2)
 {
     LOAD_VKPROC( vkGetPhysicalDeviceFeatures2KHR                    );
     LOAD_VKPROC( vkGetPhysicalDeviceProperties2KHR                  );
@@ -107,6 +107,9 @@ static bool Load_VK_KHR_get_physical_device_properties2(VkDevice handle)
     return true;
 }
 
+#undef DECL_LOADVKEXT_PROC_BASE
+#undef DECL_LOADVKEXT_PROC_INSTANCE
+#undef DECL_LOADVKEXT_PROC
 #undef LOAD_VKPROC
 
 
@@ -114,18 +117,16 @@ static bool Load_VK_KHR_get_physical_device_properties2(VkDevice handle)
 
 bool VKLoadInstanceExtensions(VkInstance instance)
 {
-    auto LoadExtension = [&](const std::string& extName, const std::function<bool(VkInstance)>& extLoadingProc) -> void
+    constexpr bool abortOnFailure = true;
+
+    auto LoadExtension = [instance, abortOnFailure](const char* extName, const LoadVKExtensionInstanceProc& extLoadingProc) -> void
     {
         /* Try to load Vulkan extension */
-        if (!extLoadingProc(instance))
-        {
-            /* Loading extension failed */
-            Log::PostReport(Log::ReportType::Error, "failed to load Vulkan extension: " + extName);
-        }
+        extLoadingProc(instance, extName, abortOnFailure);
     };
 
     #define LOAD_VKEXT(NAME) \
-        LoadExtension("VK_" + std::string(#NAME), Load_VK_##NAME)
+        LoadExtension("VK_" #NAME, Load_VK_##NAME)
 
     /* Load platform specific extensions */
     #ifdef LLGL_OS_WIN32
@@ -139,6 +140,8 @@ bool VKLoadInstanceExtensions(VkInstance instance)
 
 bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions)
 {
+    constexpr bool abortOnFailure = true;
+
     auto IsSupported = [&supportedExtensions](const char* extName) -> bool
     {
         for (auto extension : supportedExtensions)
@@ -149,16 +152,14 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
         return false;
     };
 
-    auto LoadExtension = [&](const VKExt extensionID, const char* extName, const std::function<bool(VkDevice)>& extLoadingProc) -> void
+    auto LoadExtension = [device, &IsSupported, abortOnFailure](const VKExt extensionID, const char* extName, const LoadVKExtensionDeviceProc& extLoadingProc) -> void
     {
         /* Check if extensions is included in the list of supported extension names */
         if (IsSupported(extName))
         {
             /* Try to load Vulkan extension */
-            if (extLoadingProc(device))
+            if (extLoadingProc(device, extName, abortOnFailure))
                 RegisterExtension(extensionID);
-            else
-                Log::PostReport(Log::ReportType::Error, "failed to load Vulkan extension: " + std::string(extName));
         }
     };
 

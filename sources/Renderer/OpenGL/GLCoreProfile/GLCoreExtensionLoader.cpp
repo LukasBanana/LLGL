@@ -7,9 +7,9 @@
 
 #include "../Ext/GLExtensionLoader.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../../../Core/Exception.h"
 #include "GLCoreExtensions.h"
 #include "GLCoreExtensionsProxy.h"
-#include <LLGL/Log.h>
 #include <LLGL/Utils/ForRange.h>
 #include <functional>
 #include <string>
@@ -37,18 +37,10 @@ bool LoadGLProc(T& procAddr, const char* procName)
     #elif defined(__linux__)
     procAddr = reinterpret_cast<T>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(procName)));
     #else
-    Log::PostReport(Log::ReportType::Error, "OS not supported for loading OpenGL extensions");
-    return false;
+    LLGL_TRAP("platform not supported for loading OpenGL extensions");
     #endif
 
-    /* Check for errors */
-    if (!procAddr)
-    {
-        Log::PostReport(Log::ReportType::Error, "failed to load OpenGL procedure: " + std::string(procName));
-        return false;
-    }
-
-    return true;
+    return (procAddr != nullptr);
 }
 
 static void ExtractExtensionsFromString(GLExtensionMap& extensions, const std::string& extString)
@@ -68,24 +60,25 @@ static void ExtractExtensionsFromString(GLExtensionMap& extensions, const std::s
 
 #ifndef __APPLE__
 
+using LoadGLExtensionProc = std::function<bool(const char* extName, bool abortOnFailure, bool usePlaceholder)>;
+
+#define DECL_LOADGLEXT_PROC(EXTNAME) \
+    Load_GL_ ## EXTNAME(const char* extName, bool abortOnFailure, bool usePlaceholder)
+
 #define LOAD_GLPROC_SIMPLE(NAME) \
     LoadGLProc(NAME, #NAME)
 
-#ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
-
-#define LOAD_GLPROC(NAME)               \
-    if (usePlaceholder)                 \
-        NAME = Proxy_##NAME;            \
-    else if (!LoadGLProc(NAME, #NAME))  \
-        return false
-
-#else
-
-#define LOAD_GLPROC(NAME)           \
-    if (!LoadGLProc(NAME, #NAME))   \
-        return false
-
-#endif // /LLGL_GL_ENABLE_EXT_PLACEHOLDERS
+#define LOAD_GLPROC(NAME)                                                               \
+    if (usePlaceholder)                                                                 \
+    {                                                                                   \
+        NAME = Proxy_##NAME;                                                            \
+    }                                                                                   \
+    else if (!LoadGLProc(NAME, #NAME))                                                  \
+    {                                                                                   \
+        if (abortOnFailure)                                                             \
+            LLGL_TRAP("failed to load OpenGL procedure: %s ( %s )", #NAME, extName);    \
+        return false;                                                                   \
+    }
 
 /* --- Common GL extensions --- */
 
@@ -122,7 +115,7 @@ bool LoadCreateContextProcs()
 
 #if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
 
-static bool Load_GL_ARB_compatibility(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_compatibility)
 {
     LOAD_GLPROC( glPrimitiveRestartIndex );
     return true;
@@ -132,7 +125,7 @@ static bool Load_GL_ARB_compatibility(bool usePlaceholder)
 
 /* --- Hardware buffer extensions --- */
 
-static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_vertex_buffer_object)
 {
     LOAD_GLPROC( glGenBuffers           );
     LOAD_GLPROC( glDeleteBuffers        );
@@ -148,14 +141,14 @@ static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_map_buffer_range(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_map_buffer_range)
 {
     LOAD_GLPROC( glMapBufferRange );
     LOAD_GLPROC( glFlushMappedBufferRange );
     return true;
 }
 
-static bool Load_GL_ARB_vertex_array_object(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_vertex_array_object)
 {
     LOAD_GLPROC( glGenVertexArrays    );
     LOAD_GLPROC( glDeleteVertexArrays );
@@ -164,7 +157,7 @@ static bool Load_GL_ARB_vertex_array_object(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_vertex_shader(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_vertex_shader)
 {
     LOAD_GLPROC( glEnableVertexAttribArray  );
     LOAD_GLPROC( glDisableVertexAttribArray );
@@ -173,7 +166,7 @@ static bool Load_GL_ARB_vertex_shader(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_framebuffer_object(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_framebuffer_object)
 {
     LOAD_GLPROC( glGenRenderbuffers                    );
     LOAD_GLPROC( glDeleteRenderbuffers                 );
@@ -202,7 +195,7 @@ static bool Load_GL_ARB_framebuffer_object(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_uniform_buffer_object(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_uniform_buffer_object)
 {
     LOAD_GLPROC( glGetUniformBlockIndex      );
     LOAD_GLPROC( glGetActiveUniformBlockiv   );
@@ -212,7 +205,7 @@ static bool Load_GL_ARB_uniform_buffer_object(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_shader_storage_buffer_object)
 {
     LOAD_GLPROC( glShaderStorageBlockBinding );
     return true;
@@ -220,14 +213,14 @@ static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceholder)
 
 /* --- Drawing extensions --- */
 
-static bool Load_GL_ARB_draw_instanced(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_draw_instanced)
 {
     LOAD_GLPROC( glDrawArraysInstanced   );
     LOAD_GLPROC( glDrawElementsInstanced );
     return true;
 }
 
-static bool Load_GL_ARB_base_instance(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_base_instance)
 {
     LOAD_GLPROC( glDrawArraysInstancedBaseInstance             );
     LOAD_GLPROC( glDrawElementsInstancedBaseInstance           );
@@ -235,7 +228,7 @@ static bool Load_GL_ARB_base_instance(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_draw_elements_base_vertex(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_draw_elements_base_vertex)
 {
     LOAD_GLPROC( glDrawElementsBaseVertex          );
     LOAD_GLPROC( glDrawElementsInstancedBaseVertex );
@@ -244,7 +237,7 @@ static bool Load_GL_ARB_draw_elements_base_vertex(bool usePlaceholder)
 
 /* --- Shader extensions --- */
 
-static bool Load_GL_ARB_shader_objects(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_shader_objects)
 {
     LOAD_GLPROC( glCreateShader       );
     LOAD_GLPROC( glShaderSource       );
@@ -290,7 +283,7 @@ static bool Load_GL_ARB_shader_objects(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_shader_objects_21(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_shader_objects_21)
 {
     LOAD_GLPROC( glUniformMatrix2x3fv );
     LOAD_GLPROC( glUniformMatrix2x4fv );
@@ -301,7 +294,7 @@ static bool Load_GL_ARB_shader_objects_21(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_shader_objects_30(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_shader_objects_30)
 {
     LOAD_GLPROC( glUniform1uiv );
     LOAD_GLPROC( glUniform2uiv );
@@ -310,7 +303,7 @@ static bool Load_GL_ARB_shader_objects_30(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_shader_objects_40(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_shader_objects_40)
 {
     LOAD_GLPROC( glUniform1dv         );
     LOAD_GLPROC( glUniform2dv         );
@@ -328,27 +321,27 @@ static bool Load_GL_ARB_shader_objects_40(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_instanced_arrays(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_instanced_arrays)
 {
     LOAD_GLPROC( glVertexAttribDivisor );
     return true;
 }
 
-static bool Load_GL_ARB_tessellation_shader(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_tessellation_shader)
 {
     LOAD_GLPROC( glPatchParameteri  );
     LOAD_GLPROC( glPatchParameterfv );
     return true;
 }
 
-static bool Load_GL_ARB_compute_shader(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_compute_shader)
 {
     LOAD_GLPROC( glDispatchCompute         );
     LOAD_GLPROC( glDispatchComputeIndirect );
     return true;
 }
 
-static bool Load_GL_ARB_get_program_binary(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_get_program_binary)
 {
     LOAD_GLPROC( glGetProgramBinary  );
     LOAD_GLPROC( glProgramBinary     );
@@ -356,7 +349,7 @@ static bool Load_GL_ARB_get_program_binary(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_program_interface_query(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_program_interface_query)
 {
     LOAD_GLPROC( glGetProgramInterfaceiv           );
     LOAD_GLPROC( glGetProgramResourceIndex         );
@@ -367,7 +360,7 @@ static bool Load_GL_ARB_program_interface_query(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_separate_shader_objects(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_separate_shader_objects)
 {
     LOAD_GLPROC( glUseProgramStages          );
     LOAD_GLPROC( glActiveShaderProgram       );
@@ -433,7 +426,7 @@ static bool Load_GL_ARB_separate_shader_objects(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_EXT_gpu_shader4(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_gpu_shader4)
 {
     LOAD_GLPROC( glVertexAttribIPointer );
     LOAD_GLPROC( glBindFragDataLocation );
@@ -443,33 +436,33 @@ static bool Load_GL_EXT_gpu_shader4(bool usePlaceholder)
 
 /* --- Texture extensions --- */
 
-static bool Load_GL_ARB_multitexture(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_multitexture)
 {
     LOAD_GLPROC( glActiveTexture );
     return true;
 }
 
-static bool Load_GL_EXT_texture3D(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_texture3D)
 {
     LOAD_GLPROC( glTexImage3D    );
     LOAD_GLPROC( glTexSubImage3D );
     return true;
 }
 
-static bool Load_GL_EXT_copy_texture(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_copy_texture)
 {
     LOAD_GLPROC( glCopyTexSubImage3D );
     return true;
 }
 
-static bool Load_GL_ARB_clear_texture(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_clear_texture)
 {
     LOAD_GLPROC( glClearTexImage    );
     LOAD_GLPROC( glClearTexSubImage );
     return true;
 }
 
-static bool Load_GL_ARB_texture_compression(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_texture_compression)
 {
     LOAD_GLPROC( glCompressedTexImage1D    );
     LOAD_GLPROC( glCompressedTexImage2D    );
@@ -481,7 +474,7 @@ static bool Load_GL_ARB_texture_compression(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_texture_multisample(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_texture_multisample)
 {
     LOAD_GLPROC( glTexImage2DMultisample );
     LOAD_GLPROC( glTexImage3DMultisample );
@@ -490,13 +483,13 @@ static bool Load_GL_ARB_texture_multisample(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_texture_view(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_texture_view)
 {
     LOAD_GLPROC( glTextureView );
     return true;
 }
 
-static bool Load_GL_ARB_sampler_objects(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_sampler_objects)
 {
     LOAD_GLPROC( glGenSamplers        );
     LOAD_GLPROC( glDeleteSamplers     );
@@ -510,7 +503,7 @@ static bool Load_GL_ARB_sampler_objects(bool usePlaceholder)
 
 /* --- Other extensions --- */
 
-static bool Load_GL_ARB_occlusion_query(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_occlusion_query)
 {
     LOAD_GLPROC( glGenQueries        );
     LOAD_GLPROC( glDeleteQueries     );
@@ -521,14 +514,14 @@ static bool Load_GL_ARB_occlusion_query(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_NV_conditional_render(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(NV_conditional_render)
 {
     LOAD_GLPROC( glBeginConditionalRender );
     LOAD_GLPROC( glEndConditionalRender   );
     return true;
 }
 
-static bool Load_GL_ARB_timer_query(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_timer_query)
 {
     LOAD_GLPROC( glQueryCounter        );
     LOAD_GLPROC( glGetQueryObjecti64v  );
@@ -536,7 +529,7 @@ static bool Load_GL_ARB_timer_query(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_viewport_array(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_viewport_array)
 {
     LOAD_GLPROC( glViewportArrayv   );
     LOAD_GLPROC( glScissorArrayv    );
@@ -544,31 +537,31 @@ static bool Load_GL_ARB_viewport_array(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_EXT_blend_minmax(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_blend_minmax)
 {
     LOAD_GLPROC( glBlendEquation );
     return true;
 }
 
-static bool Load_GL_EXT_blend_color(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_blend_color)
 {
     LOAD_GLPROC( glBlendColor );
     return true;
 }
 
-static bool Load_GL_EXT_blend_func_separate(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_blend_func_separate)
 {
     LOAD_GLPROC( glBlendFuncSeparate );
     return true;
 }
 
-static bool Load_GL_EXT_blend_equation_separate(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_blend_equation_separate)
 {
     LOAD_GLPROC( glBlendEquationSeparate );
     return true;
 }
 
-static bool Load_GL_ARB_draw_buffers_blend(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_draw_buffers_blend)
 {
     LOAD_GLPROC( glBlendEquationi         );
     LOAD_GLPROC( glBlendEquationSeparatei );
@@ -577,7 +570,7 @@ static bool Load_GL_ARB_draw_buffers_blend(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_multi_bind(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_multi_bind)
 {
     LOAD_GLPROC( glBindBuffersBase   );
     LOAD_GLPROC( glBindBuffersRange  );
@@ -588,7 +581,7 @@ static bool Load_GL_ARB_multi_bind(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_EXT_stencil_two_side(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_stencil_two_side)
 {
     //correct extension ??? maybe "GL_ATI_separate_stencil"
     LOAD_GLPROC( glStencilFuncSeparate );
@@ -597,7 +590,7 @@ static bool Load_GL_EXT_stencil_two_side(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_KHR_debug(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(KHR_debug)
 {
     LOAD_GLPROC( glDebugMessageControl  );
     LOAD_GLPROC( glDebugMessageInsert   );
@@ -613,19 +606,19 @@ static bool Load_GL_KHR_debug(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_clip_control(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_clip_control)
 {
     LOAD_GLPROC( glClipControl );
     return true;
 }
 
-static bool Load_GL_ARB_draw_buffers(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_draw_buffers)
 {
     LOAD_GLPROC( glDrawBuffers );
     return true;
 }
 
-static bool Load_GL_EXT_draw_buffers2(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_draw_buffers2)
 {
     LOAD_GLPROC( glColorMaski    );
     LOAD_GLPROC( glGetBooleani_v );
@@ -636,7 +629,7 @@ static bool Load_GL_EXT_draw_buffers2(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_EXT_transform_feedback(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(EXT_transform_feedback)
 {
     LOAD_GLPROC( glBindBufferRange             );
     LOAD_GLPROC( glBeginTransformFeedback      );
@@ -646,7 +639,7 @@ static bool Load_GL_EXT_transform_feedback(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_NV_transform_feedback(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(NV_transform_feedback)
 {
     LOAD_GLPROC( glBindBufferRangeNV           );
     LOAD_GLPROC( glBeginTransformFeedbackNV    );
@@ -657,7 +650,7 @@ static bool Load_GL_NV_transform_feedback(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_sync(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_sync)
 {
     LOAD_GLPROC( glFenceSync      );
     LOAD_GLPROC( glIsSync         );
@@ -669,19 +662,19 @@ static bool Load_GL_ARB_sync(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_internalformat_query(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_internalformat_query)
 {
     LOAD_GLPROC( glGetInternalformativ );
     return true;
 }
 
-static bool Load_GL_ARB_internalformat_query2(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_internalformat_query2)
 {
     LOAD_GLPROC( glGetInternalformati64v );
     return true;
 }
 
-static bool Load_GL_ARB_ES2_compatibility(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_ES2_compatibility)
 {
     LOAD_GLPROC( glReleaseShaderCompiler    );
     LOAD_GLPROC( glShaderBinary             );
@@ -691,13 +684,13 @@ static bool Load_GL_ARB_ES2_compatibility(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_gl_spirv(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_gl_spirv)
 {
     LOAD_GLPROC( glSpecializeShader );
     return true;
 }
 
-static bool Load_GL_ARB_texture_storage(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_texture_storage)
 {
     LOAD_GLPROC( glTexStorage1D );
     LOAD_GLPROC( glTexStorage2D );
@@ -705,80 +698,80 @@ static bool Load_GL_ARB_texture_storage(bool usePlaceholder)
     return true;
 }
 
-static bool Load_GL_ARB_texture_storage_multisample(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_texture_storage_multisample)
 {
     LOAD_GLPROC( glTexStorage2DMultisample );
     LOAD_GLPROC( glTexStorage3DMultisample );
     return true;
 }
 
-static bool Load_GL_ARB_buffer_storage(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_buffer_storage)
 {
     LOAD_GLPROC( glBufferStorage );
     return true;
 }
 
-static bool Load_GL_ARB_copy_buffer(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_copy_buffer)
 {
     LOAD_GLPROC( glCopyBufferSubData );
     return true;
 }
 
-static bool Load_GL_ARB_copy_image(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_copy_image)
 {
     LOAD_GLPROC( glCopyImageSubData );
     return true;
 }
 
-static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_polygon_offset_clamp)
 {
     LOAD_GLPROC( glPolygonOffsetClamp );
     return true;
 }
 
-static bool Load_GL_ARB_shader_image_load_store(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_shader_image_load_store)
 {
     LOAD_GLPROC( glBindImageTexture );
     LOAD_GLPROC( glMemoryBarrier    );
     return true;
 }
 
-static bool Load_GL_ARB_framebuffer_no_attachments(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_framebuffer_no_attachments)
 {
     LOAD_GLPROC( glFramebufferParameteri     );
     LOAD_GLPROC( glGetFramebufferParameteriv );
     return true;
 }
 
-static bool Load_GL_ARB_clear_buffer_object(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_clear_buffer_object)
 {
     LOAD_GLPROC( glClearBufferData    );
     LOAD_GLPROC( glClearBufferSubData );
     return true;
 }
 
-static bool Load_GL_ARB_draw_indirect(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_draw_indirect)
 {
     LOAD_GLPROC( glDrawArraysIndirect   );
     LOAD_GLPROC( glDrawElementsIndirect );
     return true;
 }
 
-static bool Load_GL_ARB_multi_draw_indirect(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_multi_draw_indirect)
 {
     LOAD_GLPROC( glMultiDrawArraysIndirect   );
     LOAD_GLPROC( glMultiDrawElementsIndirect );
     return true;
 }
 
-static bool Load_GL_ARB_get_texture_sub_image(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_get_texture_sub_image)
 {
     LOAD_GLPROC( glGetTextureSubImage           );
     LOAD_GLPROC( glGetCompressedTextureSubImage );
     return true;
 }
 
-static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
+static bool DECL_LOADGLEXT_PROC(ARB_direct_state_access)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
     LOAD_GLPROC( glTransformFeedbackBufferBase              );
@@ -880,6 +873,7 @@ static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
     return true;
 }
 
+#undef DECL_LOADGLEXT_PROC
 #undef LOAD_GLPROC_SIMPLE
 #undef LOAD_GLPROC
 
@@ -891,8 +885,6 @@ static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
 {
     GLExtensionMap extensions;
-
-    const char* extString = nullptr;
 
     /* Filter standard GL extensions */
     if (isCoreProfile)
@@ -910,8 +902,7 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
             for_range(i, numExtensions)
             {
                 /* Get current extension string */
-                extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
-                if (extString)
+                if (auto extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i)))
                     extensions[extString] = false;
             }
         }
@@ -921,18 +912,16 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
     else
     {
         /* Get complete extension string */
-        extString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-        if (extString)
+        if (auto extString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)))
             ExtractExtensionsFromString(extensions, extString);
     }
 
     #if defined(_WIN32) && defined(WGL_ARB_extensions_string)
 
     /* Filter Win32 related extensions */
-    if (wglGetExtensionsStringARB || LoadGLProc(wglGetExtensionsStringARB, "wglGetExtensionsStringARB"))
+    if (wglGetExtensionsStringARB != nullptr || LoadGLProc(wglGetExtensionsStringARB, "wglGetExtensionsStringARB"))
     {
-        extString = wglGetExtensionsStringARB(wglGetCurrentDC());
-        if (extString)
+        if (auto extString = wglGetExtensionsStringARB(::wglGetCurrentDC()))
             ExtractExtensionsFromString(extensions, extString);
     }
 
@@ -983,7 +972,7 @@ static void IncludeImpliedExtensions(GLExtensionMap& extensions)
 // Global member to store if the extension have already been loaded
 static bool g_OpenGLExtensionsLoaded = false;
 
-bool LoadSupportedOpenGLExtensions(bool isCoreProfile)
+bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 {
     /* Only load GL extensions once */
     if (g_OpenGLExtensionsLoaded)
@@ -1062,13 +1051,13 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile)
 
     #else // __APPLE__
 
-    auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt extensionID) -> void
+    auto LoadExtension = [&extensions, abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
     {
         /* Try to load OpenGL extension */
         auto it = extensions.find(extName);
         if (it != extensions.end())
         {
-            if (extLoadingProc(false))
+            if (extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ false))
             {
                 /* Enable extension in registry */
                 RegisterExtension(extensionID);
@@ -1076,17 +1065,15 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile)
             }
             else
             {
-                /* Loading extension failed */
-                Log::PostReport(Log::ReportType::Error, "failed to load OpenGL extension: " + extName);
+                /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
+                extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ true);
             }
         }
-        #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
         else
         {
             /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
-            extLoadingProc(true);
+            extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ true);
         }
-        #endif
     };
 
     auto EnableExtension = [&](const std::string& extName, GLExt extensionID) -> void
@@ -1097,10 +1084,10 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile)
     };
 
     #define LOAD_GLEXT(NAME) \
-        LoadExtension("GL_" + std::string(#NAME), Load_GL_##NAME, GLExt::NAME)
+        LoadExtension("GL_" #NAME, Load_GL_##NAME, GLExt::NAME)
 
     #define ENABLE_GLEXT(NAME) \
-        EnableExtension("GL_" + std::string(#NAME), GLExt::NAME)
+        EnableExtension("GL_" #NAME, GLExt::NAME)
 
     /* Add standard extensions */
     if (isCoreProfile)

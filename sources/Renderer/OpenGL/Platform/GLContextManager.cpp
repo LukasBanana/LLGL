@@ -82,7 +82,8 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
 
     /* Load GL extensions for the very first context */
     const bool hasGLCoreProfile = (profile_.contextProfile == OpenGLContextProfile::CoreProfile);
-    LoadSupportedOpenGLExtensions(hasGLCoreProfile);
+    const bool abortOnFailure   = !profile_.suppressFailedExtensions;
+    LoadSupportedOpenGLExtensions(hasGLCoreProfile, abortOnFailure);
 
     /* Initialize state manager for new GL context */
     auto& stateMngr = context->GetStateManager();

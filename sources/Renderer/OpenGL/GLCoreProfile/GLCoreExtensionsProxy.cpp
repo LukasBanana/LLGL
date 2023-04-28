@@ -1,12 +1,9 @@
 /*
  * GLCoreExtensionsProxy.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
-
-#ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
-
 
 #include "../OpenGL.h"
 #include "../GLCore.h"
@@ -28,9 +25,6 @@ namespace LLGL
 
 
 } // /namespace LLGL
-
-
-#endif // /LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 
 
