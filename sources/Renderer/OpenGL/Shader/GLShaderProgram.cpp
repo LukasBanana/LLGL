@@ -15,7 +15,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Exception.h"
-#include "../../../Core/BasicReport.h"
+#include <LLGL/Report.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Constants.h>
 #include <LLGL/Utils/ForRange.h>
@@ -198,7 +198,7 @@ void GLShaderProgram::BindResourceSlots(const GLShaderBindingLayout& bindingLayo
     }
 }
 
-void GLShaderProgram::QueryInfoLogs(BasicReport& report)
+void GLShaderProgram::QueryInfoLogs(Report& report)
 {
     const bool hasErrors = !GLShaderProgram::GetLinkStatus(GetID());
     std::string log = GLShaderProgram::GetGLProgramLog(GetID());

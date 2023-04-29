@@ -16,174 +16,198 @@ namespace LLGL
 
 
 /*
- * BlobManaged class
+ * Blob::Pimpl struct
  */
 
-// Managed implementation of <Blob> interface.
-class BlobManaged final : public Blob
+struct Blob::Pimpl
 {
-
-    public:
-
-        BlobManaged(const void* data, std::size_t size);
-        BlobManaged(ByteBuffer&& data, std::size_t size);
-
-    public:
-
-        const void* GetData() const override;
-        std::size_t GetSize() const override;
-
-    private:
-
-        ByteBuffer  data_;
-        std::size_t size_ = 0;
-
+    virtual ~Pimpl() = default;
+    virtual const void* GetData() const = 0;
+    virtual std::size_t GetSize() const = 0;
 };
 
-BlobManaged::BlobManaged(const void* data, std::size_t size) :
-    data_ { AllocateByteBuffer(size, UninitializeTag{}) },
-    size_ { size                                        }
+struct InternalStringBlob final : Blob::Pimpl
 {
-    ::memcpy(data_.get(), data, size);
-}
+    InternalStringBlob(std::string&& str) :
+        str { std::forward<std::string>(str) }
+    {
+    }
 
-BlobManaged::BlobManaged(ByteBuffer&& data, std::size_t size) :
-    data_ { std::move(data) },
-    size_ { size            }
-{
-}
+    const void* GetData() const override
+    {
+        return str.data();
+    }
 
-const void* BlobManaged::GetData() const
-{
-    return data_.get();
-}
+    std::size_t GetSize() const override
+    {
+        return str.size();
+    }
 
-std::size_t BlobManaged::GetSize() const
-{
-    return size_;
-}
-
-
-/*
- * BlobUnmanaged class
- */
-
-// Unmanaged implementation of <Blob> interface.
-class BlobUnmanaged final : public Blob
-{
-
-    public:
-
-        BlobUnmanaged(const void* data, std::size_t size);
-
-    public:
-
-        const void* GetData() const override;
-        std::size_t GetSize() const override;
-
-    private:
-
-        const void* data_ = nullptr;
-        std::size_t size_ = 0;
-
+    std::string str;
 };
 
-BlobUnmanaged::BlobUnmanaged(const void* data, std::size_t size) :
-    data_ { data },
-    size_ { size }
+struct InternalVectorBlob final : Blob::Pimpl
 {
-}
+    InternalVectorBlob(const void* data, std::size_t size) :
+        container { reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data) + size }
+    {
+    }
 
-const void* BlobUnmanaged::GetData() const
-{
-    return data_;
-}
+    InternalVectorBlob(std::vector<char>&& cont) :
+        container { std::forward<std::vector<char>>(cont) }
+    {
+    }
 
-std::size_t BlobUnmanaged::GetSize() const
-{
-    return size_;
-}
+    const void* GetData() const override
+    {
+        return container.data();
+    }
 
+    std::size_t GetSize() const override
+    {
+        return container.size();
+    }
 
-/*
- * BlobContainer class
- */
-
-// Container wrapper implementation of <Blob> interface.
-template <typename T>
-class BlobContainer final : public Blob
-{
-
-    public:
-
-        explicit BlobContainer(T&& container);
-
-    public:
-
-        const void* GetData() const override;
-        std::size_t GetSize() const override;
-
-    private:
-
-        T container_;
-
+    std::vector<char> container;
 };
 
-template <typename T>
-BlobContainer<T>::BlobContainer(T&& container) :
-    container_ { std::move(container) }
+struct InternalBufferBlob final : Blob::Pimpl
 {
+    InternalBufferBlob(ByteBuffer&& buffer, std::size_t size) :
+        buffer { std::forward<ByteBuffer>(buffer) },
+        size   { size                             }
+    {
+    }
+
+    const void* GetData() const override
+    {
+        return buffer.get();
+    }
+
+    std::size_t GetSize() const override
+    {
+        return size;
+    }
+
+    ByteBuffer  buffer;
+    std::size_t size;
+};
+
+struct InternalUnmanagedBlob final : Blob::Pimpl
+{
+    InternalUnmanagedBlob(const void* data, std::size_t size) :
+        data { data },
+        size { size }
+    {
+    }
+
+    const void* GetData() const override
+    {
+        return data;
+    }
+
+    std::size_t GetSize() const override
+    {
+        return size;
+    }
+
+    const void* data;
+    std::size_t size;
+};
+
+static Blob::Pimpl* MakeInternalBlob(const void* data, std::size_t size, bool isWeakRef)
+{
+    if (isWeakRef)
+        return new InternalVectorBlob{ data, size };
+    else
+        return new InternalUnmanagedBlob{ data, size };
 }
 
-template <typename T>
-const void* BlobContainer<T>::GetData() const
+static Blob::Pimpl* MakeInternalBlob(std::vector<char>&& cont)
 {
-    return container_.data();
+    return new InternalVectorBlob{ std::forward<std::vector<char>>(cont) };
 }
 
-template <typename T>
-std::size_t BlobContainer<T>::GetSize() const
+static Blob::Pimpl* MakeInternalBlob(ByteBuffer&& buf, std::size_t size)
 {
-    return container_.size() * sizeof(typename T::value_type);
+    return new InternalBufferBlob{ std::forward<ByteBuffer>(buf), size };
 }
 
-using BlobStdVectorInt8 = BlobContainer<std::vector<std::int8_t>>;
-using BlobStdString     = BlobContainer<std::string>;
+static Blob::Pimpl* MakeInternalBlob(std::string&& str)
+{
+    return new InternalStringBlob{ std::forward<std::string>(str) };
+}
 
 
 /*
  * Blob class
  */
 
-std::unique_ptr<Blob> Blob::CreateCopy(const void* data, std::size_t size)
+Blob::Blob() :
+    pimpl_ { nullptr }
 {
-    return MakeUnique<BlobManaged>(data, size);
 }
 
-std::unique_ptr<Blob> Blob::CreateWeakRef(const void* data, std::size_t size)
+Blob::Blob(Blob&& rhs) :
+    pimpl_ { rhs.pimpl_ }
 {
-    return MakeUnique<BlobUnmanaged>(data, size);
+    rhs.pimpl_ = nullptr;
 }
 
-std::unique_ptr<Blob> Blob::CreateStrongRef(std::vector<std::int8_t>&& container)
+Blob& Blob::operator = (Blob&& rhs)
 {
-    return MakeUnique<BlobStdVectorInt8>(std::forward<std::vector<std::int8_t>>(container));
+    if (this != &rhs)
+    {
+        delete pimpl_;
+        pimpl_ = rhs.pimpl_;
+        rhs.pimpl_ = nullptr;
+    }
+    return *this;
 }
 
-std::unique_ptr<Blob> Blob::CreateStrongRef(std::string&& container)
+Blob::Blob(const void* data, std::size_t size, bool isWeakRef) :
+    pimpl_ { MakeInternalBlob(data, size, isWeakRef) }
 {
-    return MakeUnique<BlobStdString>(std::forward<std::string>(container));
 }
 
-std::unique_ptr<Blob> Blob::CreateFromFile(const char* filename)
+Blob::~Blob()
+{
+    delete pimpl_;
+}
+
+Blob Blob::CreateCopy(const void* data, std::size_t size)
+{
+    return Blob{ data, size };
+}
+
+Blob Blob::CreateWeakRef(const void* data, std::size_t size)
+{
+    return Blob{ data, size, /*isWeakRef:*/ true };
+}
+
+Blob Blob::CreateStrongRef(std::vector<char>&& cont)
+{
+    Blob blob;
+    blob.pimpl_ = MakeInternalBlob(std::forward<std::vector<char>>(cont));
+    return blob;
+}
+
+Blob Blob::CreateStrongRef(std::string&& str)
+{
+    Blob blob;
+    blob.pimpl_ = MakeInternalBlob(std::forward<std::string>(str));
+    return blob;
+}
+
+Blob Blob::CreateFromFile(const char* filename)
 {
     if (filename == nullptr || *filename == '\0')
-        return nullptr;
+        return Blob{};
 
     /* Read file as binary */
     std::ifstream file{ filename, std::ios::in | std::ios::binary };
     if (!file.good())
-        return nullptr;
+        return Blob{};
 
     /* Determine file size */
     file.seekg(0, std::ios::end);
@@ -195,12 +219,29 @@ std::unique_ptr<Blob> Blob::CreateFromFile(const char* filename)
     file.read(buffer.get(), fileSize);
 
     /* Return blob that manages the read buffer */
-    return MakeUnique<BlobManaged>(std::move(buffer), static_cast<std::size_t>(fileSize));
+    Blob blob;
+    blob.pimpl_ = MakeInternalBlob(std::move(buffer), static_cast<std::size_t>(fileSize));
+    return blob;
 }
 
-std::unique_ptr<Blob> Blob::CreateFromFile(const std::string& filename)
+Blob Blob::CreateFromFile(const std::string& filename)
 {
     return CreateFromFile(filename.c_str());
+}
+
+const void* Blob::GetData() const
+{
+    return (pimpl_ != nullptr ? pimpl_->GetData() : nullptr);
+}
+
+std::size_t Blob::GetSize() const
+{
+    return (pimpl_ != nullptr ? pimpl_->GetSize() : 0);
+}
+
+Blob::operator bool () const
+{
+    return (pimpl_ != nullptr && pimpl_->GetData() != nullptr && pimpl_->GetSize() > 0);
 }
 
 

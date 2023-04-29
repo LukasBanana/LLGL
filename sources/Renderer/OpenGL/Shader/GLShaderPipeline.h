@@ -20,7 +20,7 @@ namespace LLGL
 class GLShaderPipeline;
 class GLShaderBindingLayout;
 class GLStateManager;
-class BasicReport;
+class Report;
 
 using GLShaderPipelineSPtr = std::shared_ptr<GLShaderPipeline>;
 
@@ -39,7 +39,7 @@ class GLShaderPipeline
         virtual void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) = 0;
 
         // Adds the shader info logs to the output report.
-        virtual void QueryInfoLogs(BasicReport& report) = 0;
+        virtual void QueryInfoLogs(Report& report) = 0;
 
         // Returns the native pipeline ID. Can be either from glCreateProgramPipelines or glCreateProgram.
         inline GLuint GetID() const

@@ -10,8 +10,8 @@
 
 
 #include <LLGL/Shader.h>
+#include <LLGL/Report.h>
 #include "../OpenGL.h"
-#include "../../../Core/BasicReport.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <functional>
 
@@ -109,7 +109,7 @@ class GLShader : public Shader
         std::vector<GLShaderAttribute>  shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;
         std::vector<const char*>        transformFeedbackVaryings_;
-        BasicReport                     report_;
+        Report                          report_;
 
 };
 

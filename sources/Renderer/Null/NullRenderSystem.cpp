@@ -318,12 +318,12 @@ PipelineState* NullRenderSystem::CreatePipelineState(const Blob& serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* NullRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* NullRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<NullPipelineState>(pipelineStateDesc);
 }
 
-PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<NullPipelineState>(pipelineStateDesc);
 }

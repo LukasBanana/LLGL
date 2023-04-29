@@ -36,7 +36,6 @@ struct InterfaceID
         Input,                  //!< Extends Interface. \see Input
         RenderSystem,           //!< Extends Interface. \see RenderSystem
         RenderSystemChild,      //!< Extends Interface. \see RenderSystemChild
-        Report,                 //!< Extends Interface. \see Report
         Buffer,                 //!< Extends RenderSystemChild. \see Buffer
         BufferArray,            //!< Extends RenderSystemChild. \see BufferArray
         CommandBuffer,          //!< Extends RenderSystemChild. \see CommandBuffer

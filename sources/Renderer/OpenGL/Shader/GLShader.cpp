@@ -119,7 +119,7 @@ void GLShader::PatchShaderSourceWithOptions(
 
 void GLShader::ReportStatusAndLog(bool status, const std::string& log)
 {
-    report_.Reset(log, !status);
+    report_.Reset(log.c_str(), !status);
 }
 
 

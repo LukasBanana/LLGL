@@ -1,6 +1,6 @@
 /*
  * MTShader.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -12,7 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/Shader.h>
-#include "../../../Core/BasicReport.h"
+#include <LLGL/Report.h>
 
 
 namespace LLGL
@@ -78,7 +78,7 @@ class MTShader final : public Shader
         id<MTLLibrary>          library_            = nil;
         id<MTLFunction>         native_             = nil;
 
-        BasicReport             report_;
+        Report                  report_;
         MTLSize                 numThreadsPerGroup_ = {};
 
         MTLVertexDescriptor*    vertexDesc_         = nullptr;

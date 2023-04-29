@@ -273,12 +273,14 @@ ExampleBase::ExampleBase(
     };
     #endif
 
+    if (debugger)
+    {
+        rendererDesc.profiler = profilerObj_.get();
+        rendererDesc.debugger = debuggerObj_.get();
+    }
+
     // Create render system
-    renderer = LLGL::RenderSystem::Load(
-        rendererDesc,
-        (debugger ? profilerObj_.get() : nullptr),
-        (debugger ? debuggerObj_.get() : nullptr)
-    );
+    renderer = LLGL::RenderSystem::Load(rendererDesc);
 
     if (!debugger)
         debuggerObj_.reset();

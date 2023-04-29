@@ -26,7 +26,12 @@ int main()
         //debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load("Direct3D12", profiler.get(), debugger.get());
+        LLGL::RenderSystemDescriptor rendererDesc = "Direct3D12";
+        {
+            rendererDesc.profiler = profiler.get();
+            rendererDesc.debugger = debugger.get();
+        }
+        auto renderer = LLGL::RenderSystem::Load(rendererDesc);
 
         // Create swap-chain
         LLGL::SwapChainDescriptor swapChainDesc;

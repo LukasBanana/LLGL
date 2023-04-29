@@ -74,7 +74,7 @@ void Serializer::WriteSegment(IdentType ident, const void* data, std::size_t siz
     End();
 }
 
-std::unique_ptr<Blob> Serializer::Finalize()
+Blob Serializer::Finalize()
 {
     if (!data_.empty())
     {
@@ -83,7 +83,7 @@ std::unique_ptr<Blob> Serializer::Finalize()
         pos_    = 0;
         return Blob::CreateStrongRef(std::move(data_));
     }
-    return nullptr;
+    return Blob{};
 }
 
 
@@ -92,14 +92,14 @@ std::unique_ptr<Blob> Serializer::Finalize()
  */
 
 Deserializer::Deserializer(const Blob& blob) :
-    data_ { reinterpret_cast<const std::int8_t*>(blob.GetData()) },
-    size_ { blob.GetSize()                                       }
+    data_ { reinterpret_cast<const char*>(blob.GetData()) },
+    size_ { blob.GetSize()                                }
 {
 }
 
 Deserializer::Deserializer(const void* data, std::size_t size) :
-    data_ { reinterpret_cast<const std::int8_t*>(data) },
-    size_ { size                                       }
+    data_ { reinterpret_cast<const char*>(data) },
+    size_ { size                                }
 {
 }
 

@@ -10,10 +10,10 @@
 
 
 #include <LLGL/Shader.h>
+#include <LLGL/Report.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include "VKShaderBindingLayout.h"
-#include "../../../Core/BasicReport.h"
 #include <vector>
 #include <functional>
 
@@ -123,7 +123,7 @@ class VKShader final : public Shader
         VertexInputLayout           inputLayout_;
 
         std::string                 entryPoint_;
-        BasicReport                 report_;
+        Report                      report_;
 
 };
 

@@ -488,7 +488,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const Blob& serializedCache)
     return nullptr;//TODO
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
 {
     LLGL_DBG_SOURCE;
 
@@ -510,7 +510,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
     return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
 {
     LLGL_DBG_SOURCE;
 

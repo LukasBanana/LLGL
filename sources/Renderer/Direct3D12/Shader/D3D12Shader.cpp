@@ -275,7 +275,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 
     /* Return true if compilation was successful */
     const bool hasErrors = FAILED(hr);
-    report_.Reset(errors.Get(), hasErrors);
+    report_.Reset(DXGetBlobString(errors.Get()), hasErrors);
     return !hasErrors;
 }
 

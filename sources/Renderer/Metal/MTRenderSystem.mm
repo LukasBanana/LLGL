@@ -259,12 +259,12 @@ PipelineState* MTRenderSystem::CreatePipelineState(const Blob& /*serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<MTGraphicsPSO>(device_, pipelineStateDesc, GetDefaultRenderPass());
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<MTComputePSO>(device_, pipelineStateDesc);
 }

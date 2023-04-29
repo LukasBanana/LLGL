@@ -349,7 +349,7 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const Blob& serializedCach
     LLGL_TRAP("serialized cache does not denote a D3D12 graphics or compute PSO");
 }
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
 {
     Serialization::Serializer writer;
 
@@ -367,7 +367,7 @@ PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     return pipelineState;
 }
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc);
 }

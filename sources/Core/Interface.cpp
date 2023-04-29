@@ -51,7 +51,6 @@ LLGL_IMPLEMENT_INTERFACE( PipelineState,            RenderSystemChild )
 LLGL_IMPLEMENT_INTERFACE( QueryHeap,                RenderSystemChild )
 LLGL_IMPLEMENT_INTERFACE( RenderTarget,             RenderSystemChild )
 LLGL_IMPLEMENT_INTERFACE( RenderPass,               RenderSystemChild )
-LLGL_IMPLEMENT_INTERFACE( Report,                   Interface         )
 LLGL_IMPLEMENT_INTERFACE( Shader,                   RenderSystemChild )
 LLGL_IMPLEMENT_INTERFACE( SwapChain,                RenderTarget      )
 

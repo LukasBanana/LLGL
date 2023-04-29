@@ -1,6 +1,6 @@
 /*
  * MTPipelineState.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -14,7 +14,7 @@
 #include <LLGL/PipelineState.h>
 #include "MTDescriptorCache.h"
 #include "MTConstantsCache.h"
-#include "../../../Core/BasicReport.h"
+#include <LLGL/Report.h>
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
 
@@ -84,7 +84,7 @@ class MTPipelineState : public PipelineState
         const MTPipelineLayout*             pipelineLayout_     = nullptr;
         std::unique_ptr<MTDescriptorCache>  descriptorCache_;
         std::unique_ptr<MTConstantsCache>   constantsCache_;
-        BasicReport                         report_;
+        Report                              report_;
 
 };
 

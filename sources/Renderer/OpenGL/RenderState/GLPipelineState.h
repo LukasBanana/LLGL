@@ -12,7 +12,7 @@
 #include "../OpenGL.h"
 #include "../Shader/GLShaderBindingLayout.h"
 #include "../Shader/GLShaderPipeline.h"
-#include "../../../Core/BasicReport.h"
+#include <LLGL/Report.h>
 #include <LLGL/PipelineState.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Container/ArrayView.h>
@@ -93,7 +93,7 @@ class GLPipelineState : public PipelineState
         GLShaderPipelineSPtr            shaderPipeline_         = nullptr;
         GLShaderBindingLayoutSPtr       shaderBindingLayout_;
         std::vector<GLUniformLocation>  uniformMap_;
-        BasicReport                     report_;
+        Report                          report_;
 
 };
 

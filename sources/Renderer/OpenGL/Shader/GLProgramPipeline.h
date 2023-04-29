@@ -28,7 +28,7 @@ class GLProgramPipeline final : public GLShaderPipeline
 
         void Bind(GLStateManager& stateMngr) override;
         void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;
-        void QueryInfoLogs(BasicReport& report) override;
+        void QueryInfoLogs(Report& report) override;
 
     private:
 

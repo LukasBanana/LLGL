@@ -11,8 +11,8 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Report.h>
 #include "D3D11ConstantsCache.h"
-#include "../../../Core/BasicReport.h"
 #include <memory>
 
 
@@ -67,7 +67,7 @@ class D3D11PipelineState : public PipelineState
 
         const bool                  isGraphicsPSO_  = false;
         const D3D11PipelineLayout*  pipelineLayout_ = nullptr;
-        BasicReport                 report_;
+        Report                      report_;
         D3D11ConstantsCachePtr      constantsCache_;
 
 };

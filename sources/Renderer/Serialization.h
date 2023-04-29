@@ -48,16 +48,16 @@ Offset      Header
 struct Segment
 {
     // Segment identifier number (renderer specific). A magic number of zero terminates the list of segments.
-    IdentType           ident;
+    IdentType   ident;
 
     /*
     Size (in bytes) of the data segment (excluding this size field). Use 'data + size' to jump to the next segment.
     If this is USHORT_MAX, the remaining data is stored in the next segment.
     */
-    SizeType            size;
+    SizeType    size;
 
     // Pointer to the segment data.
-    const std::int8_t*  data;
+    const char* data;
 };
 
 
@@ -108,7 +108,7 @@ class LLGL_EXPORT Serializer
         void WriteSegment(IdentType ident, const void* data, std::size_t size);
 
         // Returns the final blob of the serialized data. A new serialization can be created after this call.
-        std::unique_ptr<Blob> Finalize();
+        Blob Finalize();
 
     public:
 
@@ -123,9 +123,9 @@ class LLGL_EXPORT Serializer
 
     private:
 
-        std::vector<std::int8_t>    data_;
-        std::size_t                 begin_  = 0;
-        std::size_t                 pos_    = 0;
+        std::vector<char>   data_;
+        std::size_t         begin_  = 0;
+        std::size_t         pos_    = 0;
 
 };
 
@@ -192,10 +192,10 @@ class LLGL_EXPORT Deserializer
 
     private:
 
-        const std::int8_t*  data_       = nullptr;
-        std::size_t         size_       = 0;
-        std::size_t         pos_        = 0;
-        std::size_t         segmentEnd_ = 0;
+        const char* data_       = nullptr;
+        std::size_t size_       = 0;
+        std::size_t pos_        = 0;
+        std::size_t segmentEnd_ = 0;
 
 };
 

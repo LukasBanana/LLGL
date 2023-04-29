@@ -154,16 +154,16 @@ int main(int argc, char* argv[])
 
         // Create graphics pipeline
         LLGL::PipelineState* pipeline = nullptr;
-        std::unique_ptr<LLGL::Blob> pipelineCache;
+        LLGL::Blob pipelineCache;
 
         #ifdef ENABLE_CACHED_PSO
         // Try to read PSO cache from file
         const std::string cacheFilename = "GraphicsPSO." + rendererModule + ".cache";
-        if ((pipelineCache = LLGL::Blob::CreateFromFile(cacheFilename)) != nullptr)
+        if (pipelineCache = LLGL::Blob::CreateFromFile(cacheFilename))
         {
             // Create graphics PSO from cache
-            pipeline = renderer->CreatePipelineState(*pipelineCache);
-            std::cout << "Pipeline cache restored: " << pipelineCache->GetSize() << " bytes" << std::endl;
+            pipeline = renderer->CreatePipelineState(pipelineCache);
+            std::cout << "Pipeline cache restored: " << pipelineCache.GetSize() << " bytes" << std::endl;
         }
         else
         #endif
@@ -184,13 +184,13 @@ int main(int argc, char* argv[])
             pipeline = renderer->CreatePipelineState(pipelineDesc, &pipelineCache);
             if (pipelineCache)
             {
-                std::cout << "Pipeline cache created: " << pipelineCache->GetSize() << " bytes" << std::endl;
+                std::cout << "Pipeline cache created: " << pipelineCache.GetSize() << " bytes" << std::endl;
 
                 // Store PSO cache to file
                 std::ofstream file{ cacheFilename, std::ios::out | std::ios::binary };
                 file.write(
-                    reinterpret_cast<const char*>(pipelineCache->GetData()),
-                    static_cast<std::streamsize>(pipelineCache->GetSize())
+                    reinterpret_cast<const char*>(pipelineCache.GetData()),
+                    static_cast<std::streamsize>(pipelineCache.GetSize())
                 );
             }
 

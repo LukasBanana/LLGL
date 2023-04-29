@@ -12,10 +12,10 @@
 #include <LLGL/PipelineState.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Report.h>
 #include "D3D12PipelineLayout.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../../Serialization.h"
-#include "../../../Core/BasicReport.h"
 #include <d3d12.h>
 #include <memory>
 
@@ -97,7 +97,7 @@ class D3D12PipelineState : public PipelineState
         ComPtr<ID3D12RootSignature>             rootSignature_;
         const D3D12PipelineLayout*              pipelineLayout_ = nullptr;
         std::vector<D3D12RootConstantLocation>  rootConstantMap_;
-        BasicReport                             report_;
+        Report                                  report_;
 
 };
 

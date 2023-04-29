@@ -123,8 +123,8 @@ class DbgRenderSystem final : public RenderSystem
         /* ----- Pipeline States ----- */
 
         PipelineState* CreatePipelineState(const Blob& serializedCache) override;
-        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
-        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache = nullptr) override;
+        PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* serializedCache = nullptr) override;
 
         void Release(PipelineState& pipelineState) override;
 

@@ -33,6 +33,9 @@ namespace LLGL
 {
 
 
+class RenderingProfiler;
+class RenderingDebugger;
+
 /* ----- Types ----- */
 
 /**
@@ -269,10 +272,23 @@ struct RenderSystemDescriptor
     translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
     If LLGL was built with the \c LLGL_BUILD_STATIC_LIB option, this member is ignored.
     */
-    std::string     moduleName;
+    std::string         moduleName;
 
     //! Debuging callback function object.
-    DebugCallback   debugCallback;
+    DebugCallback       debugCallback;
+
+    /**
+    \brief profiler Optional pointer to a rendering profiler. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
+    \remarks If this is used, the counters of the profiler must be reset manually.
+    */
+    RenderingProfiler*  profiler            = nullptr;
+
+    /**
+    \brief debugger Optional pointer to a rendering debugger. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
+    \remarks If the default debugger is used (i.e. no sub class of RenderingDebugger), then all reports will be send to the Log.
+    In order to see any reports from the Log, use either Log::SetReportCallback or Log::SetReportCallbackStd.
+    */
+    RenderingDebugger*  debugger            = nullptr;
 
     /**
     \brief Optional raw pointer to a renderer specific configuration structure.
@@ -297,14 +313,14 @@ struct RenderSystemDescriptor
     \see RendererConfigurationOpenGL
     \see RendererConfigurationOpenGLES3
     */
-    const void*     rendererConfig      = nullptr;
+    const void*         rendererConfig      = nullptr;
 
     /**
     \brief Specifies the size (in bytes) of the structure where the \c rendererConfig member points to (use \c sizeof with the respective structure). By default 0.
     \remarks If \c rendererConfig is null then this member is ignored.
     \see rendererConfig
     */
-    std::size_t     rendererConfigSize  = 0;
+    std::size_t         rendererConfigSize  = 0;
 
     #ifdef LLGL_OS_ANDROID
 

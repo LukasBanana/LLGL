@@ -10,7 +10,7 @@
 
 
 #include "GLShader.h"
-#include "../../../Core/BasicReport.h"
+#include <LLGL/Report.h>
 
 
 namespace LLGL

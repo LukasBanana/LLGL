@@ -13,8 +13,8 @@
 #include <LLGL/ShaderReflection.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
+#include <LLGL/Report.h>
 #include "../../DXCommon/ComPtr.h"
-#include "../../DXCommon/DXReport.h"
 #include <vector>
 #include <string>
 #include <d3d11.h>
@@ -139,7 +139,7 @@ class D3D11Shader final : public Shader
         D3D11NativeShader                           native_;
 
         ComPtr<ID3DBlob>                            byteCode_;
-        DXReport                                    report_;
+        Report                                      report_;
 
         ComPtr<ID3D11InputLayout>                   inputLayout_;
 

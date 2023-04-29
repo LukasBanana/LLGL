@@ -13,7 +13,8 @@
 #include <LLGL/ShaderReflection.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
-#include "../../DXCommon/DXReport.h"
+#include <LLGL/Report.h>
+#include "../../DXCommon/ComPtr.h"
 #include "../../../Core/LinearStringContainer.h"
 #include <vector>
 #include <d3d12.h>
@@ -74,7 +75,7 @@ class D3D12Shader final : public Shader
     private:
 
         ComPtr<ID3DBlob>                            byteCode_;
-        DXReport                                    report_;
+        Report                                      report_;
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
         std::vector<D3D12_SO_DECLARATION_ENTRY>     soDeclEntries_;

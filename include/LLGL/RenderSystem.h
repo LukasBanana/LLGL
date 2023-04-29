@@ -142,11 +142,6 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Loads a new render system from the specified module.
         \param[in] renderSystemDesc Specifies the render system descriptor structure. The 'moduleName' member of this strucutre must not be empty.
-        \param[in] profiler Optional pointer to a rendering profiler. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
-        If this is used, the counters of the profiler must be reset manually.
-        \param[in] debugger Optional pointer to a rendering debugger. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
-        If the default debugger is used (i.e. no sub class of RenderingDebugger), then all reports will be send to the Log.
-        In order to see any reports from the Log, use either Log::SetReportCallback or Log::SetReportCallbackStd.
         \remarks The descriptor structure can be initialized by only the module name like shown in the following example:
         \code
         // Load the "OpenGL" render system module
@@ -167,11 +162,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \throws std::runtime_error If loading the render system from the specified module failed.
         \see RenderSystemDescriptor::moduleName
         */
-        static RenderSystemPtr Load(
-            const RenderSystemDescriptor&   renderSystemDesc,
-            RenderingProfiler*              profiler            = nullptr,
-            RenderingDebugger*              debugger            = nullptr
-        );
+        static RenderSystemPtr Load(const RenderSystemDescriptor& renderSystemDesc);
 
         /**
         \brief Unloads the specified render system and the internal module.
@@ -542,8 +533,8 @@ class LLGL_EXPORT RenderSystem : public Interface
             );
         }
         \endcode
-        \see CreatePipelineState(const GraphicsPipelineDescriptor&, std::unique_ptr<Blob>*)
-        \see CreatePipelineState(const ComputePipelineDescriptor&, std::unique_ptr<Blob>*)
+        \see CreatePipelineState(const GraphicsPipelineDescriptor&, Blob*)
+        \see CreatePipelineState(const ComputePipelineDescriptor&, Blob*)
         */
         virtual PipelineState* CreatePipelineState(const Blob& serializedCache) = 0;
 
@@ -558,7 +549,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see GraphicsPipelineDescriptor
         \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
+        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache = nullptr) = 0;
 
         /**
         \brief Creates a new compute pipeline state object (PSO).
@@ -570,7 +561,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see ComputePipelineDescriptor
         \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* serializedCache = nullptr) = 0;
+        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* serializedCache = nullptr) = 0;
 
         //! Releases the specified PipelineState object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineState& pipelineState) = 0;

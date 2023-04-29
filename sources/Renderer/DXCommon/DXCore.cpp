@@ -195,12 +195,18 @@ Cont GetBlobDataTmpl(ID3DBlob* blob)
 
 std::string DXGetBlobString(ID3DBlob* blob)
 {
-    return GetBlobDataTmpl<std::string>(blob);
+    if (blob != nullptr)
+        return GetBlobDataTmpl<std::string>(blob);
+    else
+        return {};
 }
 
 std::vector<char> DXGetBlobData(ID3DBlob* blob)
 {
-    return GetBlobDataTmpl<std::vector<char>>(blob);
+    if (blob != nullptr)
+        return GetBlobDataTmpl<std::vector<char>>(blob);
+    else
+        return {};
 }
 
 ComPtr<ID3DBlob> DXCreateBlob(const void* data, std::size_t size)

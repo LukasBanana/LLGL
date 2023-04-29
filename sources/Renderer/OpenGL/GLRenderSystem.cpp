@@ -477,12 +477,12 @@ PipelineState* GLRenderSystem::CreatePipelineState(const Blob& /*serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<GLGraphicsPSO>(pipelineStateDesc, GetRenderingCaps().limits);
 }
 
-PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<GLComputePSO>(pipelineStateDesc);
 }

@@ -378,7 +378,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const Blob& /*serializedCa
     return nullptr;//TODO
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_)
@@ -408,7 +408,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     return pipelineStates_.emplace<D3D11GraphicsPSO>(device_.Get(), pipelineStateDesc);
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<D3D11ComputePSO>(pipelineStateDesc);
 }

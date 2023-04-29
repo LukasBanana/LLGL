@@ -630,7 +630,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const Blob& /*serializedCache
     return nullptr;//TODO
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<VKGraphicsPSO>(
         device_,
@@ -640,7 +640,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescrip
     );
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, std::unique_ptr<Blob>* /*serializedCache*/)
+PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
 {
     return pipelineStates_.emplace<VKComputePSO>(device_, pipelineStateDesc);
 }

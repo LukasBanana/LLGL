@@ -11,7 +11,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
-#include "../../../Core/BasicReport.h"
+#include <LLGL/Report.h>
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -81,7 +81,7 @@ void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLa
         separableShaders_[i]->BindResourceSlots(bindingLayout);
 }
 
-void GLProgramPipeline::QueryInfoLogs(BasicReport& report)
+void GLProgramPipeline::QueryInfoLogs(Report& report)
 {
     bool hasErrors = false;
     std::string log;

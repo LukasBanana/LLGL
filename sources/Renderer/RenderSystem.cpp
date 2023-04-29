@@ -167,10 +167,7 @@ static RenderSystemDeleter::RenderSystemDeleterFuncPtr LoadRenderSystemDeleter(M
 
 #endif // /LLGL_BUILD_STATIC_LIB
 
-RenderSystemPtr RenderSystem::Load(
-    const RenderSystemDescriptor&   renderSystemDesc,
-    RenderingProfiler*              profiler,
-    RenderingDebugger*              debugger)
+RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDesc)
 {
     /* Initialize mobile specific states */
     #if defined LLGL_OS_ANDROID
@@ -187,12 +184,12 @@ RenderSystemPtr RenderSystem::Load(
         reinterpret_cast<RenderSystem*>(StaticModule::AllocRenderSystem(renderSystemDesc))
     };
 
-    if (profiler != nullptr || debugger != nullptr)
+    if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
     {
         #ifdef LLGL_ENABLE_DEBUG_LAYER
 
         /* Create debug layer render system */
-        renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), profiler, debugger) };
+        renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger) };
 
         #else
 
@@ -229,12 +226,12 @@ RenderSystemPtr RenderSystem::Load(
             RenderSystemDeleter{ LoadRenderSystemDeleter(*module) }
         };
 
-        if (profiler != nullptr || debugger != nullptr)
+        if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
         {
             #ifdef LLGL_ENABLE_DEBUG_LAYER
 
             /* Create debug layer render system */
-            renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), profiler, debugger) };
+            renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger) };
 
             #else
 

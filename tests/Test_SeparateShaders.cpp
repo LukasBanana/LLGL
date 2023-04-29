@@ -19,7 +19,11 @@ int main(int argc, char* argv[])
         LLGL::RenderingDebugger debugger;
         LLGL::Log::SetReportCallbackStd(&(std::cerr));
 
-        auto renderer = LLGL::RenderSystem::Load("OpenGL", nullptr, &debugger);
+        LLGL::RenderSystemDescriptor rendererDesc = "OpenGL";
+        {
+            rendererDesc.debugger = &debugger;
+        }
+        auto renderer = LLGL::RenderSystem::Load(rendererDesc);
 
         // Swap chain and surface
         LLGL::SwapChainDescriptor swapChainDesc;

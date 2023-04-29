@@ -196,7 +196,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
 
     /* Store if compilation was successful */
     const bool hasErrors = FAILED(hr);
-    report_.Reset(errors.Get(), hasErrors);
+    report_.Reset(DXGetBlobString(errors.Get()), hasErrors);
     return !hasErrors;
 }
 
