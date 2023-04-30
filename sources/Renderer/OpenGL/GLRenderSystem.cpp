@@ -551,17 +551,33 @@ void APIENTRY GLDebugCallback(
 
 #endif // /GL_KHR_debug
 
+struct GLDebugMessageMetaData
+{
+    GLenum source, type, severity;
+};
+
 void GLRenderSystem::EnableDebugCallback(bool enable)
 {
     #ifdef GL_KHR_debug
+
     if (HasExtension(GLExt::KHR_debug))
     {
         if (enable)
         {
+            /* Enable GL debug message callback */
             GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
             GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
             glDebugMessageCallback(GLDebugCallback, nullptr);
-            glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+
+            /* Filter out spam from debug callback */
+            static constexpr GLDebugMessageMetaData debugMessageMetaData[] =
+            {
+                { GL_DEBUG_SOURCE_API,         GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION },
+                { GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE,        GL_DONT_CARE                   },
+            };
+
+            for (const auto& metaData : debugMessageMetaData)
+                glDebugMessageControl(metaData.source, metaData.type, metaData.severity, 0, nullptr, GL_FALSE);
         }
         else
         {
@@ -570,6 +586,7 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
             glDebugMessageCallback(nullptr, nullptr);
         }
     }
+
     #endif // /GL_KHR_debug
 }
 
