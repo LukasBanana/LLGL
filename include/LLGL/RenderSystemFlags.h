@@ -286,7 +286,7 @@ struct RenderSystemDescriptor
     /**
     \brief debugger Optional pointer to a rendering debugger. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
     \remarks If the default debugger is used (i.e. no sub class of RenderingDebugger), then all reports will be send to the Log.
-    In order to see any reports from the Log, use either Log::SetReportCallback or Log::SetReportCallbackStd.
+    In order to see any reports from the Log, use either Log::RegisterCallback or Log::RegisterCallbackStd.
     */
     RenderingDebugger*  debugger            = nullptr;
 

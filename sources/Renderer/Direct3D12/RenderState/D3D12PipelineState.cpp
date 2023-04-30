@@ -14,6 +14,7 @@
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../PipelineStateUtils.h"
+#include "../../../Core/ReportUtils.h"
 
 
 namespace LLGL
@@ -75,7 +76,7 @@ void D3D12PipelineState::SetNative(ComPtr<ID3D12PipelineState>&& native)
 
 void D3D12PipelineState::ResetReport(std::string&& text, bool hasErrors)
 {
-    report_.Reset(std::forward<std::string&&>(text), hasErrors);
+    ResetReportWithNewline(report_, std::forward<std::string&&>(text), hasErrors);
 }
 
 

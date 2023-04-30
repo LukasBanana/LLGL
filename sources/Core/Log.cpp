@@ -1,13 +1,18 @@
 /*
  * Log.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include <LLGL/Log.h>
+#include "CoreUtils.h"
+#include "../Renderer/ContainerTypes.h"
 #include <mutex>
+#include <atomic>
 #include <string>
+#include <stdio.h>
+#include <stdarg.h>
 
 
 namespace LLGL
@@ -17,78 +22,172 @@ namespace Log
 {
 
 
-struct LogState
+struct LogListener
 {
-    std::mutex      reportMutex;
-    ReportCallback  reportCallback  = nullptr;
-    std::ostream*   outputStream    = nullptr;
-    void*           userData        = nullptr;
-    std::size_t     limit           = 0;
-    std::size_t     counter         = 0;
+    LogListener() = default;
+    LogListener(const LogListener&) = default;
+    LogListener& operator = (const LogListener&) = default;
+
+    inline LogListener(ReportCallback callback, void* userData) :
+        callback { callback },
+        userData { userData }
+    {
+    }
+
+    ReportCallback  callback = nullptr;
+    void*           userData = nullptr;
+
+    inline void Invoke(ReportType type, const char* text)
+    {
+        if (callback != nullptr)
+            callback(type, text, userData);
+    }
 };
 
-static LogState g_logState;
+using LogListenerPtr = std::unique_ptr<LogListener>;
+
+struct LogState
+{
+    std::mutex                              lock;
+    UnorderedUniquePtrVector<LogListener>   listeners;
+    LogListenerPtr                          listenerStd;
+};
+
+class TrivialLock
+{
+
+    public:
+
+        inline void lock()
+        {
+            value_ = true;
+        }
+
+        void unlock()
+        {
+            value_ = false;
+        }
+
+        inline operator bool () const
+        {
+            return value_;
+        }
+
+    private:
+
+        bool value_ = false;
+
+};
+
+static LogState                 g_logState;
+static thread_local TrivialLock g_logRecursionLock;
 
 
 /* ----- Functions ----- */
 
-LLGL_EXPORT void PostReport(ReportType type, const StringView& message, const StringView& contextInfo)
+static void PostReport(ReportType type, const char* text)
 {
-    ReportCallback  callback;
-    void*           userData    = nullptr;
-    bool            ignore      = false;
+    std::lock_guard<std::mutex> guard{ g_logState.lock };
 
-    /* Get callback and user data with a lock guard */
-    {
-        std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
+    if (auto listenerStd = g_logState.listenerStd.get())
+        listenerStd->Invoke(type, text);
 
-        /* Get callback and user data */
-        callback = g_logState.reportCallback;
-        userData = g_logState.userData;
-
-        /* Increase report counter and check if the report must be ignored */
-        g_logState.counter++;
-        if (g_logState.limit > 0 && g_logState.counter > g_logState.limit)
-            ignore = true;
-    }
-
-    /* Post report to callback */
-    if (!ignore && callback != nullptr)
-        callback(type, message, contextInfo, userData);
+    for (const auto& listener : g_logState.listeners)
+        listener->Invoke(type, text);
 }
 
-LLGL_EXPORT void SetReportCallback(const ReportCallback& callback, void* userData)
+static void InternalLogPrintf(ReportType type, const char* format, va_list args)
 {
-    std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
-    g_logState.reportCallback   = callback;
-    g_logState.userData         = userData;
-}
-
-LLGL_EXPORT void SetReportCallbackStd(std::ostream* stream)
-{
-    std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
-    if (stream != nullptr)
+    if (!g_logRecursionLock)
     {
-        g_logState.outputStream     = stream;
-        g_logState.reportCallback   = [](ReportType type, const StringView& message, const StringView& contextInfo, void* userData)
+        std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
+        int len = ::vsnprintf(nullptr, 0, format, args);
+        if (len > 0)
         {
-            if (!contextInfo.empty())
-                (*g_logState.outputStream) << std::string(contextInfo.begin(), contextInfo.end()) << ": ";
-            (*g_logState.outputStream) << std::string(message.begin(), message.end()) << std::endl;
-        };
+            const std::size_t formatLen = static_cast<std::size_t>(len);
+            auto formatStr = MakeUniqueArray<char>(formatLen + 1);
+            ::vsnprintf(formatStr.get(), formatLen + 1, format, args);
+            PostReport(type, formatStr.get());
+        }
     }
-    else
-    {
-        g_logState.outputStream     = nullptr;
-        g_logState.reportCallback   = nullptr;
-    }
-    g_logState.userData = nullptr;
 }
 
-LLGL_EXPORT void SetReportLimit(std::size_t maxCount)
+LLGL_EXPORT void Printf(const char* format, ...)
 {
-    std::lock_guard<std::mutex> guard{ g_logState.reportMutex };
-    g_logState.limit = maxCount;
+    va_list args;
+    va_start(args, format);
+    InternalLogPrintf(ReportType::Information, format, args);
+    va_end(args);
+}
+
+LLGL_EXPORT void Errorf(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    InternalLogPrintf(ReportType::Information, format, args);
+    va_end(args);
+}
+
+LLGL_EXPORT LogHandle RegisterCallback(const ReportCallback& callback, void* userData)
+{
+    if (!g_logRecursionLock)
+    {
+        std::lock_guard<std::mutex> guard{ g_logState.lock };
+        return reinterpret_cast<LogHandle>(g_logState.listeners.emplace<LogListener>(callback, userData));
+    }
+    return nullptr;
+}
+
+LLGL_EXPORT LogHandle RegisterCallbackReport(Report& report)
+{
+    return RegisterCallback(
+        [](ReportType type, const char* text, void* userData)
+        {
+            if (auto report = reinterpret_cast<Report*>(userData))
+            {
+                if (type == ReportType::Error)
+                    report->Errorf("%s", text);
+                else
+                    report->Printf("%s", text);
+            }
+        },
+        &report
+    );
+}
+
+LLGL_EXPORT LogHandle RegisterCallbackStd()
+{
+    if (!g_logRecursionLock)
+    {
+        std::lock_guard<std::mutex> guard{ g_logState.lock };
+        if (g_logState.listenerStd.get() == nullptr)
+        {
+            g_logState.listenerStd = MakeUnique<LogListener>(
+                [](ReportType type, const char* text, void* /*userData*/)
+                {
+                    if (type == ReportType::Error)
+                        ::fprintf(stderr, "%s", text);
+                    else
+                        ::fprintf(stdout, "%s", text);
+                },
+                nullptr
+            );
+        }
+        return reinterpret_cast<LogHandle>(g_logState.listenerStd.get());
+    }
+    return nullptr;
+}
+
+LLGL_EXPORT void UnregisterCallback(LogHandle handle)
+{
+    if (handle != nullptr)
+    {
+        std::lock_guard<std::mutex> guard{ g_logState.lock };
+        if (handle == reinterpret_cast<LogHandle>(g_logState.listenerStd.get()))
+            g_logState.listenerStd.reset();
+        else
+            g_logState.listeners.erase(reinterpret_cast<LogListener*>(handle));
+    }
 }
 
 

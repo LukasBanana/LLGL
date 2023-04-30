@@ -105,10 +105,9 @@ class LLGL_EXPORT RenderingDebugger
 
                 /**
                 \brief Returns a report string for this message.
-                \param[in] reportTypeName Specifies the name of the report type (e.g. "ERROR").
                 \return Constructed report string containing all information of this message.
                 */
-                UTF8String ToReportString(const StringView& reportTypeName) const;
+                UTF8String ToReportString() const;
 
                 //! Returns the message text.
                 inline const UTF8String& GetText() const
@@ -165,8 +164,7 @@ class LLGL_EXPORT RenderingDebugger
         \code
         class MyDebugger : public LLGL::RenderingDebugger {
             void OnError(ErrorType type, Message& message) override {
-                LLGL::Log::PostReport(
-                    LLGL::Log::ReportType::Error,
+                LLGL::Log::Errorf(
                     "ERROR (" + std::string(LLGL::ToString(type)) + "): in '" + message.GetSource() + "': " + message.GetText()
                 );
                 message.Block();

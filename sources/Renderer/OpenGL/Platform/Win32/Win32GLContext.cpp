@@ -11,6 +11,7 @@
 #include "../../../CheckedCast.h"
 #include "../../../TextureUtils.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
@@ -23,7 +24,7 @@ namespace LLGL
 static void DeleteGLContext(HGLRC& hGLRC)
 {
     if (wglDeleteContext(hGLRC) == FALSE)
-        Log::PostReport(Log::ReportType::Error, "wglDeleteContext failed");
+        Log::Errorf("wglDeleteContext failed");
     hGLRC = nullptr;
 }
 
@@ -31,7 +32,7 @@ static bool MakeGLContextCurrent(HDC hDC, HGLRC hGLRC)
 {
     if (wglMakeCurrent(hDC, hGLRC) == FALSE)
     {
-        Log::PostReport(Log::ReportType::Error, "wglMakeCurrent failed");
+        Log::Errorf("wglMakeCurrent failed");
         return false;
     }
     return true;
@@ -108,7 +109,7 @@ bool Win32GLContext::SetSwapInterval(int interval)
 
 static void ErrMultisampledGLContextNotSupported()
 {
-    Log::PostReport(Log::ReportType::Error, "multi-sampled OpenGL context is not supported");
+    Log::Errorf("multi-sampled OpenGL context is not supported");
 }
 
 static HDC GetWin32DeviceContext(const Surface& surface)
@@ -188,14 +189,14 @@ void Win32GLContext::CreateContext(Surface& surface, Win32GLContext* sharedConte
             else
             {
                 /* Print warning and disbale profile selection */
-                Log::PostReport(Log::ReportType::Error, "failed to create extended OpenGL profile");
+                Log::Errorf("failed to create extended OpenGL profile");
                 profile_.contextProfile = OpenGLContextProfile::CompatibilityProfile;
             }
         }
         else
         {
             /* Print warning and disable profile settings */
-            Log::PostReport(Log::ReportType::Error, "failed to select OpenGL profile");
+            Log::Errorf("failed to select OpenGL profile");
             profile_.contextProfile = OpenGLContextProfile::CompatibilityProfile;
         }
     }
@@ -283,12 +284,12 @@ HGLRC Win32GLContext::CreateExplicitWGLContext(HDC hDC, Win32GLContext* sharedCo
 
     if (error == ERROR_INVALID_VERSION_ARB)
     {
-        Log::PostReport(Log::ReportType::Error, "invalid version for OpenGL profile");
+        Log::Errorf("invalid version for OpenGL profile");
         return nullptr;
     }
     else if (error == ERROR_INVALID_PROFILE_ARB)
     {
-        Log::PostReport(Log::ReportType::Error, "invalid OpenGL profile");
+        Log::Errorf("invalid OpenGL profile");
         return nullptr;
     }
 

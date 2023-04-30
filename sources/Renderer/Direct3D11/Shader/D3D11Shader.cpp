@@ -12,6 +12,7 @@
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
+#include "../../../Core/ReportUtils.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
@@ -196,7 +197,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
 
     /* Store if compilation was successful */
     const bool hasErrors = FAILED(hr);
-    report_.Reset(DXGetBlobString(errors.Get()), hasErrors);
+    ResetReportWithNewline(report_, DXGetBlobString(errors.Get()), hasErrors);
     return !hasErrors;
 }
 
@@ -220,7 +221,7 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
         return true;
     }
 
-    report_.Reset(ToString(shaderDesc.type) + std::string(" shader error:") + "missing DXBC bytecode", true);
+    report_.Errorf("%s shader error: missing DXBC bytecode\n", ToString(shaderDesc.type));
     return false;
 }
 

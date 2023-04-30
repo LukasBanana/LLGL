@@ -32,7 +32,11 @@ LLGL_EXPORT int LLGL_RenderSystem_RendererID();
 // Returns the name of this render system module (e.g. "OpenGL" or "Direct3D 11").
 LLGL_EXPORT const char* LLGL_RenderSystem_Name();
 
-// Allocates the render system and returns it as raw pointer.
+/**
+\brief Allocates the render system and returns it as raw pointer.
+\param[in] renderSystemDesc Specifies the descriptor for this render system. This must be re-interpret casted to RenderSystemDescriptor.
+\param[in] renderSystemDescSize Specifies the size of the descriptor. This must be equal to <tt>sizeof(RenderSystemDescriptor)</tt>.
+*/
 LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int renderSystemDescSize);
 
 /**

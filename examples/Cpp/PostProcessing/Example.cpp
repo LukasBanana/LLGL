@@ -100,8 +100,10 @@ public:
         CreateResourceHeaps();
 
         // Show some information
-        std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the outer box" << std::endl;
-        std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the glow intensity" << std::endl;
+        LLGL::Log::Printf(
+            "press LEFT MOUSE BUTTON and move the mouse to rotate the outer box\n"
+            "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the glow intensity\n"
+        );
     }
 
     void CreateBuffers()
@@ -500,8 +502,7 @@ private:
         {
             float delta = mouseMotion.x*0.01f;
             sceneSettings.intensity = std::max(0.0f, std::min(sceneSettings.intensity + delta, 3.0f));
-            std::cout << "glow intensity: " << static_cast<int>(sceneSettings.intensity*100.0f) << "%    \r";
-            std::flush(std::cout);
+            LLGL::Log::Printf("glow intensity: %d%%    \r", static_cast<int>(sceneSettings.intensity*100.0f));
         }
 
         // Initialize viewports

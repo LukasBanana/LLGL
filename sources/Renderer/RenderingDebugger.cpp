@@ -109,19 +109,15 @@ void RenderingDebugger::PostWarning(const WarningType type, const StringView& me
 
 void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
-    Log::PostReport(
-        Log::ReportType::Error,
-        message.ToReportString("ERROR (" + UTF8String(ToString(type)) + ")")
-    );
+    UTF8String str = message.ToReportString();
+    Log::Errorf("error (%s): %s\n", ToString(type), str.c_str());
     message.Block();
 }
 
 void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
-    Log::PostReport(
-        Log::ReportType::Warning,
-        message.ToReportString("WARNING (" + UTF8String(ToString(type)) + ")")
-    );
+    UTF8String str = message.ToReportString();
+    Log::Printf("warning (%s): %s\n", ToString(type), str.c_str());
     message.Block();
 }
 
@@ -151,12 +147,9 @@ void RenderingDebugger::Message::BlockAfter(std::size_t occurrences)
         Block();
 }
 
-UTF8String RenderingDebugger::Message::ToReportString(const StringView& reportTypeName) const
+UTF8String RenderingDebugger::Message::ToReportString() const
 {
     UTF8String s;
-
-    s += reportTypeName;
-    s += ": ";
 
     if (!GetGroupName().empty())
     {

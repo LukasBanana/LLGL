@@ -157,6 +157,7 @@ option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and 
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 option(LLGL_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
 option(LLGL_ENABLE_JIT_COMPILER "Enable Just-in-Time (JIT) compilation for emulated deferred command buffers (experimental)" OFF)
+option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
 
 option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
 
@@ -213,6 +214,10 @@ endif()
 
 if(LLGL_ENABLE_JIT_COMPILER)
     ADD_DEFINE(LLGL_ENABLE_JIT_COMPILER)
+endif()
+
+if(LLGL_ENABLE_EXCEPTIONS)
+    ADD_DEFINE(LLGL_ENABLE_EXCEPTIONS)
 endif()
 
 if(LLGL_GL_ENABLE_VENDOR_EXT)

@@ -109,7 +109,7 @@ void LinuxGLContext::CreateContext(
     GLXContext intermediateGlc = CreateContextCompatibilityProfile(nativeHandle.visual, nullptr);
 
     if (glXMakeCurrent(display_, nativeHandle.window, intermediateGlc) != True)
-        Log::PostReport(Log::ReportType::Error, "glXMakeCurrent failed on GLX compatibility profile");
+        Log::Errorf("glXMakeCurrent failed on GLX compatibility profile");
 
     if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
     {
@@ -121,7 +121,7 @@ void LinuxGLContext::CreateContext(
     {
         /* Make new OpenGL context current */
         if (glXMakeCurrent(display_, nativeHandle.window, glc_) != True)
-            Log::PostReport(Log::ReportType::Error, "glXMakeCurrent failed on GLX core profile");
+            Log::Errorf("glXMakeCurrent failed on GLX core profile");
 
         /* Valid core profile created, so we can delete the intermediate GLX context */
         glXDestroyContext(display_, intermediateGlc);
@@ -159,11 +159,7 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
     if (major < 3)
     {
         /* Don't try to create a core profile when GL version is below 3.0 */
-        Log::PostReport(
-            Log::ReportType::Error,
-            "cannot create OpenGL core profile with GL version " +
-            std::to_string(major) + '.' + std::to_string(minor)
-        );
+        Log::Errorf("cannot create OpenGL core profile with GL version %d.%d", major, minor);
         return nullptr;
     }
 
@@ -217,7 +213,7 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
     }
 
     /* Context creation failed */
-    Log::PostReport(Log::ReportType::Error, "failed to create OpenGL core profile");
+    Log::Errorf("failed to create OpenGL core profile");
 
     return nullptr;
 }

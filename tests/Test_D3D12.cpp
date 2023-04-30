@@ -9,14 +9,13 @@
 #include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Timer.h>
 #include <Gauss/Gauss.h>
-#include <iostream>
 
 
 int main()
 {
     try
     {
-        LLGL::Log::SetReportCallbackStd(&(std::cerr));
+        LLGL::Log::RegisterCallbackStd();
 
         // Setup profiler and debugger
         std::shared_ptr<LLGL::RenderingProfiler> profiler;
@@ -122,7 +121,7 @@ int main()
         for (auto shader : { vertShader, fragShader })
         {
             if (auto report = shader->GetReport())
-                std::cerr << report->GetText() << std::endl;
+                LLGL::Log::Errorf("%s", report->GetText());
         }
 
         // Create pipeline layout
@@ -212,7 +211,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
         system("pause");
     }
 

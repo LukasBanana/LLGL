@@ -8,7 +8,6 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/Utility.h>
 #include <LLGL/Utils/VertexFormat.h>
-#include <iostream>
 
 
 int main(int argc, char* argv[])
@@ -17,7 +16,7 @@ int main(int argc, char* argv[])
     {
         // Render system with debugger
         LLGL::RenderingDebugger debugger;
-        LLGL::Log::SetReportCallbackStd(&(std::cerr));
+        LLGL::Log::RegisterCallbackStd();
 
         LLGL::RenderSystemDescriptor rendererDesc = "OpenGL";
         {
@@ -108,7 +107,7 @@ int main(int argc, char* argv[])
 
         if (auto report = pso->GetReport())
         {
-            std::cerr << report->GetText() << std::endl;
+            LLGL::Log::Errorf("%s\n", report->GetText());
             if (report->HasErrors())
             {
                 #ifdef _WIN32
@@ -140,7 +139,7 @@ int main(int argc, char* argv[])
             if (input.KeyDown(LLGL::Key::Tab))
             {
                 resSet = 1 - resSet;
-                std::cout << "Switched to resource heap: " << resSet << std::endl;
+                LLGL::Log::Printf("Switched to resource heap: %u\n", resSet);
             }
 
             commands->Begin();
@@ -168,7 +167,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
     }
     return 0;
 }

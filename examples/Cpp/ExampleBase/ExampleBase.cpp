@@ -253,8 +253,7 @@ ExampleBase::ExampleBase(
     profiler     { *profilerObj_                 }
 {
     // Set report callback to standard output
-    LLGL::Log::SetReportCallbackStd(&(std::cerr));
-    LLGL::Log::SetReportLimit(10);
+    LLGL::Log::RegisterCallbackStd();
 
     // Set up renderer descriptor
     LLGL::RenderSystemDescriptor rendererDesc = rendererModule_;

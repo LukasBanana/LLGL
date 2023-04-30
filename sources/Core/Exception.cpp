@@ -7,6 +7,7 @@
 
 #include "Exception.h"
 #include "CoreUtils.h"
+#include <LLGL/Report.h>
 #include "../Platform/Debug.h"
 #include <stdexcept>
 #include <stdarg.h>
@@ -41,7 +42,7 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
     const int len = ::vsnprintf(nullptr, 0, format, args);
     if (len > 0)
     {
-        const auto formatLen = static_cast<std::size_t>(len);
+        const std::size_t formatLen = static_cast<std::size_t>(len);
         auto formatStr = MakeUniqueArray<char>(formatLen + 1);
         ::vsnprintf(formatStr.get(), formatLen + 1, format, args);
         report.append(formatStr.get(), formatLen);
@@ -49,7 +50,7 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
 
     va_end(args);
 
-    #ifdef LLGL_EXCEPTIONS_ENABLED
+    #ifdef LLGL_ENABLE_EXCEPTIONS
 
     /* Throw exception with report and optional origin */
     throw std::runtime_error(report);
@@ -157,6 +158,53 @@ LLGL_EXPORT void TrapParamExceededUpperBound(const char* origin, const char* par
 LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramName, int value, int maximum)
 {
     Trap(origin, "parameter '%s = %d' out of range [0, %d]", paramName, value, maximum);
+}
+
+static void InternalPrintf(std::string& str, const char* format, va_list args)
+{
+    int len = ::vsnprintf(nullptr, 0, format, args);
+    if (len > 0)
+    {
+        /*
+        Since C++11 we can override the last character with '\0' ourselves,
+        so it's safe to let ::vsnprintf override std::string from [0, size()] inclusive.
+        */
+        const std::size_t formatLen = static_cast<std::size_t>(len);
+        str.resize(formatLen);
+        ::vsnprintf(&str[0], formatLen + 1, format, args);
+    }
+}
+
+LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, ...)
+{
+    #ifdef LLGL_ENABLE_EXCEPTIONS
+
+    std::string errorStr;
+
+    va_list args;
+    va_start(args, format);
+    InternalPrintf(errorStr, format, args);
+    va_end(args);
+
+    throw std::runtime_error(errorStr);
+
+    #else
+
+    if (report != nullptr)
+    {
+        std::string errorStr;
+
+        va_list args;
+        va_start(args, format);
+        InternalPrintf(errorStr, format, args);
+        va_end(args);
+
+        report->Errorf("%s\n", errorStr.c_str());
+    }
+
+    return nullptr;
+
+    #endif
 }
 
 

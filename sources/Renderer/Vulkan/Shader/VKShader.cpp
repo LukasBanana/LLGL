@@ -11,6 +11,7 @@
 #include "../VKTypes.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
+#include "../../../Core/ReportUtils.h"
 #include "../../PipelineStateUtils.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
@@ -586,17 +587,13 @@ void VKShader::BuildBindingLayout()
 
 void VKShader::BuildReport()
 {
-    std::string s;
-
     switch (loadBinaryResult_)
     {
         case LoadBinaryResult::Undefined:
-            s += ToString(GetType());
-            s += " shader: shader module is undefined";
+            report_.Errorf("%s shader: shader module is undefined\n", ToString(GetType()));
             break;
         case LoadBinaryResult::InvalidCodeSize:
-            s += ToString(GetType());
-            s += " shader: shader module code size is not a multiple of four bytes";
+            report_.Errorf("%s shader: shader module code size is not a multiple of four bytes\n", ToString(GetType()));
             break;
         case LoadBinaryResult::ReflectFailed:
             //TODO
@@ -604,10 +601,6 @@ void VKShader::BuildReport()
         default:
             break;
     }
-
-    const bool hasErrors = (loadBinaryResult_ != LoadBinaryResult::Successful);
-
-    report_.Reset(std::move(s), hasErrors);
 }
 
 bool VKShader::CompileSource(const ShaderDescriptor& shaderDesc)

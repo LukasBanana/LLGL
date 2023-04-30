@@ -107,7 +107,7 @@ using RenderSystemPtr = std::unique_ptr<RenderSystem, RenderSystemDeleter>;
 \brief Render system interface.
 \remarks This is the main interface for the entire renderer.
 It manages the ownership of all graphics objects and is used to create, modify, and delete all those objects.
-The main functions for most graphics objects are "Create...", "Write...", "Read...", "Map...", "Unmap...", and "Release":
+The main functions for most graphics objects are \c Create*, \c Write*, \c Read*, \c Map*, \c Unmap*, and \c Release:
 \code
 // Create and initialize vertex buffer
 LLGL::BufferDescriptor bufferDesc;
@@ -142,6 +142,8 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Loads a new render system from the specified module.
         \param[in] renderSystemDesc Specifies the render system descriptor structure. The 'moduleName' member of this strucutre must not be empty.
+        \param[out] report Optional pointer to a report on potential failure of loading the specified module.
+        \remarks If loading the specified moduel failed, the return value is null and the reason for failure is reported in \c report if it's a valid pointer.
         \remarks The descriptor structure can be initialized by only the module name like shown in the following example:
         \code
         // Load the "OpenGL" render system module
@@ -150,19 +152,25 @@ class LLGL_EXPORT RenderSystem : public Interface
         \remarks The debugger and profiler can be used like this:
         \code
         // Forward all log reports to the standard output stream for errors
-        LLGL::Log::SetReportCallbackStd(&(std::cerr));
+        LLGL::Log::RegisterCallbackStd();
 
         // Declare profiler and debugger (these classes can also be extended)
         LLGL::RenderingProfiler myProfiler;
         LLGL::RenderingDebugger myDebugger;
 
         // Load the "Direct3D11" render system module
-        auto myRenderSystem = LLGL::RenderSystem::Load("Direct3D11", &myProfiler, &myDebugger);
+        LLGL::RenderSystemDescriptor myRendererDesc;
+        {
+            myRendererDesc.moduleName   = "Direct3D11";
+            myRendererDesc.profiler     = &myProfiler;
+            myRendererDesc.debugger     = &myDebugger;
+        }
+        auto myRenderSystem = LLGL::RenderSystem::Load(myRendererDesc);
         \endcode
         \throws std::runtime_error If loading the render system from the specified module failed.
         \see RenderSystemDescriptor::moduleName
         */
-        static RenderSystemPtr Load(const RenderSystemDescriptor& renderSystemDesc);
+        static RenderSystemPtr Load(const RenderSystemDescriptor& renderSystemDesc, Report* report = nullptr);
 
         /**
         \brief Unloads the specified render system and the internal module.
@@ -196,6 +204,13 @@ class LLGL_EXPORT RenderSystem : public Interface
         after a valid swap-chain has been created. Otherwise the behavior is undefined!
         */
         const RenderingCapabilities& GetRenderingCaps() const;
+
+        /**
+        \brief Returns a pointer to the report or null if there is none.
+        \remarks If there is a report, it indicates errors from a previous operation, similar to \c ::GetLastError() from the Windows API.
+        \see Report
+        */
+        const Report* GetReport() const;
 
     public:
 
@@ -590,6 +605,9 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         //! Allocates the internal data.
         RenderSystem();
+
+        //! Returns the internal report of this render system to be modified by the renderer implementation.
+        Report& GetMutableReport();
 
         //! Sets the renderer information.
         void SetRendererInfo(const RendererInfo& info);

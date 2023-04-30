@@ -6,7 +6,6 @@
  */
 
 #include <ExampleBase.h>
-#include <iostream>
 
 
 int main(int argc, char* argv[])
@@ -14,13 +13,13 @@ int main(int argc, char* argv[])
     try
     {
         // Set report callback to standard output
-        LLGL::Log::SetReportCallbackStd(&std::cerr);
+        LLGL::Log::RegisterCallbackStd();
 
         // Load render system module
         LLGL::RenderingDebugger debugger;
         auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));//, nullptr, &debugger);
 
-        std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
+        LLGL::Log::Printf("LLGL Renderer: %s\n", renderer->GetName());
 
         // Create two swap-chains
         LLGL::SwapChainDescriptor swapChainDesc[2];
@@ -172,7 +171,7 @@ int main(int argc, char* argv[])
                 if (auto report = shader->GetReport())
                 {
                     if (*report->GetText() != '\0')
-                        std::cerr << report->GetText() << std::endl;
+                        LLGL::Log::Errorf("%s", report->GetText());
                 }
             }
         }
@@ -227,7 +226,7 @@ int main(int argc, char* argv[])
         bool enableLogicOp[2] = { false, false };
 
         if (logicOpSupported)
-            std::cout << "Press SPACE to enabled/disable logic fragment operations" << std::endl;
+            LLGL::Log::Printf("Press SPACE to enabled/disable logic fragment operations\n");
 
         // Generate multiple-instances via geometry shader.
         // Otherwise, use instanced rendering if geometry shaders are not supported (for Metal shading language).
@@ -250,16 +249,11 @@ int main(int argc, char* argv[])
                 {
                     if (logicOpSupported)
                     {
-                        std::cout << "Logic Fragment Operation ";
                         enableLogicOp[i] = !enableLogicOp[i];
-                        if (enableLogicOp[i])
-                            std::cout << "Enabled";
-                        else
-                            std::cout << "Disabled";
-                        std::cout << " (Window " << (i + 1) << ")" << std::endl;
+                        LLGL::Log::Printf("Logic Fragment Operation %s (Window %d)\n", (enableLogicOp[i] ? "Enabled" : "Disabled"), (i + 1));
                     }
                     else
-                        std::cout << "Logic Fragment Operation Not Supported" << std::endl;
+                        LLGL::Log::Printf("Logic Fragment Operation Not Supported\n");
                 }
             }
 
@@ -310,7 +304,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
     }
     return 0;
 }

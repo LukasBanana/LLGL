@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
 #include <string>
+#include <cstddef>
 
 
 #define LLGL_VA_ARGS(...) \
@@ -30,6 +31,8 @@
 namespace LLGL
 {
 
+
+class Report;
 
 // Primary function to trap execution from an unrecoverable state. This might either throw an exception, abort execution, or break the debugger.
 [[noreturn]]
@@ -70,6 +73,9 @@ LLGL_EXPORT void TrapParamExceededUpperBound(const char* origin, const char* par
 // Throws an std::out_of_range exception with the message, that a value has exceeded its maximum, i.e. <value> is not in the closed range [0, maximum].
 [[noreturn]]
 LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramName, int value, int maximum);
+
+// Reports the specified error if 'report' is non-null (see Report::Errorf) or throws a std::runtime_error if LLGL_ENABLE_EXCEPTIONS is defined.
+LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, ...);
 
 
 } // /namespace LLGL

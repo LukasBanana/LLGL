@@ -12,6 +12,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Exception.h"
+#include "../../../Core/ReportUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <stdexcept>
@@ -119,7 +120,7 @@ void GLShader::PatchShaderSourceWithOptions(
 
 void GLShader::ReportStatusAndLog(bool status, const std::string& log)
 {
-    report_.Reset(log.c_str(), !status);
+    ResetReportWithNewline(report_, log.c_str(), !status);
 }
 
 

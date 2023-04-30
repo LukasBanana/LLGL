@@ -10,6 +10,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/ReportUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <stdexcept>
@@ -275,7 +276,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 
     /* Return true if compilation was successful */
     const bool hasErrors = FAILED(hr);
-    report_.Reset(DXGetBlobString(errors.Get()), hasErrors);
+    ResetReportWithNewline(report_, DXGetBlobString(errors.Get()), hasErrors);
     return !hasErrors;
 }
 

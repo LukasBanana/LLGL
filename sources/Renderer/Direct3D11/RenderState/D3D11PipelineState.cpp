@@ -12,6 +12,7 @@
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/ReportUtils.h"
 
 
 namespace LLGL
@@ -42,7 +43,7 @@ const Report* D3D11PipelineState::GetReport() const
 
 void D3D11PipelineState::ResetReport(std::string&& text, bool hasErrors)
 {
-    report_.Reset(std::forward<std::string&&>(text), hasErrors);
+    ResetReportWithNewline(report_, std::forward<std::string&&>(text), hasErrors);
 }
 
 

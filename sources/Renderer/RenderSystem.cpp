@@ -9,6 +9,7 @@
 #include "../Core/CoreUtils.h"
 #include "../Core/StringUtils.h"
 #include "../Core/Assertion.h"
+#include "../Core/Exception.h"
 #include "RenderTargetUtils.h"
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
@@ -21,7 +22,7 @@
 #include <LLGL/RenderSystem.h>
 #include <inttypes.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #ifdef LLGL_ENABLE_DEBUG_LAYER
 #   include "DebugLayer/DbgRenderSystem.h"
@@ -47,9 +48,10 @@ struct RenderSystem::Pimpl
     std::string             name;
     RendererInfo            info;
     RenderingCapabilities   caps;
+    Report                  report;
 };
 
-static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
+static std::unordered_map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
 
 RenderSystem::RenderSystem() :
     pimpl_ { new Pimpl{} }
@@ -107,14 +109,20 @@ std::vector<std::string> RenderSystem::FindModules()
     return modules;
 }
 
-static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
+static bool LoadRenderSystemBuildID(
+    Module&             module,
+    const std::string&  moduleFilename,
+    Report*             report)
 {
     /* Load "LLGL_RenderSystem_BuildID" procedure */
     LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_BUILDID, (void));
 
     auto RenderSystem_BuildID = reinterpret_cast<PFN_RENDERSYSTEM_BUILDID>(module.LoadProcedure("LLGL_RenderSystem_BuildID"));
     if (!RenderSystem_BuildID)
-        throw std::runtime_error("failed to load <LLGL_RenderSystem_BuildID> procedure from module: \"" + moduleFilename + "\"");
+    {
+        ReportException(report, "failed to load <LLGL_RenderSystem_BuildID> procedure from module: %s", moduleFilename.c_str());
+        return false;
+    }
 
     return (RenderSystem_BuildID() == LLGL_BUILD_ID);
 }
@@ -142,19 +150,32 @@ static const char* LoadRenderSystemName(Module& module, const RenderSystemDescri
         return "";
 }
 
-static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename, const RenderSystemDescriptor& renderSystemDesc)
+static RenderSystem* LoadRenderSystem(
+    Module&                         module,
+    const std::string&              moduleFilename,
+    const RenderSystemDescriptor&   renderSystemDesc,
+    Report*                         outReport)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
     LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (const void*, int));
 
     auto RenderSystem_Alloc = reinterpret_cast<PFN_RENDERSYSTEM_ALLOC>(module.LoadProcedure("LLGL_RenderSystem_Alloc"));
     if (!RenderSystem_Alloc)
-        throw std::runtime_error("failed to load 'LLGL_RenderSystem_Alloc' procedure from module: " + moduleFilename);
+        return ReportException(outReport, "failed to load 'LLGL_RenderSystem_Alloc' procedure from module: %s", moduleFilename.c_str());
 
     /* Allocate render system */
     auto renderSystem = reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(&renderSystemDesc, static_cast<int>(sizeof(RenderSystemDescriptor))));
     if (!renderSystem)
-        throw std::runtime_error("failed to allocate render system from module: " + moduleFilename);
+        return ReportException(outReport, "failed to allocate render system from module: %s", moduleFilename);
+
+    /* Check if errors where reported and the render system is unusable */
+    if (auto report = renderSystem->GetReport())
+    {
+        if (outReport != nullptr)
+            *outReport = *report;
+        if (report->HasErrors())
+            return nullptr;
+    }
 
     return renderSystem;
 }
@@ -167,7 +188,7 @@ static RenderSystemDeleter::RenderSystemDeleterFuncPtr LoadRenderSystemDeleter(M
 
 #endif // /LLGL_BUILD_STATIC_LIB
 
-RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDesc)
+RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDesc, Report* report)
 {
     /* Initialize mobile specific states */
     #if defined LLGL_OS_ANDROID
@@ -189,11 +210,12 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
         #ifdef LLGL_ENABLE_DEBUG_LAYER
 
         /* Create debug layer render system */
-        renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger) };
+        renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger } };
 
         #else
 
-        Log::PostReport(Log::ReportType::Error, "LLGL was not compiled with debug layer support");
+        if (report != nullptr)
+            report->Errorf("LLGL was not compiled with debug layer support");
 
         #endif // /LLGL_ENABLE_DEBUG_LAYER
     }
@@ -214,46 +236,55 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     Verify build ID from render system module to detect a module,
     that has compiled with a different compiler (type, version, debug/release mode etc.)
     */
-    if (!LoadRenderSystemBuildID(*module, moduleFilename))
-        throw std::runtime_error("build ID mismatch in render system module");
+    if (!LoadRenderSystemBuildID(*module, moduleFilename, report))
+        return ReportException(report, "build ID mismatch in render system module");
 
+    #ifdef LLGL_ENABLE_EXCEPTIONS
     try
+    #endif
     {
         /* Allocate render system */
         auto renderSystem = RenderSystemPtr
         {
-            LoadRenderSystem(*module, moduleFilename, renderSystemDesc),
+            LoadRenderSystem(*module, moduleFilename, renderSystemDesc, report),
             RenderSystemDeleter{ LoadRenderSystemDeleter(*module) }
         };
 
-        if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
+        if (renderSystem)
         {
-            #ifdef LLGL_ENABLE_DEBUG_LAYER
+            if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
+            {
+                #ifdef LLGL_ENABLE_DEBUG_LAYER
 
-            /* Create debug layer render system */
-            renderSystem = RenderSystemPtr{ new DbgRenderSystem(std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger) };
+                /* Create debug layer render system */
+                renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger } };
 
-            #else
+                #else
 
-            Log::PostReport(Log::ReportType::Error, "LLGL was not compiled with debug layer support");
+                if (report != nullptr)
+                    report->Errorf("LLGL was not compiled with debug layer support");
 
-            #endif // /LLGL_ENABLE_DEBUG_LAYER
+                #endif // /LLGL_ENABLE_DEBUG_LAYER
+            }
+
+            renderSystem->pimpl_->name          = LoadRenderSystemName(*module,renderSystemDesc);
+            renderSystem->pimpl_->rendererID    = LoadRenderSystemRendererID(*module,renderSystemDesc);
+
+            /* Store new module inside internal map */
+            g_renderSystemModules[renderSystem.get()] = std::move(module);
         }
 
-        renderSystem->pimpl_->name          = LoadRenderSystemName(*module,renderSystemDesc);
-        renderSystem->pimpl_->rendererID    = LoadRenderSystemRendererID(*module,renderSystemDesc);
-
-        /* Store new module inside internal map */
-        g_renderSystemModules[renderSystem.get()] = std::move(module);
-
-        /* Return new render system and unique pointer */
         return renderSystem;
     }
+    #ifdef LLGL_ENABLE_EXCEPTIONS
     catch (const std::exception& e)
     {
         /* Throw with new exception, otherwise the exception's v-table will be corrupted since it's part of the module */
-        throw std::runtime_error(e.what());
+        if (report != nullptr)
+            report->Errorf("%s", e.what());
+        return nullptr;
     }
+    #endif
 
     #endif // /LLGL_BUILD_STATIC_LIB
 }
@@ -289,10 +320,20 @@ const RenderingCapabilities& RenderSystem::GetRenderingCaps() const
     return pimpl_->caps;
 }
 
+const Report* RenderSystem::GetReport() const
+{
+    return (pimpl_->report ? &(pimpl_->report) : nullptr);
+}
+
 
 /*
  * ======= Protected: =======
  */
+
+Report& RenderSystem::GetMutableReport()
+{
+    return pimpl_->report;
+}
 
 void RenderSystem::SetRendererInfo(const RendererInfo& info)
 {
