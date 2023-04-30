@@ -40,6 +40,8 @@ class VKTexture final : public Texture
 
         Format GetFormat() const override;
 
+        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
+
     public:
 
         // Creates an additional texture view of the specified texture range and uses the same format as this texture object.

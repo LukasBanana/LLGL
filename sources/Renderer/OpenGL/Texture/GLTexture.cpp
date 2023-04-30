@@ -259,6 +259,12 @@ Format GLTexture::GetFormat() const
     return MapGLSwizzleFormat(format, swizzleFormat_);
 }
 
+SubresourceFootprint GLTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    const auto desc = GetDesc();
+    return CalcPackedSubresourceFootprint(desc.type, desc.format, desc.extent, mipLevel, desc.arrayLayers);
+}
+
 static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
 {
     if (IsMipMappedTexture(textureDesc))

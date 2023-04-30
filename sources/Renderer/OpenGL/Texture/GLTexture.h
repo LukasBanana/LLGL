@@ -44,6 +44,8 @@ class GLTexture final : public Texture
 
         Format GetFormat() const override;
 
+        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
+
     public:
 
         GLTexture(const TextureDescriptor& desc);

@@ -25,14 +25,13 @@ void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr
     auto device = deviceMemoryMngr.GetVkDevice();
 
     /* Get memory requirements for the image */
-    VkMemoryRequirements requirements;
-    vkGetImageMemoryRequirements(device, image_, &requirements);
+    vkGetImageMemoryRequirements(device, image_, &memoryRequirements_);
 
     /* Allocate device memory */
     memoryRegion_ = deviceMemoryMngr.Allocate(
-        requirements.size,
-        requirements.alignment,
-        requirements.memoryTypeBits,
+        memoryRequirements_.size,
+        memoryRequirements_.alignment,
+        memoryRequirements_.memoryTypeBits,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 

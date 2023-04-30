@@ -6,6 +6,7 @@
  */
 
 #include "NullTexture.h"
+#include "../../TextureUtils.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
@@ -44,11 +45,6 @@ void NullTexture::SetName(const char* name)
         label_.clear();
 }
 
-Extent3D NullTexture::GetMipExtent(std::uint32_t mipLevel) const
-{
-    return LLGL::GetMipExtent(GetType(), extent_, ClampMipLevel(mipLevel));
-}
-
 TextureDescriptor NullTexture::GetDesc() const
 {
     return desc;
@@ -57,6 +53,16 @@ TextureDescriptor NullTexture::GetDesc() const
 Format NullTexture::GetFormat() const
 {
     return desc.format;
+}
+
+Extent3D NullTexture::GetMipExtent(std::uint32_t mipLevel) const
+{
+    return LLGL::GetMipExtent(GetType(), extent_, ClampMipLevel(mipLevel));
+}
+
+SubresourceFootprint NullTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    return CalcPackedSubresourceFootprint(GetType(), GetFormat(), desc.extent, mipLevel, desc.arrayLayers);
 }
 
 std::uint32_t NullTexture::ClampMipLevel(std::uint32_t mipLevel) const

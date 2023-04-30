@@ -50,11 +50,6 @@ void DbgTexture::SetName(const char* name)
     DbgSetObjectName(*this, name);
 }
 
-Extent3D DbgTexture::GetMipExtent(std::uint32_t mipLevel) const
-{
-    return instance.GetMipExtent(mipLevel);
-}
-
 TextureDescriptor DbgTexture::GetDesc() const
 {
     return instance.GetDesc();
@@ -63,6 +58,16 @@ TextureDescriptor DbgTexture::GetDesc() const
 Format DbgTexture::GetFormat() const
 {
     return instance.GetFormat();
+}
+
+Extent3D DbgTexture::GetMipExtent(std::uint32_t mipLevel) const
+{
+    return instance.GetMipExtent(mipLevel);
+}
+
+SubresourceFootprint DbgTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    return instance.GetSubresourceFootprint(mipLevel);
 }
 
 

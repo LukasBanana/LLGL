@@ -80,6 +80,28 @@ LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const E
     return layout;
 }
 
+LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
+    const TextureType   type,
+    const Format        format,
+    const Extent3D&     extent,
+    std::uint32_t       mipLevel,
+    std::uint32_t       numArrayLayers,
+    std::uint32_t       alignment)
+{
+    SubresourceFootprint footprint;
+    {
+        const auto mipExtent = GetMipExtent(type, extent, mipLevel);
+        const auto numLayers = mipExtent.depth * numArrayLayers;
+        footprint.rowAlignment  = alignment;
+        footprint.rowSize       = GetMemoryFootprint(format, mipExtent.width);
+        footprint.rowStride     = GetAlignedSize(footprint.rowSize, alignment);
+        footprint.layerSize     = (mipExtent.height > 1 ? footprint.rowStride * (mipExtent.height - 1) + footprint.rowSize : footprint.rowSize * mipExtent.height);
+        footprint.layerStride   = footprint.rowStride * mipExtent.height;
+        footprint.size          = (numLayers > 1 ? footprint.layerStride * (numLayers - 1) + footprint.layerSize : footprint.layerSize * numLayers);
+    }
+    return footprint;
+}
+
 LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc)
 {
     return

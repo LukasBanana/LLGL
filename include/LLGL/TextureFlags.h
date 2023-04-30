@@ -213,6 +213,8 @@ struct TextureLocation
 \remarks This is used to write (or partially write) and read (or partially read) the image data of a \b single texture MIP-map level.
 \see RenderSystem::WriteTexture
 \see RenderSystem::ReadTexture
+\see CommandBuffer::CopyBufferFromTexture
+\see CommandBuffer::CopyTextureFromBuffer
 \see TextureLocation
 */
 struct TextureRegion
@@ -251,6 +253,7 @@ struct TextureRegion
 
     /**
     \brief Extent of the sub texture region.
+    \remarks All components of the extent must be greater than zero. By default (0, 0, 0).
     \see TextureDescriptor::extent
     */
     Extent3D            extent;
@@ -400,6 +403,40 @@ struct TextureViewDescriptor
     TextureSwizzleRGBA  swizzle;
 };
 
+/**
+\brief Memory footprint structure for texture subresources.
+\see Texture::GetSubresourceFootprint
+*/
+struct SubresourceFootprint
+{
+    //! Total size (in bytes) of the texture subresource.
+    std::uint64_t size          = 0;
+
+    //! Alignment (in bytes) for each row. Minimum alignment a renderer must return for a texture is 1.
+    std::uint32_t rowAlignment  = 0;
+
+    /**
+    \brief Size (in bytes) of each row in the texture subresource.
+    \remarks Not to be confused with row stride although this value \e might be equal to rowStride.
+    */
+    std::uint32_t rowSize       = 0;
+
+    /**
+    \brief Stride (in bytes) of each row in the texture subresource. This is aligned to rowAlignment.
+    \see rowAlignment
+    */
+    std::uint32_t rowStride     = 0;
+
+    /**
+    \brief Size (in bytes) of each layer in the texture subresource. For 3D textures, this counts as a depth layer.
+    \remarks Not to be confused with layer stride although this value \e might be equal to layerStride.
+    */
+    std::uint32_t layerSize     = 0;
+
+    //! Stride (in bytes) for each layer. For 3D textures, this counts as depth layer.
+    std::uint32_t layerStride   = 0;
+};
+
 
 /* ----- Functions ----- */
 
@@ -518,7 +555,7 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uin
 \see Texture::GetMipExtent
 \see Texture::GetFormat
 */
-std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource);
+LLGL_EXPORT std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource);
 
 /**
 \brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.

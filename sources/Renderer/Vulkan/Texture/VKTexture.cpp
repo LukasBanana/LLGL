@@ -7,6 +7,8 @@
 
 #include "VKTexture.h"
 #include "../Memory/VKDeviceMemory.h"
+#include "../../TextureUtils.h"
+#include "../../../Core/CoreUtils.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include <algorithm>
@@ -120,6 +122,14 @@ TextureDescriptor VKTexture::GetDesc() const
 Format VKTexture::GetFormat() const
 {
     return VKTypes::Unmap(GetVkFormat());
+}
+
+SubresourceFootprint VKTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    const Extent3D extent{ extent_.width, extent_.height, extent_.depth };
+    SubresourceFootprint footprint = CalcPackedSubresourceFootprint(GetType(), GetFormat(), extent, mipLevel, GetNumArrayLayers());
+    footprint.size = GetAlignedSize(footprint.size, static_cast<std::uint64_t>(image_.GetMemoryRequirements().alignment));
+    return footprint;
 }
 
 void VKTexture::CreateImageView(

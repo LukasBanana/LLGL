@@ -248,6 +248,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void ValidateBindFlags(long resourceFlags, long bindFlags, long validFlags, const char* resourceName = nullptr);
         void ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFlags);
         void ValidateBindTextureFlags(DbgTexture& textureDbg, long bindFlags);
+        void ValidateTextureRegion(DbgTexture& textureDbg, const TextureRegion& region);
         void ValidateIndexType(const Format format);
         void ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, std::uint32_t rowStride, std::uint32_t layerStride, const Extent3D& extent);
 

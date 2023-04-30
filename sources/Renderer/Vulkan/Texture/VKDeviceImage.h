@@ -22,6 +22,7 @@ namespace LLGL
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
 
+//TODO: Add current VkImageLayout to manage state transitioning
 // Wrapper class for VkImage handle.
 class VKDeviceImage
 {
@@ -75,10 +76,17 @@ class VKDeviceImage
             return memoryRegion_;
         }
 
+        // Returns the Vulkan memory requirements for this device image.
+        inline const VkMemoryRequirements& GetMemoryRequirements() const
+        {
+            return memoryRequirements_;
+        }
+
     private:
 
         VKPtr<VkImage>          image_;
-        VKDeviceMemoryRegion*   memoryRegion_   = nullptr;
+        VkMemoryRequirements    memoryRequirements_ = {};
+        VKDeviceMemoryRegion*   memoryRegion_       = nullptr;
 
 };
 

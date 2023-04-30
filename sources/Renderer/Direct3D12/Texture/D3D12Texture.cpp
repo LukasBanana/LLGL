@@ -144,6 +144,35 @@ Format D3D12Texture::GetFormat() const
     return GetBaseFormat();
 }
 
+SubresourceFootprint D3D12Texture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    SubresourceFootprint footprint;
+    {
+        ComPtr<ID3D12Device> device;
+        HRESULT hr = resource_.native->GetDevice(IID_PPV_ARGS(device.GetAddressOf()));
+        if (SUCCEEDED(hr))
+        {
+            UINT    subresourceIndex    = D3D12CalcSubresource(mipLevel, 0, 0, GetNumMipLevels(), GetNumArrayLayers());
+            UINT64  totalSize           = 0;
+            UINT    rows                = 0;
+            UINT64  rowSize             = 0;
+
+            D3D12_RESOURCE_DESC resourceDesc = resource_.native->GetDesc();
+
+            D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprint;
+            device->GetCopyableFootprints(&resourceDesc, subresourceIndex, 1, 0, &placedFootprint, &rows, &rowSize, &totalSize);
+
+            footprint.size          = totalSize;
+            footprint.rowAlignment  = D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
+            footprint.rowSize       = static_cast<std::uint32_t>(rowSize);
+            footprint.rowStride     = placedFootprint.Footprint.RowPitch;
+            footprint.layerSize     = (rows > 1 ? placedFootprint.Footprint.RowPitch * (rows - 1) + footprint.rowSize : footprint.rowSize * rows);
+            footprint.layerStride   = placedFootprint.Footprint.RowPitch * rows;
+        }
+    }
+    return footprint;
+}
+
 static D3D12_TEXTURE_COPY_LOCATION GetD3DTextureSubresourceLocation(ID3D12Resource* resource, UINT subresource)
 {
     D3D12_TEXTURE_COPY_LOCATION copyDesc;

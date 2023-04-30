@@ -58,6 +58,16 @@ LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& e
 // Calculates the size and strides for a subresource of the specified format and extent.
 LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent);
 
+// Calcualtes the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().
+LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
+    const TextureType   type,
+    const Format        format,
+    const Extent3D&     extent,
+    std::uint32_t       mipLevel,
+    std::uint32_t       numArrayLayers,
+    std::uint32_t       alignment = 1
+);
+
 // Returns true if the specified flags for texture creation require MIP-map generation at creation time.
 LLGL_EXPORT bool MustGenerateMipsOnCreate(const TextureDescriptor& textureDesc);
 

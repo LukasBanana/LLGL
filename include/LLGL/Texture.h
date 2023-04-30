@@ -36,26 +36,6 @@ class LLGL_EXPORT Texture : public Resource
         //! Returns ResourceType::Texture.
         ResourceType GetResourceType() const override final;
 
-        /**
-        \brief Returns the memory footprint (in bytes) of the entire texture.
-        \remarks This function uses the member \c GetDesc and the global \c GetMemoryFootprint functions.
-        \see LLGL::GetMemoryFootprint(const Format, std::uint32_t)
-        \see LLGL::GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
-        \see GetDesc
-        \todo Maybe make this virtual to allow memory alignment (especially for D3D12).
-        */
-        std::uint32_t GetMemoryFootprint() const;
-
-        /**
-        \brief Returns the memory footprint (in bytes) of the specified subresource and extent for this texture.
-        \remarks This function uses the member \c GetFormat and the global \c GetMemoryFootprint functions.
-        \see LLGL::GetMemoryFootprint(const Format, std::uint32_t)
-        \see LLGL::GetMemoryFootprint(const TextureType, const Format, const Extent3D&, const TextureSubresource&)
-        \see GetFormat
-        \todo Maybe make this virtual to allow memory alignment (especially for D3D12).
-        */
-        std::uint32_t GetMemoryFootprint(const Extent3D& extent, const TextureSubresource& subresource) const;
-
         //! Returns the type of this texture.
         inline TextureType GetType() const
         {
@@ -89,6 +69,15 @@ class LLGL_EXPORT Texture : public Resource
         */
         virtual TextureDescriptor GetDesc() const = 0;
 
+        /*
+        \brief Returns the hardware format of this texture.
+        \remarks This is usually the format this texture was created with.
+        However, sometimes the internal hardware format might be different from what the client programmer requested, especially with the OpenGL backend.
+        This function returns the actual internal hardware format.
+        \see TextureDescriptor::format.
+        */
+        virtual Format GetFormat() const = 0;
+
         /**
         \brief Returns the texture extent for the specified MIP-level. This also includes the number of array layers.
         \param[in] mipLevel Specifies the MIP-map level to query from. The first and largest MIP-map is level zero.
@@ -104,14 +93,14 @@ class LLGL_EXPORT Texture : public Resource
         */
         virtual Extent3D GetMipExtent(std::uint32_t mipLevel) const = 0;
 
-        /*
-        \brief Returns the hardware format of this texture.
-        \remarks This is usually the format this texture was created with.
-        However, sometimes the internal hardware format might be different from what the client programmer requested, especially with the OpenGL backend.
-        This function returns the actual internal hardware format.
-        \see TextureDescriptor::format.
+        /**
+        \brief Returns the memory footprint of the specified MIP-map subresource and optional extent.
+        \param[in] mipLevel Specifies the optional MIP-map subresource. The first and largest MIP-map is level zero. By default 0.
+        \param[in] extent Specifies the extent of the subresource. This will be clamped to the extent of the specified MIP-map. By default the entire MIP-extent is used.
+        \return Memory footprint of the specified subresource. If this operation failed, all fields in the returned structure are default initialized.
+        \see GetMipExtent
         */
-        virtual Format GetFormat() const = 0;
+        virtual SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const = 0;
 
     protected:
 

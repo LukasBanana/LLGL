@@ -150,6 +150,12 @@ Format MTTexture::GetFormat() const
     return MTTypes::ToFormat([native_ pixelFormat]);
 }
 
+SubresourceFootprint MTTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    const auto numArrayLayers = static_cast<std::uint32_t>([native_ arrayLength]);
+    return CalcPackedSubresourceFootprint(GetType(), GetFormat(), GetMipExtent(0), mipLevel, numArrayLayers);
+}
+
 void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
     /* Convert region to MTLRegion */

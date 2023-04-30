@@ -180,7 +180,13 @@ void DbgCommandBuffer::CopyBuffer(
     profile_.bufferCopies++;
 }
 
-//TODO: add remaining validation
+// Returns the minimum required memory footprint to copy the specified texture region into a buffer
+static std::uint64_t GetTextureRegionMinFootprint(const DbgTexture& textureDbg, const TextureRegion& region)
+{
+    const std::uint32_t numTexels = NumMipTexels(textureDbg.GetType(), region.extent, region.subresource.baseMipLevel);
+    return GetMemoryFootprint(textureDbg.GetFormat(), numTexels);
+}
+
 void DbgCommandBuffer::CopyBufferFromTexture(
     Buffer&                 dstBuffer,
     std::uint64_t           dstOffset,
@@ -197,9 +203,9 @@ void DbgCommandBuffer::CopyBufferFromTexture(
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
-        //ValidateBufferRange(dstBufferDbg, dstOffset, srcSize);
+        ValidateBufferRange(dstBufferDbg, dstOffset, GetTextureRegionMinFootprint(srcTextureDbg, srcRegion));
         ValidateBindTextureFlags(srcTextureDbg, BindFlags::CopySrc);
-        //ValidateTextureRegion(srcTextureDbg, TextureRegion{ dstLocation.offset, dstExtent }, srcSize);
+        ValidateTextureRegion(srcTextureDbg, srcRegion);
         ValidateTextureBufferCopyStrides(srcTextureDbg, rowStride, layerStride, srcRegion.extent);
     }
 
@@ -263,7 +269,6 @@ void DbgCommandBuffer::CopyTexture(
     profile_.textureCopies++;
 }
 
-//TODO: add remaining validation
 void DbgCommandBuffer::CopyTextureFromBuffer(
     Texture&                dstTexture,
     const TextureRegion&    dstRegion,
@@ -280,9 +285,9 @@ void DbgCommandBuffer::CopyTextureFromBuffer(
         LLGL_DBG_SOURCE;
         AssertRecording();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
-        //ValidateTextureRegion(dstTextureDbg, TextureRegion{ dstLocation.offset, dstExtent }, srcSize);
+        ValidateTextureRegion(dstTextureDbg, dstRegion);
         ValidateBindBufferFlags(srcBufferDbg, BindFlags::CopySrc);
-        //ValidateBufferRange(srcBufferDbg, srcOffset, srcSize);
+        ValidateBufferRange(srcBufferDbg, srcOffset, GetTextureRegionMinFootprint(dstTextureDbg, dstRegion));
         ValidateTextureBufferCopyStrides(dstTextureDbg, rowStride, layerStride, dstRegion.extent);
     }
 
@@ -1728,6 +1733,103 @@ void DbgCommandBuffer::ValidateBindBufferFlags(DbgBuffer& bufferDbg, long bindFl
 void DbgCommandBuffer::ValidateBindTextureFlags(DbgTexture& textureDbg, long bindFlags)
 {
     ValidateBindFlags(textureDbg.desc.bindFlags, bindFlags, bindFlags, GetLabelOrDefault(textureDbg.label, "LLGL::Texture"));
+}
+
+void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const TextureRegion& region)
+{
+    /* Validate MIP-map range */
+    if (region.subresource.numMipLevels == 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with MIP-map count of 0"
+        );
+    }
+    else if (region.subresource.numMipLevels > 1)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with MIP-map count greater than 1"
+        );
+    }
+    else if (region.subresource.baseMipLevel + region.subresource.numMipLevels > textureDbg.mipLevels)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with MIP-map range [" + std::to_string(region.subresource.baseMipLevel) +
+            ", +" + std::to_string(region.subresource.numMipLevels) +
+            ") for texture with " + std::to_string(textureDbg.mipLevels) + " MIP-maps"
+        );
+    }
+
+    /* Validate array layer range */
+    if (region.subresource.numArrayLayers == 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with array count of 0"
+        );
+    }
+    else if (region.subresource.baseArrayLayer + region.subresource.numArrayLayers > textureDbg.desc.arrayLayers)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with array range [" + std::to_string(region.subresource.baseArrayLayer) +
+            ", +" + std::to_string(region.subresource.numArrayLayers) +
+            ") for texture with " + std::to_string(textureDbg.desc.arrayLayers) + " layers"
+        );
+    }
+
+    /* Validate extent */
+    const auto mipExtent = textureDbg.GetMipExtent(region.subresource.baseMipLevel);
+
+    if (region.extent.width  == 0 ||
+        region.extent.height == 0 ||
+        region.extent.depth  == 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with zero extent (" + std::to_string(region.extent.width) +
+            ", " + std::to_string(region.extent.height) + ", " + std::to_string(region.extent.depth) + ")"
+        );
+    }
+    else if (region.offset.x < 0 ||
+             region.offset.y < 0 ||
+             region.offset.z < 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid texture region with negative offset (" + std::to_string(region.offset.x) +
+            ", " + std::to_string(region.offset.y) + ", " + std::to_string(region.offset.z) + ")"
+        );
+    }
+    else
+    {
+        if (static_cast<std::uint32_t>(region.offset.x) + region.extent.width > mipExtent.width)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid texture region with X-range [" + std::to_string(region.offset.x) + ", +" + std::to_string(region.extent.width) +
+                ") out of bounds [0, " + std::to_string(mipExtent.width) + ") for MIP-level " + std::to_string(region.subresource.baseMipLevel)
+            );
+        }
+        if (static_cast<std::uint32_t>(region.offset.y) + region.extent.height > mipExtent.height)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid texture region with Y-range [" + std::to_string(region.offset.y) + ", +" + std::to_string(region.extent.height) +
+                ") out of bounds [0, " + std::to_string(mipExtent.height) + ") for MIP-level " + std::to_string(region.subresource.baseMipLevel)
+            );
+        }
+        if (static_cast<std::uint32_t>(region.offset.z) + region.extent.depth > mipExtent.depth)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid texture region with Z-range [" + std::to_string(region.offset.z) + ", +" + std::to_string(region.extent.depth) +
+                ") out of bounds [0, " + std::to_string(mipExtent.depth) + ") for MIP-level " + std::to_string(region.subresource.baseMipLevel)
+            );
+        }
+    }
 }
 
 void DbgCommandBuffer::ValidateIndexType(const Format format)

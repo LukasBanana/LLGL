@@ -178,6 +178,11 @@ Format D3D11Texture::GetFormat() const
     return GetBaseFormat();
 }
 
+SubresourceFootprint D3D11Texture::GetSubresourceFootprint(std::uint32_t mipLevel) const
+{
+    return CalcPackedSubresourceFootprint(GetType(), GetBaseFormat(), GetMipExtent(0), mipLevel, GetNumArrayLayers());
+}
+
 static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
     ID3D11Device*                   device,
     const D3D11_TEXTURE1D_DESC&     desc,

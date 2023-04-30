@@ -157,7 +157,7 @@ void GLDeferredCommandBuffer::CopyBufferFromTexture(
         cmd->region         = srcRegion;
         cmd->bufferID       = LLGL_CAST(GLBuffer&, dstBuffer).GetID();
         cmd->offset         = static_cast<GLintptr>(dstOffset);
-        cmd->size           = cmd->texture->GetMemoryFootprint(srcRegion.extent, srcRegion.subresource);
+        cmd->size           = GetMemoryFootprint(cmd->texture->GetType(), cmd->texture->GetFormat(), srcRegion.extent, srcRegion.subresource);
         cmd->rowLength      = static_cast<GLint>(rowStride);
         cmd->imageHeight    = static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0);
     }
@@ -222,7 +222,7 @@ void GLDeferredCommandBuffer::CopyTextureFromBuffer(
         cmd->region         = dstRegion;
         cmd->bufferID       = LLGL_CAST(GLBuffer&, srcBuffer).GetID();
         cmd->offset         = static_cast<GLintptr>(srcOffset);
-        cmd->size           = cmd->texture->GetMemoryFootprint(dstRegion.extent, dstRegion.subresource);
+        cmd->size           = GetMemoryFootprint(cmd->texture->GetType(), cmd->texture->GetFormat(), dstRegion.extent, dstRegion.subresource);
         cmd->rowLength      = static_cast<GLint>(rowStride);
         cmd->imageHeight    = static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0);
     }

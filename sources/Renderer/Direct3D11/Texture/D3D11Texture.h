@@ -60,6 +60,8 @@ class D3D11Texture final : public Texture
 
         Format GetFormat() const override;
 
+        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
+
     public:
 
         D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc);

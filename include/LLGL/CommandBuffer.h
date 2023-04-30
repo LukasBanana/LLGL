@@ -128,8 +128,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         its format <b>must not</b> be compressed (see FormatFlags::IsCompressed) or packed (see FormatFlags::IsPacked).
         \param[in] srcRegion Specifies the source region where the texture is to be read from.
         Note that the \c numMipLevels attribute of this parameter \b must be 1.
-        \param[in] rowStride Specifies an optional stride (in bytes) per row in the source buffer. By default 0.
-        \param[in] layerStride Specifies an optional stride (in bytes) per layer in the source buffer.
+        \param[in] rowStride Specifies an optional stride (in bytes) per row in the destination buffer. By default 0.
+        \param[in] layerStride Specifies an optional stride (in bytes) per layer in the destination buffer.
         This \b must be a multiple of \c rowStride. If \c rowStride is zero, then \c layerStride must also be zero. By default 0.
         \remarks This is called "copy buffer from texture" instead of "copy texture to buffer"
         to be uniform with the notation <code>buffer := texture</code>, or <code>memcpy(destination, source, size)</code>.
@@ -143,6 +143,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks The same rules of \c rowStride also apply to \c layerStride.
         \see CopyTextureFromBuffer
         \see GetMemoryFootprint
+        \see Texture::GetSubresourceFootprint
         */
         virtual void CopyBufferFromTexture(
             Buffer&                 dstBuffer,
@@ -219,6 +220,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks The same rules of \c rowStride also apply to \c layerStride.
         \see CopyBufferFromTexture
         \see GetMemoryFootprint
+        \see Texture::GetSubresourceFootprint
         */
         virtual void CopyTextureFromBuffer(
             Texture&                dstTexture,

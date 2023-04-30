@@ -114,7 +114,7 @@ void GLImmediateCommandBuffer::CopyBufferFromTexture(
         srcRegion,
         dstBufferGL.GetID(),
         static_cast<GLintptr>(dstOffset),
-        srcTextureGL.GetMemoryFootprint(srcRegion.extent, srcRegion.subresource),
+        GetMemoryFootprint(srcTextureGL.GetType(), srcTextureGL.GetFormat(), srcRegion.extent, srcRegion.subresource),
         static_cast<GLint>(rowStride),
         static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
     );
@@ -166,7 +166,7 @@ void GLImmediateCommandBuffer::CopyTextureFromBuffer(
         dstRegion,
         srcBufferGL.GetID(),
         static_cast<GLintptr>(srcOffset),
-        dstTextureGL.GetMemoryFootprint(dstRegion.extent, dstRegion.subresource),
+        GetMemoryFootprint(dstTextureGL.GetType(), dstTextureGL.GetFormat(), dstRegion.extent, dstRegion.subresource),
         static_cast<GLint>(rowStride),
         static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
     );

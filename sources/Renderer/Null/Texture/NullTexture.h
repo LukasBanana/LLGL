@@ -25,9 +25,10 @@ class NullTexture final : public Texture
     public:
 
         void SetName(const char* name) override;
-        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
         TextureDescriptor GetDesc() const override;
         Format GetFormat() const override;
+        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
+        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
 
     public:
 

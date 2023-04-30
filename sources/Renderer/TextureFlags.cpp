@@ -1,11 +1,12 @@
 /*
  * TextureFlags.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include <LLGL/TextureFlags.h>
+#include <LLGL/Utils/ForRange.h>
 #include "TextureUtils.h"
 #include <algorithm>
 #include <cmath>
@@ -58,7 +59,7 @@ LLGL_EXPORT std::uint32_t NumMipTexels(const TextureType type, const Extent3D& e
     std::uint32_t numTexels = 0;
 
     const auto subresourceExtent = CalcTextureExtent(type, extent, subresource.numArrayLayers);
-    for (std::uint32_t mipLevel = 0; mipLevel < subresource.numMipLevels; ++mipLevel)
+    for_range(mipLevel, subresource.numMipLevels)
         numTexels += NumMipTexels(type, subresourceExtent, subresource.baseMipLevel + mipLevel);
 
     return numTexels;
@@ -164,7 +165,7 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uin
     return {};
 }
 
-std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource)
+LLGL_EXPORT std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource)
 {
     const auto numTexels = NumMipTexels(type, extent, subresource);
     return GetMemoryFootprint(format, numTexels);
