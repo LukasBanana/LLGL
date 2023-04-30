@@ -7,8 +7,8 @@
 
 #include <LLGL/Report.h>
 #include <string>
-#include <stdio.h>
 #include <stdarg.h>
+#include "StringUtils.h"
 
 
 namespace LLGL
@@ -100,22 +100,6 @@ void Report::Reset(std::string&& text, bool hasErrors)
         pimpl_ = new Report::Pimpl{ std::move(text), hasErrors };
 }
 
-static void InternalReportPrintf(std::string& str, const char* format, va_list args)
-{
-    int len = ::vsnprintf(nullptr, 0, format, args);
-    if (len > 0)
-    {
-        /*
-        Since C++11 we can override the last character with '\0' ourselves,
-        so it's safe to let ::vsnprintf override std::string from [0, size()] inclusive.
-        */
-        const std::size_t formatLen = static_cast<std::size_t>(len);
-        const std::size_t appendOff = str.size();
-        str.resize(appendOff + formatLen);
-        ::vsnprintf(&str[appendOff], formatLen + 1, format, args);
-    }
-}
-
 void Report::Printf(const char* format, ...)
 {
     /* Reset report with error flags disabled */
@@ -123,10 +107,7 @@ void Report::Printf(const char* format, ...)
         pimpl_ = new Report::Pimpl{};
 
     /* Forward formatted string with variadic arguments to internal function */
-    va_list args;
-    va_start(args, format);
-    InternalReportPrintf(pimpl_->text, format, args);
-    va_end(args);
+    LLGL_STRING_PRINTF(pimpl_->text, format);
 }
 
 void Report::Errorf(const char* format, ...)
@@ -138,10 +119,7 @@ void Report::Errorf(const char* format, ...)
     pimpl_->hasErrors = true;
 
     /* Forward formatted string with variadic arguments to internal function */
-    va_list args;
-    va_start(args, format);
-    InternalReportPrintf(pimpl_->text, format, args);
-    va_end(args);
+    LLGL_STRING_PRINTF(pimpl_->text, format);
 }
 
 Report& Report::operator = (const Report& rhs)

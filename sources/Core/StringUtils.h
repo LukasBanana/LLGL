@@ -12,6 +12,20 @@
 #include <LLGL/Export.h>
 #include <string>
 #include <vector>
+#include <stdarg.h>
+
+
+#define LLGL_STRING_PRINTF(OUTPUT, FORMAT)                          \
+    {                                                               \
+        va_list args1, args2;                                       \
+        va_start(args1, FORMAT);                                    \
+        va_copy(args2, args1);                                      \
+        {                                                           \
+            LLGL::StringPrintf((OUTPUT), (FORMAT), args1, args2);   \
+        }                                                           \
+        va_end(args2);                                              \
+        va_end(args1);                                              \
+    }
 
 
 namespace LLGL
@@ -65,6 +79,9 @@ LLGL_EXPORT std::string ToUTF8String(const wchar_t* utf16);
 // Converts the UTF8 input string to UTF16 string.
 LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8);
 LLGL_EXPORT std::wstring ToUTF16String(const char* utf8);
+
+// Writes a formatted string into an STL string.
+LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2);
 
 
 } // /namespace LLGL

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <codecvt>
 #include <locale>
+#include <stdio.h>
 
 
 namespace LLGL
@@ -65,6 +66,22 @@ LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8)
 LLGL_EXPORT std::wstring ToUTF16String(const char* utf8)
 {
     return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(utf8);
+}
+
+void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2)
+{
+    const int len = ::vsnprintf(nullptr, 0, format, args1);
+    if (len > 0)
+    {
+        /*
+        Since C++11 we can override the last character with '\0' ourselves,
+        so it's safe to let ::vsnprintf override std::string from [0, size()] inclusive.
+        */
+        const std::size_t formatLen = static_cast<std::size_t>(len);
+        const std::size_t appendOff = str.size();
+        str.resize(appendOff + formatLen);
+        ::vsnprintf(&str[appendOff], formatLen + 1, format, args2);
+    }
 }
 
 

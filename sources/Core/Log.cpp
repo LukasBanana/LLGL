@@ -7,6 +7,7 @@
 
 #include <LLGL/Log.h>
 #include "CoreUtils.h"
+#include "StringUtils.h"
 #include "../Renderer/ContainerTypes.h"
 #include <mutex>
 #include <atomic>
@@ -96,36 +97,26 @@ static void PostReport(ReportType type, const char* text)
         listener->Invoke(type, text);
 }
 
-static void InternalLogPrintf(ReportType type, const char* format, va_list args)
+LLGL_EXPORT void Printf(const char* format, ...)
 {
     if (!g_logRecursionLock)
     {
         std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
-        int len = ::vsnprintf(nullptr, 0, format, args);
-        if (len > 0)
-        {
-            const std::size_t formatLen = static_cast<std::size_t>(len);
-            auto formatStr = MakeUniqueArray<char>(formatLen + 1);
-            ::vsnprintf(formatStr.get(), formatLen + 1, format, args);
-            PostReport(type, formatStr.get());
-        }
+        std::string str;
+        LLGL_STRING_PRINTF(str, format);
+        PostReport(ReportType::Default, str.c_str());
     }
-}
-
-LLGL_EXPORT void Printf(const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    InternalLogPrintf(ReportType::Default, format, args);
-    va_end(args);
 }
 
 LLGL_EXPORT void Errorf(const char* format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    InternalLogPrintf(ReportType::Error, format, args);
-    va_end(args);
+    if (!g_logRecursionLock)
+    {
+        std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
+        std::string str;
+        LLGL_STRING_PRINTF(str, format);
+        PostReport(ReportType::Error, str.c_str());
+    }
 }
 
 LLGL_EXPORT LogHandle RegisterCallback(const ReportCallback& callback, void* userData)
