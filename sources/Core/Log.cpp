@@ -116,7 +116,7 @@ LLGL_EXPORT void Printf(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    InternalLogPrintf(ReportType::Information, format, args);
+    InternalLogPrintf(ReportType::Default, format, args);
     va_end(args);
 }
 
@@ -124,7 +124,7 @@ LLGL_EXPORT void Errorf(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    InternalLogPrintf(ReportType::Information, format, args);
+    InternalLogPrintf(ReportType::Error, format, args);
     va_end(args);
 }
 

@@ -30,28 +30,16 @@ namespace Log
 enum class ReportType
 {
     /**
-    \brief Error message type.
-    \remarks For example, when a feature is used that is not supported.
+    \brief Default report type. Usually forwarded to \c stdout or \c std::cout.
+    \see Printf
+    */
+    Default = 0,
+
+    /**
+    \brief Error message type. Usualyl forwarded to \c stderr \c std::cerr.
+    \see Errorf.
     */
     Error,
-
-    /**
-    \brief Warning message type.
-    \remarks For example, when an operation has no effect like submitting a draw command with zero vertices.
-    */
-    Warning,
-
-    /**
-    \brief Information message type.
-    \remarks For example, when a multi-sampling format is not supported so it's set to a lower quality than it was specified.
-    */
-    Information,
-
-    /**
-    \brief Performance penelty message type.
-    \remarks For example, when unnecessary clear commands are submitted.
-    */
-    Performance,
 };
 
 

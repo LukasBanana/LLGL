@@ -11,7 +11,7 @@
 #include "../../../CheckedCast.h"
 #include "../../../TextureUtils.h"
 #include "../../../../Core/CoreUtils.h"
-#include "../../../../Core/Exception.h"
+#include "../../../../Core/Assertion.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
@@ -117,7 +117,7 @@ static HDC GetWin32DeviceContext(const Surface& surface)
     /* Get device context from native window */
     NativeHandle nativeHandle = {};
     if (!surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
-        throw std::runtime_error("invalid native Win32 window handle");
+        LLGL_TRAP("invalid native Win32 window handle");
     return ::GetDC(nativeHandle.window);
 }
 
@@ -203,13 +203,13 @@ void Win32GLContext::CreateContext(Surface& surface, Win32GLContext* sharedConte
 
     /* Check if context creation was successful */
     if (wglMakeCurrent(hDC_, hGLRC_) != TRUE)
-        throw std::runtime_error("wglMakeCurrent failed");
+        LLGL_TRAP("wglMakeCurrent failed");
 
     /* Share resources with previous render context (only for compatibility profile) */
     if (sharedContext && profile_.contextProfile == OpenGLContextProfile::CompatibilityProfile)
     {
         if (!wglShareLists(sharedContext->hGLRC_, hGLRC_))
-            throw std::runtime_error("wglShareLists failed");
+            LLGL_TRAP("wglShareLists failed");
     }
 }
 
@@ -219,7 +219,7 @@ HGLRC Win32GLContext::CreateStandardWGLContext(HDC hDC)
     HGLRC hGLRC = wglCreateContext(hDC);
 
     if (!hGLRC)
-        throw std::runtime_error("wglCreateContext failed");
+        LLGL_TRAP("wglCreateContext failed");
 
     /* Make GL context current or delete context on failure */
     if (!MakeGLContextCurrent(hDC, hGLRC))
@@ -392,14 +392,14 @@ void Win32GLContext::SelectPixelFormat(Surface& surface)
 
         /* Check for errors */
         if (!pixelFormat_)
-            throw std::runtime_error("failed to select pixel format");
+            LLGL_TRAP("failed to select pixel format");
 
         /* Set pixel format */
         const BOOL wasFormatSelected = ::SetPixelFormat(hDC, pixelFormat_, &formatDesc);
         if (!wasFormatSelected)
         {
             if (wasStandardFormatUsed)
-                throw std::runtime_error("failed to set pixel format");
+                LLGL_TRAP("failed to set pixel format");
         }
         else
         {
