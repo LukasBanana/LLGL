@@ -291,6 +291,15 @@ struct CommandBufferDescriptor
     \see CommandBuffer::Begin
     */
     std::uint32_t   numNativeBuffers    = 2;
+
+    /**
+    \brief Specifies the minimum size (in bytes) for the staging pool (if supported). By default 65536 (or <tt>0xFFFF + 1</tt>).
+    \remarks This is only a hint to the framework, since not all rendering APIs support command buffers natively.
+    For the D3D12 backend for instance, this will specify the initial buffer size for the staging pool, i.e. for buffer updates during command encoding.
+    For command buffers that will make many and large buffer updates, increase this size to fine-tune performance.
+    \see CommandBuffer::UpdateBuffer
+    */
+    std::uint64_t   minStagingPoolSize  = (0xFFFF + 1);
 };
 
 

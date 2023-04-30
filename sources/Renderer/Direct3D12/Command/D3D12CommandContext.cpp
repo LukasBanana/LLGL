@@ -48,6 +48,7 @@ void D3D12CommandContext::Create(
     D3D12CommandQueue&      commandQueue,
     D3D12_COMMAND_LIST_TYPE commandListType,
     UINT                    numAllocators,
+    UINT64                  initialStagingChunkSize,
     bool                    initialClose)
 {
     /* Store reference to device and command queue */
@@ -61,13 +62,16 @@ void D3D12CommandContext::Create(
     numAllocators_ = std::max(1u, std::min(numAllocators, g_maxNumAllocators));
 
     /* Create command allocators and descriptor heap pools */
+    constexpr UINT64 minStagingChunkSize = (0xFF + 1);
+    initialStagingChunkSize = std::max(minStagingChunkSize, initialStagingChunkSize);
+
     for_range(i, numAllocators_)
     {
         commandAllocators_[i] = device.CreateDXCommandAllocator(commandListType);
         for_range(j, D3D12CommandContext::g_maxNumDescriptorHeaps)
             stagingDescriptorPools_[i][j].InitializeDevice(device.GetNative(), g_descriptorHeapTypes[j]);
         descriptorCaches_[i].Create(device.GetNative());
-        stagingBufferPools_[i].InitializeDevice(device.GetNative(), USHRT_MAX);
+        stagingBufferPools_[i].InitializeDevice(device.GetNative(), initialStagingChunkSize);
     }
 
     /* Create graphics command list and close it (they are created in recording mode) */

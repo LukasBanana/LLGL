@@ -59,9 +59,10 @@ class D3D12CommandContext
         void Create(
             D3D12Device&            device,
             D3D12CommandQueue&      commandQueue,
-            D3D12_COMMAND_LIST_TYPE commandListType = D3D12_COMMAND_LIST_TYPE_DIRECT,
-            UINT                    numAllocators   = ~0u,
-            bool                    initialClose    = false
+            D3D12_COMMAND_LIST_TYPE commandListType         = D3D12_COMMAND_LIST_TYPE_DIRECT,
+            UINT                    numAllocators           = ~0u,
+            UINT64                  initialStagingChunkSize = (0xFFFF + 1),
+            bool                    initialClose            = false
         );
 
         void Close();

@@ -984,7 +984,7 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
 
     /* Create command context and store reference to command list */
     auto commandQueueD3D = LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue());
-    commandContext_.Create(device, *commandQueueD3D, GetD3DCommandListType(desc), desc.numNativeBuffers, true);
+    commandContext_.Create(device, *commandQueueD3D, GetD3DCommandListType(desc), desc.numNativeBuffers, desc.minStagingPoolSize, true);
     commandList_ = commandContext_.GetCommandList();
 
     /* Store increment size for descriptor heaps */
