@@ -152,7 +152,7 @@ static const char* LoadRenderSystemName(Module& module, const RenderSystemDescri
 
 static RenderSystem* LoadRenderSystem(
     Module&                         module,
-    const std::string&              moduleFilename,
+    const char*                     moduleFilename,
     const RenderSystemDescriptor&   renderSystemDesc,
     Report*                         outReport)
 {
@@ -161,7 +161,7 @@ static RenderSystem* LoadRenderSystem(
 
     auto RenderSystem_Alloc = reinterpret_cast<PFN_RENDERSYSTEM_ALLOC>(module.LoadProcedure("LLGL_RenderSystem_Alloc"));
     if (!RenderSystem_Alloc)
-        return ReportException(outReport, "failed to load 'LLGL_RenderSystem_Alloc' procedure from module: %s", moduleFilename.c_str());
+        return ReportException(outReport, "failed to load 'LLGL_RenderSystem_Alloc' procedure from module: %s", moduleFilename);
 
     /* Allocate render system */
     auto renderSystem = reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(&renderSystemDesc, static_cast<int>(sizeof(RenderSystemDescriptor))));
@@ -246,7 +246,7 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
         /* Allocate render system */
         auto renderSystem = RenderSystemPtr
         {
-            LoadRenderSystem(*module, moduleFilename, renderSystemDesc, report),
+            LoadRenderSystem(*module, moduleFilename.c_str(), renderSystemDesc, report),
             RenderSystemDeleter{ LoadRenderSystemDeleter(*module) }
         };
 
