@@ -46,7 +46,7 @@ bool GLLegacyShader::Reflect(ShaderReflection& reflection) const
 {
     const Shader* shaders[] = { this };
     GLShaderProgram intermediateProgram{ 1, shaders };
-    GLShaderProgram::QueryReflection(intermediateProgram.GetID(), reflection);
+    GLShaderProgram::QueryReflection(intermediateProgram.GetID(), GetGLType(), reflection);
     return true;
 }
 

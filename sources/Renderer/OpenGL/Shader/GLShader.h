@@ -46,6 +46,9 @@ class GLShader : public Shader
         const GLShaderAttribute* GetFragmentAttribs() const;
         std::size_t GetNumFragmentAttribs() const;
 
+        // Returns the GLenum for this shader type, e.g. GL_VERTEX_SHADER.
+        GLenum GetGLType() const;
+
         // Returns the transform feedback varying names.
         inline const std::vector<const char*>& GetTransformFeedbackVaryings() const
         {

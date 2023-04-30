@@ -616,7 +616,7 @@ static bool GLGetProgramResourceProperties(
 {
     if (HasExtension(GLExt::ARB_program_interface_query))
     {
-        glGetProgramResourceiv(program, programInterface, resourceIndex, count, props, count, nullptr, params);
+        glGetProgramResourceiv(program, programInterface, resourceIndex, /*propCount:*/ count, props, /*paramCount:*/ count, nullptr, params);
         return true;
     }
     return false;
@@ -742,10 +742,8 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
         return;
 
     /* Query number of shader storage blocks */
-    GLenum properties[3] = { 0 };
-    properties[0] = GL_NUM_ACTIVE_VARIABLES;
     GLint numStorageBlocks = 0;
-    glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, 0, 1, properties, 1, nullptr, &numStorageBlocks);
+    glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &numStorageBlocks);
     if (numStorageBlocks <= 0)
         return;
 
@@ -889,14 +887,15 @@ static void GLQueryWorkGroupSize(GLuint program, ShaderReflection& reflection)
     #endif // /GL_ARB_compute_shader
 }
 
-void GLShaderProgram::QueryReflection(GLuint program, ShaderReflection& reflection)
+void GLShaderProgram::QueryReflection(GLuint program, GLenum shaderStage, ShaderReflection& reflection)
 {
     GLQueryVertexAttributes(program, reflection);
     GLQueryStreamOutputAttributes(program, reflection);
     GLQueryConstantBuffers(program, reflection);
     GLQueryStorageBuffers(program, reflection);
     GLQueryUniforms(program, reflection);
-    GLQueryWorkGroupSize(program, reflection);
+    if (shaderStage == GL_COMPUTE_SHADER)
+        GLQueryWorkGroupSize(program, reflection);
 }
 
 

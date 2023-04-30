@@ -23,12 +23,12 @@
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
+#include "../../Platform/Debug.h"
 #include "GLRenderingCaps.h"
 #include "Command/GLImmediateCommandBuffer.h"
 #include "Command/GLDeferredCommandBuffer.h"
 #include "RenderState/GLGraphicsPSO.h"
 #include "RenderState/GLComputePSO.h"
-#include <LLGL/Log.h>
 #include <LLGL/Utils/ForRange.h>
 
 #ifdef LLGL_OPENGL
@@ -543,8 +543,8 @@ void APIENTRY GLDebugCallback(
     GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
 {
     /* Forward callback to log */
-    LLGL::Log::Printf(
-        "glDebugMessageCallback (%s, %s, %s): %s\n",
+    DebugPrintf(
+        "glDebugMessageCallback (%s, %s, %s): %s",
         GLDebugSourceToStr(source), GLDebugTypeToStr(type), GLDebugSeverityToStr(severity), message
     );
 }
@@ -561,6 +561,7 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
             GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
             GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
             glDebugMessageCallback(GLDebugCallback, nullptr);
+            glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
         }
         else
         {

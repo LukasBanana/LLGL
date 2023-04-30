@@ -7,6 +7,7 @@
 
 #include "GLShader.h"
 #include "GLShaderSourcePatcher.h"
+#include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -62,6 +63,11 @@ const GLShaderAttribute* GLShader::GetFragmentAttribs() const
 std::size_t GLShader::GetNumFragmentAttribs() const
 {
     return (shaderAttribs_.size() - numVertexAttribs_);
+}
+
+GLenum GLShader::GetGLType() const
+{
+    return GLTypes::Map(GetType());
 }
 
 void GLShader::PatchShaderSource(

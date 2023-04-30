@@ -83,7 +83,7 @@ void GLSeparableShader::SetName(const char* name)
 
 bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
 {
-    GLShaderProgram::QueryReflection(GetID(), reflection);
+    GLShaderProgram::QueryReflection(GetID(), GetGLType(), reflection);
     return true;
 }
 

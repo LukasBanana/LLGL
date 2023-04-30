@@ -56,7 +56,7 @@ class GLShaderProgram final : public GLShaderPipeline
         static void LinkProgram(GLuint program);
 
         // Queries the shader reflection for the specified program.
-        static void QueryReflection(GLuint program, ShaderReflection& reflection);
+        static void QueryReflection(GLuint program, GLenum shaderStage, ShaderReflection& reflection);
 
     private:
 
