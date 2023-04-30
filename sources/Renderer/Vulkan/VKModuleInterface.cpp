@@ -32,7 +32,7 @@ namespace ModuleVulkan
 
     RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
     {
-        return new VKRenderSystem(*renderSystemDesc);
+        return new VKRenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleVulkan
 

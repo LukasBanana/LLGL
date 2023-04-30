@@ -49,12 +49,14 @@ static bool D3DSupportsDriverCommandLists(ID3D11Device* device, ID3D11DeviceCont
 }
 #endif
 
-D3D11RenderSystem::D3D11RenderSystem()
+D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
+    const bool debugDevice = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0);
+
     /* Create DXGU factory, query video adapters, and create D3D11 device */
     CreateFactory();
     QueryVideoAdapters();
-    CreateDevice(nullptr);
+    CreateDevice(nullptr, debugDevice);
 
     /* Initialize states and renderer information */
     CreateStateManagerAndCommandQueue();
@@ -496,7 +498,7 @@ void D3D11RenderSystem::QueryVideoAdapters()
     }
 }
 
-void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
+void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice)
 {
     /* Find list of feature levels to select from, and statically determine maximal feature level */
     auto featureLevels = DXGetFeatureLevels(
@@ -509,18 +511,17 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
 
     HRESULT hr = 0;
 
-    #ifdef LLGL_DEBUG
-
-    /* Try to create device with debug layer (only supported if Windows 8.1 SDK is installed) */
-    if (!CreateDeviceWithFlags(adapter, featureLevels, D3D11_CREATE_DEVICE_DEBUG, hr))
+    if (debugDevice)
+    {
+        /* Try to create device with debug layer (only supported if Windows 8.1 SDK is installed) */
+        if (!CreateDeviceWithFlags(adapter, featureLevels, D3D11_CREATE_DEVICE_DEBUG, hr))
+            CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
+    }
+    else
+    {
+        /* Create device without debug layer */
         CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
-
-    #else
-
-    /* Create device without debug layer */
-    CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
-
-    #endif
+    }
 
     DXThrowIfCreateFailed(hr, "ID3D11Device");
 

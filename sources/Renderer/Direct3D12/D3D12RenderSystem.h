@@ -55,7 +55,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Common ----- */
 
-        D3D12RenderSystem();
+        D3D12RenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~D3D12RenderSystem();
 
         /* ----- Swap-chain ------ */
@@ -202,11 +202,9 @@ class D3D12RenderSystem final : public RenderSystem
 
     private:
 
-        #ifdef LLGL_DEBUG
         void EnableDebugLayer();
-        #endif
 
-        void CreateFactory();
+        void CreateFactory(bool debugDevice = false);
         void QueryVideoAdapters();
         void CreateDevice();
 

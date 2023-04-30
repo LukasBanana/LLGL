@@ -51,7 +51,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Common ----- */
 
-        D3D11RenderSystem();
+        D3D11RenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~D3D11RenderSystem();
 
         /* ----- Swap-chain ------ */
@@ -178,7 +178,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         void CreateFactory();
         void QueryVideoAdapters();
-        void CreateDevice(IDXGIAdapter* adapter);
+        void CreateDevice(IDXGIAdapter* adapter, bool debugDevice = false);
         bool CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr);
         void CreateStateManagerAndCommandQueue();
 

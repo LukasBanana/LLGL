@@ -33,14 +33,14 @@ namespace LLGL
 {
 
 
-D3D12RenderSystem::D3D12RenderSystem()
+D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
-    #ifdef LLGL_DEBUG
-    EnableDebugLayer();
-    #endif
+    const bool debugDevice = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0);
+    if (debugDevice)
+        EnableDebugLayer();
 
     /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
-    CreateFactory();
+    CreateFactory(debugDevice);
     QueryVideoAdapters();
     CreateDevice();
 
@@ -426,8 +426,6 @@ void D3D12RenderSystem::SyncGPU()
  * ======= Private: =======
  */
 
-#ifdef LLGL_DEBUG
-
 void D3D12RenderSystem::EnableDebugLayer()
 {
     ComPtr<ID3D12Debug> debugController0;
@@ -441,16 +439,14 @@ void D3D12RenderSystem::EnableDebugLayer()
     }
 }
 
-#endif // /LLGL_DEBUG
-
-void D3D12RenderSystem::CreateFactory()
+void D3D12RenderSystem::CreateFactory(bool debugDevice)
 {
     /* Create DXGI factory 1.4 */
-    #ifdef LLGL_DEBUG
-    auto hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
-    #else
-    auto hr = CreateDXGIFactory1(IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
-    #endif
+    HRESULT hr = S_OK;
+    if (debugDevice)
+        hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
+    else
+        hr = CreateDXGIFactory1(IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
 }
 

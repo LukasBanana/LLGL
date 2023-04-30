@@ -35,7 +35,6 @@ class LLGL_EXPORT RenderSystemChild : public Interface
         \remarks The default implementation has no effect.
         \see CommandBuffer::PushDebugGroup
         \see CommandBuffer::PopDebugGroup
-        \see RenderSystemDescriptor::debugCallback
         */
         virtual void SetName(const char* name);
 

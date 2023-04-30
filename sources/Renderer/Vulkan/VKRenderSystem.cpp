@@ -32,14 +32,11 @@ namespace LLGL
 
 
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    instance_ { vkDestroyInstance }
+    instance_          { vkDestroyInstance                                                },
+    debugLayerEnabled_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0) }
 {
     /* Extract optional renderer configuartion */
     auto rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
-
-    #ifdef LLGL_DEBUG
-    debugLayerEnabled_ = true;
-    #endif
 
     /* Create Vulkan instance and device objects */
     CreateInstance(rendererConfigVK);

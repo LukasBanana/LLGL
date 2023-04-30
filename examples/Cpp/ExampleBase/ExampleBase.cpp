@@ -265,17 +265,13 @@ ExampleBase::ExampleBase(
         throw std::invalid_argument("'android_app' state was not specified");
     #endif
 
-    #if defined _DEBUG && 1
-    rendererDesc.debugCallback = [](const std::string& type, const std::string& message)
-    {
-        std::cerr << type << ": " << message << std::endl;
-    };
-    #endif
-
     if (debugger)
     {
-        rendererDesc.profiler = profilerObj_.get();
-        rendererDesc.debugger = debuggerObj_.get();
+        #ifdef LLGL_DEBUG
+        rendererDesc.flags      = LLGL::RenderSystemFlags::DebugDevice;
+        #endif
+        rendererDesc.profiler   = profilerObj_.get();
+        rendererDesc.debugger   = debuggerObj_.get();
     }
 
     // Create render system

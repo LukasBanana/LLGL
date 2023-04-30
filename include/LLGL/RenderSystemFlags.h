@@ -36,21 +36,6 @@ namespace LLGL
 class RenderingProfiler;
 class RenderingDebugger;
 
-/* ----- Types ----- */
-
-/**
-\brief Debug callback function interface.
-\param[in] type Descriptive type of the message.
-\param[in] message Specifies the debug output message.
-\remarks This output is renderer dependent.
-\ingroup group_callbacks
-\note Only supported with: OpenGL, Vulkan, Metal.
-\note For Direct3D, debug output will be reported in the output log of the IDE.
-\see RenderSystemDescriptor::debugCallback
-*/
-using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
-
-
 /* ----- Enumerations ----- */
 
 /**
@@ -190,6 +175,35 @@ enum class CPUAccess
 };
 
 
+/* ----- Flags ----- */
+
+/**
+\brief Render system flags enumeration.
+\see RenderSystemDescriptor::flags
+*/
+struct RenderSystemFlags
+{
+    enum
+    {
+        /**
+        \brief Specifies that a debug device is requested for the render system backend.
+        \remarks This is only a hint to LLGL since not every backend supports native debug layers.
+        Here is an overview of what impact this flag has to the respective renderer:
+        - Direct3D 12: A debug controller of type \c ID3D12Debug will be created and GPU validation via \c EnableDebugLayer and \c SetEnableGPUBasedValidation (D3D12.1) will be enabled.<br>
+          See https://learn.microsoft.com/en-us/windows/win32/direct3d12/using-d3d12-debug-layer-gpu-based-validation
+        - Direct3D 11: \c D3D11_CREATE_DEVICE_DEBUG will be added to the Direct3D device instance.<br>
+          See https://learn.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-devices-layers#debug-layer
+        - Vulkan: A debug callback will be registered via \c vkCreateDebugReportCallbackEXT if the Vulkan extension \c "VK_EXT_debug_report" is available.<br>
+          See https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_debug_report.html
+        - OpenGL: A debug callback will be registered via \c glDebugMessageCallback if the OpenGL extension \c "GL_KHR_debug" is vailable.<br>
+          See https://www.khronos.org/opengl/wiki/Debug_Output
+        - Metal: Not supported.
+        */
+        DebugDevice = (1 << 0),
+    };
+};
+
+
 /* ----- Structures ----- */
 
 /**
@@ -274,8 +288,12 @@ struct RenderSystemDescriptor
     */
     std::string         moduleName;
 
-    //! Debuging callback function object.
-    DebugCallback       debugCallback;
+    /**
+    \brief Render system flags. This can be a bitwise OR combination of RenderSystemFlags entries. By default 0.
+    \remarks Use this to create a native debug layer for the device context.
+    \see RenderSystemFlags
+    */
+    long                flags               = 0;
 
     /**
     \brief profiler Optional pointer to a rendering profiler. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.

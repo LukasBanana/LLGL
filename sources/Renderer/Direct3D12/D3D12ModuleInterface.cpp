@@ -30,9 +30,9 @@ namespace ModuleDirect3D12
         return "Direct3D 12";
     }
 
-    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* /*renderSystemDesc*/)
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
     {
-        return new D3D12RenderSystem();
+        return new D3D12RenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleDirect3D12
 

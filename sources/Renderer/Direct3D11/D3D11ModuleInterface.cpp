@@ -30,9 +30,9 @@ namespace ModuleDirect3D11
         return "Direct3D 11";
     }
 
-    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* /*renderSystemDesc*/)
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
     {
-        return new D3D11RenderSystem();
+        return new D3D11RenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleDirect3D11
 

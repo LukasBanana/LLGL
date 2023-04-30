@@ -160,7 +160,8 @@ int main(int argc, char* argv[])
         #ifdef ENABLE_CACHED_PSO
         // Try to read PSO cache from file
         const std::string cacheFilename = "GraphicsPSO." + rendererModule + ".cache";
-        if (pipelineCache = LLGL::Blob::CreateFromFile(cacheFilename))
+        pipelineCache = LLGL::Blob::CreateFromFile(cacheFilename);
+        if (pipelineCache)
         {
             // Create graphics PSO from cache
             pipeline = renderer->CreatePipelineState(pipelineCache);

@@ -51,13 +51,6 @@ int main()
         rendererConfig.majorVersion     = 3;
         rendererConfig.minorVersion     = 0;
 
-        #if 0
-        contextDesc.debugCallback = [](const std::string& type, const std::string& message)
-        {
-            std::cout << type << ':' << std::endl << "  " << message << std::endl;
-        };
-        #endif
-
         #ifdef __linux__
 
         auto swapChain = renderer->CreateSwapChain(swapChainDesc);

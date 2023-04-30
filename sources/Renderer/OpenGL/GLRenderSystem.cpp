@@ -28,6 +28,7 @@
 #include "Command/GLDeferredCommandBuffer.h"
 #include "RenderState/GLGraphicsPSO.h"
 #include "RenderState/GLComputePSO.h"
+#include <LLGL/Log.h>
 #include <LLGL/Utils/ForRange.h>
 
 #ifdef LLGL_OPENGL
@@ -50,7 +51,8 @@ static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescri
 }
 
 GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    contextMngr_ { GetGLProfileFromDesc(renderSystemDesc) }
+    contextMngr_  { GetGLProfileFromDesc(renderSystemDesc)                           },
+    debugContext_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0) }
 {
 }
 
@@ -524,8 +526,8 @@ void GLRenderSystem::Release(Fence& fence)
 void GLRenderSystem::CreateGLContextDependentDevices(GLStateManager& stateManager)
 {
     /* Enable debug callback function */
-    if (debugCallback_)
-        SetDebugCallback(debugCallback_);
+    if (debugContext_)
+        EnableDebugCallback();
 
     /* Create command queue instance */
     commandQueue_ = MakeUnique<GLCommandQueue>(stateManager);
@@ -538,37 +540,27 @@ void GLRenderSystem::CreateGLContextDependentDevices(GLStateManager& stateManage
 #ifdef GL_KHR_debug
 
 void APIENTRY GLDebugCallback(
-    GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+    GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
 {
-    /* Generate output stream */
-    std::string typeStr;
-
-    typeStr = "OpenGL debug callback (";
-    typeStr += GLDebugSourceToStr(source);
-    typeStr += ", ";
-    typeStr += GLDebugTypeToStr(type);
-    typeStr += ", ";
-    typeStr += GLDebugSeverityToStr(severity);
-    typeStr += ")";
-
-    /* Call debug callback */
-    auto debugCallback = reinterpret_cast<const DebugCallback*>(userParam);
-    (*debugCallback)(typeStr, message);
+    /* Forward callback to log */
+    LLGL::Log::Printf(
+        "glDebugMessageCallback (%s, %s, %s): %s\n",
+        GLDebugSourceToStr(source), GLDebugTypeToStr(type), GLDebugSeverityToStr(severity), message
+    );
 }
 
 #endif // /GL_KHR_debug
 
-void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
+void GLRenderSystem::EnableDebugCallback(bool enable)
 {
     #ifdef GL_KHR_debug
     if (HasExtension(GLExt::KHR_debug))
     {
-        debugCallback_ = debugCallback;
-        if (debugCallback_)
+        if (enable)
         {
             GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
             GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-            glDebugMessageCallback(GLDebugCallback, &debugCallback_);
+            glDebugMessageCallback(GLDebugCallback, nullptr);
         }
         else
         {

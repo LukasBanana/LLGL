@@ -37,7 +37,7 @@ namespace ModuleOpenGL
 
     RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
     {
-        return new GLRenderSystem(*renderSystemDesc);
+        return new GLRenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleOpenGL
 
