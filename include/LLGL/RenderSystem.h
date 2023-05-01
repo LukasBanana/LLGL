@@ -537,14 +537,14 @@ class LLGL_EXPORT RenderSystem : public Interface
             myPipelineDesc.computeShader  = myComputeShader;
 
             // Create new PSO
-            std::unique_ptr<LLGL::Blob> myCache;
+            LLGL::Blob myCache;
             myRenderer->CreatePipelineState(myPipelineDesc, &myCache);
 
             // Store PSO to file
             std::ofstream myCacheFile{ "MyPSOCacheFile.bin", std::ios::out | std::ios::binary };
             myCacheFile.write(
-                reinterpret_cast<const char*>(myCache->GetData()),
-                static_cast<std::streamsize>(myCache->GetSize())
+                reinterpret_cast<const char*>(myCache.GetData()),
+                static_cast<std::streamsize>(myCache.GetSize())
             );
         }
         \endcode
@@ -558,7 +558,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \param[in] pipelineStateDesc Specifies the graphics PSO descriptor.
         This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
         The \c vertexShader member of the descriptor must never be null!
-        \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
+        \param[out] serializedCache Optional pointer to a Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
         This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
         It can be used to faster restore a pipeline state on next application run.
         \see GraphicsPipelineDescriptor
@@ -570,7 +570,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Creates a new compute pipeline state object (PSO).
         \param[in] pipelineStateDesc Specifies the compute PSO descriptor. This will describe the entire pipeline state.
         The \c computeShader member of the descriptor must never be null!
-        \param[out] serializedCache Optional pointer to a unique Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
+        \param[out] serializedCache Optional pointer to a Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
         This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
         It can be used to faster restore a pipeline state on next application run.
         \see ComputePipelineDescriptor

@@ -63,7 +63,7 @@ class LLGL_EXPORT ArrayView
         {
         }
 
-        //! Initializes the array view with the specified fixed size array. The size of this container will be equal to the template parameter <N>.
+        //! Initializes the array view with the specified fixed size array. The size of this container will be equal to the template parameter \c <N>.
         template <std::size_t N>
         ArrayView(const T (&data)[N]) :
             data_ { data },

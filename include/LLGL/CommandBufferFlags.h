@@ -74,7 +74,7 @@ struct CommandBufferFlags
         /**
         \brief Specifies that the encoded command buffer will be submitted as a secondary command buffer.
         \remarks If this is specified, the command buffer must be submitted using the \c Execute function of a primary command buffer.
-        \remakrs This cannot be used in combination with the \c ImmediateSubmit flag.
+        \remarks This cannot be used in combination with the \c ImmediateSubmit flag.
         \see CommandBuffer::Execute
         */
         Secondary       = (1 << 0),
@@ -82,7 +82,7 @@ struct CommandBufferFlags
         /**
         \brief Specifies that the encoded command buffer can be submitted multiple times.
         \remarks If this is not specified, the command buffer must be encoded again after it has been submitted to the command queue.
-        \remakrs This cannot be used in combination with the \c ImmediateSubmit flag.
+        \remarks This cannot be used in combination with the \c ImmediateSubmit flag.
         \see CommandQueue::Submit(CommandBuffer&)
         */
         MultiSubmit     = (1 << 1),

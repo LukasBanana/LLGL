@@ -70,14 +70,14 @@ class LLGL_EXPORT Blob : public NonCopyable
 
         /**
         \brief Creates a new Blob instance with a strong reference to the specified vector container.
-        \param[in] container Specifies the container whose data is to be moved into this Blob instance.
+        \param[in] cont Specifies the container whose data is to be moved into this Blob instance.
         \return New instance of Blob that manages the specified container.
         */
         static Blob CreateStrongRef(std::vector<char>&& cont);
 
         /**
         \brief Creates a new Blob instance with a strong reference to the specified string container.
-        \param[in] container Specifies the container whose data is to be moved into this Blob instance.
+        \param[in] str Specifies the container whose data is to be moved into this Blob instance.
         \return New instance of Blob that manages the specified container.
         */
         static Blob CreateStrongRef(std::string&& str);

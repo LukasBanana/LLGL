@@ -95,8 +95,7 @@ class LLGL_EXPORT Texture : public Resource
 
         /**
         \brief Returns the memory footprint of the specified MIP-map subresource and optional extent.
-        \param[in] mipLevel Specifies the optional MIP-map subresource. The first and largest MIP-map is level zero. By default 0.
-        \param[in] extent Specifies the extent of the subresource. This will be clamped to the extent of the specified MIP-map. By default the entire MIP-extent is used.
+        \param[in] mipLevel Specifies the MIP-map leve to query from. The first and largest MIP-map is level zero.
         \return Memory footprint of the specified subresource. If this operation failed, all fields in the returned structure are default initialized.
         \see GetMipExtent
         */
