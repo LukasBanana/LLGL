@@ -17,6 +17,7 @@
 #include <utility>
 #include <type_traits>
 #include <unordered_set>
+#include <cstdint>
 
 
 namespace LLGL
@@ -64,11 +65,12 @@ SubType* TakeOwnership(std::vector<std::unique_ptr<BaseType>>& objectSet, std::u
  */
 
 // Alternative for std::unique_ptr<T> with an index into its owning container for fast removal.
-template <typename T, typename Payload>
+template <typename T, typename Payload, std::size_t Alignment = alignof(T)>
 class PayloadUniquePtr final
 {
 
-        static_assert(std::is_standard_layout<Payload>::value, "PayloadUniquePtr<T, Payload>: Payload must be a standard layout");
+        static_assert(std::is_standard_layout<Payload>::value, "PayloadUniquePtr<T, Payload, Alignment>: Payload must be a standard layout");
+        static_assert(Alignment > 0, "PayloadUniquePtr<T, Payload, Alignment>: Alignment must be greater than 0");
 
     public:
 
@@ -85,7 +87,7 @@ class PayloadUniquePtr final
 
         template <typename TOther>
         PayloadUniquePtr(PayloadUniquePtr<TOther, Payload>&& rhs) :
-            ptr_ { rhs.release() }
+            mem_ { rhs.release() }
         {
         }
 
@@ -102,46 +104,47 @@ class PayloadUniquePtr final
             reset();
         }
 
-        pointer release()
+        char* release()
         {
-            pointer ptr = ptr_;
-            ptr_ = nullptr;
-            return ptr;
+            char* mem = mem_;
+            mem_ = nullptr;
+            return mem;
         }
 
-        void reset(pointer ptr = nullptr)
+        void reset(char* mem = nullptr)
         {
-            if (ptr_ != ptr)
+            if (mem_ != mem)
             {
-                if (ptr_ != nullptr)
+                if (mem_ != nullptr)
                 {
                     /* Call destructor and free memory including payload */
-                    ptr_->~T();
-                    char* mem = reinterpret_cast<char*>(ptr_) - sizeof(Payload);
-                    ::delete [] mem;
+                    get()->~T();
+                    ::delete [] mem_;
                 }
-                ptr_ = ptr;
+                mem_ = mem;
             }
         }
 
         pointer get() const noexcept
         {
-            return ptr_;
+            auto addr = reinterpret_cast<std::uintptr_t>(mem_);
+            addr = GetAlignedSize(addr + sizeof(Payload), Alignment);
+            return reinterpret_cast<pointer>(addr);
         }
 
         void swap(PayloadUniquePtr& other) noexcept
         {
-            std::swap(other.ptr_, ptr_);
+            std::swap(other.mem_, mem_);
         }
 
         Payload& payload() noexcept
         {
-            return *reinterpret_cast<Payload*>(reinterpret_cast<char*>(ptr_) - sizeof(Payload));
+            return *reinterpret_cast<Payload*>(mem_);
         }
 
         const Payload& payload() const noexcept
         {
-            return *reinterpret_cast<const Payload*>(reinterpret_cast<const char*>(ptr_) - sizeof(Payload));
+            return *reinterpret_cast<const Payload*>(mem_);
         }
 
     public:
@@ -166,29 +169,30 @@ class PayloadUniquePtr final
         template <typename... Args>
         static PayloadUniquePtr<T, Payload> Alloc(const Payload& payload, Args&&... args)
         {
-            /* Allocate memory for payload and object */
-            char* mem = ::new char[sizeof(T) + sizeof(Payload)];
+            /* Allocate memory for payload and object with enough padding to have pointer alignment of <T> */
+            constexpr auto payloadAndPaddingSize = sizeof(Payload) + Alignment - 1;
+            char* mem = ::new char[sizeof(T) + payloadAndPaddingSize];
 
             /* Initialize payload */
             *reinterpret_cast<Payload*>(mem) = payload;
 
-            /* Construct  */
-            T* ptr = reinterpret_cast<T*>(mem + sizeof(Payload));
-            ::new (ptr) T(std::forward<Args>(args)...);
+            /* Construct object */
+            PayloadUniquePtr<T, Payload> ptr{ mem };
+            ::new (ptr.get()) T(std::forward<Args>(args)...);
 
-            return PayloadUniquePtr<T, Payload>{ ptr };
+            return ptr;
         }
 
     private:
 
-        PayloadUniquePtr(T* ptr) :
-            ptr_ { ptr }
+        PayloadUniquePtr(char* mem) :
+            mem_ { mem }
         {
         }
 
     private:
 
-        T* ptr_ = nullptr;
+        char* mem_ = nullptr;
 
 };
 
