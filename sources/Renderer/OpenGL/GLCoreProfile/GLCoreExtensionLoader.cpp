@@ -173,6 +173,7 @@ static bool DECL_LOADGLEXT_PROC(ARB_framebuffer_object)
     LOAD_GLPROC( glBindRenderbuffer                    );
     LOAD_GLPROC( glRenderbufferStorage                 );
     LOAD_GLPROC( glRenderbufferStorageMultisample      );
+    LOAD_GLPROC( glGetRenderbufferParameteriv          );
     LOAD_GLPROC( glGenFramebuffers                     );
     LOAD_GLPROC( glDeleteFramebuffers                  );
     LOAD_GLPROC( glBindFramebuffer                     );
