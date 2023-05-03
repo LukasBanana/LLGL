@@ -18,7 +18,7 @@ namespace LLGL
 GLReadTextureFBO::GLReadTextureFBO()
 {
     fbo_.GenFramebuffer();
-    fbo_.Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, fbo_.GetID());
 }
 
 GLReadTextureFBO::~GLReadTextureFBO()

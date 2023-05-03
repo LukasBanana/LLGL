@@ -884,22 +884,30 @@ void GLTexture::AllocRenderbufferStorage(const TextureDescriptor& textureDesc)
     );
 }
 
+// Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
+static void BindGLTextureNonPersistent(const GLTexture& textureGL)
+{
+    GLStateManager::Get().BindTexture(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
+}
+
 void GLTexture::QueryInternalFormat()
 {
     GLint format = 0;
     {
         if (IsRenderbuffer())
+        {
+            /* Bind renderbuffer and query qttributes */
+            GLStateManager::Get().BindRenderbuffer(GetID());
             glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+        }
         else
+        {
+            /* Bind texture and query attributes */
+            BindGLTextureNonPersistent(*this);
             GLProfile::GetTexParameterInternalFormat(GetGLTexTarget(), &format);
+        }
     }
     internalFormat_ = static_cast<GLenum>(format);
-}
-
-// Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
-static void BindGLTextureNonPersistent(const GLTexture& textureGL)
-{
-    GLStateManager::Get().BindTexture(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
 }
 
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const

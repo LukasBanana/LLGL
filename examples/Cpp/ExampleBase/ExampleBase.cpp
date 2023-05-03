@@ -433,7 +433,12 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     if (auto report = shader->GetReport())
     {
         if (*report->GetText() != '\0')
-            std::cerr << report->GetText() << std::endl;
+        {
+            if (report->HasErrors())
+                LLGL::Log::Errorf("%s", report->GetText());
+            else
+                LLGL::Log::Printf("%s", report->GetText());
+        }
     }
 
     return shader;

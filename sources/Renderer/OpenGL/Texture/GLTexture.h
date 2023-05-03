@@ -153,19 +153,20 @@ class GLTexture final : public Texture
 
     private:
 
-        GLuint              id_             = 0;                        // GL object name for texture or renderbuffer
-        GLenum              internalFormat_ = 0;
-        GLsizei             numMipLevels_   = 1;
-        bool                isRenderbuffer_ = false;
-        GLSwizzleFormat     swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
+        GLuint                  id_             = 0;                        // GL object name for texture or renderbuffer
+        GLenum                  internalFormat_ = 0;
+
+        const GLsizei           numMipLevels_   = 1;
+        const bool              isRenderbuffer_ = false;
+        const GLSwizzleFormat   swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
 
         #ifdef LLGL_OPENGLES3
-        GLint               extent_[3]      = {};
-        GLint               samples_        = 1;
+        GLint                   extent_[3]      = {};
+        GLint                   samples_        = 1;
         #endif
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        const GL2XSampler*  boundSampler_   = nullptr;                  // Sampler currently bound to this texture
+        const GL2XSampler*      boundSampler_   = nullptr;                  // Sampler currently bound to this texture
         #endif
 
 };

@@ -1,6 +1,6 @@
 /*
  * GLFramebuffer.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -54,16 +54,6 @@ void GLFramebuffer::DeleteFramebuffer()
         GLStateManager::Get().NotifyFramebufferRelease(id_);
         id_ = 0;
     }
-}
-
-void GLFramebuffer::Bind(GLFramebufferTarget target) const
-{
-    GLStateManager::Get().BindFramebuffer(target, GetID());
-}
-
-void GLFramebuffer::Unbind(GLFramebufferTarget target) const
-{
-    GLStateManager::Get().BindFramebuffer(target, 0);
 }
 
 bool GLFramebuffer::FramebufferParameters(

@@ -11,44 +11,52 @@
 #include "../../CheckedCast.h"
 #include "../../RenderTargetUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-static void Convert(AttachmentFormatDescriptor& dst, const AttachmentDescriptor& src)
+static void ConvertAttachmentFormatDesc(AttachmentFormatDescriptor& dst, const AttachmentDescriptor& src)
 {
     dst.format  = GetAttachmentFormat(src);
     dst.loadOp  = AttachmentLoadOp::Load;
     dst.storeOp = AttachmentStoreOp::Store;
 }
 
-static void Convert(RenderPassDescriptor& dst, const RenderTargetDescriptor& src)
+static void ConvertRenderPassAttachmentDesc(RenderPassDescriptor& dst, const AttachmentDescriptor& src, std::uint32_t colorAttachmentIndex = 0)
 {
-    std::uint32_t numColorAttachments = 0;
-    for (const auto& attachment : src.attachments)
+    const Format format = GetAttachmentFormat(src);
+    if (IsColorFormat(format))
     {
-        const Format format = GetAttachmentFormat(attachment);
-        if (IsDepthAndStencilFormat(format))
-        {
-            Convert(dst.depthAttachment, attachment);
-            Convert(dst.stencilAttachment, attachment);
-        }
-        else if (IsDepthFormat(format))
-            Convert(dst.depthAttachment, attachment);
-        else if (IsStencilFormat(format))
-            Convert(dst.stencilAttachment, attachment);
-        else if (numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-            Convert(dst.colorAttachments[numColorAttachments++], attachment);
+        LLGL_ASSERT(colorAttachmentIndex < LLGL_MAX_NUM_COLOR_ATTACHMENTS);
+        ConvertAttachmentFormatDesc(dst.colorAttachments[colorAttachmentIndex], src);
     }
+    else if (IsDepthAndStencilFormat(format))
+    {
+        ConvertAttachmentFormatDesc(dst.depthAttachment, src);
+        ConvertAttachmentFormatDesc(dst.stencilAttachment, src);
+    }
+    else if (IsDepthFormat(format))
+        ConvertAttachmentFormatDesc(dst.depthAttachment, src);
+    else if (IsStencilFormat(format))
+        ConvertAttachmentFormatDesc(dst.stencilAttachment, src);
+}
+
+static void ConvertRenderPassDesc(RenderPassDescriptor& dst, const RenderTargetDescriptor& src)
+{
+    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        ConvertRenderPassAttachmentDesc(dst, src.colorAttachments[i], i);
+    ConvertRenderPassAttachmentDesc(dst, src.depthStencilAttachment);
     dst.samples = src.samples;
 }
 
 static RenderPassDescriptor MakeRenderPassDesc(const RenderTargetDescriptor& renderTargetDesc)
 {
     RenderPassDescriptor renderPassDesc;
-    Convert(renderPassDesc, renderTargetDesc);
+    ConvertRenderPassDesc(renderPassDesc, renderTargetDesc);
     return renderPassDesc;
 }
 

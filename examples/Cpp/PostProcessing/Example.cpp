@@ -238,13 +238,20 @@ public:
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
             renderTargetDesc.resolution = resolution;
-            renderTargetDesc.attachments =
+            renderTargetDesc.samples    = GetSampleCount();
+            if (renderTargetDesc.samples > 1)
             {
-                LLGL::AttachmentDescriptor{ LLGL::Format::D32Float },
-                LLGL::AttachmentDescriptor{ colorMap },
-                LLGL::AttachmentDescriptor{ glossMap },
-            };
-            renderTargetDesc.samples = GetSampleCount();
+                renderTargetDesc.colorAttachments[0]    = colorMap->GetFormat();
+                renderTargetDesc.colorAttachments[1]    = glossMap->GetFormat();
+                renderTargetDesc.resolveAttachments[0]  = colorMap;
+                renderTargetDesc.resolveAttachments[1]  = glossMap;
+            }
+            else
+            {
+                renderTargetDesc.colorAttachments[0]    = colorMap;
+                renderTargetDesc.colorAttachments[1]    = glossMap;
+            }
+            renderTargetDesc.depthStencilAttachment = LLGL::Format::D32Float;
         }
         renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
 
@@ -254,22 +261,16 @@ public:
 
         LLGL::RenderTargetDescriptor renderTargetBlurXDesc;
         {
-            renderTargetBlurXDesc.resolution = resolution;
-            renderTargetBlurXDesc.attachments =
-            {
-                LLGL::AttachmentDescriptor{ glossMapBlurX }
-            };
+            renderTargetBlurXDesc.resolution            = resolution;
+            renderTargetBlurXDesc.colorAttachments[0]   = glossMapBlurX;
         }
         renderTargetBlurX = renderer->CreateRenderTarget(renderTargetBlurXDesc);
 
         // Create render-target for vertical blur pass (no depth buffer needed)
         LLGL::RenderTargetDescriptor renderTargetBlurYDesc;
         {
-            renderTargetBlurYDesc.resolution = resolution;
-            renderTargetBlurYDesc.attachments =
-            {
-                LLGL::AttachmentDescriptor{ glossMapBlurY }
-            };
+            renderTargetBlurYDesc.resolution            = resolution;
+            renderTargetBlurYDesc.colorAttachments[0]   = glossMapBlurY;
         }
         renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
     }

@@ -13,7 +13,6 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/PipelineStateFlags.h>
-#include <vector>
 #include <cstdint>
 
 
@@ -48,7 +47,7 @@ struct AttachmentDescriptor
 
     /**
     \brief Specifies the render-target attachment format. By default Format::Undefined.
-    \remarks If this is undefined, the \c texture <b>must not</b> be null and the format will be determined by texture's format.
+    \remarks If this is undefined, \c texture <b>must not</b> be null and the format will be determined by the texture's format.
     \see Texture::GetFormat
     */
     Format          format      = Format::Undefined;
@@ -125,32 +124,10 @@ struct RenderTargetDescriptor
     \brief Number of samples for the render targets. By default 1.
     \remarks If the specified number of samples is not supported, LLGL will silently reduce it.
     The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
+    \remarks If \c renderPass is specified, the number of samples from that RenderPass must match this number of samples.
     \see RenderTarget::GetSamples
     */
     std::uint32_t                       samples             = 1;
-
-    #if 1//TODO: replace this
-
-    /**
-    \brief Specifies whether custom multi-sampling is used or not. By default false.
-    \remarks If this is true, only multi-sampled textures can be attached to a render-target,
-    i.e. textures of the following types: Texture2DMS, Texture2DMSArray.
-    If this is false, only non-multi-sampled textures can be attached to a render-target.
-    This field will be ignored if multi-sampling is disabled.
-    \todo Remove this attribute and support custom resolve attachments instead.
-    */
-    bool                                customMultiSampling = false;
-
-    /**
-    \brief Specifies all render target attachment descriptors.
-    \remarks This container can also be empty, if the respective fragment shader has no direct output but writes into a storage texture instead
-    (e.g. \c image3D in GLSL, or <code>RWTexture3D<float4></code> in HLSL).
-    If the respective rendering API does not support render targets without any attachments, LLGL will generate a dummy texture.
-    \todo Replace this attribute by a fixed number of for color, resolve, and depth-stencil attachments.
-    */
-    std::vector<AttachmentDescriptor>   attachments;
-
-    #else
 
     /**
     \brief Specifies the list of color attachment descriptors.
@@ -176,8 +153,6 @@ struct RenderTargetDescriptor
     \see TextureDescriptor::samples
     */
     AttachmentDescriptor                depthStencilAttachment;
-
-    #endif
 };
 
 

@@ -624,9 +624,6 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Validates the specified shader descriptor.
         void AssertCreateShader(const ShaderDescriptor& shaderDesc);
 
-        //! Validates the specified render target descriptor.
-        void AssertCreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc);
-
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase = nullptr);
 

@@ -153,12 +153,8 @@ private:
         // Create render target
         LLGL::RenderTargetDescriptor rtDesc;
         {
-            rtDesc.resolution       = resolution;
-            //rtDesc.multiSampling    = GetMultiSampleDesc();
-            rtDesc.attachments      =
-            {
-                LLGL::AttachmentDescriptor{ depthRangeTexture }
-            };
+            rtDesc.resolution               = resolution;
+            rtDesc.depthStencilAttachment   = depthRangeTexture;
         }
         depthRangeRenderTarget = renderer->CreateRenderTarget(rtDesc);
     }

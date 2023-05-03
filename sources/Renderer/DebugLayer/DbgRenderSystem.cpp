@@ -18,6 +18,8 @@
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 
+#include <LLGL/Log.h>
+
 
 namespace LLGL
 {
@@ -442,12 +444,22 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
     {
         instanceDesc.renderPass = DbgGetInstance<DbgRenderPass>(renderTargetDesc.renderPass);
 
-        for (auto& attachment : instanceDesc.attachments)
+        auto TransferDbgAttachment = [this](AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment)
         {
-            if (debugger_)
-                ValidateAttachmentDesc(attachment);
-            attachment.texture = DbgGetInstance<DbgTexture>(attachment.texture);
+            if (IsAttachmentEnabled(attachmentDesc))
+            {
+                if (debugger_)
+                    ValidateAttachmentDesc(attachmentDesc, colorTarget, isResolveAttachment, isDepthStencilAttachment);
+                attachmentDesc.texture = DbgGetInstance<DbgTexture>(attachmentDesc.texture);
+            }
+        };
+
+        for_range(colorTarget, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        {
+            TransferDbgAttachment(instanceDesc.colorAttachments[colorTarget], colorTarget, /*isResolveAttachment:*/ false, /*isDepthStencilAttachment:*/ false);
+            TransferDbgAttachment(instanceDesc.resolveAttachments[colorTarget], colorTarget, /*isResolveAttachment:*/ true, /*isDepthStencilAttachment:*/ false);
         }
+        TransferDbgAttachment(instanceDesc.depthStencilAttachment, 0, /*isResolveAttachment:*/ false, /*isDepthStencilAttachment:*/ true);
     }
     return renderTargets_.emplace<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, renderTargetDesc);
 }
@@ -698,7 +710,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
             if (auto formatName = ToString(bufferDesc.format))
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + IntToHex(static_cast<std::uint32_t>(bufferDesc.format)));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + std::string(IntToHex(static_cast<std::uint32_t>(bufferDesc.format))));
         }
 
         /* Validate buffer size for specified index format */
@@ -1257,7 +1269,7 @@ void DbgRenderSystem::ValidateTextureViewType(const TextureType sharedTextureTyp
     }
 }
 
-void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc)
+void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment)
 {
     if (auto texture = attachmentDesc.texture)
     {
@@ -1267,21 +1279,43 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         const Format format = GetAttachmentFormat(attachmentDesc);
         if (IsColorFormat(format))
         {
-            if ((textureDbg->desc.bindFlags & BindFlags::ColorAttachment) == 0)
+            if (isDepthStencilAttachment)
             {
                 LLGL_DBG_ERROR(
-                    ErrorType::InvalidState,
-                    "cannot have color attachment with a texture that was not created with the 'LLGL::BindFlags::ColorAttachment' flag"
+                    ErrorType::InvalidArgument,
+                    "cannot use color format for depth-stencil attachment"
+                );
+            }
+            else if ((textureDbg->desc.bindFlags & BindFlags::ColorAttachment) == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot have color attachment [" + std::to_string(colorTarget) +
+                    "] with texture that was not created with the 'LLGL::BindFlags::ColorAttachment' flag"
                 );
             }
         }
         else
         {
-            if ((textureDbg->desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
+            if (isResolveAttachment)
             {
                 LLGL_DBG_ERROR(
-                    ErrorType::InvalidState,
-                    "cannot have depth-stencil attachment with a texture that was not created with the 'LLGL::BindFlags::DepthStencilAttachment' flag"
+                    ErrorType::InvalidArgument,
+                    "cannot use depth-stencil format for resolve attachment [" + std::to_string(colorTarget) + "]"
+                );
+            }
+            else if (!isDepthStencilAttachment)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use depth-stencil format for color attachment [" + std::to_string(colorTarget) + "]"
+                );
+            }
+            else if ((textureDbg->desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot have depth-stencil attachment with texture that was not created with the 'LLGL::BindFlags::DepthStencilAttachment' flag"
                 );
             }
         }
@@ -1313,13 +1347,6 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "cannot have attachment with undefined format"
-            );
-        }
-        else if (IsColorFormat(attachmentDesc.format))
-        {
-            LLGL_DBG_ERROR(
-                ErrorType::InvalidArgument,
-                "cannot have color attachment with 'texture' member being a null pointer"
             );
         }
     }

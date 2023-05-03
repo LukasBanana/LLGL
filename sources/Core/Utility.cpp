@@ -1,6 +1,6 @@
 /*
- * Utility.h
- * 
+ * Utility.cpp
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -16,6 +16,7 @@
 #include <LLGL/Shader.h>
 #include <cstring>
 #include <cctype>
+#include "../Renderer/RenderTargetUtils.h"
 
 
 namespace LLGL
@@ -595,24 +596,21 @@ LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& re
 {
     RenderPassDescriptor renderPassDesc;
     {
-        std::uint32_t numColorAttachments = 0;
-        for (const auto& attachment : renderTargetDesc.attachments)
-        {
-            /* First try to get format from texture */
-            const Format format = (attachment.texture != nullptr ? attachment.texture->GetFormat() : attachment.format);
+        /* Transfer color attachment descriptors */
+        for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+            renderPassDesc.colorAttachments[i] = GetAttachmentFormat(renderTargetDesc.colorAttachments[i]);
 
-            if (IsDepthAndStencilFormat(format))
-            {
-                renderPassDesc.depthAttachment      = { format };
-                renderPassDesc.stencilAttachment    = { format };
-            }
-            else if (IsDepthFormat(format))
-                renderPassDesc.depthAttachment      = { format };
-            else if (IsStencilFormat(format))
-                renderPassDesc.depthAttachment      = { format };
-            else if (numColorAttachments < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-                renderPassDesc.colorAttachments[numColorAttachments++] = { format };
+        /* Transfer depth-stencil attachment descriptor */
+        const Format depthStencilFormat = GetAttachmentFormat(renderTargetDesc.depthStencilAttachment);
+        if (IsDepthAndStencilFormat(depthStencilFormat))
+        {
+            renderPassDesc.depthAttachment = depthStencilFormat;
+            renderPassDesc.stencilAttachment = depthStencilFormat;
         }
+        else if (IsDepthFormat(depthStencilFormat))
+            renderPassDesc.depthAttachment = depthStencilFormat;
+        else if (IsStencilFormat(depthStencilFormat))
+            renderPassDesc.stencilAttachment = depthStencilFormat;
     }
     return renderPassDesc;
 }

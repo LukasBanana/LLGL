@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
+#include <LLGL/Container/SmallVector.h>
 #include "GLFramebuffer.h"
 #include "GLRenderbuffer.h"
 #include "GLTexture.h"
@@ -21,6 +22,8 @@
 namespace LLGL
 {
 
+
+class GLStateManager;
 
 class GLRenderTarget final : public RenderTarget
 {
@@ -44,69 +47,59 @@ class GLRenderTarget final : public RenderTarget
         ~GLRenderTarget();
 
         // Blits the multi-sample framebuffer onto the default framebuffer.
-        void BlitOntoFramebuffer();
+        void ResolveMultisampled(GLStateManager& stateMngr);
 
         // Blits the specified color attachment from the framebuffer onto the screen.
-        void BlitOntoScreen(std::size_t colorAttachmentIndex);
-
-        // Returns the active framebuffer (i.e. either the default framebuffer or the multi-sample framebuffer).
-        const GLFramebuffer& GetFramebuffer() const;
+        void ResolveMultisampledIntoBackbuffer(GLStateManager& stateMngr, std::uint32_t colorTarget);
 
         // Sets the draw buffers for the currently bound FBO.
         void SetDrawBuffers();
 
+        // Returns the primary FBO.
+        inline const GLFramebuffer& GetFramebuffer() const
+        {
+            return framebuffer_;
+        }
+
     private:
 
         void CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc);
-        void CreateFramebufferWithNoAttachments(const RenderTargetDescriptor& desc);
+        void CreateFramebufferWithNoAttachments();
 
-        void AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* outInternalFormats);
-        void AttachAllDepthStencilBuffers(const std::vector<AttachmentDescriptor>& attachmentDescs);
+        void BuildColorAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget);
+        void BuildResolveAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget);
+        void BuildDepthStencilAttachment(const AttachmentDescriptor& attachmentDesc);
 
-        void AttachDepthBuffer();
-        void AttachStencilBuffer();
-        void AttachDepthStencilBuffer();
-        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& outInternalFormat);
+        void BuildAttachmentWithTexture(GLenum binding, const AttachmentDescriptor& attachmentDesc);
+        void BuildAttachmentWithRenderbuffer(GLenum binding, Format format);
 
-        void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
+        void CreateAndAttachRenderbuffer(GLenum binding, GLenum internalFormat);
 
-        void CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment);
-
-        GLenum MakeFramebufferAttachment(const Format format);
-        GLenum MakeFramebufferColorAttachment();
-        GLenum MakeFramebufferDepthStencilAttachment(const Format format);
-
-        void CreateRenderbuffersMS(const GLenum* internalFormats);
-        void CreateRenderbufferMS(GLenum attachment, GLenum internalFormat);
-
-        bool HasMultiSampling() const;
-        bool HasCustomMultiSampling() const;
-        bool HasDepthStencilAttachment() const;
-
-        void BlitFramebuffer();
+        GLenum AllocColorAttachmentBinding(std::uint32_t colorTarget);
+        GLenum AllocResolveAttachmentBinding(std::uint32_t colorTarget);
+        GLenum AllocDepthStencilAttachmentBinding(const Format format);
 
     private:
 
-        Extent2D                    resolution_;
+        GLint                       resolution_[2];
 
-        GLFramebuffer               framebuffer_;   // primary FBO
-        GLFramebuffer               framebufferMS_; // secondary FBO for multi-sampling
-
-        GLRenderbuffer              renderbuffer_;
+        GLFramebuffer               framebuffer_;                       // Primary FBO
+        GLFramebuffer               framebufferResolve_;                // Secondary FBO to resolve multi-sampled FBO into
 
         /*
         For multi-sampled render targets we also need a renderbuffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
         which is only supported since OpenGL 3.2+, but renderbuffers are supported since OpenGL 3.0+.
         */
-        std::vector<GLRenderbuffer> renderbuffersMS_;
+        std::vector<GLRenderbuffer> renderbuffers_;
 
-        std::vector<GLenum>         colorAttachments_;
+        SmallVector<GLenum, 2>      drawBuffers_;                       // Values for glDrawBuffers for the primary FBO
+        SmallVector<GLenum, 2>      drawBuffersResolve_;                // Values for glDrawBuffers for the resolve FBO
 
-        GLsizei                     samples_            = 1;
-        GLbitfield                  blitMask_           = 0;
+        GLint                       samples_                = 1;
+        GLenum                      depthStencilBinding_    = 0;        // Equivalent of drawBuffers but for depth-stencil
 
-        const RenderPass*           renderPass_         = nullptr;
+        const RenderPass*           renderPass_             = nullptr;
 
 };
 

@@ -358,13 +358,10 @@ void GLStateManager::SetViewport(const GLViewport& viewport)
 
 void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
 {
+    if (!HasExtension(GLExt::ARB_viewport_array))
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_viewport_array");
     if (static_cast<GLint>(first) + count > limits_.maxViewports)
-    {
-        throw std::runtime_error(
-            "exceeded limit of viewports/scissors (limits is " + std::to_string(limits_.maxViewports) +
-            ", but specified " + std::to_string(first + count) + ")"
-        );
-    }
+        LLGL_TRAP("GL_ARB_viewport_array: out of bounds: limit is %d, but %d was specified", limits_.maxViewports, static_cast<int>(first + count));
 }
 
 void GLStateManager::SetViewportArray(GLuint first, GLsizei count, const GLViewport* viewports)
@@ -373,7 +370,6 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, const GLViewp
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
-        AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
         if (NeedsAdjustedViewport())
@@ -408,8 +404,6 @@ void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDep
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
-        AssertExtViewportArray();
-
         glDepthRangeArrayv(first, count, reinterpret_cast<const GLdouble*>(depthRanges));
     }
     else
@@ -448,7 +442,6 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScisso
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
-        AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
         if (NeedsAdjustedViewport())
@@ -1144,7 +1137,7 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
         case TextureType::Texture2DMSArray: return GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY;
         default:                            break;
     }
-    throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
+    LLGL_TRAP("failed to convert texture type to OpenGL texture target");
 }
 
 void GLStateManager::ActiveTexture(GLuint layer)
@@ -1254,7 +1247,7 @@ void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, G
     #endif // /GL_ARB_shader_image_load_store
     {
         /* Error: extension not supported */
-        throw std::runtime_error("renderer does not support storage images");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_shader_image_load_store");
     }
 }
 
@@ -1497,16 +1490,28 @@ GLuint GLStateManager::GetBoundProgramPipeline() const
 
 void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager** nextStateManager)
 {
+    /* Resolve previously bound render target */
+    ResolveMultisampledRenderTarget();
+
     /* Bind render target/context */
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         auto& swapChainGL = LLGL_CAST(GLSwapChain&, renderTarget);
-        BindAndBlitSwapChain(swapChainGL);
+
+        /* Make context current and unbind FBO */
+        GLSwapChain::MakeCurrent(&swapChainGL);
+        GLStateManager::Get().BindGLRenderTarget(nullptr);
+
         if (nextStateManager != nullptr)
             *nextStateManager = &(swapChainGL.GetStateManager());
     }
     else
-        BindAndBlitRenderTarget(LLGL_CAST(GLRenderTarget&, renderTarget));
+    {
+        /* Bind FBO, and notify new render target height */
+        auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
+        BindGLRenderTarget(&renderTargetGL);
+        NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
+    }
 }
 
 void GLStateManager::Clear(long flags)
@@ -1599,16 +1604,6 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
 /*
  * ======= Private: =======
  */
-
-void GLStateManager::AssertExtViewportArray()
-{
-    #ifdef GL_ARB_viewport_array
-    if (!HasExtension(GLExt::ARB_viewport_array))
-    #endif
-    {
-        throw std::runtime_error("renderer does not support viewport, depth-range, and scissor arrays");
-    }
-}
 
 GLContextState::TextureLayer* GLStateManager::GetActiveTextureLayer()
 {
@@ -1795,26 +1790,10 @@ void GLStateManager::RestoreWriteMasks(GLIntermediateBufferWriteMasks& intermedi
 
 /* ----- Render pass ----- */
 
-void GLStateManager::BlitBoundRenderTarget()
+void GLStateManager::ResolveMultisampledRenderTarget()
 {
-    if (auto renderTarget = GetBoundRenderTarget())
-        renderTarget->BlitOntoFramebuffer();
-}
-
-void GLStateManager::BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL)
-{
-    /* Blit previously bound render target, bind FBO, and notify new render target height */
-    BlitBoundRenderTarget();
-    BindGLRenderTarget(&renderTargetGL);
-    NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
-}
-
-void GLStateManager::BindAndBlitSwapChain(GLSwapChain& swapChainGL)
-{
-    /* Blit previously bound render target, unbind FBO, and make context current */
-    BlitBoundRenderTarget();
-    GLSwapChain::MakeCurrent(&swapChainGL);
-    GLStateManager::Get().BindGLRenderTarget(nullptr);
+    if (auto* renderTarget = GetBoundRenderTarget())
+        renderTarget->ResolveMultisampled(*this);
 }
 
 void GLStateManager::ClearAttachmentsWithRenderPass(

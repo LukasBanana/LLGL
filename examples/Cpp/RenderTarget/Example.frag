@@ -1,6 +1,6 @@
 // GLSL model fragment shader
 
-#version 140
+#version 450
 
 layout(std140) uniform Settings
 {
@@ -10,7 +10,10 @@ layout(std140) uniform Settings
 };
 
 uniform sampler2D colorMap;
-//uniform sampler2DMS colorMapMS;
+
+#ifdef ENABLE_CUSTOM_MULTISAMPLING
+uniform sampler2DMS colorMapMS;
+#endif
 
 in vec3 vNormal;
 in vec2 vTexCoord;
@@ -19,7 +22,7 @@ out vec4 fragColor;
 
 vec4 SampleColorMap(vec2 texCoord)
 {
-    #if 0
+    #ifdef ENABLE_CUSTOM_MULTISAMPLING
 	if (useTexture2DMS != 0)
 	{
 		// Fetch texel from multi-sample texture

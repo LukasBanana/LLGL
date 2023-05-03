@@ -160,11 +160,8 @@ private:
         // Create render target
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
-            renderTargetDesc.resolution     = shadowMapResolution;
-            renderTargetDesc.attachments    =
-            {
-                LLGL::AttachmentDescriptor{ shadowMap }
-            };
+            renderTargetDesc.resolution             = shadowMapResolution;
+            renderTargetDesc.depthStencilAttachment = shadowMap;
         }
         shadowMapRenderTarget = renderer->CreateRenderTarget(renderTargetDesc);
     }

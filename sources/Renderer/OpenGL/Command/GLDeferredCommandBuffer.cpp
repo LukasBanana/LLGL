@@ -689,7 +689,7 @@ void GLDeferredCommandBuffer::EndRenderCondition()
 #ifndef __APPLE__
 
 #define LLGL_TRAP_TRANSFORM_FEEDBACK_NOT_SUPPORTED() \
-    LLGL_TRAP_FEATURE_NOT_SUPPORTED("stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)")
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("stream-outputs (GL_EXT_transform_feedback/ NV_transform_feedback)")
 
 #endif
 

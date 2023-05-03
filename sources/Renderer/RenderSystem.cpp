@@ -403,52 +403,6 @@ void RenderSystem::AssertCreateShader(const ShaderDescriptor& shaderDesc)
     );
 }
 
-// Returns the number of color attachments in the specified render target descriptor
-static std::size_t CountColorAttachments(const RenderTargetDescriptor& renderTargetDesc)
-{
-    std::size_t n = 0;
-    for (const auto& attachment : renderTargetDesc.attachments)
-    {
-        if (IsColorFormat(GetAttachmentFormat(attachment)))
-            ++n;
-    }
-    return n;
-}
-
-// Returns the number of depth-stencil attachments in the specified render target descriptor
-static std::size_t CountDepthStencilAttachments(const RenderTargetDescriptor& renderTargetDesc)
-{
-    std::size_t n = 0;
-    for (const auto& attachment : renderTargetDesc.attachments)
-    {
-        if (IsDepthOrStencilFormat(GetAttachmentFormat(attachment)))
-            ++n;
-    }
-    return n;
-}
-
-void RenderSystem::AssertCreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
-{
-    if (renderTargetDesc.attachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-    {
-        /* Check if there is one depth-stencil attachment */
-        const auto numColorAttachments = CountColorAttachments(renderTargetDesc);
-        LLGL_ASSERT(
-            !(numColorAttachments > LLGL_MAX_NUM_COLOR_ATTACHMENTS),
-            "render target descriptor with %zu color attachments exceeded limit of %u", numColorAttachments, LLGL_MAX_NUM_COLOR_ATTACHMENTS
-        );
-    }
-    else if (renderTargetDesc.attachments.size() > 1)
-    {
-        /* Check there are not more than one depth-stencil attachment */
-        const auto numDepthStencilAttachments = CountDepthStencilAttachments(renderTargetDesc);
-        LLGL_ASSERT(
-            !(numDepthStencilAttachments > 1),
-            "render target descriptor with %zu depth-stencil attachments exceeded limit of 1", numDepthStencilAttachments
-        );
-    }
-}
-
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase)
 {
     LLGL_ASSERT(

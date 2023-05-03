@@ -308,7 +308,6 @@ class GLStateManager
         void AdjustScissor(GLScissor& outScissor, const GLScissor& inScissor);
 
         void AssertViewportLimit(GLuint first, GLsizei count);
-        void AssertExtViewportArray();
 
         GLContextState::TextureLayer* GetActiveTextureLayer();
         void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly);
@@ -332,10 +331,7 @@ class GLStateManager
         /* ----- Render pass ----- */
 
         // Blits the currently bound render target
-        void BlitBoundRenderTarget();
-
-        void BindAndBlitRenderTarget(GLRenderTarget& renderTargetGL);
-        void BindAndBlitSwapChain(GLSwapChain& swapChainGL);
+        void ResolveMultisampledRenderTarget();
 
         std::uint32_t ClearColorBuffers(
             const std::uint8_t*             colorBuffers,

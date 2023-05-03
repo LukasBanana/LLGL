@@ -12,10 +12,10 @@
 #define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
-//#define ENABLE_CUSTOM_MULTISAMPLING
+#define ENABLE_CUSTOM_MULTISAMPLING
 
 // Enable depth texture instead of depth buffer for render target
-//#define ENABLE_DEPTH_TEXTURE
+#define ENABLE_DEPTH_TEXTURE
 
 // Enables constant buffer view (CBV) ranges
 #define ENABLE_CBUFFER_RANGE
@@ -57,6 +57,10 @@ class Example_RenderTarget : public ExampleBase
     LLGL::Texture*          renderTargetDepthTex    = nullptr;
     #endif
 
+    #ifdef ENABLE_CUSTOM_MULTISAMPLING
+    LLGL::Texture*          renderTargetTexMS       = nullptr;
+    #endif
+
     Gs::Matrix4f            renderTargetProj;
 
     Gs::Vector2f            rotation;
@@ -66,13 +70,11 @@ class Example_RenderTarget : public ExampleBase
     std::vector<char>       cbufferData;
     #endif
 
-    const LLGL::Extent2D    renderTargetSize        = LLGL::Extent2D(
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        64, 64
-        #else
-        512, 512
-        #endif
-    );
+    #ifdef ENABLE_MULTISAMPLING
+    const LLGL::Extent2D    renderTargetSize        = { 64, 64 };
+    #else
+    const LLGL::Extent2D    renderTargetSize        = { 512, 512 };
+    #endif
 
     struct alignas(16) Settings
     {
@@ -145,21 +147,28 @@ private:
 
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
+        LLGL::ShaderMacro psDefines[] =
+        {
+            LLGL::ShaderMacro{ "ENABLE_CUSTOM_MULTISAMPLING" },
+            LLGL::ShaderMacro{}
+        };
+
         // Load shader program
         if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat });
-            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" });
+            shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, {}, psDefines);
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
             shaderPipeline.ps = LoadShader(
                 #ifdef __APPLE__
-                { LLGL::ShaderType::Fragment, "Example.410core.frag" }
+                { LLGL::ShaderType::Fragment, "Example.410core.frag" },
                 #else
-                { LLGL::ShaderType::Fragment, "Example.frag" }
+                { LLGL::ShaderType::Fragment, "Example.frag" },
                 #endif
+                {}, psDefines
             );
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
@@ -190,7 +199,9 @@ private:
                 LLGL::BindingDescriptor{ "Settings",        LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3                           },
                 LLGL::BindingDescriptor{ "colorMapSampler", LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                           },
                 LLGL::BindingDescriptor{ "colorMap",        LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
-              //LLGL::BindingDescriptor{ "colorMapMS",      LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 3                           },
+                #ifdef ENABLE_CUSTOM_MULTISAMPLING
+                LLGL::BindingDescriptor{ "colorMapMS",      LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 3                           },
+                #endif
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -253,19 +264,9 @@ private:
         #endif
 
         // Create empty render-target texture
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-        renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DMSDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height, multiSamplingDesc.samples)
-        );
-
-        #else
-
         renderTargetTex = renderer->CreateTexture(
             LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height)
         );
-
-        #endif
 
         #ifdef ENABLE_DEPTH_TEXTURE
 
@@ -283,29 +284,48 @@ private:
         }
         renderTargetDepthTex = renderer->CreateTexture(depthTexDesc);
 
-        #endif
+        #endif // /ENABLE_DEPTH_TEXTURE
+
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+        renderTargetTexMS = renderer->CreateTexture(
+            LLGL::Texture2DMSDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height, samples)
+        );
+
+        #endif // /ENABLE_CUSTOM_MULTISAMPLING
 
         // Create render-target with multi-sampling
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
             renderTargetDesc.resolution = renderTargetSize;
+            renderTargetDesc.samples    = samples;
 
-            #ifdef ENABLE_MULTISAMPLING
-            renderTargetDesc.samples                = samples;
-            #   ifdef ENABLE_CUSTOM_MULTISAMPLING
-            renderTargetDesc.customMultiSampling    = true;
-            #   endif
-            #endif
+            #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
-            renderTargetDesc.attachments =
+            // Only render into custom multi-sampled texture
+            renderTargetDesc.colorAttachments[0] = renderTargetTexMS;
+
+            #else
+
+            if (samples > 1)
             {
-                #ifdef ENABLE_DEPTH_TEXTURE
-                LLGL::AttachmentDescriptor{ renderTargetDepthTex },
-                #else
-                LLGL::AttachmentDescriptor{ LLGL::Format::D32Float },
-                #endif
-                LLGL::AttachmentDescriptor{ renderTargetTex }
-            };
+                // Render into multi-sampled texture (with same format), then resolve into our target texture
+                renderTargetDesc.colorAttachments[0]    = renderTargetTex->GetFormat();
+                renderTargetDesc.resolveAttachments[0]  = renderTargetTex;
+            }
+            else
+            {
+                // Render directly into target texture
+                renderTargetDesc.colorAttachments[0] = renderTargetTex;
+            }
+
+            #endif // /ENABLE_CUSTOM_MULTISAMPLING
+
+            #ifdef ENABLE_DEPTH_TEXTURE
+            renderTargetDesc.depthStencilAttachment = renderTargetDepthTex;
+            #else
+            renderTargetDesc.depthStencilAttachment = LLGL::Format::D32Float;
+            #endif
         }
         renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
 
@@ -438,6 +458,9 @@ private:
                 commands->SetResource(0, *constantBuffer);
                 commands->SetResource(1, *samplerState);
                 commands->SetResource(2, *colorMap);
+                #ifdef ENABLE_CUSTOM_MULTISAMPLING
+                commands->SetResource(3, *colorMap);
+                #endif
             }
 
             // Draw scene
@@ -489,6 +512,9 @@ private:
 
                 // Set render-target texture
                 commands->SetResource(2, *renderTargetTex);
+                #ifdef ENABLE_CUSTOM_MULTISAMPLING
+                commands->SetResource(3, *renderTargetTexMS);
+                #endif
             }
 
             // Draw scene

@@ -1,6 +1,6 @@
 /*
  * GLFramebuffer.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -36,9 +36,6 @@ class GLFramebuffer
 
         void GenFramebuffer();
         void DeleteFramebuffer();
-
-        void Bind(GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
-        void Unbind(GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
 
         // Sets the default framebuffer parameters and return true on success, otherwise the "GL_ARB_framebuffer_no_attachments" extension is not supported.
         bool FramebufferParameters(
