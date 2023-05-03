@@ -123,9 +123,9 @@ LLGL_EXPORT void TrapNotImplemented(const char* origin, const char* useCase)
 }
 
 [[noreturn]]
-LLGL_EXPORT void TrapParamNullPointer(const char* origin, const char* paramName)
+LLGL_EXPORT void TrapNullPointer(const char* origin, const char* expr)
 {
-    Trap(origin, "parameter '%s' must not be null", paramName);
+    Trap(origin, "expression '%s' must not be null", expr);
 }
 
 [[noreturn]]

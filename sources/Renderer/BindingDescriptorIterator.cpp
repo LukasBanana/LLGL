@@ -10,6 +10,7 @@
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
 #include "../Core/StringUtils.h"
+#include "../Core/Exception.h"
 #include <algorithm>
 
 
@@ -74,29 +75,27 @@ static const char* ResourceTypeToString(const ResourceType t)
 [[noreturn]]
 static void ErrNullPointerResource(ResourceType expectedType)
 {
-    throw std::invalid_argument(
-        "null pointer exception of resource object used as binding point for 'LLGL::ResourceType::" +
-        std::string(ResourceTypeToString(expectedType)) + "'"
+    LLGL_TRAP(
+        "null pointer exception of resource object used as binding point for 'LLGL::ResourceType::%s'",
+        ResourceTypeToString(expectedType)
     );
 }
 
 [[noreturn]]
 static void ErrResourceTypeMismatch(ResourceType expectedType, ResourceType actualType)
 {
-    throw std::invalid_argument(
-        "type mismatch of resource object used as binding point: expected 'LLGL::ResourceType::" +
-        std::string(ResourceTypeToString(expectedType)) + "', but got 'LLGL::ResourceType::" +
-        std::string(ResourceTypeToString(actualType)) + "'"
+    LLGL_TRAP(
+        "type mismatch of resource object used as binding point: expected 'LLGL::ResourceType::%s', but got 'LLGL::ResourceType::%s'",
+        ResourceTypeToString(expectedType), ResourceTypeToString(actualType)
     );
 }
 
 [[noreturn]]
 static void ErrBindFlagsMismatch(ResourceType resourceType, long expectedBindFlags, long actualBindFlags)
 {
-    throw std::invalid_argument(
-        "binding flags mismatch of resource object (LLGL::ResourceType::" +
-        std::string(ResourceTypeToString(resourceType)) + ") used as binding point: expected " +
-        IntToHex(expectedBindFlags) + ", but got " + IntToHex(actualBindFlags)
+    LLGL_TRAP(
+        "binding flags mismatch of resource object (LLGL::ResourceType::%s) used as binding point: expected %s, but got %s",
+        ResourceTypeToString(resourceType), IntToHex(expectedBindFlags), IntToHex(actualBindFlags)
     );
 }
 

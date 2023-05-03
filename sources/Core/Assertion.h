@@ -15,8 +15,8 @@
 #define LLGL_ASSERT(EXPR, ...) \
     if (!(EXPR)) { LLGL::TrapAssertionFailed(__FUNCTION__, #EXPR LLGL_VA_ARGS(__VA_ARGS__)); }
 
-#define LLGL_ASSERT_PTR(PARAM) \
-    if (!(PARAM)) { LLGL::TrapParamNullPointer(__FUNCTION__, #PARAM); }
+#define LLGL_ASSERT_PTR(EXPR) \
+    if (!(EXPR)) { LLGL::TrapNullPointer(__FUNCTION__, #EXPR); }
 
 #define LLGL_ASSERT_UPPER_BOUND(PARAM, UPPER_BOUND) \
     if ((PARAM) >= (UPPER_BOUND)) { LLGL::TrapParamExceededUpperBound(__FUNCTION__, #PARAM, static_cast<int>(PARAM), static_cast<int>(UPPER_BOUND)); }

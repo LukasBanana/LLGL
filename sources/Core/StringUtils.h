@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Export.h>
+#include "Exception.h"
 #include <string>
 #include <vector>
 #include <stdarg.h>
@@ -35,22 +36,53 @@ namespace LLGL
 /* ----- Templates ----- */
 
 // Returns the specified integral value as hexadecimal string.
-template <typename T>
-std::string IntToHex(T value, const char* prefix = "0x")
+template <typename T, T Radix>
+const char* IntToStr(T value, const char* prefix = nullptr)
 {
-    static_assert(std::is_integral<T>::value, "IntToHex<T>: template parameter 'T' must be an integral type");
+    static_assert(std::is_integral<T>::value, "IntToStr<T>: template parameter 'T' must be an integral type");
+    static_assert(Radix == 2 || Radix == 8 || Radix == 10 || Radix == 16, "IntToStr<T>: radix must be 2, 8, 10, or 16");
 
-    std::string hex;
-    hex.resize(sizeof(T)*2);
+    constexpr std::size_t maxPrefixLen  = 2;
+    constexpr std::size_t maxLen        = 64;
 
+    static_assert(sizeof(T)*8 <= maxLen, "IntToStr<T>: exceeded limit of digits");
+
+    /* Use static thread-local buffer for output to avoid deadling with synchronization */
+    static thread_local char str[maxLen + maxPrefixLen + 1];
+
+    /* Copy prefix into beginning of output string first */
+    std::size_t prefixOffset = 0;
+    if (prefix != nullptr)
+    {
+        for (; prefixOffset < maxPrefixLen && prefix[prefixOffset] != '\0'; ++prefixOffset)
+            str[prefixOffset] = prefix[prefixOffset];
+    }
+
+    /* Get number of digits from lookup table */
+    constexpr int digitsPerByte[] = { 0, 0, 8, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 2 };
+    int numLen = static_cast<int>(sizeof(T)) * digitsPerByte[Radix];
+
+    /* Append NUL-terminator at end of string */
+    str[prefixOffset + numLen] = '\0';
+
+    /* Insert hex digits from right-to-left */
     constexpr char alphabet[] = "0123456789ABCDEF";
-    for (auto pos = hex.size(); pos > 0; value /= 0xF)
-        hex[--pos] = alphabet[value & 0xF];
 
-    if (prefix != nullptr && *prefix != '\0')
-        hex = prefix + hex;
+    while (numLen > 0)
+    {
+        --numLen;
+        str[prefixOffset + numLen] = alphabet[value % Radix];
+        value /= Radix;
+    }
 
-    return hex;
+    return str;
+}
+
+// Returns the specified integral value as hexadecimal string.
+template <typename T>
+const char* IntToHex(T value, const char* prefix = "0x")
+{
+    return IntToStr<T, 16>(value, prefix);
 }
 
 // Returns the length of the specified null-terminated string.

@@ -6,6 +6,7 @@
  */
 
 #include "GLCore.h"
+#include "../../Core/Exception.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
 #include <stdexcept>
@@ -45,28 +46,20 @@ static const char* GLErrorToStr(const GLenum status)
     return nullptr;
 }
 
+static const char* GLErrorToStrOrHex(const GLenum status)
+{
+    if (const char* err = GLErrorToStr(status))
+        return err;
+    else
+        return IntToHex(status);
+}
+
 void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info)
 {
     if (status != statusRequired)
     {
-        std::string s;
-
-        if (info)
-        {
-            s += info;
-            s += " (error code = ";
-        }
-        else
-            s += "OpenGL operation failed (error code = ";
-
-        if (auto err = GLErrorToStr(status))
-            s += err;
-        else
-            s += IntToHex(status);
-
-        s += ")";
-
-        throw std::runtime_error(s);
+        const char* err = GLErrorToStrOrHex(status);
+        LLGL_TRAP("%s (error code = %s)", (info != nullptr ? info : "OpenGL operation failed"), err);
     }
 }
 

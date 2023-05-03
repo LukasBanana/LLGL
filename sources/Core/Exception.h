@@ -27,6 +27,9 @@
 #define LLGL_TRAP_FEATURE_NOT_SUPPORTED(FEATURE) \
     LLGL::TrapFeatureNotSupported(__FUNCTION__, FEATURE)
 
+#define LLGL_UNREACHABLE() \
+    LLGL_TRAP("reached code path that should be unreachable")
+
 
 namespace LLGL
 {
@@ -64,7 +67,7 @@ LLGL_EXPORT void TrapNotImplemented(const char* origin, const char* useCase = nu
 
 // Throws an std::invalid_argument exception with the message, that a null pointer was passed.
 [[noreturn]]
-LLGL_EXPORT void TrapParamNullPointer(const char* origin, const char* paramName);
+LLGL_EXPORT void TrapNullPointer(const char* origin, const char* expr);
 
 // Throws an std::out_of_range exception with the message, that a value has exceeded an upper bound, i.e. <value> is not in the half-open range [0, upperBound).
 [[noreturn]]

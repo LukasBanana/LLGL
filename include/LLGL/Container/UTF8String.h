@@ -41,7 +41,7 @@ class LLGL_EXPORT UTF8String
 
     public:
 
-        static const size_type npos = -1;
+        static constexpr size_type npos = -1;
 
     public:
 
@@ -175,6 +175,8 @@ class LLGL_EXPORT UTF8String
         int compare(const WStringView& str) const;
         int compare(size_type pos1, size_type count1, const WStringView& str) const;
         int compare(size_type pos1, size_type count1, const WStringView& str, size_type pos2, size_type count2 = npos) const;
+
+        UTF8String substr(size_type pos = 0, size_type cout = npos) const;
 
     public:
 

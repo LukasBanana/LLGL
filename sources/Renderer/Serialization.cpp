@@ -8,6 +8,7 @@
 #include "Serialization.h"
 #include "../Core/Assertion.h"
 #include "../Core/StringUtils.h"
+#include "../Core/Exception.h"
 #include <string.h>
 
 
@@ -136,9 +137,9 @@ Segment Deserializer::Begin(IdentType ident)
     auto seg = Begin();
     if (seg.ident != ident)
     {
-        throw std::runtime_error(
-            "mismatch in serialization segment identifier: read " +
-            IntToHex(seg.ident) + ", but expected " + IntToHex(ident)
+        LLGL_TRAP(
+            "mismatch in serialization segment identifier: read %s, but expected %s",
+            IntToHex(seg.ident), IntToHex(ident)
         );
     }
     return seg;
@@ -160,7 +161,7 @@ void Deserializer::Read(void* data, std::size_t size)
 {
     /* Out of bounds check */
     if (pos_ + size > segmentEnd_)
-        throw std::out_of_range("reading position out of bounds in serialization segment");
+        LLGL_TRAP("reading position out of bounds in serialization segment");
 
     /* Copy segment data into output buffer */
     ::memcpy(data, (data_ + pos_), size);
@@ -177,7 +178,7 @@ const char* Deserializer::ReadCString()
     {
         ++len;
         if (pos_ + len > segmentEnd_)
-            throw std::out_of_range("null terminated string out of bounds in serialization segment");
+            LLGL_TRAP("null terminated string out of bounds in serialization segment");
     }
 
     /* Return string and increment reading position */

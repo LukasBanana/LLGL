@@ -6,6 +6,9 @@
  */
 
 #include <LLGL/Container/UTF8String.h>
+#include <algorithm>
+#include "Exception.h"
+#include "Assertion.h"
 
 
 namespace LLGL
@@ -54,7 +57,7 @@ static SmallVector<wchar_t> ConvertToUTF16WCharArray(const StringView& s)
             utf16.push_back(w0 << 12 | w1 << 6 | w2);
         }
         else
-            throw std::runtime_error("UTF8 character bigger than two bytes");
+            LLGL_TRAP("UTF8 character bigger than two bytes");
     }
 
     utf16.push_back(L'\0');
@@ -294,6 +297,14 @@ int UTF8String::compare(size_type pos1, size_type count1, const WStringView& str
 {
     auto utf8String = ConvertToUTF8CharArray(str.substr(pos2, count2));
     return compare(pos1, count1, StringView{ utf8String.data(), utf8String.size() });
+}
+
+UTF8String UTF8String::substr(size_type pos, size_type count) const
+{
+    if (pos > size())
+        LLGL_TRAP("start position for UTF8 string out of range");
+    count = std::min(count, size() - pos);
+    return StringView{ &(data_[pos]), count };
 }
 
 SmallVector<wchar_t> UTF8String::to_utf16() const

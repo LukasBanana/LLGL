@@ -712,7 +712,7 @@ void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Atta
         LLGL_DBG_SOURCE;
         AssertRecording();
         AssertInsideRenderPass();
-        for (std::uint32_t i = 0; i < numAttachments; ++i)
+        for_range(i, numAttachments)
             ValidateAttachmentClear(attachments[i]);
     }
 
@@ -1839,7 +1839,7 @@ void DbgCommandBuffer::ValidateIndexType(const Format format)
         if (auto formatName = ToString(format))
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
         else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + IntToHex(static_cast<std::uint32_t>(format)));
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + std::string(IntToHex(static_cast<std::uint32_t>(format))));
     }
 }
 

@@ -132,8 +132,8 @@ RenderingDebugger::Message::Message(const StringView& text, const StringView& so
     groupName_ { groupName }
 {
     /* Replace "LLGL::Dbg" by "LLGL::" */
-    //if (source_.compare(0, 9, "LLGL::Dbg") == 0)
-    //    source_ = "LLGL::" + source_.substr(9);
+    if (source_.compare(0, 9, "LLGL::Dbg") == 0)
+        source_ = "LLGL::" + source_.substr(9);
 }
 
 void RenderingDebugger::Message::Block()
@@ -151,19 +151,24 @@ UTF8String RenderingDebugger::Message::ToReportString() const
 {
     UTF8String s;
 
-    if (!GetGroupName().empty())
-    {
-        s += "during '";
-        s += GetGroupName();
-        s += "': ";
-    }
-
     if (!GetSource().empty())
     {
         s += "in '";
         s += GetSource();
-        s += "': ";
+        s += "'";
     }
+
+    if (!GetGroupName().empty())
+    {
+        if (!s.empty())
+            s += " ";
+        s += "during '";
+        s += GetGroupName();
+        s += "'";
+    }
+
+    if (!s.empty())
+        s += ": ";
 
     s += GetText();
 
