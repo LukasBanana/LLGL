@@ -93,7 +93,7 @@ void* NullBuffer::Map(const CPUAccess access, std::uint64_t offset, std::uint64_
         return nullptr;
 
     /* Check for out-of-bounds and ensure there's no integer overflow with offset+length */
-    if (offset < desc.size && offset + length <= desc.size && offset + length > offset)
+    if (!(offset < desc.size && offset + length <= desc.size && offset + length > offset))
         return nullptr;
 
     const bool isWriteAccess = HasWriteAccess(access);

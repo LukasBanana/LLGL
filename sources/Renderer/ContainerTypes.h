@@ -127,9 +127,7 @@ class PayloadUniquePtr final
 
         pointer get() const noexcept
         {
-            auto addr = reinterpret_cast<std::uintptr_t>(mem_);
-            addr = GetAlignedSize(addr + sizeof(Payload), Alignment);
-            return reinterpret_cast<pointer>(addr);
+            return reinterpret_cast<pointer>(addr());
         }
 
         void swap(PayloadUniquePtr& other) noexcept
@@ -139,12 +137,12 @@ class PayloadUniquePtr final
 
         Payload& payload() noexcept
         {
-            return *reinterpret_cast<Payload*>(mem_);
+            return *reinterpret_cast<Payload*>(addr() - sizeof(Payload));
         }
 
         const Payload& payload() const noexcept
         {
-            return *reinterpret_cast<const Payload*>(mem_);
+            return *reinterpret_cast<const Payload*>(addr() - sizeof(Payload));
         }
 
     public:
@@ -173,11 +171,9 @@ class PayloadUniquePtr final
             constexpr auto payloadAndPaddingSize = sizeof(Payload) + Alignment - 1;
             char* mem = ::new char[sizeof(T) + payloadAndPaddingSize];
 
-            /* Initialize payload */
-            *reinterpret_cast<Payload*>(mem) = payload;
-
-            /* Construct object */
+            /* Construct unique pointer with payload */
             PayloadUniquePtr<T, Payload> ptr{ mem };
+            ptr.payload() = payload;
             ::new (ptr.get()) T(std::forward<Args>(args)...);
 
             return ptr;
@@ -188,6 +184,13 @@ class PayloadUniquePtr final
         PayloadUniquePtr(char* mem) :
             mem_ { mem }
         {
+        }
+
+        // Returns the aligned memory address that points to the object.
+        std::uintptr_t addr() const
+        {
+            auto addr = reinterpret_cast<std::uintptr_t>(mem_);
+            return GetAlignedSize(addr + sizeof(Payload), Alignment);
         }
 
     private:
