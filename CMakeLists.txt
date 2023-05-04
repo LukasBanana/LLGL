@@ -464,6 +464,8 @@ set(FilesTest_ShaderReflect ${TestProjectsPath}/Test_ShaderReflect.cpp)
 set(FilesTest_SeparateShaders ${TestProjectsPath}/Test_SeparateShaders.cpp)
 set(FilesTest_iOS ${TestProjectsPath}/Test_iOS.mm)
 
+file(GLOB FilesTestbed ${TestProjectsPath}/Testbed/*.*)
+
 # Example project files
 file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
 
@@ -961,6 +963,8 @@ if(GaussLib_INCLUDE_DIR)
         ADD_EXAMPLE_PROJECT(Test_JIT "${FilesTest_JIT}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_ShaderReflect "${FilesTest_ShaderReflect}" "${LLGL_DEPENDENCIES}")
         ADD_EXAMPLE_PROJECT(Test_SeparateShaders "${FilesTest_SeparateShaders}" "${LLGL_DEPENDENCIES}")
+        
+        ADD_EXAMPLE_PROJECT(Testbed "${FilesTestbed}" "${LLGL_DEPENDENCIES}")
     endif()
 
     # Example Projects
