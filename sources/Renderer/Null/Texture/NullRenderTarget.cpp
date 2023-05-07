@@ -67,47 +67,62 @@ const RenderPass* NullRenderTarget::GetRenderPass() const
 
 void NullRenderTarget::BuildAttachmentArray()
 {
-    for (const auto& attachment : desc.attachments)
+    /* Cache color attachments */
+    for (const auto& attachment : desc.colorAttachments)
     {
-        const Format format = GetAttachmentFormat(attachment);
-        if (IsColorFormat(format))
+        if (IsAttachmentEnabled(attachment))
         {
-            /* Cache color attachment */
             if (auto texture = attachment.texture)
             {
                 auto textureNull = LLGL_CAST(NullTexture*, texture);
                 colorAttachments_.push_back(textureNull);
             }
             else
-                colorAttachments_.push_back(MakeIntermediateAttachment(attachment));
+                colorAttachments_.push_back(MakeIntermediateAttachment(attachment.format, desc.samples));
         }
-        else
+    }
+
+    /* Cache resolve attachments */
+    for (const auto& attachment : desc.resolveAttachments)
+    {
+        if (IsAttachmentEnabled(attachment))
         {
-            /* Cache depth-stencil attachment */
             if (auto texture = attachment.texture)
             {
                 auto textureNull = LLGL_CAST(NullTexture*, texture);
-                depthStencilAttachment_ = textureNull;
-                depthStencilFormat_     = textureNull->desc.format;
+                resolveAttachments_.push_back(textureNull);
             }
             else
-                depthStencilFormat_ = attachment.format;
+                resolveAttachments_.push_back(MakeIntermediateAttachment(attachment.format));
         }
+    }
+
+    /* Cache depth-stencil attachment */
+    if (IsAttachmentEnabled(desc.depthStencilAttachment))
+    {
+        if (auto* texture = desc.depthStencilAttachment.texture)
+        {
+            auto* textureNull = LLGL_CAST(NullTexture*, texture);
+            depthStencilAttachment_ = textureNull;
+            depthStencilFormat_     = textureNull->desc.format;
+        }
+        else
+            depthStencilFormat_ = desc.depthStencilAttachment.format;
     }
 }
 
-NullTexture* NullRenderTarget::MakeIntermediateAttachment(const AttachmentDescriptor& attachmentDesc)
+NullTexture* NullRenderTarget::MakeIntermediateAttachment(const Format format, std::uint32_t samples)
 {
     TextureDescriptor textureDesc;
     {
-        textureDesc.type            = (desc.samples > 1 ? TextureType::Texture2DMS : TextureType::Texture2D);
+        textureDesc.type            = (samples > 1 ? TextureType::Texture2DMS : TextureType::Texture2D);
         textureDesc.bindFlags       = BindFlags::ColorAttachment;
         textureDesc.miscFlags       = MiscFlags::FixedSamples;
-        textureDesc.format          = attachmentDesc.format;
+        textureDesc.format          = format;
         textureDesc.extent.width    = desc.resolution.width;
         textureDesc.extent.height   = desc.resolution.height;
         textureDesc.mipLevels       = 1;
-        textureDesc.samples         = desc.samples;
+        textureDesc.samples         = samples;
     };
     intermediateAttachments_.push_back(MakeUnique<NullTexture>(textureDesc));
     return intermediateAttachments_.back().get();

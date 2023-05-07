@@ -147,21 +147,21 @@ enum class CPUAccess
     /**
     \brief CPU read access to a mapped resource.
     \remarks If this is used for RenderSystem::MapBuffer,
-    the respective buffer must have been created with the BufferFlags::MapReadAccess flag.
+    the respective buffer must have been created with the CPUAccessFlags::Read access flag.
     */
     ReadOnly,
 
     /**
     \brief CPU write access to a mapped resource.
     \remarks If this is used for RenderSystem::MapBuffer,
-    the respective buffer must have been created with the BufferFlags::MapWriteAccess flag.
+    the respective buffer must have been created with the CPUAccessFlags::Write access flag.
     */
     WriteOnly,
 
     /**
     \brief CPU write access to a mapped resource, where the previous content \e can be discarded.
     \remarks If this is used for RenderSystem::MapBuffer,
-    the respective buffer must have been created with the BufferFlags::MapWriteAccess flag.
+    the respective buffer must have been created with the CPUAccessFlags::Write access flag.
     \note Whether the previous content is discarded depends on the rendering API.
     */
     WriteDiscard,
@@ -169,7 +169,7 @@ enum class CPUAccess
     /**
     \brief CPU read and write access to a mapped resource.
     \remarks If this is used for RenderSystem::MapBuffer,
-    the respective buffer must have been created with both the BufferFlags::MapReadAccess and the BufferFlags::MapWriteAccess flag.
+    the respective buffer must have been created with both the CPUAccessFlags::Read and the CPUAccessFlags::Write access flags.
     */
     ReadWrite,
 };

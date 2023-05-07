@@ -47,15 +47,16 @@ class NullRenderTarget final : public RenderTarget
 
         void BuildAttachmentArray();
 
-        NullTexture* MakeIntermediateAttachment(const AttachmentDescriptor& attachmentDesc);
+        NullTexture* MakeIntermediateAttachment(const Format format, std::uint32_t samples = 1);
 
     private:
 
         std::string                                 label_;
         std::vector<NullTexture*>                   colorAttachments_;
+        std::vector<NullTexture*>                   resolveAttachments_;
         NullTexture*                                depthStencilAttachment_     = nullptr;
-        std::vector<std::unique_ptr<NullTexture>>   intermediateAttachments_;
         Format                                      depthStencilFormat_         = Format::Undefined;
+        std::vector<std::unique_ptr<NullTexture>>   intermediateAttachments_;
 
 };
 
