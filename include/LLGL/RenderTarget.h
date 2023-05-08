@@ -90,12 +90,10 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
     protected:
 
         /**
-        \brief Applies the specified resolution.
-        \remarks This shoudl be called for each attachment.
-        \throws std::invalid_argument If one of the resolution components is zero.
-        \throws std::invalid_argument If the internal resolution has already been set and the input resolution is not equal to that previous resolution.
+        \brief Validates the specified attachment resolution for this render target.
+        \remarks Throws an exception or aborts execution if the specified resolution is invalid.
         */
-        void ValidateResolution(const Extent2D& resolution);
+        void ValidateResolution(const Extent2D& attachmentResolution);
 
         /**
         \brief Applies the resolution of the texture MIP level.

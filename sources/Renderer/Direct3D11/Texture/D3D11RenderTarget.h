@@ -41,7 +41,11 @@ class D3D11RenderTarget final : public RenderTarget
 
     public:
 
+        // Constructs the D3D11 render target with all attachments.
         D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
+
+        // Releases all render target views manually to avoid having a separate container with ComPtr.
+        ~D3D11RenderTarget();
 
         // Resolves all multi-sampled subresources.
         void ResolveSubresources(ID3D11DeviceContext* context);
@@ -49,7 +53,7 @@ class D3D11RenderTarget final : public RenderTarget
         // Returns the list of native render target views (RTV).
         inline const std::vector<ID3D11RenderTargetView*>& GetRenderTargetViews() const
         {
-            return renderTargetViewsRef_;
+            return renderTargetViews_;
         }
 
         // Returns the native depth stencil view (DSV).
@@ -58,50 +62,81 @@ class D3D11RenderTarget final : public RenderTarget
             return depthStencilView_.Get();
         }
 
+    public:
+
+        // Creates a depth-stencil-view (DSV) of the specified subresource.
+        static void CreateSubresourceDSV(
+            ID3D11Device*               device,
+            ID3D11Resource*             resource,
+            ID3D11DepthStencilView**    dsvOutput,
+            const TextureType           type,
+            const DXGI_FORMAT           format,
+            UINT                        baseMipLevel,
+            UINT                        baseArrayLayer,
+            UINT                        numArrayLayers = 1
+        );
+
+        // Creates a render-target-view (RTV) of the specified subresource.
+        static void CreateSubresourceRTV(
+            ID3D11Device*               device,
+            ID3D11Resource*             resource,
+            ID3D11RenderTargetView**    rtvOutput,
+            const TextureType           type,
+            const DXGI_FORMAT           format,
+            UINT                        baseMipLevel,
+            UINT                        baseArrayLayer,
+            UINT                        numArrayLayers = 1
+        );
+
     private:
 
-        void FindSuitableSampleDesc(const RenderTargetDescriptor& desc);
+        void FindSuitableSampleDesc(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
-        void Attach(const AttachmentDescriptor& attachmentDesc);
-        void AttachDepthBuffer();
-        void AttachStencilBuffer();
-        void AttachDepthStencilBuffer();
-        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
-        void AttachTextureColor(D3D11Texture& textureD3D, const Format format, const AttachmentDescriptor& attachmentDesc);
-        void AttachTextureDepthStencil(D3D11Texture& textureD3D, const Format format, const AttachmentDescriptor& attachmentDesc);
+        ID3D11Texture2D* CreateInternalTexture(ID3D11Device* device, DXGI_FORMAT format, UINT bindFlags);
 
-        void CreateDepthStencilAndDSV(DXGI_FORMAT format);
-        void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);
+        void CreateRenderTargetView(
+            ID3D11Device*               device,
+            const AttachmentDescriptor& colorAttachment,
+            const AttachmentDescriptor& resolveAttachment
+        );
 
-        bool HasMultiSampling() const;
+        void CreateDepthStencilView(
+            ID3D11Device*               device,
+            const AttachmentDescriptor& depthStencilAttachment
+        );
+
+        void CreateResolveTarget(
+            ID3D11Device*               device,
+            const AttachmentDescriptor& resolveAttachment,
+            DXGI_FORMAT                 format,
+            ID3D11Resource*             multiSampledSrcTexture
+        );
 
     private:
-
-        //TODO: remove this member
-        ID3D11Device*                               device_                     = nullptr;
-
-        Extent2D                                    resolution_;
-
-        std::vector<ComPtr<ID3D11RenderTargetView>> renderTargetViews_;
-        std::vector<ID3D11RenderTargetView*>        renderTargetViewsRef_;
-
-        ComPtr<ID3D11Texture2D>                     depthStencil_;
-        ComPtr<ID3D11DepthStencilView>              depthStencilView_;
-        DXGI_FORMAT                                 depthStencilFormat_         = DXGI_FORMAT_UNKNOWN;
 
         // Members for multi-sampled render-targets
-        struct MultiSampledAttachment
+        struct ResolveTarget
         {
-            ComPtr<ID3D11Texture2D> texture2DMS;
-            ID3D11Texture2D*        targetTexture;
-            UINT                    targetSubresourceIndex;
-            DXGI_FORMAT             format;
+            ID3D11Resource* resolveDstTexture;
+            UINT            resolveDstSubresource;
+            ID3D11Resource* multiSampledSrcTexture;
+            DXGI_FORMAT     format;
         };
 
-        DXGI_SAMPLE_DESC                            sampleDesc_                 = { 1u, 0u };
-        std::vector<MultiSampledAttachment>         multiSampledAttachments_;
+    private:
 
-        const RenderPass*                           renderPass_                 = nullptr;
+        Extent2D                                resolution_;
+
+        std::vector<ID3D11RenderTargetView*>    renderTargetViews_; // Manual calls to IUnknown::Release to avoid having seprate container with ComPtr.
+        std::vector<ComPtr<ID3D11Texture2D>>    internalTextures_;  // Depth-stencil texture or multi-sampled color targets
+
+        ComPtr<ID3D11DepthStencilView>          depthStencilView_;
+        DXGI_FORMAT                             depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
+
+        DXGI_SAMPLE_DESC                        sampleDesc_         = { 1u, 0u };
+        std::vector<ResolveTarget>              resolveTargets_;
+
+        const RenderPass*                       renderPass_         = nullptr;
 
 };
 

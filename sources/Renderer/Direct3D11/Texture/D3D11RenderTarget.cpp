@@ -23,27 +23,29 @@ namespace LLGL
 
 
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
-    device_     { device          },
     resolution_ { desc.resolution },
     renderPass_ { desc.renderPass }
 {
     if (desc.samples > 1)
-        FindSuitableSampleDesc(desc);
+        FindSuitableSampleDesc(device, desc);
 
-    #if 0
-    if (desc.attachments.empty())
+    for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
-        //TODO...
+        if (IsAttachmentEnabled(desc.colorAttachments[i]))
+            CreateRenderTargetView(device, desc.colorAttachments[i], desc.resolveAttachments[i]);
     }
-    else
-    #endif
+
+    if (IsAttachmentEnabled(desc.depthStencilAttachment))
+        CreateDepthStencilView(device, desc.depthStencilAttachment);
+}
+
+D3D11RenderTarget::~D3D11RenderTarget()
+{
+    /* Release all render-target-views manually to avoid having a separate container with ComPtr */
+    for (ID3D11RenderTargetView* rtv : renderTargetViews_)
     {
-        /* Initialize all attachments */
-        for (const auto& attachment : desc.attachments)
-        {
-            LLGL_ASSERT(IsAttachmentEnabled(attachment));
-            Attach(attachment);
-        }
+        LLGL_ASSERT_PTR(rtv);
+        rtv->Release();
     }
 }
 
@@ -52,38 +54,31 @@ void D3D11RenderTarget::SetName(const char* name)
     if (name != nullptr)
     {
         /* Set label for each RTV */
-        std::uint32_t rtvIndex = 0;
-        for (const auto& rtv : GetRenderTargetViews())
+        for_range(i, renderTargetViews_.size())
         {
-            const std::string subscript = ".RTV[" + std::to_string(rtvIndex++) + "]";
-            D3D11SetObjectNameSubscript(rtv, name, subscript.c_str());
+            const std::string subscript = ".RTV[" + std::to_string(i) + "]";
+            D3D11SetObjectNameSubscript(renderTargetViews_[i], name, subscript.c_str());
         }
 
-        /* Set labels for DS and DSV */
-        if (depthStencil_)
-            D3D11SetObjectNameSubscript(depthStencil_.Get(), name, ".DS");
+        /* Set label for DSV */
         if (depthStencilView_)
             D3D11SetObjectNameSubscript(depthStencilView_.Get(), name, ".DSV");
 
-        /* Set label for each multi-sampled texture */
-        std::uint32_t attachmentIndex = 0;
-        for (const auto& attachment : multiSampledAttachments_)
+        /* Set lable for each internal texture */
+        for_range(i, internalTextures_.size())
         {
-            const std::string subscript = ".MS[" + std::to_string(attachmentIndex++) + "]";
-            D3D11SetObjectNameSubscript(attachment.texture2DMS.Get(), name, subscript.c_str());
+            const std::string subscript = ".Tex2D[" + std::to_string(i) + "]";
+            D3D11SetObjectNameSubscript(internalTextures_[i].Get(), name, subscript.c_str());
         }
     }
     else
     {
         /* Reset all labels */
-        for (auto rtv : GetRenderTargetViews())
+        for (ID3D11RenderTargetView* rtv : GetRenderTargetViews())
             D3D11SetObjectName(rtv, nullptr);
-
-        D3D11SetObjectName(depthStencil_.Get(), nullptr);
         D3D11SetObjectName(depthStencilView_.Get(), nullptr);
-
-        for (const auto& attachment : multiSampledAttachments_)
-            D3D11SetObjectName(attachment.texture2DMS.Get(), nullptr);
+        for (const auto& texD3D : internalTextures_)
+            D3D11SetObjectName(texD3D.Get(), nullptr);
     }
 }
 
@@ -117,20 +112,143 @@ const RenderPass* D3D11RenderTarget::GetRenderPass() const
     return renderPass_;
 }
 
-/* ----- Extended Internal Functions ----- */
-
 void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
 {
-    for (const auto& attachment : multiSampledAttachments_)
+    for (const ResolveTarget& target : resolveTargets_)
     {
         context->ResolveSubresource(
-            attachment.targetTexture,
-            attachment.targetSubresourceIndex,
-            attachment.texture2DMS.Get(),
+            target.resolveDstTexture,
+            target.resolveDstSubresource,
+            target.multiSampledSrcTexture,
             0,
-            attachment.format
+            target.format
         );
     }
+}
+
+void D3D11RenderTarget::CreateSubresourceDSV(
+    ID3D11Device*               device,
+    ID3D11Resource*             resource,
+    ID3D11DepthStencilView**    dsvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
+{
+    /* Create depth-stencil-view (DSV) for subresource */
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+    {
+        dsvDesc.Format  = DXTypes::ToDXGIFormatDSV(format);
+        dsvDesc.Flags   = 0;
+
+        switch (type)
+        {
+            case TextureType::Texture1D:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE1D;
+                dsvDesc.Texture1D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture2D:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2D;
+                dsvDesc.Texture2D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture1DArray:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE1DARRAY;
+                dsvDesc.Texture1DArray.MipSlice             = baseMipLevel;
+                dsvDesc.Texture1DArray.FirstArraySlice      = baseArrayLayer;
+                dsvDesc.Texture1DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case TextureType::Texture3D:
+            case TextureType::Texture2DArray:
+            case TextureType::TextureCube:
+            case TextureType::TextureCubeArray:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+                dsvDesc.Texture2DArray.MipSlice             = baseMipLevel;
+                dsvDesc.Texture2DArray.FirstArraySlice      = baseArrayLayer;
+                dsvDesc.Texture2DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DMS:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+                break;
+
+            case TextureType::Texture2DMSArray:
+                dsvDesc.ViewDimension                       = D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY;
+                dsvDesc.Texture2DMSArray.FirstArraySlice    = baseArrayLayer;
+                dsvDesc.Texture2DMSArray.ArraySize          = numArrayLayers;
+                break;
+        }
+    }
+    auto hr = device->CreateDepthStencilView(resource, &dsvDesc, dsvOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView", "for texture subresource");
+}
+
+void D3D11RenderTarget::CreateSubresourceRTV(
+    ID3D11Device*               device,
+    ID3D11Resource*             resource,
+    ID3D11RenderTargetView**    rtvOutput,
+    const TextureType           type,
+    const DXGI_FORMAT           format,
+    UINT                        baseMipLevel,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
+{
+    /* Create depth-stencil-view (DSV) for subresource */
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+    {
+        rtvDesc.Format = DXTypes::ToDXGIFormatRTV(format);
+
+        switch (type)
+        {
+            case TextureType::Texture1D:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE1D;
+                rtvDesc.Texture1D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture2D:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2D;
+                rtvDesc.Texture2D.MipSlice                  = baseMipLevel;
+                break;
+
+            case TextureType::Texture1DArray:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
+                rtvDesc.Texture1DArray.MipSlice             = baseMipLevel;
+                rtvDesc.Texture1DArray.FirstArraySlice      = baseArrayLayer;
+                rtvDesc.Texture1DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DArray:
+            case TextureType::TextureCube:
+            case TextureType::TextureCubeArray:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+                rtvDesc.Texture2DArray.MipSlice             = baseMipLevel;
+                rtvDesc.Texture2DArray.FirstArraySlice      = baseArrayLayer;
+                rtvDesc.Texture2DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case TextureType::Texture2DMS:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+                break;
+
+            case TextureType::Texture2DMSArray:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
+                rtvDesc.Texture2DMSArray.FirstArraySlice    = baseArrayLayer;
+                rtvDesc.Texture2DMSArray.ArraySize          = numArrayLayers;
+                break;
+
+            case TextureType::Texture3D:
+                rtvDesc.ViewDimension                       = D3D11_RTV_DIMENSION_TEXTURE3D;
+                rtvDesc.Texture3D.MipSlice                  = baseMipLevel;
+                rtvDesc.Texture3D.FirstWSlice               = baseArrayLayer;
+                rtvDesc.Texture3D.WSize                     = numArrayLayers;
+                break;
+        }
+    }
+    auto hr = device->CreateRenderTargetView(resource, &rtvDesc, rtvOutput);
+    DXThrowIfCreateFailed(hr, "ID3D11RenderTargetView", "for texture subresource");
 }
 
 
@@ -138,274 +256,155 @@ void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
  * ======= Private: =======
  */
 
-void D3D11RenderTarget::FindSuitableSampleDesc(const RenderTargetDescriptor& desc)
+void D3D11RenderTarget::FindSuitableSampleDesc(ID3D11Device* device, const RenderTargetDescriptor& desc)
 {
     /* Gather all attachment formats */
-    const auto numFormats = std::min(std::size_t(LLGL_MAX_NUM_ATTACHMENTS), desc.attachments.size());
-    DXGI_FORMAT formats[LLGL_MAX_NUM_ATTACHMENTS];
+    SmallVector<DXGI_FORMAT, LLGL_MAX_NUM_ATTACHMENTS> formats;
 
-    for_range(i, numFormats)
+    auto AppendAttachmentFormat = [&formats](const AttachmentDescriptor& attachment)
     {
-        const auto& attachment = desc.attachments[i];
-        const Format format = GetAttachmentFormat(attachment);
-        formats[i] = DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(format));
-    }
+        if (IsAttachmentEnabled(attachment))
+        {
+            const Format format = GetAttachmentFormat(attachment);
+            formats.push_back(DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(format)));
+        }
+    };
+
+    for (const auto& attachment : desc.colorAttachments)
+        AppendAttachmentFormat(attachment);
+    AppendAttachmentFormat(desc.depthStencilAttachment);
 
     /* Find least common denominator of suitable sample descriptor for all attachment formats */
-    sampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_, numFormats, formats, desc.samples);
+    sampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device, formats.size(), formats.data(), desc.samples);
 }
 
-void D3D11RenderTarget::Attach(const AttachmentDescriptor& attachmentDesc)
+ID3D11Texture2D* D3D11RenderTarget::CreateInternalTexture(ID3D11Device* device, DXGI_FORMAT format, UINT bindFlags)
 {
-    if (auto texture = attachmentDesc.texture)
-    {
-        /* Attach texture */
-        AttachTexture(*texture, attachmentDesc);
-    }
-    else
-    {
-        /* Attach (and create) depth-stencil buffer */
-        if (IsDepthAndStencilFormat(attachmentDesc.format))
-            AttachDepthStencilBuffer();
-        else if (IsDepthFormat(attachmentDesc.format))
-            AttachDepthBuffer();
-        else if (IsStencilFormat(attachmentDesc.format))
-            AttachStencilBuffer();
-        else
-            throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
-    }
-}
-
-void D3D11RenderTarget::AttachDepthBuffer()
-{
-    CreateDepthStencilAndDSV(DXGI_FORMAT_D32_FLOAT);
-}
-
-void D3D11RenderTarget::AttachStencilBuffer()
-{
-    CreateDepthStencilAndDSV(DXGI_FORMAT_D24_UNORM_S8_UINT);
-}
-
-void D3D11RenderTarget::AttachDepthStencilBuffer()
-{
-    CreateDepthStencilAndDSV(DXGI_FORMAT_D24_UNORM_S8_UINT);
-}
-
-static void FillViewDescForTexture1D(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
-    viewDesc.Texture1D.MipSlice = attachmentDesc.mipLevel;
-}
-
-static void FillViewDescForTexture2D(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
-    viewDesc.Texture2D.MipSlice = attachmentDesc.mipLevel;
-}
-
-static void FillViewDescForTexture3D(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE3D;
-    viewDesc.Texture3D.MipSlice     = attachmentDesc.mipLevel;
-    viewDesc.Texture3D.FirstWSlice  = attachmentDesc.arrayLayer;
-    viewDesc.Texture3D.WSize        = 1;
-}
-
-static void FillViewDescForTexture1DArray(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
-    viewDesc.Texture1DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture1DArray.FirstArraySlice = attachmentDesc.arrayLayer;
-    viewDesc.Texture1DArray.ArraySize       = 1;
-}
-
-static void FillViewDescForTexture2DArray(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-    viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.arrayLayer;
-    viewDesc.Texture2DArray.ArraySize       = 1;
-}
-
-static void FillViewDescForTexture2DMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-}
-
-static void FillViewDescForTexture2DArrayMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
-    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.arrayLayer;
-    viewDesc.Texture2DMSArray.ArraySize         = 1;
-}
-
-void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc)
-{
-    /* Get D3D texture object and apply resolution for MIP-map level */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    ValidateMipResolution(texture, attachmentDesc.mipLevel);
-
-    const Format format = GetAttachmentFormat(attachmentDesc);
-    if (IsDepthOrStencilFormat(format))
-        AttachTextureDepthStencil(textureD3D, format, attachmentDesc);
-    else
-        AttachTextureColor(textureD3D, format, attachmentDesc);
-}
-
-void D3D11RenderTarget::AttachTextureColor(D3D11Texture& textureD3D, const Format format, const AttachmentDescriptor& attachmentDesc)
-{
-    /* Initialize RTV descriptor with attachment procedure and create RTV */
-    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-
-    const DXGI_FORMAT baseFormatDXGI = DXTypes::ToDXGIFormat(format);
-
-    rtvDesc.Format = DXTypes::ToDXGIFormatRTV(baseFormatDXGI);
-
-    /*
-    If this is a multi-sample render target, but the target texture is not a multi-sample texture,
-    an intermediate multi-sample texture is required, which will be 'blitted' (or 'resolved') after the render target was rendered.
-    */
-    if (HasMultiSampling() && !IsMultiSampleTexture(textureD3D.GetType()))
-    {
-        /* Get RTV descriptor for intermediate multi-sample texture */
-        switch (textureD3D.GetType())
-        {
-            case TextureType::Texture2D:
-                FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::TextureCube:
-            case TextureType::Texture2DArray:
-            case TextureType::TextureCubeArray:
-                FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
-                break;
-            default:
-                throw std::invalid_argument("failed to attach D3D11 texture to multi-sample render-target");
-                break;
-        }
-
-        /* Recreate texture resource with multi-sampling */
-        D3D11_TEXTURE2D_DESC tex2DMSDesc, tex2DDesc;
-        textureD3D.GetNative().tex2D->GetDesc(&tex2DDesc);
-        {
-            tex2DMSDesc.Width           = (tex2DDesc.Width << attachmentDesc.mipLevel);
-            tex2DMSDesc.Height          = (tex2DDesc.Height << attachmentDesc.mipLevel);
-            tex2DMSDesc.MipLevels       = 1;
-            tex2DMSDesc.ArraySize       = 1;
-            tex2DMSDesc.Format          = baseFormatDXGI;
-            tex2DMSDesc.SampleDesc      = sampleDesc_;
-            tex2DMSDesc.Usage           = D3D11_USAGE_DEFAULT;
-            tex2DMSDesc.BindFlags       = D3D11_BIND_RENDER_TARGET;
-            tex2DMSDesc.CPUAccessFlags  = 0;
-            tex2DMSDesc.MiscFlags       = 0;
-        }
-        ComPtr<ID3D11Texture2D> tex2DMS;
-        auto hr = device_->CreateTexture2D(&tex2DMSDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
-        DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for multi-sampled render-target");
-
-        /* Store multi-sampled texture, and reference to texture target */
-        multiSampledAttachments_.push_back(
-            {
-                tex2DMS,
-                textureD3D.GetNative().tex2D.Get(),
-                D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.arrayLayer, tex2DMSDesc.MipLevels),
-                tex2DMSDesc.Format
-            }
-        );
-
-        /* Create RTV for multi-sampled (intermediate) texture */
-        CreateAndAppendRTV(tex2DMS.Get(), rtvDesc);
-    }
-    else
-    {
-        /* Get RTV descriptor for this the target texture */
-        switch (textureD3D.GetType())
-        {
-            case TextureType::Texture1D:
-                FillViewDescForTexture1D(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::Texture2D:
-                FillViewDescForTexture2D(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::Texture3D:
-                FillViewDescForTexture3D(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::Texture1DArray:
-                FillViewDescForTexture1DArray(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::TextureCube:
-            case TextureType::Texture2DArray:
-            case TextureType::TextureCubeArray:
-                FillViewDescForTexture2DArray(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::Texture2DMS:
-                FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);
-                break;
-            case TextureType::Texture2DMSArray:
-                FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
-                break;
-        }
-
-        /* Create RTV for target texture */
-        CreateAndAppendRTV(textureD3D.GetNative().resource.Get(), rtvDesc);
-    }
-}
-
-void D3D11RenderTarget::AttachTextureDepthStencil(D3D11Texture& textureD3D, const Format format, const AttachmentDescriptor& attachmentDesc)
-{
-    /* Create DSV for texture */
-    const DXGI_FORMAT baseFormatDXGI = DXTypes::ToDXGIFormat(format);
-    textureD3D.CreateSubresourceDSV(
-        device_,
-        depthStencilView_.ReleaseAndGetAddressOf(),
-        textureD3D.GetType(),
-        baseFormatDXGI,
-        attachmentDesc.mipLevel,
-        attachmentDesc.arrayLayer,
-        1
-    );
-}
-
-void D3D11RenderTarget::CreateDepthStencilAndDSV(DXGI_FORMAT format)
-{
-    /* Create depth-stencil resource */
+    /* Create internal 2D texture resource */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width           = GetResolution().width;
-        texDesc.Height          = GetResolution().height;
+        texDesc.Width           = resolution_.width;
+        texDesc.Height          = resolution_.height;
         texDesc.MipLevels       = 1;
         texDesc.ArraySize       = 1;
         texDesc.Format          = format;
         texDesc.SampleDesc      = sampleDesc_;
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags       = D3D11_BIND_DEPTH_STENCIL;
+        texDesc.BindFlags       = bindFlags;
         texDesc.CPUAccessFlags  = 0;
         texDesc.MiscFlags       = 0;
     }
-    auto hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil_.ReleaseAndGetAddressOf());
-    DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for render-target depth-stencil");
+    ComPtr<ID3D11Texture2D> tex2D;
+    auto hr = device->CreateTexture2D(&texDesc, nullptr, tex2D.GetAddressOf());
+    DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for render-target internal texture");
 
-    /* Create DSV */
-    hr = device_->CreateDepthStencilView(depthStencil_.Get(), nullptr, depthStencilView_.ReleaseAndGetAddressOf());
-    DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView",  "for render-target");
-
-    /* Store native depth-stencil format */
-    depthStencilFormat_ = format;
+    /* Append to container of internal textures and return reference to newly created texture */
+    internalTextures_.push_back(std::move(tex2D));
+    return internalTextures_.back().Get();
 }
 
-void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc)
+void D3D11RenderTarget::CreateRenderTargetView(
+    ID3D11Device*               device,
+    const AttachmentDescriptor& colorAttachment,
+    const AttachmentDescriptor& resolveAttachment)
 {
-    ComPtr<ID3D11RenderTargetView> rtv;
+    DXGI_FORMAT             colorFormat = DXGI_FORMAT_UNKNOWN;
+    ID3D11Resource*         colorTarget = nullptr;
+    ID3D11RenderTargetView* colorRTV    = nullptr;
 
-    auto hr = device_->CreateRenderTargetView(resource, &rtvDesc, rtv.ReleaseAndGetAddressOf());
-    DXThrowIfCreateFailed(hr, "ID3D11RenderTargetView");
+    if (Texture* texture = colorAttachment.texture)
+    {
+        /* Get native D3D11 texture from color attachment */
+        ValidateMipResolution(*texture, colorAttachment.mipLevel);
+        auto* textureD3D = LLGL_CAST(D3D11Texture*, texture);
+        colorFormat = textureD3D->GetBaseDXFormat();
+        colorTarget = textureD3D->GetNative().resource.Get();
 
-    renderTargetViews_.push_back(rtv);
-    renderTargetViewsRef_.push_back(rtv.Get());
+        /* Create RTV for color attachment */
+        D3D11RenderTarget::CreateSubresourceRTV(
+            /*device:*/         device,
+            /*resource:*/       colorTarget,
+            /*rtvOutput:*/      &colorRTV,
+            /*type:*/           textureD3D->GetType(),
+            /*format:*/         colorFormat,
+            /*baseMipLevel:*/   colorAttachment.mipLevel,
+            /*baseArrayLayer:*/ colorAttachment.arrayLayer
+        );
+    }
+    else
+    {
+        /* Create internal texture for color attachment */
+        colorFormat = DXTypes::ToDXGIFormat(colorAttachment.format);
+        colorTarget = CreateInternalTexture(device, colorFormat, D3D11_BIND_RENDER_TARGET);
+
+        /* Create RTV for color attachment */
+        D3D11RenderTarget::CreateSubresourceRTV(
+            /*device:*/         device,
+            /*resource:*/       colorTarget,
+            /*rtvOutput:*/      &colorRTV,
+            /*type:*/           (sampleDesc_.Count > 1 ? TextureType::Texture2DMS : TextureType::Texture2D),
+            /*format:*/         colorFormat,
+            /*baseMipLevel:*/   0,
+            /*baseArrayLayer:*/ 0
+        );
+    }
+
+    renderTargetViews_.push_back(colorRTV);
+
+    /* Create resolve target if a resolve texture is specified */
+    if (resolveAttachment.texture != nullptr && sampleDesc_.Count > 1)
+        CreateResolveTarget(device, resolveAttachment, colorFormat, colorTarget);
 }
 
-bool D3D11RenderTarget::HasMultiSampling() const
+void D3D11RenderTarget::CreateDepthStencilView(
+    ID3D11Device*               device,
+    const AttachmentDescriptor& depthStencilAttachment)
 {
-    return (sampleDesc_.Count > 1);
+    if (Texture* texture = depthStencilAttachment.texture)
+    {
+        /* Create DSV for target texture */
+        ValidateMipResolution(*texture, depthStencilAttachment.mipLevel);
+        auto* textureD3D = LLGL_CAST(D3D11Texture*, texture);
+        depthStencilFormat_ = textureD3D->GetBaseDXFormat();
+        D3D11RenderTarget::CreateSubresourceDSV(
+            /*device:*/         device,
+            /*resource:*/       textureD3D->GetNative().resource.Get(),
+            /*dsvOutput:*/      depthStencilView_.ReleaseAndGetAddressOf(),
+            /*type:*/           textureD3D->GetType(),
+            /*format:*/         depthStencilFormat_,
+            /*baseMipLevel:*/   depthStencilAttachment.mipLevel,
+            /*baseArrayLayer:*/ depthStencilAttachment.arrayLayer
+        );
+    }
+    else
+    {
+        /* Create internal texture with DSV for depth-stencil attachment */
+        depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(depthStencilAttachment.format));
+        ID3D11Texture2D* depthStencil = CreateInternalTexture(device, depthStencilFormat_, D3D11_BIND_DEPTH_STENCIL);
+
+        /* Create DSV for internal depth-stencil buffer */
+        HRESULT hr = device->CreateDepthStencilView(depthStencil, nullptr, depthStencilView_.ReleaseAndGetAddressOf());
+        DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView", "for render-target depth-stencil");
+    }
+}
+
+void D3D11RenderTarget::CreateResolveTarget(
+    ID3D11Device*               device,
+    const AttachmentDescriptor& resolveAttachment,
+    DXGI_FORMAT                 format,
+    ID3D11Resource*             multiSampledSrcTexture)
+{
+    ValidateMipResolution(*resolveAttachment.texture, resolveAttachment.mipLevel);
+    auto* textureD3D = LLGL_CAST(D3D11Texture*, resolveAttachment.texture);
+
+    ResolveTarget resolveTarget;
+    {
+        resolveTarget.resolveDstTexture         = textureD3D->GetNative().resource.Get();
+        resolveTarget.resolveDstSubresource     = D3D11CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer, textureD3D->GetNumMipLevels());
+        resolveTarget.multiSampledSrcTexture    = multiSampledSrcTexture;
+        resolveTarget.format                    = format;
+    }
+    resolveTargets_.push_back(resolveTarget);
 }
 
 

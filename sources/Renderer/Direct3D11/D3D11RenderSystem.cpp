@@ -652,8 +652,9 @@ static void InitializeD3DDepthStencilTextureWithDSV(
 {
     /* Create intermediate depth-stencil view for texture */
     ComPtr<ID3D11DepthStencilView> dsv;
-    textureD3D.CreateSubresourceDSV(
+    D3D11RenderTarget::CreateSubresourceDSV(
         device,
+        textureD3D.GetNative().resource.Get(),
         dsv.ReleaseAndGetAddressOf(),
         textureD3D.GetType(),
         textureD3D.GetDXFormat(),
@@ -679,8 +680,9 @@ static void InitializeD3DColorTextureWithRTV(
 {
     /* Create intermediate depth-stencil view for texture */
     ComPtr<ID3D11RenderTargetView> rtv;
-    textureD3D.CreateSubresourceRTV(
+    D3D11RenderTarget::CreateSubresourceRTV(
         device,
+        textureD3D.GetNative().resource.Get(),
         rtv.ReleaseAndGetAddressOf(),
         textureD3D.GetType(),
         textureD3D.GetBaseDXFormat(),

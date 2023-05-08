@@ -58,6 +58,7 @@ class Example_RenderTarget : public ExampleBase
     #endif
 
     #ifdef ENABLE_CUSTOM_MULTISAMPLING
+    LLGL::Texture*          dummyTexMS              = nullptr;
     LLGL::Texture*          renderTargetTexMS       = nullptr;
     #endif
 
@@ -70,7 +71,7 @@ class Example_RenderTarget : public ExampleBase
     std::vector<char>       cbufferData;
     #endif
 
-    #ifdef ENABLE_MULTISAMPLING
+    #ifdef ENABLE_CUSTOM_MULTISAMPLING
     const LLGL::Extent2D    renderTargetSize        = { 64, 64 };
     #else
     const LLGL::Extent2D    renderTargetSize        = { 512, 512 };
@@ -227,7 +228,7 @@ private:
         // Create graphics pipeline for render target
         {
             pipelineDesc.renderPass = renderTarget->GetRenderPass();
-            pipelineDesc.viewports  = { LLGL::Viewport{ { 0, 0 }, renderTarget->GetResolution() } };
+            pipelineDesc.viewports  = { renderTarget->GetResolution() };
 
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampleEnabled = true;
@@ -287,6 +288,10 @@ private:
         #endif // /ENABLE_DEPTH_TEXTURE
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+        dummyTexMS = renderer->CreateTexture(
+            LLGL::Texture2DMSDesc(LLGL::Format::R8UNorm, renderTargetSize.width, renderTargetSize.height, samples)
+        );
 
         renderTargetTexMS = renderer->CreateTexture(
             LLGL::Texture2DMSDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height, samples)
@@ -432,6 +437,10 @@ private:
 
         #endif // /ENABLE_CBUFFER_RANGE
 
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+        commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
+        #endif
+
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
         {
@@ -459,7 +468,7 @@ private:
                 commands->SetResource(1, *samplerState);
                 commands->SetResource(2, *colorMap);
                 #ifdef ENABLE_CUSTOM_MULTISAMPLING
-                commands->SetResource(3, *colorMap);
+                commands->SetResource(3, *dummyTexMS);
                 #endif
             }
 
@@ -482,6 +491,10 @@ private:
 
         // Generate MIP-maps again after texture has been written by the render-target
         commands->GenerateMips(*renderTargetTex);
+
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+        commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
+        #endif
 
         // Begin render pass for swap-chain
         commands->BeginRenderPass(*swapChain);

@@ -7,8 +7,7 @@
 
 #include <LLGL/RenderTarget.h>
 #include <LLGL/Texture.h>
-#include <stdexcept>
-#include <string>
+#include "../Core/Exception.h"
 
 
 namespace LLGL
@@ -24,18 +23,20 @@ static std::string Extent2DToString(const Extent2D& res)
     return (std::to_string(res.width) + 'x' + std::to_string(res.height));
 }
 
-void RenderTarget::ValidateResolution(const Extent2D& resolution)
+void RenderTarget::ValidateResolution(const Extent2D& attachmentResolution)
 {
     /* Validate texture attachment size */
-    if (resolution.width == 0 || resolution.height == 0)
-        throw std::invalid_argument("invalid resolution of render tartget attachment (at least one component is zero)");
+    if (attachmentResolution.width == 0 || attachmentResolution.height == 0)
+        LLGL_TRAP("invalid resolution of render tartget attachment: %ux%u", attachmentResolution.width, attachmentResolution.height);
 
     /* Check if size matches the current resolution */
-    if (GetResolution() != resolution)
+    const Extent2D targetResolution = GetResolution();
+    if (targetResolution != attachmentResolution)
     {
-        throw std::invalid_argument(
-            "resolution mismatch of render target attachment (" +
-            Extent2DToString(resolution) + " is specified, but expected " + Extent2DToString(GetResolution()) + ")"
+        LLGL_TRAP(
+            "resolution mismatch of render target attachment: %ux%u is specified, but expected %ux%u",
+            attachmentResolution.width, attachmentResolution.height,
+            targetResolution.width, targetResolution.height
         );
     }
 }
