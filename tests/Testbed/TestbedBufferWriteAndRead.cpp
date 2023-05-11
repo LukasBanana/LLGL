@@ -25,7 +25,7 @@ DEF_TEST( BufferWriteAndRead )
     BufferDescriptor buf2Desc;
     {
         buf2Desc.size       = 1024;
-        buf2Desc.bindFlags  = BindFlags::VertexBuffer;
+        buf2Desc.bindFlags  = BindFlags::IndexBuffer;
     }
     CREATE_BUFFER(buf2, buf2Desc, "buf2{size=1024}", nullptr);
 

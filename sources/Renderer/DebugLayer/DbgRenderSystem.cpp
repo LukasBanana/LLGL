@@ -575,7 +575,7 @@ void DbgRenderSystem::Release(Fence& fence)
 
 void DbgRenderSystem::ValidateBindFlags(long flags)
 {
-    const long bufferOnlyFlags =
+    constexpr long bufferOnlyFlags =
     (
         BindFlags::VertexBuffer         |
         BindFlags::IndexBuffer          |
@@ -584,13 +584,13 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
         BindFlags::IndirectBuffer
     );
 
-    const long textureOnlyFlags =
+    constexpr long textureOnlyFlags =
     (
         BindFlags::ColorAttachment          |
         BindFlags::DepthStencilAttachment
     );
 
-    const long validFlags =
+    constexpr long validFlags =
     (
         bufferOnlyFlags     |
         textureOnlyFlags    |
@@ -600,15 +600,42 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
         BindFlags::CopyDst
     );
 
+    constexpr long cbufferExcludedFlags =
+    (
+        BindFlags::VertexBuffer         |
+        BindFlags::IndexBuffer          |
+        BindFlags::StreamOutputBuffer   |
+        BindFlags::IndirectBuffer       |
+        BindFlags::Sampled              |
+        BindFlags::Storage
+    );
+
     /* Check for unknown flags */
     if ((flags & (~validFlags)) != 0)
         LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown bind flags specified");
 
     /* Validate combination of flags */
     if ((flags & bufferOnlyFlags) != 0 && (flags & textureOnlyFlags) != 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot combine binding flags that are exclusive for buffers and textures");
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot combine binding flags that are exclusive for buffers and textures"
+        );
+    }
     if ((flags & BindFlags::ColorAttachment) != 0 && (flags & BindFlags::DepthStencilAttachment) != 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "resources cannot have color attachment and depth-stencil attachment binding flags at the same time");
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "resources cannot have color attachment and depth-stencil attachment binding flags at the same time"
+        );
+    }
+    if ((flags & BindFlags::ConstantBuffer) != 0 && (flags & cbufferExcludedFlags) != 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot combine bind flag LLGL::BindFlags::ConstantBuffer with any other bind flag except LLGL::BindFlags::CopySrc and LLGL::BindFlags::CopyDst"
+        );
+    }
 }
 
 void DbgRenderSystem::ValidateCPUAccessFlags(long flags, long validFlags, const char* contextDesc)

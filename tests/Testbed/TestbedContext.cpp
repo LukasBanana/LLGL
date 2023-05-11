@@ -13,6 +13,7 @@ TestbedContext::TestbedContext(const char* moduleName)
     RenderSystemDescriptor rendererDesc;
     {
         rendererDesc.moduleName = moduleName;
+        rendererDesc.flags      = RenderSystemFlags::DebugDevice;
         //rendererDesc.profiler   = &profiler;
     }
     if (renderer = RenderSystem::Load(rendererDesc))

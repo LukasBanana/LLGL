@@ -99,8 +99,6 @@ class D3D11Buffer : public Buffer
             UINT                    srcOffset
         );
 
-        D3D11_MAP GetCPUAccessTypeForUsage(const CPUAccess access) const;
-
     private:
 
         ComPtr<ID3D11Buffer>    buffer_;

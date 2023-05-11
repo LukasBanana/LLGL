@@ -162,11 +162,10 @@ void D3D11Buffer::ReadSubresource(ID3D11DeviceContext* context, void* data, UINT
         ReadFromSubresourceCopyWithCpuAccess(context, data, dataSize, offset);
 }
 
-// private
-D3D11_MAP D3D11Buffer::GetCPUAccessTypeForUsage(const CPUAccess access) const
+static D3D11_MAP GetCPUAccessTypeForUsage(D3D11_USAGE usage, CPUAccess access)
 {
-    /* D3D11_MAP_WRITE_DISCARD can only be used for buffers with dynamic usage */
-    if (access == CPUAccess::WriteDiscard && usage_ != D3D11_USAGE_DYNAMIC)
+    /* D3D11_MAP_WRITE_DISCARD can only be used for buffers with D3D11_USAGE_DYNAMIC usage */
+    if (access == CPUAccess::WriteDiscard && usage != D3D11_USAGE_DYNAMIC)
         return D3D11_MAP_WRITE;
     else
         return D3D11Types::Map(access);
@@ -191,12 +190,12 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
         }
 
         /* Map CPU-access buffer */
-        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(access), 0, &mappedSubresource);
+        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(D3D11_USAGE_DEFAULT, access), 0, &mappedSubresource);
     }
     else
     {
         /* Map buffer */
-        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(access), 0, &mappedSubresource);
+        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(usage_, access), 0, &mappedSubresource);
     }
 
     return (SUCCEEDED(hr) ? mappedSubresource.pData : nullptr);
@@ -224,12 +223,12 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access, UIN
         }
 
         /* Map CPU-access buffer */
-        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(access), 0, &mappedSubresource);
+        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(D3D11_USAGE_DEFAULT, access), 0, &mappedSubresource);
     }
     else
     {
         /* Map buffer */
-        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(access), 0, &mappedSubresource);
+        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(usage_, access), 0, &mappedSubresource);
     }
 
     return (SUCCEEDED(hr) ? mappedSubresource.pData : nullptr);
@@ -293,6 +292,12 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
         return size;
 }
 
+// Returns true if the specified buffer descriptors requires an intermediate buffer for CPU-access.
+static bool NeedsIntermediateCpuAccessBuffer(const BufferDescriptor& desc)
+{
+    return (desc.cpuAccessFlags != 0);
+}
+
 void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Initialize native buffer descriptor */
@@ -326,7 +331,7 @@ void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& 
     }
 
     /* Create CPU access buffer (if required) */
-    if (desc.cpuAccessFlags != 0)
+    if (NeedsIntermediateCpuAccessBuffer(desc))
         CreateCpuAccessBuffer(device, desc);
 
     /* Store buffer creation attributes */
@@ -342,8 +347,8 @@ void D3D11Buffer::CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescri
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = static_cast<UINT>(desc.size);
-        descD3D.Usage               = DXGetCPUAccessBufferUsage(desc);
-        descD3D.BindFlags           = 0; // CPU-access buffer cannot have binding flags
+        descD3D.Usage               = D3D11_USAGE_DEFAULT;
+        descD3D.BindFlags           = D3D11_BIND_SHADER_RESOURCE; // Must have either SRV or UAV bind flags for D3D11_USAGE_DEFAULT
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlags(desc.cpuAccessFlags);
         descD3D.MiscFlags           = 0;
         descD3D.StructureByteStride = desc.stride;

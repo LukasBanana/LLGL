@@ -1,6 +1,6 @@
 /*
  * D3D11ResourceFlags.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -13,20 +13,21 @@ namespace LLGL
 
 
 /*
- * D3D11_BIND_FLAG
- * see https://docs.microsoft.com/en-us/windows/desktop/api/d3d11/ne-d3d11-d3d11_bind_flag
- */
-
+D3D11_BIND_FLAG
+see https://docs.microsoft.com/en-us/windows/desktop/api/d3d11/ne-d3d11-d3d11_bind_flag
+*/
 UINT DXGetBufferBindFlags(long bindFlags)
 {
+    /* D3D11_BIND_CONSTANT_BUFFER must NOT be combined with any other flag */
+    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+        return D3D11_BIND_CONSTANT_BUFFER;
+
     UINT flagsD3D = 0;
 
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
         flagsD3D |= D3D11_BIND_VERTEX_BUFFER;
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
         flagsD3D |= D3D11_BIND_INDEX_BUFFER;
-    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-        flagsD3D |= D3D11_BIND_CONSTANT_BUFFER;
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
         flagsD3D |= D3D11_BIND_STREAM_OUTPUT;
     if ((bindFlags & (BindFlags::Sampled | BindFlags::CopySrc)) != 0)

@@ -80,7 +80,7 @@ struct BindFlags
 
         /**
         \brief The resource can be used to bind a set of constants.
-        \remarks This can only be used for Buffer resources.
+        \remarks This can only be used for Buffer resources and must \e not be combined with any other bind flags except for CopySrc and CopyDst.
         */
         ConstantBuffer          = (1 << 2),
 
