@@ -34,8 +34,7 @@ class D3D11Buffer : public Buffer
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
         void ReadSubresource(ID3D11DeviceContext* context, void* data, UINT dataSize, UINT offset);
 
-        void* Map(ID3D11DeviceContext* context, const CPUAccess access);
-        void* Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT size);
+        void* Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT length);
         void Unmap(ID3D11DeviceContext* context);
 
         // Creates a shader-resource-view (SRV) of a subresource of this buffer object.

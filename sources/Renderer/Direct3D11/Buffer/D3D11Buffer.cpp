@@ -19,10 +19,18 @@ namespace LLGL
 {
 
 
+// Returns true if the specified buffer descriptors requires an intermediate buffer for CPU-access.
+static bool NeedsIntermediateCpuAccessBuffer(const BufferDescriptor& desc)
+{
+    return (desc.cpuAccessFlags != 0);
+}
+
 D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     Buffer { desc.bindFlags }
 {
     CreateGpuBuffer(device, desc, initialData);
+    if (NeedsIntermediateCpuAccessBuffer(desc))
+        CreateCpuAccessBuffer(device, desc);
 }
 
 void D3D11Buffer::SetName(const char* name)
@@ -171,63 +179,45 @@ static D3D11_MAP GetCPUAccessTypeForUsage(D3D11_USAGE usage, CPUAccess access)
         return D3D11Types::Map(access);
 }
 
-void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
+void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT length)
 {
+    if (offset + length > GetSize())
+        return nullptr;
+
     HRESULT hr = 0;
-    D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-
-    if (cpuAccessBuffer_)
-    {
-        /* On read access -> copy storage buffer to CPU-access buffer */
-        if (HasReadAccess(access))
-            context->CopyResource(cpuAccessBuffer_.Get(), GetNative());
-
-        /* Mark dirty-bit if write access is used */
-        if (HasWriteAccess(access))
-        {
-            mappedWriteRange_[0] = 0;
-            mappedWriteRange_[1] = size_;
-        }
-
-        /* Map CPU-access buffer */
-        hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(D3D11_USAGE_DEFAULT, access), 0, &mappedSubresource);
-    }
-    else
-    {
-        /* Map buffer */
-        hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(usage_, access), 0, &mappedSubresource);
-    }
-
-    return (SUCCEEDED(hr) ? mappedSubresource.pData : nullptr);
-}
-
-void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT size)
-{
-    HRESULT hr = 0;
-    D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+    D3D11_MAPPED_SUBRESOURCE mappedSubresource = {};
 
     if (cpuAccessBuffer_)
     {
         /* On read access -> copy storage buffer to CPU-access buffer */
         if (HasReadAccess(access))
         {
-            const D3D11_BOX srcRange{ offset, 0, 0, offset + size, 1, 1 };
-            context->CopySubresourceRegion(cpuAccessBuffer_.Get(), 0, offset, 0, 0, GetNative(), 0, &srcRange);
+            if (offset == 0 && length == GetSize())
+            {
+                /* Copy entire resource */
+                context->CopyResource(cpuAccessBuffer_.Get(), GetNative());
+            }
+            else
+            {
+                /* Copy subresource */
+                const D3D11_BOX srcRange{ offset, 0, 0, offset + length, 1, 1 };
+                context->CopySubresourceRegion(cpuAccessBuffer_.Get(), 0, offset, 0, 0, GetNative(), 0, &srcRange);
+            }
         }
 
         /* Mark dirty-bit if write access is used */
         if (HasWriteAccess(access))
         {
             mappedWriteRange_[0] = offset;
-            mappedWriteRange_[1] = offset + size;
+            mappedWriteRange_[1] = offset + length;
         }
 
-        /* Map CPU-access buffer */
+        /* Map intermediate CPU-access buffer */
         hr = context->Map(cpuAccessBuffer_.Get(), 0, GetCPUAccessTypeForUsage(D3D11_USAGE_DEFAULT, access), 0, &mappedSubresource);
     }
     else
     {
-        /* Map buffer */
+        /* Map primary buffer */
         hr = context->Map(GetNative(), 0, GetCPUAccessTypeForUsage(usage_, access), 0, &mappedSubresource);
     }
 
@@ -292,12 +282,6 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
         return size;
 }
 
-// Returns true if the specified buffer descriptors requires an intermediate buffer for CPU-access.
-static bool NeedsIntermediateCpuAccessBuffer(const BufferDescriptor& desc)
-{
-    return (desc.cpuAccessFlags != 0);
-}
-
 void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Initialize native buffer descriptor */
@@ -330,10 +314,6 @@ void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& 
         DXThrowIfCreateFailed(hr, "ID3D11Buffer");
     }
 
-    /* Create CPU access buffer (if required) */
-    if (NeedsIntermediateCpuAccessBuffer(desc))
-        CreateCpuAccessBuffer(device, desc);
-
     /* Store buffer creation attributes */
     size_   = descD3D.ByteWidth;
     stride_ = (desc.vertexAttribs.empty() ? 0 : desc.vertexAttribs.front().stride);
@@ -346,7 +326,7 @@ void D3D11Buffer::CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescri
     /* Create new D3D11 hardware buffer (for CPU access) */
     D3D11_BUFFER_DESC descD3D;
     {
-        descD3D.ByteWidth           = static_cast<UINT>(desc.size);
+        descD3D.ByteWidth           = GetSize();
         descD3D.Usage               = D3D11_USAGE_DEFAULT;
         descD3D.BindFlags           = D3D11_BIND_SHADER_RESOURCE; // Must have either SRV or UAV bind flags for D3D11_USAGE_DEFAULT
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlags(desc.cpuAccessFlags);
