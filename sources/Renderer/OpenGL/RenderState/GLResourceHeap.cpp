@@ -712,7 +712,7 @@ void GLResourceHeap::WriteResourceViewUBO(const ResourceViewDescriptor& desc, ch
 
 void GLResourceHeap::WriteResourceViewSSBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index)
 {
-    return WriteResourceViewBuffer(desc, heapPtr, index, (BindFlags::Sampled | BindFlags::Storage));
+    WriteResourceViewBuffer(desc, heapPtr, index, (BindFlags::Sampled | BindFlags::Storage));
 }
 
 // Returns true if the segment at the specified heap position contains any texture views.

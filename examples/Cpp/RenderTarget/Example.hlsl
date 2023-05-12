@@ -38,7 +38,7 @@ OutputVS VS(InputVS inp)
 
 Texture2D colorMap : register(t2);
 
-#ifdef ENABLE_TEXTURE2DMS
+#ifdef ENABLE_CUSTOM_MULTISAMPLING
 Texture2DMS<float4, 8> colorMapMS : register(t3);
 #endif
 
@@ -46,7 +46,7 @@ SamplerState samplerState : register(s1);
 
 float4 SampleColorMap(float2 texCoord)
 {
-    #ifdef ENABLE_TEXTURE2DMS
+    #ifdef ENABLE_CUSTOM_MULTISAMPLING
     if (useTexture2DMS)
     {
         // Load texel from multi-sample texture

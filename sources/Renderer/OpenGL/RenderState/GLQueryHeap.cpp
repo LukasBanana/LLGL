@@ -11,6 +11,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLTypes.h"
 #include "../../../Core/Assertion.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -105,15 +106,15 @@ void GLQueryHeap::SetName(const char* name)
 void GLQueryHeap::Begin(std::uint32_t query)
 {
     /* Begin all queries in forward order: [0, n) */
-    for (std::size_t i = 0; i < groupSize_; ++i)
+    for_range(i, groupSize_)
         glBeginQuery(MapQueryType(GetType(), i), ids_[i + groupSize_ * query]);
 }
 
 void GLQueryHeap::End(std::uint32_t query)
 {
     /* End all queries in reverse order: (n, 0] */
-    for (std::size_t i = 1; i <= groupSize_; ++i)
-        glEndQuery(MapQueryType(GetType(), groupSize_ - i));
+    for_range_reverse(i, groupSize_)
+        glEndQuery(MapQueryType(GetType(), i));
 }
 
 
