@@ -62,6 +62,12 @@ class D3D11RenderTarget final : public RenderTarget
             return depthStencilView_.Get();
         }
 
+        // Returns true if this render-target has multi-sampled color attachments.
+        inline bool HasMultiSampling() const
+        {
+            return (sampleDesc_.Count > 1);
+        }
+
     public:
 
         // Creates a depth-stencil-view (DSV) of the specified subresource.

@@ -7,6 +7,7 @@
 
 #include "D3D12Device.h"
 #include "../DXCommon/DXCore.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -17,7 +18,7 @@ namespace LLGL
 
 bool D3D12Device::CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels)
 {
-    for (auto level : featureLevels)
+    for (D3D_FEATURE_LEVEL level : featureLevels)
     {
         /* Try to create D3D12 device with current feature level */
         hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(device_.ReleaseAndGetAddressOf()));
@@ -128,7 +129,7 @@ DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(std::size_t numFormats, con
 {
     DXGI_SAMPLE_DESC sampleDesc = { maxSampleCount, 0 };
 
-    for (std::size_t i = 0; i < numFormats; ++i)
+    for_range(i, numFormats)
     {
         if (formats[i] != DXGI_FORMAT_UNKNOWN)
             sampleDesc = FindSuitableSampleDesc(formats[i], sampleDesc.Count);

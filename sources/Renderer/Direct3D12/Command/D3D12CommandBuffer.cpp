@@ -648,12 +648,12 @@ void D3D12CommandBuffer::EndRenderPass()
 {
     if (boundSwapChain_ != nullptr)
     {
-        boundSwapChain_->ResolveRenderTarget(commandContext_);
+        boundSwapChain_->ResolveSubresources(commandContext_);
         boundSwapChain_ = nullptr;
     }
     else if (boundRenderTarget_ != nullptr)
     {
-        boundRenderTarget_->ResolveRenderTarget(commandContext_);
+        boundRenderTarget_->ResolveSubresources(commandContext_);
         boundRenderTarget_ = nullptr;
     }
 }

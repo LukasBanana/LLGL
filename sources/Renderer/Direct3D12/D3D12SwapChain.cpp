@@ -122,12 +122,12 @@ D3D12Resource& D3D12SwapChain::GetCurrentColorBuffer()
         return colorBuffers_[currentFrame_];
 }
 
-void D3D12SwapChain::ResolveRenderTarget(D3D12CommandContext& commandContext)
+void D3D12SwapChain::ResolveSubresources(D3D12CommandContext& commandContext)
 {
     if (HasMultiSampling())
     {
         /* Resolve multi-sampled color buffer into presentable color buffer */
-        commandContext.ResolveRenderTarget(
+        commandContext.ResolveSubresource(
             colorBuffers_[currentFrame_],
             0,
             colorBuffersMS_[currentFrame_],

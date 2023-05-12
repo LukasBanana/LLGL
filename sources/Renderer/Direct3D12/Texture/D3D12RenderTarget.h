@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
+#include <LLGL/Container/SmallVector.h>
 #include "../D3D12Resource.h"
 #include "../RenderState/D3D12RenderPass.h"
 #include <d3d12.h>
@@ -45,41 +46,64 @@ class D3D12RenderTarget final : public RenderTarget
         D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc);
 
         void TransitionToOutputMerger(D3D12CommandContext& commandContext);
-        void ResolveRenderTarget(D3D12CommandContext& commandContext);
+        void ResolveSubresources(D3D12CommandContext& commandContext);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForRTV() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;
 
-        bool HasMultiSampling() const;
+        // Returns true if this render-target has multi-sampled color attachments.
+        inline bool HasMultiSampling() const
+        {
+            return (sampleDesc_.Count > 1);
+        }
 
     private:
 
-        void CreateDescriptorHeaps(D3D12Device& device, const RenderTargetDescriptor& desc);
-        void CreateAttachments(ID3D12Device* device, const RenderTargetDescriptor& desc);
-        void CreateColorBuffersMS(ID3D12Device* device, const RenderTargetDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle);
-        void CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format);
+        using ColorFormatVector = SmallVector<DXGI_FORMAT, LLGL_MAX_NUM_COLOR_ATTACHMENTS>;
 
-        void CreateSubresource(
+        UINT GatherAttachmentFormats(D3D12Device& device, const RenderTargetDescriptor& desc, ColorFormatVector& outColorFormats);
+
+        void CreateDescriptorHeaps(ID3D12Device* device, const UINT numColorTargets);
+
+        void CreateAttachments(
             ID3D12Device*                   device,
-            D3D12Resource&                  resource,
-            const Format                    format,
-            const TextureType               textureType,
-            UINT                            mipLevel,
-            UINT                            arrayLayer,
-            D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle
+            const RenderTargetDescriptor&   desc,
+            const ColorFormatVector&        colorFormats
         );
 
-        void CreateSubresourceRTV(
-            ID3D12Device*                       device,
-            D3D12Resource&                      resource,
-            DXGI_FORMAT                         format,
-            const TextureType                   type,
-            UINT                                mipLevel,
-            UINT                                arrayLayer,
-            const D3D12_CPU_DESCRIPTOR_HANDLE&  cpuDescHandle
+        void CreateColorAttachment(
+            ID3D12Device*                   device,
+            const AttachmentDescriptor&     colorAttachment,
+            const AttachmentDescriptor&     resolveAttachment,
+            DXGI_FORMAT                     format,
+            D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle
         );
 
-        void CreateSubresourceDSV(
+        void CreateDepthStencilAttachment(
+            ID3D12Device*                   device,
+            const AttachmentDescriptor&     depthStenciAttachment,
+            D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle
+        );
+
+        D3D12Resource* CreateInternalTexture(
+            ID3D12Device*               device,
+            DXGI_FORMAT                 format,
+            D3D12_RESOURCE_STATES       initialState,
+            D3D12_RESOURCE_FLAGS        flags,
+            const D3D12_CLEAR_VALUE*    clearValue = nullptr
+        );
+
+        void CreateRenderTargetView(
+            ID3D12Device*               device,
+            D3D12Resource&              resource,
+            DXGI_FORMAT                 format,
+            const TextureType           type,
+            UINT                        mipLevel,
+            UINT                        arrayLayer,
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle
+        );
+
+        void CreateDepthStencilView(
             ID3D12Device*       device,
             D3D12Resource&      resource,
             DXGI_FORMAT         format,
@@ -88,12 +112,21 @@ class D3D12RenderTarget final : public RenderTarget
             UINT                arrayLayer
         );
 
+        void CreateResolveTarget(
+            const AttachmentDescriptor& resolveAttachment,
+            DXGI_FORMAT                 format,
+            D3D12Resource*              multiSampledSrcTexture
+        );
+
     private:
 
-        struct ColorBufferMS
+        // Members for multi-sampled render-targets
+        struct ResolveTarget
         {
-            D3D12Resource   resource;
-            UINT            dstSubresource;
+            D3D12Resource*  resolveDstTexture;
+            UINT            resolveDstSubresource;
+            D3D12Resource*  multiSampledSrcTexture;
+            DXGI_FORMAT     format;
         };
 
     private:
@@ -103,17 +136,14 @@ class D3D12RenderTarget final : public RenderTarget
 
         // Objects:
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
-        UINT                            rtvDescSize_        = 0;
-
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
-        D3D12Resource                   depthStencilBuffer_;
         DXGI_FORMAT                     depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
         D3D12RenderPass                 defaultRenderPass_;
 
         // Containers and references:
-        std::vector<DXGI_FORMAT>        colorFormats_;
+        std::vector<D3D12Resource>      internalTextures_;
         std::vector<D3D12Resource*>     colorBuffers_;
-        std::vector<ColorBufferMS>      colorBuffersMS_;
+        std::vector<ResolveTarget>      resolveTargets_;
         D3D12Resource*                  depthStencil_       = nullptr;
 
 };

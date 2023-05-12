@@ -42,13 +42,6 @@ class D3D12RenderPass final : public RenderPass
             const RenderPassDescriptor& desc
         );
 
-        // Builds the color and depth-stencil attachments index and format buffers with the specified render target attachment descriptor.
-        void BuildAttachments(
-            UINT                        numAttachmentDescs,
-            const AttachmentDescriptor* attachmentDescs,
-            const DXGI_SAMPLE_DESC&     sampleDesc
-        );
-
         // Builds the attachments with the explicit DXGI_FORMAT entries for color and depth-stencil.
         void BuildAttachments(
             UINT                    numColorFormats,

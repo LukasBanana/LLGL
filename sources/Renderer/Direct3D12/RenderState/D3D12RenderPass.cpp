@@ -13,6 +13,7 @@
 #include "../../RenderTargetUtils.h"
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/RenderTargetFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
@@ -58,7 +59,7 @@ void D3D12RenderPass::BuildAttachments(
         desc.depthAttachment.format   != Format::Undefined             &&
         desc.stencilAttachment.format != Format::Undefined)
     {
-        throw std::invalid_argument("mismatch between depth and stencil attachment formats");
+        LLGL_TRAP("mismatch between depth and stencil attachment formats");
     }
 
     if (desc.depthAttachment.format != Format::Undefined)
@@ -70,51 +71,6 @@ void D3D12RenderPass::BuildAttachments(
 
     /* Store sample descriptor */
     sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));
-}
-
-void D3D12RenderPass::BuildAttachments(
-    UINT                        numAttachmentDescs,
-    const AttachmentDescriptor* attachmentDescs,
-    const DXGI_SAMPLE_DESC&     sampleDesc)
-{
-    /* Reset clear flags and depth-stencil format */
-    clearFlagsDSV_ = 0;
-    SetDSVFormat(DXGI_FORMAT_UNKNOWN);
-    ResetClearColorAttachmentIndices(LLGL_MAX_NUM_COLOR_ATTACHMENTS, clearColorAttachments_);
-
-    /* Check which color attachment must be cleared */
-    UINT colorAttachment = 0;
-
-    for_range(i, numAttachmentDescs)
-    {
-        const auto& attachment = attachmentDescs[i];
-
-        const Format format = GetAttachmentFormat(attachment);
-        const DXGI_FORMAT formatDXGI = DXTypes::ToDXGIFormat(format);
-
-        if (IsColorFormat(format))
-        {
-            if (colorAttachment < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-            {
-                /* Store texture color format and attachment index */
-                SetRTVFormat(formatDXGI, colorAttachment++);
-            }
-        }
-        else
-        {
-            /* Use texture depth-stencil format */
-            SetDSVFormat(formatDXGI);
-        }
-    }
-
-    numColorAttachments_ = colorAttachment;
-
-    /* Reset remaining color formats */
-    for_subrange(i, numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
-        SetRTVFormat(DXGI_FORMAT_UNKNOWN, i);
-
-    /* Store sample descriptor */
-    sampleDesc_ = sampleDesc;
 }
 
 void D3D12RenderPass::BuildAttachments(

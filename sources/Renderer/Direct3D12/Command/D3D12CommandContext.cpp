@@ -188,7 +188,7 @@ void D3D12CommandContext::FlushResourceBarrieres()
     }
 }
 
-void D3D12CommandContext::ResolveRenderTarget(
+void D3D12CommandContext::ResolveSubresource(
     D3D12Resource&  dstResource,
     UINT            dstSubresource,
     D3D12Resource&  srcResource,

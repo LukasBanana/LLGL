@@ -88,7 +88,7 @@ class D3D12CommandContext
         // Flush all accumulated resource barriers.
         void FlushResourceBarrieres();
 
-        void ResolveRenderTarget(
+        void ResolveSubresource(
             D3D12Resource&  dstResource,
             UINT            dstSubresource,
             D3D12Resource&  srcResource,

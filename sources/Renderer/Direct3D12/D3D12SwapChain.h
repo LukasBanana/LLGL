@@ -62,7 +62,7 @@ class D3D12SwapChain final : public SwapChain
         // Returns the native color buffer resource from the swap-chain that is currently being used.
         D3D12Resource& GetCurrentColorBuffer();
 
-        void ResolveRenderTarget(D3D12CommandContext& commandContext);
+        void ResolveSubresources(D3D12CommandContext& commandContext);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForRTV() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;

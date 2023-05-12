@@ -16,6 +16,8 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../RenderTargetUtils.h"
+#include "../../../Core/Assertion.h"
+#include "../../../Core/Exception.h"
 #include "../D3DX12/d3dx12.h"
 #include <LLGL/Utils/ForRange.h>
 
@@ -27,9 +29,11 @@ namespace LLGL
 D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDescriptor& desc) :
     resolution_ { desc.resolution }
 {
-    CreateDescriptorHeaps(device, desc);
-    CreateAttachments(device.GetNative(), desc);
-    defaultRenderPass_.BuildAttachments(static_cast<UINT>(desc.attachments.size()), desc.attachments.data(), sampleDesc_);
+    ColorFormatVector colorFormats;
+    const UINT numColorFormats = GatherAttachmentFormats(device, desc, colorFormats);
+    CreateDescriptorHeaps(device.GetNative(), numColorFormats);
+    CreateAttachments(device.GetNative(), desc, colorFormats);
+    defaultRenderPass_.BuildAttachments(numColorFormats, colorFormats.data(), depthStencilFormat_, sampleDesc_);
 }
 
 void D3D12RenderTarget::SetName(const char* name)
@@ -50,7 +54,7 @@ std::uint32_t D3D12RenderTarget::GetSamples() const
 
 std::uint32_t D3D12RenderTarget::GetNumColorAttachments() const
 {
-    return static_cast<std::uint32_t>(colorFormats_.size());
+    return static_cast<std::uint32_t>(colorBuffers_.size());
 }
 
 bool D3D12RenderTarget::HasDepthAttachment() const
@@ -79,19 +83,18 @@ void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandCon
     commandContext.FlushResourceBarrieres();
 }
 
-//TODO: incomplete
-void D3D12RenderTarget::ResolveRenderTarget(D3D12CommandContext& commandContext)
+void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
 {
     if (HasMultiSampling())
     {
-        for_range(i, colorBuffersMS_.size())
+        for (const ResolveTarget& target : resolveTargets_)
         {
-            commandContext.ResolveRenderTarget(
-                *colorBuffers_[i],
-                colorBuffersMS_[i].dstSubresource,
-                colorBuffersMS_[i].resource,
+            commandContext.ResolveSubresource(
+                *target.resolveDstTexture,
+                target.resolveDstSubresource,
+                *target.multiSampledSrcTexture,
                 0,
-                colorFormats_[i]
+                target.format
             );
         }
     }
@@ -123,62 +126,84 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderTarget::GetCPUDescriptorHandleForDSV() co
         return {};
 }
 
-bool D3D12RenderTarget::HasMultiSampling() const
-{
-    return (sampleDesc_.Count > 1);
-}
-
 
 /*
  * ======= Private: =======
  */
 
-void D3D12RenderTarget::CreateDescriptorHeaps(D3D12Device& device, const RenderTargetDescriptor& desc)
+// Counts the number of internal textures required for the specified render-target attachments.
+static std::size_t NumInternalTexturesForAttachments(const RenderTargetDescriptor& desc)
 {
-    /* Determine number of resource views */
-    colorFormats_.reserve(desc.attachments.size());
+    std::size_t n = 0;
 
-    for (const auto& attachment : desc.attachments)
+    auto AttachmentNeedsInternalTexture = [](const AttachmentDescriptor& attachmentDesc) -> bool
     {
-        if (auto texture = attachment.texture)
-        {
-            /* Get texture format */
-            auto format = GetAttachmentFormat(attachment);
-            auto formatDXGI = DXTypes::ToDXGIFormat(format);
+        return (attachmentDesc.texture == nullptr);
+    };
 
-            /* Store color or depth-stencil format */
-            if (IsColorFormat(format))
-                colorFormats_.push_back(formatDXGI);
-            else
-                depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(formatDXGI);
+    for (unsigned i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS && IsAttachmentEnabled(desc.colorAttachments[i]); ++i)
+    {
+        if (AttachmentNeedsInternalTexture(desc.colorAttachments[i]))
+            ++n;
+    }
+
+    if (IsAttachmentEnabled(desc.depthStencilAttachment))
+    {
+        if (AttachmentNeedsInternalTexture(desc.depthStencilAttachment))
+            ++n;
+    }
+
+    return n;
+}
+
+UINT D3D12RenderTarget::GatherAttachmentFormats(D3D12Device& device, const RenderTargetDescriptor& desc, ColorFormatVector& outColorFormats)
+{
+    /* Gather color formats */
+    for (const auto& colorAttachment : desc.colorAttachments)
+    {
+        if (IsAttachmentEnabled(colorAttachment))
+        {
+            const Format      format     = GetAttachmentFormat(colorAttachment);
+            const DXGI_FORMAT formatDXGI = DXTypes::ToDXGIFormat(format);
+            outColorFormats.push_back(formatDXGI);
         }
         else
-        {
-            /* Adopt attachment format from descriptor */
-            depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(attachment.format));
-            if (IsColorFormat(attachment.format))
-                throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
-        }
+            break;
     }
 
     /* Determine and store suitable sample descriptor */
     if (desc.samples > 1)
-        sampleDesc_ = device.FindSuitableSampleDesc(colorFormats_.size(), colorFormats_.data(), desc.samples);
+        sampleDesc_ = device.FindSuitableSampleDesc(outColorFormats.size(), outColorFormats.data(), desc.samples);
 
-    /* Create RTV descriptor heap */
-    if (!colorFormats_.empty())
+    /* Store depth-stencil format */
+    if (IsAttachmentEnabled(desc.depthStencilAttachment))
     {
-        colorBuffers_.reserve(colorFormats_.size());
-        auto numRenderTargets = static_cast<UINT>(colorFormats_.size());
+        /* Adopt attachment format from descriptor */
+        const Format      format     = GetAttachmentFormat(desc.depthStencilAttachment);
+        const DXGI_FORMAT formatDXGI = DXTypes::ToDXGIFormat(format);
+        depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(formatDXGI);
+    }
 
+    /* Pre-allocate containers to avoid dangling pointers after std::vector::push_back() */
+    colorBuffers_.reserve(outColorFormats.size());
+    internalTextures_.reserve(NumInternalTexturesForAttachments(desc));
+
+    return static_cast<UINT>(outColorFormats.size());
+}
+
+void D3D12RenderTarget::CreateDescriptorHeaps(ID3D12Device* device, const UINT numColorTargets)
+{
+    /* Create RTV descriptor heap */
+    if (numColorTargets > 0)
+    {
         D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
         {
             heapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-            heapDesc.NumDescriptors = (HasMultiSampling() ? numRenderTargets * 2 : numRenderTargets);
+            heapDesc.NumDescriptors = numColorTargets;
             heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             heapDesc.NodeMask       = 0;
         }
-        rtvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device.GetNative(), heapDesc);
+        rtvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device, heapDesc);
     }
 
     /* Create DSV descriptor heap */
@@ -191,158 +216,152 @@ void D3D12RenderTarget::CreateDescriptorHeaps(D3D12Device& device, const RenderT
             heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             heapDesc.NodeMask       = 0;
         }
-        dsvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device.GetNative(), heapDesc);
+        dsvDescHeap_ = D3D12DescriptorHeap::CreateNativeOrThrow(device, heapDesc);
     }
 }
 
-void D3D12RenderTarget::CreateAttachments(ID3D12Device* device, const RenderTargetDescriptor& desc)
+void D3D12RenderTarget::CreateAttachments(
+    ID3D12Device*                   device,
+    const RenderTargetDescriptor&   desc,
+    const ColorFormatVector&        colorFormats)
 {
-    /* Get CPU descriptor heap start for RTVs */
-    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle;
     if (rtvDescHeap_)
     {
-        cpuDescHandle   = rtvDescHeap_->GetCPUDescriptorHandleForHeapStart();
-        rtvDescSize_    = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    }
-
-    /* Create multi-sampled texture resources first */
-    if (HasMultiSampling())
-        CreateColorBuffersMS(device, desc, cpuDescHandle);
-
-    /* Create all attachments */
-    for (const auto& attachment : desc.attachments)
-    {
-        if (auto texture = attachment.texture)
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle = rtvDescHeap_->GetCPUDescriptorHandleForHeapStart();
+        const UINT rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        for_range(i, colorFormats.size())
         {
-            auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
-            const Format format = GetAttachmentFormat(attachment);
-            CreateSubresource(
-                device,
-                textureD3D.GetResource(),
-                format,
-                textureD3D.GetType(),
-                attachment.mipLevel,
-                attachment.arrayLayer,
-                cpuDescHandle
-            );
-        }
-        else
-        {
-            /* Create internal depth-stencil buffer and default DSV */
-            CreateDepthStencil(device, depthStencilFormat_);
-            device->CreateDepthStencilView(depthStencilBuffer_.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
-            depthStencil_ = &depthStencilBuffer_;
+            CreateColorAttachment(device, desc.colorAttachments[i], desc.resolveAttachments[i], colorFormats[i], cpuDescHandle);
+            cpuDescHandle.ptr += rtvDescSize;
         }
     }
+    if (dsvDescHeap_)
+        CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 }
 
-void D3D12RenderTarget::CreateColorBuffersMS(ID3D12Device* device, const RenderTargetDescriptor& desc, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle)
+void D3D12RenderTarget::CreateColorAttachment(
+    ID3D12Device*                   device,
+    const AttachmentDescriptor&     colorAttachment,
+    const AttachmentDescriptor&     resolveAttachment,
+    DXGI_FORMAT                     format,
+    D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle)
 {
-    colorBuffersMS_.resize(colorFormats_.size());
+    D3D12Resource* colorBuffer = nullptr;
 
-    std::size_t idx = 0;
-
-    for (const auto& attachment : desc.attachments)
+    /* Create color attachment */
+    if (Texture* texture = colorAttachment.texture)
     {
-        /* Only consider attachments with valid color texture */
-        if (attachment.texture == nullptr)
-            continue;
-
-        auto textureD3D = LLGL_CAST(const D3D12Texture*, attachment.texture);
-        if (!IsColorFormat(textureD3D->GetBaseFormat()))
-            continue;
-
-        auto&   colorBufferMS   = colorBuffersMS_[idx];
-        auto    format          = colorFormats_[idx];
-
-        /* Create multi-sampled render targets */
-        auto tex2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+        ValidateMipResolution(*texture, colorAttachment.mipLevel);
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
+        colorBuffer = &(textureD3D.GetResource());
+        CreateRenderTargetView(
+            device,
+            *colorBuffer,
             format,
-            resolution_.width,
-            resolution_.height,
-            1, // arraySize
-            1, // mipLevels
-            sampleDesc_.Count,
-            sampleDesc_.Quality,
+            textureD3D.GetType(),
+            colorAttachment.mipLevel,
+            colorAttachment.arrayLayer,
+            cpuDescHandle
+        );
+    }
+    else
+    {
+        colorBuffer = CreateInternalTexture(
+            device,
+            format,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );
+        device->CreateRenderTargetView(colorBuffer->Get(), nullptr, cpuDescHandle);
+    }
 
-        /* Create render target resource */
-        auto hr = device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-            D3D12_HEAP_FLAG_NONE,
-            &tex2DMSDesc,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            nullptr,
-            IID_PPV_ARGS(colorBufferMS.resource.native.ReleaseAndGetAddressOf())
+    /* Create resolve target entry if multi-sampling is enabled */
+    if (HasMultiSampling() && resolveAttachment.texture != nullptr)
+        CreateResolveTarget(resolveAttachment, format, colorBuffer);
+
+    LLGL_ASSERT_PTR(colorBuffer);
+    LLGL_ASSERT_PTR(colorBuffer->native.Get());
+    colorBuffers_.push_back(colorBuffer);
+}
+
+void D3D12RenderTarget::CreateDepthStencilAttachment(
+    ID3D12Device*                   device,
+    const AttachmentDescriptor&     depthStenciAttachment,
+    D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle)
+{
+    /* Create depth-stencil attachment */
+    if (Texture* texture = depthStenciAttachment.texture)
+    {
+        ValidateMipResolution(*texture, depthStenciAttachment.mipLevel);
+        auto& textureD3D = LLGL_CAST(D3D12Texture&, *texture);
+        depthStencil_ = &(textureD3D.GetResource());
+        CreateDepthStencilView(
+            device,
+            *depthStencil_,
+            depthStencilFormat_,
+            textureD3D.GetType(),
+            depthStenciAttachment.mipLevel,
+            depthStenciAttachment.arrayLayer
         );
-        DXThrowIfCreateFailed(hr, "ID3D12Resource", "for multi-sampled render-target");
-
-        colorBufferMS.resource.SetInitialState(D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-        /* Store level and layer to resolve multi-sampled color buffer into destination texture */
-        colorBufferMS.dstSubresource = textureD3D->CalcSubresource(attachment.mipLevel, attachment.arrayLayer);
-
-        /* Create RTV subresource */
-        device->CreateRenderTargetView(colorBufferMS.resource.native.Get(), nullptr, cpuDescHandle);
-        cpuDescHandle.ptr += rtvDescSize_;
-
-        ++idx;
+    }
+    else
+    {
+        depthStencil_ = CreateInternalTexture(
+            device,
+            depthStencilFormat_,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE),
+            &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0)
+        );
+        device->CreateDepthStencilView(depthStencil_->Get(), nullptr, cpuDescHandle);
     }
 }
 
-void D3D12RenderTarget::CreateDepthStencil(ID3D12Device* device, DXGI_FORMAT format)
+D3D12Resource* D3D12RenderTarget::CreateInternalTexture(
+    ID3D12Device*               device,
+    DXGI_FORMAT                 format,
+    D3D12_RESOURCE_STATES       initialState,
+    D3D12_RESOURCE_FLAGS        flags,
+    const D3D12_CLEAR_VALUE*    clearValue)
 {
-    /* Create depth-stencil buffer */
+    /* Create internal texture with sampling descriptor and single MIP-level */
     auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-        depthStencilFormat_,
+        format,
         resolution_.width,
         resolution_.height,
         1, // arraySize
         1, // mipLevels
         sampleDesc_.Count,
         sampleDesc_.Quality,
-        (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
+        flags
     );
 
+    /* Create render target resource */
+    D3D12Resource tex2D;
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &tex2DDesc,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
-        IID_PPV_ARGS(depthStencilBuffer_.native.ReleaseAndGetAddressOf())
+        initialState,
+        clearValue,
+        IID_PPV_ARGS(tex2D.native.GetAddressOf())
     );
-    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for render-target depth-stencil buffer");
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for render-target color buffer");
+
+    /* Add resource to list of internal textures (only for auto-release) */
+    tex2D.SetInitialState(initialState);
+    internalTextures_.push_back(std::move(tex2D));
+    return &(internalTextures_.back());
 }
 
-void D3D12RenderTarget::CreateSubresource(
-    ID3D12Device*                   device,
-    D3D12Resource&                  resource,
-    const Format                    format,
-    const TextureType               textureType,
-    UINT                            mipLevel,
-    UINT                            arrayLayer,
-    D3D12_CPU_DESCRIPTOR_HANDLE&    cpuDescHandle)
-{
-    const DXGI_FORMAT formatDXGI = DXTypes::ToDXGIFormat(format);
-    if (IsColorFormat(format))
-    {
-        CreateSubresourceRTV(device, resource, formatDXGI, textureType, mipLevel, arrayLayer, cpuDescHandle);
-        cpuDescHandle.ptr += rtvDescSize_;
-    }
-    else
-        CreateSubresourceDSV(device, resource, formatDXGI, textureType, mipLevel, arrayLayer);
-}
-
-void D3D12RenderTarget::CreateSubresourceRTV(
-    ID3D12Device*                       device,
-    D3D12Resource&                      resource,
-    DXGI_FORMAT                         format,
-    const TextureType                   type,
-    UINT                                mipLevel,
-    UINT                                arrayLayer,
-    const D3D12_CPU_DESCRIPTOR_HANDLE&  cpuDescHandle)
+void D3D12RenderTarget::CreateRenderTargetView(
+    ID3D12Device*               device,
+    D3D12Resource&              resource,
+    DXGI_FORMAT                 format,
+    const TextureType           type,
+    UINT                        mipLevel,
+    UINT                        arrayLayer,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
     /* Initialize D3D12 RTV descriptor */
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
@@ -399,10 +418,9 @@ void D3D12RenderTarget::CreateSubresourceRTV(
 
     /* Create RTV and store reference to resource */
     device->CreateRenderTargetView(resource.Get(), &rtvDesc, cpuDescHandle);
-    colorBuffers_.push_back(&resource);
 }
 
-void D3D12RenderTarget::CreateSubresourceDSV(
+void D3D12RenderTarget::CreateDepthStencilView(
     ID3D12Device*       device,
     D3D12Resource&      resource,
     DXGI_FORMAT         format,
@@ -457,7 +475,26 @@ void D3D12RenderTarget::CreateSubresourceDSV(
 
     /* Create DSV and store reference to resource */
     device->CreateDepthStencilView(resource.Get(), &dsvDesc, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
-    depthStencil_ = &resource;
+}
+
+void D3D12RenderTarget::CreateResolveTarget(
+    const AttachmentDescriptor& resolveAttachment,
+    DXGI_FORMAT                 format,
+    D3D12Resource*              multiSampledSrcTexture)
+{
+    LLGL_ASSERT_PTR(resolveAttachment.texture);
+
+    ValidateMipResolution(*resolveAttachment.texture, resolveAttachment.mipLevel);
+    auto& textureD3D = LLGL_CAST(D3D12Texture&, *resolveAttachment.texture);
+
+    ResolveTarget resolveTarget;
+    {
+        resolveTarget.resolveDstTexture         = &(textureD3D.GetResource());
+        resolveTarget.resolveDstSubresource     = textureD3D.CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer);
+        resolveTarget.multiSampledSrcTexture    = multiSampledSrcTexture;
+        resolveTarget.format                    = format;
+    }
+    resolveTargets_.push_back(resolveTarget);
 }
 
 

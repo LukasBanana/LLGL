@@ -342,7 +342,7 @@ void D3D11RenderTarget::CreateRenderTargetView(
             /*device:*/         device,
             /*resource:*/       colorTarget,
             /*rtvOutput:*/      &colorRTV,
-            /*type:*/           (sampleDesc_.Count > 1 ? TextureType::Texture2DMS : TextureType::Texture2D),
+            /*type:*/           (HasMultiSampling() ? TextureType::Texture2DMS : TextureType::Texture2D),
             /*format:*/         colorFormat,
             /*baseMipLevel:*/   0,
             /*baseArrayLayer:*/ 0
@@ -352,7 +352,7 @@ void D3D11RenderTarget::CreateRenderTargetView(
     renderTargetViews_.push_back(colorRTV);
 
     /* Create resolve target if a resolve texture is specified */
-    if (resolveAttachment.texture != nullptr && sampleDesc_.Count > 1)
+    if (resolveAttachment.texture != nullptr && HasMultiSampling())
         CreateResolveTarget(device, resolveAttachment, colorFormat, colorTarget);
 }
 
@@ -394,6 +394,8 @@ void D3D11RenderTarget::CreateResolveTarget(
     DXGI_FORMAT                 format,
     ID3D11Resource*             multiSampledSrcTexture)
 {
+    LLGL_ASSERT_PTR(resolveAttachment.texture);
+
     ValidateMipResolution(*resolveAttachment.texture, resolveAttachment.mipLevel);
     auto* textureD3D = LLGL_CAST(D3D11Texture*, resolveAttachment.texture);
 
