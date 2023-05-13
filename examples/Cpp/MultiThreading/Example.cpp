@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Utils/ForRange.h>
 #include <thread>
 #include <mutex>
 #include <chrono>
@@ -13,7 +14,7 @@
 
 
 // Enables/disables the use of two secondary command buffers
-//#define ENABLE_SECONDARY_COMMAND_BUFFERS
+#define ENABLE_SECONDARY_COMMAND_BUFFERS 0
 
 class Measure
 {
@@ -86,26 +87,28 @@ class Measure
 
 };
 
+constexpr std::uint32_t maxNumSwapBuffers = 3;
+
 class Example_MultiThreading : public ExampleBase
 {
 
     ShaderPipeline              shaderPipeline;
-    LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Buffer*               indexBuffer         = nullptr;
-    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::CommandBuffer*        primaryCmdBuffer    = nullptr;
+    LLGL::Buffer*               vertexBuffer                        = nullptr;
+    LLGL::Buffer*               indexBuffer                         = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout                      = nullptr;
+    LLGL::CommandBuffer*        primaryCmdBuffer[maxNumSwapBuffers] = {};
 
-    std::uint32_t               numIndices          = 0;
+    std::uint32_t               numIndices                          = 0;
     std::mutex                  logMutex;
 
     Measure                     measure;
 
     struct Bundle
     {
-        LLGL::PipelineState*    pipeline            = nullptr;
-        LLGL::Buffer*           constantBuffer      = nullptr;
-        LLGL::ResourceHeap*     resourceHeap        = nullptr;
-        LLGL::CommandBuffer*    secondaryCmdBuffer  = nullptr;
+        LLGL::PipelineState*    pipeline                            = nullptr;
+        LLGL::Buffer*           constantBuffer                      = nullptr;
+        LLGL::ResourceHeap*     resourceHeap                        = nullptr;
+        LLGL::CommandBuffer*    secondaryCmdBuffer                  = nullptr;
 
         struct Matrices
         {
@@ -228,14 +231,13 @@ private:
         PrintThreadsafe(mtx, "Leave thread: " + threadName);
     }
 
-    void EncodePrimaryCommandBuffer(const std::string& threadName)
+    void EncodePrimaryCommandBuffer(LLGL::CommandBuffer& cmdBuffer, std::uint32_t swapBufferIndex, const std::string& threadName = "")
     {
         // Print thread start
         if (!threadName.empty())
             PrintThreadsafe(logMutex, "Enter thread: " + threadName);
 
         // Encode command buffer
-        auto& cmdBuffer = *primaryCmdBuffer;
         cmdBuffer.Begin();
         {
             // Set hardware buffers to draw the model
@@ -243,14 +245,14 @@ private:
             cmdBuffer.SetIndexBuffer(*indexBuffer);
 
             // Set the swap-chain as the initial render target
-            cmdBuffer.BeginRenderPass(*swapChain);
+            cmdBuffer.BeginRenderPass(*swapChain, nullptr, 0, nullptr, swapBufferIndex);
             {
                 // Clear color- and depth buffers, and set viewport
                 cmdBuffer.Clear(LLGL::ClearFlags::ColorDepth, { backgroundColor });
                 cmdBuffer.SetViewport(swapChain->GetResolution());
 
                 // Draw scene with secondary command buffers
-                #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
+                #if ENABLE_SECONDARY_COMMAND_BUFFERS
 
                 for (auto& bdl : bundle)
                     cmdBuffer.Execute(*bdl.secondaryCmdBuffer);
@@ -282,9 +284,10 @@ private:
         {
             cmdBufferDesc.flags = LLGL::CommandBufferFlags::MultiSubmit;
         }
-        primaryCmdBuffer = renderer->CreateCommandBuffer(cmdBufferDesc);
+        for_range(i, swapChain->GetNumSwapBuffers())
+            primaryCmdBuffer[i] = renderer->CreateCommandBuffer(cmdBufferDesc);
 
-        #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
+        #if ENABLE_SECONDARY_COMMAND_BUFFERS
 
         // Create secondary command buffers
         cmdBufferDesc.flags = (LLGL::CommandBufferFlags::Secondary | LLGL::CommandBufferFlags::MultiSubmit);
@@ -292,7 +295,7 @@ private:
         // Start encoding secondary command buffers in parallel
         std::thread workerThread[2];
 
-        for (int i = 0; i < 2; ++i)
+        for_range(i, 2)
         {
             // Create secondary command buffer
             bundle[i].secondaryCmdBuffer = renderer->CreateCommandBuffer(cmdBufferDesc);
@@ -310,9 +313,10 @@ private:
         #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
 
         // Encode primary command buffer
-        EncodePrimaryCommandBuffer("mainThread");
+        for_range(i, swapChain->GetNumSwapBuffers())
+            EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i, "mainThread");
 
-        #ifdef ENABLE_SECONDARY_COMMAND_BUFFERS
+        #if ENABLE_SECONDARY_COMMAND_BUFFERS
 
         // Wait for worker threads to finish
         for (auto& worker : workerThread)
@@ -324,11 +328,11 @@ private:
         #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
     }
 
-    void Transform(Bundle::Matrices& matrices, const Gs::Vector3f& pos, float angle)
+    void Transform(Bundle::Matrices& matrices, const Gs::Vector3f& pos, const Gs::Vector3f& axis, float angle)
     {
         matrices.wMatrix.LoadIdentity();
         Gs::Translate(matrices.wMatrix, pos);
-        Gs::RotateFree(matrices.wMatrix, Gs::Vector3f(1, 1, 1).Normalized(), angle);
+        Gs::RotateFree(matrices.wMatrix, axis.Normalized(), angle);
         matrices.wvpMatrix = projection * matrices.wMatrix;
     }
 
@@ -339,8 +343,8 @@ private:
         rotation += 0.01f;
 
         // Update scene matrices
-        Transform(bundle[0].matrices, { -1, 0, 8 }, -rotation);
-        Transform(bundle[1].matrices, { +1, 0, 8 }, +rotation);
+        Transform(bundle[0].matrices, { -1, 0, 8 }, { +1, 1, 1 }, -rotation);
+        Transform(bundle[1].matrices, { +1, 0, 8 }, { -1, 1, 1 }, +rotation);
 
         // Update constant buffer
         for (auto& bdl : bundle)
@@ -358,7 +362,7 @@ private:
     {
         // Submit primary command buffer and present result
         measure.Start();
-        commandQueue->Submit(*primaryCmdBuffer);
+        commandQueue->Submit(*primaryCmdBuffer[swapChain->GetCurrentSwapIndex()]);
         measure.Stop();
         swapChain->Present();
     }
@@ -366,7 +370,8 @@ private:
     void OnResize(const LLGL::Extent2D& /*resoluion*/) override
     {
         // Encode primary command buffer again to update resolution in constant buffer
-        EncodePrimaryCommandBuffer("");
+        for_range(i, swapChain->GetNumSwapBuffers())
+            EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i);
     }
 
     void OnDrawFrame() override
