@@ -60,6 +60,11 @@ std::uint32_t DbgSwapChain::GetCurrentSwapIndex() const
     return instance.GetCurrentSwapIndex();
 }
 
+std::uint32_t DbgSwapChain::GetNumSwapBuffers() const
+{
+    return instance.GetNumSwapBuffers();
+}
+
 std::uint32_t DbgSwapChain::GetSamples() const
 {
     return instance.GetSamples();

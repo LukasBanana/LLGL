@@ -155,6 +155,11 @@ std::uint32_t VKSwapChain::GetCurrentSwapIndex() const
     return currentColorBuffer_;
 }
 
+std::uint32_t VKSwapChain::GetNumSwapBuffers() const
+{
+    return numColorBuffers_;
+}
+
 std::uint32_t VKSwapChain::GetSamples() const
 {
     return swapChainSamples_;

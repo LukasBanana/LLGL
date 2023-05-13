@@ -62,6 +62,11 @@ std::uint32_t NullSwapChain::GetCurrentSwapIndex() const
     return 0; // dummy
 }
 
+std::uint32_t NullSwapChain::GetNumSwapBuffers() const
+{
+    return 1; // dummy
+}
+
 std::uint32_t NullSwapChain::GetSamples() const
 {
     return samples_;

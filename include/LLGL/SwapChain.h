@@ -84,14 +84,32 @@ class LLGL_EXPORT SwapChain : public RenderTarget
 
         /**
         \brief Returns the current swap-buffer index.
+
         \remarks If the renderer supports control over swap-chain sizes, this function returns the current swap-buffer index. Otherwise, this function always returns 0.
         \remarks This function is guaranteed to never return a value greater than or equal to the swap-chain size that was specified when this swap-chain was created.
         \remarks Can be used to encode a command buffer for a specific swap-buffer.
-        \return \f$i \in \left[ 0, \texttt{SwapChainDescriptor::swapBuffers} \right)\f$
-        \see SwapChainDescriptor::swapBuffers
+
+        \return \f$i \in \left[ 0, \texttt{GetNumSwapBuffers()} \right)\f$
+
+        \see GetNumSwapBuffers
         \see CommandBuffer::BeginRenderPass
         */
         virtual std::uint32_t GetCurrentSwapIndex() const = 0;
+
+        /**
+        \brief Returns the actual number of swap-buffers in this swap-chain.
+
+        \remarks This value is either 1 if the renderer does not support swap-chain size control
+        or a value derived from SwapChainDescriptor::swapBuffers this swap-chain was created with.
+        It is not guaranteed to be equal SwapChainDescriptor::swapBuffers even if the renderer supports swap-chain size control,
+        because there are different limitations of how many swap buffers can be created.
+
+        \return A value in the range \f$\left[ 1, \infty+ \right)\f$ but \e usually in the range \f$ \left[1, 3\right]\f$.
+
+        \see GetCurrentSwapIndex
+        \see SwapChainDescriptor::swapBuffers
+        */
+        virtual std::uint32_t GetNumSwapBuffers() const = 0;
 
         /**
         \brief Returns the color format of this swap-chain.

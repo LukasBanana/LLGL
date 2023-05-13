@@ -72,6 +72,11 @@ std::uint32_t D3D11SwapChain::GetCurrentSwapIndex() const
     return 0; // dummy
 }
 
+std::uint32_t D3D11SwapChain::GetNumSwapBuffers() const
+{
+    return 1; // dummy
+}
+
 std::uint32_t D3D11SwapChain::GetSamples() const
 {
     return swapChainSampleDesc_.Count;

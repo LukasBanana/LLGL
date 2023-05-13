@@ -78,6 +78,11 @@ std::uint32_t MTSwapChain::GetCurrentSwapIndex() const
     return 0; // dummy
 }
 
+std::uint32_t MTSwapChain::GetNumSwapBuffers() const
+{
+    return 1; // dummy
+}
+
 std::uint32_t MTSwapChain::GetSamples() const
 {
     return static_cast<std::uint32_t>(renderPass_.GetSampleCount());

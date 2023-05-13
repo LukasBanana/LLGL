@@ -62,6 +62,11 @@ std::uint32_t GLSwapChain::GetCurrentSwapIndex() const
     return 0; // dummy
 }
 
+std::uint32_t GLSwapChain::GetNumSwapBuffers() const
+{
+    return 1; // dummy
+}
+
 std::uint32_t GLSwapChain::GetSamples() const
 {
     return static_cast<std::uint32_t>(context_->GetSamples());

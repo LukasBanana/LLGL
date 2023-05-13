@@ -11,8 +11,10 @@
 DEF_TEST( CommandBufferSubmit )
 {
     // Create multi-submit command buffers
-    constexpr unsigned numCmdBuffers = 2;
-    static CommandBuffer* multiSubmitCmdBuffers[numCmdBuffers] = {};
+    constexpr unsigned maxNumCmdBuffers = 2;
+    static CommandBuffer* multiSubmitCmdBuffers[maxNumCmdBuffers] = {};
+
+    const unsigned numCmdBuffers = swapChain->GetNumSwapBuffers();
 
     if (frame == 0)
     {
@@ -26,13 +28,13 @@ DEF_TEST( CommandBufferSubmit )
         CommandBufferDescriptor cmdBufferDesc;
         cmdBufferDesc.flags = CommandBufferFlags::MultiSubmit;
 
-        for_range(swapBufferIndex, numCmdBuffers)
+        for_range(swapBufferIndex, maxNumCmdBuffers)
         {
             auto* cmdBuf = renderer->CreateCommandBuffer(cmdBufferDesc);
 
             cmdBuf->Begin();
             {
-                cmdBuf->BeginRenderPass(*swapChain, nullptr, 0, nullptr, swapBufferIndex);
+                cmdBuf->BeginRenderPass(*swapChain, nullptr, 0, nullptr, swapBufferIndex % numCmdBuffers);
                 cmdBuf->Clear(ClearFlags::Color, clearValues[swapBufferIndex % numClearValues]);
                 cmdBuf->EndRenderPass();
             }
@@ -45,8 +47,15 @@ DEF_TEST( CommandBufferSubmit )
     constexpr unsigned numSubmissions = 16;
     if (frame < numSubmissions)
     {
+        // Select the correct command buffer for the current swap-chain index
+        unsigned swapBufferIndex = (numCmdBuffers == 1 ? frame % maxNumCmdBuffers : swapChain->GetCurrentSwapIndex());
+        if (swapBufferIndex >= maxNumCmdBuffers)
+        {
+            Log::Errorf("Not enough command buffers (%u) for swap-chain size (%u)\n", maxNumCmdBuffers, numCmdBuffers);
+            return TestResult::FailedErrors;
+        }
+
         // Submit command buffers several times
-        unsigned swapBufferIndex = std::min(swapChain->GetCurrentSwapIndex(), numCmdBuffers - 1);
         cmdQueue->Submit(*multiSubmitCmdBuffers[swapBufferIndex]);
 
         // Read swap chain color

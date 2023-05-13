@@ -38,6 +38,7 @@ class D3D11SwapChain final : public SwapChain
         void Present() override;
 
         std::uint32_t GetCurrentSwapIndex() const override;
+        std::uint32_t GetNumSwapBuffers() const override;
         std::uint32_t GetSamples() const override;
 
         Format GetColorFormat() const override;

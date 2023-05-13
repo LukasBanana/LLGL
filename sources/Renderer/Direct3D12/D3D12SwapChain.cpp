@@ -92,6 +92,11 @@ std::uint32_t D3D12SwapChain::GetCurrentSwapIndex() const
     return currentColorBuffer_;
 }
 
+std::uint32_t D3D12SwapChain::GetNumSwapBuffers() const
+{
+    return numColorBuffers_;
+}
+
 std::uint32_t D3D12SwapChain::GetSamples() const
 {
     return sampleDesc_.Count;
