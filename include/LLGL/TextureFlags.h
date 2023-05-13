@@ -322,7 +322,8 @@ struct TextureDescriptor
     \brief Number of MIP-map levels. By default 0.
     \remarks If this is 0, the number of MIP-map levels will be determined automatically by the texture type and extent for a full MIP-chain.
     \remarks If this is 1, no MIP-mapping is used for this texture and it has only a single MIP-map level.
-    \remarks For multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray), this value must be either 0 or 1.
+    \remarks For multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray), this value must be either 0 or 1,
+    whereas 0 specifies a full MIP-chain which implies 1 for multi-sampled textures.
     \see NumMipLevels
     \see CommandBuffer::GenerateMips
     */
@@ -452,7 +453,7 @@ struct SubresourceFootprint
 \param[in] height Specifies the texture height or number of layers for 1D array textures. By default 1 (if 1D textures are used).
 \param[in] depth Specifies the texture depth or number of layers for 2D array textures. By default 1 (if 1D or 2D textures are used).
 \remarks The height and depth are optional parameters, so this function can be easily used for 1D, 2D, and 3D textures.
-\return \f$\left\lfloor 1 + log_2\left(\max\left\{ \text{width}, \text{height}, \text{depth} \right\} \right) \right\rfloor\f$
+\return \f$\left\lfloor 1 + log_2\left(\max\left\{ \texttt{width}, \texttt{height}, \texttt{depth} \right\} \right) \right\rfloor\f$
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
 

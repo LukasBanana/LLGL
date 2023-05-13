@@ -85,7 +85,6 @@ class LLGL_EXPORT Texture : public Resource
         \remarks For a 1D array texture, the number of array layers is stored in the height extent.
         \remarks For a 2D and cube array texture, the number of array layers is stored in the depth extent.
         \remarks For cube textures and cube array textures (i.e. texture type TextureType::TextureCube and TextureType::TextureCubeArray), the depth extent will be a multiple of 6.
-        This is in contrast to the other handling of cube array layers, because this function determines the actual buffer extent of the hardware texture.
         \see TextureDescriptor::mipLevels
         \see CommandBuffer::GenerateMips
         \see NumMipDimensions
@@ -94,8 +93,8 @@ class LLGL_EXPORT Texture : public Resource
         virtual Extent3D GetMipExtent(std::uint32_t mipLevel) const = 0;
 
         /**
-        \brief Returns the memory footprint of the specified MIP-map subresource and optional extent.
-        \param[in] mipLevel Specifies the MIP-map leve to query from. The first and largest MIP-map is level zero.
+        \brief Returns the memory footprint of the specified MIP-map subresource.
+        \param[in] mipLevel Specifies the MIP-map level to query from. The first and largest MIP-map level is zero.
         \return Memory footprint of the specified subresource. If this operation failed, all fields in the returned structure are default initialized.
         \see GetMipExtent
         */

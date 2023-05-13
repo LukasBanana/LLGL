@@ -81,12 +81,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Updates the data of the specified buffer during encoding the command buffer.
+
         \param[in] dstBuffer Specifies the destination buffer whose data is to be updated.
+
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the buffer is to be updated.
         This offset plus the data block size (i.e. <code>dstOffset + dataSize</code>) must be less than or equal to the size of the buffer.
+
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This <b>must not</b> be null!
+
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
+
         \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
         For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
@@ -100,13 +105,19 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Encodes a buffer copy command for the specified buffer region.
+
         \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
+
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
         This offset plus the size (i.e. <code>dstOffset + size</code>) must be less than or equal to the size of the destination buffer.
+
         \param[in] srcBuffer Specifies the source buffer whose data is to be read from.
+
         \param[in] srcOffset Specifies the source offset (in bytes) at which the source buffer is to be read from.
         This offset plus the size (i.e. <code>srcOffset + size</code>) must be less than or equal to the size of the source buffer.
+
         \param[in] size Specifies the size of the buffer region to copy.
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         */
@@ -120,27 +131,38 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Encodes a buffer copy command that blits data from a source texture.
+
         \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
         This buffer must have been created with the binding flag BindFlags::CopyDst.
+
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the source buffer is to be updated. This \b must be a multiple of 4.
+
         \param[in] srcTexture Specifies the source texture whose data is to be read from.
         This texture must have been created with the binding flag BindFlags::CopySrc and
         its format <b>must not</b> be compressed (see FormatFlags::IsCompressed) or packed (see FormatFlags::IsPacked).
+
         \param[in] srcRegion Specifies the source region where the texture is to be read from.
         Note that the \c numMipLevels attribute of this parameter \b must be 1.
+
         \param[in] rowStride Specifies an optional stride (in bytes) per row in the destination buffer. By default 0.
+
         \param[in] layerStride Specifies an optional stride (in bytes) per layer in the destination buffer.
         This \b must be a multiple of \c rowStride. If \c rowStride is zero, then \c layerStride must also be zero. By default 0.
+
         \remarks This is called "copy buffer from texture" instead of "copy texture to buffer"
         to be uniform with the notation <code>buffer := texture</code>, or <code>memcpy(destination, source, size)</code>.
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
+
         \remarks Further performance penalties can be introduced if \c rowStride is not aligned to the respective rendering API restrictions:
         - Direct3D 12: \c rowStride \b should be a multiple of 256.
         - Metal: \c rowStride \b should be less than or equal to 32767 multiplied by the source texture's format size.
+
         \remarks If \c rowStride is 0, the source data is considered to be tightly packed for each array layer and the required alignment is managed automatically.
         \remarks If \c rowStride is not 0, it \b must be greater than or equal to the size (in bytes) of each row in the texture region with respect to the texture's format.
         \remarks The same rules of \c rowStride also apply to \c layerStride.
+
         \see CopyTextureFromBuffer
         \see GetMemoryFootprint
         \see Texture::GetSubresourceFootprint
@@ -156,13 +178,18 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Fills the destination buffer with copies of the specified 32-bit value.
+
         \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
         This command works with all kinds of buffers, but for performance reasons it is recommended to create this buffer with the binding flag BindFlags::Storage.
         Otherwise, an intermediate buffer might be created and copied by LLGL.
+
         \param[in] dstOffset Specifies the destination offset (in bytes) at which the destination buffer is to be updated.
+
         \param[in] value Specifies the 32-bit value to fill the buffer with.
+
         \param[in] fillSize Specifies the fill size (in bytes) of the buffer region. This \b must be a multiple of 4. By default Constants::wholeSize.
         If this is equal to \c Constants::wholeSize, \c dstOffset is ignored and the entire buffer will be filled.
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         */
@@ -175,15 +202,21 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Encodes a texture copy command for the specified texture regions.
+
         \param[in,out] dstTexture Specifies the destination texture whose data is to be updated.
+
         \param[in] dstLocation Specifies the destination location, including MIP-map level and offset.
         Its offset plus the extent (i.e. <code>dstLocation.offset + extent</code>) must be less than or equal to the size of the destination texture.
+
         \param[in] srcTexture Specifies the source texture whose data is to be read from.
+
         \param[in] srcLocation Specifies the source location, including MIP-map level and offset.
         Its offset plus the extent (i.e. <code>srcLocation.offset + extent</code>) must be less than or equal to the size of the source texture.
+
         \param[in] extent Specifies the extent of the texture region to copy (see TextureDescriptor::extent).
         For this function, the extent also includes the array layers, i.e. \c y component for 1D arrays (TextureType::Texture1DArray),
         and \c z component for 2D and cube arrays (TextureType::Texture2DArray and TextureType::TextureCubeArray).
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         */
@@ -197,27 +230,38 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Encodes a texture copy command that blits data from a source buffer.
+
         \param[in,out] dstTexture Specifies the destination texture whose data is to be updated.
         This texture must have been created with the binding flag BindFlags::CopyDst and
         its format <b>must not</b> be compressed (see FormatFlags::IsCompressed) or packed (see FormatFlags::IsPacked).
+
         \param[in] dstRegion Specifies the destination region where the texture is to be updated.
         Note that the \c numMipLevels attribute of this parameter \b must be 1.
+
         \param[in] srcBuffer Specifies the source buffer whose data is to be read from.
         This buffer must have been created with the binding flag BindFlags::CopySrc.
+
         \param[in] srcOffset Specifies the source offset (in bytes) at which the source buffer is to be read from. This \b must be a multiple of 4.
+
         \param[in] rowStride Specifies an optional stride (in bytes) per row in the source buffer. By default 0.
+
         \param[in] layerStride Specifies an optional stride (in bytes) per layer in the source buffer.
         This \b must be a multiple of \c rowStride. If \c rowStride is zero, then \c layerStride must also be zero. By default 0.
+
         \remarks This is called "copy texture from buffer" instead of "copy buffer to texture"
         to be uniform with the notation <code>texture := buffer</code>, or <code>memcpy(destination, source, size)</code>.
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
+
         \remarks Further performance penalties can be introduced if \c rowStride is not aligned to the respective rendering API restrictions:
         - Direct3D 12: \c rowStride \b should be a multiple of 256.
         - Metal: \c rowStride \b should be less than or equal to 32767 multiplied by the destination texture's format size.
+
         \remarks If \c rowStride is 0, the source data is considered to be tightly packed for each array layer and the required alignment is managed automatically.
         \remarks If \c rowStride is not 0, it \b must be greater than or equal to the size (in bytes) of each row in the texture region with respect to the texture's format.
         \remarks The same rules of \c rowStride also apply to \c layerStride.
+
         \see CopyBufferFromTexture
         \see GetMemoryFootprint
         \see Texture::GetSubresourceFootprint
@@ -233,25 +277,33 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Generates all MIP-maps for the specified texture.
+
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         This texture must have been created with the binding flags BindFlags::Sampled and BindFlags::ColorAttachment.
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
+
         \see GenerateMips(Texture&, const TextureSubresource&)
         */
         virtual void GenerateMips(Texture& texture) = 0;
 
         /**
         \brief Generates a range of MIP-maps for the specified texture.
+
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         This texture must have been created with the binding flags BindFlags::Sampled and BindFlags::ColorAttachment.
+
         \param[in] subresource Specifies the texture subresource, i.e. the range of MIP-maps that are to be updated.
+
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
+
         \remarks This function guarantees to generate only the MIP-maps in the specified range (specified by \c subresource).
         However, this function \e may introduce a performance penalty compared to generating the full MIP chain if texture views are not natively supported by the backend.
         It is therefore recommended to use this function only if the range of MIP-maps is significantly smaller than the entire MIP chain,
         e.g. only a single slice of a large 2D array texture, and use the primary \c GenerateMips function otherwise.
+
         \see GenerateMips(Texture&)
         \see RenderingFeatures::hasTextureViews
         */
@@ -371,17 +423,24 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Resets the binding slots for the specified resources.
-        \remarks This should be called when a resource is currently bound as shader output and will be bound as shader input for the next draw or compute commands.
+
         \param[in] resourceType Specifies the type of resources to unbind.
+
         \param[in] firstSlot Specifies the first binding slot beginning with zero.
         This must be zero for the following resource types: ResourceType::IndexBuffer, ResourceType::StreamOutputBuffer.
+
         \param[in] numSlots Specifies the number of binding slots to reset. If this is zero, the function has no effect.
+
         \param[in] bindFlags Specifies which kind of binding slots to reset.
         This can be a bitwise OR combinations of the BindFlags entries.
         To reset a vertex buffer slot for instance, it must contain the BindFlags::VertexBuffer flag.
+
         \param[in] stageFlags Specifies which shader stages are affected.
         This can be a bitwise OR combination of the StageFlags entries. By default StageFlags::AllStages.
+
+        \remarks This should be called when a resource is currently bound as shader output and will be bound as shader input for the next draw or compute commands.
         \remarks If direct resource binding is not supported by the render system, this function has no effect.
+
         \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see BindFlags
         \see StageFlags
@@ -398,22 +457,29 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Begins with a new render pass.
+
         \param[in] renderTarget Specifies the render target in which the subsequent draw operations will be stored.
-        If this is a swap-chain and SwapChain::Present is called on such swap-chain, this encoded command is invalidated.
-        Therefore, a command buffer that renders directly into a swap-chain must be recorded again after the back buffer of such a swap-chain has been flipped with the front-buffer.
+        If this is a swap-chain and SwapChain::Present is called on such swap-chain before this command buffer is submitted to the command queue,
+        use \c swapBufferIndex parameter to render into a specific swap buffer and then select the correct command buffer
+        via SwapChain::GetCurrentSwapIndex when submitting to the command queue.
+
         \param[in] renderPass Specifies an optional render pass object. If this is null, the default render pass for the specified render target will be used.
         This render pass object must be compatible with the render pass object the specified render target was created with.
+
         \param[in] numClearValues Specifies the number of clear values that are specified in the \c clearValues parameter.
         This \em should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
         Otherwise, the following default values are used: (0, 0, 0, 0) for color, 1 for depth, 0 for stencil.
+
         \param[in] clearValues Optional pointer to the array of clear values.
         If \c numClearValues is not zero, this must be a valid pointer to an array of at least \c numClearValues entries.
         Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
         where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) and
         the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
+
         \param[in] swapBufferIndex Optional index into what swap-chain buffer the render pass is meant to be rendered.
         If this is Constants::currentSwapIndex, the current buffer in the swap-chain is used. Otherwise, this should be the current value returned by SwapChain::GetCurrentSwapIndex.
         This parameter is ignored for regular render targets, i.e. if \c renderTarget is \e not a SwapChain.
+
         \remarks This function starts a new render pass section and must be ended with the \c EndRenderPass function.
         \remarks The following example shows how to use a render pass to clear a render target with two color attachments and a depth-stencil attachment:
         \code
@@ -434,6 +500,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         }
         myCmdBuffer->EndRenderPass();
         \endcode
+
         \remarks
         The following commands \b must only be used \b inside a render pass section:
         - Drawing commands (i.e. \c Draw, \c DrawInstanced, \c DrawIndexed, \c DrawIndexedInstanced, \c DrawIndirect and \c DrawIndexedIndirect).
@@ -441,14 +508,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         - Query block (i.e. \c BeginQuery and \c EndQuery).
         - Conditional render block (i.e. \c BeginRenderCondition and \c EndRenderCondition).
         - Stream-output block (i.e. \c BeginStreamOutput and \c EndStreamOutput).
+
         \remarks
         The following commands \b must only be used \b outside a render pass section:
         - Dispatch compute commands (i.e. \c Dispatch and \c DispatchIndirect).
+
         \remarks
         The following commands \em can be used both inside and outside a render pass section but are \em recommended
         to be used only \b outside a render pass section to avoid potential performace penalties:
         - Copy commands (i.e. \c UpdateBuffer, \c CopyBuffer, and \c CopyTexture).
         - MIP-map generation commands (i.e. \c GenerateMips).
+
         \see RenderSystem::CreateRenderPass
         \see RenderSystem::CreateRenderTarget
         \see RenderTargetDescriptor::renderPass
@@ -472,16 +542,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Clears the specified group of attachments of the active render target.
+
         \param[in] flags Specifies the clear buffer flags.
         This can be a bitwise OR combination of the ClearFlags enumeration entries.
         If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color specified by \c clearValue.
+
         \param[in] clearValue Specifies the value to which the attachments will be cleared.
+
         \remarks To specify the clear values for each buffer type, use the respective <code>SetClear...</code> function.
         To clear only a specific render-target color buffer, use the \c ClearAttachments function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
         For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
         i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
         For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
+
         \see ClearFlags
         \see ClearAttachments
         \see BeginRenderPass
@@ -490,13 +564,17 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Clears the specified attachments of the active render target.
+
         \param[in] numAttachments Specifies the number of attachments to clear.
+
         \param[in] attachments Pointer to the array of attachment clear commands. This <b>must not</b> be null!
+
         \remarks To clear all color buffers with the same value, use the \c Clear function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
         For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
         i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
         For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
+
         \see Clear
         \see BeginRenderPass
         */
@@ -506,10 +584,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the active graphics or compute pipeline state.
+
         \param[in] pipelineState Specifies the pipeline state which is to be bound for subsequent draw or compute commands.
+
         \remarks A <b>graphics pipeline state</b> will set all blending-, rasterizer-, depth-, stencil-, and shader states.
         A valid graphics pipeline state must always be set before any drawing operation can be performed,
         and a graphics pipeline state \b can be set \b inside and \b outside a render pass section.
+
         \remarks A <b>compute pipeline state</b> will set shader states for dispatch compute commands.
         A valid compute pipeline state must always be set before any dispatch compute operation cam ne performed,
         and a compute pipeline state \b must be set \b outside a render pass section.
@@ -527,6 +608,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         }
         myCmdBuffer->EndRenderPass();
         \endcode
+
         \see RenderSystem::CreatePipelineState
         */
         virtual void SetPipelineState(PipelineState& pipelineState) = 0;
@@ -554,14 +636,19 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the value of a certain number of shader uniforms (aka. push constant/ shader constants) in the currently bound PSO.
+
         \param[in] first Specifies the zero-based index of the first uniform that are to be updated.
         This \b must be in the half-open range <code>[0, PipelineLayout::GetNumUniforms)</code>.
         The number of uniforms that are to be updated is determined by the size of the data. See \c dataSize parameter for more details.
+
         \param[in] data Raw pointer to the data that is to be copied to the uniform.
+
         \param[in] dataSize Specifies the size (in bytes) of the input buffer \c data.
         This \b must be a multiple of 4 since 32-bits are the smallest granularity to update shader uniforms.
         This parameter also determines the number of uniforms that are to be updated.
+
         \remarks This function must only be called after a pipeline state object (PSO) has been bound.
+
         \see PipelineLayoutDescriptor::uniforms
         \see SetPipelineState
         */
@@ -571,12 +658,16 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Begins a query of the specified query heap.
+
         \param[in] queryHeap Specifies the query heap.
+
         \param[in] query Specifies the zero-based index of the query within the heap to begin with. By default 0.
         This must be in the half-open range [0, QueryHeapDescriptor::numQueries).
+
         \remarks The \c BeginQuery and \c EndQuery functions can be wrapped around any drawing and/or compute operation.
         This can be an occlusion query for instance, which determines how many fragments have passed the depth test.
         The result of a query can be retrieved by the command queue after this command buffer has been submitted.
+
         \see EndQuery
         \see RenderSystem::CreateQueryHeap
         \see CommandQueue::QueryResult
@@ -591,11 +682,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Begins conditional rendering with the specified query object.
+
         \param[in] queryHeap Specifies the query heap.
         This query heap must have been created with the \c renderCondition member set to \c true.
+
         \param[in] query Specifies the zero-based index of the query within the heap which is to be used as render condition. By default 0.
         This must be in the half-open range <code>[0, QueryHeapDescriptor::numQueries)</code>.
+
         \param[in] mode Specifies the mode of the render condition.
+
         \remarks Here is a usage example:
         \code
         myCmdBuffer->BeginQuery(*myOcclusionQuery);
@@ -605,6 +700,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         // draw actual object ...
         myCmdBuffer->EndRenderCondition();
         \endcode
+
         \see RenderSystem::CreateQueryHeap
         \see QueryHeapDescriptor::renderCondition
         */
@@ -620,10 +716,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Begins a stream-output section for subsequent draw calls.
+
         \param[in] numBuffers Specifies the number of stream-output buffers. This must be in the range <code>[1, RenderingLimits::maxStreamOutputs]</code>.
+
         \param[in] buffers Array to the stream-output buffers. This must be a valid pointer to an array of \c numBuffers buffer objects.
         Each of these buffers must have been created with the binding flag BindFlags::StreamOutputBuffer.
+
         \remarks This must only be called if a graphics pipeline is currently bound.
+
         \see EndStreamOutput
         \see SetGraphicsPipeline
         \see RenderingFeatures::hasStreamOutputs
@@ -668,16 +768,19 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex buffer.
+
         \param[in] numVertices Specifies the number of vertices to generate.
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
         \param[in] numInstances Specifies the number of instances to generate.
         \param[in] firstInstance Specifies the zero-based offset of the first instance.
+
         \note The parameter \c firstVertex modifies the vertex ID within the shader pipeline differently for \c SV_VertexID
         in HLSL and \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan), due to rendering API differences.
         The system value \c SV_VertexID in HLSL will always start with zero,
         but the system value \c gl_VertexID in GLSL (or \c gl_VertexIndex for Vulkan)
         will start with the value of \c firstVertex.
         The same holds true for the parameter \c firstInstance and the system values \c SV_InstanceID in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan).
+
         \see RenderingFeatures::hasInstancing
         \see RenderingFeatures::hasOffsetInstancing
         */
@@ -691,17 +794,21 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex- and index buffers.
+
         \param[in] numIndices Specifies the number of indices to generate.
         \param[in] numInstances Specifies the number of instances to generate.
         \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
         \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
         \param[in] firstInstance Specifies the zero-based offset of the first instance.
+
         \note The parameter \c firstInstance modifies the instance ID within the shader pipeline differently for \c SV_InstanceID
         in HLSL and \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan), due to rendering API differences.
         The system value \c SV_InstanceID in HLSL will always start with zero,
         but the system value \c gl_InstanceID in GLSL (or \c gl_InstanceIndex for Vulkan)
         will start with the value of \c firstInstance.
+
         \note For the Metal renderer, the parameter \c vertexOffset is ignored when tessellation is enabled.
+
         \see RenderingFeatures::hasInstancing
         \see RenderingFeatures::hasOffsetInstancing
         */
@@ -718,11 +825,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws an unknown amount of instances of primitives whose draw command arguments are taken from a buffer object.
+
         \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BindFlags::IndirectBuffer binding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
         \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments,
         which is commonly greater than or euqal to <code>sizeof(DrawIndirectArguments)</code>. This stride must be a multiple of 4.
+
         \remarks This is also known as a "multi draw command" which is only natively supported by OpenGL and Vulkan.
         For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop, which is equivalent to the following example:
         \code
@@ -732,6 +841,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             offset += stride;
         }
         \endcode
+
         \see DrawIndirectArguments
         \see RenderingFeatures::hasIndirectDrawing
         */
@@ -747,11 +857,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Draws an unknown amount of instances of primitives whose indexed draw command arguments are taken from a buffer object.
+
         \param[in] buffer Specifies the buffer from which the draw command arguments are taken. This buffer must have been created with the BindFlags::IndirectBuffer binding flag.
         \param[in] offset Specifies an offset within the argument buffer from which the arguments are to be taken. This offset must be a multiple of 4.
         \param[in] numCommands Specifies the number of draw commands that are to be taken from the argument buffer.
         \param[in] stride Specifies the stride (in bytes) betweeen consecutive sets of arguments,
         which is commonly greater than or euqal to <code>sizeof(DrawIndexedIndirectArguments)</code>. This stride must be a multiple of 4.
+
         \remarks This is also known as a "multi draw command" which is only natively supported by OpenGL and Vulkan.
         For other rendering APIs, the recording of multiple draw commands is emulated with a simple loop, which is equivalent to the following example:
         \code
@@ -761,6 +873,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             offset += stride;
         }
         \endcode
+
         \see DrawIndexedIndirectArguments
         */
         virtual void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
@@ -789,7 +902,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Pushes the specified name onto a stack of group strings that is used for debug reports.
+
         \param[in] name Pointer to a null terminated string that specifies the name. This <b>must not</b> be null!
+
         \remarks
         Here is a usage example:
         \code
@@ -805,7 +920,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         myCmdBuffer->EndRenderPass();
         myCmdBuffer->PopDebugGroup();
         \endcode
+
         \note Only supported in debug mode or when the debug layer is enabled. Otherwise, the function has no effect.
+
         \see PopDebugGroup
         \see RenderSystemChild::SetName
         */
@@ -818,9 +935,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets a few low-level graphics API dependent states.
+
         \param[in] stateDesc Specifies a pointer to the renderer spcific state descriptor. If this is a null pointer, the function has no effect.
         \param[in] stateDescSize Specifies the size (in bytes) of the renderer spcific state descriptor structure.
         If this value is not equal to the state descriptor structure that is required for the respective renderer, the function has no effect.
+
         \remarks This can be used to work around several differences between the low-level graphics APIs, e.g. for internal buffer binding slots.
         Here is a usage example:
         \code
@@ -828,9 +947,11 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         myMetalStateDesc.tessFactorBufferSlot = 1;
         myCmdBuffer->SetGraphicsAPIDependentState(&myMetalStateDesc, sizeof(myMetalStateDesc));
         \endcode
+
         \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
+
         \see MetalDependentStateDescriptor
-        \todo Rename to SetAPIDependentState
+        \todo Replace by GetNativeHandle function
         */
         virtual void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) = 0;
 
