@@ -29,7 +29,7 @@ void VKRenderBuffer::Create(
     const Extent2D&         extent,
     VkFormat                format,
     VkImageAspectFlags      aspectFlags,
-    VkSampleCountFlagBits   samplesCountBits,
+    VkSampleCountFlagBits   sampleCountBits,
     VkImageUsageFlags       usageFlags)
 {
     if (format == VK_FORMAT_UNDEFINED)
@@ -43,15 +43,15 @@ void VKRenderBuffer::Create(
 
     /* Create depth-stencil image */
     CreateVkImage(
-        deviceMemoryMngr.GetVkDevice(),
-        VK_IMAGE_TYPE_2D,
-        format,
-        VkExtent3D{ extent.width, extent.height, 1 },
-        1, // MIP levels
-        1, // array layers
-        0, // create flags
-        samplesCountBits,
-        usageFlags
+        /*device:*/             deviceMemoryMngr.GetVkDevice(),
+        /*imageType:*/          VK_IMAGE_TYPE_2D,
+        /*format:*/             format,
+        /*extent:*/             VkExtent3D{ extent.width, extent.height, 1 },
+        /*numMipLevels:*/       1,
+        /*numArrayLayers:*/     1,
+        /*createFlags:*/        0,
+        /*sampleCountBits:*/    sampleCountBits,
+        /*usageFlags:*/         usageFlags
     );
 
     /* Allocate device memory region */

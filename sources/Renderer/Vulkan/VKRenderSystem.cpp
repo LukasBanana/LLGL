@@ -303,68 +303,71 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         initialData = intermediateData.get();
     }
 
-    /* Create staging buffer */
-    VkBufferCreateInfo stagingCreateInfo;
-    BuildVkBufferCreateInfo(
-        stagingCreateInfo,
-        initialDataSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-    );
-
-    auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize);
-
     /* Create device texture */
-    auto* textureVK  = textures_.emplace<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
+    auto* textureVK = textures_.emplace<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
 
-    /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
-    auto cmdBuffer = device_.AllocCommandBuffer();
+    if (initialData != nullptr)
     {
-        const TextureSubresource subresource{ 0, textureVK->GetNumArrayLayers(), 0, textureVK->GetNumMipLevels() };
-
-        device_.TransitionImageLayout(
-            cmdBuffer,
-            textureVK->GetVkImage(),
-            textureVK->GetVkFormat(),
-            VK_IMAGE_LAYOUT_UNDEFINED,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            subresource
+        /* Create staging buffer */
+        VkBufferCreateInfo stagingCreateInfo;
+        BuildVkBufferCreateInfo(
+            stagingCreateInfo,
+            initialDataSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT
         );
 
-        device_.CopyBufferToImage(
-            cmdBuffer,
-            stagingBuffer.GetVkBuffer(),
-            textureVK->GetVkImage(),
-            textureVK->GetVkFormat(),
-            VkOffset3D{ 0, 0, 0 },
-            textureVK->GetVkExtent(),
-            subresource
-        );
+        auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize);
 
-        device_.TransitionImageLayout(
-            cmdBuffer,
-            textureVK->GetVkImage(),
-            textureVK->GetVkFormat(),
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            subresource
-        );
-
-        /* Generate MIP-maps if enabled */
-        if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
+        /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
+        auto cmdBuffer = device_.AllocCommandBuffer();
         {
-            device_.GenerateMips(
+            const TextureSubresource subresource{ 0, textureVK->GetNumArrayLayers(), 0, textureVK->GetNumMipLevels() };
+
+            device_.TransitionImageLayout(
                 cmdBuffer,
                 textureVK->GetVkImage(),
                 textureVK->GetVkFormat(),
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                subresource
+            );
+
+            device_.CopyBufferToImage(
+                cmdBuffer,
+                stagingBuffer.GetVkBuffer(),
+                textureVK->GetVkImage(),
+                textureVK->GetVkFormat(),
+                VkOffset3D{ 0, 0, 0 },
                 textureVK->GetVkExtent(),
                 subresource
             );
-        }
-    }
-    device_.FlushCommandBuffer(cmdBuffer);
 
-    /* Release staging buffer */
-    stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
+            device_.TransitionImageLayout(
+                cmdBuffer,
+                textureVK->GetVkImage(),
+                textureVK->GetVkFormat(),
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                subresource
+            );
+
+            /* Generate MIP-maps if enabled */
+            if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
+            {
+                device_.GenerateMips(
+                    cmdBuffer,
+                    textureVK->GetVkImage(),
+                    textureVK->GetVkFormat(),
+                    textureVK->GetVkExtent(),
+                    subresource
+                );
+            }
+        }
+        device_.FlushCommandBuffer(cmdBuffer);
+
+        /* Release staging buffer */
+        stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
+    }
 
     /* Create image view for texture */
     textureVK->CreateInternalImageView(device_);
@@ -586,7 +589,6 @@ void VKRenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    AssertCreateRenderTarget(renderTargetDesc);
     return renderTargets_.emplace<VKRenderTarget>(device_, *deviceMemoryMngr_, renderTargetDesc);
 }
 

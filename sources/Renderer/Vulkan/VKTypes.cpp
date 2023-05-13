@@ -6,6 +6,7 @@
  */
 
 #include "VKTypes.h"
+#include "../../Core/Assertion.h"
 #include <stdexcept>
 #include <string>
 
@@ -20,9 +21,9 @@ namespace VKTypes
 /* ----- Map functions ----- */
 
 [[noreturn]]
-void MapFailed(const std::string& typeName, const std::string& vknTypeName)
+void MapFailed(const char* typeName, const char* vknTypeName)
 {
-    throw std::invalid_argument("failed to map <LLGL::" + typeName + "> to <" + vknTypeName + "> Vulkan parameter");
+    LLGL_TRAP("failed to map <LLGL::%s> to <%s> Vulkan parameter", typeName, vknTypeName);
 }
 
 VkShaderStageFlagBits Map(const ShaderType shaderType)
@@ -396,10 +397,7 @@ VkSampleCountFlagBits ToVkSampleCountBits(std::uint32_t samples)
         case 64:    return VK_SAMPLE_COUNT_64_BIT;
         default:    break;
     }
-    throw std::invalid_argument(
-        "failed to map multi-sampling of " + std::to_string(samples) +
-        " sample(s) to <VkSampleCountFlagBits> Vulkan parameter"
-    );
+    LLGL_TRAP("failed to map multi-sampling of %u sample(s) to <VkSampleCountFlagBits> Vulkan parameter", samples);
 }
 
 VkOffset3D ToVkOffset(const Offset3D& offset)

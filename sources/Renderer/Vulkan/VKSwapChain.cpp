@@ -11,6 +11,7 @@
 #include "Memory/VKDeviceMemoryManager.h"
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Utils/ForRange.h>
 #include <limits.h>
@@ -98,15 +99,7 @@ VKSwapChain::VKSwapChain(
 void VKSwapChain::Present()
 {
     /* Get image index for next presentation */
-    std::uint32_t imageIndex = 0;
-    vkAcquireNextImageKHR(
-        device_,
-        swapChain_,
-        UINT64_MAX,
-        imageAvailableSemaphore_[currentColorBuffer_],
-        VK_NULL_HANDLE,
-        &imageIndex
-    );
+    const std::uint32_t presentableImageIndex = GetPresentableImageIndex();
 
     /* Initialize semaphores */
     VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_[currentColorBuffer_] };
@@ -140,14 +133,14 @@ void VKSwapChain::Present()
         presentInfo.pWaitSemaphores     = signalSemaphores;
         presentInfo.swapchainCount      = 1;
         presentInfo.pSwapchains         = swapChains;
-        presentInfo.pImageIndices       = &imageIndex;
+        presentInfo.pImageIndices       = &presentableImageIndex;
         presentInfo.pResults            = nullptr;
     }
     result = vkQueuePresentKHR(presentQueue_, &presentInfo);
     VKThrowIfFailed(result, "failed to present Vulkan graphics queue");
 
     /* Move to next frame */
-    currentColorBuffer_ = (currentColorBuffer_ + 1) % numColorBuffers_;
+    currentColorBuffer_ = (presentableImageIndex + 1) % numColorBuffers_;
 }
 
 std::uint32_t VKSwapChain::GetCurrentSwapIndex() const
@@ -398,6 +391,9 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
 
     /* Create swap-chain image views */
     CreateSwapChainImageViews();
+
+    /* Get initial color buffer index for new Vulkan swap-chain */
+    currentColorBuffer_ = GetPresentableImageIndex();
 }
 
 void VKSwapChain::CreateSwapChainImageViews()
@@ -437,23 +433,18 @@ void VKSwapChain::CreateSwapChainImageViews()
 void VKSwapChain::CreateSwapChainFramebuffers()
 {
     /* Initialize image view attachments */
-    VkImageView attachments[maxNumColorBuffers] = {};
+    VkImageView attachments[3] = {};
+    std::uint32_t numAttachments = 0;
 
-    std::uint32_t numAttachments    = 0;
-    std::uint32_t attachmentDSV     = 0;
-    std::uint32_t attachmentColor   = 0;
-    std::uint32_t attachmentColorMS = 0;
-
-    attachmentColor = numAttachments++;
+    const std::uint32_t attachmentColor = numAttachments++;
 
     if (HasDepthStencilBuffer())
     {
-        attachmentDSV = numAttachments++;
+        const std::uint32_t attachmentDSV = numAttachments++;
         attachments[attachmentDSV] = depthStencilBuffer_.GetVkImageView();
     }
 
-    if (HasMultiSampling())
-        attachmentColorMS = numAttachments++;
+    const std::uint32_t attachmentResolve = (HasMultiSampling() ? numAttachments++ : 0);
 
     /* Initialize framebuffer descriptor */
     VkFramebufferCreateInfo createInfo;
@@ -473,10 +464,13 @@ void VKSwapChain::CreateSwapChainFramebuffers()
     for_range(i, numColorBuffers_)
     {
         /* Update image view in Vulkan descriptor */
-        attachments[attachmentColor] = swapChainImageViews_[i];
-
         if (HasMultiSampling())
-            attachments[attachmentColorMS] = colorBuffers_[i].GetVkImageView();
+        {
+            attachments[attachmentColor] = colorBuffers_[i].GetVkImageView();
+            attachments[attachmentResolve] = swapChainImageViews_[i];
+        }
+        else
+            attachments[attachmentColor] = swapChainImageViews_[i];
 
         /* Create framebuffer */
         auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, swapChainFramebuffers_[i].ReleaseAndGetAddressOf());
@@ -524,12 +518,12 @@ void VKSwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
 VkSurfaceFormatKHR VKSwapChain::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const
 {
     if (surfaceFormats.empty())
-        throw std::runtime_error("no Vulkan surface formats available");
+        LLGL_TRAP("no Vulkan surface formats available");
 
     if (surfaceFormats.size() == 1 && surfaceFormats.front().format == VK_FORMAT_UNDEFINED)
         return { VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
-    for (const auto& format : surfaceFormats)
+    for (const VkSurfaceFormatKHR& format : surfaceFormats)
     {
         if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             return format;
@@ -543,7 +537,7 @@ VkPresentModeKHR VKSwapChain::PickSwapPresentMode(const std::vector<VkPresentMod
     if (vsyncInterval == 0)
     {
         /* Check if MAILBOX or IMMEDIATE presentation mode is available, to avoid vertical synchronization */
-        for (const auto& mode : presentModes)
+        for (const VkPresentModeKHR& mode : presentModes)
         {
             if (mode == VK_PRESENT_MODE_MAILBOX_KHR || mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
                 return mode;
@@ -595,6 +589,20 @@ std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
         std::max(surfaceSupportDetails_.caps.minImageCount, 1u),
         std::min(surfaceSupportDetails_.caps.maxImageCount, VKSwapChain::maxNumColorBuffers)
     );
+}
+
+std::uint32_t VKSwapChain::GetPresentableImageIndex() const
+{
+    std::uint32_t presentableImageIndex = 0;
+    vkAcquireNextImageKHR(
+        device_,
+        swapChain_,
+        UINT64_MAX,
+        imageAvailableSemaphore_[currentColorBuffer_],
+        VK_NULL_HANDLE,
+        &presentableImageIndex
+    );
+    return presentableImageIndex;
 }
 
 

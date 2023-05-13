@@ -111,7 +111,7 @@ TextureDescriptor VKTexture::GetDesc() const
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
             texDesc.arrayLayers     = numArrayLayers_;
-            texDesc.samples         = 0; //TODO
+            texDesc.samples         = static_cast<std::uint32_t>(sampleCountBits_);
             texDesc.miscFlags       |= MiscFlags::FixedSamples;
             break;
     }
@@ -133,22 +133,20 @@ SubresourceFootprint VKTexture::GetSubresourceFootprint(std::uint32_t mipLevel) 
 }
 
 void VKTexture::CreateImageView(
-    VkDevice            device,
-    std::uint32_t       baseMipLevel,
-    std::uint32_t       numMipLevels,
-    std::uint32_t       baseArrayLayer,
-    std::uint32_t       numArrayLayers,
-    VKPtr<VkImageView>& outImageView)
+    VkDevice                    device,
+    const TextureSubresource&   subresource,
+    Format                      format,
+    VKPtr<VkImageView>&         outImageView)
 {
     VkImageSubresourceRange subresourceRange;
     {
         subresourceRange.aspectMask     = GetAspectFlags();
-        subresourceRange.baseMipLevel   = baseMipLevel;
-        subresourceRange.levelCount     = numMipLevels;
-        subresourceRange.baseArrayLayer = baseArrayLayer;
-        subresourceRange.layerCount     = numArrayLayers;
+        subresourceRange.baseMipLevel   = subresource.baseMipLevel;
+        subresourceRange.levelCount     = subresource.numMipLevels;
+        subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
+        subresourceRange.layerCount     = subresource.numArrayLayers;
     }
-    image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, outImageView);
+    image_.CreateVkImageView(device, VKTypes::Map(GetType()), VKTypes::Map(format), subresourceRange, outImageView);
 }
 
 void VKTexture::CreateImageView(
@@ -196,7 +194,15 @@ void VKTexture::CreateImageView(
 
 void VKTexture::CreateInternalImageView(VkDevice device)
 {
-    CreateImageView(device, 0, GetNumMipLevels(), 0, GetNumArrayLayers(), imageView_);
+    VkImageSubresourceRange subresourceRange;
+    {
+        subresourceRange.aspectMask     = GetAspectFlags();
+        subresourceRange.baseMipLevel   = 0;
+        subresourceRange.levelCount     = GetNumMipLevels();
+        subresourceRange.baseArrayLayer = 0;
+        subresourceRange.layerCount     = GetNumArrayLayers();
+    }
+    image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, imageView_);
 }
 
 static VkImageAspectFlags GetAspectFlagsByFormat(VkFormat format)
@@ -307,28 +313,23 @@ static std::uint32_t GetVkImageArrayLayers(const TextureDescriptor& desc, const 
     switch (imageType)
     {
         case VK_IMAGE_TYPE_1D:
-            return std::max(1u, desc.arrayLayers);
-
         case VK_IMAGE_TYPE_2D:
-            if (IsCubeTexture(desc.type))
-                return std::max(1u, desc.arrayLayers) * 6;
-            else
-                return std::max(1u, desc.arrayLayers);
+            return std::max(1u, desc.arrayLayers);
 
         default:
             return 1u;
     }
 }
 
+//TODO:
+//returned value must be a bit value from "VkImageFormatProperties::sampleCounts"
+//that was returned by "vkGetPhysicalDeviceImageFormatProperties"
 static VkSampleCountFlagBits GetVkImageSampleCountFlags(const TextureDescriptor& desc)
 {
     if (IsMultiSampleTexture(desc.type))
-    {
-        //TODO:
-        //returned value must be a bit value from "VkImageFormatProperties::sampleCounts"
-        //that was returned by "vkGetPhysicalDeviceImageFormatProperties"
-    }
-    return VK_SAMPLE_COUNT_1_BIT;
+        return VKTypes::ToVkSampleCountBits(desc.samples);
+    else
+        return VK_SAMPLE_COUNT_1_BIT;
 }
 
 static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
@@ -368,11 +369,12 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
 void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
 {
     /* Setup texture parameters */
-    auto imageType  = GetVkImageType(desc.type);
+    VkImageType imageType = GetVkImageType(desc.type);
 
-    extent_         = GetVkImageExtent3D(desc, imageType);
-    numMipLevels_   = NumMipLevels(desc);
-    numArrayLayers_ = GetVkImageArrayLayers(desc, imageType);
+    extent_             = GetVkImageExtent3D(desc, imageType);
+    numMipLevels_       = NumMipLevels(desc);
+    numArrayLayers_     = GetVkImageArrayLayers(desc, imageType);
+    sampleCountBits_    = GetVkImageSampleCountFlags(desc);
 
     /* Create image object */
     image_.CreateVkImage(
@@ -383,7 +385,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
         numMipLevels_,
         numArrayLayers_,
         GetVkImageCreateFlags(desc),
-        GetVkImageSampleCountFlags(desc),
+        sampleCountBits_,
         GetVkImageUsageFlags(desc)
     );
 }

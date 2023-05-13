@@ -46,12 +46,10 @@ class VKTexture final : public Texture
 
         // Creates an additional texture view of the specified texture range and uses the same format as this texture object.
         void CreateImageView(
-            VkDevice            device,
-            std::uint32_t       baseMipLevel,
-            std::uint32_t       numMipLevels,
-            std::uint32_t       baseArrayLayer,
-            std::uint32_t       numArrayLayers,
-            VKPtr<VkImageView>& outImageView
+            VkDevice                    device,
+            const TextureSubresource&   subresource,
+            Format                      format,
+            VKPtr<VkImageView>&         outImageView
         );
 
         // Creates an additional texture view with the specififed view descriptor.
@@ -103,6 +101,12 @@ class VKTexture final : public Texture
             return numArrayLayers_;
         }
 
+        // Returns the sample count as Vulkan bit mask.
+        inline VkSampleCountFlagBits GetSampleCountBits() const
+        {
+            return sampleCountBits_;
+        }
+
         // Returns the region of the hardware device memory.
         inline VKDeviceMemoryRegion* GetMemoryRegion() const
         {
@@ -115,13 +119,14 @@ class VKTexture final : public Texture
 
     private:
 
-        VKDeviceImage       image_;
-        VKPtr<VkImageView>  imageView_;
+        VKDeviceImage           image_;
+        VKPtr<VkImageView>      imageView_;
 
-        VkFormat            format_         = VK_FORMAT_UNDEFINED;
-        VkExtent3D          extent_;
-        std::uint32_t       numMipLevels_   = 0;
-        std::uint32_t       numArrayLayers_ = 0;
+        VkFormat                format_             = VK_FORMAT_UNDEFINED;
+        VkExtent3D              extent_;
+        std::uint32_t           numMipLevels_       = 0;
+        std::uint32_t           numArrayLayers_     = 0;
+        VkSampleCountFlagBits   sampleCountBits_    = VK_SAMPLE_COUNT_1_BIT;
 
 };
 

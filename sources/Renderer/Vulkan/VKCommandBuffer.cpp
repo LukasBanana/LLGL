@@ -540,7 +540,7 @@ void VKCommandBuffer::BeginRenderPass(
 
     scissorRectInvalidated_ = true;
 
-    /* Declare array or clear values */
+    /* Uninitialized stack memory for clear values */
     VkClearValue clearValuesVK[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 1];
     std::uint32_t numClearValuesVK = 0;
 
@@ -1095,27 +1095,23 @@ void VKCommandBuffer::ConvertRenderPassClearValues(
 {
     /* Fill array of clear values */
     dstClearValuesCount     = renderPass.GetNumClearValues();
-    auto clearValuesMask    = renderPass.GetClearValuesMask();
-    auto depthStencilIndex  = renderPass.GetDepthStencilIndex();
-    bool multiSampleEnabled = (renderPass.GetSampleCountBits() > VK_SAMPLE_COUNT_1_BIT);
+
+    std::uint64_t   clearValuesMask     = renderPass.GetClearValuesMask();
+    std::uint8_t    depthStencilIndex   = renderPass.GetDepthStencilIndex();
+    const bool      hasMultiSampling    = (renderPass.GetSampleCountBits() > VK_SAMPLE_COUNT_1_BIT);
 
     const VkClearColorValue         defaultClearColor           = { { 0.0f, 0.0f, 0.0f, 0.0f } };
     const VkClearDepthStencilValue  defaultClearDepthStencil    = { 1.0f, 0 };
 
-    std::uint32_t dstIndex = 0, srcIndex = 0;
+    std::uint32_t srcIndex = 0;
 
-    for (std::uint32_t i = 0; i < dstClearValuesCount; ++i)
+    for_range(i, dstClearValuesCount)
     {
         /* Check if current attachment index requires a clear value */
         if (((clearValuesMask >> i) & 0x1ull) != 0)
         {
             /* Select destination Vulkan clear value */
-            if (i == depthStencilIndex || !multiSampleEnabled)
-                dstIndex = i;
-            else
-                dstIndex = (renderPass.GetNumColorAttachments() + 1u + i);
-
-            auto& dst = dstClearValues[dstIndex];
+            auto& dst = dstClearValues[i];
 
             if (srcIndex < srcClearValuesCount)
             {
@@ -1137,7 +1133,7 @@ void VKCommandBuffer::ConvertRenderPassClearValues(
         }
     }
 
-    if (multiSampleEnabled)
+    if (hasMultiSampling)
         dstClearValuesCount += renderPass.GetNumColorAttachments();
 }
 

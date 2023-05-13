@@ -31,7 +31,7 @@ namespace VKTypes
 /* ----- Map functions ----- */
 
 [[noreturn]]
-void MapFailed(const std::string& typeName, const std::string& vknTypeName);
+void MapFailed(const char* typeName, const char* vknTypeName);
 
 VkShaderStageFlagBits   Map( const ShaderType           shaderType        );
 VkFormat                Map( const Format               format            );

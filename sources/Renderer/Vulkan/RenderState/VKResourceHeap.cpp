@@ -20,6 +20,7 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include <map>
@@ -39,7 +40,7 @@ VKResourceHeap::VKResourceHeap(
     /* Get pipeline layout object */
     auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutVK)
-        throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
+        LLGL_TRAP("failed to create resource view heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
     CopyLayoutBindings(pipelineLayoutVK->GetLayoutHeapBindings());
@@ -123,10 +124,7 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
                 break;
 
             default:
-                throw std::invalid_argument(
-                    "invalid descriptor type in Vulkan descriptor set: " +
-                    IntToHex(static_cast<std::uint32_t>(binding.descriptorType))
-                );
+                LLGL_TRAP("invalid descriptor type in Vulkan descriptor set: %s", IntToHex(static_cast<std::uint32_t>(binding.descriptorType)));
                 break;
         }
 

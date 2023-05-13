@@ -34,7 +34,7 @@ class VKRenderBuffer : private VKDeviceImage
             const Extent2D&         extent,
             VkFormat                format,
             VkImageAspectFlags      aspectFlags,
-            VkSampleCountFlagBits   samplesCountBits,
+            VkSampleCountFlagBits   sampleCountBits,
             VkImageUsageFlags       usageFlags
         );
 

@@ -35,7 +35,10 @@ inline Format GetAttachmentFormat(const AttachmentDescriptor& attachmentDesc)
     return Format::Undefined;
 }
 
-// Returns the number of active color attachments in the specified render target descriptor. The first inactive attachment breaks the count.
+/*
+Returns the number of active color attachments in the specified render target descriptor.
+The first inactive attachment breaks the count.
+*/
 inline std::uint32_t NumActiveColorAttachments(const RenderTargetDescriptor& renderTargetDesc)
 {
     std::uint32_t n = 0;
@@ -44,15 +47,19 @@ inline std::uint32_t NumActiveColorAttachments(const RenderTargetDescriptor& ren
     return n;
 }
 
-// Returns true if any of the resolve attachments in the specified render target descriptor has a valid texture target.
-inline bool HasAnyActiveResolveAttachments(const RenderTargetDescriptor& renderTargetDesc)
+/*
+Returns the number of active resolve attachments in the specified render target descriptor.
+The first inactive color attachment (not resolve attachment) breaks the count.
+*/
+inline std::uint32_t NumActiveResolveAttachments(const RenderTargetDescriptor& renderTargetDesc)
 {
-    for (const auto& attachmentDesc : renderTargetDesc.resolveAttachments)
+    std::uint32_t n = 0;
+    for (std::uint32_t i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS && IsAttachmentEnabled(renderTargetDesc.colorAttachments[i]); ++i)
     {
-        if (attachmentDesc.texture != nullptr)
-            return true;
+        if (renderTargetDesc.resolveAttachments[i].texture != nullptr)
+            ++n;
     }
-    return false;
+    return n;
 }
 
 

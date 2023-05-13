@@ -29,7 +29,7 @@ VKRenderPass::VKRenderPass(VkDevice device, const RenderPassDescriptor& desc) :
     CreateVkRenderPass(device, desc);
 }
 
-static void Convert(
+static void ConvertColorVkAttachmentDesc(
     VkAttachmentDescription&            dst,
     const AttachmentFormatDescriptor&   src,
     VkSampleCountFlagBits               sampleCountBits)
@@ -51,7 +51,7 @@ static VkFormat GetDepthStencilFormat(const Format depthFormat, const Format& st
     {
         /* Check whether depth and stencil attachments share the same format */
         if (depthFormat != stencilFormat)
-            throw std::invalid_argument("format mismatch between depth and stencil render pass attachments");
+            LLGL_TRAP("format mismatch between depth and stencil render pass attachments");
         return VKTypes::Map(depthFormat);
     }
 
@@ -70,7 +70,7 @@ static VkFormat GetDepthStencilFormat(const Format depthFormat, const Format& st
     return VK_FORMAT_UNDEFINED;
 }
 
-static void Convert(
+static void ConvertDepthStencilVkAttachmentDesc(
     VkAttachmentDescription&            dst,
     const AttachmentFormatDescriptor&   srcDepth,
     const AttachmentFormatDescriptor&   srcStencil,
@@ -93,37 +93,29 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     const auto  numColorAttachments = NumEnabledColorAttachments(desc);
     auto        numAttachments      = numColorAttachments;
 
-    if (numAttachments > static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max()))
-        throw std::invalid_argument("too many attachments for Vulkan render pass");
+    constexpr auto maxNumClearValues = static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max());
+    LLGL_ASSERT(numAttachments <= maxNumClearValues, "too many attachments for Vulkan render pass");
 
     /* Check for depth-stencil attachment */
-    bool hasDepthStencil = false;
-
-    if (desc.depthAttachment.format != Format::Undefined || desc.stencilAttachment.format != Format::Undefined)
-    {
+    const bool hasDepthStencil = (desc.depthAttachment.format != Format::Undefined || desc.stencilAttachment.format != Format::Undefined);
+    if (hasDepthStencil)
         ++numAttachments;
-        hasDepthStencil = true;
-    }
 
     /* Initialize attachment descriptors */
-    const auto sampleCountBits = VKTypes::ToVkSampleCountBits(desc.samples);
+    const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(desc.samples);
     VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     for_range(i, numColorAttachments)
-        Convert(attachmentDescs[i], desc.colorAttachments[i], VK_SAMPLE_COUNT_1_BIT);
+        ConvertColorVkAttachmentDesc(attachmentDescs[i], desc.colorAttachments[i], sampleCountBits);
 
     if (hasDepthStencil)
-        Convert(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment, sampleCountBits);
+        ConvertDepthStencilVkAttachmentDesc(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment, sampleCountBits);
 
     if (sampleCountBits > VK_SAMPLE_COUNT_1_BIT)
     {
         /* Take color attachment format descriptors for multi-sampled attachemnts */
         for_range(i, numColorAttachments)
-            Convert(attachmentDescs[numAttachments + i], desc.colorAttachments[i], sampleCountBits);
-
-        /* Modify original attachment descriptors */
-        for_range(i, numColorAttachments)
-            attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            ConvertColorVkAttachmentDesc(attachmentDescs[numAttachments + i], desc.colorAttachments[i], VK_SAMPLE_COUNT_1_BIT);
     }
 
     /* Create render pass with native attachment descriptors */
@@ -140,28 +132,21 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     LLGL_ASSERT(numAttachments <= LLGL_MAX_NUM_ATTACHMENTS);
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
 
-    /* Store sample count bits */
-    sampleCountBits_ = sampleCountBits;
-    const bool multiSampleEnabled = (sampleCountBits > VK_SAMPLE_COUNT_1_BIT);
+    /* Uninitialized stack memory for descriptor containers */
+    VkAttachmentReference colorAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    VkAttachmentReference resolveAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    VkAttachmentReference depthStencilAttachmentRef;
 
-    VkAttachmentReference rtvAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
-    VkAttachmentReference rtvMsaaAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
-    VkAttachmentReference dsvAttachmentRef = {};
-
-    /* Store index for depth-stencil attachment */
-    bool hasDepthStencil = (numColorAttachments < numAttachments);
-    if (hasDepthStencil)
-        depthStencilIndex_ = static_cast<std::uint8_t>(numColorAttachments);
-
-    /* Store number of color attachments (required for default blend states in VKGraphicsPipeline) */
-    numColorAttachments_ = static_cast<std::uint8_t>(numColorAttachments);
+    /* Store sample count bits and number of color attachments (required for default blend states in VKGraphicsPipeline) */
+    sampleCountBits_        = sampleCountBits;
+    numColorAttachments_    = static_cast<std::uint8_t>(numColorAttachments);
 
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
 
     for_range(i, numAttachments)
     {
-        if (attachmentDescs[multiSampleEnabled && i + 1 < numAttachments ? numAttachments + i : i].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
+        if (attachmentDescs[i].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
             clearValuesMask_ |= (0x1ull << i);
             numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i + 1));
@@ -171,22 +156,34 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     /* Initialize attachment reference */
     for_range(i, numColorAttachments)
     {
-        rtvAttachmentsRefs[i].attachment    = i;
-        rtvAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentsRefs[i].attachment  = i;
+        colorAttachmentsRefs[i].layout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     }
 
+    const bool hasDepthStencil = (numColorAttachments < numAttachments);
     if (hasDepthStencil)
     {
-        dsvAttachmentRef.attachment = depthStencilIndex_;
-        dsvAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthStencilIndex_ = static_cast<std::uint8_t>(numColorAttachments);
+        depthStencilAttachmentRef.attachment    = depthStencilIndex_;
+        depthStencilAttachmentRef.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
-    if (multiSampleEnabled)
+    const bool hasMultiSampling = (sampleCountBits > VK_SAMPLE_COUNT_1_BIT);
+    if (hasMultiSampling)
     {
+        std::uint32_t resolveAttachmentIndex = numAttachments;
         for_range(i, numColorAttachments)
         {
-            rtvMsaaAttachmentsRefs[i].attachment    = numAttachments + i;
-            rtvMsaaAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            if (attachmentDescs[numAttachments + i].format == VK_FORMAT_UNDEFINED)
+            {
+                resolveAttachmentsRefs[i].attachment    = VK_ATTACHMENT_UNUSED;
+                resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_UNDEFINED;
+            }
+            else
+            {
+                resolveAttachmentsRefs[i].attachment    = resolveAttachmentIndex++;
+                resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            }
         }
     }
 
@@ -198,18 +195,9 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         subpassDesc.inputAttachmentCount    = 0;
         subpassDesc.pInputAttachments       = nullptr;
         subpassDesc.colorAttachmentCount    = numColorAttachments;
-        if (multiSampleEnabled && numColorAttachments > 0)
-        {
-            /* Swap color and resolve attachments */
-            subpassDesc.pColorAttachments   = rtvMsaaAttachmentsRefs;
-            subpassDesc.pResolveAttachments = rtvAttachmentsRefs;
-        }
-        else
-        {
-            subpassDesc.pColorAttachments   = rtvAttachmentsRefs;
-            subpassDesc.pResolveAttachments = nullptr;
-        }
-        subpassDesc.pDepthStencilAttachment = (hasDepthStencil ? &dsvAttachmentRef : nullptr);
+        subpassDesc.pColorAttachments       = colorAttachmentsRefs;
+        subpassDesc.pResolveAttachments     = (hasMultiSampling && numColorAttachments > 0 ? resolveAttachmentsRefs : nullptr);
+        subpassDesc.pDepthStencilAttachment = (hasDepthStencil ? &depthStencilAttachmentRef : nullptr);
         subpassDesc.preserveAttachmentCount = 0;
         subpassDesc.pPreserveAttachments    = nullptr;
     }
@@ -232,7 +220,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         createInfo.sType            = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
-        createInfo.attachmentCount  = (multiSampleEnabled ? numAttachments + numColorAttachments : numAttachments);
+        createInfo.attachmentCount  = (hasMultiSampling ? numAttachments + numColorAttachments : numAttachments);
         createInfo.pAttachments     = attachmentDescs;
         createInfo.subpassCount     = 1;
         createInfo.pSubpasses       = (&subpassDesc);

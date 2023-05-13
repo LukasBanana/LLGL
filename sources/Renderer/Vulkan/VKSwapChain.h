@@ -111,6 +111,8 @@ class VKSwapChain final : public SwapChain
         VkFormat PickDepthStencilFormat(int depthBits, int stencilBits) const;
         std::uint32_t PickSwapChainSize(std::uint32_t swapBuffers) const;
 
+        std::uint32_t GetPresentableImageIndex() const;
+
     private:
 
         static constexpr std::uint32_t maxNumColorBuffers = 3;

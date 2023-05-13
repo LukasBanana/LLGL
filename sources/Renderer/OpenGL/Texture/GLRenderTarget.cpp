@@ -167,7 +167,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     }
 
     /* Create secondary FBO if there are any resolve targets */
-    if (HasAnyActiveResolveAttachments(desc))
+    if (NumActiveResolveAttachments(desc) > 0)
     {
         /* Create secondary FBO if standard multi-sampling is enabled */
         framebufferResolve_.GenFramebuffer();

@@ -22,6 +22,8 @@ namespace LLGL
 {
 
 
+class VKTexture;
+
 class VKRenderTarget final : public RenderTarget
 {
 
@@ -73,8 +75,6 @@ class VKRenderTarget final : public RenderTarget
 
     private:
 
-        void CreateDepthStencilAttachment(VKDeviceMemoryManager& deviceMemoryMngr, VkFormat format);
-
         void CreateRenderPass(
             VkDevice                        device,
             const RenderTargetDescriptor&   desc,
@@ -84,6 +84,16 @@ class VKRenderTarget final : public RenderTarget
 
         void CreateDefaultRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
         void CreateSecondaryRenderPass(VkDevice device, const RenderTargetDescriptor& desc);
+
+        VkImageView CreateAttachmentImageView(
+            VkDevice                    device,
+            VKTexture&                  textureVK,
+            Format                      format,
+            const AttachmentDescriptor& attachmentDesc
+        );
+
+        VkImageView CreateColorBuffer(VKDeviceMemoryManager& deviceMemoryMngr, Format format);
+        VkImageView CreateDepthStencilBuffer(VKDeviceMemoryManager& deviceMemoryMngr, Format format);
 
         void CreateFramebuffer(
             VkDevice                        device,
@@ -105,7 +115,7 @@ class VKRenderTarget final : public RenderTarget
         std::vector<VKPtr<VkImageView>> imageViews_;
 
         VKDepthStencilBuffer            depthStencilBuffer_;
-        VkFormat                        depthStencilFormat_     = VK_FORMAT_UNDEFINED;  // Format either from internal depth-stencil buffer or attachmed texture.
+        Format                          depthStencilFormat_     = Format::Undefined;    // Format either from internal depth-stencil buffer or attachmed texture.
         std::vector<VKColorBufferPtr>   colorBuffers_;                                  // Internal color buffers for multi-sampling
 
         std::uint32_t                   numColorAttachments_    = 0;
