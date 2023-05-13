@@ -26,19 +26,19 @@ DEF_TEST( CommandBufferSubmit )
         CommandBufferDescriptor cmdBufferDesc;
         cmdBufferDesc.flags = CommandBufferFlags::MultiSubmit;
 
-        for_range(i, numCmdBuffers)
+        for_range(swapBufferIndex, numCmdBuffers)
         {
             auto* cmdBuf = renderer->CreateCommandBuffer(cmdBufferDesc);
 
             cmdBuf->Begin();
             {
-                cmdBuf->BeginRenderPass(*swapChain);
-                cmdBuf->Clear(ClearFlags::Color, clearValues[i % numClearValues]);
+                cmdBuf->BeginRenderPass(*swapChain, nullptr, 0, nullptr, swapBufferIndex);
+                cmdBuf->Clear(ClearFlags::Color, clearValues[swapBufferIndex % numClearValues]);
                 cmdBuf->EndRenderPass();
             }
             cmdBuf->End();
 
-            multiSubmitCmdBuffers[i] = cmdBuf;
+            multiSubmitCmdBuffers[swapBufferIndex] = cmdBuf;
         }
     }
 
@@ -46,7 +46,8 @@ DEF_TEST( CommandBufferSubmit )
     if (frame < numSubmissions)
     {
         // Submit command buffers several times
-        cmdQueue->Submit(*multiSubmitCmdBuffers[frame % numCmdBuffers]);
+        unsigned swapBufferIndex = std::min(swapChain->GetCurrentSwapIndex(), numCmdBuffers - 1);
+        cmdQueue->Submit(*multiSubmitCmdBuffers[swapBufferIndex]);
 
         // Read swap chain color
         //TODO

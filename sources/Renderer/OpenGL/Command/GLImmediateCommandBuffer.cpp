@@ -443,7 +443,8 @@ void GLImmediateCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
+    const ClearValue*   clearValues,
+    std::uint32_t       /*swapBufferIndex*/)
 {
     /* Bind render target and update state manager if GL context has switched */
     auto nextStateMngr = stateMngr_;

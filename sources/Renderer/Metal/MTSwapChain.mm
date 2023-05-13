@@ -1,6 +1,6 @@
 /*
  * MTSwapChain.mm
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -71,6 +71,11 @@ MTSwapChain::MTSwapChain(
 void MTSwapChain::Present()
 {
     [view_ draw];
+}
+
+std::uint32_t MTSwapChain::GetCurrentSwapIndex() const
+{
+    return 0; // dummy
 }
 
 std::uint32_t MTSwapChain::GetSamples() const

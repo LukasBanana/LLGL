@@ -43,6 +43,7 @@ class VKSwapChain final : public SwapChain
 
         void Present() override;
 
+        std::uint32_t GetCurrentSwapIndex() const override;
         std::uint32_t GetSamples() const override;
 
         Format GetColorFormat() const override;
@@ -67,10 +68,7 @@ class VKSwapChain final : public SwapChain
         }
 
         // Returns the native VkFramebuffer object that is currently used from swap-chain.
-        inline VkFramebuffer GetVkFramebuffer() const
-        {
-            return swapChainFramebuffers_[currentColorBuffer_].Get();
-        }
+        VkFramebuffer GetVkFramebuffer(std::uint32_t swapBufferIndex = Constants::currentSwapIndex) const;
 
         // Returns the swap-chain resolution as VkExtent2D.
         inline const VkExtent2D& GetVkExtent() const
@@ -114,7 +112,7 @@ class VKSwapChain final : public SwapChain
 
     private:
 
-        static const std::uint32_t maxNumColorBuffers = 3;
+        static constexpr std::uint32_t maxNumColorBuffers = 3;
 
         VkInstance              instance_                                   = VK_NULL_HANDLE;
         VkPhysicalDevice        physicalDevice_                             = VK_NULL_HANDLE;

@@ -103,6 +103,7 @@ struct SwapChainDescriptor
     \brief Number of swap buffers. By default 2 (for double-buffering).
     \remarks This is only a hint to the renderer and there is no guarantee how many buffers are finally used for the swap chain.
     Especially OpenGL does not support custom swap chain sizes.
+    \see SwapChain::GetCurrentSwapIndex
     */
     std::uint32_t   swapBuffers     = 2;
 

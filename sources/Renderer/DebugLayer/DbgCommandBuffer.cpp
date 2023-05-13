@@ -642,7 +642,8 @@ void DbgCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
+    const ClearValue*   clearValues,
+    std::uint32_t       swapBufferIndex)
 {
     if (debugger_)
     {
@@ -665,9 +666,13 @@ void DbgCommandBuffer::BeginRenderPass(
 
         /* Record swap-chain frame to validate when submitting the command buffer */
         if (debugger_)
-            records_.swapChainFrames.push_back({ bindings_.swapChain, swapChainDbg.GetCurrentFrame() });
+        {
+            const std::uint32_t actualSwapBufferIndex = (swapBufferIndex == Constants::currentSwapIndex ? swapChainDbg.GetCurrentSwapIndex() : swapBufferIndex);
+            records_.swapChainFrames.push_back({ bindings_.swapChain, actualSwapBufferIndex });
+            ValidateSwapBufferIndex(swapChainDbg, actualSwapBufferIndex);
+        }
 
-        instance.BeginRenderPass(swapChainDbg.instance, renderPass, numClearValues, clearValues);
+        instance.BeginRenderPass(swapChainDbg.instance, renderPass, numClearValues, clearValues, swapBufferIndex);
     }
     else
     {
@@ -676,7 +681,7 @@ void DbgCommandBuffer::BeginRenderPass(
         bindings_.swapChain     = nullptr;
         bindings_.renderTarget  = &renderTargetDbg;
 
-        instance.BeginRenderPass(renderTargetDbg.instance, renderPass, numClearValues, clearValues);
+        instance.BeginRenderPass(renderTargetDbg.instance, renderPass, numClearValues, clearValues, swapBufferIndex);
     }
 
     profile_.renderPassSections++;
@@ -1263,12 +1268,15 @@ void DbgCommandBuffer::ValidateSubmit()
 {
     for (const SwapChainFramePair& pair : records_.swapChainFrames)
     {
-        if (pair.swapChain->GetCurrentFrame() != pair.frame)
+        if (pair.swapChain->GetCurrentSwapIndex() != pair.frame)
         {
-            if (!pair.swapChain->label.empty())
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "command buffer submitted after back-buffer swap [SwapChain: \"" + pair.swapChain->label + "\"]");
-            else
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "command buffer submitted after back-buffer swap");
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "command buffer submitted with swap-chain " +
+                std::string(pair.swapChain->label.empty() ? "" : "['" + pair.swapChain->label + "'] ") +
+                "back-buffer [" + std::to_string(pair.frame) + "] while swap-chain has current back buffer [" +
+                std::to_string(pair.swapChain->GetCurrentSwapIndex()) + "]"
+            );
         }
     }
 }
@@ -1962,6 +1970,18 @@ void DbgCommandBuffer::ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::
         LLGL_DBG_ERROR_NOT_SUPPORTED("conditional rendering");
     if (!queryHeapDbg.desc.renderCondition)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot use query heap for conditional rendering that was not created with 'renderCondition' enabled");
+}
+
+void DbgCommandBuffer::ValidateSwapBufferIndex(DbgSwapChain& swapChainDbg, std::uint32_t swapBufferIndex)
+{
+    if (swapBufferIndex != Constants::currentSwapIndex && swapBufferIndex >= swapChainDbg.desc.swapBuffers)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot begin render pass with swap-buffer index " + std::to_string(swapBufferIndex) +
+            " for swap-chain with only " + std::to_string(swapChainDbg.desc.swapBuffers) + " buffer(s)"
+        );
+    }
 }
 
 void DbgCommandBuffer::ValidateStreamOutputs(std::uint32_t numBuffers)

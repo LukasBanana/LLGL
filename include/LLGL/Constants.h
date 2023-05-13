@@ -30,31 +30,38 @@ namespace Constants
 \see RenderSystem::WriteTexture
 \see RenderSystem::ReadTexture
 */
-constexpr unsigned      maxThreadCount  = -1;
+constexpr unsigned      maxThreadCount      = -1;
 
 /**
 \brief Offset value to determine the offset automatically, e.g. to append a vertex attribute at the end of a vertex format.
 \see VertexFormat::AppendAttribute
 */
-constexpr std::uint32_t ignoreOffset    = -1;
+constexpr std::uint32_t ignoreOffset        = -1;
 
 /**
 \brief Specifies an invalid binding slot for shader resources.
 \see ShaderResourceReflection::slot
 */
-constexpr std::uint32_t invalidSlot     = -1;
+constexpr std::uint32_t invalidSlot         = -1;
 
 /**
 \brief Specifies to use the whole size of a resource.
 \see CommandBuffer::FillBuffer
 */
-constexpr std::uint64_t wholeSize       = -1;
+constexpr std::uint64_t wholeSize           = -1;
 
 /**
 \brief Specifies an invalid timer ID for window events.
 \see WindowBehavior::moveAndResizeTimerID
 */
-constexpr std::uint32_t invalidTimerID  = 0u;
+constexpr std::uint32_t invalidTimerID      = 0u;
+
+/**
+\brief Specifies to use the current swap-index when beginning a render pass for a swap-chain.
+\see CommandBuffer::BeginRenderPass
+\see SwapChain::GetCurrentSwapIndex
+*/
+constexpr std::uint32_t currentSwapIndex    = -1;
 
 
 } // /namespace Constants

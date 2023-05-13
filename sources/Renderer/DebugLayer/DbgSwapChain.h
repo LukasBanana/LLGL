@@ -30,6 +30,7 @@ class DbgSwapChain final : public SwapChain
 
         void Present() override;
 
+        std::uint32_t GetCurrentSwapIndex() const override;
         std::uint32_t GetSamples() const override;
 
         Format GetColorFormat() const override;
@@ -41,18 +42,13 @@ class DbgSwapChain final : public SwapChain
 
     public:
 
-        DbgSwapChain(SwapChain& instance);
-
-        // Returns the current frame which is incremented with eath Present() invocation.
-        inline std::uint64_t GetCurrentFrame() const
-        {
-            return currentFrame_;
-        }
+        DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc);
 
     public:
 
-        SwapChain&  instance;
-        std::string label;
+        SwapChain&                  instance;
+        const SwapChainDescriptor   desc;
+        std::string                 label;
 
     private:
 
@@ -60,8 +56,7 @@ class DbgSwapChain final : public SwapChain
 
     private:
 
-        std::unique_ptr<DbgRenderPass>  renderPass_;
-        std::uint64_t                   currentFrame_   = 0;
+        std::unique_ptr<DbgRenderPass> renderPass_;
 
 };
 

@@ -411,6 +411,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
         where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) and
         the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
+        \param[in] swapBufferIndex Optional index into what swap-chain buffer the render pass is meant to be rendered.
+        If this is Constants::currentSwapIndex, the current buffer in the swap-chain is used. Otherwise, this should be the current value returned by SwapChain::GetCurrentSwapIndex.
+        This parameter is ignored for regular render targets, i.e. if \c renderTarget is \e not a SwapChain.
         \remarks This function starts a new render pass section and must be ended with the \c EndRenderPass function.
         \remarks The following example shows how to use a render pass to clear a render target with two color attachments and a depth-stencil attachment:
         \code
@@ -450,13 +453,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see RenderSystem::CreateRenderTarget
         \see RenderTargetDescriptor::renderPass
         \see AttachmentFormatDescriptor::loadOp
+        \see SwapChain::GetCurrentSwapIndex
         \see EndRenderPass
         */
         virtual void BeginRenderPass(
             RenderTarget&       renderTarget,
             const RenderPass*   renderPass      = nullptr,
             std::uint32_t       numClearValues  = 0,
-            const ClearValue*   clearValues     = nullptr
+            const ClearValue*   clearValues     = nullptr,
+            std::uint32_t       swapBufferIndex = Constants::currentSwapIndex
         ) = 0;
 
         /**

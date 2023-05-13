@@ -210,6 +210,13 @@ T DivideCeil(T numerator, T denominator)
     return ((numerator + denominator - T(1)) / denominator);
 }
 
+// Clamps value x into the range [minimum, maximum].
+template <typename T>
+T Clamp(T x, T minimum, T maximum)
+{
+    return (std::max)(minimum, (std::min)(x, maximum));
+}
+
 
 } // /namespace LLGL
 

@@ -1,6 +1,6 @@
 /*
  * MTSwapChain.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -36,6 +36,7 @@ class MTSwapChain final : public SwapChain
 
         void Present() override;
 
+        std::uint32_t GetCurrentSwapIndex() const override;
         std::uint32_t GetSamples() const override;
 
         Format GetColorFormat() const override;

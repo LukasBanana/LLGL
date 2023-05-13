@@ -874,7 +874,8 @@ void D3D11CommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
+    const ClearValue*   clearValues,
+    std::uint32_t       /*swapBufferIndex*/)
 {
     /* Bind render target/context */
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))

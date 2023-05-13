@@ -142,7 +142,8 @@ class D3D12CommandBuffer final : public CommandBuffer
             RenderTarget&       renderTarget,
             const RenderPass*   renderPass      = nullptr,
             std::uint32_t       numClearValues  = 0,
-            const ClearValue*   clearValues     = nullptr
+            const ClearValue*   clearValues     = nullptr,
+            std::uint32_t       swapBufferIndex = Constants::currentSwapIndex
         ) override;
 
         void EndRenderPass() override;
@@ -230,7 +231,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetScissorRectsToDefault(UINT numScissorRects);
 
         void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
-        void BindSwapChain(D3D12SwapChain& swapChainD3D);
+        void BindSwapChain(D3D12SwapChain& swapChainD3D, std::uint32_t swapBufferIndex = Constants::currentSwapIndex);
 
         std::uint32_t ClearAttachmentsWithRenderPass(
             const D3D12RenderPass&  renderPassD3D,
@@ -274,6 +275,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         bool                            scissorEnabled_         = false;
         UINT                            numBoundScissorRects_   = 0;
         UINT                            numColorBuffers_        = 0;
+        UINT                            currentColorBuffer_     = 0;
 
         D3D12SwapChain*                 boundSwapChain_         = nullptr;
         D3D12RenderTarget*              boundRenderTarget_      = nullptr;

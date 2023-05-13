@@ -40,6 +40,7 @@ class D3D12SwapChain final : public SwapChain
 
         void Present() override;
 
+        std::uint32_t GetCurrentSwapIndex() const override;
         std::uint32_t GetSamples() const override;
 
         Format GetColorFormat() const override;
@@ -59,12 +60,14 @@ class D3D12SwapChain final : public SwapChain
 
         ~D3D12SwapChain();
 
+        UINT TranslateSwapIndex(std::uint32_t swapBufferIndex) const;
+
         // Returns the native color buffer resource from the swap-chain that is currently being used.
-        D3D12Resource& GetCurrentColorBuffer();
+        D3D12Resource& GetCurrentColorBuffer(UINT colorBuffer);
 
-        void ResolveSubresources(D3D12CommandContext& commandContext);
+        void ResolveSubresources(D3D12CommandContext& commandContext, UINT colorBuffer);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForRTV() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForRTV(UINT colorBuffer) const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;
 
         bool HasMultiSampling() const;
@@ -78,42 +81,42 @@ class D3D12SwapChain final : public SwapChain
 
         bool SetPresentSyncInterval(UINT syncInterval);
 
-        void QueryDeviceParameters(const D3D12Device& device, std::uint32_t samples);
+        void CreateDescriptorHeaps(const D3D12Device& device, std::uint32_t samples);
 
         void CreateResolutionDependentResources(const Extent2D& resolution);
-        void CreateColorBufferRTVs(const Extent2D& resolution);
-        void CreateDepthStencil(const Extent2D& resolution);
+        void CreateColorBufferRTVs(ID3D12Device* device, const Extent2D& resolution);
+        void CreateDepthStencil(ID3D12Device* device, const Extent2D& resolution);
 
         void MoveToNextFrame();
 
     private:
 
-        static constexpr UINT maxSwapBuffers = 3;
+        static constexpr UINT maxNumColorBuffers = 3;
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
-        D3D12CommandQueue*              commandQueue_                       = nullptr;
+        D3D12CommandQueue*              commandQueue_                           = nullptr;
         D3D12RenderPass                 defaultRenderPass_;
 
         ComPtr<IDXGISwapChain3>         swapChainDXGI_;
-        DXGI_SAMPLE_DESC                sampleDesc_                         = { 1, 0 };
-        UINT                            syncInterval_                       = 0;
+        DXGI_SAMPLE_DESC                sampleDesc_                             = { 1, 0 };
+        UINT                            syncInterval_                           = 0;
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
-        UINT                            rtvDescSize_                        = 0;
+        UINT                            rtvDescSize_                            = 0;
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
-        D3D12Resource                   colorBuffers_[maxSwapBuffers];
-        D3D12Resource                   colorBuffersMS_[maxSwapBuffers];
-        DXGI_FORMAT                     colorFormat_                        = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
+        D3D12Resource                   colorBuffers_[maxNumColorBuffers];
+        D3D12Resource                   colorBuffersMS_[maxNumColorBuffers];
+        DXGI_FORMAT                     colorFormat_                            = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM;
 
         D3D12Resource                   depthStencil_;
-        DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                     depthStencilFormat_                     = DXGI_FORMAT_UNKNOWN;
 
-        UINT64                          frameFenceValues_[maxSwapBuffers]   = {};
+        UINT64                          frameFenceValues_[maxNumColorBuffers]   = {};
         D3D12NativeFence                frameFence_;
 
-        UINT                            numFrames_                          = 0;
-        UINT                            currentFrame_                       = 0;
+        UINT                            numColorBuffers_                        = 0;
+        UINT                            currentColorBuffer_                     = 0;
 
 };
 

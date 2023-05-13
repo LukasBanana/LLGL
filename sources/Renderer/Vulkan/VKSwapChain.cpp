@@ -150,6 +150,11 @@ void VKSwapChain::Present()
     currentColorBuffer_ = (currentColorBuffer_ + 1) % numColorBuffers_;
 }
 
+std::uint32_t VKSwapChain::GetCurrentSwapIndex() const
+{
+    return currentColorBuffer_;
+}
+
 std::uint32_t VKSwapChain::GetSamples() const
 {
     return swapChainSamples_;
@@ -183,6 +188,14 @@ bool VKSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 }
 
 /* --- Extended functions --- */
+
+VkFramebuffer VKSwapChain::GetVkFramebuffer(std::uint32_t swapBufferIndex) const
+{
+    if (swapBufferIndex == Constants::currentSwapIndex)
+        return swapChainFramebuffers_[currentColorBuffer_].Get();
+    else
+        return swapChainFramebuffers_[std::min(swapBufferIndex, numColorBuffers_ - 1)].Get();
+}
 
 bool VKSwapChain::HasDepthStencilBuffer() const
 {
@@ -572,7 +585,11 @@ VkFormat VKSwapChain::PickDepthStencilFormat(int depthBits, int stencilBits) con
 
 std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
 {
-    return std::max(surfaceSupportDetails_.caps.minImageCount, std::min(swapBuffers, surfaceSupportDetails_.caps.maxImageCount));
+    return Clamp(
+        swapBuffers,
+        std::max(surfaceSupportDetails_.caps.minImageCount, 1u),
+        std::min(surfaceSupportDetails_.caps.maxImageCount, VKSwapChain::maxNumColorBuffers)
+    );
 }
 
 

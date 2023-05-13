@@ -76,8 +76,22 @@ class LLGL_EXPORT SwapChain : public RenderTarget
 
         /* ----- Back Buffer ----- */
 
-        //! Swaps the back buffer with the front buffer to present it on the screen (or rather on this swap-chain).
+        /**
+        \brief Swaps the current back buffer with the front buffer to present it on the screen.
+        \see GetCurrentSwapIndex
+        */
         virtual void Present() = 0;
+
+        /**
+        \brief Returns the current swap-buffer index.
+        \remarks If the renderer supports control over swap-chain sizes, this function returns the current swap-buffer index. Otherwise, this function always returns 0.
+        \remarks This function is guaranteed to never return a value greater than or equal to the swap-chain size that was specified when this swap-chain was created.
+        \remarks Can be used to encode a command buffer for a specific swap-buffer.
+        \return \f$i \in \left[ 0, \texttt{SwapChainDescriptor::swapBuffers} \right)\f$
+        \see SwapChainDescriptor::swapBuffers
+        \see CommandBuffer::BeginRenderPass
+        */
+        virtual std::uint32_t GetCurrentSwapIndex() const = 0;
 
         /**
         \brief Returns the color format of this swap-chain.
@@ -115,6 +129,8 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         */
         virtual bool SetVsyncInterval(std::uint32_t vsyncInterval) = 0;
 
+    public:
+
         /* ----- Surface & Display ----- */
 
         /**
@@ -136,6 +152,14 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \endcode
         */
         Surface& GetSurface() const;
+
+    protected:
+
+        /**
+        \brief Primary function to resize all swap buffers.
+        \see ResizeBuffers
+        */
+        virtual bool ResizeBuffersPrimary(const Extent2D& resolution) = 0;
 
     protected:
 
@@ -176,12 +200,6 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \see SetDisplayFullscreenMode
         */
         bool ResetDisplayFullscreenMode();
-
-        /**
-        \brief Primary function to resize all swap buffers.
-        \see ResizeBuffers
-        */
-        virtual bool ResizeBuffersPrimary(const Extent2D& resolution) = 0;
 
     private:
 

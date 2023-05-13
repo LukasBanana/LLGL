@@ -61,7 +61,7 @@ SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChain
         commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
     }
 
-    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance);
+    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance, swapChainDesc);
 }
 
 void DbgRenderSystem::Release(SwapChain& swapChain)

@@ -508,7 +508,8 @@ void VKCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
+    const ClearValue*   clearValues,
+    std::uint32_t       swapBufferIndex)
 {
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
@@ -518,7 +519,7 @@ void VKCommandBuffer::BeginRenderPass(
         /* Store information about framebuffer attachments */
         renderPass_                     = swapChainVK.GetSwapChainRenderPass().GetVkRenderPass();
         secondaryRenderPass_            = swapChainVK.GetSecondaryVkRenderPass();
-        framebuffer_                    = swapChainVK.GetVkFramebuffer();
+        framebuffer_                    = swapChainVK.GetVkFramebuffer(swapBufferIndex);
         framebufferRenderArea_.extent   = swapChainVK.GetVkExtent();
         numColorAttachments_            = swapChainVK.GetNumColorAttachments();
         hasDepthStencilAttachment_      = (swapChainVK.HasDepthAttachment() || swapChainVK.HasStencilAttachment());

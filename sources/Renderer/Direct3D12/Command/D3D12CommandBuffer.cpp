@@ -621,13 +621,14 @@ void D3D12CommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
+    const ClearValue*   clearValues,
+    std::uint32_t       swapBufferIndex)
 {
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         /* Bind swap chain */
         boundSwapChain_ = LLGL_CAST(D3D12SwapChain*, &renderTarget);
-        BindSwapChain(*boundSwapChain_);
+        BindSwapChain(*boundSwapChain_, swapBufferIndex);
     }
     else
     {
@@ -648,7 +649,7 @@ void D3D12CommandBuffer::EndRenderPass()
 {
     if (boundSwapChain_ != nullptr)
     {
-        boundSwapChain_->ResolveSubresources(commandContext_);
+        boundSwapChain_->ResolveSubresources(commandContext_, currentColorBuffer_);
         boundSwapChain_ = nullptr;
     }
     else if (boundRenderTarget_ != nullptr)
@@ -1033,11 +1034,14 @@ void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
         commandList_->OMSetRenderTargets(numColorBuffers_, &rtvDescHandle_, TRUE, nullptr);
 }
 
-void D3D12CommandBuffer::BindSwapChain(D3D12SwapChain& swapChainD3D)
+void D3D12CommandBuffer::BindSwapChain(D3D12SwapChain& swapChainD3D, std::uint32_t swapBufferIndex)
 {
+    /* Translate swap-index into actual D3D color buffer index */
+    currentColorBuffer_ = swapChainD3D.TranslateSwapIndex(swapBufferIndex);
+
     /* Indicate that the back buffer will be used as render target */
     commandContext_.TransitionResource(
-        swapChainD3D.GetCurrentColorBuffer(),
+        swapChainD3D.GetCurrentColorBuffer(currentColorBuffer_),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         true
     );
@@ -1045,7 +1049,7 @@ void D3D12CommandBuffer::BindSwapChain(D3D12SwapChain& swapChainD3D)
     /* Set current back buffer as RTV and optional DSV */
     numColorBuffers_ = 1;
 
-    rtvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForRTV();
+    rtvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForRTV(currentColorBuffer_);
     dsvDescHandle_ = swapChainD3D.GetCPUDescriptorHandleForDSV();
 
     if (dsvDescHandle_.ptr != 0)
