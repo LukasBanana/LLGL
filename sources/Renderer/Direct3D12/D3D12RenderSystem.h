@@ -224,7 +224,7 @@ class D3D12RenderSystem final : public RenderSystem
         );
 
         // Maps the range of the specified D3D buffer between GPU and CPU memory space.
-        void* MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size);
+        void* MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t length);
 
         // Updates the image data of the specified texture region and converts the source image on-the-fly.
         HRESULT UpdateTextureSubresourceFromImage(

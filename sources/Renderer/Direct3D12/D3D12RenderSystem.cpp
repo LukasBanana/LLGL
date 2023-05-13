@@ -577,10 +577,10 @@ void D3D12RenderSystem::UpdateBufferAndSync(
     ExecuteCommandListAndSync();
 }
 
-void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t size)
+void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
 {
     void* mappedData = nullptr;
-    const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(size) };
+    const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(offset + length) };
 
     if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
         return mappedData;
