@@ -1,6 +1,6 @@
 /*
  * VKDevice.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -12,7 +12,7 @@
 #include "Texture/VKTexture.h"
 #include "Memory/VKDeviceMemoryRegion.h"
 #include "Memory/VKDeviceMemory.h"
-#include <set>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <string.h>
 #include <limits.h>
@@ -63,11 +63,9 @@ void VKDevice::CreateLogicalDevice(
     /* Initialize queue create description */
     queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
 
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<std::uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
+    SmallVector<VkDeviceQueueCreateInfo, 2> queueCreateInfos;
 
-    float queuePriority = 1.0f;
-    for (auto family : uniqueQueueFamilies)
+    auto AddQueueFamily = [&queueCreateInfos](std::uint32_t family, float queuePriority)
     {
         VkDeviceQueueCreateInfo info;
         {
@@ -79,7 +77,14 @@ void VKDevice::CreateLogicalDevice(
             info.pQueuePriorities   = &queuePriority;
         }
         queueCreateInfos.push_back(info);
-    }
+    };
+
+    constexpr float queuePriority = 1.0f;
+
+    AddQueueFamily(queueFamilyIndices_.graphicsFamily, queuePriority);
+
+    if (queueFamilyIndices_.graphicsFamily != queueFamilyIndices_.presentFamily)
+        AddQueueFamily(queueFamilyIndices_.presentFamily, queuePriority);
 
     /* Create logical device */
     VkDeviceCreateInfo createInfo;
@@ -95,7 +100,7 @@ void VKDevice::CreateLogicalDevice(
         createInfo.ppEnabledExtensionNames  = extensions;
         createInfo.pEnabledFeatures         = features;
     }
-    auto result = vkCreateDevice(physicalDevice, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan logical device");
 
     /* Query device graphics queue */
@@ -117,7 +122,7 @@ VKPtr<VkCommandPool> VKDevice::CreateCommandPool()
         createInfo.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         createInfo.queueFamilyIndex = queueFamilyIndices_.graphicsFamily;
     }
-    auto result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 
     return commandPool;
@@ -136,7 +141,7 @@ VkCommandBuffer VKDevice::AllocCommandBuffer(bool begin)
         allocInfo.level                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount   = 1;
     }
-    auto result = vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuffer);
+    VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuffer);
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffer");
 
     /* Begin command buffer recording (if enabled) */
@@ -159,7 +164,7 @@ VkCommandBuffer VKDevice::AllocCommandBuffer(bool begin)
 void VKDevice::FlushCommandBuffer(VkCommandBuffer cmdBuffer, bool release)
 {
     /* End command buffer record */
-    auto result = vkEndCommandBuffer(cmdBuffer);
+    VkResult result = vkEndCommandBuffer(cmdBuffer);
     VKThrowIfFailed(result, "failed to end recording Vulkan command buffer");
 
     /* Create fence to ensure the command buffer has finished execution */
@@ -272,7 +277,7 @@ void VKDevice::CopyBuffer(
     VkDeviceSize    srcOffset,
     VkDeviceSize    dstOffset)
 {
-    auto cmdBuffer = AllocCommandBuffer();
+    VkCommandBuffer cmdBuffer = AllocCommandBuffer();
     {
         CopyBuffer(cmdBuffer, srcBuffer, dstBuffer, size, srcOffset, dstOffset);
     }
@@ -413,14 +418,14 @@ void VKDevice::GenerateMips(
     barrier.subresourceRange.layerCount     = 1;
 
     /* Blit each MIP-map from previous (lower) MIP level */
-    for (std::uint32_t arrayLayer = 0; arrayLayer < subresource.numArrayLayers; ++arrayLayer)
+    for_range(arrayLayer, subresource.numArrayLayers)
     {
-        auto currExtent = extent;
+        VkExtent3D currExtent = extent;
 
-        for (std::uint32_t mipLevel = 1; mipLevel < subresource.numMipLevels; ++mipLevel)
+        for_subrange(mipLevel, 1, subresource.numMipLevels)
         {
             /* Determine extent of next MIP level */
-            auto nextExtent = currExtent;
+            VkExtent3D nextExtent = currExtent;
 
             nextExtent.width    = std::max(1u, currExtent.width  / 2);
             nextExtent.height   = std::max(1u, currExtent.height / 2);
@@ -507,11 +512,11 @@ void VKDevice::GenerateMips(
 
 void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset)
 {
-    if (auto region = buffer.GetMemoryRegion())
+    if (VKDeviceMemoryRegion* region = buffer.GetMemoryRegion())
     {
         /* Map buffer memory to host memory */
-        auto deviceMemory = region->GetParentChunk();
-        if (auto memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
+        VKDeviceMemory* deviceMemory = region->GetParentChunk();
+        if (void* memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
         {
             /* Copy input data to buffer memory */
             ::memcpy(memory, data, static_cast<std::size_t>(size));
@@ -522,11 +527,11 @@ void VKDevice::WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSiz
 
 void VKDevice::ReadBuffer(VKDeviceBuffer& buffer, void* data, VkDeviceSize size, VkDeviceSize offset)
 {
-    if (auto region = buffer.GetMemoryRegion())
+    if (VKDeviceMemoryRegion* region = buffer.GetMemoryRegion())
     {
         /* Map buffer memory to host memory */
-        auto deviceMemory = region->GetParentChunk();
-        if (auto memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
+        VKDeviceMemory* deviceMemory = region->GetParentChunk();
+        if (const void* memory = deviceMemory->Map(device_, region->GetOffset() + offset, size))
         {
             /* Copy buffer memory to output data */
             ::memcpy(data, memory, static_cast<std::size_t>(size));
@@ -537,7 +542,7 @@ void VKDevice::ReadBuffer(VKDeviceBuffer& buffer, void* data, VkDeviceSize size,
 
 void VKDevice::FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size, VkDeviceSize offset)
 {
-    if (auto region = buffer.GetMemoryRegion())
+    if (VKDeviceMemoryRegion* region = buffer.GetMemoryRegion())
     {
         /* Flush mapped memory to make it visible on the device */
         VkMappedMemoryRange memoryRange;
@@ -548,7 +553,7 @@ void VKDevice::FlushMappedBuffer(VKDeviceBuffer& buffer, VkDeviceSize size, VkDe
             memoryRange.offset  = region->GetOffset() + offset;
             memoryRange.size    = size;
         }
-        auto result = vkFlushMappedMemoryRanges(device_, 1, &memoryRange);
+        VkResult result = vkFlushMappedMemoryRanges(device_, 1, &memoryRange);
         VKThrowIfFailed(result, "failed to flush mapped memory range");
     }
 }

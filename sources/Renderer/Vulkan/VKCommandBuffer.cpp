@@ -124,7 +124,7 @@ void VKCommandBuffer::Begin()
         beginInfo.flags             = usageFlags_;
         beginInfo.pInheritanceInfo  = nullptr;
     }
-    auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
+    VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
 
     #if 0//TODO: optimize
@@ -139,7 +139,7 @@ void VKCommandBuffer::Begin()
 void VKCommandBuffer::End()
 {
     /* End encoding of current command buffer */
-    auto result = vkEndCommandBuffer(commandBuffer_);
+    VkResult result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
 
     /* Store new record state */
@@ -148,7 +148,7 @@ void VKCommandBuffer::End()
     /* Execute command buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
     {
-        auto result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFence());
+        VkResult result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFence());
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 
@@ -1028,7 +1028,7 @@ void VKCommandBuffer::CreateVkCommandPool(std::uint32_t queueFamilyIndex)
         createInfo.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         createInfo.queueFamilyIndex = queueFamilyIndex;
     }
-    auto result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 }
 
@@ -1043,7 +1043,7 @@ void VKCommandBuffer::CreateVkCommandBuffers()
         allocInfo.level                 = bufferLevel_;
         allocInfo.commandBufferCount    = numCommandBuffers_;
     }
-    auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferArray_);
+    VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferArray_);
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 }
 
@@ -1060,7 +1060,7 @@ void VKCommandBuffer::CreateVkRecordingFences()
     for_range(i, numCommandBuffers_)
     {
         /* Create fence for command buffer recording */
-        auto result = vkCreateFence(device_, &createInfo, nullptr, recordingFenceArray_[i].ReleaseAndGetAddressOf());
+        VkResult result = vkCreateFence(device_, &createInfo, nullptr, recordingFenceArray_[i].ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Vulkan fence");
     }
 }
