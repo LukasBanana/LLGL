@@ -110,7 +110,7 @@ void GLQueryHeap::Begin(std::uint32_t query)
         glBeginQuery(MapQueryType(GetType(), i), ids_[i + groupSize_ * query]);
 }
 
-void GLQueryHeap::End(std::uint32_t query)
+void GLQueryHeap::End()
 {
     /* End all queries in reverse order: (n, 0] */
     for_range_reverse(i, groupSize_)

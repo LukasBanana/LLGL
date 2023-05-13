@@ -294,7 +294,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeEndQuery:
         {
             auto cmd = reinterpret_cast<const GLCmdEndQuery*>(pc);
-            compiler.CallMember(&GLQueryHeap::End, cmd->queryHeap, cmd->query);
+            compiler.CallMember(&GLQueryHeap::End, cmd->queryHeap);
             return sizeof(*cmd);
         }
         case GLOpcodeBeginConditionalRender:

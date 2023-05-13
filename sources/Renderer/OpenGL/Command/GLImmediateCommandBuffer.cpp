@@ -544,11 +544,11 @@ void GLImmediateCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t qu
     queryHeapGL.Begin(query);
 }
 
-void GLImmediateCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
+void GLImmediateCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t /*query*/)
 {
     /* Begin query with internal target */
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
-    queryHeapGL.End(query);
+    queryHeapGL.End();
 }
 
 void GLImmediateCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)

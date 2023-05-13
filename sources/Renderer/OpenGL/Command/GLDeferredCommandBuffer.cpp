@@ -662,12 +662,11 @@ void GLDeferredCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t que
     }
 }
 
-void GLDeferredCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
+void GLDeferredCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t /*query*/)
 {
     auto cmd = AllocCommand<GLCmdEndQuery>(GLOpcodeEndQuery);
     {
-        cmd->queryHeap  = LLGL_CAST(GLQueryHeap*, &queryHeap);
-        cmd->query      = query;
+        cmd->queryHeap = LLGL_CAST(GLQueryHeap*, &queryHeap);
     }
 }
 

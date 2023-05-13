@@ -289,7 +289,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeEndQuery:
         {
             auto cmd = reinterpret_cast<const GLCmdEndQuery*>(pc);
-            cmd->queryHeap->End(cmd->query);
+            cmd->queryHeap->End();
             return sizeof(*cmd);
         }
         case GLOpcodeBeginConditionalRender:

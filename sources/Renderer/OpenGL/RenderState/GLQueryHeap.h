@@ -31,7 +31,7 @@ class GLQueryHeap final : public QueryHeap
         ~GLQueryHeap();
 
         void Begin(std::uint32_t query);
-        void End(std::uint32_t query);
+        void End();
 
         // Returns the the specified query ID.
         inline GLuint GetID(std::uint32_t query) const

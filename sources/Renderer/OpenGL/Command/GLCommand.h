@@ -262,8 +262,7 @@ struct GLCmdBeginQuery
 
 struct GLCmdEndQuery
 {
-    GLQueryHeap*    queryHeap;
-    std::uint32_t   query;
+    GLQueryHeap* queryHeap;
 };
 
 struct GLCmdBeginConditionalRender
