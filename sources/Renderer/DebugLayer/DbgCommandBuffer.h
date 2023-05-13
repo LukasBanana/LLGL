@@ -214,6 +214,8 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void NextProfile(FrameProfile& outputProfile);
 
+        void ValidateSubmit();
+
     public:
 
         /* ----- Debugging members ----- */
@@ -289,10 +291,19 @@ class DbgCommandBuffer final : public CommandBuffer
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
         void ResetStates();
+        void ResetRecords();
         void ResetBindingTable(const DbgPipelineLayout* pipelineLayoutDbg);
 
         void StartTimer(const char* annotation);
         void EndTimer();
+
+    private:
+
+        struct SwapChainFramePair
+        {
+            DbgSwapChain*   swapChain;
+            std::uint64_t   frame;      // Frame index when the swap-chain render-pass was encoded
+        };
 
     private:
 
@@ -356,6 +367,12 @@ class DbgCommandBuffer final : public CommandBuffer
             bool                    streamOutputBusy                        = false;
         }
         states_;
+
+        struct Records
+        {
+            std::vector<SwapChainFramePair> swapChainFrames;
+        }
+        records_;
 
 };
 

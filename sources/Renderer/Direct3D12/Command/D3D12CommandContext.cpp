@@ -27,10 +27,6 @@ static constexpr D3D12_DESCRIPTOR_HEAP_TYPE g_descriptorHeapTypes[] =
     D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
 };
 
-const UINT D3D12CommandContext::g_maxNumAllocators;
-const UINT D3D12CommandContext::g_maxNumResourceBarrieres;
-const UINT D3D12CommandContext::g_maxNumDescriptorHeaps;
-
 D3D12CommandContext::D3D12CommandContext()
 {
     ClearCache();
@@ -59,7 +55,7 @@ void D3D12CommandContext::Create(
     allocatorFence_.Create(device.GetNative());
 
     /* Determine number of command allocators */
-    numAllocators_ = std::max(1u, std::min(numAllocators, g_maxNumAllocators));
+    numAllocators_ = std::max(1u, std::min(numAllocators, D3D12CommandContext::maxNumAllocators));
 
     /* Create command allocators and descriptor heap pools */
     constexpr UINT64 minStagingChunkSize = (0xFF + 1);
@@ -68,7 +64,7 @@ void D3D12CommandContext::Create(
     for_range(i, numAllocators_)
     {
         commandAllocators_[i] = device.CreateDXCommandAllocator(commandListType);
-        for_range(j, D3D12CommandContext::g_maxNumDescriptorHeaps)
+        for_range(j, D3D12CommandContext::maxNumDescriptorHeaps)
             stagingDescriptorPools_[i][j].InitializeDevice(device.GetNative(), g_descriptorHeapTypes[j]);
         descriptorCaches_[i].Create(device.GetNative());
         stagingBufferPools_[i].InitializeDevice(device.GetNative(), initialStagingChunkSize);
@@ -271,7 +267,7 @@ static bool CompareDescriptorHeapRefs(
 
 void D3D12CommandContext::SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps)
 {
-    if (numDescriptorHeaps <= D3D12CommandContext::g_maxNumDescriptorHeaps)
+    if (numDescriptorHeaps <= D3D12CommandContext::maxNumDescriptorHeaps)
     {
         /* Check if the descriptor heaps are cached */
         if (stateCache_.dirtyBits.descriptorHeaps != 0 ||
@@ -360,7 +356,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DE
 {
     /* Get current descriptor heap pool via allocator- and type index */
     const UINT typeIndex = static_cast<UINT>(type);
-    LLGL_ASSERT(typeIndex < D3D12CommandContext::g_maxNumDescriptorHeaps);
+    LLGL_ASSERT(typeIndex < D3D12CommandContext::maxNumDescriptorHeaps);
     auto& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
 
     /* Return CPU descriptor handle for the specified descriptor in the pool */
@@ -375,7 +371,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
 {
     /* Get current descriptor heap pool via allocator- and type index */
     const UINT typeIndex = static_cast<UINT>(type);
-    LLGL_ASSERT(typeIndex < D3D12CommandContext::g_maxNumDescriptorHeaps);
+    LLGL_ASSERT(typeIndex < D3D12CommandContext::maxNumDescriptorHeaps);
     auto& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
 
     /* Copy descriptors into shader-visible descriptor heap */
@@ -495,7 +491,7 @@ void D3D12CommandContext::DispatchIndirect(
 
 D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
 {
-    if (numResourceBarriers_ == g_maxNumResourceBarrieres)
+    if (numResourceBarriers_ == D3D12CommandContext::maxNumResourceBarrieres)
         FlushResourceBarrieres();
     return resourceBarriers_[numResourceBarriers_++];
 }
@@ -519,7 +515,7 @@ void D3D12CommandContext::NextCommandAllocator()
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
     /* Reset descriptor heap pools before they are re-used */
-    for_range(i, D3D12CommandContext::g_maxNumDescriptorHeaps)
+    for_range(i, D3D12CommandContext::maxNumDescriptorHeaps)
         stagingDescriptorPools_[currentAllocatorIndex_][i].Reset();
 }
 

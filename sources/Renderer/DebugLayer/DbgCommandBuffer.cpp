@@ -82,8 +82,9 @@ DbgCommandBuffer::DbgCommandBuffer(
 
 void DbgCommandBuffer::Begin()
 {
-    /* Reset previous states */
+    /* Reset previous states and records */
     ResetStates();
+    ResetRecords();
 
     /* Enable performance profiler if it was scheduled */
     perfProfilerEnabled_ = (profiler_ != nullptr && profiler_->timeRecordingEnabled);
@@ -661,6 +662,10 @@ void DbgCommandBuffer::BeginRenderPass(
 
         bindings_.swapChain     = &swapChainDbg;
         bindings_.renderTarget  = nullptr;
+
+        /* Record swap-chain frame to validate when submitting the command buffer */
+        if (debugger_)
+            records_.swapChainFrames.push_back({ bindings_.swapChain, swapChainDbg.GetCurrentFrame() });
 
         instance.BeginRenderPass(swapChainDbg.instance, renderPass, numClearValues, clearValues);
     }
@@ -1252,6 +1257,20 @@ void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
     /* Copy frame profile values to output profile */
     ::memcpy(outputProfile.values, profile_.values, sizeof(profile_.values));
     outputProfile.timeRecords = std::move(profile_.timeRecords);
+}
+
+void DbgCommandBuffer::ValidateSubmit()
+{
+    for (const SwapChainFramePair& pair : records_.swapChainFrames)
+    {
+        if (pair.swapChain->GetCurrentFrame() != pair.frame)
+        {
+            if (!pair.swapChain->label.empty())
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "command buffer submitted after back-buffer swap [SwapChain: \"" + pair.swapChain->label + "\"]");
+            else
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "command buffer submitted after back-buffer swap");
+        }
+    }
 }
 
 #undef LLGL_DBG_COMMAND
@@ -2249,6 +2268,11 @@ void DbgCommandBuffer::ResetStates()
     ::memset(profile_.values, 0, sizeof(profile_.values));
     ::memset(&bindings_, 0, sizeof(bindings_));
     ::memset(&states_, 0, sizeof(states_));
+}
+
+void DbgCommandBuffer::ResetRecords()
+{
+    records_.swapChainFrames.clear();
 }
 
 void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayoutDbg)

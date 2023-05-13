@@ -52,6 +52,7 @@ void DbgSwapChain::SetName(const char* name)
 void DbgSwapChain::Present()
 {
     instance.Present();
+    ++currentFrame_;
 }
 
 std::uint32_t DbgSwapChain::GetSamples() const

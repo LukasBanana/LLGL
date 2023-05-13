@@ -88,7 +88,7 @@ class D3D12SwapChain final : public SwapChain
 
     private:
 
-        static const UINT maxSwapBuffers = 3;
+        static constexpr UINT maxSwapBuffers = 3;
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
         D3D12CommandQueue*              commandQueue_                       = nullptr;

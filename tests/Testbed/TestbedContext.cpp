@@ -8,13 +8,18 @@
 #include "Testbed.h"
 
 
+#define ENABLE_DEBUGGER 1
+
 TestbedContext::TestbedContext(const char* moduleName)
 {
     RenderSystemDescriptor rendererDesc;
     {
         rendererDesc.moduleName = moduleName;
         rendererDesc.flags      = RenderSystemFlags::DebugDevice;
-        //rendererDesc.profiler   = &profiler;
+        #if ENABLE_DEBUGGER
+        rendererDesc.profiler   = &profiler;
+        rendererDesc.debugger   = &debugger;
+        #endif
     }
     if (renderer = RenderSystem::Load(rendererDesc))
     {

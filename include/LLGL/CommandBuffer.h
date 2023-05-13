@@ -399,6 +399,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Begins with a new render pass.
         \param[in] renderTarget Specifies the render target in which the subsequent draw operations will be stored.
+        If this is a swap-chain and SwapChain::Present is called on such swap-chain, this encoded command is invalidated.
+        Therefore, a command buffer that renders directly into a swap-chain must be recorded again after the back buffer of such a swap-chain has been flipped with the front-buffer.
         \param[in] renderPass Specifies an optional render pass object. If this is null, the default render pass for the specified render target will be used.
         This render pass object must be compatible with the render pass object the specified render target was created with.
         \param[in] numClearValues Specifies the number of clear values that are specified in the \c clearValues parameter.

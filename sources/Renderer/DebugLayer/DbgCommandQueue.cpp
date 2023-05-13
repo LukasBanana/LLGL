@@ -1,6 +1,6 @@
 /*
  * DbgCommandQueue.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -29,6 +29,12 @@ DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* prof
 void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        commandBufferDbg.ValidateSubmit();
+    }
 
     instance.Submit(commandBufferDbg.instance);
 

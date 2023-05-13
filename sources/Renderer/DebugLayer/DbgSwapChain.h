@@ -43,6 +43,12 @@ class DbgSwapChain final : public SwapChain
 
         DbgSwapChain(SwapChain& instance);
 
+        // Returns the current frame which is incremented with eath Present() invocation.
+        inline std::uint64_t GetCurrentFrame() const
+        {
+            return currentFrame_;
+        }
+
     public:
 
         SwapChain&  instance;
@@ -54,7 +60,8 @@ class DbgSwapChain final : public SwapChain
 
     private:
 
-        std::unique_ptr<DbgRenderPass> renderPass_;
+        std::unique_ptr<DbgRenderPass>  renderPass_;
+        std::uint64_t                   currentFrame_   = 0;
 
 };
 

@@ -183,9 +183,9 @@ class D3D12CommandContext
 
     private:
 
-        static const UINT g_maxNumAllocators        = 3;
-        static const UINT g_maxNumResourceBarrieres = 16;
-        static const UINT g_maxNumDescriptorHeaps   = 2;
+        static constexpr UINT maxNumAllocators          = 3;
+        static constexpr UINT maxNumResourceBarrieres   = 16;
+        static constexpr UINT maxNumDescriptorHeaps     = 2;
 
     private:
 
@@ -204,11 +204,11 @@ class D3D12CommandContext
             }
             dirtyBits;
 
-            ID3D12RootSignature*    graphicsRootSignature                       = nullptr;
-            ID3D12RootSignature*    computeRootSignature                        = nullptr;
-            ID3D12PipelineState*    pipelineState                               = nullptr;
-            UINT                    numDescriptorHeaps                          = 0;
-            ID3D12DescriptorHeap*   descriptorHeaps[g_maxNumDescriptorHeaps]    = {};
+            ID3D12RootSignature*    graphicsRootSignature                   = nullptr;
+            ID3D12RootSignature*    computeRootSignature                    = nullptr;
+            ID3D12PipelineState*    pipelineState                           = nullptr;
+            UINT                    numDescriptorHeaps                      = 0;
+            ID3D12DescriptorHeap*   descriptorHeaps[maxNumDescriptorHeaps]  = {};
         };
 
     private:
@@ -233,27 +233,27 @@ class D3D12CommandContext
 
     private:
 
-        ID3D12Device*                       device_                                         = nullptr;
-        D3D12CommandQueue*                  commandQueue_                                   = nullptr;
+        ID3D12Device*                       device_                                     = nullptr;
+        D3D12CommandQueue*                  commandQueue_                               = nullptr;
 
-        ComPtr<ID3D12CommandAllocator>      commandAllocators_[g_maxNumAllocators];
-        UINT                                currentAllocatorIndex_                          = 0;
-        UINT                                numAllocators_                                  = g_maxNumAllocators;
+        ComPtr<ID3D12CommandAllocator>      commandAllocators_[maxNumAllocators];
+        UINT                                currentAllocatorIndex_                      = 0;
+        UINT                                numAllocators_                              = maxNumAllocators;
 
-        UINT64                              allocatorFenceValues_[g_maxNumAllocators]       = {};
+        UINT64                              allocatorFenceValues_[maxNumAllocators]     = {};
         D3D12NativeFence                    allocatorFence_;
 
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
-        D3D12_RESOURCE_BARRIER              resourceBarriers_[g_maxNumResourceBarrieres];
-        UINT                                numResourceBarriers_                            = 0;
+        D3D12_RESOURCE_BARRIER              resourceBarriers_[maxNumResourceBarrieres];
+        UINT                                numResourceBarriers_                        = 0;
 
-        D3D12StagingDescriptorHeapPool      stagingDescriptorPools_[g_maxNumAllocators][g_maxNumDescriptorHeaps];
+        D3D12StagingDescriptorHeapPool      stagingDescriptorPools_[maxNumAllocators][maxNumDescriptorHeaps];
         D3D12DescriptorHeapSetLayout        stagingDescriptorSetLayout_;
         D3D12RootParameterIndices           stagingDescriptorIndices_;
-        D3D12DescriptorCache                descriptorCaches_[g_maxNumAllocators];
+        D3D12DescriptorCache                descriptorCaches_[maxNumAllocators];
 
-        D3D12StagingBufferPool              stagingBufferPools_[g_maxNumAllocators];
+        D3D12StagingBufferPool              stagingBufferPools_[maxNumAllocators];
 
         StateCache                          stateCache_;
 

@@ -41,6 +41,7 @@ class TestbedContext
     protected:
 
         LLGL::RenderingProfiler profiler;
+        LLGL::RenderingDebugger debugger;
         LLGL::RenderSystemPtr   renderer;
         LLGL::SwapChain*        swapChain   = nullptr;
         LLGL::CommandBuffer*    cmdBuffer   = nullptr;
