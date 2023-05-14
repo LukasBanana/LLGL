@@ -58,8 +58,9 @@ class MTRenderTarget final : public RenderTarget
 
         void CreateAttachment(
             id<MTLDevice>                       device,
-            MTLRenderPassAttachmentDescriptor*  attachment,
-            const AttachmentDescriptor&         desc,
+            MTLRenderPassAttachmentDescriptor*  outAttachment,
+            const AttachmentDescriptor&         inAttachment,
+            const AttachmentDescriptor*         inResolveAttachment,
             const MTAttachmentFormat&           fmt,
             std::uint32_t                       slot
         );

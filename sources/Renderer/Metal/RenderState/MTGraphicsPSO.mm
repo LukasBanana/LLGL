@@ -214,7 +214,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
 
         /* Initialize pixel formats from render pass */
         const auto& colorAttachments = renderPassMT->GetColorAttachments();
-        for_range(i, std::min(colorAttachments.size(), std::size_t(8u)))
+        for_range(i, std::min(colorAttachments.size(), std::size_t(LLGL_MAX_NUM_COLOR_ATTACHMENTS)))
         {
             FillColorAttachmentDesc(
                 psoDesc.colorAttachments[i],

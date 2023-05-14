@@ -11,6 +11,7 @@
 #include <LLGL/CommandBufferFlags.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 #include "../MTTypes.h"
 #include "../Texture/MTTexture.h"
@@ -72,8 +73,21 @@ MTRenderPass::MTRenderPass(const RenderTargetDescriptor& desc) :
     else
     {
         /* Create default render pass for render target */
-        for (const auto& attachment : desc.attachments)
+        const std::uint32_t numColorAttachments = NumActiveColorAttachments(desc);
+        colorAttachments_.resize(numColorAttachments);
+        for_range(i, numColorAttachments)
         {
+            const auto& attachment = desc.colorAttachments[i];
+            const Format format = GetAttachmentFormat(attachment);
+            if (IsColorFormat(format))
+                colorAttachments_[i] = MakeMTAttachmentFormat(format);
+            else
+                LLGL_TRAP("invalid format for render-pass color attachment: %s", ToString(format));
+        }
+
+        if (IsAttachmentEnabled(desc.depthStencilAttachment))
+        {
+            const auto& attachment = desc.depthStencilAttachment;
             const Format format = GetAttachmentFormat(attachment);
             if (IsDepthAndStencilFormat(format))
                 depthAttachment_ = stencilAttachment_ = MakeMTAttachmentFormat(format);
@@ -81,8 +95,8 @@ MTRenderPass::MTRenderPass(const RenderTargetDescriptor& desc) :
                 depthAttachment_ = MakeMTAttachmentFormat(format);
             else if (IsStencilFormat(format))
                 stencilAttachment_ = MakeMTAttachmentFormat(format);
-            else if (IsColorFormat(format))
-                colorAttachments_.push_back(MakeMTAttachmentFormat(format));
+            else
+                LLGL_TRAP("invalid format for render-pass depth-stencil attachment: %s", ToString(format));
         }
     }
 }
