@@ -2217,8 +2217,8 @@ void DbgCommandBuffer::AssertVertexBufferBound()
             auto buffer = bindings_.vertexBuffers[i];
             if (buffer->elements > 0 && !buffer->initialized)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
-            if (buffer->mapped)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex buffer used for drawing while being mapped to CPU local memory");
+            if (buffer->IsMappedForCPUAccess())
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex buffer used for drawing while being mapped to CPU memory space");
         }
     }
     else
@@ -2231,8 +2231,8 @@ void DbgCommandBuffer::AssertIndexBufferBound()
     {
         if (!buffer->initialized)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound");
-        if (buffer->mapped)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "index buffer used for drawing while being mapped to CPU local memory");
+        if (buffer->IsMappedForCPUAccess())
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "index buffer used for drawing while being mapped to CPU memory space");
     }
     else
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound");

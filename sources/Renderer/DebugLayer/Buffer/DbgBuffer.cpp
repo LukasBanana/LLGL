@@ -38,6 +38,32 @@ BufferDescriptor DbgBuffer::GetDesc() const
     return instance.GetDesc();
 }
 
+void DbgBuffer::OnMap(const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    mappedAccess_   = access;
+    mappedRange_[0] = std::min(offset, desc.size);
+    mappedRange_[1] = std::min(offset + length, desc.size);
+}
+
+void DbgBuffer::OnUnmap()
+{
+    if (IsMappedForCPUAccess())
+    {
+        if (mappedAccess_ == CPUAccess::WriteDiscard || mappedAccess_ == CPUAccess::WriteOnly)
+        {
+            /* If the buffer was mapped for writing, we assume the buffer has been initialized */
+            initialized = true;
+        }
+        mappedRange_[0] = 0;
+        mappedRange_[1] = 0;
+    }
+}
+
+bool DbgBuffer::IsMappedForCPUAccess() const
+{
+    return (mappedRange_[0] < mappedRange_[1]);
+}
+
 
 } // /namespace LLGL
 

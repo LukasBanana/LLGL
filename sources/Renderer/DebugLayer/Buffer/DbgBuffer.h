@@ -33,6 +33,12 @@ class DbgBuffer final : public Buffer
 
         DbgBuffer(Buffer& instance, const BufferDescriptor& desc);
 
+        void OnMap(const CPUAccess access, std::uint64_t offset, std::uint64_t length);
+        void OnUnmap();
+
+        // Returns true if this buffer is currently mapped into CPU memory space.
+        bool IsMappedForCPUAccess() const;
+
     public:
 
         Buffer&                 instance;
@@ -40,7 +46,11 @@ class DbgBuffer final : public Buffer
         std::string             label;
         std::uint64_t           elements    = 0;
         bool                    initialized = false;
-        bool                    mapped      = false;
+
+    private:
+
+        CPUAccess               mappedAccess_   = CPUAccess::ReadOnly;
+        std::uint64_t           mappedRange_[2] = { 0, 0 };
 
 };
 

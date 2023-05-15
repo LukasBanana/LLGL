@@ -211,7 +211,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     auto result = instance_->MapBuffer(bufferDbg.instance, access);
 
     if (result != nullptr)
-        bufferDbg.mapped = true;
+        bufferDbg.OnMap(access, 0, bufferDbg.desc.size);
 
     if (profiler_)
         profiler_->frameProfile.bufferMappings++;
@@ -234,7 +234,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::ui
     auto result = instance_->MapBuffer(bufferDbg.instance, access, offset, length);
 
     if (result != nullptr)
-        bufferDbg.mapped = true;
+        bufferDbg.OnMap(access, offset, length);
 
     if (profiler_)
         profiler_->frameProfile.bufferMappings++;
@@ -254,7 +254,7 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
     instance_->UnmapBuffer(bufferDbg.instance);
 
-    bufferDbg.mapped = false;
+    bufferDbg.OnUnmap();
 }
 
 /* ----- Textures ----- */
@@ -827,13 +827,13 @@ void DbgRenderSystem::ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory
 {
     if (mapMemory)
     {
-        if (bufferDbg.mapped)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot map buffer that has already been mapped to CPU local memory");
+        if (bufferDbg.IsMappedForCPUAccess())
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot map buffer that has already been mapped to CPU memory space");
     }
     else
     {
-        if (!bufferDbg.mapped)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot unmap buffer that was not previously mapped to CPU local memory");
+        if (!bufferDbg.IsMappedForCPUAccess())
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot unmap buffer that was not previously mapped to CPU memory space");
     }
 }
 
