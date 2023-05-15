@@ -31,21 +31,11 @@ class D3D11Buffer : public Buffer
 
         D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
-        void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
+        void WriteSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
         void ReadSubresource(ID3D11DeviceContext* context, void* data, UINT dataSize, UINT offset);
 
         void* Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT length);
         void Unmap(ID3D11DeviceContext* context);
-
-        // Creates a shader-resource-view (SRV) of a subresource of this buffer object.
-        void CreateSubresourceSRV(
-            ID3D11Device*               device,
-            ID3D11ShaderResourceView**  srvOutput,
-            const DXGI_FORMAT           format,
-            UINT                        firstElement,
-            UINT                        numElements,
-            bool                        isRawView       = false
-        );
 
         // Returns the native ID3D11Buffer object.
         inline ID3D11Buffer* GetNative() const
@@ -80,7 +70,7 @@ class D3D11Buffer : public Buffer
     private:
 
         void CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
-        void CreateCpuAccessBuffer(ID3D11Device* device, const BufferDescriptor& desc);
+        void CreateCpuAccessBuffer(ID3D11Device* device, UINT cpuAccessFlags, UINT stride);
 
         void ReadFromStagingBuffer(
             ID3D11DeviceContext*    context,
@@ -96,6 +86,21 @@ class D3D11Buffer : public Buffer
             void*                   data,
             UINT                    dataSize,
             UINT                    srcOffset
+        );
+
+        void WriteWithStagingBuffer(
+            ID3D11DeviceContext*    context,
+            ID3D11Buffer*           stagingBuffer,
+            const void*             data,
+            UINT                    dataSize,
+            UINT                    dstOffset
+        );
+
+        void WriteWithSubresourceCopyWithCpuAccess(
+            ID3D11DeviceContext*    context,
+            const void*             data,
+            UINT                    dataSize,
+            UINT                    dstOffset
         );
 
     private:

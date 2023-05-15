@@ -38,9 +38,6 @@ D3D11_USAGE DXGetBufferUsage(const BufferDescriptor& desc);
 D3D11_USAGE DXGetCPUAccessBufferUsage(const BufferDescriptor& desc);
 D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& desc);
 
-// Returns the D3D mapping for a partial or full write.
-D3D11_MAP DXGetMapWrite(bool writeDiscard);
-
 
 } // /namespace LLGL
 

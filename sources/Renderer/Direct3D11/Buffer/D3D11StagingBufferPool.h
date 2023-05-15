@@ -35,8 +35,9 @@ class D3D11StagingBufferPool
             ID3D11Device*           device,
             ID3D11DeviceContext*    context,
             UINT                    chunkSize,
-            UINT                    bindFlags   = 0,
-            UINT                    miscFlags   = 0
+            D3D11_USAGE             usage           = D3D11_USAGE_STAGING,
+            UINT                    cpuAccessFlags  = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ,
+            UINT                    bindFlags       = 0
         );
 
         // Resets all chunks in the pool.
@@ -58,8 +59,9 @@ class D3D11StagingBufferPool
         std::vector<D3D11StagingBuffer> chunks_;
         std::size_t                     chunkIdx_           = 0;
         UINT                            chunkSize_          = 0;
+        D3D11_USAGE                     usage_              = D3D11_USAGE_STAGING;
+        UINT                            cpuAccessFlags_     = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
         UINT                            bindFlags_          = 0;
-        UINT                            miscFlags_          = 0;
         bool                            incrementOffsets_   = false;
 
 };

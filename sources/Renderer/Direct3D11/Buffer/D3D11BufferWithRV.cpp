@@ -54,11 +54,11 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
     uavFlags_     { GetUAVFlags(desc)         }
 {
     /* Determine stride size either for structured buffers or regular buffers */
-    const UINT stride = GetStorageBufferStride(desc);
+    const UINT stride = ((uavFlags_ & D3D11_BUFFER_UAV_FLAG_RAW) != 0 ? 4 : GetStorageBufferStride(desc));
 
     /* Create resource views (SRV and UAV) */
-    auto format         = GetD3DResourceViewFormat(desc);
-    auto numElements    = static_cast<UINT>(desc.size) / stride;
+    const DXGI_FORMAT   format      = GetD3DResourceViewFormat(desc);
+    const UINT          numElements = static_cast<UINT>(desc.size) / stride;
 
     if ((desc.bindFlags & BindFlags::Sampled) != 0)
         CreateInternalSRV(device, format, 0, numElements);
@@ -88,10 +88,20 @@ static void CreateD3D11BufferSubresourceSRV(
     /* Initialize descriptor and create SRV */
     D3D11_SHADER_RESOURCE_VIEW_DESC desc;
     {
-        desc.Format                 = format;
-        desc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
-        desc.Buffer.FirstElement    = firstElement;
-        desc.Buffer.NumElements     = numElements;
+        desc.Format = format;
+        if (format == DXGI_FORMAT_R32_TYPELESS)
+        {
+            desc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFEREX;
+            desc.BufferEx.FirstElement  = firstElement;
+            desc.BufferEx.NumElements   = numElements;
+            desc.BufferEx.Flags         = D3D11_BUFFEREX_SRV_FLAG_RAW;
+        }
+        else
+        {
+            desc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
+            desc.Buffer.FirstElement    = firstElement;
+            desc.Buffer.NumElements     = numElements;
+        }
     }
     auto hr = device->CreateShaderResourceView(resource, &desc, srvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", errorContextInfo);

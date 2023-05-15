@@ -8,6 +8,7 @@
 #include "D3D11StagingBuffer.h"
 #include "../D3D11ResourceFlags.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/Assertion.h"
 #include <algorithm>
 
 
@@ -15,31 +16,34 @@ namespace LLGL
 {
 
 
-static D3D11_USAGE DXGetOptimalUsageForBindFlags(UINT bindFlags)
+static UINT DXGetAllowedCPUAccessFlags(D3D11_USAGE usage)
 {
-    if ((bindFlags & D3D11_BIND_CONSTANT_BUFFER) != 0)
-        return D3D11_USAGE_DYNAMIC;
-    else
-        return D3D11_USAGE_DEFAULT;
+    if (usage == D3D11_USAGE_DYNAMIC)
+        return D3D11_CPU_ACCESS_WRITE;
+    if (usage == D3D11_USAGE_STAGING)
+        return D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
+    return 0;
 }
 
 D3D11StagingBuffer::D3D11StagingBuffer(
     ID3D11Device*   device,
     UINT            size,
-    UINT            bindFlags,
-    UINT            miscFlags)
+    D3D11_USAGE     usage,
+    UINT            cpuAccessFlags,
+    UINT            bindFlags)
 :
-    usage_     { DXGetOptimalUsageForBindFlags(bindFlags) },
-    size_      { size                                     }
+    usage_ { usage },
+    size_  { size  }
 {
     /* Create new D3D11 hardware buffer (for CPU access) */
+    LLGL_ASSERT((cpuAccessFlags & DXGetAllowedCPUAccessFlags(usage)) == cpuAccessFlags, "invalid CPU-access flags for D3D11 buffer usage");
     D3D11_BUFFER_DESC descD3D;
     {
         descD3D.ByteWidth           = size;
-        descD3D.Usage               = usage_;
+        descD3D.Usage               = usage;
         descD3D.BindFlags           = bindFlags;
-        descD3D.CPUAccessFlags      = (usage_ == D3D11_USAGE_DYNAMIC ? D3D11_CPU_ACCESS_WRITE : 0);
-        descD3D.MiscFlags           = miscFlags;
+        descD3D.CPUAccessFlags      = cpuAccessFlags;
+        descD3D.MiscFlags           = 0; // MiscFlags cannot be used for buffers with D3D11_CPU_ACCESS flags
         descD3D.StructureByteStride = 0;
     }
     auto hr = device->CreateBuffer(&descD3D, nullptr, native_.GetAddressOf());
@@ -81,16 +85,14 @@ void D3D11StagingBuffer::Write(
 {
     if (usage_ == D3D11_USAGE_DYNAMIC)
     {
-        /* Discard previous content if the offset starts at zero, because intermediate buffers will be filled from start to end */
-        const bool writeDiscard = (offset_ == 0);
-
+        /* D3D11_USAGE_DYNAMIC only supports map-write with discard */
         /* Update partial subresource by mapping buffer from GPU into CPU memory space */
         D3D11_MAPPED_SUBRESOURCE subresource;
-        context->Map(GetNative(), 0, DXGetMapWrite(writeDiscard), 0, &subresource);
+        if (SUCCEEDED(context->Map(GetNative(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource)))
         {
             ::memcpy(reinterpret_cast<char*>(subresource.pData) + offset_, data, dataSize);
+            context->Unmap(GetNative(), 0);
         }
-        context->Unmap(GetNative(), 0);
     }
     else
     {

@@ -26,6 +26,8 @@ D3D11StateManager::D3D11StateManager(ID3D11Device* device, const ComPtr<ID3D11De
         device,
         context.Get(),
         g_cbufferChunkSize,
+        D3D11_USAGE_DYNAMIC,
+        D3D11_CPU_ACCESS_WRITE,
         D3D11_BIND_CONSTANT_BUFFER
     }
 {
@@ -395,10 +397,11 @@ void D3D11StateManager::SetConstants(UINT slot, const void* data, UINT dataSize,
     auto bufferRange = stagingCbufferPool_.Write(data, dataSize, cbufferUpdateAlignment);
 
     /* Bind intermediate buffer to buffer range */
-    const UINT firstConstants[] = { bufferRange.offset / 16 };
-    const UINT numConstants[]   = { bufferRange.size / 16 };
+    ID3D11Buffer* buffers[]        = { bufferRange.native };
+    const UINT    firstConstants[] = { bufferRange.offset / 16 };
+    const UINT    numConstants[]   = { bufferRange.size / 16 };
 
-    SetConstantBuffersRange(slot, 1, &(bufferRange.native), firstConstants, numConstants, stageFlags);
+    SetConstantBuffersRange(slot, 1, buffers, firstConstants, numConstants, stageFlags);
 }
 
 void D3D11StateManager::DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)

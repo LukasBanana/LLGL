@@ -156,11 +156,6 @@ D3D11_USAGE DXGetTextureUsage(const TextureDescriptor& /*desc*/)
     return D3D11_USAGE_DEFAULT;
 }
 
-D3D11_MAP DXGetMapWrite(bool writeDiscard)
-{
-    return (writeDiscard ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE);
-}
-
 
 } // /namespace LLGL
 

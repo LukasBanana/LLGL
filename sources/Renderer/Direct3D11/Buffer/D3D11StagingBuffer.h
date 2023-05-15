@@ -27,8 +27,9 @@ class D3D11StagingBuffer
         D3D11StagingBuffer(
             ID3D11Device*   device,
             UINT            size,
-            UINT            bindFlags   = 0,
-            UINT            miscFlags   = 0
+            D3D11_USAGE     usage           = D3D11_USAGE_STAGING,
+            UINT            cpuAccessFlags  = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ,
+            UINT            bindFlags       = 0
         );
 
         D3D11StagingBuffer(D3D11StagingBuffer&& rhs);
@@ -79,7 +80,7 @@ class D3D11StagingBuffer
     private:
 
         ComPtr<ID3D11Buffer>    native_;
-        D3D11_USAGE             usage_      = D3D11_USAGE_DEFAULT;
+        D3D11_USAGE             usage_      = D3D11_USAGE_STAGING;
         UINT                    size_       = 0;
         UINT                    offset_     = 0;
 
