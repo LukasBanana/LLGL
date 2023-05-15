@@ -56,6 +56,8 @@ class TestbedContext
         DECL_TEST( CommandBufferSubmit );
         DECL_TEST( BufferWriteAndRead );
         DECL_TEST( BufferMap );
+        DECL_TEST( BufferFill );
+        DECL_TEST( BufferUpdate );
         DECL_TEST( BufferCopy );
         DECL_TEST( BufferToTextureCopy );
         DECL_TEST( TextureCopy );

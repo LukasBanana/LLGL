@@ -12,6 +12,7 @@
 #include "../Ext/VKExtensions.h"
 #include "../Ext/VKExtensionRegistry.h"
 #include "../../ResourceUtils.h"
+#include "../../../Core/Exception.h"
 
 
 namespace LLGL
@@ -43,7 +44,7 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
         else
         {
             /* Error: feature not supported due to missing extension */
-            throw std::runtime_error("stream output buffer not supported by Vulkan renderer");
+            LLGL_TRAP("stream output buffer not supported by Vulkan renderer");
         }
     }
 

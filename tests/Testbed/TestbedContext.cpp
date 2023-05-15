@@ -61,6 +61,8 @@ void TestbedContext::RunAllTests()
     RUN_TEST( CommandBufferSubmit       );
     RUN_TEST( BufferWriteAndRead        );
     RUN_TEST( BufferMap                 );
+    RUN_TEST( BufferFill                );
+    RUN_TEST( BufferUpdate              );
     RUN_TEST( BufferCopy                );
     RUN_TEST( BufferToTextureCopy       );
     RUN_TEST( TextureCopy               );

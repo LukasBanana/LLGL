@@ -23,6 +23,7 @@ using namespace LLGL;
 
 #define CREATE_BUFFER(OBJ, DESC, NAME, INITIAL)                         \
     Buffer* OBJ = nullptr;                                              \
+    const char* OBJ##_Name = NAME;                                      \
     {                                                                   \
         TestResult result = CreateBuffer(DESC, NAME, &OBJ, INITIAL);    \
         if (result != TestResult::Passed)                               \
