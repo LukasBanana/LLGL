@@ -55,7 +55,8 @@ struct BufferDescriptor
     \remarks This field is ignored if the binding flags do not contain at least one of the following bits: BindFlags::IndexBuffer, BindFlags::Sampled, or BindFlags::Storage.
     \remarks If the BindFlags::IndexBuffer bit is set, this must be either Format::R16UInt, Format::R32UInt, or Format::Undefined.
     \remarks If Format::Undefined is specified and the BindFlags::IndexBuffer bit is set, only the secondary \c SetIndexBuffer function can be used in the CommandBuffer interface.
-    \remarks If Format::Undefined is specified and \c stride is zero, sampled and storage buffers will be interpreted as byte address buffers.
+    \remarks If Format::Undefined is specified and \c stride is zero, sampled and storage buffers
+    (i.e. buffer views with BindFlags::Sampled and BindFlags::Storage respectively) will be interpreted as byte address buffers.
     \see BindFlags::IndexBuffer
     \see CommandBuffer::SetIndexBuffer(Buffer&)
     */

@@ -180,6 +180,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Fills the destination buffer with copies of the specified 32-bit value.
 
         \param[in,out] dstBuffer Specifies the destination buffer whose data is to be updated.
+        This buffer must have been created with the binding flag BindFlags::CopyDst.
         This command works with all kinds of buffers, but for performance reasons it is recommended to create this buffer with the binding flag BindFlags::Storage.
         Otherwise, an intermediate buffer might be created and copied by LLGL.
 

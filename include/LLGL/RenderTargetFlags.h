@@ -110,7 +110,7 @@ struct RenderTargetDescriptor
     \see AttachmentFormatDescriptor::loadOp
     \see AttachmentFormatDescriptor::storeOp
     */
-    const RenderPass*                   renderPass          = nullptr;
+    const RenderPass*       renderPass  = nullptr;
 
     /**
     \brief Specifies the resolution of the render targets.
@@ -118,7 +118,7 @@ struct RenderTargetDescriptor
     i.e. the specified array layer and MIP-map level must have the same extent.
     \see Texture::GetMipExtent
     */
-    Extent2D                            resolution;
+    Extent2D                resolution;
 
     /**
     \brief Number of samples for the render targets. By default 1.
@@ -127,7 +127,7 @@ struct RenderTargetDescriptor
     \remarks If \c renderPass is specified, the number of samples from that RenderPass must match this number of samples.
     \see RenderTarget::GetSamples
     */
-    std::uint32_t                       samples             = 1;
+    std::uint32_t           samples     = 1;
 
     /**
     \brief Specifies the list of color attachment descriptors.
@@ -136,7 +136,7 @@ struct RenderTargetDescriptor
     must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::ColorAttachment.
     \see TextureDescriptor::samples
     */
-    AttachmentDescriptor                colorAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    AttachmentDescriptor    colorAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     /**
     \brief Specifies the list of attachment descriptors for which the corresponding multi-sampled color attachments will be resolved into after a render pass.
@@ -144,7 +144,7 @@ struct RenderTargetDescriptor
     \remarks For each attachment, for which a texture is specified, this texture must have 1 sample,
     must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::ColorAttachment.
     */
-    AttachmentDescriptor                resolveAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
+    AttachmentDescriptor    resolveAttachments[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
     /**
     \brief Specifies the depth-stencil attachment descriptor.
@@ -152,7 +152,7 @@ struct RenderTargetDescriptor
     must have the same size as specified by RenderTargetDescriptor::resolution, and must have been created with the binding flag BindFlags::DepthStencilAttachment.
     \see TextureDescriptor::samples
     */
-    AttachmentDescriptor                depthStencilAttachment;
+    AttachmentDescriptor    depthStencilAttachment;
 };
 
 

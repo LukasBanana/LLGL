@@ -352,7 +352,7 @@ struct PipelineLayoutDescriptor
     \remarks In Vulkan they are called "push constants", in OpenGL they are called "uniforms", and in Direct3D they are called "shader constants".
     \remarks Uniforms are not described by their binding slot, but solely by their name and type.
     They represent a small range within one or more constant buffers or push constant ranges and therefore don't have individual binding slots.
-    Their offests within these buffers are determined by LLGL when a PipelineState object (POS )is created with a PipelineLayout that contains uniform descriptors.
+    Their offests within these buffers are determined by LLGL when a PipelineState object (PSO) is created with a PipelineLayout that contains uniform descriptors.
     This process is highly dependent on the backend, the shaders used within the PSO, and other factors.
     It is advised to keep the number of uniforms small as there is only a very limited amount of space for uniforms:
     - Vulkan only guarantees a minimum of 128 bytes for the push constant ranges which is shared across all shader stages within a single PSO.

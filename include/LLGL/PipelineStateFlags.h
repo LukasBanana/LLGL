@@ -534,7 +534,7 @@ struct DepthBiasDescriptor
     /**
     \brief Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
     \note For OpenGL, this is only supported if the extension \c GL_ARB_polygon_offset_clamp is available
-    (see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_polygon_offset_clamp.txt).
+    \see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_polygon_offset_clamp.txt
     */
     float clamp             = 0.0f;
 };
@@ -757,7 +757,7 @@ struct GraphicsPipelineDescriptor
     /**
     \brief Specifies an optional pipeline layout for the graphics pipeline. By default null.
     \remarks This layout determines at which slots buffer resources will be bound.
-    If this is null, a default layout will be used that is only compatible with graphics pipelines that have no input and output vertex attributes and no binding points.
+    If this is null, a default layout will be used that is only compatible with graphics pipelines that have no binding points, i.e. no input/output buffers or textures.
     \see RenderSystem::CreatePipelineLayout
     */
     const PipelineLayout*   pipelineLayout          = nullptr;
@@ -801,7 +801,8 @@ struct GraphicsPipelineDescriptor
     /**
     \brief Specifies an optional fragment shader (also referred to as "Pixel Shader").
     \remarks If no fragment shader is specified, generated fragments are discarded by the output merger
-    and only the stream-output functionality is used by either the vertex or geometry shader.
+    and only the stream-output functionality as well as depth writes are used by either the vertex or geometry shader.
+    If a depth buffer is attached to the current render target, omitting the fragment shader can be utilized to render a standard shadow map.
     */
     Shader*                 fragmentShader          = nullptr;
 
