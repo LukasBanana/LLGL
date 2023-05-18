@@ -1,12 +1,13 @@
 /*
- * Test9_Metal.cpp
+ * Test_Metal.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "Helper.h"
-#include <LLGL/Utility.h>
+#include <LLGL/LLGL.h>
+#include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/VertexFormat.h>
 #include <memory>
 #include <iostream>
 #include <string>
@@ -23,13 +24,12 @@ int main()
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Metal");
 
-        // Create render context
-        LLGL::RenderContextDescriptor contextDesc;
-
-        contextDesc.videoMode.resolution    = { 800, 600 };
-        contextDesc.vsync.enabled           = true;
-        
-        auto context = renderer->CreateRenderContext(contextDesc);
+        // Create swap chain
+        LLGL::SwapChainDescriptor swapChainDesc;
+        {
+            swapChainDesc.resolution = { 800, 600 };
+        }
+        auto swapChain = renderer->CreateSwapChain(swapChainDesc);
         
         // Renderer info
         const auto& info = renderer->GetRendererInfo();
@@ -43,22 +43,20 @@ int main()
         auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBuffer();
 
-        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+        auto& window = static_cast<LLGL::Window&>(swapChain->GetSurface());
         
         // Setup window title
-        auto title = "LLGL Test 9 ( " + renderer->GetName() + " )";
-        window.SetTitle(std::wstring(title.begin(), title.end()));
+        window.SetTitle("LLGL Test 9 ( " + std::string(renderer->GetName()) + " )");
 
         // Setup input controller
-        auto input = std::make_shared<LLGL::Input>();
-        window.AddEventListener(input);
+        LLGL::Input input{ window };
 
         // Create vertex buffer
         struct Vertex
         {
-            Gs::Vector2f     position;
-            Gs::Vector2f     texCoord;
-            LLGL::ColorRGBub color;
+            float   position[2];
+            float   texCoord[2];
+            uint8_t color[4];
         }
         vertices[] =
         {
@@ -109,8 +107,11 @@ int main()
         {
             samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Mirror;
             samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.mipMapping      = true;
-            samplerDesc.borderColor     = { 1, 1, 1, 1 };
+            samplerDesc.mipMapEnabled   = true;
+            samplerDesc.borderColor[0]  = 1;
+            samplerDesc.borderColor[1]  = 1;
+            samplerDesc.borderColor[2]  = 1;
+            samplerDesc.borderColor[3]  = 1;
             #if 0
             samplerDesc.magFilter       = LLGL::SamplerFilter::Nearest;
             samplerDesc.minFilter       = LLGL::SamplerFilter::Nearest;
@@ -120,47 +121,37 @@ int main()
         auto sampler = renderer->CreateSampler(samplerDesc);
         
         // Create shader program
-        LLGL::ShaderDescriptor vsDesc { LLGL::ShaderType::Vertex,   "TestShader.metal", "VMain", "1.1" };
-        LLGL::ShaderDescriptor fsDesc { LLGL::ShaderType::Fragment, "TestShader.metal", "FMain", "1.1" };
+        LLGL::ShaderDescriptor vsDesc{ LLGL::ShaderType::Vertex,   "TestShader.metal", "VMain", "1.1" };
+        LLGL::ShaderDescriptor fsDesc{ LLGL::ShaderType::Fragment, "TestShader.metal", "FMain", "1.1" };
 
         vsDesc.vertex.inputAttribs = vertexFormat.attributes;
 
-        LLGL::ShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.vertexShader      = renderer->CreateShader(vsDesc);
-            shaderProgramDesc.fragmentShader    = renderer->CreateShader(fsDesc);
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
-        
-        if (shaderProgram->HasErrors())
-            throw std::runtime_error(shaderProgram->GetReport());
-        
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("texture(tex@0):frag,sampler(smpl@0):frag"));
+            pipelineDesc.vertexShader       = renderer->CreateShader(vsDesc);
+            pipelineDesc.fragmentShader     = renderer->CreateShader(fsDesc);
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         // Main loop
-        commands->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
-        
-        while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        while (window.ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
         {
             commands->Begin();
             {
-                commands->BeginRenderPass(*context);
+                commands->BeginRenderPass(*swapChain);
                 {
-                    commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+                    commands->SetViewport(swapChain->GetResolution());
                     
-                    commands->Clear(LLGL::ClearFlags::Color);
+                    commands->Clear(LLGL::ClearFlags::Color, LLGL::ClearValue{ 0.3f, 0.3f, 1.0f, 1.0f });
 
                     commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
                     
-                    commands->SetResource(*texture, LLGL::BindFlags::Sampled, 0, LLGL::StageFlags::FragmentStage);
-                    commands->SetResource(*sampler, 0, 0, LLGL::StageFlags::FragmentStage);
+                    commands->SetResource(0, *texture);
+                    commands->SetResource(1, *sampler);
 
                     commands->Draw(4, 0);
                 }
@@ -169,7 +160,7 @@ int main()
             commands->End();
             commandQueue->Submit(*commands);
             
-            context->Present();
+            swapChain->Present();
         }
     }
     catch (const std::exception& e)
