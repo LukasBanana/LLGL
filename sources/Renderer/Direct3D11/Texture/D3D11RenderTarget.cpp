@@ -365,7 +365,7 @@ void D3D11RenderTarget::CreateDepthStencilView(
         /* Create DSV for target texture */
         ValidateMipResolution(*texture, depthStencilAttachment.mipLevel);
         auto* textureD3D = LLGL_CAST(D3D11Texture*, texture);
-        depthStencilFormat_ = textureD3D->GetBaseDXFormat();
+        depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(textureD3D->GetBaseDXFormat());
         D3D11RenderTarget::CreateSubresourceDSV(
             /*device:*/         device,
             /*resource:*/       textureD3D->GetNative().resource.Get(),

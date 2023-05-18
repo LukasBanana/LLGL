@@ -6,6 +6,7 @@
  */
 
 #include "DXTypes.h"
+#include "../../Core/Exception.h"
 #include <stdexcept>
 #include <string>
 
@@ -20,25 +21,19 @@ namespace DXTypes
 [[noreturn]]
 void MapFailed(const char* typeName, const char* dxTypeName)
 {
-    throw std::invalid_argument(
-        "failed to map <LLGL::" + std::string(typeName) + "> to <" + std::string(dxTypeName) + "> Direct3D parameter"
-    );
+    LLGL_TRAP("failed to map <LLGL::%s> to <%s> Direct3D parameter", typeName, dxTypeName);
 }
 
 [[noreturn]]
 void UnmapFailed(const char* typeName, const char* dxTypeName)
 {
-    throw std::invalid_argument(
-        "failed to unmap <LLGL::" + std::string(typeName) + "> from <" + std::string(dxTypeName) + "> Direct3D parameter"
-    );
+    LLGL_TRAP("failed to unmap <LLGL::%s> from <%s> Direct3D parameter", typeName, dxTypeName);
 }
 
 [[noreturn]]
 void ParamNotSupported(const char* paramName, const char* requirement)
 {
-    throw std::runtime_error(
-        "parameter '" + std::string(paramName) + "' requires " + std::string(requirement)
-    );
+    LLGL_TRAP("parameter '%s' requires %s", paramName, requirement);
 }
 
 DXGI_FORMAT ToDXGIFormat(const DataType dataType)

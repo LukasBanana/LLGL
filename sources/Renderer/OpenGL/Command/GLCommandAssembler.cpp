@@ -255,7 +255,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             //TODO: update reference to GLStateManager
             auto cmd = reinterpret_cast<const GLCmdBindRenderTarget*>(pc);
-            compiler.CallMember(&GLStateManager::BindRenderTarget, g_stateMngrArg, cmd->renderTarget);
+            compiler.CallMember(&GLStateManager::BindRenderTarget, g_stateMngrArg, cmd->renderTarget, nullptr);
             return sizeof(*cmd);
         }
         case GLOpcodeBindPipelineState:

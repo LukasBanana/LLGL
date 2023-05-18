@@ -189,6 +189,7 @@ TextureDescriptor GLTexture::GetDesc() const
 
     texDesc.type        = GetType();
     texDesc.bindFlags   = 0;
+    texDesc.format      = GetFormat();
     texDesc.mipLevels   = static_cast<std::uint32_t>(GetNumMipLevels());
 
     /* Query hardware texture format and size */
@@ -198,21 +199,35 @@ TextureDescriptor GLTexture::GetDesc() const
     else
         GetTextureParams(extent, &samples);
 
-    /*
-    Translate data from OpenGL to LLGL.
-    Note: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6).
-    */
-    texDesc.format              = GetFormat();
+    /* Initial value of GL_TEXTURE_SAMPLES is 0, so clamp to [1, inf+) to be uniform with all backends */
+    texDesc.samples = static_cast<std::uint32_t>(std::max(1, samples));
 
-    texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
-    texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);
+    switch (GetType())
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            texDesc.extent.width    = static_cast<std::uint32_t>(extent[0]);
+            texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[1]);
+            break;
 
-    if (GetType() == TextureType::Texture3D)
-        texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
-    else
-        texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
+        case TextureType::Texture2D:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            /* For cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6) */
+            texDesc.extent.width    = static_cast<std::uint32_t>(extent[0]);
+            texDesc.extent.height   = static_cast<std::uint32_t>(extent[1]);
+            texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
+            break;
 
-    texDesc.samples             = static_cast<std::uint32_t>(samples);
+        case TextureType::Texture3D:
+            texDesc.extent.width    = static_cast<std::uint32_t>(extent[0]);
+            texDesc.extent.height   = static_cast<std::uint32_t>(extent[1]);
+            texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
+            break;
+    }
 
     return texDesc;
 }

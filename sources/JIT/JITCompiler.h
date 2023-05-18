@@ -202,6 +202,8 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         template <typename T>
         inline void PushVariant(const T* arg);
 
+        inline void PushVariant(std::nullptr_t);
+
         template <typename Arg0>
         inline void PushArgsPrimary(Arg0&& arg0);
 
@@ -255,6 +257,11 @@ template <typename T>
 inline void JITCompiler::PushVariant(const T* arg)
 {
     PushPtr(reinterpret_cast<const void*>(arg));
+}
+
+inline void JITCompiler::PushVariant(std::nullptr_t)
+{
+    PushPtr(nullptr);
 }
 
 // Template specialization
