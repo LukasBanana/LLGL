@@ -55,7 +55,7 @@ int main()
 
         auto swapChain = renderer->CreateSwapChain(swapChainDesc);
 
-        auto window = static_cast<LLGL::Window*>(&(context->GetSurface()));
+        auto window = static_cast<LLGL::Window*>(&(swapChain->GetSurface()));
 
         #else
 

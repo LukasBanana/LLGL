@@ -21,7 +21,7 @@ TestbedContext::TestbedContext(const char* moduleName)
         rendererDesc.debugger   = &debugger;
         #endif
     }
-    if (renderer = RenderSystem::Load(rendererDesc))
+    if ((renderer = RenderSystem::Load(rendererDesc)) != nullptr)
     {
         // Create swap chain
         SwapChainDescriptor swapChainDesc;
