@@ -859,11 +859,13 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     /* Bind texture */
     GLStateManager::Get().BindGLTexture(*this);
 
-    /* Initialize texture parameters for the first time */
-    auto target = GLTypes::Map(textureDesc.type);
-
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    /* Initialize texture parameters for the first time (sampler states not supported for multisample textures) */
+    if (!IsMultiSampleTexture(textureDesc.type))
+    {
+        auto target = GLTypes::Map(textureDesc.type);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
 
     /* Configure texture swizzling if format is not supported */
     InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
