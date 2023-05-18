@@ -84,5 +84,5 @@ environment:
 
 build_script:
   - git clone https://github.com/LukasBanana/GaussianLib.git
-  - cmake -G "%GENERATOR%" -A "%ARCH%" -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B builds
+  - cmake -G "%GENERATOR%" -A "%ARCH%" -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B builds
   - cmake --build builds --config "%CONFIG%"

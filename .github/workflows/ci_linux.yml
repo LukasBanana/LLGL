@@ -25,7 +25,7 @@ jobs:
         sudo apt-get install libx11-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
 
     - name: Configure CMake
-      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
