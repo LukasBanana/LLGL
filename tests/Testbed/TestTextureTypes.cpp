@@ -1,0 +1,113 @@
+/*
+ * TestTextureTypes.cpp
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+#include "Testbed.h"
+
+
+DEF_TEST( TextureTypes )
+{
+    auto CreateDummyTextureAndMeasureTiming = [this](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, std::uint32_t samples)
+    {
+        const auto t0 = Timer::Tick();
+
+        TextureDescriptor texDesc;
+        {
+            texDesc.type        = type;
+            texDesc.extent      = extent;
+            texDesc.mipLevels   = mips;
+            texDesc.arrayLayers = layers;
+            texDesc.samples     = samples;
+        }
+        TestResult result = CreateTexture(texDesc, name, nullptr);
+        if (result != TestResult::Passed)
+            return result;
+
+        // Print duration
+        if (showTiming)
+        {
+            const auto t1 = Timer::Tick();
+            const auto freq = static_cast<double>(Timer::Frequency()) / 1000.0;
+            const auto duration = static_cast<double>(t1 - t0) / freq;
+            Log::Printf("Create texture: %s ( %f ms )\n", name, duration);
+        }
+
+        return TestResult::Passed;
+    };
+
+    #define CREATE_DUMMY(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES)                                                         \
+        {                                                                                                                   \
+            TestResult result = CreateDummyTextureAndMeasureTiming((NAME), (TYPE), (EXTENT), (MIPS), (LAYERS), (SAMPLES));  \
+            if (result != TestResult::Passed)                                                                               \
+                return result;                                                                                              \
+        }
+
+    #define CREATE_DUMMY_SLOW(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES) \
+        if (!fastTest)                                                   \
+        {                                                                \
+            CREATE_DUMMY(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES);     \
+        }
+
+    ////////////// Texture1D //////////////
+
+    CREATE_DUMMY     ("tex{1D,1w}",              TextureType::Texture1D, Extent3D(   1, 1, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY     ("tex{1D,1024w,full-mips}", TextureType::Texture1D, Extent3D(1024, 1, 1), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY_SLOW("tex{1D,1024w,4-mips}",    TextureType::Texture1D, Extent3D(1024, 1, 1), /*mips:*/ 4, /*layers:*/ 1, /*samples:*/ 1);
+
+    ////////////// Texture1DArray //////////////
+
+    if (caps.features.hasArrayTextures)
+    {
+        CREATE_DUMMY     ("tex{1D[1],1w}",               TextureType::Texture1DArray, Extent3D(   1, 1, 1), /*mips:*/ 1, /*layers:*/    1, /*samples:*/ 1);
+        CREATE_DUMMY     ("tex{1D[10],1w}",              TextureType::Texture1DArray, Extent3D(   1, 1, 1), /*mips:*/ 1, /*layers:*/   10, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{1D[64],1024w,full-mips}", TextureType::Texture1DArray, Extent3D(1024, 1, 1), /*mips:*/ 0, /*layers:*/   64, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{1D[1024],1024w,6-mips}",  TextureType::Texture1DArray, Extent3D(1024, 1, 1), /*mips:*/ 6, /*layers:*/ 1024, /*samples:*/ 1);
+    }
+
+    ////////////// Texture2D //////////////
+
+    CREATE_DUMMY     ("tex{2D,1wh}",                 TextureType::Texture2D, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY     ("tex{2D,1024wh,full-mips}",    TextureType::Texture2D, Extent3D(1024, 1024, 1), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY_SLOW("tex{2D,1024w,256h,3-mips}",   TextureType::Texture2D, Extent3D(1024,  256, 1), /*mips:*/ 4, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY_SLOW("tex{2D,800w,600h,full-mips}", TextureType::Texture2D, Extent3D( 800,  600, 1), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY_SLOW("tex{2D,123w,456h,full-mips}", TextureType::Texture2D, Extent3D( 123,  456, 1), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+
+    ////////////// Texture2DMS //////////////
+
+    CREATE_DUMMY     ("tex{2DMS,1wh}",        TextureType::Texture2DMS, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 1);
+    CREATE_DUMMY     ("tex{2DMS,1024wh}",     TextureType::Texture2DMS, Extent3D(1024, 1024, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 2);
+    CREATE_DUMMY_SLOW("tex{2DMS,1024w,256h}", TextureType::Texture2DMS, Extent3D(1024,  256, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 4);
+    CREATE_DUMMY_SLOW("tex{2DMS,800w,600h}",  TextureType::Texture2DMS, Extent3D( 800,  600, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 8);
+    CREATE_DUMMY_SLOW("tex{2DMS,123w,456h}",  TextureType::Texture2DMS, Extent3D( 123,  456, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 8);
+
+    ////////////// Texture2DArray //////////////
+
+    if (caps.features.hasArrayTextures)
+    {
+        CREATE_DUMMY     ("tex{2D[1],1wh}",                  TextureType::Texture2DArray, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/    1, /*samples:*/ 1);
+        CREATE_DUMMY     ("tex{2D[1024],32wh}",              TextureType::Texture2DArray, Extent3D(  32,   32, 1), /*mips:*/ 0, /*layers:*/ 1024, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{2D[16],1024wh,full-mips}",    TextureType::Texture2DArray, Extent3D(1024, 1024, 1), /*mips:*/ 0, /*layers:*/   16, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{2D[64],1024w,256h,3-mips}",   TextureType::Texture2DArray, Extent3D(1024,  256, 1), /*mips:*/ 3, /*layers:*/   64, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{2D[32],800w,600h,full-mips}", TextureType::Texture2DArray, Extent3D( 800,  600, 1), /*mips:*/ 0, /*layers:*/   32, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{2D[13],123w,456h,full-mips}", TextureType::Texture2DArray, Extent3D( 123,  456, 1), /*mips:*/ 0, /*layers:*/   13, /*samples:*/ 1);
+    }
+
+    ////////////// Texture3D //////////////
+
+    if (caps.features.has3DTextures)
+    {
+        CREATE_DUMMY     ("tex{3D,1w,1h}",                    TextureType::Texture3D, Extent3D(   1,   1,   1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{3D,256whd,full-mips}",         TextureType::Texture3D, Extent3D( 256, 256, 256), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{3D,1024w,256h,64d,4-mips}",    TextureType::Texture3D, Extent3D(1024, 256,  64), /*mips:*/ 4, /*layers:*/ 1, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{3D,800w,600h,32d,full-mips}",  TextureType::Texture3D, Extent3D( 800, 600,  32), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{3D,123w,456h,789d,full-mips}", TextureType::Texture3D, Extent3D( 123, 456, 789), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
+    }
+
+
+
+    return TestResult::Passed;
+}
+

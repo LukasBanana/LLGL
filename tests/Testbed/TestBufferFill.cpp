@@ -1,5 +1,5 @@
 /*
- * TestbedBufferFill.cpp
+ * TestBufferFill.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -81,6 +81,10 @@ DEF_TEST( BufferFill )
             return TestResult::FailedMismatch;
         }
     }
+
+    // Delete old buffers
+    renderer->Release(*buf1);
+    renderer->Release(*buf2);
 
     return TestResult::Passed;
 }

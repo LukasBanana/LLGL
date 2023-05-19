@@ -30,6 +30,24 @@ using namespace LLGL;
             return result;                                              \
     }
 
+#define CREATE_TEXTURE(OBJ, DESC, NAME, INITIAL)                        \
+    Texture* OBJ = nullptr;                                             \
+    const char* OBJ##_Name = NAME;                                      \
+    {                                                                   \
+        TestResult result = CreateTexture(DESC, NAME, &OBJ, INITIAL);   \
+        if (result != TestResult::Passed)                               \
+            return result;                                              \
+    }
+
+#define CREATE_RENDER_TARGET(OBJ, DESC, NAME)                       \
+    RenderTarget* OBJ = nullptr;                                    \
+    const char* OBJ##_Name = NAME;                                  \
+    {                                                               \
+        TestResult result = CreateRenderTarget(DESC, NAME, &OBJ);   \
+        if (result != TestResult::Passed)                           \
+            return result;                                          \
+    }
+
 
 #endif
 

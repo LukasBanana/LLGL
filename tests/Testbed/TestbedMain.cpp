@@ -11,11 +11,11 @@
 
 using namespace LLGL;
 
-static void RunTestbedForRenderer(const char* moduleName)
+static void RunTestbedForRenderer(const char* moduleName, int argc, char* argv[])
 {
     Log::Printf("Run Testbed: %s\n", moduleName);
     Log::Printf("=============================\n");
-    TestbedContext context{ moduleName };
+    TestbedContext context{ moduleName, argc, argv };
     context.RunAllTests();
     Log::Printf("=============================\n\n");
 }
@@ -40,17 +40,23 @@ static const char* GetRendererModule(const std::string& name)
 int main(int argc, char* argv[])
 {
     Log::RegisterCallbackStd();
-    if (argc >= 2)
+
+    std::string singleModule;
+    if (argc >= 2 && argv[1][0] != '-')
+        singleModule = GetRendererModule(argv[1]);
+
+    if (!singleModule.empty())
     {
         // Run tests for specific renderer
-        RunTestbedForRenderer(GetRendererModule(argv[1]));
+        RunTestbedForRenderer(singleModule.c_str(), argc - 1, argv + 1);
     }
     else
     {
         // Run tests for all available renderers
         for (std::string moduleName : RenderSystem::FindModules())
-            RunTestbedForRenderer(moduleName.c_str());
+            RunTestbedForRenderer(moduleName.c_str(), argc - 1, argv + 1);
     }
+
     #ifdef _WIN32
     system("pause");
     #endif
