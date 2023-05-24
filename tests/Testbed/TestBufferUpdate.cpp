@@ -44,7 +44,7 @@ DEF_TEST( BufferUpdate )
         buf4Desc.size       = 4096;
         buf4Desc.bindFlags  = BindFlags::Storage | BindFlags::Sampled;
     }
-    CREATE_BUFFER(buf4, buf4Desc, "buf4{size=2048,r/w}", nullptr);
+    CREATE_BUFFER_COND(caps.features.hasStorageBuffers, buf4, buf4Desc, "buf4{size=4096,r/w}", nullptr);
 
     // Perform same update tests on all buffers
     Buffer* buffers[] = { buf1, buf2, buf3, buf4 };
@@ -53,6 +53,9 @@ DEF_TEST( BufferUpdate )
 
     for (int i = 0; i < sizeof(bufferSizes)/sizeof(bufferSizes[0]); ++i)
     {
+        if (buffers[i] == nullptr)
+            continue;
+
         // Fill buffer
         cmdBuffer->Begin();
         {
