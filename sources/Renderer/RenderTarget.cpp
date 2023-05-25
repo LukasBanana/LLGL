@@ -18,11 +18,6 @@ namespace LLGL
  * ======= Protected: =======
  */
 
-static std::string Extent2DToString(const Extent2D& res)
-{
-    return (std::to_string(res.width) + 'x' + std::to_string(res.height));
-}
-
 void RenderTarget::ValidateResolution(const Extent2D& attachmentResolution)
 {
     /* Validate texture attachment size */

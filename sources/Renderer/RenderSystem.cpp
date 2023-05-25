@@ -200,10 +200,7 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     #ifdef LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */
-    auto renderSystem = RenderSystemPtr
-    {
-        reinterpret_cast<RenderSystem*>(StaticModule::AllocRenderSystem(renderSystemDesc))
-    };
+    RenderSystemPtr renderSystem{ StaticModule::AllocRenderSystem(renderSystemDesc) };
 
     if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
     {
