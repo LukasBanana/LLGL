@@ -18,12 +18,20 @@
 using namespace LLGL;
 
 
+#if __cplusplus >= 201703L
+#   define LLGL_MAYBE_UNUSED [[maybe_unused]]
+#elif defined __GNUC__ || defined __clang__
+#   define LLGL_MAYBE_UNUSED __attribute__((unused))
+#else
+#   define LLGL_MAYBE_UNUSED
+#endif
+
 #define DEF_TEST(NAME) \
     TestResult TestbedContext::Test##NAME(unsigned frame)
 
 #define CREATE_BUFFER_COND(COND, OBJ, DESC, NAME, INITIAL)              \
-    Buffer* OBJ = nullptr;                                              \
-    const char* OBJ##_Name = NAME;                                      \
+    LLGL_MAYBE_UNUSED Buffer* OBJ = nullptr;                            \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;                    \
     if (!!(COND))                                                       \
     {                                                                   \
         TestResult result = CreateBuffer(DESC, NAME, &OBJ, INITIAL);    \
@@ -35,8 +43,8 @@ using namespace LLGL;
     CREATE_BUFFER_COND(true, OBJ, DESC, NAME, INITIAL)
 
 #define CREATE_TEXTURE_COND(COND, OBJ, DESC, NAME, INITIAL)             \
-    Texture* OBJ = nullptr;                                             \
-    const char* OBJ##_Name = NAME;                                      \
+    LLGL_MAYBE_UNUSED Texture* OBJ = nullptr;                           \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;                    \
     if (!!(COND))                                                       \
     {                                                                   \
         TestResult result = CreateTexture(DESC, NAME, &OBJ, INITIAL);   \
@@ -48,8 +56,8 @@ using namespace LLGL;
     CREATE_TEXTURE_COND(true, OBJ, DESC, NAME, INITIAL)
 
 #define CREATE_RENDER_TARGET(OBJ, DESC, NAME)                       \
-    RenderTarget* OBJ = nullptr;                                    \
-    const char* OBJ##_Name = NAME;                                  \
+    LLGL_MAYBE_UNUSED RenderTarget* OBJ = nullptr;                  \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;                \
     {                                                               \
         TestResult result = CreateRenderTarget(DESC, NAME, &OBJ);   \
         if (result != TestResult::Passed)                           \

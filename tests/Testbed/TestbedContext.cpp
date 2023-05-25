@@ -218,7 +218,7 @@ TestResult TestbedContext::CreateTexture(
         if (expectedMipLevels != desc.mipLevels)
         {
             Log::Errorf(
-                "Mismatch between texture \"%s\" descriptor (mipLevels = %u; deduced from %u) and actual texture (mipLevels = %u)",
+                "Mismatch between texture \"%s\" descriptor (mipLevels = %u; deduced from %u) and actual texture (mipLevels = %u)\n",
                 name, expectedMipLevels, desc.mipLevels, resultDesc.mipLevels
             );
         }
