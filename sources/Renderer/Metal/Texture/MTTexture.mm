@@ -53,25 +53,55 @@ static MTLResourceOptions GetResourceOptions(const TextureDescriptor& desc)
     return opt;
 }
 
-static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
+static MTLTextureType ToMTLTextureTypeWithMipMaps(TextureType type)
 {
-    dst.textureType         = MTTypes::ToMTLTextureType(src.type);
+    switch (type)
+    {
+        case TextureType::Texture1D:        return MTLTextureType2D;
+        case TextureType::Texture1DArray:   return MTLTextureType2DArray;
+        default:                            return MTTypes::ToMTLTextureType(type);
+    }
+}
+
+// Returns the most suitable sample count for the Metal device
+static NSUInteger FindSuitableSampleCount(id<MTLDevice> device, NSUInteger samples)
+{
+    while (samples > 1)
+    {
+        if ([device supportsTextureSampleCount:samples])
+            return samples;
+        --samples;
+    }
+    return 4u; // Supported by all macOS and iOS devices; 1 is not supported according to Metal validation layer
+}
+
+static void ConvertTextureDesc(id<MTLDevice> device, MTLTextureDescriptor* dst, const TextureDescriptor& src)
+{
+    /*
+    Convert 1D textures to 2D textures of size (Wx1) if MIP-map count is greater than 1
+    since Metal does not support MIP-mapped 1D textures.
+    */
+    const NSUInteger mipMapCount = NumMipLevels(src);
+
+    dst.textureType         = (mipMapCount > 1 ? ToMTLTextureTypeWithMipMaps(src.type) : MTTypes::ToMTLTextureType(src.type));
     dst.pixelFormat         = MTTypes::ToMTLPixelFormat(src.format);
     dst.width               = src.extent.width;
     dst.height              = src.extent.height;
     dst.depth               = src.extent.depth;
-    dst.mipmapLevelCount    = static_cast<NSUInteger>(NumMipLevels(src));
-    dst.sampleCount         = static_cast<NSUInteger>(std::max(1u, src.samples));
+    dst.mipmapLevelCount    = mipMapCount;
+    dst.sampleCount         = (IsMultiSampleTexture(src.type) ? FindSuitableSampleCount(device, static_cast<NSUInteger>(src.samples)) : 1u);
     dst.arrayLength         = GetTextureLayers(src);
     dst.usage               = GetTextureUsage(src);
     dst.resourceOptions     = GetResourceOptions(src);
+    if (IsMultiSampleTexture(src.type) || IsDepthOrStencilFormat(src.format))
+        dst.storageMode = MTLStorageModePrivate;
 }
 
 MTTexture::MTTexture(id<MTLDevice> device, const TextureDescriptor& desc) :
     Texture { desc.type, desc.bindFlags }
 {
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
-    Convert(texDesc, desc);
+    ConvertTextureDesc(device, texDesc, desc);
     native_ = [device newTextureWithDescriptor:texDesc];
     [texDesc release];
 }

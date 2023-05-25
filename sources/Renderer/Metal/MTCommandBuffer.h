@@ -30,6 +30,7 @@ class MTRenderTarget;
 class MTPipelineState;
 class MTDescriptorCache;
 class MTConstantsCache;
+class MTCommandQueue;
 
 class MTCommandBuffer final : public CommandBuffer
 {
@@ -38,7 +39,7 @@ class MTCommandBuffer final : public CommandBuffer
 
         /* ----- Common ----- */
 
-        MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue, const CommandBufferDescriptor& desc);
+        MTCommandBuffer(id<MTLDevice> device, MTCommandQueue& cmdQueue, const CommandBufferDescriptor& desc);
         ~MTCommandBuffer();
 
         /* ----- Encoding ----- */
@@ -239,10 +240,10 @@ class MTCommandBuffer final : public CommandBuffer
     private:
 
         id<MTLDevice>                   device_                 = nil;
-        id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
         dispatch_semaphore_t            cmdBufferSemaphore_     = nil;
 
+        MTCommandQueue&                 cmdQueue_;
         MTCommandContext                context_;
         std::vector<id<MTLDrawable>>    drawables_;
 

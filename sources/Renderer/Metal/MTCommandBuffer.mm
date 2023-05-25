@@ -6,6 +6,7 @@
  */
 
 #include "MTCommandBuffer.h"
+#include "MTCommandQueue.h"
 #include "MTSwapChain.h"
 #include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
@@ -40,7 +41,7 @@ static const NSUInteger g_minFillBufferForKernel = 64;
 // Default value when no compute PSO is bound.
 static const MTLSize g_defaultNumThreadsPerGroup{ 1, 1, 1 };
 
-MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, id<MTLCommandQueue> cmdQueue, const CommandBufferDescriptor& desc) :
+MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, MTCommandQueue& cmdQueue, const CommandBufferDescriptor& desc) :
     device_            { device                                                    },
     cmdQueue_          { cmdQueue                                                  },
     stagingBufferPool_ { device, USHRT_MAX                                         },
@@ -64,7 +65,7 @@ void MTCommandBuffer::Begin()
     dispatch_semaphore_wait(cmdBufferSemaphore_, DISPATCH_TIME_FOREVER);
 
     /* Allocate new command buffer from command queue */
-    cmdBuffer_ = [cmdQueue_ commandBuffer];
+    cmdBuffer_ = [cmdQueue_.GetNative() commandBuffer];
 
     /* Append complete handler to signal semaphore */
     __block dispatch_semaphore_t blockSemaphore = cmdBufferSemaphore_;
@@ -90,7 +91,7 @@ void MTCommandBuffer::End()
 
     /* Commit native buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
-        [cmdBuffer_ commit];
+        cmdQueue_.SubmitCommandBuffer(GetNative());
 
     ResetRenderStates();
 }

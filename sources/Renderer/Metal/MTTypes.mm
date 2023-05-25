@@ -148,13 +148,13 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RGB9E5Float:       return MTLPixelFormatRGB9E5Float;
 
         /* --- Depth-stencil formats --- */
-        #ifndef LLGL_OS_IOS
+        #ifdef LLGL_OS_IOS
+        case Format::D16UNorm:          return MTLPixelFormatDepth32Float;
+        #else
         case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;
         #endif
         case Format::D32Float:          return MTLPixelFormatDepth32Float;
-        #ifndef LLGL_OS_IOS
-        case Format::D24UNormS8UInt:    return MTLPixelFormatDepth24Unorm_Stencil8;
-        #endif
+        case Format::D24UNormS8UInt:    return MTLPixelFormatDepth32Float_Stencil8; // MTLPixelFormatDepth24Unorm_Stencil8 not supported?
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
         #ifndef LLGL_OS_IOS

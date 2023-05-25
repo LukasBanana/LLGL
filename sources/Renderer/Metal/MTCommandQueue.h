@@ -57,6 +57,9 @@ class MTCommandQueue final : public CommandQueue
             return native_;
         }
 
+        // Submits the specified Metal command buffer.
+        void SubmitCommandBuffer(id<MTLCommandBuffer> cmdBuffer);
+
     private:
 
         id<MTLCommandQueue>     native_                 = nil;

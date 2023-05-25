@@ -60,7 +60,7 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return commandBuffers_.emplace<MTCommandBuffer>(device_, commandQueue_->GetNative(), commandBufferDesc);
+    return commandBuffers_.emplace<MTCommandBuffer>(device_, *commandQueue_, commandBufferDesc);
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -93,24 +93,28 @@ void MTRenderSystem::Release(BufferArray& bufferArray)
 
 void MTRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
 {
+    commandQueue_->WaitIdle();
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     bufferMT.Write(static_cast<NSUInteger>(offset), data, static_cast<NSUInteger>(dataSize));
 }
 
 void MTRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
 {
+    commandQueue_->WaitIdle();
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     bufferMT.Read(static_cast<NSUInteger>(offset), data, static_cast<NSUInteger>(dataSize));
 }
 
 void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
+    commandQueue_->WaitIdle();
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     return bufferMT.Map(access);
 }
 
 void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
 {
+    commandQueue_->WaitIdle();
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     return bufferMT.Map(access, static_cast<NSUInteger>(offset), static_cast<NSUInteger>(length));
 }
@@ -163,12 +167,14 @@ void MTRenderSystem::Release(Texture& texture)
 
 void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
+    commandQueue_->WaitIdle();
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
     textureMT.WriteRegion(textureRegion, imageDesc);
 }
 
 void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
+    commandQueue_->WaitIdle();
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
     textureMT.ReadRegion(textureRegion, imageDesc);
 }
