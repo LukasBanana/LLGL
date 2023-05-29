@@ -30,9 +30,11 @@ class TestbedContext
 
         void RunAllTests();
 
-    protected:
+    public:
 
-        void EvaluateTestResult(TestResult result, const char* name);
+        static void RunRendererIndependentTests();
+
+    protected:
 
         TestResult RunTest(const std::function<TestResult(unsigned)>& callback);
 

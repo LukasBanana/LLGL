@@ -189,20 +189,20 @@ private:
         constexpr auto resTexture   = LLGL::ResourceType::Texture;
         //constexpr auto resSampler   = LLGL::ResourceType::Sampler;
 
-        /*auto layoutDescTEST = LLGL::PipelineLayoutDesc(
+        #if 0
+        LLGL::PipelineLayoutDescriptor layoutDescTEST = LLGL::Parse(
             "heap{"
-            "  cbuffer(Scene@0):vert:frag,"
-            "  buffer(transforms@1):vert,"
-            "  sampler(colorMapSampler@0):frag,"
+            "  cbuffer(Scene@0):vert:frag,"                     // Heap resource binding for a constant buffer
+            "  buffer(transforms@1):vert,"                      // Heap resource binding for a sampled buffer
             "},"
-            "texture(colorMap@0):frag,"
-            "sampler{ U=Clamp, V=Clamp, Min=Linear, Mag=Linear, Mip=Linear, Anisotropy=8 }:frag,"
-        );*/
+            "texture(colorMap@0):frag,"                         // Dynamic resource binding for a texture
+            "sampler(colorMapSampler@0){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
+            "uint(instance),"                                   // Uniform for a uint type
+            "float3(lightVec),"                                 // Uniform for a float3/ vec3 type
+        );
+        #endif
 
-        LLGL::SamplerDescriptor colorMapSamplerDesc;
-        {
-            colorMapSamplerDesc.mipMapLODBias = 1;
-        }
+        LLGL::SamplerDescriptor colorMapSamplerDesc = LLGL::Parse("lod.bias=1");
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             layoutDesc.heapBindings =

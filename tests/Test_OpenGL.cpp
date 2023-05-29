@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <memory>
@@ -265,7 +265,7 @@ int main()
         #endif
 
         // Create pipeline layout
-        auto pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("texture(0):frag, sampler(0):frag"));
+        auto pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("texture(0):frag, sampler(0):frag"));
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;

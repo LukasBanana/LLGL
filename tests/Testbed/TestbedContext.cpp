@@ -7,6 +7,7 @@
 
 #include "Testbed.h"
 #include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/Parse.h>
 #include <string.h>
 
 
@@ -68,6 +69,22 @@ TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
     }
 }
 
+static const char* TestResultToStr(TestResult result)
+{
+    switch (result)
+    {
+        case TestResult::Passed:            return "Ok";
+        case TestResult::FailedMismatch:    return "FAILED - MISMATCH";
+        case TestResult::FailedErrors:      return "FAILED - ERRORS";
+        default:                            return "UNDEFINED";
+    }
+}
+
+static void PrintTestResult(TestResult result, const char* name)
+{
+    Log::Printf("Test %s: [ %s ]\n", name, TestResultToStr(result));
+}
+
 void TestbedContext::RunAllTests()
 {
     #define RUN_TEST(TEST)                                                          \
@@ -75,7 +92,7 @@ void TestbedContext::RunAllTests()
             const TestResult result = RunTest(                                      \
                 std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1) \
             );                                                                      \
-            EvaluateTestResult(result, #TEST);                                      \
+            PrintTestResult(result, #TEST);                                         \
         }
 
     RUN_TEST( CommandBufferSubmit       );
@@ -94,22 +111,108 @@ void TestbedContext::RunAllTests()
     RUN_TEST( RenderTargetNoAttachments );
     RUN_TEST( RenderTarget1Attachment   );
     RUN_TEST( RenderTargetNAttachments  );
+
+    #undef RUN_TEST
 }
 
-static const char* TestResultToStr(TestResult result)
+static TestResult TestParseSamplerDesc()
 {
-    switch (result)
+    auto CompareSamplerDescs = [](const LLGL::SamplerDescriptor& lhs, const LLGL::SamplerDescriptor& rhs) -> TestResult
     {
-        case TestResult::Passed:            return "Ok";
-        case TestResult::FailedMismatch:    return "FAILED - MISMATCH";
-        case TestResult::FailedErrors:      return "FAILED - ERRORS";
-        default:                            return "UNDEFINED";
+        return (::memcmp(&lhs, &rhs, sizeof(lhs)) != 0 ? TestResult::FailedMismatch : TestResult::Passed);
+    };
+
+    #define TEST_SAMPLER_DESCS(LHS, RHS)                                \
+        {                                                               \
+            const TestResult result = CompareSamplerDescs(LHS, RHS);    \
+            if (result != TestResult::Passed)                           \
+            {                                                           \
+                Log::Errorf("LLGL::Parse(%s) failed\n", #RHS);          \
+                return result;                                          \
+            }                                                           \
+        }
+
+    // Compare sampler descriptor with default initialization
+    SamplerDescriptor samplerDesc0A;
+    SamplerDescriptor samplerDesc0B = Parse("");
+    TEST_SAMPLER_DESCS(samplerDesc0A, samplerDesc0B);
+
+    // Compare sampler descriptor with various different values
+    SamplerDescriptor samplerDesc1A;
+    {
+        samplerDesc1A.addressModeU      = SamplerAddressMode::Clamp;
+        samplerDesc1A.addressModeV      = SamplerAddressMode::Clamp;
+        samplerDesc1A.addressModeW      = SamplerAddressMode::MirrorOnce;
+        samplerDesc1A.minFilter         = SamplerFilter::Nearest;
+        samplerDesc1A.magFilter         = SamplerFilter::Nearest;
+        samplerDesc1A.mipMapEnabled     = false;
+        samplerDesc1A.mipMapLODBias     = 2.5f;
+        samplerDesc1A.minLOD            = 2.0f;
+        samplerDesc1A.maxLOD            = 5.0f;
+        samplerDesc1A.maxAnisotropy     = 8;
+        samplerDesc1A.compareEnabled    = true;
+        samplerDesc1A.compareOp         = CompareOp::Less;
+        samplerDesc1A.borderColor[3]    = 1.0f;
     }
+    SamplerDescriptor samplerDesc1B = Parse(
+        "address.uv=clamp,"
+        "address.w=mirrorOnce,"
+        "filter.min=nearest,"
+        "filter.mag=nearest,"
+        "filter.mip=none,"
+        "compare=ls,"
+        "anisotropy=8,"
+        "lod.min=2,"
+        "lod.max=5,"
+        "lod.bias=2.5,"
+        "border=black"
+    );
+    TEST_SAMPLER_DESCS(samplerDesc1A, samplerDesc1B);
+
+    // Compare sampler descriptor with different values and whitespaces in source string
+    SamplerDescriptor samplerDesc2A;
+    {
+        samplerDesc2A.addressModeU      = SamplerAddressMode::Border;
+        samplerDesc2A.addressModeV      = SamplerAddressMode::Border;
+        samplerDesc2A.addressModeW      = SamplerAddressMode::Border;
+        samplerDesc2A.mipMapFilter      = SamplerFilter::Nearest;
+        samplerDesc2A.compareEnabled    = true;
+        samplerDesc2A.compareOp         = CompareOp::GreaterEqual;
+        samplerDesc2A.mipMapLODBias     = 3.0f;
+        samplerDesc2A.minLOD            = 0.25f;
+        samplerDesc2A.maxLOD            = 10.0f;
+        samplerDesc2A.borderColor[0]    = 1.0f;
+        samplerDesc2A.borderColor[1]    = 1.0f;
+        samplerDesc2A.borderColor[2]    = 1.0f;
+        samplerDesc2A.borderColor[3]    = 1.0f;
+    }
+    SamplerDescriptor samplerDesc2B = Parse(
+        "\taddress = border,\n"
+        "\tfilter.mip = nearest,\n"
+        "\tcompare = ge,\n"
+        "\tlod.min = 0.25,\n"
+        "\tlod.max = 10,\n"
+        "\tlod.bias = 3,\n"
+        "\tborder = white,\n"
+    );
+    TEST_SAMPLER_DESCS(samplerDesc2A, samplerDesc2B);
+
+    return TestResult::Passed;
 }
 
-void TestbedContext::EvaluateTestResult(TestResult result, const char* name)
+void TestbedContext::RunRendererIndependentTests()
 {
-    Log::Printf("Test %s: [ %s ]\n", name, TestResultToStr(result));
+    #define RUN_TEST(TEST)                          \
+        {                                           \
+            const TestResult result = Test##TEST(); \
+            PrintTestResult(result, #TEST);         \
+        }
+
+    RUN_TEST( ParseSamplerDesc );
+
+    //TODO
+
+    #undef RUN_TEST
 }
 
 TestResult TestbedContext::RunTest(const std::function<TestResult(unsigned)>& callback)

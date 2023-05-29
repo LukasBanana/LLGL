@@ -8,11 +8,6 @@
 #ifndef LLGL_UTILITY_H
 #define LLGL_UTILITY_H
 
-#ifdef LLGL_ENABLE_UTILITY
-
-/*
-THIS HEADER MUST BE EXPLICITLY INCLUDED
-*/
 
 #include <LLGL/Export.h>
 #include <LLGL/ForwardDecls.h>
@@ -140,61 +135,6 @@ Hence, this utility function cannot be used in conjunction with all renderer ver
 */
 LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& reflection);
 
-/**
-\brief Generates a pipeline layout descriptor by parsing the specified string.
-\param[in] layoutSignature Specifies the string for the layout signature. This string must \e not be null. The syntax for this string is as follows:
-- All binding points wrapped inside <code>"heap{"</code>...<code>"}"</code> will be put into PipelineLayoutDescriptor::heapBindings. Otherwise, they are put into PipelineLayoutDescriptor::bindings.
-- Each pair of binding point type (i.e. BindingDescriptor::type) and binding flags (i.e. BindingDescriptor::bindFlags) is specified by one of the following identifiers:
-    - <code>cbuffer</code> for constant buffers (i.e. ResourceType::Buffer and BindFlags::ConstantBuffer).
-    - <code>buffer</code> for sampled buffers (i.e. ResourceType::Buffer and BindFlags::Sampled).
-    - <code>rwbuffer</code> for read/write storage buffers (i.e. ResourceType::Buffer and BindFlags::Storage).
-    - <code>texture</code> for textures (i.e. ResourceType::Texture and BindFlags::Sampled).
-    - <code>rwtexture</code> for read/write textures (i.e. ResourceType::Texture and BindFlags::Storage).
-    - <code>sampler</code> for sampler states (i.e. ResourceType::Sampler).
-- Optionally, the resource <b>name</b> is specified as an arbitrary identifier followed by the at-sign (e.g. <code>"texture(myColorMap@1)"</code>).
-- The <b>slot</b> of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
-- The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
-- Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3)"</code>).
-- Each binding point is separated by a comma, the last comma being optional (e.g. <code>"texture(1),sampler(2),"</code> or <code>"texture(1),sampler(2)"</code>).
-- The stage flags (i.e. BindingDescriptor::stageFlags) can be specified after each binding point with a preceding colon using the following identifiers:
-    - <code>vert</code> for the vertex shader stage (i.e. StageFlags::VertexStage).
-    - <code>tesc</code> for the tessellation-control shader stage (i.e. StageFlags::TessControlStage).
-    - <code>tese</code> for the tessellation-evaluation shader stage (i.e. StageFlags::TessEvaluationStage).
-    - <code>geom</code> for the geometry shader stage (i.e. StageFlags::GeometryStage).
-    - <code>frag</code> for the fragment shader stage (i.e. StageFlags::FragmentStage).
-    - <code>comp</code> for the compute shader stage (i.e. StageFlags::ComputeStage).
-- If no stage flag is specified, all shader stages will be used.
-- Whitespaces are ignored (e.g. blanks <code>' '</code>, tabulators <code>'\\t'</code>, new-line characters <code>'\\n'</code> and <code>'\\r'</code> etc.), see C++ STL function <code>std::isspace</code>.
-\remarks Here is a usage example:
-\code
-// Standard way of declaring a pipeline layout:
-LLGL::PipelineLayoutDescriptor myLayoutDescStd;
-
-myLayoutDescStd.heapBindings = {
-    LLGL::BindingDescriptor{ "Scene",    LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0u,     },
-    LLGL::BindingDescriptor{             LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 1u      },
-    LLGL::BindingDescriptor{ "TexArray", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 2u, 4u, },
-};
-myLayoutDescStd.bindings = {
-    LLGL::BindingDescriptor{             LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u      },
-};
-
-auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescStd);
-\endcode
-The same pipeline layout can be created with the following usage of this utility function:
-\code
-// Abbreviated way of declaring a pipeline layout using the utility function:
-auto myLayoutDescUtil = LLGL::PipelineLayoutDesc(
-    "heap{ cbuffer(Scene@0):frag:vert },"
-    "heap{ texture(1, TexArray@2[4]):frag },"
-    "sampler(3):frag,"
-);
-auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescUtil);
-\endcode
-\throws std::invalid_argument If the input parameter is null of parsing the layout signature failed.
-*/
-LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const char* layoutSignature);
-
 /* ----- RenderPassDescriptor utility functions ----- */
 
 /**
@@ -208,12 +148,6 @@ LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& re
 
 } // /namespace LLGL
 
-
-#else
-
-#error LLGL was not compiled with LLGL_ENABLE_UTILITY option
-
-#endif
 
 #endif
 

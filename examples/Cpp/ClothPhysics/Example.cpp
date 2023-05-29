@@ -386,7 +386,7 @@ public:
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc(
+            LLGL::Parse(
                 "heap{"
                 "cbuffer(SceneState@0):comp,"
                 #ifdef ENABLE_STORAGE_TEXTURES
@@ -475,16 +475,16 @@ public:
 
         graphicsLayout = renderer->CreatePipelineLayout(
             IsMetal() || IsVulkan()
-                ? LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag, texture(1,2,6):vert}")
-                : LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag, texture(1,2,3):vert}")
+                ? LLGL::Parse("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag, texture(1,2,6):vert}")
+                : LLGL::Parse("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag, texture(1,2,3):vert}")
         );
 
         #else
 
         graphicsLayout = renderer->CreatePipelineLayout(
             IsMetal() || IsVulkan()
-                ? LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag}")
-                : LLGL::PipelineLayoutDesc("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag}")
+                ? LLGL::Parse("heap{cbuffer(SceneState@3):vert:frag, texture(colorMap@4):frag, sampler(linearSampler@5):frag}")
+                : LLGL::Parse("heap{cbuffer(SceneState@0):vert:frag, texture(colorMap@0):frag, sampler(linearSampler@0):frag}")
         );
 
         #endif // /ENABLE_STORAGE_TEXTURES

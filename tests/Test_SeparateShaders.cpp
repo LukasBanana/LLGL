@@ -7,6 +7,7 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/VertexFormat.h>
 
 
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
         auto constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(settings)), settings);
 
         // Pipeline layout
-        auto layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(Settings@0):vert:frag"));
+        auto layout = renderer->CreatePipelineLayout(LLGL::Parse("cbuffer(Settings@0):vert:frag"));
 
         // Shaders
         auto CreateSeparateShader = [&renderer, &vertexFormat](LLGL::ShaderType type, std::string filename)

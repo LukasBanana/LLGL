@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/Utility.h>
 #include <LLGL/Utils/VertexFormat.h>
 #include <memory>
@@ -129,7 +130,7 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("texture(tex@0):frag,sampler(smpl@0):frag"));
+            pipelineDesc.pipelineLayout     = renderer->CreatePipelineLayout(LLGL::Parse("texture(tex@0):frag,sampler(smpl@0):frag"));
             pipelineDesc.vertexShader       = renderer->CreateShader(vsDesc);
             pipelineDesc.fragmentShader     = renderer->CreateShader(fsDesc);
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;

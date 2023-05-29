@@ -177,7 +177,7 @@ public:
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("cbuffer(2):comp, rwbuffer(3):comp, rwbuffer(4):comp")
+            LLGL::Parse("cbuffer(2):comp, rwbuffer(3):comp, rwbuffer(4):comp")
         );
 
         // Create compute pipeline

@@ -194,9 +194,9 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
 
     if (compiledSampler)
-        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("heap{cbuffer(0):vert, texture(0):frag, sampler(0):frag}"));
+        layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(0):vert, texture(0):frag, sampler(0):frag}"));
     else
-        layout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("heap{cbuffer(0):vert, texture(1):frag, sampler(2):frag}"));
+        layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(0):vert, texture(1):frag, sampler(2):frag}"));
 
     // Create resource heap
     resourceHeap = renderer->CreateResourceHeap(layout, { constantBuffer, texture, sampler });

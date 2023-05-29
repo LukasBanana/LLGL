@@ -164,7 +164,7 @@ private:
     void CreatePipelines()
     {
         // Create pipeline layout
-        pipelineLayout = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("heap{cbuffer(Scene@1):vert}"));
+        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Scene@1):vert}"));
 
         // Create resource view heap
         for (auto& bdl : bundle)

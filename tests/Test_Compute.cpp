@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Utils/Utility.h>
+#include <LLGL/Utils/Parse.h>
 #include <Gauss/Gauss.h>
 #include <vector>
 #include <iostream>
@@ -80,9 +80,7 @@ int main()
         auto timerQuery = renderer->CreateQueryHeap(queryDesc);
 
         // Create pipeline layout
-        auto pipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("rwbuffer(OutputBuffer@0):comp")
-        );
+        auto pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("rwbuffer(OutputBuffer@0):comp"));
 
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;

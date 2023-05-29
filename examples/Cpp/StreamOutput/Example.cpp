@@ -107,9 +107,7 @@ public:
     void CreatePipelines()
     {
         // Create graphics pipeline layout
-        pipelineLayout = renderer->CreatePipelineLayout(
-            LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@2):vert}")
-        );
+        pipelineLayout = renderer->CreatePipelineLayout(LLGL::Parse("heap{ cbuffer(Settings@2):vert }"));
 
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;

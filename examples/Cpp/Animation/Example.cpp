@@ -139,13 +139,13 @@ private:
         if (IsOpenGL())
         {
             pipelineLayout = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@1):frag:vert, texture(colorMap@2):frag, sampler(2):frag}")
+                LLGL::Parse("heap{cbuffer(Settings@1):frag:vert, texture(colorMap@2):frag, sampler(2):frag}")
             );
         }
         else
         {
             pipelineLayout = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc("heap{cbuffer(Settings@1):frag:vert, texture(colorMap@2):frag, sampler(linearSampler@3):frag}")
+                LLGL::Parse("heap{cbuffer(Settings@1):frag:vert, texture(colorMap@2):frag, sampler(linearSampler@3):frag}")
             );
         }
     }

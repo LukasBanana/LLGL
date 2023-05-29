@@ -154,7 +154,6 @@ endif()
 
 option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
-option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 option(LLGL_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
 option(LLGL_ENABLE_JIT_COMPILER "Enable Just-in-Time (JIT) compilation for emulated deferred command buffers (experimental)" OFF)
 option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
@@ -202,10 +201,6 @@ endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     ADD_DEFINE(LLGL_ENABLE_DEBUG_LAYER)
-endif()
-
-if(LLGL_ENABLE_UTILITY)
-    ADD_DEFINE(LLGL_ENABLE_UTILITY)
 endif()
 
 if(LLGL_ENABLE_SPIRV_REFLECT)

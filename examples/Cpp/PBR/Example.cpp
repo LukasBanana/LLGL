@@ -144,7 +144,7 @@ private:
         if (IsOpenGL())
         {
             layoutSky = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc(
+                LLGL::Parse(
                     "heap{"
                     "cbuffer(Settings@1):frag:vert,"
                     "sampler(skyBox@2):frag,"
@@ -156,7 +156,7 @@ private:
         else
         {
             layoutSky = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc(
+                LLGL::Parse(
                     "heap{"
                     "cbuffer(1):frag:vert,"
                     "sampler(2):frag,"
@@ -182,19 +182,11 @@ private:
         if (IsOpenGL())
         {
             layoutMeshes = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc(
+                LLGL::Parse(
                     "heap{"
-                    "cbuffer(Settings@1):frag:vert,"
-                    "sampler(skyBox@2):frag,"
-                    "sampler(colorMaps@3):frag,"
-                    "sampler(normalMaps@4):frag,"
-                    "sampler(roughnessMaps@5):frag,"
-                    "sampler(metallicMaps@6):frag,"
-                    "texture(2):frag,"
-                    "texture(3):frag,"
-                    "texture(4):frag,"
-                    "texture(5):frag,"
-                    "texture(6):frag,"
+                    "  cbuffer(Settings@1):frag:vert,"
+                    "  sampler(skyBox@2, colorMaps@3, normalMaps@4, roughnessMaps@5, metallicMaps@6):frag,"
+                    "  texture(2,3,4,5,6):frag,"
                     "}"
                 )
             );
@@ -202,15 +194,11 @@ private:
         else
         {
             layoutMeshes = renderer->CreatePipelineLayout(
-                LLGL::PipelineLayoutDesc(
+                LLGL::Parse(
                     "heap{"
-                    "cbuffer(1):frag:vert,"
-                    "sampler(2):frag,"
-                    "texture(3):frag,"
-                    "texture(4):frag,"
-                    "texture(5):frag,"
-                    "texture(6):frag,"
-                    "texture(7):frag,"
+                    "  cbuffer(1):frag:vert,"
+                    "  sampler(2):frag,"
+                    "  texture(3,4,5,6,7):frag,"
                     "}"
                 )
             );

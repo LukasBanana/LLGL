@@ -11,6 +11,14 @@
 
 using namespace LLGL;
 
+static void RunRendererIndependentTests()
+{
+    Log::Printf("Run renderer independent tests\n");
+    Log::Printf("=============================\n");
+    TestbedContext::RunRendererIndependentTests();
+    Log::Printf("=============================\n\n");
+}
+
 static void RunTestbedForRenderer(const char* moduleName, int argc, char* argv[])
 {
     Log::Printf("Run Testbed: %s\n", moduleName);
@@ -44,6 +52,9 @@ int main(int argc, char* argv[])
     std::string singleModule;
     if (argc >= 2 && argv[1][0] != '-')
         singleModule = GetRendererModule(argv[1]);
+
+    // Run renderer independent tests
+    RunRendererIndependentTests();
 
     if (!singleModule.empty())
     {

@@ -12,6 +12,7 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/Utility.h>
 #include <LLGL/Utils/VertexFormat.h>
+#include <LLGL/Utils/Parse.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>

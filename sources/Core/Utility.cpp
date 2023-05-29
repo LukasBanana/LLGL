@@ -5,8 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifdef LLGL_ENABLE_UTILITY
-
 #include <LLGL/Utils/Utility.h>
 #include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Utils/ForRange.h>
@@ -14,8 +12,8 @@
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
 #include <LLGL/Shader.h>
-#include <cstring>
-#include <cctype>
+#include <string.h>
+#include <ctype.h>
 #include "../Renderer/RenderTargetUtils.h"
 
 
@@ -219,14 +217,14 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
 
     if (filename != nullptr)
     {
-        if (auto fileExt = std::strrchr(filename, '.'))
+        if (const char* fileExt = ::strrchr(filename, '.'))
         {
             /* Check if filename refers to a text-based source file */
             bool isTextFile = false;
 
-            for (auto ext : { "hlsl", "fx", "glsl", "vert", "tesc", "tese", "geom", "frag", "comp", "metal" })
+            for (const char* ext : { "hlsl", "fx", "glsl", "vert", "tesc", "tese", "geom", "frag", "comp", "metal" })
             {
-                if (std::strcmp(fileExt + 1, ext) == 0)
+                if (::strcmp(fileExt + 1, ext) == 0)
                 {
                     isTextFile = true;
                     break;
@@ -254,338 +252,8 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflection& 
     PipelineLayoutDescriptor desc;
     {
         desc.bindings.resize(reflection.resources.size());
-        for (std::size_t i = 0; i < desc.bindings.size(); ++i)
+        for_range(i, desc.bindings.size())
             desc.bindings[i] = reflection.resources[i].binding;
-    }
-    return desc;
-}
-
-// Return name of ASCII character.
-static std::string GetASCIIName(char c)
-{
-    if (c >= 0 && c <= 32)
-    {
-        static const char* g_names[] =
-        {
-            "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT", "FF", "CR", "SO", "SI",     // 0x00 - 0x0F
-            "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",  // 0x10 - 0x1F
-            "SP",                                                                                                       // 0x20
-        };
-        return ('<' + std::string(g_names[static_cast<std::size_t>(c)]) + '>');
-    }
-    else if (c == 127)
-        return "<DEL>";
-    return ('\'' + std::string(1, c) + '\'');
-}
-
-[[noreturn]]
-static void ErrUnexpectedChar(const char* err, char c)
-{
-    throw std::invalid_argument(std::string(err) + ", but got " + GetASCIIName(c));
-}
-
-// Parse character or throw exception.
-static void AcceptChar(const char*& s, char c, const char* err = nullptr)
-{
-    if (*s == c)
-        ++s;
-    else
-    {
-        if (err != nullptr)
-            ErrUnexpectedChar(err, *s);
-        else
-        {
-            std::string errMsg{ "expected character " + GetASCIIName(c) };
-            ErrUnexpectedChar(errMsg.c_str(), *s);
-        }
-    }
-}
-
-// Scans the specified token and returns true on success. Otherwise, the input string remains at the current position.
-static bool ScanToken(const char*& s, const char* tok)
-{
-    auto p = s;
-    while (*tok != '\0')
-    {
-        if (*p != *tok)
-            return false;
-        ++tok;
-        ++p;
-    }
-    s = p;
-    return true;
-}
-
-// Ignore all whitespace characters.
-static void IgnoreWhiteSpaces(const char*& s)
-{
-    while (std::isspace(*s))
-        ++s;
-}
-
-// Parse resource type identifier for layout signature, e.g. "texture".
-static void ParseLayoutSignatureResourceType(const char*& s, ResourceType& type, long& bindFlags)
-{
-    struct ResourceTypeIdent
-    {
-        const char*     ident;
-        ResourceType    type;
-        long            bindFlags;
-    };
-    const ResourceTypeIdent g_resources[] =
-    {
-        { "cbuffer",   ResourceType::Buffer,  BindFlags::ConstantBuffer },
-        { "buffer",    ResourceType::Buffer,  BindFlags::Sampled        },
-        { "rwbuffer",  ResourceType::Buffer,  BindFlags::Storage        },
-        { "texture",   ResourceType::Texture, BindFlags::Sampled        },
-        { "rwtexture", ResourceType::Texture, BindFlags::Storage        },
-        { "sampler",   ResourceType::Sampler, 0                         },
-    };
-
-    /* Parse identifier (find end of alphabetic characters) */
-    IgnoreWhiteSpaces(s);
-
-    auto token = s;
-    while (std::isalpha(static_cast<unsigned char>(*s)))
-        ++s;
-    auto tokenLen = static_cast<std::size_t>(s - token);
-
-    if (tokenLen > 0)
-    {
-        /* Determine which identifier is used */
-        for (const auto& resource : g_resources)
-        {
-            if (std::strlen(resource.ident) == tokenLen && std::strncmp(token, resource.ident, tokenLen) == 0)
-            {
-                type        = resource.type;
-                bindFlags   = resource.bindFlags;
-                return;
-            }
-        }
-
-        /* Identifier not found */
-        throw std::invalid_argument("unknown resource type in layout signature: " + std::string(token, tokenLen));
-    }
-
-    ErrUnexpectedChar("expected resource type identifier", *s);
-}
-
-// Parse unsigned integral number.
-static std::uint32_t ParseUInt32(const char*& s)
-{
-    IgnoreWhiteSpaces(s);
-
-    if (*s >= '0' && *s <= '9')
-    {
-        std::uint32_t num = 0;
-        while (*s >= '0' && *s <= '9')
-        {
-            num *= 10;
-            num += (*s - '0');
-            ++s;
-        }
-
-        return num;
-    }
-
-    ErrUnexpectedChar("expected numeric character", *s);
-}
-
-// Parse single shader stage flag identifier, e.g. "vert" or "frag".
-static long ParseLayoutSignatureStageFlag(const char*& s)
-{
-    struct StageFlagIdent
-    {
-        long        bitmask;
-        const char* ident;
-    };
-    const StageFlagIdent g_flags[] =
-    {
-        { StageFlags::VertexStage,          "vert" },
-        { StageFlags::TessControlStage,     "tesc" },
-        { StageFlags::TessEvaluationStage,  "tese" },
-        { StageFlags::GeometryStage,        "geom" },
-        { StageFlags::FragmentStage,        "frag" },
-        { StageFlags::ComputeStage,         "comp" },
-    };
-
-    /* Parse identifier (find end of alphabetic characters) */
-    IgnoreWhiteSpaces(s);
-
-    auto token = s;
-    while (std::isalpha(static_cast<unsigned char>(*s)))
-        ++s;
-    auto tokenLen = static_cast<std::size_t>(s - token);
-
-    /* Determine which identifier is used */
-    for (const auto& flag : g_flags)
-    {
-        if (std::strncmp(token, flag.ident, tokenLen) == 0)
-            return flag.bitmask;
-    }
-
-    /* Identifier not found */
-    throw std::invalid_argument("unknown shader stage in layout signature: " + std::string(token, tokenLen));
-}
-
-// Parse all shader stage flags, e.g. ":vert:frag".
-static long ParseLayoutSignatureStageFlagsAll(const char*& s)
-{
-    long flags = 0;
-
-    while (*s == ':')
-    {
-        ++s;
-        IgnoreWhiteSpaces(s);
-        flags |= ParseLayoutSignatureStageFlag(s);
-        IgnoreWhiteSpaces(s);
-    }
-
-    return flags;
-}
-
-// Parse next layout signature binding point, e.g. "texture(1)"
-static void ParseLayoutSignatureBindingPoint(PipelineLayoutDescriptor& desc, const char*& s, bool isHeap)
-{
-    BindingDescriptor bindingDesc;
-
-    /* Parse resource type and set stages to default */
-    ParseLayoutSignatureResourceType(s, bindingDesc.type, bindingDesc.bindFlags);
-    bindingDesc.stageFlags = StageFlags::AllStages;
-
-    /* Parse binding points */
-    IgnoreWhiteSpaces(s);
-    AcceptChar(s, '(', "expected open bracket '(' after resource type");
-
-    auto& dstBindings = (isHeap ? desc.heapBindings : desc.bindings);
-    auto firstBinding = dstBindings.size();
-
-    for (;;)
-    {
-        /* Parse optional name */
-        IgnoreWhiteSpaces(s);
-        bindingDesc.name.clear();
-
-        if (std::isalpha(static_cast<unsigned char>(*s)) || *s == '_')
-        {
-            for (; std::isalnum(static_cast<unsigned char>(*s)) || *s == '_'; ++s)
-                bindingDesc.name += *s;
-            IgnoreWhiteSpaces(s);
-            AcceptChar(s, '@');
-        }
-
-        /* Parse slot number */
-        bindingDesc.slot = ParseUInt32(s);
-        IgnoreWhiteSpaces(s);
-
-        /* Parse optional array size */
-        if (*s == '[')
-        {
-            ++s;
-            bindingDesc.arraySize = ParseUInt32(s);
-            IgnoreWhiteSpaces(s);
-            AcceptChar(s, ']');
-            IgnoreWhiteSpaces(s);
-        }
-
-        /* Add new binding point to output descriptor */
-        dstBindings.push_back(bindingDesc);
-
-        if (*s == ',')
-            ++s;
-        else
-            break;
-    }
-
-    AcceptChar(s, ')', "expected close bracket ')' after slot indices");
-    IgnoreWhiteSpaces(s);
-
-    /* Parse optional shader stage flags */
-    if (*s == ':')
-    {
-        auto stageFlags = ParseLayoutSignatureStageFlagsAll(s);
-
-        /* Update stage flags of all previously added binding descriptors */
-        for_subrange(i, firstBinding, dstBindings.size())
-            dstBindings[i].stageFlags = stageFlags;
-    }
-}
-
-// Parse layout signature, e.g. "texture(1), sampler(2)" within a "heap{ ... }" scope
-static void ParseLayoutSignatureForHeap(PipelineLayoutDescriptor& desc, const char*& s)
-{
-    IgnoreWhiteSpaces(s);
-    if (*s == '{')
-        ++s;
-    else
-        ErrUnexpectedChar("expected open curly bracket '{' after heap declaration", *s);
-
-    while (*s != '}')
-    {
-        if (*s == '\0')
-            ErrUnexpectedChar("expected heap terminator '}'", *s);
-
-        /* Parse next binding point */
-        ParseLayoutSignatureBindingPoint(desc, s, /*isHeap:*/ true);
-
-        /* If there is no comma, the layout must end */
-        if (*s == ',')
-        {
-            ++s;
-            IgnoreWhiteSpaces(s);
-        }
-        else
-        {
-            IgnoreWhiteSpaces(s);
-            if (*s != '}')
-                ErrUnexpectedChar("expected comma separator ',' after binding point", *s);
-        }
-    }
-
-    /* Accept '}' token */
-    ++s;
-}
-
-// Parse layout signature, e.g. "texture(1), sampler(2)"
-static void ParseLayoutSignature(PipelineLayoutDescriptor& desc, const char* s)
-{
-    while (*s != '\0')
-    {
-        /* Check if we must enter a heap declaration */
-        if (ScanToken(s, "heap"))
-        {
-            /* Start parsing layout siganture for heap declaration */
-            ParseLayoutSignatureForHeap(desc, s);
-        }
-        else
-        {
-            /* Parse next binding point */
-            ParseLayoutSignatureBindingPoint(desc, s, /*isHeap:*/ false);
-        }
-
-        /* If there is no comma, the layout must end */
-        if (*s == ',')
-        {
-            ++s;
-            IgnoreWhiteSpaces(s);
-        }
-        else
-        {
-            IgnoreWhiteSpaces(s);
-            if (*s != '\0')
-                ErrUnexpectedChar("expected comma separator ',' after binding point", *s);
-        }
-    }
-}
-
-LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const char* layoutSignature)
-{
-    PipelineLayoutDescriptor desc;
-    {
-        if (layoutSignature)
-            ParseLayoutSignature(desc, layoutSignature);
-        else
-            throw std::invalid_argument("input parameter must not be null: layoutSignature");
     }
     return desc;
 }
@@ -617,8 +285,6 @@ LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& re
 
 
 } // /namespace LLGL
-
-#endif
 
 
 
