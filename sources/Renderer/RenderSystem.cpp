@@ -20,9 +20,17 @@
 #include "BuildID.h"
 
 #include <LLGL/RenderSystem.h>
-#include <inttypes.h>
 #include <string>
 #include <unordered_map>
+
+/*
+Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
+See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
+*/
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+#include <inttypes.h>
 
 #ifdef LLGL_ENABLE_DEBUG_LAYER
 #   include "DebugLayer/DbgRenderSystem.h"
