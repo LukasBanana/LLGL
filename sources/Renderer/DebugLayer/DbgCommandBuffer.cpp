@@ -297,6 +297,32 @@ void DbgCommandBuffer::CopyTextureFromBuffer(
     profile_.textureCopies++;
 }
 
+void DbgCommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    auto& dstTextureDbg = LLGL_CAST(DbgTexture&, dstTexture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        if (!states_.insideRenderPass)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannoy copy texture from framebuffer outside of a render pass");
+        if (dstRegion.extent.depth != 1)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of " + std::to_string(dstRegion.extent.depth));
+        ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
+        ValidateTextureRegion(dstTextureDbg, dstRegion);
+        if (DbgRenderTarget* renderTargetDbg = bindings_.renderTarget)
+            ValidateRenderTargetRange(*renderTargetDbg, srcOffset, Extent2D{ dstRegion.extent.width, dstRegion.extent.height });
+    }
+
+    LLGL_DBG_COMMAND( "CopyTextureFromFramebuffer", instance.CopyTextureFromFramebuffer(dstTextureDbg.instance, dstRegion, srcOffset) );
+
+    profile_.textureCopies++;
+}
+
 void DbgCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
@@ -1807,7 +1833,7 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
         );
     }
 
-    /* Validate extent */
+    /* Validate extent and offset */
     const auto mipExtent = textureDbg.GetMipExtent(region.subresource.baseMipLevel);
 
     if (region.extent.width  == 0 ||
@@ -1970,6 +1996,46 @@ void DbgCommandBuffer::ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::
         LLGL_DBG_ERROR_NOT_SUPPORTED("conditional rendering");
     if (!queryHeapDbg.desc.renderCondition)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot use query heap for conditional rendering that was not created with 'renderCondition' enabled");
+}
+
+void DbgCommandBuffer::ValidateRenderTargetRange(DbgRenderTarget& renderTargetDbg, const Offset2D& offset, const Extent2D& extent)
+{
+    /* Validate extent and offset */
+    const Extent2D resolution = renderTargetDbg.GetResolution();
+
+    if (extent.width == 0 || extent.height == 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid swap-chain region with zero extent (" + std::to_string(extent.width) + ", " + std::to_string(extent.height) + ")"
+        );
+    }
+    else if (offset.x < 0 || offset.y < 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "invalid swap-chain region with negative offset (" + std::to_string(offset.x) + ", " + std::to_string(offset.y) + ")"
+        );
+    }
+    else
+    {
+        if (static_cast<std::uint32_t>(offset.x) + extent.width > resolution.width)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid swap-chain region with X-range [" + std::to_string(offset.x) + ", +" + std::to_string(extent.width) +
+                ") out of bounds [0, " + std::to_string(resolution.width) + ")"
+            );
+        }
+        if (static_cast<std::uint32_t>(offset.y) + extent.height > resolution.height)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invalid swap-chain region with Y-range [" + std::to_string(offset.y) + ", +" + std::to_string(extent.height) +
+                ") out of bounds [0, " + std::to_string(resolution.height) + ")"
+            );
+        }
+    }
 }
 
 void DbgCommandBuffer::ValidateSwapBufferIndex(DbgSwapChain& swapChainDbg, std::uint32_t swapBufferIndex)

@@ -26,6 +26,7 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLMipGenerator.h"
+#include "../Texture/GLFramebufferCapture.h"
 #ifdef LLGL_GL_ENABLE_OPENGL2X
 #   include "../Texture/GL2XSampler.h"
 #endif
@@ -95,6 +96,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdCopyImageBuffer*>(pc);
             compiler.CallMember(&GLTexture::CopyImageFromBuffer, cmd->texture, &(cmd->region), cmd->bufferID, cmd->offset, cmd->size, cmd->rowLength, cmd->imageHeight);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyFramebufferSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyFramebufferSubData*>(pc);
+            compiler.CallMember(&GLFramebufferCapture::CaptureFramebuffer, &(GLFramebufferCapture::Get()), g_stateMngrArg, cmd->dstTexture, cmd->dstLevel, &(cmd->dstOffset), &(cmd->srcOffset), &(cmd->extent));
             return sizeof(*cmd);
         }
         case GLOpcodeGenerateMipmap:

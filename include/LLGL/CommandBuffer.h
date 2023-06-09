@@ -277,6 +277,32 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         ) = 0;
 
         /**
+        \brief Encodes a texture copy command that blits data from the current framebuffer.
+
+        \param[in,out] dstTexture Specifies the destination texture whose data is to be updated.
+        This texture must have been created with the binding flag BindFlags::CopyDst and
+        its format <b>must not</b> be compressed (see FormatFlags::IsCompressed) or packed (see FormatFlags::IsPacked).
+
+        \param[in] dstRegion Specifies the destination region where the texture is to be updated.
+        Note that both the \c numMipLevels and \c extent.depth attributes of this parameter \b must be 1.
+
+        \param[in] srcOffset Specifies the source offset at which the framebuffer is to be read from.
+        If the source offset plus the destination dimension is larger the framebuffer's resolution, the behavior is undefined.
+
+        \remarks This command must only be used \e inside a render pass, i.e. between CommandBuffer::BeginRenderPass and CommandBuffer::EndRenderPass.
+
+        \remarks For performance reasons, it is recommended to render a scene into a RenderTarget instead of copying the framebuffer into a texture.
+        This command merely simplifies the process of capturing the framebuffer mid-scene without having to interrupt a render pass or creating an intermediate render target.
+
+        \see RenderTarget::GetResolution
+        */
+        virtual void CopyTextureFromFramebuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            const Offset2D&         srcOffset
+        ) = 0;
+
+        /**
         \brief Generates all MIP-maps for the specified texture.
 
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
@@ -478,7 +504,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
 
         \param[in] swapBufferIndex Optional index into what swap-chain buffer the render pass is meant to be rendered.
-        If this is Constants::currentSwapIndex, the current buffer in the swap-chain is used. Otherwise, this should be the current value returned by SwapChain::GetCurrentSwapIndex.
+        If this is Constants::currentSwapIndex, the current buffer in the swap-chain is used.
+        Otherwise, this should be the current value returned by SwapChain::GetCurrentSwapIndex.
         This parameter is ignored for regular render targets, i.e. if \c renderTarget is \e not a SwapChain.
 
         \remarks This function starts a new render pass section and must be ended with the \c EndRenderPass function.

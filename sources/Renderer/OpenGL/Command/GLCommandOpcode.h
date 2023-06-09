@@ -25,6 +25,7 @@ enum GLOpcode : std::uint8_t
     GLOpcodeCopyImageSubData,
     GLOpcodeCopyImageToBuffer,
     GLOpcodeCopyImageFromBuffer,
+    GLOpcodeCopyFramebufferSubData,
     GLOpcodeGenerateMipmap,
     GLOpcodeGenerateMipmapSubresource,
     GLOpcodeExecute,

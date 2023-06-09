@@ -11,6 +11,7 @@
 
 #include <LLGL/TextureFlags.h>
 #include <cstdint>
+#include "GLFramebuffer.h"
 #include "../OpenGL.h"
 
 
@@ -85,19 +86,7 @@ class GLMipGenerator
 
     private:
 
-        struct MipGenerationFBOPair
-        {
-            ~MipGenerationFBOPair();
-
-            void CreateFBOs();
-            void ReleaseFBOs();
-
-            GLuint fbos[2] = { 0, 0 };
-        };
-
-    private:
-
-        MipGenerationFBOPair mipGenerationFBOPair_;
+        GLFramebufferPair mipGenerationFBOPair_;
 
 };
 

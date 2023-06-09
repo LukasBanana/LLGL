@@ -646,6 +646,30 @@ bool ExampleBase::SaveTexture(LLGL::Texture& texture, const std::string& filenam
     return SaveTextureWithRenderer(*renderer, texture, filename, mipLevel);
 }
 
+LLGL::Texture* ExampleBase::CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource)
+{
+    const LLGL::Extent2D resolution{ resolutionSource != nullptr ? resolutionSource->GetResolution() : swapChain->GetResolution() };
+
+    // Create texture to capture framebuffer
+    LLGL::TextureDescriptor texDesc;
+    {
+        texDesc.type            = LLGL::TextureType::Texture2D;
+        texDesc.bindFlags       = LLGL::BindFlags::CopyDst;
+        texDesc.extent.width    = resolution.width;
+        texDesc.extent.height   = resolution.height;
+    }
+    LLGL::Texture* tex = renderer->CreateTexture(texDesc);
+
+    // Capture framebuffer
+    LLGL::TextureRegion region;
+    {
+        region.extent = LLGL::Extent3D{ resolution.width, resolution.height, 1u };
+    }
+    commandBuffer.CopyTextureFromFramebuffer(*tex, region, LLGL::Offset2D{ 0, 0 });
+
+    return tex;
+}
+
 float ExampleBase::GetAspectRatio() const
 {
     const auto resolution = swapChain->GetResolution();

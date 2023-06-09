@@ -213,6 +213,14 @@ void NullCommandBuffer::CopyTextureFromBuffer(
     }
 }
 
+void NullCommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    //todo
+}
+
 void NullCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureNull = LLGL_CAST(NullTexture&, texture);

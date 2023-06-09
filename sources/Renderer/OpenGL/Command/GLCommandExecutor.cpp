@@ -24,6 +24,7 @@
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
+#include "../Texture/GLFramebufferCapture.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -91,6 +92,12 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdCopyImageBuffer*>(pc);
             cmd->texture->CopyImageFromBuffer(cmd->region, cmd->bufferID, cmd->offset, cmd->size, cmd->rowLength, cmd->imageHeight);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeCopyFramebufferSubData:
+        {
+            auto cmd = reinterpret_cast<const GLCmdCopyFramebufferSubData*>(pc);
+            GLFramebufferCapture::Get().CaptureFramebuffer(*stateMngr, *(cmd->dstTexture), cmd->dstLevel, cmd->dstOffset, cmd->srcOffset, cmd->extent);
             return sizeof(*cmd);
         }
         case GLOpcodeGenerateMipmap:

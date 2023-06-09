@@ -89,6 +89,12 @@ class NullCommandBuffer final : public CommandBuffer
             std::uint32_t           layerStride = 0
         ) override;
 
+        void CopyTextureFromFramebuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            const Offset2D&         srcOffset
+        ) override;
+
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 

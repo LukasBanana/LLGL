@@ -92,6 +92,15 @@ struct GLCmdCopyImageBuffer
     GLint           imageHeight;
 };
 
+struct GLCmdCopyFramebufferSubData
+{
+    GLTexture*  dstTexture;
+    GLint       dstLevel;
+    Offset3D    dstOffset;
+    Offset2D    srcOffset;
+    Extent2D    extent;
+};
+
 struct GLCmdGenerateMipmap
 {
     GLTexture* texture;

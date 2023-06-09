@@ -31,6 +31,7 @@
 #endif
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
+#include "../Texture/GLFramebufferCapture.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -169,6 +170,25 @@ void GLImmediateCommandBuffer::CopyTextureFromBuffer(
         GetMemoryFootprint(dstTextureGL.GetType(), dstTextureGL.GetFormat(), dstRegion.extent, dstRegion.subresource),
         static_cast<GLint>(rowStride),
         static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
+    );
+}
+
+void GLImmediateCommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    if (dstRegion.extent.depth != 1)
+        return /*GL_INVALID_VALUE*/;
+
+    auto& dstTextureGL = LLGL_CAST(GLTexture&, dstTexture);
+    GLFramebufferCapture::Get().CaptureFramebuffer(
+        *stateMngr_,
+        dstTextureGL,
+        static_cast<GLint>(dstRegion.subresource.baseMipLevel),
+        CalcTextureOffset(dstTexture.GetType(), dstRegion.offset, dstRegion.subresource.baseArrayLayer),
+        srcOffset,
+        Extent2D{ dstRegion.extent.width, dstRegion.extent.height }
     );
 }
 

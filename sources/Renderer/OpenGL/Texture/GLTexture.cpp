@@ -1,6 +1,6 @@
 /*
  * GLTexture.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -23,6 +23,7 @@
 #include "../Texture/GLTextureSubImage.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Exception.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -424,6 +425,7 @@ static void GLCopyImageSubData(
 
 #endif // /GL_ARB_copy_image
 
+// Copies image data from a source texture to a destination texture.
 static void GLCopyTexSubImagePrimary(
     const TextureType       type,
     const GLTextureTarget   target,
@@ -483,7 +485,7 @@ static void GLCopyTexSubImagePrimary(
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
         {
-            for (decltype(extent.depth) i = 0; i < extent.depth; ++i)
+            for_range(z, extent.depth)
             {
                 readFBO.Attach(srcTexture, srcLevel, srcOffset);
                 glCopyTexSubImage3D(
@@ -491,7 +493,7 @@ static void GLCopyTexSubImagePrimary(
                     dstLevel,
                     dstOffset.x,
                     dstOffset.y,
-                    dstOffset.z + i,
+                    dstOffset.z + z,
                     srcOffset.x,
                     srcOffset.y,
                     static_cast<GLsizei>(extent.width),

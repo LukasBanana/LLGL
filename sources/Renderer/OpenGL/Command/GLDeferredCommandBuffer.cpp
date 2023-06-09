@@ -228,6 +228,25 @@ void GLDeferredCommandBuffer::CopyTextureFromBuffer(
     }
 }
 
+void GLDeferredCommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    if (dstRegion.extent.depth != 1)
+        return /*GL_INVALID_VALUE*/;
+
+    auto cmd = AllocCommand<GLCmdCopyFramebufferSubData>(GLOpcodeCopyFramebufferSubData);
+    {
+        cmd->dstTexture     = LLGL_CAST(GLTexture*, &dstTexture);
+        cmd->dstLevel       = static_cast<GLint>(dstRegion.subresource.baseMipLevel);
+        cmd->dstOffset      = CalcTextureOffset(dstTexture.GetType(), dstRegion.offset, dstRegion.subresource.baseArrayLayer);
+        cmd->srcOffset      = srcOffset;
+        cmd->extent.width   = dstRegion.extent.width;
+        cmd->extent.height  = dstRegion.extent.height;
+    }
+}
+
 void GLDeferredCommandBuffer::GenerateMips(Texture& texture)
 {
     auto cmd = AllocCommand<GLCmdGenerateMipmap>(GLOpcodeGenerateMipmap);

@@ -19,6 +19,17 @@ namespace LLGL
 
 class GLTexture;
 
+// Helper container for a pair of OpenGL FBOs.
+struct GLFramebufferPair
+{
+    ~GLFramebufferPair();
+
+    void CreateFBOs();
+    void ReleaseFBOs();
+
+    GLuint fbos[2] = { 0, 0 };
+};
+
 // Wrapper class for GL framebuffer objects (FBOs).
 class GLFramebuffer
 {

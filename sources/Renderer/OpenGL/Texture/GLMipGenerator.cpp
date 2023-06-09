@@ -1,6 +1,6 @@
 /*
  * GLMipGenerator.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -27,9 +27,7 @@ GLMipGenerator& GLMipGenerator::Get()
 
 void GLMipGenerator::Clear()
 {
-    #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
     mipGenerationFBOPair_.ReleaseFBOs();
-    #endif
 }
 
 void GLMipGenerator::GenerateMips(const TextureType type)
@@ -219,7 +217,7 @@ void GLMipGenerator::GenerateMipsRangeWithFBO(
     stateMngr.PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
     stateMngr.PushBoundFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER);
     {
-        /* Bind read framebuffer for <current> MIP level, and draw framebuffer for <next> MIP level */
+        /* Bind read framebuffer for current MIP level and draw framebuffer for next MIP level */
         stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, mipGenerationFBOPair_.fbos[0]);
         stateMngr.BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, mipGenerationFBOPair_.fbos[1]);
 
@@ -312,32 +310,6 @@ void GLMipGenerator::GenerateMipsRangeWithTextureView(
 }
 
 #endif // /GL_ARB_texture_view
-
-
-/*
- * MipGenerationFBOPair structure
- */
-
-GLMipGenerator::MipGenerationFBOPair::~MipGenerationFBOPair()
-{
-    ReleaseFBOs();
-}
-
-void GLMipGenerator::MipGenerationFBOPair::CreateFBOs()
-{
-    if (!fbos[0])
-        glGenFramebuffers(2, fbos);
-}
-
-void GLMipGenerator::MipGenerationFBOPair::ReleaseFBOs()
-{
-    if (fbos[0])
-    {
-        glDeleteFramebuffers(2, fbos);
-        fbos[0] = 0;
-        fbos[1] = 0;
-    }
-}
 
 
 } // /namespace LLGL

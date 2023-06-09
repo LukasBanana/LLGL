@@ -259,6 +259,9 @@ protected:
     // Save texture image to a PNG file.
     bool SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
 
+    // Captures the current framebuffer into a new texture.
+    LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource = nullptr);
+
     // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
 

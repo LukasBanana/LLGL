@@ -18,6 +18,36 @@ namespace LLGL
 {
 
 
+/*
+ * GLFramebufferPair structure
+ */
+
+GLFramebufferPair::~GLFramebufferPair()
+{
+    ReleaseFBOs();
+}
+
+void GLFramebufferPair::CreateFBOs()
+{
+    if (fbos[0] == 0)
+        glGenFramebuffers(2, fbos);
+}
+
+void GLFramebufferPair::ReleaseFBOs()
+{
+    if (fbos[0] != 0)
+    {
+        glDeleteFramebuffers(2, fbos);
+        fbos[0] = 0;
+        fbos[1] = 0;
+    }
+}
+
+
+/*
+ * GLFramebuffer class
+ */
+
 GLFramebuffer::~GLFramebuffer()
 {
     DeleteFramebuffer();
