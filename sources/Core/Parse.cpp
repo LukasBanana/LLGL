@@ -29,6 +29,11 @@ static bool IsCharNumeric(char c)
     return (c >= '0' && c <= '9');
 }
 
+static bool IsCharNumericHex(char c)
+{
+    return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+}
+
 static bool IsCharIdentifier(char c)
 {
     return (IsCharAlpha(c) || IsCharNumeric(c) || c == '_');
@@ -78,16 +83,9 @@ static void ScanTokens(const char* start, const char* end, ParseContext::TokenAr
 
     for (const char* s = start; s != end; start = s)
     {
-        if (IsCharNumeric(*s))
+        if (IsCharIdentifier(*s))
         {
-            /* Accept numeric token */
-            while (s != end && IsCharNumeric(*s))
-                ++s;
-            NextToken(s);
-        }
-        else if (IsCharIdentifier(*s))
-        {
-            /* Accept identifier token */
+            /* Accept alpha-numeric token */
             while (s != end && IsCharIdentifier(*s))
                 ++s;
             NextToken(s);
@@ -140,8 +138,8 @@ class Parser
         // Returns true if the current token (with optional offset) matches an identifier.
         bool MatchIdent(int offset = 0) const;
 
-        // Returns true if the current token (with optional offset) matches a number.
-        bool MatchNumeric(int offset = 0) const;
+        // Returns the base of the current token (with optional offset) if it matches a number. Otherwise, returns 0.
+        int MatchNumeric(int offset = 0) const;
 
         // Accepts and returns the current token, then moves to the next token.
         StringView Accept();
@@ -219,17 +217,31 @@ bool Parser::MatchIdent(int offset) const
     return true;
 }
 
-bool Parser::MatchNumeric(int offset) const
+int Parser::MatchNumeric(int offset) const
 {
     const StringView tok = Token(offset);
     if (tok.empty())
-        return false;
-    for (char c : tok)
+        return 0;
+    if (tok.size() >= 3 && tok.compare(0, 2, "0x") == 0)
     {
-        if (!IsCharNumeric(tok.front()))
-            return false;
+        /* Match hexadecimal number */
+        for (char c : tok.substr(2))
+        {
+            if (!IsCharNumericHex(tok.front()))
+                return 0;
+        }
+        return 16;
     }
-    return true;
+    else
+    {
+        /* Match decimal number */
+        for (char c : tok)
+        {
+            if (!IsCharNumeric(tok.front()))
+                return 0;
+        }
+        return 10;
+    }
 }
 
 StringView Parser::Accept()
@@ -432,24 +444,46 @@ static bool ParseLayoutSignatureStageFlagsAll(Parser& parser, long& outStageFlag
     return true;
 }
 
-// Parse unsigned integral number.
-static bool ParseUInt32(Parser& parser, std::uint32_t& outValue)
+// Parse unsigned integral number, e.g. "123" or "0xFF".
+static int ParseUInt32(Parser& parser, std::uint32_t& outValue)
 {
-    if (!parser.MatchNumeric())
-        return ReturnWithParseError(parser, "expected numeric value");
-
-    StringView tok = parser.Accept();
-
-    outValue = 0;
-    for (char c : tok)
+    const int base = parser.MatchNumeric();
+    if (base == 0)
     {
-        outValue *= 10;
-        outValue += (c - '0');
+        ReturnWithParseError(parser, "expected numeric value");
+        return 0;
     }
 
-    return true;
+    StringView tok = parser.Accept();
+    outValue = 0;
+
+    if (base == 16)
+    {
+        tok = tok.substr(2);
+        for (char c : tok)
+        {
+            outValue *= 16;
+            if (IsCharNumeric(c))
+                outValue += (c - '0');
+            else if (c >= 'a' && c <= 'f')
+                outValue += (c - 'a' + 10);
+            else if (c >= 'A' && c <= 'F')
+                outValue += (c - 'A' + 10);
+        }
+    }
+    else
+    {
+        for (char c : tok)
+        {
+            outValue *= 10;
+            outValue += (c - '0');
+        }
+    }
+
+    return base;
 }
 
+// Parse floating-point number, e.g. "5" or "25.13".
 static bool ParseFloat(Parser& parser, float& outValue)
 {
     bool            hasSign     = false;
@@ -462,15 +496,21 @@ static bool ParseFloat(Parser& parser, float& outValue)
         hasSign = true;
 
     /* Parse integral part */
-    if (!ParseUInt32(parser, intPart))
+    const int intPartBase = ParseUInt32(parser, intPart);
+    if (intPartBase == 0)
         return false;
+    if (intPartBase != 10)
+        return ReturnWithParseError(parser, "hexadecimal number not accepted for floating-points");
 
     /* Parse optional fractional part */
     if (parser.Accept("."))
     {
         fracPartLen = parser.Token().size();
-        if (!ParseUInt32(parser, fracPart))
+        const int fracPartBase = ParseUInt32(parser, fracPart);
+        if (fracPartBase == 0)
             return false;
+        if (fracPartBase != 10)
+            return ReturnWithParseError(parser, "hexadecimal number not accepted for floating-points");
     }
 
     /* Convert to floating-point number */
@@ -482,6 +522,21 @@ static bool ParseFloat(Parser& parser, float& outValue)
     if (hasSign)
         outValue = -outValue;
 
+    return true;
+}
+
+// Parse boolean value from a set of accepted keywords.
+static bool ParseBoolean(Parser& parser, bool& outValue)
+{
+    const StringView tok = parser.Accept();
+    if (tok.empty())
+        return ReturnWithParseError(parser, "expected boolean value");
+    if (tok == "true" || tok == "yes" || tok == "on" || tok == "1")
+        outValue = true;
+    else if (tok == "false" || tok == "no" || tok == "off" || tok == "0")
+        outValue = false;
+    else
+        return ReturnWithParseError(parser, "unknown boolean value: %s", tok);
     return true;
 }
 
@@ -514,13 +569,13 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
             bindingDesc.name.clear();
 
         /* Parse slot number */
-        if (!ParseUInt32(parser, bindingDesc.slot.index))
+        if (ParseUInt32(parser, bindingDesc.slot.index) == 0)
             return false;
 
         /* Parse optional array size */
         if (parser.Accept("["))
         {
-            if (!ParseUInt32(parser, bindingDesc.arraySize))
+            if (ParseUInt32(parser, bindingDesc.arraySize) == 0)
                 return false;
             if (!parser.Accept("]"))
                 return ReturnWithParseError(parser, "expected closing ']' after array size");
@@ -688,7 +743,7 @@ static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor
             /* Parse optional array size */
             if (parser.Accept("["))
             {
-                if (!ParseUInt32(parser, uniformDesc.arraySize))
+                if (ParseUInt32(parser, uniformDesc.arraySize) == 0)
                     return false;
                 if (!parser.Accept("]"))
                     return ReturnWithParseError(parser, "expected close squared bracket ']' after array size");
@@ -994,8 +1049,8 @@ static bool ParseSamplerDescLod(Parser& parser, SamplerDescriptor& outDesc)
 static bool ParseSamplerDescAnisotropy(Parser& parser, SamplerDescriptor& outDesc)
 {
     if (!parser.Accept("="))
-        return ReturnWithParseError(parser, "expected assignment '=' after lod attribute");
-    return ParseUInt32(parser, outDesc.maxAnisotropy);
+        return ReturnWithParseError(parser, "expected assignment '=' after anisotropy attribute");
+    return (ParseUInt32(parser, outDesc.maxAnisotropy) != 0);
 }
 
 static bool ParseCompareOp(Parser& parser, CompareOp& outValue)
@@ -1017,10 +1072,29 @@ static bool ParseCompareOp(Parser& parser, CompareOp& outValue)
     );
 }
 
+static bool ParseStencilOp(Parser& parser, StencilOp& outValue)
+{
+    return ParseValueFromDictionary<StencilOp>(
+        parser,
+        {
+            { "keep", StencilOp::Keep     },
+            { "zero", StencilOp::Zero     },
+            { "set",  StencilOp::Replace  },
+            { "inc",  StencilOp::IncClamp },
+            { "dec",  StencilOp::DecClamp },
+            { "inv",  StencilOp::Invert   },
+            { "incw", StencilOp::IncWrap  },
+            { "decw", StencilOp::DecWrap  },
+        },
+        outValue,
+        "stencil operator"
+    );
+}
+
 static bool ParseSamplerDescCompare(Parser& parser, SamplerDescriptor& outDesc)
 {
     if (!parser.Accept("="))
-        return ReturnWithParseError(parser, "expected assignment '=' after lod attribute");
+        return ReturnWithParseError(parser, "expected assignment '=' after compare attribute");
 
     outDesc.compareEnabled = true;
 
@@ -1030,7 +1104,7 @@ static bool ParseSamplerDescCompare(Parser& parser, SamplerDescriptor& outDesc)
 static bool ParseSamplerDescBorder(Parser& parser, SamplerDescriptor& outDesc)
 {
     if (!parser.Accept("="))
-        return ReturnWithParseError(parser, "expected assignment '=' after lod attribute");
+        return ReturnWithParseError(parser, "expected assignment '=' after border attribute");
 
     const StringView tok = parser.Accept();
     if (tok.empty())
@@ -1118,6 +1192,247 @@ SamplerDescriptor ParseContext::AsSamplerDesc() const
     Parser parser{ tokens_ };
     if (!ParseSamplerDesc(parser, desc))
         RaiseParsingError(parser, "SamplerDescriptor");
+    return desc;
+}
+
+static bool ParseDepthDescCompare(Parser& parser, DepthDescriptor& outDesc)
+{
+    if (!parser.Accept("="))
+        return ReturnWithParseError(parser, "expected assignment '=' after depth compare attribute");
+    return ParseCompareOp(parser, outDesc.compareOp);
+}
+
+static bool ParseDepthDescBoolean(Parser& parser, bool& outValue)
+{
+    if (!parser.Accept("="))
+        return ReturnWithParseError(parser, "expected assignment '=' after depth attribute");
+    return ParseBoolean(parser, outValue);
+}
+
+static bool ParseDepthDesc(Parser& parser, DepthDescriptor& outDesc)
+{
+    while (parser.Feed())
+    {
+        /* Parse sampler attribute identifier */
+        if (!parser.MatchIdent())
+            return ReturnWithParseError(parser, "expected identifier for depth attribute");
+        const StringView tok = parser.Accept();
+
+        if (tok == "compare")
+        {
+            if (!ParseDepthDescCompare(parser, outDesc))
+                return false;
+        }
+        else if (tok == "test")
+        {
+            if (!ParseDepthDescBoolean(parser, outDesc.testEnabled))
+                return false;
+        }
+        else if (tok == "write")
+        {
+            if (!ParseDepthDescBoolean(parser, outDesc.writeEnabled))
+                return false;
+        }
+
+        /* If there's no comma, the descriptor must end */
+        if (!parser.Accept(",") && parser.Feed())
+            return ReturnWithParseError(parser, "expected comma separator ',' after depth attribute");
+    }
+    return true;
+}
+
+DepthDescriptor ParseContext::AsDepthDesc() const
+{
+    DepthDescriptor desc;
+    Parser parser{ tokens_ };
+    if (!ParseDepthDesc(parser, desc))
+        RaiseParsingError(parser, "DepthDescriptor");
+    return desc;
+}
+
+static bool ParseStencilFaceDescStencilOp(Parser& parser, StencilOp& outValue)
+{
+    if (!parser.Accept("="))
+        return ReturnWithParseError(parser, "expected assignment '=' after stencil-face operator attribute");
+    return ParseStencilOp(parser, outValue);
+}
+
+static bool ParseStencilFaceDescCompare(Parser& parser, StencilFaceDescriptor& outDesc)
+{
+    if (!parser.Accept("="))
+        return ReturnWithParseError(parser, "expected assignment '=' after stencil-face compare attribute");
+    return ParseCompareOp(parser, outDesc.compareOp);
+}
+
+static bool ParseStencilFaceDescUInt32(Parser& parser, std::uint32_t& outValue)
+{
+    if (!parser.Accept("="))
+        return ReturnWithParseError(parser, "expected assignment '=' after stencil-face attribute");
+    return (ParseUInt32(parser, outValue) != 0);
+}
+
+static bool ParseStencilFaceDescRef(Parser& parser, std::uint32_t& outReference, bool& outDynamicReference)
+{
+    if (!parser.Accept("="))
+        return ReturnWithParseError(parser, "expected assignment '=' after stencil-face reference attribute");
+    if (parser.Accept("dynamic"))
+    {
+        outDynamicReference = true;
+        return true;
+    }
+    return (ParseUInt32(parser, outReference) != 0);
+}
+
+static bool ParseStencilFaceDescAttribute(Parser& parser, const StringView& tok, StencilFaceDescriptor& outDesc, StencilDescriptor* outStencilDesc = nullptr)
+{
+    if (tok == "sfail")
+    {
+        if (!ParseStencilFaceDescStencilOp(parser, outDesc.stencilFailOp))
+            return false;
+    }
+    else if (tok == "dfail")
+    {
+        if (!ParseStencilFaceDescStencilOp(parser, outDesc.depthFailOp))
+            return false;
+    }
+    else if (tok == "dpass")
+    {
+        if (!ParseStencilFaceDescStencilOp(parser, outDesc.depthPassOp))
+            return false;
+    }
+    else if (tok == "compare")
+    {
+        if (!ParseStencilFaceDescCompare(parser, outDesc))
+            return false;
+    }
+    else if (tok == "read")
+    {
+        if (!ParseStencilFaceDescUInt32(parser, outDesc.readMask))
+            return false;
+    }
+    else if (tok == "write")
+    {
+        if (!ParseStencilFaceDescUInt32(parser, outDesc.writeMask))
+            return false;
+    }
+    else if (tok == "ref")
+    {
+        if (outStencilDesc)
+        {
+            if (!ParseStencilFaceDescRef(parser, outDesc.reference, outStencilDesc->referenceDynamic))
+                return false;
+        }
+        else
+        {
+            if (!ParseStencilFaceDescUInt32(parser, outDesc.reference))
+                return false;
+        }
+    }
+    else
+    {
+        if (outStencilDesc != nullptr)
+            return ReturnWithParseError(parser, "unknown stencil attribute: %s", tok);
+        else
+            return ReturnWithParseError(parser, "unknown stencil-face attribute: %s", tok);
+    }
+
+    return true;
+}
+
+static bool ParseStencilFaceDesc(Parser& parser, StencilFaceDescriptor& outDesc)
+{
+    while (parser.Feed())
+    {
+        /* Parse stencil-face attribute identifier */
+        if (!parser.MatchIdent())
+            return ReturnWithParseError(parser, "expected identifier for stencil-face attribute");
+        const StringView tok = parser.Accept();
+
+        if (!ParseStencilFaceDescAttribute(parser, tok, outDesc))
+            return false;
+
+        /* If there's no comma, the descriptor must end */
+        if (!parser.Accept(",") && parser.Feed())
+            return ReturnWithParseError(parser, "expected comma separator ',' after stencil-face attribute");
+    }
+    return true;
+}
+
+StencilFaceDescriptor ParseContext::AsStencilFaceDesc() const
+{
+    StencilFaceDescriptor desc;
+    Parser parser{ tokens_ };
+    if (!ParseStencilFaceDesc(parser, desc))
+        RaiseParsingError(parser, "StencilFaceDescriptor");
+    return desc;
+}
+
+static bool ParseStencilDesc(Parser& parser, StencilDescriptor& outDesc)
+{
+    bool hasIndependentFaces = false;
+    bool hasUniformFaces = false;
+
+    while (parser.Feed())
+    {
+        /* Parse sampler attribute identifier */
+        if (!parser.MatchIdent())
+            return ReturnWithParseError(parser, "expected identifier for stencil attribute");
+        const StringView tok = parser.Accept();
+
+        if (tok == "test")
+        {
+            if (!ParseDepthDescBoolean(parser, outDesc.testEnabled))
+                return false;
+        }
+        else if (tok == "front" || tok == "back")
+        {
+            /* Only use either independent or uniform stencil faces */
+            if (hasUniformFaces)
+                return ReturnWithParseError(parser, "cannot continue with independent stencil faces after uniform stencil faces");
+            hasIndependentFaces = true;
+
+            const bool isBackFace = (tok == "back");
+
+            /* Parse sub section for explicit front face */
+            if (!parser.Accept("{"))
+                return ReturnWithParseError(parser, "expected open curly bracket '{' after stencil face declaration");
+
+            Parser subParser;
+            if (!parser.Fork("}", subParser))
+                return false;
+
+            if (!ParseStencilFaceDesc(subParser, (isBackFace ? outDesc.back : outDesc.front)))
+                return false;
+        }
+        else
+        {
+            /* Only use either independent or uniform stencil faces */
+            if (hasIndependentFaces)
+                return ReturnWithParseError(parser, "cannot continue with uniform stencil faces after independent stencil faces");
+            hasUniformFaces = true;
+
+            /* Parse attributes for implicit front face */
+            if (!ParseStencilFaceDescAttribute(parser, tok, outDesc.front, &outDesc))
+                return false;
+        }
+
+        /* If there's no comma, the descriptor must end */
+        if (!parser.Accept(",") && parser.Feed())
+            return ReturnWithParseError(parser, "expected comma separator ',' after stencil attribute");
+    }
+
+    if (hasUniformFaces)
+        outDesc.back = outDesc.front;
+
+    return true;
+}
+
+StencilDescriptor ParseContext::AsStencilDesc() const
+{
+    StencilDescriptor desc;
+    Parser parser{ tokens_ };
+    if (!ParseStencilDesc(parser, desc))
+        RaiseParsingError(parser, "StencilDescriptor");
     return desc;
 }
 

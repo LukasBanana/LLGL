@@ -161,7 +161,7 @@ static TestResult TestParseSamplerDesc()
         "filter.mag=nearest,"
         "filter.mip=none,"
         "compare=ls,"
-        "anisotropy=8,"
+        "anisotropy=0x8,"
         "lod.min=2,"
         "lod.max=5,"
         "lod.bias=2.5,"

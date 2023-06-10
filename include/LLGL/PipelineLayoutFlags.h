@@ -26,59 +26,61 @@ namespace LLGL
 
 /**
 \brief Shader uniform type enumeration.
+\remarks All uniform types have WORD size, i.e. they are a multiple of 32-bits.
 \remarks Because "Bool" is a reserved identifier for an Xlib macro on GNU/Linux,
-all scalar types also have a component index (e.g. "Bool1" instead of "Bool").
+all scalar types have a component index (i.e. \c Bool1 instead of \c Bool).
+\see LLGL::Parse
 */
 enum class UniformType
 {
     Undefined,      //!< Undefined uniform type.
 
     /* ----- Scalars & Vectors ----- */
-    Float1,         //!< \c float uniform.
-    Float2,         //!< \c float2/ \c vec2 uniform.
-    Float3,         //!< \c float3/ \c vec3 uniform.
-    Float4,         //!< \c float4/ \c vec4 uniform.
-    Double1,        //!< \c double uniform.
-    Double2,        //!< \c double2/ \c dvec2 uniform.
-    Double3,        //!< \c double3/ \c dvec3 uniform.
-    Double4,        //!< \c double4/ \c dvec4 uniform.
-    Int1,           //!< \c int uniform.
-    Int2,           //!< \c int2/ \c ivec2 uniform.
-    Int3,           //!< \c int3/ \c ivec3 uniform.
-    Int4,           //!< \c int4/ \c ivec4 uniform.
-    UInt1,          //!< \c uint uniform.
-    UInt2,          //!< \c uint2/ \c uvec2 uniform.
-    UInt3,          //!< \c uint3/ \c uvec3 uniform.
-    UInt4,          //!< \c uint4/ \c uvec4 uniform.
-    Bool1,          //!< \c bool uniform.
-    Bool2,          //!< \c bool2/ \c bvec2 uniform.
-    Bool3,          //!< \c bool3/ \c bvec3 uniform.
-    Bool4,          //!< \c bool4/ \c bvec4 uniform.
+    Float1,         //!< Single scalar of a 32-bit floating-point. Use \c "float1" or \c "float" for parsing.
+    Float2,         //!< Two component vector of 32-bit floating-points. Use \c "float2" for parsing.
+    Float3,         //!< Three component vector of 32-bit floating-points. Use \c "float3" for parsing.
+    Float4,         //!< Four component vector of 32-bit floating-points. Use \c "float4" for parsing.
+    Double1,        //!< Single scalar of a 64-bit floating-point. Use \c "double1" or \c "double" for parsing.
+    Double2,        //!< Two component vector of 64-bit floating-points. Use \c "double2" for parsing.
+    Double3,        //!< Three component vector of 64-bit floating-points. Use \c "double3" for parsing.
+    Double4,        //!< Four component vector of 64-bit floating-points. Use \c "double4" for parsing.
+    Int1,           //!< Single scalar of a 32-bit signed integer. Use \c "int1" or \c "int" for parsing.
+    Int2,           //!< Two component vector of 32-bit signed integers. Use \c "int2" for parsing.
+    Int3,           //!< Three component vector of 32-bit signed integers. Use \c "int3" for parsing.
+    Int4,           //!< Four component vector of 32-bit signed integers. Use \c "int4" for parsing.
+    UInt1,          //!< Single scalar of a 32-bit unsigned integer. Use \c "int1" or \c "int" for parsing.
+    UInt2,          //!< Two component vector of 32-bit unsigned integers. Use \c "int2" for parsing.
+    UInt3,          //!< Three component vector of 32-bit unsigned integers. Use \c "int3" for parsing.
+    UInt4,          //!< Four component vector of 32-bit unsigned integers. Use \c "int4" for parsing.
+    Bool1,          //!< Single scalar of a 32-bit boolean. Use \c "bool1" or \c "bool" for parsing.
+    Bool2,          //!< Two component vector of 32-bit booleans. Use \c "bool2" for parsing.
+    Bool3,          //!< Three component vector of 32-bit booleans. Use \c "bool3" for parsing.
+    Bool4,          //!< Four component vector of 32-bit booleans. Use \c "bool4" for parsing.
 
     /* ----- Matrices ----- */
-    Float2x2,       //!< \c float2x2/ \c mat2 uniform.
-    Float2x3,       //!< \c float2x3/ \c mat2x3 uniform.
-    Float2x4,       //!< \c float2x4/ \c mat2x4 uniform.
-    Float3x2,       //!< \c float3x2/ \c mat3x2 uniform.
-    Float3x3,       //!< \c float3x3/ \c mat3 uniform.
-    Float3x4,       //!< \c float3x4/ \c mat3x4 uniform.
-    Float4x2,       //!< \c float4x2/ \c mat4x2 uniform.
-    Float4x3,       //!< \c float4x3/ \c mat4x3 uniform.
-    Float4x4,       //!< \c float4x4/ \c mat4 uniform.
-    Double2x2,      //!< \c double2x2/ \c dmat2 uniform.
-    Double2x3,      //!< \c double2x3/ \c dmat2x3 uniform.
-    Double2x4,      //!< \c double2x4/ \c dmat2x4 uniform.
-    Double3x2,      //!< \c double3x2/ \c dmat3x2 uniform.
-    Double3x3,      //!< \c double3x3/ \c dmat3 uniform.
-    Double3x4,      //!< \c double3x4/ \c dmat3x4 uniform.
-    Double4x2,      //!< \c double4x2/ \c dmat4x2 uniform.
-    Double4x3,      //!< \c double4x3/ \c dmat4x3 uniform.
-    Double4x4,      //!< \c double4x4/ \c dmat4 uniform.
+    Float2x2,       //!< 2x2 matrix of 32-bit floating-points. Use \c "float2x2" for parsing.
+    Float2x3,       //!< 2x3 matrix of 32-bit floating-points. Use \c "float2x3" for parsing.
+    Float2x4,       //!< 2x4 matrix of 32-bit floating-points. Use \c "float2x4" for parsing.
+    Float3x2,       //!< 3x2 matrix of 32-bit floating-points. Use \c "float3x2" for parsing.
+    Float3x3,       //!< 3x3 matrix of 32-bit floating-points. Use \c "float3x3" for parsing.
+    Float3x4,       //!< 3x4 matrix of 32-bit floating-points. Use \c "float3x4" for parsing.
+    Float4x2,       //!< 4x2 matrix of 32-bit floating-points. Use \c "float4x2" for parsing.
+    Float4x3,       //!< 4x3 matrix of 32-bit floating-points. Use \c "float4x3" for parsing.
+    Float4x4,       //!< 4x4 matrix of 32-bit floating-points. Use \c "float4x4" for parsing.
+    Double2x2,      //!< 2x2 matrix of 64-bit floating-points. Use \c "double2x2" for parsing.
+    Double2x3,      //!< 2x3 matrix of 64-bit floating-points. Use \c "double2x3" for parsing.
+    Double2x4,      //!< 2x4 matrix of 64-bit floating-points. Use \c "double2x4" for parsing.
+    Double3x2,      //!< 3x2 matrix of 64-bit floating-points. Use \c "double3x2" for parsing.
+    Double3x3,      //!< 3x3 matrix of 64-bit floating-points. Use \c "double3x3" for parsing.
+    Double3x4,      //!< 3x4 matrix of 64-bit floating-points. Use \c "double3x4" for parsing.
+    Double4x2,      //!< 4x2 matrix of 64-bit floating-points. Use \c "double4x2" for parsing.
+    Double4x3,      //!< 4x3 matrix of 64-bit floating-points. Use \c "double4x3" for parsing.
+    Double4x4,      //!< 4x4 matrix of 64-bit floating-points. Use \c "double4x4" for parsing.
 
     /* ----- Resources ----- */
-    Sampler,        //!< Sampler uniform (e.g. \c sampler2D).
-    Image,          //!< Image uniform (e.g. \c image2D).
-    AtomicCounter,  //!< Atomic counter uniform (e.g. \c atomic_uint).
+    Sampler,        //!< Sampler uniform (e.g. \c sampler2D). Not supported for parsing.
+    Image,          //!< Image uniform (e.g. \c image2D). Not supported for parsing.
+    AtomicCounter,  //!< Atomic counter uniform (e.g. \c atomic_uint). Not supported for parsing.
 };
 
 

@@ -26,8 +26,18 @@ namespace LLGL
 @{
 */
 
-/*
+/**
 \brief Context class for descriptor parsing
+\remarks Numeric values are parsed as follows:
+\code
+DIGIT       := '0'-'9'
+HEX_DIGIT   := '0'-'9' | 'a'-'f' | 'A'-'F'
+BOOL_TRUE   := 'true' | 'yes' | 'on' | '1'
+BOOL_FALSE  := 'false' | 'no' | 'off' | '0'
+uint        := DIGIT+ | '0x' HEX_DIGIT+
+float       := uint | uint '.' uint
+boolean     := BOOL_TRUE | BOOL_FALSE
+\endcode
 \see Parse
 */
 class LLGL_EXPORT ParseContext
@@ -53,29 +63,36 @@ class LLGL_EXPORT ParseContext
     public:
 
         /**
-        \brief Generates a pipeline layout descriptor for this parse context.
+        \brief Generates a pipeline layout descriptor from this parse context.
         \remarks The syntax for this conversion is as follows:
         - All binding points wrapped inside <code>"heap{"</code>...<code>"}"</code> will be put into PipelineLayoutDescriptor::heapBindings. Otherwise, they are put into PipelineLayoutDescriptor::bindings.
         - Each pair of binding point type (i.e. BindingDescriptor::type) and binding flags (i.e. BindingDescriptor::bindFlags) is specified by one of the following identifiers:
-            - <code>cbuffer</code> for constant buffers (i.e. ResourceType::Buffer and BindFlags::ConstantBuffer).
-            - <code>buffer</code> for sampled buffers (i.e. ResourceType::Buffer and BindFlags::Sampled).
-            - <code>rwbuffer</code> for read/write storage buffers (i.e. ResourceType::Buffer and BindFlags::Storage).
-            - <code>texture</code> for textures (i.e. ResourceType::Texture and BindFlags::Sampled).
-            - <code>rwtexture</code> for read/write textures (i.e. ResourceType::Texture and BindFlags::Storage).
-            - <code>sampler</code> for sampler states (i.e. ResourceType::Sampler).
+            - \c cbuffer for constant buffers (i.e. ResourceType::Buffer and BindFlags::ConstantBuffer).
+            - \c buffer for sampled buffers (i.e. ResourceType::Buffer and BindFlags::Sampled).
+            - \c rwbuffer for read/write storage buffers (i.e. ResourceType::Buffer and BindFlags::Storage).
+            - \c texture for textures (i.e. ResourceType::Texture and BindFlags::Sampled).
+            - \c rwtexture for read/write textures (i.e. ResourceType::Texture and BindFlags::Storage).
+            - \c sampler for sampler states (i.e. ResourceType::Sampler).
         - Optionally, the resource <b>name</b> is specified as an arbitrary identifier followed by the at-sign (e.g. <code>"texture(myColorMap@1)"</code>).
         - The <b>slot</b> of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
         - The <b>array size</b> of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
         - Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3)"</code>).
         - Each binding point is separated by a comma, the last comma being optional (e.g. <code>"texture(1),sampler(2),"</code> or <code>"texture(1),sampler(2)"</code>).
         - The stage flags (i.e. BindingDescriptor::stageFlags) can be specified after each binding point with a preceding colon using the following identifiers:
-            - <code>vert</code> for the vertex shader stage (i.e. StageFlags::VertexStage).
-            - <code>tesc</code> for the tessellation-control shader stage (i.e. StageFlags::TessControlStage).
-            - <code>tese</code> for the tessellation-evaluation shader stage (i.e. StageFlags::TessEvaluationStage).
-            - <code>geom</code> for the geometry shader stage (i.e. StageFlags::GeometryStage).
-            - <code>frag</code> for the fragment shader stage (i.e. StageFlags::FragmentStage).
-            - <code>comp</code> for the compute shader stage (i.e. StageFlags::ComputeStage).
+            - \c vert for the vertex shader stage (i.e. StageFlags::VertexStage).
+            - \c tesc for the tessellation-control shader stage (i.e. StageFlags::TessControlStage).
+            - \c tese for the tessellation-evaluation shader stage (i.e. StageFlags::TessEvaluationStage).
+            - \c geom for the geometry shader stage (i.e. StageFlags::GeometryStage).
+            - \c frag for the fragment shader stage (i.e. StageFlags::FragmentStage).
+            - \c comp for the compute shader stage (i.e. StageFlags::ComputeStage).
         - If no stage flag is specified, all shader stages will be used.
+        - There is a secondary syntax for uniform descriptors (see LLGL::UniformType for accepted type names):
+            \code
+            arraySize   := '[' INT ']'
+            uniform     := NAME | NAME arraySize
+            uniformList := uniform | uniform ',' uniformList
+            uniformDesc := TYPE '(' uniformList ')'
+            \endcode
         - Whitespaces are ignored (e.g. blanks <code>' '</code>, tabulators <code>'\\t'</code>, new-line characters <code>'\\n'</code> and <code>'\\r'</code> etc.), see C++ STL function <code>std::isspace</code>.
         \remarks Here is a usage example:
         \code
@@ -90,6 +107,9 @@ class LLGL_EXPORT ParseContext
         myLayoutDescStd.bindings = {
             LLGL::BindingDescriptor{             LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage,                                 3u      },
         };
+        myLayoutDescStd.uniforms = {
+            LLGL::UniformDescriptor{ "WorldMatrix", LLGL::UniformType::Float4x4 }
+        };
 
         auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescStd);
         \endcode
@@ -98,14 +118,15 @@ class LLGL_EXPORT ParseContext
         // Abbreviated way of declaring a pipeline layout using the utility function:
         LLGL::PipelineLayoutDescriptor myLayoutDescUtil = LLGL::Parse("heap{ cbuffer(Scene@0):frag:vert },"
                                                                       "heap{ texture(1, TexArray@2[4]):frag },"
-                                                                      "sampler(3):frag,");
+                                                                      "sampler(3):frag,"
+                                                                      "float4x4(WorldMatrix),");
         auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescUtil);
         \endcode
         */
         PipelineLayoutDescriptor AsPipelineLayoutDesc() const;
 
         /**
-        \brief Generates a sampler descriptor for this parse context.
+        \brief Generates a sampler descriptor from this parse context.
         \remarks The syntax for this conversion is as follows:
         - Each sampler attribute must be assigned with a value using the \c '=' assignment operator (e.g. <code>filter=linear</code>).
         - Each sampler attribute is separated by a comma, the last comma being optional (e.g. <code>"filter=linear,address=repeat,"</code> or <code>"filter=linear,address=repeat"</code>).
@@ -168,6 +189,45 @@ class LLGL_EXPORT ParseContext
         */
         SamplerDescriptor AsSamplerDesc() const;
 
+        /**
+        \brief Generates a depth descriptor from this parse context.
+        \remarks The syntax for this conversion is as follows:
+        - \c compare maps to DepthDescriptor::compareOp; see ParseContext::AsSamplerDesc for accepted value.
+        - \c test maps to DepthDescriptor::testEnabled and accepts a boolean value.
+        - \c write maps to DepthDescriptor::writeEnabled and accepts a boolean value.
+        \remarks Here is a usage example:
+        \code
+        LLGL::DepthDescriptor myDepthDesc = LLGL::Parse("compare=ls,test=on,write=on");
+        \endcode
+        */
+        DepthDescriptor AsDepthDesc() const;
+
+        /**
+        \brief Generates a stencil-face descriptor from this parse context.
+        \remarks The syntax for this conversion is as follows:
+        - \c sfail maps to StencilFaceDescriptor::stencilFailOp and the accepted values are:
+            - \c keep (StencilOp::Keep).
+            - \c zero (StencilOp::Zero).
+            - \c set (StencilOp::Replace).
+            - \c inc (StencilOp::IncClamp).
+            - \c dec (StencilOp::DecClamp).
+            - \c inv (StencilOp::Invert).
+            - \c incw (StencilOp::IncWrap).
+            - \c decw (StencilOp::DecWrap).
+        - \c dfail maps to StencilFaceDescriptor::depthFailOp and the accepted values are the same as for \c sfail.
+        - \c dpass maps to StencilFaceDescriptor::depthPassOp and the accepted values are the same as for \c sfail.
+        - \c compare maps to StencilFaceDescriptor::compareOp; see ParseContext::AsSamplerDesc for accepted value.
+        - \c read maps to StencilFaceDescriptor::readMask and accepts an integer value.
+        - \c write maps to StencilFaceDescriptor::writeMask and accepts an integer value.
+        - \c ref maps to StencilFaceDescriptor::reference and accepts an integer value.
+        */
+        StencilFaceDescriptor AsStencilFaceDesc() const;
+
+        /**
+        \brief Generates a stencil descriptor from this parse context.
+        */
+        StencilDescriptor AsStencilDesc() const;
+
     public:
 
         /**
@@ -186,6 +246,33 @@ class LLGL_EXPORT ParseContext
         inline operator SamplerDescriptor() const
         {
             return AsSamplerDesc();
+        }
+
+        /**
+        \brief Implicit conversion to DepthDescriptor.
+        \see AsDepthDesc
+        */
+        inline operator DepthDescriptor() const
+        {
+            return AsDepthDesc();
+        }
+
+        /**
+        \brief Implicit conversion to StencilFaceDescriptor.
+        \see AsStencilFaceDesc
+        */
+        inline operator StencilFaceDescriptor() const
+        {
+            return AsStencilFaceDesc();
+        }
+
+        /**
+        \brief Implicit conversion to StencilDescriptor.
+        \see AsStencilDesc
+        */
+        inline operator StencilDescriptor() const
+        {
+            return AsStencilDesc();
         }
 
     private:
