@@ -332,6 +332,14 @@ void MTCommandBuffer::CopyTextureFromBuffer(
     context_.ResumeRenderEncoder();
 }
 
+void MTCommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    //TODO
+}
+
 void MTCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureMT = LLGL_CAST(MTTexture&, texture);

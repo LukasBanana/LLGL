@@ -351,6 +351,14 @@ void VKCommandBuffer::CopyTextureFromBuffer(
         device_.CopyBufferToImage(commandBuffer_, srcBufferVK, dstTextureVK, region);
 }
 
+void VKCommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    //TODO
+}
+
 void VKCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);

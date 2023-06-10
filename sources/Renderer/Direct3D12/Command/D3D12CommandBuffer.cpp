@@ -308,6 +308,14 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
     commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
 }
 
+void D3D12CommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    //TODO
+}
+
 void D3D12CommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
