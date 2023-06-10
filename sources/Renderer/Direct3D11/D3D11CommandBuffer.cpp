@@ -654,7 +654,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         const UINT      mipLevel    = subresource.baseMipLevel;
         const D3D11_BOX srcBox      = { 0, 0, 0, dstExtent.width, dstExtent.height, dstExtent.depth };
 
-        for (std::uint32_t i = 0; i < subresource.numArrayLayers; ++i)
+        for_range(i, subresource.numArrayLayers)
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
             context_->CopySubresourceRegion(
@@ -669,6 +669,45 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
             );
         }
     }
+}
+
+void D3D11CommandBuffer::CopyTextureFromFramebuffer(
+    Texture&                dstTexture,
+    const TextureRegion&    dstRegion,
+    const Offset2D&         srcOffset)
+{
+    if (dstRegion.extent.depth != 1 ||
+        dstRegion.offset.x < 0      ||
+        dstRegion.offset.y < 0      ||
+        dstRegion.offset.z < 0)
+    {
+        return /*E_INVALIDARG*/;
+    }
+
+    auto& dstTextureD3D = LLGL_CAST(D3D11Texture&, dstTexture);
+
+    ID3D11Resource* dstResource     = dstTextureD3D.GetNativeResource();
+    UINT            dstSubresource  = dstTextureD3D.CalcSubresource(dstRegion.subresource.baseMipLevel, dstRegion.subresource.baseArrayLayer);
+    UINT            dstX            = static_cast<UINT>(dstRegion.offset.x);
+    UINT            dstY            = static_cast<UINT>(dstRegion.offset.y);
+    UINT            dstZ            = static_cast<UINT>(dstRegion.offset.z);
+
+    const D3D11_BOX srcBox
+    {
+        static_cast<UINT>(srcOffset.x),
+        static_cast<UINT>(srcOffset.y),
+        0u,
+        static_cast<UINT>(srcOffset.x) + dstRegion.extent.width,
+        static_cast<UINT>(srcOffset.y) + dstRegion.extent.height,
+        1u,
+    };
+
+    if (boundSwapChain_)
+        boundSwapChain_->CopySubresourceRegion(context_.Get(), dstResource, dstSubresource, dstX, dstY, dstZ, srcBox, dstTextureD3D.GetDXFormat());
+    #if 0 //TODO
+    else if (boundRenderTarget_)
+        boundRenderTarget_->CopySubresourceRegion();
+    #endif
 }
 
 void D3D11CommandBuffer::GenerateMips(Texture& texture)
@@ -1381,8 +1420,9 @@ void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
         renderTargetD3D.GetDepthStencilView()
     );
 
-    /* Store current render target */
-    boundRenderTarget_ = &renderTargetD3D;
+    /* Reset references to current render target */
+    boundRenderTarget_  = &renderTargetD3D;
+    boundSwapChain_     = nullptr;
 }
 
 void D3D11CommandBuffer::BindSwapChain(D3D11SwapChain& swapChainD3D)
@@ -1393,8 +1433,9 @@ void D3D11CommandBuffer::BindSwapChain(D3D11SwapChain& swapChainD3D)
     /* Set default RTVs to OM-stage */
     swapChainD3D.BindFramebufferView(this);
 
-    /* Reset reference to render target */
-    boundRenderTarget_ = nullptr;
+    /* Reset references to current render target */
+    boundRenderTarget_  = nullptr;
+    boundSwapChain_     = &swapChainD3D;
 }
 
 void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(
@@ -1545,6 +1586,7 @@ void D3D11CommandBuffer::FlushConstantsCache()
 void D3D11CommandBuffer::ResetRenderState()
 {
     boundRenderTarget_      = nullptr;
+    boundSwapChain_         = nullptr;
     boundPipelineLayout_    = nullptr;
     boundPipelineState_     = nullptr;
     boundConstantsCache_    = nullptr;

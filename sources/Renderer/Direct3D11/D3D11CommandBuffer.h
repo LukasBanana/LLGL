@@ -102,6 +102,12 @@ class D3D11CommandBuffer final : public CommandBuffer
             std::uint32_t           layerStride = 0
         ) override;
 
+        void CopyTextureFromFramebuffer(
+            Texture&                dstTexture,
+            const TextureRegion&    dstRegion,
+            const Offset2D&         srcOffset
+        ) override;
+
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, const TextureSubresource& subresource) override;
 
@@ -306,6 +312,7 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         D3D11FramebufferView                framebufferView_;
         D3D11RenderTarget*                  boundRenderTarget_      = nullptr;
+        D3D11SwapChain*                     boundSwapChain_         = nullptr;
         const D3D11PipelineLayout*          boundPipelineLayout_    = nullptr;
         D3D11PipelineState*                 boundPipelineState_     = nullptr;
         D3D11ConstantsCache*                boundConstantsCache_    = nullptr;

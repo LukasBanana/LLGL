@@ -753,39 +753,45 @@ D3D11_BOX D3D11Texture::CalcRegion(const Offset3D& offset, const Extent3D& exten
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            return CD3D11_BOX(
-                offset.x,
-                0,
-                0,
-                offset.x + static_cast<LONG>(extent.width),
-                1,
-                1
-            );
+            return D3D11_BOX
+            {
+                static_cast<UINT>(offset.x),
+                0u,
+                0u,
+                static_cast<UINT>(offset.x) + extent.width,
+                1u,
+                1u
+            };
+
         case TextureType::Texture2D:
         case TextureType::TextureCube:
         case TextureType::Texture2DArray:
         case TextureType::TextureCubeArray:
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            return CD3D11_BOX(
-                offset.x,
-                offset.y,
-                0,
-                offset.x + static_cast<LONG>(extent.width),
-                offset.y + static_cast<LONG>(extent.height),
-                1
-            );
+            return D3D11_BOX
+            {
+                static_cast<UINT>(offset.x),
+                static_cast<UINT>(offset.y),
+                0u,
+                static_cast<UINT>(offset.x) + extent.width,
+                static_cast<UINT>(offset.y) + extent.height,
+                1u
+            };
+
         case TextureType::Texture3D:
-            return CD3D11_BOX(
-                offset.x,
-                offset.y,
-                offset.z,
-                offset.x + static_cast<LONG>(extent.width),
-                offset.y + static_cast<LONG>(extent.height),
-                offset.z + static_cast<LONG>(extent.depth)
-            );
+            return D3D11_BOX
+            {
+                static_cast<UINT>(offset.x),
+                static_cast<UINT>(offset.y),
+                static_cast<UINT>(offset.z),
+                static_cast<UINT>(offset.x) + extent.width,
+                static_cast<UINT>(offset.y) + extent.height,
+                static_cast<UINT>(offset.z) + extent.depth
+            };
+
         default:
-            return CD3D11_BOX(0,0,0 , 0,0,0);
+            return D3D11_BOX{ 0u, 0u, 0u, 0u, 0u, 0u };
     }
 }
 

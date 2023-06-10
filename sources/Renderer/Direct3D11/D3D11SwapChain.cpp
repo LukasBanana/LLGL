@@ -112,6 +112,122 @@ void D3D11SwapChain::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
     bindingCommandBuffer_ = commandBuffer;
 }
 
+static bool IsD3D11BoxCoveringWholeResource(UINT width, UINT height, const D3D11_BOX& box)
+{
+    return
+    (
+        box.left    == 0        &&
+        box.top     == 0        &&
+        box.front   == 0        &&
+        box.right   == width    &&
+        box.bottom  == height   &&
+        box.back    == 1
+    );
+}
+
+static void D3D11GetResourceTypeAndSampleCount(ID3D11Resource* resource, D3D11_RESOURCE_DIMENSION& outDimension, UINT& outSampleCount)
+{
+    resource->GetType(&outDimension);
+    if (outDimension == D3D11_RESOURCE_DIMENSION_TEXTURE2D)
+    {
+        D3D11_TEXTURE2D_DESC texDesc;
+        static_cast<ID3D11Texture2D*>(resource)->GetDesc(&texDesc);
+        outSampleCount = texDesc.SampleDesc.Count;
+    }
+    else
+        outSampleCount = 1;
+}
+
+static void D3D11CopyFramebufferSubresourceRegion(
+    ID3D11DeviceContext*    context,
+    ID3D11Resource*         dstResource,
+    UINT                    dstSubresource,
+    UINT                    dstX,
+    UINT                    dstY,
+    UINT                    dstZ,
+    ID3D11Texture2D*        srcResource,
+    const D3D11_BOX&        srcBox)
+{
+    /* Check if whole resource must be copied with an intermediate texture */
+    D3D11_TEXTURE2D_DESC srcResourceDesc = {};
+    srcResource->GetDesc(&srcResourceDesc);
+
+    D3D11_RESOURCE_DIMENSION dstResourceType = D3D11_RESOURCE_DIMENSION_UNKNOWN;
+    UINT dstResourceSampleCount = 0;
+    D3D11GetResourceTypeAndSampleCount(dstResource, dstResourceType, dstResourceSampleCount);
+
+    /* Multisampled or depth-stencil resources must be copied as a whole */
+    const bool isMultisampled = (srcResourceDesc.SampleDesc.Count > 1);
+    const bool isDepthStencil = ((srcResourceDesc.BindFlags & D3D11_BIND_DEPTH_STENCIL) != 0);
+
+    if (isDepthStencil || isMultisampled)
+    {
+        const bool isWholeResource = (dstX == 0 && dstY == 0 && dstZ == 0 && IsD3D11BoxCoveringWholeResource(srcResourceDesc.Width, srcResourceDesc.Height, srcBox));
+        if (isWholeResource && dstResourceSampleCount == srcResourceDesc.SampleDesc.Count)
+        {
+            /* Copy whole subresource */
+            context->CopySubresourceRegion(dstResource, dstSubresource, 0, 0, 0, srcResource, 0, nullptr);
+        }
+        else
+        {
+            /* Create intermediate texture */
+            ComPtr<ID3D11Device> device;
+            srcResource->GetDevice(device.GetAddressOf());
+
+            ComPtr<ID3D11Texture2D> intermediateTex;
+            {
+                srcResourceDesc.BindFlags   = D3D11_BIND_RENDER_TARGET;
+                srcResourceDesc.SampleDesc  = { 1, 0 };
+            }
+            HRESULT result = device->CreateTexture2D(&srcResourceDesc, nullptr, intermediateTex.GetAddressOf());
+            DXThrowIfCreateFailed(result, "ID3D11Texture2D", "for intermediate framebuffer");
+
+            if (isMultisampled)
+                context->ResolveSubresource(intermediateTex.Get(), 0, srcResource, 0, srcResourceDesc.Format);
+            else
+                context->CopySubresourceRegion(intermediateTex.Get(), 0, 0, 0, 0, srcResource, 0, nullptr);
+
+            /* Copy intermediate texture into destination resource */
+            context->CopySubresourceRegion(dstResource, dstSubresource, dstX, dstY, dstZ, intermediateTex.Get(), 0, &srcBox);
+        }
+    }
+    else
+    {
+        /* Copy subresource region directly */
+        context->CopySubresourceRegion(dstResource, dstSubresource, dstX, dstY, dstZ, srcResource, 0, &srcBox);
+    }
+}
+
+HRESULT D3D11SwapChain::CopySubresourceRegion(
+    ID3D11DeviceContext*    context,
+    ID3D11Resource*         dstResource,
+    UINT                    dstSubresource,
+    UINT                    dstX,
+    UINT                    dstY,
+    UINT                    dstZ,
+    const D3D11_BOX&        srcBox,
+    DXGI_FORMAT             format)
+{
+    const bool isDepthStencil = DXTypes::IsDepthStencilDXGIFormat(format);
+    if (isDepthStencil)
+    {
+        if (!depthBuffer_)
+            return E_FAIL;
+        if (DXTypes::ToDXGIFormatTypeless(depthStencilFormat_) != DXTypes::ToDXGIFormatTypeless(format))
+            return E_INVALIDARG;
+        D3D11CopyFramebufferSubresourceRegion(context, dstResource, dstSubresource, dstX, dstY, dstZ, depthBuffer_.Get(), srcBox);
+    }
+    else
+    {
+        if (!colorBuffer_)
+            return E_FAIL;
+        if (DXTypes::ToDXGIFormatTypeless(colorFormat_) != DXTypes::ToDXGIFormatTypeless(format))
+            return E_INVALIDARG;
+        D3D11CopyFramebufferSubresourceRegion(context, dstResource, dstSubresource, dstX, dstY, dstZ, colorBuffer_.Get(), srcBox);
+    }
+    return S_OK;
+}
+
 
 /*
  * ======= Private: =======
@@ -178,7 +294,7 @@ void D3D11SwapChain::CreateBackBuffer()
 {
     HRESULT hr = 0;
 
-    /* Get back buffer from swap chain */
+    /* Get back buffer from swap chain (must always be zero for DXGI_SWAP_EFFECT_DISCARD) */
     hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(colorBuffer_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to get D3D11 back buffer from swap chain");
 

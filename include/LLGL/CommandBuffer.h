@@ -282,6 +282,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in,out] dstTexture Specifies the destination texture whose data is to be updated.
         This texture must have been created with the binding flag BindFlags::CopyDst and
         its format <b>must not</b> be compressed (see FormatFlags::IsCompressed) or packed (see FormatFlags::IsPacked).
+        If the current framebuffer is multi-sampled, this texture \e can be either a multi-sampled texture with the \e same sample count as the current framebuffer
+        or a single-sampled texture in which case the resource will be automatically resolved.
+        If the current framebuffer is single-sampled, this texture \b must be single-sampled as well.
 
         \param[in] dstRegion Specifies the destination region where the texture is to be updated.
         Note that both the \c numMipLevels and \c extent.depth attributes of this parameter \b must be 1.
@@ -913,7 +916,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] numWorkGroupsX Specifies the number of worker thread groups in the X-dimension.
         \param[in] numWorkGroupsY Specifies the number of worker thread groups in the Y-dimension.
         \param[in] numWorkGroupsZ Specifies the number of worker thread groups in the Z-dimension.
-        \see SetComputePipeline
+        \see SetPipelineState
         \see RenderingLimits::maxComputeShaderWorkGroups
         */
         virtual void Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ) = 0;

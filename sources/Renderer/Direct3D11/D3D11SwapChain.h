@@ -53,6 +53,18 @@ class D3D11SwapChain final : public SwapChain
         // Binds the framebuffer view of this swap-chain and stores a references to this command buffer.
         void BindFramebufferView(D3D11CommandBuffer* commandBuffer);
 
+        // Copyies a subresource region from the backbuffer (color or depth-stencil) into the destination resource.
+        HRESULT CopySubresourceRegion(
+            ID3D11DeviceContext*    context,
+            ID3D11Resource*         dstResource,
+            UINT                    dstSubresource,
+            UINT                    dstX,
+            UINT                    dstY,
+            UINT                    dstZ,
+            const D3D11_BOX&        srcBox,
+            DXGI_FORMAT             format
+        );
+
     private:
 
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;

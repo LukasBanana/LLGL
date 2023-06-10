@@ -142,6 +142,12 @@ class D3D11Texture final : public Texture
             return native_;
         }
 
+        // Returns the native D3D texture object as <ID3D11Resource*>.
+        inline ID3D11Resource* GetNativeResource() const
+        {
+            return native_.resource.Get();
+        }
+
         // Returns the standard shader resource view (SRV) of the hardware texture object (full view of all layers and MIP levels).
         inline ID3D11ShaderResourceView* GetSRV() const
         {
