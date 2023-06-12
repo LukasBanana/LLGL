@@ -189,7 +189,7 @@ TextureDescriptor GLTexture::GetDesc() const
     TextureDescriptor texDesc;
 
     texDesc.type        = GetType();
-    texDesc.bindFlags   = 0;
+    texDesc.bindFlags   = GetBindFlags();
     texDesc.format      = GetFormat();
     texDesc.mipLevels   = static_cast<std::uint32_t>(GetNumMipLevels());
 

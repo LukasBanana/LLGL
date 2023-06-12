@@ -121,7 +121,7 @@ TextureDescriptor D3D11Texture::GetDesc() const
     TextureDescriptor texDesc;
 
     texDesc.type        = GetType();
-    texDesc.bindFlags   = 0;
+    texDesc.bindFlags   = GetBindFlags();
     texDesc.miscFlags   = 0;
 
     /* Get resource dimension to query the respective D3D descriptor */

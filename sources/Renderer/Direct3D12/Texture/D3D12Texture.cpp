@@ -98,7 +98,7 @@ TextureDescriptor D3D12Texture::GetDesc() const
     auto desc = resource_.native->GetDesc();
 
     texDesc.type        = GetType();
-    texDesc.bindFlags   = 0;
+    texDesc.bindFlags   = GetBindFlags();
     texDesc.miscFlags   = 0;
     texDesc.format      = GetBaseFormat();
     texDesc.mipLevels   = desc.MipLevels;
@@ -657,26 +657,30 @@ bool D3D12Texture::SupportsGenerateMips() const
  */
 
 // see https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ne-d3d12-d3d12_resource_flags
-static D3D12_RESOURCE_FLAGS GetD3DTextureResourceFlags(long bindFlags, UINT numMipLevels)
+static D3D12_RESOURCE_FLAGS GetD3D12TextureResourceFlags(long bindFlags, UINT numMipLevels)
 {
     D3D12_RESOURCE_FLAGS flagsD3D = D3D12_RESOURCE_FLAG_NONE;
 
-    bool enabledSrvAndUav = DXTextureSupportsGenerateMips(bindFlags, numMipLevels);
+    bool isSrvAndUavEnabled = DXTextureSupportsGenerateMips(bindFlags, numMipLevels);
 
-    if ((bindFlags & BindFlags::Sampled) == 0 && !enabledSrvAndUav)
-        flagsD3D |= (D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-    else if ((bindFlags & BindFlags::ColorAttachment) != 0)
-        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    else if ((bindFlags & BindFlags::DepthStencilAttachment) != 0)
-        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    if (!( (bindFlags & BindFlags::Sampled) != 0 || isSrvAndUavEnabled ) && (bindFlags & BindFlags::DepthStencilAttachment) != 0)
+    {
+        /* D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE must be used together with D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL */
+        return (D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+    }
 
-    if ((bindFlags & BindFlags::Storage) != 0 || enabledSrvAndUav)
+    if ( (bindFlags & BindFlags::Storage) != 0 || isSrvAndUavEnabled )
         flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    if ((bindFlags & BindFlags::ColorAttachment) != 0)
+        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    if ((bindFlags & BindFlags::DepthStencilAttachment) != 0)
+        flagsD3D |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
     return flagsD3D;
 }
 
-static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
+static void ConvertD3D12TextureDesc(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
     dst.Dimension           = D3D12Types::MapResourceDimension(src.type);
     dst.Alignment           = 0;
@@ -685,12 +689,12 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     dst.SampleDesc.Count    = (IsMultiSampleTexture(src.type) ? std::max(1u, src.samples) : 1u);
     dst.SampleDesc.Quality  = 0;
     dst.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    dst.Flags               = GetD3DTextureResourceFlags(src.bindFlags, dst.MipLevels);
+    dst.Flags               = GetD3D12TextureResourceFlags(src.bindFlags, dst.MipLevels);
     ConvertD3DTextureExtent(dst, src.type, src.extent, src.arrayLayers);
 }
 
 //TODO: incomplete
-static D3D12_RESOURCE_STATES GetInitialDXResourceState(const TextureDescriptor& desc)
+static D3D12_RESOURCE_STATES GetInitialD3D12ResourceState(const TextureDescriptor& desc)
 {
     D3D12_RESOURCE_STATES flags = D3D12_RESOURCE_STATE_COMMON;
 
@@ -715,7 +719,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
     D3D12_RESOURCE_DESC descD3D;
-    Convert(descD3D, desc);
+    ConvertD3D12TextureDesc(descD3D, desc);
 
     /* Get optimal clear value (if specified) */
     const bool useClearValue = ((desc.bindFlags & (BindFlags::ColorAttachment | BindFlags::DepthStencilAttachment)) != 0);
@@ -749,7 +753,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
 
     /* Determine resource usage */
     resource_.transitionState   = D3D12_RESOURCE_STATE_COPY_DEST;
-    resource_.usageState        = GetInitialDXResourceState(desc);
+    resource_.usageState        = GetInitialD3D12ResourceState(desc);
 }
 
 // Determine SRV dimension for descriptor heaps used in D3D12MipGenerator: either 1D array, 2D array, or 3D

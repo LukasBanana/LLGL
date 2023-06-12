@@ -55,12 +55,13 @@ class LLGL_EXPORT Texture : public Resource
         \brief Queries a descriptor of this texture.
         \remarks This function only queries the following attributes:
         - \c type
+        - \c bindFlags
         - \c format
         - \c extent
         - \c arrayLayers
         - \c mipLevels
         - \c samples
-        \remarks All other attributes (such as \c bindFlags, \c miscFlags etc.) cannot be queried by this function.
+        \remarks All other attributes (i.e. \c miscFlags and \c clearValue) cannot be queried by this function.
         Those attributes are either set to zero (for flags) or the default value specified in TextureDescriptor is used.
         If only the texture format is required, use \c GetFormat instead.
         \see TextureDescriptor
@@ -69,7 +70,7 @@ class LLGL_EXPORT Texture : public Resource
         */
         virtual TextureDescriptor GetDesc() const = 0;
 
-        /*
+        /**
         \brief Returns the hardware format of this texture.
         \remarks This is usually the format this texture was created with.
         However, sometimes the internal hardware format might be different from what the client programmer requested, especially with the OpenGL backend.

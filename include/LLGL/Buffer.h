@@ -47,7 +47,7 @@ class LLGL_EXPORT Buffer : public Resource
         - \c bindFlags
         - \c cpuAccessFlags
         - \c miscFlags
-        \remarks All other attributes (such as \c vertexBuffer etc.) cannot be queried by this function.
+        \remarks All other attributes (such as \c vertexAttribs etc.) cannot be queried by this function.
         Those attributes are set to the default value specified in BufferDescriptor.
         \remarks The returned flags (such as \c cpuAccessFlags etc.) are not necessarily the same that were specified when the resource was created.
         They reflect the capabilities of the actual hardware buffer.

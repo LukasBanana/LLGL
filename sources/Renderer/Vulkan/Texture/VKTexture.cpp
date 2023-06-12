@@ -73,7 +73,7 @@ TextureDescriptor VKTexture::GetDesc() const
     TextureDescriptor texDesc;
 
     texDesc.type        = GetType();
-    texDesc.bindFlags   = 0;
+    texDesc.bindFlags   = GetBindFlags();
     texDesc.miscFlags   = 0;
     texDesc.format      = GetFormat();
     texDesc.mipLevels   = numMipLevels_;
