@@ -313,7 +313,38 @@ void D3D12CommandBuffer::CopyTextureFromFramebuffer(
     const TextureRegion&    dstRegion,
     const Offset2D&         srcOffset)
 {
-    //TODO
+    if (dstRegion.extent.depth != 1 ||
+        dstRegion.offset.x < 0      ||
+        dstRegion.offset.y < 0      ||
+        dstRegion.offset.z < 0)
+    {
+        return /*E_INVALIDARG*/;
+    }
+
+    auto& dstTextureD3D = LLGL_CAST(D3D12Texture&, dstTexture);
+
+    D3D12Resource&  dstResource     = dstTextureD3D.GetResource();
+    UINT            dstSubresource  = dstTextureD3D.CalcSubresource(dstRegion.subresource.baseMipLevel, dstRegion.subresource.baseArrayLayer);
+    UINT            dstX            = static_cast<UINT>(dstRegion.offset.x);
+    UINT            dstY            = static_cast<UINT>(dstRegion.offset.y);
+    UINT            dstZ            = static_cast<UINT>(dstRegion.offset.z);
+
+    const D3D12_BOX srcBox
+    {
+        static_cast<UINT>(srcOffset.x),
+        static_cast<UINT>(srcOffset.y),
+        0u,
+        static_cast<UINT>(srcOffset.x) + dstRegion.extent.width,
+        static_cast<UINT>(srcOffset.y) + dstRegion.extent.height,
+        1u,
+    };
+
+    if (boundSwapChain_)
+        boundSwapChain_->CopySubresourceRegion(commandContext_, dstResource, dstSubresource, dstX, dstY, dstZ, currentColorBuffer_, srcBox, dstTextureD3D.GetDXFormat());
+    #if 0 //TODO
+    else if (boundRenderTarget_)
+        boundRenderTarget_->CopySubresourceRegion();
+    #endif
 }
 
 void D3D12CommandBuffer::GenerateMips(Texture& texture)

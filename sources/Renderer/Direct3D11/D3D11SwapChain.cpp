@@ -157,12 +157,13 @@ static void D3D11CopyFramebufferSubresourceRegion(
     D3D11GetResourceTypeAndSampleCount(dstResource, dstResourceType, dstResourceSampleCount);
 
     /* Multisampled or depth-stencil resources must be copied as a whole */
-    const bool isMultisampled = (srcResourceDesc.SampleDesc.Count > 1);
+    const bool isSrcMultisampled = (srcResourceDesc.SampleDesc.Count > 1);
     const bool isDepthStencil = ((srcResourceDesc.BindFlags & D3D11_BIND_DEPTH_STENCIL) != 0);
 
-    if (isDepthStencil || isMultisampled)
+    if (isDepthStencil || isSrcMultisampled)
     {
-        const bool isWholeResource = (dstX == 0 && dstY == 0 && dstZ == 0 && IsD3D11BoxCoveringWholeResource(srcResourceDesc.Width, srcResourceDesc.Height, srcBox));
+        const bool isDstOffsetZero = (dstX == 0 && dstY == 0 && dstZ == 0);
+        const bool isWholeResource = (isDstOffsetZero && IsD3D11BoxCoveringWholeResource(srcResourceDesc.Width, srcResourceDesc.Height, srcBox));
         if (isWholeResource && dstResourceSampleCount == srcResourceDesc.SampleDesc.Count)
         {
             /* Copy whole subresource */
@@ -173,16 +174,18 @@ static void D3D11CopyFramebufferSubresourceRegion(
             /* Create intermediate texture */
             ComPtr<ID3D11Device> device;
             srcResource->GetDevice(device.GetAddressOf());
+            LLGL_ASSERT_PTR(device.Get());
 
             ComPtr<ID3D11Texture2D> intermediateTex;
             {
                 srcResourceDesc.BindFlags   = D3D11_BIND_RENDER_TARGET;
+                srcResourceDesc.MipLevels   = 1;
                 srcResourceDesc.SampleDesc  = { 1, 0 };
             }
-            HRESULT result = device->CreateTexture2D(&srcResourceDesc, nullptr, intermediateTex.GetAddressOf());
-            DXThrowIfCreateFailed(result, "ID3D11Texture2D", "for intermediate framebuffer");
+            HRESULT hr = device->CreateTexture2D(&srcResourceDesc, nullptr, intermediateTex.GetAddressOf());
+            DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for intermediate framebuffer");
 
-            if (isMultisampled)
+            if (isSrcMultisampled)
                 context->ResolveSubresource(intermediateTex.Get(), 0, srcResource, 0, srcResourceDesc.Format);
             else
                 context->CopySubresourceRegion(intermediateTex.Get(), 0, 0, 0, 0, srcResource, 0, nullptr);

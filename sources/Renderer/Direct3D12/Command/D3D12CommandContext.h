@@ -96,6 +96,17 @@ class D3D12CommandContext
             DXGI_FORMAT     format
         );
 
+        void CopyTextureRegion(
+            D3D12Resource&      dstResource,
+            UINT                dstSubresource,
+            UINT                dstX,
+            UINT                dstY,
+            UINT                dstZ,
+            D3D12Resource&      srcResource,
+            UINT                srcSubresource,
+            const D3D12_BOX*    srcBox
+        );
+
         void UpdateSubresource(
             D3D12Resource&  dstResource,
             UINT64          dstOffset,

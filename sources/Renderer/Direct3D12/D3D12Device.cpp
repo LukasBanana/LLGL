@@ -47,7 +47,7 @@ ComPtr<ID3D12CommandQueue> D3D12Device::CreateDXCommandQueue(D3D12_COMMAND_LIST_
         queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
         queueDesc.Type  = type;
     }
-    auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(cmdQueue.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(cmdQueue.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12CommandQueue");
 
     return cmdQueue;
@@ -57,7 +57,7 @@ ComPtr<ID3D12CommandAllocator> D3D12Device::CreateDXCommandAllocator(D3D12_COMMA
 {
     ComPtr<ID3D12CommandAllocator> commandAlloc;
 
-    auto hr = device_->CreateCommandAllocator(type, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateCommandAllocator(type, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12CommandAllocator");
 
     return commandAlloc;
@@ -67,7 +67,7 @@ ComPtr<ID3D12GraphicsCommandList> D3D12Device::CreateDXCommandList(D3D12_COMMAND
 {
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
-    auto hr = device_->CreateCommandList(0, type, cmdAllocator, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateCommandList(0, type, cmdAllocator, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12GraphicsCommandList");
 
     return commandList;
@@ -77,7 +77,7 @@ ComPtr<ID3D12PipelineState> D3D12Device::CreateDXGraphicsPipelineState(const D3D
 {
     ComPtr<ID3D12PipelineState> pipelineState;
 
-    auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12PipelineState");
 
     return pipelineState;
@@ -87,7 +87,7 @@ ComPtr<ID3D12PipelineState> D3D12Device::CreateDXComputePipelineState(const D3D1
 {
     ComPtr<ID3D12PipelineState> pipelineState;
 
-    auto hr = device_->CreateComputePipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateComputePipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12PipelineState");
 
     return pipelineState;
@@ -97,7 +97,7 @@ ComPtr<ID3D12QueryHeap> D3D12Device::CreateDXQueryHeap(const D3D12_QUERY_HEAP_DE
 {
     ComPtr<ID3D12QueryHeap> queryHeap;
 
-    auto hr = device_->CreateQueryHeap(&desc, IID_PPV_ARGS(queryHeap.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateQueryHeap(&desc, IID_PPV_ARGS(queryHeap.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12QueryHeap");
 
     return queryHeap;

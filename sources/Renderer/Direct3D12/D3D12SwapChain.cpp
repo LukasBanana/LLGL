@@ -189,9 +189,117 @@ bool D3D12SwapChain::HasDepthBuffer() const
     return (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN);
 }
 
-void D3D12SwapChain::SyncGPU()
+static bool IsD3D12BoxCoveringWholeResource(UINT width, UINT height, const D3D12_BOX& box)
 {
-    renderSystem_.SyncGPU();
+    return
+    (
+        box.left    == 0        &&
+        box.top     == 0        &&
+        box.front   == 0        &&
+        box.right   == width    &&
+        box.bottom  == height   &&
+        box.back    == 1
+    );
+}
+
+static void D3D12CopyFramebufferSubresourceRegion(
+    D3D12CommandContext&    context,
+    D3D12Resource&          dstResource,
+    UINT                    dstSubresource,
+    UINT                    dstX,
+    UINT                    dstY,
+    UINT                    dstZ,
+    D3D12Resource&          srcResource,
+    D3D12Resource*          intermediateResource,
+    const D3D12_BOX&        srcBox)
+{
+    ID3D12GraphicsCommandList* commandList = context.GetCommandList();
+
+    /* Check if whole resource must be copied with an intermediate texture */
+    D3D12_RESOURCE_DESC srcResourceDesc = srcResource.Get()->GetDesc();
+    const bool isSrcMultisampled = (srcResourceDesc.SampleDesc.Count > 1);
+
+    if (isSrcMultisampled)
+    {
+        D3D12_RESOURCE_DESC dstResourceDesc = dstResource.Get()->GetDesc();
+
+        const bool isSameDimension = (dstResourceDesc.Dimension == srcResourceDesc.Dimension);
+        const bool isDstOffsetZero = (dstX == 0 && dstY == 0 && dstZ == 0);
+        const bool isWholeResource = IsD3D12BoxCoveringWholeResource(static_cast<UINT>(srcResourceDesc.Width), srcResourceDesc.Height, srcBox);
+
+        if (isSameDimension && isWholeResource && isDstOffsetZero)
+        {
+            if (dstResourceDesc.SampleDesc.Count == srcResourceDesc.SampleDesc.Count)
+            {
+                /* Copy multi-sampled texture directly into destination multi-sampled texture */
+                context.CopyTextureRegion(dstResource, dstSubresource, 0, 0, 0, srcResource, 0, nullptr);
+            }
+            else
+            {
+                /* Resolve multi-sampled texture directly into destination texture */
+                context.ResolveSubresource(dstResource, dstSubresource, srcResource, 0, dstResourceDesc.Format);
+            }
+        }
+        else
+        {
+            /* Resolve into intermdiate resource and then copy its region into the destination resource */
+            LLGL_ASSERT_PTR(intermediateResource);
+            context.ResolveSubresource(*intermediateResource, 0, srcResource, 0, srcResourceDesc.Format);
+            context.CopyTextureRegion(dstResource, dstSubresource, dstX, dstY, dstZ, *intermediateResource, 0, &srcBox);
+        }
+    }
+    else
+    {
+        /* Copy subresource region directly */
+        context.CopyTextureRegion(dstResource, dstSubresource, dstX, dstY, dstZ, srcResource, 0, &srcBox);
+    }
+}
+
+HRESULT D3D12SwapChain::CopySubresourceRegion(
+    D3D12CommandContext&    context,
+    D3D12Resource&          dstResource,
+    UINT                    dstSubresource,
+    UINT                    dstX,
+    UINT                    dstY,
+    UINT                    dstZ,
+    UINT                    srcColorBuffer,
+    const D3D12_BOX&        srcBox,
+    DXGI_FORMAT             format)
+{
+    const bool isDepthStencil = DXTypes::IsDepthStencilDXGIFormat(format);
+    if (isDepthStencil)
+    {
+        if (depthStencil_.Get() == nullptr)
+            return E_FAIL;
+        if (DXTypes::ToDXGIFormatTypeless(depthStencilFormat_) != DXTypes::ToDXGIFormatTypeless(format))
+            return E_INVALIDARG;
+        if (HasMultiSampling())
+        {
+            //TODO
+        }
+        else
+            D3D12CopyFramebufferSubresourceRegion(context, dstResource, dstSubresource, dstX, dstY, dstZ, depthStencil_, nullptr, srcBox);
+    }
+    else
+    {
+        if (srcColorBuffer >= D3D12SwapChain::maxNumColorBuffers)
+            return E_INVALIDARG;
+        if (colorBuffers_[srcColorBuffer].Get() == nullptr)
+            return E_FAIL;
+        if (HasMultiSampling())
+        {
+            D3D12Resource& srcResource          = colorBuffersMS_[srcColorBuffer];
+            D3D12Resource& intermediateResource = colorBuffers_[srcColorBuffer];
+            D3D12CopyFramebufferSubresourceRegion(context, dstResource, dstSubresource, dstX, dstY, dstZ, srcResource, &intermediateResource, srcBox);
+        }
+        else
+        {
+            D3D12Resource& srcResource = colorBuffers_[srcColorBuffer];
+            D3D12CopyFramebufferSubresourceRegion(context, dstResource, dstSubresource, dstX, dstY, dstZ, srcResource, nullptr, srcBox);
+        }
+    }
+
+    return S_OK;
 }
 
 
@@ -254,7 +362,7 @@ void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resoluti
     ID3D12Device* device = renderSystem_.GetDXDevice();
 
     /* Wait until all previous GPU work is complete */
-    SyncGPU();
+    renderSystem_.SyncGPU();
 
     /* Release previous window size dependent resources, and reset fence values to current value */
     for_range(i, numColorBuffers_)

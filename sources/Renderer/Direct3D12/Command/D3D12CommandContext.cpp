@@ -209,6 +209,40 @@ void D3D12CommandContext::ResolveSubresource(
     TransitionResource(srcResource, srcResource.usageState, true);
 }
 
+void D3D12CommandContext::CopyTextureRegion(
+    D3D12Resource&      dstResource,
+    UINT                dstSubresource,
+    UINT                dstX,
+    UINT                dstY,
+    UINT                dstZ,
+    D3D12Resource&      srcResource,
+    UINT                srcSubresource,
+    const D3D12_BOX*    srcBox)
+{
+    /* Transition both resources */
+    TransitionResource(dstResource, D3D12_RESOURCE_STATE_COPY_DEST);
+    TransitionResource(srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+
+    /* Copy texture region subresources */
+    D3D12_TEXTURE_COPY_LOCATION dstLocation;
+    {
+        dstLocation.pResource           = dstResource.Get();
+        dstLocation.Type                = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dstLocation.SubresourceIndex    = dstSubresource;
+    }
+    D3D12_TEXTURE_COPY_LOCATION srcLocation;
+    {
+        srcLocation.pResource           = srcResource.Get();
+        srcLocation.Type                = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        srcLocation.SubresourceIndex    = srcSubresource;
+    }
+    commandList_->CopyTextureRegion(&dstLocation, dstX, dstY, dstZ, &srcLocation, srcBox);
+
+    /* Transition both resources */
+    TransitionResource(dstResource, dstResource.usageState);
+    TransitionResource(srcResource, srcResource.usageState, true);
+}
+
 void D3D12CommandContext::UpdateSubresource(
     D3D12Resource&  dstResource,
     UINT64          dstOffset,
