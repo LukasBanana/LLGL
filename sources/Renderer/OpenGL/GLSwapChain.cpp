@@ -1,6 +1,6 @@
 /*
  * GLSwapChain.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -19,8 +19,8 @@ GLSwapChain::GLSwapChain(
     const std::shared_ptr<Surface>& surface,
     GLContextManager&               contextMngr)
 :
-    SwapChain      { desc                                       },
-    contextHeight_ { static_cast<GLint>(desc.resolution.height) }
+    SwapChain          { desc                                       },
+    framebufferHeight_ { static_cast<GLint>(desc.resolution.height) }
 {
     /* Set up pixel format for GL context */
     GLPixelFormat pixelFormat;
@@ -48,8 +48,8 @@ GLSwapChain::GLSwapChain(
     swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface());
     GLSwapChainContext::MakeCurrent(swapChainContext_.get());
 
-    /* Get state manager and notify about the current render context */
-    GetStateManager().NotifyRenderTargetHeight(contextHeight_);
+    /* Get state manager and reset current framebuffer height */
+    GetStateManager().ResetFramebufferHeight(framebufferHeight_);
 }
 
 void GLSwapChain::Present()
@@ -98,7 +98,7 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
     {
         /* Make OpenGL context of the specified render contex current and notify the state manager */
         auto result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get());
-        GLStateManager::Get().NotifyRenderTargetHeight(swapChain->contextHeight_);
+        GLStateManager::Get().ResetFramebufferHeight(swapChain->framebufferHeight_);
         return result;
     }
     else
@@ -116,8 +116,9 @@ bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
     context_->Resize(resolution);
 
     /* Update context height */
-    contextHeight_ = static_cast<GLint>(resolution.height);
-    GetStateManager().NotifyRenderTargetHeight(contextHeight_);
+    const GLint height = static_cast<GLint>(resolution.height);
+    GetStateManager().ResetFramebufferHeight(height);
+    framebufferHeight_ = height;
 
     return true;
 }

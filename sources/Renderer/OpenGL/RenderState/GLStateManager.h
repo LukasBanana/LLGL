@@ -83,7 +83,7 @@ class GLStateManager
 
         //TODO: viewports and scissors must be updated!
         // Notifies the state manager about a new render-target height.
-        void NotifyRenderTargetHeight(GLint height);
+        void ResetFramebufferHeight(GLint height);
 
         /* ----- Boolean states ----- */
 
@@ -290,6 +290,14 @@ class GLStateManager
             return limits_;
         }
 
+        // Returns the height of the current framebuffer.
+        inline GLint GetFramebufferHeight() const
+        {
+            return framebufferHeight_;
+        }
+
+    public:
+
         // Returns the common denominator of limitations for all GL contexts.
         static inline const GLLimits& GetCommonLimits()
         {
@@ -405,7 +413,7 @@ class GLStateManager
         bool                                flipFrontFacing_            = false;
         bool                                emulateOriginUpperLeft_     = false;
         bool                                emulateDepthModeZeroToOne_  = false;
-        GLint                               renderTargetHeight_         = 0;
+        GLint                               framebufferHeight_          = 0;
 
         GLDepthStencilState*                boundDepthStencilState_     = nullptr;
         GLRasterizerState*                  boundRasterizerState_       = nullptr;

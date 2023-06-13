@@ -186,10 +186,10 @@ void GLStateManager::DetermineExtensionsAndLimits()
     #endif
 }
 
-void GLStateManager::NotifyRenderTargetHeight(GLint height)
+void GLStateManager::ResetFramebufferHeight(GLint height)
 {
     /* Store new render-target height */
-    renderTargetHeight_ = height;
+    framebufferHeight_ = height;
 
     /* Update viewports */
     //TODO...
@@ -326,7 +326,7 @@ bool GLStateManager::NeedsAdjustedViewport() const
 void GLStateManager::AdjustViewport(GLViewport& outViewport, const GLViewport& inViewport)
 {
     outViewport.x       = inViewport.x;
-    outViewport.y       = static_cast<GLfloat>(renderTargetHeight_) - inViewport.height - inViewport.y;
+    outViewport.y       = static_cast<GLfloat>(framebufferHeight_) - inViewport.height - inViewport.y;
     outViewport.width   = inViewport.width;
     outViewport.height  = inViewport.height;
 }
@@ -419,7 +419,7 @@ void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDep
 void GLStateManager::AdjustScissor(GLScissor& outScissor, const GLScissor& inScissor)
 {
     outScissor.x        = inScissor.x;
-    outScissor.y        = renderTargetHeight_ - inScissor.height - inScissor.y;
+    outScissor.y        = framebufferHeight_ - inScissor.height - inScissor.y;
     outScissor.width    = inScissor.width;
     outScissor.height   = inScissor.height;
 }
@@ -1510,7 +1510,7 @@ void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager
         /* Bind FBO, and notify new render target height */
         auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
         BindGLRenderTarget(&renderTargetGL);
-        NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
+        ResetFramebufferHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
     }
 }
 

@@ -86,6 +86,10 @@ void GLFramebufferCapture::CaptureFramebuffer(
     const GLenum            attachment      = (isDepthStencil ? GL_DEPTH_STENCIL_ATTACHMENT : GL_COLOR_ATTACHMENT0);
     const GLbitfield        bitmask         = (isDepthStencil ? GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT : GL_COLOR_BUFFER_BIT);
 
+    /* Translate framebuffer offset to lower-left coordinate system */
+    const GLint             screenPosX      = srcOffset.x;
+    const GLint             screenPosY      = stateMngr.GetFramebufferHeight() - height - srcOffset.y;
+
     /* Create intermediate texture and FBOs */
     intermediateTex_.CreateTexture();
     blitTextureFBOPair_.CreateFBOs();
@@ -100,7 +104,7 @@ void GLFramebufferCapture::CaptureFramebuffer(
         else
             glTexImage2D(targetGL, 0, textureGL.GetGLInternalFormat(), width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-        glCopyTexSubImage2D(targetGL, 0, 0, 0, srcOffset.x, srcOffset.y, width, height);
+        glCopyTexSubImage2D(targetGL, 0, 0, 0, screenPosX, screenPosY, width, height);
     }
     stateMngr.PopBoundTexture();
 
