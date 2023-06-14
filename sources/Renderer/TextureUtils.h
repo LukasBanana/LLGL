@@ -15,7 +15,7 @@
 namespace LLGL
 {
 
-//TODO: merge this header and source iwth "DescriptorHelper.cpp/h"
+//TODO: merge this header and source with "DescriptorHelper.cpp/h"
 
 /* ----- Structures ----- */
 

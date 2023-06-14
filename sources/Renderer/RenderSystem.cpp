@@ -439,8 +439,8 @@ void RenderSystem::CopyTextureImageData(
     /* Check if image buffer must be converted */
     const auto  numTexels       = (extent.width * extent.height * extent.depth);
     const auto& srcTexFormat    = GetFormatAttribs(format);
-    auto        srcFormatSize   = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
-    auto        srcImageSize    = (numTexels * srcFormatSize);
+    const auto  srcFormatSize   = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
+    const auto  srcImageSize    = (numTexels * srcFormatSize);
     const auto  dstPitch        = (extent.width * srcFormatSize);
 
     if (srcTexFormat.format != dstImageDesc.format || srcTexFormat.dataType != dstImageDesc.dataType)
@@ -455,14 +455,14 @@ void RenderSystem::CopyTextureImageData(
         }
 
         /* Determine destination image size */
-        auto dstFormatSize  = DataTypeSize(dstImageDesc.dataType) * ImageFormatSize(dstImageDesc.format);
-        auto dstImageSize   = (numTexels * dstFormatSize);
+        const auto dstFormatSize    = DataTypeSize(dstImageDesc.dataType) * ImageFormatSize(dstImageDesc.format);
+        const auto dstImageSize     = (numTexels * dstFormatSize);
 
         /* Validate input size */
         AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);
 
         /* Convert mapped data into requested format */
-        auto tempData = ConvertImageBuffer(
+        ByteBuffer formattedData = ConvertImageBuffer(
             SrcImageDescriptor
             {
                 srcTexFormat.format,
@@ -476,7 +476,7 @@ void RenderSystem::CopyTextureImageData(
         );
 
         /* Copy temporary data into output buffer */
-        ::memcpy(dstImageDesc.data, tempData.get(), dstImageSize);
+        ::memcpy(dstImageDesc.data, formattedData.get(), dstImageSize);
     }
     else
     {

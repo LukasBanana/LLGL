@@ -125,7 +125,7 @@ struct ShaderCompileFlags
         \endcode
         Then define the macro \c FLIP_POSITION_Y on the API side like this and pass it to all vertex
         (or tessellation-evaluation or geometry) shaders that will be used for render targets,
-        i.e. those shaders that render into a teture instead of a Window or Canvas:
+        i.e. those shaders that render into a texture instead of a Window or Canvas:
         \code
         const LLGL::ShaderMacro myDefinesForRenderTargetShaders[] = {
           { "FLIP_POSITION_Y", myRenderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft ? "1" : "0" },
@@ -152,6 +152,7 @@ struct ShaderCompileFlags
 \brief Shader stage flags enumeration.
 \remarks Specifies which shader stages are affected by a state change, e.g. to which shader stages a constant buffer is bound.
 \see BindingDescriptor::stageFlags
+\todo Remove "Stage" suffix from enum entries and maybe unify this enumeration with ShaderType somehow.
 */
 struct StageFlags
 {
