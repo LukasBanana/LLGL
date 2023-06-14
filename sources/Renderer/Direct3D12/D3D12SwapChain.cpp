@@ -275,7 +275,7 @@ HRESULT D3D12SwapChain::CopySubresourceRegion(
             return E_INVALIDARG;
         if (HasMultiSampling())
         {
-            //TODO
+            LLGL_TRAP_NOT_IMPLEMENTED("multi-sampled depth-stencil"); //TODO
         }
         else
             D3D12CopyFramebufferSubresourceRegion(context, dstResource, dstSubresource, dstX, dstY, dstZ, depthStencil_, nullptr, srcBox);

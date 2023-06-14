@@ -27,6 +27,7 @@ class VKPhysicalDevice;
 class VKResourceHeap;
 class VKRenderPass;
 class VKQueryHeap;
+class VKSwapChain;
 class VKPipelineState;
 
 class VKCommandBuffer final : public CommandBuffer
@@ -307,6 +308,9 @@ class VKCommandBuffer final : public CommandBuffer
         VkCommandBufferUsageFlags       usageFlags_                 = 0;
         VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         bool                            immediateSubmit_            = false;
+
+        VKSwapChain*                    boundSwapChain_             = nullptr;
+        std::uint32_t                   currentColorBuffer_         = 0;
 
         VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
         VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)

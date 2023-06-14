@@ -356,7 +356,31 @@ void VKCommandBuffer::CopyTextureFromFramebuffer(
     const TextureRegion&    dstRegion,
     const Offset2D&         srcOffset)
 {
-    //TODO
+    if (boundSwapChain_ == nullptr)
+        return /*No bound framebuffer*/;
+
+    if (dstRegion.extent.depth != 1 ||
+        dstRegion.offset.x < 0      ||
+        dstRegion.offset.y < 0      ||
+        dstRegion.offset.z < 0)
+    {
+        return /*Out of bounds*/;
+    }
+
+    auto& dstTextureVK = LLGL_CAST(VKTexture&, dstTexture);
+
+    PauseRenderPass();
+    boundSwapChain_->CopyImage(
+        device_,
+        commandBuffer_,
+        dstTextureVK.GetVkImage(),
+        VK_IMAGE_LAYOUT_UNDEFINED, //TODO: use state management of image layouts
+        dstRegion,
+        currentColorBuffer_,
+        srcOffset,
+        dstTextureVK.GetVkFormat()
+    );
+    ResumeRenderPass();
 }
 
 void VKCommandBuffer::GenerateMips(Texture& texture)
@@ -525,9 +549,11 @@ void VKCommandBuffer::BeginRenderPass(
         auto& swapChainVK = LLGL_CAST(VKSwapChain&, renderTarget);
 
         /* Store information about framebuffer attachments */
+        boundSwapChain_                 = &swapChainVK;
+        currentColorBuffer_             = swapChainVK.TranslateSwapIndex(swapBufferIndex);
         renderPass_                     = swapChainVK.GetSwapChainRenderPass().GetVkRenderPass();
         secondaryRenderPass_            = swapChainVK.GetSecondaryVkRenderPass();
-        framebuffer_                    = swapChainVK.GetVkFramebuffer(swapBufferIndex);
+        framebuffer_                    = swapChainVK.GetVkFramebuffer(currentColorBuffer_);
         framebufferRenderArea_.extent   = swapChainVK.GetVkExtent();
         numColorAttachments_            = swapChainVK.GetNumColorAttachments();
         hasDepthStencilAttachment_      = (swapChainVK.HasDepthAttachment() || swapChainVK.HasStencilAttachment());
@@ -586,6 +612,7 @@ void VKCommandBuffer::EndRenderPass()
     /* Reset render pass and framebuffer attributes */
     renderPass_     = VK_NULL_HANDLE;
     framebuffer_    = VK_NULL_HANDLE;
+    boundSwapChain_ = nullptr;
 
     /* Store new record state */
     recordState_ = RecordState::OutsideRenderPass;

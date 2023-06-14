@@ -308,12 +308,16 @@ void DbgCommandBuffer::CopyTextureFromFramebuffer(
     {
         LLGL_DBG_SOURCE;
         AssertRecording();
-        if (!states_.insideRenderPass)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannoy copy texture from framebuffer outside of a render pass");
-        if (dstRegion.extent.depth != 1)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of " + std::to_string(dstRegion.extent.depth));
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateTextureRegion(dstTextureDbg, dstRegion);
+        if (!states_.insideRenderPass)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannoy copy texture from framebuffer outside of a render pass");
+        if (dstRegion.subresource.numArrayLayers > 1)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with number of array layers greater than 1");
+        if (dstRegion.extent.depth != 1)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of " + std::to_string(dstRegion.extent.depth));
+        if (bindings_.swapChain == nullptr)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "copy texture from framebuffer is only supported for SwapChain framebuffers");
         if (DbgRenderTarget* renderTargetDbg = bindings_.renderTarget)
             ValidateRenderTargetRange(*renderTargetDbg, srcOffset, Extent2D{ dstRegion.extent.width, dstRegion.extent.height });
     }

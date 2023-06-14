@@ -301,6 +301,48 @@ void VKDevice::CopyTexture(
     );
 }
 
+void VKDevice::CopyImage(
+    VkCommandBuffer     commandBuffer,
+    VkImage             srcImage,
+    VkImageLayout       srcImageLayout,
+    VkImage             dstImage,
+    VkImageLayout       dstImageLayout,
+    const VkImageCopy&  region,
+    VkFormat            format)
+{
+    const TextureSubresource srcImageSubresource{ region.srcSubresource.baseArrayLayer, region.srcSubresource.layerCount, region.srcSubresource.mipLevel, 1u };
+    const TextureSubresource dstImageSubresource{ region.dstSubresource.baseArrayLayer, region.dstSubresource.layerCount, region.dstSubresource.mipLevel, 1u };
+
+    TransitionImageLayout(commandBuffer, srcImage, format, srcImageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageSubresource);
+    TransitionImageLayout(commandBuffer, dstImage, format, dstImageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageSubresource);
+
+    vkCmdCopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    TransitionImageLayout(commandBuffer, srcImage, format, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageLayout, srcImageSubresource);
+    TransitionImageLayout(commandBuffer, dstImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageLayout, dstImageSubresource);
+}
+
+void VKDevice::ResolveImage(
+    VkCommandBuffer         commandBuffer,
+    VkImage                 srcImage,
+    VkImageLayout           srcImageLayout,
+    VkImage                 dstImage,
+    VkImageLayout           dstImageLayout,
+    const VkImageResolve&   region,
+    VkFormat                format)
+{
+    const TextureSubresource srcImageSubresource{ region.srcSubresource.baseArrayLayer, region.srcSubresource.layerCount, region.srcSubresource.mipLevel, 1u };
+    const TextureSubresource dstImageSubresource{ region.dstSubresource.baseArrayLayer, region.dstSubresource.layerCount, region.dstSubresource.mipLevel, 1u };
+
+    TransitionImageLayout(commandBuffer, srcImage, format, srcImageLayout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageSubresource);
+    TransitionImageLayout(commandBuffer, dstImage, format, dstImageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageSubresource);
+
+    vkCmdResolveImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    TransitionImageLayout(commandBuffer, srcImage, format, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, srcImageLayout, srcImageSubresource);
+    TransitionImageLayout(commandBuffer, dstImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dstImageLayout, dstImageSubresource);
+}
+
 void VKDevice::CopyBufferToImage(
     VkCommandBuffer             commandBuffer,
     VkBuffer                    srcBuffer,

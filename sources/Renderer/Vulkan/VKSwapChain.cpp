@@ -8,6 +8,7 @@
 #include "VKSwapChain.h"
 #include "VKCore.h"
 #include "VKTypes.h"
+#include "VKDevice.h"
 #include "Memory/VKDeviceMemoryManager.h"
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
@@ -187,12 +188,12 @@ bool VKSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 
 /* --- Extended functions --- */
 
-VkFramebuffer VKSwapChain::GetVkFramebuffer(std::uint32_t swapBufferIndex) const
+std::uint32_t VKSwapChain::TranslateSwapIndex(std::uint32_t swapBufferIndex) const
 {
     if (swapBufferIndex == Constants::currentSwapIndex)
-        return swapChainFramebuffers_[currentColorBuffer_].Get();
+        return currentColorBuffer_;
     else
-        return swapChainFramebuffers_[std::min(swapBufferIndex, numColorBuffers_ - 1)].Get();
+        return std::min(swapBufferIndex, numColorBuffers_ - 1);
 }
 
 bool VKSwapChain::HasDepthStencilBuffer() const
@@ -203,6 +204,81 @@ bool VKSwapChain::HasDepthStencilBuffer() const
 bool VKSwapChain::HasMultiSampling() const
 {
     return (swapChainSamples_ > 1);
+}
+
+template <typename TDst>
+void CopyVkImageRegion(TDst& outRegion, const TextureRegion& dstRegion, const Offset2D& srcOffset, VkImageAspectFlags aspectFlags)
+{
+    outRegion.srcSubresource.aspectMask     = aspectFlags;
+    outRegion.srcSubresource.mipLevel       = 0;
+    outRegion.srcSubresource.baseArrayLayer = 0;
+    outRegion.srcSubresource.layerCount     = 1u;
+    outRegion.srcOffset.x                   = srcOffset.x;
+    outRegion.srcOffset.y                   = srcOffset.y;
+    outRegion.srcOffset.z                   = 0;
+    outRegion.dstSubresource.aspectMask     = aspectFlags;
+    outRegion.dstSubresource.mipLevel       = dstRegion.subresource.baseMipLevel;
+    outRegion.dstSubresource.baseArrayLayer = dstRegion.subresource.baseArrayLayer;
+    outRegion.dstSubresource.layerCount     = 1u;
+    outRegion.dstOffset.x                   = dstRegion.offset.x;
+    outRegion.dstOffset.y                   = dstRegion.offset.y;
+    outRegion.dstOffset.z                   = dstRegion.offset.z;
+    outRegion.extent.width                  = dstRegion.extent.width;
+    outRegion.extent.height                 = dstRegion.extent.height;
+    outRegion.extent.depth                  = 1u;
+}
+
+void VKSwapChain::CopyImage(
+    VKDevice&               device,
+    VkCommandBuffer         commandBuffer,
+    VkImage                 dstImage,
+    VkImageLayout           dstImageLayout,
+    const TextureRegion&    dstRegion,
+    std::uint32_t           srcColorBuffer,
+    const Offset2D&         srcOffset,
+    VkFormat                format)
+{
+    const bool                  isDepthStencil  = VKTypes::IsVkFormatDepthStencil(format);
+    const VkImageAspectFlags    aspectFlags     = (isDepthStencil ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_COLOR_BIT);
+
+    if (HasMultiSampling())
+    {
+        VkImageResolve resolveRegion;
+        CopyVkImageRegion(resolveRegion, dstRegion, srcOffset, aspectFlags);
+
+        if (isDepthStencil)
+        {
+            if (depthStencilFormat_ == VK_FORMAT_UNDEFINED)
+                return /*No depth-stencil buffer*/;
+
+            VkImage srcImage = depthStencilBuffer_.GetVkImage();
+            device.ResolveImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
+        }
+        else
+        {
+            VkImage srcImage = colorBuffers_[srcColorBuffer].GetVkImage();
+            device.ResolveImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
+        }
+    }
+    else
+    {
+        VkImageCopy copyRegion;
+        CopyVkImageRegion(copyRegion, dstRegion, srcOffset, aspectFlags);
+
+        if (isDepthStencil)
+        {
+            if (depthStencilFormat_ == VK_FORMAT_UNDEFINED)
+                return /*No depth-stencil buffer*/;
+
+            VkImage srcImage = depthStencilBuffer_.GetVkImage();
+            device.CopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, copyRegion, format);
+        }
+        else
+        {
+            VkImage srcImage = swapChainImages_[srcColorBuffer];
+            device.CopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, copyRegion, format);
+        }
+    }
 }
 
 

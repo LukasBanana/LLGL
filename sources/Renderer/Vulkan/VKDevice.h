@@ -89,6 +89,26 @@ class VKDevice
             const VkImageCopy&  region
         );
 
+        void CopyImage(
+            VkCommandBuffer     commandBuffer,
+            VkImage             srcImage,
+            VkImageLayout       srcImageLayout,
+            VkImage             dstImage,
+            VkImageLayout       dstImageLayout,
+            const VkImageCopy&  region,
+            VkFormat            format
+        );
+
+        void ResolveImage(
+            VkCommandBuffer         commandBuffer,
+            VkImage                 srcImage,
+            VkImageLayout           srcImageLayout,
+            VkImage                 dstImage,
+            VkImageLayout           dstImageLayout,
+            const VkImageResolve&   region,
+            VkFormat                format
+        );
+
         // Copies the source buffer into the destination image (numMipLevels must be 1).
         void CopyBufferToImage(
             VkCommandBuffer             commandBuffer,

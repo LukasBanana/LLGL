@@ -287,7 +287,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         If the current framebuffer is single-sampled, this texture \b must be single-sampled as well.
 
         \param[in] dstRegion Specifies the destination region where the texture is to be updated.
-        Note that both the \c numMipLevels and \c extent.depth attributes of this parameter \b must be 1.
+        Note that the \c subresource.numMipLevels, \c subresource.numArrayLayers, and \c extent.depth attributes of this parameter \b must be 1.
 
         \param[in] srcOffset Specifies the source offset at which the framebuffer is to be read from.
         If the source offset plus the destination dimension is larger the framebuffer's resolution, the behavior is undefined.
@@ -296,6 +296,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \remarks For performance reasons, it is recommended to render a scene into a RenderTarget instead of copying the framebuffer into a texture.
         This command merely simplifies the process of capturing the framebuffer mid-scene without having to interrupt a render pass or creating an intermediate render target.
+
+        \remarks This function is only supported for SwapChain framebuffers, not for common render targets. This functionality might be added in the future.
+
+        \todo Add support for common render targets.
 
         \see RenderTarget::GetResolution
         */

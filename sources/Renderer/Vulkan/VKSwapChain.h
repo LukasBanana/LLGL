@@ -24,6 +24,7 @@ namespace LLGL
 {
 
 
+class VKDevice;
 class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 
@@ -68,8 +69,14 @@ class VKSwapChain final : public SwapChain
             return secondaryRenderPass_.GetVkRenderPass();
         }
 
+        // Returns the actual swap buffer index.
+        std::uint32_t TranslateSwapIndex(std::uint32_t swapBufferIndex) const;
+
         // Returns the native VkFramebuffer object that is currently used from swap-chain.
-        VkFramebuffer GetVkFramebuffer(std::uint32_t swapBufferIndex = Constants::currentSwapIndex) const;
+        inline VkFramebuffer GetVkFramebuffer(std::uint32_t swapBufferIndex) const
+        {
+            return swapChainFramebuffers_[swapBufferIndex].Get();
+        }
 
         // Returns the swap-chain resolution as VkExtent2D.
         inline const VkExtent2D& GetVkExtent() const
@@ -82,6 +89,18 @@ class VKSwapChain final : public SwapChain
 
         // Returns true if this swap-chain has multi-sampling enabled.
         bool HasMultiSampling() const;
+
+        // Copies the specified backbuffer into the destination image.
+        void CopyImage(
+            VKDevice&               device,
+            VkCommandBuffer         commandBuffer,
+            VkImage                 dstImage,
+            VkImageLayout           dstImageLayout,
+            const TextureRegion&    dstRegion,
+            std::uint32_t           srcColorBuffer,
+            const Offset2D&         srcOffset,
+            VkFormat                format
+        );
 
     private:
 
