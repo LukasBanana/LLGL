@@ -310,8 +310,6 @@ void DbgCommandBuffer::CopyTextureFromFramebuffer(
         AssertRecording();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateTextureRegion(dstTextureDbg, dstRegion);
-        if (!states_.insideRenderPass)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannoy copy texture from framebuffer outside of a render pass");
         if (dstRegion.subresource.numArrayLayers > 1)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with number of array layers greater than 1");
         if (dstRegion.extent.depth != 1)

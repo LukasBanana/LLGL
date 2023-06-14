@@ -292,8 +292,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] srcOffset Specifies the source offset at which the framebuffer is to be read from.
         If the source offset plus the destination dimension is larger the framebuffer's resolution, the behavior is undefined.
 
-        \remarks This command must only be used \e inside a render pass, i.e. between CommandBuffer::BeginRenderPass and CommandBuffer::EndRenderPass.
-
         \remarks For performance reasons, it is recommended to render a scene into a RenderTarget instead of copying the framebuffer into a texture.
         This command merely simplifies the process of capturing the framebuffer mid-scene without having to interrupt a render pass or creating an intermediate render target.
 
@@ -551,7 +549,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks
         The following commands \em can be used both inside and outside a render pass section but are \em recommended
         to be used only \b outside a render pass section to avoid potential performace penalties:
-        - Copy commands (i.e. \c UpdateBuffer, \c CopyBuffer, and \c CopyTexture).
+        - Copy commands (i.e. \c UpdateBuffer, \c CopyBuffer*, and \c CopyTexture*).
         - MIP-map generation commands (i.e. \c GenerateMips).
 
         \see RenderSystem::CreateRenderPass

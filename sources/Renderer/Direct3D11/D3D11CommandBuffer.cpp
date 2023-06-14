@@ -88,7 +88,7 @@ void D3D11CommandBuffer::End()
         /* Encode commands from deferred context into command list */
         context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
     }
-    ResetRenderState();
+    ResetBindingStates();
 }
 
 void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -1583,7 +1583,7 @@ void D3D11CommandBuffer::FlushConstantsCache()
         boundConstantsCache_->Flush(*stateMngr_);
 }
 
-void D3D11CommandBuffer::ResetRenderState()
+void D3D11CommandBuffer::ResetBindingStates()
 {
     boundRenderTarget_      = nullptr;
     boundSwapChain_         = nullptr;

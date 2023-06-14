@@ -265,6 +265,8 @@ class D3D12CommandBuffer final : public CommandBuffer
             const D3D12_RECT*   rects
         );
 
+        void ResetBindingStates();
+
     private:
 
         D3D12CommandContext             commandContext_;

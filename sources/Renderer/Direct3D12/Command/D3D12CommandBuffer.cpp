@@ -69,13 +69,9 @@ void D3D12CommandBuffer::End()
 {
     /* Close command context and reset intermediate states */
     commandContext_.Close();
-    numBoundScissorRects_ = 0;
 
     /* Clear references to bound pipeline objects */
-    boundRenderTarget_      = nullptr;
-    boundSwapChain_         = nullptr;
-    boundPipelineLayout_    = nullptr;
-    boundPipelineState_     = nullptr;
+    ResetBindingStates();
 
     /* Execute command list right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
@@ -666,13 +662,17 @@ void D3D12CommandBuffer::BeginRenderPass(
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         /* Bind swap chain */
-        boundSwapChain_ = LLGL_CAST(D3D12SwapChain*, &renderTarget);
+        boundSwapChain_     = LLGL_CAST(D3D12SwapChain*, &renderTarget);
+        boundRenderTarget_  = nullptr;
+
         BindSwapChain(*boundSwapChain_, swapBufferIndex);
     }
     else
     {
         /* Bind render target */
-        boundRenderTarget_ = LLGL_CAST(D3D12RenderTarget*, &renderTarget);
+        boundSwapChain_     = nullptr;
+        boundRenderTarget_  = LLGL_CAST(D3D12RenderTarget*, &renderTarget);
+
         BindRenderTarget(*boundRenderTarget_);
     }
 
@@ -686,16 +686,11 @@ void D3D12CommandBuffer::BeginRenderPass(
 
 void D3D12CommandBuffer::EndRenderPass()
 {
+    /* Resolve multi-sampled subresources of previously bound render target */
     if (boundSwapChain_ != nullptr)
-    {
         boundSwapChain_->ResolveSubresources(commandContext_, currentColorBuffer_);
-        boundSwapChain_ = nullptr;
-    }
     else if (boundRenderTarget_ != nullptr)
-    {
         boundRenderTarget_->ResolveSubresources(commandContext_);
-        boundRenderTarget_ = nullptr;
-    }
 }
 
 /* ----- Pipeline States ----- */
@@ -1199,6 +1194,15 @@ void D3D12CommandBuffer::ClearDepthStencilView(
 
     /* Clear depth-stencil view */
     commandList_->ClearDepthStencilView(dsvDescHandle_, clearFlags, depth, stencil, numRects, rects);
+}
+
+void D3D12CommandBuffer::ResetBindingStates()
+{
+    numBoundScissorRects_   = 0;
+    boundRenderTarget_      = nullptr;
+    boundSwapChain_         = nullptr;
+    boundPipelineLayout_    = nullptr;
+    boundPipelineState_     = nullptr;
 }
 
 

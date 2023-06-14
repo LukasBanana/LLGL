@@ -246,7 +246,7 @@ class VKCommandBuffer final : public CommandBuffer
     private:
 
         void CreateVkCommandPool(std::uint32_t queueFamilyIndex);
-        void CreateVkCommandBuffers();
+        void CreateVkCommandBuffers(VkCommandBufferLevel level);
         void CreateVkRecordingFences();
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
@@ -306,7 +306,6 @@ class VKCommandBuffer final : public CommandBuffer
         RecordState                     recordState_                = RecordState::Undefined;
 
         VkCommandBufferUsageFlags       usageFlags_                 = 0;
-        VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         bool                            immediateSubmit_            = false;
 
         VKSwapChain*                    boundSwapChain_             = nullptr;

@@ -72,6 +72,8 @@ VKCommandBuffer::VKCommandBuffer(
                               device.GetVkDevice().Get()               }
 {
     /* Translate creation flags */
+    VkCommandBufferLevel bufferLevel = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
     {
         immediateSubmit_    = true;
@@ -80,7 +82,7 @@ VKCommandBuffer::VKCommandBuffer(
     else
     {
         if ((desc.flags & CommandBufferFlags::Secondary) != 0)
-            bufferLevel_ = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+            bufferLevel = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 
         if ((desc.flags & CommandBufferFlags::Secondary) != 0)
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
@@ -93,7 +95,7 @@ VKCommandBuffer::VKCommandBuffer(
 
     /* Create native command buffer objects */
     CreateVkCommandPool(queueFamilyIndices.graphicsFamily);
-    CreateVkCommandBuffers();
+    CreateVkCommandBuffers(bufferLevel);
     CreateVkRecordingFences();
 
     /* Acquire first native command buffer */
@@ -369,18 +371,34 @@ void VKCommandBuffer::CopyTextureFromFramebuffer(
 
     auto& dstTextureVK = LLGL_CAST(VKTexture&, dstTexture);
 
-    PauseRenderPass();
-    boundSwapChain_->CopyImage(
-        device_,
-        commandBuffer_,
-        dstTextureVK.GetVkImage(),
-        VK_IMAGE_LAYOUT_UNDEFINED, //TODO: use state management of image layouts
-        dstRegion,
-        currentColorBuffer_,
-        srcOffset,
-        dstTextureVK.GetVkFormat()
-    );
-    ResumeRenderPass();
+    if (IsInsideRenderPass())
+    {
+        PauseRenderPass();
+        boundSwapChain_->CopyImage(
+            device_,
+            commandBuffer_,
+            dstTextureVK.GetVkImage(),
+            VK_IMAGE_LAYOUT_UNDEFINED, //TODO: use state management of image layouts
+            dstRegion,
+            currentColorBuffer_,
+            srcOffset,
+            dstTextureVK.GetVkFormat()
+        );
+        ResumeRenderPass();
+    }
+    else
+    {
+        boundSwapChain_->CopyImage(
+            device_,
+            commandBuffer_,
+            dstTextureVK.GetVkImage(),
+            VK_IMAGE_LAYOUT_UNDEFINED, //TODO: use state management of image layouts
+            dstRegion,
+            currentColorBuffer_,
+            srcOffset,
+            dstTextureVK.GetVkFormat()
+        );
+    }
 }
 
 void VKCommandBuffer::GenerateMips(Texture& texture)
@@ -612,7 +630,6 @@ void VKCommandBuffer::EndRenderPass()
     /* Reset render pass and framebuffer attributes */
     renderPass_     = VK_NULL_HANDLE;
     framebuffer_    = VK_NULL_HANDLE;
-    boundSwapChain_ = nullptr;
 
     /* Store new record state */
     recordState_ = RecordState::OutsideRenderPass;
@@ -1067,7 +1084,7 @@ void VKCommandBuffer::CreateVkCommandPool(std::uint32_t queueFamilyIndex)
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 }
 
-void VKCommandBuffer::CreateVkCommandBuffers()
+void VKCommandBuffer::CreateVkCommandBuffers(VkCommandBufferLevel level)
 {
     /* Allocate command buffers */
     VkCommandBufferAllocateInfo allocInfo;
@@ -1075,7 +1092,7 @@ void VKCommandBuffer::CreateVkCommandBuffers()
         allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.pNext                 = nullptr;
         allocInfo.commandPool           = commandPool_;
-        allocInfo.level                 = bufferLevel_;
+        allocInfo.level                 = level;
         allocInfo.commandBufferCount    = numCommandBuffers_;
     }
     VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferArray_);
@@ -1242,6 +1259,7 @@ void VKCommandBuffer::AcquireNextBuffer()
 
 void VKCommandBuffer::ResetBindingStates()
 {
+    boundSwapChain_         = nullptr;
     boundPipelineLayout_    = nullptr;
     boundPipelineState_     = nullptr;
     descriptorCache_        = nullptr;

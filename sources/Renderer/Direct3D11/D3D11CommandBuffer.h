@@ -284,7 +284,7 @@ class D3D11CommandBuffer final : public CommandBuffer
 
         void FlushConstantsCache();
 
-        void ResetRenderState();
+        void ResetBindingStates();
 
     private:
 
