@@ -26,6 +26,7 @@ namespace LLGL
 class MTBuffer;
 class MTTexture;
 class MTSampler;
+class MTSwapChain;
 class MTRenderTarget;
 class MTPipelineState;
 class MTDescriptorCache;
@@ -260,6 +261,7 @@ class MTCommandBuffer final : public CommandBuffer
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
         const MTLSize*                  numThreadsPerGroup_     = nullptr;
+        MTSwapChain*                    boundSwapChain_         = nullptr;
         MTPipelineState*                boundPipelineState_     = nullptr;
         MTDescriptorCache*              descriptorCache_        = nullptr;
         MTConstantsCache*               constantsCache_         = nullptr;

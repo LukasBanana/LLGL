@@ -337,7 +337,68 @@ void MTCommandBuffer::CopyTextureFromFramebuffer(
     const TextureRegion&    dstRegion,
     const Offset2D&         srcOffset)
 {
-    //TODO
+    if (boundSwapChain_ == nullptr)
+        return /*No bound framebuffer*/;
+
+    id<CAMetalDrawable> drawable = [boundSwapChain_->GetMTKView() currentDrawable];
+    if (drawable == nil)
+        return /*No drawable*/;
+
+    id<MTLTexture> drawableTexture = [drawable texture];
+    if (drawableTexture == nil)
+        return /*No drawable source texture*/;
+
+    if (dstRegion.extent.depth != 1 ||
+        dstRegion.offset.x < 0      ||
+        dstRegion.offset.y < 0      ||
+        dstRegion.offset.z < 0)
+    {
+        return /*Out of bounds*/;
+    }
+
+    auto& dstTextureMT = LLGL_CAST(MTTexture&, dstTexture);
+    id<MTLTexture> targetTexture = dstTextureMT.GetNative();
+
+    /* Source and target texture formats must match for 'copyFromTexture', so create texture view on mismatch */
+    id<MTLTexture> sourceTexture;
+    if ([drawableTexture pixelFormat] != [targetTexture pixelFormat])
+        sourceTexture = [drawableTexture newTextureViewWithPixelFormat:[targetTexture pixelFormat]];
+    else
+        sourceTexture = drawableTexture;
+
+    /* Convert texture region and source origin */
+    MTLOrigin srcOrigin = MTLOriginMake(
+        static_cast<NSUInteger>(srcOffset.x),
+        static_cast<NSUInteger>(srcOffset.y),
+        0u
+    );
+
+    MTLOrigin dstOrigin;
+    MTTypes::Convert(dstOrigin, dstRegion.offset);
+
+    MTLSize srcSize;
+    MTTypes::Convert(srcSize, dstRegion.extent);
+
+    context_.PauseRenderEncoder();
+    {
+        auto blitEncoder = context_.BindBlitEncoder();
+        [blitEncoder
+            copyFromTexture:    sourceTexture
+            sourceSlice:        0
+            sourceLevel:        0
+            sourceOrigin:       srcOrigin
+            sourceSize:         srcSize
+            toTexture:          targetTexture
+            destinationSlice:   dstRegion.subresource.baseArrayLayer
+            destinationLevel:   dstRegion.subresource.baseMipLevel
+            destinationOrigin:  dstOrigin
+        ];
+    }
+    context_.ResumeRenderEncoder();
+
+    /* Decrement reference counter for temporary texture */
+    if (sourceTexture != drawableTexture)
+        [sourceTexture release];
 }
 
 void MTCommandBuffer::GenerateMips(Texture& texture)
@@ -479,6 +540,7 @@ void MTCommandBuffer::BeginRenderPass(
     {
         /* Put current drawable into queue */
         auto& swapChainMT = LLGL_CAST(MTSwapChain&, renderTarget);
+        boundSwapChain_ = &swapChainMT;
         QueueDrawable(swapChainMT.GetMTKView().currentDrawable);
 
         /* Get next render pass descriptor from MetalKit view */
@@ -1206,6 +1268,7 @@ void MTCommandBuffer::ResetRenderStates()
 {
     numPatchControlPoints_  = 0;
     tessPipelineState_      = nil;
+    boundSwapChain_         = nullptr;
     boundPipelineState_     = nullptr;
     descriptorCache_        = nullptr;
     constantsCache_         = nullptr;

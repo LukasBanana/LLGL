@@ -60,6 +60,8 @@ MTSwapChain::MTSwapChain(
 
     #endif // /LLGL_OS_IOS
 
+    view_.framebufferOnly = NO; //TODO: make this optional with create/bind flag
+
     /* Initialize color and depth buffer */
     //MTLPixelFormat colorFmt = metalLayer_.pixelFormat;
 
