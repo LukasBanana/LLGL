@@ -211,7 +211,7 @@ bool Parser::MatchIdent(int offset) const
         return false;
     for (char c : tok)
     {
-        if (!IsCharIdentifier(tok.front()))
+        if (!IsCharIdentifier(c))
             return false;
     }
     return true;
@@ -227,7 +227,7 @@ int Parser::MatchNumeric(int offset) const
         /* Match hexadecimal number */
         for (char c : tok.substr(2))
         {
-            if (!IsCharNumericHex(tok.front()))
+            if (!IsCharNumericHex(c))
                 return 0;
         }
         return 16;
@@ -237,7 +237,7 @@ int Parser::MatchNumeric(int offset) const
         /* Match decimal number */
         for (char c : tok)
         {
-            if (!IsCharNumeric(tok.front()))
+            if (!IsCharNumeric(c))
                 return 0;
         }
         return 10;
