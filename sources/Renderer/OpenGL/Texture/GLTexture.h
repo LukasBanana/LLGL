@@ -93,6 +93,12 @@ class GLTexture final : public Texture
         // Returns the GL_TEXTURE_TARGET parameter of this texture.
         GLenum GetGLTexTarget() const;
 
+        /*
+        Returns the GL_TEXTURE_TARGET parameter of this texture for MIP-map levels,
+        i.e. GL_TEXTURE_CUBE_MAP will be substituted with the first cube face GL_TEXTURE_CUBE_MAP_POSITIVE_X.
+        */
+        GLenum GetGLTexLevelTarget() const;
+
         #ifdef LLGL_GL_ENABLE_OPENGL2X
         // Binds the texture parameters of the specified sampler to this texture.
         void BindTexParameters(const GL2XSampler& sampler);

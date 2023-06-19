@@ -843,6 +843,19 @@ GLenum GLTexture::GetGLTexTarget() const
     return GLTypes::Map(GetType());
 }
 
+GLenum GLTexture::GetGLTexLevelTarget() const
+{
+    GLenum targetGL = GLTypes::Map(GetType());
+    switch (targetGL)
+    {
+        case GL_TEXTURE_CUBE_MAP:
+        case GL_TEXTURE_CUBE_MAP_ARRAY:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        default:
+            return targetGL;
+    }
+}
+
 #ifdef LLGL_GL_ENABLE_OPENGL2X
 
 void GLTexture::BindTexParameters(const GL2XSampler& sampler)
@@ -928,7 +941,7 @@ void GLTexture::QueryInternalFormat()
         {
             /* Bind texture and query attributes */
             BindGLTextureNonPersistent(*this);
-            GLProfile::GetTexParameterInternalFormat(GetGLTexTarget(), &format);
+            GLProfile::GetTexParameterInternalFormat(GetGLTexLevelTarget(), &format);
         }
     }
     internalFormat_ = static_cast<GLenum>(format);
