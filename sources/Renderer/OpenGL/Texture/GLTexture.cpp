@@ -211,13 +211,18 @@ TextureDescriptor GLTexture::GetDesc() const
             texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[1]);
             break;
 
+        case TextureType::TextureCube:
+            texDesc.extent.width    = static_cast<std::uint32_t>(extent[0]);
+            texDesc.extent.height   = static_cast<std::uint32_t>(extent[1]);
+            texDesc.arrayLayers     = 6u;
+            break;
+
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-        case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            /* For cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6) */
+            /* For cube array textures, depth extent can also be copied directly without transformation (no need to multiply by 6) */
             texDesc.extent.width    = static_cast<std::uint32_t>(extent[0]);
             texDesc.extent.height   = static_cast<std::uint32_t>(extent[1]);
             texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
@@ -1052,8 +1057,8 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
         GLStateManager::Get().PopBoundTexture();
     }
 
-    /* Adjust depth value for cube texture to be uniform with D3D */
-    if (IsCubeTexture(GetType()))
+    /* Adjust depth value for cube texture; the cube array texture on the other hand will contain a multiple of 6 already */
+    if (GetType() == TextureType::TextureCube)
         texSize[2] *= 6;
 
     #else // LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER

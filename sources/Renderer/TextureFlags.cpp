@@ -8,6 +8,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include "TextureUtils.h"
+#include "../Core/CoreUtils.h"
 #include <algorithm>
 #include <cmath>
 
@@ -132,7 +133,7 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureType type, const Extent3D& extent
             case TextureType::Texture1D:        return Extent3D{ MipExtent(extent.width, mipLevel), 1u, 1u };
             case TextureType::Texture2D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
             case TextureType::Texture3D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), MipExtent(extent.depth, mipLevel) };
-            case TextureType::TextureCube:      return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
+            case TextureType::TextureCube:      return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 6u };
             case TextureType::Texture1DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), extent.height, 1u };
             case TextureType::Texture2DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), extent.depth };
             case TextureType::TextureCubeArray: return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), extent.depth };
@@ -154,10 +155,10 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uin
             case TextureType::Texture1D:        return Extent3D{ MipExtent(extent.width, mipLevel), 1u, 1u };
             case TextureType::Texture2D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
             case TextureType::Texture3D:        return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), MipExtent(extent.depth, mipLevel) };
-            case TextureType::TextureCube:      return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 1u };
+            case TextureType::TextureCube:      return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), 6u };
             case TextureType::Texture1DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), arrayLayers, 1u };
             case TextureType::Texture2DArray:   return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), arrayLayers };
-            case TextureType::TextureCubeArray: return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), arrayLayers };
+            case TextureType::TextureCubeArray: return Extent3D{ MipExtent(extent.width, mipLevel), MipExtent(extent.height, mipLevel), GetAlignedSize(arrayLayers, 6u) };
             case TextureType::Texture2DMS:      return Extent3D{ extent.width, extent.height, 1u };
             case TextureType::Texture2DMSArray: return Extent3D{ extent.width, extent.height, arrayLayers };
         }

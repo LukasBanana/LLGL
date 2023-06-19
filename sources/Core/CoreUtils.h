@@ -195,11 +195,9 @@ template <typename T>
 T GetAlignedSize(T size, T alignment)
 {
     if (alignment > 1)
-    {
-        const T alignmentBitmask = alignment - 1;
-        return ((size + alignmentBitmask) & ~alignmentBitmask);
-    }
-    return size;
+        return ((size + (alignment - 1)) / alignment) * alignment;
+    else
+        return size;
 }
 
 // Returns the division while always rounding up. This equivalent to 'ceil(numerator / denominator)' but for integral numbers.

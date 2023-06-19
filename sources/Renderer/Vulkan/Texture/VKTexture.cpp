@@ -76,21 +76,23 @@ TextureDescriptor VKTexture::GetDesc() const
     texDesc.bindFlags   = GetBindFlags();
     texDesc.miscFlags   = 0;
     texDesc.format      = GetFormat();
-    texDesc.mipLevels   = numMipLevels_;
+    texDesc.arrayLayers = GetNumArrayLayers();
+    texDesc.mipLevels   = GetNumMipLevels();
 
     switch (texDesc.type)
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
             texDesc.extent.width    = extent_.width;
-            texDesc.arrayLayers     = numArrayLayers_;
+            texDesc.extent.height   = 1u;
+            texDesc.extent.depth    = 1u;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
-            texDesc.arrayLayers     = numArrayLayers_;
+            texDesc.extent.depth    = 1u;
             break;
 
         case TextureType::Texture3D:
@@ -103,14 +105,14 @@ TextureDescriptor VKTexture::GetDesc() const
         case TextureType::TextureCubeArray:
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
-            texDesc.arrayLayers     = numArrayLayers_ / 6;
+            texDesc.extent.depth    = 1u;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
-            texDesc.arrayLayers     = numArrayLayers_;
+            texDesc.extent.depth    = 1u;
             texDesc.samples         = static_cast<std::uint32_t>(sampleCountBits_);
             texDesc.miscFlags       |= MiscFlags::FixedSamples;
             break;

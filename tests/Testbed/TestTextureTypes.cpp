@@ -77,11 +77,14 @@ DEF_TEST( TextureTypes )
 
     ////////////// Texture2DMS //////////////
 
-    CREATE_DUMMY     ("tex{2DMS,1wh}",        TextureType::Texture2DMS, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 1);
-    CREATE_DUMMY     ("tex{2DMS,1024wh}",     TextureType::Texture2DMS, Extent3D(1024, 1024, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 2);
-    CREATE_DUMMY_SLOW("tex{2DMS,1024w,256h}", TextureType::Texture2DMS, Extent3D(1024,  256, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 4);
-    CREATE_DUMMY_SLOW("tex{2DMS,800w,600h}",  TextureType::Texture2DMS, Extent3D( 800,  600, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 8);
-    CREATE_DUMMY_SLOW("tex{2DMS,123w,456h}",  TextureType::Texture2DMS, Extent3D( 123,  456, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 8);
+    if (caps.features.hasMultiSampleTextures)
+    {
+        CREATE_DUMMY     ("tex{2DMS,1wh}",        TextureType::Texture2DMS, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 1);
+        CREATE_DUMMY     ("tex{2DMS,1024wh}",     TextureType::Texture2DMS, Extent3D(1024, 1024, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 2);
+        CREATE_DUMMY_SLOW("tex{2DMS,1024w,256h}", TextureType::Texture2DMS, Extent3D(1024,  256, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 4);
+        CREATE_DUMMY_SLOW("tex{2DMS,800w,600h}",  TextureType::Texture2DMS, Extent3D( 800,  600, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 8);
+        CREATE_DUMMY_SLOW("tex{2DMS,123w,456h}",  TextureType::Texture2DMS, Extent3D( 123,  456, 1), /*mips:*/ 1, /*layers:*/ 1, /*samples:*/ 8);
+    }
 
     ////////////// Texture2DArray //////////////
 
@@ -95,6 +98,18 @@ DEF_TEST( TextureTypes )
         CREATE_DUMMY_SLOW("tex{2D[13],123w,456h,full-mips}", TextureType::Texture2DArray, Extent3D( 123,  456, 1), /*mips:*/ 0, /*layers:*/   13, /*samples:*/ 1);
     }
 
+    ////////////// Texture2DMSArray //////////////
+
+    if (caps.features.hasMultiSampleTextures && caps.features.hasArrayTextures)
+    {
+        CREATE_DUMMY     ("tex{2DMS[1],1wh,1x}",         TextureType::Texture2DMSArray, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/    1, /*samples:*/ 1);
+        CREATE_DUMMY     ("tex{2DMS[1024],32wh,2x}",     TextureType::Texture2DMSArray, Extent3D(  32,   32, 1), /*mips:*/ 1, /*layers:*/ 1024, /*samples:*/ 2);
+        CREATE_DUMMY_SLOW("tex{2DMS[16],1024wh,4x}",     TextureType::Texture2DMSArray, Extent3D(1024, 1024, 1), /*mips:*/ 1, /*layers:*/   16, /*samples:*/ 4);
+        CREATE_DUMMY_SLOW("tex{2DMS[64],1024w,256h,8x}", TextureType::Texture2DMSArray, Extent3D(1024,  256, 1), /*mips:*/ 1, /*layers:*/   64, /*samples:*/ 8);
+        CREATE_DUMMY_SLOW("tex{2DMS[32],800w,600h,8x}",  TextureType::Texture2DMSArray, Extent3D( 800,  600, 1), /*mips:*/ 1, /*layers:*/   32, /*samples:*/ 8);
+        CREATE_DUMMY_SLOW("tex{2DMS[13],123w,456h,8x}",  TextureType::Texture2DMSArray, Extent3D( 123,  456, 1), /*mips:*/ 1, /*layers:*/   13, /*samples:*/ 8);
+    }
+
     ////////////// Texture3D //////////////
 
     if (caps.features.has3DTextures)
@@ -106,7 +121,29 @@ DEF_TEST( TextureTypes )
         CREATE_DUMMY_SLOW("tex{3D,123w,456h,789d,full-mips}", TextureType::Texture3D, Extent3D( 123, 456, 789), /*mips:*/ 0, /*layers:*/ 1, /*samples:*/ 1);
     }
 
+    ////////////// TextureCube //////////////
 
+    if (caps.features.hasCubeTextures)
+    {
+        CREATE_DUMMY     ("tex{Cube,1wh}",             TextureType::TextureCube, Extent3D(  1,   1, 1), /*mips:*/ 1, /*layers:*/ 6, /*samples:*/ 1);
+        CREATE_DUMMY     ("tex{Cube,32wh}",            TextureType::TextureCube, Extent3D( 32,  32, 1), /*mips:*/ 0, /*layers:*/ 6, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube,128wh,full-mips}", TextureType::TextureCube, Extent3D(128, 128, 1), /*mips:*/ 0, /*layers:*/ 6, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube,256h,3-mips}",     TextureType::TextureCube, Extent3D(256, 256, 1), /*mips:*/ 3, /*layers:*/ 6, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube,600wh,full-mips}", TextureType::TextureCube, Extent3D(600, 600, 1), /*mips:*/ 0, /*layers:*/ 6, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube,123wh,full-mips}", TextureType::TextureCube, Extent3D(123, 123, 1), /*mips:*/ 0, /*layers:*/ 6, /*samples:*/ 1);
+    }
+
+    ////////////// TextureCubeArray //////////////
+
+    if (caps.features.hasCubeArrayTextures)
+    {
+        CREATE_DUMMY     ("tex{Cube[6],1wh}",              TextureType::TextureCubeArray, Extent3D(  1,   1, 1), /*mips:*/ 1, /*layers:*/   6, /*samples:*/ 1);
+        CREATE_DUMMY     ("tex{Cube[600],32wh}",           TextureType::TextureCubeArray, Extent3D( 32,  32, 1), /*mips:*/ 0, /*layers:*/ 600, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube[18],128wh,full-mips}", TextureType::TextureCubeArray, Extent3D(128, 128, 1), /*mips:*/ 0, /*layers:*/  18, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube[60],256wh,3-mips}",    TextureType::TextureCubeArray, Extent3D(256, 256, 1), /*mips:*/ 3, /*layers:*/  60, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube[30],600wh,full-mips}", TextureType::TextureCubeArray, Extent3D(600, 600, 1), /*mips:*/ 0, /*layers:*/  30, /*samples:*/ 1);
+        CREATE_DUMMY_SLOW("tex{Cube[12],123wh,full-mips}", TextureType::TextureCubeArray, Extent3D(123, 123, 1), /*mips:*/ 0, /*layers:*/  12, /*samples:*/ 1);
+    }
 
     return TestResult::Passed;
 }
