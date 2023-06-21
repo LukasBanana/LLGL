@@ -59,7 +59,9 @@ class D3D12Texture final : public Texture
         void CreateSubresourceCopyAsReadbackBuffer(
             D3D12SubresourceContext&    context,
             const TextureRegion&        region,
-            UINT&                       rowStride
+            UINT&                       outRowStride,
+            UINT&                       outLayerSize,
+            UINT&                       outLayerStride
         );
 
         // Creates either the default SRV for the entire resource or a subresource.

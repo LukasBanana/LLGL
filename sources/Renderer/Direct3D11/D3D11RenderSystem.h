@@ -194,14 +194,6 @@ class D3D11RenderSystem final : public RenderSystem
             const SrcImageDescriptor*   imageDesc
         );
 
-        void InitializeGpuTextureWithImage(
-            D3D11Texture&       textureD3D,
-            const Format        format,
-            const Extent3D&     extent,
-            std::uint32_t       arrayLayers,
-            SrcImageDescriptor  imageDesc
-        );
-
     private:
 
         /* ----- Common objects ----- */

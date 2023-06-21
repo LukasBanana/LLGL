@@ -69,8 +69,9 @@ class D3D11Texture final : public Texture
         void UpdateSubresource(
             ID3D11DeviceContext*        context,
             UINT                        mipLevel,
-            UINT                        arrayLayer,
-            const D3D11_BOX&            region,
+            UINT                        baseArrayLayer,
+            UINT                        numArrayLayers,
+            const D3D11_BOX&            dstBox,
             const SrcImageDescriptor&   imageDesc
         );
 

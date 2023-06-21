@@ -16,6 +16,7 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
+#include <LLGL/Utils/ForRange.h>
 #include <limits.h>
 #include <codecvt>
 
@@ -217,27 +218,36 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 
     /* Create CPU accessible readback buffer for texture and execute command list */
     ComPtr<ID3D12Resource> readbackBuffer;
-    UINT rowStride = 0;
+    UINT rowStride = 0, layerSize = 0, layerStride = 0;
     {
         D3D12SubresourceContext subresourceContext{ *commandContext_ };
-        textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, rowStride);
+        textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, rowStride, layerSize, layerStride);
         readbackBuffer = subresourceContext.TakeResource();
     }
 
     /* Map readback buffer to CPU memory space */
-    void* mappedData = nullptr;
+    DstImageDescriptor  dstImageDesc    = imageDesc;
+    const Format        format          = textureD3D.GetFormat();
+    const Extent3D      extent          = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
 
+    void* mappedData = nullptr;
     auto hr = readbackBuffer->Map(0, nullptr, &mappedData);
     DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
 
-    /* Copy CPU accessible buffer to output data */
-    auto format = textureD3D.GetFormat();
-    auto extent = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
+    const char* srcData = reinterpret_cast<const char*>(mappedData);
 
-    CopyTextureImageData(imageDesc, extent, format, mappedData, rowStride);
+    for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
+    {
+        /* Copy CPU accessible buffer to output data */
+        CopyTextureImageData(dstImageDesc, extent, format, srcData, rowStride);
+
+        /* Move destination image pointer to next layer */
+        dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + layerSize;
+        srcData += layerStride;
+    }
 
     /* Unmap buffer */
-    const D3D12_RANGE writtenRange{ 0, 0 };
+    const D3D12_RANGE writtenRange = { 0, 0 };
     readbackBuffer->Unmap(0, &writtenRange);
 }
 
@@ -613,14 +623,14 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     const auto  dataLayout      = CalcSubresourceLayout(format, srcExtent);
 
     ByteBuffer intermediateData;
-    const void* initialData = imageDesc.data;
+    const void* srcData = imageDesc.data;
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
         intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
-        initialData         = intermediateData.get();
+        srcData             = intermediateData.get();
     }
     else
     {
@@ -632,7 +642,7 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     /* Upload image data to subresource */
     D3D12_SUBRESOURCE_DATA subresourceData;
     {
-        subresourceData.pData       = initialData;
+        subresourceData.pData       = srcData;
         subresourceData.RowPitch    = dataLayout.rowStride;
         subresourceData.SlicePitch  = dataLayout.layerStride;
     }

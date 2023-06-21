@@ -12,6 +12,8 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../TextureUtils.h"
+#include "../../../Core/Exception.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -225,57 +227,63 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
 void D3D11Texture::UpdateSubresource(
     ID3D11DeviceContext*        context,
     UINT                        mipLevel,
-    UINT                        arrayLayer,
-    const D3D11_BOX&            region,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers,
+    const D3D11_BOX&            dstBox,
     const SrcImageDescriptor&   imageDesc)
 {
     /* Check if source image must be converted */
-    auto format = GetBaseFormat();
+    Format format = GetBaseFormat();
     const auto& formatAttribs = GetFormatAttribs(format);
 
     /* Get destination subresource index */
-    auto dstSubresource = CalcSubresource(mipLevel, arrayLayer);
-    auto dataLayout     = CalcSubresourceLayout(
+    const SubresourceLayout dataLayout = CalcSubresourceLayout(
         format,
         Extent3D
         {
-            region.right - region.left,
-            region.bottom - region.top,
-            region.back - region.front
-        }
+            dstBox.right  - dstBox.left,
+            dstBox.bottom - dstBox.top,
+            dstBox.back   - dstBox.front
+        },
+        numArrayLayers
     );
 
     ByteBuffer intermediateData;
-    const void* initialData = imageDesc.data;
+    const char* srcData = reinterpret_cast<const char*>(imageDesc.data);
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
         intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
-        initialData         = intermediateData.get();
+        srcData             = intermediateData.get();
     }
     else
     {
         /* Validate input data is large enough */
         if (imageDesc.dataSize < dataLayout.dataSize)
         {
-            throw std::invalid_argument(
-                "image data size is too small to update subresource of D3D11 texture (" +
-                std::to_string(dataLayout.dataSize) + " is required but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+            LLGL_TRAP(
+                "image data size (%zu) is too small to update subresource of D3D11 texture (%u is required)",
+                imageDesc.dataSize, dataLayout.dataSize
             );
         }
     }
 
     /* Update subresource with specified image data */
-    context->UpdateSubresource(
-        native_.resource.Get(),
-        dstSubresource,
-        &region,
-        initialData,
-        dataLayout.rowStride,
-        dataLayout.layerStride
-    );
+    for_range(arrayLayer, numArrayLayers)
+    {
+        UINT dstSubresource = CalcSubresource(mipLevel, baseArrayLayer + arrayLayer);
+        context->UpdateSubresource(
+            native_.resource.Get(),
+            dstSubresource,
+            &dstBox,
+            srcData,
+            dataLayout.rowStride,
+            dataLayout.layerStride
+        );
+        srcData += dataLayout.layerStride;
+    }
 }
 
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
@@ -360,19 +368,11 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         static_cast<UINT>(region.offset.z) + region.extent.depth,
     };
 
-    for (std::uint32_t i = 0; i < region.subresource.numArrayLayers; ++i)
+    for_range(arrayLayer, region.subresource.numArrayLayers)
     {
-        const UINT arrayLayer = region.subresource.baseArrayLayer + i;
-        context->CopySubresourceRegion(
-            textureOutput.resource.Get(),
-            D3D11CalcSubresource(0, i, 1),
-            0, // DstX
-            0, // DstY
-            0, // DstZ
-            native_.resource.Get(),
-            D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_),
-            &srcBox
-        );
+        UINT dstSubresource = D3D11CalcSubresource(0, arrayLayer, 1);
+        UINT srcSubresource = D3D11CalcSubresource(region.subresource.baseMipLevel, region.subresource.baseArrayLayer + arrayLayer, numMipLevels_);
+        context->CopySubresourceRegion(textureOutput.resource.Get(), dstSubresource, 0, 0, 0, native_.resource.Get(), srcSubresource, &srcBox);
     }
 }
 

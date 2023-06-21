@@ -109,7 +109,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
     {
         /* Create deferred D3D11 device context */
         ComPtr<ID3D11DeviceContext> deferredContext;
-        auto hr = device_->CreateDeferredContext(0, deferredContext.ReleaseAndGetAddressOf());
+        HRESULT hr = device_->CreateDeferredContext(0, deferredContext.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11DeviceContext", "for deferred command buffer");
 
         /* Create state manager dedicated to deferred context */
@@ -215,12 +215,13 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                 context_.Get(),
                 textureRegion.subresource.baseMipLevel,
                 textureRegion.subresource.baseArrayLayer,
+                textureRegion.subresource.numArrayLayers,
                 CD3D11_BOX(
                     textureRegion.offset.x,
                     0,
                     0,
                     textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                    static_cast<LONG>(textureRegion.subresource.numArrayLayers),
+                    1,
                     1
                 ),
                 imageDesc
@@ -235,13 +236,14 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                 context_.Get(),
                 textureRegion.subresource.baseMipLevel,
                 textureRegion.subresource.baseArrayLayer,
+                textureRegion.subresource.numArrayLayers,
                 CD3D11_BOX(
                     textureRegion.offset.x,
                     textureRegion.offset.y,
                     0,
                     textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
                     textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
-                    static_cast<LONG>(textureRegion.subresource.numArrayLayers)
+                    1
                 ),
                 imageDesc
             );
@@ -249,6 +251,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
+            /* Multi-sampled textures cannot be written by CPU */
             break;
 
         case TextureType::Texture3D:
@@ -256,6 +259,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                 context_.Get(),
                 textureRegion.subresource.baseMipLevel,
                 0,
+                1,
                 CD3D11_BOX(
                     textureRegion.offset.x,
                     textureRegion.offset.y,
@@ -280,18 +284,27 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, textureRegion);
 
     /* Map subresource for reading */
-    const UINT subresource = 0;
+    DstImageDescriptor      dstImageDesc    = imageDesc;
+    const Format            format          = textureD3D.GetFormat();
+    const SubresourceLayout layoutPerLayer  = CalcSubresourceLayout(format, textureRegion.extent);
 
-    D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-    auto hr = context_->Map(texCopy.resource.Get(), subresource, D3D11_MAP_READ, 0, &mappedSubresource);
-    DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
+    for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
+    {
+        const UINT subresource = D3D11CalcSubresource(0, arrayLayer, 1);
 
-    /* Copy host visible resource to CPU accessible resource */
-    const auto format = textureD3D.GetFormat();
-    CopyTextureImageData(imageDesc, textureRegion.extent, format, mappedSubresource.pData, mappedSubresource.RowPitch);
+        D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+        HRESULT hr = context_->Map(texCopy.resource.Get(), subresource, D3D11_MAP_READ, 0, &mappedSubresource);
+        DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
-    /* Unmap resource */
-    context_->Unmap(texCopy.resource.Get(), subresource);
+        /* Copy host visible resource to CPU accessible resource */
+        CopyTextureImageData(dstImageDesc, textureRegion.extent, format, mappedSubresource.pData, mappedSubresource.RowPitch);
+
+        /* Unmap resource */
+        context_->Unmap(texCopy.resource.Get(), subresource);
+
+        /* Move destination image pointer to next layer */
+        dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + layoutPerLayer.dataSize;
+    }
 }
 
 /* ----- Sampler States ---- */
@@ -481,7 +494,7 @@ DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device,
 void D3D11RenderSystem::CreateFactory()
 {
     /* Create DXGI factory */
-    auto hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
+    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
     DXThrowIfCreateFailed(hr, "IDXGIFactory");
 }
 
@@ -722,11 +735,12 @@ static void InitializeD3DColorTextureWithUploadBuffer(
         for_range(layer, textureD3D.GetNumArrayLayers())
         {
             textureD3D.UpdateSubresource(
-                context,
-                0,
-                layer,
-                CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
-                imageDescDefault
+                /*context:*/        context,
+                /*mipLevel:*/       0,
+                /*baseArrayLayer:*/ layer,
+                /*numArrayLayers:*/ 1,
+                /*dstBox:*/         CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
+                /*imageDesc:*/      imageDescDefault
             );
         }
     }
@@ -740,12 +754,13 @@ void D3D11RenderSystem::InitializeGpuTexture(
     if (imageDesc)
     {
         /* Initialize texture with specified image descriptor */
-        InitializeGpuTextureWithImage(
-            textureD3D,
-            textureDesc.format,
-            textureDesc.extent,
-            textureDesc.arrayLayers,
-            *imageDesc
+        textureD3D.UpdateSubresource(
+            /*context:*/        context_.Get(),
+            /*mipLevel:*/       0,
+            /*baseArrayLayer:*/ 0,
+            /*numArrayLayers:*/ textureDesc.arrayLayers,
+            /*dstBox:*/         CD3D11_BOX(0, 0, 0, textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth),
+            /*imageDesc:*/      *imageDesc
         );
     }
     else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
@@ -790,45 +805,6 @@ void D3D11RenderSystem::InitializeGpuTexture(
                 );
             }
         }
-    }
-}
-
-void D3D11RenderSystem::InitializeGpuTextureWithImage(
-    D3D11Texture&       textureD3D,
-    const Format        format,
-    const Extent3D&     extent,
-    std::uint32_t       arrayLayers,
-    SrcImageDescriptor  imageDesc)
-{
-    /* Update only the first MIP-map level for each array layer */
-    const auto bytesPerLayer =
-    (
-        extent.width                        *
-        extent.height                       *
-        extent.depth                        *
-        ImageFormatSize(imageDesc.format)   *
-        DataTypeSize(imageDesc.dataType)
-    );
-
-    /* Remap image data size for a single array layer to update each subresource individually */
-    if (imageDesc.dataSize % arrayLayers != 0)
-        throw std::invalid_argument("image data size is not a multiple of the layer count for D3D11 texture");
-
-    imageDesc.dataSize /= arrayLayers;
-
-    for_range(layer, arrayLayers)
-    {
-        /* Update subresource of current array layer */
-        textureD3D.UpdateSubresource(
-            context_.Get(),
-            0, // mipLevel
-            layer,
-            CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
-            imageDesc
-        );
-
-        /* Move to next region of initial data */
-        imageDesc.data = (reinterpret_cast<const std::int8_t*>(imageDesc.data) + bytesPerLayer);
     }
 }
 

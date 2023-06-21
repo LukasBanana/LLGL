@@ -50,13 +50,13 @@ struct CompressedTexView
 /* ----- Functions ----- */
 
 // Calculates the actual 3D offset for the specified texture type.
-LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& offset, std::uint32_t baseArrayLayer);
+LLGL_EXPORT Offset3D CalcTextureOffset(const TextureType type, const Offset3D& offset, std::uint32_t baseArrayLayer = 0);
 
 // Calculates the actual 3D extent for the specified texture and range of array layers.
-LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& extent, std::uint32_t numArrayLayers);
+LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& extent, std::uint32_t numArrayLayers = 1);
 
 // Calculates the size and strides for a subresource of the specified format and extent.
-LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent);
+LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent, std::uint32_t numArrayLayers = 1);
 
 // Calcualtes the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().
 LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(

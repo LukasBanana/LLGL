@@ -422,10 +422,10 @@ void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t require
 
 static void CopyRowAlignedData(void* dstData, const void* srcData, std::size_t dstSize, std::size_t dstStride, std::size_t srcStride)
 {
-    auto dst = reinterpret_cast<std::int8_t*>(dstData);
-    auto src = reinterpret_cast<const std::int8_t*>(srcData);
+    auto dst = reinterpret_cast<char*>(dstData);
+    auto src = reinterpret_cast<const char*>(srcData);
 
-    for (auto dstEnd = dst + dstSize; dst < dstEnd; dst += dstStride, src += srcStride)
+    for (char* dstEnd = dst + dstSize; dst < dstEnd; dst += dstStride, src += srcStride)
         ::memcpy(dst, src, dstStride);
 }
 

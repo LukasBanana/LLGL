@@ -67,7 +67,7 @@ LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& e
     return {};
 }
 
-LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent)
+LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent, std::uint32_t numArrayLayers)
 {
     SubresourceLayout layout;
     const auto& formatDesc = GetFormatAttribs(format);
@@ -75,7 +75,7 @@ LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const E
     {
         layout.rowStride    = (extent.width * formatDesc.bitSize) / formatDesc.blockWidth / 8;
         layout.layerStride  = (extent.height * layout.rowStride) / formatDesc.blockHeight;
-        layout.dataSize     = extent.depth * layout.layerStride;
+        layout.dataSize     = extent.depth * layout.layerStride * std::max(1u, numArrayLayers);
     }
     return layout;
 }
