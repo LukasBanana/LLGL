@@ -10,7 +10,7 @@
 
 DEF_TEST( TextureTypes )
 {
-    auto CreateDummyTextureAndMeasureTiming = [this](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, std::uint32_t samples)
+    auto CreateDummyTextureAndMeasureTiming = [this](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, std::uint32_t samples) -> TestResult
     {
         const auto t0 = Timer::Tick();
 

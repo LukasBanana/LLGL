@@ -26,7 +26,7 @@ static bool HasArgument(int argc, char* argv[], const char* search)
 
 TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
     showTiming { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing") },
-    fastTest   { HasArgument(argc, argv, "-fast")                                     }
+    fastTest   { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")   }
 {
     RenderSystemDescriptor rendererDesc;
     {
