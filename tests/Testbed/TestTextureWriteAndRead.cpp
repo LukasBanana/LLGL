@@ -91,7 +91,7 @@ DEF_TEST( TextureWriteAndRead )
 
         // Read texture data
         std::vector<char> outputData;
-        outputData.resize(dataSize);
+        outputData.resize(dataSize, char(0xFF));
 
         DstImageDescriptor dstImage;
         {
@@ -123,48 +123,68 @@ DEF_TEST( TextureWriteAndRead )
 
     ////////////// Texture2D //////////////
 
-    TextureDescriptor tex2DDesc;
+    TextureDescriptor tex2DDesc_1x1;
     {
-        tex2DDesc.type           = TextureType::Texture2D;
-        tex2DDesc.format         = Format::RGBA8UNorm;
-        tex2DDesc.extent.width   = 4;
-        tex2DDesc.extent.height  = 4;
-        tex2DDesc.mipLevels      = 0;
+        tex2DDesc_1x1.type          = TextureType::Texture2D;
+        tex2DDesc_1x1.bindFlags     = BindFlags::CopySrc; //TODO: should not be required for ReadTexture function
+        tex2DDesc_1x1.format        = Format::RGBA8UNorm;
+        tex2DDesc_1x1.extent.width  = 1;
+        tex2DDesc_1x1.extent.height = 1;
+        tex2DDesc_1x1.mipLevels     = 1;
     }
 
     CreateTextureAndTestImageData(
-        "tex2D{2D,4wh}:{MIP0-full-access}",
-        tex2DDesc,
-        TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 4, 1 } },
-        colorsRgbaUb16.colors.data(),
-        colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
+        "tex2D{2D,1wh}:{single-texel-access}",
+        tex2DDesc_1x1,
+        TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } },
+        &(colorsRgbaUb4[0]),
+        sizeof(ColorRGBAub)
     );
+
+    TextureDescriptor tex2DDesc_4x4;
+    {
+        tex2DDesc_4x4.type          = TextureType::Texture2D;
+        tex2DDesc_4x4.bindFlags     = BindFlags::CopySrc; //TODO: should not be required for ReadTexture function
+        tex2DDesc_4x4.format        = Format::RGBA8UNorm;
+        tex2DDesc_4x4.extent.width  = 4;
+        tex2DDesc_4x4.extent.height = 4;
+        tex2DDesc_4x4.mipLevels     = 0;
+    }
 
     CreateTextureAndTestImageData(
         "tex2D{2D,4wh}:{single-texel-access}",
-        tex2DDesc,
+        tex2DDesc_4x4,
         TextureRegion{ TextureSubresource{ 0, 1 }, Offset3D{ 1, 1, 0 }, Extent3D{ 1, 1, 1 } },
         &(colorsRgbaUb4[0]),
         sizeof(ColorRGBAub)
+    );
+
+    CreateTextureAndTestImageData(
+        "tex2D{2D,4wh}:{MIP0-full-access}",
+        tex2DDesc_4x4,
+        TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 4, 1 } },
+        colorsRgbaUb16.colors.data(),
+        colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
     );
 
     ////////////// Texture2DArray //////////////
 
     if (caps.features.hasArrayTextures)
     {
-        TextureDescriptor tex2DArrayDesc;
+        TextureDescriptor tex2DArrayDesc_8x4x2;
         {
-            tex2DArrayDesc.type           = TextureType::Texture2DArray;
-            tex2DArrayDesc.format         = Format::RGBA8UNorm;
-            tex2DArrayDesc.extent.width   = 8;
-            tex2DArrayDesc.extent.height  = 4;
-            tex2DArrayDesc.arrayLayers    = 2;
-            tex2DArrayDesc.mipLevels      = 2;
+            tex2DArrayDesc_8x4x2.type           = TextureType::Texture2DArray;
+            tex2DArrayDesc_8x4x2.bindFlags      = BindFlags::CopySrc; //TODO: should not be required for ReadTexture function
+            tex2DArrayDesc_8x4x2.format         = Format::RGBA8UNorm;
+            tex2DArrayDesc_8x4x2.extent.width   = 8;
+            tex2DArrayDesc_8x4x2.extent.height  = 4;
+            tex2DArrayDesc_8x4x2.arrayLayers    = 2;
+            tex2DArrayDesc_8x4x2.mipLevels      = 2;
         }
 
         CreateTextureAndTestImageData(
             "tex2DArray{2D[2],8w,4h}:{MIP1-full-access}",
-            tex2DArrayDesc,
+            tex2DArrayDesc_8x4x2,
             TextureRegion{ TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 2, 1 } },
             colorsRgbaUb16.colors.data(),
             colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
@@ -172,7 +192,7 @@ DEF_TEST( TextureWriteAndRead )
 
         CreateTextureAndTestImageData(
             "tex2DArray{2D[2],8w,4h}:{1-layer-access}",
-            tex2DArrayDesc,
+            tex2DArrayDesc_8x4x2,
             TextureRegion{ TextureSubresource{ 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 2, 1 } },
             colorsRgbaUb4,
             sizeof(colorsRgbaUb4)
@@ -180,10 +200,50 @@ DEF_TEST( TextureWriteAndRead )
 
         CreateTextureAndTestImageData(
             "tex2DArray{2D[2],8w,4h}:{2-layer-access}",
-            tex2DArrayDesc,
+            tex2DArrayDesc_8x4x2,
             TextureRegion{ TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 1, 1 } },
             colorsRgbaUb4,
             sizeof(colorsRgbaUb4)
+        );
+    }
+
+    ////////////// Texture3D //////////////
+
+    if (caps.features.has3DTextures)
+    {
+        TextureDescriptor tex3DDesc_4x4x4;
+        {
+            tex3DDesc_4x4x4.type            = TextureType::Texture3D;
+            tex3DDesc_4x4x4.bindFlags       = BindFlags::CopySrc; //TODO: should not be required for ReadTexture function
+            tex3DDesc_4x4x4.format          = Format::RGBA8UNorm;
+            tex3DDesc_4x4x4.extent.width    = 4;
+            tex3DDesc_4x4x4.extent.height   = 4;
+            tex3DDesc_4x4x4.extent.depth    = 4;
+            tex3DDesc_4x4x4.mipLevels       = 2;
+        }
+
+        CreateTextureAndTestImageData(
+            "tex3D{3D,8whd}:{MIP1-full-access}",
+            tex3DDesc_4x4x4,
+            TextureRegion{ TextureSubresource{ 0, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 2, 2, 2 } },
+            colorsRgbaUb16.colors.data(),
+            8 * sizeof(ColorRGBAub)
+        );
+
+        CreateTextureAndTestImageData(
+            "tex3D{3D,8whd}:{1-slice-access}",
+            tex3DDesc_4x4x4,
+            TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 2 }, Extent3D{ 4, 4, 1 } },
+            colorsRgbaUb16.colors.data(),
+            colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
+        );
+
+        CreateTextureAndTestImageData(
+            "tex3D{3D,8whd}:{2-slice-access}",
+            tex3DDesc_4x4x4,
+            TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 1, 1, 1 }, Extent3D{ 2, 2, 2 } },
+            colorsRgbaUb16.colors.data(),
+            8 * sizeof(ColorRGBAub)
         );
     }
 
