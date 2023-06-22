@@ -388,15 +388,15 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
     /* Determine size of image for staging buffer */
-    const auto& offset          = textureRegion.offset;
-    const auto& extent          = textureRegion.extent;
-    const auto& subresource     = textureRegion.subresource;
-    const auto  format          = VKTypes::Unmap(textureVK.GetVkFormat());
+    const Offset3D&             offset          = textureRegion.offset;
+    const Extent3D&             extent          = textureRegion.extent;
+    const TextureSubresource&   subresource     = textureRegion.subresource;
+    const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
 
-    auto        image           = textureVK.GetVkImage();
-    const auto  imageSize       = extent.width * extent.height * extent.depth;
-    const void* imageData       = nullptr;
-    const auto  imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
+    VkImage                     image           = textureVK.GetVkImage();
+    const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth * subresource.numArrayLayers;
+    const void*                 imageData       = nullptr;
+    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
 
     /* Check if image data must be converted */
     ByteBuffer intermediateData;
@@ -433,7 +433,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     BuildVkBufferCreateInfo(
         stagingCreateInfo,
         imageDataSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT  // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(bufferDesc.cpuAccessFlags)
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(bufferDesc.cpuAccessFlags)
     );
 
     auto stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, imageData, imageDataSize);
@@ -480,13 +480,14 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
     /* Determine size of image for staging buffer */
-    const auto& offset = textureRegion.offset;
-    const auto& extent = textureRegion.extent;
-    const auto  format = VKTypes::Unmap(textureVK.GetVkFormat());
+    const Offset3D&             offset          = textureRegion.offset;
+    const Extent3D&             extent          = textureRegion.extent;
+    const TextureSubresource&   subresource     = textureRegion.subresource;
+    const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
 
-    auto        image           = textureVK.GetVkImage();
-    const auto  imageSize       = extent.width * extent.height * extent.depth;
-    const auto  imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
+    VkImage                     image           = textureVK.GetVkImage();
+    const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth * subresource.numArrayLayers;
+    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
@@ -502,7 +503,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             textureVK.GetVkFormat(),
             VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            textureRegion.subresource
+            subresource
         );
 
         device_.CopyImageToBuffer(
@@ -512,7 +513,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             textureVK.GetVkFormat(),
             VkOffset3D{ offset.x, offset.y, offset.z },
             VkExtent3D{ extent.width, extent.height, extent.depth },
-            textureRegion.subresource
+            subresource
         );
 
         device_.TransitionImageLayout(
@@ -521,7 +522,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
             textureVK.GetVkFormat(),
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            textureRegion.subresource
+            subresource
         );
     }
     device_.FlushCommandBuffer(cmdBuffer);
@@ -534,7 +535,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
         if (auto memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
         {
             /* Copy data to buffer object */
-            CopyTextureImageData(imageDesc, extent, format, memory);
+            CopyTextureImageData(imageDesc, Extent3D{ extent.width, extent.height, extent.depth * subresource.numArrayLayers }, format, memory);
             deviceMemory->Unmap(device_);
         }
     }
