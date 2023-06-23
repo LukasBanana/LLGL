@@ -238,9 +238,6 @@ int main(int argc, char* argv[])
                 // Set viewport and scissor rectangle
                 commands->SetViewport(swapChain->GetResolution());
 
-                // Set graphics pipeline
-                commands->SetPipelineState(*pipeline);
-
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);
 
@@ -249,6 +246,9 @@ int main(int argc, char* argv[])
                 {
                     // Clear color buffer
                     commands->Clear(LLGL::ClearFlags::Color);
+
+                    // Set graphics pipeline
+                    commands->SetPipelineState(*pipeline);
 
                     // Draw triangle with 3 vertices
                     commands->Draw(3, 0);

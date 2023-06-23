@@ -790,6 +790,9 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             /* If the PSO was created with static viewports, this PSO dictates the number of bound viewports */
             if (!pipelineStateDbg.graphicsDesc.viewports.empty())
                 bindings_.numViewports = static_cast<std::uint32_t>(pipelineStateDbg.graphicsDesc.viewports.size());
+
+            if (!states_.insideRenderPass)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "graphics PSO must be bound inside a render pass");
         }
         else
         {
@@ -797,6 +800,9 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
             {
                 //TODO: store bound compute shader
             }
+
+            if (states_.insideRenderPass)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "compute PSO must be bound outside a render pass");
         }
 
         ResetBindingTable(bindings_.pipelineState->pipelineLayout);

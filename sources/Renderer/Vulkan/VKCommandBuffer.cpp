@@ -43,15 +43,6 @@ static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDev
         return 1u;
 }
 
-// Returns the number of native command buffers for the specified descriptor
-static std::uint32_t GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
-{
-    if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
-        return 1u;
-    else
-        return std::max(1u, desc.numNativeBuffers);
-}
-
 VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
     VKDevice&                       device,
@@ -59,17 +50,18 @@ VKCommandBuffer::VKCommandBuffer(
     const QueueFamilyIndices&       queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
-    device_                 { device                                   },
-    commandQueue_           { commandQueue                             },
-    commandPool_            { device, vkDestroyCommandPool             },
-    queuePresentFamily_     { queueFamilyIndices.presentFamily         },
-    maxDrawIndirectCount_   { GetMaxDrawIndirectCount(physicalDevice)  },
+    device_                 { device                                        },
+    commandQueue_           { commandQueue                                  },
+    commandPool_            { device, vkDestroyCommandPool                  },
+    numCommandBuffers_      { VKCommandBuffer::GetNumVkCommandBuffers(desc) },
+    queuePresentFamily_     { queueFamilyIndices.presentFamily              },
+    maxDrawIndirectCount_   { GetMaxDrawIndirectCount(physicalDevice)       },
     recordingFenceArray_    { VKPtr<VkFence>{ device, vkDestroyFence },
                               VKPtr<VkFence>{ device, vkDestroyFence },
-                              VKPtr<VkFence>{ device, vkDestroyFence } },
+                              VKPtr<VkFence>{ device, vkDestroyFence }      },
     descriptorSetPoolArray_ { device.GetVkDevice().Get(),
                               device.GetVkDevice().Get(),
-                              device.GetVkDevice().Get()               }
+                              device.GetVkDevice().Get()                    }
 {
     /* Translate creation flags */
     VkCommandBufferLevel bufferLevel = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -82,16 +74,13 @@ VKCommandBuffer::VKCommandBuffer(
     else
     {
         if ((desc.flags & CommandBufferFlags::Secondary) != 0)
+        {
             bufferLevel = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-
-        if ((desc.flags & CommandBufferFlags::Secondary) != 0)
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        }
         if ((desc.flags & CommandBufferFlags::MultiSubmit) == 0)
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     }
-
-    /* Determine number of internal command buffers */
-    numCommandBuffers_ = GetNumVkCommandBuffers(desc);
 
     /* Create native command buffer objects */
     CreateVkCommandPool(queueFamilyIndices.graphicsFamily);
@@ -1287,6 +1276,14 @@ void VKCommandBuffer::AppendQueryPoolInFlight(VKQueryHeap* queryHeap)
     else
         queryHeapsInFlight_[numQueryHeapsInFlight_] = queryHeap;
     ++numQueryHeapsInFlight_;
+}
+
+std::uint32_t VKCommandBuffer::GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
+{
+    if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
+        return 1u;
+    else
+        return std::max(1u, std::min(desc.numNativeBuffers, VKCommandBuffer::maxNumCommandBuffers));
 }
 
 

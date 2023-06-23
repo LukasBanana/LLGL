@@ -27,7 +27,7 @@ D3D11PipelineState::D3D11PipelineState(
     isGraphicsPSO_  { isGraphicsPSO                                         },
     pipelineLayout_ { LLGL_CAST(const D3D11PipelineLayout*, pipelineLayout) }
 {
-    if (!pipelineLayout_->GetUniforms().empty())
+    if (pipelineLayout_ != nullptr && !pipelineLayout_->GetUniforms().empty())
     {
         constantsCache_ = MakeUnique<D3D11ConstantsCache>(
             CastShaderArray<D3D11Shader>(shaders),

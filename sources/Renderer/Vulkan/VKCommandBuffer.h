@@ -288,7 +288,12 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
-        static const std::uint32_t maxNumCommandBuffers = 3;
+        // Returns the number of native Vulkan command buffers used for the specified descriptor.
+        static std::uint32_t GetNumVkCommandBuffers(const CommandBufferDescriptor& desc);
+
+    private:
+
+        static constexpr std::uint32_t maxNumCommandBuffers = 3;
 
         VKDevice&                       device_;
 
