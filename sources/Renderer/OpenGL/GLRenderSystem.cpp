@@ -156,7 +156,7 @@ static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& bufferDe
 
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(bufferDesc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
+    RenderSystem::AssertCreateBuffer(bufferDesc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
 
     auto bufferGL = CreateGLBuffer(bufferDesc, initialData);
 
@@ -205,7 +205,7 @@ static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffe
 
 BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
 
     /* Create vertex buffer array and build VAO if there is at least one buffer with VertexBuffer binding */
     if (IsBufferArrayWithVertexBufferBinding(numBuffers, bufferArray))
@@ -422,7 +422,7 @@ void GLRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(shaderDesc);
+    RenderSystem::AssertCreateShader(shaderDesc);
 
     /* Validate rendering capabilities for required shader type */
     switch (shaderDesc.type)

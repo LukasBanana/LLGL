@@ -356,16 +356,17 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     }
 
     /* Copy subresource */
-    const UINT mipLevel = region.subresource.baseMipLevel;
+    const Offset3D offset = CalcTextureOffset(GetType(), region.offset);
+    const Extent3D extent = CalcTextureExtent(GetType(), region.extent);
 
     const D3D11_BOX srcBox
     {
-        static_cast<UINT>(region.offset.x),
-        static_cast<UINT>(region.offset.y),
-        static_cast<UINT>(region.offset.z),
-        static_cast<UINT>(region.offset.x) + region.extent.width,
-        static_cast<UINT>(region.offset.y) + region.extent.height,
-        static_cast<UINT>(region.offset.z) + region.extent.depth,
+        static_cast<UINT>(offset.x),
+        static_cast<UINT>(offset.y),
+        static_cast<UINT>(offset.z),
+        static_cast<UINT>(offset.x) + extent.width,
+        static_cast<UINT>(offset.y) + extent.height,
+        static_cast<UINT>(offset.z) + extent.depth,
     };
 
     for_range(arrayLayer, region.subresource.numArrayLayers)

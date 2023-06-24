@@ -129,7 +129,7 @@ void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(bufferDesc, UINT_MAX);
+    RenderSystem::AssertCreateBuffer(bufferDesc, UINT_MAX);
     if (DXBindFlagsNeedBufferWithRV(bufferDesc.bindFlags))
         return buffers_.emplace<D3D11BufferWithRV>(device_.Get(), bufferDesc, initialData);
     else
@@ -138,7 +138,7 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, cons
 
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
     return bufferArrays_.emplace<D3D11BufferArray>(numBuffers, bufferArray);
 }
 
@@ -284,9 +284,11 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, textureRegion);
 
     /* Map subresource for reading */
-    DstImageDescriptor      dstImageDesc    = imageDesc;
-    const Format            format          = textureD3D.GetFormat();
-    const SubresourceLayout layoutPerLayer  = CalcSubresourceLayout(format, textureRegion.extent);
+    DstImageDescriptor      dstImageDesc        = imageDesc;
+    const Format            format              = textureD3D.GetFormat();
+    const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
+    const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
+    const SubresourceLayout layoutPerLayer      = CalcSubresourceLayout(format, textureRegion.extent);
 
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
@@ -297,7 +299,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
         /* Copy host visible resource to CPU accessible resource */
-        CopyTextureImageData(dstImageDesc, textureRegion.extent, format, mappedSubresource.pData, mappedSubresource.RowPitch);
+        RenderSystem::CopyTextureImageData(dstImageDesc, numTexelsPerLayer, extent.width, format, mappedSubresource.pData, mappedSubresource.RowPitch);
 
         /* Unmap resource */
         context_->Unmap(texCopy.resource.Get(), subresource);
@@ -365,7 +367,7 @@ void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(shaderDesc);
+    RenderSystem::AssertCreateShader(shaderDesc);
     return shaders_.emplace<D3D11Shader>(device_.Get(), shaderDesc);
 }
 

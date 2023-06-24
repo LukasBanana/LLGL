@@ -121,7 +121,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
 
 BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
 
     /* Create temporary buffer array with buffer instances */
     std::vector<Buffer*>    bufferInstanceArray(numBuffers);

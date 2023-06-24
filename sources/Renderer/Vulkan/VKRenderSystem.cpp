@@ -105,7 +105,7 @@ static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long cpuAccessFlags)
 
 Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(bufferDesc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
+    RenderSystem::AssertCreateBuffer(bufferDesc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
@@ -146,7 +146,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
 
 BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
     return bufferArrays_.emplace<VKBufferArray>(numBuffers, bufferArray);
 }
 
@@ -278,7 +278,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             then use temporary image buffer as source for initial data
             */
             const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType);
-            AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(srcImageDataSize));
+            RenderSystem::AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(srcImageDataSize));
             initialData = intermediateData.get();
         }
         else
@@ -287,7 +287,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             Validate that image data is large enough,
             then use input data as source for initial data
             */
-            AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(initialDataSize));
+            RenderSystem::AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(initialDataSize));
             initialData = imageDesc->data;
         }
     }
@@ -415,7 +415,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         then use temporary image buffer as source for initial data
         */
         const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc.format) * DataTypeSize(imageDesc.dataType);
-        AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(srcImageDataSize));
+        RenderSystem::AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(srcImageDataSize));
         imageData = intermediateData.get();
     }
     else
@@ -424,7 +424,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         Validate that image data is large enough,
         then use input data as source for initial data
         */
-        AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(imageDataSize));
+        RenderSystem::AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(imageDataSize));
         imageData = imageDesc.data;
     }
 
@@ -480,8 +480,8 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
     /* Determine size of image for staging buffer */
-    const Offset3D&             offset          = textureRegion.offset;
-    const Extent3D&             extent          = textureRegion.extent;
+    const Offset3D              offset          = CalcTextureOffset(textureVK.GetType(), textureRegion.offset);
+    const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent);
     const TextureSubresource&   subresource     = textureRegion.subresource;
     const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
 
@@ -535,7 +535,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
         if (auto memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
         {
             /* Copy data to buffer object */
-            CopyTextureImageData(imageDesc, Extent3D{ extent.width, extent.height, extent.depth * subresource.numArrayLayers }, format, memory);
+            RenderSystem::CopyTextureImageData(imageDesc, imageSize, extent.width, format, memory);
             deviceMemory->Unmap(device_);
         }
     }
@@ -602,7 +602,7 @@ void VKRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(shaderDesc);
+    RenderSystem::AssertCreateShader(shaderDesc);
     return shaders_.emplace<VKShader>(device_, shaderDesc);
 }
 

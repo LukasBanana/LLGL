@@ -116,7 +116,7 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    AssertCreateBuffer(bufferDesc, ULLONG_MAX);
+    RenderSystem::AssertCreateBuffer(bufferDesc, ULLONG_MAX);
     D3D12Buffer* bufferD3D = buffers_.emplace<D3D12Buffer>(device_.GetNative(), bufferDesc);
     if (initialData != nullptr)
         UpdateBufferAndSync(*bufferD3D, 0, initialData, bufferDesc.size, bufferD3D->GetAlignment());
@@ -125,7 +125,7 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, cons
 
 BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
     return bufferArrays_.emplace<D3D12BufferArray>(numBuffers, bufferArray);
 }
 
@@ -226,9 +226,10 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     }
 
     /* Map readback buffer to CPU memory space */
-    DstImageDescriptor  dstImageDesc    = imageDesc;
-    const Format        format          = textureD3D.GetFormat();
-    const Extent3D      extent          = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
+    DstImageDescriptor  dstImageDesc        = imageDesc;
+    const Format        format              = textureD3D.GetFormat();
+    const Extent3D      extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
+    const std::uint32_t numTexelsPerLayer   = extent.width * extent.height * extent.depth;
 
     void* mappedData = nullptr;
     auto hr = readbackBuffer->Map(0, nullptr, &mappedData);
@@ -239,7 +240,7 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
         /* Copy CPU accessible buffer to output data */
-        CopyTextureImageData(dstImageDesc, extent, format, srcData, rowStride);
+        RenderSystem::CopyTextureImageData(dstImageDesc, numTexelsPerLayer, extent.width, format, srcData, rowStride);
 
         /* Move destination image pointer to next layer */
         dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + layerSize;
@@ -313,7 +314,7 @@ void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(shaderDesc);
+    RenderSystem::AssertCreateShader(shaderDesc);
     return shaders_.emplace<D3D12Shader>(shaderDesc);
 }
 

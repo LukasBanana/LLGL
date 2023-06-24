@@ -431,26 +431,26 @@ static void CopyRowAlignedData(void* dstData, const void* srcData, std::size_t d
 
 void RenderSystem::CopyTextureImageData(
     const DstImageDescriptor&   dstImageDesc,
-    const Extent3D&             extent,
-    const Format                format,
+    std::uint32_t               numTexels,
+    std::uint32_t               numTexelsInRow,
+    Format                      format,
     const void*                 data,
     std::size_t                 rowStride)
 {
     /* Check if image buffer must be converted */
-    const auto  numTexels       = (extent.width * extent.height * extent.depth);
     const auto& srcTexFormat    = GetFormatAttribs(format);
     const auto  srcFormatSize   = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
     const auto  srcImageSize    = (numTexels * srcFormatSize);
-    const auto  dstPitch        = (extent.width * srcFormatSize);
+    const auto  dstStride       = (numTexelsInRow * srcFormatSize);
 
     if (srcTexFormat.format != dstImageDesc.format || srcTexFormat.dataType != dstImageDesc.dataType)
     {
         /* Check if padding must be removed */
         ByteBuffer unpaddedData;
-        if (rowStride != 0 && dstPitch != rowStride)
+        if (rowStride != 0 && dstStride != rowStride)
         {
             unpaddedData = AllocateByteBuffer(srcImageSize, UninitializeTag{});
-            CopyRowAlignedData(unpaddedData.get(), data, srcImageSize, dstPitch, rowStride);
+            CopyRowAlignedData(unpaddedData.get(), data, srcImageSize, dstStride, rowStride);
             data = unpaddedData.get();
         }
 
@@ -459,7 +459,7 @@ void RenderSystem::CopyTextureImageData(
         const auto dstImageSize     = (numTexels * dstFormatSize);
 
         /* Validate input size */
-        AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);
+        RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);
 
         /* Convert mapped data into requested format */
         ByteBuffer formattedData = ConvertImageBuffer(
@@ -481,11 +481,11 @@ void RenderSystem::CopyTextureImageData(
     else
     {
         /* Validate input size */
-        AssertImageDataSize(dstImageDesc.dataSize, srcImageSize);
+        RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, srcImageSize);
 
         /* Copy mapped data directly into the output buffer */
-        if (rowStride != 0 && dstPitch != rowStride)
-            CopyRowAlignedData(dstImageDesc.data, data, srcImageSize, dstPitch, rowStride);
+        if (rowStride != 0 && dstStride != rowStride)
+            CopyRowAlignedData(dstImageDesc.data, data, srcImageSize, dstStride, rowStride);
         else
             ::memcpy(dstImageDesc.data, data, srcImageSize);
     }

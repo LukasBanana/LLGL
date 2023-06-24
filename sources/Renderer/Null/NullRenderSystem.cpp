@@ -158,14 +158,13 @@ void NullRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* NullRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    if (bufferDesc.size > GetRenderingCaps().limits.maxBufferSize)
-        throw std::invalid_argument("");
+    RenderSystem::AssertCreateBuffer(bufferDesc, GetRenderingCaps().limits.maxBufferSize);
     return buffers_.emplace<NullBuffer>(bufferDesc, initialData);
 }
 
 BufferArray* NullRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
     return bufferArrays_.emplace<NullBufferArray>(numBuffers, bufferArray);
 }
 

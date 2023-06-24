@@ -121,6 +121,13 @@ DEF_TEST( TextureWriteAndRead )
         return TestResult::Passed;
     };
 
+    #define TEST_IMAGE_DATA(NAME, DESC, REGION, DATA, SIZE)                                                 \
+        {                                                                                                   \
+            TestResult result = CreateTextureAndTestImageData((NAME), (DESC), (REGION), (DATA), (SIZE));    \
+            if (result != TestResult::Passed)                                                               \
+                return result;                                                                              \
+        }
+
     ////////////// Texture2D //////////////
 
     TextureDescriptor tex2DDesc_1x1;
@@ -133,10 +140,10 @@ DEF_TEST( TextureWriteAndRead )
         tex2DDesc_1x1.mipLevels     = 1;
     }
 
-    CreateTextureAndTestImageData(
+    TEST_IMAGE_DATA(
         "tex2D{2D,1wh}:{single-texel-access}",
         tex2DDesc_1x1,
-        TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } },
+        TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } ),
         &(colorsRgbaUb4[0]),
         sizeof(ColorRGBAub)
     );
@@ -151,18 +158,18 @@ DEF_TEST( TextureWriteAndRead )
         tex2DDesc_4x4.mipLevels     = 0;
     }
 
-    CreateTextureAndTestImageData(
+    TEST_IMAGE_DATA(
         "tex2D{2D,4wh}:{single-texel-access}",
         tex2DDesc_4x4,
-        TextureRegion{ TextureSubresource{ 0, 1 }, Offset3D{ 1, 1, 0 }, Extent3D{ 1, 1, 1 } },
+        TextureRegion( TextureSubresource{ 0, 1 }, Offset3D{ 1, 1, 0 }, Extent3D{ 1, 1, 1 } ),
         &(colorsRgbaUb4[0]),
         sizeof(ColorRGBAub)
     );
 
-    CreateTextureAndTestImageData(
+    TEST_IMAGE_DATA(
         "tex2D{2D,4wh}:{MIP0-full-access}",
         tex2DDesc_4x4,
-        TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 4, 1 } },
+        TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 4, 1 } ),
         colorsRgbaUb16.colors.data(),
         colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
     );
@@ -182,26 +189,26 @@ DEF_TEST( TextureWriteAndRead )
             tex2DArrayDesc_8x4x2.mipLevels      = 2;
         }
 
-        CreateTextureAndTestImageData(
+        TEST_IMAGE_DATA(
             "tex2DArray{2D[2],8w,4h}:{MIP1-full-access}",
             tex2DArrayDesc_8x4x2,
-            TextureRegion{ TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 2, 1 } },
+            TextureRegion( TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 2, 1 } ),
             colorsRgbaUb16.colors.data(),
             colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
         );
 
-        CreateTextureAndTestImageData(
+        TEST_IMAGE_DATA(
             "tex2DArray{2D[2],8w,4h}:{1-layer-access}",
             tex2DArrayDesc_8x4x2,
-            TextureRegion{ TextureSubresource{ 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 2, 1 } },
+            TextureRegion( TextureSubresource{ 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 2, 1 } ),
             colorsRgbaUb4,
             sizeof(colorsRgbaUb4)
         );
 
-        CreateTextureAndTestImageData(
+        TEST_IMAGE_DATA(
             "tex2DArray{2D[2],8w,4h}:{2-layer-access}",
             tex2DArrayDesc_8x4x2,
-            TextureRegion{ TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 1, 1 } },
+            TextureRegion( TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 1, 1 } ),
             colorsRgbaUb4,
             sizeof(colorsRgbaUb4)
         );
@@ -222,26 +229,26 @@ DEF_TEST( TextureWriteAndRead )
             tex3DDesc_4x4x4.mipLevels       = 2;
         }
 
-        CreateTextureAndTestImageData(
+        TEST_IMAGE_DATA(
             "tex3D{3D,8whd}:{MIP1-full-access}",
             tex3DDesc_4x4x4,
-            TextureRegion{ TextureSubresource{ 0, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 2, 2, 2 } },
+            TextureRegion( TextureSubresource{ 0, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 2, 2, 2 } ),
             colorsRgbaUb16.colors.data(),
             8 * sizeof(ColorRGBAub)
         );
 
-        CreateTextureAndTestImageData(
+        TEST_IMAGE_DATA(
             "tex3D{3D,8whd}:{1-slice-access}",
             tex3DDesc_4x4x4,
-            TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 2 }, Extent3D{ 4, 4, 1 } },
+            TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 2 }, Extent3D{ 4, 4, 1 } ),
             colorsRgbaUb16.colors.data(),
             colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
         );
 
-        CreateTextureAndTestImageData(
+        TEST_IMAGE_DATA(
             "tex3D{3D,8whd}:{2-slice-access}",
             tex3DDesc_4x4x4,
-            TextureRegion{ TextureSubresource{ 0, 0 }, Offset3D{ 1, 1, 1 }, Extent3D{ 2, 2, 2 } },
+            TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 1, 1, 1 }, Extent3D{ 2, 2, 2 } ),
             colorsRgbaUb16.colors.data(),
             8 * sizeof(ColorRGBAub)
         );

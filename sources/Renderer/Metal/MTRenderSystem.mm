@@ -72,12 +72,13 @@ void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
+    RenderSystem::AssertCreateBuffer(bufferDesc, device_.maxBufferLength);
     return buffers_.emplace<MTBuffer>(device_, bufferDesc, initialData);
 }
 
 BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    AssertCreateBufferArray(numBuffers, bufferArray);
+    RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
     return bufferArrays_.emplace<MTBufferArray>(numBuffers, bufferArray);
 }
 
@@ -237,7 +238,7 @@ void MTRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
-    AssertCreateShader(shaderDesc);
+    RenderSystem::AssertCreateShader(shaderDesc);
     return shaders_.emplace<MTShader>(device_, shaderDesc);
 }
 

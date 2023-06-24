@@ -615,27 +615,30 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Sets the rendering capabilities.
         void SetRenderingCaps(const RenderingCapabilities& caps);
 
+    protected:
+
         //! Validates the specified buffer descriptor to be used for buffer creation.
-        void AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize);
+        static void AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize);
 
         //! Validates the specified arguments to be used for buffer array creation.
-        void AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        static void AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         //! Validates the specified shader descriptor.
-        void AssertCreateShader(const ShaderDescriptor& shaderDesc);
+        static void AssertCreateShader(const ShaderDescriptor& shaderDesc);
 
         //! Validates the specified image data size against the required size (in bytes).
-        void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase = nullptr);
+        static void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase = nullptr);
 
         /**
         \brief Copies the specified source data (i.e. \c data) to the destination image.
         \remarks This function also performs image conversion if there is a mismatch between source and destination format.
         \see ConvertImageBuffer
         */
-        void CopyTextureImageData(
+        static void CopyTextureImageData(
             const DstImageDescriptor&   dstImageDesc,
-            const Extent3D&             extent,
-            const Format                format,
+            std::uint32_t               numTexels,
+            std::uint32_t               numTexelsInRow,
+            Format                      format,
             const void*                 data,
             std::size_t                 rowStride   = 0
         );
