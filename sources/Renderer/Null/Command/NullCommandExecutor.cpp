@@ -19,6 +19,8 @@
 #include "../RenderState/NullRenderPass.h"
 #include "../RenderState/NullQueryHeap.h"
 
+#include "../../CheckedCast.h"
+
 
 namespace LLGL
 {
@@ -37,7 +39,25 @@ static std::size_t ExecuteNullCommand(const NullOpcode opcode, const void* pc)
         case NullOpcodeCopySubresource:
         {
             auto cmd = reinterpret_cast<const NullCmdCopySubresource*>(pc);
-            //TODO
+            auto* dst = cmd->dstResource;
+            auto* src = cmd->srcResource;
+            if (dst->GetResourceType() == ResourceType::Buffer)
+            {
+                auto* dstBuffer = LLGL_CAST(NullBuffer*, dst);
+                if (src->GetResourceType() == ResourceType::Buffer)
+                {
+                    auto* srcBuffer = LLGL_CAST(const NullBuffer*, src);
+                    dstBuffer->CopyFromBuffer(cmd->dstX, *srcBuffer, cmd->srcX, cmd->width);
+                }
+                else if (src->GetResourceType() == ResourceType::Texture)
+                {
+                    //TODO
+                }
+            }
+            else if (dst->GetResourceType() == ResourceType::Texture)
+            {
+                //TODO
+            }
             return sizeof(*cmd);
         }
         case NullOpcodeGenerateMips:

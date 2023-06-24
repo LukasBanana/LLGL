@@ -48,10 +48,15 @@ BufferDescriptor NullBuffer::GetDesc() const
     return desc;
 }
 
-bool NullBuffer::Read(std::uint64_t offset, void* data, std::uint64_t size)
+static bool IsRangeInsideBuffer(const NullBuffer& buffer, std::uint64_t offset, std::uint64_t size)
 {
     /* Check for out-of-bounds and ensure there's no integer overflow with offset+size */
-    if (offset < desc.size && offset + size <= desc.size && offset + size > offset)
+    return (offset < buffer.desc.size && offset + size <= buffer.desc.size && offset + size > offset);
+}
+
+bool NullBuffer::Read(std::uint64_t offset, void* data, std::uint64_t size)
+{
+    if (IsRangeInsideBuffer(*this, offset, size))
     {
         ::memcpy(data, GetBytesAt(offset), static_cast<std::size_t>(size));
         return true;
@@ -61,10 +66,19 @@ bool NullBuffer::Read(std::uint64_t offset, void* data, std::uint64_t size)
 
 bool NullBuffer::Write(std::uint64_t offset, const void* data, std::uint64_t size)
 {
-    /* Check for out-of-bounds and ensure there's no integer overflow with offset+size */
-    if (offset < desc.size && offset + size <= desc.size && offset + size > offset)
+    if (IsRangeInsideBuffer(*this, offset, size))
     {
         ::memcpy(GetBytesAt(offset), data, static_cast<std::size_t>(size));
+        return true;
+    }
+    return false;
+}
+
+bool NullBuffer::CopyFromBuffer(std::uint64_t dstOffset, const NullBuffer& srcBuffer, std::uint64_t srcOffset, std::uint64_t size)
+{
+    if (IsRangeInsideBuffer(*this, dstOffset, size) && IsRangeInsideBuffer(srcBuffer, srcOffset, size))
+    {
+        ::memcpy(GetBytesAt(dstOffset), srcBuffer.GetBytesAt(srcOffset), static_cast<std::size_t>(size));
         return true;
     }
     return false;
