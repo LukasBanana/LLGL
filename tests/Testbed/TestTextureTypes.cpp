@@ -100,7 +100,7 @@ DEF_TEST( TextureTypes )
 
     ////////////// Texture2DMSArray //////////////
 
-    if (caps.features.hasMultiSampleTextures && caps.features.hasArrayTextures)
+    if (caps.features.hasMultiSampleArrayTextures)
     {
         CREATE_DUMMY     ("tex{2DMS[1],1wh,1x}",         TextureType::Texture2DMSArray, Extent3D(   1,    1, 1), /*mips:*/ 1, /*layers:*/    1, /*samples:*/ 1);
         CREATE_DUMMY     ("tex{2DMS[1024],32wh,2x}",     TextureType::Texture2DMSArray, Extent3D(  32,   32, 1), /*mips:*/ 1, /*layers:*/ 1024, /*samples:*/ 2);

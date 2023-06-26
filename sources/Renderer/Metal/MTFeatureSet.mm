@@ -107,6 +107,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasArrayTextures               = true;
     features.hasCubeArrayTextures           = (version >= 101);
     features.hasMultiSampleTextures         = true;
+    features.hasMultiSampleArrayTextures    = false;
     features.hasTextureViews                = true;
     features.hasTextureViewSwizzle          = true;
     features.hasBufferViews                 = true;

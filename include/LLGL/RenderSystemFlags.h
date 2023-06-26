@@ -415,6 +415,7 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether cube array textures are supported.
+    \remarks This implies RenderingFeatures::hasCubeTextures to be true as well.
     \see TextureType::TextureCubeArray
     */
     bool hasCubeArrayTextures           = false;
@@ -422,9 +423,15 @@ struct RenderingFeatures
     /**
     \brief Specifies whether multi-sample textures are supported.
     \see TextureType::Texture2DMS
-    \see TextureType::Texture2DMSArray
     */
     bool hasMultiSampleTextures         = false;
+
+    /**
+    \brief Specifies whether multi-sample array textures are supported.
+    \remarks This implies RenderingFeatures::hasMultiSampleTextures to be true as well.
+    \see TextureType::Texture2DMSArray
+    */
+    bool hasMultiSampleArrayTextures    = false;
 
     /**
     \brief Specifies whether texture views are supported.

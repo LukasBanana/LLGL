@@ -75,31 +75,32 @@ LLGL_EXPORT bool ValidateRenderingCaps(
             LLGL_CONTINUE_VALIDATION_IF(continueValidation);                \
         }
 
-    LLGL_VALIDATE_FEATURE( hasRenderTargets,             "render targets"             );
-    LLGL_VALIDATE_FEATURE( has3DTextures,                "3D textures"                );
-    LLGL_VALIDATE_FEATURE( hasCubeTextures,              "cube textures"              );
-    LLGL_VALIDATE_FEATURE( hasArrayTextures,             "array textures"             );
-    LLGL_VALIDATE_FEATURE( hasCubeArrayTextures,         "cube array textures"        );
-    LLGL_VALIDATE_FEATURE( hasMultiSampleTextures,       "multi-sample textures"      );
-    LLGL_VALIDATE_FEATURE( hasTextureViews,              "texture views"              );
-    LLGL_VALIDATE_FEATURE( hasTextureViewSwizzle,        "texture view swizzle"       );
-    LLGL_VALIDATE_FEATURE( hasSamplers,                  "sampler states"             );
-    LLGL_VALIDATE_FEATURE( hasConstantBuffers,           "constant buffers"           );
-    LLGL_VALIDATE_FEATURE( hasStorageBuffers,            "storage buffers"            );
-    LLGL_VALIDATE_FEATURE( hasUniforms,                  "uniforms"                   );
-    LLGL_VALIDATE_FEATURE( hasGeometryShaders,           "geometry shaders"           );
-    LLGL_VALIDATE_FEATURE( hasTessellationShaders,       "tessellation shaders"       );
-    LLGL_VALIDATE_FEATURE( hasTessellatorStage,          "tessellator stage"          );
-    LLGL_VALIDATE_FEATURE( hasComputeShaders,            "compute shaders"            );
-    LLGL_VALIDATE_FEATURE( hasInstancing,                "hardware instancing"        );
-    LLGL_VALIDATE_FEATURE( hasOffsetInstancing,          "offset instancing"          );
-    LLGL_VALIDATE_FEATURE( hasIndirectDrawing,           "indirect drawing"           );
-    LLGL_VALIDATE_FEATURE( hasViewportArrays,            "viewport arrays"            );
-    LLGL_VALIDATE_FEATURE( hasConservativeRasterization, "conservative rasterization" );
-    LLGL_VALIDATE_FEATURE( hasStreamOutputs,             "stream outputs"             );
-    LLGL_VALIDATE_FEATURE( hasLogicOp,                   "logic fragment operations"  );
-    LLGL_VALIDATE_FEATURE( hasPipelineStatistics,        "query pipeline statistics"  );
-    LLGL_VALIDATE_FEATURE( hasRenderCondition,           "conditional rendering"      );
+    LLGL_VALIDATE_FEATURE( hasRenderTargets,             "render targets"              );
+    LLGL_VALIDATE_FEATURE( has3DTextures,                "3D textures"                 );
+    LLGL_VALIDATE_FEATURE( hasCubeTextures,              "cube textures"               );
+    LLGL_VALIDATE_FEATURE( hasArrayTextures,             "array textures"              );
+    LLGL_VALIDATE_FEATURE( hasCubeArrayTextures,         "cube array textures"         );
+    LLGL_VALIDATE_FEATURE( hasMultiSampleTextures,       "multi-sample textures"       );
+    LLGL_VALIDATE_FEATURE( hasMultiSampleArrayTextures,  "multi-sample array textures" );
+    LLGL_VALIDATE_FEATURE( hasTextureViews,              "texture views"               );
+    LLGL_VALIDATE_FEATURE( hasTextureViewSwizzle,        "texture view swizzle"        );
+    LLGL_VALIDATE_FEATURE( hasSamplers,                  "sampler states"              );
+    LLGL_VALIDATE_FEATURE( hasConstantBuffers,           "constant buffers"            );
+    LLGL_VALIDATE_FEATURE( hasStorageBuffers,            "storage buffers"             );
+    LLGL_VALIDATE_FEATURE( hasUniforms,                  "uniforms"                    );
+    LLGL_VALIDATE_FEATURE( hasGeometryShaders,           "geometry shaders"            );
+    LLGL_VALIDATE_FEATURE( hasTessellationShaders,       "tessellation shaders"        );
+    LLGL_VALIDATE_FEATURE( hasTessellatorStage,          "tessellator stage"           );
+    LLGL_VALIDATE_FEATURE( hasComputeShaders,            "compute shaders"             );
+    LLGL_VALIDATE_FEATURE( hasInstancing,                "hardware instancing"         );
+    LLGL_VALIDATE_FEATURE( hasOffsetInstancing,          "offset instancing"           );
+    LLGL_VALIDATE_FEATURE( hasIndirectDrawing,           "indirect drawing"            );
+    LLGL_VALIDATE_FEATURE( hasViewportArrays,            "viewport arrays"             );
+    LLGL_VALIDATE_FEATURE( hasConservativeRasterization, "conservative rasterization"  );
+    LLGL_VALIDATE_FEATURE( hasStreamOutputs,             "stream outputs"              );
+    LLGL_VALIDATE_FEATURE( hasLogicOp,                   "logic fragment operations"   );
+    LLGL_VALIDATE_FEATURE( hasPipelineStatistics,        "query pipeline statistics"   );
+    LLGL_VALIDATE_FEATURE( hasRenderCondition,           "conditional rendering"       );
 
     #undef LLGL_VALIDATE_FEATURE
 

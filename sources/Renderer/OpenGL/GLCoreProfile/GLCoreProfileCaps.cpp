@@ -185,8 +185,9 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasArrayTextures               = HasExtension(GLExt::EXT_texture_array);
     features.hasCubeArrayTextures           = HasExtension(GLExt::ARB_texture_cube_map_array);
     features.hasMultiSampleTextures         = HasExtension(GLExt::ARB_texture_multisample);
+    features.hasMultiSampleArrayTextures    = features.hasMultiSampleTextures; // Same extension
     features.hasTextureViews                = HasExtension(GLExt::ARB_texture_view);
-    features.hasTextureViewSwizzle          = HasExtension(GLExt::ARB_texture_view); // same as for 'hasTextureViews'
+    features.hasTextureViewSwizzle          = features.hasTextureViews; // Same extension
     features.hasBufferViews                 = (HasExtension(GLExt::ARB_multi_bind) || HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasSamplers                    = HasNativeSamplers();
     features.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
@@ -194,7 +195,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
     features.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
     features.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
-    features.hasTessellatorStage            = HasExtension(GLExt::ARB_tessellation_shader); // same as for 'hasTessellationShaders'
+    features.hasTessellatorStage            = features.hasTessellationShaders; // Same extension
     features.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
     features.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
     features.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);

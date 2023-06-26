@@ -254,16 +254,16 @@ ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID)
 
 static std::uint32_t GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
 {
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384; // D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;  // D3D10_REQ_TEXTURE2D_U_OR_V_DIMENSION
     if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
     else                                        return 2048;
 }
 
 static std::uint32_t GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
 {
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384; // D3D11_REQ_TEXTURECUBE_DIMENSION
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;  // D3D10_REQ_TEXTURECUBE_DIMENSION
     if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
     else                                        return 512;
 }
@@ -346,6 +346,7 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasArrayTextures                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasCubeArrayTextures              = (featureLevel >= D3D_FEATURE_LEVEL_10_1);
     caps.features.hasMultiSampleTextures            = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.features.hasMultiSampleArrayTextures       = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasTextureViews                   = true;
     caps.features.hasTextureViewSwizzle             = false; // not supported by D3D11
     caps.features.hasBufferViews                    = true;

@@ -179,6 +179,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasArrayTextures                  = true;
     caps.features.hasCubeArrayTextures              = (features_.imageCubeArray != VK_FALSE);
     caps.features.hasMultiSampleTextures            = true;
+    caps.features.hasMultiSampleArrayTextures       = true;
     caps.features.hasTextureViews                   = true;
     caps.features.hasTextureViewSwizzle             = true;
     caps.features.hasBufferViews                    = true;
