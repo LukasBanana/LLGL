@@ -6,8 +6,7 @@
  */
 
 #include "MTTypes.h"
-#include <stdexcept>
-#include <string>
+#include "../../Core/Exception.h"
 
 
 namespace LLGL
@@ -18,15 +17,15 @@ namespace MTTypes
 
 
 [[noreturn]]
-void MapFailed(const std::string& typeName, const std::string& mtlTypeName)
+void MapFailed(const char* typeName, const char* mtlTypeName)
 {
-    throw std::invalid_argument("failed to map <LLGL::" + typeName + "> to <" + mtlTypeName + "> Metal parameter");
+    LLGL_TRAP("failed to map <LLGL::%s> to <%s> Metal parameter", typeName, mtlTypeName);
 }
 
 [[noreturn]]
-void UnmapFailed(const std::string& typeName, const std::string& mtlTypeName)
+void UnmapFailed(const char* typeName, const char* mtlTypeName)
 {
-    throw std::invalid_argument("failed to unmap <LLGL::" + typeName + "> from <" + mtlTypeName + "> Metal parameter");
+    LLGL_TRAP("failed to unmap <LLGL::%s> from <%s> Metal parameter", typeName, mtlTypeName);
 }
 
 MTLDataType ToMTLDataType(const DataType dataType)
@@ -286,7 +285,10 @@ MTLTextureType ToMTLTextureType(const TextureType textureType)
         case TextureType::Texture2DArray:   return MTLTextureType2DArray;
         case TextureType::TextureCubeArray: return MTLTextureTypeCubeArray;
         case TextureType::Texture2DMS:      return MTLTextureType2DMultisample;
-        case TextureType::Texture2DMSArray: break;//return MTLTextureType2DMultisampleArray; // Beta
+        case TextureType::Texture2DMSArray:
+            if (@available(macOS 10.14, *))
+                return MTLTextureType2DMultisampleArray;
+            break;
     }
     MapFailed("TextureType", "MTLTextureType");
 }
