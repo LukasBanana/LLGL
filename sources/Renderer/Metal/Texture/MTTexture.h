@@ -51,6 +51,9 @@ class MTTexture final : public Texture
         // Creats a new MTLTexture object as subresource view from this texture.
         id<MTLTexture> CreateSubresourceView(const TextureSubresource& subresource);
 
+        // Returns the number of bytes per row for this texture with the specified row extent.
+        NSUInteger GetBytesPerRow(std::uint32_t rowExtent) const;
+
         // Returns the native MTLTexture object.
         inline id<MTLTexture> GetNative() const
         {

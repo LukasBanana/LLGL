@@ -41,7 +41,7 @@ class MTCommandContext
         void Flush();
 
         // Binds the respective command encoder with the specified descriptor.
-        id<MTLRenderCommandEncoder> BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool primaryRenderPass = false);
+        id<MTLRenderCommandEncoder> BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool isPrimaryRenderPass = false);
         id<MTLComputeCommandEncoder> BindComputeEncoder();
         id<MTLBlitCommandEncoder> BindBlitEncoder();
 
@@ -72,6 +72,12 @@ class MTCommandContext
         void RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder);
 
     public:
+
+        // Returns the native command buffer currently used by this context.
+        inline id<MTLCommandBuffer> GetCommandBuffer() const
+        {
+            return cmdBuffer_;
+        }
 
         // Returns the current render command encoder and flushes the queued render states and render pass.
         id<MTLRenderCommandEncoder> FlushAndGetRenderEncoder();
@@ -107,28 +113,29 @@ class MTCommandContext
 
     private:
 
-        static const NSUInteger g_maxNumVertexBuffers = 32;
+        static constexpr NSUInteger maxNumVertexBuffers         = 32;
+        static constexpr NSUInteger maxNumViewportsAndScissors  = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
 
         struct MTRenderEncoderState
         {
-            MTLViewport     viewports[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]      = {};
-            NSUInteger      viewportCount                                       = 0;
-            MTLScissorRect  scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS]   = {};
-            NSUInteger      scissorRectCount                                    = 0;
-            id<MTLBuffer>   vertexBuffers[g_maxNumVertexBuffers];
-            NSUInteger      vertexBufferOffsets[g_maxNumVertexBuffers];
-            NSRange         vertexBufferRange                                   = { 0, 0 };
+            MTLViewport     viewports[maxNumViewportsAndScissors]       = {};
+            NSUInteger      viewportCount                               = 0;
+            MTLScissorRect  scissorRects[maxNumViewportsAndScissors]    = {};
+            NSUInteger      scissorRectCount                            = 0;
+            id<MTLBuffer>   vertexBuffers[maxNumVertexBuffers];
+            NSUInteger      vertexBufferOffsets[maxNumVertexBuffers];
+            NSRange         vertexBufferRange                           = { 0, 0 };
 
-            MTGraphicsPSO*  graphicsPSO                                         = nullptr;
-            MTResourceHeap* graphicsResourceHeap                                = nullptr;
-            std::uint32_t   graphicsResourceSet                                 = 0;
+            MTGraphicsPSO*  graphicsPSO                                 = nullptr;
+            MTResourceHeap* graphicsResourceHeap                        = nullptr;
+            std::uint32_t   graphicsResourceSet                         = 0;
 
-            float           blendColor[4]                                       = { 0.0f, 0.0f, 0.0f, 0.0f };
-            bool            blendColorDynamic                                   = false;
+            float           blendColor[4]                               = { 0.0f, 0.0f, 0.0f, 0.0f };
+            bool            blendColorDynamic                           = false;
 
-            std::uint32_t   stencilFrontRef                                     = 0;
-            std::uint32_t   stencilBackRef                                      = 0;
-            bool            stencilRefDynamic                                   = false;
+            std::uint32_t   stencilFrontRef                             = 0;
+            std::uint32_t   stencilBackRef                              = 0;
+            bool            stencilRefDynamic                           = false;
         };
 
         struct MTComputeEncoderState

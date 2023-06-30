@@ -14,8 +14,8 @@
 #include <LLGL/RenderSystem.h>
 #include "../ContainerTypes.h"
 
-#include "MTCommandQueue.h"
-#include "MTCommandBuffer.h"
+#include "Command/MTCommandQueue.h"
+#include "Command/MTCommandBuffer.h"
 #include "MTSwapChain.h"
 
 #include "Buffer/MTBuffer.h"

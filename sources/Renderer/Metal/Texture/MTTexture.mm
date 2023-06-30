@@ -306,6 +306,12 @@ id<MTLTexture> MTTexture::CreateSubresourceView(const TextureSubresource& subres
     ];
 }
 
+NSUInteger MTTexture::GetBytesPerRow(std::uint32_t rowExtent) const
+{
+    const Format format = MTTypes::ToFormat([native_ pixelFormat]);
+    return LLGL::GetMemoryFootprint(format, rowExtent);
+}
+
 
 } // /namespace LLGL
 

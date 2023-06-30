@@ -400,6 +400,7 @@ file(GLOB FilesRendererVKTexture            ${PROJECT_SOURCE_DIR}/sources/Render
 # Metal renderer files
 file(GLOB FilesRendererMTL                  ${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/*.*)
 file(GLOB FilesRendererMTLBuffer            ${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Buffer/*.*)
+file(GLOB FilesRendererMTLCommand           ${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Command/*.*)
 file(GLOB FilesRendererMTLRenderState       ${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/RenderState/*.*)
 file(GLOB FilesRendererMTLShader            ${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Shader/*.*)
 file(GLOB FilesRendererMTLTexture           ${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Texture/*.*)
@@ -558,6 +559,7 @@ source_group("Sources\\Vulkan\\Texture" FILES ${FilesRendererVKTexture})
 
 source_group("Sources\\Metal" FILES ${FilesRendererMTL})
 source_group("Sources\\Metal\\Buffer" FILES ${FilesRendererMTLBuffer})
+source_group("Sources\\Metal\\Command" FILES ${FilesRendererMTLCommand})
 source_group("Sources\\Metal\\RenderState" FILES ${FilesRendererMTLRenderState})
 source_group("Sources\\Metal\\Shader" FILES ${FilesRendererMTLShader})
 source_group("Sources\\Metal\\Shader\\Bulitin" FILES ${FilesRendererMTLShaderBuiltin})
@@ -692,6 +694,7 @@ set(
     FilesMTL
     ${FilesRendererMTL}
     ${FilesRendererMTLBuffer}
+    ${FilesRendererMTLCommand}
     ${FilesRendererMTLRenderState}
     ${FilesRendererMTLShader}
     ${FilesRendererMTLShaderBuiltin}

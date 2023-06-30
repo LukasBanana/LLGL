@@ -1,47 +1,34 @@
 /*
- * MTCommandBuffer.h
+ * MTMultiSubmitCommandBuffer.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_MT_COMMAND_BUFFER_H
-#define LLGL_MT_COMMAND_BUFFER_H
+#ifndef LLGL_MT_MULTI_SUBMIT_COMMAND_BUFFER_H
+#define LLGL_MT_MULTI_SUBMIT_COMMAND_BUFFER_H
 
 
-#import <MetalKit/MetalKit.h>
-
-#include <LLGL/CommandBuffer.h>
-#include <LLGL/StaticLimits.h>
-#include "Buffer/MTStagingBufferPool.h"
-#include "Buffer/MTTessFactorBuffer.h"
-#include "MTCommandContext.h"
-#include <vector>
+#include "MTCommandBuffer.h"
+#include "MTCommandOpcode.h"
+#include "../../VirtualCommandBuffer.h"
 
 
 namespace LLGL
 {
 
 
-class MTBuffer;
-class MTTexture;
-class MTSampler;
-class MTSwapChain;
-class MTRenderTarget;
-class MTPipelineState;
-class MTDescriptorCache;
-class MTConstantsCache;
-class MTCommandQueue;
+using MTVirtualCommandBuffer = VirtualCommandBuffer<MTOpcode>;
 
-class MTCommandBuffer final : public CommandBuffer
+class MTMultiSubmitCommandBuffer final : public MTCommandBuffer
 {
 
     public:
 
         /* ----- Common ----- */
 
-        MTCommandBuffer(id<MTLDevice> device, MTCommandQueue& cmdQueue, const CommandBufferDescriptor& desc);
-        ~MTCommandBuffer();
+        MTMultiSubmitCommandBuffer(id<MTLDevice> device, const CommandBufferDescriptor& desc);
+        ~MTMultiSubmitCommandBuffer();
 
         /* ----- Encoding ----- */
 
@@ -122,13 +109,9 @@ class MTCommandBuffer final : public CommandBuffer
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
-        void SetIndexBuffer(Buffer& buffer) override;
-        void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override;
-
         /* ----- Resources ----- */
 
         void SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet = 0) override;
-        void SetResource(std::uint32_t descriptor, Resource& resource) override;
 
         void ResetResourceSlots(
             const ResourceType  resourceType,
@@ -158,7 +141,6 @@ class MTCommandBuffer final : public CommandBuffer
         void SetPipelineState(PipelineState& pipelineState) override;
         void SetBlendFactor(const float color[4]) override;
         void SetStencilReference(std::uint32_t reference, const StencilFace stencilFace = StencilFace::FrontAndBack) override;
-        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override;
 
         /* ----- Queries ----- */
 
@@ -203,78 +185,54 @@ class MTCommandBuffer final : public CommandBuffer
         void PushDebugGroup(const char* name) override;
         void PopDebugGroup() override;
 
-        /* ----- Extensions ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
-
     public:
 
-        // Returns the native MTLCommandBuffer object.
-        inline id<MTLCommandBuffer> GetNative() const
-        {
-            return cmdBuffer_;
-        }
+        // Returns true.
+        bool IsMultiSubmitCmdBuffer() const override;
 
-        // Returns true if this is an immediate command buffer.
-        inline bool IsImmediateCmdBuffer() const
+        // Returns the internal virtual command buffer.
+        inline const MTVirtualCommandBuffer& GetVirtualCommandBuffer() const
         {
-            return immediateSubmit_;
+            return buffer_;
         }
 
     private:
 
-        void SetIndexType(bool indexType16Bits);
-        void QueueDrawable(id<MTLDrawable> drawable);
+        void BindRenderEncoderForTessellation(NSUInteger numPatches, NSUInteger numInstances = 1);
+        void BindRenderEncoder();
+        void BindComputeEncoder();
+        void BindBlitEncoder();
+
+        void QueueDrawable(MTKView* view);
         void PresentDrawables();
 
-        void FillBufferByte1(MTBuffer& bufferMT, const NSRange& range, std::uint8_t value);
-        void FillBufferByte4(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
-        void FillBufferByte4Emulated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
-        void FillBufferByte4Accelerated(MTBuffer& bufferMT, const NSRange& range, std::uint32_t value);
+        void DispatchThreads1D(id<MTLComputePipelineState> computePSO, NSUInteger numThreads);
 
-        void DispatchTessellatorStage(NSUInteger numPatchesAndInstances);
-        id<MTLRenderCommandEncoder> GetRenderEncoderForPatches(NSUInteger numPatches);
+        void GenerateMipmapsForTexture(id<MTLTexture> texture);
 
-        // Dispatches the specified amount of local threads in as large threadgroups as possible.
-        void DispatchThreads1D(
-            id<MTLComputeCommandEncoder>    computeEncoder,
-            id<MTLComputePipelineState>     computePSO,
-            NSUInteger                      numThreads
-        );
+        void SetNativeVertexBuffers(NSUInteger count, const id<MTLBuffer>* buffers, const NSUInteger* offsets);
 
-        void ResetRenderStates();
+        void FlushContext();
+
+        void ReleaseIntermediateResources();
+
+        // Allocates only an opcode for empty commands.
+        void AllocOpcode(const MTOpcode opcode);
+
+        // Allocates a new command and stores the specified opcode.
+        template <typename TCommand>
+        TCommand* AllocCommand(const MTOpcode opcode, std::size_t payloadSize = 0);
 
     private:
 
-        id<MTLDevice>                   device_                 = nil;
-        id<MTLCommandBuffer>            cmdBuffer_              = nil;
-        dispatch_semaphore_t            cmdBufferSemaphore_     = nil;
+        MTVirtualCommandBuffer          buffer_;
+        MTOpcode                        lastOpcode_             = MTOpcodeNop;
 
-        MTCommandQueue&                 cmdQueue_;
-        MTCommandContext                context_;
-        std::vector<id<MTLDrawable>>    drawables_;
+        MTEncoderState                  encoderState_           = MTEncoderState::None;
+        SmallVector<MTKView*, 2>        views_;
+        SmallVector<id<MTLTexture>, 2>  intermediateTextures_;
 
-        MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
-        id<MTLBuffer>                   indexBuffer_            = nil;
-        NSUInteger                      indexBufferOffset_      = 0;
-        MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
-        NSUInteger                      indexTypeSize_          = 4;
-        NSUInteger                      numPatchControlPoints_  = 0;
-        const MTLSize*                  numThreadsPerGroup_     = nullptr;
-        MTSwapChain*                    boundSwapChain_         = nullptr;
-        MTPipelineState*                boundPipelineState_     = nullptr;
-        MTDescriptorCache*              descriptorCache_        = nullptr;
-        MTConstantsCache*               constantsCache_         = nullptr;
-
-        MTStagingBufferPool             stagingBufferPool_;
-
-        bool                            immediateSubmit_        = false;
-
-        // Tessellator stage objects
-        MTTessFactorBuffer              tessFactorBuffer_;
-        NSUInteger                      tessFactorBufferSlot_   = 30;
-        NSUInteger                      tessFactorSize_         = 0;
-        id<MTLComputePipelineState>     tessPipelineState_      = nil;
+        bool                            isInsideRenderPass_     = false;
 
 };
 

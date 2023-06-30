@@ -10,6 +10,8 @@
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Vendor.h"
+#include "Command/MTDirectCommandBuffer.h"
+#include "Command/MTMultiSubmitCommandBuffer.h"
 #include "MTFeatureSet.h"
 #include "MTTypes.h"
 #include "RenderState/MTGraphicsPSO.h"
@@ -60,7 +62,10 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return commandBuffers_.emplace<MTCommandBuffer>(device_, *commandQueue_, commandBufferDesc);
+    if ((commandBufferDesc.flags & (CommandBufferFlags::MultiSubmit | CommandBufferFlags::Secondary)) != 0)
+        return commandBuffers_.emplace<MTMultiSubmitCommandBuffer>(device_, commandBufferDesc);
+    else
+        return commandBuffers_.emplace<MTDirectCommandBuffer>(device_, *commandQueue_, commandBufferDesc);
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)

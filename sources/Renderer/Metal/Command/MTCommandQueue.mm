@@ -6,8 +6,10 @@
  */
 
 #include "MTCommandQueue.h"
-#include "MTCommandBuffer.h"
-#include "../CheckedCast.h"
+#include "MTDirectCommandBuffer.h"
+#include "MTMultiSubmitCommandBuffer.h"
+#include "MTCommandExecutor.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL
@@ -31,8 +33,20 @@ MTCommandQueue::~MTCommandQueue()
 void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, commandBuffer);
-    if (!commandBufferMT.IsImmediateCmdBuffer())
-        SubmitCommandBuffer(commandBufferMT.GetNative());
+    if (commandBufferMT.IsMultiSubmitCmdBuffer())
+    {
+        auto& multiSubmitCommandBufferMT = LLGL_CAST(MTMultiSubmitCommandBuffer&, commandBufferMT);
+        MTCommandContext context;
+        context.Reset([native_ commandBuffer]);
+        ExecuteMTMultiSubmitCommandBuffer(multiSubmitCommandBufferMT, context);
+        SubmitCommandBuffer(context.GetCommandBuffer());
+    }
+    else
+    {
+        auto& directCommandBufferMT = LLGL_CAST(MTDirectCommandBuffer&, commandBufferMT);
+        if (!directCommandBufferMT.IsImmediateCmdBuffer())
+            SubmitCommandBuffer(directCommandBufferMT.GetNative());
+    }
 }
 
 /* ----- Queries ----- */

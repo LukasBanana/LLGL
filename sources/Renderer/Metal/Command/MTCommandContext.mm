@@ -6,15 +6,17 @@
  */
 
 #include "MTCommandContext.h"
-#include "RenderState/MTDescriptorCache.h"
-#include "RenderState/MTConstantsCache.h"
-#include "RenderState/MTResourceHeap.h"
-#include "RenderState/MTGraphicsPSO.h"
-#include "RenderState/MTComputePSO.h"
+#include "../RenderState/MTDescriptorCache.h"
+#include "../RenderState/MTConstantsCache.h"
+#include "../RenderState/MTResourceHeap.h"
+#include "../RenderState/MTGraphicsPSO.h"
+#include "../RenderState/MTComputePSO.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
+#include <string.h>
 
 
 namespace LLGL
@@ -48,13 +50,15 @@ void MTCommandContext::Flush()
     }
 }
 
-id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool primaryRenderPass)
+id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool isPrimaryRenderPass)
 {
+    LLGL_ASSERT_PTR(renderPassDesc);
+
     Flush();
     renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
 
     /* Store descriptor for primary render pass */
-    if (primaryRenderPass)
+    if (isPrimaryRenderPass)
         renderPassDesc_ = renderPassDesc;
 
     /* A new render command encoder forces all pipeline states to be reset */
@@ -127,7 +131,7 @@ MTLRenderPassDescriptor* MTCommandContext::CopyRenderPassDesc()
     return (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
 }
 
-static void Convert(MTLViewport& dst, const Viewport& src)
+static void ConvertMTLViewport(MTLViewport& dst, const Viewport& src)
 {
     const double scaling = 1.0;//2.0 for retina display
     dst.originX = static_cast<double>(src.x)*scaling;
@@ -142,7 +146,7 @@ void MTCommandContext::SetViewports(const Viewport* viewports, NSUInteger viewpo
 {
     renderEncoderState_.viewportCount = std::min(viewportCount, NSUInteger(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS));
     for_range(i, renderEncoderState_.viewportCount)
-        Convert(renderEncoderState_.viewports[i], viewports[i]);
+        ConvertMTLViewport(renderEncoderState_.viewports[i], viewports[i]);
     renderDirtyBits_.viewports = 1;
 }
 
@@ -173,8 +177,8 @@ void MTCommandContext::SetVertexBuffer(id<MTLBuffer> buffer, NSUInteger offset)
 
 void MTCommandContext::SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUInteger* offsets, NSUInteger bufferCount)
 {
-    std::copy(buffers, buffers + bufferCount, renderEncoderState_.vertexBuffers);
-    std::copy(offsets, offsets + bufferCount, renderEncoderState_.vertexBufferOffsets);
+    ::memcpy(renderEncoderState_.vertexBuffers, buffers, sizeof(id) * bufferCount);
+    ::memcpy(renderEncoderState_.vertexBufferOffsets, offsets, sizeof(NSUInteger) * bufferCount);
 
     renderEncoderState_.vertexBufferRange.location  = 0;
     renderEncoderState_.vertexBufferRange.length    = bufferCount;
