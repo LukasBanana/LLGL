@@ -13,6 +13,9 @@
 namespace LLGL
 {
 
+D3D12RootParameter::D3D12RootParameter()
+{
+}
 
 D3D12RootParameter::D3D12RootParameter(D3D12_ROOT_PARAMETER* managedRootParam) :
     managedRootParam_ { managedRootParam }

@@ -373,14 +373,17 @@ class LLGL_EXPORT SmallVector
         {
             if (size_ == cap_)
                 realloc(GrowStrategy::Grow(size_ + 1));
-            Allocator{}.construct(end(), value);
+            Allocator alloc;
+            std::allocator_traits<Allocator>::construct(alloc, end(), value);
             ++size_;
         }
 
         void push_back(value_type&& value)
         {
             reserve(size() + 1);
-            Allocator{}.construct(end(), std::forward<value_type&&>(value));
+            //Allocator{}.construct(end(), std::forward<value_type&&>(value));
+            Allocator alloc;
+            std::allocator_traits<Allocator>::construct(alloc, end(), std::forward<value_type&&>(value));
             ++size_;
         }
 
@@ -646,7 +649,7 @@ class LLGL_EXPORT SmallVector
         {
             Allocator alloc;
             for (; from != to; ++from)
-                alloc.destroy(from);
+                std::allocator_traits<Allocator>::destroy(alloc, from);
         }
 
         template <typename... TArgs>
@@ -654,7 +657,7 @@ class LLGL_EXPORT SmallVector
         {
             Allocator alloc;
             for (; from != to; ++from)
-                alloc.construct(from, std::forward<TArgs>(args)...);
+                std::allocator_traits<Allocator>::construct(alloc, from, std::forward<TArgs>(args)...);
         }
 
         template <typename InputIter>
@@ -662,7 +665,7 @@ class LLGL_EXPORT SmallVector
         {
             Allocator alloc;
             for (pointer p = pos; from != to; ++from, ++p)
-                alloc.construct(p, *from);
+                std::allocator_traits<Allocator>::construct(alloc, p, *from);
         }
 
         template <typename InputIter>
@@ -730,8 +733,8 @@ class LLGL_EXPORT SmallVector
             for (; from != to; ++from, ++dst)
             {
                 /* Copy element from current position 'from' to destination 'dst' and destroy the old one */
-                alloc.construct(dst, *from);
-                alloc.destroy(from);
+                std::allocator_traits<Allocator>::construct(alloc, dst, *from);
+                std::allocator_traits<Allocator>::destroy(alloc, from);
             }
         }
 
@@ -743,8 +746,8 @@ class LLGL_EXPORT SmallVector
             for (auto rfrom = reverse_iterator{ to }, rto = reverse_iterator{ from }; rfrom != rto; ++rfrom, ++rdst)
             {
                 /* Copy element from current position 'from' to destination 'dst' and destroy the old one */
-                alloc.construct(&(*rdst), *rfrom);
-                alloc.destroy(&(*rfrom));
+                std::allocator_traits<Allocator>::construct(alloc, &(*rfrom));
+                std::allocator_traits<Allocator>::destroy(alloc, &(*rfrom));
             }
         }
 
