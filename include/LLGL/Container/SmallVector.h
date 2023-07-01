@@ -381,7 +381,6 @@ class LLGL_EXPORT SmallVector
         void push_back(value_type&& value)
         {
             reserve(size() + 1);
-            //Allocator{}.construct(end(), std::forward<value_type&&>(value));
             Allocator alloc;
             std::allocator_traits<Allocator>::construct(alloc, end(), std::forward<value_type&&>(value));
             ++size_;
@@ -746,7 +745,7 @@ class LLGL_EXPORT SmallVector
             for (auto rfrom = reverse_iterator{ to }, rto = reverse_iterator{ from }; rfrom != rto; ++rfrom, ++rdst)
             {
                 /* Copy element from current position 'from' to destination 'dst' and destroy the old one */
-                std::allocator_traits<Allocator>::construct(alloc, &(*rfrom));
+                std::allocator_traits<Allocator>::construct(alloc, &(*rdst), *rfrom);
                 std::allocator_traits<Allocator>::destroy(alloc, &(*rfrom));
             }
         }
