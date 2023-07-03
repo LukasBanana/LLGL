@@ -26,14 +26,12 @@ class GLCommandBuffer : public CommandBuffer
 
     public:
 
-        // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
-        virtual bool IsImmediateCmdBuffer() const = 0;
+        #include <LLGL/Backend/CommandBuffer.Extensions.inl>
 
     public:
 
-        /* ----- Extensions ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override final;
+        // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
+        virtual bool IsImmediateCmdBuffer() const = 0;
 
     protected:
 

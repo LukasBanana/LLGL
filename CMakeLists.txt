@@ -273,6 +273,7 @@ set(FilesMsvcNatvis ${PROJECT_SOURCE_DIR}/LLGL.natvis)
 
 # Common files
 file(GLOB FilesInclude                      ${PROJECT_INCLUDE_DIR}/LLGL/*.*)
+file(GLOB FilesIncludeBackend               ${PROJECT_INCLUDE_DIR}/LLGL/Backend/*.inl)
 file(GLOB FilesIncludeContainer             ${PROJECT_INCLUDE_DIR}/LLGL/Container/*.*)
 file(GLOB FilesIncludeUtils                 ${PROJECT_INCLUDE_DIR}/LLGL/Utils/*.*)
 file(GLOB FilesIncludePlatformBase          ${PROJECT_INCLUDE_DIR}/LLGL/Platform/*.*)
@@ -507,6 +508,7 @@ set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/cpp/Example.c
 source_group("NatVis" FILES ${FilesMsvcNatvis})
 
 source_group("Include" FILES ${FilesInclude})
+source_group("Include\\Backend" FILES ${FilesIncludeBackend})
 source_group("Include\\Container" FILES ${FilesIncludeContainer})
 source_group("Include\\Utils" FILES ${FilesIncludeUtils})
 source_group("Sources\\Core" FILES ${FilesCore})
@@ -605,6 +607,7 @@ endif()
 set(
     FilesLLGL
     ${FilesInclude}
+    ${FilesIncludeBackend}
     ${FilesIncludeContainer}
     ${FilesIncludeUtils}
     ${FilesIncludePlatformBase}
