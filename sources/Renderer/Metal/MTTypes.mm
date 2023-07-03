@@ -286,8 +286,10 @@ MTLTextureType ToMTLTextureType(const TextureType textureType)
         case TextureType::TextureCubeArray: return MTLTextureTypeCubeArray;
         case TextureType::Texture2DMS:      return MTLTextureType2DMultisample;
         case TextureType::Texture2DMSArray:
+            #ifndef LLGL_OS_IOS
             if (@available(macOS 10.14, *))
                 return MTLTextureType2DMultisampleArray;
+            #endif
             break;
     }
     MapFailed("TextureType", "MTLTextureType");

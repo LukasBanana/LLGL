@@ -6,8 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <LLGL/Misc/VertexFormat.h>
-#include <iostream>
+#include <LLGL/Utils/VertexFormat.h>
 
 
 #if 0 // TESTING
@@ -194,7 +193,7 @@ int main()
 {
     try
     {
-        LLGL::Log::SetReportCallbackStd(&std::cout);
+        LLGL::Log::RegisterCallbackStd();
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Metal");
@@ -212,10 +211,16 @@ int main()
         // Print rendering capabilities
         const auto& info = renderer->GetRendererInfo();
 
-        std::cout << "Renderer: " << info.rendererName << std::endl;
-        std::cout << "Vendor: " << info.vendorName << std::endl;
-        std::cout << "Device: " << info.deviceName << std::endl;
-        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
+        LLGL::Log::Printf(
+            "Renderer: %s\n"
+            "Vendor: %s\n"
+            "Device: %s\n"
+            "Shading Language: %s\n",
+            info.rendererName.c_str(),
+            info.vendorName.c_str(),
+            info.deviceName.c_str(),
+            info.shadingLanguageName.c_str()
+        );
 
         // Create command buffer
         auto commandQueue = renderer->GetCommandQueue();
@@ -301,7 +306,7 @@ int main()
             if (auto report = shader->GetReport())
             {
                 if (report->HasErrors())
-                    std::cerr << report->GetText() << std::endl;
+                    LLGL::Log::Errorf("%s\n", report->GetText());
             }
         }
 
@@ -314,7 +319,7 @@ int main()
         }
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
-        LLGL::ColorRGBAf bgColor{ 0.0, 1.0f, 0.0f };
+        LLGL::ClearValue bgColor{ 0.0, 1.0f, 0.0f, 1.0f };
 
         // Main loop
         while (canvas.ProcessEvents()/* && !input->KeyDown(LLGL::Key::Escape)*/)
@@ -342,7 +347,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
     }
     return 0;
 }
