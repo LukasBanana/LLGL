@@ -8,19 +8,19 @@
 /* ----- Queries ----- */
 
 virtual void BeginQuery(
-    QueryHeap&                  queryHeap,
-    std::uint32_t               query
+    LLGL::QueryHeap&                queryHeap,
+    std::uint32_t                   query
 ) override final;
 
 virtual void EndQuery(
-    QueryHeap&                  queryHeap,
-    std::uint32_t               query
+    LLGL::QueryHeap&                queryHeap,
+    std::uint32_t                   query
 ) override final;
 
 virtual void BeginRenderCondition(
-    QueryHeap&                  queryHeap,
-    std::uint32_t               query,
-    const RenderConditionMode   mode
+    QueryHeap&                      queryHeap,
+    std::uint32_t                   query,
+    const LLGL::RenderConditionMode mode
 ) override final;
 
 virtual void EndRenderCondition(

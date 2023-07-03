@@ -8,8 +8,8 @@
 /* ----- Stream Output ------ */
 
 virtual void BeginStreamOutput(
-    std::uint32_t   numBuffers,
-    Buffer* const * buffers
+    std::uint32_t           numBuffers,
+    LLGL::Buffer* const *   buffers
 ) override final;
 
 virtual void EndStreamOutput(

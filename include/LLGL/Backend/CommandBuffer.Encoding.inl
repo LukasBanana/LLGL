@@ -16,7 +16,7 @@ virtual void End(
 ) override final;
 
 virtual void Execute(
-    CommandBuffer& deferredCommandBuffer
+    LLGL::CommandBuffer& deferredCommandBuffer
 ) override final;
 
 

@@ -8,11 +8,11 @@
 /* ----- Render Passes ----- */
 
 virtual void BeginRenderPass(
-    RenderTarget&           renderTarget,
-    const RenderPass*       renderPass      = nullptr,
-    std::uint32_t           numClearValues  = 0,
-    const ClearValue*       clearValues     = nullptr,
-    std::uint32_t           swapBufferIndex = Constants::currentSwapIndex
+    LLGL::RenderTarget&             renderTarget,
+    const LLGL::RenderPass*         renderPass      = nullptr,
+    std::uint32_t                   numClearValues  = 0,
+    const LLGL::ClearValue*         clearValues     = nullptr,
+    std::uint32_t                   swapBufferIndex = LLGL::Constants::currentSwapIndex
 ) override final;
 
 virtual void EndRenderPass(
@@ -20,13 +20,13 @@ virtual void EndRenderPass(
 ) override final;
 
 virtual void Clear(
-    long                    flags,
-    const ClearValue&       clearValue      = {}
+    long                            flags,
+    const LLGL::ClearValue&         clearValue      = {}
 ) override final;
 
 virtual void ClearAttachments(
-    std::uint32_t           numAttachments,
-    const AttachmentClear*  attachments
+    std::uint32_t                   numAttachments,
+    const LLGL::AttachmentClear*    attachments
 ) override final;
 
 

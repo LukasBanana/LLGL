@@ -58,24 +58,24 @@ virtual void DrawIndexedInstanced(
 ) override final;
 
 virtual void DrawIndirect(
-    Buffer&         buffer,
+    LLGL::Buffer&   buffer,
     std::uint64_t   offset
 ) override final;
 
 virtual void DrawIndirect(
-    Buffer&         buffer,
+    LLGL::Buffer&   buffer,
     std::uint64_t   offset,
     std::uint32_t   numCommands,
     std::uint32_t   stride
 ) override final;
 
 virtual void DrawIndexedIndirect(
-    Buffer&         buffer,
+    LLGL::Buffer&   buffer,
     std::uint64_t   offset
 ) override final;
 
 virtual void DrawIndexedIndirect(
-    Buffer&         buffer,
+    LLGL::Buffer&   buffer,
     std::uint64_t   offset,
     std::uint32_t   numCommands,
     std::uint32_t   stride

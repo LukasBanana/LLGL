@@ -8,21 +8,21 @@
 /* ----- Input Assembly ------ */
 
 virtual void SetVertexBuffer(
-    Buffer&         buffer
+    LLGL::Buffer&       buffer
 ) override final;
 
 virtual void SetVertexBufferArray(
-    BufferArray&    bufferArray
+    LLGL::BufferArray&  bufferArray
 ) override final;
 
 virtual void SetIndexBuffer(
-    Buffer&         buffer
+    LLGL::Buffer&       buffer
 ) override final;
 
 virtual void SetIndexBuffer(
-    Buffer&         buffer,
-    const Format    format,
-    std::uint64_t   offset = 0
+    LLGL::Buffer&       buffer,
+    const LLGL::Format  format,
+    std::uint64_t       offset = 0
 ) override final;
 
 

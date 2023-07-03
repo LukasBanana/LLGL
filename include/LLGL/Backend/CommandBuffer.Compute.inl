@@ -14,7 +14,7 @@ virtual void Dispatch(
 ) override final;
 
 virtual void DispatchIndirect(
-    Buffer&         buffer,
+    LLGL::Buffer&   buffer,
     std::uint64_t   offset
 ) override final;
 

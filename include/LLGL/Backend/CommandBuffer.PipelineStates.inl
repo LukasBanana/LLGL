@@ -8,22 +8,22 @@
 /* ----- Pipeline States ----- */
 
 virtual void SetPipelineState(
-    PipelineState&      pipelineState
+    LLGL::PipelineState&    pipelineState
 ) override final;
 
 virtual void SetBlendFactor(
-    const float         color[4]
+    const float             color[4]
 ) override final;
 
 virtual void SetStencilReference(
-    std::uint32_t       reference,
-    const StencilFace   stencilFace = StencilFace::FrontAndBack
+    std::uint32_t           reference,
+    const LLGL::StencilFace stencilFace = LLGL::StencilFace::FrontAndBack
 ) override final;
 
 virtual void SetUniforms(
-    std::uint32_t       first,
-    const void*         data,
-    std::uint16_t       dataSize
+    std::uint32_t           first,
+    const void*             data,
+    std::uint16_t           dataSize
 ) override final;
 
 

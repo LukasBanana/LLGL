@@ -8,21 +8,21 @@
 /* ----- Resources ----- */
 
 virtual void SetResourceHeap(
-    ResourceHeap&       resourceHeap,
-    std::uint32_t       descriptorSet   = 0
+    LLGL::ResourceHeap&         resourceHeap,
+    std::uint32_t               descriptorSet   = 0
 ) override final;
 
 virtual void SetResource(
-    std::uint32_t       descriptor,
-    Resource&           resource
+    std::uint32_t               descriptor,
+    LLGL::Resource&             resource
 ) override final;
 
 virtual void ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags      = StageFlags::AllStages
+    const LLGL::ResourceType    resourceType,
+    std::uint32_t               firstSlot,
+    std::uint32_t               numSlots,
+    long                        bindFlags,
+    long                        stageFlags      = LLGL::StageFlags::AllStages
 ) override final;
 
 

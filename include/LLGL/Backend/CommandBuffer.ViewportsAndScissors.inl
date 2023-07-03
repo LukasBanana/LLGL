@@ -8,21 +8,21 @@
 /* ----- Viewport and Scissor ----- */
 
 virtual void SetViewport(
-    const Viewport& viewport
+    const LLGL::Viewport&   viewport
 ) override final;
 
 virtual void SetViewports(
-    std::uint32_t   numViewports,
-    const Viewport* viewports
+    std::uint32_t           numViewports,
+    const LLGL::Viewport*   viewports
 ) override final;
 
 virtual void SetScissor(
-    const Scissor&  scissor
+    const LLGL::Scissor&    scissor
 ) override final;
 
 virtual void SetScissors(
-    std::uint32_t   numScissors,
-    const Scissor*  scissors
+    std::uint32_t           numScissors,
+    const LLGL::Scissor*    scissors
 ) override final;
 
 
