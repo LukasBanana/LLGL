@@ -26,6 +26,7 @@ class D3D12RootParameter
 
     public:
 
+        D3D12RootParameter() = default;
         D3D12RootParameter(D3D12_ROOT_PARAMETER* managedRootParam);
 
         D3D12RootParameter(const D3D12RootParameter&) = default;
