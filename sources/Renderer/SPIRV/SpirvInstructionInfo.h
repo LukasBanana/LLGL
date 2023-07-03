@@ -9,7 +9,7 @@
 #define LLGL_SPIRV_INSTRUCTION_INFO_H
 
 
-#include <spirv-headers/spirv.hpp11>
+#include <spirv/1.2/spirv.hpp11>
 #include <cstdint>
 
 
