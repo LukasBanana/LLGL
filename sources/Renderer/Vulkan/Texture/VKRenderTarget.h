@@ -29,20 +29,15 @@ class VKRenderTarget final : public RenderTarget
 
     public:
 
+        #include <LLGL/Backend/RenderTarget.inl>
+
+    public:
+
         VKRenderTarget(
             VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const RenderTargetDescriptor&   desc
         );
-
-        Extent2D GetResolution() const override;
-        std::uint32_t GetSamples() const override;
-        std::uint32_t GetNumColorAttachments() const override;
-
-        bool HasDepthAttachment() const override;
-        bool HasStencilAttachment() const override;
-
-        const RenderPass* GetRenderPass() const override;
 
     public:
 

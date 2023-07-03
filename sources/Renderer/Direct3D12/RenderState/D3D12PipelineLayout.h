@@ -110,12 +110,11 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     public:
 
-        void SetName(const char* name) override;
+        #include <LLGL/Backend/PipelineLayout.inl>
 
-        std::uint32_t GetNumHeapBindings() const override;
-        std::uint32_t GetNumBindings() const override;
-        std::uint32_t GetNumStaticSamplers() const override;
-        std::uint32_t GetNumUniforms() const override;
+    public:
+
+        void SetName(const char* name) override;
 
     public:
 

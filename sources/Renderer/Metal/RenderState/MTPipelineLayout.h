@@ -1,6 +1,6 @@
 /*
  * MTPipelineLayout.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -28,10 +28,7 @@ class MTPipelineLayout final : public PipelineLayout
 
     public:
 
-        std::uint32_t GetNumHeapBindings() const override;
-        std::uint32_t GetNumBindings() const override;
-        std::uint32_t GetNumStaticSamplers() const override;
-        std::uint32_t GetNumUniforms() const override;
+        #include <LLGL/Backend/PipelineLayout.inl>
 
     public:
 

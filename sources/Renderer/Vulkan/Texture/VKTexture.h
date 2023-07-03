@@ -28,19 +28,15 @@ class VKTexture final : public Texture
 
     public:
 
+        #include <LLGL/Backend/Texture.inl>
+
+    public:
+
         VKTexture(
             VkDevice                    device,
             VKDeviceMemoryManager&      deviceMemoryMngr,
             const TextureDescriptor&    desc
         );
-
-        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
-
-        TextureDescriptor GetDesc() const override;
-
-        Format GetFormat() const override;
-
-        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
 
     public:
 

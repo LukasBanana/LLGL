@@ -24,11 +24,11 @@ class NullTexture final : public Texture
 
     public:
 
+        #include <LLGL/Backend/Texture.inl>
+
+    public:
+
         void SetName(const char* name) override;
-        TextureDescriptor GetDesc() const override;
-        Format GetFormat() const override;
-        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
-        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
 
     public:
 

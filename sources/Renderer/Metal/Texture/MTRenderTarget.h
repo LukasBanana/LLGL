@@ -27,17 +27,14 @@ class MTRenderTarget final : public RenderTarget
 
     public:
 
+        #include <LLGL/Backend/RenderTarget.inl>
+
+    public:
+
         MTRenderTarget(id<MTLDevice> device, const RenderTargetDescriptor& desc);
         ~MTRenderTarget();
 
-        Extent2D GetResolution() const override;
-        std::uint32_t GetSamples() const override;
-        std::uint32_t GetNumColorAttachments() const override;
-
-        bool HasDepthAttachment() const override;
-        bool HasStencilAttachment() const override;
-
-        const RenderPass* GetRenderPass() const override;
+    public:
 
         // Updates the native render pass descriptor with the specified clear values. Returns null on failure.
         MTLRenderPassDescriptor* GetAndUpdateNativeRenderPass(
@@ -45,8 +42,6 @@ class MTRenderTarget final : public RenderTarget
             std::uint32_t       numClearValues,
             const ClearValue*   clearValues
         );
-
-    public:
 
         // Returns the native render pass descriptor <MTLRenderPassDescriptor>.
         inline MTLRenderPassDescriptor* GetNativeRenderPass() const

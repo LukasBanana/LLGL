@@ -26,13 +26,7 @@ class MTTexture final : public Texture
 
     public:
 
-        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
-
-        TextureDescriptor GetDesc() const override;
-
-        Format GetFormat() const override;
-
-        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
+        #include <LLGL/Backend/Texture.inl>
 
     public:
 

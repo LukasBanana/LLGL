@@ -1,6 +1,6 @@
 /*
  * DbgTexture.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -23,11 +23,11 @@ class DbgTexture final : public Texture
 
     public:
 
+        #include <LLGL/Backend/Texture.inl>
+
+    public:
+
         void SetName(const char* name) override;
-        TextureDescriptor GetDesc() const override;
-        Format GetFormat() const override;
-        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
-        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
 
     public:
 

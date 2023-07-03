@@ -27,28 +27,11 @@ class D3D11CommandQueue final : public CommandQueue
 
     public:
 
+        #include <LLGL/Backend/CommandQueue.inl>
+
+    public:
+
         D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context);
-
-        /* ----- Command Buffers ----- */
-
-        void Submit(CommandBuffer& commandBuffer) override;
-
-        /* ----- Queries ----- */
-
-        bool QueryResult(
-            QueryHeap&      queryHeap,
-            std::uint32_t   firstQuery,
-            std::uint32_t   numQueries,
-            void*           data,
-            std::size_t     dataSize
-        ) override;
-
-        /* ----- Fences ----- */
-
-        void Submit(Fence& fence) override;
-
-        bool WaitFence(Fence& fence, std::uint64_t timeout) override;
-        void WaitIdle() override;
 
     private:
 

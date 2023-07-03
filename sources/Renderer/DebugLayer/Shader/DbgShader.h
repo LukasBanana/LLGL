@@ -23,9 +23,11 @@ class DbgShader final : public Shader
 
     public:
 
+        #include <LLGL/Backend/Shader.inl>
+
+    public:
+
         void SetName(const char* name) override;
-        const Report* GetReport() const override;
-        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 

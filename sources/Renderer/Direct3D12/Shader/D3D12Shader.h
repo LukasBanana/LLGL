@@ -42,11 +42,11 @@ class D3D12Shader final : public Shader
 
     public:
 
+        #include <LLGL/Backend/Shader.inl>
+
+    public:
+
         D3D12Shader(const ShaderDescriptor& desc);
-
-        const Report* GetReport() const override;
-
-        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 

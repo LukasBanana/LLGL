@@ -24,12 +24,12 @@ class MTShader final : public Shader
 
     public:
 
+        #include <LLGL/Backend/Shader.inl>
+
+    public:
+
         MTShader(id<MTLDevice> device, const ShaderDescriptor& desc);
         ~MTShader();
-
-        const Report* GetReport() const override;
-
-        bool Reflect(ShaderReflection& reflection) const override;
 
     public:
 

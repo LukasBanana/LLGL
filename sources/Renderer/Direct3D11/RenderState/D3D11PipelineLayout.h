@@ -37,10 +37,7 @@ class D3D11PipelineLayout final : public PipelineLayout
 
     public:
 
-        std::uint32_t GetNumHeapBindings() const override;
-        std::uint32_t GetNumBindings() const override;
-        std::uint32_t GetNumStaticSamplers() const override;
-        std::uint32_t GetNumUniforms() const override;
+        #include <LLGL/Backend/PipelineLayout.inl>
 
     public:
 

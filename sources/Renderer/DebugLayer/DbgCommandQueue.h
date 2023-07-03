@@ -25,7 +25,9 @@ class DbgCommandQueue final : public CommandQueue
 
     public:
 
-        /* ----- Common ----- */
+        #include <LLGL/Backend/CommandQueue.inl>
+
+    public:
 
         DbgCommandQueue(
             CommandQueue&       instance,
@@ -33,30 +35,7 @@ class DbgCommandQueue final : public CommandQueue
             RenderingDebugger*  debugger
         );
 
-        /* ----- Command Buffers ----- */
-
-        void Submit(CommandBuffer& commandBuffer) override;
-
-        /* ----- Queries ----- */
-
-        bool QueryResult(
-            QueryHeap&      queryHeap,
-            std::uint32_t   firstQuery,
-            std::uint32_t   numQueries,
-            void*           data,
-            std::size_t     dataSize
-        ) override;
-
-        /* ----- Fences ----- */
-
-        void Submit(Fence& fence) override;
-
-        bool WaitFence(Fence& fence, std::uint64_t timeout) override;
-        void WaitIdle() override;
-
     public:
-
-        /* ----- Debugging members ----- */
 
         CommandQueue& instance;
 

@@ -29,33 +29,16 @@ class D3D12CommandQueue final : public CommandQueue
 
     public:
 
+        #include <LLGL/Backend/CommandQueue.inl>
+
+    public:
+
         D3D12CommandQueue(
             D3D12Device&            device,
             D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT
         );
 
         void SetName(const char* name) override;
-
-        /* ----- Command Buffers ----- */
-
-        void Submit(CommandBuffer& commandBuffer) override;
-
-        /* ----- Queries ----- */
-
-        bool QueryResult(
-            QueryHeap&      queryHeap,
-            std::uint32_t   firstQuery,
-            std::uint32_t   numQueries,
-            void*           data,
-            std::size_t     dataSize
-        ) override;
-
-        /* ----- Fences ----- */
-
-        void Submit(Fence& fence) override;
-
-        bool WaitFence(Fence& fence, std::uint64_t timeout) override;
-        void WaitIdle() override;
 
     public:
 

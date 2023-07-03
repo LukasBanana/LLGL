@@ -27,15 +27,11 @@ class D3D12Texture final : public Texture
 
     public:
 
+        #include <LLGL/Backend/Texture.inl>
+
+    public:
+
         void SetName(const char* name) override;
-
-        Extent3D GetMipExtent(std::uint32_t mipLevel) const override;
-
-        TextureDescriptor GetDesc() const override;
-
-        Format GetFormat() const override;
-
-        SubresourceFootprint GetSubresourceFootprint(std::uint32_t mipLevel) const override;
 
     public:
 
