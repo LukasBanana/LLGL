@@ -117,9 +117,30 @@ void TestbedContext::RunAllTests()
 
 static TestResult TestParseSamplerDesc()
 {
+    #define TEST_SAMPLER_ATTRIB(ATTR)           \
+        if (lhs.ATTR != rhs.ATTR)               \
+            return TestResult::FailedMismatch
+
     auto CompareSamplerDescs = [](const LLGL::SamplerDescriptor& lhs, const LLGL::SamplerDescriptor& rhs) -> TestResult
     {
-        return (::memcmp(&lhs, &rhs, sizeof(lhs)) != 0 ? TestResult::FailedMismatch : TestResult::Passed);
+        TEST_SAMPLER_ATTRIB(addressModeU  );
+        TEST_SAMPLER_ATTRIB(addressModeV  );
+        TEST_SAMPLER_ATTRIB(addressModeW  );
+        TEST_SAMPLER_ATTRIB(minFilter     );
+        TEST_SAMPLER_ATTRIB(magFilter     );
+        TEST_SAMPLER_ATTRIB(mipMapFilter  );
+        TEST_SAMPLER_ATTRIB(mipMapEnabled );
+        TEST_SAMPLER_ATTRIB(mipMapLODBias );
+        TEST_SAMPLER_ATTRIB(minLOD        );
+        TEST_SAMPLER_ATTRIB(maxLOD        );
+        TEST_SAMPLER_ATTRIB(maxAnisotropy );
+        TEST_SAMPLER_ATTRIB(compareEnabled);
+        TEST_SAMPLER_ATTRIB(compareOp     );
+        TEST_SAMPLER_ATTRIB(borderColor[0]);
+        TEST_SAMPLER_ATTRIB(borderColor[1]);
+        TEST_SAMPLER_ATTRIB(borderColor[2]);
+        TEST_SAMPLER_ATTRIB(borderColor[3]);
+        return TestResult::Passed;
     };
 
     #define TEST_SAMPLER_DESCS(LHS, RHS)                                \
