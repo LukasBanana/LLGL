@@ -31,6 +31,7 @@
 #include <limits.h>
 
 #include <LLGL/Backend/Metal/NativeHandle.h>
+#include <LLGL/Backend/Metal/NativeCommand.h>
 
 
 namespace LLGL

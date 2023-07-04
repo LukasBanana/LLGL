@@ -1008,6 +1008,11 @@ void MTMultiSubmitCommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
+void MTMultiSubmitCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
+{
+    // dummy
+}
+
 bool MTMultiSubmitCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     return (nativeHandle == nullptr || nativeHandleSize == 0);

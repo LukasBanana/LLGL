@@ -47,18 +47,19 @@ struct NativeCommand
 {
     NativeCommandType type;
 
+    struct TessFactorBuffer
+    {
+        /**
+        \brief Specifies the buffer slot for the internal tessellation factor buffer. By default 30, which is the maximum buffer slot.
+        \remarks In the respective Metal tessellation kernel,
+        this must refer to a buffer of type \c MTLTriangleTessellationFactorsHalf or \c MTLQuadTessellationFactorsHalf.
+        */
+        std::uint32_t slot;
+    };
+
     union
     {
-        struct TessFactorBuffer
-        {
-            /**
-            \brief Specifies the buffer slot for the internal tessellation factor buffer. By default 30, which is the maximum buffer slot.
-            \remarks In the respective Metal tessellation kernel,
-            this must refer to a buffer of type \c MTLTriangleTessellationFactorsHalf or \c MTLQuadTessellationFactorsHalf.
-            */
-            std::uint32_t slot;
-        }
-        tessFactorBuffer;
+        TessFactorBuffer tessFactorBuffer;
     };
 };
 
