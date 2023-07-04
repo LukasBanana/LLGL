@@ -44,12 +44,12 @@ AndroidCanvas::~AndroidCanvas()
 {
 }
 
-bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    if (nativeHandleSize == sizeof(NativeHandle))
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-        handle.window = window_;
+        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle->window = window_;
         return true;
     }
     return false;

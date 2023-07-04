@@ -48,14 +48,14 @@ LinuxWindow::~LinuxWindow()
     XCloseDisplay(display_);
 }
 
-bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    if (nativeHandleSize == sizeof(NativeHandle))
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-        handle.display  = display_;
-        handle.window   = wnd_;
-        handle.visual   = visual_;
+        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle->display = display_;
+        handle->window  = wnd_;
+        handle->visual  = visual_;
         return true;
     }
     return false;

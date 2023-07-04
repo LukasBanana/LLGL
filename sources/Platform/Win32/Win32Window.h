@@ -25,7 +25,7 @@ class Win32Window final : public Window
         Win32Window(const WindowDescriptor& desc);
         ~Win32Window();
 
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
         void ResetPixelFormat() override;
 

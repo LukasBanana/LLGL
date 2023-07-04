@@ -25,7 +25,7 @@ class IOSCanvas : public Canvas
         IOSCanvas(const CanvasDescriptor& desc);
         ~IOSCanvas();
 
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
         Extent2D GetContentSize() const override;
 

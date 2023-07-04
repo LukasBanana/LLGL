@@ -25,7 +25,7 @@ class LinuxWindow : public Window
         LinuxWindow(const WindowDescriptor& desc);
         ~LinuxWindow();
 
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
         void ResetPixelFormat() override;
 

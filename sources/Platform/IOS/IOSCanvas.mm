@@ -97,12 +97,12 @@ IOSCanvas::~IOSCanvas()
 {
 }
 
-bool IOSCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+bool IOSCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    if (nativeHandleSize == sizeof(NativeHandle))
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        //auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-        //handle.window = wnd_;
+        //auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        //handle->window = wnd_;
         //return true;
     }
     return false;

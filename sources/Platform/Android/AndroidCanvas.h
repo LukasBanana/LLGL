@@ -25,7 +25,7 @@ class AndroidCanvas : public Canvas
         AndroidCanvas(const CanvasDescriptor& desc);
         ~AndroidCanvas();
 
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
         Extent2D GetContentSize() const override;
 

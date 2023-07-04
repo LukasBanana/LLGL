@@ -112,7 +112,7 @@ static void ErrMultisampledGLContextNotSupported()
     Log::Errorf("multi-sampled OpenGL context is not supported");
 }
 
-static HDC GetWin32DeviceContext(const Surface& surface)
+static HDC GetWin32DeviceContext(Surface& surface)
 {
     /* Get device context from native window */
     NativeHandle nativeHandle = {};

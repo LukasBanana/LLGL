@@ -24,7 +24,7 @@ class MacOSWindow : public Window
 
         MacOSWindow(const WindowDescriptor& desc);
 
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
         void ResetPixelFormat() override;
 

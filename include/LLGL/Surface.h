@@ -46,7 +46,7 @@ class LLGL_EXPORT Surface : public Interface
         #include <LLGL/Platform/NativeHandle.h>
         //...
         bool MyWindowClass::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) {
-            if (nativeHandleSize == sizeof(LLGL::NativeHandle)) {
+            if (nativeHandle != nullptr && nativeHandleSize == sizeof(LLGL::NativeHandle)) {
                 auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
                 //handle->window = 'some HWND window handle';
                 return true;
@@ -54,8 +54,10 @@ class LLGL_EXPORT Surface : public Interface
             return false;
         }
         \endcode
+        \remarks This is not a constant member function because it might modify internal reference counters.
+        LLGL also has to assume that the returning handle will be used to modify the surface.
         */
-        virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const = 0;
+        virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) = 0;
 
         /**
         \brief Returns the size of the surface context (or rather the drawing area).
