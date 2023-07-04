@@ -573,8 +573,8 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
         if (enable)
         {
             /* Enable GL debug message callback */
-            GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT);
-            GLStateManager::Get().Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+            GLStateManager::Get().Enable(GLState::DebugOutput);
+            GLStateManager::Get().Enable(GLState::DebugOutputSynchronous);
             glDebugMessageCallback(GLDebugCallback, nullptr);
 
             /* Filter out spam from debug callback */
@@ -589,8 +589,8 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
         }
         else
         {
-            GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT);
-            GLStateManager::Get().Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+            GLStateManager::Get().Disable(GLState::DebugOutput);
+            GLStateManager::Get().Disable(GLState::DebugOutputSynchronous);
             glDebugMessageCallback(nullptr, nullptr);
         }
     }

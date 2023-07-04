@@ -440,14 +440,14 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         case GLResourceType_UBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
-            BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, bufferGL, binding.slot);
+            BindBufferBase(GLBufferTarget::UniformBuffer, bufferGL, binding.slot);
         }
         break;
 
         case GLResourceType_SSBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
-            BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferGL, binding.slot);
+            BindBufferBase(GLBufferTarget::ShaderStorageBuffer, bufferGL, binding.slot);
         }
         break;
 
@@ -716,7 +716,7 @@ void GLDeferredCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer
 {
     /* Bind transform feedback buffers */
     numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
-    BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, numBuffers, buffers);
+    BindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, 0, numBuffers, buffers);
 
     /* Begin transform feedback section */
     #ifdef __APPLE__

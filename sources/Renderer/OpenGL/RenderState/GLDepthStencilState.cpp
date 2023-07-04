@@ -41,18 +41,18 @@ void GLDepthStencilState::Bind(GLStateManager& stateMngr)
     /* Setup depth state */
     if (depthTestEnabled_)
     {
-        stateMngr.Enable(GLState::DEPTH_TEST);
+        stateMngr.Enable(GLState::DepthTest);
         stateMngr.SetDepthFunc(depthFunc_);
     }
     else
-        stateMngr.Disable(GLState::DEPTH_TEST);
+        stateMngr.Disable(GLState::DepthTest);
 
     stateMngr.SetDepthMask(depthMask_);
 
     /* Setup stencil state */
     if (stencilTestEnabled_)
     {
-        stateMngr.Enable(GLState::STENCIL_TEST);
+        stateMngr.Enable(GLState::StencilTest);
         if (independentStencilFaces_)
         {
             BindStencilFaceState(stencilFront_, GL_FRONT);
@@ -62,7 +62,7 @@ void GLDepthStencilState::Bind(GLStateManager& stateMngr)
             BindStencilState(stencilFront_);
     }
     else
-        stateMngr.Disable(GLState::STENCIL_TEST);
+        stateMngr.Disable(GLState::StencilTest);
 }
 
 void GLDepthStencilState::BindStencilRefOnly(GLint ref, GLenum face)
@@ -129,14 +129,14 @@ int GLDepthStencilState::CompareSWO(const GLDepthStencilState& lhs, const GLDept
         LLGL_COMPARE_BOOL_MEMBER_SWO( independentStencilFaces_ );
 
         {
-            auto order = GLStencilFaceState::CompareSWO(lhs.stencilFront_, rhs.stencilFront_);
+            int order = GLStencilFaceState::CompareSWO(lhs.stencilFront_, rhs.stencilFront_);
             if (order != 0)
                 return order;
         }
 
         if (!lhs.independentStencilFaces_)
         {
-            auto order = GLStencilFaceState::CompareSWO(lhs.stencilBack_, rhs.stencilBack_);
+            int order = GLStencilFaceState::CompareSWO(lhs.stencilBack_, rhs.stencilBack_);
             if (order != 0)
                 return order;
         }

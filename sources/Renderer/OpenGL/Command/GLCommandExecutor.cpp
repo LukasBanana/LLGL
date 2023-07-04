@@ -340,7 +340,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysIndirect*>(pc);
             #ifdef LLGL_GLEXT_DRAW_INDIRECT
-            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DrawIndirectBuffer, cmd->id);
             GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
@@ -390,7 +390,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
             #ifdef LLGL_GLEXT_DRAW_INDIRECT
-            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DrawIndirectBuffer, cmd->id);
             GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
@@ -404,7 +404,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawArraysIndirect*>(pc);
             #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
-            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DrawIndirectBuffer, cmd->id);
             glMultiDrawArraysIndirect(cmd->mode, cmd->indirect, cmd->drawcount, cmd->stride);
             #endif
             return sizeof(*cmd);
@@ -413,7 +413,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawElementsIndirect*>(pc);
             #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
-            stateMngr->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DrawIndirectBuffer, cmd->id);
             glMultiDrawElementsIndirect(cmd->mode, cmd->type, cmd->indirect, cmd->drawcount, cmd->stride);
             #endif
             return sizeof(*cmd);
@@ -430,7 +430,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdDispatchComputeIndirect*>(pc);
             #ifdef LLGL_GLEXT_COMPUTE_SHADER
-            stateMngr->BindBuffer(GLBufferTarget::DISPATCH_INDIRECT_BUFFER, cmd->id);
+            stateMngr->BindBuffer(GLBufferTarget::DispatchIndirectBuffer, cmd->id);
             glDispatchComputeIndirect(cmd->indirect);
             #endif
             return sizeof(*cmd);
@@ -466,11 +466,11 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
             if (cmd->resetUBO)
-                stateMngr->UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
+                stateMngr->UnbindBuffersBase(GLBufferTarget::UniformBuffer, cmd->first, cmd->count);
             if (cmd->resetSSAO)
-                stateMngr->UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
+                stateMngr->UnbindBuffersBase(GLBufferTarget::ShaderStorageBuffer, cmd->first, cmd->count);
             if (cmd->resetTransformFeedback)
-                stateMngr->UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
+                stateMngr->UnbindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, cmd->first, cmd->count);
             if (cmd->resetTextures)
                 stateMngr->UnbindTextures(cmd->first, cmd->count);
             if (cmd->resetImages)

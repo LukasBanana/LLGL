@@ -52,7 +52,7 @@ void GLBufferWithVAO::BuildVertexArrayWithVAO()
     GLStateManager::Get().BindVertexArray(GetVaoID());
     {
         /* Bind VBO */
-        GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
+        GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, GetID());
 
         /* Build each vertex attribute */
         for (const auto& attrib : vertexAttribs_)

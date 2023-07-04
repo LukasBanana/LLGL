@@ -16,6 +16,7 @@
 #include "../Texture/GLRenderTarget.h"
 #include "GLStateManager.h"
 #include <LLGL/PipelineStateFlags.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -44,7 +45,7 @@ GLBlendState::GLBlendState(const BlendDescriptor& desc, std::uint32_t numColorAt
     if (desc.independentBlendEnabled)
     {
         numDrawBuffers_ = numColorAttachments;
-        for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        for_range(i, numColorAttachments)
             GLDrawBufferState::Convert(drawBuffers_[i], desc.targets[i]);
     }
     else
@@ -65,14 +66,14 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
     if (blendColorEnabled_)
         stateMngr.SetBlendColor(blendColor_);
 
-    stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
+    stateMngr.Set(GLState::SampleAlphaToCoverage, sampleAlphaToCoverage_);
 
     #ifdef LLGL_OPENGL
 
     if (logicOpEnabled_)
     {
         /* Enable logic pixel operation */
-        stateMngr.Enable(GLState::COLOR_LOGIC_OP);
+        stateMngr.Enable(GLState::ColorLogicOp);
         stateMngr.SetLogicOp(logicOp_);
 
         /* Bind only color masks for all draw buffers */
@@ -81,7 +82,7 @@ void GLBlendState::Bind(GLStateManager& stateMngr)
     else
     {
         /* Disable logic pixel operation */
-        stateMngr.Disable(GLState::COLOR_LOGIC_OP);
+        stateMngr.Disable(GLState::ColorLogicOp);
 
         /* Bind blend states for all draw buffers */
         BindDrawBufferStates(stateMngr);
@@ -107,14 +108,14 @@ int GLBlendState::CompareSWO(const GLBlendState& lhs, const GLBlendState& rhs)
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[2]         );
     LLGL_COMPARE_MEMBER_SWO     ( blendColor_[3]         );
     LLGL_COMPARE_MEMBER_SWO     ( sampleAlphaToCoverage_ );
-    //LLGL_COMPARE_MEMBER_SWO     ( sampleMask_            );
+  //LLGL_COMPARE_MEMBER_SWO     ( sampleMask_            );
     #ifdef LLGL_OPENGL
     LLGL_COMPARE_BOOL_MEMBER_SWO( logicOpEnabled_        );
     LLGL_COMPARE_MEMBER_SWO     ( logicOp_               );
     #endif
     LLGL_COMPARE_MEMBER_SWO     ( numDrawBuffers_        );
 
-    for (decltype(numDrawBuffers_) i = 0; i < lhs.numDrawBuffers_; ++i)
+    for_range(i, lhs.numDrawBuffers_)
     {
         auto order = GLDrawBufferState::CompareSWO(lhs.drawBuffers_[i], rhs.drawBuffers_[i]);
         if (order != 0)

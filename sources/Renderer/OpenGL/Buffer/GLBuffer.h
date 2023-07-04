@@ -81,7 +81,7 @@ class GLBuffer : public Buffer
     private:
 
         GLuint          id_                 = 0;
-        GLBufferTarget  target_             = GLBufferTarget::ARRAY_BUFFER;
+        GLBufferTarget  target_             = GLBufferTarget::ArrayBuffer;
         bool            indexType16Bits_    = false;
 
 };

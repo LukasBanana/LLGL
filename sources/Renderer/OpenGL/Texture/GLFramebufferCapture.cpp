@@ -109,12 +109,12 @@ void GLFramebufferCapture::CaptureFramebuffer(
     stateMngr.PopBoundTexture();
 
     /* Blit intermediate texture into destination texture with flipped Y-axis to accommodate OpenGL coordinate system */
-    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
-    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::ReadFramebuffer);
+    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::DrawFramebuffer);
     {
         /* Bind read framebuffer for intermediate texture and draw framebuffer for destination texture */
-        stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, blitTextureFBOPair_.fbos[0]);
-        stateMngr.BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, blitTextureFBOPair_.fbos[1]);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, blitTextureFBOPair_.fbos[0]);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, blitTextureFBOPair_.fbos[1]);
 
         GLProfile::FramebufferTexture2D(GL_READ_FRAMEBUFFER, attachment, targetGL, intermediateTex_.texID, 0);
         GLFramebuffer::AttachTexture(textureGL, attachment, dstLevel, dstOffset.z, GL_DRAW_FRAMEBUFFER);

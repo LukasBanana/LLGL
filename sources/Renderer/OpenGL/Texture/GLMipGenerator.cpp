@@ -214,12 +214,12 @@ void GLMipGenerator::GenerateMipsRangeWithFBO(
 
     mipGenerationFBOPair_.CreateFBOs();
 
-    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
-    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::ReadFramebuffer);
+    stateMngr.PushBoundFramebuffer(GLFramebufferTarget::DrawFramebuffer);
     {
         /* Bind read framebuffer for current MIP level and draw framebuffer for next MIP level */
-        stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, mipGenerationFBOPair_.fbos[0]);
-        stateMngr.BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, mipGenerationFBOPair_.fbos[1]);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, mipGenerationFBOPair_.fbos[0]);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, mipGenerationFBOPair_.fbos[1]);
 
         switch (texType)
         {

@@ -525,7 +525,7 @@ static void GLCopyTexSubImage(
 
     /* Store bound texture and framebuffer */
     GLStateManager::Get().PushBoundTexture(target);
-    GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+    GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::ReadFramebuffer);
     {
         GLCopyTexSubImagePrimary(
             type,
@@ -590,14 +590,14 @@ void GLTexture::CopyImageToBuffer(
     };
 
     /* Bind buffer to pixel transfer pack buffer unit */
-    GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_PACK_BUFFER, bufferID);
+    GLStateManager::Get().BindBuffer(GLBufferTarget::PixelPackBuffer, bufferID);
     GLStateManager::Get().SetPixelStorePack(rowLength, imageHeight, 1);
     {
         /* Read image sub data and store into currently bound pack buffer */
         GetTextureSubImage(region, imageDesc);
     }
     GLStateManager::Get().SetPixelStorePack(0, 0, 1);
-    GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_PACK_BUFFER, 0);
+    GLStateManager::Get().BindBuffer(GLBufferTarget::PixelPackBuffer, 0);
 }
 
 /*
@@ -627,14 +627,14 @@ void GLTexture::CopyImageFromBuffer(
     };
 
     /* Bind buffer to pixel transfer unpack buffer unit */
-    GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, bufferID);
+    GLStateManager::Get().BindBuffer(GLBufferTarget::PixelUnpackBuffer, bufferID);
     GLStateManager::Get().SetPixelStoreUnpack(rowLength, imageHeight, 1);
     {
         /* Write image sub data from currently bound unpack buffer */
         TextureSubImage(region, imageDesc);
     }
     GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
-    GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
+    GLStateManager::Get().BindBuffer(GLBufferTarget::PixelUnpackBuffer, 0);
 }
 
 void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescriptor& imageDesc, bool restoreBoundTexture)
@@ -746,7 +746,7 @@ static void GLGetTextureImage(
         GLTexImage(stagingTextureDesc, nullptr);
 
         /* Copy source texture region into temporary staging texture */
-        GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+        GLStateManager::Get().PushBoundFramebuffer(GLFramebufferTarget::ReadFramebuffer);
         {
             GLCopyTexSubImagePrimary(
                 type,

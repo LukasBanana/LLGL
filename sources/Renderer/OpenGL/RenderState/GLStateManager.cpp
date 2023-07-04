@@ -849,7 +849,7 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
 
 void GLStateManager::UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count)
 {
-    BindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count, g_nullResources);
+    BindBuffersBase(GLBufferTarget::UniformBuffer, first, count, g_nullResources);
 }
 
 // Returns the maximum index value for the specified index data type.
@@ -876,7 +876,7 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
             Always reset index buffer binding
             -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
             */
-            contextState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
+            contextState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ElementArrayBuffer)] = 0;
 
             if (vertexArray != 0)
             {
@@ -885,14 +885,14 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
                 if (contextState_.boundElementArrayBuffer != 0)
                 {
                     /* Bind deferred index buffer and enable primitive restart index */
-                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, contextState_.boundElementArrayBuffer);
-                    Enable(GLState::PRIMITIVE_RESTART);
+                    BindBuffer(GLBufferTarget::ElementArrayBuffer, contextState_.boundElementArrayBuffer);
+                    Enable(GLState::PrimitiveRestart);
                     SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
                 }
                 else
                 {
                     /* Disable primitive restart index if no index buffer is bound */
-                    Disable(GLState::PRIMITIVE_RESTART);
+                    Disable(GLState::PrimitiveRestart);
                 }
 
                 #else // LLGL_PRIMITIVE_RESTART
@@ -900,7 +900,7 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
                 if (contextState_.boundElementArrayBuffer != 0)
                 {
                     /* Bind deferred index buffer */
-                    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, contextState_.boundElementArrayBuffer);
+                    BindBuffer(GLBufferTarget::ElementArrayBuffer, contextState_.boundElementArrayBuffer);
                 }
 
                 #endif // /LLGL_PRIMITIVE_RESTART
@@ -925,7 +925,7 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
     if (!HasNativeVAO())
     {
         /* Bind element array buffer directly (for GL 2.x compatibility) */
-        BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
+        BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
     }
     else
     #endif // /LLGL_GL_ENABLE_OPENGL2X
@@ -940,14 +940,14 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
         if (contextState_.boundVertexArray != 0)
         {
             /* Bind index buffer and enable primitive restart index */
-            BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
-            Enable(GLState::PRIMITIVE_RESTART);
+            BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
+            Enable(GLState::PrimitiveRestart);
             SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
         }
         else
         {
             /* Disable primitive restart index */
-            Disable(GLState::PRIMITIVE_RESTART);
+            Disable(GLState::PrimitiveRestart);
         }
 
         #else
@@ -955,7 +955,7 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
         if (contextState_.boundVertexArray != 0)
         {
             /* Bind index buffer */
-            BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
+            BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
         }
 
         #endif
@@ -994,23 +994,23 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 
     /* Release buffer ID from all potentially used GL buffer targets */
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
-        NotifyBufferRelease(id, GLBufferTarget::ARRAY_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::ArrayBuffer);
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
-        NotifyBufferRelease(id, GLBufferTarget::ELEMENT_ARRAY_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::ElementArrayBuffer);
     if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-        NotifyBufferRelease(id, GLBufferTarget::UNIFORM_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::UniformBuffer);
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        NotifyBufferRelease(id, GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::TransformFeedbackBuffer);
     if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-        NotifyBufferRelease(id, GLBufferTarget::SHADER_STORAGE_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::ShaderStorageBuffer);
     if ((bindFlags & BindFlags::IndirectBuffer) != 0)
     {
-        NotifyBufferRelease(id, GLBufferTarget::DRAW_INDIRECT_BUFFER);
-        NotifyBufferRelease(id, GLBufferTarget::DISPATCH_INDIRECT_BUFFER);
+        NotifyBufferRelease(id, GLBufferTarget::DrawIndirectBuffer);
+        NotifyBufferRelease(id, GLBufferTarget::DispatchIndirectBuffer);
     }
 
-    NotifyBufferRelease(id, GLBufferTarget::COPY_READ_BUFFER);
-    NotifyBufferRelease(id, GLBufferTarget::COPY_WRITE_BUFFER);
+    NotifyBufferRelease(id, GLBufferTarget::CopyReadBuffer);
+    NotifyBufferRelease(id, GLBufferTarget::CopyWriteBuffer);
 }
 
 void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)
@@ -1030,12 +1030,12 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
     boundRenderTarget_ = renderTarget;
     if (renderTarget)
     {
-        BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTarget->GetFramebuffer().GetID());
+        BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, renderTarget->GetFramebuffer().GetID());
         SetClipControl(GL_UPPER_LEFT, contextState_.clipDepthMode);
     }
     else
     {
-        BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, 0);
         SetClipControl(GL_LOWER_LEFT, contextState_.clipDepthMode);
     }
 }
@@ -1127,15 +1127,15 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
 {
     switch (type)
     {
-        case TextureType::Texture1D:        return GLTextureTarget::TEXTURE_1D;
-        case TextureType::Texture2D:        return GLTextureTarget::TEXTURE_2D;
-        case TextureType::Texture3D:        return GLTextureTarget::TEXTURE_3D;
-        case TextureType::TextureCube:      return GLTextureTarget::TEXTURE_CUBE_MAP;
-        case TextureType::Texture1DArray:   return GLTextureTarget::TEXTURE_1D_ARRAY;
-        case TextureType::Texture2DArray:   return GLTextureTarget::TEXTURE_2D_ARRAY;
-        case TextureType::TextureCubeArray: return GLTextureTarget::TEXTURE_CUBE_MAP_ARRAY;
-        case TextureType::Texture2DMS:      return GLTextureTarget::TEXTURE_2D_MULTISAMPLE;
-        case TextureType::Texture2DMSArray: return GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY;
+        case TextureType::Texture1D:        return GLTextureTarget::Texture1D;
+        case TextureType::Texture2D:        return GLTextureTarget::Texture2D;
+        case TextureType::Texture3D:        return GLTextureTarget::Texture3D;
+        case TextureType::TextureCube:      return GLTextureTarget::TextureCubeMap;
+        case TextureType::Texture1DArray:   return GLTextureTarget::Texture1DArray;
+        case TextureType::Texture2DArray:   return GLTextureTarget::Texture2DArray;
+        case TextureType::TextureCubeArray: return GLTextureTarget::TextureCubeMapArray;
+        case TextureType::Texture2DMS:      return GLTextureTarget::Texture2DMultisample;
+        case TextureType::Texture2DMSArray: return GLTextureTarget::Texture2DMultisampleArray;
         default:                            break;
     }
     LLGL_TRAP("failed to convert texture type to OpenGL texture target");
@@ -1731,12 +1731,12 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 
     #ifdef GL_NV_conservative_raster
     // see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::NV_conservative_raster, GL_CONSERVATIVE_RASTERIZATION_NV);
+    InitStateExt(GLStateExt::ConservativeRasterization, GLExt::NV_conservative_raster, GL_CONSERVATIVE_RASTERIZATION_NV);
     #endif
 
     #ifdef GL_INTEL_conservative_rasterization
     // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
+    InitStateExt(GLStateExt::ConservativeRasterization, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
     #endif
 
     #endif

@@ -339,7 +339,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             //TODO: generate loop in ASM
             auto cmd = reinterpret_cast<const GLCmdDrawArraysIndirect*>(pc);
-            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DrawIndirectBuffer, cmd->id);
             GLintptr offset = cmd->indirect;
             for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
             {
@@ -385,7 +385,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             auto cmd = reinterpret_cast<const GLCmdDrawElementsIndirect*>(pc);
             {
                 //TODO: generate loop in ASM
-                compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+                compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DrawIndirectBuffer, cmd->id);
                 GLintptr offset = cmd->indirect;
                 for (std::uint32_t i = 0; i < cmd->numCommands; ++i)
                 {
@@ -399,14 +399,14 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeMultiDrawArraysIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawArraysIndirect*>(pc);
-            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DrawIndirectBuffer, cmd->id);
             compiler.Call(glMultiDrawArraysIndirect, cmd->mode, cmd->indirect, cmd->drawcount, cmd->stride);
             return sizeof(*cmd);
         }
         case GLOpcodeMultiDrawElementsIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdMultiDrawElementsIndirect*>(pc);
-            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DRAW_INDIRECT_BUFFER, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DrawIndirectBuffer, cmd->id);
             compiler.Call(glMultiDrawElementsIndirect, cmd->mode, cmd->type, cmd->indirect, cmd->drawcount, cmd->stride);
             return sizeof(*cmd);
         }
@@ -421,7 +421,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeDispatchComputeIndirect:
         {
             auto cmd = reinterpret_cast<const GLCmdDispatchComputeIndirect*>(pc);
-            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DISPATCH_INDIRECT_BUFFER, cmd->id);
+            compiler.CallMember(&GLStateManager::BindBuffer, g_stateMngrArg, GLBufferTarget::DispatchIndirectBuffer, cmd->id);
             compiler.Call(glDispatchComputeIndirect, cmd->indirect);
             return sizeof(*cmd);
         }
@@ -457,11 +457,11 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
             if (cmd->resetUBO)
-                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::UNIFORM_BUFFER, cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::UniformBuffer, cmd->first, cmd->count);
             if (cmd->resetSSAO)
-                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::SHADER_STORAGE_BUFFER, cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::ShaderStorageBuffer, cmd->first, cmd->count);
             if (cmd->resetTransformFeedback)
-                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, cmd->first, cmd->count);
+                compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::TransformFeedbackBuffer, cmd->first, cmd->count);
             if (cmd->resetTextures)
                 compiler.CallMember(&GLStateManager::UnbindTextures, g_stateMngrArg, cmd->first, cmd->count);
             if (cmd->resetImages)

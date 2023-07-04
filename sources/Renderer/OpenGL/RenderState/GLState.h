@@ -21,41 +21,42 @@ class GLPipelineState;
 
 /* ----- Enumerations ----- */
 
-/**
-\brief OpenGL boolean state enumeration.
-\remarks Similar naming convention is used as in OpenGL API for simplicity.
-*/
+// OpenGL boolean state enumeration.
 enum class GLState
 {
-    BLEND = 0,
-    CULL_FACE,
-    DEPTH_TEST,
-    DITHER,
-    POLYGON_OFFSET_FILL,
-    PRIMITIVE_RESTART_FIXED_INDEX,
-    RASTERIZER_DISCARD,
-    SAMPLE_ALPHA_TO_COVERAGE,
-    SAMPLE_COVERAGE,
-    SCISSOR_TEST,
-    STENCIL_TEST,
+    Blend = 0,                  // GL_BLEND
+    CullFace,                   // GL_CULL_FACE
+    DepthTest,                  // GL_DEPTH_TEST
+    Dither,                     // GL_DITHER
+    PolygonOffsetFill,          // GL_POLYGON_OFFSET_FILL
+    PrimitiveRestartFixedIndex, // GL_PRIMITIVE_RESTART_FIXED_INDEX
+    RasterizerDiscard,          // GL_RASTERIZER_DISCARD
+    SampleAlphaToCoverage,      // GL_SAMPLE_ALPHA_TO_COVERAGE
+    SampleCoverage,             // GL_SAMPLE_COVERAGE
+    ScissorTest,                // GL_SCISSOR_TEST
+    StencilTest,                // GL_STENCIL_TEST
+
     #ifdef LLGL_OPENGL
-    COLOR_LOGIC_OP,
-    DEPTH_CLAMP,
-    DEBUG_OUTPUT,
-    DEBUG_OUTPUT_SYNCHRONOUS,
-    FRAMEBUFFER_SRGB,
-    LINE_SMOOTH,
-    MULTISAMPLE,
-    POLYGON_OFFSET_LINE,
-    POLYGON_OFFSET_POINT,
-    POLYGON_SMOOTH,
-    PRIMITIVE_RESTART,
-    PROGRAM_POINT_SIZE,
-    SAMPLE_ALPHA_TO_ONE,
-    SAMPLE_SHADING,
-    SAMPLE_MASK,
-    TEXTURE_CUBE_MAP_SEAMLESS,
-    #endif
+
+    ColorLogicOp,               // GL_COLOR_LOGIC_OP
+    DepthClamp,                 // GL_DEPTH_CLAMP
+    DebugOutput,                // GL_DEBUG_OUTPUT
+    DebugOutputSynchronous,     // GL_DEBUG_OUTPUT_SYNCHRONOUS
+    FramebufferSRGB,            // GL_FRAMEBUFFER_SRGB
+    LineSmooth,                 // GL_LINE_SMOOTH
+    Multisample,                // GL_MULTISAMPLE
+    PolygonOffsetLine,          // GL_POLYGON_OFFSET_LINE
+    PolygonOffsetPoint,         // GL_POLYGON_OFFSET_POINT
+    PolygonSmooth,              // GL_POLYGON_SMOOTH
+    PrimitiveRestart,           // GL_PRIMITIVE_RESTART
+    ProgramPointSize,           // GL_PROGRAM_POINT_SIZE
+    SampleAlphaToOne,           // GL_SAMPLE_ALPHA_TO_ONE
+    SampleShading,              // GL_SAMPLE_SHADING
+    SampleMask,                 // GL_SAMPLE_MASK
+    TextureCubeMapSeamless,     // GL_TEXTURE_CUBE_MAP_SEAMLESS
+
+    #endif // /LLGL_OPENGL
+
     Num,
 };
 
@@ -63,7 +64,8 @@ enum class GLState
 
 enum class GLStateExt
 {
-    CONSERVATIVE_RASTERIZATION = 0, // either NV or INTEL extension
+    ConservativeRasterization = 0, // GL_CONSERVATIVE_RASTERIZATION_(NV/INTEL)
+
     Num,
 };
 
@@ -71,44 +73,47 @@ enum class GLStateExt
 
 enum class GLBufferTarget
 {
-    ARRAY_BUFFER = 0,
-    ATOMIC_COUNTER_BUFFER,
-    COPY_READ_BUFFER,
-    COPY_WRITE_BUFFER,
-    DISPATCH_INDIRECT_BUFFER,
-    DRAW_INDIRECT_BUFFER,
-    ELEMENT_ARRAY_BUFFER,
-    PIXEL_PACK_BUFFER,
-    PIXEL_UNPACK_BUFFER,
-    QUERY_BUFFER,
-    SHADER_STORAGE_BUFFER,
-    TEXTURE_BUFFER,
-    TRANSFORM_FEEDBACK_BUFFER,
-    UNIFORM_BUFFER,
+    ArrayBuffer = 0,            // GL_ARRAY_BUFFER
+    AtomicCounterBuffer,        // GL_ATOMIC_COUNTER_BUFFER
+    CopyReadBuffer,             // GL_COPY_READ_BUFFER
+    CopyWriteBuffer,            // GL_COPY_WRITE_BUFFER
+    DispatchIndirectBuffer,     // GL_DISPATCH_INDIRECT_BUFFER
+    DrawIndirectBuffer,         // GL_DRAW_INDIRECT_BUFFER
+    ElementArrayBuffer,         // GL_ELEMENT_ARRAY_BUFFER
+    PixelPackBuffer,            // GL_PIXEL_PACK_BUFFER
+    PixelUnpackBuffer,          // GL_PIXEL_UNPACK_BUFFER
+    QueryBuffer,                // GL_QUERY_BUFFER
+    ShaderStorageBuffer,        // GL_SHADER_STORAGE_BUFFER
+    TextureBuffer,              // GL_TEXTURE_BUFFER
+    TransformFeedbackBuffer,    // GL_TRANSFORM_FEEDBACK_BUFFER
+    UniformBuffer,              // GL_UNIFORM_BUFFER
+
     Num,
 };
 
 enum class GLFramebufferTarget
 {
-    FRAMEBUFFER = 0,
-    DRAW_FRAMEBUFFER,
-    READ_FRAMEBUFFER,
+    Framebuffer = 0,    // GL_FRAMEBUFFER
+    DrawFramebuffer,    // GL_DRAW_FRAMEBUFFER
+    ReadFramebuffer,    // GL_READ_FRAMEBUFFER
+
     Num,
 };
 
 enum class GLTextureTarget
 {
-    TEXTURE_1D = 0,
-    TEXTURE_2D,
-    TEXTURE_3D,
-    TEXTURE_1D_ARRAY,
-    TEXTURE_2D_ARRAY,
-    TEXTURE_RECTANGLE,
-    TEXTURE_CUBE_MAP,
-    TEXTURE_CUBE_MAP_ARRAY,
-    TEXTURE_BUFFER,
-    TEXTURE_2D_MULTISAMPLE,
-    TEXTURE_2D_MULTISAMPLE_ARRAY,
+    Texture1D = 0,              // GL_TEXTURE_1D
+    Texture2D,                  // GL_TEXTURE_2D
+    Texture3D,                  // GL_TEXTURE_3D
+    Texture1DArray,             // GL_TEXTURE_1D_ARRAY
+    Texture2DArray,             // GL_TEXTURE_2D_ARRAY
+    TextureRectangle,           // GL_TEXTURE_RECTANGLE
+    TextureCubeMap,             // GL_TEXTURE_CUBE_MAP
+    TextureCubeMapArray,        // GL_TEXTURE_CUBE_MAP_ARRAY
+    TextureBuffer,              // GL_TEXTURE_BUFFER
+    Texture2DMultisample,       // GL_TEXTURE_2D_MULTISAMPLE
+    Texture2DMultisampleArray,  // GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+
     Num,
 };
 

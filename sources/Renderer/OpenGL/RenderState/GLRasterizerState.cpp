@@ -23,10 +23,10 @@ static GLState ToPolygonOffsetState(const PolygonMode mode)
 {
     switch (mode)
     {
-        case PolygonMode::Fill:         return GLState::POLYGON_OFFSET_FILL;
+        case PolygonMode::Fill:         return GLState::PolygonOffsetFill;
         #ifdef LLGL_OPENGL
-        case PolygonMode::Wireframe:    return GLState::POLYGON_OFFSET_LINE;
-        case PolygonMode::Points:       return GLState::POLYGON_OFFSET_POINT;
+        case PolygonMode::Wireframe:    return GLState::PolygonOffsetLine;
+        case PolygonMode::Points:       return GLState::PolygonOffsetPoint;
         #else
         case PolygonMode::Wireframe:    break;
         case PolygonMode::Points:       break;
@@ -70,24 +70,24 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
 {
     #ifdef LLGL_OPENGL
     stateMngr.SetPolygonMode(polygonMode_);
-    stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);
-    stateMngr.Set(GLState::MULTISAMPLE, multiSampleEnabled_);
-    stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
+    stateMngr.Set(GLState::DepthClamp, depthClampEnabled_);
+    stateMngr.Set(GLState::Multisample, multiSampleEnabled_);
+    stateMngr.Set(GLState::LineSmooth, lineSmoothEnabled_);
     #endif
 
     stateMngr.SetFrontFace(frontFace_);
     stateMngr.SetLineWidth(lineWidth_);
 
-    stateMngr.Set(GLState::RASTERIZER_DISCARD, rasterizerDiscard_);
-    stateMngr.Set(GLState::SCISSOR_TEST, scissorTestEnabled_);
+    stateMngr.Set(GLState::RasterizerDiscard, rasterizerDiscard_);
+    stateMngr.Set(GLState::ScissorTest, scissorTestEnabled_);
 
     if (cullFace_ != 0)
     {
-        stateMngr.Enable(GLState::CULL_FACE);
+        stateMngr.Enable(GLState::CullFace);
         stateMngr.SetCullFace(cullFace_);
     }
     else
-        stateMngr.Disable(GLState::CULL_FACE);
+        stateMngr.Disable(GLState::CullFace);
 
     if (polygonOffsetEnabled_)
     {
@@ -98,7 +98,7 @@ void GLRasterizerState::Bind(GLStateManager& stateMngr)
         stateMngr.Disable(polygonOffsetMode_);
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-    stateMngr.Set(GLStateExt::CONSERVATIVE_RASTERIZATION, conservativeRaster_);
+    stateMngr.Set(GLStateExt::ConservativeRasterization, conservativeRaster_);
     #endif
 }
 

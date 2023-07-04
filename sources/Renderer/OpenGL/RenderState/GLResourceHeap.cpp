@@ -351,11 +351,11 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet
 
     /* Bind all constant buffers */
     for_range(i, segmentation_.numUniformBufferSegments)
-        heapPtr += BindBuffersSegment(stateMngr, heapPtr, GLBufferTarget::UNIFORM_BUFFER);
+        heapPtr += BindBuffersSegment(stateMngr, heapPtr, GLBufferTarget::UniformBuffer);
 
     /* Bind all shader storage buffers */
     for_range(i, segmentation_.numStorageBufferSegments)
-        heapPtr += BindBuffersSegment(stateMngr, heapPtr, GLBufferTarget::SHADER_STORAGE_BUFFER);
+        heapPtr += BindBuffersSegment(stateMngr, heapPtr, GLBufferTarget::ShaderStorageBuffer);
 
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasNativeSamplers())

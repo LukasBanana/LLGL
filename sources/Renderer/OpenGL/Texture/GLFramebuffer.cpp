@@ -96,7 +96,7 @@ bool GLFramebuffer::FramebufferParameters(
     #ifdef GL_ARB_framebuffer_no_attachments
     if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
     {
-        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::Framebuffer, GetID());
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, layers);

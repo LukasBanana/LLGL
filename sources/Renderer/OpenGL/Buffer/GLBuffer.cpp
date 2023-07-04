@@ -23,18 +23,18 @@ namespace LLGL
 static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
 {
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
-        return GLBufferTarget::ARRAY_BUFFER;
+        return GLBufferTarget::ArrayBuffer;
     if ((bindFlags & BindFlags::IndexBuffer) != 0)
-        return GLBufferTarget::ELEMENT_ARRAY_BUFFER;
+        return GLBufferTarget::ElementArrayBuffer;
     if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-        return GLBufferTarget::UNIFORM_BUFFER;
+        return GLBufferTarget::UniformBuffer;
     if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        return GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER;
+        return GLBufferTarget::TransformFeedbackBuffer;
     if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-        return GLBufferTarget::SHADER_STORAGE_BUFFER;
+        return GLBufferTarget::ShaderStorageBuffer;
     if ((bindFlags & BindFlags::IndirectBuffer) != 0)
-        return GLBufferTarget::DRAW_INDIRECT_BUFFER;
-    return GLBufferTarget::ARRAY_BUFFER;
+        return GLBufferTarget::DrawIndirectBuffer;
+    return GLBufferTarget::ArrayBuffer;
 }
 
 GLBuffer::GLBuffer(long bindFlags) :
@@ -235,8 +235,8 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
     if (HasExtension(GLExt::ARB_copy_buffer))
     {
         /* Bind source and destination buffer for copy operation (GL 3.1+) */
-        GLStateManager::Get().BindBuffer(GLBufferTarget::COPY_READ_BUFFER, readBuffer.GetID());
-        GLStateManager::Get().BindBuffer(GLBufferTarget::COPY_WRITE_BUFFER, GetID());
+        GLStateManager::Get().BindBuffer(GLBufferTarget::CopyReadBuffer, readBuffer.GetID());
+        GLStateManager::Get().BindBuffer(GLBufferTarget::CopyWriteBuffer, GetID());
         glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, readOffset, writeOffset, size);
     }
     else

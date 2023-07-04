@@ -85,8 +85,8 @@ void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
 {
     if (framebufferResolve_.Valid() && !drawBuffersResolve_.empty())
     {
-        stateMngr.BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferResolve_.GetID());
-        stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, framebuffer_.GetID());
+        stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebufferResolve_.GetID());
+        stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, framebuffer_.GetID());
 
         for (GLenum buf : drawBuffersResolve_)
         {
@@ -95,8 +95,8 @@ void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
             GLFramebuffer::Blit(resolution_[0], resolution_[1], GL_COLOR_BUFFER_BIT);
         }
 
-        stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
-        stateMngr.BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, 0);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, 0);
     }
 }
 
@@ -104,14 +104,14 @@ void GLRenderTarget::ResolveMultisampledIntoBackbuffer(GLStateManager& stateMngr
 {
     if (colorTarget < drawBuffers_.size())
     {
-        stateMngr.BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, framebuffer_.GetID());
+        stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, 0);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, framebuffer_.GetID());
         {
             glReadBuffer(drawBuffers_[colorTarget]);
             GLProfile::DrawBuffer(GL_BACK);
             GLFramebuffer::Blit(resolution_[0], resolution_[1], GL_COLOR_BUFFER_BIT);
         }
-        stateMngr.BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
+        stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, 0);
     }
 }
 
@@ -151,7 +151,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     const std::uint32_t numColorAttachments = GetNumColorAttachments();
 
     /* Bind primary FBO */
-    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebuffer_.GetID());
     {
         /* Attach all color targets */
         for_range(colorTarget, numColorAttachments)
@@ -173,7 +173,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
         framebufferResolve_.GenFramebuffer();
 
         /* Bind multi-sampled FBO */
-        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebufferResolve_.GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebufferResolve_.GetID());
         {
             /* Attach all color resolve targets */
             for_range(colorTarget, numColorAttachments)
@@ -201,7 +201,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments()
     #endif // /GL_ARB_framebuffer_no_attachments
     {
         /* Bind primary FBO and create dummy renderbuffer attachment */
-        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, framebuffer_.GetID());
+        GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebuffer_.GetID());
         CreateAndAttachRenderbuffer(GL_COLOR_ATTACHMENT0, GL_RED);
     }
 

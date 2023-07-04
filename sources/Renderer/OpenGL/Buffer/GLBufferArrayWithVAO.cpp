@@ -70,7 +70,7 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
             {
                 /* Bind VBO */
                 auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, bufferGL);
-                GLStateManager::Get().BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBufferGL->GetID());
+                GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, vertexBufferGL->GetID());
 
                 /* Build each vertex attribute */
                 const auto& vertexAttribs = vertexBufferGL->GetVertexAttribs();

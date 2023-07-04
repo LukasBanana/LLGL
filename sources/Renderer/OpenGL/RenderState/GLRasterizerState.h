@@ -63,7 +63,7 @@ class GLRasterizerState
         bool        lineSmoothEnabled_      = false;    // glEnable(GL_LINE_SMOOTH)
         GLfloat     lineWidth_              = 1.0f;
         bool        polygonOffsetEnabled_   = false;
-        GLState     polygonOffsetMode_      = GLState::POLYGON_OFFSET_FILL;
+        GLState     polygonOffsetMode_      = GLState::PolygonOffsetFill;
         GLfloat     polygonOffsetFactor_    = 0.0f;
         GLfloat     polygonOffsetUnits_     = 0.0f;
         GLfloat     polygonOffsetClamp_     = 0.0f;

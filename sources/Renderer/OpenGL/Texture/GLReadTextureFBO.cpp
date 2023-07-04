@@ -1,6 +1,6 @@
 /*
  * GLReadTextureFBO.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -18,7 +18,7 @@ namespace LLGL
 GLReadTextureFBO::GLReadTextureFBO()
 {
     fbo_.GenFramebuffer();
-    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, fbo_.GetID());
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, fbo_.GetID());
 }
 
 GLReadTextureFBO::~GLReadTextureFBO()

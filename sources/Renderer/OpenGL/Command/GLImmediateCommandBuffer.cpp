@@ -369,14 +369,14 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
         case GLResourceType_UBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
-            stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, binding.slot, bufferGL.GetID());
+            stateMngr_->BindBufferBase(GLBufferTarget::UniformBuffer, binding.slot, bufferGL.GetID());
         }
         break;
 
         case GLResourceType_SSBO:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
-            stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, binding.slot, bufferGL.GetID());
+            stateMngr_->BindBufferBase(GLBufferTarget::ShaderStorageBuffer, binding.slot, bufferGL.GetID());
         }
         break;
 
@@ -433,11 +433,11 @@ void GLImmediateCommandBuffer::ResetResourceSlots(
             case ResourceType::Buffer:
             {
                 if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-                    stateMngr_->UnbindBuffersBase(GLBufferTarget::UNIFORM_BUFFER, first, count);
+                    stateMngr_->UnbindBuffersBase(GLBufferTarget::UniformBuffer, first, count);
                 if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-                    stateMngr_->UnbindBuffersBase(GLBufferTarget::SHADER_STORAGE_BUFFER, first, count);
+                    stateMngr_->UnbindBuffersBase(GLBufferTarget::ShaderStorageBuffer, first, count);
                 if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-                    stateMngr_->UnbindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, first, count);
+                    stateMngr_->UnbindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, first, count);
             }
             break;
 
@@ -602,7 +602,7 @@ void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffe
         soTargets[i] = bufferGL->GetID();
     }
 
-    stateMngr_->BindBuffersBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, static_cast<GLsizei>(numBuffers), soTargets);
+    stateMngr_->BindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, 0, static_cast<GLsizei>(numBuffers), soTargets);
 
     /* Begin transform feedback section */
     #ifdef LLGL_GLEXT_TRANSFORM_FEEDBACK
@@ -735,7 +735,7 @@ void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset
 {
     #ifdef LLGL_GLEXT_DRAW_INDIRECT
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+    stateMngr_->BindBuffer(GLBufferTarget::DrawIndirectBuffer, bufferGL.GetID());
 
     const GLintptr indirect = static_cast<GLintptr>(offset);
     glDrawArraysIndirect(
@@ -750,7 +750,7 @@ void GLImmediateCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset
     #ifdef LLGL_GLEXT_DRAW_INDIRECT
     /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+    stateMngr_->BindBuffer(GLBufferTarget::DrawIndirectBuffer, bufferGL.GetID());
 
     GLintptr indirect = static_cast<GLintptr>(offset);
     #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
@@ -784,7 +784,7 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
 {
     #ifdef LLGL_GLEXT_DRAW_INDIRECT
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+    stateMngr_->BindBuffer(GLBufferTarget::DrawIndirectBuffer, bufferGL.GetID());
 
     const GLintptr indirect = static_cast<GLintptr>(offset);
     glDrawElementsIndirect(
@@ -800,7 +800,7 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
     #ifdef LLGL_GLEXT_DRAW_INDIRECT
     /* Bind indirect argument buffer */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DRAW_INDIRECT_BUFFER, bufferGL.GetID());
+    stateMngr_->BindBuffer(GLBufferTarget::DrawIndirectBuffer, bufferGL.GetID());
 
     GLintptr indirect = static_cast<GLintptr>(offset);
     #ifdef LLGL_GLEXT_MULTI_DRAW_INDIRECT
@@ -845,7 +845,7 @@ void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t of
 {
     #ifdef LLGL_GLEXT_COMPUTE_SHADER
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(GLBufferTarget::DISPATCH_INDIRECT_BUFFER, bufferGL.GetID());
+    stateMngr_->BindBuffer(GLBufferTarget::DispatchIndirectBuffer, bufferGL.GetID());
     glDispatchComputeIndirect(static_cast<GLintptr>(offset));
     #endif
 }
