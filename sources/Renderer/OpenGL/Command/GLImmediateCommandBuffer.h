@@ -35,8 +35,6 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
     public:
 
-        /* ----- Internal ----- */
-
         // Returns true.
         bool IsImmediateCmdBuffer() const override;
 

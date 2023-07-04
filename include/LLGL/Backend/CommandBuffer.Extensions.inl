@@ -7,9 +7,9 @@
 
 /* ----- Extensions ----- */
 
-virtual void SetGraphicsAPIDependentState(
-    const void* stateDesc,
-    std::size_t stateDescSize
+virtual void DoNativeCommand(
+    const void* nativeCommand,
+    std::size_t nativeCommandSize
 ) override final;
 
 virtual bool GetNativeHandle(

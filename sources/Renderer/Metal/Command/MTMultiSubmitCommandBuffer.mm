@@ -1114,9 +1114,8 @@ void MTMultiSubmitCommandBuffer::BindRenderEncoderForTessellation(NSUInteger num
     {
         auto cmd = AllocCommand<MTCmdSetTessellationPSO>(MTOpcodeSetTessellationPSO);
         {
-            cmd->tessPipelineState      = GetTessPipelineState();
-            cmd->tessFactorBuffer       = tessFactorBuffer;
-            cmd->tessFactorBufferSlot   = GetTessFactorBufferSlot();
+            cmd->tessPipelineState  = GetTessPipelineState();
+            cmd->tessFactorBuffer   = tessFactorBuffer;
         }
         DispatchThreads1D(GetTessPipelineState(), numPatchesAndInstances);
     }

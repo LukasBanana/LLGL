@@ -21,6 +21,7 @@
 #include "../../../Core/Assertion.h"
 
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Backend/Metal/NativeCommand.h>
 
 
 namespace LLGL
@@ -174,7 +175,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             auto computeEncoder = context.BindComputeEncoder();
             context.RebindResourceHeap(computeEncoder);
             [computeEncoder setComputePipelineState: cmd->tessPipelineState];
-            [computeEncoder setBuffer:cmd->tessFactorBuffer offset:0 atIndex:cmd->tessFactorBufferSlot];
+            [computeEncoder setBuffer:cmd->tessFactorBuffer offset:0 atIndex:context.bindingTable.tessFactorBufferSlot];
             return sizeof(*cmd);
         }
         case MTOpcodeSetTessellationFactorBuffer:
@@ -456,6 +457,27 @@ void ExecuteMTCommandBuffer(const MTCommandBuffer& cmdBuffer, MTCommandContext& 
         /* Execute multi-submit command buffer */
         auto& multiSubmitCmdBufferGL = LLGL_CAST(const MTMultiSubmitCommandBuffer&, cmdBuffer);
         ExecuteMTMultiSubmitCommandBuffer(multiSubmitCmdBufferGL, context);
+    }
+}
+
+void ExecuteNativeMTCommand(const Metal::NativeCommand& cmd, MTCommandContext& context)
+{
+    switch (cmd.type)
+    {
+        case Metal::NativeCommandType::ClearCache:
+        {
+            context.Reset();
+        }
+        break;
+
+        case Metal::NativeCommandType::TessFactorBuffer:
+        {
+            context.bindingTable.tessFactorBufferSlot = cmd.tessFactorBuffer.slot;
+        }
+        break;
+
+        default:
+        break;
     }
 }
 

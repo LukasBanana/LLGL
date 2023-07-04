@@ -13,6 +13,8 @@ namespace LLGL
 {
 
 
+namespace Metal { struct NativeCommand; }
+
 class MTCommandContext;
 class MTCommandBuffer;
 class MTMultiSubmitCommandBuffer;
@@ -23,6 +25,9 @@ Metal render states are tracked with the specified command context.
 */
 void ExecuteMTMultiSubmitCommandBuffer(const MTMultiSubmitCommandBuffer& cmdbuffer, MTCommandContext& context);
 void ExecuteMTCommandBuffer(const MTCommandBuffer& cmdbuffer, MTCommandContext& context);
+
+// Executes the specified native Metal command.
+void ExecuteNativeMTCommand(const Metal::NativeCommand& cmd, MTCommandContext& context);
 
 
 } // /namespace LLGL

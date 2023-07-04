@@ -1027,6 +1027,15 @@ void MTDirectCommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
+void MTDirectCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
+{
+    if (nativeCommand != nullptr && nativeCommandSize == sizeof(Metal::NativeCommand))
+    {
+        const auto* nativeCommandMT = reinterpret_cast<const Metal::NativeCommand*>(nativeCommand);
+        ExecuteNativeMTCommand(*nativeCommandMT, context_);
+    }
+}
+
 bool MTDirectCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Metal::CommandBufferNativeHandle))
@@ -1151,7 +1160,7 @@ id<MTLRenderCommandEncoder> MTDirectCommandBuffer::DispatchTessellationAndGetRen
 
             /* Disaptch kernel to generate patch tessellation factors */
             [computeEncoder setComputePipelineState: tessPipelineState];
-            [computeEncoder setBuffer:tessFactorBuffer offset:0 atIndex:GetTessFactorBufferSlot()];
+            [computeEncoder setBuffer:tessFactorBuffer offset:0 atIndex:context_.bindingTable.tessFactorBufferSlot];
 
             DispatchThreads1D(computeEncoder, tessPipelineState, numPatchesAndInstances);
         }

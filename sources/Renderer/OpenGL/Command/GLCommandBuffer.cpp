@@ -56,11 +56,6 @@ void GLCommandBuffer::SetPipelineRenderState(const GLPipelineState& pipelineStat
 
 /* ----- Extensions ----- */
 
-void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
-{
-    // dummy
-}
-
 bool GLCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy

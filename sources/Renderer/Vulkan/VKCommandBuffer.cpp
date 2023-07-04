@@ -1051,7 +1051,7 @@ void VKCommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
-void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void VKCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
 {
     // dummy
 }

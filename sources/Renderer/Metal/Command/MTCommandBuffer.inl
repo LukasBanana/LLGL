@@ -17,7 +17,7 @@
 #include <LLGL/Backend/CommandBuffer.Drawing.inl>
 #include <LLGL/Backend/CommandBuffer.Compute.inl>
 #include <LLGL/Backend/CommandBuffer.Debugging.inl>
-/*exclude<LLGL/Backend/CommandBuffer.Extensions.inl>*/
+#include <LLGL/Backend/CommandBuffer.Extensions.inl>
 
 
 /* ----- Input Assembly ------ */
@@ -58,13 +58,6 @@ virtual void SetBlendFactor(
 virtual void SetStencilReference(
     std::uint32_t       reference,
     const StencilFace   stencilFace     = StencilFace::FrontAndBack
-) override final;
-
-/* ----- Extensions ----- */
-
-virtual bool GetNativeHandle(
-    void*               nativeHandle,
-    std::size_t         nativeHandleSize
 ) override final;
 
 

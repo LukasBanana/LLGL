@@ -605,13 +605,17 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Returns the native device handle.
+
         \param[out] nativeHandle Raw pointer to the backend specific structure to store the native handle.
         Optain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeHandle.h></code>
-        where \c BACKEND must be either \c Direct3D11, \c Direct3D12, \c Metal, or \c Vulkan.
+        where \c BACKEND must be either \c Direct3D12, \c Direct3D11, \c Metal, or \c Vulkan.
         OpenGL does not have a native handle as it uses the current platform specific GL context.
+
         \param[in] nativeHandleSize Specifies the size (in bytes) of the native handle structure for robustness.
         This must be <code>sizeof(STRUCT)</code> where \c STRUCT is the respective backend specific structure such as \c LLGL::Direct3D12::RenderSystemNativeHandle.
+
         \return True if the native handle was successfully retrieved. Otherwise, \c nativeHandleSize specifies an incompatible structure size.
+
         \remarks For the Direct3D backends, all retrieved COM pointers will be incremented and the user is responsible for releasing those pointers,
         i.e. a call to \c IUnknown::Release is required to each of the objects returned by this function.
         \remarks For the Metal backend, all retrieved \c NSObject instances will have their retain counter incremented and the user is responsible for releasing those objects,
@@ -627,7 +631,13 @@ class LLGL_EXPORT RenderSystem : public Interface
         ...
         d3dDevice->Release();
         \endcode
-        \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
+
+        \note Only supported with: Direct3D 12, Direct3D 11, Vulkan, Metal.
+
+        \see Direct3D12::RenderSystemNativeHandle
+        \see Direct3D11::RenderSystemNativeHandle
+        \see Vulkan::RenderSystemNativeHandle
+        \see Metal::RenderSystemNativeHandle
         */
         virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) = 0;
 

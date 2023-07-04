@@ -26,7 +26,7 @@ class GLCommandBuffer : public CommandBuffer
 
     public:
 
-        #include <LLGL/Backend/CommandBuffer.Extensions.inl>
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override final;
 
     public:
 

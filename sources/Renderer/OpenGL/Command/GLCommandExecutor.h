@@ -13,6 +13,8 @@ namespace LLGL
 {
 
 
+namespace OpenGL { struct NativeCommand; }
+
 class GLStateManager;
 class GLCommandBuffer;
 class GLDeferredCommandBuffer;
@@ -23,6 +25,9 @@ GL render states are tracked with the specified state manager.
 */
 void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdbuffer, GLStateManager& stateMngr);
 void ExecuteGLCommandBuffer(const GLCommandBuffer& cmdbuffer, GLStateManager& stateMngr);
+
+// Executes the specified native GL command.
+void ExecuteNativeGLCommand(const OpenGL::NativeCommand& cmd, GLStateManager& stateMngr);
 
 
 } // /namespace LLGL

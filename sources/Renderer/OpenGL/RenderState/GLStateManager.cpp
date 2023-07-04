@@ -197,6 +197,7 @@ void GLStateManager::ResetFramebufferHeight(GLint height)
 
 /* ----- Boolean states ----- */
 
+//TODO: do a full cache reset: query *all* context states
 void GLStateManager::Reset()
 {
     /* Query all states from OpenGL */

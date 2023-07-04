@@ -113,7 +113,6 @@ struct MTCmdSetTessellationPSO
 {
     id<MTLComputePipelineState> tessPipelineState;
     id<MTLBuffer>               tessFactorBuffer;
-    NSUInteger                  tessFactorBufferSlot;
 };
 
 struct MTCmdSetTessellationFactorBuffer

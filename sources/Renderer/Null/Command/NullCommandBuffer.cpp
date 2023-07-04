@@ -591,7 +591,7 @@ void NullCommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
-void NullCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void NullCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
 {
     // dummy
 }

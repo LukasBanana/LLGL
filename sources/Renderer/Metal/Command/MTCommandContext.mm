@@ -23,12 +23,19 @@ namespace LLGL
 {
 
 
-void MTCommandContext::Reset(id<MTLCommandBuffer> cmdBuffer)
+void MTCommandContext::Reset()
 {
-    cmdBuffer_ = cmdBuffer;
+    /* Reset all dirty bits */
+    renderDirtyBits_.bits = ~0;
     isRenderEncoderPaused_ = false;
     ResetRenderEncoderState();
     ResetComputeEncoderState();
+}
+
+void MTCommandContext::Reset(id<MTLCommandBuffer> cmdBuffer)
+{
+    Reset();
+    cmdBuffer_ = cmdBuffer;
 }
 
 void MTCommandContext::Flush()

@@ -16,6 +16,8 @@
 #include "../../CheckedCast.h"
 #include <algorithm>
 
+#include <LLGL/Backend/Metal/NativeCommand.h>
+
 
 namespace LLGL
 {
@@ -52,15 +54,6 @@ void MTCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::ui
 {
     if (constantsCache_ != nullptr)
         constantsCache_->SetUniforms(first, data, dataSize);
-}
-
-void MTCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
-{
-    if (stateDesc != nullptr && stateDescSize == sizeof(MetalDependentStateDescriptor))
-    {
-        const auto stateDescMT = reinterpret_cast<const MetalDependentStateDescriptor*>(stateDesc);
-        tessFactorBufferSlot_ = stateDescMT->tessFactorBufferSlot;
-    }
 }
 
 

@@ -1,6 +1,6 @@
 /*
  * MTCommandContext.h
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -28,11 +28,19 @@ class MTComputePSO;
 class MTDescriptorCache;
 class MTConstantsCache;
 
+struct MTInternalBindingTable
+{
+    NSUInteger tessFactorBufferSlot = 30;
+};
+
 // Metal commadn context: Manages the scheduling between render and compute command encoders.
 class MTCommandContext
 {
 
     public:
+
+        // Resets all internal states.
+        void Reset();
 
         // Resets the encoder scheduler with the new command buffer.
         void Reset(id<MTLCommandBuffer> cmdBuffer);
@@ -102,6 +110,11 @@ class MTCommandContext
         {
             return blitEncoder_;
         }
+
+    public:
+
+        // Table of all internal binding slots.
+        MTInternalBindingTable bindingTable;
 
     private:
 

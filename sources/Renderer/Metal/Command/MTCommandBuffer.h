@@ -52,10 +52,6 @@ class MTCommandBuffer : public CommandBuffer
 
         void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override final;
 
-        /* ----- Extensions ----- */
-
-        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override final;
-
     public:
 
         /*
@@ -153,11 +149,6 @@ class MTCommandBuffer : public CommandBuffer
             return boundPipelineState_;
         }
 
-        inline NSUInteger GetTessFactorBufferSlot() const
-        {
-            return tessFactorBufferSlot_;
-        }
-
         inline id<MTLComputePipelineState> GetTessPipelineState() const
         {
             return tessPipelineState_;
@@ -192,7 +183,6 @@ class MTCommandBuffer : public CommandBuffer
 
         // Tessellator stage objects
         MTTessFactorBuffer              tessFactorBuffer_;
-        NSUInteger                      tessFactorBufferSlot_   = 30;
         NSUInteger                      tessFactorSize_         = 0;
         id<MTLComputePipelineState>     tessPipelineState_      = nil;
 

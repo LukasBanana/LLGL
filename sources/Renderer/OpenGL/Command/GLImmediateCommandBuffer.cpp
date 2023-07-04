@@ -44,6 +44,8 @@
 
 #include <cstring> // std::strlen
 
+#include <LLGL/Backend/OpenGL/NativeCommand.h>
+
 
 namespace LLGL
 {
@@ -874,7 +876,21 @@ void GLImmediateCommandBuffer::PopDebugGroup()
     #endif // /GL_KHR_debug
 }
 
-/* ----- Internal ----- */
+/* ----- Extensions ----- */
+
+void GLImmediateCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
+{
+    if (nativeCommand != nullptr && nativeCommandSize == sizeof(OpenGL::NativeCommand))
+    {
+        const auto* nativeCommandGL = reinterpret_cast<const OpenGL::NativeCommand*>(nativeCommand);
+        ExecuteNativeGLCommand(*nativeCommandGL, *stateMngr_);
+    }
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
 {

@@ -19,6 +19,13 @@
 #include <LLGL/Backend/CommandBuffer.Debugging.inl>
 /*exclude<LLGL/Backend/CommandBuffer.Extensions.inl> */
 
+/* ----- Extensions ----- */
+
+virtual void DoNativeCommand(
+    const void* nativeCommand,
+    std::size_t nativeCommandSize
+) override final;
+
 
 
 // ================================================================================

@@ -358,7 +358,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] viewports Pointer to the array of viewports. This <b>must not</b> be null!
         \remarks This must only be used if the currently bound graphics pipeline state was created with \c viewports being empty. Otherwise, the behavior is undefined.
         \see GraphicsPipelineDescriptor::viewports
-        \see SetGraphicsAPIDependentState
         \see RenderingLimits::maxViewports
         */
         virtual void SetViewports(std::uint32_t numViewports, const Viewport* viewports) = 0;
@@ -376,13 +375,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets an array of scissor rectangles, but only if the scissor test was enabled in the previously set graphics pipeline (otherwise, this function has no effect).
         \param[in] numScissors Specifies the number of scissor rectangles to set.
         \param[in] scissors Pointer to the array of scissor rectangles. This <b>must not</b> be null!
-        \remarks This function behaves differently on the OpenGL render system, depending on the state configured
-        with the \c SetGraphicsAPIDependentState function. If <code>stateOpenGL.screenSpaceOriginLowerLeft</code> is \c false,
-        the origin of each scissor rectangle is on the upper-left (like for all other render systems).
-        If <code>stateOpenGL.screenSpaceOriginLowerLeft</code> is \c true, the origin of each scissor rectangle is on the lower-left.
         \remarks This must only be used if the currently bound graphics pipeline state was created with \c scissors being empty. Otherwise, the behavior is undefined.
         \see GraphicsPipelineDescriptor::scissors
-        \see SetGraphicsAPIDependentState
         \see RasterizerDescriptor::scissorTestEnabled
         */
         virtual void SetScissors(std::uint32_t numScissors, const Scissor* scissors) = 0;
@@ -967,36 +961,46 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /* ----- Extensions ----- */
 
         /**
-        \brief Sets a few low-level graphics API dependent states.
+        \brief Performs a native command that is backend specific.
 
-        \param[in] stateDesc Specifies a pointer to the renderer spcific state descriptor. If this is a null pointer, the function has no effect.
-        \param[in] stateDescSize Specifies the size (in bytes) of the renderer spcific state descriptor structure.
-        If this value is not equal to the state descriptor structure that is required for the respective renderer, the function has no effect.
+        \param[out] nativeCommand Raw pointer to the backend specific structure to store the native command.
+        Optain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeCommand.h></code>
+        where \c BACKEND must be either \c Direct3D12, \c Direct3D11, \c Vulkan, \c Metal, or \c OpenGL.
 
+        \param[in] nativeCommandSize Specifies the size (in bytes) of the native command structure for robustness.
+        This must be <code>sizeof(STRUCT)</code> where \c STRUCT is the respective backend specific structure such as \c LLGL::Metal::NativeCommand.
+
+        \remarks This must only be used on an immediate command buffer, i.e. those that have been created with the CommandBufferFlags::ImmediateSubmit flag.
         \remarks This can be used to work around several differences between the low-level graphics APIs, e.g. for internal buffer binding slots.
         Here is a usage example:
         \code
-        LLGL::MetalDependentStateDescriptor myMetalStateDesc;
-        myMetalStateDesc.tessFactorBufferSlot = 1;
-        myCmdBuffer->SetGraphicsAPIDependentState(&myMetalStateDesc, sizeof(myMetalStateDesc));
+        LLGL::Metal::NativeCommand myMetalCommand;
+        myMetalCommand.type                  = LLGL::Metal::NativeCommandType::TessFactorBuffer;
+        myMetalCommand.tessFactorBuffer.slot = 1;
+        myCmdBuffer->DoNativeCommand(&myMetalCommand, sizeof(myMetalCommand));
         \endcode
 
-        \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
-
-        \see MetalDependentStateDescriptor
-        \todo Replace by GetNativeHandle function
+        \see Direct3D12::NativeCommand
+        \see Direct3D11::NativeCommand
+        \see Vulkan::NativeCommand
+        \see Metal::NativeCommand
+        \see OpenGL::NativeCommand
         */
-        virtual void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) = 0;
+        virtual void DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize) = 0;
 
         /**
         \brief Returns the native command buffer handle.
+
         \param[out] nativeHandle Raw pointer to the backend specific structure to store the native handle.
         Optain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeHandle.h></code>
-        where \c BACKEND must be either \c Direct3D11, \c Direct3D12, \c Metal, or \c Vulkan.
+        where \c BACKEND must be either \c Direct3D12, \c Direct3D11, \c Vulkan, or \c Metal.
         OpenGL does not have a native handle as it uses the current platform specific GL context.
+
         \param[in] nativeHandleSize Specifies the size (in bytes) of the native handle structure for robustness.
         This must be <code>sizeof(STRUCT)</code> where \c STRUCT is the respective backend specific structure such as \c LLGL::Direct3D12::CommandBufferNativeHandle.
+
         \return True if the native handle was successfully retrieved. Otherwise, \c nativeHandleSize specifies an incompatible structure size.
+
         \remarks This must only be used on an immediate command buffer, i.e. those that have been created with the CommandBufferFlags::ImmediateSubmit flag.
         \remarks For the Direct3D backends, all retrieved COM pointers will be incremented and the user is responsible for releasing those pointers,
         i.e. a call to \c IUnknown::Release is required to each of the objects returned by this function.
@@ -1013,7 +1017,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         ...
         d3dCommandList->Release();
         \endcode
-        \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
+
+        \note Only supported with: Direct3D 12, Direct3D 11, Vulkan, Metal.
+
+        \see Direct3D12::CommandBufferNativeHandle
+        \see Direct3D11::CommandBufferNativeHandle
+        \see Vulkan::CommandBufferNativeHandle
+        \see Metal::CommandBufferNativeHandle
         */
         virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) = 0;
 

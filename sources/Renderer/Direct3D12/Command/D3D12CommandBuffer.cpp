@@ -989,7 +989,7 @@ void D3D12CommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
-void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void D3D12CommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
 {
     // dummy
 }

@@ -1009,7 +1009,17 @@ void GLDeferredCommandBuffer::PopDebugGroup()
     #endif // /GL_KHR_debug
 }
 
-/* ----- Internal ----- */
+/* ----- Extensions ----- */
+
+void GLDeferredCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
+{
+    // dummy
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 bool GLDeferredCommandBuffer::IsImmediateCmdBuffer() const
 {

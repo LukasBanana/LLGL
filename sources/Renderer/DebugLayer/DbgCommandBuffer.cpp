@@ -1284,9 +1284,9 @@ void DbgCommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
-void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
+void DbgCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
 {
-    LLGL_DBG_COMMAND( "SetGraphicsAPIDependentState", instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize) );
+    LLGL_DBG_COMMAND( "DoNativeCommand", instance.DoNativeCommand(nativeCommand, nativeCommandSize) );
 }
 
 bool DbgCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)

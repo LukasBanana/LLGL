@@ -235,22 +235,6 @@ struct AttachmentClear
 };
 
 /**
-\brief Graphics API dependent state descriptor for the Metal renderer.
-\remarks This descriptor is used to compensate a few differences between Metal and the other rendering APIs.
-\see CommandBuffer::SetGraphicsAPIDependentState
-\todo Move into namespace Metal
-*/
-struct MetalDependentStateDescriptor
-{
-    /**
-    \brief Specifies the buffer slot for the internal tessellation factor buffer. By default 30, which is the maximum buffer slot.
-    \remarks In the respective Metal tessellation kernel,
-    this must refer to a buffer of type \c MTLTriangleTessellationFactorsHalf or \c MTLQuadTessellationFactorsHalf.
-    */
-    std::uint32_t tessFactorBufferSlot = 30;
-};
-
-/**
 \brief Command buffer descriptor structure.
 \see RenderSystem::CreateCommandBuffer
 */

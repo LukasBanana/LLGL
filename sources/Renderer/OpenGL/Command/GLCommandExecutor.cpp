@@ -43,6 +43,8 @@
 #   include "../../../JIT/JITProgram.h"
 #endif
 
+#include <LLGL/Backend/OpenGL/NativeCommand.h>
+
 
 namespace LLGL
 {
@@ -554,6 +556,21 @@ void ExecuteGLCommandBuffer(const GLCommandBuffer& cmdBuffer, GLStateManager& st
             /* Execute deferred command buffer */
             ExecuteGLDeferredCommandBuffer(deferredCmdBufferGL, stateMngr);
         }
+    }
+}
+
+void ExecuteNativeGLCommand(const OpenGL::NativeCommand& cmd, GLStateManager& stateMngr)
+{
+    switch (cmd.type)
+    {
+        case OpenGL::NativeCommandType::ClearCache:
+        {
+            stateMngr.Reset();
+        }
+        break;
+
+        default:
+        break;
     }
 }
 
