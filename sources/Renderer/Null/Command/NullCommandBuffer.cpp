@@ -596,6 +596,11 @@ void NullCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std:
     // dummy
 }
 
+bool NullCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy
+}
+
 
 /*
  * ======= Internal: =======

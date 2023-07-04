@@ -26,6 +26,8 @@
 #include <LLGL/ImageFlags.h>
 #include <limits>
 
+#include <LLGL/Backend/Vulkan/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -675,6 +677,24 @@ Fence* VKRenderSystem::CreateFence()
 void VKRenderSystem::Release(Fence& fence)
 {
     fences_.erase(&fence);
+}
+
+/* ----- Extensions ----- */
+
+bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Vulkan::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleVK = reinterpret_cast<Vulkan::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleVK->instance            = instance_.Get();
+        nativeHandleVK->physicalDevice      = physicalDevice_.GetVkPhysicalDevice();
+        nativeHandleVK->device              = device_.GetVkDevice();
+        nativeHandleVK->queue               = device_.GetVkQueue();
+        nativeHandleVK->queueGraphicsFamily = device_.GetQueueFamilyIndices().graphicsFamily;
+        nativeHandleVK->queuePresentFamily  = device_.GetQueueFamilyIndices().presentFamily;
+        return true;
+    }
+    return false;
 }
 
 

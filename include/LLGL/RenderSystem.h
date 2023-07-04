@@ -601,6 +601,36 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Releases the specified Fence object. After this call, the specified object must no longer be used.
         virtual void Release(Fence& fence) = 0;
 
+        /* ----- Extensions ----- */
+
+        /**
+        \brief Returns the native device handle.
+        \param[out] nativeHandle Raw pointer to the backend specific structure to store the native handle.
+        Optain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeHandle.h></code>
+        where \c BACKEND must be either \c Direct3D11, \c Direct3D12, \c Metal, or \c Vulkan.
+        OpenGL does not have a native handle as it uses the current platform specific GL context.
+        \param[in] nativeHandleSize Specifies the size (in bytes) of the native handle structure for robustness.
+        This must be <code>sizeof(STRUCT)</code> where \c STRUCT is the respective backend specific structure such as \c LLGL::Direct3D12::RenderSystemNativeHandle.
+        \return True if the native handle was successfully retrieved. Otherwise, \c nativeHandleSize specifies an incompatible structure size.
+        \remarks For the Direct3D backends, all retrieved COM pointers will be incremented and the user is responsible for releasing those pointers,
+        i.e. a call to \c IUnknown::Release is required to each of the objects returned by this function.
+        \remarks For the Metal backend, all retrieved \c NSObject instances will have their retain counter incremented and the user is responsible for releasing those objects,
+        i.e. a call to <code>-(oneway void)release</code> is required to each of the objects returned by this function.
+        \remarks For backends that do not support this function, the return value is false unless \c nativeHandle is null or \c nativeHandleSize is 0.
+        \remarks Example for obtaining the native handle of a Direct3D12 render system:
+        \code
+        #include <LLGL/Backend/Direct3D12/NativeHandle.h>
+        //...
+        LLGL::Direct3D12::RenderSystemNativeHandle d3dNativeHandle;
+        myRenderer->GetNativeHandle(&d3dNativeHandle, sizeof(d3dNativeHandle));
+        ID3D12Device* d3dDevice = d3dNativeHandle.device;
+        ...
+        d3dDevice->Release();
+        \endcode
+        \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
+        */
+        virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) = 0;
+
     protected:
 
         //! Allocates the internal data.

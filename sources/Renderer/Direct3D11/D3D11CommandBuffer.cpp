@@ -40,6 +40,8 @@
 #include "Texture/D3D11RenderTarget.h"
 #include "Texture/D3D11MipGenerator.h"
 
+#include <LLGL/Backend/Direct3D11/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -1240,6 +1242,18 @@ void D3D11CommandBuffer::PopDebugGroup()
 void D3D11CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
     // dummy
+}
+
+bool D3D11CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D11::CommandBufferNativeHandle))
+    {
+        auto* nativeHandleD3D = reinterpret_cast<Direct3D11::CommandBufferNativeHandle*>(nativeHandle);
+        nativeHandleD3D->deviceContext = context_.Get();
+        nativeHandleD3D->deviceContext->AddRef();
+        return true;
+    }
+    return false;
 }
 
 

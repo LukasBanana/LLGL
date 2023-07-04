@@ -29,6 +29,8 @@
 #include <LLGL/TypeInfo.h>
 #include <cstddef>
 
+#include <LLGL/Backend/Vulkan/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -1052,6 +1054,17 @@ void VKCommandBuffer::PopDebugGroup()
 void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
     // dummy
+}
+
+bool VKCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Vulkan::CommandBufferNativeHandle))
+    {
+        auto* nativeHandleVK = reinterpret_cast<Vulkan::CommandBufferNativeHandle*>(nativeHandle);
+        nativeHandleVK->commandBuffer = commandBuffer_;
+        return true;
+    }
+    return false;
 }
 
 

@@ -21,6 +21,8 @@
 #include <LLGL/Platform/Platform.h>
 #include <AvailabilityMacros.h>
 
+#include <LLGL/Backend/Metal/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -309,6 +311,20 @@ Fence* MTRenderSystem::CreateFence()
 void MTRenderSystem::Release(Fence& fence)
 {
     fences_.erase(&fence);
+}
+
+/* ----- Extensions ----- */
+
+bool MTRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Metal::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleMT = reinterpret_cast<Metal::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleMT->device = device_;
+        [nativeHandleMT->device retain];
+        return true;
+    }
+    return false;
 }
 
 

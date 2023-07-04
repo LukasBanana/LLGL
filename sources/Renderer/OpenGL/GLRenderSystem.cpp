@@ -519,6 +519,13 @@ void GLRenderSystem::Release(Fence& fence)
     fences_.erase(&fence);
 }
 
+/* ----- Extensions ----- */
+
+bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy
+}
+
 
 /*
  * ======= Private: =======

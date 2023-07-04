@@ -30,6 +30,8 @@
 #include <algorithm>
 #include <limits.h>
 
+#include <LLGL/Backend/Metal/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -1023,7 +1025,24 @@ void MTDirectCommandBuffer::PopDebugGroup()
     #endif // /LLGL_DEBUG
 }
 
-/* ----- Internal ----- */
+/* ----- Extensions ----- */
+
+bool MTDirectCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Metal::CommandBufferNativeHandle))
+    {
+        auto* nativeHandleMT = reinterpret_cast<Metal::CommandBufferNativeHandle*>(nativeHandle);
+        nativeHandleMT->commandBuffer = cmdBuffer_;
+        [nativeHandleMT->commandBuffer retain];
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 bool MTDirectCommandBuffer::IsMultiSubmitCmdBuffer() const
 {

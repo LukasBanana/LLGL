@@ -1006,7 +1006,17 @@ void MTMultiSubmitCommandBuffer::PopDebugGroup()
     #endif // /LLGL_DEBUG
 }
 
-/* ----- Internal ----- */
+/* ----- Extensions ----- */
+
+bool MTMultiSubmitCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return (nativeHandle == nullptr || nativeHandleSize == 0);
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 bool MTMultiSubmitCommandBuffer::IsMultiSubmitCmdBuffer() const
 {

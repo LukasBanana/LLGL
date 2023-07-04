@@ -19,6 +19,7 @@
 #include <LLGL/Backend/RenderSystem.PipelineState.inl>
 #include <LLGL/Backend/RenderSystem.QueryHeap.inl>
 #include <LLGL/Backend/RenderSystem.Fence.inl>
+#include <LLGL/Backend/RenderSystem.Extensions.inl>
 
 
 

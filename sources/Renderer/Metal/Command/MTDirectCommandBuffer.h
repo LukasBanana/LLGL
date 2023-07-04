@@ -50,7 +50,7 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
 
         void QueueDrawable(id<MTLDrawable> drawable);
         void PresentDrawables();
-        
+
         // Returns the texture of the current drawable from the active framebuffer.
         id<MTLTexture> GetCurrentDrawableTexture() const;
 

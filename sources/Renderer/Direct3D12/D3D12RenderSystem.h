@@ -62,8 +62,6 @@ class D3D12RenderSystem final : public RenderSystem
 
     public:
 
-        /* ----- Extended internal functions ----- */
-
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& swapChainDescDXGI, HWND wnd);
 
         // Internal fence

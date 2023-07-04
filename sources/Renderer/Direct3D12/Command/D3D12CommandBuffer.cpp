@@ -33,6 +33,7 @@
 
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Backend/Direct3D12/NativeHandle.h>
 
 #include "../D3DX12/d3dx12.h"
 #include <pix.h>
@@ -993,7 +994,22 @@ void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std
     // dummy
 }
 
-/* ----- Internal ----- */
+bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D12::CommandBufferNativeHandle))
+    {
+        auto* nativeHandleD3D = reinterpret_cast<Direct3D12::CommandBufferNativeHandle*>(nativeHandle);
+        nativeHandleD3D->commandList = commandList_;
+        nativeHandleD3D->commandList->AddRef();
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 void D3D12CommandBuffer::Execute()
 {

@@ -61,6 +61,11 @@ void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::s
     // dummy
 }
 
+bool GLCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy
+}
+
 
 } // /namespace LLGL
 

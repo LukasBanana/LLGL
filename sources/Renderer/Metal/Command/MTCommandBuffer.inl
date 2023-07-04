@@ -60,6 +60,13 @@ virtual void SetStencilReference(
     const StencilFace   stencilFace     = StencilFace::FrontAndBack
 ) override final;
 
+/* ----- Extensions ----- */
+
+virtual bool GetNativeHandle(
+    void*               nativeHandle,
+    std::size_t         nativeHandleSize
+) override final;
+
 
 
 // ================================================================================

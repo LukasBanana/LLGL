@@ -1289,6 +1289,11 @@ void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::
     LLGL_DBG_COMMAND( "SetGraphicsAPIDependentState", instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize) );
 }
 
+bool DbgCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return instance.GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
 /* ----- Internal ----- */
 
 void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)

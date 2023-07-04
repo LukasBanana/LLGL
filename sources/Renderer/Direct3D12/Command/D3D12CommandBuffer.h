@@ -51,8 +51,6 @@ class D3D12CommandBuffer final : public CommandBuffer
 
     public:
 
-        /* ----- Extended functions ----- */
-
         // Executes this command buffer.
         void Execute();
 

@@ -29,6 +29,8 @@
 #include "RenderState/D3D12GraphicsPSO.h"
 #include "RenderState/D3D12ComputePSO.h"
 
+#include <LLGL/Backend/Direct3D12/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -415,7 +417,24 @@ void D3D12RenderSystem::Release(Fence& fence)
     fences_.erase(&fence);
 }
 
-/* ----- Extended internal functions ----- */
+/* ----- Extensions ----- */
+
+bool D3D12RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D12::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleD3D = reinterpret_cast<Direct3D12::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleD3D->device = device_.GetNative();
+        nativeHandleD3D->device->AddRef();
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& swapChainDescDXGI, HWND wnd)
 {

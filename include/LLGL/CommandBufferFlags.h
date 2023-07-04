@@ -89,7 +89,7 @@ struct CommandBufferFlags
 
         /**
         \brief Specifies that the encoded command buffer is an immediate command buffer.
-        \remarks If this specified, the command buffer is submitted immediately after encoding is done
+        \remarks If this is specified, the command buffer is submitted immediately after encoding is done
         and calling CommandQueue::Submit on such a command buffer has no effect.
         \remarks This cannot be used in combination with the \c Secondary or \c MultiSubmit flags.
         \see CommandBuffer::End

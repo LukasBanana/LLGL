@@ -58,8 +58,6 @@ class D3D11RenderSystem final : public RenderSystem
 
     public:
 
-        /* ----- Internal functions ----- */
-
         // Returns a sample descriptor for the specified format.
         static DXGI_SAMPLE_DESC FindSuitableSampleDesc(ID3D11Device* device, DXGI_FORMAT format, UINT maxSampleCount);
 

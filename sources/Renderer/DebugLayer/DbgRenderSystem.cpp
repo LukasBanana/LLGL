@@ -568,6 +568,13 @@ void DbgRenderSystem::Release(Fence& fence)
     return instance_->Release(fence);
 }
 
+/* ----- Extensions ----- */
+
+bool DbgRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return instance_->GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
 
 /*
  * ======= Private: =======

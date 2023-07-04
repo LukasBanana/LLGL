@@ -30,6 +30,8 @@
 #include "RenderState/D3D11GraphicsPSO3.h"
 #include "RenderState/D3D11ComputePSO.h"
 
+#include <LLGL/Backend/Direct3D11/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -459,7 +461,24 @@ void D3D11RenderSystem::Release(Fence& fence)
     fences_.erase(&fence);
 }
 
-/* ----- Internal functions ----- */
+/* ----- Extensions ----- */
+
+bool D3D11RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D11::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleD3D = reinterpret_cast<Direct3D11::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleD3D->device = device_.Get();
+        nativeHandleD3D->device->AddRef();
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * ======= Internal: =======
+ */
 
 DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device, DXGI_FORMAT format, UINT maxSampleCount)
 {

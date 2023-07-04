@@ -356,6 +356,13 @@ void NullRenderSystem::Release(Fence& fence)
     fences_.erase(&fence);
 }
 
+/* ----- Extensions ----- */
+
+bool NullRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy
+}
+
 
 } // /namespace LLGL
 
