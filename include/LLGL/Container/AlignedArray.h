@@ -9,6 +9,7 @@
 #define LLGL_ALIGNED_ARRAY_H
 
 
+#include <LLGL/Export.h>
 #include <cstddef>
 
 
@@ -22,7 +23,7 @@ namespace LLGL
 \tparam Size Specifies the size (in elements) of this array.
 */
 template <typename T, std::size_t Size>
-class AlignedArray
+class LLGL_EXPORT AlignedArray
 {
 
     public:
