@@ -72,12 +72,26 @@ std::uint32_t NullTexture::ClampMipLevel(std::uint32_t mipLevel) const
 
 void NullTexture::Write(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
 {
-    //todo
+    if (textureRegion.subresource.baseMipLevel < images_.size() && textureRegion.subresource.numMipLevels == 1)
+    {
+        /* Write pixels to selected destination MIP-map image */
+        Image& mipMap = images_[textureRegion.subresource.baseMipLevel];
+        const Offset3D offset = CalcTextureOffset(GetType(), textureRegion.offset, textureRegion.subresource.baseArrayLayer);
+        const Extent3D extent = CalcTextureExtent(GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
+        mipMap.WritePixels(offset, extent, imageDesc);
+    }
 }
 
 void NullTexture::Read(const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
-    //todo
+    if (textureRegion.subresource.baseMipLevel < images_.size() && textureRegion.subresource.numMipLevels == 1)
+    {
+        /* Read pixels from selected source MIP-map image */
+        Image& mipMap = images_[textureRegion.subresource.baseMipLevel];
+        const Offset3D offset = CalcTextureOffset(GetType(), textureRegion.offset, textureRegion.subresource.baseArrayLayer);
+        const Extent3D extent = CalcTextureExtent(GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
+        mipMap.ReadPixels(offset, extent, imageDesc);
+    }
 }
 
 void NullTexture::GenerateMips(const TextureSubresource* subresource)
@@ -87,7 +101,7 @@ void NullTexture::GenerateMips(const TextureSubresource* subresource)
 
 std::uint32_t NullTexture::PackSubresourceIndex(std::uint32_t mipLevel, std::uint32_t arrayLayer) const
 {
-    return mipLevel * desc.mipLevels + arrayLayer;
+    return (mipLevel * desc.mipLevels + arrayLayer);
 }
 
 void NullTexture::UnpackSubresourceIndex(std::uint32_t subresource, std::uint32_t& outMipLevel, std::uint32_t& outArrayLayer) const
@@ -107,7 +121,7 @@ void NullTexture::AllocImages()
     images_.reserve(desc.mipLevels);
     for_range(mipLevel, desc.mipLevels)
     {
-        const auto mipExtent = LLGL::GetMipExtent(GetType(), extent_, mipLevel);
+        const Extent3D mipExtent = LLGL::GetMipExtent(GetType(), extent_, mipLevel);
         images_.emplace_back(mipExtent, formatAttribs.format, formatAttribs.dataType);
     }
 }
