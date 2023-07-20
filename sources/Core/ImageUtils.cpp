@@ -27,8 +27,8 @@ void BitBlit(
     std::uint32_t   srcRowStride,
     std::uint32_t   srcLayerStride)
 {
-    const auto rowLength    = bpp * extent.width;
-    const auto layerLength  = rowLength * extent.height;
+    const std::uint32_t rowLength   = bpp * extent.width;
+    const std::uint32_t layerLength = rowLength * extent.height;
 
     /* Clamp strides to tightly packed lengths */
     dstRowStride = std::max(dstRowStride, rowLength);
@@ -60,7 +60,8 @@ void BitBlit(
     }
     else
     {
-        /* Adjust depth stride */
+        /* Adjust depth strides */
+        dstLayerStride -= dstRowStride * extent.height;
         srcLayerStride -= srcRowStride * extent.height;
 
         /* Copy region directly into output data */
@@ -78,6 +79,7 @@ void BitBlit(
             }
 
             /* Move pointers to next slice */
+            dst += dstLayerStride;
             src += srcLayerStride;
         }
     }
