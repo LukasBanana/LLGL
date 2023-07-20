@@ -120,7 +120,7 @@ void VKSwapChain::Present()
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores    = signalSemaphores;
     }
-    auto result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+    VkResult result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
     VKThrowIfFailed(result, "failed to submit semaphore to Vulkan graphics queue");
 
     /* Present result on screen */
@@ -315,7 +315,7 @@ void VKSwapChain::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
         createInfo.pNext = nullptr;
         createInfo.flags = 0;
     }
-    auto result = vkCreateSemaphore(device_, &createInfo, nullptr, semaphore.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateSemaphore(device_, &createInfo, nullptr, semaphore.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan semaphore");
 }
 
@@ -349,7 +349,7 @@ void VKSwapChain::CreateGpuSurface()
         createInfo.hinstance    = GetModuleHandle(NULL);
         createInfo.hwnd         = nativeHandle.window;
     }
-    auto result = vkCreateWin32SurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateWin32SurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Win32 surface for Vulkan swap-chain");
 
     #elif defined LLGL_OS_LINUX
@@ -362,7 +362,7 @@ void VKSwapChain::CreateGpuSurface()
         createInfo.dpy      = nativeHandle.display;
         createInfo.window   = nativeHandle.window;
     }
-    auto result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
 
     #endif
@@ -380,14 +380,14 @@ void VKSwapChain::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
         renderPassDesc.samples = swapChainSamples_;
 
         /* Determine load and store operations for primary and secondary render passes */
-        auto loadOp     = (isSecondary ? AttachmentLoadOp::Load : AttachmentLoadOp::Undefined);
-        auto storeOp    = AttachmentStoreOp::Store;
+        const AttachmentLoadOp  loadOp  = (isSecondary ? AttachmentLoadOp::Load : AttachmentLoadOp::Undefined);
+        const AttachmentStoreOp storeOp = AttachmentStoreOp::Store;
 
         /* Specify single color attachment */
         renderPassDesc.colorAttachments[0] = AttachmentFormatDescriptor{ GetColorFormat(), loadOp, storeOp };
 
         /* Specify depth-stencil attachment */
-        auto depthStencilFormat = GetDepthStencilFormat();
+        const Format depthStencilFormat = GetDepthStencilFormat();
 
         if (IsDepthFormat(depthStencilFormat))
             renderPassDesc.depthAttachment = AttachmentFormatDescriptor{ depthStencilFormat, loadOp, storeOp };
@@ -414,13 +414,13 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
 
     /* Get device queues for graphics and presentation */
     VkSurfaceKHR surface = surface_.Get();
-    auto queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT, &surface);
+    const QueueFamilyIndices queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT, &surface);
 
     vkGetDeviceQueue(device_, queueFamilyIndices.graphicsFamily, 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, queueFamilyIndices.presentFamily, 0, &presentQueue_);
 
     /* Pick swap-chain presentation mode (with v-sync parameters) */
-    auto presentMode = PickSwapPresentMode(surfaceSupportDetails_.presentModes, vsyncInterval);
+    const VkPresentModeKHR presentMode = PickSwapPresentMode(surfaceSupportDetails_.presentModes, vsyncInterval);
 
     /* Create swap-chain */
     VkSwapchainCreateInfoKHR createInfo;
@@ -434,7 +434,7 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
         createInfo.imageColorSpace              = swapChainFormat_.colorSpace;
         createInfo.imageExtent                  = swapChainExtent_;
         createInfo.imageArrayLayers             = 1;
-        createInfo.imageUsage                   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        createInfo.imageUsage                   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;// | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
         if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily)
         {
@@ -455,7 +455,7 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
         createInfo.clipped                      = VK_TRUE;
         createInfo.oldSwapchain                 = VK_NULL_HANDLE;
     }
-    auto result = vkCreateSwapchainKHR(device_, &createInfo, nullptr, swapChain_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateSwapchainKHR(device_, &createInfo, nullptr, swapChain_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan swap-chain");
 
     /* Query swap-chain images */
@@ -501,7 +501,7 @@ void VKSwapChain::CreateSwapChainImageViews()
         createInfo.image = swapChainImages_[i];
 
         /* Create image view for framebuffer */
-        auto result = vkCreateImageView(device_, &createInfo, nullptr, swapChainImageViews_[i].ReleaseAndGetAddressOf());
+        VkResult result = vkCreateImageView(device_, &createInfo, nullptr, swapChainImageViews_[i].ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Vulkan swap-chain image view");
     }
 }
@@ -549,7 +549,7 @@ void VKSwapChain::CreateSwapChainFramebuffers()
             attachments[attachmentColor] = swapChainImageViews_[i];
 
         /* Create framebuffer */
-        auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, swapChainFramebuffers_[i].ReleaseAndGetAddressOf());
+        VkResult result = vkCreateFramebuffer(device_, &createInfo, nullptr, swapChainFramebuffers_[i].ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");
     }
 }

@@ -530,11 +530,11 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     device_.FlushCommandBuffer(cmdBuffer);
 
     /* Map staging buffer to CPU memory space */
-    if (auto region = stagingBuffer.GetMemoryRegion())
+    if (VKDeviceMemoryRegion* region = stagingBuffer.GetMemoryRegion())
     {
         /* Map buffer memory to host memory */
-        auto deviceMemory = region->GetParentChunk();
-        if (auto memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
+        VKDeviceMemory* deviceMemory = region->GetParentChunk();
+        if (void* memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
         {
             /* Copy data to buffer object */
             RenderSystem::CopyTextureImageData(imageDesc, imageSize, extent.width, format, memory);

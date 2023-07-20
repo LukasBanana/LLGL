@@ -315,17 +315,17 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
         ValidateImageDataSize(extent, imageDesc);
 
         /* Get source image parameters */
-        const auto  bpp             = GetBytesPerPixel();
-        const auto  srcRowStride    = bpp * GetExtent().width;
-        const auto  srcDepthStride  = srcRowStride * GetExtent().height;
-        auto        src             = data_.get() + GetDataPtrOffset(offset);
+        const std::uint32_t bpp             = GetBytesPerPixel();
+        const std::uint32_t srcRowStride    = bpp * GetExtent().width;
+        const std::uint32_t srcDepthStride  = srcRowStride * GetExtent().height;
+        const char*         src             = data_.get() + GetDataPtrOffset(offset);
 
         if (GetFormat() == imageDesc.format && GetDataType() == imageDesc.dataType)
         {
             /* Get destination image parameters */
-            const auto  dstRowStride    = bpp * extent.width;
-            const auto  dstDepthStride  = dstRowStride * extent.height;
-            auto        dst             = reinterpret_cast<char*>(imageDesc.data);
+            const std::uint32_t dstRowStride    = bpp * extent.width;
+            const std::uint32_t dstDepthStride  = dstRowStride * extent.height;
+            char*               dst             = reinterpret_cast<char*>(imageDesc.data);
 
             /* Blit region into destination image */
             BitBlit(
@@ -337,7 +337,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
         else
         {
             /* Copy region into temporary sub-image */
-            Image subImage { extent, GetFormat(), GetDataType() };
+            Image subImage{ extent, GetFormat(), GetDataType() };
 
             BitBlit(
                 extent, bpp,
@@ -362,17 +362,17 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
         ValidateImageDataSize(extent, imageDesc);
 
         /* Get destination image parameters */
-        const auto  bpp             = GetBytesPerPixel();
-        const auto  dstRowStride    = bpp * GetExtent().width;
-        const auto  dstDepthStride  = dstRowStride * GetExtent().height;
-        auto        dst             = data_.get() + GetDataPtrOffset(offset);
+        const std::uint32_t bpp             = GetBytesPerPixel();
+        const std::uint32_t dstRowStride    = bpp * GetExtent().width;
+        const std::uint32_t dstDepthStride  = dstRowStride * GetExtent().height;
+        char*               dst             = data_.get() + GetDataPtrOffset(offset);
 
         if (GetFormat() == imageDesc.format && GetDataType() == imageDesc.dataType)
         {
             /* Get source image parameters */
-            const auto  srcRowStride    = bpp * extent.width;
-            const auto  srcDepthStride  = srcRowStride * extent.height;
-            auto        src             = reinterpret_cast<const char*>(imageDesc.data);
+            const std::uint32_t srcRowStride    = bpp * extent.width;
+            const std::uint32_t srcDepthStride  = srcRowStride * extent.height;
+            const char*         src             = reinterpret_cast<const char*>(imageDesc.data);
 
             /* Blit source image into region */
             BitBlit(
@@ -384,7 +384,7 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
         else
         {
             /* Copy input data into sub-image into */
-            Image subImage { extent, imageDesc.format, imageDesc.dataType };
+            Image subImage{ extent, imageDesc.format, imageDesc.dataType };
             ::memcpy(subImage.GetData(), imageDesc.data, imageDesc.dataSize);
 
             /* Convert sub-image */

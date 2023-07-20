@@ -95,7 +95,7 @@ class D3D12SwapChain final : public SwapChain
 
         void CreateDescriptorHeaps(const D3D12Device& device, std::uint32_t samples);
 
-        void CreateResolutionDependentResources(const Extent2D& resolution);
+        HRESULT CreateResolutionDependentResources(const Extent2D& resolution);
         void CreateColorBufferRTVs(ID3D12Device* device, const Extent2D& resolution);
         void CreateDepthStencil(ID3D12Device* device, const Extent2D& resolution);
 

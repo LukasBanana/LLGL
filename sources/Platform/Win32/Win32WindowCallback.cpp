@@ -1,6 +1,6 @@
 /*
  * Win32WindowCallback.cpp
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
@@ -14,6 +14,7 @@
 #ifndef HID_USAGE_PAGE_GENERIC
 #   define HID_USAGE_PAGE_GENERIC   ((USHORT)0x01)
 #endif
+
 #ifndef HID_USAGE_GENERIC_MOUSE
 #   define HID_USAGE_GENERIC_MOUSE  ((USHORT)0x02)
 #endif
@@ -45,15 +46,15 @@ static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bool isSysKey)
 {
     /* Get window object from window handle */
-    if (auto window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = GetWindowFromUserData(wnd))
     {
         /* Extract key code */
-        auto keyCodeSys     = static_cast<std::uint32_t>(wParam);
-        auto keyCodeOEM     = static_cast<std::uint32_t>(lParam & (0xff << 16)) >> 16;
-        bool isExtendedKey  = ((lParam & (1 << 24)) != 0);
+        const DWORD keyCodeSys      = static_cast<DWORD>(wParam);
+        const DWORD keyCodeOEM      = static_cast<DWORD>(lParam & (0xff << 16)) >> 16;
+        const bool  isExtendedKey   = ((lParam & (1 << 24)) != 0);
 
         /* Get key code mapping first */
-        auto keyCode = MapKey(static_cast<std::uint8_t>(keyCodeSys));
+        const Key keyCode = MapKey(static_cast<BYTE>(keyCodeSys));
 
         /* Check for extended keys */
         switch (keyCode)
@@ -96,15 +97,15 @@ static void ReleaseMouseCapture()
     }
 }
 
-static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
+static void CaptureMouseButton(HWND wnd, Key keyCode, bool isDoubleClick = false)
 {
     /* Get window object from window handle */
-    if (auto window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = GetWindowFromUserData(wnd))
     {
         /* Post key events and capture mouse */
         window->PostKeyDown(keyCode);
 
-        if (doubleClick)
+        if (isDoubleClick)
             window->PostDoubleClick(keyCode);
 
         if (++g_mouseCaptureCounter == 1)
@@ -115,7 +116,7 @@ static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
 static void ReleaseMouseButton(HWND wnd, Key keyCode)
 {
     /* Get window object from window handle */
-    if (auto window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = GetWindowFromUserData(wnd))
     {
         /* Post key event and release mouse capture */
         window->PostKeyUp(keyCode);
@@ -134,7 +135,7 @@ static void ReleaseMouseButton(HWND wnd, Key keyCode)
 static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
 {
     /* Get window object from window handle */
-    if (auto window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = GetWindowFromUserData(wnd))
     {
         /* Extract mouse position from event parameter */
         int x = GET_X_LPARAM(lParam);
@@ -148,7 +149,7 @@ static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
 static void PostGlobalMouseMotion(HWND wnd, LPARAM lParam)
 {
     /* Get window object from window handle */
-    if (auto window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = GetWindowFromUserData(wnd))
     {
         RAWINPUT raw;
         UINT rawSize = sizeof(raw);
@@ -160,7 +161,7 @@ static void PostGlobalMouseMotion(HWND wnd, LPARAM lParam)
 
         if (raw.header.dwType == RIM_TYPEMOUSE)
         {
-            const auto& mouse = raw.data.mouse;
+            const RAWMOUSE& mouse = raw.data.mouse;
 
             if (mouse.usFlags == MOUSE_MOVE_RELATIVE)
             {
@@ -200,11 +201,11 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_SIZE:
         {
             /* Post resize event to window */
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
             {
                 WORD width = LOWORD(lParam);
                 WORD height = HIWORD(lParam);
-                window->PostResize({ static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height) });
+                window->PostResize(Extent2D{ width, height });
             }
         }
         break;
@@ -212,14 +213,14 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_CLOSE:
         {
             /* Post close event to window */
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
                 window->PostQuit();
         }
         break;
 
         case WM_SETFOCUS:
         {
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
                 window->PostGetFocus();
         }
         break;
@@ -227,7 +228,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_KILLFOCUS:
         {
             ReleaseMouseCapture();
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
                 window->PostLostFocus();
         }
         break;
@@ -260,7 +261,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_CHAR:
         {
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
                 window->PostChar(static_cast<wchar_t>(wParam));
         }
         return 0;
@@ -329,7 +330,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_MOUSEWHEEL:
         {
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
                 window->PostWheelMotion(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
         }
         return 0;
@@ -351,7 +352,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_ERASEBKGND:
         {
             /* Do not erase background to avoid flickering when user resizes the window */
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
             {
                 if (window->GetBehavior().disableClearOnResize)
                     return 0;
@@ -361,7 +362,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_ENTERSIZEMOVE:
         {
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
             {
                 auto timerID = window->GetBehavior().moveAndResizeTimerID;
                 if (timerID != Constants::invalidTimerID)
@@ -375,7 +376,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_EXITSIZEMOVE:
         {
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
             {
                 auto timerID = window->GetBehavior().moveAndResizeTimerID;
                 if (timerID != Constants::invalidTimerID)
@@ -389,7 +390,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_TIMER:
         {
-            if (auto window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = GetWindowFromUserData(wnd))
             {
                 auto timerID = static_cast<std::uint32_t>(wParam);
                 window->PostTimer(timerID);

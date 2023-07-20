@@ -80,7 +80,7 @@ void D3D12SwapChain::SetName(const char* name)
 void D3D12SwapChain::Present()
 {
     /* Present swap-chain with vsync interval */
-    auto hr = swapChainDXGI_->Present(syncInterval_, 0);
+    HRESULT hr = swapChainDXGI_->Present(syncInterval_, 0);
     DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 
     /* Advance frame counter */
@@ -357,7 +357,7 @@ void D3D12SwapChain::CreateDescriptorHeaps(const D3D12Device& device, std::uint3
     }
 }
 
-void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
+HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resolution)
 {
     ID3D12Device* device = renderSystem_.GetDXDevice();
 
@@ -378,7 +378,7 @@ void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resoluti
     if (swapChainDXGI_)
     {
         /* Resize swap chain */
-        auto hr = swapChainDXGI_->ResizeBuffers(
+        HRESULT hr = swapChainDXGI_->ResizeBuffers(
             numColorBuffers_,
             resolution.width,
             resolution.height,
@@ -389,7 +389,7 @@ void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resoluti
         if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
         {
             /* Do not continue execution of this method, device resources will be destroyed and re-created */
-            return;
+            return hr;
         }
         else
             DXThrowIfFailed(hr, "failed to resize DXGI swap chain buffers");
@@ -429,6 +429,8 @@ void D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resoluti
     /* Create depth-stencil buffer (is used) */
     if (HasDepthBuffer())
         CreateDepthStencil(device, resolution);
+
+    return S_OK;
 }
 
 void D3D12SwapChain::CreateColorBufferRTVs(ID3D12Device* device, const Extent2D& resolution)
@@ -437,7 +439,7 @@ void D3D12SwapChain::CreateColorBufferRTVs(ID3D12Device* device, const Extent2D&
     for_range(i, numColorBuffers_)
     {
         /* Get render target resource from swap-chain buffer */
-        auto hr = swapChainDXGI_->GetBuffer(i, IID_PPV_ARGS(colorBuffers_[i].native.ReleaseAndGetAddressOf()));
+        HRESULT hr = swapChainDXGI_->GetBuffer(i, IID_PPV_ARGS(colorBuffers_[i].native.ReleaseAndGetAddressOf()));
         DXThrowIfCreateFailed(hr, "ID3D12Resource", "for swap-chain color buffer");
 
         colorBuffers_[i].SetInitialState(D3D12_RESOURCE_STATE_PRESENT);
@@ -460,7 +462,7 @@ void D3D12SwapChain::CreateColorBufferRTVs(ID3D12Device* device, const Extent2D&
         for_range(i, numColorBuffers_)
         {
             /* Create render target resource */
-            auto hr = device->CreateCommittedResource(
+            HRESULT hr = device->CreateCommittedResource(
                 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
                 D3D12_HEAP_FLAG_NONE,
                 &tex2DMSDesc,
@@ -499,7 +501,7 @@ void D3D12SwapChain::CreateDepthStencil(ID3D12Device* device, const Extent2D& re
         (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
     );
 
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &tex2DDesc,
