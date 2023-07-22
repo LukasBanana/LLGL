@@ -10,19 +10,38 @@
 
 DEF_TEST( CommandBufferSubmit )
 {
-    // Create multi-submit command buffers
     constexpr unsigned maxNumCmdBuffers = 2;
+
     static CommandBuffer* multiSubmitCmdBuffers[maxNumCmdBuffers] = {};
+    static Texture* framebufferResultTex;
 
     const unsigned numCmdBuffers = swapChain->GetNumSwapBuffers();
 
+    const ClearValue clearValues[] =
+    {
+        ClearValue{ 0.2f, 1.0f, 0.2f, 1 },
+        ClearValue{ 0.2f, 0.4f, 0.8f, 1 }
+    };
+
+    const TextureRegion texRegion{ Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } };
+
     if (frame == 0)
     {
-        const ClearValue clearValues[] =
+        // Create 1x1 texture for framebuffer result (i.e. to read a single pixel)
+        const std::uint8_t initialImageData[4] = { 0xDE, 0xAD, 0xBE, 0xEF };
+        SrcImageDescriptor initialImage;
         {
-            ClearValue{ 0.2f, 1.0f, 0.2f, 1 },
-            ClearValue{ 0.2f, 0.4f, 0.8f, 1 }
-        };
+            initialImage.data       = initialImageData;
+            initialImage.dataSize   = sizeof(initialImageData);
+        }
+        TextureDescriptor texDesc;
+        {
+            texDesc.bindFlags   = BindFlags::Sampled | BindFlags::CopyDst;
+            texDesc.format      = swapChain->GetColorFormat();
+        }
+        framebufferResultTex = renderer->CreateTexture(texDesc, &initialImage);
+
+        // Create multi-submit command buffers
         constexpr unsigned numClearValues = sizeof(clearValues)/sizeof(clearValues[0]);
 
         CommandBufferDescriptor cmdBufferDesc;
@@ -36,6 +55,7 @@ DEF_TEST( CommandBufferSubmit )
             {
                 cmdBuf->BeginRenderPass(*swapChain, nullptr, 0, nullptr, swapBufferIndex % numCmdBuffers);
                 cmdBuf->Clear(ClearFlags::Color, clearValues[swapBufferIndex % numClearValues]);
+                cmdBuf->CopyTextureFromFramebuffer(*framebufferResultTex, texRegion, Offset2D{ 0, 0 });
                 cmdBuf->EndRenderPass();
             }
             cmdBuf->End();
@@ -58,9 +78,33 @@ DEF_TEST( CommandBufferSubmit )
         // Submit command buffers several times
         cmdQueue->Submit(*multiSubmitCmdBuffers[swapBufferIndex]);
 
-        // Read swap chain color
-        //TODO
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Read framebuffer pixel value from intermediate texture
+        std::uint8_t framebufferResult[4] = {};
+        DstImageDescriptor framebufferResultDesc;
+        {
+            framebufferResultDesc.data      = framebufferResult;
+            framebufferResultDesc.dataSize  = sizeof(framebufferResult);
+        }
+        renderer->ReadTexture(*framebufferResultTex, texRegion, framebufferResultDesc);
+
+        const std::uint8_t expectedResult[4] =
+        {
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[0] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[1] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[2] * 255.0f),
+            static_cast<std::uint8_t>(clearValues[swapBufferIndex].color[3] * 255.0f),
+        };
+
+        if (::memcmp(framebufferResult, expectedResult, sizeof(framebufferResult)) != 0)
+        {
+            Log::Errorf(
+                "Mismatch between framebuffer[%u] color [%02X %02X %02X %02X] and clear value [%02X %02X %02X %02X]\n",
+                swapBufferIndex,
+                framebufferResult[0], framebufferResult[1], framebufferResult[2], framebufferResult[3],
+                expectedResult[0], expectedResult[1], expectedResult[2], expectedResult[3]
+            );
+            return TestResult::FailedMismatch;
+        }
 
         return TestResult::Continue;
     }
@@ -69,6 +113,7 @@ DEF_TEST( CommandBufferSubmit )
         // Delete old command buffers
         for (auto* cmdBuf : multiSubmitCmdBuffers)
             renderer->Release(*cmdBuf);
+        renderer->Release(*framebufferResultTex);
 
         return TestResult::Passed;
     }
