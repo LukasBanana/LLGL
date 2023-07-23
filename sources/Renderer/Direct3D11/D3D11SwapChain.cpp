@@ -211,7 +211,7 @@ HRESULT D3D11SwapChain::CopySubresourceRegion(
     const D3D11_BOX&        srcBox,
     DXGI_FORMAT             format)
 {
-    const bool isDepthStencil = DXTypes::IsDepthStencilDXGIFormat(format);
+    const bool isDepthStencil = DXTypes::IsDepthStencilDXGIFormat(DXTypes::ToDXGIFormatDSV(format));
     if (isDepthStencil)
     {
         if (!depthBuffer_)

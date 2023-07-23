@@ -286,15 +286,21 @@ void D3D11Texture::UpdateSubresource(
     }
 }
 
-void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
-    ID3D11Device*           device,
-    ID3D11DeviceContext*    context,
-    D3D11NativeTexture&     textureOutput,
-    UINT                    cpuAccessFlags,
-    const TextureRegion&    region)
+static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
+    ID3D11Device*               device,
+    ID3D11DeviceContext*        context,
+    const D3D11NativeTexture&   inTexture,
+    UINT                        inTextureMipLevels,
+    UINT                        inTextureArraySize,
+    D3D11NativeTexture&         outTexture,
+    D3D11_USAGE                 outTextureUsage,
+    UINT                        cpuAccessFlags,
+    UINT                        srcFirstMipLevel,
+    UINT                        srcFirstArrayLayer,
+    const D3D11_BOX*            srcBox)
 {
     D3D11_RESOURCE_DIMENSION dimension;
-    native_.resource->GetType(&dimension);
+    inTexture.resource->GetType(&dimension);
 
     switch (dimension)
     {
@@ -302,17 +308,21 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         {
             /* Create temporary 1D texture with a similar descriptor */
             D3D11_TEXTURE1D_DESC desc;
-            native_.tex1D->GetDesc(&desc);
+            inTexture.tex1D->GetDesc(&desc);
             {
-                desc.Width          = region.extent.width;
+                if (srcBox != nullptr)
+                {
+                    /* Override dimension if source box is specified */
+                    desc.Width      = (srcBox->right - srcBox->left);
+                }
                 desc.MipLevels      = 1;
-                desc.ArraySize      = region.subresource.numArrayLayers;
-                desc.Usage          = D3D11_USAGE_STAGING;
+                desc.ArraySize      = inTextureArraySize;
+                desc.Usage          = outTextureUsage;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0;
             }
-            textureOutput.tex1D = DXCreateTexture1D(device, desc);
+            outTexture.tex1D = DXCreateTexture1D(device, desc);
         }
         break;
 
@@ -320,18 +330,22 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         {
             /* Query and modify descriptor for 2D texture */
             D3D11_TEXTURE2D_DESC desc;
-            native_.tex2D->GetDesc(&desc);
+            inTexture.tex2D->GetDesc(&desc);
             {
-                desc.Width          = region.extent.width;
-                desc.Height         = region.extent.height;
+                if (srcBox != nullptr)
+                {
+                    /* Override dimension if source box is specified */
+                    desc.Width      = (srcBox->right - srcBox->left);
+                    desc.Height     = (srcBox->bottom - srcBox->top);
+                    desc.ArraySize  = inTextureArraySize;
+                }
                 desc.MipLevels      = 1;
-                desc.ArraySize      = region.subresource.numArrayLayers;
-                desc.Usage          = D3D11_USAGE_STAGING;
+                desc.Usage          = outTextureUsage;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE);
             }
-            textureOutput.tex2D = DXCreateTexture2D(device, desc);
+            outTexture.tex2D = DXCreateTexture2D(device, desc);
         }
         break;
 
@@ -339,23 +353,42 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         {
             /* Query and modify descriptor for 3D texture */
             D3D11_TEXTURE3D_DESC desc;
-            native_.tex3D->GetDesc(&desc);
+            inTexture.tex3D->GetDesc(&desc);
             {
-                desc.Width          = region.extent.width;
-                desc.Height         = region.extent.height;
-                desc.Depth          = region.extent.depth;
+                if (srcBox != nullptr)
+                {
+                    /* Override dimension if source box is specified */
+                    desc.Width      = (srcBox->right - srcBox->left);
+                    desc.Height     = (srcBox->bottom - srcBox->top);
+                    desc.Depth      = (srcBox->back - srcBox->front);
+                }
                 desc.MipLevels      = 1;
-                desc.Usage          = D3D11_USAGE_STAGING;
+                desc.Usage          = outTextureUsage;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0;
             }
-            textureOutput.tex3D = DXCreateTexture3D(device, desc);
+            outTexture.tex3D = DXCreateTexture3D(device, desc);
         }
         break;
     }
 
     /* Copy subresource */
+    for_range(arrayLayer, inTextureArraySize)
+    {
+        UINT dstSubresource = D3D11CalcSubresource(0, arrayLayer, 1);
+        UINT srcSubresource = D3D11CalcSubresource(srcFirstMipLevel, srcFirstArrayLayer + arrayLayer, inTextureMipLevels);
+        context->CopySubresourceRegion(outTexture.resource.Get(), dstSubresource, 0, 0, 0, inTexture.resource.Get(), srcSubresource, srcBox);
+    }
+}
+
+void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
+    ID3D11Device*           device,
+    ID3D11DeviceContext*    context,
+    D3D11NativeTexture&     textureOutput,
+    UINT                    cpuAccessFlags,
+    const TextureRegion&    region)
+{
     const Offset3D offset = CalcTextureOffset(GetType(), region.offset);
     const Extent3D extent = CalcTextureExtent(GetType(), region.extent);
 
@@ -369,11 +402,55 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         static_cast<UINT>(offset.z) + extent.depth,
     };
 
-    for_range(arrayLayer, region.subresource.numArrayLayers)
+    const bool isDepthStencilOrMultisampled = ((GetBindFlags() & BindFlags::DepthStencilAttachment) != 0 || IsMultiSampleTexture(GetType()));
+    if (isDepthStencilOrMultisampled)
     {
-        UINT dstSubresource = D3D11CalcSubresource(0, arrayLayer, 1);
-        UINT srcSubresource = D3D11CalcSubresource(region.subresource.baseMipLevel, region.subresource.baseArrayLayer + arrayLayer, numMipLevels_);
-        context->CopySubresourceRegion(textureOutput.resource.Get(), dstSubresource, 0, 0, 0, native_.resource.Get(), srcSubresource, &srcBox);
+        /* Copy texture into intermediate staging texture with same dimension */
+        D3D11NativeTexture intermediateTexture;
+        CreateD3D11TextureSubresourceCopyWithCPUAccess(
+            /*device:*/             device,
+            /*context:*/            context,
+            /*inTexture:*/          native_,
+            /*inTextureMipLevels:*/ numMipLevels_,
+            /*inTextureArraySize:*/ region.subresource.numArrayLayers,
+            /*outTexture:*/         intermediateTexture,
+            /*outTextureUsage:*/    D3D11_USAGE_DEFAULT,
+            /*cpuAccessFlags:*/     0,
+            /*srcFirstMipLevel:*/   region.subresource.baseMipLevel,
+            /*srcFirstArrayLayer:*/ region.subresource.baseArrayLayer,
+            /*srcBox:*/             nullptr
+        );
+
+        /* Copy intermediate texture into output texture */
+        CreateD3D11TextureSubresourceCopyWithCPUAccess(
+            /*device:*/             device,
+            /*context:*/            context,
+            /*inTexture:*/          intermediateTexture,
+            /*inTextureMipLevels:*/ 1,
+            /*inTextureArraySize:*/ region.subresource.numArrayLayers,
+            /*outTexture:*/         textureOutput,
+            /*outTextureUsage:*/    D3D11_USAGE_STAGING,
+            /*cpuAccessFlags:*/     cpuAccessFlags,
+            /*srcFirstMipLevel:*/   0,
+            /*srcFirstArrayLayer:*/ 0,
+            /*srcBox:*/             &srcBox
+        );
+    }
+    else
+    {
+        CreateD3D11TextureSubresourceCopyWithCPUAccess(
+            /*device:*/             device,
+            /*context:*/            context,
+            /*inTexture:*/          native_,
+            /*inTextureMipLevels:*/ numMipLevels_,
+            /*inTextureArraySize:*/ region.subresource.numArrayLayers,
+            /*outTexture:*/         textureOutput,
+            /*outTextureUsage:*/    D3D11_USAGE_STAGING,
+            /*cpuAccessFlags:*/     cpuAccessFlags,
+            /*srcFirstMipLevel:*/   region.subresource.baseMipLevel,
+            /*srcFirstArrayLayer:*/ region.subresource.baseArrayLayer,
+            /*srcBox:*/             &srcBox
+        );
     }
 }
 
