@@ -568,12 +568,19 @@ bool TestbedContext::LoadShaders()
         shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
         shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
     }
-    else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
+    else if (IsShadingLanguageSupported(ShadingLanguage::GLSL_450))
     {
         shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert", ShaderType::Vertex);
         shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag", ShaderType::Fragment);
         shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert", ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
         shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag", ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+    }
+    else if (IsShadingLanguageSupported(ShadingLanguage::GLSL_330))
+    {
+        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert", ShaderType::Vertex);
+        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag", ShaderType::Fragment);
+        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert", ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
+        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag", ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {

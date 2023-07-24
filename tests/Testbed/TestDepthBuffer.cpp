@@ -112,15 +112,6 @@ DEF_TEST( DepthBuffer )
     const float expectedDepthValue = 0.975574434f;
     const float deltaDepthValue = std::abs(readbackDepthValue - expectedDepthValue);
 
-    if (deltaDepthValue > epsilon)
-    {
-        Log::Errorf(
-            "Mismatch between depth buffer value at center (%f) and expected value (%f): delta = %f\n",
-            readbackDepthValue, expectedDepthValue, deltaDepthValue
-        );
-        //return TestResult::FailedMismatch;
-    }
-
     // Match entire depth and create delta heat map
     std::vector<float> readbackDepthBuffer;
     readbackDepthBuffer.resize(texDesc.extent.width * texDesc.extent.height, -1.0f);
@@ -139,6 +130,16 @@ DEF_TEST( DepthBuffer )
     renderer->Release(*psoLayout);
     renderer->Release(*renderTarget);
     renderer->Release(*readbackTex);
+
+    // Evaluate readback result
+    if (deltaDepthValue > epsilon)
+    {
+        Log::Errorf(
+            "Mismatch between depth buffer value at center (%f) and expected value (%f): delta = %f\n",
+            readbackDepthValue, expectedDepthValue, deltaDepthValue
+        );
+        return TestResult::FailedMismatch;
+    }
 
     return TestResult::Passed;
 }
