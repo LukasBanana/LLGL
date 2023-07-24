@@ -10,8 +10,14 @@
 
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Utils/VertexFormat.h>
+#include <Gauss/Matrix.h>
+#include <Gauss/Vector4.h>
 #include <functional>
+#include <initializer_list>
 
+
+constexpr float epsilon = 0.00001f;
 
 enum class TestResult
 {
@@ -60,16 +66,80 @@ class TestbedContext
 
     protected:
 
+        struct Vertex
+        {
+            float position[3];
+            float normal[3];
+            float texCoord[2];
+        };
+
+        struct IndexedTriangleMesh
+        {
+            std::uint64_t indexBufferOffset;
+            std::uint32_t numIndices;
+        };
+
+        struct IndexedTriangleMeshBuffer
+        {
+            std::vector<Vertex>         vertices;
+            std::vector<std::uint32_t>  indices;
+            std::uint32_t               firstVertex = 0;
+            std::uint32_t               firstIndex  = 0;
+
+            void NewMesh();
+            void AddVertex(float x, float y, float z, float nx, float ny, float nz, float tx, float ty);
+            void AddIndices(const std::initializer_list<std::uint32_t>& indices, std::uint32_t offset = 0);
+            void FinalizeMesh(IndexedTriangleMesh& outMesh);
+        };
+
+        struct SceneConstants
+        {
+            Gs::Matrix4f wvpMatrix;
+            Gs::Matrix4f wMatrix;
+            Gs::Vector4f solidColor = { 1, 1, 1, 1 };
+            Gs::Vector4f lightVec   = { 0, 0, -1, 0 };
+        }
+        sceneConstants;
+
+        enum Models
+        {
+            ModelCube = 0,
+
+            ModelCount,
+        };
+
+        enum Shaders
+        {
+            VSSolid = 0,
+            PSSolid,
+            VSTextured,
+            PSTextured,
+
+            ShaderCount,
+        };
+
+    protected:
+
+        const std::string           moduleName;
+        const bool                  verbose;
         const bool                  showTiming;
         const bool                  fastTest; // Skip slow buffer/texture creations to speed up test run
+
         LLGL::RenderingProfiler     profiler;
         LLGL::RenderingDebugger     debugger;
         LLGL::RenderSystemPtr       renderer;
         LLGL::RenderingCapabilities caps;
-        LLGL::SwapChain*            swapChain   = nullptr;
-        LLGL::CommandBuffer*        cmdBuffer   = nullptr;
-        LLGL::CommandQueue*         cmdQueue    = nullptr;
-        LLGL::Surface*              surface     = nullptr;
+        LLGL::SwapChain*            swapChain               = nullptr;
+        LLGL::CommandBuffer*        cmdBuffer               = nullptr;
+        LLGL::CommandQueue*         cmdQueue                = nullptr;
+        LLGL::Surface*              surface                 = nullptr;
+        LLGL::Buffer*               meshBuffer              = nullptr;
+        LLGL::Buffer*               sceneCbuffer            = nullptr;
+
+        LLGL::VertexFormat          vertexFormat;
+        IndexedTriangleMesh         models[ModelCount];
+        LLGL::Shader*               shaders[ShaderCount]    = {};
+        Gs::Matrix4f                projection;
 
     private:
 
@@ -94,6 +164,18 @@ class TestbedContext
         DECL_TEST( RenderTargetNAttachments );
 
         #undef DECL_TEST
+
+        bool LoadShaders();
+        void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
+
+        void CreateTriangleMeshes();
+
+        void CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
+
+        void CreateConstantBuffers();
+
+        void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& filename);
+        void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& filename, float nearPlane, float farPlane);
 
 };
 

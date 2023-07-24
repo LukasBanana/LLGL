@@ -8,7 +8,10 @@
 #include "Testbed.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/Parse.h>
+#include <LLGL/Utils/TypeNames.h>
+#include <Gauss/ProjectionMatrix4.h>
 #include <string.h>
+#include <fstream>
 
 
 #define ENABLE_GPU_DEBUGGER 1
@@ -25,12 +28,14 @@ static bool HasArgument(int argc, char* argv[], const char* search)
 }
 
 TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
-    showTiming { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing") },
-    fastTest   { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")   }
+    moduleName { moduleName                                                            },
+    verbose    { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose") },
+    showTiming { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")  },
+    fastTest   { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")    }
 {
     RenderSystemDescriptor rendererDesc;
     {
-        rendererDesc.moduleName = moduleName;
+        rendererDesc.moduleName = this->moduleName;
         #if ENABLE_GPU_DEBUGGER
         rendererDesc.flags      = RenderSystemFlags::DebugDevice;
         #endif
@@ -51,7 +56,7 @@ TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
 
         // Show swap-chain surface
         Window& wnd = CastTo<Window>(swapChain->GetSurface());
-        wnd.SetTitle("LLGL Testbed - " + std::string(moduleName));
+        wnd.SetTitle("LLGL Testbed - " + this->moduleName);
         wnd.Show();
 
         // Get command queue
@@ -66,6 +71,12 @@ TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
 
         // Query rendering capabilities
         caps = renderer->GetRenderingCaps();
+
+        // Create common scene resources
+        CreateTriangleMeshes();
+        CreateConstantBuffers();
+        LoadShaders();
+        LoadProjectionMatrix();
     }
 }
 
@@ -483,4 +494,355 @@ TestResult TestbedContext::CreateRenderTarget(
         renderer->Release(*target);
 
     return TestResult::Passed;
+}
+
+bool TestbedContext::LoadShaders()
+{
+    auto IsShadingLanguageSupported = [this](ShadingLanguage language) -> bool
+    {
+        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
+    };
+
+    auto StringEndsWith = [](const std::string& str, const std::string& suffix) -> bool
+    {
+        return (str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix.c_str()) == 0);
+    };
+
+    auto LoadShaderFromFile = [this, &StringEndsWith](const std::string& filename, ShaderType type, const char* entry = nullptr, const char* profile = nullptr, const ShaderMacro* defines = nullptr) -> Shader*
+    {
+        const bool isFileBinary = (StringEndsWith(filename, ".spv") || StringEndsWith(filename, ".dxbc"));
+
+        auto PrintLoadingInfo = [type, &filename]()
+        {
+            Log::Printf("Loading %s shader: %s", ToString(type), filename.c_str());
+        };
+
+        if (verbose)
+            PrintLoadingInfo();
+
+        ShaderDescriptor shaderDesc;
+        {
+            shaderDesc.type                 = type;
+            shaderDesc.source               = filename.c_str();
+            shaderDesc.sourceType           = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
+            shaderDesc.entryPoint           = entry;
+            shaderDesc.profile              = profile;
+            shaderDesc.defines              = defines;
+            shaderDesc.vertex.inputAttribs  = vertexFormat.attributes;
+        }
+        Shader* shader = renderer->CreateShader(shaderDesc);
+
+        if (shader != nullptr)
+        {
+            if (const Report* report = shader->GetReport())
+            {
+                if (report->HasErrors())
+                {
+                    if (!verbose)
+                        PrintLoadingInfo();
+                    Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
+                    Log::Errorf("%s", report->GetText());
+                    return nullptr;
+                }
+            }
+        }
+
+        if (verbose)
+            Log::Printf(" [ Ok ]\n");
+
+        return shader;
+    };
+
+    const ShaderMacro definesEnableTexturing[] =
+    {
+        ShaderMacro{ "ENABLE_TEXTURING", "1" },
+        ShaderMacro{ nullptr, nullptr }
+    };
+
+    const std::string shaderPath = "Shaders/";
+
+    if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
+    {
+        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Vertex,   "VSMain", "vs_5_0");
+        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Fragment, "PSMain", "ps_5_0");
+        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
+        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
+    }
+    else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
+    {
+        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert", ShaderType::Vertex);
+        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag", ShaderType::Fragment);
+        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert", ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
+        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag", ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+    }
+    else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
+    {
+        //todo
+    }
+    else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
+    {
+        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
+    }
+    else
+    {
+        Log::Errorf("No shaders provided for this backend");
+        return false;
+    }
+
+    return true;
+}
+
+void TestbedContext::LoadProjectionMatrix(float nearPlane, float farPlane, float fov)
+{
+    // Initialize default projection matrix
+    const bool isClipSpaceUnitCube = (renderer->GetRenderingCaps().clippingRange == ClippingRange::MinusOneToOne);
+
+    const Extent2D resolution = swapChain->GetResolution();
+    const float aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
+
+    const int flags = (isClipSpaceUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
+
+    projection = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fov), flags).ToMatrix4();
+}
+
+void TestbedContext::CreateTriangleMeshes()
+{
+    // Create vertex format
+    vertexFormat.attributes =
+    {
+        VertexAttribute{ "position", Format::RGB32Float, 0, offsetof(Vertex, position), sizeof(Vertex) },
+        VertexAttribute{ "normal",   Format::RGB32Float, 1, offsetof(Vertex, normal  ), sizeof(Vertex) },
+        VertexAttribute{ "texCoord", Format::RG32Float,  2, offsetof(Vertex, texCoord), sizeof(Vertex) },
+    };
+
+    // Create models
+    IndexedTriangleMeshBuffer sceneBuffer;
+
+    CreateModelCube(sceneBuffer, models[ModelCube]);
+
+    const std::uint64_t vertexBufferSize = sceneBuffer.vertices.size() * sizeof(Vertex);
+    const std::uint64_t indexBufferSize = sceneBuffer.indices.size() * sizeof(std::uint32_t);
+
+    for (int i = ModelCube; i < ModelCount; ++i)
+        models[i].indexBufferOffset += vertexBufferSize;
+
+    // Create GPU mesh buffer
+    BufferDescriptor meshBufferDesc;
+    {
+        meshBufferDesc.size             = vertexBufferSize + indexBufferSize;
+        meshBufferDesc.bindFlags        = BindFlags::VertexBuffer | BindFlags::IndexBuffer;
+        meshBufferDesc.vertexAttribs    = vertexFormat.attributes;
+    }
+    meshBuffer = renderer->CreateBuffer(meshBufferDesc);
+
+    // Write vertices and indices into GPU buffer
+    renderer->WriteBuffer(*meshBuffer, 0, sceneBuffer.vertices.data(), sceneBuffer.vertices.size() * sizeof(Vertex));
+    renderer->WriteBuffer(*meshBuffer, vertexBufferSize, sceneBuffer.indices.data(), sceneBuffer.indices.size() * sizeof(std::uint32_t));
+}
+
+void TestbedContext::CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh)
+{
+    scene.NewMesh();
+
+    // Front
+    scene.AddVertex(-1,+1,-1,  0, 0,-1,  0, 0 );
+    scene.AddVertex(+1,+1,-1,  0, 0,-1,  1, 0 );
+    scene.AddVertex(+1,-1,-1,  0, 0,-1,  1, 1 );
+    scene.AddVertex(-1,-1,-1,  0, 0,-1,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 0);
+
+    // Back
+    scene.AddVertex(+1,+1,+1,  0, 0,+1,  0, 0 );
+    scene.AddVertex(-1,+1,+1,  0, 0,+1,  1, 0 );
+    scene.AddVertex(-1,-1,+1,  0, 0,+1,  1, 1 );
+    scene.AddVertex(+1,-1,+1,  0, 0,+1,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 4);
+
+    // Right
+    scene.AddVertex(+1,+1,-1, +1, 0, 0,  0, 0 );
+    scene.AddVertex(+1,+1,+1, +1, 0, 0,  1, 0 );
+    scene.AddVertex(+1,-1,+1, +1, 0, 0,  1, 1 );
+    scene.AddVertex(+1,-1,-1, +1, 0, 0,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 8);
+
+    // Left
+    scene.AddVertex(-1,+1,+1, -1, 0, 0,  0, 0 );
+    scene.AddVertex(-1,+1,-1, -1, 0, 0,  1, 0 );
+    scene.AddVertex(-1,-1,-1, -1, 0, 0,  1, 1 );
+    scene.AddVertex(-1,-1,+1, -1, 0, 0,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 12);
+
+    // Top
+    scene.AddVertex(-1,+1,+1,  0,+1, 0,  0, 0 );
+    scene.AddVertex(+1,+1,+1,  0,+1, 0,  1, 0 );
+    scene.AddVertex(+1,+1,-1,  0,+1, 0,  1, 1 );
+    scene.AddVertex(-1,+1,-1,  0,+1, 0,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 16);
+
+    // Bottom
+    scene.AddVertex(-1,-1,-1,  0,-1, 0,  0, 0 );
+    scene.AddVertex(+1,-1,-1,  0,-1, 0,  1, 0 );
+    scene.AddVertex(+1,-1,+1,  0,-1, 0,  1, 1 );
+    scene.AddVertex(-1,-1,+1,  0,-1, 0,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 20);
+
+    scene.FinalizeMesh(outMesh);
+}
+
+void TestbedContext::CreateConstantBuffers()
+{
+    BufferDescriptor bufDesc;
+    {
+        bufDesc.size        = sizeof(SceneConstants);
+        bufDesc.bindFlags   = BindFlags::ConstantBuffer;
+    }
+    sceneCbuffer = renderer->CreateBuffer(bufDesc, &sceneCbuffer);
+    sceneCbuffer->SetName("sceneCbuffer");
+}
+
+
+#if defined(_MSC_VER)
+#   pragma pack(push, packing)
+#   pragma pack(1)
+#   define PACK_STRUCT
+#elif defined(__GNUC__)
+#   define PACK_STRUCT __attribute__((packed))
+#else
+#   define PACK_STRUCT
+#endif
+
+struct TGAHeader
+{
+    std::uint8_t    idLength;
+    std::uint8_t    colorMap;
+    std::uint8_t    imageType;
+    std::uint16_t   firstEntryIndex;
+    std::uint16_t   colorMapLength;
+    std::uint8_t    colorMapEntrySize;
+    std::uint16_t   origin[2];
+    std::uint16_t   dimension[2];
+    std::uint8_t    bbp;
+    std::uint8_t    descriptor;
+}
+PACK_STRUCT;
+
+#ifdef _MSC_VER
+#   pragma pack(pop, packing)
+#endif
+
+#undef PACK_STRUCT
+
+static bool SaveImageTGA(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose)
+{
+    if (verbose)
+        Log::Printf("Save TGA image: %s", filename.c_str());
+
+    std::ofstream file{ filename, std::ios_base::binary };
+    if (!file.good())
+    {
+        Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        return false;
+    }
+
+    TGAHeader header = {};
+    {
+        header.idLength             = 0;
+        header.colorMap             = 0;
+        header.imageType            = 2; // uncompressed true-color image
+        header.firstEntryIndex      = 0;
+        header.colorMapLength       = 0;
+        header.colorMapEntrySize    = 0;
+        header.origin[0]            = 0;
+        header.origin[1]            = 0;
+        header.dimension[0]         = extent.width;
+        header.dimension[1]         = extent.height;
+        header.bbp                  = 24;
+        header.descriptor           = 32;
+    }
+    file.write(reinterpret_cast<const char*>(&header), sizeof(header));
+    file.write(reinterpret_cast<const char*>(pixels.data()), sizeof(ColorRGBub) * pixels.size());
+
+    if (verbose)
+        Log::Printf(" [ Ok ]\n");
+
+    return true;
+}
+
+void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const Extent2D& extent, const std::string& filename)
+{
+    SaveDepthImageTGA(image, extent, filename, 0.1f, 100.0f);
+}
+
+void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& filename, float nearPlane, float farPlane)
+{
+    std::vector<ColorRGBub> colors;
+    colors.resize(image.size() * 3);
+
+    const bool remapDepthValues     = true;
+    const bool isClipSpaceUnitCube  = (renderer->GetRenderingCaps().clippingRange == ClippingRange::MinusOneToOne);
+
+    // Get inverse projection matrix if depth values are meant to be remapped to linear space
+    Gs::Matrix4f invProjection;
+    if (remapDepthValues)
+    {
+        invProjection = projection;
+        invProjection.MakeInverse();
+    }
+
+    for (std::size_t i = 0; i < image.size(); ++i)
+    {
+        float depthValue = image[i];
+
+        if (remapDepthValues)
+        {
+            // For unit-cube clipping spaces, the depth value in range [0, 1] must be remapped to [-1, +1]
+            const float clipRangeDepthValue = (isClipSpaceUnitCube ? depthValue*2.0f - 1.0f : depthValue);
+
+            // Project depth value back to linear depth
+            const Gs::Vector4f backProjected = invProjection * Gs::Vector4f{ 0.0f, 0.0f, clipRangeDepthValue, 1.0f };
+
+            // Scale depth value from [nearPlane, farPlane] to [0, 1]
+            depthValue = ((backProjected.z / backProjected.w) - nearPlane) / (farPlane - nearPlane);
+        }
+
+        // Transform depth value from [0, 1] to color value in range [0, 255]
+        const std::uint8_t color = static_cast<std::uint8_t>(std::max(0.0f, std::min(depthValue, 1.0f)) * 255.0f);
+
+        colors[i] = ColorRGBub{ color };
+    }
+
+    const std::string path = "Output/" + moduleName + "/";
+    SaveImageTGA(colors, extent, path + filename, verbose);
+}
+
+
+/*
+ * IndexedTriangleMeshBuffer structure
+ */
+
+void TestbedContext::IndexedTriangleMeshBuffer::NewMesh()
+{
+    firstVertex = vertices.size();
+    firstIndex  = indices.size();
+}
+
+void TestbedContext::IndexedTriangleMeshBuffer::AddVertex(float x, float y, float z, float nx, float ny, float nz, float tx, float ty)
+{
+    this->vertices.push_back(Vertex{ x,y,z, nx,ny,nz, tx,ty });
+}
+
+void TestbedContext::IndexedTriangleMeshBuffer::AddIndices(const std::initializer_list<std::uint32_t>& indices, std::uint32_t offset)
+{
+    this->indices.reserve(this->indices.size() + indices.size());
+    for (std::uint32_t idx : indices)
+        this->indices.push_back(firstVertex + idx + offset);
+}
+
+void TestbedContext::IndexedTriangleMeshBuffer::FinalizeMesh(IndexedTriangleMesh& outMesh)
+{
+    outMesh.indexBufferOffset   = firstIndex * sizeof(std::uint32_t);
+    outMesh.numIndices          = indices.size() - firstIndex;
 }
