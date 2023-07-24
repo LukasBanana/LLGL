@@ -491,6 +491,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \param[in] renderPass Specifies an optional render pass object. If this is null, the default render pass for the specified render target will be used.
         This render pass object must be compatible with the render pass object the specified render target was created with.
+        Note that the default render pass will ignore the previous framebuffer content (see AttachmentLoadOp::Undefined), i.e. such a render pass section should fill the entire framebuffer.
 
         \param[in] numClearValues Specifies the number of clear values that are specified in the \c clearValues parameter.
         This \em should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
@@ -752,7 +753,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \remarks This must only be called if a graphics pipeline is currently bound.
 
         \see EndStreamOutput
-        \see SetGraphicsPipeline
+        \see SetPipelineState
         \see RenderingFeatures::hasStreamOutputs
         \see RenderingLimits::maxStreamOutputs
         */
