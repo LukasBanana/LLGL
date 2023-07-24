@@ -6,6 +6,7 @@
  */
 
 #include "VKDeviceImage.h"
+#include "../VKDevice.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../VKCore.h"
@@ -127,6 +128,22 @@ void VKDeviceImage::CreateVkImageView(
     }
     VkResult result = vkCreateImageView(device, &createInfo, nullptr, outImageView.ReleaseAndGetAddressOf());
     VKThrowIfCreateFailed(result, "VkImageView");
+}
+
+VkImageLayout VKDeviceImage::TransitionImageLayout(
+    VKDevice&                   device,
+    VkCommandBuffer             commandBuffer,
+    VkFormat                    format,
+    VkImageLayout               newLayout,
+    const TextureSubresource&   subresource)
+{
+    VkImageLayout oldLayout = layout_;
+    if (newLayout != oldLayout)
+    {
+        device.TransitionImageLayout(commandBuffer, image_, format, oldLayout, newLayout, subresource);
+        layout_ = newLayout;
+    }
+    return oldLayout;
 }
 
 

@@ -77,14 +77,14 @@ static bool IsPhysicalDeviceSuitable(
 bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
 {
     /* Query all physical devices and pick suitable */
-    auto physicalDevices = VKQueryPhysicalDevices(instance);
+    std::vector<VkPhysicalDevice> physicalDevices = VKQueryPhysicalDevices(instance);
 
-    for (const auto& device : physicalDevices)
+    for (VkPhysicalDevice device : physicalDevices)
     {
         if (IsPhysicalDeviceSuitable(device, supportedExtensions_))
         {
             /* Store reference to all extension names */
-            for (const auto& extension : supportedExtensions_)
+            for (const VkExtensionProperties& extension : supportedExtensions_)
                 supportedExtensionNames_.insert(extension.extensionName);
 
             if (!EnableExtensions(g_requiredVulkanExtensions, true))

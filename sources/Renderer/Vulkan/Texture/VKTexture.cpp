@@ -6,6 +6,7 @@
  */
 
 #include "VKTexture.h"
+#include "../VKDevice.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/CoreUtils.h"
@@ -205,6 +206,28 @@ void VKTexture::CreateInternalImageView(VkDevice device)
         subresourceRange.layerCount     = GetNumArrayLayers();
     }
     image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, imageView_);
+}
+
+VkImageLayout VKTexture::TransitionImageLayout(
+    VKDevice&       device,
+    VkCommandBuffer commandBuffer,
+    VkImageLayout   newLayout)
+{
+    return TransitionImageLayout(
+        device,
+        commandBuffer,
+        newLayout,
+        TextureSubresource{ 0, numArrayLayers_, 0, numMipLevels_ }
+    );
+}
+
+VkImageLayout VKTexture::TransitionImageLayout(
+    VKDevice&                   device,
+    VkCommandBuffer             commandBuffer,
+    VkImageLayout               newLayout,
+    const TextureSubresource&   subresource)
+{
+    return image_.TransitionImageLayout(device, commandBuffer, GetVkFormat(), newLayout, subresource);
 }
 
 static VkImageAspectFlags GetAspectFlagsByFormat(VkFormat format)

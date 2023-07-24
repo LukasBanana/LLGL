@@ -20,6 +20,7 @@ namespace LLGL
 {
 
 
+class VKDevice;
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
 
@@ -57,6 +58,21 @@ class VKTexture final : public Texture
 
         // Creates the standard image view that is stored within this texture object.
         void CreateInternalImageView(VkDevice device);
+
+        // Transitions this image to the specified new layout and returns the old layout.
+        VkImageLayout TransitionImageLayout(
+            VKDevice&       device,
+            VkCommandBuffer commandBuffer,
+            VkImageLayout   newLayout
+        );
+
+        // Transitions the subresources of this image to the specified new layout and returns the old layout.
+        VkImageLayout TransitionImageLayout(
+            VKDevice&                   device,
+            VkCommandBuffer             commandBuffer,
+            VkImageLayout               newLayout,
+            const TextureSubresource&   subresource
+        );
 
         // Returns the image ascpect flags for the VkFormat of this texture.
         VkImageAspectFlags GetAspectFlags() const;

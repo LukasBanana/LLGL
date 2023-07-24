@@ -19,8 +19,10 @@ namespace LLGL
 {
 
 
+class VKDevice;
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
+struct TextureSubresource;
 
 //TODO: Add current VkImageLayout to manage state transitioning
 // Wrapper class for VkImage handle.
@@ -64,6 +66,14 @@ class VKDeviceImage
             const VkComponentMapping*       components          = nullptr
         );
 
+        VkImageLayout TransitionImageLayout(
+            VKDevice&                   device,
+            VkCommandBuffer             commandBuffer,
+            VkFormat                    format,
+            VkImageLayout               newLayout,
+            const TextureSubresource&   subresource
+        );
+
         // Returns the native VkImage handle.
         inline VkImage GetVkImage() const
         {
@@ -85,6 +95,7 @@ class VKDeviceImage
     private:
 
         VKPtr<VkImage>          image_;
+        VkImageLayout           layout_             = VK_IMAGE_LAYOUT_UNDEFINED;
         VkMemoryRequirements    memoryRequirements_ = {};
         VKDeviceMemoryRegion*   memoryRegion_       = nullptr;
 
