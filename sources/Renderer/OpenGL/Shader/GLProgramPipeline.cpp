@@ -99,10 +99,10 @@ void GLProgramPipeline::QueryInfoLogs(Report& report)
 
 void GLProgramPipeline::UseProgramStages(std::size_t numShaders, GLSeparableShader* const* shaders)
 {
-    for (std::size_t i = 0; i < numShaders; ++i)
+    for_range(i, numShaders)
     {
-        auto separableShader = shaders[i];
-        if (auto stage = ToGLShaderStageBit(separableShader->GetType()))
+        GLSeparableShader* separableShader = shaders[i];
+        if (GLbitfield stage = ToGLShaderStageBit(separableShader->GetType()))
         {
             glUseProgramStages(GetID(), stage, separableShader->GetID());
             separableShaders_[i] = separableShader;

@@ -162,29 +162,30 @@ void GLShader::ReserveAttribs(const ShaderDescriptor& desc)
     shaderAttribs_.reserve(numVertexAttribs_ + desc.fragment.outputAttribs.size());
 }
 
-void GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
+bool GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs)
 {
     if (numVertexAttribs == 0 || vertexAttribs == nullptr)
-        return;
+        return true;
 
     /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
-    constexpr std::size_t minSupportedVertexAttribs = 8;
+    constexpr std::uint32_t minSupportedVertexAttribs = 8;
 
-    std::size_t highestAttribIndex = 0;
+    std::uint32_t highestAttribIndex = 0;
     for_range(i, numVertexAttribs)
-        highestAttribIndex = std::max(highestAttribIndex, static_cast<std::size_t>(vertexAttribs[i].location));
+        highestAttribIndex = std::max(highestAttribIndex, vertexAttribs[i].location);
 
     if (highestAttribIndex > minSupportedVertexAttribs)
     {
         GLint maxSupportedVertexAttribs = 0;
         glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
 
-        if (highestAttribIndex > static_cast<std::size_t>(maxSupportedVertexAttribs))
+        if (highestAttribIndex > static_cast<std::uint32_t>(maxSupportedVertexAttribs))
         {
-            throw std::invalid_argument(
-                "failed build input layout, because too many vertex attributes are specified (" +
-                std::to_string(highestAttribIndex) + " is specified, but maximum is " + std::to_string(maxSupportedVertexAttribs) + ")"
+            report_.Errorf(
+                "failed build input layout, because too many vertex attributes are specified (%u is specified, but maximum is %u)",
+                highestAttribIndex, maxSupportedVertexAttribs
             );
+            return false;
         }
     }
 
@@ -196,6 +197,8 @@ void GLShader::BuildVertexInputLayout(std::size_t numVertexAttribs, const Vertex
         if (attr.semanticIndex == 0)
             shaderAttribs_.push_back({ attr.location, shaderAttribNames_.CopyString(attr.name) });
     }
+
+    return true;
 }
 
 void GLShader::BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs)

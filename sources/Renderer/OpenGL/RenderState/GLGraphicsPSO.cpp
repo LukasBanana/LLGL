@@ -55,13 +55,14 @@ GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const Rende
     if (IsPrimitiveTopologyPatches(desc.primitiveTopology))
     {
         /* Store patch vertices and check limit */
-        const auto patchSize = GetPrimitiveTopologyPatchSize(desc.primitiveTopology);
+        const std::uint32_t patchSize = GetPrimitiveTopologyPatchSize(desc.primitiveTopology);
         if (patchSize > limits.maxPatchVertices)
         {
-            throw std::runtime_error(
-                "renderer does not support " + std::to_string(patchVertices_) +
-                " control points for patches (limit is " + std::to_string(limits.maxPatchVertices) + ")"
+            GetMutableReport().Errorf(
+                "renderer does not support %u control points for patches (limit is %u)",
+                patchSize, limits.maxPatchVertices
             );
+            patchVertices_ = static_cast<GLint>(limits.maxPatchVertices);
         }
         else
             patchVertices_ = static_cast<GLint>(patchSize);
@@ -76,9 +77,9 @@ GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const Rende
     rasterizerState_ = GLStatePool::Get().CreateRasterizerState(desc.rasterizer);
 
     /* Create blend state */
-    if (auto renderPass = desc.renderPass)
+    if (const RenderPass* renderPass = desc.renderPass)
     {
-        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
+        auto* renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
         blendState_ = GLStatePool::Get().CreateBlendState(desc.blend, renderPassGL->GetNumColorAttachments());
     }
     else
@@ -154,10 +155,11 @@ void GLGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewpor
 
     if (numStaticViewports_ > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
     {
-        throw std::invalid_argument(
-            "too many viewports in graphics pipeline state (" + std::to_string(numStaticViewports_) +
-            " specified, but limit is " + std::to_string(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS) + ")"
+        GetMutableReport().Errorf(
+            "too many viewports in graphics pipeline state (%d specified, but limit is %u)",
+            numStaticViewports_, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS
         );
+        numStaticViewports_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
     }
 
     /* Build <GLViewport> entries */
@@ -190,10 +192,11 @@ void GLGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* 
 
     if (numStaticScissors_ > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
     {
-        throw std::invalid_argument(
-            "too many scissors in graphics pipeline state (" + std::to_string(numStaticScissors_) +
-            " specified, but limit is " + std::to_string(LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS) + ")"
+        GetMutableReport().Errorf(
+            "too many scissors in graphics pipeline state (%d specified, but limit is %u)",
+            numStaticScissors_, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS
         );
+        numStaticScissors_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
     }
 
     /* Build <GLScissor> entries */

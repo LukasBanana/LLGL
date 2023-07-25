@@ -78,6 +78,14 @@ class GLPipelineState : public PipelineState
             return uniformMap_;
         }
 
+    protected:
+
+        // Returns a mutable reference to the PSO report.
+        inline Report& GetMutableReport()
+        {
+            return report_;
+        }
+
     private:
 
         // Builds the index-to-uniform map.

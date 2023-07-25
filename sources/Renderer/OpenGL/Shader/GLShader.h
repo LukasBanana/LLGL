@@ -100,7 +100,7 @@ class GLShader : public Shader
     private:
 
         void ReserveAttribs(const ShaderDescriptor& desc);
-        void BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
+        bool BuildVertexInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
         void BuildFragmentOutputLayout(std::size_t numFragmentAttribs, const FragmentAttribute* fragmentAttribs);
         void BuildTransformFeedbackVaryings(std::size_t numVaryings, const VertexAttribute* varyings);
 
