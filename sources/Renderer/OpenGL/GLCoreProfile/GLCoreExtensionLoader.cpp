@@ -245,6 +245,7 @@ static bool DECL_LOADGLEXT_PROC(ARB_shader_objects)
     LOAD_GLPROC( glCompileShader      );
     LOAD_GLPROC( glGetShaderiv        );
     LOAD_GLPROC( glGetShaderInfoLog   );
+    LOAD_GLPROC( glGetShaderSource    );
     LOAD_GLPROC( glDeleteShader       );
     LOAD_GLPROC( glCreateProgram      );
     LOAD_GLPROC( glDeleteProgram      );

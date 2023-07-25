@@ -266,6 +266,7 @@ DECL_GLPROC(PFNGLSHADERSOURCEPROC,                                  glShaderSour
 DECL_GLPROC(PFNGLCOMPILESHADERPROC,                                 glCompileShader,                                void,           (GLuint));
 DECL_GLPROC(PFNGLGETSHADERIVPROC,                                   glGetShaderiv,                                  void,           (GLuint, GLenum, GLint*));
 DECL_GLPROC(PFNGLGETSHADERINFOLOGPROC,                              glGetShaderInfoLog,                             void,           (GLuint, GLsizei, GLsizei*, GLchar*));
+DECL_GLPROC(PFNGLGETSHADERSOURCEPROC,                               glGetShaderSource,                              void,           (GLuint, GLsizei, GLsizei*, GLchar*));
 DECL_GLPROC(PFNGLDELETESHADERPROC,                                  glDeleteShader,                                 void,           (GLuint));
 DECL_GLPROC(PFNGLCREATEPROGRAMPROC,                                 glCreateProgram,                                GLuint,         (void));
 DECL_GLPROC(PFNGLDELETEPROGRAMPROC,                                 glDeleteProgram,                                void,           (GLuint));
