@@ -16,6 +16,7 @@
 #include "GLPipelineLayout.h"
 #include "../Shader/GLShaderBindingLayout.h"
 #include "../Shader/GLShaderPipeline.h"
+#include "../Shader/GLShader.h"
 #include <vector>
 
 
@@ -66,7 +67,7 @@ class GLStatePool
 
         /* ----- Shader pipelines ----- */
 
-        GLShaderPipelineSPtr CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders);
+        GLShaderPipelineSPtr CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders, GLShader::Permutation permutation = GLShader::PermutationDefault);
         void ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline);
 
     private:

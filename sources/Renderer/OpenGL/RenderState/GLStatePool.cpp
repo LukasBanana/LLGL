@@ -36,7 +36,7 @@ std::shared_ptr<T> FindCompatibleStateObject(
     const TCompare&                         compareObject,
     std::size_t&                            index)
 {
-    auto* entry = FindInSortedArray<std::shared_ptr<TBase>>(
+    std::shared_ptr<TBase>* entry = FindInSortedArray<std::shared_ptr<TBase>>(
         container.data(),
         container.size(),
         [&compareObject](const std::shared_ptr<TBase>& entry) -> int
@@ -55,11 +55,11 @@ std::shared_ptr<T> CreateRenderStateObjectExt(std::vector<std::shared_ptr<TBase>
     const TCompare stateToCompare{ std::forward<Args>(args)... };
 
     std::size_t insertionIndex = 0;
-    if (auto sharedState = FindCompatibleStateObject<T, TCompare, TBase>(container, stateToCompare, insertionIndex))
+    if (std::shared_ptr<T> sharedState = FindCompatibleStateObject<T, TCompare, TBase>(container, stateToCompare, insertionIndex))
         return sharedState;
 
     /* Allocate new render state object with insertion sort */
-    auto newState = std::make_shared<T>(std::forward<Args>(args)...);
+    std::shared_ptr<T> newState = std::make_shared<T>(std::forward<Args>(args)...);
     container.insert(container.begin() + insertionIndex, newState);
 
     return newState;
@@ -72,11 +72,11 @@ std::shared_ptr<T> CreateRenderStateObject(std::vector<std::shared_ptr<T>>& cont
     T stateToCompare{ std::forward<Args>(args)... };
 
     std::size_t insertionIndex = 0;
-    if (auto sharedState = FindCompatibleStateObject<T, T, T>(container, stateToCompare, insertionIndex))
+    if (std::shared_ptr<T> sharedState = FindCompatibleStateObject<T, T, T>(container, stateToCompare, insertionIndex))
         return sharedState;
 
     /* Allocate new render state object with insertion sort */
-    auto newState = std::make_shared<T>(stateToCompare);
+    std::shared_ptr<T> newState = std::make_shared<T>(stateToCompare);
     container.insert(container.begin() + insertionIndex, newState);
 
     return newState;
@@ -91,7 +91,7 @@ void ReleaseRenderStateObject(
     if (renderState && renderState.use_count() == 2)
     {
         /* Reset render state */
-        auto objectRef = renderState.get();
+        T* objectRef = renderState.get();
         renderState.reset();
 
         /* Retrieve entry index in container to remove entry */
@@ -208,20 +208,20 @@ static bool HasGLSeparableShaders(std::size_t numShaders, Shader* const* shaders
     return (numShaders > 0 && IsGLSeparableShader(shaders[0]));
 }
 
-GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders)
+GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders, GLShader::Permutation permutation)
 {
     #ifdef LLGL_OPENGL
     if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(numShaders, shaders))
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(shaderPipelines_, numShaders, shaders)
+            CreateRenderStateObjectExt<GLProgramPipeline, GLPipelineSignature>(shaderPipelines_, numShaders, shaders, permutation)
         );
     }
     else
     #endif
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders)
+            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders, permutation)
         );
     }
 }

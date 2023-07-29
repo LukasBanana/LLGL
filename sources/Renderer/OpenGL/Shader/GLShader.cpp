@@ -70,33 +70,66 @@ GLenum GLShader::GetGLType() const
     return GLTypes::Map(GetType());
 }
 
-void GLShader::PatchShaderSource(
-    const ShaderSourceCallback& sourceCallback,
-    const ShaderDescriptor&     shaderDesc)
+bool GLShader::NeedsPermutationFlippedYPosition(const ShaderType shaderType, long shaderFlags)
 {
-    /* Generate statement to flip vertex Y-coordinate if requested */
-    const char* vertexTransformStmt = nullptr;
-    if ((shaderDesc.flags & ShaderCompileFlags::PatchClippingOrigin) != 0)
+    /* If GL_ARB_clip_control is supported, emulating this feature via shader permutation is not necessary */
+    if (!HasExtension(GLExt::ARB_clip_control))
     {
-        if (shaderDesc.type == ShaderType::Vertex ||
-            shaderDesc.type == ShaderType::TessEvaluation ||
-            shaderDesc.type == ShaderType::Geometry)
+        /* Is this shader permutation enabled for this shader? */
+        if ((shaderFlags & ShaderCompileFlags::PatchClippingOrigin) != 0)
         {
-            vertexTransformStmt = "gl_Position.y = -gl_Position.y;";
+            /* Is this a shader type that modifies gl_Position? */
+            if (shaderType == ShaderType::Vertex ||
+                shaderType == ShaderType::TessEvaluation ||
+                shaderType == ShaderType::Geometry)
+            {
+                return true;
+            }
         }
     }
+    return false;
+}
+
+bool GLShader::HasAnyShaderPermutation(Permutation permutation, const ArrayView<Shader*>& shaders)
+{
+    if (!shaders.empty())
+    {
+        if (permutation == PermutationDefault)
+        {
+            /* Every GLShader must have at least the default permutation */
+            return true;
+        }
+        for (const Shader* shader : shaders)
+        {
+            auto* shaderGL = LLGL_CAST(const GLShader*, shader);
+            if (shaderGL->GetID(permutation) != 0)
+            {
+                /* Found GLShader with requested permutation */
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void GLShader::PatchShaderSource(
+    const ShaderSourceCallback& sourceCallback,
+    const char*                 shaderSource,
+    const ShaderDescriptor&     shaderDesc,
+    long                        enabledFlags)
+{
+    const long shaderFlags = (shaderDesc.flags & enabledFlags);
+
+    /* Generate statement to flip vertex Y-coordinate if requested */
+    const char* vertexTransformStmt = nullptr;
+    if (GLShader::NeedsPermutationFlippedYPosition(shaderDesc.type, shaderFlags))
+        vertexTransformStmt = "gl_Position.y = -gl_Position.y;";
 
     /* Add '#pragma optimize(off)'-directive to source if optimization is disabled */
-    const bool pragmaOptimizeOff = ((shaderDesc.flags & ShaderCompileFlags::NoOptimization) != 0);
+    const bool pragmaOptimizeOff = ((shaderFlags & ShaderCompileFlags::NoOptimization) != 0);
 
     /* Get source code */
-    if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
-    {
-        const std::string fileContent = ReadFileString(shaderDesc.source);
-        GLShader::PatchShaderSourceWithOptions(sourceCallback, fileContent.c_str(), shaderDesc.defines, pragmaOptimizeOff, vertexTransformStmt);
-    }
-    else
-        GLShader::PatchShaderSourceWithOptions(sourceCallback, shaderDesc.source, shaderDesc.defines, pragmaOptimizeOff, vertexTransformStmt);
+    GLShader::PatchShaderSourceWithOptions(sourceCallback, shaderSource, shaderDesc.defines, pragmaOptimizeOff, vertexTransformStmt);
 }
 
 void GLShader::PatchShaderSourceWithOptions(

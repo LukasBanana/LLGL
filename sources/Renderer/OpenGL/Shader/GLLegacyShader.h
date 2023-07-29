@@ -43,6 +43,9 @@ class GLLegacyShader final : public GLShader
 
     private:
 
+        GLuint CreateShaderPermutation(Permutation permutation);
+        bool FinalizeShaderPermutation(Permutation permutation);
+
         void BuildShader(const ShaderDescriptor& shaderDesc);
         void CompileSource(const ShaderDescriptor& shaderDesc);
         void LoadBinary(const ShaderDescriptor& shaderDesc);

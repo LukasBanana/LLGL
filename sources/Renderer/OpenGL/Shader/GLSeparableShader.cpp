@@ -12,63 +12,22 @@
 #include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
 
-static GLuint CreateSeparableGLProgram()
-{
-    if (const GLuint program = glCreateProgram())
-    {
-        glProgramParameteri(program, GL_PROGRAM_SEPARABLE, GL_TRUE);
-        return program;
-    }
-    return 0;
-}
-
 GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
     GLShader { /*isSeparable:*/ true, desc }
 {
-    const GLuint program = CreateSeparableGLProgram();
-    SetID(program);
-
-    /* Compile and attach intermediate GL shader object */
     GLLegacyShader intermediateShader{ desc };
-    glAttachShader(GetID(), intermediateShader.GetID());
-
-    switch (desc.type)
+    if (CreateAndLinkSeparableGLProgram(intermediateShader, PermutationDefault))
     {
-        case ShaderType::Vertex:
-            /* Build input layout for vertex shader */
-            GLShaderProgram::BindAttribLocations(GetID(), GetNumVertexAttribs(), GetVertexAttribs());
-            break;
-
-        case ShaderType::Fragment:
-            /* Build output layout for fragment shader */
-            GLShaderProgram::BindFragDataLocations(GetID(), GetNumFragmentAttribs(), GetFragmentAttribs());
-            break;
-
-        default:
-            break;
+        if (intermediateShader.GetID(PermutationFlippedYPosition) != 0)
+            CreateAndLinkSeparableGLProgram(intermediateShader, PermutationFlippedYPosition);
     }
-
-    /* Build transform feedback varyings for vertex or geometry shader and link program */
-    const auto& varyings = GetTransformFeedbackVaryings();
-    if (!varyings.empty())
-        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings.size(), varyings.data());
-    else
-        GLShaderProgram::LinkProgram(GetID());
-
-    /* Detach intermediate shader before it gets deleted */
-    glDetachShader(GetID(), intermediateShader.GetID());
-
-    /* Query link status and log */
-    ReportStatusAndLog(
-        GLShaderProgram::GetLinkStatus(GetID()),
-        GLShaderProgram::GetGLProgramLog(GetID())
-    );
 }
 
 GLSeparableShader::~GLSeparableShader()
@@ -92,6 +51,8 @@ void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLa
     if (bindingLayout_ != &bindingLayout)
     {
         bindingLayout.UniformAndBlockBinding(GetID());
+        if (GLuint id = GetID(PermutationFlippedYPosition))
+            bindingLayout.UniformAndBlockBinding(id);
         bindingLayout_ = &bindingLayout;
     }
 }
@@ -101,6 +62,64 @@ void GLSeparableShader::QueryInfoLog(std::string& text, bool& hasErrors)
     if (!GLShaderProgram::GetLinkStatus(GetID()))
         hasErrors = true;
     text += GLShaderProgram::GetGLProgramLog(GetID());
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+static GLuint CreateSeparableGLProgram()
+{
+    if (const GLuint program = glCreateProgram())
+    {
+        glProgramParameteri(program, GL_PROGRAM_SEPARABLE, GL_TRUE);
+        return program;
+    }
+    return 0;
+}
+
+bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermediateShader, Permutation permutation)
+{
+    /* Create new separable GL program for current permutation */
+    const GLuint program = CreateSeparableGLProgram();
+    SetID(program, permutation);
+
+    /* Compile and attach intermediate GL shader object */
+    const GLuint shader = intermediateShader.GetID(permutation);
+    glAttachShader(program, shader);
+
+    switch (intermediateShader.GetType())
+    {
+        case ShaderType::Vertex:
+            /* Build input layout for vertex shader */
+            GLShaderProgram::BindAttribLocations(program, GetNumVertexAttribs(), GetVertexAttribs());
+            break;
+
+        case ShaderType::Fragment:
+            /* Build output layout for fragment shader */
+            GLShaderProgram::BindFragDataLocations(program, GetNumFragmentAttribs(), GetFragmentAttribs());
+            break;
+
+        default:
+            break;
+    }
+
+    /* Build transform feedback varyings for vertex or geometry shader and link program */
+    const auto& varyings = GetTransformFeedbackVaryings();
+    if (!varyings.empty())
+        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(program, varyings.size(), varyings.data());
+    else
+        GLShaderProgram::LinkProgram(program);
+
+    /* Detach intermediate shader before it gets deleted */
+    glDetachShader(program, shader);
+
+    /* Query link status and log */
+    const bool status = GLShaderProgram::GetLinkStatus(program);
+    ReportStatusAndLog(status, GLShaderProgram::GetGLProgramLog(program));
+
+    return status;
 }
 
 

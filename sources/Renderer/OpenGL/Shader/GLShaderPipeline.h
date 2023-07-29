@@ -9,6 +9,7 @@
 #define LLGL_GL_SHADER_PIPELINE_H
 
 
+#include "GLShader.h"
 #include "GLPipelineSignature.h"
 #include <memory>
 
@@ -38,7 +39,7 @@ class GLShaderPipeline
         // Binds the resource names to their respective binding slots for this pipeline.
         virtual void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) = 0;
 
-        // Adds the shader info logs to the output report.
+        // Resets the output report with the shader info logs.
         virtual void QueryInfoLogs(Report& report) = 0;
 
         // Returns the native pipeline ID. Can be either from glCreateProgramPipelines or glCreateProgram.
@@ -61,7 +62,7 @@ class GLShaderPipeline
         GLShaderPipeline(GLuint id);
 
         // Builds the pipeline signature for SWO comparison.
-        void BuildSignature(std::size_t numShaders, const Shader* const* shaders);
+        void BuildSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation);
 
         // Stores the native shader pipeline ID.
         inline void SetID(GLuint id)

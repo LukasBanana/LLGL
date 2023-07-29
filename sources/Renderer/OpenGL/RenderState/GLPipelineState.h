@@ -12,6 +12,7 @@
 #include "../OpenGL.h"
 #include "../Shader/GLShaderBindingLayout.h"
 #include "../Shader/GLShaderPipeline.h"
+#include "../Shader/GLShader.h"
 #include <LLGL/Report.h>
 #include <LLGL/PipelineState.h>
 #include <LLGL/RenderSystemFlags.h>
@@ -69,7 +70,7 @@ class GLPipelineState : public PipelineState
         // Returns the shader pipeline used for this PSO.
         inline const GLShaderPipeline* GetShaderPipeline() const
         {
-            return shaderPipeline_.get();
+            return shaderPipelines_[GLShader::PermutationDefault].get();
         }
 
         // Returns the list of uniforms that maps from index of 'PipelineLayoutDescriptor::uniforms[]' to GL uniform location.
@@ -89,16 +90,16 @@ class GLPipelineState : public PipelineState
     private:
 
         // Builds the index-to-uniform map.
-        void BuildUniformMap(const std::vector<UniformDescriptor>& uniforms);
+        void BuildUniformMap(GLShader::Permutation permutation, const std::vector<UniformDescriptor>& uniforms);
 
         // Builds the specified uniform location.
         void BuildUniformLocation(GLuint program, GLUniformLocation& outUniform, const UniformDescriptor& inUniform);
 
     private:
 
-        const bool                      isGraphicsPSO_          = false;
-        const GLPipelineLayout*         pipelineLayout_         = nullptr;
-        GLShaderPipelineSPtr            shaderPipeline_         = nullptr;
+        const bool                      isGraphicsPSO_                                  = false;
+        const GLPipelineLayout*         pipelineLayout_                                 = nullptr;
+        GLShaderPipelineSPtr            shaderPipelines_[GLShader::PermutationCount];
         GLShaderBindingLayoutSPtr       shaderBindingLayout_;
         std::vector<GLUniformLocation>  uniformMap_;
         Report                          report_;

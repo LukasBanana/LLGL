@@ -34,6 +34,16 @@ class GLShader : public Shader
 
     public:
 
+        // Enumeration of all GL shader permutations.
+        enum Permutation
+        {
+            PermutationDefault = 0,         // Default GL shader; Unmodified source.
+            PermutationFlippedYPosition,    // Shader permutation with flipped Y position; Implemented as 'gl_Position.y = -gl_Position.y' statements.
+            PermutationCount,
+        };
+
+    public:
+
         const Report* GetReport() const override;
 
     public:
@@ -58,7 +68,13 @@ class GLShader : public Shader
         // Returns the native shader ID. Can be either from glCreateShader or glCreateShaderProgramv.
         inline GLuint GetID() const
         {
-            return id_;
+            return id_[PermutationDefault];
+        }
+
+        // Returns the native shader ID for the specified permutation or the default permutation if the specified one is not available.
+        inline GLuint GetID(Permutation permutation) const
+        {
+            return (id_[permutation] != 0 ? id_[permutation] : id_[PermutationDefault]);
         }
 
         // Returns true if this is a separable shader, i.e. of type <GLSeparableShader>. Otherwise, it's of type <GLLegacyShader>.
@@ -69,10 +85,18 @@ class GLShader : public Shader
 
     public:
 
-        // Patches the shader source and invokes the callback with the preprocessed shader.
+        // Returns true if the specified shader descriptor requires the permutation with flipped Y-position; See PermutationFlippedYPosition.
+        static bool NeedsPermutationFlippedYPosition(const ShaderType shaderType, long shaderFlags);
+
+        // Returns true if any of the specified shaders has the specified permutation.
+        static bool HasAnyShaderPermutation(Permutation permutation, const ArrayView<Shader*>& shaders);
+
+        // Patches the shader source and invokes the callback with the preprocessed shader. See ShaderCompileFlags.
         static void PatchShaderSource(
             const ShaderSourceCallback& sourceCallback,
-            const ShaderDescriptor&     shaderDesc
+            const char*                 shaderSource,
+            const ShaderDescriptor&     shaderDesc,
+            long                        enabledFlags
         );
 
         // Patches the shader source with the specified options: macro definitions, pragma directives, additional statements etc.
@@ -92,9 +116,9 @@ class GLShader : public Shader
         void ReportStatusAndLog(bool status, const std::string& log);
 
         // Stores the native shader ID.
-        inline void SetID(GLuint id)
+        inline void SetID(GLuint id, Permutation permutation = PermutationDefault)
         {
-            id_ = id;
+            id_[permutation] = id;
         }
 
     private:
@@ -107,7 +131,7 @@ class GLShader : public Shader
     private:
 
         const bool                      isSeparable_;
-        GLuint                          id_                         = 0; // ID from either glCreateShader or glCreateShaderProgramv
+        GLuint                          id_[PermutationCount]       = {}; // ID from either glCreateShader or glCreateShaderProgramv
         LinearStringContainer           shaderAttribNames_;
         std::vector<GLShaderAttribute>  shaderAttribs_;
         std::size_t                     numVertexAttribs_           = 0;

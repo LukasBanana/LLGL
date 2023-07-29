@@ -10,6 +10,7 @@
 
 
 #include "../OpenGL.h"
+#include "GLShader.h"
 #include <cstddef>
 
 
@@ -30,17 +31,22 @@ class GLPipelineSignature
         GLPipelineSignature() = default;
 
         // Initializes the signature with the specified shaders. Equivalent of calling Build.
-        GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders);
+        GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation);
 
         /*
         Initializes the signature with the specified shaders.
         The internal ID array is sorted by their shader types for matching SWO comparison.
         The number of shaders must be less than or equal to LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE.
         */
-        void Build(std::size_t numShaders, const Shader* const* shaders);
+        void Build(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation);
+
+    public:
 
         // Returns a signed integer of the strict-weak-order (SWO) comparison, and 0 on equality.
         static int CompareSWO(const GLPipelineSignature& lhs, const GLPipelineSignature& rhs);
+
+        // Returns the last shader in the pipeline that modifies gl_Position.
+        static const GLShader* FindFinalGLPositionShader(std::size_t numShaders, const Shader* const* shaders);
 
     public:
 

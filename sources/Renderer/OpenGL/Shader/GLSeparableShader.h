@@ -17,6 +17,7 @@ namespace LLGL
 {
 
 
+class GLLegacyShader;
 class GLShaderBindingLayout;
 
 // Shader implementation for separable GL shader programs; requires GL_ARB_separate_shader_objects extension.
@@ -38,6 +39,10 @@ class GLSeparableShader final : public GLShader
 
         // Queries the program info log and appends it to the output text.
         void QueryInfoLog(std::string& text, bool& hasErrors);
+
+    private:
+
+        bool CreateAndLinkSeparableGLProgram(GLLegacyShader& intermediateShader, Permutation permutation);
 
     private:
 

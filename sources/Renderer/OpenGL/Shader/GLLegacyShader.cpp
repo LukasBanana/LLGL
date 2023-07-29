@@ -21,15 +21,7 @@ namespace LLGL
 GLLegacyShader::GLLegacyShader(const ShaderDescriptor& desc) :
     GLShader { /*isSeparable:*/ false, desc }
 {
-    GLuint id = glCreateShader(GLTypes::Map(desc.type));
-    SetID(id);
     BuildShader(desc);
-
-    /* Query compile status and log */
-    ReportStatusAndLog(
-        GLLegacyShader::GetCompileStatus(GetID()),
-        GLLegacyShader::GetGLShaderLog(GetID())
-    );
 }
 
 GLLegacyShader::~GLLegacyShader()
@@ -92,6 +84,21 @@ std::string GLLegacyShader::GetGLShaderLog(GLuint shader)
  * ======= Private: =======
  */
 
+GLuint GLLegacyShader::CreateShaderPermutation(Permutation permutation)
+{
+    GLuint id = glCreateShader(GLTypes::Map(GetType()));
+    SetID(id, permutation);
+    return id;
+}
+
+bool GLLegacyShader::FinalizeShaderPermutation(Permutation permutation)
+{
+    /* Query compile status and log */
+    const bool status = GLLegacyShader::GetCompileStatus(GetID());
+    ReportStatusAndLog(status, GLLegacyShader::GetGLShaderLog(GetID()));
+    return status;
+}
+
 void GLLegacyShader::BuildShader(const ShaderDescriptor& shaderDesc)
 {
     if (IsShaderSourceCode(shaderDesc.sourceType))
@@ -102,17 +109,35 @@ void GLLegacyShader::BuildShader(const ShaderDescriptor& shaderDesc)
 
 void GLLegacyShader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
-    GLShader::PatchShaderSource(
-        [this](const char* source)
+    auto CompileShaderPermutation = [this, &shaderDesc](Permutation permutation, long enabledFlags) -> bool
+    {
+        const GLuint shader = CreateShaderPermutation(permutation);
+        auto sourceCallback = std::bind(GLLegacyShader::CompileShaderSource, shader, std::placeholders::_1);
+
+        if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
         {
-            GLLegacyShader::CompileShaderSource(GetID(), source);
-        },
-        shaderDesc
-    );
+            const std::string fileContent = ReadFileString(shaderDesc.source);
+            GLShader::PatchShaderSource(sourceCallback, fileContent.c_str(), shaderDesc, enabledFlags);
+        }
+        else
+            GLShader::PatchShaderSource(sourceCallback, shaderDesc.source, shaderDesc, enabledFlags);
+
+        return FinalizeShaderPermutation(permutation);
+    };
+
+    /* Compile and patch default shader permutation */
+    if (CompileShaderPermutation(PermutationDefault, ShaderCompileFlags::NoOptimization))
+    {
+        /* Compile and patch shader permutation for flipped Y-position */
+        if (GLShader::NeedsPermutationFlippedYPosition(shaderDesc.type, shaderDesc.flags))
+            CompileShaderPermutation(PermutationFlippedYPosition, ShaderCompileFlags::NoOptimization | ShaderCompileFlags::PatchClippingOrigin);
+    }
 }
 
 void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
 {
+    const GLuint shader = CreateShaderPermutation(PermutationDefault);
+
     #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
     if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
     {
@@ -136,18 +161,19 @@ void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
         }
 
         /* Load shader binary */
-        const GLuint shaders[] = { GetID() };
-        glShaderBinary(1, shaders, GL_SHADER_BINARY_FORMAT_SPIR_V, binaryBuffer, binaryLength);
+        glShaderBinary(1, &shader, GL_SHADER_BINARY_FORMAT_SPIR_V, binaryBuffer, binaryLength);
 
         /* Specialize for the default "main" function in a SPIR-V module  */
         const char* entryPoint = (shaderDesc.entryPoint == nullptr || *shaderDesc.entryPoint == '\0' ? "main" : shaderDesc.entryPoint);
-        glSpecializeShader(GetID(), entryPoint, 0, nullptr, nullptr);
+        glSpecializeShader(shader, entryPoint, 0, nullptr, nullptr);
     }
     else
     #endif
     {
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("loading binary shader");
     }
+
+    FinalizeShaderPermutation(PermutationDefault);
 }
 
 

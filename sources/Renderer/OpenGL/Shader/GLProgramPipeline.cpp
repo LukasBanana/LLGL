@@ -37,10 +37,14 @@ static GLuint GLCreateProgramPipeline()
     return id;
 }
 
-GLProgramPipeline::GLProgramPipeline(std::size_t numShaders, Shader* const* shaders) :
+GLProgramPipeline::GLProgramPipeline(
+    std::size_t             numShaders,
+    Shader* const*          shaders,
+    GLShader::Permutation   permutation)
+:
     GLShaderPipeline { GLCreateProgramPipeline() }
 {
-    UseProgramStages(numShaders, reinterpret_cast<GLSeparableShader* const*>(shaders));
+    UseProgramStages(numShaders, reinterpret_cast<GLSeparableShader* const*>(shaders), permutation);
 }
 
 GLProgramPipeline::~GLProgramPipeline()
@@ -97,18 +101,33 @@ void GLProgramPipeline::QueryInfoLogs(Report& report)
  * ======= Private: =======
  */
 
-void GLProgramPipeline::UseProgramStages(std::size_t numShaders, GLSeparableShader* const* shaders)
+void GLProgramPipeline::UseProgramStages(
+    std::size_t                 numShaders,
+    GLSeparableShader* const*   shaders,
+    GLShader::Permutation       permutation)
 {
+    /* Find last shader in pipeline that transforms gl_Position if such permutation is requested */
+    const GLShader* shaderWithFlippedYPosition = nullptr;
+    if (permutation == GLShader::PermutationFlippedYPosition)
+        shaderWithFlippedYPosition = GLPipelineSignature::FindFinalGLPositionShader(numShaders, reinterpret_cast<const Shader* const*>(shaders));
+
     for_range(i, numShaders)
     {
         GLSeparableShader* separableShader = shaders[i];
         if (GLbitfield stage = ToGLShaderStageBit(separableShader->GetType()))
         {
-            glUseProgramStages(GetID(), stage, separableShader->GetID());
+            const GLShader::Permutation permutationForShader =
+            (
+                separableShader == shaderWithFlippedYPosition
+                    ? GLShader::PermutationFlippedYPosition
+                    : GLShader::PermutationDefault
+            );
+            glUseProgramStages(GetID(), stage, separableShader->GetID(permutationForShader));
             separableShaders_[i] = separableShader;
         }
     }
-    BuildSignature(numShaders, reinterpret_cast<const Shader* const*>(shaders));
+
+    BuildSignature(numShaders, reinterpret_cast<const Shader* const*>(shaders), permutation);
 }
 
 

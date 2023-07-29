@@ -32,7 +32,11 @@ class GLShaderProgram final : public GLShaderPipeline
 
     public:
 
-        GLShaderProgram(std::size_t numShaders, const Shader* const* shaders);
+        GLShaderProgram(
+            std::size_t             numShaders,
+            const Shader* const*    shaders,
+            GLShader::Permutation   permutation = GLShader::PermutationDefault
+        );
         ~GLShaderProgram();
 
     public:

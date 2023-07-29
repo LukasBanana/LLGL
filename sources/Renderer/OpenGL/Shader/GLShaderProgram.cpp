@@ -83,44 +83,70 @@ static SharedGLShader g_nullFragmentShader;
 
 struct GLOrderedShaders
 {
-    const GLShader* vs = nullptr;
-    const GLShader* gs = nullptr;
-    const GLShader* fs = nullptr;
+    const GLShader* vertexShader                = nullptr;
+    const GLShader* geometryShader              = nullptr;
+    const GLShader* fragmentShader              = nullptr;
+    const GLShader* shaderWithFlippedYPosition  = nullptr; // Last shader that modifies gl_Position (vertex, tessellation-evaluation, or geometry)
+
+    GLuint GetGLShaderID(const GLShader* shader) const
+    {
+        const GLShader::Permutation permutation =
+        (
+            shader == shaderWithFlippedYPosition
+                ? GLShader::PermutationFlippedYPosition
+                : GLShader::PermutationDefault
+        );
+        return shader->GetID(permutation);
+    }
 };
 
-static void AttachGLLegacyShader(GLuint program, const Shader* shader, GLOrderedShaders& outOrderedShaders)
+static void AttachGLLegacyShaders(
+    GLuint                  program,
+    std::size_t             numShaders,
+    const Shader* const*    shaders,
+    GLOrderedShaders&       orderedShaders)
 {
-    if (shader != nullptr)
+    for_range(i, numShaders)
     {
-        /* Attach shader to shader program */
-        auto shaderGL = LLGL_CAST(const GLLegacyShader*, shader);
-        glAttachShader(program, shaderGL->GetID());
-
-        /* Put into ordered container */
-        switch (shaderGL->GetType())
+        if (const Shader* shader = shaders[i])
         {
-            case ShaderType::Vertex:
-                outOrderedShaders.vs = shaderGL;
-                break;
-            case ShaderType::Geometry:
-                outOrderedShaders.gs = shaderGL;
-                break;
-            case ShaderType::Fragment:
-                outOrderedShaders.fs = shaderGL;
-                break;
-            default:
-                break;
+            /* Attach shader to shader program */
+            auto shaderGL = LLGL_CAST(const GLLegacyShader*, shader);
+            glAttachShader(program, orderedShaders.GetGLShaderID(shaderGL));
+
+            switch (shaderGL->GetType())
+            {
+                case ShaderType::Vertex:
+                    orderedShaders.vertexShader = shaderGL;
+                    break;
+                case ShaderType::Geometry:
+                    orderedShaders.geometryShader = shaderGL;
+                    break;
+                case ShaderType::Fragment:
+                    orderedShaders.fragmentShader = shaderGL;
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }
 
-GLShaderProgram::GLShaderProgram(std::size_t numShaders, const Shader* const* shaders) :
+GLShaderProgram::GLShaderProgram(
+    std::size_t             numShaders,
+    const Shader* const*    shaders,
+    GLShader::Permutation   permutation)
+:
     GLShaderPipeline { glCreateProgram() }
 {
-    /* Attach all specified shaders to this shader program */
     GLOrderedShaders orderedShaders;
-    for_range(i, numShaders)
-        AttachGLLegacyShader(GetID(), shaders[i], orderedShaders);
+
+    /* Find last shader in pipeline that transforms gl_Position if such permutation is requested */
+    if (permutation == GLShader::PermutationFlippedYPosition)
+        orderedShaders.shaderWithFlippedYPosition = GLPipelineSignature::FindFinalGLPositionShader(numShaders, shaders);
+
+    /* Attach all specified shaders to this shader program */
+    AttachGLLegacyShaders(GetID(), numShaders, shaders, orderedShaders);
 
     #ifdef __APPLE__
     /*
@@ -140,22 +166,22 @@ GLShaderProgram::GLShaderProgram(std::size_t numShaders, const Shader* const* sh
     #endif
 
     /* Build input layout for vertex shader */
-    if (auto vs = orderedShaders.vs)
+    if (const GLShader* vs = orderedShaders.vertexShader)
         GLShaderProgram::BindAttribLocations(GetID(), vs->GetNumVertexAttribs(), vs->GetVertexAttribs());
 
     /* Build output layout for fragment shader */
-    if (auto fs = orderedShaders.fs)
+    if (const GLShader* fs = orderedShaders.fragmentShader)
         GLShaderProgram::BindFragDataLocations(GetID(), fs->GetNumFragmentAttribs(), fs->GetFragmentAttribs());
 
     /* Build transform feedback varyings for vertex or geometry shader and link program */
     const GLShader* shaderWithVaryings = nullptr;
 
-    if (auto gs = orderedShaders.gs)
+    if (const GLShader* gs = orderedShaders.geometryShader)
     {
         if (!gs->GetTransformFeedbackVaryings().empty())
             shaderWithVaryings = gs;
     }
-    else if (auto vs = orderedShaders.vs)
+    else if (const GLShader* vs = orderedShaders.vertexShader)
     {
         if (!vs->GetTransformFeedbackVaryings().empty())
             shaderWithVaryings = vs;
@@ -171,7 +197,7 @@ GLShaderProgram::GLShaderProgram(std::size_t numShaders, const Shader* const* sh
         GLShaderProgram::LinkProgram(GetID());
 
     /* Build pipeline signature */
-    BuildSignature(numShaders, shaders);
+    BuildSignature(numShaders, shaders, permutation);
 }
 
 GLShaderProgram::~GLShaderProgram()
