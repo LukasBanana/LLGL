@@ -17,8 +17,14 @@ namespace LLGL
 {
 
 
+
+#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
+    extern PFNTYPE NAME
+
 // Include inline header for object declarations
 #include "GLCoreExtensionsDecl.inl"
+
+#undef DECL_GLPROC
 
 
 } // /namespace LLGL

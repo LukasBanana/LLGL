@@ -7,41 +7,11 @@
 
 // THIS FILE MUST NOT HAVE A HEADER GUARD
 
-/*
-All OpenGL extension functions are declared here.
-Depending on the following macros being defined, the respective implementation is enabled:
-- LLGL_DEF_GL_PROXY_PROCS: defines the proxy functions for potentially unsupported GL extensions
-- LLGL_DECL_GL_PROXY_PROCS: declares the proxy functions for potentially unsupported GL extensions
-- LLGL_DEF_GL_EXT_PROCS: defines the global function pointer for GL extensions
-- None: declares the global function pointer for GL extensions
-*/
-
 
 #ifndef __APPLE__
 
-#if defined LLGL_DEF_GL_PROXY_PROCS
-
-#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
-    RTYPE APIENTRY Proxy_##NAME ARGS            \
-    {                                           \
-        ErrUnsupportedGLProc(#NAME);            \
-    }
-
-#elif defined LLGL_DECL_GL_PROXY_PROCS
-
-#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
-    RTYPE APIENTRY Proxy_##NAME ARGS
-
-#elif defined LLGL_DEF_GL_EXT_PROCS
-
-#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
-    PFNTYPE NAME = nullptr
-
-#else
-
-#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
-    extern PFNTYPE NAME
-
+#ifndef DECL_GLPROC
+#error Missing definition of macro DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS)
 #endif
 
 /* Platform specific GL extensions */
