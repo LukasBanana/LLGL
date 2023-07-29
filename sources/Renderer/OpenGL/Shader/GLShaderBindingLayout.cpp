@@ -35,9 +35,9 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
         for_range(i, numUniformBindings_)
         {
             const auto& resource = bindings_[resourceIndex++];
-            auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
-            if (blockIndex != GL_INVALID_INDEX)
-                glProgramUniform1i(program, blockIndex, static_cast<GLint>(resource.slot));
+            GLint location = glGetUniformLocation(program, resource.name.c_str());
+            if (location != GL_INVALID_INDEX)
+                glProgramUniform1i(program, location, static_cast<GLint>(resource.slot));
         }
     }
     else
@@ -50,9 +50,9 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
             for_range(i, numUniformBindings_)
             {
                 const auto& resource = bindings_[resourceIndex++];
-                auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
-                if (blockIndex != GL_INVALID_INDEX)
-                    glUniform1i(blockIndex, static_cast<GLint>(resource.slot));
+                GLint location = glGetUniformLocation(program, resource.name.c_str());
+                if (location != GL_INVALID_INDEX)
+                    glUniform1i(location, static_cast<GLint>(resource.slot));
             }
         }
         stateMngr->PopBoundShaderProgram();
@@ -62,9 +62,9 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
         for_range(i, numUniformBindings_)
         {
             const auto& resource = bindings_[resourceIndex++];
-            auto blockIndex = glGetUniformLocation(program, resource.name.c_str());
-            if (blockIndex != GL_INVALID_INDEX)
-                glUniform1i(blockIndex, static_cast<GLint>(resource.slot));
+            GLint location = glGetUniformLocation(program, resource.name.c_str());
+            if (location != GL_INVALID_INDEX)
+                glUniform1i(location, static_cast<GLint>(resource.slot));
         }
     }
 
@@ -72,7 +72,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     for_range(i, numUniformBlockBindings_)
     {
         const auto& resource = bindings_[resourceIndex++];
-        auto blockIndex = glGetUniformBlockIndex(program, resource.name.c_str());
+        GLuint blockIndex = glGetUniformBlockIndex(program, resource.name.c_str());
         if (blockIndex != GL_INVALID_INDEX)
             glUniformBlockBinding(program, blockIndex, resource.slot);
     }
@@ -82,7 +82,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     for_range(i, numShaderStorageBindings_)
     {
         const auto& resource = bindings_[resourceIndex++];
-        auto blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
+        GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
         if (blockIndex != GL_INVALID_INDEX)
             glShaderStorageBlockBinding(program, blockIndex, resource.slot);
     }

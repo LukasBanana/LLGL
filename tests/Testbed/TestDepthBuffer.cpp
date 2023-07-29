@@ -57,6 +57,15 @@ DEF_TEST( DepthBuffer )
     }
     PipelineState* pso = renderer->CreatePipelineState(psoDesc);
 
+    if (const Report* report = pso->GetReport())
+    {
+        if (report->HasErrors())
+        {
+            Log::Errorf("PSO creation failed:\n%s", report->GetText());
+            return TestResult::FailedErrors;
+        }
+    }
+
     // Update scene constants
     sceneConstants.wMatrix.LoadIdentity();
     Gs::Translate(sceneConstants.wMatrix, Gs::Vector3f{ 0, 0, 2 });

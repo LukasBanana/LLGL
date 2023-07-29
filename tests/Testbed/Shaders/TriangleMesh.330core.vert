@@ -36,6 +36,5 @@ void main()
     #if ENABLE_TEXTURING
     vTexCoord = texCoord;
     #endif
-    gl_Position.y = -gl_Position.y; //TODO: temporary fix for render target VS
 }
 
