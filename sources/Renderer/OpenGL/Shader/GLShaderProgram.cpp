@@ -153,7 +153,7 @@ GLShaderProgram::GLShaderProgram(
     Mac implementation of OpenGL violates GL spec and always requires a fragment shader,
     so we create a dummy if not specified by client.
     */
-    if (orderedShaders.fs == nullptr)
+    if (orderedShaders.fragmentShader == nullptr)
     {
         const GLchar* nullFragmentShaderSource =
             "#version 330 core\n"
