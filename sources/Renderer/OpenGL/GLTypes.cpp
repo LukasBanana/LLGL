@@ -1011,6 +1011,36 @@ bool IsIntegerTypedFormat(GLenum internalFormat)
     }
 }
 
+bool IsDepthFormat(GLenum internalFormat)
+{
+    switch (internalFormat)
+    {
+        case GL_DEPTH_COMPONENT16:
+        #ifdef LLGL_OPENGL
+        case GL_DEPTH_COMPONENT32:
+        #else
+        case GL_DEPTH_COMPONENT32F:
+        #endif
+        case GL_DEPTH_COMPONENT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool IsDepthStencilFormat(GLenum internalFormat)
+{
+    switch (internalFormat)
+    {
+        case GL_DEPTH24_STENCIL8:
+        case GL_DEPTH_STENCIL:
+        case GL_DEPTH32F_STENCIL8:
+            return true;
+        default:
+            return false;
+    }
+}
+
 
 } // /namespace GLTypes
 

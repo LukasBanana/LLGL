@@ -70,6 +70,12 @@ DataType    UnmapDataType   ( const GLenum type           );
 // Returns true if the specified GL internal format has an integer type (e.g. GL_R32UI).
 bool IsIntegerTypedFormat(GLenum internalFormat);
 
+// Returns true if the specified GL internal format is a depth-only format.
+bool IsDepthFormat(GLenum internalFormat);
+
+// Returns true if the specified GL internal format is a depth-and-stencil format.
+bool IsDepthStencilFormat(GLenum internalFormat);
+
 
 } // /namespace GLTypes
 

@@ -8,6 +8,7 @@
 #include "GLReadTextureFBO.h"
 #include "GLTexture.h"
 #include "../RenderState/GLStateManager.h"
+#include "../GLTypes.h"
 #include <LLGL/TextureFlags.h>
 
 
@@ -44,11 +45,21 @@ static GLint TextureOffsetToArrayLayer(const TextureType type, const Offset3D& o
     }
 }
 
+static GLenum GetGLAttachmentForInternalFormat(GLenum internalFormat)
+{
+    if (GLTypes::IsDepthFormat(internalFormat))
+        return GL_DEPTH_ATTACHMENT;
+    if (GLTypes::IsDepthStencilFormat(internalFormat))
+        return GL_DEPTH_STENCIL_ATTACHMENT;
+    return GL_COLOR_ATTACHMENT0;
+}
+
 void GLReadTextureFBO::Attach(GLTexture& texture, GLint mipLevel, const Offset3D& offset)
 {
+    const GLenum attachment = GetGLAttachmentForInternalFormat(texture.GetGLInternalFormat());
     GLFramebuffer::AttachTexture(
         texture,
-        GL_COLOR_ATTACHMENT0,
+        attachment,
         static_cast<GLint>(mipLevel),
         TextureOffsetToArrayLayer(texture.GetType(), offset),
         GL_READ_FRAMEBUFFER
