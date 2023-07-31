@@ -23,11 +23,15 @@ namespace LLGL
 {
 
 
+static constexpr NSUInteger g_tessFactorBufferAlignment = (sizeof(MTLQuadTessellationFactorsHalf) * 256);
+
 MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, long flags) :
-    device_            { device            },
-    flags_             { flags             },
-    stagingBufferPool_ { device, USHRT_MAX },
-    tessFactorBuffer_  { device            }
+    device_            { device                         },
+    flags_             { flags                          },
+    stagingBufferPool_ { device, USHRT_MAX              },
+    tessFactorBuffer_  { device,
+                         MTLResourceStorageModePrivate,
+                         g_tessFactorBufferAlignment    }
 {
     ResetRenderStates();
 }

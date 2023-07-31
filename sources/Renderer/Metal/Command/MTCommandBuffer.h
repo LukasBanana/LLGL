@@ -14,7 +14,7 @@
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/StaticLimits.h>
 #include "MTCommandContext.h"
-#include "../Buffer/MTTessFactorBuffer.h"
+#include "../Buffer/MTIntermediateBuffer.h"
 #include "../Buffer/MTStagingBufferPool.h"
 
 
@@ -182,7 +182,7 @@ class MTCommandBuffer : public CommandBuffer
         MTConstantsCache*               constantsCache_         = nullptr;
 
         // Tessellator stage objects
-        MTTessFactorBuffer              tessFactorBuffer_;
+        MTIntermediateBuffer            tessFactorBuffer_;
         NSUInteger                      tessFactorSize_         = 0;
         id<MTLComputePipelineState>     tessPipelineState_      = nil;
 
