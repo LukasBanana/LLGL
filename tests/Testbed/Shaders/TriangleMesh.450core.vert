@@ -11,7 +11,7 @@
 #define ENABLE_TEXTURING 0
 #endif
 
-layout(binding = 0, std140) uniform Scene
+layout(binding = 1, std140) uniform Scene
 {
     mat4 wvpMatrix;
     mat4 wMatrix;

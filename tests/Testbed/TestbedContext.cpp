@@ -578,7 +578,10 @@ bool TestbedContext::LoadShaders()
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
-        //todo
+        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Vertex,   "VSMain", "1.1");
+        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Fragment, "PSMain", "1.1");
+        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
+        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
@@ -832,7 +835,7 @@ void TestbedContext::IndexedTriangleMeshBuffer::NewMesh()
 
 void TestbedContext::IndexedTriangleMeshBuffer::AddVertex(float x, float y, float z, float nx, float ny, float nz, float tx, float ty)
 {
-    this->vertices.push_back(Vertex{ x,y,z, nx,ny,nz, tx,ty });
+    this->vertices.push_back(Vertex{ {x,y,z}, {nx,ny,nz}, {tx,ty} });
 }
 
 void TestbedContext::IndexedTriangleMeshBuffer::AddIndices(const std::initializer_list<std::uint32_t>& indices, std::uint32_t offset)

@@ -44,7 +44,7 @@ DEF_TEST( DepthBuffer )
     renderTarget->SetName("renderTarget");
 
     // Create PSO for rendering
-    PipelineLayout* psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@0):vert:frag"));
+    PipelineLayout* psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@1):vert:frag"));
 
     GraphicsPipelineDescriptor psoDesc;
     {
@@ -118,7 +118,8 @@ DEF_TEST( DepthBuffer )
     }
     renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageDesc);
 
-    const float expectedDepthValue = 0.975574434f;
+    constexpr float expectedDepthValue = 0.975574434f;
+
     const float deltaDepthValue = std::abs(readbackDepthValue - expectedDepthValue);
 
     // Match entire depth and create delta heat map
@@ -141,6 +142,11 @@ DEF_TEST( DepthBuffer )
     renderer->Release(*readbackTex);
 
     // Evaluate readback result
+    if (readbackDepthValue == -1.0f)
+    {
+        Log::Errorf("Failed to read back value from depth buffer texture at center\n");
+        return TestResult::FailedErrors;
+    }
     if (deltaDepthValue > epsilon)
     {
         Log::Errorf(

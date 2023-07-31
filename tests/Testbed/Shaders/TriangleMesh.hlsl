@@ -9,7 +9,7 @@
 #define ENABLE_TEXTURING 0
 #endif
 
-cbuffer Scene
+cbuffer Scene : register(b1)
 {
     float4x4 wvpMatrix;
     float4x4 wMatrix;
