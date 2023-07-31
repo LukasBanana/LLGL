@@ -7,9 +7,11 @@
 
 #include "MTTexture.h"
 #include "../MTTypes.h"
+#include "../Buffer/MTIntermediateBuffer.h"
 #include "../../TextureUtils.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/ImageFlags.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 
@@ -216,7 +218,7 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDe
     /* Replace region of native texture with source image data */
     auto byteAlignedData = reinterpret_cast<const std::int8_t*>(imageData);
 
-    for (NSUInteger arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
+    for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
         [native_
             replaceRegion:  region
@@ -230,7 +232,11 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDe
     }
 }
 
-void MTTexture::ReadRegion(const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void MTTexture::ReadRegion(
+    const TextureRegion&        textureRegion,
+    const DstImageDescriptor&   imageDesc,
+    id<MTLCommandQueue>         cmdQueue,
+    MTIntermediateBuffer*       intermediateBuffer)
 {
     /* Convert region to MTLRegion */
     MTLRegion region;
@@ -238,56 +244,34 @@ void MTTexture::ReadRegion(const TextureRegion& textureRegion, const DstImageDes
     MTTypes::Convert(region.size, textureRegion.extent);
 
     /* Get dimensions */
-    auto        format          = MTTypes::ToFormat([native_ pixelFormat]);
-    const auto& formatAttribs   = GetFormatAttribs(format);
-    const auto  layout          = CalcSubresourceLayout(format, textureRegion.extent);
+    const Format            format          = MTTypes::ToFormat([native_ pixelFormat]);
+    const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
+    const SubresourceLayout layout          = CalcSubresourceLayout(format, textureRegion.extent);
 
-    if (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType)
+    if ([native_ storageMode] == MTLStorageModePrivate)
     {
-        /* Generate intermediate buffer for conversion */
-        auto intermediateDataSize   = layout.dataSize * textureRegion.extent.depth;
-        auto intermediateData       = AllocateByteBuffer(intermediateDataSize, UninitializeTag{});
+        if (cmdQueue == nil || intermediateBuffer == nullptr)
+            return /*Invalid arguments*/;
 
-        for (std::uint32_t arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
-        {
-            /* Copy bytes into intermediate data, then convert its format */
-            [native_
-                getBytes:       intermediateData.get()
-                bytesPerRow:    static_cast<NSUInteger>(layout.rowStride)
-                bytesPerImage:  static_cast<NSUInteger>(layout.layerStride)
-                fromRegion:     region
-                mipmapLevel:	static_cast<NSUInteger>(textureRegion.subresource.baseMipLevel)
-                slice:          static_cast<NSUInteger>(textureRegion.subresource.baseArrayLayer + arrayLayer)
-            ];
-
-            /* Convert intermediate data into requested format */
-            auto tempData = ConvertImageBuffer(
-                SrcImageDescriptor{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), intermediateDataSize },
-                imageDesc.format, imageDesc.dataType, /*GetConfiguration().threadCount*/0
-            );
-
-            /* Copy temporary data into output buffer */
-            ::memcpy(imageDesc.data, tempData.get(), imageDesc.dataSize);
-        }
+        ReadRegionFromPrivateMemory(
+            region,
+            textureRegion.subresource,
+            formatAttribs,
+            layout,
+            imageDesc,
+            cmdQueue,
+            *intermediateBuffer
+        );
     }
     else
     {
-        /* Copy texture data directly into outut buffer */
-        auto dstImageData = reinterpret_cast<std::int8_t*>(imageDesc.data);
-
-        for (std::uint32_t arrayLayer = 0; arrayLayer < textureRegion.subresource.numArrayLayers; ++arrayLayer)
-        {
-            /* Copy bytes into intermediate data, then convert its format */
-            [native_
-                getBytes:       dstImageData
-                bytesPerRow:    static_cast<NSUInteger>(layout.rowStride)
-                bytesPerImage:  static_cast<NSUInteger>(layout.layerStride)
-                fromRegion:     region
-                mipmapLevel:    static_cast<NSUInteger>(textureRegion.subresource.baseMipLevel)
-                slice:          static_cast<NSUInteger>(textureRegion.subresource.baseArrayLayer + arrayLayer)
-            ];
-            dstImageData += layout.layerStride;
-        }
+        ReadRegionFromSharedMemory(
+            region,
+            textureRegion.subresource,
+            formatAttribs,
+            layout,
+            imageDesc
+        );
     }
 }
 
@@ -310,6 +294,121 @@ NSUInteger MTTexture::GetBytesPerRow(std::uint32_t rowExtent) const
 {
     const Format format = MTTypes::ToFormat([native_ pixelFormat]);
     return LLGL::GetMemoryFootprint(format, rowExtent);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void MTTexture::ReadRegionFromSharedMemory(
+    const MTLRegion&            region,
+    const TextureSubresource&   subresource,
+    const FormatAttributes&     formatAttribs,
+    const SubresourceLayout&    layout,
+    const DstImageDescriptor&   imageDesc)
+{
+    if (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType)
+    {
+        /* Generate intermediate buffer for conversion */
+        const std::uint32_t intermediateDataSize    = layout.dataSize * region.size.depth;
+        ByteBuffer          intermediateData        = AllocateByteBuffer(intermediateDataSize, UninitializeTag{});
+
+        for_range(arrayLayer, subresource.numArrayLayers)
+        {
+            /* Copy bytes into intermediate data, then convert its format */
+            [native_
+                getBytes:       intermediateData.get()
+                bytesPerRow:    layout.rowStride
+                bytesPerImage:  layout.layerStride
+                fromRegion:     region
+                mipmapLevel:    subresource.baseMipLevel
+                slice:          subresource.baseArrayLayer + arrayLayer
+            ];
+
+            /* Convert intermediate data into requested format */
+            ByteBuffer formattedData = ConvertImageBuffer(
+                SrcImageDescriptor{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), intermediateDataSize },
+                imageDesc.format, imageDesc.dataType, /*GetConfiguration().threadCount*/0
+            );
+
+            /* Copy temporary data into output buffer */
+            ::memcpy(imageDesc.data, formattedData.get(), imageDesc.dataSize);
+        }
+    }
+    else
+    {
+        char* dstImageData = reinterpret_cast<char*>(imageDesc.data);
+
+        for_range(arrayLayer, subresource.numArrayLayers)
+        {
+            /* Copy bytes into intermediate data, then convert its format */
+            [native_
+                getBytes:       dstImageData
+                bytesPerRow:    layout.rowStride
+                bytesPerImage:  layout.layerStride
+                fromRegion:     region
+                mipmapLevel:    subresource.baseMipLevel
+                slice:          subresource.baseArrayLayer + arrayLayer
+            ];
+            dstImageData += layout.layerStride;
+        }
+    }
+}
+
+void MTTexture::ReadRegionFromPrivateMemory(
+    const MTLRegion&            region,
+    const TextureSubresource&   subresource,
+    const FormatAttributes&     formatAttribs,
+    const SubresourceLayout&    layout,
+    const DstImageDescriptor&   imageDesc,
+    id<MTLCommandQueue>         cmdQueue,
+    MTIntermediateBuffer&       intermediateBuffer)
+{
+    /* Copy texture data into intermediate buffer in shared CPU/GPU memory */
+    const NSUInteger intermediateDataSize = layout.dataSize * region.size.depth * subresource.numArrayLayers;
+    if (imageDesc.dataSize < intermediateDataSize)
+        return /*Out of bounds*/;
+
+    intermediateBuffer.Grow(intermediateDataSize);
+
+    id<MTLCommandBuffer> cmdBuffer = [cmdQueue commandBuffer];
+    id<MTLBlitCommandEncoder> blitEncoder = [cmdBuffer blitCommandEncoder];
+
+    for_range(arrayLayer, subresource.numArrayLayers)
+    {
+        /* Copy bytes into intermediate data, then convert its format */
+        [blitEncoder
+            copyFromTexture:            native_
+            sourceSlice:                subresource.baseArrayLayer + arrayLayer
+            sourceLevel:                subresource.baseMipLevel
+            sourceOrigin:               region.origin
+            sourceSize:                 region.size
+            toBuffer:                   intermediateBuffer.GetNative()
+            destinationOffset:          layout.layerStride * arrayLayer
+            destinationBytesPerRow:     layout.rowStride
+            destinationBytesPerImage:   layout.layerStride
+        ];
+    }
+
+    [blitEncoder endEncoding];
+    [cmdBuffer commit];
+    [cmdBuffer waitUntilCompleted];
+
+    if (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType)
+    {
+        ConvertImageBuffer(
+            SrcImageDescriptor{ formatAttribs.format, formatAttribs.dataType, intermediateBuffer.GetBytes(), intermediateDataSize },
+            imageDesc
+        );
+    }
+    else
+    {
+        /* Copy bytes from intermediate shared buffer into output CPU buffer */
+        ::memcpy(imageDesc.data, intermediateBuffer.GetBytes(), imageDesc.dataSize);
+    }
+
+    [cmdBuffer release];
 }
 
 

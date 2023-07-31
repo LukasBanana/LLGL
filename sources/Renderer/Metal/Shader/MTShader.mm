@@ -7,6 +7,7 @@
 
 #include "MTShader.h"
 #include "../MTTypes.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
 #include <cstring>
@@ -62,7 +63,7 @@ static MTLLanguageVersion GetMTLLanguageVersion(const ShaderDescriptor& desc)
             return MTLLanguageVersion1_0;
         #endif // /LLGL_OS_IOS
     }
-    throw std::invalid_argument("invalid Metal shader version specified");
+    LLGL_TRAP("invalid Metal shader version specified");
 }
 
 const Report* MTShader::GetReport() const
@@ -135,7 +136,13 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
         sourceString = [[NSString alloc] initWithUTF8String:shaderDesc.source];
 
     if (sourceString == nil)
-        throw std::runtime_error("cannot compile Metal shader without source");
+    {
+        if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
+            report_.Errorf("failed to load Metal shader source from file: %s\n", shaderDesc.source);
+        else
+            report_.Errorf("failed to compile Metal shader source\n");
+        return false;
+    }
 
     /* Convert entry point to NSString, and initialize shader compile options */
     MTLCompileOptions* opt = ToMTLCompileOptions(shaderDesc);
@@ -183,7 +190,13 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
     }
 
     if (dispatchData == nil)
-        throw std::runtime_error("cannot compile Metal shader without source");
+    {
+        if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
+            report_.Errorf("failed to load Metal shader binary from file: %s\n", shaderDesc.source);
+        else
+            report_.Errorf("failed to compile Metal shader binary\n");
+        return false;
+    }
 
     /* Load shader library */
     NSError* error = [NSError alloc];

@@ -20,6 +20,9 @@ namespace LLGL
 
 struct SrcImageDescriptor;
 struct DstImageDescriptor;
+struct SubresourceLayout;
+struct FormatAttributes;
+class MTIntermediateBuffer;
 
 class MTTexture final : public Texture
 {
@@ -40,7 +43,12 @@ class MTTexture final : public Texture
         void WriteRegion(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc);
 
         // Copies the specified texture region to the destination image data; 'numMipLevel' must be 1.
-        void ReadRegion(const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc);
+        void ReadRegion(
+            const TextureRegion&        textureRegion,
+            const DstImageDescriptor&   imageDesc,
+            id<MTLCommandQueue>         cmdQueue            = nil,
+            MTIntermediateBuffer*       intermediateBuffer  = nullptr
+        );
 
         // Creats a new MTLTexture object as subresource view from this texture.
         id<MTLTexture> CreateSubresourceView(const TextureSubresource& subresource);
@@ -53,6 +61,26 @@ class MTTexture final : public Texture
         {
             return native_;
         }
+
+    private:
+
+        void ReadRegionFromSharedMemory(
+            const MTLRegion&            region,
+            const TextureSubresource&   subresource,
+            const FormatAttributes&     formatAttribs,
+            const SubresourceLayout&    layout,
+            const DstImageDescriptor&   imageDesc
+        );
+
+        void ReadRegionFromPrivateMemory(
+            const MTLRegion&            region,
+            const TextureSubresource&   subresource,
+            const FormatAttributes&     formatAttribs,
+            const SubresourceLayout&    layout,
+            const DstImageDescriptor&   imageDesc,
+            id<MTLCommandQueue>         cmdQueue,
+            MTIntermediateBuffer&       intermediateBuffer
+        );
 
     private:
 

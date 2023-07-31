@@ -20,6 +20,7 @@
 
 #include "Buffer/MTBuffer.h"
 #include "Buffer/MTBufferArray.h"
+#include "Buffer/MTIntermediateBuffer.h"
 
 #include "RenderState/MTPipelineLayout.h"
 #include "RenderState/MTPipelineState.h"
@@ -32,6 +33,8 @@
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
 #include "Texture/MTRenderTarget.h"
+
+#include <memory>
 
 
 namespace LLGL
@@ -65,25 +68,26 @@ class MTRenderSystem final : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        id<MTLDevice>                       device_             = nil;
+        id<MTLDevice>                           device_             = nil;
+        std::unique_ptr<MTIntermediateBuffer>   intermediateBuffer_;
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<MTSwapChain>      swapChains_;
-        HWObjectInstance<MTCommandQueue>    commandQueue_;
-        HWObjectContainer<MTCommandBuffer>  commandBuffers_;
-        HWObjectContainer<MTBuffer>         buffers_;
-        HWObjectContainer<MTBufferArray>    bufferArrays_;
-        HWObjectContainer<MTTexture>        textures_;
-        HWObjectContainer<MTSampler>        samplers_;
-        HWObjectContainer<MTRenderPass>     renderPasses_;
-        HWObjectContainer<MTRenderTarget>   renderTargets_;
-        HWObjectContainer<MTShader>         shaders_;
-        HWObjectContainer<MTPipelineLayout> pipelineLayouts_;
-        HWObjectContainer<MTPipelineState>  pipelineStates_;
-        HWObjectContainer<MTResourceHeap>   resourceHeaps_;
-        //HWObjectContainer<MTQueryHeap>      queryHeaps_;
-        HWObjectContainer<MTFence>          fences_;
+        HWObjectContainer<MTSwapChain>          swapChains_;
+        HWObjectInstance<MTCommandQueue>        commandQueue_;
+        HWObjectContainer<MTCommandBuffer>      commandBuffers_;
+        HWObjectContainer<MTBuffer>             buffers_;
+        HWObjectContainer<MTBufferArray>        bufferArrays_;
+        HWObjectContainer<MTTexture>            textures_;
+        HWObjectContainer<MTSampler>            samplers_;
+        HWObjectContainer<MTRenderPass>         renderPasses_;
+        HWObjectContainer<MTRenderTarget>       renderTargets_;
+        HWObjectContainer<MTShader>             shaders_;
+        HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;
+        HWObjectContainer<MTPipelineState>  	pipelineStates_;
+        HWObjectContainer<MTResourceHeap>       resourceHeaps_;
+        //HWObjectContainer<MTQueryHeap>          queryHeaps_;
+        HWObjectContainer<MTFence>              fences_;
 
 };
 

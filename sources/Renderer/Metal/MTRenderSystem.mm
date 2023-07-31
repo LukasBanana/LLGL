@@ -9,6 +9,7 @@
 #include "../CheckedCast.h"
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/Exception.h"
 #include "../../Core/Vendor.h"
 #include "Command/MTDirectCommandBuffer.h"
 #include "Command/MTMultiSubmitCommandBuffer.h"
@@ -184,7 +185,7 @@ void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 {
     commandQueue_->WaitIdle();
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    textureMT.ReadRegion(textureRegion, imageDesc);
+    textureMT.ReadRegion(textureRegion, imageDesc, commandQueue_->GetNative(), intermediateBuffer_.get());
 }
 
 /* ----- Sampler States ---- */
@@ -337,7 +338,7 @@ void MTRenderSystem::CreateDeviceResources()
     /* Create Metal device */
     device_ = MTLCreateSystemDefaultDevice();
     if (device_ == nil)
-        throw std::runtime_error("failed to create Metal device");
+        LLGL_TRAP("failed to create Metal device");
 
     /* Initialize renderer information */
     RendererInfo info;
@@ -354,6 +355,10 @@ void MTRenderSystem::CreateDeviceResources()
 
     /* Initialize builtin PSOs */
     MTBuiltinPSOFactory::Get().CreateBuiltinPSOs(device_);
+
+    /* Initialize intermediate buffer */
+    constexpr NSUInteger intermediateBufferAlignment = 256u;
+    intermediateBuffer_ = MakeUnique<MTIntermediateBuffer>(device_, MTLResourceStorageModeShared, intermediateBufferAlignment);
 }
 
 void MTRenderSystem::QueryRenderingCaps()
