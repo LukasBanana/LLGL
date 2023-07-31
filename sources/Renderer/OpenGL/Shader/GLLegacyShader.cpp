@@ -136,9 +136,9 @@ void GLLegacyShader::CompileSource(const ShaderDescriptor& shaderDesc)
 
 void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
 {
+    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
     const GLuint shader = CreateShaderPermutation(PermutationDefault);
 
-    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
     if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
     {
         /* Get shader binary */
