@@ -133,7 +133,9 @@ DEF_TEST( DepthBuffer )
     }
     renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
 
-    SaveDepthImageTGA(readbackDepthBuffer, resolution, "DepthBuffer.Result.tga", 1.0f, 10.0f);
+    SaveDepthImageTGA(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
+
+    const int maxDiff = DiffImagesTGA("DepthBuffer");
 
     // Clear resources
     renderer->Release(*pso);
@@ -153,6 +155,11 @@ DEF_TEST( DepthBuffer )
             "Mismatch between depth buffer value at center (%f) and expected value (%f): delta = %f\n",
             readbackDepthValue, expectedDepthValue, deltaDepthValue
         );
+        return TestResult::FailedMismatch;
+    }
+    if (maxDiff != 0)
+    {
+        Log::Errorf("Mismatch between reference and result images for depth buffer (maxDiff = %d)\n", maxDiff);
         return TestResult::FailedMismatch;
     }
 

@@ -728,7 +728,7 @@ struct TGAHeader
     std::uint8_t    colorMapEntrySize;
     std::uint16_t   origin[2];
     std::uint16_t   dimension[2];
-    std::uint8_t    bbp;
+    std::uint8_t    bpp;
     std::uint8_t    descriptor;
 }
 PACK_STRUCT;
@@ -739,14 +739,21 @@ PACK_STRUCT;
 
 #undef PACK_STRUCT
 
-static bool SaveImageTGA(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose)
+static bool SaveImageTGA(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
 {
-    if (verbose)
+    auto PrintInfo = [&filename]
+    {
         Log::Printf("Save TGA image: %s", filename.c_str());
+    };
+
+    if (verbose)
+        PrintInfo();
 
     std::ofstream file{ filename, std::ios_base::binary };
     if (!file.good())
     {
+        if (!verbose)
+            PrintInfo();
         Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
         return false;
     }
@@ -763,11 +770,54 @@ static bool SaveImageTGA(const std::vector<ColorRGBub>& pixels, const Extent2D& 
         header.origin[1]            = 0;
         header.dimension[0]         = extent.width;
         header.dimension[1]         = extent.height;
-        header.bbp                  = 24;
+        header.bpp                  = 24;
         header.descriptor           = 32;
     }
     file.write(reinterpret_cast<const char*>(&header), sizeof(header));
     file.write(reinterpret_cast<const char*>(pixels.data()), sizeof(ColorRGBub) * pixels.size());
+
+    if (verbose)
+        Log::Printf(" [ Ok ]\n");
+
+    return true;
+}
+
+static bool LoadImageTGA(std::vector<ColorRGBub>& pixels, Extent2D& extent, const std::string& filename, bool verbose = false)
+{
+    auto PrintInfo = [&filename]
+    {
+        Log::Printf("Load TGA image: %s", filename.c_str());
+    };
+
+    if (verbose)
+        PrintInfo();
+
+    std::ifstream file{ filename, std::ios_base::binary };
+    if (!file.good())
+    {
+        if (!verbose)
+            PrintInfo();
+        Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        return false;
+    }
+
+    // Read header
+    TGAHeader header = {};
+    file.read(reinterpret_cast<char*>(&header), sizeof(header));
+
+    if (header.bpp != 24)
+    {
+        if (!verbose)
+            PrintInfo();
+        Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        return false;
+    }
+
+    extent.width    = header.dimension[0];
+    extent.height   = header.dimension[1];
+
+    pixels.resize(extent.width * extent.height);
+    file.read(reinterpret_cast<char*>(pixels.data()), sizeof(ColorRGBub) * pixels.size());
 
     if (verbose)
         Log::Printf(" [ Ok ]\n");
@@ -780,10 +830,10 @@ void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const Ex
     SaveDepthImageTGA(image, extent, filename, 0.1f, 100.0f);
 }
 
-void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& filename, float nearPlane, float farPlane)
+void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane)
 {
     std::vector<ColorRGBub> colors;
-    colors.resize(image.size() * 3);
+    colors.resize(image.size());
 
     const bool remapDepthValues     = true;
     const bool isClipSpaceUnitCube  = (renderer->GetRenderingCaps().clippingRange == ClippingRange::MinusOneToOne);
@@ -819,7 +869,69 @@ void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const LL
     }
 
     const std::string path = "Output/" + moduleName + "/";
-    SaveImageTGA(colors, extent, path + filename, verbose);
+    SaveImageTGA(colors, extent, path + name + ".Result.tga", verbose);
+}
+
+static int GetColorDiff(std::uint8_t a, std::uint8_t b)
+{
+    return static_cast<int>(a < b ? b - a : a - b);
+}
+
+static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
+{
+    constexpr std::uint8_t heapMapLUT[256][3] =
+    {
+        #include "TestbedHeatMapLUT.inl"
+    };
+    diff = std::max(0, std::min(diff * scale, 255));
+    return ColorRGBub{ heapMapLUT[diff][0], heapMapLUT[diff][1], heapMapLUT[diff][2] };
+}
+
+int TestbedContext::DiffImagesTGA(const std::string& name, int diffScale)
+{
+    /* Load input images and validate they have the same dimensions */
+    std::vector<ColorRGBub> pixelsA, pixelsB, pixelsDiff;
+    Extent2D extentA, extentB;
+
+    const std::string resultPath    = "Output/" + moduleName + "/";
+    const std::string refPath       = "Reference/";
+    const std::string diffPath      = "Output/" + moduleName + "/";
+
+    if (!LoadImageTGA(pixelsA, extentA, refPath + name + ".Ref.tga"))
+        return -1;
+    if (!LoadImageTGA(pixelsB, extentB, resultPath + name + ".Result.tga"))
+        return -2;
+
+    if (extentA != extentB)
+        return -3;
+
+    /* Generate heat-map image */
+    int highestDiff = 0;
+    pixelsDiff.resize(extentA.width * extentA.height);
+
+    for (std::size_t i = 0, n = pixelsDiff.size(); i < n; ++i)
+    {
+        const ColorRGBub& colorA = pixelsA[i];
+        const ColorRGBub& colorB = pixelsB[i];
+        int diff[3] =
+        {
+            GetColorDiff(colorA.r, colorB.r),
+            GetColorDiff(colorA.g, colorB.g),
+            GetColorDiff(colorA.b, colorB.b),
+        };
+        int maxDiff = std::max({ diff[0], diff[1], diff[2] });
+        pixelsDiff[i] = GetHeatMapColor(maxDiff, diffScale);
+        highestDiff = std::max(highestDiff, maxDiff);
+    }
+
+    if (highestDiff != 0)
+    {
+        if (!SaveImageTGA(pixelsDiff, extentA, diffPath + name + ".Diff.tga", verbose))
+            return -4;
+    }
+
+    /* Return highest difference value */
+    return highestDiff;
 }
 
 
