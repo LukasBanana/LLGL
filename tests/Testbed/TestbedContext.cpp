@@ -887,9 +887,9 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
     return ColorRGBub{ heapMapLUT[diff][0], heapMapLUT[diff][1], heapMapLUT[diff][2] };
 }
 
-int TestbedContext::DiffImagesTGA(const std::string& name, int diffScale)
+int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int scale)
 {
-    /* Load input images and validate they have the same dimensions */
+    // Load input images and validate they have the same dimensions
     std::vector<ColorRGBub> pixelsA, pixelsB, pixelsDiff;
     Extent2D extentA, extentB;
 
@@ -905,7 +905,7 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int diffScale)
     if (extentA != extentB)
         return -3;
 
-    /* Generate heat-map image */
+    // Generate heat-map image
     int highestDiff = 0;
     pixelsDiff.resize(extentA.width * extentA.height);
 
@@ -920,18 +920,19 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int diffScale)
             GetColorDiff(colorA.b, colorB.b),
         };
         int maxDiff = std::max({ diff[0], diff[1], diff[2] });
-        pixelsDiff[i] = GetHeatMapColor(maxDiff, diffScale);
+        pixelsDiff[i] = GetHeatMapColor(maxDiff, scale);
         highestDiff = std::max(highestDiff, maxDiff);
     }
 
-    if (highestDiff != 0)
+    if (highestDiff > threshold)
     {
+        // Save diff inage and return highest difference value
         if (!SaveImageTGA(pixelsDiff, extentA, diffPath + name + ".Diff.tga", verbose))
             return -4;
+        return highestDiff;
     }
 
-    /* Return highest difference value */
-    return highestDiff;
+    return 0;
 }
 
 
