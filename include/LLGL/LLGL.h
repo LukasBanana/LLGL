@@ -27,22 +27,22 @@
 //DOXYGEN MAIN PAGE
 /**
  * \mainpage LLGL 0.03 Beta Documentation
- * 
+ *
  * LLGL (Low Level Graphics Library)
  * =================================
  * \image html LLGL_Logo.png
  * \image latex LLGL_Logo.png "LLGL Logo" width=0.1\textwidth
- * 
+ *
  * Overview
  * --------
- * 
+ *
  * - **Version**: 0.03 Beta
  * - **License**: [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
- * 
- * 
+ *
+ *
  * References
  * ----------
- * 
+ *
  * - Tutorials: https://github.com/LukasBanana/LLGL/tree/master/examples/Cpp#tutorials-and-examples
  */
 
