@@ -59,6 +59,7 @@ set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(EXAMPLE_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/Cpp")
+set(EXAMPLE_C99_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/C99")
 
 
 # === Preprocessor definitions ===
@@ -96,6 +97,16 @@ macro(ADD_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     endif()
     target_link_libraries(${TEST_NAME} ${LIB_FILES})
     set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+endmacro()
+
+macro(ADD_C99_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
+    if(APPLE)
+        add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
+    else()
+        add_executable(${TEST_NAME} ${TEST_FILES})
+    endif()
+    target_link_libraries(${TEST_NAME} ${LIB_FILES})
+    set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE C DEBUG_POSTFIX "D")
 endmacro()
 
 macro(ADD_MOBILE_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
@@ -194,6 +205,8 @@ if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project (experimental)" OFF)
     option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C#" OFF)
 endif()
+
+option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
 
 if(LLGL_ENABLE_CHECKED_CAST)
     ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
@@ -731,6 +744,15 @@ set(
     ${FilesRendererDXCommon}
 )
 
+# Wrapper: C99
+if(LLGL_BUILD_WRAPPER_C99)
+    file(GLOB FilesWrapperC99 ${PROJECT_SOURCE_DIR}/wrapper/C99/*.*)
+    file(GLOB FilesIncludeC99 ${PROJECT_INCLUDE_DIR}/LLGL-C/*.*)
+    source_group("Wrapper\\C99\\Include" FILES ${FilesIncludeC99})
+    source_group("Wrapper\\C99\\Sources" FILES ${FilesWrapperC99})
+    set(FilesLLGL ${FilesLLGL} ${FilesIncludeC99} ${FilesWrapperC99})
+endif()
+
 # Base project
 if(LLGL_BUILD_STATIC_LIB)
     set(SUMMARY_LIBRARY_TYPE "Static")
@@ -978,14 +1000,14 @@ if(GaussLib_INCLUDE_DIR)
             add_library(android_native_app_glue STATIC ${FilesAndroidNativeAppGlue})
             target_link_libraries(ExampleBase android_native_app_glue)
             include_directories(${ANDROID_APP_GLUE_DIR})
-        endif()
+        endif(LLGL_ANDROID_PLATFORM)
         
         set(EXAMPLE_PROJECT_LIBS ${LLGL_DEPENDENCIES} ExampleBase)
         
         if(LLGL_ANDROID_PLATFORM)
             set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
             ADD_MOBILE_EXAMPLE_PROJECT(Example_HelloAndroid "${FilesExample_HelloAndroid}" "${EXAMPLE_PROJECT_LIBS}")
-        else()
+        else(LLGL_ANDROID_PLATFORM)
             ADD_EXAMPLE_PROJECT(Example_HelloTriangle "${FilesExample_HelloTriangle}" "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_Tessellation "${FilesExample_Tessellation}" "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_Texturing "${FilesExample_Texturing}" "${EXAMPLE_PROJECT_LIBS}")
@@ -1009,8 +1031,12 @@ if(GaussLib_INCLUDE_DIR)
             ADD_EXAMPLE_PROJECT(Example_VolumeRendering "${FilesExample_VolumeRendering}" "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_PrimitiveRestart "${FilesExample_PrimitiveRestart}" "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_ResourceBinding "${FilesExample_ResourceBinding}" "${EXAMPLE_PROJECT_LIBS}")
-        endif()
-    endif()
+            
+            if (LLGL_BUILD_WRAPPER_C99)
+                ADD_C99_EXAMPLE_PROJECT(Example_C99_HelloTriangle "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle/HelloTriangle.c" "${LLGL_DEPENDENCIES}")
+            endif(LLGL_BUILD_WRAPPER_C99)
+        endif(LLGL_ANDROID_PLATFORM)
+    endif(LLGL_BUILD_EXAMPLES)
 else()
 #    if(LLGL_BUILD_TESTS)
 #        message(SEND_ERROR "LLGL_BUILD_TESTS is enabled but 'GaussLib_INCLUDE_DIR' path is missing")
@@ -1022,7 +1048,7 @@ endif()
 
 # Wrapper: C#
 if(WIN32 AND LLGL_BUILD_WRAPPER_CSHARP)
-    add_subdirectory(Wrapper/CSharp)
+    add_subdirectory(wrapper/CSharp)
 endif()
 
 # Install targets, headers, and CMake config files
@@ -1078,6 +1104,10 @@ endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
     message("Build Renderer: Direct3D 12.0")
+endif()
+
+if(LLGL_BUILD_WRAPPER_C99)
+    message("Build Wrapper: C99")
 endif()
 
 if(WIN32 AND LLGL_BUILD_WRAPPER_CSHARP)
