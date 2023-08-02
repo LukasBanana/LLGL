@@ -135,7 +135,7 @@ DEF_TEST( DepthBuffer )
 
     SaveDepthImageTGA(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
 
-    const int maxDiff = DiffImagesTGA("DepthBuffer");
+    const int diff = DiffImagesTGA("DepthBuffer");
 
     // Clear resources
     renderer->Release(*pso);
@@ -157,9 +157,9 @@ DEF_TEST( DepthBuffer )
         );
         return TestResult::FailedMismatch;
     }
-    if (maxDiff != 0)
+    if (diff != 0)
     {
-        Log::Errorf("Mismatch between reference and result images for depth buffer (maxDiff = %d)\n", maxDiff);
+        Log::Errorf("Mismatch between reference and result images for depth buffer (diff = %d)\n", diff);
         return TestResult::FailedMismatch;
     }
 

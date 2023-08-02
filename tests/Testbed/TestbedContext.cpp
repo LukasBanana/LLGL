@@ -94,6 +94,7 @@ static const char* TestResultToStr(TestResult result)
 static void PrintTestResult(TestResult result, const char* name)
 {
     Log::Printf("Test %s: [ %s ]\n", name, TestResultToStr(result));
+    ::fflush(stdout);
 }
 
 void TestbedContext::RunAllTests()
