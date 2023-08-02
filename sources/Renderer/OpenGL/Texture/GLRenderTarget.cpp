@@ -142,7 +142,7 @@ void GLRenderTarget::SetDrawBuffers()
 
 static void GLThrowIfFramebufferStatusFailed(const char* info)
 {
-    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     GLThrowIfFailed(status, GL_FRAMEBUFFER_COMPLETE, info);
 }
 

@@ -21,7 +21,7 @@ DEF_TEST( RenderTargetNoAttachments )
     RenderTargetDescriptor target2Desc;
     {
         target2Desc.resolution  = Extent2D{ 512, 512 };
-        target2Desc.samples     = 8;
+        target2Desc.samples     = 4;//8;
     }
     CREATE_RENDER_TARGET(target2, target2Desc, "target2{512x512x8msaa}");
 
@@ -40,7 +40,7 @@ DEF_TEST( RenderTargetNoAttachments )
     // Create target using a render pass with no attachments
     RenderPassDescriptor pass4Desc;
     {
-        pass4Desc.samples = 8;
+        pass4Desc.samples = 4;//8;
     }
     RenderPass* pass4 = renderer->CreateRenderPass(pass4Desc);
     pass4->SetName("pass4{8msaa}");

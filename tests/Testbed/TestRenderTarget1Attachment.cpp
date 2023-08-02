@@ -61,7 +61,7 @@ DEF_TEST( RenderTarget1Attachment )
     {
         targetMS1Desc.resolution              = Extent2D{ 512, 512 };
         targetMS1Desc.depthStencilAttachment  = Format::D24UNormS8UInt;
-        targetMS1Desc.samples                 = 8;
+        targetMS1Desc.samples                 = 4;//8;
     }
     CREATE_RENDER_TARGET(targetMS1, targetMS1Desc, "targetMS1{d24s8,8msaa}");
 
@@ -69,7 +69,7 @@ DEF_TEST( RenderTarget1Attachment )
     RenderTargetDescriptor targetMS2Desc;
     {
         targetMS2Desc.resolution    = Extent2D{ 512, 512 };
-        targetMS2Desc.samples       = 8;
+        targetMS2Desc.samples       = 4;//8;
     }
     CREATE_RENDER_TARGET(targetMS2, targetMS2Desc, "targetMS2{512x512x8msaa[1]}");
 

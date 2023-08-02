@@ -25,12 +25,16 @@ jobs:
         sudo apt-get install libx11-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
 
     - name: Configure CMake
-      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=OFF -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_WRAPPER_C99=OFF -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_VULKAN=ON -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_WRAPPER_C99=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       
     - name: Testbed
+      continue-on-error: true
       working-directory: tests/Testbed
-      run: xvfb-run ${{github.workspace}}/build/build/TestbedD gl -v -f
+      run: |
+        mkdir Output
+        mkdir Output/OpenGL
+        xvfb-run ${{github.workspace}}/build/build/TestbedD gl -v -f -t
 

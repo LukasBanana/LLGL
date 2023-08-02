@@ -69,6 +69,13 @@ TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
         }
         cmdBuffer = renderer->CreateCommandBuffer(cmdBufferDesc);
 
+        // Print renderer information
+        if (verbose)
+        {
+            const RendererInfo& info = renderer->GetRendererInfo();
+            Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
+        }
+
         // Query rendering capabilities
         caps = renderer->GetRenderingCaps();
 
@@ -409,6 +416,12 @@ TestResult TestbedContext::CreateRenderTarget(
     const char*                         name,
     LLGL::RenderTarget**                output)
 {
+    if (verbose)
+    {
+        Log::Printf("Creating render target: %s\n", name);
+        fflush(stdout);
+    }
+
     // Create render target
     RenderTarget* target = renderer->CreateRenderTarget(desc);
 
