@@ -49,6 +49,9 @@ enum class ResourceType
     Sampler,
 };
 
+
+/* ----- Flags ----- */
+
 /**
 \brief Flags for Buffer and Texture resources that describe for which purposes they will be used.
 \remarks Resources can be created with both input and output binding flags, but they cannot be used together when the resource is bound. See the following table for compatibility:

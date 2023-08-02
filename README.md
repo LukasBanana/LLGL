@@ -11,13 +11,13 @@
 
 ## Documentation
 
-- **NOTE:** *This repository receives bug fixes only, but no major updates. Pull requests may still be accepted.*
 - **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
 - [Getting Started with LLGL](docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
 - [LLGL Coding Conventions](docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
 - [Examples and Tutorials for C++](examples/Cpp)
+- [Examples for C99](examples/C99)
 - [Examples for C#](examples/CSharp)
 
 
@@ -80,7 +80,9 @@ CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex);
 
 // OpenGL Implementation:
 void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    glDrawElements(GetDrawMode(), static_cast<GLsizei>(numIndices), GetIndexType(), GetIndicesOffset(firstIndex));
+    glDrawElements(
+        GetDrawMode(), static_cast<GLsizei>(numIndices), GetIndexType(), GetIndicesOffset(firstIndex)
+    );
 }
 
 // Direct3D 11 Implementation

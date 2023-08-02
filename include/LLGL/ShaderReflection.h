@@ -10,7 +10,6 @@
 
 
 #include <LLGL/ForwardDecls.h>
-#include <LLGL/ShaderFlags.h>
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>

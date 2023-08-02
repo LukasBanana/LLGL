@@ -22,7 +22,7 @@ namespace LLGL
 {
 
 
-static const std::size_t g_maxNumReusableTextureViews = 16;
+static constexpr std::size_t g_maxNumReusableTextureViews = 16;
 
 GLTextureViewPool::~GLTextureViewPool()
 {
@@ -97,7 +97,7 @@ void GLTextureViewPool::ReleaseTextureView(GLuint texID)
 {
     /* Try to find texture by GL texture ID only */
     std::size_t insertionIndex = 0;
-    auto* sharedTexView = FindInSortedArray<GLTextureView>(
+    GLTextureView* sharedTexView = FindInSortedArray<GLTextureView>(
         textureViews_.data(),
         textureViews_.size(),
         [texID](const GLTextureView& rhs)

@@ -24,7 +24,7 @@ namespace LLGL
 class PipelineLayout;
 
 
-/* ----- Enumerations ----- */
+/* ----- Flags ----- */
 
 /**
 \brief Flags for memory barriers in resource heaps.

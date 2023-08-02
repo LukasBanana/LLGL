@@ -165,6 +165,8 @@ class TestbedContext
 
         #undef DECL_TEST
 
+    private:
+
         bool LoadShaders();
         void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
 
