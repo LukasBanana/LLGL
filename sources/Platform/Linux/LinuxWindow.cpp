@@ -45,7 +45,6 @@ LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
 LinuxWindow::~LinuxWindow()
 {
     XDestroyWindow(display_, wnd_);
-    XCloseDisplay(display_);
 }
 
 bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
@@ -210,9 +209,10 @@ void LinuxWindow::OpenWindow()
     }
     else
     {
-        /* Open X11 display */
-        display_    = XOpenDisplay(nullptr);
-        visual_     = nullptr;
+        /* Get shared X11 display */
+        sharedX11Display_   = LinuxSharedX11Display::GetShared();
+        display_            = sharedX11Display_->GetNative();
+        visual_             = nullptr;
     }
 
     if (!display_)

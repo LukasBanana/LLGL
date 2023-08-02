@@ -18,15 +18,15 @@ static std::vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
 static std::vector<Display*>                        g_displayRefList;
 static Display*                                     g_primaryDisplay;
 
-static std::shared_ptr<LinuxSharedX11Display> GetSharedX11Display()
+LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
 {
-    static auto sharedX11Display = std::make_shared<LinuxSharedX11Display>();
+    static LinuxSharedX11DisplaySPtr sharedX11Display = std::make_shared<LinuxSharedX11Display>();
     return sharedX11Display;
 }
 
 static bool UpdateDisplayList()
 {
-    auto sharedX11Display = GetSharedX11Display();
+    auto sharedX11Display = LinuxSharedX11Display::GetShared();
 
     const int screenCount = ScreenCount(sharedX11Display->GetNative());
     if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
@@ -112,7 +112,7 @@ bool Display::IsCursorShown()
 
 bool Display::SetCursorPosition(const Offset2D& position)
 {
-    auto sharedX11Display = GetSharedX11Display();
+    LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedX11Display::GetShared();
     ::Display* dpy = sharedX11Display->GetNative();
     Window rootWnd = DefaultRootWindow(dpy);
     XWarpPointer(
@@ -132,7 +132,7 @@ bool Display::SetCursorPosition(const Offset2D& position)
 
 Offset2D Display::GetCursorPosition()
 {
-    auto sharedX11Display = GetSharedX11Display();
+    LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedX11Display::GetShared();
     ::Display* dpy = sharedX11Display->GetNative();
     Window rootWnd = DefaultRootWindow(dpy);
     Window rootWndReturn, childWndReturn;

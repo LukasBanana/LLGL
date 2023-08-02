@@ -18,6 +18,10 @@ namespace LLGL
 {
 
 
+class LinuxSharedX11Display;
+
+using LinuxSharedX11DisplaySPtr = std::shared_ptr<LinuxSharedX11Display>;
+
 // Helper class to handle a shared X11 display instance
 class LinuxSharedX11Display
 {
@@ -26,6 +30,9 @@ class LinuxSharedX11Display
 
         LinuxSharedX11Display();
         ~LinuxSharedX11Display();
+
+        // Returns a shared instance of the X11 display.
+        static LinuxSharedX11DisplaySPtr GetShared();
 
         // Returns the native X11 display.
         inline ::Display* GetNative() const

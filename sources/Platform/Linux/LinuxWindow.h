@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Window.h>
+#include "LinuxDisplay.h"
 #include <X11/Xlib.h>
 
 
@@ -62,17 +63,19 @@ class LinuxWindow : public Window
         
     private:
     
-        WindowDescriptor    desc_;
+        WindowDescriptor            desc_;
 
-        ::Display*          display_        = nullptr;
-        //::Colormap          colorMap_;
-        ::Window            wnd_;
-        //::Cursor            cursor_;
-        ::XVisualInfo*      visual_         = nullptr;
+        LinuxSharedX11DisplaySPtr   sharedX11Display_;
+
+        ::Display*                  display_            = nullptr;
+      //::Colormap                  colorMap_;
+        ::Window                    wnd_;
+      //::Cursor                    cursor_;
+        ::XVisualInfo*              visual_             = nullptr;
         
-        ::Atom              closeWndAtom_;
+        ::Atom                      closeWndAtom_;
         
-        Offset2D            prevMousePos_;
+        Offset2D                    prevMousePos_;
 
 };
 
