@@ -82,7 +82,7 @@
     static_assert(TYPE::VALUE == (TYPE)(LLGL ## TYPE ## VALUE), "LLGL" #TYPE #VALUE " does not equal enumeration value of LLGL::" #TYPE "::" #VALUE)
 
 #define LLGL_STATIC_ASSERT_FLAG(TYPE, VALUE) \
-    static_assert(TYPE ## Flags::VALUE == LLGL ## TYPE ## VALUE, "LLGL" #TYPE #VALUE " does not equal flags value of LLGL::" #TYPE "Flags::" #VALUE)
+    static_assert(static_cast<long>(TYPE ## Flags::VALUE) == static_cast<long>(LLGL ## TYPE ## VALUE), "LLGL" #TYPE #VALUE " does not equal flags value of LLGL::" #TYPE "Flags::" #VALUE)
 
 #define LLGL_STATIC_ASSERT_SIZE(TYPE) \
     static_assert(sizeof(LLGL::TYPE) == sizeof(LLGL ## TYPE), "LLGL" #TYPE " does not match size of LLGL::" #TYPE)

@@ -9,6 +9,7 @@
 #include <LLGL-C/Canvas.h>
 #include "C99Internal.h"
 #include "../sources/Core/CoreUtils.h"
+#include "../sources/Core/Exception.h"
 #include <vector>
 #include <string>
 #include <string.h>
@@ -20,7 +21,7 @@
 using namespace LLGL;
 
 #define LLGL_CALLBACK_WRAPPER(FUNC, ...) \
-    if (callbacks_.FUNC != NULL) { callbacks_.FUNC(LLGLCanvas{ &sender }, __VA_ARGS__); }
+    if (callbacks_.FUNC != NULL) { callbacks_.FUNC(LLGLCanvas{ &sender } LLGL_VA_ARGS(__VA_ARGS__)); }
 
 class InternalCanvasEventListener final : public Canvas::EventListener
 {
