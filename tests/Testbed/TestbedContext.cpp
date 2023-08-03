@@ -17,6 +17,8 @@
 #define ENABLE_GPU_DEBUGGER 1
 #define ENABLE_CPU_DEBUGGER 0
 
+static constexpr const char* g_defaultOutputDir = "Output/";
+
 static bool HasArgument(int argc, char* argv[], const char* search)
 {
     for (int i = 0; i < argc; ++i)
@@ -27,8 +29,31 @@ static bool HasArgument(int argc, char* argv[], const char* search)
     return false;
 }
 
+static std::string FindOutputDir(int argc, char* argv[])
+{
+    for (int i = 0; i < argc; ++i)
+    {
+        if (::strncmp(argv[i], "-o=", 3) == 0)
+            return argv[i] + 3;
+    }
+    return g_defaultOutputDir;
+}
+
+static std::string SanitizePath(std::string path)
+{
+    for (char& chr : path)
+    {
+        if (chr == '\\')
+            chr = '/';
+    }
+    if (!path.empty() && path.back() != '/')
+        path.push_back('/');
+    return path;
+}
+
 TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
     moduleName { moduleName                                                            },
+    outputDir  { SanitizePath(FindOutputDir(argc, argv))                               },
     verbose    { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose") },
     showTiming { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")  },
     fastTest   { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")    }
@@ -882,7 +907,7 @@ void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const LL
         colors[i] = ColorRGBub{ color };
     }
 
-    const std::string path = "Output/" + moduleName + "/";
+    const std::string path = outputDir + moduleName + "/";
     SaveImageTGA(colors, extent, path + name + ".Result.tga", verbose);
 }
 
@@ -907,9 +932,9 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int sc
     std::vector<ColorRGBub> pixelsA, pixelsB, pixelsDiff;
     Extent2D extentA, extentB;
 
-    const std::string resultPath    = "Output/" + moduleName + "/";
+    const std::string resultPath    = outputDir + moduleName + "/";
     const std::string refPath       = "Reference/";
-    const std::string diffPath      = "Output/" + moduleName + "/";
+    const std::string diffPath      = outputDir + moduleName + "/";
 
     if (!LoadImageTGA(pixelsA, extentA, refPath + name + ".Ref.tga"))
         return -1;

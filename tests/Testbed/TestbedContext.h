@@ -121,6 +121,7 @@ class TestbedContext
     protected:
 
         const std::string           moduleName;
+        const std::string           outputDir;
         const bool                  verbose;
         const bool                  showTiming;
         const bool                  fastTest; // Skip slow buffer/texture creations to speed up test run
