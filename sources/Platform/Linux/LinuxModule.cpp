@@ -20,9 +20,8 @@ namespace LLGL
 static std::string GetProgramPath()
 {
     /* Get filename of running program */
-    static const std::size_t bufLen = 1024;
-    char buf[bufLen] = { 0 };
-    readlink("/proc/self/exe", buf, bufLen);
+    char buf[1024] = { 0 };
+    (void)readlink("/proc/self/exe", buf, sizeof(buf));
 
     /* Get path from program */
     std::string path = buf;
