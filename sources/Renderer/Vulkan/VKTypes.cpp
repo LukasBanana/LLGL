@@ -30,6 +30,7 @@ VkShaderStageFlagBits Map(const ShaderType shaderType)
 {
     switch (shaderType)
     {
+        case ShaderType::Undefined:         break;
         case ShaderType::Vertex:            return VK_SHADER_STAGE_VERTEX_BIT;
         case ShaderType::TessControl:       return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
         case ShaderType::TessEvaluation:    return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;

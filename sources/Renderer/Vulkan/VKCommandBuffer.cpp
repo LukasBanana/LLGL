@@ -36,6 +36,8 @@ namespace LLGL
 {
 
 
+constexpr std::uint32_t VKCommandBuffer::maxNumCommandBuffers;
+
 // Returns the maximum for a indirect multi draw command
 static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
