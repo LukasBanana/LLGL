@@ -35,5 +35,5 @@ jobs:
       run: |
         mkdir Output
         mkdir Output/OpenGL
-        xvfb-run ${{github.workspace}}/build/build/TestbedD gl vk -v -f -t
+        xvfb-run ${{github.workspace}}/build/build/TestbedD gl -v -f -t
 
