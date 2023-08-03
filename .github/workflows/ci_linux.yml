@@ -31,10 +31,9 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       
     - name: Testbed
-      continue-on-error: true
       working-directory: tests/Testbed
       run: |
         mkdir Output
         mkdir Output/OpenGL
-        xvfb-run ${{github.workspace}}/build/build/TestbedD gl -v -f -t
+        xvfb-run ${{github.workspace}}/build/build/TestbedD gl vk -v -f -t
 
