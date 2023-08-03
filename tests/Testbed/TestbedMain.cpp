@@ -49,24 +49,23 @@ int main(int argc, char* argv[])
 {
     Log::RegisterCallbackStd();
 
-    std::string singleModule;
-    if (argc >= 2 && argv[1][0] != '-')
-        singleModule = GetRendererModule(argv[1]);
+    // Gather all explicitly specified module names
+    std::vector<std::string> enabledModules;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i][0] != '-')
+            enabledModules.push_back(GetRendererModule(argv[i]));
+    }
+
+    if (enabledModules.empty())
+        enabledModules = RenderSystem::FindModules();
 
     // Run renderer independent tests
     RunRendererIndependentTests();
 
-    if (!singleModule.empty())
-    {
-        // Run tests for specific renderer
-        RunTestbedForRenderer(singleModule.c_str(), argc - 1, argv + 1);
-    }
-    else
-    {
-        // Run tests for all available renderers
-        for (std::string moduleName : RenderSystem::FindModules())
-            RunTestbedForRenderer(moduleName.c_str(), argc - 1, argv + 1);
-    }
+    // Run renderer specific tests
+    for (const std::string& moduleName : enabledModules)
+        RunTestbedForRenderer(moduleName.c_str(), argc - 1, argv + 1);
 
     #ifdef _WIN32
     system("pause");
