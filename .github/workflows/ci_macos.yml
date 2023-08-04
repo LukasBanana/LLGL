@@ -6,11 +6,14 @@ on:
   pull_request:
     branches: [ "master" ]
 
-env:
-  BUILD_TYPE: Debug
-
 jobs:
   build_macos:
+    strategy:
+      matrix:
+        config: [Debug, Release]
+        lib: [Shared, Static]
+      fail-fast: false
+    
     runs-on: macos-latest
 
     steps:
@@ -20,8 +23,8 @@ jobs:
       run: git clone https://github.com/LukasBanana/GaussianLib.git
 
     - name: Configure CMake
-      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_WRAPPER_C99=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+      run: cmake -S . -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }} -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_METAL=ON -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_WRAPPER_C99=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }}
       
