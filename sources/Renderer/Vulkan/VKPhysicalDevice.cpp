@@ -154,7 +154,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     /* Map properties to output renderer info */
     info.rendererName           = ("Vulkan " + VKApiVersionToString(properties_.apiVersion));
     info.deviceName             = properties_.deviceName;
-    info.vendorName             = GetVendorByID(properties_.vendorID);
+    info.vendorName             = GetVendorName(GetVendorByID(properties_.vendorID));
     info.shadingLanguageName    = "SPIR-V";
 
     /* Map limits to output rendering capabilites */

@@ -493,7 +493,7 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
     VideoAdapterDescriptor videoAdapterDesc;
 
     videoAdapterDesc.name           = std::wstring(desc.Description);
-    videoAdapterDesc.vendor         = GetVendorByID(desc.VendorId);
+    videoAdapterDesc.vendor         = GetVendorName(GetVendorByID(desc.VendorId));
     videoAdapterDesc.videoMemory    = static_cast<uint64_t>(desc.DedicatedVideoMemory);
 
     /* Enumerate over all adapter outputs */

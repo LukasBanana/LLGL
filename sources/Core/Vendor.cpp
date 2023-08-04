@@ -12,21 +12,37 @@ namespace LLGL
 {
 
 
-// see http://pcidatabase.com/vendors.php?sort=id
-LLGL_EXPORT std::string GetVendorByID(unsigned short id)
+// see https://pcisig.com/membership/member-companies
+LLGL_EXPORT DeviceVendor GetVendorByID(std::uint16_t id)
 {
     switch (id)
     {
-        case 0x1002: return "Advanced Micro Devices, Inc.";
-        case 0x10de: return "NVIDIA Corporation";
-        case 0x102b: return "Matrox Electronic Systems Ltd.";
-        case 0x1414: return "Microsoft Corporation";
-        case 0x5333: return "S3 Graphics Co., Ltd.";
-        case 0x8086: return "Intel Corporation";
-        case 0x80ee: return "Oracle Corporation";
-        case 0x15ad: return "VMware Inc.";
+        case 0x106B:    return DeviceVendor::Apple;
+        case 0x1022:    return DeviceVendor::AMD;
+        case 0x8086:    return DeviceVendor::Intel;
+        case 0x102B:    return DeviceVendor::Matrox;
+        case 0x1414:    return DeviceVendor::Microsoft;
+        case 0x10DE:    return DeviceVendor::NVIDIA;
+        case 0x108E:    return DeviceVendor::Oracle;
+        case 0x15AD:    return DeviceVendor::VMware;
+        default:        return DeviceVendor::Undefined;
     }
-    return "";
+}
+
+LLGL_EXPORT const char* GetVendorName(DeviceVendor vendor)
+{
+    switch (vendor)
+    {
+        case DeviceVendor::Apple:       return "Apple Inc.";
+        case DeviceVendor::AMD:         return "Advanced Micro Devices, Inc.";
+        case DeviceVendor::Intel:       return "Intel Corporation";
+        case DeviceVendor::Matrox:      return "Matrox Electronic Systems Ltd.";
+        case DeviceVendor::Microsoft:   return "Microsoft Corporation";
+        case DeviceVendor::NVIDIA:      return "NVIDIA Corporation";
+        case DeviceVendor::Oracle:      return "Oracle Corporation";
+        case DeviceVendor::VMware:      return "VMware Inc.";
+        default:                        return "";
+    }
 }
 
 

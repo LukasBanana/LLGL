@@ -10,15 +10,34 @@
 
 
 #include <LLGL/Export.h>
-#include <string>
+#include <cstdint>
 
 
 namespace LLGL
 {
 
 
-//! Returns the name of the hardware vendor by the specified ID number.
-LLGL_EXPORT std::string GetVendorByID(unsigned short id);
+// GPU vendor ID enumeration.
+enum class DeviceVendor
+{
+    Undefined,
+
+    Apple,
+    AMD,
+    Intel,
+    Matrox,
+    Microsoft,
+    NVIDIA,
+    Oracle,
+    VMware,
+};
+
+
+// Returns the device vendor by the specified ID number.
+LLGL_EXPORT DeviceVendor GetVendorByID(std::uint16_t id);
+
+// Returns the name of the hardware vendor by the specified ID number.
+LLGL_EXPORT const char* GetVendorName(DeviceVendor vendor);
 
 
 } // /namespace LLGL
