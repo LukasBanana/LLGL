@@ -1,0 +1,41 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_windows:
+    strategy:
+      matrix:
+        generator: [Visual Studio 16 2019, Visual Studio 17 2022]
+        arch: [Win32, x64]
+        lib: [Shared, Static]
+        config: [Debug, Release]
+      fail-fast: false
+    
+    runs-on: ${{ matrix.generator == 'Visual Studio 17 2022' && 'windows-latest' || 'windows-2019' }}
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Checkout Dependencies
+      run: git clone https://github.com/LukasBanana/GaussianLib.git
+
+    - name: Configure CMake
+      run: >
+        cmake -G "${{ matrix.generator }}" -A "${{ matrix.arch }}" -S . -B ${{ github.workspace }}/build
+        -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
+        -DLLGL_BUILD_RENDERER_OPENGL=ON
+        -DLLGL_BUILD_RENDERER_DIRECT3D11=ON
+        -DLLGL_BUILD_RENDERER_DIRECT3D12=ON
+        -DLLGL_BUILD_EXAMPLES=ON
+        -DLLGL_BUILD_TESTS=ON
+        -DLLGL_BUILD_WRAPPER_C99=ON
+        -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }}
+      
