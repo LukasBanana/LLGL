@@ -204,7 +204,7 @@ T GetAlignedSize(T size, T alignment)
 template <typename T>
 T DivideCeil(T numerator, T denominator)
 {
-    static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: template parameter 'T' must be an integral type");
+    static_assert(std::is_integral<T>::value, "DivideCeil<T>: template parameter 'T' must be an integral type");
     return ((numerator + denominator - T(1)) / denominator);
 }
 

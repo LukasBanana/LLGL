@@ -34,7 +34,7 @@ namespace ModuleNull
     {
         return new NullRenderSystem(*renderSystemDesc);
     }
-} // /namespace ModuleOpenGL
+} // /namespace ModuleNull
 
 
 } // /namespace LLGL

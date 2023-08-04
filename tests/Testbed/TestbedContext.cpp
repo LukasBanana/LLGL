@@ -981,8 +981,8 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int sc
 
 void TestbedContext::IndexedTriangleMeshBuffer::NewMesh()
 {
-    firstVertex = vertices.size();
-    firstIndex  = indices.size();
+    firstVertex = static_cast<std::uint32_t>(vertices.size());
+    firstIndex  = static_cast<std::uint32_t>(indices.size());
 }
 
 void TestbedContext::IndexedTriangleMeshBuffer::AddVertex(float x, float y, float z, float nx, float ny, float nz, float tx, float ty)
@@ -1000,5 +1000,5 @@ void TestbedContext::IndexedTriangleMeshBuffer::AddIndices(const std::initialize
 void TestbedContext::IndexedTriangleMeshBuffer::FinalizeMesh(IndexedTriangleMesh& outMesh)
 {
     outMesh.indexBufferOffset   = firstIndex * sizeof(std::uint32_t);
-    outMesh.numIndices          = indices.size() - firstIndex;
+    outMesh.numIndices          = static_cast<std::uint32_t>(indices.size()) - firstIndex;
 }
