@@ -584,6 +584,18 @@ bool IsVkFormatColor(const VkFormat format)
     return (format != VK_FORMAT_UNDEFINED && !IsVkFormatDepthStencil(format));
 }
 
+std::uint32_t GetMaxVkSampleCounts(VkSampleCountFlags flags)
+{
+    if ((flags & VK_SAMPLE_COUNT_64_BIT) != 0) { return 64; }
+    if ((flags & VK_SAMPLE_COUNT_32_BIT) != 0) { return 32; }
+    if ((flags & VK_SAMPLE_COUNT_16_BIT) != 0) { return 16; }
+    if ((flags & VK_SAMPLE_COUNT_8_BIT ) != 0) { return 8;  }
+    if ((flags & VK_SAMPLE_COUNT_4_BIT ) != 0) { return 4;  }
+    if ((flags & VK_SAMPLE_COUNT_2_BIT ) != 0) { return 2;  }
+    if ((flags & VK_SAMPLE_COUNT_1_BIT ) != 0) { return 1;  }
+    return 0;
+}
+
 
 /* ----- Convert functions ----- */
 

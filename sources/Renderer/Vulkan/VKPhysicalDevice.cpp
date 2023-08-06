@@ -8,6 +8,7 @@
 #include "VKPhysicalDevice.h"
 #include "Ext/VKExtensionRegistry.h"
 #include "VKCore.h"
+#include "VKTypes.h"
 #include "RenderState/VKGraphicsPSO.h"
 #include "../../Core/Vendor.h"
 #include <LLGL/StaticLimits.h>
@@ -228,6 +229,10 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.limits.minConstantBufferAlignment          = limits.minUniformBufferOffsetAlignment;
     caps.limits.minSampledBufferAlignment           = limits.minStorageBufferOffsetAlignment; // Use SSBO for both sampled and storage buffers
     caps.limits.minStorageBufferAlignment           = limits.minStorageBufferOffsetAlignment;
+    caps.limits.maxColorBufferSamples               = VKTypes::GetMaxVkSampleCounts(limits.framebufferColorSampleCounts);
+    caps.limits.maxDepthBufferSamples               = VKTypes::GetMaxVkSampleCounts(limits.framebufferDepthSampleCounts);
+    caps.limits.maxStencilBufferSamples             = VKTypes::GetMaxVkSampleCounts(limits.framebufferStencilSampleCounts);
+    caps.limits.maxNoAttachmentSamples              = VKTypes::GetMaxVkSampleCounts(limits.framebufferNoAttachmentsSampleCounts);
 
     /* Store graphics pipeline spcific limitations */
     pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];

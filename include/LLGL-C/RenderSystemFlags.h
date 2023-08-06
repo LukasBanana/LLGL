@@ -200,6 +200,10 @@ typedef struct LLGLRenderingLimits
     uint64_t    minConstantBufferAlignment;
     uint64_t    minSampledBufferAlignment;
     uint64_t    minStorageBufferAlignment;
+    uint32_t    maxColorBufferSamples;
+    uint32_t    maxDepthBufferSamples;
+    uint32_t    maxStencilBufferSamples;
+    uint32_t    maxNoAttachmentSamples;
 }
 LLGLRenderingLimits;
 

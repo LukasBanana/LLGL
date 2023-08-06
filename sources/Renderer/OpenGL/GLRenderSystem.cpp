@@ -410,7 +410,7 @@ void GLRenderSystem::Release(RenderPass& renderPass)
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
     LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasRenderTargets);
-    return renderTargets_.emplace<GLRenderTarget>(renderTargetDesc);
+    return renderTargets_.emplace<GLRenderTarget>(GetRenderingCaps().limits, renderTargetDesc);
 }
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)

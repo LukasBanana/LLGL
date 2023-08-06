@@ -38,7 +38,7 @@ class GLRenderTarget final : public RenderTarget
 
     public:
 
-        GLRenderTarget(const RenderTargetDescriptor& desc);
+        GLRenderTarget(const RenderingLimits& limits, const RenderTargetDescriptor& desc);
         ~GLRenderTarget();
 
         // Blits the multi-sample framebuffer onto the default framebuffer.

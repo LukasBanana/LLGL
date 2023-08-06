@@ -980,6 +980,10 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxTessFactor);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, minConstantBufferAlignment);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, minSampledBufferAlignment);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, minStorageBufferAlignment);
+LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxColorBufferSamples);
+LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxDepthBufferSamples);
+LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxStencilBufferSamples);
+LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxNoAttachmentSamples);
 
 LLGL_STATIC_ASSERT_SIZE(SrcImageDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(SrcImageDescriptor, format);

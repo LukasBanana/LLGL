@@ -9,58 +9,44 @@
 #define LLGL_RENDER_TARGET_UTILS_H
 
 
-#include <LLGL/Texture.h>
-#include <LLGL/RenderTargetFlags.h>
+#include <LLGL/Export.h>
+#include <LLGL/Format.h>
+#include <cstdint>
 
 
 namespace LLGL
 {
 
 
+struct RenderingLimits;
+struct AttachmentDescriptor;
+struct RenderTargetDescriptor;
+
 /* ----- Functions ----- */
 
 // Returns true if the specified render-target attachment is enabled, i.e. either 'texture' or 'format' is valid.
-inline bool IsAttachmentEnabled(const AttachmentDescriptor& attachmentDesc)
-{
-    return (attachmentDesc.texture != nullptr || attachmentDesc.format != Format::Undefined);
-}
+LLGL_EXPORT bool IsAttachmentEnabled(const AttachmentDescriptor& attachmentDesc);
 
 // Returns the format of the specified render-target attachment.
-inline Format GetAttachmentFormat(const AttachmentDescriptor& attachmentDesc)
-{
-    if (attachmentDesc.format != Format::Undefined)
-        return attachmentDesc.format;
-    if (auto texture = attachmentDesc.texture)
-        return texture->GetFormat();
-    return Format::Undefined;
-}
+LLGL_EXPORT Format GetAttachmentFormat(const AttachmentDescriptor& attachmentDesc);
 
 /*
 Returns the number of active color attachments in the specified render target descriptor.
 The first inactive attachment breaks the count.
 */
-inline std::uint32_t NumActiveColorAttachments(const RenderTargetDescriptor& renderTargetDesc)
-{
-    std::uint32_t n = 0;
-    while (n < LLGL_MAX_NUM_COLOR_ATTACHMENTS && IsAttachmentEnabled(renderTargetDesc.colorAttachments[n]))
-        ++n;
-    return n;
-}
+LLGL_EXPORT std::uint32_t NumActiveColorAttachments(const RenderTargetDescriptor& renderTargetDesc);
 
 /*
 Returns the number of active resolve attachments in the specified render target descriptor.
 The first inactive color attachment (not resolve attachment) breaks the count.
 */
-inline std::uint32_t NumActiveResolveAttachments(const RenderTargetDescriptor& renderTargetDesc)
-{
-    std::uint32_t n = 0;
-    for (std::uint32_t i = 0; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS && IsAttachmentEnabled(renderTargetDesc.colorAttachments[i]); ++i)
-    {
-        if (renderTargetDesc.resolveAttachments[i].texture != nullptr)
-            ++n;
-    }
-    return n;
-}
+LLGL_EXPORT std::uint32_t NumActiveResolveAttachments(const RenderTargetDescriptor& renderTargetDesc);
+
+// Returns true if the specified render-target descriptor has any active attachaemnts
+LLGL_EXPORT bool HasAnyActiveAttachments(const RenderTargetDescriptor& desc);
+
+// Returns the number of samples for the specified render-target descriptor and rendering limitations.
+LLGL_EXPORT std::uint32_t GetLimitedRenderTargetSamples(const RenderingLimits& limits, const RenderTargetDescriptor& desc);
 
 
 } // /namespace LLGL

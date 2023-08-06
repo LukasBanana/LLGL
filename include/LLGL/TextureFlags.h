@@ -333,6 +333,9 @@ struct TextureDescriptor
     \brief Number of samples per texel. By default 1.
     \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
     \see IsMultiSampleTexture
+    \see RenderingLimits::maxColorBufferSamples
+    \see RenderingLimits::maxDepthBufferSamples
+    \see RenderingLimits::maxStencilBufferSamples
     */
     std::uint32_t   samples         = 1;
 

@@ -126,6 +126,10 @@ struct RenderTargetDescriptor
     The actual number of samples can be queried by the \c GetSamples function of the RenderTarget interface.
     \remarks If \c renderPass is specified, the number of samples from that RenderPass must match this number of samples.
     \see RenderTarget::GetSamples
+    \see RenderingLimits::maxColorBufferSamples
+    \see RenderingLimits::maxDepthBufferSamples
+    \see RenderingLimits::maxStencilBufferSamples
+    \see RenderingLimits::maxNoAttachmentSamples
     */
     std::uint32_t           samples     = 1;
 

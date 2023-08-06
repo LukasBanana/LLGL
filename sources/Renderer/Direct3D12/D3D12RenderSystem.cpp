@@ -582,6 +582,12 @@ void D3D12RenderSystem::QueryRenderingCaps()
         caps.limits.maxViewportSize[1]              = D3D12_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxBufferSize                   = ULLONG_MAX;
         caps.limits.maxConstantBufferSize           = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+
+        /* Determine maximum number of samples for various formats */
+        caps.limits.maxColorBufferSamples           = device_.FindSuitableSampleDesc(DXGI_FORMAT_R8G8B8A8_UNORM).Count;
+        caps.limits.maxDepthBufferSamples           = device_.FindSuitableSampleDesc(DXGI_FORMAT_D32_FLOAT).Count;
+        caps.limits.maxStencilBufferSamples         = device_.FindSuitableSampleDesc(DXGI_FORMAT_D32_FLOAT_S8X24_UINT).Count;
+        caps.limits.maxNoAttachmentSamples          = D3D12_MAX_MULTISAMPLE_SAMPLE_COUNT;
     }
     SetRenderingCaps(caps);
 }

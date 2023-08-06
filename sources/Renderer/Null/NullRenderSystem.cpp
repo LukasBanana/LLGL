@@ -93,6 +93,10 @@ static void InitNullRendererLimits(RenderingLimits& limits)
     limits.minConstantBufferAlignment       = 1;
     limits.minSampledBufferAlignment        = 1;
     limits.minStorageBufferAlignment        = 1;
+    limits.maxColorBufferSamples            = 1;
+    limits.maxDepthBufferSamples            = 1;
+    limits.maxStencilBufferSamples          = 1;
+    limits.maxNoAttachmentSamples           = 1;
 }
 
 static RenderingCapabilities GetNullRenderingCaps()

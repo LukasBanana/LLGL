@@ -1,11 +1,12 @@
 /*
  * MTFeatureSet.mm
- * 
+ *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include "MTFeatureSet.h"
+#include "MTDevice.h"
 #include <AvailabilityMacros.h>
 #include <initializer_list>
 #include <algorithm>
@@ -160,6 +161,16 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     caps.limits.minConstantBufferAlignment  = 256u; //???
     caps.limits.minSampledBufferAlignment   = 32u;  //???
     caps.limits.minStorageBufferAlignment   = 32u;  //???
+
+    /*
+    Determine maximum number of samples for multi-sampled textures.
+    All devices support at least 4, but only some devices supported up to 8 samples.
+    */
+    const NSUInteger maxSamples = MTDevice::FindSuitableSampleCount(device, 8u);
+    caps.limits.maxColorBufferSamples       = maxSamples;
+    caps.limits.maxDepthBufferSamples       = maxSamples;
+    caps.limits.maxStencilBufferSamples     = maxSamples;
+    caps.limits.maxNoAttachmentSamples      = maxSamples;
 }
 
 

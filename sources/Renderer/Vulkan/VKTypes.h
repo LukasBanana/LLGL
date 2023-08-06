@@ -63,6 +63,8 @@ bool IsVkFormatDepthStencil(const VkFormat format);
 bool IsVkFormatStencil(const VkFormat format);
 bool IsVkFormatColor(const VkFormat format);
 
+std::uint32_t GetMaxVkSampleCounts(VkSampleCountFlags flags);
+
 
 /* ----- Convert functions ----- */
 

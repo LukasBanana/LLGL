@@ -17,21 +17,21 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
 
-GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
+GLRenderTarget::GLRenderTarget(const RenderingLimits& limits, const RenderTargetDescriptor& desc) :
     resolution_  { static_cast<GLint>(desc.resolution.width), static_cast<GLint>(desc.resolution.height) },
     drawBuffers_ { SmallVector<GLenum, 2>(std::size_t(NumActiveColorAttachments(desc)))                  },
-    samples_     { static_cast<GLint>(desc.samples)                                                      },
+    samples_     { static_cast<GLint>(GetLimitedRenderTargetSamples(limits, desc))                       },
     renderPass_  { desc.renderPass                                                                       }
 {
     framebuffer_.GenFramebuffer();
-    const bool hasAnyAttachments = (!drawBuffers_.empty() || IsAttachmentEnabled(desc.depthStencilAttachment));
-    if (hasAnyAttachments)
+    if (HasAnyActiveAttachments(desc))
         CreateFramebufferWithAttachments(desc);
     else
         CreateFramebufferWithNoAttachments();

@@ -719,6 +719,40 @@ struct RenderingLimits
     \see BufferViewDescriptor::size
     */
     std::uint64_t   minStorageBufferAlignment           = 0;
+
+    /**
+    \brief Specifies the maximum number of samples for color buffers. Common values are 4, 8, 16, or 32.
+    \remarks Most renderers will return at least a value of 4.
+    \see RenderPassDescriptor::samples
+    \see RenderTargetDescriptor::samples
+    \see TextureDescriptor::samples
+    */
+    std::uint32_t   maxColorBufferSamples               = 0;
+
+    /**
+    \brief Specifies the maximum number of samples for depth buffers. Common values are 4, 8, 16, or 32.
+    \remarks Most renderers will return at least a value of 4.
+    \see RenderPassDescriptor::samples
+    \see RenderTargetDescriptor::samples
+    \see TextureDescriptor::samples
+    */
+    std::uint32_t   maxDepthBufferSamples               = 0;
+
+    /**
+    \brief Specifies the maximum number of samples for stencil buffers. Common values are 4, 8, 16, or 32.
+    \remarks Most renderers will return at least a value of 4.
+    \see RenderPassDescriptor::samples
+    \see RenderTargetDescriptor::samples
+    \see TextureDescriptor::samples
+    */
+    std::uint32_t   maxStencilBufferSamples             = 0;
+
+    /**
+    \brief Specifies the maximum number of samples for a RenderTarget with no attachments. Common values are 4, 8, 16, or 32.
+    \remarks Most renderers will return at least a value of 4.
+    \see RenderTargetDescriptor::samples
+    */
+    std::uint32_t   maxNoAttachmentSamples              = 0;
 };
 
 /**

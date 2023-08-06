@@ -66,6 +66,31 @@ class TestbedContext
 
     protected:
 
+        enum Models
+        {
+            ModelCube = 0,
+
+            ModelCount,
+        };
+
+        enum Shaders
+        {
+            VSSolid = 0,
+            PSSolid,
+            VSTextured,
+            PSTextured,
+
+            ShaderCount,
+        };
+
+        enum DiffErrors
+        {
+            DiffErrorLoadRefFailed      = -1,
+            DiffErrorLoadResultFailed   = -2,
+            DiffErrorExtentMismatch     = -3,
+            DiffErrorSaveDiffFailed     = -4,
+        };
+
         struct Vertex
         {
             float position[3];
@@ -100,23 +125,6 @@ class TestbedContext
             Gs::Vector4f lightVec   = { 0, 0, -1, 0 };
         }
         sceneConstants;
-
-        enum Models
-        {
-            ModelCube = 0,
-
-            ModelCount,
-        };
-
-        enum Shaders
-        {
-            VSSolid = 0,
-            PSSolid,
-            VSTextured,
-            PSTextured,
-
-            ShaderCount,
-        };
 
     protected:
 

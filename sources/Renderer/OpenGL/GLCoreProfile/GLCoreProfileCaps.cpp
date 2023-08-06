@@ -278,6 +278,36 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
 
     /* Determine tessellation limits */
     limits.maxTessFactor = GLGetUInt(GL_MAX_TESS_GEN_LEVEL);
+
+    /* Determine maximum number of samples for render-target attachments */
+    #ifdef GL_ARB_texture_multisample
+    if (HasExtension(GLExt::ARB_texture_multisample))
+    {
+        limits.maxColorBufferSamples    = GLGetUInt(GL_MAX_COLOR_TEXTURE_SAMPLES);
+        limits.maxDepthBufferSamples    = GLGetUInt(GL_MAX_DEPTH_TEXTURE_SAMPLES);
+        limits.maxStencilBufferSamples  = GLGetUInt(GL_MAX_INTEGER_SAMPLES);
+    }
+    else
+    #endif
+    {
+        const GLuint maxSamples = GLGetUInt(GL_MAX_SAMPLES);
+        limits.maxColorBufferSamples    = maxSamples;
+        limits.maxDepthBufferSamples    = maxSamples;
+        limits.maxStencilBufferSamples  = maxSamples;
+    }
+
+    #ifdef GL_ARB_framebuffer_no_attachments
+    if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
+    {
+        /* Determine maximum number of samples for render-targets with no attachments */
+        limits.maxNoAttachmentSamples = GLGetUInt(GL_MAX_FRAMEBUFFER_SAMPLES);
+    }
+    else
+    #endif
+    {
+        /* Use maximum number of samples for color buffers as fallbacks for empty render-targets */
+        limits.maxNoAttachmentSamples = limits.maxColorAttachments;
+    }
 }
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits)

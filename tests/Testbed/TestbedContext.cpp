@@ -474,11 +474,37 @@ TestResult TestbedContext::CreateRenderTarget(
     const std::uint32_t resultSamples = target->GetSamples();
     if (resultSamples != desc.samples)
     {
-        Log::Errorf(
-            "Mismatch between render target \"%s\" descriptor (samples = %u) and actual render target (samples = %u)\n",
-            name, desc.samples, resultSamples
-        );
-        return TestResult::FailedMismatch;
+        auto GetAttachmentFormat = [](const AttachmentDescriptor& desc) -> Format
+        {
+            if (desc.format != Format::Undefined)
+                return desc.format;
+            if (desc.texture != nullptr)
+                return desc.texture->GetFormat();
+            return Format::Undefined;
+        };
+
+        // Returns the maximum number of samples supported for the specified render-target descriptor
+        auto GetMaxFormatSamples = [&GetAttachmentFormat](const RenderingLimits& limits, const RenderTargetDescriptor& desc) -> std::uint32_t
+        {
+            std::uint32_t maxSamples = ~0u;
+            if (GetAttachmentFormat(desc.colorAttachments[0]) != Format::Undefined)
+                maxSamples = std::min(maxSamples, limits.maxColorBufferSamples);
+            if (IsDepthFormat(GetAttachmentFormat(desc.depthStencilAttachment)))
+                maxSamples = std::min(maxSamples, limits.maxDepthBufferSamples);
+            if (IsStencilFormat(GetAttachmentFormat(desc.depthStencilAttachment)))
+                maxSamples = std::min(maxSamples, limits.maxStencilBufferSamples);
+            return (maxSamples == ~0u ? limits.maxNoAttachmentSamples : maxSamples);
+        };
+
+        const std::uint32_t maxSamples = GetMaxFormatSamples(renderer->GetRenderingCaps().limits, desc);
+        if (resultSamples != maxSamples)
+        {
+            Log::Errorf(
+                "Mismatch between render target \"%s\" descriptor (samples = %u) and actual render target (samples = %u; max = %u)\n",
+                name, desc.samples, resultSamples, maxSamples
+            );
+            return TestResult::FailedMismatch;
+        }
     }
 
     auto HasAttachment = [](const AttachmentDescriptor& attachment) -> bool
@@ -937,12 +963,12 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int sc
     const std::string diffPath      = outputDir + moduleName + "/";
 
     if (!LoadImageTGA(pixelsA, extentA, refPath + name + ".Ref.tga"))
-        return -1;
+        return DiffErrorLoadRefFailed;
     if (!LoadImageTGA(pixelsB, extentB, resultPath + name + ".Result.tga"))
-        return -2;
+        return DiffErrorLoadResultFailed;
 
     if (extentA != extentB)
-        return -3;
+        return DiffErrorExtentMismatch;
 
     // Generate heat-map image
     int highestDiff = 0;
@@ -967,7 +993,7 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int sc
     {
         // Save diff inage and return highest difference value
         if (!SaveImageTGA(pixelsDiff, extentA, diffPath + name + ".Diff.tga", verbose))
-            return -4;
+            return DiffErrorSaveDiffFailed;
         return highestDiff;
     }
 

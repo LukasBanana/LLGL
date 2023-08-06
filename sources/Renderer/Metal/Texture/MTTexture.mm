@@ -7,6 +7,7 @@
 
 #include "MTTexture.h"
 #include "../MTTypes.h"
+#include "../MTDevice.h"
 #include "../Buffer/MTIntermediateBuffer.h"
 #include "../../TextureUtils.h"
 #include <LLGL/TextureFlags.h>
@@ -65,18 +66,6 @@ static MTLTextureType ToMTLTextureTypeWithMipMaps(TextureType type)
     }
 }
 
-// Returns the most suitable sample count for the Metal device
-static NSUInteger FindSuitableSampleCount(id<MTLDevice> device, NSUInteger samples)
-{
-    while (samples > 1)
-    {
-        if ([device supportsTextureSampleCount:samples])
-            return samples;
-        --samples;
-    }
-    return 4u; // Supported by all macOS and iOS devices; 1 is not supported according to Metal validation layer
-}
-
 static void ConvertTextureDesc(id<MTLDevice> device, MTLTextureDescriptor* dst, const TextureDescriptor& src)
 {
     /*
@@ -91,7 +80,7 @@ static void ConvertTextureDesc(id<MTLDevice> device, MTLTextureDescriptor* dst, 
     dst.height              = src.extent.height;
     dst.depth               = src.extent.depth;
     dst.mipmapLevelCount    = mipMapCount;
-    dst.sampleCount         = (IsMultiSampleTexture(src.type) ? FindSuitableSampleCount(device, static_cast<NSUInteger>(src.samples)) : 1u);
+    dst.sampleCount         = (IsMultiSampleTexture(src.type) ? MTDevice::FindSuitableSampleCount(device, static_cast<NSUInteger>(src.samples)) : 1u);
     dst.arrayLength         = GetTextureLayers(src);
     dst.usage               = GetTextureUsage(src);
     dst.resourceOptions     = GetResourceOptions(src);

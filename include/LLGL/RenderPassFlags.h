@@ -146,6 +146,10 @@ struct RenderPassDescriptor
     \remarks This must be greater than 0. If this is 1, multi-sampling is disabled.
     All attachments and the respective render target must have the same number of samples.
     \see TextureDescriptor::samples
+    \see RenderingLimits::maxColorBufferSamples
+    \see RenderingLimits::maxDepthBufferSamples
+    \see RenderingLimits::maxStencilBufferSamples
+    \see RenderingLimits::maxNoAttachmentSamples
     */
     std::uint32_t               samples             = 1;
 };
