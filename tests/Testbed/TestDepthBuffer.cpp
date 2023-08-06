@@ -28,7 +28,7 @@ DEF_TEST( DepthBuffer )
         texDesc.format          = Format::D32Float;
         texDesc.extent.width    = resolution.width;
         texDesc.extent.height   = resolution.height;
-        texDesc.bindFlags       = BindFlags::DepthStencilAttachment | BindFlags::CopySrc | BindFlags::Sampled;
+        texDesc.bindFlags       = BindFlags::DepthStencilAttachment;
         texDesc.mipLevels       = 1;
     }
     Texture* readbackTex = renderer->CreateTexture(texDesc);
@@ -86,7 +86,7 @@ DEF_TEST( DepthBuffer )
         cmdBuffer->BeginRenderPass(*renderTarget);
         {
             // Draw scene
-            cmdBuffer->Clear(ClearFlags::ColorDepth);
+            cmdBuffer->Clear(ClearFlags::Depth);
             cmdBuffer->SetPipelineState(*pso);
             cmdBuffer->SetViewport(resolution);
             cmdBuffer->SetVertexBuffer(*meshBuffer);

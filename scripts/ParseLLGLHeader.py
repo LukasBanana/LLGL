@@ -8,7 +8,7 @@
 import os
 import sys
 import re
-from enum import IntEnum
+from enum import Enum
 
 def printHelp():
     print("help:")
@@ -27,7 +27,7 @@ def fatal(msg):
     print(sys.argv[0] + ': ' + msg)
     sys.exit(1)
 
-class StdType(IntEnum):
+class StdType(Enum):
     UNDEFINED = 0
     BOOL = 1
     CHAR = 2
@@ -80,6 +80,13 @@ class LLGLMeta:
     includes = {
         '<LLGL-C/Types.h>'
     }
+    copyright = [
+        'Copyright (c) 2015 Lukas Hermanns. All rights reserved.',
+        'Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).'
+    ]
+    info = [
+        'AUTO GENERATED CODE - DO NOT EDIT'
+    ]
 
 class LLGLMacros:
     def translateArraySize(ident):
@@ -98,37 +105,7 @@ class LLGLType:
     DYNAMIC_ARRAY = -1
 
     def __init__(self, typename = '', isConst = False, isPointer = False):
-        if typename != '':
-            if typename == 'bool':
-                self.baseType = StdType.BOOL
-            elif typename == 'char':
-                self.baseType = StdType.CHAR
-            elif typename == 'int8_t':
-                self.baseType = StdType.INT8
-            elif typename == 'int16_t':
-                self.baseType = StdType.INT16
-            elif typename == 'int32_t':
-                self.baseType = StdType.INT32
-            elif typename == 'int64_t':
-                self.baseType = StdType.INT64
-            elif typename == 'uint8_t':
-                self.baseType = StdType.UINT8
-            elif typename == 'uint16_t':
-                self.baseType = StdType.UINT16
-            elif typename == 'uint32_t':
-                self.baseType = StdType.UINT32
-            elif typename == 'uint64_t':
-                self.baseType = StdType.UINT64
-            elif typename == 'long':
-                self.baseType = StdType.LONG
-            elif typename == 'size_t':
-                self.baseType = StdType.SIZE_T
-            elif typename == 'float':
-                self.baseType = StdType.FLOAT
-            else:
-                self.baseType = StdType.STRUCT
-        else:
-            self.baseType = StdType.UNDEFINED
+        self.baseType = LLGLType.toBaseType(typename)
         self.typename = typename
         self.arraySize = 0
         self.isConst = isConst
@@ -151,6 +128,38 @@ class LLGLType:
         if self.isConst:
             str += '+'
         return str
+
+    def toBaseType(typename):
+        if typename != '':
+            if typename == 'bool':
+                return StdType.BOOL
+            elif typename == 'char':
+                return StdType.CHAR
+            elif typename == 'int8_t':
+                return StdType.INT8
+            elif typename == 'int16_t':
+                return StdType.INT16
+            elif typename == 'int32_t':
+                return StdType.INT32
+            elif typename == 'int64_t':
+                return StdType.INT64
+            elif typename == 'uint8_t':
+                return StdType.UINT8
+            elif typename == 'uint16_t':
+                return StdType.UINT16
+            elif typename == 'uint32_t':
+                return StdType.UINT32
+            elif typename == 'uint64_t':
+                return StdType.UINT64
+            elif typename == 'long':
+                return StdType.LONG
+            elif typename == 'size_t':
+                return StdType.SIZE_T
+            elif typename == 'float':
+                return StdType.FLOAT
+            else:
+                return StdType.STRUCT
+        return StdType.UNDEFINED
 
 class LLGLField:
     name = ''
@@ -576,11 +585,12 @@ class Translator:
         self.statement('/*')
         self.statement(' * {}.h'.format(doc.name))
         self.statement(' *')
-        self.statement(' * Copyright (c) 2015 Lukas Hermanns. All rights reserved.')
-        self.statement(' * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).')
+        for line in LLGLMeta.copyright:
+            self.statement(' * ' + line)
         self.statement(' */')
         self.statement('')
-        self.statement('/* AUTO GENERATED CODE - DO NOT EDIT */')
+        for line in LLGLMeta.info:
+            self.statement('/* {} */'.format(line))
         self.statement('')
 
         # Write header guard
@@ -714,11 +724,12 @@ class Translator:
         self.statement('/*')
         self.statement(' * {}.cs'.format(doc.name))
         self.statement(' *')
-        self.statement(' * Copyright (c) 2015 Lukas Hermanns. All rights reserved.')
-        self.statement(' * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).')
+        for line in LLGLMeta.copyright:
+            self.statement(' * ' + line)
         self.statement(' */')
         self.statement('')
-        self.statement('/* AUTO GENERATED CODE - DO NOT EDIT */')
+        for line in LLGLMeta.info:
+            self.statement('/* {} */'.format(line))
         self.statement('')
         self.statement('using System;')
         self.statement('using System.Runtime.InteropServices;')

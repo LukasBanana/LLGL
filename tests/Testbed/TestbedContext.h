@@ -134,6 +134,8 @@ class TestbedContext
         const bool                  showTiming;
         const bool                  fastTest; // Skip slow buffer/texture creations to speed up test run
 
+        unsigned                    failures                = 0;
+
         LLGL::RenderingProfiler     profiler;
         LLGL::RenderingDebugger     debugger;
         LLGL::RenderSystemPtr       renderer;
@@ -190,6 +192,8 @@ class TestbedContext
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
         int DiffImagesTGA(const std::string& name, int threshold = 1, int scale = 1);
+
+        void RecordTestResult(TestResult result, const char* name);
 
 };
 

@@ -38,7 +38,7 @@ enum class GLExt
     ARB_draw_elements_base_vertex,      // GL 3.1
     ARB_draw_instanced,                 // GL 2.1
     ARB_draw_indirect,
-    ARB_framebuffer_no_attachments,
+    ARB_framebuffer_no_attachments,     // GL 4.2
     ARB_framebuffer_object,
     ARB_get_program_binary,
     ARB_get_texture_sub_image,          // GL 4.5

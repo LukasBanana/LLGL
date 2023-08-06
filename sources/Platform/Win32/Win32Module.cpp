@@ -49,7 +49,7 @@ static HMODULE LoadLibrarySafe(LPCSTR filename)
 bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if Win32 dynamic link library can be loaded properly */
-    if (auto handle = LoadLibrarySafe(moduleFilename))
+    if (HMODULE handle = LoadLibrarySafe(moduleFilename))
     {
         FreeLibrary(handle);
         return true;

@@ -136,9 +136,10 @@ void TestbedContext::RunAllTests()
             const TestResult result = RunTest(                                      \
                 std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1) \
             );                                                                      \
-            PrintTestResult(result, #TEST);                                         \
+            RecordTestResult(result, #TEST);                                        \
         }
 
+    // Run all unit tests
     RUN_TEST( CommandBufferSubmit       );
     RUN_TEST( BufferWriteAndRead        );
     RUN_TEST( BufferMap                 );
@@ -157,6 +158,12 @@ void TestbedContext::RunAllTests()
     RUN_TEST( RenderTargetNAttachments  );
 
     #undef RUN_TEST
+
+    // Print summary
+    if (failures == 1)
+        Log::Printf(" ==> 1 TEST FAILED\n", failures);
+    else if (failures > 1)
+        Log::Printf(" ==> %u TESTS FAILED\n", failures);
 }
 
 static TestResult TestParseSamplerDesc()
@@ -998,6 +1005,13 @@ int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int sc
     }
 
     return 0;
+}
+
+void TestbedContext::RecordTestResult(TestResult result, const char* name)
+{
+    PrintTestResult(result, name);
+    if (result != TestResult::Passed)
+        ++failures;
 }
 
 

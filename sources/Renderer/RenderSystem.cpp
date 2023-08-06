@@ -107,10 +107,10 @@ std::vector<std::string> RenderSystem::FindModules()
 
     std::vector<std::string> modules;
 
-    for (auto m : knownModules)
+    for (const char* m : knownModules)
     {
-        auto moduleName = Module::GetModuleFilename(m);
-        if (Module::IsAvailable(moduleName.c_str()))
+        std::string moduleFilename = Module::GetModuleFilename(m);
+        if (Module::IsAvailable(moduleFilename.c_str()))
             modules.push_back(m);
     }
 

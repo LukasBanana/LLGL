@@ -36,11 +36,11 @@ static const char* GetRendererModule(const std::string& name)
         return "Vulkan";
     if (name == "mt" || name == "mtl" || name == "metal")
         return "Metal";
-    if (name == "d3d11" || name == "D3D11" || name == "dx11" || name == "DX11")
+    if (name == "d3d11" || name == "dx11" || name == "direct3d11")
         return "Direct3D11";
-    if (name == "d3d12" || name == "D3D12" || name == "dx12" || name == "DX12")
+    if (name == "d3d12" || name == "dx12" || name == "direct3d12")
         return "Direct3D12";
-    if (name == "null" || name == "nil" || name == "0")
+    if (name == "null")
         return "Null";
     return name.c_str();
 }
