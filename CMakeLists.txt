@@ -1002,7 +1002,7 @@ if(GaussLib_INCLUDE_DIR)
             include_directories(${ANDROID_APP_GLUE_DIR})
         endif(LLGL_ANDROID_PLATFORM)
         
-        set(EXAMPLE_PROJECT_LIBS ${LLGL_DEPENDENCIES} ExampleBase)
+        set(EXAMPLE_PROJECT_LIBS ExampleBase ${LLGL_DEPENDENCIES})
         
         if(LLGL_ANDROID_PLATFORM)
             set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
