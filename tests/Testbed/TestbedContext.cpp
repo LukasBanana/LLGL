@@ -148,14 +148,14 @@ void TestbedContext::RunAllTests()
     RUN_TEST( BufferCopy                );
     RUN_TEST( TextureTypes              );
     RUN_TEST( TextureWriteAndRead       );
-    RUN_TEST( TextureCopy               );
-    RUN_TEST( TextureToBufferCopy       );
-    RUN_TEST( BufferToTextureCopy       );
+    //RUN_TEST( TextureCopy               ); //TODO: not implemented yet
+    //RUN_TEST( TextureToBufferCopy       ); //TODO: not implemented yet
+    //RUN_TEST( BufferToTextureCopy       ); //TODO: not implemented yet
     RUN_TEST( DepthBuffer               );
     RUN_TEST( StencilBuffer             );
     RUN_TEST( RenderTargetNoAttachments );
     RUN_TEST( RenderTarget1Attachment   );
-    RUN_TEST( RenderTargetNAttachments  );
+    //RUN_TEST( RenderTargetNAttachments  ); //TODO: not implemented yet
 
     #undef RUN_TEST
 
@@ -939,6 +939,18 @@ void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const LL
 
         colors[i] = ColorRGBub{ color };
     }
+
+    const std::string path = outputDir + moduleName + "/";
+    SaveImageTGA(colors, extent, path + name + ".Result.tga", verbose);
+}
+
+void TestbedContext::SaveStencilImageTGA(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name)
+{
+    std::vector<ColorRGBub> colors;
+    colors.resize(image.size());
+
+    for (std::size_t i = 0; i < image.size(); ++i)
+        colors[i] = ColorRGBub{ image[i] };
 
     const std::string path = outputDir + moduleName + "/";
     SaveImageTGA(colors, extent, path + name + ".Result.tga", verbose);

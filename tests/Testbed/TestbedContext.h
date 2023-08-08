@@ -189,6 +189,7 @@ class TestbedContext
 
         void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
         void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
+        void SaveStencilImageTGA(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
         int DiffImagesTGA(const std::string& name, int threshold = 1, int scale = 1);

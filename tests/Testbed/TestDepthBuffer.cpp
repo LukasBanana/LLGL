@@ -43,7 +43,7 @@ DEF_TEST( DepthBuffer )
     RenderTarget* renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
     renderTarget->SetName("renderTarget");
 
-    // Create PSO for rendering
+    // Create PSO for rendering to the depth buffer
     PipelineLayout* psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@1):vert:frag"));
 
     GraphicsPipelineDescriptor psoDesc;
@@ -107,7 +107,9 @@ DEF_TEST( DepthBuffer )
     };
     const TextureRegion readbackTexRegion{ readbackTexPosition, Extent3D{ 1, 1, 1 } };
 
-    float readbackDepthValue = -1.0f;
+    constexpr float invalidDepthValue = -1.0f;
+
+    float readbackDepthValue = invalidDepthValue;
 
     DstImageDescriptor dstImageDesc;
     {
@@ -128,7 +130,7 @@ DEF_TEST( DepthBuffer )
     {
         dstImageDesc.format     = ImageFormat::Depth;
         dstImageDesc.data       = readbackDepthBuffer.data();
-        dstImageDesc.dataSize   = sizeof(float) * readbackDepthBuffer.size();
+        dstImageDesc.dataSize   = sizeof(decltype(readbackDepthBuffer)::value_type) * readbackDepthBuffer.size();
         dstImageDesc.dataType   = DataType::Float32;
     }
     renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
