@@ -25,11 +25,11 @@ struct DefaultBufferGrowPolicy
 {
     static inline std::size_t MinChunkCapacity()
     {
-        return 128u;
+        return 8192u;
     }
     static inline std::size_t NextChunkCapacity(std::size_t currentChunkCapacity)
     {
-        return (std::max)(currentChunkCapacity * 2, MinChunkCapacity());
+        return (std::max)(currentChunkCapacity + currentChunkCapacity/2, MinChunkCapacity());
     }
 };
 
@@ -182,7 +182,7 @@ class VirtualCommandBuffer
         {
             if (!Empty())
             {
-                for (Chunk* c = first_; c != nullptr && c->size > 0; c = c->next)
+                for (Chunk* c = first_; c != nullptr; c = c->next)
                     c->size = 0;
                 current_    = first_;
                 size_       = 0;
@@ -211,7 +211,7 @@ class VirtualCommandBuffer
             if (first_ != nullptr && first_->next != nullptr)
             {
                 /* Check if last (and biggest) chunk is big enough */
-                auto biggest = FindBiggestChunk();
+                Chunk* biggest = FindBiggestChunk();
                 if (biggest != nullptr && biggest->capacity >= size_)
                     PackRecycle(biggest);
                 else
@@ -332,7 +332,7 @@ class VirtualCommandBuffer
                     else
                     {
                         /* Delete old chunk, allocate a new one, and re-assign reference to biggest chunk even if second-next is NULL */
-                        auto secondNext = current_->next->next;
+                        Chunk* secondNext = current_->next->next;
                         if (biggest_ == current_->next)
                             biggest_ = secondNext;
                         VirtualCommandBuffer::FreeChunk(current_->next);
@@ -371,6 +371,7 @@ class VirtualCommandBuffer
                 AllocNextChunk(std::max(NextCapacity(), size));
             char* data = VirtualCommandBuffer::GetChunkData(current_) + current_->size;
             current_->size += size;
+            LLGL_ASSERT(current_->size <= current_->capacity);
             size_ += size;
             return data;
         }
@@ -380,8 +381,8 @@ class VirtualCommandBuffer
         {
             if (biggest_ == nullptr && first_ != nullptr)
             {
-                auto result = first_;
-                for (auto c = first_->next; c != nullptr; c = c->next)
+                Chunk* result = first_;
+                for (Chunk* c = first_->next; c != nullptr; c = c->next)
                 {
                     if (result->capacity < c->capacity)
                         result = c;
