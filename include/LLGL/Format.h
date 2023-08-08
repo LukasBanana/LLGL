@@ -229,7 +229,7 @@ enum class Format
 \brief Image format enumeration that applies to each pixel of an image.
 \see SrcImageDescriptor::format
 \see DstImageDescriptor::format
-\see ImageFormatSize
+\see GetMemoryFootprint
 \todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
 */
 enum class ImageFormat
@@ -247,7 +247,8 @@ enum class ImageFormat
 
     /* Depth-stencil formats */
     Depth,          //!< Depth component.
-    DepthStencil,   //!< Depth component and stencil index.
+    DepthStencil,   //!< Depth and stencil components.
+    Stencil,        //!< Stencil component.
 
     /* Compressed formats */
     BC1,            //!< Block compression BC1.

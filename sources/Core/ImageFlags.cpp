@@ -86,6 +86,12 @@ union VariantConstBuffer
 
 using VariantColor = ColorRGBA<Variant>;
 
+struct DepthStencilValue
+{
+    float           depth;
+    std::uint32_t   stencil;
+};
+
 
 /* ----- Internal functions ----- */
 
@@ -200,11 +206,11 @@ static void ConvertImageBufferDataType(
     unsigned    threadCount)
 {
     /* Validate destination buffer size */
-    auto imageSize              = srcBufferSize / DataTypeSize(srcDataType);
-    auto requiredDstBufferSize  = imageSize * DataTypeSize(dstDataType);
+    const std::size_t imageSize             = srcBufferSize / DataTypeSize(srcDataType);
+    const std::size_t requiredDstBufferSize = imageSize * DataTypeSize(dstDataType);
 
     if (dstBufferSize != requiredDstBufferSize)
-        throw std::invalid_argument("cannot convert image data type with destination buffer size mismatch");
+        LLGL_TRAP("cannot convert image data type with destination buffer size mismatch");
 
     /* Get variant buffer for source and destination images */
     DoConcurrentRange(
@@ -342,42 +348,42 @@ void TransferRGBAFormattedVariantColor(ImageFormat format, DataType dataType, TB
             CopyTypedVariant(dataType, buffer, idx    , value.r);
             break;
         case ImageFormat::RG:
-            CopyTypedVariant(dataType, buffer, idx    , value.r);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx*2    , value.r);
+            CopyTypedVariant(dataType, buffer, idx*2 + 1, value.g);
             break;
         case ImageFormat::RGB:
-            CopyTypedVariant(dataType, buffer, idx    , value.r);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
-            CopyTypedVariant(dataType, buffer, idx + 2, value.b);
+            CopyTypedVariant(dataType, buffer, idx*3    , value.r);
+            CopyTypedVariant(dataType, buffer, idx*3 + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx*3 + 2, value.b);
             break;
         case ImageFormat::BGR:
-            CopyTypedVariant(dataType, buffer, idx    , value.b);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
-            CopyTypedVariant(dataType, buffer, idx + 2, value.r);
+            CopyTypedVariant(dataType, buffer, idx*3    , value.b);
+            CopyTypedVariant(dataType, buffer, idx*3 + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx*3 + 2, value.r);
             break;
         case ImageFormat::RGBA:
-            CopyTypedVariant(dataType, buffer, idx    , value.r);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
-            CopyTypedVariant(dataType, buffer, idx + 2, value.b);
-            CopyTypedVariant(dataType, buffer, idx + 3, value.a);
+            CopyTypedVariant(dataType, buffer, idx*4    , value.r);
+            CopyTypedVariant(dataType, buffer, idx*4 + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx*4 + 2, value.b);
+            CopyTypedVariant(dataType, buffer, idx*4 + 3, value.a);
             break;
         case ImageFormat::BGRA:
-            CopyTypedVariant(dataType, buffer, idx    , value.b);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
-            CopyTypedVariant(dataType, buffer, idx + 2, value.r);
-            CopyTypedVariant(dataType, buffer, idx + 3, value.a);
+            CopyTypedVariant(dataType, buffer, idx*4    , value.b);
+            CopyTypedVariant(dataType, buffer, idx*4 + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx*4 + 2, value.r);
+            CopyTypedVariant(dataType, buffer, idx*4 + 3, value.a);
             break;
         case ImageFormat::ARGB:
-            CopyTypedVariant(dataType, buffer, idx    , value.a);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.r);
-            CopyTypedVariant(dataType, buffer, idx + 2, value.g);
-            CopyTypedVariant(dataType, buffer, idx + 3, value.b);
+            CopyTypedVariant(dataType, buffer, idx*4    , value.a);
+            CopyTypedVariant(dataType, buffer, idx*4 + 1, value.r);
+            CopyTypedVariant(dataType, buffer, idx*4 + 2, value.g);
+            CopyTypedVariant(dataType, buffer, idx*4 + 3, value.b);
             break;
         case ImageFormat::ABGR:
-            CopyTypedVariant(dataType, buffer, idx    , value.a);
-            CopyTypedVariant(dataType, buffer, idx + 1, value.b);
-            CopyTypedVariant(dataType, buffer, idx + 2, value.g);
-            CopyTypedVariant(dataType, buffer, idx + 3, value.r);
+            CopyTypedVariant(dataType, buffer, idx*4    , value.a);
+            CopyTypedVariant(dataType, buffer, idx*4 + 1, value.b);
+            CopyTypedVariant(dataType, buffer, idx*4 + 2, value.g);
+            CopyTypedVariant(dataType, buffer, idx*4 + 3, value.r);
             break;
         default:
             break;
@@ -396,35 +402,113 @@ static void WriteRGBAFormattedVariant(
     TransferRGBAFormattedVariantColor(dstFormat, dataType, dstBuffer, idx, value);
 }
 
+static void ReadDepthStencilValue(
+    ImageFormat srcFormat, DataType dataType, const VariantConstBuffer& srcBuffer, std::size_t idx, DepthStencilValue& value)
+{
+    if (srcFormat == ImageFormat::Depth && dataType == DataType::UInt16)
+    {
+        /* Read D16UNorm format: Decompress 16-bit float */
+        value.depth = DecompressFloat16(srcBuffer.uint16[idx]);
+    }
+    else if (srcFormat == ImageFormat::DepthStencil && dataType == DataType::UInt32)
+    {
+        /* Read D24UNormS8UInt format: Decompress 24-bit float and 8-bit unsigned integer */
+        value.depth   = static_cast<float>(srcBuffer.uint32[idx] & 0xFFFFFF) / static_cast<float>(0xFFFFFF);
+        value.stencil = srcBuffer.uint32[idx] >> 24;
+    }
+    else if (srcFormat == ImageFormat::Depth && dataType == DataType::Float32)
+    {
+        /* Read D32Float format: Copy 32-bit float */
+        value.depth = srcBuffer.real32[idx];
+    }
+    else if (srcFormat == ImageFormat::DepthStencil && dataType == DataType::Float32)
+    {
+        /* Read D32FloatS8X24UInt format: Copy 32-bit float and 8-bit unsigned integer */
+        value.depth   = srcBuffer.real32[idx*2];
+        value.stencil = srcBuffer.uint32[idx*2 + 1] >> 24;
+    }
+    else if (srcFormat == ImageFormat::Stencil && dataType == DataType::UInt8)
+    {
+        /* Read S8UInt format: Copy 8-bit unsigned integer */
+        value.stencil = srcBuffer.uint8[idx];
+    }
+}
+
+static void WriteDepthStencilValue(
+    ImageFormat dstFormat, DataType dataType, VariantBuffer& dstBuffer, std::size_t idx, const DepthStencilValue& value)
+{
+    if (dstFormat == ImageFormat::Depth && dataType == DataType::UInt16)
+    {
+        /* Write D16UNorm format: Compress 16-bit float */
+        dstBuffer.uint16[idx] = CompressFloat16(value.depth);
+    }
+    else if (dstFormat == ImageFormat::DepthStencil && dataType == DataType::UInt32)
+    {
+        /* Write D24UNormS8UInt format: Decompress 24-bit float and 8-bit unsigned integer */
+        const std::uint32_t depth24 = static_cast<std::uint32_t>(value.depth * static_cast<float>(0xFFFFFF));
+        dstBuffer.uint32[idx] = ((value.stencil & 0xFF)) << 24 | (depth24 & 0xFFFFFF);
+    }
+    else if (dstFormat == ImageFormat::Depth && dataType == DataType::Float32)
+    {
+        /* Write D32Float format: Copy 32-bit float */
+        dstBuffer.real32[idx] = value.depth;
+    }
+    else if (dstFormat == ImageFormat::DepthStencil && dataType == DataType::Float32)
+    {
+        /* Read D32FloatS8X24UInt format: Copy 32-bit float and 8-bit unsigned integer */
+        dstBuffer.real32[idx*2]     = value.depth;
+        dstBuffer.uint32[idx*2 + 1] = (value.stencil & 0xFF) << 24;
+    }
+    else if (dstFormat == ImageFormat::Stencil && dataType == DataType::UInt8)
+    {
+        /* Write S8UInt format: Copy 8-bit unsigned integer */
+        dstBuffer.uint8[idx] = value.stencil & 0xFF;
+    }
+}
+
 // Worker thread procedure for the "ConvertImageBufferFormat" function
 static void ConvertImageBufferFormatWorker(
     ImageFormat         srcFormat,
     DataType            srcDataType,
     VariantConstBuffer  srcBuffer,
     ImageFormat         dstFormat,
+    DataType            dstDataType,
     VariantBuffer       dstBuffer,
     std::size_t         begin,
     std::size_t         end)
 {
-    /* Get size for source and destination formats */
-    auto srcFormatSize = ImageFormatSize(srcFormat);
-    auto dstFormatSize = ImageFormatSize(dstFormat);
-
-    /* Initialize default variant color (0, 0, 0, 1) */
-    VariantColor value{ UninitializeTag{} };
-
-    SetVariantMinMax(srcDataType, value.r, true);
-    SetVariantMinMax(srcDataType, value.g, true);
-    SetVariantMinMax(srcDataType, value.b, true);
-    SetVariantMinMax(srcDataType, value.a, false);
-
-    for_subrange(i, begin, end)
+    if (IsDepthOrStencilFormat(srcFormat))
     {
-        /* Read RGBA variant from source buffer */
-        ReadRGBAFormattedVariant(srcFormat, srcDataType, srcBuffer, i*srcFormatSize, value);
+        /* Initialize default depth-stencil value (0, 0) */
+        DepthStencilValue depthStencilValue{ 0.0f, 0u };
 
-        /* Write RGBA variant to destination buffer */
-        WriteRGBAFormattedVariant(dstFormat, srcDataType, dstBuffer, i*dstFormatSize, value);
+        for_subrange(i, begin, end)
+        {
+            /* Read depth-stencil value from source buffer */
+            ReadDepthStencilValue(srcFormat, srcDataType, srcBuffer, i, depthStencilValue);
+
+            /* Write depth-stencil value to destination buffer */
+            WriteDepthStencilValue(dstFormat, dstDataType, dstBuffer, i, depthStencilValue);
+        }
+    }
+    else
+    {
+        /* Initialize default variant color (0, 0, 0, 1) */
+        VariantColor colorValue{ UninitializeTag{} };
+
+        SetVariantMinMax(srcDataType, colorValue.r, true);
+        SetVariantMinMax(srcDataType, colorValue.g, true);
+        SetVariantMinMax(srcDataType, colorValue.b, true);
+        SetVariantMinMax(srcDataType, colorValue.a, false);
+
+        for_subrange(i, begin, end)
+        {
+            /* Read RGBA variant from source buffer */
+            ReadRGBAFormattedVariant(srcFormat, srcDataType, srcBuffer, i, colorValue);
+
+            /* Write RGBA variant to destination buffer */
+            WriteRGBAFormattedVariant(dstFormat, dstDataType, dstBuffer, i, colorValue);
+        }
     }
 }
 
@@ -433,20 +517,12 @@ static void ConvertImageBufferFormat(
     const DstImageDescriptor&   dstImageDesc,
     unsigned                    threadCount)
 {
-    /* Get image parameters */
-    auto dataTypeSize   = DataTypeSize(srcImageDesc.dataType);
-    auto srcFormatSize  = ImageFormatSize(srcImageDesc.format);
-    auto dstFormatSize  = ImageFormatSize(dstImageDesc.format);
-
     /* Validate destination buffer size */
-    auto imageSize              = srcImageDesc.dataSize / srcFormatSize;
-    auto requiredDstBufferSize  = imageSize * dstFormatSize;
+    const std::size_t imageSize             = srcImageDesc.dataSize / GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, 1);
+    const std::size_t requiredDstBufferSize = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, imageSize);
 
     if (dstImageDesc.dataSize != requiredDstBufferSize)
-        throw std::invalid_argument("cannot convert image format with destination buffer size mismatch");
-
-    /* Allocate destination buffer */
-    imageSize /= dataTypeSize;
+        LLGL_TRAP("cannot convert image format with destination buffer size mismatch");
 
     /* Get variant buffer for source and destination images */
     DoConcurrentRange(
@@ -456,6 +532,7 @@ static void ConvertImageBufferFormat(
             srcImageDesc.dataType,
             srcImageDesc.data,
             dstImageDesc.format,
+            dstImageDesc.dataType,
             dstImageDesc.data,
             std::placeholders::_1,
             std::placeholders::_2
@@ -468,15 +545,17 @@ static void ConvertImageBufferFormat(
 static void ValidateSourceImageDesc(const SrcImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    if (imageDesc.dataSize % GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1) != 0)
-        throw std::invalid_argument("source image data size is not a multiple of the source data type size");
+    const std::uint32_t dataTypeSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1);
+    LLGL_ASSERT(dataTypeSize > 0, "source image data type size must be greater than zero");
+    LLGL_ASSERT(imageDesc.dataSize % dataTypeSize == 0, "source image data size is not a multiple of the source data type size");
 }
 
 static void ValidateDestinationImageDesc(const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    if (imageDesc.dataSize % GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1) != 0)
-        throw std::invalid_argument("destination image data size is not a multiple of the destination data type size");
+    const std::uint32_t dataTypeSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1);
+    LLGL_ASSERT(dataTypeSize > 0, "destination image data type size must be greater than zero");
+    LLGL_ASSERT(imageDesc.dataSize % dataTypeSize == 0, "destination image data size is not a multiple of the source data type size");
 }
 
 static void ValidateImageConversionParams(
@@ -485,9 +564,9 @@ static void ValidateImageConversionParams(
     DataType                    dstDataType)
 {
     if (IsCompressedFormat(srcImageDesc.format) || IsCompressedFormat(dstFormat))
-        throw std::invalid_argument("cannot convert compressed image formats");
-    if (IsDepthOrStencilFormat(srcImageDesc.format) || IsDepthOrStencilFormat(dstFormat))
-        throw std::invalid_argument("cannot convert depth-stencil image formats");
+        LLGL_TRAP("cannot convert compressed image formats");
+    if (IsDepthOrStencilFormat(srcImageDesc.format) != IsDepthOrStencilFormat(dstFormat))
+        LLGL_TRAP("cannot convert between depth-stencil and non-depth-stencil image formats");
 }
 
 
@@ -498,6 +577,9 @@ LLGL_EXPORT bool ConvertImageBuffer(
     const DstImageDescriptor&   dstImageDesc,
     unsigned                    threadCount)
 {
+    if (srcImageDesc.format == dstImageDesc.format && srcImageDesc.dataType == dstImageDesc.dataType)
+        return false;
+
     /* Validate input parameters */
     ValidateSourceImageDesc(srcImageDesc);
     ValidateDestinationImageDesc(dstImageDesc);
@@ -506,11 +588,16 @@ LLGL_EXPORT bool ConvertImageBuffer(
     if (threadCount >= Constants::maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
 
-    if (srcImageDesc.dataType != dstImageDesc.dataType && srcImageDesc.format != dstImageDesc.format)
+    if (IsDepthOrStencilFormat(srcImageDesc.format))
+    {
+        /* Convert depth-stencil image format */
+        ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
+    }
+    else if (srcImageDesc.dataType != dstImageDesc.dataType && srcImageDesc.format != dstImageDesc.format)
     {
         /* Convert image data type with intermediate buffer */
-        auto intermediateBufferSize = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstImageDesc.dataType);
-        auto intermediateBuffer     = MakeUniqueArray<char>(intermediateBufferSize);
+        const std::size_t   intermediateBufferSize  = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstImageDesc.dataType);
+        ByteBuffer          intermediateBuffer      = AllocateByteBuffer(intermediateBufferSize, UninitializeTag{});
 
         ConvertImageBufferDataType(
             srcImageDesc.dataType,
@@ -566,6 +653,9 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     DataType                    dstDataType,
     unsigned                    threadCount)
 {
+    if (srcImageDesc.format == dstFormat && srcImageDesc.dataType == dstDataType)
+        return nullptr;
+
     /* Validate input parameters */
     ValidateSourceImageDesc(srcImageDesc);
     ValidateImageConversionParams(srcImageDesc, dstFormat, dstDataType);
@@ -574,79 +664,60 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
         threadCount = std::thread::hardware_concurrency();
 
     /* Initialize destination image descriptor */
-    auto srcNumPixels = srcImageDesc.dataSize / (DataTypeSize(srcImageDesc.dataType) * ImageFormatSize(srcImageDesc.format));
+    const std::uint32_t srcNumPixels = static_cast<std::uint32_t>(srcImageDesc.dataSize / GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, 1));
+    const std::uint32_t dstImageSize = GetMemoryFootprint(dstFormat, dstDataType, srcNumPixels);
 
-    DstImageDescriptor dstImageDesc
+    ByteBuffer dstImage = AllocateByteBuffer(dstImageSize, UninitializeTag{});
+
+    const DstImageDescriptor dstImageDesc{ dstFormat, dstDataType, dstImage.get(), dstImageSize };
+
+    if (IsDepthOrStencilFormat(srcImageDesc.format))
     {
-        dstFormat,
-        dstDataType,
-        nullptr,
-        srcNumPixels * DataTypeSize(dstDataType) * ImageFormatSize(dstFormat)
-    };
-
-    if (srcImageDesc.dataType != dstDataType && srcImageDesc.format != dstFormat)
+        /* Convert depth-stencil image format */
+        ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
+    }
+    else if (srcImageDesc.dataType != dstDataType && srcImageDesc.format != dstFormat)
     {
-        auto dstImage = MakeUniqueArray<char>(dstImageDesc.dataSize);
-        {
-            /* Convert image data type with intermediate buffer */
-            auto intermediateBufferSize = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
-            auto intermediateBuffer     = MakeUniqueArray<char>(intermediateBufferSize);
+        /* Convert image data type with intermediate buffer */
+        const std::size_t   intermediateBufferSize  = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
+        ByteBuffer          intermediateBuffer      = AllocateByteBuffer(intermediateBufferSize, UninitializeTag{});
 
-            ConvertImageBufferDataType(
-                srcImageDesc.dataType,
-                srcImageDesc.data,
-                srcImageDesc.dataSize,
-                dstDataType,
-                intermediateBuffer.get(),
-                intermediateBufferSize,
-                threadCount
-            );
+        ConvertImageBufferDataType(
+            srcImageDesc.dataType,
+            srcImageDesc.data,
+            srcImageDesc.dataSize,
+            dstDataType,
+            intermediateBuffer.get(),
+            intermediateBufferSize,
+            threadCount
+        );
 
-            /* Set new source buffer and source data type */
-            const SrcImageDescriptor intermediateImageDesc
-            {
-                srcImageDesc.format,
-                dstDataType,
-                intermediateBuffer.get(),
-                intermediateBufferSize
-            };
+        /* Set new source buffer and source data type */
+        const SrcImageDescriptor intermediateImageDesc{ srcImageDesc.format, dstDataType, intermediateBuffer.get(), intermediateBufferSize };
 
-            /* Convert image format */
-            dstImageDesc.data = dstImage.get();
-            ConvertImageBufferFormat(intermediateImageDesc, dstImageDesc, threadCount);
-        }
-        return dstImage;
+        /* Convert image format */
+        ConvertImageBufferFormat(intermediateImageDesc, dstImageDesc, threadCount);
     }
     else if (srcImageDesc.dataType != dstDataType)
     {
         /* Convert image data type */
-        auto dstImage = MakeUniqueArray<char>(dstImageDesc.dataSize);
-        {
-            dstImageDesc.data = dstImage.get();
-            ConvertImageBufferDataType(
-                srcImageDesc.dataType,
-                srcImageDesc.data,
-                srcImageDesc.dataSize,
-                dstDataType,
-                dstImageDesc.data,
-                dstImageDesc.dataSize,
-                threadCount
-            );
-        }
-        return dstImage;
+        ConvertImageBufferDataType(
+            srcImageDesc.dataType,
+            srcImageDesc.data,
+            srcImageDesc.dataSize,
+            dstDataType,
+            dstImageDesc.data,
+            dstImageDesc.dataSize,
+            threadCount
+        );
     }
     else if (srcImageDesc.format != dstFormat)
     {
         /* Convert image format */
-        auto dstImage = MakeUniqueArray<char>(dstImageDesc.dataSize);
-        {
-            dstImageDesc.data = dstImage.get();
-            ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
-        }
-        return dstImage;
+        ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
     }
 
-    return nullptr;
+    return dstImage;
 }
 
 LLGL_EXPORT ByteBuffer DecompressImageBufferToRGBA8UNorm(
@@ -710,7 +781,7 @@ LLGL_EXPORT void CopyImageBufferRegion(
     ValidateDestinationImageDesc(dstImageDesc);
 
     if (srcImageDesc.format != dstImageDesc.format || srcImageDesc.dataType != dstImageDesc.dataType)
-        throw std::invalid_argument("cannot copy image buffer region with source and destination images having different format or data type");
+        LLGL_TRAP("cannot copy image buffer region with source and destination images having different format or data type");
 
     const auto bpp = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, 1);
 
@@ -719,14 +790,14 @@ LLGL_EXPORT void CopyImageBufferRegion(
     const auto dstPosEnd    = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstLayerStride, bpp);
 
     if (dstPosEnd > dstImageDesc.dataSize)
-        throw std::out_of_range("destination image buffer region out of range");
+        LLGL_TRAP("destination image buffer region out of range");
 
     /* Validate source image boundaries */
     const auto srcPos       = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcLayerStride, bpp);
     const auto srcPosEnd    = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcLayerStride, bpp);
 
     if (srcPosEnd > srcImageDesc.dataSize)
-        throw std::out_of_range("source image buffer region out of range");
+        LLGL_TRAP("source image buffer region out of range");
 
     /* Copy image buffer region */
     BitBlit(
@@ -765,8 +836,8 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     WriteRGBAFormattedVariant(format, dataType, fillBuffer1, 0, fillColor1);
 
     /* Allocate image buffer */
-    const auto bytesPerPixel = DataTypeSize(dataType) * ImageFormatSize(format);
-    auto imageBuffer = MakeUniqueArray<char>(bytesPerPixel * imageSize);
+    const std::size_t   bytesPerPixel   = GetMemoryFootprint(format, dataType, 1);
+    ByteBuffer          imageBuffer     = MakeUniqueArray<char>(bytesPerPixel * imageSize);
 
     /* Initialize image buffer with fill color */
     DoConcurrentRange(

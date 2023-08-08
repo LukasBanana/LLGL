@@ -145,6 +145,7 @@ typedef enum LLGLImageFormat
     /* Depth-stencil formats */
     LLGLImageFormatDepth,
     LLGLImageFormatDepthStencil,
+    LLGLImageFormatStencil,
 
     /* Compressed formats */
     LLGLImageFormatBC1,

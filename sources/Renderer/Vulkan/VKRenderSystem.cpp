@@ -279,7 +279,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             Validate that source image data was large enough so conversion is valid,
             then use temporary image buffer as source for initial data
             */
-            const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType);
+            const auto srcImageDataSize = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, imageSize);
             RenderSystem::AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(srcImageDataSize));
             initialData = intermediateData.get();
         }
@@ -402,7 +402,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         Validate that source image data was large enough so conversion is valid,
         then use temporary image buffer as source for initial data
         */
-        const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc.format) * DataTypeSize(imageDesc.dataType);
+        const auto srcImageDataSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, imageSize);
         RenderSystem::AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(srcImageDataSize));
         imageData = intermediateData.get();
     }
@@ -458,6 +458,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent);
     const TextureSubresource&   subresource     = textureRegion.subresource;
     const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
+    const FormatAttributes&     formatAttribs   = GetFormatAttribs(format);
 
     VkImage                     image           = textureVK.GetVkImage();
     const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth * subresource.numArrayLayers;
@@ -495,7 +496,8 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
         if (void* memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
         {
             /* Copy data to buffer object */
-            RenderSystem::CopyTextureImageData(imageDesc, imageSize, extent.width, format, memory);
+            const SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, memory, static_cast<std::size_t>(imageDataSize) };
+            RenderSystem::CopyTextureImageData(imageDesc, srcImageDesc, imageSize, extent.width);
             deviceMemory->Unmap(device_);
         }
     }

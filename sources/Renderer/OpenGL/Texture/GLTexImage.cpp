@@ -11,6 +11,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include <LLGL/Utils/ColorRGBA.h>
+#include <LLGL/Utils/ForRange.h>
 #include <array>
 #include <algorithm>
 
@@ -148,10 +149,10 @@ static void GLTexImage1DBase(
         /* Allocate mutable texture storage of MIP levels (emulate <glTexStorage1D>) */
         if (mipLevels > 1)
         {
-            for (std::uint32_t i = 1; i < mipLevels; ++i)
+            for_subrange(mipLevel, 1, mipLevels)
             {
                 sx = std::max(1u, sx / 2u);
-                glTexImage1D(target, static_cast<GLint>(i), internalFormat, sx, 0, format, type, nullptr);
+                glTexImage1D(target, static_cast<GLint>(mipLevel), internalFormat, sx, 0, format, type, nullptr);
             }
         }
     }
@@ -208,20 +209,20 @@ static void GLTexImage2DBase(
             #ifdef LLGL_OPENGL
             if (target == GL_TEXTURE_1D_ARRAY || target == GL_PROXY_TEXTURE_1D_ARRAY)
             {
-                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                for_subrange(mipLevel, 1, mipLevels)
                 {
                     sx = std::max(1u, sx / 2u);
-                    glTexImage2D(target, static_cast<GLint>(i), internalFormat, sx, sy, 0, format, type, nullptr);
+                    glTexImage2D(target, static_cast<GLint>(mipLevel), internalFormat, sx, sy, 0, format, type, nullptr);
                 }
             }
             else
             #endif
             {
-                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                for_subrange(mipLevel, 1, mipLevels)
                 {
                     sx = std::max(1u, sx / 2u);
                     sy = std::max(1u, sy / 2u);
-                    glTexImage2D(target, static_cast<GLint>(i), internalFormat, sx, sy, 0, format, type, nullptr);
+                    glTexImage2D(target, static_cast<GLint>(mipLevel), internalFormat, sx, sy, 0, format, type, nullptr);
                 }
             }
         }
@@ -275,21 +276,21 @@ static void GLTexImage3DBase(
         {
             if (target == GL_TEXTURE_3D || target == GL_PROXY_TEXTURE_3D)
             {
-                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                for_subrange(mipLevel, 1, mipLevels)
                 {
                     sx = std::max(1u, sx / 2u);
                     sy = std::max(1u, sy / 2u);
                     sz = std::max(1u, sz / 2u);
-                    glTexImage3D(target, static_cast<GLint>(i), internalFormat, sx, sy, sz, 0, format, type, nullptr);
+                    glTexImage3D(target, static_cast<GLint>(mipLevel), internalFormat, sx, sy, sz, 0, format, type, nullptr);
                 }
             }
             else
             {
-                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                for_subrange(mipLevel, 1, mipLevels)
                 {
                     sx = std::max(1u, sx / 2u);
                     sy = std::max(1u, sy / 2u);
-                    glTexImage3D(target, static_cast<GLint>(i), internalFormat, sx, sy, sz, 0, format, type, nullptr);
+                    glTexImage3D(target, static_cast<GLint>(mipLevel), internalFormat, sx, sy, sz, 0, format, type, nullptr);
                 }
             }
         }
@@ -703,16 +704,16 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
-        auto imageFace          = reinterpret_cast<const char*>(imageDesc->data);
-        auto imageFaceStride    = (desc.extent.width * desc.extent.height * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
+        const char*     imageFace       = reinterpret_cast<const char*>(imageDesc->data);
+        std::uint32_t   imageFaceStride = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, desc.extent.width * desc.extent.height);
 
         if (IsCompressedFormat(desc.format))
             imageFaceStride = static_cast<std::uint32_t>(imageDesc->dataSize);
 
-        auto dataFormatGL       = GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format));
-        auto dataTypeGL         = GLTypes::Map(imageDesc->dataType);
+        GLenum dataFormatGL       = GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format));
+        GLenum dataTypeGL         = GLTypes::Map(imageDesc->dataType);
 
-        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        for_range(arrayLayer, desc.arrayLayers)
         {
             GLTexImageCube(
                 numMipLevels,
@@ -743,7 +744,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
         }
 
         /* Allocate depth texture image without initial data */
-        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        for_range(arrayLayer, desc.arrayLayers)
         {
             GLTexImageCube(
                 numMipLevels,
@@ -772,7 +773,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
         }
 
         /* Allocate depth texture image without initial data */
-        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        for_range(arrayLayer, desc.arrayLayers)
         {
             GLTexImageCube(
                 numMipLevels,
@@ -790,7 +791,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
     {
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height, desc.clearValue.color);
-        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        for_range(arrayLayer, desc.arrayLayers)
         {
             GLTexImageCube(
                 numMipLevels,
@@ -807,7 +808,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
     else
     {
         /* Allocate texture without initial data */
-        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
+        for_range(arrayLayer, desc.arrayLayers)
         {
             GLTexImageCube(
                 numMipLevels,

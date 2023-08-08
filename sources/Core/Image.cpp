@@ -280,7 +280,7 @@ void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRe
 
 static std::size_t GetRequiredImageDataSize(const Extent3D& extent, const ImageFormat format, const DataType dataType)
 {
-    return static_cast<std::size_t>(ImageFormatSize(format) * DataTypeSize(dataType) * extent.width * extent.height * extent.depth);
+    return GetMemoryFootprint(format, dataType, extent.width * extent.height * extent.depth);
 }
 
 static void ValidateImageDataSize(const Extent3D& extent, const DstImageDescriptor& imageDesc)
@@ -428,7 +428,7 @@ DstImageDescriptor Image::GetDstDesc()
 
 std::uint32_t Image::GetBytesPerPixel() const
 {
-    return (ImageFormatSize(format_) * DataTypeSize(dataType_));
+    return GetMemoryFootprint(format_, dataType_, 1);
 }
 
 std::uint32_t Image::GetRowStride() const

@@ -71,9 +71,9 @@ ByteBuffer DecompressBC1ToRGBA8UNorm(
     if (extent.width % 4 != 0 || extent.height % 4 != 0 || data == nullptr || dataSize < extent.width * extent.height / 2)
         return nullptr;
 
-    auto imageBuffer = AllocateByteBuffer(extent.width * extent.height * 4, UninitializeTag{});
+    ByteBuffer dstImage = AllocateByteBuffer(extent.width * extent.height * 4, UninitializeTag{});
 
-    auto output = reinterpret_cast<std::uint8_t*>(imageBuffer.get());
+    std::uint8_t* output = reinterpret_cast<std::uint8_t*>(dstImage.get());
     std::uint16_t compressedColor[2];
     std::uint8_t decompressedColor[4][3];
 
@@ -116,7 +116,7 @@ ByteBuffer DecompressBC1ToRGBA8UNorm(
         }
     }
 
-    return imageBuffer;
+    return dstImage;
 }
 
 

@@ -288,6 +288,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     /* Map subresource for reading */
     DstImageDescriptor      dstImageDesc        = imageDesc;
     const Format            format              = textureD3D.GetFormat();
+    const FormatAttributes& formatAttribs       = GetFormatAttribs(format);
     const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
     const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
     const SubresourceLayout layoutPerLayer      = CalcSubresourceLayout(format, textureRegion.extent);
@@ -301,7 +302,8 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
         /* Copy host visible resource to CPU accessible resource */
-        RenderSystem::CopyTextureImageData(dstImageDesc, numTexelsPerLayer, extent.width, format, mappedSubresource.pData, mappedSubresource.RowPitch);
+        const SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, mappedSubresource.pData, mappedSubresource.DepthPitch };
+        RenderSystem::CopyTextureImageData(dstImageDesc, srcImageDesc, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
 
         /* Unmap resource */
         context_->Unmap(texCopy.resource.Get(), subresource);

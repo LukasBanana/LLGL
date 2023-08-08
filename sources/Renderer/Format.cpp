@@ -151,7 +151,7 @@ static const FormatAttributes g_formatAttribs[] =
     /* --- Depth-stencil formats --- */
 //   bits  w  h  c  format                     dataType
     {  16, 1, 1, 1, ImageFormat::Depth,        DataType::UInt16,    Mips | RTV | Dim1D_2D | DimCube | UNorm  | Depth           }, // D16UNorm
-    {  32, 1, 1, 2, ImageFormat::DepthStencil, DataType::UInt16,    Mips | RTV | Dim1D_2D | DimCube | UNorm  | Depth | Stencil }, // D24UNormS8UInt
+    {  32, 1, 1, 2, ImageFormat::DepthStencil, DataType::UInt32,    Mips | RTV | Dim1D_2D | DimCube | UNorm  | Depth | Stencil }, // D24UNormS8UInt
     {  32, 1, 1, 1, ImageFormat::Depth,        DataType::Float32,   Mips | RTV | Dim1D_2D | DimCube | SFloat | Depth           }, // D32Float
     {  64, 1, 1, 2, ImageFormat::DepthStencil, DataType::Float32,   Mips | RTV | Dim1D_2D | DimCube | SFloat | Depth | Stencil }, // D32FloatS8X24UInt
   //{   8, 1, 1, 1, ImageFormat::Stencil,      DataType::UInt8,     Mips | RTV | Dim1D_2D | DimCube | UInt   | Stencil         }, // S8UInt
@@ -208,6 +208,7 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
         case ImageFormat::ABGR:         return 4;
         case ImageFormat::Depth:        return 1;
         case ImageFormat::DepthStencil: return 2;
+        case ImageFormat::Stencil:      return 1;
         case ImageFormat::BC1:          return 0; // no conversion supported yet
         case ImageFormat::BC2:          return 0; // no conversion supported yet
         case ImageFormat::BC3:          return 0; // no conversion supported yet
@@ -220,6 +221,13 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
 // Returns the number of bytes per pixel for the specified imagea format and data type
 static std::uint32_t GetBytesPerPixel(const ImageFormat imageFormat, const DataType dataType)
 {
+    if (imageFormat == ImageFormat::DepthStencil)
+    {
+        if (dataType == DataType::UInt32)
+            return 4; // 24-bit for depth, 8-bit for stencil
+        else if (dataType == DataType::Float32)
+            return 8; // 32-bit for depth, 32-bit for stencil
+    }
     return (ImageFormatSize(imageFormat) * DataTypeSize(dataType));
 }
 
@@ -246,7 +254,7 @@ LLGL_EXPORT bool IsDepthOrStencilFormat(const Format format)
 
 LLGL_EXPORT bool IsDepthOrStencilFormat(const ImageFormat imageFormat)
 {
-    return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil);
+    return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil || imageFormat == ImageFormat::Stencil);
 }
 
 LLGL_EXPORT bool IsDepthAndStencilFormat(const Format format)

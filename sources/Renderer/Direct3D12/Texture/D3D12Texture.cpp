@@ -350,8 +350,9 @@ static void GetMemoryFootprintWithAlignment(
     UINT&           layerStride,
     UINT64&         outBufferSize)
 {
-    const auto& formatAttribs = GetFormatAttribs(format);
-    auto rowSize    = extent.width * formatAttribs.bitSize / (8 * formatAttribs.blockWidth);
+    const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
+    const UINT              rowSize         = extent.width * formatAttribs.bitSize / (8u * formatAttribs.blockWidth);
+
     layerSize       = rowSize * (extent.height / formatAttribs.blockHeight);
     rowStride       = GetAlignedSize<UINT>(rowSize, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
     layerStride     = GetAlignedSize<UINT>(rowStride * (extent.height / formatAttribs.blockHeight), D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
@@ -361,14 +362,21 @@ static void GetMemoryFootprintWithAlignment(
 void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     D3D12SubresourceContext&    context,
     const TextureRegion&        region,
+    UINT                        plane,
     UINT&                       outRowStride,
     UINT&                       outLayerSize,
     UINT&                       outLayerStride)
 {
+    auto GetFormatForSubresourceCopy = [](Format format, UINT plane) -> Format
+    {
+        /* D3D12_PLACED_SUBRESOURCE_FOOTPRINT::Format must be DXGI_FORMAT_R32_TYPELESS for depth and DXGI_FORMAT_R8_TYPELESS for stencil */
+        return (IsDepthOrStencilFormat(format) ? (plane == 0 ? Format::R32Float : Format::R8UInt) : format);
+    };
+
     /* Determine required buffer size for texture subresource */
     const Offset3D  offset = CalcTextureOffset(GetType(), region.offset, 0);
     const Extent3D  extent = CalcTextureExtent(GetType(), region.extent, 1);
-    const Format    format = GetFormat();
+    const Format    format = GetFormatForSubresourceCopy(GetFormat(), plane);
 
     UINT64 dstBufferSize = 0;
     GetMemoryFootprintWithAlignment(
@@ -388,7 +396,7 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     D3D12_PLACED_SUBRESOURCE_FOOTPRINT dstBufferFootprint;
     {
         dstBufferFootprint.Offset               = 0;
-        dstBufferFootprint.Footprint.Format     = GetDXFormat();
+        dstBufferFootprint.Footprint.Format     = DXTypes::ToDXGIFormatTypeless(DXTypes::ToDXGIFormat(format));
         dstBufferFootprint.Footprint.Width      = extent.width;
         dstBufferFootprint.Footprint.Height     = extent.height;
         dstBufferFootprint.Footprint.Depth      = extent.depth;
@@ -401,7 +409,7 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
     {
         for_range(arrayLayer, region.subresource.numArrayLayers)
         {
-            const UINT srcSubresource = CalcSubresource(region.subresource.baseMipLevel, region.subresource.baseArrayLayer + arrayLayer);
+            const UINT srcSubresource = CalcSubresource(region.subresource.baseMipLevel, region.subresource.baseArrayLayer + arrayLayer, plane);
             context.GetCommandList()->CopyTextureRegion(
                 &CD3DX12_TEXTURE_COPY_LOCATION(dstBuffer, dstBufferFootprint),
                 0, 0, 0,
@@ -594,9 +602,9 @@ void D3D12Texture::CreateUnorderedAccessViewPrimary(
     device->CreateUnorderedAccessView(resource_.native.Get(), nullptr, &uavDesc, cpuDescHandle);
 }
 
-UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer) const
+UINT D3D12Texture::CalcSubresource(UINT mipLevel, UINT arrayLayer, UINT plane) const
 {
-    return D3D12CalcSubresource(mipLevel, arrayLayer, /*planeSlice:*/ 0, numMipLevels_, numArrayLayers_);
+    return D3D12CalcSubresource(mipLevel, arrayLayer, plane, numMipLevels_, numArrayLayers_);
 }
 
 UINT D3D12Texture::CalcSubresource(const TextureLocation& location) const

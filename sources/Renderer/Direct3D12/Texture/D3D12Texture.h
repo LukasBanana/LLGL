@@ -55,6 +55,7 @@ class D3D12Texture final : public Texture
         void CreateSubresourceCopyAsReadbackBuffer(
             D3D12SubresourceContext&    context,
             const TextureRegion&        region,
+            UINT                        plane,
             UINT&                       outRowStride,
             UINT&                       outLayerSize,
             UINT&                       outLayerStride
@@ -69,7 +70,7 @@ class D3D12Texture final : public Texture
         void CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const TextureViewDescriptor& desc);
 
         // Returns the subresource index for the specified MIP-map level and array layer.
-        UINT CalcSubresource(UINT mipLevel, UINT arrayLayer) const;
+        UINT CalcSubresource(UINT mipLevel, UINT arrayLayer, UINT plane = 0) const;
 
         // Returns the subresource index for the specified texture location with respect to the type of this texture (i.e. whether or not array layers are included).
         UINT CalcSubresource(const TextureLocation& location) const;

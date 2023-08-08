@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-void BitBlit(
+LLGL_EXPORT void BitBlit(
     const Extent3D& extent,
     std::uint32_t   bpp,
     char*           dst,

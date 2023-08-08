@@ -218,35 +218,53 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
 
+    /* Determine what plane to read from */
+    const bool isStencilOnlyFormat  = (imageDesc.format == ImageFormat::Stencil);
+    const bool isDepthOnlyFormat    = (imageDesc.format == ImageFormat::Depth);
+    const UINT texturePlane         = (isStencilOnlyFormat ? 1 : 0);
+
     /* Create CPU accessible readback buffer for texture and execute command list */
     ComPtr<ID3D12Resource> readbackBuffer;
     UINT rowStride = 0, layerSize = 0, layerStride = 0;
     {
         D3D12SubresourceContext subresourceContext{ *commandContext_ };
-        textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, rowStride, layerSize, layerStride);
+        textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, texturePlane, rowStride, layerSize, layerStride);
         readbackBuffer = subresourceContext.TakeResource();
     }
 
     /* Map readback buffer to CPU memory space */
-    DstImageDescriptor  dstImageDesc        = imageDesc;
-    const Format        format              = textureD3D.GetFormat();
-    const Extent3D      extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
-    const std::uint32_t numTexelsPerLayer   = extent.width * extent.height * extent.depth;
+    DstImageDescriptor      dstImageDesc        = imageDesc;
+    const Format            format              = textureD3D.GetFormat();
+    const FormatAttributes& formatAttribs       = GetFormatAttribs(format);
+    const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
+    const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
 
     void* mappedData = nullptr;
-    auto hr = readbackBuffer->Map(0, nullptr, &mappedData);
+    HRESULT hr = readbackBuffer->Map(0, nullptr, &mappedData);
     DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
 
     const char* srcData = reinterpret_cast<const char*>(mappedData);
+    SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, srcData, layerStride };
+
+    if (isStencilOnlyFormat)
+    {
+        srcImageDesc.format     = ImageFormat::Stencil;
+        srcImageDesc.dataType   = DataType::UInt8;
+    }
+    else if (isDepthOnlyFormat)
+    {
+        srcImageDesc.format     = ImageFormat::Depth;
+        srcImageDesc.dataType   = DataType::Float32;
+    }
 
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
         /* Copy CPU accessible buffer to output data */
-        RenderSystem::CopyTextureImageData(dstImageDesc, numTexelsPerLayer, extent.width, format, srcData, rowStride);
+        RenderSystem::CopyTextureImageData(dstImageDesc, srcImageDesc, numTexelsPerLayer, extent.width, rowStride);
 
         /* Move destination image pointer to next layer */
         dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + layerSize;
-        srcData += layerStride;
+        srcImageDesc.data = reinterpret_cast<const char*>(srcImageDesc.data) + layerStride;
     }
 
     /* Unmap buffer */

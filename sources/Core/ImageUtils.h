@@ -9,6 +9,7 @@
 #define LLGL_IMAGE_UTILS_H
 
 
+#include <LLGL/Export.h>
 #include <cstdint>
 
 
@@ -21,7 +22,7 @@ struct Extent3D;
 /* ----- Functions ----- */
 
 // Copies the specified extent from the source image to the destination image buffer.
-void BitBlit(
+LLGL_EXPORT void BitBlit(
     const Extent3D& extent,
     std::uint32_t   bpp,
     char*           dst,

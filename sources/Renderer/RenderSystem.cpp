@@ -420,8 +420,13 @@ void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t require
     );
 }
 
-static void CopyRowAlignedData(void* dstData, const void* srcData, std::size_t dstSize, std::size_t dstStride, std::size_t srcStride)
+static void CopyRowAlignedData(void* dstData, std::size_t dstSize, std::size_t dstStride, const void* srcData, std::size_t srcStride)
 {
+    LLGL_ASSERT_PTR(dstData);
+    LLGL_ASSERT_PTR(srcData);
+    LLGL_ASSERT(dstStride > 0);
+    LLGL_ASSERT(dstStride <= srcStride, "dstStride (%u) is not less than or equal to srcStride (%u)", dstStride, srcStride);
+
     auto dst = reinterpret_cast<char*>(dstData);
     auto src = reinterpret_cast<const char*>(srcData);
 
@@ -431,45 +436,37 @@ static void CopyRowAlignedData(void* dstData, const void* srcData, std::size_t d
 
 void RenderSystem::CopyTextureImageData(
     const DstImageDescriptor&   dstImageDesc,
+    const SrcImageDescriptor&   srcImageDesc,
     std::uint32_t               numTexels,
     std::uint32_t               numTexelsInRow,
-    Format                      format,
-    const void*                 data,
-    std::size_t                 rowStride)
+    std::uint32_t               rowStride)
 {
     /* Check if image buffer must be converted */
-    const auto& srcTexFormat    = GetFormatAttribs(format);
-    const auto  srcFormatSize   = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
-    const auto  srcImageSize    = (numTexels * srcFormatSize);
-    const auto  dstStride       = (numTexelsInRow * srcFormatSize);
+    const std::uint32_t     unpaddedImageSize   = GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, numTexels);
+    const std::uint32_t     unpaddedStride      = GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, numTexelsInRow);
 
-    if (srcTexFormat.format != dstImageDesc.format || srcTexFormat.dataType != dstImageDesc.dataType)
+    if (srcImageDesc.format != dstImageDesc.format || srcImageDesc.dataType != dstImageDesc.dataType)
     {
         /* Check if padding must be removed */
+        const void* data = srcImageDesc.data;
+
         ByteBuffer unpaddedData;
-        if (rowStride != 0 && dstStride != rowStride)
+        if (rowStride != 0 && unpaddedStride != rowStride)
         {
-            unpaddedData = AllocateByteBuffer(srcImageSize, UninitializeTag{});
-            CopyRowAlignedData(unpaddedData.get(), data, srcImageSize, dstStride, rowStride);
+            unpaddedData = AllocateByteBuffer(unpaddedImageSize, UninitializeTag{});
+            CopyRowAlignedData(unpaddedData.get(), unpaddedImageSize, unpaddedStride, data, rowStride);
             data = unpaddedData.get();
         }
 
         /* Determine destination image size */
-        const auto dstFormatSize    = DataTypeSize(dstImageDesc.dataType) * ImageFormatSize(dstImageDesc.format);
-        const auto dstImageSize     = (numTexels * dstFormatSize);
+        const std::uint32_t dstImageSize = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, numTexels);
 
         /* Validate input size */
         RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);
 
         /* Convert mapped data into requested format */
         ByteBuffer formattedData = ConvertImageBuffer(
-            SrcImageDescriptor
-            {
-                srcTexFormat.format,
-                srcTexFormat.dataType,
-                data,
-                srcImageSize
-            },
+            SrcImageDescriptor{ srcImageDesc.format, srcImageDesc.dataType, data, unpaddedImageSize },
             dstImageDesc.format,
             dstImageDesc.dataType,
             Constants::maxThreadCount
@@ -481,13 +478,13 @@ void RenderSystem::CopyTextureImageData(
     else
     {
         /* Validate input size */
-        RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, srcImageSize);
+        RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, unpaddedImageSize);
 
         /* Copy mapped data directly into the output buffer */
-        if (rowStride != 0 && dstStride != rowStride)
-            CopyRowAlignedData(dstImageDesc.data, data, srcImageSize, dstStride, rowStride);
+        if (rowStride != 0 && unpaddedStride != rowStride)
+            CopyRowAlignedData(dstImageDesc.data, unpaddedImageSize, unpaddedStride, srcImageDesc.data, rowStride);
         else
-            ::memcpy(dstImageDesc.data, data, srcImageSize);
+            ::memcpy(dstImageDesc.data, srcImageDesc.data, unpaddedImageSize);
     }
 }
 

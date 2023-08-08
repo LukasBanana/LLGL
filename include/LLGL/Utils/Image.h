@@ -214,9 +214,8 @@ class LLGL_EXPORT Image
         /**
         \brief Returns the size (in bytes) for each pixel.
         \see GetFormat
-        \see ImageFormatSize
         \see GetDataType
-        \see DataTypeSize
+        \see GetMemoryFootprint
         */
         std::uint32_t GetBytesPerPixel() const;
 

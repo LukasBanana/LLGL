@@ -131,8 +131,7 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 \throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
 \throw std::invalid_argument If the destination buffer is a null pointer.
 \see Constants::maxThreadCount
-\see DataTypeSize
-\see ImageFormatSize
+\see GetMemoryFootprint
 */
 LLGL_EXPORT bool ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
@@ -157,8 +156,7 @@ This can be casted to the respective target data type (e.g. <code>unsigned char<
 \throw std::invalid_argument If the source buffer is a null pointer.
 \see Constants::maxThreadCount
 \see ByteBuffer
-\see DataTypeSize
-\see ImageFormatSize
+\see GetMemoryFootprint
 */
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
