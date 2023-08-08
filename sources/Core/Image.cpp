@@ -7,6 +7,8 @@
 
 #include <LLGL/Utils/Image.h>
 #include "ImageUtils.h"
+#include "Exception.h"
+#include "PrintfUtils.h"
 #include <algorithm>
 #include <string.h>
 
@@ -82,7 +84,7 @@ void Image::Convert(const ImageFormat format, const DataType dataType, unsigned 
     /* Convert image buffer (if necessary) */
     if (data_)
     {
-        if (auto convertedData = ConvertImageBuffer(GetSrcDesc(), format, dataType, threadCount))
+        if (ByteBuffer convertedData = ConvertImageBuffer(GetSrcDesc(), format, dataType, threadCount))
             data_ = std::move(convertedData);
     }
 
@@ -182,7 +184,7 @@ static bool ShiftNegative1DRegion(std::int32_t& dstOffset, std::uint32_t dstExte
 {
     if (dstOffset < 0)
     {
-        auto dstOffsetInv = static_cast<std::uint32_t>(-dstOffset);
+        const std::uint32_t dstOffsetInv = static_cast<std::uint32_t>(-dstOffset);
         if (dstOffsetInv < srcExtent)
         {
             /* Reduce source region extent, and clamp destination offset to zero */
@@ -199,7 +201,7 @@ static bool ShiftNegative1DRegion(std::int32_t& dstOffset, std::uint32_t dstExte
 
     if (static_cast<std::uint32_t>(dstOffset) + srcExtent > dstExtent)
     {
-        auto shift = static_cast<std::uint32_t>(dstOffset) + srcExtent - dstExtent;
+        const std::uint32_t shift = static_cast<std::uint32_t>(dstOffset) + srcExtent - dstExtent;
         if (shift < srcExtent)
         {
             /* Reduce source region extent */
@@ -217,11 +219,11 @@ static bool ShiftNegative1DRegion(std::int32_t& dstOffset, std::uint32_t dstExte
 
 static bool Overlap1DRegion(std::int32_t dstOffset, std::int32_t srcOffset, std::uint32_t extent)
 {
-    auto dstOffsetMin = static_cast<std::uint32_t>(dstOffset);
-    auto dstOffsetMax = dstOffsetMin + extent;
+    const std::uint32_t dstOffsetMin = static_cast<std::uint32_t>(dstOffset);
+    const std::uint32_t dstOffsetMax = dstOffsetMin + extent;
 
-    auto srcOffsetMin = static_cast<std::uint32_t>(srcOffset);
-    auto srcOffsetMax = srcOffsetMin + extent;
+    const std::uint32_t srcOffsetMin = static_cast<std::uint32_t>(srcOffset);
+    const std::uint32_t srcOffsetMax = srcOffsetMin + extent;
 
     return (dstOffsetMin <= srcOffsetMax && dstOffsetMax >= srcOffsetMin);
 }
@@ -260,8 +262,8 @@ void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRe
             }
 
             /* Copy image buffer region */
-            const auto srcExtent = srcImageRef->GetExtent();
-            const auto dstExtent = GetExtent();
+            const Extent3D srcExtent = srcImageRef->GetExtent();
+            const Extent3D dstExtent = GetExtent();
 
             CopyImageBufferRegion(
                 GetDstDesc(),
@@ -285,24 +287,24 @@ static std::size_t GetRequiredImageDataSize(const Extent3D& extent, const ImageF
 
 static void ValidateImageDataSize(const Extent3D& extent, const DstImageDescriptor& imageDesc)
 {
-    const auto requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
+    const std::uint64_t requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
     if (imageDesc.dataSize < requiredDataSize)
     {
-        throw std::invalid_argument(
-            "data size of destinaton image descriptor is too small (" + std::to_string(requiredDataSize) +
-            " is required, but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+        LLGL_TRAP(
+            "data size of destinaton image descriptor is too small: 0x%016" PRIX64 " is required, but only 0x%016" PRIX64 " was specified",
+            requiredDataSize, imageDesc.dataSize
         );
     }
 }
 
 static void ValidateImageDataSize(const Extent3D& extent, const SrcImageDescriptor& imageDesc)
 {
-    const auto requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
+    const std::size_t requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
     if (imageDesc.dataSize < requiredDataSize)
     {
-        throw std::invalid_argument(
-            "data size of source image descriptor is too small (" + std::to_string(requiredDataSize) +
-            " is required, but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+        LLGL_TRAP(
+            "data size of source image descriptor is too small: 0x%016" PRIX64 " is required, but only 0x%016" PRIX64 " was specified",
+            requiredDataSize, imageDesc.dataSize
         );
     }
 }
@@ -428,7 +430,7 @@ DstImageDescriptor Image::GetDstDesc()
 
 std::uint32_t Image::GetBytesPerPixel() const
 {
-    return GetMemoryFootprint(format_, dataType_, 1);
+    return static_cast<std::uint32_t>(GetMemoryFootprint(format_, dataType_, 1));
 }
 
 std::uint32_t Image::GetRowStride() const
@@ -480,12 +482,12 @@ void Image::ResetAttributes()
 
 std::size_t Image::GetDataPtrOffset(const Offset3D& offset) const
 {
-    const auto bpp  = static_cast<std::size_t>(GetBytesPerPixel());
-    const auto x    = static_cast<std::size_t>(offset.x);
-    const auto y    = static_cast<std::size_t>(offset.y);
-    const auto z    = static_cast<std::size_t>(offset.z);
-    const auto w    = static_cast<std::size_t>(GetExtent().width);
-    const auto h    = static_cast<std::size_t>(GetExtent().height);
+    const std::size_t bpp   = static_cast<std::size_t>(GetBytesPerPixel());
+    const std::size_t x     = static_cast<std::size_t>(offset.x);
+    const std::size_t y     = static_cast<std::size_t>(offset.y);
+    const std::size_t z     = static_cast<std::size_t>(offset.z);
+    const std::size_t w     = static_cast<std::size_t>(GetExtent().width);
+    const std::size_t h     = static_cast<std::size_t>(GetExtent().height);
     return (bpp * (x + (y + z * h) * w));
 }
 

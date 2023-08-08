@@ -23,14 +23,7 @@
 #include <string>
 #include <unordered_map>
 
-/*
-Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
-See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
-*/
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-#include <inttypes.h>
+#include "../Core/PrintfUtils.h"
 
 #ifdef LLGL_ENABLE_DEBUG_LAYER
 #   include "DebugLayer/DbgRenderSystem.h"
@@ -442,8 +435,8 @@ void RenderSystem::CopyTextureImageData(
     std::uint32_t               rowStride)
 {
     /* Check if image buffer must be converted */
-    const std::uint32_t     unpaddedImageSize   = GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, numTexels);
-    const std::uint32_t     unpaddedStride      = GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, numTexelsInRow);
+    const std::size_t unpaddedImageSize = GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, numTexels);
+    const std::size_t unpaddedStride    = GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, numTexelsInRow);
 
     if (srcImageDesc.format != dstImageDesc.format || srcImageDesc.dataType != dstImageDesc.dataType)
     {
@@ -459,7 +452,7 @@ void RenderSystem::CopyTextureImageData(
         }
 
         /* Determine destination image size */
-        const std::uint32_t dstImageSize = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, numTexels);
+        const std::size_t dstImageSize = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, numTexels);
 
         /* Validate input size */
         RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);

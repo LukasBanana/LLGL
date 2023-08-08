@@ -182,7 +182,7 @@ void DbgCommandBuffer::CopyBuffer(
 }
 
 // Returns the minimum required memory footprint to copy the specified texture region into a buffer
-static std::uint64_t GetTextureRegionMinFootprint(const DbgTexture& textureDbg, const TextureRegion& region)
+static std::size_t GetTextureRegionMinFootprint(const DbgTexture& textureDbg, const TextureRegion& region)
 {
     const std::uint32_t numTexels = NumMipTexels(textureDbg.GetType(), region.extent, region.subresource.baseMipLevel);
     return GetMemoryFootprint(textureDbg.GetFormat(), numTexels);
@@ -1913,7 +1913,7 @@ void DbgCommandBuffer::ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, 
 {
     if (rowStride != 0)
     {
-        const auto rowSize = GetMemoryFootprint(textureDbg.desc.format, extent.width);
+        const std::size_t rowSize = GetMemoryFootprint(textureDbg.desc.format, extent.width);
         if (rowStride < rowSize)
         {
             LLGL_DBG_ERROR(

@@ -135,7 +135,7 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
     UINT alignedRowStride = rowStride;
     if (rowStride == 0)
     {
-        rowStride = GetMemoryFootprint(srcTextureD3D.GetFormat(), srcExtent.width);
+        rowStride = static_cast<std::uint32_t>(GetMemoryFootprint(srcTextureD3D.GetFormat(), srcExtent.width));
         alignedRowStride = GetAlignedSize<UINT>(rowStride, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
     }
 
@@ -256,7 +256,7 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
     UINT alignedRowStride = rowStride;
     if (rowStride == 0)
     {
-        rowStride = GetMemoryFootprint(dstTextureD3D.GetFormat(), dstExtent.width);
+        rowStride = static_cast<std::uint32_t>(GetMemoryFootprint(dstTextureD3D.GetFormat(), dstExtent.width));
         alignedRowStride = GetAlignedSize<UINT>(rowStride, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
     }
 

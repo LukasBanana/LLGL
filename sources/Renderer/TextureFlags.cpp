@@ -166,9 +166,9 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uin
     return {};
 }
 
-LLGL_EXPORT std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource)
+LLGL_EXPORT std::size_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource)
 {
-    const auto numTexels = NumMipTexels(type, extent, subresource);
+    const std::uint32_t numTexels = NumMipTexels(type, extent, subresource);
     return GetMemoryFootprint(format, numTexels);
 }
 

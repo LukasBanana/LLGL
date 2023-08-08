@@ -704,11 +704,11 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
-        const char*     imageFace       = reinterpret_cast<const char*>(imageDesc->data);
-        std::uint32_t   imageFaceStride = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, desc.extent.width * desc.extent.height);
+        const char* imageFace       = reinterpret_cast<const char*>(imageDesc->data);
+        std::size_t imageFaceStride = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, desc.extent.width * desc.extent.height);
 
         if (IsCompressedFormat(desc.format))
-            imageFaceStride = static_cast<std::uint32_t>(imageDesc->dataSize);
+            imageFaceStride = imageDesc->dataSize;
 
         GLenum dataFormatGL       = GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format));
         GLenum dataTypeGL         = GLTypes::Map(imageDesc->dataType);

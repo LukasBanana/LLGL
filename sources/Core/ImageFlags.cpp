@@ -545,7 +545,7 @@ static void ConvertImageBufferFormat(
 static void ValidateSourceImageDesc(const SrcImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    const std::uint32_t dataTypeSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1);
+    const std::size_t dataTypeSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1);
     LLGL_ASSERT(dataTypeSize > 0, "source image data type size must be greater than zero");
     LLGL_ASSERT(imageDesc.dataSize % dataTypeSize == 0, "source image data size is not a multiple of the source data type size");
 }
@@ -553,7 +553,7 @@ static void ValidateSourceImageDesc(const SrcImageDescriptor& imageDesc)
 static void ValidateDestinationImageDesc(const DstImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_PTR(imageDesc.data);
-    const std::uint32_t dataTypeSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1);
+    const std::size_t dataTypeSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, 1);
     LLGL_ASSERT(dataTypeSize > 0, "destination image data type size must be greater than zero");
     LLGL_ASSERT(imageDesc.dataSize % dataTypeSize == 0, "destination image data size is not a multiple of the source data type size");
 }
@@ -664,8 +664,8 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
         threadCount = std::thread::hardware_concurrency();
 
     /* Initialize destination image descriptor */
-    const std::uint32_t srcNumPixels = static_cast<std::uint32_t>(srcImageDesc.dataSize / GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, 1));
-    const std::uint32_t dstImageSize = GetMemoryFootprint(dstFormat, dstDataType, srcNumPixels);
+    const std::size_t srcNumPixels = srcImageDesc.dataSize / GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, 1);
+    const std::size_t dstImageSize = GetMemoryFootprint(dstFormat, dstDataType, srcNumPixels);
 
     ByteBuffer dstImage = AllocateByteBuffer(dstImageSize, UninitializeTag{});
 
@@ -783,18 +783,18 @@ LLGL_EXPORT void CopyImageBufferRegion(
     if (srcImageDesc.format != dstImageDesc.format || srcImageDesc.dataType != dstImageDesc.dataType)
         LLGL_TRAP("cannot copy image buffer region with source and destination images having different format or data type");
 
-    const auto bpp = GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, 1);
+    const std::uint32_t bpp = static_cast<std::uint32_t>(GetMemoryFootprint(dstImageDesc.format, dstImageDesc.dataType, 1));
 
     /* Validate destination image boundaries */
-    const auto dstPos       = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstLayerStride, bpp);
-    const auto dstPosEnd    = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstLayerStride, bpp);
+    const std::size_t dstPos    = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstLayerStride, bpp);
+    const std::size_t dstPosEnd = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstLayerStride, bpp);
 
     if (dstPosEnd > dstImageDesc.dataSize)
         LLGL_TRAP("destination image buffer region out of range");
 
     /* Validate source image boundaries */
-    const auto srcPos       = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcLayerStride, bpp);
-    const auto srcPosEnd    = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcLayerStride, bpp);
+    const std::size_t srcPos    = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcLayerStride, bpp);
+    const std::size_t srcPosEnd = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcLayerStride, bpp);
 
     if (srcPosEnd > srcImageDesc.dataSize)
         LLGL_TRAP("source image buffer region out of range");

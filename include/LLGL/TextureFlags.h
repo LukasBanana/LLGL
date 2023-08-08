@@ -554,12 +554,12 @@ LLGL_EXPORT Extent3D GetMipExtent(const TextureDescriptor& textureDesc, std::uin
 \param[in] format Specifies the hardware format.
 \param[in] extent Specifies the extent of the texture subresource.
 \param[in] subresource Specifies the texture subresource.
-\see GetMemoryFootprint(const Format, std::uint32_t)
+\see GetMemoryFootprint(const Format, std::uint64_t)
 \see Texture::GetMemoryFootprint
 \see Texture::GetMipExtent
 \see Texture::GetFormat
 */
-LLGL_EXPORT std::uint32_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource);
+LLGL_EXPORT std::size_t GetMemoryFootprint(const TextureType type, const Format format, const Extent3D& extent, const TextureSubresource& subresource);
 
 /**
 \brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.

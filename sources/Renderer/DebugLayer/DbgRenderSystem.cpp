@@ -18,8 +18,6 @@
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 
-#include <LLGL/Log.h>
-
 
 namespace LLGL
 {
@@ -1141,10 +1139,10 @@ void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uin
 void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize)
 {
     /* Validate output data size */
-    const auto& subresource         = textureRegion.subresource;
-    const auto  baseSubresource     = TextureSubresource{ 0, subresource.numArrayLayers, 0, subresource.numMipLevels };
-    const auto  numTexels           = NumMipTexels(textureDbg.desc.type, textureRegion.extent, baseSubresource);
-    const auto  requiredDataSize    = GetMemoryFootprint(imageFormat, dataType, numTexels);
+    const auto&         subresource         = textureRegion.subresource;
+    const auto          baseSubresource     = TextureSubresource{ 0, subresource.numArrayLayers, 0, subresource.numMipLevels };
+    const auto          numTexels           = NumMipTexels(textureDbg.desc.type, textureRegion.extent, baseSubresource);
+    const std::size_t   requiredDataSize    = GetMemoryFootprint(imageFormat, dataType, numTexels);
 
     /* Ignore compressed formats */
     if (requiredDataSize != 0)

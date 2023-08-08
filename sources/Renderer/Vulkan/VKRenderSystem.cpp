@@ -256,8 +256,8 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Determine size of image for staging buffer */
-    const auto imageSize        = NumMipTexels(textureDesc, 0);
-    const auto initialDataSize  = static_cast<VkDeviceSize>(GetMemoryFootprint(textureDesc.format, imageSize));
+    const std::uint32_t imageSize       = NumMipTexels(textureDesc, 0);
+    const std::size_t   initialDataSize = GetMemoryFootprint(textureDesc.format, imageSize);
 
     /* Set up initial image data */
     const void* initialData = nullptr;
@@ -279,8 +279,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             Validate that source image data was large enough so conversion is valid,
             then use temporary image buffer as source for initial data
             */
-            const auto srcImageDataSize = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, imageSize);
-            RenderSystem::AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(srcImageDataSize));
+            const std::size_t srcImageDataSize = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, imageSize);
+            RenderSystem::AssertImageDataSize(imageDesc->dataSize, srcImageDataSize);
             initialData = intermediateData.get();
         }
         else
@@ -289,7 +289,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             Validate that image data is large enough,
             then use input data as source for initial data
             */
-            RenderSystem::AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(initialDataSize));
+            RenderSystem::AssertImageDataSize(imageDesc->dataSize, initialDataSize);
             initialData = imageDesc->data;
         }
     }
@@ -300,7 +300,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
             intermediateData = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, textureDesc.clearValue.color);
         else
-            intermediateData = AllocateByteBuffer(static_cast<std::size_t>(initialDataSize), UninitializeTag{});
+            intermediateData = AllocateByteBuffer(initialDataSize, UninitializeTag{});
 
         initialData = intermediateData.get();
     }
@@ -402,8 +402,8 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         Validate that source image data was large enough so conversion is valid,
         then use temporary image buffer as source for initial data
         */
-        const auto srcImageDataSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, imageSize);
-        RenderSystem::AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(srcImageDataSize));
+        const std::size_t srcImageDataSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, imageSize);
+        RenderSystem::AssertImageDataSize(imageDesc.dataSize, srcImageDataSize);
         imageData = intermediateData.get();
     }
     else
