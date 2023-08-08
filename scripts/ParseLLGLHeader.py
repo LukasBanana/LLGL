@@ -45,6 +45,7 @@ class StdType(Enum):
     ENUM = 14
     FLAGS = 15
     STRUCT = 16
+    CONST = 17 # static constexpr int
 
 class LLGLMeta:
     UTF8STRING = 'UTF8String'
@@ -157,6 +158,8 @@ class LLGLType:
                 return StdType.SIZE_T
             elif typename == 'float':
                 return StdType.FLOAT
+            elif typename == 'const':
+                return StdType.CONST
             else:
                 return StdType.STRUCT
         return StdType.UNDEFINED
@@ -186,6 +189,12 @@ class LLGLRecord:
 
     def __init__(self, name):
         self.name = name
+
+    def hasConstFieldsOnly(self):
+        for field in self.fields:
+            if field.type.baseType != StdType.CONST:
+                return False
+        return True
 
 class LLGLHeader:
     name = ''
@@ -391,18 +400,21 @@ class Parser:
         return entries
 
     def parseType(self):
-        isConst = self.scanner.acceptIf('const')
-        typename = self.scanner.accept()
-        if typename in LLGLMeta.containers and self.scanner.acceptIf('<'):
-            typename = self.scanner.accept()
-            self.scanner.acceptOrFail('>')
-            type = LLGLType(typename, isConst = True, isPointer = True)
-            type.setArraySize(LLGLType.DYNAMIC_ARRAY)
-            return type
+        if self.scanner.acceptIf(['static', 'constexpr', 'int']):
+            return LLGLType('const')
         else:
-            isPointer = self.scanner.acceptIf('*')
-            type = LLGLType(typename, isConst, isPointer)
-            return type
+            isConst = self.scanner.acceptIf('const')
+            typename = self.scanner.accept()
+            if typename in LLGLMeta.containers and self.scanner.acceptIf('<'):
+                typename = self.scanner.accept()
+                self.scanner.acceptOrFail('>')
+                type = LLGLType(typename, isConst = True, isPointer = True)
+                type.setArraySize(LLGLType.DYNAMIC_ARRAY)
+                return type
+            else:
+                isPointer = self.scanner.acceptIf('*')
+                type = LLGLType(typename, isConst, isPointer)
+                return type
 
     def parseStructMembers(self, structName):
         members = []
@@ -505,9 +517,10 @@ def printHeader(header):
         print('@END')
 
     print('@HEADER{' + header.name + '}')
+    iterate(lambda record: printRecord(record, 'CONST'), filter(lambda record: record.hasConstFieldsOnly(), header.structs))
     iterate(lambda record: printRecord(record, 'ENUM'), header.enums)
     iterate(lambda record: printRecord(record, 'FLAG'), header.flags)
-    iterate(lambda record: printRecord(record, 'STRUCT'), header.structs)
+    iterate(lambda record: printRecord(record, 'STRUCT'), filter(lambda record: not record.hasConstFieldsOnly(), header.structs))
     print('@END')
 
 class Translator:
@@ -609,6 +622,23 @@ class Translator:
             self.statement('')
             self.statement('')
 
+        # Write all constants
+        constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
+
+        if len(constStructs) > 0:
+            self.statement('/* ----- Constants ----- */')
+            self.statement('')
+            for struct in constStructs:
+                # Write struct field declarations
+                declList = Translator.DeclarationList()
+                for field in struct.fields:
+                    declList.append(Translator.Declaration('', 'LLGL_{}_{}'.format(struct.name.upper(), field.name.upper()), field.init))
+
+                for decl in declList.decls:
+                    self.statement('#define ' + decl.name + declList.spaces(1, decl.name) + ' ( ' + decl.init + ' )')
+                self.statement('')
+            self.statement('')
+
         # Write all enumerations
         if len(doc.enums) > 0:
             self.statement('/* ----- Enumerations ----- */')
@@ -665,7 +695,9 @@ class Translator:
             self.statement('')
 
         # Write all structures
-        if len(doc.structs) > 0:
+        commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
+
+        if len(commonStructs) > 0:
             def translateStructField(type, name):
                 typeStr = ''
                 declStr = ''
@@ -690,7 +722,7 @@ class Translator:
 
             self.statement('/* ----- Structures ----- */')
             self.statement('')
-            for struct in doc.structs:
+            for struct in commonStructs:
                 self.statement('typedef struct LLGL{}'.format(struct.name))
                 self.openScope()
 
@@ -736,6 +768,28 @@ class Translator:
         self.statement('')
         self.statement('namespace LLGL')
         self.openScope()
+
+        # Write all constants
+        constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
+
+        if len(constStructs) > 0:
+            self.statement('/* ----- Constants ----- */')
+            self.statement('')
+            for struct in constStructs:
+                self.statement('public enum {} : int'.format(struct.name))
+                self.openScope()
+
+                # Write struct field declarations
+                declList = Translator.DeclarationList()
+                for field in struct.fields:
+                    declList.append(Translator.Declaration('', field.name, field.init))
+
+                for decl in declList.decls:
+                    self.statement(decl.name + declList.spaces(1, decl.name) + ' = ' + decl.init + ',')
+
+                self.closeScope()
+                self.statement('')
+            self.statement('')
 
         # Write all enumerations
         if len(doc.enums) > 0:
@@ -791,7 +845,9 @@ class Translator:
             self.statement('')
 
         # Write all structures
-        if len(doc.structs) > 0:
+        commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
+
+        if len(commonStructs) > 0:
             def translateStructField(type, name):
                 def translateType(type):
                     if type.baseType == StdType.BOOL:
@@ -840,7 +896,7 @@ class Translator:
 
             self.statement('/* ----- Structures ----- */')
             self.statement('')
-            for struct in doc.structs:
+            for struct in commonStructs:
                 self.statement('public unsafe struct ' + struct.name)
                 self.openScope()
 
