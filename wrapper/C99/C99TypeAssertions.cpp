@@ -5,77 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include <LLGL/Types.h>
-#include <LLGL-C/Types.h>
-
-#include <LLGL/RenderSystemFlags.h>
-#include <LLGL-C/RenderSystemFlags.h>
-
-#include <LLGL/SwapChainFlags.h>
-#include <LLGL-C/SwapChainFlags.h>
-
-#include <LLGL/PipelineStateFlags.h>
-#include <LLGL-C/PipelineStateFlags.h>
-
-#include <LLGL/CommandBufferFlags.h>
-#include <LLGL-C/CommandBufferFlags.h>
-
-#include <LLGL/SystemValue.h>
-#include <LLGL-C/SystemValue.h>
-
-#include <LLGL/Format.h>
-#include <LLGL-C/Format.h>
-
-#include <LLGL/ResourceFlags.h>
-#include <LLGL-C/ResourceFlags.h>
-
-#include <LLGL/BufferFlags.h>
-#include <LLGL-C/BufferFlags.h>
-
-#include <LLGL/TextureFlags.h>
-#include <LLGL-C/TextureFlags.h>
-
-#include <LLGL/ImageFlags.h>
-#include <LLGL-C/ImageFlags.h>
-
-#include <LLGL/SamplerFlags.h>
-#include <LLGL-C/SamplerFlags.h>
-
-#include <LLGL/ResourceHeapFlags.h>
-#include <LLGL-C/ResourceHeapFlags.h>
-
-#include <LLGL/ShaderFlags.h>
-#include <LLGL-C/ShaderFlags.h>
-
-#include <LLGL/ShaderReflection.h>
-#include <LLGL-C/ShaderReflection.h>
-
-#include <LLGL/RenderTargetFlags.h>
-#include <LLGL-C/RenderTargetFlags.h>
-
-#include <LLGL/RenderPassFlags.h>
-#include <LLGL-C/RenderPassFlags.h>
-
-#include <LLGL/PipelineLayoutFlags.h>
-#include <LLGL-C/PipelineLayoutFlags.h>
-
-#include <LLGL/QueryHeapFlags.h>
-#include <LLGL-C/QueryHeapFlags.h>
-
-#include <LLGL/WindowFlags.h>
-#include <LLGL-C/WindowFlags.h>
-
-#include <LLGL/DisplayFlags.h>
-#include <LLGL-C/DisplayFlags.h>
-
-#include <LLGL/Key.h>
-#include <LLGL-C/Key.h>
-
-#include <LLGL/IndirectArguments.h>
-#include <LLGL-C/IndirectArguments.h>
-
-#include <LLGL/Log.h>
-#include <LLGL-C/Log.h>
+#include <LLGL/LLGL.h>
+#include <LLGL-C/LLGL.h>
 
 
 #define LLGL_STATIC_ASSERT_ENUM(TYPE, VALUE) \

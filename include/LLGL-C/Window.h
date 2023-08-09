@@ -10,10 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/Surface.h>
-#include <LLGL-C/WindowFlags.h>
-#include <LLGL-C/Key.h>
+#include <LLGL-C/LLGLWrapper.h>
 #include <stdbool.h>
 
 

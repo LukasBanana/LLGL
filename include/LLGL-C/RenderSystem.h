@@ -10,22 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/RenderSystemFlags.h>
-#include <LLGL-C/SwapChainFlags.h>
-#include <LLGL-C/CommandBufferFlags.h>
-#include <LLGL-C/ResourceFlags.h>
-#include <LLGL-C/BufferFlags.h>
-#include <LLGL-C/TextureFlags.h>
-#include <LLGL-C/SamplerFlags.h>
-#include <LLGL-C/ImageFlags.h>
-#include <LLGL-C/ShaderFlags.h>
-#include <LLGL-C/QueryHeapFlags.h>
-#include <LLGL-C/ResourceHeapFlags.h>
-#include <LLGL-C/RenderTargetFlags.h>
-#include <LLGL-C/RenderPassFlags.h>
-#include <LLGL-C/PipelineLayoutFlags.h>
-#include <stdbool.h>
+#include <LLGL-C/LLGLWrapper.h>
 
 
 LLGL_C_EXPORT int llglLoadRenderSystem(const char* moduleName);

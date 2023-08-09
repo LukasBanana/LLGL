@@ -10,8 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/DisplayFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 #include <stddef.h>
 #include <stdbool.h>
 

@@ -9,7 +9,7 @@
 #define LLGL_C99_INCLUDE_H
 
 
-#include <LLGL-C/Types.h>
+#include <LLGL-C/LLGLWrapper.h>
 #include <LLGL-C/Window.h>
 #include <LLGL-C/Canvas.h>
 #include <LLGL-C/Display.h>
@@ -27,8 +27,6 @@
 #include <LLGL-C/RenderTarget.h>
 #include <LLGL-C/QueryHeap.h>
 #include <LLGL-C/Log.h>
-#include <LLGL-C/IndirectArguments.h>
-#include <LLGL-C/ImageFlags.h>
 
 
 #endif

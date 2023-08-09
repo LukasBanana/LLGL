@@ -10,11 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/ResourceFlags.h>
-#include <LLGL-C/CommandBufferFlags.h>
-#include <LLGL-C/PipelineStateFlags.h>
-#include <LLGL-C/TextureFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 #include <stddef.h>
 #include <stdbool.h>
 

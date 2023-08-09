@@ -10,10 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/Format.h>
-#include <LLGL-C/SwapChainFlags.h>
-#include <LLGL-C/RenderSystemFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 #include <stdint.h>
 
 

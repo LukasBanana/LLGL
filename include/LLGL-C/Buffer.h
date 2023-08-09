@@ -10,8 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/BufferFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 
 
 LLGL_C_EXPORT long llglGetBufferBindFlags(LLGLBuffer buffer);

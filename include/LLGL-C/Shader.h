@@ -10,9 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/ShaderFlags.h>
-#include <LLGL-C/ShaderReflection.h>
+#include <LLGL-C/LLGLWrapper.h>
 
 
 LLGL_C_EXPORT LLGLReport llglGetShaderReport(LLGLShader shader);

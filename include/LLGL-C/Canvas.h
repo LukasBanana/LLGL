@@ -10,10 +10,8 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/CanvasFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 #include <LLGL-C/Surface.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/Key.h>
 
 
 typedef void (*LLGL_PFN_OnCanvasProcessEvents)(LLGLCanvas sender);

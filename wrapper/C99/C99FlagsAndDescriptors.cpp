@@ -6,7 +6,8 @@
  */
 
 #include <LLGL/Format.h>
-#include <LLGL-C/Format.h>
+#include <LLGL-C/Export.h>
+#include <LLGL-C/LLGLWrapper.h>
 
 
 // namespace LLGL {

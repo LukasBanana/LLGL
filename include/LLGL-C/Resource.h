@@ -10,8 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/ResourceFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 
 
 LLGL_C_EXPORT LLGLResourceType lgllGetResourceType(LLGLResource resource);

@@ -10,8 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-#include <LLGL-C/QueryHeapFlags.h>
+#include <LLGL-C/LLGLWrapper.h>
 
 
 LLGL_C_EXPORT LLGLQueryType llglGetQueryHeapType(LLGLQueryHeap queryHeap);
