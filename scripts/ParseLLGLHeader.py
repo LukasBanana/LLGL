@@ -29,27 +29,41 @@ def fatal(msg):
 
 class StdType(Enum):
     UNDEFINED = 0
-    BOOL = 1
-    CHAR = 2
-    INT8 = 3
-    INT16 = 4
-    INT32 = 5
-    INT64 = 6
-    UINT8 = 7
-    UINT16 = 8
-    UINT32 = 9
-    UINT64 = 10
-    LONG = 11
-    SIZE_T = 12
-    FLOAT = 13
-    ENUM = 14
-    FLAGS = 15
-    STRUCT = 16
-    CONST = 17 # static constexpr int
+    VOID = 1
+    BOOL = 2
+    CHAR = 3
+    INT8 = 4
+    INT16 = 5
+    INT32 = 6
+    INT64 = 7
+    UINT8 = 8
+    UINT16 = 9
+    UINT32 = 10
+    UINT64 = 11
+    LONG = 12
+    SIZE_T = 13
+    FLOAT = 14
+    ENUM = 15
+    FLAGS = 16
+    STRUCT = 17
+    CONST = 18 # static constexpr int
+
+class ConditionalType:
+    name = ''
+    cond = None
+    include = None
+
+    def __init__(self, name, cond = None, include = None):
+        self.name = name
+        self.cond = cond
+        self.include = include
 
 class LLGLMeta:
     UTF8STRING = 'UTF8String'
     STRING = 'string'
+    builtins = [
+        ConditionalType('android_app', 'defined LLGL_OS_ANDROID', '<android_native_app_glue.h>')
+    ]
     containers = [
         'vector',
         'ArrayView'
@@ -68,6 +82,8 @@ class LLGLMeta:
         'RenderPass',
         'RenderSystem',
         'RenderTarget',
+        'RenderingDebugger',
+        'RenderingProfiler',
         'Report',
         'Resource',
         'ResourceHeap',
@@ -102,6 +118,7 @@ class LLGLType:
     arraySize = 0 # 0 for non-array, -1 for dynamic array, anything else for fixed size array
     isConst = False
     isPointer = False
+    builtinCond = None # Conditional expression string for builtin typenames (see LLGLMeta.builtins)
 
     DYNAMIC_ARRAY = -1
 
@@ -111,6 +128,7 @@ class LLGLType:
         self.arraySize = 0
         self.isConst = isConst
         self.isPointer = isPointer
+        self.builtinCond = next((builtin.cond for builtin in LLGLMeta.builtins if builtin.name == typename), None)
 
     def setArraySize(self, arraySize):
         if isinstance(arraySize, str):
@@ -132,15 +150,17 @@ class LLGLType:
 
     def toBaseType(typename):
         if typename != '':
-            if typename == 'bool':
+            if typename == 'void':
+                return StdType.VOID
+            elif typename == 'bool':
                 return StdType.BOOL
             elif typename == 'char':
                 return StdType.CHAR
             elif typename == 'int8_t':
                 return StdType.INT8
-            elif typename == 'int16_t':
+            elif typename in ['int16_t', 'short']:
                 return StdType.INT16
-            elif typename == 'int32_t':
+            elif typename in ['int32_t', 'int']:
                 return StdType.INT32
             elif typename == 'int64_t':
                 return StdType.INT64
@@ -164,6 +184,31 @@ class LLGLType:
                 return StdType.STRUCT
         return StdType.UNDEFINED
 
+    # Returns true if this type is a custom LLGL enum, flags, or struct declaration
+    def isCustomType(self):
+        return self.baseType == StdType.STRUCT and not self.typename in ([LLGLMeta.UTF8STRING, LLGLMeta.STRING] + LLGLMeta.containers)
+
+    # Returns true if this type is an LLGL interface type such as PipelineState
+    def isInterface(self):
+        return self.baseType == StdType.STRUCT and self.typename in LLGLMeta.interfaces
+
+    def isDynamicArray(self):
+        return self.arraySize == LLGLType.DYNAMIC_ARRAY
+
+    def isPointerOrString(self):
+        return self.isPointer or self.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]
+
+    def getFixedBitsize(self):
+        if self.baseType in [StdType.INT8, StdType.UINT8]:
+            return 8
+        elif type.baseType in [StdType.INT16, StdType.UINT16]:
+            return 16
+        elif type.baseType in [StdType.INT32, StdType.UINT32]:
+            return 32
+        elif type.baseType in [StdType.INT64, StdType.UINT64]:
+            return 64
+        return 0
+
 class LLGLField:
     name = ''
     type = LLGLType()
@@ -186,9 +231,13 @@ class LLGLRecord:
     name = ''
     base = None
     fields = []
+    deps = set() # Set of record names this record depends on
 
     def __init__(self, name):
         self.name = name
+        self.base = None
+        self.fields = []
+        self.deps = set()
 
     def hasConstFieldsOnly(self):
         for field in self.fields:
@@ -196,30 +245,85 @@ class LLGLRecord:
                 return False
         return True
 
-class LLGLHeader:
+    # Returns set of struct names that this record depends on
+    def deriveDependencies(self):
+        for field in self.fields:
+            if field.type.isCustomType() and not field.type.isInterface() and field.type.typename != self.name:
+                self.deps.add(field.type.typename)
+
+class LLGLModule:
     name = ''
     enums = []
     flags = []
     structs = []
-    dependencies = set()
+    typeDeps = set() # Set of types used in this header
 
     def __init__(self):
         self.name = ''
         self.enums = []
         self.flags = []
         self.structs = []
-        self.dependencies = set()
+        self.typeDeps = set()
 
     def deriveDependencies(self):
         for struct in self.structs:
             for field in struct.fields:
-                self.dependencies.add(field.type)
+                self.typeDeps.add(field.type)
 
     def merge(self, other):
         self.enums.extend(other.enums)
         self.flags.extend(other.flags)
         self.structs.extend(other.structs)
-        self.dependencies.update(other.dependencies)
+        self.typeDeps.update(other.typeDeps)
+
+    def findStructByName(self, name):
+        for struct in self.structs:
+            if struct.name == name:
+                return struct
+        return None
+
+    def sortStructsByDependencies(self):
+        # Derive dependencies for all structs
+        for struct in self.structs:
+            struct.deriveDependencies()
+
+        # Start with structs that have no dependencies
+        knownTypenames = set(builtin.name for builtin in LLGLMeta.builtins)
+        baseTypenames = set(enum.name for enum in self.enums) | set(flag.name for flag in self.flags) | knownTypenames
+        sortedStructs = []
+        pendingStructs = []
+
+        for struct in self.structs:
+            if len(struct.deps) == 0:
+                sortedStructs.append(struct)
+            else:
+                pendingStructs.append(struct)
+
+        # Continue with remaining structs
+        while len(pendingStructs) > 0:
+            wasAnyPendingStructSorted = False
+            pendingStructIndex = 0
+            declaredTypenames = set(struct.name for struct in sortedStructs) | baseTypenames
+
+            while pendingStructIndex < len(pendingStructs):
+                struct = pendingStructs[pendingStructIndex]
+                if struct.deps.issubset(declaredTypenames):
+                    sortedStructs.append(struct)
+                    pendingStructs.pop(pendingStructIndex)
+                    wasAnyPendingStructSorted = True
+                else:
+                    pendingStructIndex += 1
+            if not wasAnyPendingStructSorted:
+                def printCyclicDependencies(struct, typenames):
+                    print(f"Cyclic dependency in struct '{struct.name}':")
+                    for dep in struct.deps:
+                        if not dep in typenames:
+                            print(f" ==> Missing '{dep}'")
+
+                printCyclicDependencies(pendingStructs[0], declaredTypenames)
+                fatal('error: failed to resolve dependencies')
+
+        return sortedStructs
 
 def scanTokens(filename):
     def preprocessSource(text):
@@ -357,7 +461,7 @@ class Scanner:
 
     def acceptOrFail(self, match):
         if not self.acceptIf(match):
-            fatal("{0}: error: expected token '{1}', but got '{2}'; predecessors: {3}".format(self.filename, match, self.tok(), self.tokens[self.readPos - 5:self.readPos]))
+            fatal(f"{self.filename}: error: expected token '{match}', but got '{self.tok()}'; predecessors: {self.tokens[self.readPos - 5:self.readPos]}")
 
     def ignoreUntil(self, filter):
         while self.good():
@@ -406,9 +510,11 @@ class Parser:
             isConst = self.scanner.acceptIf('const')
             typename = self.scanner.accept()
             if typename in LLGLMeta.containers and self.scanner.acceptIf('<'):
+                isConst = self.scanner.acceptIf('const')
                 typename = self.scanner.accept()
+                isPointer = self.scanner.acceptIf('*')
                 self.scanner.acceptOrFail('>')
-                type = LLGLType(typename, isConst = True, isPointer = True)
+                type = LLGLType(typename, isConst, isPointer)
                 type.setArraySize(LLGLType.DYNAMIC_ARRAY)
                 return type
             else:
@@ -460,10 +566,10 @@ class Parser:
                 self.scanner.acceptOrFail(';')
         return members
 
-    # Parses input file by filename and returns LLGLHeader
+    # Parses input file by filename and returns LLGLModule
     def parseHeader(self, filename):
-        header = LLGLHeader()
-        header.name = os.path.splitext(os.path.basename(filename))[0]
+        mod = LLGLModule()
+        mod.name = os.path.splitext(os.path.basename(filename))[0]
 
         self.scanner.scan(filename)
 
@@ -477,7 +583,7 @@ class Parser:
                 self.scanner.acceptOrFail('{')
                 enum.fields = self.parseEnumEntries()
                 self.scanner.acceptOrFail('}')
-                header.enums.append(enum)
+                mod.enums.append(enum)
             elif self.scanner.acceptIf('struct'):
                 self.scanner.acceptIf('LLGL_EXPORT')
                 name = self.scanner.accept()
@@ -489,25 +595,25 @@ class Parser:
                         flag.base = self.parseType()
                     self.scanner.acceptOrFail('{')
                     flag.fields = self.parseEnumEntries()
-                    header.flags.append(flag)
+                    mod.flags.append(flag)
                 else:
                     # Parse structure
                     struct = LLGLRecord(name)
                     struct.fields = self.parseStructMembers(name)
-                    header.structs.append(struct)
+                    mod.structs.append(struct)
                 self.scanner.acceptOrFail('}')
             else:
                 self.scanner.accept()
 
-        return header
+        return mod
 
 def parseFile(filename):
     parser = Parser()
-    header = parser.parseHeader(filename)
-    header.deriveDependencies()
-    return header
+    mod = parser.parseHeader(filename)
+    mod.deriveDependencies()
+    return mod
 
-def printHeader(header):
+def printModule(module):
     def printField(field):
         print('@FIELD{' + str(field) + '}')
 
@@ -516,11 +622,11 @@ def printHeader(header):
         iterate(printField, record.fields)
         print('@END')
 
-    print('@HEADER{' + header.name + '}')
-    iterate(lambda record: printRecord(record, 'CONST'), filter(lambda record: record.hasConstFieldsOnly(), header.structs))
-    iterate(lambda record: printRecord(record, 'ENUM'), header.enums)
-    iterate(lambda record: printRecord(record, 'FLAG'), header.flags)
-    iterate(lambda record: printRecord(record, 'STRUCT'), filter(lambda record: not record.hasConstFieldsOnly(), header.structs))
+    print('@HEADER{' + module.name + '}')
+    iterate(lambda record: printRecord(record, 'CONST'), filter(lambda record: record.hasConstFieldsOnly(), module.structs))
+    iterate(lambda record: printRecord(record, 'ENUM'), module.enums)
+    iterate(lambda record: printRecord(record, 'FLAG'), module.flags)
+    iterate(lambda record: printRecord(record, 'STRUCT'), filter(lambda record: not record.hasConstFieldsOnly(), module.structs))
     print('@END')
 
 class Translator:
@@ -531,11 +637,13 @@ class Translator:
         type = ''
         name = ''
         init = None
+        directive = None
 
-        def __init__(self, type, name, init = None):
+        def __init__(self, type = '', name = '', init = None, directive = None):
             self.type = type
             self.name = name
             self.init = init
+            self.directive = directive
 
     class DeclarationList:
         decls = []
@@ -547,9 +655,10 @@ class Translator:
 
         def append(self, decl):
             self.decls.append(decl)
-            self.maxLen[0] = max(self.maxLen[0], len(decl.type))
-            self.maxLen[1] = max(self.maxLen[1], len(decl.name))
-            self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init != None else 0)
+            if not decl.directive:
+                self.maxLen[0] = max(self.maxLen[0], len(decl.type))
+                self.maxLen[1] = max(self.maxLen[1], len(decl.name))
+                self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init != None else 0)
 
         def spaces(self, index, str):
             return ' ' * (self.maxLen[index] - len(str) + 1)
@@ -571,7 +680,7 @@ class Translator:
     def convertNameToHeaderGuard(name):
         return re.sub(r'([A-Z]+)', r'_\1', name).upper()
 
-    def translateHeaderToC99(self, doc):
+    def translateModuleToC99(self, doc):
         def translateDependency(type):
             if type.baseType in [StdType.BOOL]:
                 return '<stdbool.h>', True
@@ -581,12 +690,12 @@ class Translator:
                 return '<stddef.h>', True
             elif type.baseType in [StdType.CHAR, StdType.LONG, StdType.FLOAT]:
                 return None, True
-            return '<LLGL-C/{}Flags.h>'.format(type.typename), False
+            return f'<LLGL-C/{type.typename}Flags.h>', False
 
-        def translateIncludes(dependencies):
+        def translateIncludes(typeDeps):
             stdIncludes = set()
             llglIncludes = LLGLMeta.includes.copy()
-            for dep in dependencies:
+            for dep in typeDeps:
                 inc = translateDependency(dep)
                 if inc and inc[0] != None:
                     if inc[1]:
@@ -614,11 +723,19 @@ class Translator:
         self.statement('')
 
         # Write all include directives
-        includeHeaders = translateIncludes(doc.dependencies)
+        includeHeaders = translateIncludes(doc.typeDeps)
         if len(includeHeaders[0]) > 0 or len(includeHeaders[1]) > 0:
             for i in range(0, len(includeHeaders)):
                 for inc in includeHeaders[i]:
                     self.statement('#include {}'.format(inc))
+
+            for builtin in LLGLMeta.builtins:
+                if builtin.cond and builtin.include:
+                    self.statement('')
+                    self.statement(f'#if {builtin.cond}')
+                    self.statement(f'#   include {builtin.include}')
+                    self.statement(f'#endif /* {builtin.cond} */')
+
             self.statement('')
             self.statement('')
 
@@ -640,10 +757,17 @@ class Translator:
             self.statement('')
 
         # Write all enumerations
+        sizedTypes = dict()
+
         if len(doc.enums) > 0:
             self.statement('/* ----- Enumerations ----- */')
             self.statement('')
             for enum in doc.enums:
+                if enum.base:
+                    bitsize = enum.base.getFixedBitsize()
+                    if bitsize > 0:
+                        sizedTypes[enum.name] = bitsize
+
                 self.statement('typedef enum LLGL{}'.format(enum.name))
                 self.openScope()
 
@@ -671,6 +795,16 @@ class Translator:
                 str = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', str)
                 return str
 
+            def translateFieldName(name):
+                exceptions = [
+                    ('LLGLCPUAccessReadWrite', None) # Identifier for LLGL::CPUAccessFlags::ReadWrite is already used for LLGL::CPUAccess::ReadWrite
+                ]
+                for exception in exceptions:
+                    if name == exception[0]:
+                        return exception[1]
+                return name
+
+
             self.statement('/* ----- Flags ----- */')
             self.statement('')
             for flag in doc.flags:
@@ -681,7 +815,9 @@ class Translator:
                 # Write flag entry declarations
                 declList = Translator.DeclarationList()
                 for field in flag.fields:
-                    declList.append(Translator.Declaration('', 'LLGL{}{}'.format(basename, field.name), translateFlagInitializer(basename, field.init) if field.init else None))
+                    fieldName = translateFieldName(f'LLGL{basename}{field.name}')
+                    if fieldName:
+                        declList.append(Translator.Declaration('', fieldName, translateFlagInitializer(basename, field.init) if field.init else None))
 
                 for decl in declList.decls:
                     if decl.init != None:
@@ -699,25 +835,42 @@ class Translator:
 
         if len(commonStructs) > 0:
             def translateStructField(type, name):
+                nonlocal sizedTypes
                 typeStr = ''
                 declStr = ''
-                if type.typename == LLGLMeta.UTF8STRING:
-                    typeStr += 'const wchar_t*'
-                elif type.typename == LLGLMeta.STRING:
+
+                # Write type specifier
+                if type.isDynamicArray() and not type.isPointerOrString():
+                    typeStr += 'const '
+
+                if type.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
                     typeStr += 'const char*'
                 elif type.baseType == StdType.STRUCT and type.typename in LLGLMeta.interfaces:
                     typeStr += 'LLGL' + type.typename
                 else:
                     if type.isConst:
                         typeStr += 'const '
-                    if type.baseType == StdType.STRUCT:
+                    if type.baseType == StdType.STRUCT and type.builtinCond == None:
                         typeStr += 'LLGL'
                     typeStr += type.typename
                     if type.isPointer:
                         typeStr += '*'
+                
+                if type.isDynamicArray():
+                    typeStr += ' const*' if type.isPointerOrString() else '*'
+
+                # Write field name
                 declStr += name
+
+                # Write optional bit size for enumerations with underlying type (C does not support explicit underlying enum types)
+                bitsize = sizedTypes.get(type.typename)
+                if bitsize:
+                    declStr += f' : {bitsize}'
+
+                # Write fixed size array dimension
                 if type.arraySize > 0:
-                    declStr += '[{}]'.format(type.arraySize)
+                    declStr += f'[{type.arraySize}]'
+
                 return (typeStr, declStr)
 
             self.statement('/* ----- Structures ----- */')
@@ -730,16 +883,23 @@ class Translator:
                 declList = Translator.DeclarationList()
                 for field in struct.fields:
                     # Write two fields for dynamic arrays
-                    if field.type.arraySize == -1:
-                        declList.append(Translator.Declaration('size_t', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
+                    builtinCond = field.type.builtinCond
+                    if builtinCond:
+                        declList.append(Translator.Declaration(directive = f'#if {builtinCond}'))
+                    if field.type.isDynamicArray():
+                        declList.append(Translator.Declaration('size_t', f'num{field.name[0].upper()}{field.name[1:]}'))
                     declStr = translateStructField(field.type, field.name)
                     declList.append(Translator.Declaration(declStr[0], declStr[1], field.init))
+                    if builtinCond:
+                        declList.append(Translator.Declaration(directive = f'#endif /* {builtinCond} */'))
 
                 for decl in declList.decls:
-                    if decl.init != None:
-                        self.statement(decl.type + declList.spaces(0, decl.type) + decl.name + ';' + declList.spaces(1, decl.name) + '/* = ' + decl.init + ' */')
+                    if decl.directive:
+                        self.statement(decl.directive)
+                    elif decl.init:
+                        self.statement(f'{decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {decl.init} */')
                     else:
-                        self.statement(decl.type + declList.spaces(0, decl.type) + decl.name + ';')
+                        self.statement(f'{decl.type}{declList.spaces(0, decl.type)}{decl.name};')
                 self.closeScope()
                 self.statement('LLGL{};'.format(struct.name))
                 self.statement('')
@@ -752,7 +912,7 @@ class Translator:
         self.statement('/* ================================================================================ */')
         self.statement('')
 
-    def translateHeaderToCsharp(self, doc):
+    def translateModuleToCsharp(self, doc):
         self.statement('/*')
         self.statement(' * {}.cs'.format(doc.name))
         self.statement(' *')
@@ -850,7 +1010,9 @@ class Translator:
         if len(commonStructs) > 0:
             def translateStructField(type, name):
                 def translateType(type):
-                    if type.baseType == StdType.BOOL:
+                    if type.baseType == StdType.VOID:
+                        return 'void'
+                    elif type.baseType == StdType.BOOL:
                         return 'bool'
                     elif type.baseType == StdType.CHAR:
                         return 'byte'
@@ -943,22 +1105,23 @@ def main():
         singleName = findArgValue(args, '-name')
         
         # Parse input headers
-        headers = iterate(parseFile, files)
-        if singleName != None and len(headers) > 0:
-            singleHeader = headers[0]
-            singleHeader.name = singleName
-            if len(headers) > 1:
-                for header in headers[1:]:
-                    singleHeader.merge(header)
-            headers = [singleHeader]
+        modules = iterate(parseFile, files)
+        if singleName != None and len(modules) > 0:
+            singleModule = modules[0]
+            singleModule.name = singleName
+            if len(modules) > 1:
+                for module in modules[1:]:
+                    singleModule.merge(module)
+            singleModule.structs = singleModule.sortStructsByDependencies()
+            modules = [singleModule]
 
         # Translate or just print meta data of input header files
         if '-c99' in args:
-            iterate(translator.translateHeaderToC99, headers)
+            iterate(translator.translateModuleToC99, modules)
         elif '-csharp' in args:
-            iterate(translator.translateHeaderToCsharp, headers)
+            iterate(translator.translateModuleToCsharp, modules)
         else:
-            iterate(printHeader, headers)
+            iterate(printModule, modules)
     else:
         printHelp()
 
