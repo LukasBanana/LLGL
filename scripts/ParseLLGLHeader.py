@@ -19,6 +19,7 @@ def printHelp():
     print("  -c99 ......... Translate header to C99")
     print("  -csharp ...... Translate header to C#")
     print("  -name=NAME ... Override name for consolidated headers")
+    print("  -fn .......... Also parse exported C function declarations")
 
 def iterate(func, cont):
     return list(map(func, cont))
@@ -61,9 +62,28 @@ class ConditionalType:
 class LLGLMeta:
     UTF8STRING = 'UTF8String'
     STRING = 'string'
-    builtins = [
+    externals = [
         ConditionalType('android_app', 'defined LLGL_OS_ANDROID', '<android_native_app_glue.h>')
     ]
+    builtins = {
+        'void': StdType.VOID,
+        'bool': StdType.BOOL,
+        'char': StdType.CHAR,
+        'int8_t': StdType.INT8,
+        'int16_t': StdType.INT16,
+        'short': StdType.INT16,
+        'int32_t': StdType.INT32,
+        'int': StdType.INT32,
+        'int64_t': StdType.INT64,
+        'uint8_t': StdType.UINT8,
+        'uint16_t': StdType.UINT16,
+        'uint32_t': StdType.UINT32,
+        'uint64_t': StdType.UINT64,
+        'long': StdType.LONG,
+        'size_t': StdType.SIZE_T,
+        'float': StdType.FLOAT,
+        'const': StdType.CONST
+    }
     containers = [
         'vector',
         'ArrayView'
@@ -74,6 +94,7 @@ class LLGLMeta:
         'Canvas',
         'CommandBuffer',
         'CommandQueue',
+        'Display',
         'Fence',
         'Image',
         'PipelineLayout',
@@ -104,6 +125,8 @@ class LLGLMeta:
     info = [
         'AUTO GENERATED CODE - DO NOT EDIT'
     ]
+    funcPrefix = 'llgl'
+    typePrefix = 'LLGL'
 
 class LLGLMacros:
     def translateArraySize(ident):
@@ -118,7 +141,7 @@ class LLGLType:
     arraySize = 0 # 0 for non-array, -1 for dynamic array, anything else for fixed size array
     isConst = False
     isPointer = False
-    builtinCond = None # Conditional expression string for builtin typenames (see LLGLMeta.builtins)
+    externalCond = None # Conditional expression string for external typenames (see LLGLMeta.externals)
 
     DYNAMIC_ARRAY = -1
 
@@ -128,7 +151,7 @@ class LLGLType:
         self.arraySize = 0
         self.isConst = isConst
         self.isPointer = isPointer
-        self.builtinCond = next((builtin.cond for builtin in LLGLMeta.builtins if builtin.name == typename), None)
+        self.externalCond = next((external.cond for external in LLGLMeta.externals if external.name == typename), None)
 
     def setArraySize(self, arraySize):
         if isinstance(arraySize, str):
@@ -150,38 +173,8 @@ class LLGLType:
 
     def toBaseType(typename):
         if typename != '':
-            if typename == 'void':
-                return StdType.VOID
-            elif typename == 'bool':
-                return StdType.BOOL
-            elif typename == 'char':
-                return StdType.CHAR
-            elif typename == 'int8_t':
-                return StdType.INT8
-            elif typename in ['int16_t', 'short']:
-                return StdType.INT16
-            elif typename in ['int32_t', 'int']:
-                return StdType.INT32
-            elif typename == 'int64_t':
-                return StdType.INT64
-            elif typename == 'uint8_t':
-                return StdType.UINT8
-            elif typename == 'uint16_t':
-                return StdType.UINT16
-            elif typename == 'uint32_t':
-                return StdType.UINT32
-            elif typename == 'uint64_t':
-                return StdType.UINT64
-            elif typename == 'long':
-                return StdType.LONG
-            elif typename == 'size_t':
-                return StdType.SIZE_T
-            elif typename == 'float':
-                return StdType.FLOAT
-            elif typename == 'const':
-                return StdType.CONST
-            else:
-                return StdType.STRUCT
+            builtin = LLGLMeta.builtins.get(typename)
+            return builtin if builtin else StdType.STRUCT
         return StdType.UNDEFINED
 
     # Returns true if this type is a custom LLGL enum, flags, or struct declaration
@@ -214,17 +207,19 @@ class LLGLField:
     type = LLGLType()
     init = None
 
-    def __init__(self, name):
+    def __init__(self, name, type = LLGLType()):
         self.name = name
+        self.type = type
+        self.init = None
 
     def __str__(self):
         str = ''
         if self.type.baseType != StdType.UNDEFINED:
-            str += '{}:{}'.format(self.name, self.type)
+            str += f'{self.name}:{self.type}'
         else:
-            str += '{}'.format(self.name)
-        if self.init != None:
-            str += '({})'.format(self.init)
+            str += f'{self.name}'
+        if self.init:
+            str += f'({self.init})'
         return str
 
 class LLGLRecord:
@@ -251,11 +246,22 @@ class LLGLRecord:
             if field.type.isCustomType() and not field.type.isInterface() and field.type.typename != self.name:
                 self.deps.add(field.type.typename)
 
+class LLGLFunction:
+    returnType = LLGLType()
+    name = ''
+    params = [] # Array of LLGLField
+
+    def __init__(self, name, returnType = LLGLType()):
+        self.returnType = returnType
+        self.name = name
+        self.params = []
+
 class LLGLModule:
     name = ''
-    enums = []
-    flags = []
-    structs = []
+    enums = [] # Array of LLGLRecord
+    flags = [] # Array of LLGLRecord
+    structs = [] # Array of LLGLRecord
+    funcs = [] # Array of LLGLFunction
     typeDeps = set() # Set of types used in this header
 
     def __init__(self):
@@ -263,6 +269,7 @@ class LLGLModule:
         self.enums = []
         self.flags = []
         self.structs = []
+        self.funcs = []
         self.typeDeps = set()
 
     def deriveDependencies(self):
@@ -274,6 +281,7 @@ class LLGLModule:
         self.enums.extend(other.enums)
         self.flags.extend(other.flags)
         self.structs.extend(other.structs)
+        self.funcs.extend(other.funcs)
         self.typeDeps.update(other.typeDeps)
 
     def findStructByName(self, name):
@@ -288,7 +296,7 @@ class LLGLModule:
             struct.deriveDependencies()
 
         # Start with structs that have no dependencies
-        knownTypenames = set(builtin.name for builtin in LLGLMeta.builtins)
+        knownTypenames = set(external.name for external in LLGLMeta.externals)
         baseTypenames = set(enum.name for enum in self.enums) | set(flag.name for flag in self.flags) | knownTypenames
         sortedStructs = []
         pendingStructs = []
@@ -509,8 +517,9 @@ class Parser:
         else:
             isConst = self.scanner.acceptIf('const')
             typename = self.scanner.accept()
+            isConst = self.scanner.acceptIf('const') or isConst
             if typename in LLGLMeta.containers and self.scanner.acceptIf('<'):
-                isConst = self.scanner.acceptIf('const')
+                isConst = self.scanner.acceptIf('const') or isConst
                 typename = self.scanner.accept()
                 isPointer = self.scanner.acceptIf('*')
                 self.scanner.acceptOrFail('>')
@@ -566,15 +575,58 @@ class Parser:
                 self.scanner.acceptOrFail(';')
         return members
 
+    def parseParameter(self):
+        # Only parse return type name parameter name as C does not support default arguments
+        paramType = self.parseType()
+        param = LLGLField(self.scanner.accept(), paramType)
+
+        # Parse optional fixed size array
+        if self.scanner.acceptIf('['):
+            param.type.setArraySize(self.scanner.accept())
+            self.scanner.acceptOrFail(']')
+
+        self.scanner.acceptIf('LLGL_NULLABLE')
+
+        return param
+
+    def parseFunctionDecl(self):
+        # Parse return type
+        returnType = self.parseType()
+
+        # Parse function name
+        name = self.scanner.accept()
+
+        # Parse parameter list
+        func = LLGLFunction(name, returnType)
+
+        self.scanner.acceptOrFail('(')
+        if not self.scanner.match(')'):
+            if self.scanner.match(['void', ')']):
+                # Ignore explicit empty parameter list
+                self.scanner.accept()
+            else:
+                # Parse parameters until no more ',' is scanned
+                while True:
+                    func.params.append(self.parseParameter())
+                    if not self.scanner.acceptIf(','):
+                        break
+        self.scanner.acceptOrFail(')')
+        self.scanner.acceptOrFail(';')
+
+        return func
+
     # Parses input file by filename and returns LLGLModule
-    def parseHeader(self, filename):
+    def parseHeader(self, filename, processFunctions = False):
         mod = LLGLModule()
         mod.name = os.path.splitext(os.path.basename(filename))[0]
 
         self.scanner.scan(filename)
 
         while self.scanner.good():
-            if self.scanner.acceptIf(['enum', 'class']):
+            if processFunctions and self.scanner.acceptIf('LLGL_C_EXPORT'):
+                # Parse function declaration
+                mod.funcs.append(self.parseFunctionDecl())
+            elif self.scanner.acceptIf(['enum', 'class']):
                 # Parse enumeration
                 name = self.scanner.accept()
                 enum = LLGLRecord(name)
@@ -607,19 +659,24 @@ class Parser:
 
         return mod
 
-def parseFile(filename):
+def parseFile(filename, processFunctions = False):
     parser = Parser()
-    mod = parser.parseHeader(filename)
+    mod = parser.parseHeader(filename, processFunctions)
     mod.deriveDependencies()
     return mod
 
 def printModule(module):
-    def printField(field):
-        print('@FIELD{' + str(field) + '}')
+    def printField(field, type):
+        print('@' + type + '{' + str(field) + '}')
 
     def printRecord(record, type):
         print('@' + type + '{' + record.name + '}')
-        iterate(printField, record.fields)
+        iterate(lambda field: printField(field, 'FIELD'), record.fields)
+        print('@END')
+
+    def printFunc(func, type):
+        print('@' + type + '{' + func.name + '}=>' + str(func.returnType))
+        iterate(lambda param: printField(param, 'PARAM'), func.params)
         print('@END')
 
     print('@HEADER{' + module.name + '}')
@@ -627,6 +684,7 @@ def printModule(module):
     iterate(lambda record: printRecord(record, 'ENUM'), module.enums)
     iterate(lambda record: printRecord(record, 'FLAG'), module.flags)
     iterate(lambda record: printRecord(record, 'STRUCT'), filter(lambda record: not record.hasConstFieldsOnly(), module.structs))
+    iterate(lambda func: printFunc(func, 'FUNC'), module.funcs)
     print('@END')
 
 class Translator:
@@ -656,9 +714,9 @@ class Translator:
         def append(self, decl):
             self.decls.append(decl)
             if not decl.directive:
-                self.maxLen[0] = max(self.maxLen[0], len(decl.type))
+                self.maxLen[0] = max(self.maxLen[0], len(decl.type) if decl.type else 0)
                 self.maxLen[1] = max(self.maxLen[1], len(decl.name))
-                self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init != None else 0)
+                self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init else 0)
 
         def spaces(self, index, str):
             return ' ' * (self.maxLen[index] - len(str) + 1)
@@ -667,7 +725,10 @@ class Translator:
         return ' ' * (self.indent * self.tabSize)
 
     def statement(self, line):
-        print(self.indentation() + line)
+        if len(line) > 0 and line[0] == '#':
+            print(line)
+        else:
+            print(self.indentation() + line)
 
     def openScope(self, stmt = '{'):
         self.statement(stmt)
@@ -697,7 +758,7 @@ class Translator:
             llglIncludes = LLGLMeta.includes.copy()
             for dep in typeDeps:
                 inc = translateDependency(dep)
-                if inc and inc[0] != None:
+                if inc and inc[0]:
                     if inc[1]:
                         stdIncludes.add(inc[0])
                     #else:
@@ -729,12 +790,12 @@ class Translator:
                 for inc in includeHeaders[i]:
                     self.statement('#include {}'.format(inc))
 
-            for builtin in LLGLMeta.builtins:
-                if builtin.cond and builtin.include:
+            for external in LLGLMeta.externals:
+                if external.cond and external.include:
                     self.statement('')
-                    self.statement(f'#if {builtin.cond}')
-                    self.statement(f'#   include {builtin.include}')
-                    self.statement(f'#endif /* {builtin.cond} */')
+                    self.statement(f'#if {external.cond}')
+                    self.statement(f'#   include {external.include}')
+                    self.statement(f'#endif /* {external.cond} */')
 
             self.statement('')
             self.statement('')
@@ -745,6 +806,7 @@ class Translator:
         if len(constStructs) > 0:
             self.statement('/* ----- Constants ----- */')
             self.statement('')
+
             for struct in constStructs:
                 # Write struct field declarations
                 declList = Translator.DeclarationList()
@@ -754,6 +816,7 @@ class Translator:
                 for decl in declList.decls:
                     self.statement('#define ' + decl.name + declList.spaces(1, decl.name) + ' ( ' + decl.init + ' )')
                 self.statement('')
+
             self.statement('')
 
         # Write all enumerations
@@ -762,6 +825,7 @@ class Translator:
         if len(doc.enums) > 0:
             self.statement('/* ----- Enumerations ----- */')
             self.statement('')
+
             for enum in doc.enums:
                 if enum.base:
                     bitsize = enum.base.getFixedBitsize()
@@ -777,7 +841,7 @@ class Translator:
                     declList.append(Translator.Declaration('', 'LLGL{}{}'.format(enum.name, field.name), field.init))
 
                 for decl in declList.decls:
-                    if decl.init != None:
+                    if decl.init:
                         self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
                     else:
                         self.statement(decl.name + ',')
@@ -785,6 +849,7 @@ class Translator:
                 self.closeScope()
                 self.statement('LLGL{};'.format(enum.name))
                 self.statement('')
+
             self.statement('')
 
         # Write all flags
@@ -807,6 +872,7 @@ class Translator:
 
             self.statement('/* ----- Flags ----- */')
             self.statement('')
+
             for flag in doc.flags:
                 self.statement('typedef enum LLGL{}'.format(flag.name))
                 basename = flag.name[:-len('Flags')]
@@ -820,7 +886,7 @@ class Translator:
                         declList.append(Translator.Declaration('', fieldName, translateFlagInitializer(basename, field.init) if field.init else None))
 
                 for decl in declList.decls:
-                    if decl.init != None:
+                    if decl.init:
                         self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
                     else:
                         self.statement(decl.name + ',')
@@ -828,6 +894,7 @@ class Translator:
                 self.closeScope()
                 self.statement('LLGL{};'.format(flag.name))
                 self.statement('')
+
             self.statement('')
 
         # Write all structures
@@ -850,7 +917,7 @@ class Translator:
                 else:
                     if type.isConst:
                         typeStr += 'const '
-                    if type.baseType == StdType.STRUCT and type.builtinCond == None:
+                    if type.baseType == StdType.STRUCT and not type.externalCond:
                         typeStr += 'LLGL'
                     typeStr += type.typename
                     if type.isPointer:
@@ -873,8 +940,19 @@ class Translator:
 
                 return (typeStr, declStr)
 
+            def translateFieldInitializer(type, init):
+                if type.isDynamicArray():
+                    return 'NULL'
+                if init:
+                    if init == 'nullptr':
+                        return 'LLGL_NULL_OBJECT' if type.isInterface() else 'NULL'
+                    else:
+                        return re.sub(r'(\w+::)', r'LLGL\1', init).replace('::', '').replace('|', ' | ').replace('Flags', '')
+                return None
+
             self.statement('/* ----- Structures ----- */')
             self.statement('')
+
             for struct in commonStructs:
                 self.statement('typedef struct LLGL{}'.format(struct.name))
                 self.openScope()
@@ -883,15 +961,15 @@ class Translator:
                 declList = Translator.DeclarationList()
                 for field in struct.fields:
                     # Write two fields for dynamic arrays
-                    builtinCond = field.type.builtinCond
-                    if builtinCond:
-                        declList.append(Translator.Declaration(directive = f'#if {builtinCond}'))
+                    externalCond = field.type.externalCond
+                    if externalCond:
+                        declList.append(Translator.Declaration(directive = f'#if {externalCond}'))
                     if field.type.isDynamicArray():
-                        declList.append(Translator.Declaration('size_t', f'num{field.name[0].upper()}{field.name[1:]}'))
+                        declList.append(Translator.Declaration('size_t', f'num{field.name[0].upper()}{field.name[1:]}', '0'))
                     declStr = translateStructField(field.type, field.name)
-                    declList.append(Translator.Declaration(declStr[0], declStr[1], field.init))
-                    if builtinCond:
-                        declList.append(Translator.Declaration(directive = f'#endif /* {builtinCond} */'))
+                    declList.append(Translator.Declaration(declStr[0], declStr[1], translateFieldInitializer(field.type, field.init)))
+                    if externalCond:
+                        declList.append(Translator.Declaration(directive = f'#endif /* {externalCond} */'))
 
                 for decl in declList.decls:
                     if decl.directive:
@@ -903,6 +981,7 @@ class Translator:
                 self.closeScope()
                 self.statement('LLGL{};'.format(struct.name))
                 self.statement('')
+
             self.statement('')
 
         self.statement('#endif /* {} */'.format(headerGuardName))
@@ -913,6 +992,23 @@ class Translator:
         self.statement('')
 
     def translateModuleToCsharp(self, doc):
+        builtinTypenames = {
+            StdType.VOID: 'void',
+            StdType.BOOL: 'bool',
+            StdType.CHAR: 'byte',
+            StdType.INT8: 'sbyte',
+            StdType.INT16: 'short',
+            StdType.INT32: 'int',
+            StdType.INT64: 'long',
+            StdType.UINT8: 'byte',
+            StdType.UINT16: 'ushort',
+            StdType.UINT32: 'uint',
+            StdType.UINT64: 'ulong',
+            StdType.LONG: 'long',
+            StdType.SIZE_T: 'UIntPtr',
+            StdType.FLOAT: 'float'
+        }
+
         self.statement('/*')
         self.statement(' * {}.cs'.format(doc.name))
         self.statement(' *')
@@ -926,8 +1022,18 @@ class Translator:
         self.statement('using System;')
         self.statement('using System.Runtime.InteropServices;')
         self.statement('')
-        self.statement('namespace LLGL')
+        self.statement('namespace LLGLModule')
         self.openScope()
+        self.statement('public static partial class LLGL')
+        self.openScope()
+
+        # Write DLL name
+        self.statement('#if DEBUG')
+        self.statement('const string DllName = "LLGLD.dll";')
+        self.statement('#else')
+        self.statement('const string DllName = "LLGL.dll";')
+        self.statement('#endif')
+        self.statement('')
 
         # Write all constants
         constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
@@ -935,6 +1041,7 @@ class Translator:
         if len(constStructs) > 0:
             self.statement('/* ----- Constants ----- */')
             self.statement('')
+
             for struct in constStructs:
                 self.statement('public enum {} : int'.format(struct.name))
                 self.openScope()
@@ -949,12 +1056,27 @@ class Translator:
 
                 self.closeScope()
                 self.statement('')
+
             self.statement('')
+
+        # Write all interface handles
+        self.statement('/* ----- Handles ----- */')
+        self.statement('')
+
+        for interface in LLGLMeta.interfaces:
+            self.statement(f'public unsafe struct {interface}')
+            self.openScope()
+            self.statement('internal unsafe void* ptr;')
+            self.closeScope()
+            self.statement('')
+
+        self.statement('')
 
         # Write all enumerations
         if len(doc.enums) > 0:
             self.statement('/* ----- Enumerations ----- */')
             self.statement('')
+
             for enum in doc.enums:
                 self.statement('public enum ' + enum.name)
                 self.openScope()
@@ -965,13 +1087,14 @@ class Translator:
                     declList.append(Translator.Declaration('', field.name, field.init))
 
                 for decl in declList.decls:
-                    if decl.init != None:
+                    if decl.init:
                         self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
                     else:
                         self.statement(decl.name + ',')
 
                 self.closeScope()
                 self.statement('')
+
             self.statement('')
 
         # Write all flags
@@ -983,6 +1106,7 @@ class Translator:
 
             self.statement('/* ----- Flags ----- */')
             self.statement('')
+
             for flag in doc.flags:
                 self.statement('[Flags]')
                 self.statement('public enum {} : uint'.format(flag.name))
@@ -995,69 +1119,69 @@ class Translator:
                     declList.append(Translator.Declaration('', field.name, translateFlagInitializer(field.init) if field.init else None))
 
                 for decl in declList.decls:
-                    if decl.init != None:
+                    if decl.init:
                         self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
                     else:
                         self.statement(decl.name + ',')
 
                 self.closeScope()
                 self.statement('')
+
             self.statement('')
 
         # Write all structures
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
 
-        if len(commonStructs) > 0:
-            def translateStructField(type, name):
-                def translateType(type):
-                    if type.baseType == StdType.VOID:
-                        return 'void'
-                    elif type.baseType == StdType.BOOL:
-                        return 'bool'
-                    elif type.baseType == StdType.CHAR:
-                        return 'byte'
-                    elif type.baseType == StdType.INT8:
-                        return 'sbyte'
-                    elif type.baseType == StdType.INT16:
-                        return 'short'
-                    elif type.baseType == StdType.INT32:
-                        return 'int'
-                    elif type.baseType == StdType.INT64:
-                        return 'long'
-                    elif type.baseType == StdType.UINT8:
-                        return 'byte'
-                    elif type.baseType == StdType.UINT16:
-                        return 'ushort'
-                    elif type.baseType == StdType.UINT32:
-                        return 'uint'
-                    elif type.baseType == StdType.UINT64:
-                        return 'ulong'
-                    elif type.baseType == StdType.LONG:
-                        return 'long'
-                    elif type.baseType == StdType.SIZE_T:
-                        return 'UIntPtr'
-                    elif type.baseType == StdType.FLOAT:
-                        return 'float'
-                    else:
-                        return type.typename
+        class CsharpDeclaration:
+            marshal = None
+            type = ''
+            ident = ''
 
-                typeStr = ''
-                declStr = ''
-                if type.baseType == StdType.STRUCT and type.typename in LLGLMeta.interfaces:
-                    typeStr += type.typename
+            def __init__(self, ident):
+                self.marshal = None
+                self.type = ''
+                self.ident = ident
+
+        def translateDecl(type, ident = None, isInsideStruct = False):
+            decl = CsharpDeclaration(ident)
+
+            def sanitizeTypename(typename):
+                if typename.startswith(LLGLMeta.typePrefix):
+                    return typename[len(LLGLMeta.typePrefix):]
+                elif typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
+                    return 'string'
                 else:
-                    if type.arraySize > 0:
-                        typeStr += 'fixed '
-                    typeStr += translateType(type)
-                    if type.isPointer:
-                        typeStr += '*'
-                declStr += name
-                if type.arraySize > 0:
-                    declStr += '[{}]'.format(type.arraySize)
-                return (typeStr, declStr)
+                    return typename
 
+            nonlocal builtinTypenames
+
+            if type.baseType == StdType.STRUCT and type.typename in LLGLMeta.interfaces:
+                decl.type = sanitizeTypename(type.typename)
+            else:
+                builtin = builtinTypenames.get(type.baseType)
+                if isInsideStruct:
+                    if type.arraySize > 0 and builtin:
+                        decl.type += 'fixed '
+                    decl.type += builtin if builtin else sanitizeTypename(type.typename)
+                    if type.isPointer:
+                        decl.type += '*'
+                    elif type.arraySize > 0:
+                        if builtin:
+                            decl.ident += f'[{type.arraySize}]'
+                        else:
+                            decl.marshal = f'MarshalAs(UnmanagedType.ByValArray, SizeConst = {type.arraySize})'
+                            decl.type += '[]'
+                else:
+                    decl.type += builtin if builtin else sanitizeTypename(type.typename)
+                    if type.isPointer or type.arraySize > 0:
+                        decl.type += '*'
+
+            return decl
+
+        if len(commonStructs) > 0:
             self.statement('/* ----- Structures ----- */')
             self.statement('')
+
             for struct in commonStructs:
                 self.statement('public unsafe struct ' + struct.name)
                 self.openScope()
@@ -1065,21 +1189,48 @@ class Translator:
                 # Write struct field declarations
                 declList = Translator.DeclarationList()
                 for field in struct.fields:
-                    # Write two fields for dynamic arrays
-                    if field.type.arraySize == -1:
-                        declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
-                    declStr = translateStructField(field.type, field.name)
-                    declList.append(Translator.Declaration(declStr[0], declStr[1], field.init))
+                    if not field.type.externalCond:
+                        # Write two fields for dynamic arrays
+                        if field.type.arraySize == -1:
+                            declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
+                        fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
+                        if fieldDecl.marshal:
+                            declList.append(Translator.Declaration(None, fieldDecl.marshal))
+                        declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init))
 
                 for decl in declList.decls:
-                    if decl.init != None:
-                        self.statement('public ' + decl.type + declList.spaces(0, decl.type) + decl.name + ';' + declList.spaces(1, decl.name) + '/* = ' + decl.init + ' */')
+                    if not decl.type:
+                        self.statement(f'[{decl.name}]')
+                    elif decl.init:
+                        self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {decl.init} */')
                     else:
-                        self.statement('public ' + decl.type + declList.spaces(0, decl.type) + decl.name + ';')
+                        self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};')
                 self.closeScope()
                 self.statement('')
+
             self.statement('')
 
+        # Write all functions
+        if len(doc.funcs) > 0:
+            self.statement('/* ----- Functions ----- */')
+            self.statement('')
+
+            for func in doc.funcs:
+                self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
+                returnTypeStr = translateDecl(func.returnType).type
+                paramListStr = ''
+                for param in func.params:
+                    if len(paramListStr) > 0:
+                        paramListStr += ', '
+                    paramDecl = translateDecl(param.type, param.name)
+                    paramListStr += f'{paramDecl.type} {paramDecl.ident}'
+                funcName = func.name[len(LLGLMeta.funcPrefix):]
+                self.statement(f'public static extern unsafe {returnTypeStr} {funcName}({paramListStr});');
+                self.statement('')
+
+            self.statement('')
+
+        self.closeScope()
         self.closeScope()
         self.statement('')
         self.statement('')
@@ -1103,10 +1254,13 @@ def main():
             return None
 
         singleName = findArgValue(args, '-name')
+
+        # Are function declarations includes?
+        processFunctions = '-fn' in args
         
         # Parse input headers
-        modules = iterate(parseFile, files)
-        if singleName != None and len(modules) > 0:
+        modules = iterate(lambda filename: parseFile(filename, processFunctions), files)
+        if singleName and len(modules) > 0:
             singleModule = modules[0]
             singleModule.name = singleName
             if len(modules) > 1:

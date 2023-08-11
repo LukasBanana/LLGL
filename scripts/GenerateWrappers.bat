@@ -6,6 +6,7 @@ if not exist .\ParseLLGLHeader.py (
 )
 
 set INCLUDE=..\include\LLGL
+set CINCLUDE=..\include\LLGL-C
 
 set INPUT=^
     %INCLUDE%\BufferFlags.h ^
@@ -35,18 +36,46 @@ set INPUT=^
     %INCLUDE%\VertexAttribute.h ^
     %INCLUDE%\WindowFlags.h
 
+set INPUT_FN=^
+    %INPUT% ^
+    %CINCLUDE%\Buffer.h ^
+    %CINCLUDE%\CommandBuffer.h ^
+    %CINCLUDE%\CommandQueue.h ^
+    %CINCLUDE%\PipelineLayout.h ^
+    %CINCLUDE%\PipelineState.h ^
+    %CINCLUDE%\QueryHeap.h ^
+    %CINCLUDE%\RenderSystem.h ^
+    %CINCLUDE%\RenderTarget.h ^
+    %CINCLUDE%\Report.h ^
+    %CINCLUDE%\Resource.h ^
+    %CINCLUDE%\Shader.h ^
+    %CINCLUDE%\Surface.h ^
+    %CINCLUDE%\SwapChain.h ^
+    %CINCLUDE%\Texture.h ^
+    %CINCLUDE%\Timer.h
+
+REM    %CINCLUDE%\Canvas.h ^
+REM    %CINCLUDE%\Display.h ^
+REM    %CINCLUDE%\Log.h ^
+REM    %CINCLUDE%\Window.h ^
+
 REM Generate wrapper for C99, C#
-call :Generate c99 .\LLGLWrapper.h
-REM call :Generate csharp .\LLGLWrapper.cs
+call :Generate .\LLGLWrapper.h -c99
+call :Generate .\LLGLWrapper.cs -csharp -fn
 
 exit /B 0
 
 :Generate
-set LANGUAGE=%~1
-set OUTPUT=%~2
+set OUTPUT=%~1
+set LANGUAGE=%~2
+set FUNCTIONS=%~3
 
 REM Generate wrapper
-set ARGS=.\ParseLLGLHeader.py -%LANGUAGE% "-name=LLGLWrapper" %INPUT%
+if "%FUNCTIONS%"=="" (
+    set ARGS=.\ParseLLGLHeader.py "-name=LLGLWrapper" %LANGUAGE% %INPUT%
+) else (
+    set ARGS=.\ParseLLGLHeader.py "-name=LLGLWrapper" %LANGUAGE% %FUNCTIONS% %INPUT_FN%
+)
 
 REM Run Python script to parse LLGL headers and write result into output file
 python3 %ARGS% > %OUTPUT%
