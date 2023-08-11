@@ -11,20 +11,23 @@ jobs:
     strategy:
       matrix:
         lib: [Shared, Static]
-        config: [Debug, Release]
+        config: [Release, Debug]
       fail-fast: false
-    
+
     runs-on: macos-latest
 
+    env:
+      README: ${{ github.workspace }}/README.txt
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Checkout Dependencies
-      run: git clone https://github.com/LukasBanana/GaussianLib.git
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
     - name: Configure CMake
       run: >
-        cmake -S . -B ${{github.workspace}}/build
+        cmake -S . -B ${{github.workspace}}/macOS-x64
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
         -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
         -DLLGL_BUILD_RENDERER_OPENGL=ON
@@ -32,8 +35,23 @@ jobs:
         -DLLGL_BUILD_EXAMPLES=ON
         -DLLGL_BUILD_TESTS=ON
         -DLLGL_BUILD_WRAPPER_C99=ON
-        -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+        -DLLGL_GL_ENABLE_OPENGL2X=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }}
+      run: |
+        cmake --build ${{github.workspace}}/macOS-x64 --config ${{ matrix.config }}
+        CURRENT_TIME=$(date)
+        echo "LLGL built with Xcode for macOS on $CURRENT_TIME." > ${{ env.README }}
+        echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
+
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v3
+      if: matrix.lib == 'Shared' && matrix.config == 'Release'
+      with:
+        name: LLGL-Mac-${{ matrix.config }}-x64
+        path: |
+          ${{ env.README }}
+          ${{ github.workspace }}/macOS-x64/build/libLLGL*.dylib
+          ${{ github.workspace }}/macOS-x64/build/Example_*.app
+          ${{ github.workspace }}/macOS-x64/build/Testbed*.app
       

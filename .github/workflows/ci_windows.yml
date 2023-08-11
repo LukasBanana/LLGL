@@ -10,23 +10,26 @@ jobs:
   build_windows:
     strategy:
       matrix:
-        generator: [Visual Studio 16 2019, Visual Studio 17 2022]
-        arch: [Win32, x64]
+        generator: [Visual Studio 17 2022, Visual Studio 16 2019]
+        arch: [x64, Win32]
         lib: [Shared, Static]
-        config: [Debug, Release]
+        config: [Release, Debug]
       fail-fast: false
-    
+
     runs-on: ${{ matrix.generator == 'Visual Studio 17 2022' && 'windows-latest' || 'windows-2019' }}
 
+    env:
+      README: ${{ github.workspace }}/README.txt
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Checkout Dependencies
-      run: git clone https://github.com/LukasBanana/GaussianLib.git
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
     - name: Configure CMake
       run: >
-        cmake -G "${{ matrix.generator }}" -A "${{ matrix.arch }}" -S . -B ${{ github.workspace }}/build
+        cmake -G "${{ matrix.generator }}" -A "${{ matrix.arch }}" -S . -B ${{ github.workspace }}/${{ matrix.arch }}
         -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
         -DLLGL_BUILD_RENDERER_OPENGL=ON
         -DLLGL_BUILD_RENDERER_DIRECT3D11=ON
@@ -34,8 +37,23 @@ jobs:
         -DLLGL_BUILD_EXAMPLES=ON
         -DLLGL_BUILD_TESTS=ON
         -DLLGL_BUILD_WRAPPER_C99=ON
-        -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include"
+        -DLLGL_ENABLE_SPIRV_REFLECT=ON
+        "-DLLGL_D3D11_ENABLE_FEATURELEVEL=Direct3D 11.3"
+        -DLLGL_GL_ENABLE_OPENGL2X=ON
 
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }}
-      
+      run: |
+        cmake --build ${{ github.workspace }}/${{ matrix.arch }} --config ${{ matrix.config }}
+        echo "LLGL built with ${{ matrix.generator }} for ${{ matrix.arch }} on $(date)." > ${{ env.README }}
+        echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
+
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v3
+      if: matrix.generator == 'Visual Studio 17 2022' && matrix.arch == 'x64' && matrix.lib == 'Shared' && matrix.config == 'Release'
+      with:
+        name: LLGL-Windows-${{ matrix.config }}-${{ matrix.arch }}
+        path: |
+          ${{ env.README }}
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/LLGL*.dll
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/Example_*.exe
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/Testbed*.exe
