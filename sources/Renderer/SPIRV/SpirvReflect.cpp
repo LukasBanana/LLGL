@@ -24,7 +24,7 @@ SpirvResult SpirvReflect::Reflect(const SpirvModuleView& module)
     /* Parse SPIR-V header */
     SpirvHeader header;
     SpirvResult result = module.ReadHeader(header);
-    if (result != SpirvResult::Success)
+    if (result != SpirvResult::NoError)
         return result;
 
     idBound_ = header.idBound;
@@ -40,11 +40,11 @@ SpirvResult SpirvReflect::Reflect(const SpirvModuleView& module)
         }
 
         result = ParseInstruction(instr);
-        if (result != SpirvResult::Success)
+        if (result != SpirvResult::NoError)
             return result;
     }
 
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 static void ParseSpvExecutionMode(const SpirvInstruction& instr, SpirvReflect::SpvExecutionMode& outExecutionMode)
@@ -84,7 +84,7 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
     /* Parse SPIR-V header */
     SpirvHeader header;
     SpirvResult result = module.ReadHeader(header);
-    if (result != SpirvResult::Success)
+    if (result != SpirvResult::NoError)
         return result;
 
     /* Parse each SPIR-V instruction in the module */
@@ -104,7 +104,7 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
         }
     }
 
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
@@ -156,13 +156,13 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
     /* Parse SPIR-V header */
     SpirvHeader header;
     SpirvResult result = module.ReadHeader(header);
-    if (result != SpirvResult::Success)
+    if (result != SpirvResult::NoError)
         return result;
 
     /* Find global variable declaration with PushConstant storage class */
     const spv::Id pushConstantVarId = FindGlobalPushConstantVariableType(module);
     if (pushConstantVarId == 0)
-        return SpirvResult::Success;
+        return SpirvResult::NoError;
 
     /* Find pointer subtype for push constant variable */
     const spv::Id pushConstantTypeId = FindPointerTypeSubtype(module, pushConstantVarId);
@@ -224,7 +224,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
         }
     }
 
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 static SpirvReflect::SpvBindingPoint* FindOrInsertBindingPoint(std::vector<SpirvReflect::SpvBindingPoint>& bindingPoints, spv::Id varId)
@@ -253,7 +253,7 @@ SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector
     /* Parse SPIR-V header */
     SpirvHeader header;
     SpirvResult result = module.ReadHeader(header);
-    if (result != SpirvResult::Success)
+    if (result != SpirvResult::NoError)
         return result;
 
     /* Now parse SPIR-V module for binding and descriptor set decorations */
@@ -303,7 +303,7 @@ SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector
         }
     }
 
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 
@@ -340,7 +340,7 @@ SpirvResult SpirvReflect::ParseInstruction(const SpirvInstruction& instr)
         case spv::Op::OpConstant:
             return OpConstant(instr);
         default:
-            return SpirvResult::Success;
+            return SpirvResult::NoError;
     }
 }
 
@@ -351,7 +351,7 @@ SpirvResult SpirvReflect::OpName(const Instr& instr)
         return SpirvResult::IdOutOfBounds;
 
     names_.Set(id, instr.GetString(1));
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 SpirvResult SpirvReflect::OpDecorate(const Instr& instr)
@@ -375,7 +375,7 @@ SpirvResult SpirvReflect::OpDecorate(const Instr& instr)
         default:
             break;
     }
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 void SpirvReflect::OpDecorateBinding(const Instr& instr, spv::Id id)
@@ -463,7 +463,7 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
         break;
     }
 
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 SpirvResult SpirvReflect::OpConstant(const Instr& instr)
@@ -489,7 +489,7 @@ SpirvResult SpirvReflect::OpConstant(const Instr& instr)
                 val.f64 = instr.GetFloat64(0);
         }
     }
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 SpirvResult SpirvReflect::OpType(const Instr& instr)
@@ -534,7 +534,7 @@ SpirvResult SpirvReflect::OpType(const Instr& instr)
 
     #undef LLGL_OPTYPE_CASE_HANDLER
 
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 void SpirvReflect::OpTypeVoid(const Instr& /*instr*/, SpvType& type)

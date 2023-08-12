@@ -22,7 +22,7 @@ namespace LLGL
 // SPIR-V error codes.
 enum class SpirvResult
 {
-    Success = 0,        // No error occurred.
+    NoError = 0,        // No error occurred.
 
     InvalidModule,      // Invalid size of module; must be a multiple of 4.
     InvalidHeader,      // Invalid module header.

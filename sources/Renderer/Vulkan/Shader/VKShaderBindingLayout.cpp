@@ -28,8 +28,8 @@ bool VKShaderBindingLayout::BuildFromSpirvModule(const void* data, std::size_t s
 
     /* Reflect all SPIR-V binding points */
     std::vector<SpirvReflect::SpvBindingPoint> bindingPoints;
-    auto result = SpirvReflectBindingPoints(SpirvModuleView{ data, size }, bindingPoints);
-    if (result != SpirvResult::Success)
+    SpirvResult result = SpirvReflectBindingPoints(SpirvModuleView{ data, size }, bindingPoints);
+    if (result != SpirvResult::NoError)
         return false;
 
     /* Convert binding points into to module bindings */

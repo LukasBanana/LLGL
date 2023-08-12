@@ -17,12 +17,12 @@ static SpirvResult ReadSpirvHeader(const std::uint32_t* words, std::size_t wordC
     if (wordCount < sizeof(SpirvHeader)/sizeof(std::uint32_t))
         return SpirvResult::InvalidModule;
 
-    auto* header = reinterpret_cast<const SpirvHeader*>(words);
+    const SpirvHeader* header = reinterpret_cast<const SpirvHeader*>(words);
     if (header->spirvMagic != spv::MagicNumber)
         return SpirvResult::InvalidHeader;
 
     outHeader = *header;
-    return SpirvResult::Success;
+    return SpirvResult::NoError;
 }
 
 

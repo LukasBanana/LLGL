@@ -382,7 +382,7 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
 {
     /* Parse shader module */
     SpirvReflect spvReflect;
-    if (spvReflect.Reflect(SpirvModuleView{ shaderCode_ }) != SpirvResult::Success)
+    if (spvReflect.Reflect(SpirvModuleView{ shaderCode_ }) != SpirvResult::NoError)
         return false;
 
     /* Gather input/output attributes */
@@ -466,8 +466,8 @@ bool VKShader::ReflectPushConstants(
 
     /* Parse shader module for push-constants */
     SpirvReflect::SpvBlock block;
-    auto result = SpirvReflectPushConstants(SpirvModuleView{ shaderCode_ }, block);
-    if (result != SpirvResult::Success)
+    SpirvResult result = SpirvReflectPushConstants(SpirvModuleView{ shaderCode_ }, block);
+    if (result != SpirvResult::NoError)
         return false;
 
     /* Build push constant ranges */
