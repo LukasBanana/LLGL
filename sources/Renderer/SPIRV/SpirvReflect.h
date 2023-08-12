@@ -87,15 +87,15 @@ class SpirvReflect
             const SpvType* Deref(const spv::Op opcodeType) const;
             bool RefersToType(const spv::Op opcodeType) const;
 
-            spv::Op                     opcode      = spv::Op::Max;             // Opcode for this type (e.g. spv::Op::OpTypeFloat).
-            spv::Id                     result      = 0;                        // Result ID of this type.
-            spv::StorageClass           storage     = spv::StorageClass::Max;   // Storage class of this type. By default spv::StorageClass::Max.
-            const char*                 name        = nullptr;                  // Name of this type (only for structures).
-            const SpvType*              baseType    = nullptr;                  // Reference to the base type, or null if there is no base type.
-            std::uint32_t               elements    = 0;                        // Number of elements for the base type, or 0 if there is no base type.
-            std::uint32_t               size        = 0;                        // Size (in bytes) of this type, or 0 if this is an OpTypeVoid type.
-            bool                        sign        = false;                    // Specifies whether or not this is a signed type (only for OpTypeInt).
-            std::vector<const SpvType*> fieldTypes;                             // List of types of each record field.
+            spv::Op                     opcode      = spv::OpMax;           // Opcode for this type (e.g. spv::Op::OpTypeFloat).
+            spv::Id                     result      = 0;                    // Result ID of this type.
+            spv::StorageClass           storage     = spv::StorageClassMax; // Storage class of this type. By default spv::StorageClass::Max.
+            const char*                 name        = nullptr;              // Name of this type (only for structures).
+            const SpvType*              baseType    = nullptr;              // Reference to the base type, or null if there is no base type.
+            std::uint32_t               elements    = 0;                    // Number of elements for the base type, or 0 if there is no base type.
+            std::uint32_t               size        = 0;                    // Size (in bytes) of this type, or 0 if this is an OpTypeVoid type.
+            bool                        sign        = false;                // Specifies whether or not this is a signed type (only for OpTypeInt).
+            std::vector<const SpvType*> fieldTypes;                         // List of types of each record field.
         };
 
         // SPIRV-V scalar constants.
@@ -127,7 +127,7 @@ class SpirvReflect
         struct SpvVarying
         {
             const char*     name        = nullptr;
-            spv::BuiltIn    builtin     = spv::BuiltIn::Max;    // Optional built-in type
+            spv::BuiltIn    builtin     = spv::BuiltInMax;  // Optional built-in type
             const SpvType*  type        = nullptr;
             std::uint32_t   location    = 0;
             bool            input       = false;

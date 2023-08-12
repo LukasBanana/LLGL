@@ -9,7 +9,7 @@
 #define LLGL_SPIRV_INSTRUCTION_H
 
 
-#include <spirv/1.2/spirv.hpp11>
+#include <spirv/1.2/spirv.hpp>
 #include <cstdint>
 
 
@@ -50,9 +50,9 @@ struct SpirvInstruction
     // Returns the operand offset after the end of the ASCII string operands beginning at the specified offset.
     std::uint32_t FindStringEndOperand(std::uint32_t firstOperand) const;
 
-    spv::Op         opcode      = spv::Op::OpNop;   // Instruction op-code. By default OpNop.
-    spv::Id         type        = 0;                // Type ID number. By default 0.
-    spv::Id         result      = 0;                // Result ID number. By default 0.
+    spv::Op         opcode      = spv::OpNop;   // Instruction op-code. By default OpNop.
+    spv::Id         type        = 0;            // Type ID number. By default 0.
+    spv::Id         result      = 0;            // Result ID number. By default 0.
     std::uint32_t   numOperands = 0;
     const spv::Id*  operands    = nullptr;
 };

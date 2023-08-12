@@ -52,23 +52,23 @@ static void ParseSpvExecutionMode(const SpirvInstruction& instr, SpirvReflect::S
     auto mode = static_cast<spv::ExecutionMode>(instr.GetUInt32(1));
     switch (mode)
     {
-        case spv::ExecutionMode::EarlyFragmentTests:
+        case spv::ExecutionModeEarlyFragmentTests:
             outExecutionMode.earlyFragmentTest = true;
             break;
 
-        case spv::ExecutionMode::OriginUpperLeft:
+        case spv::ExecutionModeOriginUpperLeft:
             outExecutionMode.originUpperLeft = true;
             break;
 
-        case spv::ExecutionMode::DepthGreater:
+        case spv::ExecutionModeDepthGreater:
             outExecutionMode.depthGreater = true;
             break;
 
-        case spv::ExecutionMode::DepthLess:
+        case spv::ExecutionModeDepthLess:
             outExecutionMode.depthLess = true;
             break;
 
-        case spv::ExecutionMode::LocalSize:
+        case spv::ExecutionModeLocalSize:
             outExecutionMode.localSizeX = instr.GetUInt32(2);
             outExecutionMode.localSizeY = instr.GetUInt32(3);
             outExecutionMode.localSizeZ = instr.GetUInt32(4);
@@ -115,7 +115,7 @@ static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
         {
             /* OpVariable ResultType ResultId StorageClass[0] (Initializer[1]) */
             auto storage = static_cast<spv::StorageClass>(instr.GetUInt32(0));
-            if (storage == spv::StorageClass::PushConstant)
+            if (storage == spv::StorageClassPushConstant)
             {
                 /* Return variable type; Must be OpTypePointer for push constants */
                 return instr.type;
@@ -210,7 +210,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
                 if (instr.GetUInt32(0) == pushConstantTypeId)
                 {
                     const auto decoration = static_cast<spv::Decoration>(instr.GetUInt32(2));
-                    if (decoration == spv::Decoration::Offset)
+                    if (decoration == spv::DecorationOffset)
                     {
                         if (instr.numOperands < 4)
                             return SpirvResult::OperandOutOfBounds;
@@ -281,15 +281,15 @@ SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector
 
             /* Add entry for either binding or descriptor set */
             const auto decoration = static_cast<spv::Decoration>(instr.GetUInt32(1));
-            if (decoration == spv::Decoration::DescriptorSet ||
-                decoration == spv::Decoration::Binding)
+            if (decoration == spv::DecorationDescriptorSet ||
+                decoration == spv::DecorationBinding)
             {
                 if (instr.numOperands < 3)
                     return SpirvResult::OperandOutOfBounds;
 
                 auto* binding = FindOrInsertBindingPoint(outBindingPoints, varId);
                 binding->id = varId;
-                if (decoration == spv::Decoration::DescriptorSet)
+                if (decoration == spv::DecorationDescriptorSet)
                 {
                     binding->set                = instr.GetUInt32(2);
                     binding->setWordOffset      = module.WordOffset(it) + 3;
@@ -363,13 +363,13 @@ SpirvResult SpirvReflect::OpDecorate(const Instr& instr)
     auto decoration = static_cast<spv::Decoration>(instr.GetUInt32(1));
     switch (decoration)
     {
-        case spv::Decoration::Binding:
+        case spv::DecorationBinding:
             OpDecorateBinding(instr, id);
             break;
-        case spv::Decoration::Location:
+        case spv::DecorationLocation:
             OpDecorateLocation(instr, id);
             break;
-        case spv::Decoration::BuiltIn:
+        case spv::DecorationBuiltIn:
             OpDecorateBuiltin(instr, id);
             break;
         default:
@@ -420,8 +420,8 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
 
     switch (storage)
     {
-        case spv::StorageClass::Uniform:
-        case spv::StorageClass::UniformConstant:
+        case spv::StorageClassUniform:
+        case spv::StorageClassUniformConstant:
         //case spv::StorageClass::PushConstant:
         {
             auto& var = uniforms_[instr.result];
@@ -439,7 +439,7 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
         }
         break;
 
-        case spv::StorageClass::Input:
+        case spv::StorageClassInput:
         {
             auto& var = varyings_[instr.result];
             {
@@ -449,7 +449,7 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
         }
         break;
 
-        case spv::StorageClass::Output:
+        case spv::StorageClassOutput:
         {
             auto& var = varyings_[instr.result];
             {

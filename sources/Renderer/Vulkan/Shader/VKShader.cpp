@@ -272,26 +272,26 @@ static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
 {
     switch (type)
     {
-        case spv::BuiltIn::ClipDistance:        return SystemValue::ClipDistance;
-        case spv::BuiltIn::CullDistance:        return SystemValue::CullDistance;
-        //                                      return SystemValue::Color;
-        case spv::BuiltIn::FragDepth:           return SystemValue::Depth;
-        //                                      return SystemValue::DepthGreater;
-        //                                      return SystemValue::DepthLess;
-        case spv::BuiltIn::FrontFacing:         return SystemValue::FrontFacing;
-        case spv::BuiltIn::InstanceId:          return SystemValue::InstanceID;
-        case spv::BuiltIn::InstanceIndex:       return SystemValue::InstanceID;
-        case spv::BuiltIn::Position:            return SystemValue::Position;
-        case spv::BuiltIn::FragCoord:           return SystemValue::Position;
-        case spv::BuiltIn::PrimitiveId:         return SystemValue::PrimitiveID;
-        case spv::BuiltIn::Layer:               return SystemValue::RenderTargetIndex;
-        case spv::BuiltIn::SampleMask:          return SystemValue::SampleMask;
-        case spv::BuiltIn::SampleId:            return SystemValue::SampleID;
-        case spv::BuiltIn::FragStencilRefEXT:   return SystemValue::Stencil;
-        case spv::BuiltIn::VertexId:            return SystemValue::VertexID;
-        case spv::BuiltIn::VertexIndex:         return SystemValue::VertexID;
-        case spv::BuiltIn::ViewportIndex:       return SystemValue::ViewportIndex;
-        default:                                return SystemValue::Undefined;
+        case spv::BuiltInClipDistance:      return SystemValue::ClipDistance;
+        case spv::BuiltInCullDistance:      return SystemValue::CullDistance;
+        //                                  return SystemValue::Color;
+        case spv::BuiltInFragDepth:         return SystemValue::Depth;
+        //                                  return SystemValue::DepthGreater;
+        //                                  return SystemValue::DepthLess;
+        case spv::BuiltInFrontFacing:       return SystemValue::FrontFacing;
+        case spv::BuiltInInstanceId:        return SystemValue::InstanceID;
+        case spv::BuiltInInstanceIndex:     return SystemValue::InstanceID;
+        case spv::BuiltInPosition:          return SystemValue::Position;
+        case spv::BuiltInFragCoord:         return SystemValue::Position;
+        case spv::BuiltInPrimitiveId:       return SystemValue::PrimitiveID;
+        case spv::BuiltInLayer:             return SystemValue::RenderTargetIndex;
+        case spv::BuiltInSampleMask:        return SystemValue::SampleMask;
+        case spv::BuiltInSampleId:          return SystemValue::SampleID;
+        case spv::BuiltInFragStencilRefEXT: return SystemValue::Stencil;
+        case spv::BuiltInVertexId:          return SystemValue::VertexID;
+        case spv::BuiltInVertexIndex:       return SystemValue::VertexID;
+        case spv::BuiltInViewportIndex:     return SystemValue::ViewportIndex;
+        default:                            return SystemValue::Undefined;
     }
 }
 
@@ -362,8 +362,8 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
             //if (varType->opcode == spv::Op::OpTypeArray)
             //    resource.binding.arraySize = varType->elements;
 
-            if (varType->storage == spv::StorageClass::Uniform ||
-                varType->storage == spv::StorageClass::UniformConstant)
+            if (varType->storage == spv::StorageClassUniform ||
+                varType->storage == spv::StorageClassUniformConstant)
             {
                 if (auto derefType = ReflectSpvBinding(resource.binding, varType))
                 {
