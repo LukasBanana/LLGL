@@ -10,20 +10,20 @@ jobs:
   build_ios:
     strategy:
       matrix:
-        config: [Debug, Release]
+        config: [Release, Debug]
       fail-fast: false
     
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Checkout Dependencies
-      run: git clone https://github.com/LukasBanana/GaussianLib.git
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
     - name: Configure CMake
       run: >
-        cmake -S . -B ${{github.workspace}}/build
+        cmake -S . -B ${{github.workspace}}/iOS-arm64
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
         -DLLGL_BUILD_RENDERER_OPENGLES3=OFF
         -DLLGL_BUILD_RENDERER_METAL=ON
@@ -35,5 +35,5 @@ jobs:
         -DCMAKE_IOS_INSTALL_COMBINED=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }}
+      run: cmake --build ${{github.workspace}}/iOS-arm64 --config ${{ matrix.config }}
       
