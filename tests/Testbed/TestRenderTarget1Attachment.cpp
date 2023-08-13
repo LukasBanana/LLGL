@@ -59,9 +59,9 @@ DEF_TEST( RenderTarget1Attachment )
     // Create render target with 1 depth-stencil attachment and multi-sampling
     RenderTargetDescriptor targetMS1Desc;
     {
-        targetMS1Desc.resolution              = Extent2D{ 512, 512 };
-        targetMS1Desc.depthStencilAttachment  = Format::D24UNormS8UInt;
-        targetMS1Desc.samples                 = 8;
+        targetMS1Desc.resolution                = Extent2D{ 512, 512 };
+        targetMS1Desc.depthStencilAttachment    = Format::D24UNormS8UInt;
+        targetMS1Desc.samples                   = 8;
     }
     CREATE_RENDER_TARGET(targetMS1, targetMS1Desc, "targetMS1{d24s8,8msaa}");
 
@@ -73,7 +73,10 @@ DEF_TEST( RenderTarget1Attachment )
     }
     CREATE_RENDER_TARGET(targetMS2, targetMS2Desc, "targetMS2{512x512x8msaa[1]}");
 
-    #if 0
+    #if 0 //TODO
+
+    ////////////// CUSTOM RENDER PASSES //////////////
+
     // Create target using a render pass with 1 attachment
     RenderPassDescriptor pass3Desc;
     RenderPass* pass3 = renderer->CreateRenderPass(pass3Desc);
@@ -104,12 +107,12 @@ DEF_TEST( RenderTarget1Attachment )
     #endif
 
     // Delete old render targets
-    renderer->Release(*target1);
     renderer->Release(*target2);
     renderer->Release(*target3);
     renderer->Release(*target4);
     renderer->Release(*targetMS1);
     renderer->Release(*targetMS2);
+    renderer->Release(*depthTex1);
 
     return TestResult::Passed;
 }

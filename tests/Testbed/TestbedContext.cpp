@@ -155,7 +155,7 @@ void TestbedContext::RunAllTests()
     RUN_TEST( StencilBuffer             );
     RUN_TEST( RenderTargetNoAttachments );
     RUN_TEST( RenderTarget1Attachment   );
-    //RUN_TEST( RenderTargetNAttachments  ); //TODO: not implemented yet
+    RUN_TEST( RenderTargetNAttachments  );
 
     #undef RUN_TEST
 
