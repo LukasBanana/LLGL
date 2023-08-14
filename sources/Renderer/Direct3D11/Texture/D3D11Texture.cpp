@@ -343,7 +343,7 @@ static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
                 desc.Usage          = outTextureUsage;
                 desc.BindFlags      = 0;
                 desc.CPUAccessFlags = cpuAccessFlags;
-                desc.MiscFlags      = (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE);
+                desc.MiscFlags      = 0; // Don't adopt D3D11_RESOURCE_MISC_TEXTURECUBE here for CPU access textures
             }
             outTexture.tex2D = DXCreateTexture2D(device, desc);
         }

@@ -472,7 +472,7 @@ void D3D11CommandBuffer::CopyTexture(
     auto& dstTextureD3D = LLGL_CAST(D3D11Texture&, dstTexture);
     auto& srcTextureD3D = LLGL_CAST(D3D11Texture&, srcTexture);
 
-    const Offset3D  dstOffset   = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset, dstLocation.arrayLayer);
+    const Offset3D  dstOffset   = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset);
     const D3D11_BOX srcBox      = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
 
     context_->CopySubresourceRegion(

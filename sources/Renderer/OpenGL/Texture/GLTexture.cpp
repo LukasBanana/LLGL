@@ -399,6 +399,15 @@ void GLTexture::TexParameterSwizzle(
 
 #ifdef GL_ARB_copy_image
 
+// For glCopyImageSubData, the array lazer is always specified in the Z-coordinate
+static Offset3D ToGLArrayTextureOffset(TextureType type, const Offset3D& offset)
+{
+    if (type == TextureType::Texture1DArray)
+        return Offset3D{ offset.x, 0, offset.y };
+    else
+        return offset;
+}
+
 static void GLCopyImageSubData(
     GLTexture&      dstTexture,
     GLint           dstLevel,
@@ -409,19 +418,21 @@ static void GLCopyImageSubData(
     const Extent3D& extent)
 {
     /* Copy raw data of texture directly (GL 4.3+) */
+    const Offset3D dstOffsetGL = ToGLArrayTextureOffset(dstTexture.GetType(), dstOffset);
+    const Offset3D srcOffsetGL = ToGLArrayTextureOffset(srcTexture.GetType(), srcOffset);
     glCopyImageSubData(
         srcTexture.GetID(),
         GLTypes::Map(srcTexture.GetType()),
         srcLevel,
-        srcOffset.x,
-        srcOffset.y,
-        srcOffset.z,
+        srcOffsetGL.x,
+        srcOffsetGL.y,
+        srcOffsetGL.z,
         dstTexture.GetID(),
         GLTypes::Map(dstTexture.GetType()),
         dstLevel,
-        dstOffset.x,
-        dstOffset.y,
-        dstOffset.z,
+        dstOffsetGL.x,
+        dstOffsetGL.y,
+        dstOffsetGL.z,
         static_cast<GLsizei>(extent.width),
         static_cast<GLsizei>(extent.height),
         static_cast<GLsizei>(extent.depth)
