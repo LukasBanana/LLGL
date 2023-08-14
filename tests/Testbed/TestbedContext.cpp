@@ -148,7 +148,7 @@ void TestbedContext::RunAllTests()
     RUN_TEST( BufferCopy                );
     RUN_TEST( TextureTypes              );
     RUN_TEST( TextureWriteAndRead       );
-    //RUN_TEST( TextureCopy               ); //TODO: not implemented yet
+    RUN_TEST( TextureCopy               );
     //RUN_TEST( TextureToBufferCopy       ); //TODO: not implemented yet
     //RUN_TEST( BufferToTextureCopy       ); //TODO: not implemented yet
     RUN_TEST( DepthBuffer               );
@@ -1026,6 +1026,25 @@ void TestbedContext::RecordTestResult(TestResult result, const char* name)
         ++failures;
 }
 
+std::string TestbedContext::FormatByteArray(const void* data, std::size_t size)
+{
+    std::string s;
+    s.reserve(size * 3);
+
+    char formatted[3] = {};
+    const unsigned char* bytes = reinterpret_cast<const unsigned char*>(data);
+
+    for_range(i, size)
+    {
+        if (!s.empty())
+            s += ' ';
+        ::snprintf(formatted, 3, "%02X", static_cast<unsigned>(bytes[i]));
+        s += formatted;
+    }
+
+    return s;
+}
+
 
 /*
  * IndexedTriangleMeshBuffer structure
@@ -1054,3 +1073,34 @@ void TestbedContext::IndexedTriangleMeshBuffer::FinalizeMesh(IndexedTriangleMesh
     outMesh.indexBufferOffset   = firstIndex * sizeof(std::uint32_t);
     outMesh.numIndices          = static_cast<std::uint32_t>(indices.size()) - firstIndex;
 }
+
+
+/*
+ * RandomColorSet structure
+ */
+
+std::uint8_t RandomUint8()
+{
+    return static_cast<std::uint8_t>(::rand() % 0xFF);
+}
+
+static void GenerateRandomColors(ColorRGBAub* colors, std::size_t count)
+{
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        colors[i].r = RandomUint8();
+        colors[i].g = RandomUint8();
+        colors[i].b = RandomUint8();
+        colors[i].a = RandomUint8();
+    }
+}
+
+void TestbedContext::RandomColorSet::Generate(std::size_t count)
+{
+    if (colors.size() != count)
+    {
+        colors.resize(count);
+        GenerateRandomColors(colors.data(), colors.size());
+    }
+}
+

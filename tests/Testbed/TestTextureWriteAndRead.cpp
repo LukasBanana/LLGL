@@ -9,36 +9,6 @@
 #include <stdlib.h>
 
 
-std::uint8_t RandomUint8()
-{
-    return static_cast<std::uint8_t>(::rand() % 0xFF);
-}
-
-static void GenerateRandomColors(ColorRGBAub* colors, std::size_t count)
-{
-    for (std::size_t i = 0; i < count; ++i)
-    {
-        colors[i].r = RandomUint8();
-        colors[i].g = RandomUint8();
-        colors[i].b = RandomUint8();
-        colors[i].a = RandomUint8();
-    }
-}
-
-struct RandomColorSet
-{
-    std::vector<ColorRGBAub> colors;
-
-    void Generate(std::size_t count)
-    {
-        if (colors.size() != count)
-        {
-            colors.resize(count);
-            GenerateRandomColors(colors.data(), colors.size());
-        }
-    }
-};
-
 DEF_TEST( TextureWriteAndRead )
 {
     const ColorRGBAub colorsRgbaUb4[4] =
@@ -52,26 +22,7 @@ DEF_TEST( TextureWriteAndRead )
     static RandomColorSet colorsRgbaUb16;
     colorsRgbaUb16.Generate(16);
 
-    auto PrintImageData = [](const void* data, std::size_t dataSize) -> std::string
-    {
-        std::string s;
-        s.reserve(dataSize * 3);
-
-        char formatted[3] = {};
-        const unsigned char* bytes = reinterpret_cast<const unsigned char*>(data);
-
-        for_range(i, dataSize)
-        {
-            if (!s.empty())
-                s += ' ';
-            ::snprintf(formatted, 3, "%02X", static_cast<unsigned>(bytes[i]));
-            s += formatted;
-        }
-
-        return s;
-    };
-
-    auto CreateTextureAndTestImageData = [this, &PrintImageData](const char* name, const TextureDescriptor& texDesc, const TextureRegion& region, const void* data, std::size_t dataSize) -> TestResult
+    auto CreateTextureAndTestImageData = [this](const char* name, const TextureDescriptor& texDesc, const TextureRegion& region, const void* data, std::size_t dataSize) -> TestResult
     {
         // Create texture object
         Texture* tex = nullptr;
@@ -108,9 +59,8 @@ DEF_TEST( TextureWriteAndRead )
         // Match input with output texture data
         if (::memcmp(data, outputData.data(), dataSize) != 0)
         {
-            std::string inputDataStr = PrintImageData(data, dataSize);
-            std::string outputDataStr = PrintImageData(outputData.data(), dataSize);
-
+            const std::string inputDataStr = FormatByteArray(data, dataSize);
+            const std::string outputDataStr = FormatByteArray(outputData.data(), dataSize);
             Log::Errorf(
                 "Mismatch between data of texture %s and initial data:\n -> Expected: [%s]\n -> Actual:   [%s] \n",
                 name, inputDataStr.c_str(), outputDataStr.c_str()

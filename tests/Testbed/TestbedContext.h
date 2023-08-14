@@ -11,8 +11,10 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/VertexFormat.h>
+#include <LLGL/Utils/ColorRGBA.h>
 #include <Gauss/Matrix.h>
 #include <Gauss/Vector4.h>
+#include <vector>
 #include <functional>
 #include <initializer_list>
 
@@ -89,6 +91,15 @@ class TestbedContext
             DiffErrorLoadResultFailed   = -2,
             DiffErrorExtentMismatch     = -3,
             DiffErrorSaveDiffFailed     = -4,
+        };
+
+    protected:
+
+        struct RandomColorSet
+        {
+            std::vector<LLGL::ColorRGBAub> colors;
+
+            void Generate(std::size_t count);
         };
 
         struct Vertex
@@ -195,6 +206,8 @@ class TestbedContext
         int DiffImagesTGA(const std::string& name, int threshold = 1, int scale = 1);
 
         void RecordTestResult(TestResult result, const char* name);
+
+        std::string FormatByteArray(const void* data, std::size_t size);
 
 };
 
