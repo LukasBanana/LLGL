@@ -1,5 +1,5 @@
-// GLSL shader version 1.30 (for OpenGL 3.1)
-#version 130
+// GLSL shader version 1.40 (for OpenGL 3.2)
+#version 140
 
 // Vertex attributes (these names must match our vertex format attributes)
 in vec2 position;
