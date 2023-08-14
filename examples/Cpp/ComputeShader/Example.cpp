@@ -109,15 +109,15 @@ public:
         Vertex vertices[] =
         {
             // Triangle
-            { CircleX(  0.0f), CircleY(  0.0f), 255,   0,   0, 255 },
-            { CircleX(120.0f), CircleY(120.0f),   0, 255,   0, 255 },
-            { CircleX(240.0f), CircleY(240.0f),   0,   0, 255, 255 },
+            { { CircleX(  0.0f), CircleY(  0.0f) }, { 255,   0,   0, 255 } },
+            { { CircleX(120.0f), CircleY(120.0f) }, {   0, 255,   0, 255 } },
+            { { CircleX(240.0f), CircleY(240.0f) }, {   0,   0, 255, 255 } },
 
             // Quad
-            { -1.0f, +1.0f,   0, 255,   0, 255 },
-            { -1.0f, -1.0f, 255,   0,   0, 255 },
-            { +1.0f, +1.0f,   0,   0, 255, 255 },
-            { +1.0f, -1.0f, 255,   0, 255, 255 },
+            { { -1.0f, +1.0f }, {   0, 255,   0, 255 } },
+            { { -1.0f, -1.0f }, { 255,   0,   0, 255 } },
+            { { +1.0f, +1.0f }, {   0,   0, 255, 255 } },
+            { { +1.0f, -1.0f }, { 255,   0, 255, 255 } },
         };
 
         // Create vertex buffer
@@ -177,7 +177,7 @@ public:
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse("cbuffer(2):comp, rwbuffer(3):comp, rwbuffer(4):comp")
+            LLGL::Parse("heap{cbuffer(2):comp, rwbuffer(3):comp, rwbuffer(4):comp}")
         );
 
         // Create compute pipeline
