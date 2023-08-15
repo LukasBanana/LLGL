@@ -40,6 +40,8 @@ DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* 
     features_ { caps_.features                            },
     limits_   { caps_.limits                              }
 {
+    /* Initialize rendering capabilities from wrapped instance */
+    UpdateRenderingCaps();
 }
 
 /* ----- Swap-chain ----- */
@@ -49,13 +51,10 @@ SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChain
     /* Create primary swap-chain */
     auto swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
 
+    /* Instantiate command queue if not done and update rendering capabilities from wrapped instance */
     if (!commandQueue_)
     {
-        /* Store meta data about render system */
-        SetRendererInfo(instance_->GetRendererInfo());
-        SetRenderingCaps(instance_->GetRenderingCaps());
-
-        /* Instantiate command queue */
+        UpdateRenderingCaps();
         commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
     }
 
@@ -1821,6 +1820,13 @@ void DbgRenderSystem::ReleaseDbg(HWObjectContainer<T>& cont, TBase& entry)
     auto& entryDbg = LLGL_CAST(T&, entry);
     instance_->Release(entryDbg.instance);
     cont.erase(&entry);
+}
+
+void DbgRenderSystem::UpdateRenderingCaps()
+{
+    /* Store meta data about render system */
+    SetRendererInfo(instance_->GetRendererInfo());
+    SetRenderingCaps(instance_->GetRenderingCaps());
 }
 
 

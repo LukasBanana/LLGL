@@ -249,7 +249,6 @@ ExampleBase::ExampleBase(
 :
     profilerObj_ { new LLGL::RenderingProfiler() },
     debuggerObj_ { new LLGL::RenderingDebugger() },
-    samples_     { samples                       },
     profiler     { *profilerObj_                 }
 {
     // Set report callback to standard output
@@ -280,11 +279,17 @@ ExampleBase::ExampleBase(
     if (!debugger)
         debuggerObj_.reset();
 
+    // Apply device limits (not for GL, because we won't have a valid GL context until we create our first swap chain)
+    if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
+        samples_ = samples;
+    else
+        samples_ = std::min(samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
+
     // Create swap-chain
     LLGL::SwapChainDescriptor swapChainDesc;
     {
         swapChainDesc.resolution    = resolution;
-        swapChainDesc.samples       = samples;
+        swapChainDesc.samples       = GetSampleCount();
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
 

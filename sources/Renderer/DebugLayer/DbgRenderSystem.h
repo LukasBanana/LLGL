@@ -106,6 +106,8 @@ class DbgRenderSystem final : public RenderSystem
 
         std::vector<ResourceViewDescriptor> GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews);
 
+        void UpdateRenderingCaps();
+
     private:
 
         /* ----- Common objects ----- */
