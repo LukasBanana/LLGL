@@ -965,7 +965,7 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
 {
     constexpr std::uint8_t heapMapLUT[256][3] =
     {
-        #include "TestbedHeatMapLUT.inl"
+        #include "HeatMapLUT.inl"
     };
     diff = std::max(0, std::min(diff * scale, 255));
     return ColorRGBub{ heapMapLUT[diff][0], heapMapLUT[diff][1], heapMapLUT[diff][2] };
