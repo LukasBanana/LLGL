@@ -12,7 +12,7 @@
 #include <LLGL/Fence.h>
 #include <string>
 #include <atomic>
-
+#include <cstdint>
 
 namespace LLGL
 {
