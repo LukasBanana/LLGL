@@ -989,8 +989,8 @@ void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
 
 void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 {
-    auto id         = buffer.GetID();
-    auto bindFlags  = buffer.GetBindFlags();
+    GLuint  id          = buffer.GetID();
+    long    bindFlags   = buffer.GetBindFlags();
 
     /* Release buffer ID from all potentially used GL buffer targets */
     if ((bindFlags & BindFlags::VertexBuffer) != 0)
@@ -1011,6 +1011,7 @@ void GLStateManager::NotifyBufferRelease(const GLBuffer& buffer)
 
     NotifyBufferRelease(id, GLBufferTarget::CopyReadBuffer);
     NotifyBufferRelease(id, GLBufferTarget::CopyWriteBuffer);
+    NotifyBufferRelease(id, buffer.GetTarget());
 }
 
 void GLStateManager::DisableVertexAttribArrays(GLuint firstIndex)
@@ -1332,12 +1333,12 @@ void GLStateManager::BindGLTexture(GLTexture& texture)
     #endif
 }
 
-void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
+void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool invalidateActiveLayerOnly)
 {
     if (texture != 0)
     {
         glDeleteTextures(1, &texture);
-        NotifyTextureRelease(texture, target, activeLayerOnly);
+        NotifyTextureRelease(texture, target, invalidateActiveLayerOnly);
     }
 }
 
@@ -1611,10 +1612,10 @@ GLContextState::TextureLayer* GLStateManager::GetActiveTextureLayer()
     return &(contextState_.textureLayers[contextState_.activeTexture]);
 }
 
-void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly)
+void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool invalidateActiveLayerOnly)
 {
     auto targetIdx = static_cast<std::size_t>(target);
-    if (activeLayerOnly)
+    if (invalidateActiveLayerOnly)
     {
         /* Invalidate GL texture only on active layer (should only be used for internal and temporary textures) */
         InvalidateBoundGLObject(GetActiveTextureLayer()->boundTextures[targetIdx], texture);

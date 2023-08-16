@@ -235,7 +235,7 @@ class GLStateManager
 
         void BindGLTexture(GLTexture& texture);
 
-        void DeleteTexture(GLuint texture, GLTextureTarget target, bool activeLayerOnly = false);
+        void DeleteTexture(GLuint texture, GLTextureTarget target, bool invalidateActiveLayerOnly = false);
 
         /* ----- Sampler ----- */
 
@@ -318,7 +318,7 @@ class GLStateManager
         void AssertViewportLimit(GLuint first, GLsizei count);
 
         GLContextState::TextureLayer* GetActiveTextureLayer();
-        void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool activeLayerOnly);
+        void NotifyTextureRelease(GLuint texture, GLTextureTarget target, bool invalidateActiveLayerOnly);
 
         void SetFrontFaceInternal(GLenum mode);
         void FlipFrontFacing(bool isFlipped);
