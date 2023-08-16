@@ -113,11 +113,12 @@ void GLImmediateCommandBuffer::CopyBufferFromTexture(
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
     auto& srcTextureGL = LLGL_CAST(GLTexture&, srcTexture);
+    const TextureSubresource zeroBasedSubresource{ 0, srcRegion.subresource.numArrayLayers, 0, 1 };
     srcTextureGL.CopyImageToBuffer(
         srcRegion,
         dstBufferGL.GetID(),
         static_cast<GLintptr>(dstOffset),
-        static_cast<GLsizei>(GetMemoryFootprint(srcTextureGL.GetType(), srcTextureGL.GetFormat(), srcRegion.extent, srcRegion.subresource)),
+        static_cast<GLsizei>(GetMemoryFootprint(srcTextureGL.GetType(), srcTextureGL.GetFormat(), srcRegion.extent, zeroBasedSubresource)),
         static_cast<GLint>(rowStride),
         static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
     );
@@ -165,11 +166,12 @@ void GLImmediateCommandBuffer::CopyTextureFromBuffer(
 {
     auto& dstTextureGL = LLGL_CAST(GLTexture&, dstTexture);
     auto& srcBufferGL = LLGL_CAST(GLBuffer&, srcBuffer);
+    const TextureSubresource zeroBasedSubresource{ 0, dstRegion.subresource.numArrayLayers, 0, 1 };
     dstTextureGL.CopyImageFromBuffer(
         dstRegion,
         srcBufferGL.GetID(),
         static_cast<GLintptr>(srcOffset),
-        static_cast<GLsizei>(GetMemoryFootprint(dstTextureGL.GetType(), dstTextureGL.GetFormat(), dstRegion.extent, dstRegion.subresource)),
+        static_cast<GLsizei>(GetMemoryFootprint(dstTextureGL.GetType(), dstTextureGL.GetFormat(), dstRegion.extent, zeroBasedSubresource)),
         static_cast<GLint>(rowStride),
         static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0)
     );

@@ -151,13 +151,14 @@ void GLDeferredCommandBuffer::CopyBufferFromTexture(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
+    const TextureSubresource zeroBasedSubresource{ 0, srcRegion.subresource.numArrayLayers, 0, 1 };
     auto cmd = AllocCommand<GLCmdCopyImageBuffer>(GLOpcodeCopyImageToBuffer);
     {
         cmd->texture        = LLGL_CAST(GLTexture*, &srcTexture);
         cmd->region         = srcRegion;
         cmd->bufferID       = LLGL_CAST(GLBuffer&, dstBuffer).GetID();
         cmd->offset         = static_cast<GLintptr>(dstOffset);
-        cmd->size           = static_cast<GLsizei>(GetMemoryFootprint(cmd->texture->GetType(), cmd->texture->GetFormat(), srcRegion.extent, srcRegion.subresource));
+        cmd->size           = static_cast<GLsizei>(GetMemoryFootprint(cmd->texture->GetType(), cmd->texture->GetFormat(), srcRegion.extent, zeroBasedSubresource));
         cmd->rowLength      = static_cast<GLint>(rowStride);
         cmd->imageHeight    = static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0);
     }
@@ -216,13 +217,14 @@ void GLDeferredCommandBuffer::CopyTextureFromBuffer(
     std::uint32_t           rowStride,
     std::uint32_t           layerStride)
 {
+    const TextureSubresource zeroBasedSubresource{ 0, dstRegion.subresource.numArrayLayers, 0, 1 };
     auto cmd = AllocCommand<GLCmdCopyImageBuffer>(GLOpcodeCopyImageFromBuffer);
     {
         cmd->texture        = LLGL_CAST(GLTexture*, &dstTexture);
         cmd->region         = dstRegion;
         cmd->bufferID       = LLGL_CAST(GLBuffer&, srcBuffer).GetID();
         cmd->offset         = static_cast<GLintptr>(srcOffset);
-        cmd->size           = static_cast<GLsizei>(GetMemoryFootprint(cmd->texture->GetType(), cmd->texture->GetFormat(), dstRegion.extent, dstRegion.subresource));
+        cmd->size           = static_cast<GLsizei>(GetMemoryFootprint(cmd->texture->GetType(), cmd->texture->GetFormat(), dstRegion.extent, zeroBasedSubresource));
         cmd->rowLength      = static_cast<GLint>(rowStride);
         cmd->imageHeight    = static_cast<GLint>(rowStride > 0 ? layerStride / rowStride : 0);
     }
