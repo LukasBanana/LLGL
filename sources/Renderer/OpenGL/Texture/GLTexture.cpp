@@ -142,17 +142,23 @@ void GLTexture::SetName(const char* name)
         GLSetObjectLabel(GL_TEXTURE, GetID(), name);
 }
 
-static GLenum GLGetTextureParamTarget(const TextureType type)
+// Map TextureType to GLenum for glGetTexLevelParameter* functions. This is different for cube maps.
+static GLenum GLGetTextureLevelParamTarget(const TextureType type)
 {
+    /*
+    The spec. is wrong here regarding TextureCubeArray:
+    GL_TEXTURE_CUBE_MAP_ARRAY is supposedly not allowed for glGetTexLevelParameter,
+    but all tested GL implementations either accept it or fail with individual cube faces.
+    */
     switch (type)
     {
         case TextureType::Texture1D:        return GL_TEXTURE_1D;
         case TextureType::Texture2D:        return GL_TEXTURE_2D;
         case TextureType::Texture3D:        return GL_TEXTURE_3D;
-        case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP_POSITIVE_X; // use first cube face instead of texture type
+        case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP_POSITIVE_X; // Use first cube face instead of texture type
         case TextureType::Texture1DArray:   return GL_TEXTURE_1D_ARRAY;
         case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
-        case TextureType::TextureCubeArray: return GL_TEXTURE_CUBE_MAP_POSITIVE_X; // use first cube face instead of texture type
+        case TextureType::TextureCubeArray: return GL_TEXTURE_CUBE_MAP_ARRAY;
         case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
         case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
     }
@@ -984,7 +990,7 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
         {
             /* Bind texture and query attributes */
             BindGLTextureNonPersistent(*this);
-            auto target = GLGetTextureParamTarget(GetType());
+            const GLenum target = GLGetTextureLevelParamTarget(GetType());
 
             if (extent != nullptr)
             {
@@ -1073,7 +1079,7 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
         {
             /* Bind texture and query attributes */
             BindGLTextureNonPersistent(*this);
-            auto target = GLGetTextureParamTarget(GetType());
+            const GLenum target = GLGetTextureLevelParamTarget(GetType());
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
