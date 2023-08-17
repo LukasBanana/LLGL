@@ -276,7 +276,7 @@ static Format MapGLSwizzleFormat(const Format format, const GLSwizzleFormat swiz
 Format GLTexture::GetFormat() const
 {
     /* Translate internal format depending on texture swizzle to circumvent certain inverted formats (e.g. BGRA) */
-    const auto format = GLTypes::UnmapFormat(GetGLInternalFormat());
+    const Format format = GLTypes::UnmapFormat(GetGLInternalFormat());
     return MapGLSwizzleFormat(format, swizzleFormat_);
 }
 

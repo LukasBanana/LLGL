@@ -70,7 +70,7 @@ Win32GLContext::Win32GLContext(
     /* Create WGL context */
     if (sharedContext)
     {
-        auto sharedContextWGL = LLGL_CAST(Win32GLContext*, sharedContext);
+        Win32GLContext* sharedContextWGL = LLGL_CAST(Win32GLContext*, sharedContext);
         CreateContext(surface, sharedContextWGL);
     }
     else
@@ -141,7 +141,7 @@ void Win32GLContext::CreateContext(Surface& surface, Win32GLContext* sharedConte
     SelectPixelFormat(surface);
 
     /* Create standard render context first */
-    auto stdRenderContext = CreateStandardWGLContext(hDC_);
+    HGLRC stdRenderContext = CreateStandardWGLContext(hDC_);
 
     /* Check for multi-sample anti-aliasing */
     if (hasMultiSampling)
@@ -180,7 +180,7 @@ void Win32GLContext::CreateContext(Surface& surface, Win32GLContext* sharedConte
         */
         if (wglCreateContextAttribsARB || LoadCreateContextProcs())
         {
-            if (auto extRenderContext = CreateExplicitWGLContext(hDC_, sharedContext))
+            if (HGLRC extRenderContext = CreateExplicitWGLContext(hDC_, sharedContext))
             {
                 /* Use the extended profile and delete the old standard render context */
                 hGLRC_ = extRenderContext;

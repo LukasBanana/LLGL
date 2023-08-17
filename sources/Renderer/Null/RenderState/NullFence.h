@@ -14,6 +14,7 @@
 #include <atomic>
 #include <cstdint>
 
+
 namespace LLGL
 {
 

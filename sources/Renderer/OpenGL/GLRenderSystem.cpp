@@ -97,7 +97,7 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
     /* Get state manager from swap-chain with shared GL context */
-    if (auto currentGLContext = contextMngr_.AllocContext())
+    if (std::shared_ptr<GLContext> currentGLContext = contextMngr_.AllocContext())
     {
         /* Create deferred or immediate command buffer */
         if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)

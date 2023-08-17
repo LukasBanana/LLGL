@@ -170,7 +170,7 @@ static RenderSystem* LoadRenderSystem(
         return ReportException(outReport, "failed to allocate render system from module: %s", moduleFilename);
 
     /* Check if errors where reported and the render system is unusable */
-    if (auto report = renderSystem->GetReport())
+    if (const Report* report = renderSystem->GetReport())
     {
         if (outReport != nullptr)
             *outReport = *report;
@@ -227,8 +227,8 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     #else // LLGL_BUILD_STATIC_LIB
 
     /* Load render system module */
-    auto moduleFilename = Module::GetModuleFilename(renderSystemDesc.moduleName.c_str());
-    auto module         = Module::Load(moduleFilename.c_str());
+    const std::string       moduleFilename  = Module::GetModuleFilename(renderSystemDesc.moduleName.c_str());
+    std::unique_ptr<Module> module          = Module::Load(moduleFilename.c_str());
 
     /*
     Verify build ID from render system module to detect a module,
@@ -242,7 +242,7 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     #endif
     {
         /* Allocate render system */
-        auto renderSystem = RenderSystemPtr
+        RenderSystemPtr renderSystem
         {
             LoadRenderSystem(*module, moduleFilename.c_str(), renderSystemDesc, report),
             RenderSystemDeleter{ LoadRenderSystemDeleter(*module) }
@@ -282,7 +282,7 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
             report->Errorf("%s", e.what());
         return nullptr;
     }
-    #endif
+    #endif // /LLGL_ENABLE_EXCEPTIONS
 
     #endif // /LLGL_BUILD_STATIC_LIB
 }

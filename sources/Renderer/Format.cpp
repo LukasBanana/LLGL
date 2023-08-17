@@ -185,10 +185,10 @@ LLGL_EXPORT const FormatAttributes& GetFormatAttribs(const Format format)
 
 std::size_t GetMemoryFootprint(const Format format, std::size_t numTexels)
 {
-    const auto& formatDesc = GetFormatAttribs(format);
-    const auto blockSize = formatDesc.blockWidth * formatDesc.blockHeight;
+    const FormatAttributes& formatAttribs = GetFormatAttribs(format);
+    const std::size_t blockSize = formatAttribs.blockWidth * formatAttribs.blockHeight;
     if (blockSize > 0 && numTexels % blockSize == 0)
-        return ((numTexels / blockSize * formatDesc.bitSize) / 8);
+        return ((numTexels / blockSize * formatAttribs.bitSize) / 8);
     else
         return 0;
 }

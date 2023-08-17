@@ -78,7 +78,7 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
     }
     pixelFormats_.emplace_back(std::move(formatWithContext));
 
-    auto context = pixelFormats_.back().context;
+    std::shared_ptr<GLContext> context = pixelFormats_.back().context;
 
     /* Load GL extensions for the very first context */
     const bool hasGLCoreProfile = (profile_.contextProfile == OpenGLContextProfile::CoreProfile);
@@ -86,7 +86,7 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
     LoadSupportedOpenGLExtensions(hasGLCoreProfile, abortOnFailure);
 
     /* Initialize state manager for new GL context */
-    auto& stateMngr = context->GetStateManager();
+    GLStateManager& stateMngr = context->GetStateManager();
     stateMngr.DetermineExtensionsAndLimits();
     InitRenderStates(stateMngr);
 
@@ -96,7 +96,7 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
 std::shared_ptr<GLContext> GLContextManager::FindOrMakeContextWithPixelFormat(const GLPixelFormat& pixelFormat, Surface* surface)
 {
     /* Try to find suitable pixel format or make new context otherwise */
-    for (const auto& formatWithContext : pixelFormats_)
+    for (const GLPixelFormatWithContext& formatWithContext : pixelFormats_)
     {
         if (formatWithContext.pixelFormat == pixelFormat)
             return formatWithContext.context;
