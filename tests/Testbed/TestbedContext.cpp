@@ -1023,12 +1023,12 @@ static int GetColorDiff(std::uint8_t a, std::uint8_t b)
 
 static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
 {
-    constexpr std::uint8_t heapMapLUT[256][3] =
+    constexpr std::uint8_t heapMapLUT[256*3] =
     {
         #include "HeatMapLUT.inl"
     };
     diff = std::max(0, std::min(diff * scale, 255));
-    return ColorRGBub{ heapMapLUT[diff][0], heapMapLUT[diff][1], heapMapLUT[diff][2] };
+    return ColorRGBub{ heapMapLUT[diff*3], heapMapLUT[diff*3+1], heapMapLUT[diff*3+2] };
 }
 
 int TestbedContext::DiffImagesTGA(const std::string& name, int threshold, int scale)

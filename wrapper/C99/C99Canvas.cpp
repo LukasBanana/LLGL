@@ -57,14 +57,6 @@ static void ConvertCanvasDesc(CanvasDescriptor& dst, const LLGLCanvasDescriptor&
     dst.borderless  = src.borderless;
 }
 
-static void ConvertCanvasDesc(LLGLCanvasDescriptor& dst, const CanvasDescriptor& src)
-{
-    static thread_local std::string internalTitle;
-    internalTitle = src.title.c_str();
-    dst.title       = internalTitle.c_str();
-    dst.borderless  = src.borderless;
-}
-
 LLGL_C_EXPORT LLGLCanvas llglCreateCanvas(const LLGLCanvasDescriptor* canvasDesc)
 {
     LLGL_ASSERT_PTR(canvasDesc);
