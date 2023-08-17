@@ -10,6 +10,7 @@ jobs:
   build_linux:
     strategy:
       matrix:
+        ext: [Full, Limited]
         lib: [Shared, Static]
         config: [Release, Debug]
       fail-fast: false
@@ -18,6 +19,7 @@ jobs:
 
     env:
       README: ${{ github.workspace }}/README.txt
+      EXT_FULL: ${{ matrix.ext == 'Full' && 'ON' || 'OFF' }}
 
     steps:
     - name: Checkout Repository
@@ -37,13 +39,16 @@ jobs:
         cmake -S . -B ${{github.workspace}}/Linux-x86_64
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
         -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
+        -DLLGL_BUILD_RENDERER_NULL=${{ env.EXT_FULL }}
         -DLLGL_BUILD_RENDERER_OPENGL=ON
-        -DLLGL_BUILD_RENDERER_VULKAN=ON
+        -DLLGL_BUILD_RENDERER_VULKAN=${{ env.EXT_FULL }}
         -DLLGL_BUILD_EXAMPLES=ON
         -DLLGL_BUILD_TESTS=ON
-        -DLLGL_BUILD_WRAPPER_C99=ON
-        -DLLGL_ENABLE_SPIRV_REFLECT=ON
+        -DLLGL_BUILD_WRAPPER_C99=${{ env.EXT_FULL }}
+        -DLLGL_ENABLE_SPIRV_REFLECT=${{ env.EXT_FULL }}
         -DLLGL_GL_ENABLE_OPENGL2X=ON
+        -DLLGL_GL_ENABLE_DSA_EXT=${{ env.EXT_FULL }}
+        -DLLGL_GL_ENABLE_VENDOR_EXT=${{ env.EXT_FULL }}
 
     - name: Build
       run: cmake --build ${{github.workspace}}/Linux-x86_64 --config ${{ matrix.config }}
@@ -60,7 +65,7 @@ jobs:
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v3
-      if: matrix.lib == 'Shared' && matrix.config == 'Release'
+      if: matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
         name: LLGL-Ubuntu-${{ matrix.config }}-x86_64
         path: |
