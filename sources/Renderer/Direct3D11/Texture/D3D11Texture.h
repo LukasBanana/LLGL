@@ -114,9 +114,9 @@ class D3D11Texture final : public Texture
             ID3D11UnorderedAccessView** uavOutput,
             const TextureType           type,
             const DXGI_FORMAT           format,
-            UINT                        baseMipLevel,
-            UINT                        baseArrayLayer,
-            UINT                        numArrayLayers
+            UINT                        mipLevel,
+            UINT                        baseArrayLayerOrSlice,
+            UINT                        numArrayLayersOrSlices
         );
 
         // Returns the subresource index for the specified MIP-map level and array layer.

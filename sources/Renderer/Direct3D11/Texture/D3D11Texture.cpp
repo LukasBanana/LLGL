@@ -542,9 +542,9 @@ static void CreateD3D11TextureSubresourceUAV(
     ID3D11UnorderedAccessView** uavOutput,
     const TextureType           type,
     const DXGI_FORMAT           format,
-    UINT                        baseMipLevel,
-    UINT                        baseArrayLayer,
-    UINT                        numArrayLayers,
+    UINT                        mipLevel,
+    UINT                        baseArrayLayerOrSlice,
+    UINT                        numArrayLayersOrSlices,
     const char*                 errorContextInfo = nullptr)
 {
     /* Create unordered-access-view (UAV) for subresource */
@@ -556,35 +556,35 @@ static void CreateD3D11TextureSubresourceUAV(
         {
             case TextureType::Texture1D:
                 uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE1D;
-                uavDesc.Texture1D.MipSlice              = baseMipLevel;
+                uavDesc.Texture1D.MipSlice              = mipLevel;
                 break;
 
             case TextureType::Texture2D:
                 uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE2D;
-                uavDesc.Texture2D.MipSlice              = baseMipLevel;
+                uavDesc.Texture2D.MipSlice              = mipLevel;
                 break;
 
             case TextureType::Texture3D:
                 uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE3D;
-                uavDesc.Texture3D.MipSlice              = baseMipLevel;
-                uavDesc.Texture3D.FirstWSlice           = baseArrayLayer;
-                uavDesc.Texture3D.WSize                 = numArrayLayers;
+                uavDesc.Texture3D.MipSlice              = mipLevel;
+                uavDesc.Texture3D.FirstWSlice           = baseArrayLayerOrSlice;
+                uavDesc.Texture3D.WSize                 = numArrayLayersOrSlices;
                 break;
 
             case TextureType::Texture1DArray:
                 uavDesc.ViewDimension                   = D3D11_UAV_DIMENSION_TEXTURE1DARRAY;
-                uavDesc.Texture1DArray.MipSlice         = baseMipLevel;
-                uavDesc.Texture1DArray.FirstArraySlice  = baseArrayLayer;
-                uavDesc.Texture1DArray.ArraySize        = numArrayLayers;
+                uavDesc.Texture1DArray.MipSlice         = mipLevel;
+                uavDesc.Texture1DArray.FirstArraySlice  = baseArrayLayerOrSlice;
+                uavDesc.Texture1DArray.ArraySize        = numArrayLayersOrSlices;
                 break;
 
             case TextureType::Texture2DArray:
             case TextureType::TextureCube:
             case TextureType::TextureCubeArray:
                 uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-                uavDesc.Texture2DArray.MipSlice         = baseMipLevel;
-                uavDesc.Texture2DArray.FirstArraySlice  = baseArrayLayer;
-                uavDesc.Texture2DArray.ArraySize        = numArrayLayers;
+                uavDesc.Texture2DArray.MipSlice         = mipLevel;
+                uavDesc.Texture2DArray.FirstArraySlice  = baseArrayLayerOrSlice;
+                uavDesc.Texture2DArray.ArraySize        = numArrayLayersOrSlices;
                 break;
 
             case TextureType::Texture2DMS:
@@ -651,7 +651,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
                 desc.Usage          = D3D11_USAGE_DEFAULT;
                 desc.BindFlags      = bindFlags;
                 desc.CPUAccessFlags = 0;
-                desc.MiscFlags      = (IsCubeTexture(GetType()) ? D3D11_RESOURCE_MISC_TEXTURECUBE : 0);
+                desc.MiscFlags      = 0; // Don't adopt D3D11_RESOURCE_MISC_TEXTURECUBE here for CPU access textures
             }
             textureOutput.tex2D = DXCreateTexture2D(device, desc);
         }
@@ -680,6 +680,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
     /* Create SRV and UAV for entire subresource copy */
     if (srvOutput != nullptr)
     {
+        const UINT numArrayLayers = region.subresource.numArrayLayers;
         CreateD3D11TextureSubresourceSRV(
             device,
             textureOutput.resource.Get(),
@@ -689,13 +690,14 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
             0,
             1,
             0,
-            region.subresource.numArrayLayers,
+            numArrayLayers,
             "for texture subresource copy"
         );
     }
 
     if (uavOutput != nullptr)
     {
+        const UINT numArrayLayersOrSlices = (subresourceType == TextureType::Texture3D ? region.extent.depth : region.subresource.numArrayLayers);
         CreateD3D11TextureSubresourceUAV(
             device,
             textureOutput.resource.Get(),
@@ -704,7 +706,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
             format,
             0,
             0,
-            region.subresource.numArrayLayers,
+            numArrayLayersOrSlices,
             "for texture subresource copy"
         );
     }
@@ -759,9 +761,9 @@ void D3D11Texture::CreateSubresourceUAV(
     ID3D11UnorderedAccessView** uavOutput,
     const TextureType           type,
     const DXGI_FORMAT           format,
-    UINT                        baseMipLevel,
-    UINT                        baseArrayLayer,
-    UINT                        numArrayLayers)
+    UINT                        mipLevel,
+    UINT                        baseArrayLayerOrSlice,
+    UINT                        numArrayLayersOrSlices)
 {
     if (device == nullptr)
     {
@@ -773,9 +775,9 @@ void D3D11Texture::CreateSubresourceUAV(
             uavOutput,
             type,
             format,
-            baseMipLevel,
-            baseArrayLayer,
-            numArrayLayers,
+            mipLevel,
+            baseArrayLayerOrSlice,
+            numArrayLayersOrSlices,
             __FUNCTION__
         );
     }
@@ -787,9 +789,9 @@ void D3D11Texture::CreateSubresourceUAV(
             uavOutput,
             type,
             format,
-            baseMipLevel,
-            baseArrayLayer,
-            numArrayLayers,
+            mipLevel,
+            baseArrayLayerOrSlice,
+            numArrayLayersOrSlices,
             __FUNCTION__
         );
     }
