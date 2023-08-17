@@ -195,6 +195,8 @@ class TestbedContext
 
     private:
 
+        void LogRendererInfo();
+
         bool LoadShaders();
         void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
 

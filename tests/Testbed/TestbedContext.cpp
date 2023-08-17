@@ -96,10 +96,7 @@ TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
 
         // Print renderer information
         if (verbose)
-        {
-            const RendererInfo& info = renderer->GetRendererInfo();
-            Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
-        }
+            LogRendererInfo();
 
         // Query rendering capabilities
         caps = renderer->GetRenderingCaps();
@@ -626,6 +623,31 @@ double TestbedContext::ToMillisecs(std::uint64_t t0, std::uint64_t t1)
     const double freq = static_cast<double>(Timer::Frequency()) / 1000.0;
     const double duration = static_cast<double>(t1 - t0) / freq;
     return duration;
+}
+
+void TestbedContext::LogRendererInfo()
+{
+    const RendererInfo& info = renderer->GetRendererInfo();
+    Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
+
+    if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
+    {
+        Log::Printf(
+            "Configuration:\n"
+
+            #ifdef LLGL_GL_ENABLE_OPENGL2X
+            " - OpenGL 2.x ( Enabled )\n"
+            #else
+            " - OpenGL 2.x ( Disabled )\n"
+            #endif // /LLGL_GL_ENABLE_OPENGL2X
+
+            #ifdef LLGL_GL_ENABLE_DSA_EXT
+            " - GL_ARB_direct_state_access ( Enabled )\n"
+            #else
+            " - GL_ARB_direct_state_access ( Disabled )\n"
+            #endif // /LLGL_GL_ENABLE_DSA_EXT
+        );
+    }
 }
 
 bool TestbedContext::LoadShaders()
