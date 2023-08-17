@@ -12,7 +12,7 @@ DEF_TEST( TextureTypes )
 {
     auto CreateDummyTextureAndMeasureTiming = [this](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, std::uint32_t samples) -> TestResult
     {
-        const auto t0 = Timer::Tick();
+        const std::uint64_t t0 = Timer::Tick();
 
         TextureDescriptor texDesc;
         {
@@ -29,10 +29,8 @@ DEF_TEST( TextureTypes )
         // Print duration
         if (showTiming)
         {
-            const auto t1 = Timer::Tick();
-            const auto freq = static_cast<double>(Timer::Frequency()) / 1000.0;
-            const auto duration = static_cast<double>(t1 - t0) / freq;
-            Log::Printf("Create texture: %s ( %f ms )\n", name, duration);
+            const std::uint64_t t1 = Timer::Tick();
+            Log::Printf("Create texture: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));
         }
 
         return TestResult::Passed;

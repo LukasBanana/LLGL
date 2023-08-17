@@ -150,7 +150,7 @@ void TestbedContext::RunAllTests()
     RUN_TEST( TextureWriteAndRead       );
     RUN_TEST( TextureCopy               );
     //RUN_TEST( TextureToBufferCopy       ); //TODO: not implemented yet
-    //RUN_TEST( BufferToTextureCopy       ); //TODO: not implemented yet
+    //RUN_TEST( BufferToTextureCopy       ); //TODO: incomplete
     RUN_TEST( DepthBuffer               );
     RUN_TEST( StencilBuffer             );
     RUN_TEST( RenderTargetNoAttachments );
@@ -378,6 +378,15 @@ TestResult TestbedContext::CreateTexture(
         return TestResult::FailedMismatch;
     }
 
+    if (resultDesc.format != desc.format)
+    {
+        Log::Errorf(
+            "Warning: Mismatch between texture \"%s\" descriptor (format = %s) and actual texture (format = %s)\n",
+            name, ToString(desc.format), ToString(resultDesc.format)
+        );
+        return TestResult::FailedMismatch;
+    }
+
     if (resultDesc.arrayLayers != desc.arrayLayers)
     {
         Log::Errorf(
@@ -566,6 +575,57 @@ TestResult TestbedContext::CreateRenderTarget(
         renderer->Release(*target);
 
     return TestResult::Passed;
+}
+
+static std::string FormatCharArray(const unsigned char* data, std::size_t count, std::size_t bytesPerGroup)
+{
+    std::string s;
+    s.reserve(count * 3);
+
+    char formatted[3] = {};
+
+    for_range(i, count)
+    {
+        if (!s.empty() && (bytesPerGroup == 0 || i % bytesPerGroup == 0))
+            s += ' ';
+        ::snprintf(formatted, sizeof(formatted), "%02X", static_cast<unsigned>(data[i]));
+        s += formatted;
+    }
+
+    return s;
+}
+
+static std::string FormatFloatArray(const float* data, std::size_t count)
+{
+    std::string s;
+    s.reserve(count * 5);
+
+    char formatted[16] = {};
+
+    for_range(i, count)
+    {
+        if (!s.empty())
+            s += ' ';
+        ::snprintf(formatted, sizeof(formatted), "%.2f", data[i]);
+        s += formatted;
+    }
+
+    return s;
+}
+
+std::string TestbedContext::FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup, bool formatAsFloats)
+{
+    if (formatAsFloats)
+        return FormatFloatArray(reinterpret_cast<const float*>(data), size/sizeof(float));
+    else
+        return FormatCharArray(reinterpret_cast<const unsigned char*>(data), size, bytesPerGroup);
+}
+
+double TestbedContext::ToMillisecs(std::uint64_t t0, std::uint64_t t1)
+{
+    const double freq = static_cast<double>(Timer::Frequency()) / 1000.0;
+    const double duration = static_cast<double>(t1 - t0) / freq;
+    return duration;
 }
 
 bool TestbedContext::LoadShaders()
@@ -1024,25 +1084,6 @@ void TestbedContext::RecordTestResult(TestResult result, const char* name)
     PrintTestResult(result, name);
     if (result != TestResult::Passed)
         ++failures;
-}
-
-std::string TestbedContext::FormatByteArray(const void* data, std::size_t size)
-{
-    std::string s;
-    s.reserve(size * 3);
-
-    char formatted[3] = {};
-    const unsigned char* bytes = reinterpret_cast<const unsigned char*>(data);
-
-    for_range(i, size)
-    {
-        if (!s.empty())
-            s += ' ';
-        ::snprintf(formatted, 3, "%02X", static_cast<unsigned>(bytes[i]));
-        s += formatted;
-    }
-
-    return s;
 }
 
 

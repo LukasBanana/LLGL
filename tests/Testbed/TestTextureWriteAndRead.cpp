@@ -6,18 +6,13 @@
  */
 
 #include "Testbed.h"
+#include "Testset.h"
 #include <stdlib.h>
 
 
 DEF_TEST( TextureWriteAndRead )
 {
-    const ColorRGBAub colorsRgbaUb4[4] =
-    {
-        ColorRGBAub{ 0xC0, 0x01, 0x12, 0xFF },
-        ColorRGBAub{ 0x80, 0x12, 0x34, 0x90 },
-        ColorRGBAub{ 0x13, 0x23, 0x56, 0x80 },
-        ColorRGBAub{ 0x12, 0x34, 0x78, 0x70 },
-    };
+    const ArrayView<ColorRGBAub> colorsRgbaUb4 = Testset::GetColorsRgbaUb4();
 
     static RandomColorSet colorsRgbaUb16;
     colorsRgbaUb16.Generate(16);
@@ -59,10 +54,12 @@ DEF_TEST( TextureWriteAndRead )
         // Match input with output texture data
         if (::memcmp(data, outputData.data(), dataSize) != 0)
         {
-            const std::string inputDataStr = FormatByteArray(data, dataSize);
-            const std::string outputDataStr = FormatByteArray(outputData.data(), dataSize);
+            const std::string inputDataStr = TestbedContext::FormatByteArray(data, dataSize, 4);
+            const std::string outputDataStr = TestbedContext::FormatByteArray(outputData.data(), dataSize, 4);
             Log::Errorf(
-                "Mismatch between data of texture %s and initial data:\n -> Expected: [%s]\n -> Actual:   [%s] \n",
+                "Mismatch between data of texture %s and initial data:\n"
+                " -> Expected: [%s]\n"
+                " -> Actual:   [%s]\n",
                 name, inputDataStr.c_str(), outputDataStr.c_str()
             );
             return TestResult::FailedMismatch;
@@ -94,7 +91,7 @@ DEF_TEST( TextureWriteAndRead )
         "tex2D{2D,1wh}:{single-texel-access}",
         tex2DDesc_1x1,
         TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } ),
-        &(colorsRgbaUb4[0]),
+        colorsRgbaUb4.data(),
         sizeof(ColorRGBAub)
     );
 
@@ -112,7 +109,7 @@ DEF_TEST( TextureWriteAndRead )
         "tex2D{2D,4wh}:{single-texel-access}",
         tex2DDesc_4x4,
         TextureRegion( TextureSubresource{ 0, 1 }, Offset3D{ 1, 1, 0 }, Extent3D{ 1, 1, 1 } ),
-        &(colorsRgbaUb4[0]),
+        colorsRgbaUb4.data(),
         sizeof(ColorRGBAub)
     );
 
@@ -151,16 +148,16 @@ DEF_TEST( TextureWriteAndRead )
             "tex2DArray{2D[2],8w,4h}:{1-layer-access}",
             tex2DArrayDesc_8x4x2,
             TextureRegion( TextureSubresource{ 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 2, 1 } ),
-            colorsRgbaUb4,
-            sizeof(colorsRgbaUb4)
+            colorsRgbaUb4.data(),
+            sizeof(colorsRgbaUb4[0]) * colorsRgbaUb4.size()
         );
 
         TEST_IMAGE_DATA(
             "tex2DArray{2D[2],8w,4h}:{2-layer-access}",
             tex2DArrayDesc_8x4x2,
             TextureRegion( TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 1, 0, 0 }, Extent3D{ 2, 1, 1 } ),
-            colorsRgbaUb4,
-            sizeof(colorsRgbaUb4)
+            colorsRgbaUb4.data(),
+            sizeof(colorsRgbaUb4[0]) * colorsRgbaUb4.size()
         );
     }
 

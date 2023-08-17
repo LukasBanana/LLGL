@@ -189,6 +189,12 @@ class TestbedContext
 
     private:
 
+        static std::string FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup = 1, bool formatAsFloats = false);
+
+        static double ToMillisecs(std::uint64_t t0, std::uint64_t t1);
+
+    private:
+
         bool LoadShaders();
         void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
 
@@ -206,8 +212,6 @@ class TestbedContext
         int DiffImagesTGA(const std::string& name, int threshold = 1, int scale = 1);
 
         void RecordTestResult(TestResult result, const char* name);
-
-        std::string FormatByteArray(const void* data, std::size_t size);
 
 };
 

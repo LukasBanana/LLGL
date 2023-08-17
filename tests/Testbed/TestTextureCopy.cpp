@@ -6,36 +6,32 @@
  */
 
 #include "Testbed.h"
+#include "Testset.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
 
 DEF_TEST( TextureCopy )
 {
-    // Create small buffer with initial data and read access
-    static const ColorRGBAub colorsRgbaUb8[8] =
-    {
-        ColorRGBAub{ 0xC0, 0x01, 0x12, 0xFF },
-        ColorRGBAub{ 0x80, 0x12, 0x34, 0x90 },
-        ColorRGBAub{ 0x13, 0x23, 0x56, 0x80 },
-        ColorRGBAub{ 0x12, 0x34, 0x78, 0x70 },
-        ColorRGBAub{ 0xF0, 0xB0, 0xAA, 0xBB },
-        ColorRGBAub{ 0x50, 0x20, 0xAC, 0x0F },
-        ColorRGBAub{ 0xAB, 0xCD, 0xEF, 0x01 },
-        ColorRGBAub{ 0x66, 0x78, 0x23, 0x4C },
-    };
+    // Define random color values for initial texture data
+    const ArrayView<ColorRGBAub> colorsRgbaUb8 = Testset::GetColorsRgbaUb8();
 
-    auto CreateTargetTexturesAndCopyImage = [this](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers) -> TestResult
+    auto CreateTargetTexturesAndCopyImage = [this, &colorsRgbaUb8](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers) -> TestResult
     {
+        const std::uint64_t t0 = Timer::Tick();
+
         auto ToNonArrayTextureType = [](TextureType type) -> TextureType
         {
             switch (type)
             {
-                case TextureType::Texture1DArray:   return TextureType::Texture1D;
-                case TextureType::Texture2DArray:   return TextureType::Texture2D;
-                case TextureType::TextureCube:      return TextureType::Texture2D;
-                case TextureType::TextureCubeArray: return TextureType::TextureCube;
-                default:                            return type;
+                case TextureType::Texture1DArray:
+                    return TextureType::Texture1D;
+                case TextureType::Texture2DArray:
+                case TextureType::TextureCube:
+                case TextureType::TextureCubeArray:
+                    return TextureType::Texture2D;
+                default:
+                    return type;
             }
         };
 
@@ -62,40 +58,46 @@ DEF_TEST( TextureCopy )
         };
 
         // Create source texture
+        const std::string srcTexName = std::string("src.") + name;
         TextureDescriptor srcTexDesc;
         {
             srcTexDesc.type         = type;
             srcTexDesc.bindFlags    = BindFlags::CopySrc;
+            srcTexDesc.format       = Format::RGBA8UNorm;
             srcTexDesc.extent       = extent;
             srcTexDesc.mipLevels    = mips;
             srcTexDesc.arrayLayers  = layers;
         }
-        CREATE_TEXTURE(srcTex, srcTexDesc, "srcTex", nullptr);
+        CREATE_TEXTURE(srcTex, srcTexDesc, srcTexName.c_str(), nullptr);
 
         // Create intermediate texture to copy into
+        const std::string interTexName = std::string("inter.") + name;
         TextureDescriptor interTexDesc;
         {
             interTexDesc.type           = ToNonArrayTextureType(type);
             interTexDesc.bindFlags      = BindFlags::CopySrc | BindFlags::CopyDst;
+            interTexDesc.format         = Format::RGBA8UNorm;
             interTexDesc.extent         = extent;
             interTexDesc.mipLevels      = 1;
             interTexDesc.arrayLayers    = 1;
         }
-        CREATE_TEXTURE(interTex, interTexDesc, "interTex", nullptr);
+        CREATE_TEXTURE(interTex, interTexDesc, interTexName.c_str(), nullptr);
 
         // Create destination texture to read the results from
+        const std::string dstTexName = std::string("dst.") + name;
         TextureDescriptor dstTexDesc;
         {
             dstTexDesc.type         = type;
             dstTexDesc.bindFlags    = BindFlags::CopyDst;
+            dstTexDesc.format       = Format::RGBA8UNorm;
             dstTexDesc.extent       = extent;
             dstTexDesc.mipLevels    = mips;
             dstTexDesc.arrayLayers  = layers;
         }
-        CREATE_TEXTURE(dstTex, dstTexDesc, "dstTex", nullptr);
+        CREATE_TEXTURE(dstTex, dstTexDesc, dstTexName.c_str(), nullptr);
 
         // Run test through all MIP-maps and array layers (should not be more than 2 each)
-        const auto texDims = NumTextureDimensions(interTexDesc.type);
+        const std::uint32_t texDims = NumTextureDimensions(interTexDesc.type);
 
         for_range(mip, mips)
         {
@@ -106,8 +108,8 @@ DEF_TEST( TextureCopy )
                 {
                     srcImage.format     = ImageFormat::RGBA;
                     srcImage.dataType   = DataType::UInt8;
-                    srcImage.data       = colorsRgbaUb8;
-                    srcImage.dataSize   = sizeof(colorsRgbaUb8);
+                    srcImage.data       = colorsRgbaUb8.data();
+                    srcImage.dataSize   = sizeof(colorsRgbaUb8[0]) * colorsRgbaUb8.size();
                 }
                 TextureRegion texRegion;
                 {
@@ -137,12 +139,14 @@ DEF_TEST( TextureCopy )
                 renderer->ReadTexture(*dstTex, texRegion, dstImage);
 
                 // Evaluate results
-                if (::memcmp(colorsRgbaUb8, outputData, sizeof(outputData)) != 0)
+                if (::memcmp(colorsRgbaUb8.data(), outputData, sizeof(outputData)) != 0)
                 {
-                    const std::string inputDataStr = FormatByteArray(colorsRgbaUb8, sizeof(colorsRgbaUb8));
-                    const std::string outputDataStr = FormatByteArray(outputData, sizeof(outputData));
+                    const std::string inputDataStr = TestbedContext::FormatByteArray(colorsRgbaUb8.data(), sizeof(colorsRgbaUb8[0]) * colorsRgbaUb8.size(), 4);
+                    const std::string outputDataStr = TestbedContext::FormatByteArray(outputData, sizeof(outputData), 4);
                     Log::Errorf(
-                        "Mismatch between data of texture %s [MIP %u, Layer %u] and copy result:\n -> Expected: [%s]\n -> Actual:   [%s] \n",
+                        "Mismatch between data of texture %s [MIP %u, Layer %u] and copy result:\n"
+                        " -> Expected: [%s]\n"
+                        " -> Actual:   [%s]\n",
                         name, mip, layer, inputDataStr.c_str(), outputDataStr.c_str()
                     );
                     return TestResult::FailedMismatch;
@@ -155,6 +159,13 @@ DEF_TEST( TextureCopy )
         renderer->Release(*interTex);
         renderer->Release(*dstTex);
 
+        // Print duration
+        if (showTiming)
+        {
+            const std::uint64_t t1 = Timer::Tick();
+            Log::Printf("Copy texture: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));
+        }
+
         return TestResult::Passed;
     };
 
@@ -165,20 +176,23 @@ DEF_TEST( TextureCopy )
                 return result;                                                                                  \
         }
 
-    TEST_TEXTURE_COPY("tex{1D,64w}",    TextureType::Texture1D,  Extent3D(64,  1,  1), 2, 1);
-    TEST_TEXTURE_COPY("tex{2D,32wh}",   TextureType::Texture2D,  Extent3D(32, 32,  1), 2, 1);
+    TEST_TEXTURE_COPY("tex{1D,64w}",  TextureType::Texture1D, Extent3D(64,  1,  1), 2, 1);
+    TEST_TEXTURE_COPY("tex{2D,32wh}", TextureType::Texture2D, Extent3D(32, 32,  1), 2, 1);
 
     if (caps.features.has3DTextures)
-        TEST_TEXTURE_COPY("tex{3D,16whd}",  TextureType::Texture3D,  Extent3D(16, 16, 16), 2, 1);
+        TEST_TEXTURE_COPY("tex{3D,16whd}", TextureType::Texture3D, Extent3D(16, 16, 16), 2, 1);
 
     if (caps.features.hasCubeTextures)
-        TEST_TEXTURE_COPY("tex{Cube,16wh}",  TextureType::TextureCube,  Extent3D(16, 16, 1), 2, 6);
+        TEST_TEXTURE_COPY("tex{Cube,16wh}", TextureType::TextureCube, Extent3D(16, 16, 1), 2, 6);
 
     if (caps.features.hasArrayTextures)
     {
-        TEST_TEXTURE_COPY("tex{1D[2],64w}",     TextureType::Texture1DArray, Extent3D(64,  1, 1), 2, 2);
-        TEST_TEXTURE_COPY("tex{2D[2],32wh}",    TextureType::Texture2DArray, Extent3D(32, 32, 1), 2, 2);
+        TEST_TEXTURE_COPY("tex{1D[2],64w}",  TextureType::Texture1DArray, Extent3D(64,  1, 1), 2, 2);
+        TEST_TEXTURE_COPY("tex{2D[2],32wh}", TextureType::Texture2DArray, Extent3D(32, 32, 1), 2, 2);
     }
+
+    if (caps.features.hasCubeArrayTextures)
+        TEST_TEXTURE_COPY("tex{Cube[2],16w}", TextureType::TextureCubeArray, Extent3D(16, 16, 1), 2, 6*2);
 
     return TestResult::Passed;
 }
