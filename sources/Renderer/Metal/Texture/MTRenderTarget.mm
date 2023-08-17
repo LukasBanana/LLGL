@@ -107,17 +107,9 @@ MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescripto
 
 MTRenderTarget::~MTRenderTarget()
 {
-    #if 0//TODO: code analysis warns about invalid reference counting
-    /* Release all textures */
-    for_range(i, numColorAttachments_)
-        [nativeRenderPass_.colorAttachments[i] release];
-    if (auto attachment = nativeRenderPass_.depthAttachment)
-        [attachment.texture release];
-    if (auto attachment = nativeRenderPass_.stencilAttachment)
-        [attachment.texture release];
-
-    //[nativeRenderPass_ release];
-    #endif
+    /* Release all internally created textures */
+    for (id<MTLTexture> tex : internalTextures_)
+        [tex release];
 }
 
 Extent2D MTRenderTarget::GetResolution() const
@@ -188,12 +180,11 @@ void MTRenderTarget::CreateAttachment(
         {
             /* Create texture view with format */
             const MTLPixelFormat pixelFormat = MTTypes::ToMTLPixelFormat(inAttachment.format);
-            outAttachment.texture = [tex newTextureViewWithPixelFormat:pixelFormat];
+            outAttachment.texture = CreateAttachmentTextureView(tex, pixelFormat);
         }
         else
         {
-            /* Increment reference counter of texture and use texture directly */
-            [tex retain];
+            /* Use input texture directly */
             outAttachment.texture = tex;
         }
     }
@@ -214,12 +205,11 @@ void MTRenderTarget::CreateAttachment(
         {
             /* Create texture view with format */
             const MTLPixelFormat pixelFormat = MTTypes::ToMTLPixelFormat(inAttachment.format);
-            outAttachment.resolveTexture = [tex newTextureViewWithPixelFormat:pixelFormat];
+            outAttachment.resolveTexture = CreateAttachmentTextureView(tex, pixelFormat);
         }
         else
         {
-            /* Increment reference counter of texture and use texture directly */
-            [tex retain];
+            /* Use input texture directly */
             outAttachment.resolveTexture = tex;
         }
 
@@ -257,12 +247,20 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
 
 id<MTLTexture> MTRenderTarget::CreateAttachmentTexture(id<MTLDevice> device, MTLPixelFormat pixelFormat)
 {
-    auto texDesc = CreateTextureDesc(device, pixelFormat, renderPass_.GetSampleCount());
+    MTLTextureDescriptor* texDesc = CreateTextureDesc(device, pixelFormat, renderPass_.GetSampleCount());
 
-    id<MTLTexture> texture = [device newTextureWithDescriptor:texDesc];
+    id<MTLTexture> newTexture = [device newTextureWithDescriptor:texDesc];
+    internalTextures_.push_back(newTexture);
     [texDesc release];
 
-    return texture;
+    return newTexture;
+}
+
+id<MTLTexture> MTRenderTarget::CreateAttachmentTextureView(id<MTLTexture> sourceTexture, MTLPixelFormat pixelFormat)
+{
+    id<MTLTexture> newTextureView = [sourceTexture newTextureViewWithPixelFormat:pixelFormat];
+    internalTextures_.push_back(newTextureView);
+    return newTextureView;
 }
 
 

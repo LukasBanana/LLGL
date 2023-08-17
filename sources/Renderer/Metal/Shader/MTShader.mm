@@ -206,9 +206,6 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
         error:              &error
     ];
 
-    if (source != nullptr)
-        [source release];
-
     [dispatchData release];
 
     /* Load shader function with entry point */

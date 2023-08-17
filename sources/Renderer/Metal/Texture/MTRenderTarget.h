@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/RenderTarget.h>
+#include <LLGL/Container/SmallVector.h>
 #include "../RenderState/MTRenderPass.h"
 
 
@@ -67,14 +68,16 @@ class MTRenderTarget final : public RenderTarget
         );
 
         id<MTLTexture> CreateAttachmentTexture(id<MTLDevice> device, MTLPixelFormat pixelFormat);
+        id<MTLTexture> CreateAttachmentTextureView(id<MTLTexture> sourceTexture, MTLPixelFormat pixelFormat);
 
     private:
 
-        Extent2D                    resolution_;
-        MTLRenderPassDescriptor*    nativeRenderPass_           = nullptr; // Cannot be id<>
-        MTLRenderPassDescriptor*    nativeMutableRenderPass_    = nullptr; // Cannot be id<>
-        std::uint32_t               numColorAttachments_        = 0;
-        MTRenderPass                renderPass_;
+        Extent2D                        resolution_;
+        MTLRenderPassDescriptor*        nativeRenderPass_           = nullptr; // Cannot be id<>
+        MTLRenderPassDescriptor*        nativeMutableRenderPass_    = nullptr; // Cannot be id<>
+        std::uint32_t                   numColorAttachments_        = 0;
+        MTRenderPass                    renderPass_;
+        SmallVector<id<MTLTexture>, 2>  internalTextures_; // List of internally created MTLTexture views
 
 };
 

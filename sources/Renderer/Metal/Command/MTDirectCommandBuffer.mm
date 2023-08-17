@@ -353,7 +353,8 @@ void MTDirectCommandBuffer::CopyTextureFromFramebuffer(
 
     /* Source and target texture formats must match for 'copyFromTexture', so create texture view on mismatch */
     id<MTLTexture> sourceTexture;
-    if ([drawableTexture pixelFormat] != [targetTexture pixelFormat])
+    const bool isTextureViewRequired = ([drawableTexture pixelFormat] != [targetTexture pixelFormat]);
+    if (isTextureViewRequired)
         sourceTexture = [drawableTexture newTextureViewWithPixelFormat:[targetTexture pixelFormat]];
     else
         sourceTexture = drawableTexture;
@@ -389,7 +390,7 @@ void MTDirectCommandBuffer::CopyTextureFromFramebuffer(
     context_.ResumeRenderEncoder();
 
     /* Decrement reference counter for temporary texture */
-    if (sourceTexture != drawableTexture)
+    if (isTextureViewRequired)
         [sourceTexture release];
 }
 

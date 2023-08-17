@@ -396,8 +396,6 @@ void MTTexture::ReadRegionFromPrivateMemory(
         /* Copy bytes from intermediate shared buffer into output CPU buffer */
         ::memcpy(imageDesc.data, intermediateBuffer.GetBytes(), imageDesc.dataSize);
     }
-
-    [cmdBuffer release];
 }
 
 

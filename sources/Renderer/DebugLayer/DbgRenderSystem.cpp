@@ -869,8 +869,8 @@ static std::string BindingSlotToString(const BindingSlot& slot)
 
 void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc)
 {
-    const auto minAlignment = GetMinAlignmentForBufferBinding(bindingDesc, limits_);
-    if (viewDesc.offset % minAlignment != 0 || viewDesc.size % minAlignment != 0)
+    const std::uint64_t minAlignment = GetMinAlignmentForBufferBinding(bindingDesc, limits_);
+    if (minAlignment > 0 && (viewDesc.offset % minAlignment != 0 || viewDesc.size % minAlignment != 0))
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,

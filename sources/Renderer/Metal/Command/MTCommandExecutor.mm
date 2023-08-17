@@ -117,7 +117,8 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
 
             /* Source and target texture formats must match for 'copyFromTexture', so create texture view on mismatch */
             id<MTLTexture> sourceTexture;
-            if ([drawableTexture pixelFormat] != [cmd->destinationTexture pixelFormat])
+            const bool isTextureViewRequired = ([drawableTexture pixelFormat] != [cmd->destinationTexture pixelFormat]);
+            if (isTextureViewRequired)
                 sourceTexture = [drawableTexture newTextureViewWithPixelFormat:[cmd->destinationTexture pixelFormat]];
             else
                 sourceTexture = drawableTexture;
@@ -136,7 +137,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             ];
 
             /* Decrement reference counter for temporary texture */
-            if (sourceTexture != drawableTexture)
+            if (isTextureViewRequired)
                 [sourceTexture release];
             return sizeof(*cmd);
         }

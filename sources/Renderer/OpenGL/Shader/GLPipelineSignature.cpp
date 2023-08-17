@@ -31,8 +31,9 @@ static GLuint SortShaderArray(std::size_t numShaders, const Shader* const* shade
     const GLShader* shadersOrderedByType[numShaderTypes] = {};
     for_range(i, numShaders)
     {
-        const auto shaderType   = shaders[i]->GetType();
-        const auto shaderIndex  = static_cast<int>(shaderType);
+        LLGL_ASSERT_PTR(shaders[i]);
+        const ShaderType shaderType = shaders[i]->GetType();
+        const int shaderIndex = static_cast<int>(shaderType);
         LLGL_ASSERT(shadersOrderedByType[shaderIndex] == nullptr, "duplicate definitions of %s shader in one pipeline", ToString(shaderType));
         shadersOrderedByType[shaderIndex] = LLGL_CAST(const GLShader*, shaders[i]);
     }

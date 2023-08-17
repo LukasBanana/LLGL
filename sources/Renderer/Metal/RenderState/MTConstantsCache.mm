@@ -253,7 +253,6 @@ void MTConstantsCache::AppendUniformByDesc(
 {
     NSString* uniformName = [NSString stringWithCString:uniformDesc.name.c_str() encoding:NSASCIIStringEncoding];
     AppendUniformByName(reflection, uniformDesc, uniformIndex, uniformName, shaderBuffers);
-    [uniformName release];
 }
 
 
