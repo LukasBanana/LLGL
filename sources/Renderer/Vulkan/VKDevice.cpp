@@ -416,7 +416,7 @@ void VKDevice::CopyImageToBuffer(
     vkCmdCopyImageToBuffer(
         commandBuffer,
         srcTexture.GetVkImage(),
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         dstBuffer.GetVkBuffer(),
         1,
         &region

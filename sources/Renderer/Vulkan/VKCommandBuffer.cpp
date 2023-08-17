@@ -235,6 +235,8 @@ void VKCommandBuffer::CopyBufferFromTexture(
         region.imageExtent                      = VKTypes::ToVkExtent(srcRegion.extent);
     }
 
+    VkImageLayout oldLayout = srcTextureVK.TransitionImageLayout(device_, commandBuffer_, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
     if (IsInsideRenderPass())
     {
         PauseRenderPass();
@@ -243,6 +245,8 @@ void VKCommandBuffer::CopyBufferFromTexture(
     }
     else
         device_.CopyImageToBuffer(commandBuffer_, srcTextureVK, dstBufferVK, region);
+
+    srcTextureVK.TransitionImageLayout(device_, commandBuffer_, oldLayout);
 }
 
 void VKCommandBuffer::FillBuffer(
@@ -336,6 +340,8 @@ void VKCommandBuffer::CopyTextureFromBuffer(
         region.imageExtent                      = VKTypes::ToVkExtent(dstRegion.extent);
     }
 
+    VkImageLayout oldLayout = dstTextureVK.TransitionImageLayout(device_, commandBuffer_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
     if (IsInsideRenderPass())
     {
         PauseRenderPass();
@@ -344,6 +350,8 @@ void VKCommandBuffer::CopyTextureFromBuffer(
     }
     else
         device_.CopyBufferToImage(commandBuffer_, srcBufferVK, dstTextureVK, region);
+
+    dstTextureVK.TransitionImageLayout(device_, commandBuffer_, oldLayout);
 }
 
 void VKCommandBuffer::CopyTextureFromFramebuffer(
