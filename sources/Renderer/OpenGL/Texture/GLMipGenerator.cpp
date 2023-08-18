@@ -13,6 +13,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -241,18 +242,8 @@ void GLMipGenerator::GenerateMipsRangeWithFBO(
             case TextureType::TextureCube:
             {
                 /* Generate MIP-maps for all 6 cube faces */
-                static const GLenum g_cubeFaceTexTargets[] =
-                {
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-                    GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-                    GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-                    GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-                };
-
-                for (std::size_t i = 0; i < 6; ++i)
-                    GenerateMipsRangeTexture2D(extent, texID, g_cubeFaceTexTargets[i], baseMipLevel, numMipLevels);
+                for_range(cubeFace, 6u)
+                    GenerateMipsRangeTexture2D(extent, texID, GLTypes::ToTextureCubeMap(cubeFace), baseMipLevel, numMipLevels);
             }
             break;
 
