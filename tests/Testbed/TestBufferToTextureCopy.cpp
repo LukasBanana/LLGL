@@ -148,7 +148,7 @@ DEF_TEST( BufferToTextureCopy )
         if (showTiming)
         {
             const std::uint64_t t1 = Timer::Tick();
-            Log::Printf("Copy to texture: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));
+            Log::Printf("Copy buffer to texture: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));
         }
 
         return TestResult::Passed;

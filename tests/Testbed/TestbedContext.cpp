@@ -147,7 +147,7 @@ void TestbedContext::RunAllTests()
     RUN_TEST( TextureWriteAndRead       );
     RUN_TEST( TextureCopy               );
     //RUN_TEST( TextureToBufferCopy       ); //TODO: not implemented yet
-    //RUN_TEST( BufferToTextureCopy       ); //TODO: incomplete
+    RUN_TEST( BufferToTextureCopy       );
     RUN_TEST( DepthBuffer               );
     RUN_TEST( StencilBuffer             );
     RUN_TEST( RenderTargetNoAttachments );
