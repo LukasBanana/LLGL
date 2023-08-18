@@ -68,6 +68,7 @@ void D3D12CommandContext::Create(
             stagingDescriptorPools_[i][j].InitializeDevice(device.GetNative(), g_descriptorHeapTypes[j]);
         descriptorCaches_[i].Create(device.GetNative());
         stagingBufferPools_[i].InitializeDevice(device.GetNative(), initialStagingChunkSize);
+        intermediateBufferPools_[i].InitializeDevice(device.GetNative());
     }
 
     /* Create graphics command list and close it (they are created in recording mode) */
@@ -250,6 +251,11 @@ void D3D12CommandContext::UpdateSubresource(
     UINT64          dataSize)
 {
     stagingBufferPools_[currentAllocatorIndex_].WriteStaged(*this, dstResource, dstOffset, data, dataSize);
+}
+
+ID3D12Resource* D3D12CommandContext::AllocIntermediateBuffer(UINT64 size, UINT alignment)
+{
+    return intermediateBufferPools_[currentAllocatorIndex_].AllocBuffer(size, alignment);
 }
 
 void D3D12CommandContext::SetGraphicsRootSignature(ID3D12RootSignature* rootSignature)
@@ -532,10 +538,6 @@ D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
 
 void D3D12CommandContext::NextCommandAllocator()
 {
-    /* Clear descriptor cache and reset staging buffer pool */
-    descriptorCaches_[currentAllocatorIndex_].Clear();
-    stagingBufferPools_[currentAllocatorIndex_].Reset();
-
     /* Get next command allocator */
     const UINT64 currentFenceValue = allocatorFenceValues_[currentAllocatorIndex_];
     currentAllocatorIndex_ = ((currentAllocatorIndex_ + 1) % numAllocators_);
@@ -551,6 +553,11 @@ void D3D12CommandContext::NextCommandAllocator()
     /* Reset descriptor heap pools before they are re-used */
     for_range(i, D3D12CommandContext::maxNumDescriptorHeaps)
         stagingDescriptorPools_[currentAllocatorIndex_][i].Reset();
+
+    /* Clear descriptor cache and reset staging buffer pool */
+    descriptorCaches_[currentAllocatorIndex_].Clear();
+    stagingBufferPools_[currentAllocatorIndex_].Reset();
+    intermediateBufferPools_[currentAllocatorIndex_].Reset();
 }
 
 void D3D12CommandContext::ClearCache()

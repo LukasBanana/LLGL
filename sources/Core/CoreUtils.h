@@ -11,6 +11,7 @@
 
 #include "../Renderer/CheckedCast.h"
 #include <LLGL/Export.h>
+#include <LLGL/Types.h>
 #include <algorithm>
 #include <type_traits>
 #include <memory>
@@ -198,6 +199,16 @@ T GetAlignedSize(T size, T alignment)
         return ((size + (alignment - 1)) / alignment) * alignment;
     else
         return size;
+}
+
+/*
+Returns the image buffer size (in bytes) with aligned row stride for a given 3D extent.
+The last row of the last layer will have length 'rowSize', all other rows will have length 'alignedRowStride'.
+*/
+template <typename T>
+T GetAlignedImageSize(const Extent3D& extent, T rowSize, T alignedRowStride)
+{
+    return (alignedRowStride * extent.height) * (extent.depth - 1) + (alignedRowStride * (extent.height - 1) + rowSize);
 }
 
 // Returns the division while always rounding up. This equivalent to 'ceil(numerator / denominator)' but for integral numbers.

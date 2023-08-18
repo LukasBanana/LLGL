@@ -16,9 +16,13 @@ namespace LLGL
 {
 
 
-D3D12StagingBuffer::D3D12StagingBuffer(ID3D12Device* device, UINT64 size)
+D3D12StagingBuffer::D3D12StagingBuffer(
+    ID3D12Device*   device,
+    UINT64          size,
+    UINT            alignment,
+    D3D12_HEAP_TYPE heapType)
 {
-    Create(device, size);
+    Create(device, size, alignment, heapType);
 }
 
 D3D12StagingBuffer::D3D12StagingBuffer(D3D12StagingBuffer&& rhs) :
@@ -42,13 +46,13 @@ D3D12StagingBuffer& D3D12StagingBuffer::operator = (D3D12StagingBuffer&& rhs)
 void D3D12StagingBuffer::Create(
     ID3D12Device*   device,
     UINT64          size,
-    UINT64          alignment,
+    UINT            alignment,
     D3D12_HEAP_TYPE heapType)
 {
-    size = GetAlignedSize(size, alignment);
+    size = GetAlignedSize<UINT64>(size, alignment);
 
     /* Create GPU upload buffer */
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(heapType),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(size),

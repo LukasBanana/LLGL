@@ -12,7 +12,6 @@
 #include <LLGL/CommandBuffer.h>
 #include <cstddef>
 #include "D3D12CommandContext.h"
-#include "../Buffer/D3D12StagingBufferPool.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../../DXCommon/DXCore.h"
 

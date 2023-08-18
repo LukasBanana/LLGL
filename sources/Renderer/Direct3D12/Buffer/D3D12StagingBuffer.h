@@ -29,7 +29,12 @@ class D3D12StagingBuffer
         D3D12StagingBuffer() = default;
 
         // Creates the native D3D upload resource.
-        D3D12StagingBuffer(ID3D12Device* device, UINT64 size);
+        D3D12StagingBuffer(
+            ID3D12Device*   device,
+            UINT64          size,
+            UINT            alignment   = 256u,
+            D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
+        );
 
         D3D12StagingBuffer(D3D12StagingBuffer&& rhs);
         D3D12StagingBuffer& operator = (D3D12StagingBuffer&& rhs);
@@ -41,7 +46,7 @@ class D3D12StagingBuffer
         void Create(
             ID3D12Device*   device,
             UINT64          size,
-            UINT64          alignment   = 256u,
+            UINT            alignment   = 256u,
             D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
         );
 

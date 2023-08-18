@@ -618,11 +618,11 @@ D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const TextureLocation
     return GetD3DTextureSubresourceLocation(GetNative(), CalcSubresource(location));
 }
 
-D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(const D3D12Buffer& srcBuffer, UINT64 srcOffset, const Extent3D& extent, UINT rowPitch) const
+D3D12_TEXTURE_COPY_LOCATION D3D12Texture::CalcCopyLocation(ID3D12Resource* srcResource, UINT64 srcOffset, const Extent3D& extent, UINT rowPitch) const
 {
     D3D12_TEXTURE_COPY_LOCATION copyDesc;
     {
-        copyDesc.pResource                            = srcBuffer.GetNative();
+        copyDesc.pResource                            = srcResource;
         copyDesc.Type                                 = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
         copyDesc.PlacedFootprint.Offset               = srcOffset;
         copyDesc.PlacedFootprint.Footprint.Format     = GetDXFormat();

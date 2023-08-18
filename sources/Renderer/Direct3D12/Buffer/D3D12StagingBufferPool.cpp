@@ -30,7 +30,7 @@ void D3D12StagingBufferPool::InitializeDevice(ID3D12Device* device, UINT64 chunk
 
 void D3D12StagingBufferPool::Reset()
 {
-    for (auto& chunk : chunks_)
+    for (D3D12StagingBuffer& chunk : chunks_)
         chunk.Reset();
     chunkIdx_ = 0;
 }

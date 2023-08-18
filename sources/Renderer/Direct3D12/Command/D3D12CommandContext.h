@@ -15,6 +15,7 @@
 #include "../RenderState/D3D12StagingDescriptorHeapPool.h"
 #include "../RenderState/D3D12DescriptorCache.h"
 #include "../Buffer/D3D12StagingBufferPool.h"
+#include "../Buffer/D3D12IntermediateBufferPool.h"
 #include <d3d12.h>
 #include <cstddef>
 #include <cstdint>
@@ -113,6 +114,8 @@ class D3D12CommandContext
             const void*     data,
             UINT64          dataSize
         );
+
+        ID3D12Resource* AllocIntermediateBuffer(UINT64 size, UINT alignment = 256u);
 
         void SetGraphicsRootSignature(ID3D12RootSignature* rootSignature);
         void SetComputeRootSignature(ID3D12RootSignature* rootSignature);
@@ -265,6 +268,7 @@ class D3D12CommandContext
         D3D12DescriptorCache                descriptorCaches_[maxNumAllocators];
 
         D3D12StagingBufferPool              stagingBufferPools_[maxNumAllocators];
+        D3D12IntermediateBufferPool         intermediateBufferPools_[maxNumAllocators];
 
         StateCache                          stateCache_;
 

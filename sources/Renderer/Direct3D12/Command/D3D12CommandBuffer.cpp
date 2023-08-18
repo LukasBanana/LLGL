@@ -116,7 +116,6 @@ void D3D12CommandBuffer::CopyBuffer(
     commandContext_.TransitionResource(srcBufferD3D.GetResource(), srcBufferD3D.GetResource().usageState, true);
 }
 
-//TODO: incomplete for unaligned row strides
 void D3D12CommandBuffer::CopyBufferFromTexture(
     Buffer&                 dstBuffer,
     std::uint64_t           dstOffset,
@@ -139,37 +138,51 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
         alignedRowStride = GetAlignedSize<UINT>(rowStride, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
     }
 
-    const D3D12_TEXTURE_COPY_LOCATION   dstLocationD3D  = srcTextureD3D.CalcCopyLocation(dstBufferD3D, dstOffset, srcExtent, alignedRowStride);
     const D3D12_TEXTURE_COPY_LOCATION   srcLocationD3D  = srcTextureD3D.CalcCopyLocation(srcLocation);
     const D3D12_BOX                     srcBox          = srcTextureD3D.CalcRegion(srcRegion.offset, srcExtent);
 
     commandContext_.TransitionResource(dstBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
     commandContext_.TransitionResource(srcTextureD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, true);
     {
-        if (alignedRowStride != rowStride)
+        if (dstOffset % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT != 0 || (alignedRowStride != rowStride && (srcExtent.height > 1 || srcExtent.depth > 1)))
         {
-            /* Copy each row individually due to unalgined row pitch */
+            /* Copy texture region into intermediate buffer with correct row stride */
+            const UINT64 alignedBufferSize = GetAlignedImageSize<UINT64>(srcExtent, rowStride, alignedRowStride);
+            ID3D12Resource* alignedBuffer = commandContext_.AllocIntermediateBuffer(alignedBufferSize, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+
+            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+
+            /* Copy entire region from source texture into intermediate buffer */
+            const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = srcTextureD3D.CalcCopyLocation(alignedBuffer, 0, srcExtent, alignedRowStride);
+            commandList_->CopyTextureRegion(
+                &dstLocationD3D,    // pDst
+                0,                  // DstX
+                0,                  // DstY
+                0,                  // DstZ
+                &srcLocationD3D,    // pSrc
+                &srcBox             // pSrcBox
+            );
+
+            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST, true);
+
+            /* Copy each row individually from intermediate buffer into destination buffer due to unalgined row pitch */
+            UINT64 alignedOffset = 0;
             for_range(z, srcExtent.depth)
             {
                 for_range(y, srcExtent.height)
                 {
-                    commandList_->CopyTextureRegion(
-                        &dstLocationD3D,    // pDst
-                        0,                  // DstX
-                        0,                  // DstY
-                        0,                  // DstZ
-                        &srcLocationD3D,    // pSrc
-                        &CD3DX12_BOX(       // pSrcBox
-                            srcBox.left, srcBox.top + y, srcBox.front + z,
-                            srcBox.right, srcBox.top + y + 1, srcBox.front + z + 1
-                        )
-                    );
+                    commandList_->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, alignedBuffer, alignedOffset, rowStride);
+                    alignedOffset += alignedRowStride;
+                    dstOffset += rowStride;
                 }
             }
+
+            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
         }
         else
         {
-            /* Copy entire texture region from buffer  */
+            /* Copy entire region from source texture into destination buffer */
+            const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = srcTextureD3D.CalcCopyLocation(dstBufferD3D.GetNative(), dstOffset, srcExtent, alignedRowStride);
             commandList_->CopyTextureRegion(
                 &dstLocationD3D,    // pDst
                 0,                  // DstX
@@ -237,7 +250,6 @@ void D3D12CommandBuffer::CopyTexture(
     commandContext_.TransitionResource(srcTextureD3D.GetResource(), srcTextureD3D.GetResource().usageState, true);
 }
 
-//TODO: incomplete for unaligned row strides
 void D3D12CommandBuffer::CopyTextureFromBuffer(
     Texture&                dstTexture,
     const TextureRegion&    dstRegion,
@@ -261,36 +273,50 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
     }
 
     const D3D12_TEXTURE_COPY_LOCATION   dstLocationD3D  = dstTextureD3D.CalcCopyLocation(dstLocation);
-    const D3D12_TEXTURE_COPY_LOCATION   srcLocationD3D  = dstTextureD3D.CalcCopyLocation(srcBufferD3D, srcOffset, dstExtent, alignedRowStride);
     const D3D12_BOX                     srcBox          = dstTextureD3D.CalcRegion(Offset3D{}, dstExtent);
 
     commandContext_.TransitionResource(dstTextureD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
     commandContext_.TransitionResource(srcBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, true);
     {
-        if (alignedRowStride != rowStride)
+        if (srcOffset % D3D12_TEXTURE_DATA_PITCH_ALIGNMENT != 0 || (alignedRowStride != rowStride && (dstExtent.height > 1 || dstExtent.depth > 1)))
         {
-            /* Copy each row individually due to unalgined row pitch */
+            /* Copy texture region into intermediate buffer with correct row stride */
+            const UINT64 alignedBufferSize = GetAlignedImageSize<UINT64>(dstExtent, rowStride, alignedRowStride);
+            ID3D12Resource* alignedBuffer = commandContext_.AllocIntermediateBuffer(alignedBufferSize, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+
+            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+
+            /* Copy each row individually from intermediate buffer into destination texture due to unalgined row pitch */
+            UINT64 alignedOffset = 0;
             for_range(z, dstExtent.depth)
             {
                 for_range(y, dstExtent.height)
                 {
-                    commandList_->CopyTextureRegion(
-                        &dstLocationD3D,                            // pDst
-                        static_cast<UINT>(dstRegion.offset.x),      // DstX
-                        static_cast<UINT>(dstRegion.offset.y) + y,  // DstY
-                        static_cast<UINT>(dstRegion.offset.z) + z,  // DstZ
-                        &srcLocationD3D,                            // pSrc
-                        &CD3DX12_BOX(                               // pSrcBox
-                            srcBox.left, srcBox.top + y, srcBox.front + z,
-                            srcBox.right, srcBox.top + y + 1, srcBox.front + z + 1
-                        )
-                    );
+                    commandList_->CopyBufferRegion(alignedBuffer, alignedOffset, srcBufferD3D.GetNative(), srcOffset, rowStride);
+                    alignedOffset += alignedRowStride;
+                    srcOffset += rowStride;
                 }
             }
+
+            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST, true);
+
+            /* Copy entire region from intermediate buffer into destination texture */
+            const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = dstTextureD3D.CalcCopyLocation(alignedBuffer, 0, dstExtent, alignedRowStride);
+            commandList_->CopyTextureRegion(
+                &dstLocationD3D,                        // pDst
+                static_cast<UINT>(dstRegion.offset.x),  // DstX
+                static_cast<UINT>(dstRegion.offset.y),  // DstY
+                static_cast<UINT>(dstRegion.offset.z),  // DstZ
+                &srcLocationD3D,                        // pSrc
+                &srcBox                                 // pSrcBox
+            );
+
+            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
         }
         else
         {
-            /* Copy entire texture region from buffer  */
+            /* Copy entire region from source buffer into destination texture */
+            const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = dstTextureD3D.CalcCopyLocation(srcBufferD3D.GetNative(), srcOffset, dstExtent, alignedRowStride);
             commandList_->CopyTextureRegion(
                 &dstLocationD3D,                        // pDst
                 static_cast<UINT>(dstRegion.offset.x),  // DstX
