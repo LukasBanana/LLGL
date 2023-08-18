@@ -138,11 +138,13 @@ static GLuint g_nullResources[GLStateManager::g_maxNumResourceSlots] = {};
  * Internal functions
  */
 
+static constexpr GLuint g_invalidGLId = UINT_MAX;
+
 static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObjectId)
 {
     /* Invalidate bound ID by setting it to maximum value */
     if (boundId == releasedObjectId)
-        boundId = UINT_MAX;
+        boundId = g_invalidGLId;
 }
 
 
@@ -976,7 +978,8 @@ void GLStateManager::PopBoundBuffer()
 {
     const auto& state = bufferStack_.top();
     {
-        BindBuffer(state.target, state.buffer);
+        if (state.buffer != g_invalidGLId)
+            BindBuffer(state.target, state.buffer);
     }
     bufferStack_.pop();
 }
@@ -1066,14 +1069,15 @@ void GLStateManager::PopBoundFramebuffer()
 {
     const auto& state = framebufferStack_.top();
     {
-        BindFramebuffer(state.target, state.framebuffer);
+        if (state.framebuffer != g_invalidGLId)
+            BindFramebuffer(state.target, state.framebuffer);
     }
     framebufferStack_.pop();
 }
 
 void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
-    for (auto& boundFramebuffer : contextState_.boundFramebuffers)
+    for (GLuint& boundFramebuffer : contextState_.boundFramebuffers)
         InvalidateBoundGLObject(boundFramebuffer, framebuffer);
 }
 
@@ -1108,7 +1112,8 @@ void GLStateManager::PopBoundRenderbuffer()
 {
     const auto& state = renderbufferStack_.top();
     {
-        BindRenderbuffer(state.renderbuffer);
+        if (state.renderbuffer != g_invalidGLId)
+            BindRenderbuffer(state.renderbuffer);
     }
     renderbufferStack_.pop();
 }
@@ -1311,8 +1316,11 @@ void GLStateManager::PopBoundTexture()
 {
     const auto& state = textureState_.top();
     {
-        ActiveTexture(state.layer);
-        BindTexture(state.target, state.texture);
+        if (state.texture != g_invalidGLId)
+        {
+            ActiveTexture(state.layer);
+            BindTexture(state.target, state.texture);
+        }
     }
     textureState_.pop();
 }
@@ -1385,7 +1393,7 @@ void GLStateManager::UnbindSamplers(GLuint first, GLsizei count)
 
 void GLStateManager::NotifySamplerRelease(GLuint sampler)
 {
-    for (auto& boundSampler : contextState_.boundSamplers)
+    for (GLuint& boundSampler : contextState_.boundSamplers)
         InvalidateBoundGLObject(boundSampler, sampler);
 }
 
@@ -1446,7 +1454,8 @@ void GLStateManager::PopBoundShaderProgram()
 {
     const auto& state = shaderProgramStack_.top();
     {
-        BindShaderProgram(state.program);
+        if (state.program != g_invalidGLId)
+            BindShaderProgram(state.program);
     }
     shaderProgramStack_.pop();
 }
@@ -1623,7 +1632,7 @@ void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target
     else
     {
         /* Invalidate GL texture on all layers */
-        for (auto& layer : contextState_.textureLayers)
+        for (GLContextState::TextureLayer& layer : contextState_.textureLayers)
             InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
     }
 }
