@@ -50,6 +50,7 @@ project(LLGL)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
 # === Build path ===
@@ -86,6 +87,11 @@ macro(ADD_DEBUG_DEFINE IDENT)
     endif(MSVC)
 endmacro()
 
+macro(SET_RENDERER_PROJECT_PROPERTIES PROJECT_NAME)
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "LLGL")
+endmacro()
+
 macro(SET_PROJECT_WORKING_DIR TEST_NAME WORKING_DIR)
     if(WIN32)
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.8.2")
@@ -109,6 +115,14 @@ macro(SET_EXAMPLE_PROJECT_WORKING_DIR TEST_NAME)
     endif()
 endmacro()
 
+macro(SET_EXAMPLE_PROJECT_FOLDER TEST_NAME)
+    if(${TEST_NAME} MATCHES "Example_+")
+        set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Examples")
+    elseif(${TEST_NAME} MATCHES "Test_+" OR ${TEST_NAME} MATCHES "Testbed")
+        set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Tests")
+    endif()
+endmacro()
+
 macro(ADD_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     if(APPLE)
         add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
@@ -120,7 +134,9 @@ macro(ADD_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     endif()
     target_link_libraries(${TEST_NAME} ${LIB_FILES})
     set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+    set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Examples")
     SET_EXAMPLE_PROJECT_WORKING_DIR(${TEST_NAME})
+    SET_EXAMPLE_PROJECT_FOLDER(${TEST_NAME})
 endmacro()
 
 macro(ADD_C99_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
@@ -132,6 +148,7 @@ macro(ADD_C99_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
     target_link_libraries(${TEST_NAME} ${LIB_FILES})
     set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE C DEBUG_POSTFIX "D")
     SET_EXAMPLE_PROJECT_WORKING_DIR(${TEST_NAME})
+    SET_EXAMPLE_PROJECT_FOLDER(${TEST_NAME})
 endmacro()
 
 macro(ADD_MOBILE_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
@@ -144,6 +161,7 @@ macro(ADD_MOBILE_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
         target_link_libraries(${TEST_NAME} ${LIB_FILES} android_native_app_glue log)
         set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
     endif()
+    SET_EXAMPLE_PROJECT_FOLDER(${TEST_NAME})
 endmacro()
 
 if(WIN32)
@@ -807,7 +825,7 @@ elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
 endif()
 
-set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+SET_RENDERER_PROJECT_PROPERTIES(LLGL)
 
 set(LLGL_DEPENDENCIES LLGL)
 
@@ -820,7 +838,7 @@ if(LLGL_BUILD_RENDERER_NULL)
         add_library(LLGL_Null SHARED ${FilesNull})
     endif()
     
-    set_target_properties(LLGL_Null PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+    SET_RENDERER_PROJECT_PROPERTIES(LLGL_Null)
     target_link_libraries(LLGL_Null LLGL ${OPENGL_LIBRARIES})
     
     ADD_DEFINE(LLGL_BUILD_RENDERER_NULL)
@@ -841,7 +859,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
             add_library(LLGL_OpenGLES3 SHARED ${FilesGLES3})
         endif()
         
-        set_target_properties(LLGL_OpenGLES3 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        SET_RENDERER_PROJECT_PROPERTIES(LLGL_OpenGLES3)
         
         if(APPLE)
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES")
@@ -876,7 +894,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
             add_library(LLGL_OpenGL SHARED ${FilesGL})
         endif()
         
-        set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        SET_RENDERER_PROJECT_PROPERTIES(LLGL_OpenGL)
         target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_OPENGL)
@@ -901,7 +919,7 @@ if(NOT APPLE AND LLGL_BUILD_RENDERER_VULKAN)
             add_library(LLGL_Vulkan SHARED ${FilesVK})
         endif()
         
-        set_target_properties(LLGL_Vulkan PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        SET_RENDERER_PROJECT_PROPERTIES(LLGL_Vulkan)
         target_link_libraries(LLGL_Vulkan LLGL ${Vulkan_LIBRARY})
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_VULKAN)
@@ -929,7 +947,7 @@ if(APPLE AND LLGL_BUILD_RENDERER_METAL)
             add_library(LLGL_Metal SHARED ${FilesMTL})
         endif()
         
-        set_target_properties(LLGL_Metal PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        SET_RENDERER_PROJECT_PROPERTIES(LLGL_Metal)
         
         if(LLGL_MOBILE_PLATFORM)
             target_link_libraries(LLGL_Metal PUBLIC LLGL "-framework Foundation -framework UIKit -framework QuartzCore -framework Metal -framework MetalKit")
@@ -955,7 +973,7 @@ if(WIN32)
             add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
         endif()
         
-        set_target_properties(LLGL_Direct3D11 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        SET_RENDERER_PROJECT_PROPERTIES(LLGL_Direct3D11)
         target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
         
         ADD_DEFINE(LLGL_BUILD_RENDERER_DIRECT3D11)
@@ -972,7 +990,7 @@ if(WIN32)
             add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
         endif()
         
-        set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        SET_RENDERER_PROJECT_PROPERTIES(LLGL_Direct3D12)
         target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
         target_compile_definitions(LLGL_Direct3D12 PUBLIC -DLLGL_DX_ENABLE_D3D12)
         
@@ -1017,10 +1035,13 @@ if(GaussLib_INCLUDE_DIR)
 
     # Example Projects
     if(LLGL_BUILD_EXAMPLES)
+        # Base project (static lib) for all examples
         add_library(ExampleBase STATIC ${FilesExampleBase})
         set_target_properties(ExampleBase PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         target_link_libraries(ExampleBase "${LLGL_DEPENDENCIES}")
+        set_target_properties(ExampleBase PROPERTIES FOLDER "Examples")
         
+        # Native "app glue" for Android examples
         if(LLGL_ANDROID_PLATFORM)
             add_library(android_native_app_glue STATIC ${FilesAndroidNativeAppGlue})
             target_link_libraries(ExampleBase android_native_app_glue)
