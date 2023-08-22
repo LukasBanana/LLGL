@@ -1,5 +1,5 @@
-// GLSL shader version 1.30 (for OpenGL 3.1)
-#version 130
+// GLSL shader version 3.30 (for OpenGL 3.3)
+#version 330
 
 in vec2 position;
 in vec4 color;
