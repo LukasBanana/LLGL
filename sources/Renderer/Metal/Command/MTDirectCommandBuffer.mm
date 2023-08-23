@@ -174,7 +174,7 @@ void MTDirectCommandBuffer::CopyBufferFromTexture(
 
     /* Determine actual row and layer strides */
     if (rowStride == 0)
-        rowStride = srcTextureMT.GetBytesPerRow(srcRegion.extent.width);
+        rowStride = static_cast<std::uint32_t>(srcTextureMT.GetBytesPerRow(srcRegion.extent.width));
     if (layerStride == 0)
         layerStride = rowStride * srcRegion.extent.height;
 
@@ -297,7 +297,7 @@ void MTDirectCommandBuffer::CopyTextureFromBuffer(
 
     /* Determine actual row and layer strides */
     if (rowStride == 0)
-        rowStride = dstTextureMT.GetBytesPerRow(dstRegion.extent.width);
+        rowStride = static_cast<std::uint32_t>(dstTextureMT.GetBytesPerRow(dstRegion.extent.width));
     if (layerStride == 0)
         layerStride = rowStride * dstRegion.extent.height;
 

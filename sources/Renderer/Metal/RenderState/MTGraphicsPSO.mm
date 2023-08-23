@@ -17,6 +17,7 @@
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
+#include <TargetConditionals.h>
 
 
 namespace LLGL
@@ -81,8 +82,10 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
     [renderEncoder setFrontFacingWinding:winding_];
     [renderEncoder setTriangleFillMode:fillMode_];
 
+    #if TARGET_OS_SIMULATOR == 0
     if (@available(macOS 10.11, iOS 11, *))
         [renderEncoder setDepthClipMode:clipMode_];
+    #endif
 
     #ifndef LLGL_OS_IOS//TODO: disabled for testing iOS
     [renderEncoder setDepthBias:depthBias_ slopeScale:depthSlope_ clamp:depthClamp_];

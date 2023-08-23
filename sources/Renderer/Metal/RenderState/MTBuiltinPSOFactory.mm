@@ -9,6 +9,8 @@
 #include "../Shader/MTShader.h"
 #include "../Shader/Builtin/MTBuiltin.h"
 #include "../MTCore.h"
+#include "../../../Core/Exception.h"
+#include <LLGL/Report.h>
 
 
 namespace LLGL
@@ -58,8 +60,15 @@ void MTBuiltinPSOFactory::LoadBuiltinComputePSO(
     }
     MTShader cs{ device, shaderDesc };
 
+    /* We cannot recover from a faulty built-in shader */
+    if (const Report* report = cs.GetReport())
+    {
+        if (report->HasErrors())
+            LLGL_TRAP("%s", report->GetText());
+    }
+
     /* Create native compute pipeline state */
-    const auto idx = static_cast<std::size_t>(builtin);
+    const std::size_t idx = static_cast<std::size_t>(builtin);
     NSError* error = nullptr;
     builtinComputePSOs_[idx] = [device newComputePipelineStateWithFunction:cs.GetNative() error:&error];
     if (!builtinComputePSOs_[idx])

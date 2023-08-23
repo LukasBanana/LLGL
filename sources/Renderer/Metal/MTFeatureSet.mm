@@ -167,10 +167,10 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     All devices support at least 4, but only some devices supported up to 8 samples.
     */
     const NSUInteger maxSamples = MTDevice::FindSuitableSampleCount(device, 8u);
-    caps.limits.maxColorBufferSamples       = maxSamples;
-    caps.limits.maxDepthBufferSamples       = maxSamples;
-    caps.limits.maxStencilBufferSamples     = maxSamples;
-    caps.limits.maxNoAttachmentSamples      = maxSamples;
+    caps.limits.maxColorBufferSamples       = static_cast<std::uint32_t>(maxSamples);
+    caps.limits.maxDepthBufferSamples       = static_cast<std::uint32_t>(maxSamples);
+    caps.limits.maxStencilBufferSamples     = static_cast<std::uint32_t>(maxSamples);
+    caps.limits.maxNoAttachmentSamples      = static_cast<std::uint32_t>(maxSamples);
 }
 
 

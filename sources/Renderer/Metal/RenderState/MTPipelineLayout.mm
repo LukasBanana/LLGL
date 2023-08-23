@@ -110,9 +110,9 @@ void MTPipelineLayout::BuildStaticSamplers(
     numStaticSamplers_ = static_cast<std::uint32_t>(staticSamplerDescs.size());
     staticSamplerStates_.reserve(staticSamplerDescs.size());
     staticSamplerIndices_.reserve(staticSamplerDescs.size());
-    numStaticSamplerPerStage_[MTShaderStage_Vertex  ] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::VertexStage);
-    numStaticSamplerPerStage_[MTShaderStage_Fragment] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::FragmentStage);
-    numStaticSamplerPerStage_[MTShaderStage_Kernel  ] = BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::ComputeStage);
+    numStaticSamplerPerStage_[MTShaderStage_Vertex  ] = static_cast<std::uint32_t>(BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::VertexStage));
+    numStaticSamplerPerStage_[MTShaderStage_Fragment] = static_cast<std::uint32_t>(BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::FragmentStage));
+    numStaticSamplerPerStage_[MTShaderStage_Kernel  ] = static_cast<std::uint32_t>(BuildStaticSamplersForStage(device, staticSamplerDescs, StageFlags::ComputeStage));
 }
 
 std::size_t MTPipelineLayout::BuildStaticSamplersForStage(

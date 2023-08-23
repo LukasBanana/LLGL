@@ -300,7 +300,7 @@ void MTTexture::ReadRegionFromSharedMemory(
     if (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType)
     {
         /* Generate intermediate buffer for conversion */
-        const std::uint32_t intermediateDataSize    = layout.dataSize * region.size.depth;
+        const std::uint32_t intermediateDataSize    = static_cast<std::uint32_t>(layout.dataSize * region.size.depth);
         ByteBuffer          intermediateData        = AllocateByteBuffer(intermediateDataSize, UninitializeTag{});
 
         for_range(arrayLayer, subresource.numArrayLayers)
