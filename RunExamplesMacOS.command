@@ -14,78 +14,30 @@ else
     exit 1
 fi
 
-PS3='select example: '
-options=(
-    "Hello Triangle"
-    "Tessellation"
-    "Texturing"
-    "Render Target"
-    "Buffer Array"
-    "Instancing"
-    "Stream Output"
-    "Post Processing"
-    "Shadow Mapping"
-    "Stencil Buffer"
-    "Volume Rendering"
-    "Compute Shader"
-    "Animation"
-    "Cloth Physics"
-    "Primitive Restart"
-    "Resource Binding"
+list_examples()
+{
+    EXCLUDED=(MultiRenderer MultiThreading PBR ComputeShader UnorderedAccess)
+    EXAMPLE_DIRS=($(ls examples/Cpp))
+    for DIR in "${EXAMPLE_DIRS[@]}"; do
+        if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
+            if [ -f "examples/Cpp/$DIR/Example.cpp" ]; then
+                echo "$DIR"
+            fi
+        fi
+    done
+}
+
+run_example()
+(
+    EXAMPLE=$1
+    EXE="../../../$BUILD_DIR/Example_${EXAMPLE}.app/Contents/MacOS/Example_${EXAMPLE}"
+    cd examples/Cpp/$EXAMPLE
+    eval $EXE
 )
-select opt in "${options[@]}"
-do
-    case $opt in
-    "${options[0]}")
-        (cd "$SOURCE_DIR/examples/Cpp/HelloTriangle"; ../../../$BUILD_DIR/Example_HelloTriangle.app/Contents/MacOS/Example_HelloTriangle)
-        ;;
-    "${options[1]}")
-        (cd "$SOURCE_DIR/examples/Cpp/Tessellation"; ../../../$BUILD_DIR/Example_Tessellation.app/Contents/MacOS/Example_Tessellation)
-        ;;
-    "${options[2]}")
-        (cd "$SOURCE_DIR/examples/Cpp/Texturing"; ../../../$BUILD_DIR/Example_Texturing.app/Contents/MacOS/Example_Texturing)
-        ;;
-    "${options[3]}")
-        (cd "$SOURCE_DIR/examples/Cpp/RenderTarget"; ../../../$BUILD_DIR/Example_RenderTarget.app/Contents/MacOS/Example_RenderTarget)
-        ;;
-    "${options[4]}")
-        (cd "$SOURCE_DIR/examples/Cpp/BufferArray"; ../../../$BUILD_DIR/Example_BufferArray.app/Contents/MacOS/Example_BufferArray)
-        ;;
-    "${options[5]}")
-        (cd "$SOURCE_DIR/examples/Cpp/Instancing"; ../../../$BUILD_DIR/Example_Instancing.app/Contents/MacOS/Example_Instancing)
-        ;;
-    "${options[6]}")
-        (cd "$SOURCE_DIR/examples/Cpp/StreamOutput"; ../../../$BUILD_DIR/Example_StreamOutput.app/Contents/MacOS/Example_StreamOutput)
-        ;;
-    "${options[7]}")
-        (cd "$SOURCE_DIR/examples/Cpp/PostProcessing"; ../../../$BUILD_DIR/Example_PostProcessing.app/Contents/MacOS/Example_PostProcessing)
-        ;;
-    "${options[8]}")
-        (cd "$SOURCE_DIR/examples/Cpp/ShadowMapping"; ../../../$BUILD_DIR/Example_ShadowMapping.app/Contents/MacOS/Example_ShadowMapping)
-        ;;
-    "${options[9]}")
-        (cd "$SOURCE_DIR/examples/Cpp/StencilBuffer"; ../../../$BUILD_DIR/Example_StencilBuffer.app/Contents/MacOS/Example_StencilBuffer)
-        ;;
-    "${options[10]}")
-        (cd "$SOURCE_DIR/examples/Cpp/VolumeRendering"; ../../../$BUILD_DIR/Example_VolumeRendering.app/Contents/MacOS/Example_VolumeRendering)
-        ;;
-    "${options[11]}")
-        (cd "$SOURCE_DIR/examples/Cpp/ComputeShader"; ../../../$BUILD_DIR/Example_ComputeShader.app/Contents/MacOS/Example_ComputeShader)
-        ;;
-    "${options[12]}")
-        (cd "$SOURCE_DIR/examples/Cpp/Animation"; ../../../$BUILD_DIR/Example_Animation.app/Contents/MacOS/Example_Animation)
-        ;;
-    "${options[13]}")
-        (cd "$SOURCE_DIR/examples/Cpp/ClothPhysics"; ../../../$BUILD_DIR/Example_ClothPhysics.app/Contents/MacOS/Example_ClothPhysics)
-        ;;
-    "${options[14]}")
-        (cd "$SOURCE_DIR/examples/Cpp/PrimitiveRestart"; ../../../$BUILD_DIR/Example_PrimitiveRestart.app/Contents/MacOS/Example_PrimitiveRestart)
-        ;;
-    "${options[15]}")
-        (cd "$SOURCE_DIR/examples/Cpp/ResourceBinding"; ../../../$BUILD_DIR/Example_ResourceBinding.app/Contents/MacOS/Example_ResourceBinding)
-        ;;
-    *)
-        echo "invalid selection"
-        ;;
-    esac
+
+EXAMPLES=($(list_examples))
+
+PS3="Select example: "
+select OPT in "${EXAMPLES[@]}"; do
+    run_example $OPT
 done
