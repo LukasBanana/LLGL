@@ -9,6 +9,7 @@ ENABLE_VULKAN="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 BUILD_TYPE="Release"
+PROJECT_ONLY=0
 
 print_help()
 {
@@ -19,6 +20,7 @@ print_help()
     echo "  -c, --clear-cache ....... Clear CMake cache and rebuild"
     echo "  -s, --skip-validation ... Skip check for missing packages (X11, OpenGL etc.)"
     echo "  -d, --debug ............. Configure Debug build (default is Release)"
+    echo "  -p, --project-only ...... Build project solution only (no compilation)"
     echo "  -null ................... Include Null renderer"
     echo "  -vulkan ................. Include Vulkan renderer"
     echo "  -no-examples ............ Exclude example projects"
@@ -38,6 +40,8 @@ for ARG in "$@"; do
         SKIP_VALIDATION=1
     elif [ $ARG = "-d" ] || [ $ARG = "--debug" ]; then
         BUILD_TYPE="Debug"
+    elif [ $ARG = "-p" ] || [ $ARG = "--project-only" ]; then
+        PROJECT_ONLY=1
     elif [ $ARG = "-null" ]; then
         ENABLE_NULL="ON"
     elif [ $ARG = "-vulkan" ]; then
@@ -77,15 +81,11 @@ GAUSSIAN_LIB_DIR="GaussianLib/include"
 if [ -f "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR/Gauss/Gauss.h" ]; then
     GAUSSIAN_LIB_DIR=$(realpath "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR")
 elif [ ! -d "$OUTPUT_DIR/$GAUSSIAN_LIB_DIR" ]; then
-    pushd "$OUTPUT_DIR"
-    git clone https://github.com/LukasBanana/GaussianLib.git
-    popd
+    (cd "$OUTPUT_DIR" git clone https://github.com/LukasBanana/GaussianLib.git)
     GAUSSIAN_LIB_DIR=$(realpath "$OUTPUT_DIR/$GAUSSIAN_LIB_DIR")
 fi
 
-# Build into output directory
-cd "$OUTPUT_DIR"
-
+# Build into output directory (this syntax requried CMake 3.13+)
 cmake \
     -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
     -DLLGL_BUILD_RENDERER_OPENGL=ON \
@@ -95,7 +95,9 @@ cmake \
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES \
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS \
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR" \
-    -S "$SOURCE_DIR"
+    -S "$SOURCE_DIR" \
+    -B "$OUTPUT_DIR"
 
-cmake --build .
-
+if [ $PROJECT_ONLY -eq 0 ]; then
+    cmake --build "$OUTPUT_DIR"
+fi

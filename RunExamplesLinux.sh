@@ -3,12 +3,15 @@
 BUILD_DIR="build_linux/build"
 
 if [ "$#" -eq 1 ]; then
+    HELLO_EXAMPLE="Example_HelloTriangle"
     BUILD_DIR=$1
-elif [ -f "build_linux/build/Example_HelloTriangle" ]; then
-    BUILD_DIR="build_linux/build"
-elif [ -f "bin/x64/Linux/Example_HelloTriangle" ]; then
-    BUILD_DIR="bin/x64/Linux"
-else
+    if [[ "$BUILD_DIR" == */ ]]; then
+        BUILD_DIR="${BUILD_DIR::-1}" # Remove trailing '/' character from path
+    fi
+    if [ -f "$BUILD_DIR/build/$HELLO_EXAMPLE" ] || [ -f "$BUILD_DIR/build/${HELLO_EXAMPLE}D" ]; then
+        BUILD_DIR="$BUILD_DIR/build"
+    fi
+elif [ ! -d "$BUILD_DIR" ]; then
     echo "error: build folder not found: $BUILD_DIR"
     exit 1
 fi
