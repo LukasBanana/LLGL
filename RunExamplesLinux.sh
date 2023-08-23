@@ -1,4 +1,5 @@
 #!/bin/bash
+
 BUILD_DIR="build_linux/build"
 
 if [ "$#" -eq 1 ]; then
@@ -12,77 +13,35 @@ else
     exit 1
 fi
 
-PS3='select example: '
-options=(
-	"Hello Triangle"
-	"Tessellation"
-	"Texturing"
-	"Queries"
-	"Render Target"
-	"Multi Context"
-	"Buffer Array"
-	"Compute Shader"
-	"Stream Output"
-	"Instancing"
-	"Post Processing"
-	"Shadow Mapping"
-	"Animation"
-	"Stencil Buffer"
-	"Volume Rendering"
-	"Resource Binding"
+list_examples()
+{
+    EXCLUDED=(MultiRenderer MultiThreading PBR ComputeShader UnorderedAccess)
+    EXAMPLE_DIRS=($(ls examples/Cpp))
+    for DIR in "${EXAMPLE_DIRS[@]}"; do
+        if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
+            if [ -f "examples/Cpp/$DIR/Example.cpp" ]; then
+                echo "$DIR"
+            fi
+        fi
+    done
+}
+
+run_example()
+(
+    EXAMPLE=$1
+    EXE="../../../$BUILD_DIR/Example_$EXAMPLE"
+    EXE_D="${EXE}D"
+    cd examples/Cpp/$EXAMPLE
+    if [ -f "$EXE_D" ]; then
+        eval $EXE_D
+    else
+        eval $EXE
+    fi
 )
-select opt in "${options[@]}"
-do
-	case $opt in
-	"${options[0]}")
-		(cd examples/Cpp/HelloTriangle; ../../../$BUILD_DIR/Example_HelloTriangle)
-		;;
-	"${options[1]}")
-		(cd examples/Cpp/Tessellation; ../../../$BUILD_DIR/Example_Tessellation)
-		;;
-	"${options[2]}")
-		(cd examples/Cpp/Texturing; ../../../$BUILD_DIR/Example_Texturing)
-		;;
-	"${options[3]}")
-		(cd examples/Cpp/Queries; ../../../$BUILD_DIR/Example_Queries)
-		;;
-	"${options[4]}")
-		(cd examples/Cpp/RenderTarget; ../../../$BUILD_DIR/Example_RenderTarget)
-		;;
-	"${options[5]}")
-		(cd examples/Cpp/MultiContext; ../../../$BUILD_DIR/Example_MultiContext)
-		;;
-	"${options[6]}")
-		(cd examples/Cpp/BufferArray; ../../../$BUILD_DIR/Example_BufferArray)
-		;;
-	"${options[7]}")
-		(cd examples/Cpp/ComputeShader; ../../../$BUILD_DIR/Example_ComputeShader)
-		;;
-	"${options[8]}")
-		(cd examples/Cpp/StreamOutput; ../../../$BUILD_DIR/Example_StreamOutput)
-		;;
-	"${options[9]}")
-		(cd examples/Cpp/Instancing; ../../../$BUILD_DIR/Example_Instancing)
-		;;
-	"${options[10]}")
-		(cd examples/Cpp/PostProcessing; ../../../$BUILD_DIR/Example_PostProcessing)
-		;;
-	"${options[11]}")
-		(cd examples/Cpp/ShadowMapping; ../../../$BUILD_DIR/Example_ShadowMapping)
-		;;
-	"${options[12]}")
-		(cd examples/Cpp/Animation; ../../../$BUILD_DIR/Example_Animation)
-		;;
-	"${options[13]}")
-		(cd examples/Cpp/StencilBuffer; ../../../$BUILD_DIR/Example_StencilBuffer)
-		;;
-	"${options[14]}")
-		(cd examples/Cpp/VolumeRendering; ../../../$BUILD_DIR/Example_VolumeRendering)
-		;;
-	"${options[15]}")
-		(cd examples/Cpp/ResourceBinding; ../../../$BUILD_DIR/Example_ResourceBinding)
-		;;
-	*)
-		echo "invalid selection";;
-	esac
+
+EXAMPLES=($(list_examples))
+
+PS3="Select example: "
+select OPT in "${EXAMPLES[@]}"; do
+    run_example $OPT
 done
