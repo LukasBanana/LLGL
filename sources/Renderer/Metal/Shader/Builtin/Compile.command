@@ -28,8 +28,8 @@ fi
 
 # Convert shader byte code into C header files
 for SDK in ${METAL_SDKS[@]}; do
-    python3 "$HEX_CONVERSION_SCRIPT" FillBufferByte4.${SDK}.metallib -offsets cxx > FillBufferByte4.${SDK}.metallib.bin.h
-    python3 "$HEX_CONVERSION_SCRIPT" FillBufferByte4.${SDK}.metallib -len -paren > FillBufferByte4.${SDK}.metallib.len.h
+    python3 "$HEX_CONVERSION_SCRIPT" FillBufferByte4.${SDK}.metallib -offsets cxx > FillBufferByte4.${SDK}.metallib.bin.inl
+    python3 "$HEX_CONVERSION_SCRIPT" FillBufferByte4.${SDK}.metallib -len -paren > FillBufferByte4.${SDK}.metallib.len.inl
 done
 
 echo Done

@@ -12,22 +12,22 @@
 const char* g_metalLibFillBufferByte4 =
 (
     #if TARGET_OS_SIMULATOR != 0
-    #   include "FillBufferByte4.iphonesimulator.metallib.bin.h"
+    #   include "FillBufferByte4.iphonesimulator.metallib.bin.inl"
     #elif TARGET_OS_IPHONE != 0
-    #   include "FillBufferByte4.iphoneos.metallib.bin.h"
+    #   include "FillBufferByte4.iphoneos.metallib.bin.inl"
     #else
-    #   include "FillBufferByte4.macosx.metallib.bin.h"
+    #   include "FillBufferByte4.macosx.metallib.bin.inl"
     #endif
 );
 
 const std::size_t g_metalLibFillBufferByte4Len =
 (
     #if TARGET_OS_SIMULATOR != 0
-    #   include "FillBufferByte4.iphonesimulator.metallib.len.h"
+    #   include "FillBufferByte4.iphonesimulator.metallib.len.inl"
     #elif TARGET_OS_IPHONE != 0
-    #   include "FillBufferByte4.iphoneos.metallib.len.h"
+    #   include "FillBufferByte4.iphoneos.metallib.len.inl"
     #else
-    #   include "FillBufferByte4.macosx.metallib.len.h"
+    #   include "FillBufferByte4.macosx.metallib.len.inl"
     #endif
 );
 
