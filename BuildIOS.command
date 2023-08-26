@@ -3,11 +3,14 @@
 SOURCE_DIR="$(dirname $0)"
 OUTPUT_DIR="$SOURCE_DIR/build_ios"
 CLEAR_CACHE=0
-ENABLE_EXAMPLES="OFF"
-ENABLE_TESTS="ON"
+ENABLE_EXAMPLES="ON"
+ENABLE_TESTS="OFF"
 #BUILD_TYPE="Release"
 DEPLOYMENT_TARGET="11.0"
 PROJECT_ONLY=0
+
+# When this .command script is launched from Finder, we have to change to the source directory explicitly
+cd $SOURCE_DIR
 
 print_help()
 {
@@ -19,8 +22,7 @@ print_help()
 #    echo "  -d, --debug ............. Configure Debug build (default is Release)"
     echo "  -t, --target T .......... Sets deployment target to T (default is 11.0)"
     echo "  -p, --project-only ...... Build project solution only (no compilation)"
-#    echo "  -no-examples ............ Exclude example projects"
-    echo "  -no-tests ............... Exclude test projects"
+    echo "  -no-examples ............ Exclude example projects"
     echo "NOTES:"
     echo "  Default output directory is 'build_ios'"
 }
@@ -44,10 +46,8 @@ for ARG in "$@"; do
             READ_TARGET=1
         elif [ $ARG = "-p" ] || [ $ARG = "--project-only" ]; then
             PROJECT_ONLY=1
-#        elif [ $ARG = "-no-examples" ]; then
-#            ENABLE_EXAMPLES="OFF"
-        elif [ $ARG = "-no-tests" ]; then
-            ENABLE_TESTS="OFF"
+        elif [ $ARG = "-no-examples" ]; then
+            ENABLE_EXAMPLES="OFF"
         else
             OUTPUT_DIR=$ARG
         fi

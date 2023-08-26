@@ -9,6 +9,9 @@ ENABLE_TESTS="ON"
 BUILD_TYPE="Release"
 PROJECT_ONLY=0
 
+# When this .command script is launched from Finder, we have to change to the source directory explicitly
+cd $SOURCE_DIR
+
 print_help()
 {
     echo "USAGE:"
