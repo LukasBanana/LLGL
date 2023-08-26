@@ -40,7 +40,7 @@
 #include "../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
-
+#include <dxcapi.h>
 
 namespace LLGL
 {
@@ -102,6 +102,12 @@ class D3D12RenderSystem final : public RenderSystem
             return cmdSignatureFactory_;
         }
 
+        // Returns the DxcCreateInstance factory, if available. If unavailable, returns nullptr.
+        inline DxcCreateInstanceProc GetDxcCreateInstance() const
+        {
+            return dxcCreateInstanceFn_;
+        }
+
     private:
 
         void EnableDebugLayer();
@@ -109,6 +115,7 @@ class D3D12RenderSystem final : public RenderSystem
         void CreateFactory(bool debugDevice = false);
         void QueryVideoAdapters();
         void CreateDevice();
+        void CreateDxcInterface();
 
         void QueryRendererInfo();
         void QueryRenderingCaps();
@@ -170,6 +177,8 @@ class D3D12RenderSystem final : public RenderSystem
         /* ----- Other members ----- */
 
         std::vector<VideoAdapterDescriptor>     videoAdatperDescs_;
+        HMODULE                                 dxcModule_ = nullptr;
+        DxcCreateInstanceProc                   dxcCreateInstanceFn_ = nullptr;
 
 };
 
