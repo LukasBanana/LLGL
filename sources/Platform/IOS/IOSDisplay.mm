@@ -7,6 +7,7 @@
 
 #include "IOSDisplay.h"
 #include "../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -31,7 +32,7 @@ Display* Display::Get(std::size_t index)
 
 Display* Display::GetPrimary()
 {
-    static std::unique_ptr<Display> primaryDisplay = MakeUnique<IOSDisplay>();
+    static std::unique_ptr<Display> primaryDisplay = MakeUnique<IOSDisplay>([UIScreen mainScreen]);
     return primaryDisplay.get();
 }
 
@@ -60,9 +61,14 @@ Offset2D Display::GetCursorPosition()
  * IOSDisplay class
  */
 
+IOSDisplay::IOSDisplay(UIScreen* screen) :
+    screen_ { screen }
+{
+}
+
 bool IOSDisplay::IsPrimary() const
 {
-    return true;
+    return (screen_ == [UIScreen mainScreen]);
 }
 
 UTF8String IOSDisplay::GetDeviceName() const
@@ -73,8 +79,7 @@ UTF8String IOSDisplay::GetDeviceName() const
 
 Offset2D IOSDisplay::GetOffset() const
 {
-    //TODO
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    CGRect screenRect = [screen_ bounds];
     return Offset2D
     {
         static_cast<std::int32_t>(screenRect.origin.x),
@@ -94,30 +99,47 @@ bool IOSDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
     return false;
 }
 
+static Extent2D GetScaledScreenResolution(CGSize size, CGFloat screenScale)
+{
+    Extent2D resolution;
+    resolution.width    = static_cast<std::uint32_t>(size.width  * screenScale);
+    resolution.height   = static_cast<std::uint32_t>(size.height * screenScale);
+    return resolution;
+}
+
+static void ConvertUIScreenMode(DisplayModeDescriptor& dst, UIScreen* screen, UIScreenMode* mode)
+{
+    CGFloat     scale   = 1.0f;//[screen_ nativeScale];
+    NSInteger   maxFPS  = [screen maximumFramesPerSecond];
+
+    dst.resolution  = GetScaledScreenResolution(mode.size, scale);
+    dst.refreshRate = static_cast<std::uint32_t>(maxFPS);
+}
+
 DisplayModeDescriptor IOSDisplay::GetDisplayMode() const
 {
     DisplayModeDescriptor displayModeDesc;
     {
-        /* Get attributes from main screen */
-        UIScreen*   mainScreen  = [UIScreen mainScreen];
-
-        CGRect      screenRect  = [mainScreen nativeBounds];
-        CGFloat     screenScale = [mainScreen nativeScale];
-        NSInteger   maxFPS      = [mainScreen maximumFramesPerSecond];
-
-        displayModeDesc.resolution.width    = static_cast<std::uint32_t>(screenRect.size.width * screenScale);
-        displayModeDesc.resolution.height   = static_cast<std::uint32_t>(screenRect.size.height * screenScale);
-        displayModeDesc.refreshRate         = static_cast<std::uint32_t>(maxFPS);
+        ConvertUIScreenMode(displayModeDesc, screen_, [screen_ currentMode]);
     }
     return displayModeDesc;
 }
 
 std::vector<DisplayModeDescriptor> IOSDisplay::GetSupportedDisplayModes() const
 {
-    std::vector<DisplayModeDescriptor> displayModeDescs;
+    const NSUInteger numModes = [[screen_ availableModes] count];
 
-    //TODO
-    displayModeDescs.push_back(GetDisplayMode());
+    std::vector<DisplayModeDescriptor> displayModeDescs;
+    displayModeDescs.reserve(static_cast<std::size_t>(numModes));
+
+    for_range(i, numModes)
+    {
+        DisplayModeDescriptor modeDesc;
+        {
+            ConvertUIScreenMode(modeDesc, screen_, [[screen_ availableModes] objectAtIndex:i]);
+        }
+        displayModeDescs.push_back(modeDesc);
+    }
 
     return displayModeDescs;
 }

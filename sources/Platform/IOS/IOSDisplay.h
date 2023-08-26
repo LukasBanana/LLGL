@@ -23,7 +23,7 @@ class IOSDisplay : public Display
 
     public:
 
-        IOSDisplay() = default;
+        IOSDisplay(UIScreen* screen);
 
         bool IsPrimary() const override;
 
@@ -36,6 +36,10 @@ class IOSDisplay : public Display
         DisplayModeDescriptor GetDisplayMode() const override;
 
         std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
+
+    private:
+
+        UIScreen* screen_ = nullptr;
 
 };
 
