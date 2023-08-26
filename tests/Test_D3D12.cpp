@@ -9,6 +9,7 @@
 #include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Timer.h>
 #include <Gauss/Gauss.h>
+#include <llgl/utils/utility.h>
 
 
 int main()
@@ -30,6 +31,7 @@ int main()
             rendererDesc.profiler = profiler.get();
             rendererDesc.debugger = debugger.get();
         }
+        rendererDesc.flags |= LLGL::RenderSystemFlags::DebugDevice;
         auto renderer = LLGL::RenderSystem::Load(rendererDesc);
 
         // Create swap-chain
@@ -110,8 +112,8 @@ int main()
         auto bufDesc = constantBuffer->GetDesc();
 
         // Load shader
-        LLGL::ShaderDescriptor vertShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_5_0" };
-        LLGL::ShaderDescriptor fragShaderDesc{ LLGL::ShaderType::Fragment, "Shaders/TestShader.hlsl", "PS", "ps_5_0" };
+        LLGL::ShaderDescriptor vertShaderDesc{ LLGL::ShaderType::Vertex,   "Shaders/TestShader.hlsl", "VS", "vs_6_0" };
+        LLGL::ShaderDescriptor fragShaderDesc{ LLGL::ShaderType::Fragment, "Shaders/TestShader.hlsl", "PS", "ps_6_0" };
 
         vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 
@@ -124,18 +126,18 @@ int main()
                 LLGL::Log::Errorf("%s", report->GetText());
         }
 
+        LLGL::ShaderReflection shaderReflection;
+        if (!vertShader->Reflect(shaderReflection))
+            return false;
+        if (!fragShader->Reflect(shaderReflection))
+            return false;
+
         // Create pipeline layout
-        LLGL::PipelineLayoutDescriptor layoutDesc;
-        {
-            layoutDesc.heapBindings =
-            {
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
-            };
-        }
+        LLGL::PipelineLayoutDescriptor layoutDesc = LLGL::PipelineLayoutDesc(shaderReflection);
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
         // Create resource heap
-        auto resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
+        //auto resourceHeap = renderer->CreateResourceHeap(pipelineLayout, { constantBuffer });
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -197,7 +199,7 @@ int main()
 
                     commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
-                    commands->SetResourceHeap(*resourceHeap);
+                    commands->SetResource(0, *constantBuffer);
 
                     commands->Draw(3, 0);
                 }
