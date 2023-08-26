@@ -37,6 +37,8 @@ struct D3D12ConstantBufferReflection
     std::vector<D3D12ConstantReflection>    fields;
 };
 
+class D3D12RenderSystem;
+
 class D3D12Shader final : public Shader
 {
 
@@ -46,7 +48,7 @@ class D3D12Shader final : public Shader
 
     public:
 
-        D3D12Shader(const ShaderDescriptor& desc);
+        D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor& desc);
 
     public:
 
@@ -73,6 +75,8 @@ class D3D12Shader final : public Shader
         HRESULT ReflectConstantBuffers(std::vector<D3D12ConstantBufferReflection>& outConstantBuffers) const;
 
     private:
+
+		D3D12RenderSystem&    						renderSystem_;
 
         ComPtr<ID3DBlob>                            byteCode_;
         Report                                      report_;

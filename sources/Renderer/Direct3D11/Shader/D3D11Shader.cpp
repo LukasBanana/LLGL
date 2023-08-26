@@ -185,7 +185,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         nullptr,                            // ID3DInclude*         pInclude
         entry,                              // LPCSTR               pEntrypoint
         target,                             // LPCSTR               pTarget
-        DXGetCompilerFlags(flags),          // UINT                 Flags1
+        FXCGetCompilerFlags(flags),          // UINT                 Flags1
         0,                                  // UINT                 Flags2 (recommended to always be 0)
         byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
         errors.ReleaseAndGetAddressOf()     // ID3DBlob**           ppErrorMsgs

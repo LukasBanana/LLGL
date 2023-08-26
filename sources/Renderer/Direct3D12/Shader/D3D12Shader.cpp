@@ -6,6 +6,7 @@
  */
 
 #include "D3D12Shader.h"
+#include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
@@ -15,14 +16,16 @@
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>
-
+#include <dxcapi.h>
+#include <comdef.h>
 
 namespace LLGL
 {
 
 
-D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
-    Shader { desc.type }
+D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor& desc):
+    Shader{ desc.type },
+    renderSystem_{ renderSystem }
 {
     if (BuildShader(desc))
     {
@@ -232,6 +235,28 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
     }
 }
 
+bool IsProfileDxcAppropriate(const char* target)
+{
+    // LLGL allows for a blank string to be sent into the target of a ShaderDescriptor, but
+    // FXC nor DXC supports this behavior, so it doesn't matter if we send to FXC or DXC.
+    if (target[0] == '\0')
+        return false;
+
+    // Get the 4th character in the target string. If it's 1-5, we allow use FXC. Otherwise,
+    // we use DXC for forward-compatibility.
+    char majorShaderModelVersion = target[3];
+    if (majorShaderModelVersion == '1' ||
+        majorShaderModelVersion == '2' ||
+        majorShaderModelVersion == '3' ||
+        majorShaderModelVersion == '4' ||
+        majorShaderModelVersion == '5')
+    {
+        return false;
+    }
+
+    return true;
+}
+
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
 bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
@@ -260,19 +285,90 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 
     /* Compile shader code */
     ComPtr<ID3DBlob> errors;
-    auto hr = D3DCompile(
-        sourceCode,
-        sourceLength,
-        nullptr,                            // LPCSTR               pSourceName
-        defines,                            // D3D_SHADER_MACRO*    pDefines
-        nullptr,                            // ID3DInclude*         pInclude
-        entry,                              // LPCSTR               pEntrypoint
-        target,                             // LPCSTR               pTarget
-        DXGetCompilerFlags(flags),          // UINT                 Flags1
-        0,                                  // UINT                 Flags2 (recommended to always be 0)
-        byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
-        errors.ReleaseAndGetAddressOf()     // ID3DBlob**           ppErrorMsgs
-    );
+    HRESULT hr = S_OK;
+    if (IsProfileDxcAppropriate(target))
+    {
+        DxcCreateInstanceProc createFn = renderSystem_.GetDxcCreateInstance();
+        if (createFn == nullptr)
+        {
+            report_.Errorf("Unsupported shader profile '%s' (unable to load dxcompiler.dll).\n", target);
+            return false;
+        }
+
+        std::wstring entryWide = ToUTF16String(entry);
+        std::wstring targetWide = ToUTF16String(target);
+
+        std::vector<LPCWSTR> compilerArgs = DXCGetCompilerArgs(flags);
+        compilerArgs.push_back(L"-E");
+        compilerArgs.push_back(entryWide.c_str());
+        compilerArgs.push_back(L"-T");
+        compilerArgs.push_back(targetWide.c_str());
+
+        DxcBuffer source;
+        source.Encoding = DXC_CP_ACP;
+        source.Ptr = sourceCode;
+        source.Size = sourceLength;
+
+        ComPtr<IDxcCompiler3> compiler;
+        hr = createFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
+        if (FAILED(hr))
+            return false;
+
+        ComPtr<IDxcUtils> utils;
+        hr = createFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils));
+        if (FAILED(hr))
+            return false;
+
+        ComPtr<IDxcIncludeHandler> includeHandler;
+        hr = utils->CreateDefaultIncludeHandler(includeHandler.ReleaseAndGetAddressOf());
+        if (FAILED(hr))
+            return false;
+
+        ComPtr<IDxcResult> result;
+        hr = compiler->Compile(
+            &source,
+            compilerArgs.data(),
+            static_cast<UINT32>(compilerArgs.size()),
+            includeHandler.Get(),
+            IID_PPV_ARGS(&result)
+        );
+        if (FAILED(hr))
+            return false;
+
+        HRESULT compileResult = S_OK;
+        hr = result->GetStatus(&compileResult);
+        if (FAILED(hr))
+            return false;
+
+        hr = compileResult;
+
+        if (SUCCEEDED(compileResult))
+        {
+            hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&byteCode_), nullptr);
+            if (FAILED(hr))
+                return false;
+        }
+
+        hr = result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
+        if (FAILED(hr))
+            return false;
+    }
+    else
+    {
+        hr = D3DCompile(
+            sourceCode,
+            sourceLength,
+            nullptr,                            // LPCSTR               pSourceName
+            defines,                            // D3D_SHADER_MACRO*    pDefines
+            nullptr,                            // ID3DInclude*         pInclude
+            entry,                              // LPCSTR               pEntrypoint
+            target,                             // LPCSTR               pTarget
+            FXCGetCompilerFlags(flags),          // UINT                 Flags1
+            0,                                  // UINT                 Flags2 (recommended to always be 0)
+            byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
+            errors.ReleaseAndGetAddressOf()     // ID3DBlob**           ppErrorMsgs
+        );
+    }
 
     /* Return true if compilation was successful */
     const bool hasErrors = FAILED(hr);
