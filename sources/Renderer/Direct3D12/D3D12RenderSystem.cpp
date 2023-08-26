@@ -1,5 +1,4 @@
-/*
- * D3D12RenderSystem.cpp
+/* D3D12RenderSystem.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -46,6 +45,7 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     CreateFactory(debugDevice);
     QueryVideoAdapters();
     CreateDevice();
+    CreateDxcInterface();
 
     /* Create command queue interface */
     commandQueue_   = MakeUnique<D3D12CommandQueue>(device_);
@@ -80,6 +80,12 @@ D3D12RenderSystem::~D3D12RenderSystem()
     /* Clear resources of singletons */
     D3D12MipGenerator::Get().Clear();
     D3D12BufferConstantsPool::Get().Clear();
+
+    /* Ensure DXC gets unloaded, if we have an open handle to it. */
+	if (dxcModule_ != nullptr)
+	{
+		FreeLibrary(dxcModule_);
+	}
 }
 
 /* ----- Swap-chain ----- */
@@ -335,7 +341,7 @@ void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     RenderSystem::AssertCreateShader(shaderDesc);
-    return shaders_.emplace<D3D12Shader>(shaderDesc);
+    return shaders_.emplace<D3D12Shader>(*this, shaderDesc);
 }
 
 void D3D12RenderSystem::Release(Shader& shader)
@@ -524,6 +530,20 @@ void D3D12RenderSystem::CreateDevice()
         factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
         if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
             DXThrowIfFailed(hr, "failed to create D3D12 device");
+    }
+}
+
+void D3D12RenderSystem::CreateDxcInterface()
+{
+    dxcModule_ = LoadLibrary(L"dxcompiler.dll");
+    if (dxcModule_ == nullptr)
+        return;
+
+    dxcCreateInstanceFn_ = (DxcCreateInstanceProc)GetProcAddress(dxcModule_, "DxcCreateInstance");
+    if (dxcCreateInstanceFn_ == nullptr)
+    {
+        FreeLibrary(dxcModule_);
+        dxcModule_ = nullptr;
     }
 }
 
