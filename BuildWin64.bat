@@ -2,6 +2,13 @@
 
 set SOURCE_DIR=%~dp0
 set OUTPUT_DIR=build_win64
+set BUILD_TYPE=Release
+set BUILD_ARCH=x64
+set ENABLE_EXAMPLES=ON
+set ENABLE_TESTS=ON
+set STATIC_LIB=OFF
+set VERBOSE=0
+set PROJECT_ONLY=0
 
 REM Ensure we are inside the repository folder
 if not exist "CMakeLists.txt" (
@@ -12,7 +19,7 @@ if not exist "CMakeLists.txt" (
 REM Make output build folder
 if not "%1" == "" (
     if "%2" == "" (
-        set OUTPUT_DIR="%1"
+        set OUTPUT_DIR=%1
     ) else (
         echo error: too many arguemnts
         echo usage: BuildWin64.bat [OUTPUT_DIR]
@@ -20,23 +27,46 @@ if not "%1" == "" (
     )
 )
 
-if not exist %OUTPUT_DIR% (
-    mkdir %OUTPUT_DIR%
+if not exist "%OUTPUT_DIR%" (
+    mkdir "%OUTPUT_DIR%"
 )
 
-cd %OUTPUT_DIR%
-
 REM Checkout external depenencies
-set GAUSSIAN_LIB_DIR="%OUTPUT_DIR%\GaussianLib\include"
+set GAUSSIAN_LIB_DIR=GaussianLib\include
 
-if not exist %GAUSSIAN_LIB_DIR% (
-    REM Find executable path of <git>
-    REM ... TODO ...
-    
-    REM Clone third party into build folder
-    git clone https://github.com/LukasBanana/GaussianLib.git
+if exist "external\%GAUSSIAN_LIB_DIR%" (
+    set GAUSSIAN_LIB_DIR=external\%GAUSSIAN_LIB_DIR%
+) else (
+    if not exist "%GAUSSIAN_LIB_DIR%" (
+        REM Clone third party into build folder
+        pushd %OUTPUT_DIR%
+        git clone https://github.com/LukasBanana/GaussianLib.git
+        popd
+    )
+    set GAUSSIAN_LIB_DIR=%OUTPUT_DIR%\%GAUSSIAN_LIB_DIR%
+)
+
+REM Print additional information if in verbose mode
+if %VERBOSE% == 1 (
+    echo GAUSSIAN_LIB_DIR=%GAUSSIAN_LIB_DIR%
 )
 
 REM Build into output directory
-cmake -DCMAKE_GENERATOR_PLATFORM=x64 -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DLLGL_BUILD_EXAMPLES=ON -DGaussLib_INCLUDE_DIR:STRING=%GAUSSIAN_LIB_DIR% -DCMAKE_BUILD_TYPE=Release -S %SOURCE_DIR%
-cmake --build .
+set OPTIONS= ^
+    -DLLGL_BUILD_RENDERER_OPENGL=ON ^
+    -DLLGL_BUILD_RENDERER_DIRECT3D11=ON ^
+    -DLLGL_BUILD_RENDERER_DIRECT3D12=ON ^
+    -DLLGL_BUILD_EXAMPLES=%ENABLE_EXAMPLES% ^
+    -DLLGL_BUILD_TESTS=%ENABLE_TESTS% ^
+    -DLLGL_BUILD_STATIC_LIB=%STATIC_LIB% ^
+    -DGaussLib_INCLUDE_DIR:STRING="%GAUSSIAN_LIB_DIR%" ^
+    -A %BUILD_ARCH% ^
+    -B "%OUTPUT_DIR%" ^
+    -S "%SOURCE_DIR%"
+
+if %PROJECT_ONLY% == 0 (
+    cmake %OPTIONS%
+    cmake --build "%OUTPUT_DIR%" --config %BUILD_TYPE%
+) else (
+    cmake %OPTIONS%
+)
