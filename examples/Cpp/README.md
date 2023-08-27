@@ -27,6 +27,13 @@ Simple texturing and sampler state example.
 <p align="center"><img src="Texturing/Example.png" width="400" height="300"/></p>
 
 
+### [Fonts](Fonts)
+
+Example how to render fonts efficiently in batched draw calls.
+
+<p align="center"><img src="Fonts/Example.png" width="400" height="300"/></p>
+
+
 ### [Queries](Queries)
 
 Shows how to use Query objects and conditional rendering for occlusion culling.

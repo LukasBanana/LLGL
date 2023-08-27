@@ -1,0 +1,52 @@
+// HLSL texturing shader
+
+cbuffer Settings : register(b0)
+{
+    float4x4    wvpMatrix;
+    float2      glyphTextureInvSize;
+}
+
+struct InputVS
+{
+    int2   position : POSITION;
+    int2   texCoord : TEXCOORD;
+    float4 color    : COLOR;
+};
+
+struct OutputVS
+{
+    float4 position : SV_Position;
+    float2 texCoord : TEXCOORD;
+    float4 color    : COLOR;
+};
+
+
+// VERTEX SHADER
+
+void VS(InputVS inp, out OutputVS outp)
+{
+    // Decompress vertex attributes
+    float x = (float)inp.position.x;
+    float y = (float)inp.position.y;
+    float u = (float)inp.texCoord.x;
+    float v = (float)inp.texCoord.y;
+
+    // Write vertex output attributes
+    outp.position = mul(wvpMatrix, float4(x, y, 0, 1));
+    outp.texCoord = glyphTextureInvSize * float2(u, v);
+    outp.color    = inp.color;
+}
+
+
+// PIXEL SHADER
+
+Texture2D glyphTexture : register(t0);
+SamplerState linearSampler : register(s0);
+
+float4 PS(OutputVS inp) : SV_Target
+{
+    return float4(inp.color.rgb, inp.color.a * glyphTexture.Sample(linearSampler, inp.texCoord).a);
+}
+
+
+

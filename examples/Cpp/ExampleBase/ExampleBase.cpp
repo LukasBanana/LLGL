@@ -552,7 +552,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     int width = 0, height = 0, components = 0;
 
-    auto imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, static_cast<int>(formatAttribs.components));
+    stbi_uc* imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, static_cast<int>(formatAttribs.components));
     if (!imageBuffer)
         throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
 
