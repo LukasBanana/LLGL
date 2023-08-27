@@ -3,6 +3,9 @@
 SOURCE_DIR="$(dirname $0)"
 BUILD_DIR="$SOURCE_DIR/build_macos/build"
 
+# When this .command script is launched from Finder, we have to change to the source directory explicitly
+cd $SOURCE_DIR
+
 if [ "$#" -eq 1 ]; then
     BUILD_DIR=$1
 elif [ -d "$SOURCE_DIR/build_macos/build/Example_HelloTriangle.app" ]; then
