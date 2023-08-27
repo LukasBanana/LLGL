@@ -48,7 +48,7 @@ VkFormat Map(const Format format)
         case Format::Undefined:         return VK_FORMAT_UNDEFINED;
 
         /* --- Alpha channel color formats --- */
-        case Format::A8UNorm:           break;
+        case Format::A8UNorm:           return VK_FORMAT_R8_UNORM; // texture component swizzle
 
         /* --- Red channel color formats --- */
         case Format::R8UNorm:           return VK_FORMAT_R8_UNORM;

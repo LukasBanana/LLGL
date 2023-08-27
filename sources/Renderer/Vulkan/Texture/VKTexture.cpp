@@ -19,15 +19,25 @@ namespace LLGL
 {
 
 
+// Maps the specified format to a swizzle format, or identity swizzle if texture swizzling is not necessary
+static VKSwizzleFormat MapToVKSwizzleFormat(const Format format)
+{
+    if (format == Format::A8UNorm)
+        return VKSwizzleFormat::Alpha;
+    else
+        return VKSwizzleFormat::RGBA;
+}
+
 VKTexture::VKTexture(
     VkDevice                    device,
     VKDeviceMemoryManager&      deviceMemoryMngr,
     const TextureDescriptor&    desc)
 :
-    Texture    { desc.type, desc.bindFlags  },
-    image_     { device                     },
-    imageView_ { device, vkDestroyImageView },
-    format_    { VKTypes::Map(desc.format)  }
+    Texture        { desc.type, desc.bindFlags         },
+    image_         { device                            },
+    imageView_     { device, vkDestroyImageView        },
+    format_        { VKTypes::Map(desc.format)         },
+    swizzleFormat_ { MapToVKSwizzleFormat(desc.format) }
 {
     /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
@@ -135,6 +145,42 @@ SubresourceFootprint VKTexture::GetSubresourceFootprint(std::uint32_t mipLevel) 
     return footprint;
 }
 
+// Maps the TextureSwizzleRGBA::a component to a different value for the "Alpha" swizzle format
+static VkComponentSwizzle GetVkComponentAlphaComponent(const TextureSwizzle swizzleAlpha)
+{
+    switch (swizzleAlpha)
+    {
+        case TextureSwizzle::Alpha: return VK_COMPONENT_SWIZZLE_R;      // Only alpha component can be mapped to another component
+        case TextureSwizzle::Zero:  return VK_COMPONENT_SWIZZLE_ZERO;   // Zero is allowed as fixed value
+        case TextureSwizzle::One:   return VK_COMPONENT_SWIZZLE_ONE;    // One is allowed as fixed value
+        default:                    return VK_COMPONENT_SWIZZLE_ZERO;   // Use zero as default value
+    }
+}
+
+static void ConvertVkComponentMapping(VkComponentMapping& dst, const TextureSwizzleRGBA& src, VKSwizzleFormat swizzleFormat)
+{
+    switch (swizzleFormat)
+    {
+        case VKSwizzleFormat::RGBA: // Identity mapping
+        {
+            dst.r = VKTypes::ToVkComponentSwizzle(src.r);
+            dst.g = VKTypes::ToVkComponentSwizzle(src.g);
+            dst.b = VKTypes::ToVkComponentSwizzle(src.b);
+            dst.a = VKTypes::ToVkComponentSwizzle(src.a);
+        }
+        break;
+
+        case VKSwizzleFormat::Alpha:
+        {
+            dst.r = VK_COMPONENT_SWIZZLE_ZERO;
+            dst.g = VK_COMPONENT_SWIZZLE_ZERO;
+            dst.b = VK_COMPONENT_SWIZZLE_ZERO;
+            dst.a = GetVkComponentAlphaComponent(src.a);
+        }
+        break;
+    }
+}
+
 void VKTexture::CreateImageView(
     VkDevice                    device,
     const TextureSubresource&   subresource,
@@ -149,7 +195,16 @@ void VKTexture::CreateImageView(
         subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
         subresourceRange.layerCount     = subresource.numArrayLayers;
     }
-    image_.CreateVkImageView(device, VKTypes::Map(GetType()), VKTypes::Map(format), subresourceRange, outImageView);
+    VkComponentMapping components = {};
+    ConvertVkComponentMapping(components, TextureSwizzleRGBA{}, swizzleFormat_);
+    image_.CreateVkImageView(
+        device,
+        VKTypes::Map(GetType()),
+        VKTypes::Map(format),
+        subresourceRange,
+        outImageView,
+        &components
+    );
 }
 
 void VKTexture::CreateImageView(
@@ -165,34 +220,16 @@ void VKTexture::CreateImageView(
         subresourceRange.baseArrayLayer = textureViewDesc.subresource.baseArrayLayer;
         subresourceRange.layerCount     = textureViewDesc.subresource.numArrayLayers;
     }
-    if (IsTextureSwizzleIdentity(textureViewDesc.swizzle))
-    {
-        image_.CreateVkImageView(
-            device,
-            VKTypes::Map(textureViewDesc.type),
-            VKTypes::Map(textureViewDesc.format),
-            subresourceRange,
-            outImageView
-        );
-    }
-    else
-    {
-        VkComponentMapping components;
-        {
-            components.r = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.r);
-            components.g = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.g);
-            components.b = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.b);
-            components.a = VKTypes::ToVkComponentSwizzle(textureViewDesc.swizzle.a);
-        }
-        image_.CreateVkImageView(
-            device,
-            VKTypes::Map(textureViewDesc.type),
-            VKTypes::Map(textureViewDesc.format),
-            subresourceRange,
-            outImageView,
-            &components
-        );
-    }
+    VkComponentMapping components = {};
+    ConvertVkComponentMapping(components, textureViewDesc.swizzle, swizzleFormat_);
+    image_.CreateVkImageView(
+        device,
+        VKTypes::Map(textureViewDesc.type),
+        VKTypes::Map(textureViewDesc.format),
+        subresourceRange,
+        outImageView,
+        &components
+    );
 }
 
 void VKTexture::CreateInternalImageView(VkDevice device)
@@ -205,7 +242,9 @@ void VKTexture::CreateInternalImageView(VkDevice device)
         subresourceRange.baseArrayLayer = 0;
         subresourceRange.layerCount     = GetNumArrayLayers();
     }
-    image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, imageView_);
+    VkComponentMapping components = {};
+    ConvertVkComponentMapping(components, TextureSwizzleRGBA{}, swizzleFormat_);
+    image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, imageView_, &components);
 }
 
 VkImageLayout VKTexture::TransitionImageLayout(

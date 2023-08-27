@@ -109,6 +109,7 @@ static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
     return
     {
+        Format::A8UNorm,
         Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
         Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
         Format::R32UInt,            Format::R32SInt,            Format::R32Float,
@@ -168,7 +169,7 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 
     for (GLint internalFormat : compressedTexFormats)
     {
-        auto format = GLTypes::UnmapFormat(internalFormat);
+        const Format format = GLTypes::UnmapFormat(internalFormat);
         if (format != Format::Undefined)
             textureFormats.push_back(format);
     }

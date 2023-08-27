@@ -24,6 +24,13 @@ class VKDevice;
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
 
+// Predefined texture swizzles to emulate certain texture format
+enum class VKSwizzleFormat
+{
+    RGBA,   // VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A (Identity mapping)
+    Alpha,  // VK_COMPONENT_SWIZZLE_ZERO, VK_COMPONENT_SWIZZLE_ZERO, VK_COMPONENT_SWIZZLE_ZERO, VK_COMPONENT_SWIZZLE_R
+};
+
 class VKTexture final : public Texture
 {
 
@@ -139,6 +146,7 @@ class VKTexture final : public Texture
         std::uint32_t           numMipLevels_       = 0;
         std::uint32_t           numArrayLayers_     = 0;
         VkSampleCountFlagBits   sampleCountBits_    = VK_SAMPLE_COUNT_1_BIT;
+        const VKSwizzleFormat   swizzleFormat_      = VKSwizzleFormat::RGBA;
 
 };
 

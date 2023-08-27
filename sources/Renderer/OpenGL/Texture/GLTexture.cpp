@@ -62,7 +62,7 @@ static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 }
 
 // Maps the specified format to a swizzle format, or identity swizzle if texture swizzling is not necessary
-static GLSwizzleFormat MapSwizzleFormat(const Format format)
+static GLSwizzleFormat MapToGLSwizzleFormat(const Format format)
 {
     const auto& formatDesc = GetFormatAttribs(format);
     if (formatDesc.format == ImageFormat::Alpha)
@@ -77,7 +77,7 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
     Texture         { desc.type, desc.bindFlags                },
     numMipLevels_   { static_cast<GLsizei>(NumMipLevels(desc)) },
     isRenderbuffer_ { IsRenderbufferSufficient(desc)           },
-    swizzleFormat_  { MapSwizzleFormat(desc.format)            }
+    swizzleFormat_  { MapToGLSwizzleFormat(desc.format)        }
 {
     if (IsRenderbuffer())
     {
@@ -400,7 +400,7 @@ void GLTexture::TexParameterSwizzle(
     const TextureSwizzleRGBA&   swizzle,
     bool                        ignoreIdentitySwizzle)
 {
-    InitializeGLTextureSwizzleWithFormat(type, MapSwizzleFormat(format), swizzle, ignoreIdentitySwizzle);
+    InitializeGLTextureSwizzleWithFormat(type, MapToGLSwizzleFormat(format), swizzle, ignoreIdentitySwizzle);
 }
 
 #ifdef GL_ARB_copy_image

@@ -265,6 +265,7 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        case ImageFormat::Alpha:            return GL_RED; // texture swizzle
         case ImageFormat::R:                return GL_RED;
         case ImageFormat::RG:               return GL_RG;
         case ImageFormat::RGB:              return GL_RGB;
@@ -294,6 +295,7 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        case ImageFormat::Alpha:            return GL_RED_INTEGER; // texture swizzle
         case ImageFormat::R:                return GL_RED_INTEGER;
         case ImageFormat::RG:               return GL_RG_INTEGER;
         case ImageFormat::RGB:              return GL_RGB_INTEGER;
