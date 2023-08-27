@@ -40,7 +40,7 @@ def printHexString(filename, columns=16, spaces=0, offsets='', paren=False):
         print('(')
     byteRange = (0, 0)
     def writeNewline():
-        if offsets == 'c++' or offsets == 'cxx':
+        if offsets in ['c++', 'cxx']:
             print('" // 0x{0:0{2}X} - 0x{1:0{2}X}'.format(byteRange[0], byteRange[1], 8))
         elif offsets == 'c':
             print('" /* 0x{0:0{2}X} - 0x{1:0{2}X} */'.format(byteRange[0], byteRange[1], 8))
@@ -69,7 +69,7 @@ def printFileSize(filename, paren=False):
     for b in readBytes(filename):
         n += 1
     if paren:
-        print('( ' + str(n) + ' )')
+        print(f'( {str(n)} )')
     else:
         print(str(n))
 
@@ -107,8 +107,8 @@ def main():
             paren = True
         elif arg == "-offsets":
             offsets = argValue('-offsets')
-            if not (offsets == 'c' or offsets == 'cxx' or offsets == 'c++'):
-                fatal("accepted offset styles are 'c', 'cxx', and 'c++', but got '" + offsets + "'");
+            if not offsets in ['c', 'cxx', 'c++']:
+                fatal(f"accepted offset styles are 'c', 'cxx', and 'c++', but got '{offsets}'");
         elif arg == "-col":
             columns = int(argValue('-col'))
         elif arg == "-spaces":
@@ -117,7 +117,7 @@ def main():
             if filename == "":
                 filename = arg
             else:
-                fatal('cannot process more than one filename at a time, but got "' + arg + '"')
+                fatal(f"cannot process more than one filename at a time, but got '{arg}'")
         i += 1
 
     if filename == "":
