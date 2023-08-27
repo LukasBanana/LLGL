@@ -248,12 +248,12 @@ bool IsProfileDxcAppropriate(const char* target)
     {
         // find our first underscore
         if (target[i] == '_')
-    {
+        {
             // i + 1 should be our major shader version.
             int iMajorShaderVersion = (target[i + 1] - '0');
             if (iMajorShaderVersion >= 6)
                 return true;
-    }
+        }
     }
 
     return false;
@@ -655,7 +655,30 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     ComPtr<ID3D12ShaderReflection> reflectionObject;
     hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
-        return hr;
+    {
+        // Check if DXC can reflect this shader. This case occurs for SM6 shaders.
+        // Unfortunately there is no good way to check this value without manually
+        // parsing the shader bytecode.
+        DxcCreateInstanceProc createFn = renderSystem_.GetDxcCreateInstance();
+        if (createFn == nullptr)
+        {
+            // We can't invoke the DXC reflection API. Return as if we failed.
+            return hr;
+        }
+
+        ComPtr<IDxcUtils> dxcUtils;
+        hr = createFn(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+        if (FAILED(hr))
+            return hr;
+
+        DxcBuffer bufFragReflection;
+        bufFragReflection.Encoding = DXC_CP_ACP;
+        bufFragReflection.Ptr = byteCode_->GetBufferPointer();
+        bufFragReflection.Size = byteCode_->GetBufferSize();
+        hr = dxcUtils->CreateReflection(&bufFragReflection, IID_PPV_ARGS(&reflectionObject));
+        if (FAILED(hr))
+            return hr;
+    }
 
     D3D12_SHADER_DESC shaderDesc;
     hr = reflectionObject->GetDesc(&shaderDesc);
