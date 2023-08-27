@@ -535,7 +535,7 @@ void D3D12RenderSystem::CreateDevice()
 
 void D3D12RenderSystem::CreateDxcInterface()
 {
-    dxcModule_ = LoadLibrary(L"dxcompiler.dll");
+    dxcModule_ = LoadLibrary(TEXT("dxcompiler.dll"));
     if (dxcModule_ == nullptr)
         return;
 
