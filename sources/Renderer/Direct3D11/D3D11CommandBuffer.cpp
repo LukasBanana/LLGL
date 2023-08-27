@@ -125,22 +125,24 @@ void D3D11CommandBuffer::CopyBuffer(
     std::uint64_t   srcOffset,
     std::uint64_t   size)
 {
-    auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
-    auto& srcBufferD3D = LLGL_CAST(D3D11Buffer&, srcBuffer);
-    CD3D11_BOX box =     CD3D11_BOX(
-                            static_cast<LONG>(srcOffset), 0, 0,
-                            static_cast<LONG>(srcOffset + size), 1, 1
-                         );
+    D3D11Buffer& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
+    D3D11Buffer& srcBufferD3D = LLGL_CAST(D3D11Buffer&, srcBuffer);
+
+    const D3D11_BOX srcBox
+    {
+        static_cast<UINT>(srcOffset), 0u, 0u,
+        static_cast<UINT>(srcOffset + size), 1u, 1u
+    };
 
     context_->CopySubresourceRegion(
-        dstBufferD3D.GetNative(),                       // pDstResource
-        0,                                              // DstSubresource
-        static_cast<UINT>(dstOffset),                   // DstX
-        0,                                              // DstY
-        0,                                              // DstZ
-        srcBufferD3D.GetNative(),                       // pSrcResource
-        0,                                              // SrcSubresource
-        &box                                            // pSrcBox
+        dstBufferD3D.GetNative(),       // pDstResource
+        0,                              // DstSubresource
+        static_cast<UINT>(dstOffset),   // DstX
+        0,                              // DstY
+        0,                              // DstZ
+        srcBufferD3D.GetNative(),       // pSrcResource
+        0,                              // SrcSubresource
+        &srcBox                         // pSrcBox
     );
 }
 

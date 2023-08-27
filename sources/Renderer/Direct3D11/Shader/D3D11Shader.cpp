@@ -100,7 +100,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 }
 
 // Converts a vertex attribute to a D3D input element descriptor
-static void Convert(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
+static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
 {
     dst.SemanticName            = src.name.c_str();
     dst.SemanticIndex           = src.semanticIndex;
@@ -112,7 +112,7 @@ static void Convert(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
 }
 
 // Converts a vertex attribute to a D3D stream-output entry
-static void Convert(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
+static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
     dst.Stream          = 0;//src.location;
     dst.SemanticName    = src.name.c_str();
@@ -135,11 +135,11 @@ void D3D11Shader::BuildInputLayout(ID3D11Device* device, UINT numVertexAttribs, 
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
     inputElements.resize(numVertexAttribs);
 
-    for (UINT i = 0; i < numVertexAttribs; ++i)
-        Convert(inputElements[i], vertexAttribs[i]);
+    for_range(i, numVertexAttribs)
+        ConvertInputElementDesc(inputElements[i], vertexAttribs[i]);
 
     /* Create input layout */
-    auto hr = device->CreateInputLayout(
+    HRESULT hr = device->CreateInputLayout(
         inputElements.data(),
         numVertexAttribs,
         GetByteCode()->GetBufferPointer(),
@@ -177,7 +177,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
 
     /* Compile shader code */
     ComPtr<ID3DBlob> errors;
-    auto hr = D3DCompile(
+    HRESULT hr = D3DCompile(
         sourceCode,
         sourceLength,
         nullptr,                            // LPCSTR               pSourceName
@@ -270,8 +270,8 @@ D3D11NativeShader D3D11Shader::CreateNativeShaderFromBlob(
                 std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
                 outputElements.resize(numStreamOutputAttribs);
 
-                for (std::size_t i = 0; i < numStreamOutputAttribs; ++i)
-                    Convert(outputElements[i], streamOutputAttribs[i]);
+                for_range(i, numStreamOutputAttribs)
+                    ConvertSODeclEntry(outputElements[i], streamOutputAttribs[i]);
 
                 /* Create geometry shader with stream-output declaration */
                 hr = device->CreateGeometryShaderWithStreamOutput(
@@ -334,7 +334,7 @@ static ShaderResourceReflection* FetchOrInsertResource(
     std::uint32_t       slot)
 {
     /* Fetch resource from list */
-    for (auto& resource : reflection.resources)
+    for (ShaderResourceReflection& resource : reflection.resources)
     {
         if (resource.binding.type == type &&
             resource.binding.slot == slot &&
@@ -346,7 +346,7 @@ static ShaderResourceReflection* FetchOrInsertResource(
 
     /* Allocate new resource and initialize parameters */
     reflection.resources.resize(reflection.resources.size() + 1);
-    auto ref = &(reflection.resources.back());
+    ShaderResourceReflection* ref = &(reflection.resources.back());
     {
         ref->binding.name = std::string(name);
         ref->binding.type = type;
@@ -364,16 +364,20 @@ static void Convert(VertexAttribute& dst, const D3D11_SIGNATURE_PARAMETER_DESC& 
     dst.systemValue     = DXTypes::Unmap(src.SystemValueType);
 }
 
+// D3D11 shader reflection is currently not supported for MinGW,
+// due to missing reference to '_GUID const& __mingw_uuidof<ID3D11ShaderReflection>()'.
+#ifndef __GNUC__
+
 static HRESULT ReflectShaderVertexAttributes(
     ID3D11ShaderReflection*     reflectionObject,
     const D3D11_SHADER_DESC&    shaderDesc,
     ShaderReflection&           reflection)
 {
-    for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
+    for_range(i, shaderDesc.InputParameters)
     {
         /* Get signature parameter descriptor */
         D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
-        auto hr = reflectionObject->GetInputParameterDesc(i, &paramDesc);
+        HRESULT hr = reflectionObject->GetInputParameterDesc(i, &paramDesc);
         if (FAILED(hr))
             return hr;
 
@@ -383,11 +387,11 @@ static HRESULT ReflectShaderVertexAttributes(
         reflection.vertex.inputAttribs.push_back(vertexAttrib);
     }
 
-    for (UINT i = 0; i < shaderDesc.OutputParameters; ++i)
+    for_range(i, shaderDesc.OutputParameters)
     {
         /* Get signature parameter descriptor */
         D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
-        auto hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
+        HRESULT hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
         if (FAILED(hr))
             return hr;
 
@@ -401,7 +405,7 @@ static HRESULT ReflectShaderVertexAttributes(
 }
 
 // Converts a D3D11 signature parameter into a fragment attribute
-static void Convert(FragmentAttribute& dst, const D3D11_SIGNATURE_PARAMETER_DESC& src)
+static void ConvertFragmentAttrib(FragmentAttribute& dst, const D3D11_SIGNATURE_PARAMETER_DESC& src)
 {
     dst.name        = std::string(src.SemanticName);
     dst.format      = DXGetSignatureParameterType(src.ComponentType, src.Mask);
@@ -414,17 +418,17 @@ static HRESULT ReflectShaderFragmentAttributes(
     const D3D11_SHADER_DESC&    shaderDesc,
     ShaderReflection&           reflection)
 {
-    for (UINT i = 0; i < shaderDesc.OutputParameters; ++i)
+    for_range(i, shaderDesc.OutputParameters)
     {
         /* Get signature parameter descriptor */
         D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
-        auto hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
+        HRESULT hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
         if (FAILED(hr))
             return hr;
 
         /* Add fragment attribute to output list */
         FragmentAttribute fragmentAttrib;
-        Convert(fragmentAttrib, paramDesc);
+        ConvertFragmentAttrib(fragmentAttrib, paramDesc);
         reflection.fragment.outputAttribs.push_back(fragmentAttrib);
     }
 
@@ -476,7 +480,7 @@ static HRESULT ReflectShaderConstantBuffer(
         auto cbufferReflection = reflectionObject->GetConstantBufferByIndex(cbufferIdx++);
 
         D3D11_SHADER_BUFFER_DESC shaderBufferDesc;
-        auto hr = cbufferReflection->GetDesc(&shaderBufferDesc);
+        HRESULT hr = cbufferReflection->GetDesc(&shaderBufferDesc);
         if (FAILED(hr))
             return hr;
         DXThrowIfFailed(hr, "failed to retrieve D3D11 shader buffer descriptor");
@@ -510,11 +514,11 @@ static HRESULT ReflectShaderInputBindings(
     HRESULT hr = S_OK;
     UINT cbufferIdx = 0;
 
-    for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
+    for_range(i, shaderDesc.BoundResources)
     {
         /* Get shader input resource descriptor */
         D3D11_SHADER_INPUT_BIND_DESC inputBindDesc;
-        auto hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
+        HRESULT hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
         if (FAILED(hr))
             return hr;
 
@@ -562,8 +566,12 @@ static HRESULT ReflectShaderInputBindings(
     return S_OK;
 }
 
+#endif // /__GNUC__
+
 HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
 {
+    #ifndef __GNUC__
+
     HRESULT hr = S_OK;
 
     /* Get shader reflection */
@@ -607,11 +615,19 @@ HRESULT D3D11Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
         );
     }
 
-    return S_OK;
+    return hr;
+
+    #else // __GNUC__
+
+    return E_NOTIMPL;
+
+    #endif // /__GNUC__
 }
 
 HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferReflection>& outConstantBuffers) const
 {
+    #ifndef __GNUC__
+
     HRESULT hr = S_OK;
 
     /* Get shader reflection */
@@ -629,7 +645,7 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
     {
         /* Get shader input resource descriptor */
         D3D11_SHADER_INPUT_BIND_DESC inputBindDesc;
-        auto hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
+        HRESULT hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
         if (FAILED(hr))
             return hr;
 
@@ -675,6 +691,12 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
     }
 
     return hr;
+
+    #else // __GNUC__
+
+    return E_NOTIMPL;
+
+    #endif // /__GNUC__
 }
 
 

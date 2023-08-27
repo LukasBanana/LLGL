@@ -218,13 +218,9 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                 textureRegion.subresource.baseMipLevel,
                 textureRegion.subresource.baseArrayLayer,
                 textureRegion.subresource.numArrayLayers,
-                CD3D11_BOX(
+                D3D11Types::MakeD3D11Box(
                     textureRegion.offset.x,
-                    0,
-                    0,
-                    textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                    1,
-                    1
+                    textureRegion.extent.width
                 ),
                 imageDesc
             );
@@ -239,13 +235,11 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                 textureRegion.subresource.baseMipLevel,
                 textureRegion.subresource.baseArrayLayer,
                 textureRegion.subresource.numArrayLayers,
-                CD3D11_BOX(
+                D3D11Types::MakeD3D11Box(
                     textureRegion.offset.x,
                     textureRegion.offset.y,
-                    0,
-                    textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                    textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
-                    1
+                    textureRegion.extent.width,
+                    textureRegion.extent.height
                 ),
                 imageDesc
             );
@@ -262,13 +256,13 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                 textureRegion.subresource.baseMipLevel,
                 0,
                 1,
-                CD3D11_BOX(
+                D3D11Types::MakeD3D11Box(
                     textureRegion.offset.x,
                     textureRegion.offset.y,
                     textureRegion.offset.z,
-                    textureRegion.offset.x + static_cast<LONG>(textureRegion.extent.width),
-                    textureRegion.offset.y + static_cast<LONG>(textureRegion.extent.height),
-                    textureRegion.offset.z + static_cast<LONG>(textureRegion.extent.depth)
+                    textureRegion.extent.width,
+                    textureRegion.extent.height,
+                    textureRegion.extent.depth
                 ),
                 imageDesc
             );
@@ -768,7 +762,7 @@ static void InitializeD3DColorTextureWithUploadBuffer(
                 /*mipLevel:*/       0,
                 /*baseArrayLayer:*/ layer,
                 /*numArrayLayers:*/ 1,
-                /*dstBox:*/         CD3D11_BOX(0, 0, 0, extent.width, extent.height, extent.depth),
+                /*dstBox:*/         D3D11Types::MakeD3D11Box(0, 0, 0, extent.width, extent.height, extent.depth),
                 /*imageDesc:*/      imageDescDefault
             );
         }
@@ -788,7 +782,7 @@ void D3D11RenderSystem::InitializeGpuTexture(
             /*mipLevel:*/       0,
             /*baseArrayLayer:*/ 0,
             /*numArrayLayers:*/ textureDesc.arrayLayers,
-            /*dstBox:*/         CD3D11_BOX(0, 0, 0, textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth),
+            /*dstBox:*/         D3D11Types::MakeD3D11Box(0, 0, 0, textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth),
             /*imageDesc:*/      *imageDesc
         );
     }

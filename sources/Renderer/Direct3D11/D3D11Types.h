@@ -56,6 +56,10 @@ void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src);
 void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src);
 #endif
 
+D3D11_BOX MakeD3D11Box(std::int32_t x, std::uint32_t width);
+D3D11_BOX MakeD3D11Box(std::int32_t x, std::int32_t y, std::uint32_t width, std::uint32_t height);
+D3D11_BOX MakeD3D11Box(std::int32_t x, std::int32_t y, std::int32_t z, std::uint32_t width, std::uint32_t height, std::uint32_t depth);
+
 
 } // /namespace D3D11Types
 

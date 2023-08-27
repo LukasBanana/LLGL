@@ -69,23 +69,32 @@ report_missing_packages()
     fi
 }
 
-PKG_MGR=$(find_package_manager)
+KERNEL_NAME=$(uname -s)
 
-if [ $PKG_MGR = "pacman" ]; then
+if [[ $KERNEL_NAME == MSYS_NT* ]]; then
+    # Check packages for MSYS2 on Windows
     MISSING=$( list_missing_packages_arch \
-        git cmake libx11 libxrandr libgl )
-    report_missing_packages "sudo pacman -S" "$MISSING"
-elif [ $PKG_MGR = "apt-get" ]; then
-    MISSING=$( list_missing_packages_debian \
-        git cmake libx11-dev libxrandr-dev mesa-common-dev libglu1-mesa-dev freeglut3-dev )
-    report_missing_packages "sudo apt-get install" "$MISSING"
-elif [ $PKG_MGR = "yum" ]; then
-    MISSING=$( list_missing_packages_redhat \
-        git cmake libx11-devel libXrandr-devel mesa-libGL-devel )
-    report_missing_packages "sudo yum install" "$MISSING"
+        git mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc mingw-w64-x86_64-glew mingw-w64-x86_64-freeglut )
+    report_missing_packages "pacman -S" "$MISSING"
 else
-    echo error: could not identify Linux distribution
-    exit 1
-fi
+    # Check packages for respective Linux distribution
+    PKG_MGR=$(find_package_manager)
 
+    if [ "$PKG_MGR" = "pacman" ]; then
+        MISSING=$( list_missing_packages_arch \
+            git cmake libx11 libxrandr libgl )
+        report_missing_packages "sudo pacman -S" "$MISSING"
+    elif [ "$PKG_MGR" = "apt-get" ]; then
+        MISSING=$( list_missing_packages_debian \
+            git cmake libx11-dev libxrandr-dev mesa-common-dev libglu1-mesa-dev freeglut3-dev )
+        report_missing_packages "sudo apt-get install" "$MISSING"
+    elif [ "$PKG_MGR" = "yum" ]; then
+        MISSING=$( list_missing_packages_redhat \
+            git cmake libx11-devel libXrandr-devel mesa-libGL-devel )
+        report_missing_packages "sudo yum install" "$MISSING"
+    else
+        echo error: could not identify Linux distribution
+        exit 1
+    fi
+fi
 

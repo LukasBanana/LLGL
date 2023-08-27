@@ -406,6 +406,45 @@ void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src)
 
 #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
+D3D11_BOX MakeD3D11Box(std::int32_t x, std::uint32_t width)
+{
+    return D3D11_BOX
+    {
+        static_cast<UINT>(x),
+        0u,
+        0u,
+        static_cast<UINT>(x) + width,
+        1u,
+        1u
+    };
+}
+
+D3D11_BOX MakeD3D11Box(std::int32_t x, std::int32_t y, std::uint32_t width, std::uint32_t height)
+{
+    return D3D11_BOX
+    {
+        static_cast<UINT>(x),
+        static_cast<UINT>(y),
+        0u,
+        static_cast<UINT>(x) + width,
+        static_cast<UINT>(y) + height,
+        1u
+    };
+}
+
+D3D11_BOX MakeD3D11Box(std::int32_t x, std::int32_t y, std::int32_t z, std::uint32_t width, std::uint32_t height, std::uint32_t depth)
+{
+    return D3D11_BOX
+    {
+        static_cast<UINT>(x),
+        static_cast<UINT>(y),
+        static_cast<UINT>(z),
+        static_cast<UINT>(x) + width,
+        static_cast<UINT>(y) + height,
+        static_cast<UINT>(z) + depth
+    };
+}
+
 
 } // /namespace D3D11Types
 
