@@ -20,15 +20,15 @@ LLGL_EXPORT std::string ReadFileString(const char* filename)
 {
     // Read file content into string
     std::ifstream file{ filename };
-
-    if (!file.good())
-        throw std::runtime_error("failed to open file: " + std::string(filename));
-
-    return std::string
+    if (file.good())
     {
-        ( std::istreambuf_iterator<char>(file) ),
-        ( std::istreambuf_iterator<char>() )
-    };
+        return std::string
+        {
+            ( std::istreambuf_iterator<char>(file) ),
+            ( std::istreambuf_iterator<char>() )
+        };
+    }
+    return "";
 }
 
 LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
