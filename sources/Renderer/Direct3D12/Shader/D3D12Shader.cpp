@@ -237,24 +237,26 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
 
 bool IsProfileDxcAppropriate(const char* target)
 {
+    size_t szLen = StrLength(target);
+
     // LLGL allows for a blank string to be sent into the target of a ShaderDescriptor, but
     // FXC nor DXC supports this behavior, so it doesn't matter if we send to FXC or DXC.
-    if (target[0] == '\0')
+    if (szLen == 0)
         return false;
 
-    // Get the 4th character in the target string. If it's 1-5, we allow use FXC. Otherwise,
-    // we use DXC for forward-compatibility.
-    char majorShaderModelVersion = target[3];
-    if (majorShaderModelVersion == '1' ||
-        majorShaderModelVersion == '2' ||
-        majorShaderModelVersion == '3' ||
-        majorShaderModelVersion == '4' ||
-        majorShaderModelVersion == '5')
+    for_range(i, szLen)
     {
-        return false;
+        // find our first underscore
+        if (target[i] == '_')
+    {
+            // i + 1 should be our major shader version.
+            int iMajorShaderVersion = (target[i + 1] - '0');
+            if (iMajorShaderVersion >= 6)
+                return true;
+    }
     }
 
-    return true;
+    return false;
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
