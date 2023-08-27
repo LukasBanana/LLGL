@@ -4,6 +4,7 @@ tests/Output
 build*/
 *.aps
 Screenshot.*
+Capture.*
 *.cache
 *.spvasm
 Makefile
