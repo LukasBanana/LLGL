@@ -6,6 +6,7 @@
  */
 
 #include "IOSModule.h"
+#include "../../Core/CoreUtils.h"
 #include <dlfcn.h>
 #include <stdexcept>
 
