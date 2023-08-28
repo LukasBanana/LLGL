@@ -349,9 +349,7 @@ SystemValue Unmap(const D3D_NAME name)
         case D3D_NAME_RENDER_TARGET_ARRAY_INDEX:    return SystemValue::RenderTargetIndex;
         case D3D_NAME_COVERAGE:                     return SystemValue::SampleMask;
         case D3D_NAME_SAMPLE_INDEX:                 return SystemValue::SampleID;
-        #if defined LLGL_DX_ENABLE_D3D12 || LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
         case D3D_NAME_STENCIL_REF:                  return SystemValue::Stencil;
-        #endif
         case D3D_NAME_VERTEX_ID:                    return SystemValue::VertexID;
         case D3D_NAME_VIEWPORT_ARRAY_INDEX:         return SystemValue::ViewportIndex;
         default:                                    return SystemValue::Undefined;

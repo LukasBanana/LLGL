@@ -104,10 +104,8 @@ static const char* DXErrorToStr(const HRESULT hr)
         LLGL_CASE_TO_STR( D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS );
         LLGL_CASE_TO_STR( D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD );
 
-        #ifdef LLGL_DX_ENABLE_D3D12
         LLGL_CASE_TO_STR( D3D12_ERROR_ADAPTER_NOT_FOUND );
         LLGL_CASE_TO_STR( D3D12_ERROR_DRIVER_VERSION_MISMATCH );
-        #endif
     }
     return nullptr;
 }
@@ -289,9 +287,7 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0) { languages.push_back(ShadingLanguage::HLSL_4_0); }
     if (featureLevel >= D3D_FEATURE_LEVEL_10_1) { languages.push_back(ShadingLanguage::HLSL_4_1); }
     if (featureLevel >= D3D_FEATURE_LEVEL_11_0) { languages.push_back(ShadingLanguage::HLSL_5_0); }
-    #ifdef LLGL_DX_ENABLE_D3D12
     if (featureLevel >= D3D_FEATURE_LEVEL_12_0) { languages.push_back(ShadingLanguage::HLSL_5_1); }
-    #endif
 
     return languages;
 }
@@ -395,10 +391,8 @@ std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLe
 {
     std::vector<D3D_FEATURE_LEVEL> featureLevels =
     {
-        #ifdef LLGL_DX_ENABLE_D3D12
         D3D_FEATURE_LEVEL_12_1,
         D3D_FEATURE_LEVEL_12_0,
-        #endif
         D3D_FEATURE_LEVEL_11_1,
         D3D_FEATURE_LEVEL_11_0,
         D3D_FEATURE_LEVEL_10_1,
@@ -424,10 +418,8 @@ const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {
-        #ifdef LLGL_DX_ENABLE_D3D12
         case D3D_FEATURE_LEVEL_12_1:    return "12.1";
         case D3D_FEATURE_LEVEL_12_0:    return "12.0";
-        #endif
         case D3D_FEATURE_LEVEL_11_1:    return "11.1";
         case D3D_FEATURE_LEVEL_11_0:    return "11.0";
         case D3D_FEATURE_LEVEL_10_1:    return "10.1";
@@ -443,10 +435,8 @@ const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
 {
     switch (featureLevel)
     {
-        #ifdef LLGL_DX_ENABLE_D3D12
         case D3D_FEATURE_LEVEL_12_1:    /*pass*/
         case D3D_FEATURE_LEVEL_12_0:    /*pass*/
-        #endif
         case D3D_FEATURE_LEVEL_11_1:    /*pass*/
         case D3D_FEATURE_LEVEL_11_0:    return "5.0";
         case D3D_FEATURE_LEVEL_10_1:    return "4.1";
