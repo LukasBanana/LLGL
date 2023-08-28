@@ -14,6 +14,7 @@
 #   include "GL2XSampler.h"
 #endif
 #include "../GLTypes.h"
+#include "../GLCore.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -23,6 +24,7 @@
 #include "../Texture/GLTextureSubImage.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Exception.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -760,6 +762,45 @@ static void GLGetTextureSubImage(
 
 #ifdef LLGL_OPENGL
 
+// Forwards the call to glGetTexImage() and converts the output data if necessary
+static void GLGetTexImage(
+    TextureType type,
+    GLint       mipLevel,
+    ImageFormat format,
+    DataType    dataType,
+    void*       data,
+    std::size_t numTexels)
+{
+    if (format == ImageFormat::Stencil && GLGetVersion() < 440)
+    {
+        /* GL_STENCIL_INDEX can only be passed into glGetTexImage in GL 4.4+, so read GL_DEPTH_STENCIL and separate stencil manually */
+        std::unique_ptr<GLDepthStencilPair[]> dsImageData = MakeUniqueArray<GLDepthStencilPair>(numTexels);
+
+        glGetTexImage(
+            GLTypes::Map(type),
+            mipLevel,
+            GL_DEPTH_STENCIL,
+            GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+            dsImageData.get()
+        );
+
+        /* Copy stencil values into output buffer */
+        std::uint8_t* dst = reinterpret_cast<std::uint8_t*>(data);
+        for_range(i, numTexels)
+            dst[i] = dsImageData[i].stencil;
+    }
+    else
+    {
+        glGetTexImage(
+            GLTypes::Map(type),
+            mipLevel,
+            GLTypes::Map(format),
+            GLTypes::Map(dataType),
+            data
+        );
+    }
+}
+
 static void GLGetTextureImage(
     GLTexture&                  textureGL,
     const TextureRegion&        region,
@@ -773,9 +814,10 @@ static void GLGetTextureImage(
     const Extent3D extent = CalcTextureExtent(type, region.extent, region.subresource.numArrayLayers);
 
     /* Check if source region must be copied into a staging texture */
-    const GLint     mipLevel    = static_cast<GLint>(region.subresource.baseMipLevel);
-    const Extent3D  mipExtent   = textureGL.GetMipExtent(region.subresource.baseMipLevel);
-    const bool      useStaging  = (mipExtent != extent);
+    const GLint         mipLevel    = static_cast<GLint>(region.subresource.baseMipLevel);
+    const Extent3D      mipExtent   = textureGL.GetMipExtent(region.subresource.baseMipLevel);
+    const bool          useStaging  = (mipExtent != extent);
+    const std::uint32_t numTexels   = extent.width * extent.height * extent.depth;
 
     if (useStaging)
     {
@@ -839,13 +881,7 @@ static void GLGetTextureImage(
         {
             /* Bind texture and read image data from texture */
             GLStateManager::Get().BindTexture(stagingTextureTarget, stagingTextureID);
-            glGetTexImage(
-                GLTypes::Map(stagingTextureType),
-                0,
-                GLTypes::Map(imageDesc.format),
-                GLTypes::Map(imageDesc.dataType),
-                imageDesc.data
-            );
+            GLGetTexImage(stagingTextureType, 0, imageDesc.format, imageDesc.dataType, imageDesc.data, numTexels);
         }
 
         /* Delete temporary staging texture */
@@ -874,13 +910,7 @@ static void GLGetTextureImage(
             /* Bind texture and read image data from texture */
             const GLTextureTarget srcTextureTarget = GLStateManager::GetTextureTarget(type);
             GLStateManager::Get().BindTexture(srcTextureTarget, srcTextureID);
-            glGetTexImage(
-                GLTypes::Map(type),
-                mipLevel,
-                GLTypes::Map(imageDesc.format),
-                GLTypes::Map(imageDesc.dataType),
-                imageDesc.data
-            );
+            GLGetTexImage(type, mipLevel, imageDesc.format, imageDesc.dataType, imageDesc.data, numTexels);
         }
     }
 }

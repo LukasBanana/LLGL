@@ -32,12 +32,6 @@ static std::vector<float> GenImageDataRf(std::uint32_t numPixels, float value)
     return std::vector<float>(static_cast<std::size_t>(numPixels), value);
 }
 
-struct alignas(4) GLDepthStencilPair
-{
-    float           depth;
-    std::uint8_t    stencil;
-};
-
 // Generates an image buffer with floating-points for the Red component and an unsigned byte for the Green component.
 static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPixels, float depth, std::uint8_t stencil)
 {

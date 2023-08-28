@@ -35,6 +35,9 @@ GLboolean GLBoolean(bool value);
 // Reads major/minor version from the string by glGetString(GL_VERSION), used for GL 2.x context creation.
 bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor);
 
+// Returns the GL profile version as a single number, e.g. 450 for OpenGL 4.5.
+int GLGetVersion();
+
 // Throws an std::runtime_error exception reporting a call to an unsupported OpenGL procedure.
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name);

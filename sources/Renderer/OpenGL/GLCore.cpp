@@ -154,13 +154,33 @@ bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor)
     return false;
 }
 
+// Helper structure to query major/minor versions only once
+struct GLVersion
+{
+    GLVersion()
+    {
+        GLint major = 0;
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        GLint minor = 0;
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+        this->no = major * 100 + minor * 10;
+    }
+    int no;
+};
+
+int GLGetVersion()
+{
+    static GLVersion version;
+    return version.no;
+}
+
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name)
 {
     #ifdef LLGL_OPENGLES3
-    throw std::runtime_error("illegal use of unsupported OpenGLES procedure: " + std::string(name));
+    LLGL_TRAP("illegal use of unsupported OpenGLES procedure: %s", name);
     #else
-    throw std::runtime_error("illegal use of unsupported OpenGL procedure: " + std::string(name));
+    LLGL_TRAP("illegal use of unsupported OpenGL procedure: %s", name);
     #endif
 }
 

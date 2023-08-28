@@ -24,6 +24,13 @@
 namespace LLGL
 {
 
+// Depth-stencil pair structure for GL_FLOAT_32_UNSIGNED_INT_24_8_REV image format.
+struct alignas(4) GLDepthStencilPair
+{
+    float           depth;
+    std::uint8_t    stencil;
+};
+
 namespace GLTypes
 {
 
