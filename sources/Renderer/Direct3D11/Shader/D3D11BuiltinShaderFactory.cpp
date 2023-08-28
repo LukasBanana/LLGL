@@ -24,12 +24,18 @@ D3D11BuiltinShaderFactory& D3D11BuiltinShaderFactory::Get()
 
 void D3D11BuiltinShaderFactory::CreateBuiltinShaders(ID3D11Device* device)
 {
-    LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture1DFromBufferCS, LLGL_IDR_D3D11_COPYTEXTURE1DFROMBUFFER_CS);
-    LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture2DFromBufferCS, LLGL_IDR_D3D11_COPYTEXTURE2DFROMBUFFER_CS);
-    LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture3DFromBufferCS, LLGL_IDR_D3D11_COPYTEXTURE3DFROMBUFFER_CS);
-    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture1DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS);
-    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture2DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS);
-    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture3DCS, LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS);
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture1DFromBufferCS,
+        LLGL_IDR_D3D11_COPYTEXTURE1DFROMBUFFER_CS, sizeof(LLGL_IDR_D3D11_COPYTEXTURE1DFROMBUFFER_CS));
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture2DFromBufferCS,
+        LLGL_IDR_D3D11_COPYTEXTURE2DFROMBUFFER_CS, sizeof(LLGL_IDR_D3D11_COPYTEXTURE2DFROMBUFFER_CS));
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyTexture3DFromBufferCS,
+        LLGL_IDR_D3D11_COPYTEXTURE3DFROMBUFFER_CS, sizeof(LLGL_IDR_D3D11_COPYTEXTURE3DFROMBUFFER_CS));
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture1DCS,
+        LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS, sizeof(LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS));
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture2DCS,
+        LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS, sizeof(LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS));
+    LoadBuiltinShader(device, D3D11BuiltinShader::CopyBufferFromTexture3DCS,
+        LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS, sizeof(LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS));
 }
 
 void D3D11BuiltinShaderFactory::Clear()
@@ -62,9 +68,13 @@ static ShaderType GetBuiltinShaderType(const D3D11BuiltinShader builtin)
     return ShaderType::Undefined;
 }
 
-void D3D11BuiltinShaderFactory::LoadBuiltinShader(ID3D11Device* device, const D3D11BuiltinShader builtin, int resourceID)
+void D3D11BuiltinShaderFactory::LoadBuiltinShader(
+    ID3D11Device* device,
+    const D3D11BuiltinShader builtin,
+    const BYTE* shaderBytecode,
+    size_t shaderBytecodeSize)
 {
-    if (auto blob = DXCreateBlobFromResource(resourceID))
+    if (auto blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
     {
         const auto idx = static_cast<std::size_t>(builtin);
         builtinShaders_[idx] = D3D11Shader::CreateNativeShaderFromBlob(device, GetBuiltinShaderType(builtin), blob.Get());

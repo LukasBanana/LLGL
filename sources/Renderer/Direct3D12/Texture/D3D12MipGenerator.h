@@ -58,7 +58,8 @@ class D3D12MipGenerator
         ComPtr<ID3D12PipelineState> CreateComputePSO(
             ID3D12Device*           device,
             ID3D12RootSignature*    rootSignature,
-            int                     resourceID
+            const BYTE*             shaderBytecode,
+            size_t                  shaderBytecodeSize
         );
 
         void CreateResourcesFor1DMips(ID3D12Device* device);

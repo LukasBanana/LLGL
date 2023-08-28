@@ -119,11 +119,12 @@ HRESULT D3D12MipGenerator::GenerateMips(
 ComPtr<ID3D12PipelineState> D3D12MipGenerator::CreateComputePSO(
     ID3D12Device*           device,
     ID3D12RootSignature*    rootSignature,
-    int                     resourceID)
+    const BYTE*             shaderBytecode,
+    size_t                  shaderBytecodeSize)
 {
     ComPtr<ID3D12PipelineState> pipelineState;
 
-    if (auto blob = DXCreateBlobFromResource(resourceID))
+    if (auto blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
     {
         /* Create graphics pipeline state and graphics command list */
         D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
@@ -156,10 +157,10 @@ void D3D12MipGenerator::CreateResourcesFor1DMips(ID3D12Device* device)
     rootSignature1D_ = rootSignature.Finalize(device);
 
     /* Create pre-build PSOs */
-    pipelines1D_[0x0] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS             );
-    pipelines1D_[0x1] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS_ODDX        );
-    pipelines1D_[0x2] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS_SRGB        );
-    pipelines1D_[0x3] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS_SRGB_ODDX   );
+    pipelines1D_[0x0] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS,           sizeof(LLGL_IDR_GENERATEMIPS1D_CS)          );
+    pipelines1D_[0x1] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS_ODDX,      sizeof(LLGL_IDR_GENERATEMIPS1D_CS_ODDX)     );
+    pipelines1D_[0x2] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS_SRGB,      sizeof(LLGL_IDR_GENERATEMIPS1D_CS_SRGB)     );
+    pipelines1D_[0x3] = CreateComputePSO( device, rootSignature1D_.Get(), LLGL_IDR_GENERATEMIPS1D_CS_SRGB_ODDX, sizeof(LLGL_IDR_GENERATEMIPS1D_CS_SRGB_ODDX));
 }
 
 void D3D12MipGenerator::CreateResourcesFor2DMips(ID3D12Device* device)
@@ -179,14 +180,14 @@ void D3D12MipGenerator::CreateResourcesFor2DMips(ID3D12Device* device)
     rootSignature2D_ = rootSignature.Finalize(device);
 
     /* Create pre-build PSOs */
-    pipelines2D_[0x0] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS             );
-    pipelines2D_[0x1] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_ODDX        );
-    pipelines2D_[0x2] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_ODDY        );
-    pipelines2D_[0x3] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_ODDXY       );
-    pipelines2D_[0x4] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB        );
-    pipelines2D_[0x5] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDX   );
-    pipelines2D_[0x6] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDY   );
-    pipelines2D_[0x7] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDXY  );
+    pipelines2D_[0x0] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS,             sizeof(LLGL_IDR_GENERATEMIPS2D_CS)            );
+    pipelines2D_[0x1] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_ODDX,        sizeof(LLGL_IDR_GENERATEMIPS2D_CS_ODDX)       );
+    pipelines2D_[0x2] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_ODDY,        sizeof(LLGL_IDR_GENERATEMIPS2D_CS_ODDY)       );
+    pipelines2D_[0x3] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_ODDXY,       sizeof(LLGL_IDR_GENERATEMIPS2D_CS_ODDXY)      );
+    pipelines2D_[0x4] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB,        sizeof(LLGL_IDR_GENERATEMIPS2D_CS_SRGB)       );
+    pipelines2D_[0x5] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDX,   sizeof(LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDX)  );
+    pipelines2D_[0x6] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDY,   sizeof(LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDY)  );
+    pipelines2D_[0x7] = CreateComputePSO( device, rootSignature2D_.Get(), LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDXY,  sizeof(LLGL_IDR_GENERATEMIPS2D_CS_SRGB_ODDXY) );
 }
 
 void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
@@ -203,22 +204,22 @@ void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
     rootSignature3D_ = rootSignature.Finalize(device);
 
     /* Create pre-build PSOs */
-    pipelines3D_[0x0] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS             );
-    pipelines3D_[0x1] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDX        );
-    pipelines3D_[0x2] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDY        );
-    pipelines3D_[0x3] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXY       );
-    pipelines3D_[0x4] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDZ        );
-    pipelines3D_[0x5] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXZ       );
-    pipelines3D_[0x6] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDYZ       );
-    pipelines3D_[0x7] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXYZ      );
-    pipelines3D_[0x8] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB        );
-    pipelines3D_[0x9] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDX   );
-    pipelines3D_[0xA] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDY   );
-    pipelines3D_[0xB] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXY  );
-    pipelines3D_[0xC] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDZ   );
-    pipelines3D_[0xD] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXZ  );
-    pipelines3D_[0xE] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDYZ  );
-    pipelines3D_[0xF] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXYZ );
+    pipelines3D_[0x0] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS,             sizeof(LLGL_IDR_GENERATEMIPS3D_CS)            );
+    pipelines3D_[0x1] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDX,        sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDX)       );
+    pipelines3D_[0x2] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDY,        sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDY)       );
+    pipelines3D_[0x3] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXY,       sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDXY)      );
+    pipelines3D_[0x4] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDZ,        sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDZ)       );
+    pipelines3D_[0x5] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXZ,       sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDXZ)      );
+    pipelines3D_[0x6] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDYZ,       sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDYZ)      );
+    pipelines3D_[0x7] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_ODDXYZ,      sizeof(LLGL_IDR_GENERATEMIPS3D_CS_ODDXYZ)     );
+    pipelines3D_[0x8] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB,        sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB)       );
+    pipelines3D_[0x9] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDX,   sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDX)  );
+    pipelines3D_[0xA] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDY,   sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDY)  );
+    pipelines3D_[0xB] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXY,  sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXY) );
+    pipelines3D_[0xC] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDZ,   sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDZ)  );
+    pipelines3D_[0xD] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXZ,  sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXZ) );
+    pipelines3D_[0xE] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDYZ,  sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDYZ) );
+    pipelines3D_[0xF] = CreateComputePSO( device, rootSignature3D_.Get(), LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXYZ, sizeof(LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXYZ));
 }
 
 void D3D12MipGenerator::GenerateMips1D(

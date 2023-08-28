@@ -53,7 +53,10 @@ class D3D11BuiltinShaderFactory
 
         D3D11BuiltinShaderFactory() = default;
 
-        void LoadBuiltinShader(ID3D11Device* device, const D3D11BuiltinShader builtin, int resourceID);
+        void LoadBuiltinShader(ID3D11Device* device,
+            const D3D11BuiltinShader builtin,
+            const BYTE* shaderBytecode,
+            size_t shaderBytecodeSize);
 
     private:
 
