@@ -1009,8 +1009,7 @@ if(WIN32)
         
         SET_RENDERER_PROJECT_PROPERTIES(LLGL_Direct3D12)
         target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
-        target_compile_definitions(LLGL_Direct3D12 PUBLIC -DLLGL_DX_ENABLE_D3D12)
-        
+
         ADD_DEFINE(LLGL_BUILD_RENDERER_DIRECT3D12)
         
         list(APPEND LLGL_ALL_TARGETS LLGL_Direct3D12)
