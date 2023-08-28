@@ -508,7 +508,6 @@ file(GLOB FilesRendererD3D11Texture         ${PROJECT_SOURCE_DIR}/sources/Render
 set(
     FilesRendererD3D11ShaderBuiltin
     ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/Builtin/D3D11Builtin.h
-    ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/Builtin/D3D11Builtin.rc
 )
 
 # Test project files
