@@ -940,15 +940,17 @@ static void IncludeDefaultCoreProfileExtensions(GLExtensionMap& extensions)
     static const std::string coreProfileDefaultExtenions[] =
     {
         "GL_ARB_compatibility",
+        "GL_ARB_multitexture",          // GL 1.2
         "GL_ARB_shader_objects",
         "GL_ARB_shader_objects_21",
         "GL_ARB_shader_objects_30",
         "GL_ARB_vertex_buffer_object",
         "GL_ARB_vertex_shader",
-        "GL_EXT_texture3D",
-        "GL_EXT_copy_texture",
         "GL_EXT_blend_func_separate",   // GL 2.0
+        "GL_EXT_copy_texture",
+        "GL_EXT_gpu_shader4",           // GL 2.0
         "GL_EXT_stencil_two_side",      // GL 2.0
+        "GL_EXT_texture3D",
     };
     for (const auto& ext : coreProfileDefaultExtenions)
         extensions[ext] = false;

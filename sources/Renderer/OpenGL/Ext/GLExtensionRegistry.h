@@ -47,7 +47,7 @@ enum class GLExt
     ARB_instanced_arrays,               // GL 2.1
     ARB_internalformat_query,
     ARB_internalformat_query2,
-    ARB_multitexture,
+    ARB_multitexture,                   // GL 1.2
     ARB_multi_bind,                     // GL 4.3
     ARB_multi_draw_indirect,
     ARB_occlusion_query,
@@ -94,7 +94,7 @@ enum class GLExt
     EXT_blend_minmax,
     EXT_copy_texture,                   // GL 1.2
     EXT_draw_buffers2,
-    EXT_gpu_shader4,
+    EXT_gpu_shader4,                    // GL 2.0
     EXT_stencil_two_side,               //ATI_separate_stencil,
     EXT_texture3D,                      // GL 1.2
     EXT_texture_array,                  // no procedures
