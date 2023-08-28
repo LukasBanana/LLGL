@@ -495,7 +495,6 @@ file(GLOB FilesRendererD3D12Texture         ${PROJECT_SOURCE_DIR}/sources/Render
 set(
     FilesRendererD3D12ShaderBuiltin
     ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/Builtin/D3D12Builtin.h
-    ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/Builtin/D3D12Builtin.rc
 )
 
 # Direct3D11 renderer files
