@@ -9,21 +9,21 @@
 #define LLGL_D3D11_BUILTIN_H
 
 
-#include "CopyTextureFromBufferCS.Dim1D.inc"
-#include "CopyTextureFromBufferCS.Dim2D.inc"
-#include "CopyTextureFromBufferCS.Dim3D.inc"
+#include "CopyTextureFromBufferCS.Dim1D.cso.inl"
+#include "CopyTextureFromBufferCS.Dim2D.cso.inl"
+#include "CopyTextureFromBufferCS.Dim3D.cso.inl"
 
-#include "CopyBufferFromTextureCS.Dim1D.inc"
-#include "CopyBufferFromTextureCS.Dim2D.inc"
-#include "CopyBufferFromTextureCS.Dim3D.inc"
+#include "CopyBufferFromTextureCS.Dim1D.cso.inl"
+#include "CopyBufferFromTextureCS.Dim2D.cso.inl"
+#include "CopyBufferFromTextureCS.Dim3D.cso.inl"
 
-#define LLGL_IDR_D3D11_COPYTEXTURE1DFROMBUFFER_CS CopyTextureFromBufferCS_Dim1D
-#define LLGL_IDR_D3D11_COPYTEXTURE2DFROMBUFFER_CS CopyTextureFromBufferCS_Dim2D
-#define LLGL_IDR_D3D11_COPYTEXTURE3DFROMBUFFER_CS CopyTextureFromBufferCS_Dim3D
+#define LLGL_IDR_D3D11_COPYTEXTURE1DFROMBUFFER_CS g_CopyTextureFromBufferCS_Dim1D
+#define LLGL_IDR_D3D11_COPYTEXTURE2DFROMBUFFER_CS g_CopyTextureFromBufferCS_Dim2D
+#define LLGL_IDR_D3D11_COPYTEXTURE3DFROMBUFFER_CS g_CopyTextureFromBufferCS_Dim3D
 
-#define LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS CopyBufferFromTextureCS_Dim1D
-#define LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS CopyBufferFromTextureCS_Dim2D
-#define LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS CopyBufferFromTextureCS_Dim3D
+#define LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE1D_CS g_CopyBufferFromTextureCS_Dim1D
+#define LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE2D_CS g_CopyBufferFromTextureCS_Dim2D
+#define LLGL_IDR_D3D11_COPYBUFFERFROMTEXTURE3D_CS g_CopyBufferFromTextureCS_Dim3D
 
 
 #endif
