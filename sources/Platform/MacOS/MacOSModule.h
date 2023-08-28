@@ -21,10 +21,17 @@ class MacOSModule : public Module
 
     public:
 
-        MacOSModule(const char* moduleFilename);
+        MacOSModule(const char* moduleFilename, Report* report = nullptr);
         ~MacOSModule();
 
         void* LoadProcedure(const char* procedureName) override;
+
+    public:
+
+        inline bool IsValid() const
+        {
+            return (handle_ != nullptr);
+        }
 
     private:
 

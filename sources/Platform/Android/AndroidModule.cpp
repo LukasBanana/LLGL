@@ -20,14 +20,13 @@ namespace LLGL
 static std::string GetProgramPath()
 {
     /* Get filename of running program */
-    static const std::size_t bufLen = 1024;
-    char buf[bufLen] = { 0 };
-    readlink("/proc/self/exe", buf, bufLen);
+    char buf[1024] = { 0 };
+    (void)readlink("/proc/self/exe", buf, sizeof(buf));
 
     /* Get path from program */
     std::string path = buf;
 
-    auto pathEnd = path.find_last_of('/');
+    std::size_t pathEnd = path.find_last_of('/');
     if (pathEnd != std::string::npos)
         path.resize(pathEnd + 1);
 
@@ -50,7 +49,7 @@ std::string Module::GetModuleFilename(const char* moduleName)
 bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if Linux shared library can be loaded properly */
-    if (auto handle = dlopen(moduleFilename, RTLD_LAZY))
+    if (void* handle = dlopen(moduleFilename, RTLD_LAZY))
     {
         dlclose(handle);
         return true;
@@ -58,31 +57,32 @@ bool Module::IsAvailable(const char* moduleFilename)
     return false;
 }
 
-std::unique_ptr<Module> Module::Load(const char* moduleFilename)
+std::unique_ptr<Module> Module::Load(const char* moduleFilename, Report* report)
 {
-    return MakeUnique<AndroidModule>(moduleFilename);
+    std::unique_ptr<AndroidModule> module = MakeUnique<AndroidModule>(moduleFilename, report);
+    return (module->IsValid() ? std::move(module) : nullptr);
 }
 
-AndroidModule::AndroidModule(const char* moduleFilename)
+AndroidModule::AndroidModule(const char* moduleFilename, Report* report)
 {
     /* Open Linux shared library */
     handle_ = dlopen(moduleFilename, RTLD_LAZY);
 
     /* Check if loading has failed */
-    if (!handle_)
-        throw std::runtime_error("failed to load shared library (SO): \"" + std::string(moduleFilename) + "\"");
+    if (!handle_ && report != nullptr)
+        report->Errorf("failed to load shared library (SO): \"%s\"%s\n", moduleFilename, appendix.c_str());
 }
 
 AndroidModule::~AndroidModule()
 {
-    dlclose(handle_);
+    if (handle_ != nullptr)
+        dlclose(handle_);
 }
 
 void* AndroidModule::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
-    auto procAddr = dlsym(handle_, procedureName);
-    return reinterpret_cast<void*>(procAddr);
+    return dlsym(handle_, procedureName);
 }
 
 

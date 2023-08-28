@@ -21,10 +21,17 @@ class IOSModule : public Module
 
     public:
 
-        IOSModule(const char* moduleFilename);
+        IOSModule(const char* moduleFilename, Report* report = nullptr);
         ~IOSModule();
 
         void* LoadProcedure(const char* procedureName) override;
+
+    public:
+
+        inline bool IsValid() const
+        {
+            return (handle_ != nullptr);
+        }
 
     private:
 
