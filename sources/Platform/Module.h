@@ -9,6 +9,7 @@
 #define LLGL_MODULE_H
 
 
+#include <LLGL/Export.h>
 #include <LLGL/NonCopyable.h>
 #include <memory>
 #include <string>
@@ -26,7 +27,7 @@ namespace LLGL
 
 
 // Module class (to load procedures for shared libraries)
-class Module : public NonCopyable
+class LLGL_EXPORT Module : public NonCopyable
 {
 
     public:

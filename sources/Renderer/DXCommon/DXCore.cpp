@@ -15,7 +15,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <d3dcompiler.h>
-#include <dxcapi.h>
 
 
 #ifndef LLGL_BUILD_STATIC_LIB
@@ -460,7 +459,7 @@ const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/gg615083(v=vs.85).aspx
-UINT FXCGetCompilerFlags(int flags)
+UINT DXGetFxcCompilerFlags(int flags)
 {
     UINT dxFlags = 0;
 
@@ -480,28 +479,6 @@ UINT FXCGetCompilerFlags(int flags)
         dxFlags |= D3DCOMPILE_WARNINGS_ARE_ERRORS;
 
     return dxFlags;
-}
-
-std::vector<LPCWSTR> DXCGetCompilerArgs(int flags)
-{
-    std::vector<LPCWSTR> dxArgs;
-
-    if ((flags & ShaderCompileFlags::Debug) != 0)
-        dxArgs.push_back(DXC_ARG_DEBUG);
-
-    if ((flags & ShaderCompileFlags::NoOptimization) != 0)
-        dxArgs.push_back(DXC_ARG_SKIP_OPTIMIZATIONS);
-    else if ((flags & ShaderCompileFlags::OptimizationLevel1) != 0)
-        dxArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL1);
-    else if ((flags & ShaderCompileFlags::OptimizationLevel2) != 0)
-        dxArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL2);
-    else if ((flags & ShaderCompileFlags::OptimizationLevel3) != 0)
-        dxArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
-
-    if ((flags & ShaderCompileFlags::WarningsAreErrors) != 0)
-        dxArgs.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
-
-    return dxArgs;
 }
 
 VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)

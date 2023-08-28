@@ -251,6 +251,7 @@ endif()
 if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project (experimental)" OFF)
+    option(LLGL_D3D12_ENABLE_DXCOMPILER "Enable support for DirectXShaderCompiler (DXC); requires Windows Kit to be installed" OFF)
     option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C#" OFF)
 endif()
 
@@ -294,6 +295,10 @@ endif()
 
 if(LLGL_PREFER_STL_CONTAINERS)
     ADD_DEFINE(LLGL_PREFER_STL_CONTAINERS)
+endif()
+
+if(LLGL_D3D12_ENABLE_DXCOMPILER)
+    ADD_DEFINE(LLGL_D3D12_ENABLE_DXCOMPILER)
 endif()
 
 if(WIN32)
@@ -475,6 +480,9 @@ set(
 
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon             ${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
+if(LLGL_D3D12_ENABLE_DXCOMPILER)
+    file(GLOB FilesRendererDXCommonDXC      ${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/DXC/*.*)
+endif()
 
 # Direct3D12 renderer files
 file(GLOB FilesRendererD3D12                ${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
@@ -630,6 +638,7 @@ source_group("Metal\\Shader\\Bulitin" FILES ${FilesRendererMTLShaderBuiltin})
 source_group("Metal\\Texture" FILES ${FilesRendererMTLTexture})
 
 source_group("DXCommon" FILES ${FilesRendererDXCommon})
+source_group("DXCommon\\DXC" FILES ${FilesRendererDXCommonDXC})
 
 source_group("Direct3D11" FILES ${FilesRendererD3D11})
 source_group("Direct3D11\\Buffer" FILES ${FilesRendererD3D11Buffer})
@@ -781,6 +790,10 @@ set(
     ${FilesRendererD3D12Texture}
     ${FilesRendererDXCommon}
 )
+
+if(LLGL_D3D12_ENABLE_DXCOMPILER)
+    set(FilesD3D12 ${FilesD3D12} ${FilesRendererDXCommonDXC})
+endif()
 
 set(
     FilesD3D11

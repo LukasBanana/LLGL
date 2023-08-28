@@ -79,11 +79,8 @@ const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel);
 // Returns the specified feature level as HLSL shader model version string.
 const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
 
-// Returns the compiler flags for the 'ShaderCompileFlags' enumeration values.
-UINT FXCGetCompilerFlags(int flags);
-
-// Returns the compiler arguments for the 'ShaderCompileFlags' enumeration values.
-std::vector<LPCWSTR> DXCGetCompilerArgs(int flags);
+// Returns the compiler flags for the 'ShaderCompileFlags' enumeration values for the DirectX Effects Compiler (FXC).
+UINT DXGetFxcCompilerFlags(int flags);
 
 // Returns the video adapter descriptor from the specified DXGI adapter.
 VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);

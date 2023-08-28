@@ -16,8 +16,12 @@
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>
-#include <dxcapi.h>
 #include <comdef.h>
+
+#ifdef LLGL_D3D12_ENABLE_DXCOMPILER
+#   include "../../DXCommon/DXC/DXCInstance.h"
+#endif
+
 
 namespace LLGL
 {
@@ -235,24 +239,22 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
     }
 }
 
-bool IsProfileDxcAppropriate(const char* target)
+static bool IsProfileDxcAppropriate(const char* target)
 {
-    size_t szLen = StrLength(target);
-
     // LLGL allows for a blank string to be sent into the target of a ShaderDescriptor, but
     // FXC nor DXC supports this behavior, so it doesn't matter if we send to FXC or DXC.
-    if (szLen == 0)
+    if (target == nullptr || *target == '\0')
         return false;
 
-    for_range(i, szLen)
+    // Search for first occurrence of '_' to parse the FXC/DXC SM pattern '[lib|vs|ps|...]_D_D', e.g. 'vs_6_0'
+    for (const char* c = target; *c != '\0'; ++c)
     {
         // find our first underscore
-        if (target[i] == '_')
+        if (c[0] == '_')
         {
-            // i + 1 should be our major shader version.
-            int iMajorShaderVersion = (target[i + 1] - '0');
-            if (iMajorShaderVersion >= 6)
-                return true;
+            // Safe to use next character in NUL-terminated string, since it's either our major version number or '\0'
+            char majorShaderVersion = c[1];
+            return (majorShaderVersion >= '6');
         }
     }
 
@@ -280,83 +282,70 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     }
 
     /* Get parameter from union */
-    const char* entry   = shaderDesc.entryPoint;
-    const char* target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
-    auto        defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);
-    auto        flags   = shaderDesc.flags;
+    const char*             entry   = shaderDesc.entryPoint;
+    const char*             target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
+    const D3D_SHADER_MACRO* defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);
+    int                     flags   = static_cast<int>(shaderDesc.flags);
 
     /* Compile shader code */
     ComPtr<ID3DBlob> errors;
     HRESULT hr = S_OK;
+
+    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
     if (IsProfileDxcAppropriate(target))
     {
-        DxcCreateInstanceProc createFn = renderSystem_.GetDxcCreateInstance();
-        if (createFn == nullptr)
+        /* Load DXC compiler */
+        if (FAILED(DXLoadDxcompilerInterface()))
         {
             report_.Errorf("Unsupported shader profile '%s' (unable to load dxcompiler.dll).\n", target);
             return false;
         }
 
-        std::wstring entryWide = ToUTF16String(entry);
-        std::wstring targetWide = ToUTF16String(target);
+        /* Get DXC compiler arguments */
+        std::vector<LPCWSTR> compilerArgs = DXGetDxcCompilerArgs(flags);
 
-        std::vector<LPCWSTR> compilerArgs = DXCGetCompilerArgs(flags);
         compilerArgs.push_back(L"-E");
+        const std::wstring entryWide = ToUTF16String(entry);
         compilerArgs.push_back(entryWide.c_str());
+
         compilerArgs.push_back(L"-T");
+        const std::wstring targetWide = ToUTF16String(target);
         compilerArgs.push_back(targetWide.c_str());
 
-        DxcBuffer source;
-        source.Encoding = DXC_CP_ACP;
-        source.Ptr = sourceCode;
-        source.Size = sourceLength;
-
-        ComPtr<IDxcCompiler3> compiler;
-        hr = createFn(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
-        if (FAILED(hr))
-            return false;
-
-        ComPtr<IDxcUtils> utils;
-        hr = createFn(CLSID_DxcUtils, IID_PPV_ARGS(&utils));
-        if (FAILED(hr))
-            return false;
-
-        ComPtr<IDxcIncludeHandler> includeHandler;
-        hr = utils->CreateDefaultIncludeHandler(includeHandler.ReleaseAndGetAddressOf());
-        if (FAILED(hr))
-            return false;
-
-        ComPtr<IDxcResult> result;
-        hr = compiler->Compile(
-            &source,
-            compilerArgs.data(),
-            static_cast<UINT32>(compilerArgs.size()),
-            includeHandler.Get(),
-            IID_PPV_ARGS(&result)
-        );
-        if (FAILED(hr))
-            return false;
-
-        HRESULT compileResult = S_OK;
-        hr = result->GetStatus(&compileResult);
-        if (FAILED(hr))
-            return false;
-
-        hr = compileResult;
-
-        if (SUCCEEDED(compileResult))
+        std::vector<std::wstring> definesWide;
+        if (defines != nullptr)
         {
-            hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&byteCode_), nullptr);
-            if (FAILED(hr))
-                return false;
+            /* Append macro definitions as compiler arguments "-D<NAME>" or "-D<NAME>=<VALUE>" */
+            for (; defines->Name != nullptr; ++defines)
+            {
+                std::wstring defineWide = std::wstring(L"-D") + ToUTF16String(defines->Name);
+                if (defines->Definition != nullptr && defines->Definition[0] != '\0')
+                {
+                    defineWide += L'=';
+                    defineWide += ToUTF16String(defines->Definition);
+                }
+                definesWide.push_back(std::move(defineWide));
+            }
+
+            compilerArgs.reserve(compilerArgs.size() + definesWide.size());
+            for (const std::wstring& s : definesWide)
+                compilerArgs.push_back(s.c_str());
         }
 
-        hr = result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
-        if (FAILED(hr))
-            return false;
+        /* Compile shader to DXIL with DXC */
+        hr = DXCompileShaderToDxil(
+            sourceCode,
+            sourceLength,
+            compilerArgs.data(),
+            compilerArgs.size(),
+            byteCode_.ReleaseAndGetAddressOf(),
+            errors.ReleaseAndGetAddressOf()
+        );
     }
     else
+    #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
     {
+        /* Compile shader yo DXBC with FXC */
         hr = D3DCompile(
             sourceCode,
             sourceLength,
@@ -365,7 +354,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
             nullptr,                            // ID3DInclude*         pInclude
             entry,                              // LPCSTR               pEntrypoint
             target,                             // LPCSTR               pTarget
-            FXCGetCompilerFlags(flags),          // UINT                 Flags1
+            DXGetFxcCompilerFlags(flags),       // UINT                 Flags1
             0,                                  // UINT                 Flags2 (recommended to always be 0)
             byteCode_.ReleaseAndGetAddressOf(), // ID3DBlob**           ppCode
             errors.ReleaseAndGetAddressOf()     // ID3DBlob**           ppErrorMsgs
@@ -654,31 +643,24 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     /* Get shader reflection */
     ComPtr<ID3D12ShaderReflection> reflectionObject;
     hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
+
+    #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
     if (FAILED(hr))
     {
         // Check if DXC can reflect this shader. This case occurs for SM6 shaders.
         // Unfortunately there is no good way to check this value without manually
         // parsing the shader bytecode.
-        DxcCreateInstanceProc createFn = renderSystem_.GetDxcCreateInstance();
-        if (createFn == nullptr)
+        if (FAILED(DXLoadDxcompilerInterface()))
         {
             // We can't invoke the DXC reflection API. Return as if we failed.
             return hr;
         }
 
-        ComPtr<IDxcUtils> dxcUtils;
-        hr = createFn(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-        if (FAILED(hr))
-            return hr;
-
-        DxcBuffer bufFragReflection;
-        bufFragReflection.Encoding = DXC_CP_ACP;
-        bufFragReflection.Ptr = byteCode_->GetBufferPointer();
-        bufFragReflection.Size = byteCode_->GetBufferSize();
-        hr = dxcUtils->CreateReflection(&bufFragReflection, IID_PPV_ARGS(&reflectionObject));
+        hr = DXReflectDxilShader(byteCode_.Get(), reflectionObject.ReleaseAndGetAddressOf());
         if (FAILED(hr))
             return hr;
     }
+    #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
 
     D3D12_SHADER_DESC shaderDesc;
     hr = reflectionObject->GetDesc(&shaderDesc);
