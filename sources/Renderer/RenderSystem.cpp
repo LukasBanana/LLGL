@@ -228,7 +228,22 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
 
     /* Load render system module */
     const std::string       moduleFilename  = Module::GetModuleFilename(renderSystemDesc.moduleName.c_str());
-    std::unique_ptr<Module> module          = Module::Load(moduleFilename.c_str());
+    std::unique_ptr<Module> module;
+
+    #ifdef LLGL_ENABLE_EXCEPTIONS
+
+    Report moduleReport;
+    module = Module::Load(moduleFilename.c_str(), &moduleReport);
+    if (!module)
+        TrapReport(__FUNCTION__, moduleReport);
+
+    #else
+
+    module = Module::Load(moduleFilename.c_str(), report);
+    if (!module)
+        return nullptr;
+
+    #endif
 
     /*
     Verify build ID from render system module to detect a module,
@@ -278,9 +293,7 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     catch (const std::exception& e)
     {
         /* Throw with new exception, otherwise the exception's v-table will be corrupted since it's part of the module */
-        if (report != nullptr)
-            report->Errorf("%s", e.what());
-        return nullptr;
+        return ReportException(report, e.what());
     }
     #endif // /LLGL_ENABLE_EXCEPTIONS
 

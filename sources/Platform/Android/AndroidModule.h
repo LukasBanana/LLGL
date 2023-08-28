@@ -21,10 +21,17 @@ class AndroidModule : public Module
 
     public:
 
-        AndroidModule(const char* moduleFilename);
+        AndroidModule(const char* moduleFilename, Report* report = nullptr);
         ~AndroidModule();
 
         void* LoadProcedure(const char* procedureName) override;
+
+    public:
+
+        inline bool IsValid() const
+        {
+            return (handle_ != nullptr);
+        }
 
     private:
 

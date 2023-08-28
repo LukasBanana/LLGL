@@ -140,6 +140,15 @@ LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramN
     Trap(origin, "parameter '%s = %d' out of range [0, %d]", paramName, value, maximum);
 }
 
+[[noreturn]]
+LLGL_EXPORT void TrapReport(const char* origin, const Report& report)
+{
+    std::string text = report.GetText();
+    for (std::size_t n = text.size(); n > 0 && (text[n - 1] == '\n' || text[n - 1] == '\r'); --n)
+        text.pop_back();
+    Trap(origin, "%s", text.c_str());
+}
+
 LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, ...)
 {
     #ifdef LLGL_ENABLE_EXCEPTIONS

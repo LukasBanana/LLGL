@@ -21,10 +21,17 @@ class LinuxModule : public Module
 
     public:
 
-        LinuxModule(const char* moduleFilename);
+        LinuxModule(const char* moduleFilename, Report* report = nullptr);
         ~LinuxModule();
 
         void* LoadProcedure(const char* procedureName) override;
+
+    public:
+
+        inline bool IsValid() const
+        {
+            return (handle_ != nullptr);
+        }
 
     private:
 

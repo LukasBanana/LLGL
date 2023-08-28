@@ -29,8 +29,7 @@ std::string Module::GetModuleFilename(const char* moduleName)
 bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if MacOS dynamic library can be loaded properly */
-    auto handle = dlopen(moduleFilename, RTLD_LAZY);
-    if (handle)
+    if (void* handle = dlopen(moduleFilename, RTLD_LAZY))
     {
         dlclose(handle);
         return true;
@@ -38,31 +37,32 @@ bool Module::IsAvailable(const char* moduleFilename)
     return false;
 }
 
-std::unique_ptr<Module> Module::Load(const char* moduleFilename)
+std::unique_ptr<Module> Module::Load(const char* moduleFilename, Report* report)
 {
-    return std::unique_ptr<Module>(new IOSModule(moduleFilename));
+    std::unique_ptr<IOSModule> module = MakeUnique<IOSModule>(moduleFilename, report);
+    return (module->IsValid() ? std::move(module) : nullptr);
 }
 
-IOSModule::IOSModule(const char* moduleFilename)
+IOSModule::IOSModule(const char* moduleFilename, Report* report)
 {
     /* Open MacOS dynamic library */
     handle_ = dlopen(moduleFilename, RTLD_LAZY);
 
     /* Check if loading has failed */
-    if (!handle_)
-        throw std::runtime_error("failed to load dynamic library (DYLIB) \"" + std::string(moduleFilename) + "\"");
+    if (!handle_ && report != nullptr)
+        report->Errorf("failed to load dynamic library (DYLIB): \"%s\"\n", moduleFilename);
 }
 
 IOSModule::~IOSModule()
 {
-    dlclose(handle_);
+    if (handle_ != nullptr)
+        dlclose(handle_);
 }
 
 void* IOSModule::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
-    auto procAddr = dlsym(handle_, procedureName);
-    return reinterpret_cast<void*>(procAddr);
+    return dlsym(handle_, procedureName);
 }
 
 

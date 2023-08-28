@@ -22,14 +22,22 @@ class Win32Module final : public Module
 
     public:
 
-        Win32Module(const char* moduleFileanme);
+        Win32Module(const char* moduleFileanme, Report* report = nullptr);
         ~Win32Module();
 
         void* LoadProcedure(const char* procedureName) override;
 
+    public:
+
+        // Returns true if this module has been loaded successfully.
+        inline bool IsValid() const
+        {
+            return (handle_ != nullptr);
+        }
+
     private:
 
-        HMODULE handle_ = 0;
+        HMODULE handle_ = nullptr;
 
 };
 

@@ -26,7 +26,7 @@ static std::string GetProgramPath()
     /* Get path from program */
     std::string path = buf;
 
-    auto pathEnd = path.find_last_of('/');
+    std::size_t pathEnd = path.find_last_of('/');
     if (pathEnd != std::string::npos)
         path.resize(pathEnd + 1);
 
@@ -49,7 +49,7 @@ std::string Module::GetModuleFilename(const char* moduleName)
 bool Module::IsAvailable(const char* moduleFilename)
 {
     /* Check if Linux shared library can be loaded properly */
-    if (auto handle = dlopen(moduleFilename, RTLD_LAZY))
+    if (void* handle = dlopen(moduleFilename, RTLD_LAZY))
     {
         dlclose(handle);
         return true;
@@ -57,45 +57,43 @@ bool Module::IsAvailable(const char* moduleFilename)
     return false;
 }
 
-std::unique_ptr<Module> Module::Load(const char* moduleFilename)
+std::unique_ptr<Module> Module::Load(const char* moduleFilename, Report* report)
 {
-    return MakeUnique<LinuxModule>(moduleFilename);
+    std::unique_ptr<LinuxModule> module = MakeUnique<LinuxModule>(moduleFilename, report);
+    return (module->IsValid() ? std::move(module) : nullptr);
 }
 
-LinuxModule::LinuxModule(const char* moduleFilename)
+LinuxModule::LinuxModule(const char* moduleFilename, Report* report)
 {
     /* Open Linux shared library */
     handle_ = dlopen(moduleFilename, RTLD_LAZY);
 
     /* Check if loading has failed */
-    if (!handle_)
+    if (!handle_ && report != nullptr)
     {
-        std::string msg = "failed to load shared library (SO): \"";
-        msg += moduleFilename;
-        msg += "\"";
-
         /* Append error message from most recent call to 'dlopen' */
+        std::string appendix;
         if (const char* err = dlerror())
         {
-            msg += "; ";
-            msg += err;
+            appendix += "; ";
+            appendix += err;
         }
 
         /* Throw error message */
-        throw std::runtime_error(msg);
+        report->Errorf("failed to load shared library (SO): \"%s\"%s\n", moduleFilename, appendix.c_str());
     }
 }
 
 LinuxModule::~LinuxModule()
 {
-    dlclose(handle_);
+    if (handle_ != nullptr)
+        dlclose(handle_);
 }
 
 void* LinuxModule::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
-    auto procAddr = dlsym(handle_, procedureName);
-    return reinterpret_cast<void*>(procAddr);
+    return dlsym(handle_, procedureName);
 }
 
 

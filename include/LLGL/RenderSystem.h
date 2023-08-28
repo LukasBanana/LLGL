@@ -147,7 +147,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \remarks The descriptor structure can be initialized by only the module name like shown in the following example:
         \code
         // Load the "OpenGL" render system module
-        auto myRenderSystem = LLGL::RenderSystem::Load("OpenGL");
+        LLGL::RenderSystemPtr myRenderSystem = LLGL::RenderSystem::Load("OpenGL");
         \endcode
         \remarks The debugger and profiler can be used like this:
         \code
@@ -165,7 +165,7 @@ class LLGL_EXPORT RenderSystem : public Interface
             myRendererDesc.profiler     = &myProfiler;
             myRendererDesc.debugger     = &myDebugger;
         }
-        auto myRenderSystem = LLGL::RenderSystem::Load(myRendererDesc);
+        LLGL::RenderSystemPtr myRenderSystem = LLGL::RenderSystem::Load(myRendererDesc);
         \endcode
         \throws std::runtime_error If loading the render system from the specified module failed.
         \see RenderSystemDescriptor::moduleName
