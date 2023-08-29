@@ -10,7 +10,7 @@
 #include "GLESExtensionsProxy.h"
 #include "OpenGLES.h"
 #if defined(LLGL_OS_IOS)
-#   import <OpenGLES/EAGL.h>
+//#   import <OpenGLES/EAGL.h>
 #else
 #   include <EGL/egl.h>
 #endif
@@ -23,6 +23,8 @@ namespace LLGL
 
 
 /* --- Internal functions --- */
+
+#ifndef LLGL_OS_IOS
 
 template <typename T>
 bool LoadGLProc(T& procAddr, const char* procName)
@@ -93,6 +95,8 @@ static GLExtensionList QuerySupportedOpenGLExtensions(bool coreProfile)
     return extensions;
 }
 
+#endif // /LLGL_OS_IOS
+
 // Global member to store if the extension have already been loaded
 static bool g_OpenGLExtensionsLoaded = false;
 
@@ -101,6 +105,12 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     /* Only load GL extensions once */
     if (g_OpenGLExtensionsLoaded)
         return true;
+
+    #ifdef LLGL_OS_IOS
+
+    //TODO: only enable extensions
+
+    #else
 
     GLExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
 
@@ -137,6 +147,8 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     //LOAD_GLEXT( ARB_compute_shader      );
 
     #undef LOAD_GLEXT
+
+    #endif // /LLGL_OS_IOS
 
     g_OpenGLExtensionsLoaded = true;
 

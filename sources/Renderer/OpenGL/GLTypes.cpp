@@ -278,8 +278,8 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         #endif
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
-        case ImageFormat::Stencil:          return GL_STENCIL_INDEX;
         #ifdef LLGL_OPENGL
+        case ImageFormat::Stencil:          return GL_STENCIL_INDEX;
         case ImageFormat::BC1:              return GL_COMPRESSED_RGBA;
         case ImageFormat::BC2:              return GL_COMPRESSED_RGBA;
         case ImageFormat::BC3:              return GL_COMPRESSED_RGBA;
@@ -308,8 +308,8 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
         #endif
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
-        case ImageFormat::Stencil:          return GL_STENCIL_INDEX;
         #ifdef LLGL_OPENGL
+        case ImageFormat::Stencil:          return GL_STENCIL_INDEX;
         case ImageFormat::BC1:              return GL_COMPRESSED_RGBA;
         case ImageFormat::BC2:              return GL_COMPRESSED_RGBA;
         case ImageFormat::BC3:              return GL_COMPRESSED_RGBA;
@@ -1039,7 +1039,9 @@ bool IsDepthStencilFormat(GLenum internalFormat)
         case GL_DEPTH24_STENCIL8:
         case GL_DEPTH_STENCIL:
         case GL_DEPTH32F_STENCIL8:
+        #ifdef LLGL_OPENGL
         case GL_STENCIL_INDEX:
+        #endif
         case GL_STENCIL_INDEX8:
             return true;
         default:

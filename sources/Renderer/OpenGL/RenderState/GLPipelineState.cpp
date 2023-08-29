@@ -129,10 +129,12 @@ static GLuint GetUniformWordSize(GLenum type)
         case GL_FLOAT_VEC2:         return 2;
         case GL_FLOAT_VEC3:         return 3;
         case GL_FLOAT_VEC4:         return 4;
+        #ifdef LLGL_OPENGL
         case GL_DOUBLE:             return 1*2;
         case GL_DOUBLE_VEC2:        return 2*2;
         case GL_DOUBLE_VEC3:        return 3*2;
         case GL_DOUBLE_VEC4:        return 4*2;
+        #endif // /LLGL_OPENGL
         case GL_INT:                return 1;
         case GL_INT_VEC2:           return 2;
         case GL_INT_VEC3:           return 3;
@@ -156,6 +158,7 @@ static GLuint GetUniformWordSize(GLenum type)
         case GL_FLOAT_MAT4x2:       return 4*2;
         case GL_FLOAT_MAT4x3:       return 4*3;
         case GL_FLOAT_MAT4:         return 4*4;
+        #ifdef LLGL_OPENGL
         case GL_DOUBLE_MAT2:        return 2*2*2;
         case GL_DOUBLE_MAT2x3:      return 2*3*2;
         case GL_DOUBLE_MAT2x4:      return 2*4*2;
@@ -165,6 +168,7 @@ static GLuint GetUniformWordSize(GLenum type)
         case GL_DOUBLE_MAT4x2:      return 4*2*2;
         case GL_DOUBLE_MAT4x3:      return 4*3*2;
         case GL_DOUBLE_MAT4:        return 4*4*2;
+        #endif // /LLGL_OPENGL
 
         default:                    return 0;
     }

@@ -920,8 +920,10 @@ void GLShaderProgram::QueryReflection(GLuint program, GLenum shaderStage, Shader
     GLQueryConstantBuffers(program, reflection);
     GLQueryStorageBuffers(program, reflection);
     GLQueryUniforms(program, reflection);
+    #ifdef GL_ARB_compute_shader
     if (shaderStage == GL_COMPUTE_SHADER)
         GLQueryWorkGroupSize(program, reflection);
+    #endif
 }
 
 
