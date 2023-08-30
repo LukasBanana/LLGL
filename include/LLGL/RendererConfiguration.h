@@ -33,7 +33,7 @@ enum class OpenGLContextProfile
 
     /**
     \brief OpenGL ES profile.
-    \todo Not supported yet
+    \note Only supported on: Android and iOS.
     */
     ESProfile,
 };
