@@ -15,6 +15,9 @@ jobs:
     
     runs-on: macos-latest
 
+    env:
+      DEPLOYMENT_TARGET: 13.0
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
@@ -24,15 +27,14 @@ jobs:
     - name: Configure CMake
       run: >
         cmake -S . -B ${{github.workspace}}/iOS-arm64
+        -DCMAKE_SYSTEM_NAME=iOS
+        -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.DEPLOYMENT_TARGET }}
+        -DCMAKE_IOS_INSTALL_COMBINED=ON
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-        -DLLGL_BUILD_RENDERER_OPENGLES3=OFF
+        -DLLGL_BUILD_RENDERER_OPENGLES3=ON
         -DLLGL_BUILD_RENDERER_METAL=ON
         -DLLGL_BUILD_EXAMPLES=OFF
-        -DCMAKE_SYSTEM_NAME=iOS
-        "-DCMAKE_OSX_ARCHITECTURES=arm64"
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
-        -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO
-        -DCMAKE_IOS_INSTALL_COMBINED=ON
 
     - name: Build
       run: cmake --build ${{github.workspace}}/iOS-arm64 --config ${{ matrix.config }}

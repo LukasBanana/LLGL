@@ -880,6 +880,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         
         if(APPLE)
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES")
+            ADD_DEFINE(GLES_SILENCE_DEPRECATION)
         else()
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} EGL)
         endif()

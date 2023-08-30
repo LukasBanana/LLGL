@@ -3,6 +3,7 @@
 SOURCE_DIR="$(dirname $0)"
 OUTPUT_DIR="$SOURCE_DIR/build_ios"
 CLEAR_CACHE=0
+ENABLE_NULL="OFF"
 ENABLE_GLES3="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="OFF"
@@ -25,6 +26,7 @@ print_help()
     echo "  -p, --project-only ........ Build project solution only (no compilation)"
     echo "  -t, --target T ............ Sets deployment target to T (default is 11.0)"
     echo "  -v, --verbose ............. Print additional information"
+    echo "  --null .................... Include Null renderer"
     echo "  --gles .................... Include GLES3 renderer"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
@@ -51,6 +53,8 @@ for ARG in "$@"; do
             READ_TARGET=1
         elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
             VERBOSE=1
+        elif [ "$ARG" = "--null" ]; then
+            ENABLE_NULL="ON"
         elif [ "$ARG" = "--gles" ]; then
             ENABLE_GLES3="ON"
         elif [ "$ARG" = "-no-examples" ]; then
@@ -104,7 +108,7 @@ OPTIONS=(
     -DCMAKE_OSX_DEPLOYMENT_TARGET="$DEPLOYMENT_TARGET"
     -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO
     -DCMAKE_IOS_INSTALL_COMBINED=ON
-    -DLLGL_BUILD_RENDERER_NULL=OFF
+    -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_OPENGLES3=$ENABLE_GLES3
     -DLLGL_BUILD_RENDERER_METAL=ON
     -DLLGL_BUILD_STATIC_LIB=ON
