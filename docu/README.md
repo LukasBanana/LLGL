@@ -8,7 +8,8 @@ The primary build tool for LLGL is [CMake](https://cmake.org/) and while LLGL is
 
 ## Windows
 
-LLGL is compatible with the MSVC toolchian of [Visual Studio](https://visualstudio.microsoft.com/) 2015 and later.
+LLGL is compatible with the MSVC toolchain of [Visual Studio](https://visualstudio.microsoft.com/) 2015 and later.
+To build D3D11 and D3D12 backends, the Windows SDK 10 (10.0.10240.0 or later) is also required.
 
 
 ## macOS
@@ -27,6 +28,10 @@ At least version 12 on *macOS 10.15 Catalina* is required to test the Metal back
 The `BuildLinux.sh` script recognizes several major Linux distributions.
 Use `$ ./BuildLinux.sh -h` in a command prompt for more details.
 See also `scripts/ListMissingPackages.sh` for details about supported OS distributions.
+
+The following libraries are the minimum requirement to build LLGL on Linux:
+- **X11**: `libx11-dev` (Debian), `libx11` (Arch), `libx11-devel` (RedHat)
+- **Xrandr**: `libxrandr-dev` (Debian), `libxrandr` (Arch), `libXrandr-devel` (RedHat)
 
 
 ## MSYS2

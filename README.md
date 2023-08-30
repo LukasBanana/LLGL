@@ -28,7 +28,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | <img src="docu/Icons/windows.svg" height="20" /> Windows | <p>[![MSVC16+ Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_windows.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_windows.yml)</p> <p>[![MSVC14 Build Status](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl)</p> | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A |
 | <img src="docu/Icons/linux.svg" height="20" /> GNU/Linux | [![GNU/Linux Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A |
 | <img src="docu/Icons/macos.svg" height="20" /> macOS | [![macOS Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml) | N/A | N/A | N/A | :heavy_check_mark: | N/A | :heavy_check_mark: |
-| <img src="docu/Icons/ios.svg" height="20" /> iOS | [![iOS Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml) | N/A | N/A | N/A | N/A | :heavy_multiplication_x: | :heavy_check_mark: |
+| <img src="docu/Icons/ios.svg" height="20" /> iOS | [![iOS Build Status](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml) | N/A | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
 | <img src="docu/Icons/android.svg" height="20" /> Android | | N/A | N/A | :heavy_multiplication_x: | N/A | :heavy_check_mark: | N/A |
 
 
@@ -39,6 +39,7 @@ Build scripts are provided for [**CMake**]((https://cmake.org/)).
 ### Windows
 
 [**Visual Studio 2015**](https://visualstudio.microsoft.com/) or later is required to build LLGL on Windows.
+The Windows SDK is also required to build D3D11 and D3D12 backends.
 
 ### macOS, iOS
 
@@ -46,9 +47,7 @@ Build scripts are provided for [**CMake**]((https://cmake.org/)).
 
 ### GNU/Linux
 
-The following development libraries are required to build LLGL on GNU/Linux:
-- **X11**: `libx11-dev`
-- **Xrandr**: `libxrandr-dev`
+LLGL on GNU/Linux requires the development libraries for [X11](https://www.x.org/) and its [Xrandr](https://www.x.org/wiki/Projects/XRandR/) extension (see [docs](docu#gnulinux) for details).
 
 ### Android
 
