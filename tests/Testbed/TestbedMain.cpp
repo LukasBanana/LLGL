@@ -7,6 +7,7 @@
 
 #include "TestbedContext.h"
 #include <string>
+#include <regex>
 
 
 using namespace LLGL;
@@ -19,16 +20,37 @@ static void RunRendererIndependentTests()
     Log::Printf("=============================\n\n");
 }
 
-static void RunTestbedForRenderer(const char* moduleName, int argc, char* argv[])
+static void RunTestbedForRenderer(const char* moduleName, int version, int argc, char* argv[])
 {
-    Log::Printf("Run Testbed: %s\n", moduleName);
+    if (version != 0)
+        Log::Printf("Run Testbed: %s (%d)\n", moduleName, version);
+    else
+        Log::Printf("Run Testbed: %s\n", moduleName);
     Log::Printf("=============================\n");
-    TestbedContext context{ moduleName, argc, argv };
+    TestbedContext context{ moduleName, version, argc, argv };
     context.RunAllTests();
     Log::Printf("=============================\n\n");
 }
 
-static const char* GetRendererModule(const std::string& name)
+struct ModuleAndVersion
+{
+    std::string name;
+    int         version;
+
+    ModuleAndVersion(const char* name, int version = 0) :
+        name    { name    },
+        version { version }
+    {
+    }
+
+    ModuleAndVersion(const std::string& name, int version = 0) :
+        name    { name    },
+        version { version }
+    {
+    }
+};
+
+static ModuleAndVersion GetRendererModule(const std::string& name)
 {
     if (name == "gl" || name == "opengl")
         return "OpenGL";
@@ -42,6 +64,10 @@ static const char* GetRendererModule(const std::string& name)
         return "Direct3D12";
     if (name == "null")
         return "Null";
+    if (std::regex_match(name, std::regex(R"(gl\d{3})")))
+        return ModuleAndVersion{ "OpenGL", std::atoi(name.c_str() + 2) };
+    if (std::regex_match(name, std::regex(R"(opengl\d{3})")))
+        return ModuleAndVersion{ "OpenGL", std::atoi(name.c_str() + 6) };
     return name.c_str();
 }
 
@@ -50,7 +76,7 @@ int main(int argc, char* argv[])
     Log::RegisterCallbackStd();
 
     // Gather all explicitly specified module names
-    std::vector<std::string> enabledModules;
+    std::vector<ModuleAndVersion> enabledModules;
     for (int i = 1; i < argc; ++i)
     {
         if (argv[i][0] != '-')
@@ -58,14 +84,19 @@ int main(int argc, char* argv[])
     }
 
     if (enabledModules.empty())
-        enabledModules = RenderSystem::FindModules();
+    {
+        std::vector<std::string> availableModules = RenderSystem::FindModules();
+        enabledModules.reserve(availableModules.size());
+        for (const std::string& module : availableModules)
+            enabledModules.push_back(module);
+    }
 
     // Run renderer independent tests
     RunRendererIndependentTests();
 
     // Run renderer specific tests
-    for (const std::string& moduleName : enabledModules)
-        RunTestbedForRenderer(moduleName.c_str(), argc - 1, argv + 1);
+    for (const ModuleAndVersion& module : enabledModules)
+        RunTestbedForRenderer(module.name.c_str(), module.version, argc - 1, argv + 1);
 
     #ifdef _WIN32
     system("pause");

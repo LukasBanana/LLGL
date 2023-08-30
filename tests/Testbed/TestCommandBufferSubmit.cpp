@@ -19,8 +19,8 @@ DEF_TEST( CommandBufferSubmit )
 
     const ClearValue clearValues[] =
     {
-        ClearValue{ 0.2f, 1.0f, 0.2f, 1 },
-        ClearValue{ 0.2f, 0.4f, 0.8f, 1 }
+        ClearValue{ 0.2f, 1.0f, 0.2f, 1 }, // Green
+        ClearValue{ 0.2f, 0.4f, 0.8f, 1 }  // Blue
     };
 
     const TextureRegion texRegion{ Offset3D{ 0, 0, 0 }, Extent3D{ 1, 1, 1 } };

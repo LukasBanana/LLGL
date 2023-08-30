@@ -34,7 +34,7 @@ class TestbedContext
 
     public:
 
-        TestbedContext(const char* moduleName, int argc, char* argv[]);
+        TestbedContext(const char* moduleName, int version, int argc, char* argv[]);
 
         void RunAllTests();
 

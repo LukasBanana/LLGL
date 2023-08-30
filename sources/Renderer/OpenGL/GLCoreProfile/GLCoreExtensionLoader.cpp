@@ -305,6 +305,7 @@ static bool DECL_LOADGLEXT_PROC(ARB_shader_objects_30)
     return true;
 }
 
+//TODO: no determined yet when to load this extension
 static bool DECL_LOADGLEXT_PROC(ARB_shader_objects_40)
 {
     LOAD_GLPROC( glUniform1dv         );

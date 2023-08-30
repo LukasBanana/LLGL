@@ -51,13 +51,24 @@ static std::string SanitizePath(std::string path)
     return path;
 }
 
-TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
+static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
+{
+    if (version != 0)
+    {
+        cfg.majorVersion = (version / 100) % 10;
+        cfg.minorVersion = (version /  10) % 10;
+    }
+}
+
+TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
     moduleName { moduleName                                                            },
     outputDir  { SanitizePath(FindOutputDir(argc, argv))                               },
     verbose    { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose") },
     showTiming { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")  },
     fastTest   { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")    }
 {
+    RendererConfigurationOpenGL cfgGL;
+
     RenderSystemDescriptor rendererDesc;
     {
         rendererDesc.moduleName = this->moduleName;
@@ -68,6 +79,14 @@ TestbedContext::TestbedContext(const char* moduleName, int argc, char* argv[]) :
         rendererDesc.profiler   = &profiler;
         rendererDesc.debugger   = &debugger;
         #endif
+
+        if (::strcmp(moduleName, "OpenGL") == 0)
+        {
+            // OpenGL specific configuration
+            ConfigureOpenGL(cfgGL, version);
+            rendererDesc.rendererConfig     = &cfgGL;
+            rendererDesc.rendererConfigSize = sizeof(cfgGL);
+        }
     }
     if ((renderer = RenderSystem::Load(rendererDesc)) != nullptr)
     {
