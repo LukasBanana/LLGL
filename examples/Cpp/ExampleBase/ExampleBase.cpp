@@ -8,6 +8,7 @@
 #include <ExampleBase.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <iostream>
+#include "FileUtils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -119,17 +120,17 @@ ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
 
 
 /*
- * ResizeEventHandler class
+ * WindowEventHandler class
  */
 
-ExampleBase::ResizeEventHandler::ResizeEventHandler(ExampleBase& tutorial, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection) :
-    tutorial_   { tutorial   },
+ExampleBase::WindowEventHandler::WindowEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection) :
+    app_        { app        },
     swapChain_  { swapChain  },
     projection_ { projection }
 {
 }
 
-void ExampleBase::ResizeEventHandler::OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize)
+void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize)
 {
     if (clientAreaSize.width >= 4 && clientAreaSize.height >= 4)
     {
@@ -140,22 +141,51 @@ void ExampleBase::ResizeEventHandler::OnResize(LLGL::Window& sender, const LLGL:
 
         // Update projection matrix
         auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
-        projection_ = tutorial_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
+        projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
         // Notify application about resize event
-        tutorial_.OnResize(clientAreaSize);
+        app_.OnResize(clientAreaSize);
 
         // Re-draw frame
-        if (tutorial_.IsLoadingDone())
-            tutorial_.OnDrawFrame();
+        if (app_.IsLoadingDone())
+            app_.DrawFrame();
     }
 }
 
-void ExampleBase::ResizeEventHandler::OnTimer(LLGL::Window& sender, std::uint32_t timerID)
+void ExampleBase::WindowEventHandler::OnTimer(LLGL::Window& sender, std::uint32_t timerID)
 {
     // Re-draw frame
-    if (tutorial_.IsLoadingDone())
-        tutorial_.OnDrawFrame();
+    if (app_.IsLoadingDone())
+        app_.DrawFrame();
+}
+
+/*
+ * CanvasEventHandler class
+ */
+
+ExampleBase::CanvasEventHandler::CanvasEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection) :
+    app_        { app        },
+    swapChain_  { swapChain  },
+    projection_ { projection }
+{
+}
+
+void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
+{
+    app_.DrawFrame();
+}
+
+void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const LLGL::Extent2D& clientAreaSize)
+{
+    // Update swap buffers
+    swapChain_->ResizeBuffers(clientAreaSize);
+
+    // Update projection matrix
+    auto aspectRatio = static_cast<float>(clientAreaSize.width) / static_cast<float>(clientAreaSize.height);
+    projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
+
+    // Notify application about resize event
+    app_.OnResize(clientAreaSize);
 }
 
 
@@ -163,7 +193,13 @@ void ExampleBase::ResizeEventHandler::OnTimer(LLGL::Window& sender, std::uint32_
  * ExampleBase class
  */
 
+#if defined LLGL_OS_IOS
+std::string ExampleBase::rendererModule_ = "Metal";
+#elif defined LLGL_OS_ANDROID
+std::string ExampleBase::rendererModule_ = "OpenGLES3";
+#else
 std::string ExampleBase::rendererModule_;
+#endif
 
 #ifdef LLGL_OS_ANDROID
 android_app* ExampleBase::androidApp_;
@@ -232,12 +268,23 @@ void ExampleBase::Run()
         #ifdef LLGL_OS_MACOS
         @autoreleasepool
         {
-            OnDrawFrame();
+            DrawFrame();
         }
         #else
-        OnDrawFrame();
+        DrawFrame();
         #endif
     }
+}
+
+void ExampleBase::DrawFrame()
+{
+    // Draw frame in respective example project
+    OnDrawFrame();
+
+    #ifndef LLGL_MOBILE_PLATFORM
+    // Present the result on the screen - cannot be explicitly invoked on moble platforms
+    swapChain->Present();
+    #endif
 }
 
 ExampleBase::ExampleBase(
@@ -335,6 +382,8 @@ ExampleBase::ExampleBase(
     auto rendererName = renderer->GetName();
     canvas.SetTitle(title + " ( " + rendererName + " )");
 
+    canvas.AddEventListener(std::make_shared<CanvasEventHandler>(*this, swapChain, projection));
+
     #else // LLGL_MOBILE_PLATFORM
 
     // Set window title
@@ -358,7 +407,7 @@ ExampleBase::ExampleBase(
     window.SetBehavior(behavior);
 
     // Add window resize listener
-    window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, swapChain, projection));
+    window.AddEventListener(std::make_shared<WindowEventHandler>(*this, swapChain, projection));
 
     // Show window
     window.Show();
@@ -404,6 +453,11 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     {
         // Forward macro definitions
         deviceShaderDesc.defines = defines;
+
+        #ifdef LLGL_OS_IOS
+        // Always load shaders from default library (default.metallib) when compiling for iOS
+        deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
+        #endif
 
         // Forward vertex and fragment attributes
         switch (shaderDesc.type)
@@ -552,9 +606,10 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     int width = 0, height = 0, components = 0;
 
-    stbi_uc* imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, static_cast<int>(formatAttribs.components));
+    const std::string path = FindResourcePath(filename);
+    stbi_uc* imageBuffer = stbi_load(path.c_str(), &width, &height, &components, static_cast<int>(formatAttribs.components));
     if (!imageBuffer)
-        throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
+        throw std::runtime_error("failed to load texture from file: \"" + path + "\"");
 
     // Initialize source image descriptor to upload image data onto hardware texture
     LLGL::SrcImageDescriptor imageDesc;

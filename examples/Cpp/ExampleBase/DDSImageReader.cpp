@@ -6,6 +6,7 @@
  */
 
 #include "DDSImageReader.h"
+#include "FileUtils.h"
 #include <fstream>
 #include <cstdint>
 #include <cstring>
@@ -135,13 +136,14 @@ T ReadValue(std::istream& stream)
 void DDSImageReader::LoadFromFile(const std::string& filename)
 {
     // Open file for reading
-    std::ifstream file(filename, std::ios::binary);
+    const std::string path = FindResourcePath(filename);
+    std::ifstream file(path, std::ios::binary);
     if (!file.good())
-        throw std::runtime_error("failed to load DDS image from file: " + filename);
+        throw std::runtime_error("failed to load DDS image from file: " + path);
 
     // Read magic number
     if (ReadValue<std::int32_t>(file) != ddsMagicNumber)
-        throw std::runtime_error("invalid magic number in DDS image: " + filename);
+        throw std::runtime_error("invalid magic number in DDS image: " + path);
 
     // Rerad DDS header
     DDSHeader header;

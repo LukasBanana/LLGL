@@ -83,6 +83,9 @@ public:
     // Runs the main loop.
     void Run();
 
+    // Draws a frame and presents the result on the screen.
+    void DrawFrame();
+
 protected:
 
     struct TutorialShaderDescriptor
@@ -107,19 +110,37 @@ protected:
 
 private:
 
-    class ResizeEventHandler : public LLGL::Window::EventListener
+    class WindowEventHandler : public LLGL::Window::EventListener
     {
 
         public:
 
-            ResizeEventHandler(ExampleBase& tutorial, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
+            WindowEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
 
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override;
             void OnTimer(LLGL::Window& sender, std::uint32_t timerID) override;
 
         private:
 
-            ExampleBase&        tutorial_;
+            ExampleBase&        app_;
+            LLGL::SwapChain*    swapChain_;
+            Gs::Matrix4f&       projection_;
+
+    };
+
+    class CanvasEventHandler : public LLGL::Canvas::EventListener
+    {
+
+        public:
+
+            CanvasEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
+
+            void OnDraw(LLGL::Canvas& sender) override;
+            void OnResize(LLGL::Canvas& sender, const LLGL::Extent2D& clientAreaSize) override;
+
+        private:
+
+            ExampleBase&        app_;
             LLGL::SwapChain*    swapChain_;
             Gs::Matrix4f&       projection_;
 
@@ -371,6 +392,16 @@ void RunExample(android_app* state)
     void android_main(android_app* state)   \
     {                                       \
         return RunExample<CLASS>(state);    \
+    }
+
+#elif defined LLGL_OS_IOS
+
+extern std::unique_ptr<ExampleBase> InstantiateExample();
+
+#define LLGL_IMPLEMENT_EXAMPLE(CLASS)                       \
+    std::unique_ptr<ExampleBase> InstantiateExample()       \
+    {                                                       \
+        return std::unique_ptr<ExampleBase>(new CLASS());   \
     }
 
 #else // LLGL_OS_*

@@ -181,9 +181,6 @@ private:
         }
         commands->End();
         commandQueue->Submit(*commands);
-
-        // Present the result on the screen
-        swapChain->Present();
     }
 
 };

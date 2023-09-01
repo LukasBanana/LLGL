@@ -200,9 +200,6 @@ private:
 
         // Read stream-output buffer
         //commandQueue->WaitIdle();
-
-        // Present result on the screen
-        swapChain->Present();
     }
 
 };

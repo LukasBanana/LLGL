@@ -275,9 +275,6 @@ private:
         }
         commands->End();
         commandQueue->Submit(*commands);
-
-        // Present result on the screen
-        swapChain->Present();
     }
 
 };

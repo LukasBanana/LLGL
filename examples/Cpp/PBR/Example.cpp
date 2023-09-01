@@ -528,7 +528,6 @@ private:
         commands->End();
 
         commandQueue->Submit(*commands);
-        swapChain->Present();
     }
 
 };

@@ -364,7 +364,6 @@ private:
         measure.Start();
         commandQueue->Submit(*primaryCmdBuffer[swapChain->GetCurrentSwapIndex()]);
         measure.Stop();
-        swapChain->Present();
     }
 
     void OnResize(const LLGL::Extent2D& /*resoluion*/) override

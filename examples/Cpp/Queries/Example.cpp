@@ -313,9 +313,6 @@ private:
             prevPrintTime = currentTime;
             PrintQueryResults();
         }
-
-        // Present result on the screen
-        swapChain->Present();
     }
 
 };

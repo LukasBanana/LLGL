@@ -6,6 +6,7 @@
  */
 
 #include "GeometryUtils.h"
+#include "FileUtils.h"
 #include <fstream>
 #include <stdexcept>
 #include <limits>
@@ -25,9 +26,10 @@ std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
 TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename)
 {
     // Read obj file
-    std::ifstream file(filename);
+    const std::string path = FindResourcePath(filename);
+    std::ifstream file(path);
     if (!file.good())
-        throw std::runtime_error("failed to load model from file: \"" + filename + "\"");
+        throw std::runtime_error("failed to load model from file: \"" + path + "\"");
 
     // Initialize triangle mesh
     TriangleMesh mesh;

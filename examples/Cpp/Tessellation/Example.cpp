@@ -284,9 +284,6 @@ private:
         }
         commands->End();
         commandQueue->Submit(*commands);
-
-        // Present result on the screen
-        swapChain->Present();
     }
 
     void OnDrawFrame() override
