@@ -59,11 +59,14 @@ set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
-set(EXAMPLE_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/Cpp")
-set(EXAMPLE_C99_PROJECTS_DIR "${PROJECT_SOURCE_DIR}/examples/C99")
+set(EXAMPLE_PROJECTS_ROOT_DIR "${PROJECT_SOURCE_DIR}/examples")
+set(EXAMPLE_CPP_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/Cpp")
+set(EXAMPLE_C99_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/C99")
+set(EXAMPLE_IOS_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/iOS")
+set(EXAMPLEBASE_PROJECT_DIR "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase")
 
 
-# === Preprocessor definitions ===
+# === Macros ===
 
 if(LLGL_IOS_PLATFORM OR LLGL_ANDROID_PLATFORM)
     set(LLGL_MOBILE_PLATFORM ON)
@@ -92,82 +95,133 @@ macro(SET_RENDERER_PROJECT_PROPERTIES PROJECT_NAME)
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "LLGL")
 endmacro()
 
-macro(SET_PROJECT_WORKING_DIR TEST_NAME WORKING_DIR)
+macro(SET_PROJECT_WORKING_DIR PROJECT_NAME WORKING_DIR)
     if(WIN32)
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.8.2")
-            set_target_properties(${TEST_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIR}")
+            set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIR}")
         endif()
     elseif(APPLE)
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
-            set_target_properties(${TEST_NAME} PROPERTIES XCODE_GENERATE_SCHEME TRUE XCODE_SCHEME_WORKING_DIRECTORY "${WORKING_DIR}")
+            set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_GENERATE_SCHEME TRUE XCODE_SCHEME_WORKING_DIRECTORY "${WORKING_DIR}")
         endif()
     endif()
 endmacro()
 
-macro(SET_EXAMPLE_PROJECT_WORKING_DIR TEST_NAME)
-    if(${TEST_NAME} MATCHES "Example_C99_+")
-        string(SUBSTRING ${TEST_NAME} 12 -1 TEST_BASE_NAME)
-        SET_PROJECT_WORKING_DIR(${TEST_NAME} "${EXAMPLE_C99_PROJECTS_DIR}/${TEST_BASE_NAME}")
-    elseif(${TEST_NAME} MATCHES "Example_+")
-        string(SUBSTRING ${TEST_NAME} 8 -1 TEST_BASE_NAME)
-        SET_PROJECT_WORKING_DIR(${TEST_NAME} "${EXAMPLE_PROJECTS_DIR}/${TEST_BASE_NAME}")
-    elseif(${TEST_NAME} MATCHES "Test_+")
-        SET_PROJECT_WORKING_DIR(${TEST_NAME} "${PROJECT_SOURCE_DIR}/tests")
-    elseif(${TEST_NAME} MATCHES "Testbed")
-        SET_PROJECT_WORKING_DIR(${TEST_NAME} "${PROJECT_SOURCE_DIR}/tests/Testbed")
+macro(SET_EXAMPLE_PROJECT_WORKING_DIR PROJECT_NAME)
+    if(${PROJECT_NAME} MATCHES "Example_C99_+")
+        string(SUBSTRING ${PROJECT_NAME} 12 -1 TEST_BASE_NAME)
+        SET_PROJECT_WORKING_DIR(${PROJECT_NAME} "${EXAMPLE_C99_PROJECTS_DIR}/${TEST_BASE_NAME}")
+    elseif(${PROJECT_NAME} MATCHES "Example_+")
+        string(SUBSTRING ${PROJECT_NAME} 8 -1 TEST_BASE_NAME)
+        SET_PROJECT_WORKING_DIR(${PROJECT_NAME} "${EXAMPLE_CPP_PROJECTS_DIR}/${TEST_BASE_NAME}")
+    elseif(${PROJECT_NAME} MATCHES "Test_+")
+        SET_PROJECT_WORKING_DIR(${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/tests")
+    elseif(${PROJECT_NAME} MATCHES "Testbed")
+        SET_PROJECT_WORKING_DIR(${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/tests/Testbed")
     endif()
 endmacro()
 
-macro(SET_EXAMPLE_PROJECT_FOLDER TEST_NAME)
-    if(${TEST_NAME} MATCHES "Example_C99_+")
-        set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Examples (C99)")
-    elseif(${TEST_NAME} MATCHES "Example_+")
-        set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Examples")
-    elseif(${TEST_NAME} MATCHES "Test_+" OR ${TEST_NAME} MATCHES "Testbed")
-        set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Tests")
+macro(SET_EXAMPLE_PROJECT_FOLDER PROJECT_NAME)
+    if(${PROJECT_NAME} MATCHES "Example_C99_+")
+        set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples (C99)")
+    elseif(${PROJECT_NAME} MATCHES "Example_+")
+        set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples")
+    elseif(${PROJECT_NAME} MATCHES "Test_+" OR ${PROJECT_NAME} MATCHES "Testbed")
+        set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
     endif()
 endmacro()
 
-macro(ADD_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
+macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
     if(APPLE)
-        add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
+        if(LLGL_IOS_PLATFORM)
+            # iOS Project configurations
+            add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
+
+            string(LENGTH "Example_" PROJECT_BUNDLE_NAME_PREFIX_LEN)
+            string(SUBSTRING ${PROJECT_NAME} ${PROJECT_BUNDLE_NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
+
+            set(RES_FILES "${SRC_FILES}")
+            list(FILTER RES_FILES INCLUDE REGEX ".+\\.(metal|png)")
+            source_group("Resources" FILES ${RES_FILES})
+
+            set_target_properties(
+                ${PROJECT_NAME} PROPERTIES
+                OUTPUT_NAME                         "${PROJECT_BUNDLE_NAME}"
+                MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_NAME}"
+                MACOSX_BUNDLE_LONG_VERSION_STRING   "LLGL-1.0"
+                MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
+                MACOSX_BUNDLE_BUNDLE_VERSION        1.0
+                MACOSX_BUNDLE_ICON_FILE             "AppIcon.png"
+                RESOURCE                            "${RES_FILES}"
+            )
+            target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
+        else()
+            add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
+        endif()
     elseif(LLGL_ANDROID_PLATFORM)
-        add_library(${TEST_NAME} SHARED ${TEST_FILES})
-        target_link_libraries(${TEST_NAME} log)
+        # Android project configuratons
+        add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
+        target_link_libraries(${PROJECT_NAME} ${LIB_FILES} android_native_app_glue log)
     else()
-        add_executable(${TEST_NAME} ${TEST_FILES})
+        add_executable(${PROJECT_NAME} ${SRC_FILES})
     endif()
-    target_link_libraries(${TEST_NAME} ${LIB_FILES})
-    set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-    set_target_properties(${TEST_NAME} PROPERTIES FOLDER "Examples")
-    SET_EXAMPLE_PROJECT_WORKING_DIR(${TEST_NAME})
-    SET_EXAMPLE_PROJECT_FOLDER(${TEST_NAME})
+    target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples")
+    SET_EXAMPLE_PROJECT_WORKING_DIR(${PROJECT_NAME})
+    SET_EXAMPLE_PROJECT_FOLDER(${PROJECT_NAME})
 endmacro()
 
-macro(ADD_C99_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
+macro(ADD_C99_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
     if(APPLE)
-        add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
+        add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
     else()
-        add_executable(${TEST_NAME} ${TEST_FILES})
+        add_executable(${PROJECT_NAME} ${SRC_FILES})
     endif()
-    target_link_libraries(${TEST_NAME} ${LIB_FILES})
-    set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE C DEBUG_POSTFIX "D")
-    SET_EXAMPLE_PROJECT_WORKING_DIR(${TEST_NAME})
-    SET_EXAMPLE_PROJECT_FOLDER(${TEST_NAME})
+    target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C DEBUG_POSTFIX "D")
+    SET_EXAMPLE_PROJECT_WORKING_DIR(${PROJECT_NAME})
+    SET_EXAMPLE_PROJECT_FOLDER(${PROJECT_NAME})
 endmacro()
 
-macro(ADD_MOBILE_EXAMPLE_PROJECT TEST_NAME TEST_FILES LIB_FILES)
-    if(LLGL_IOS_PLATFORM)
-        add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
-        target_link_libraries(${TEST_NAME} ${LIB_FILES})
-    elseif(LLGL_ANDROID_PLATFORM)
-        add_library(${TEST_NAME} SHARED ${TEST_FILES})
-        target_link_libraries(${TEST_NAME} ${LIB_FILES} android_native_app_glue log)
+
+# === Functions ===
+
+function(find_project_source_files PROJECT_NAME OUTPUT_LIST)
+    set(ProjectDir ${EXAMPLE_CPP_PROJECTS_DIR}/${PROJECT_NAME})
+    if(WIN32)
+        file(
+            GLOB ProjectFiles
+            ${ProjectDir}/*.cpp
+            ${ProjectDir}/*.hlsl
+        )
+    elseif(APPLE)
+        if (LLGL_IOS_PLATFORM)
+            file(
+                GLOB ProjectFiles
+                ${ProjectDir}/*.cpp
+                ${ProjectDir}/*.metal
+                ${EXAMPLEBASE_PROJECT_DIR}/iOS/AppIcon.png
+                ${EXAMPLEBASE_PROJECT_DIR}/iOS/LaunchScreen.storyboard
+            )
+        else()
+            file(
+                GLOB ProjectFiles
+                ${ProjectDir}/*.cpp
+                ${ProjectDir}/*.metal
+            )
+        endif()
+    else()
+        file(
+            GLOB ProjectFiles
+            ${ProjectDir}/*.cpp
+        )
     endif()
-    set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-    SET_EXAMPLE_PROJECT_WORKING_DIR(${TEST_NAME})
-    SET_EXAMPLE_PROJECT_FOLDER(${TEST_NAME})
-endmacro()
+    set(${OUTPUT_LIST} ${ProjectFiles} PARENT_SCOPE)
+endfunction()
+
+
+# === Preprocessor definitions ===
 
 if(WIN32)
     ADD_DEFINE(_CRT_SECURE_NO_WARNINGS)
@@ -517,7 +571,6 @@ set(FilesTest_Compute           ${TEST_PROFILES_DIR}/Test_Compute.cpp)
 set(FilesTest_Container         ${TEST_PROFILES_DIR}/Test_Container.cpp)
 set(FilesTest_D3D12             ${TEST_PROFILES_DIR}/Test_D3D12.cpp)
 set(FilesTest_Display           ${TEST_PROFILES_DIR}/Test_Display.cpp)
-set(FilesTest_iOS               ${TEST_PROFILES_DIR}/Test_iOS.mm)
 set(FilesTest_Image             ${TEST_PROFILES_DIR}/Test_Image.cpp)
 set(FilesTest_JIT               ${TEST_PROFILES_DIR}/Test_JIT.cpp)
 set(FilesTest_Metal             ${TEST_PROFILES_DIR}/Test_Metal.cpp)
@@ -531,44 +584,53 @@ set(FilesTest_Window            ${TEST_PROFILES_DIR}/Test_Window.cpp)
 file(GLOB FilesTestbed ${TEST_PROFILES_DIR}/Testbed/*.*)
 
 # Example project files
-file(GLOB FilesExampleBase ${EXAMPLE_PROJECTS_DIR}/ExampleBase/*.*)
+file(GLOB FilesExampleBase ${EXAMPLEBASE_PROJECT_DIR}/*.*)
 
 if(LLGL_ANDROID_PLATFORM)
     set(ANDROID_APP_GLUE_DIR "$ENV{ANDROID_NDK_HOME}/sources/android/native_app_glue")
     set(FilesAndroidNativeAppGlue "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c" "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h")
+elseif(LLGL_IOS_PLATFORM)
+    file(
+        GLOB FilesExampleBaseIOS
+        ${EXAMPLEBASE_PROJECT_DIR}/iOS/*.h
+        ${EXAMPLEBASE_PROJECT_DIR}/iOS/*.mm
+        ${EXAMPLEBASE_PROJECT_DIR}/iOS/*.m
+    )
 endif()
 
 if(APPLE)
-    set_source_files_properties(${EXAMPLE_PROJECTS_DIR}/ExampleBase/ExampleBase.cpp PROPERTIES COMPILE_FLAGS -xobjective-c++)
+    set_source_files_properties(${EXAMPLEBASE_PROJECT_DIR}/ExampleBase.cpp PROPERTIES COMPILE_FLAGS -xobjective-c++)
 endif()
 
-set(FilesExample_HelloTriangle      ${EXAMPLE_PROJECTS_DIR}/HelloTriangle/Example.cpp)
-set(FilesExample_Tessellation       ${EXAMPLE_PROJECTS_DIR}/Tessellation/Example.cpp)
-set(FilesExample_Texturing          ${EXAMPLE_PROJECTS_DIR}/Texturing/Example.cpp)
-set(FilesExample_Queries            ${EXAMPLE_PROJECTS_DIR}/Queries/Example.cpp)
-set(FilesExample_RenderTarget       ${EXAMPLE_PROJECTS_DIR}/RenderTarget/Example.cpp)
-set(FilesExample_MultiContext       ${EXAMPLE_PROJECTS_DIR}/MultiContext/Example.cpp)
-set(FilesExample_BufferArray        ${EXAMPLE_PROJECTS_DIR}/BufferArray/Example.cpp)
-set(FilesExample_ClothPhysics       ${EXAMPLE_PROJECTS_DIR}/ClothPhysics/Example.cpp)
-set(FilesExample_ComputeShader      ${EXAMPLE_PROJECTS_DIR}/ComputeShader/Example.cpp)
-set(FilesExample_Fonts              ${EXAMPLE_PROJECTS_DIR}/Fonts/Example.cpp)
-set(FilesExample_StreamOutput       ${EXAMPLE_PROJECTS_DIR}/StreamOutput/Example.cpp)
-set(FilesExample_Instancing         ${EXAMPLE_PROJECTS_DIR}/Instancing/Example.cpp)
-set(FilesExample_PostProcessing     ${EXAMPLE_PROJECTS_DIR}/PostProcessing/Example.cpp)
-set(FilesExample_Mapping            ${EXAMPLE_PROJECTS_DIR}/Mapping/Example.cpp)
-set(FilesExample_MultiRenderer      ${EXAMPLE_PROJECTS_DIR}/MultiRenderer/Example.cpp)
-set(FilesExample_ShadowMapping      ${EXAMPLE_PROJECTS_DIR}/ShadowMapping/Example.cpp)
-set(FilesExample_UnorderedAccess    ${EXAMPLE_PROJECTS_DIR}/UnorderedAccess/Example.cpp)
-set(FilesExample_MultiThreading     ${EXAMPLE_PROJECTS_DIR}/MultiThreading/Example.cpp)
-set(FilesExample_PBR                ${EXAMPLE_PROJECTS_DIR}/PBR/Example.cpp)
-set(FilesExample_StencilBuffer      ${EXAMPLE_PROJECTS_DIR}/StencilBuffer/Example.cpp)
-set(FilesExample_Animation          ${EXAMPLE_PROJECTS_DIR}/Animation/Example.cpp)
-set(FilesExample_VolumeRendering    ${EXAMPLE_PROJECTS_DIR}/VolumeRendering/Example.cpp)
-set(FilesExample_PrimitiveRestart   ${EXAMPLE_PROJECTS_DIR}/PrimitiveRestart/Example.cpp)
-set(FilesExample_ResourceBinding    ${EXAMPLE_PROJECTS_DIR}/ResourceBinding/Example.cpp)
+find_project_source_files(HelloTriangle     FilesExample_HelloTriangle)
+find_project_source_files(Tessellation      FilesExample_Tessellation)
+find_project_source_files(Texturing         FilesExample_Texturing)
+find_project_source_files(Queries           FilesExample_Queries)
+find_project_source_files(RenderTarget      FilesExample_RenderTarget)
+find_project_source_files(MultiContext      FilesExample_MultiContext)
+find_project_source_files(BufferArray       FilesExample_BufferArray)
+find_project_source_files(ClothPhysics      FilesExample_ClothPhysics)
+find_project_source_files(ComputeShader     FilesExample_ComputeShader)
+find_project_source_files(Fonts             FilesExample_Fonts)
+find_project_source_files(StreamOutput      FilesExample_StreamOutput)
+find_project_source_files(Instancing        FilesExample_Instancing)
+find_project_source_files(PostProcessing    FilesExample_PostProcessing)
+find_project_source_files(Mapping           FilesExample_Mapping)
+find_project_source_files(MultiRenderer     FilesExample_MultiRenderer)
+find_project_source_files(ShadowMapping     FilesExample_ShadowMapping)
+find_project_source_files(UnorderedAccess   FilesExample_UnorderedAccess)
+find_project_source_files(MultiThreading    FilesExample_MultiThreading)
+find_project_source_files(PBR               FilesExample_PBR)
+find_project_source_files(StencilBuffer     FilesExample_StencilBuffer)
+find_project_source_files(Animation         FilesExample_Animation)
+find_project_source_files(VolumeRendering   FilesExample_VolumeRendering)
+find_project_source_files(PrimitiveRestart  FilesExample_PrimitiveRestart)
+find_project_source_files(ResourceBinding   FilesExample_ResourceBinding)
 
 # Mobile example project files
-set(FilesExample_HelloAndroid ${EXAMPLE_PROJECTS_DIR}/HelloAndroid/cpp/Example.cpp)
+set(FilesExample_HelloAndroid ${EXAMPLE_CPP_PROJECTS_DIR}/HelloAndroid/cpp/Example.cpp)
+
+file(GLOB FilesExample_iOS_HelloTriangle ${EXAMPLE_IOS_PROJECTS_DIR}/HelloTriangle/*.*)
 
 
 # === Source group folders ===
@@ -657,6 +719,8 @@ source_group("Sources" FILES ${FilesExampleBase})
 
 if(LLGL_ANDROID_PLATFORM)
     source_group("android_native_app_glue" FILES ${FilesAndroidNativeAppGlue})
+elseif(LLGL_IOS_PLATFORM)
+    source_group("Sources\\iOS" FILES ${FilesExampleBaseIOS})
 endif()
 
 
@@ -667,7 +731,7 @@ include_directories("${PROJECT_INCLUDE_DIR}")
 include(cmake/FindGaussianLib.cmake)
 
 if(LLGL_BUILD_EXAMPLES)
-    include_directories("${PROJECT_SOURCE_DIR}/examples/Cpp/ExampleBase")
+    include_directories("${EXAMPLEBASE_PROJECT_DIR}")
 endif()
 
 
@@ -686,6 +750,12 @@ set(
     ${FilesPlatform}
     ${FilesRenderer}
 )
+
+set(FilesExampleBaseAll ${FilesExampleBase})
+
+if(LLGL_IOS_PLATFORM)
+    set(FilesExampleBaseAll ${FilesExampleBaseAll} ${FilesExampleBaseIOS})
+endif()
 
 if(MSVC)
     set(FilesLLGL ${FilesLLGL} ${FilesMsvcNatvis})
@@ -1018,12 +1088,6 @@ if(WIN32)
 endif()
 
 # Test Projects
-if(APPLE)
-    if(LLGL_BUILD_TESTS AND LLGL_MOBILE_PLATFORM)
-        ADD_EXAMPLE_PROJECT(Test_iOS "${FilesTest_iOS}" "${LLGL_DEPENDENCIES}")
-    endif()
-endif()
-
 if(GaussLib_INCLUDE_DIR)
     # Test Projects
     if(LLGL_BUILD_TESTS AND NOT LLGL_MOBILE_PLATFORM)
@@ -1057,7 +1121,7 @@ if(GaussLib_INCLUDE_DIR)
     # Example Projects
     if(LLGL_BUILD_EXAMPLES)
         # Base project (static lib) for all examples
-        add_library(ExampleBase STATIC ${FilesExampleBase})
+        add_library(ExampleBase STATIC ${FilesExampleBaseAll})
         set_target_properties(ExampleBase PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
         target_link_libraries(ExampleBase "${LLGL_DEPENDENCIES}")
         set_target_properties(ExampleBase PROPERTIES FOLDER "Examples")
@@ -1074,8 +1138,8 @@ if(GaussLib_INCLUDE_DIR)
         if(LLGL_ANDROID_PLATFORM)
             # Android specific examples
             set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
-            ADD_MOBILE_EXAMPLE_PROJECT(Example_HelloAndroid "${FilesExample_HelloAndroid}" "${EXAMPLE_PROJECT_LIBS}")
-        else(LLGL_ANDROID_PLATFORM)
+            ADD_EXAMPLE_PROJECT(Example_HelloAndroid "${FilesExample_HelloAndroid}" "${EXAMPLE_PROJECT_LIBS}")
+        else()
             # Common examples
             ADD_EXAMPLE_PROJECT(Example_Animation           "${FilesExample_Animation}"         "${EXAMPLE_PROJECT_LIBS}")
             ADD_EXAMPLE_PROJECT(Example_BufferArray         "${FilesExample_BufferArray}"       "${EXAMPLE_PROJECT_LIBS}")
@@ -1104,9 +1168,9 @@ if(GaussLib_INCLUDE_DIR)
             
             if (LLGL_BUILD_WRAPPER_C99)
                 # C99 wrapper examples
-                ADD_C99_EXAMPLE_PROJECT(Example_C99_HelloTriangle "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle/HelloTriangle.c" "${LLGL_DEPENDENCIES}")
+                ADD_C99_EXAMPLE_PROJECT(Example_C99_HelloTriangle "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle/HelloTriangle.c" "${EXAMPLE_PROJECT_LIBS}")
             endif(LLGL_BUILD_WRAPPER_C99)
-        endif(LLGL_ANDROID_PLATFORM)
+        endif()
     endif(LLGL_BUILD_EXAMPLES)
 else(GaussLib_INCLUDE_DIR)
     # If GaussianLib is not available, tests and examples cannot be enabled
