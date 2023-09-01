@@ -44,14 +44,14 @@ class LLGL_EXPORT Canvas : public Surface
                 friend class Canvas;
 
                 /**
-                \brief Send when the canvas events are about to be polled. The event listeners receive this event before the canvas itself.
+                \brief Sent when the canvas events are about to be polled. The event listeners receive this event before the canvas itself.
                 \param[in] sender Specifies the sender of this event.
                 \see Canvas::OnProcessEvents
                 */
                 virtual void OnProcessEvents(Canvas& sender);
 
                 /**
-                \brief Send when the canvas is about to quit.
+                \brief Sent when the canvas is about to quit.
                 \param[in] sender Specifies the sender of this event.
                 \param[out] veto Specifies whether to cancel the quit event.
                 If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
@@ -59,6 +59,15 @@ class LLGL_EXPORT Canvas : public Surface
                 \see Canvas::ProcessEvents
                 */
                 virtual void OnQuit(Canvas& sender, bool& veto);
+
+                /**
+                \brief Sent when the canvas must redraw its content.
+                \param[in] sender Specifies the sender of this event.
+                */
+                virtual void OnDraw(Canvas& sender);
+
+                //! Send when the canvas has been resized. This can also happen when the orientation has changed.
+                virtual void OnResize(Canvas& sender, const Extent2D& clientAreaSize);
 
         };
 
@@ -122,6 +131,18 @@ class LLGL_EXPORT Canvas : public Surface
         \see HasQuit
         */
         void PostQuit();
+
+        /**
+        \brief Posts a draw event to all event listeners.
+        \see EventListener::OnDraw
+        */
+        void PostDraw();
+
+        /**
+        \brief Posts a resize event to all event listeners.
+        \see EventListener::OnResize
+        */
+        void PostResize(const Extent2D& clientAreaSize);
 
     protected:
 

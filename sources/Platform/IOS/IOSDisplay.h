@@ -37,6 +37,14 @@ class IOSDisplay : public Display
 
         std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
 
+    public:
+
+        // Returns the native UIScreen object.
+        inline UIScreen* GetNative() const
+        {
+            return screen_;
+        }
+
     private:
 
         UIScreen* screen_ = nullptr;

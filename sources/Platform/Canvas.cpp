@@ -43,6 +43,16 @@ void Canvas::EventListener::OnQuit(Canvas& sender, bool& veto)
     // dummy
 }
 
+void Canvas::EventListener::OnDraw(Canvas& sender)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnResize(Canvas& sender, const Extent2D& clientAreaSize)
+{
+    // dummy
+}
+
 
 /* ----- Window class ----- */
 
@@ -107,6 +117,16 @@ void Canvas::PostQuit()
         }
         pimpl_->quit = canQuit;
     }
+}
+
+void Canvas::PostDraw()
+{
+    FOREACH_LISTENER_CALL( OnDraw(*this) );
+}
+
+void Canvas::PostResize(const Extent2D& clientAreaSize)
+{
+    FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
 }
 
 #undef FOREACH_LISTENER_CALL

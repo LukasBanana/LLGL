@@ -63,12 +63,13 @@ class MTShader final : public Shader
     private:
 
         bool Compile(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
-        bool CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
-        bool CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
+        bool CompileFromLibraryWithSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
+        bool CompileFromLibraryWithData(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
+        bool CompileFromDefaultLibrary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
 
         void BuildInputLayout(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
 
-        bool LoadFunction(const char* entryPoint);
+        bool LoadShaderFunction(const char* entryPoint, NSError* error = nullptr);
 
         bool ReflectComputePipeline(ShaderReflection& reflection) const;
 

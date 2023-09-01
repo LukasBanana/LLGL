@@ -10,8 +10,36 @@
 #include "RenderState/MTRenderPass.h"
 #include "../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include "../../Core/Assertion.h"
 
 #import <QuartzCore/CAMetalLayer.h>
+
+
+@implementation MTSwapChainViewDelegate
+{
+    LLGL::Canvas* canvas_;
+}
+
+-(nonnull instancetype)initWithCanvas:(LLGL::Canvas&)canvas;
+{
+    self = [super init];
+    if (self)
+        canvas_ = &canvas;
+    return self;
+}
+
+- (void)drawInMTKView:(nonnull MTKView *)view
+{
+    if (canvas_)
+        canvas_->PostDraw();
+}
+
+- (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
+{
+    //TODO
+}
+
+@end
 
 
 namespace LLGL
@@ -35,19 +63,20 @@ MTSwapChain::MTSwapChain(
     /* Create MetalKit view */
     #ifdef LLGL_OS_IOS
 
-    //UIView* view = nativeHandle.view;
-    CGRect screenBounds = [UIScreen mainScreen].nativeBounds;
+    LLGL_ASSERT_PTR(nativeHandle.view);
+    UIView* canvasView = nativeHandle.view;
 
-    view_ = [[MTKView alloc] initWithFrame:screenBounds device:device];
+    view_ = [[MTKView alloc] initWithFrame:canvasView.frame device:device];
 
-    if (NSClassFromString(@"MTKView") != nullptr)
-    {
-        CALayer* layer = view_.layer;
-        if (layer != nullptr && [layer isKindOfClass:NSClassFromString(@"CAMetalLayer")])
-        {
-            metalLayer_ = reinterpret_cast<CAMetalLayer*>(layer);
-        }
-    }
+    viewDelegate_ = [[MTSwapChainViewDelegate alloc] initWithCanvas:static_cast<Canvas&>(GetSurface())];
+    [viewDelegate_ mtkView:view_ drawableSizeWillChange:view_.bounds.size];
+    view_.delegate = viewDelegate_;
+
+    view_.translatesAutoresizingMaskIntoConstraints = NO;
+    NSDictionary* viewsDictionary = @{@"mtkView":view_};
+    [canvasView addSubview:view_];
+    [canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
+    [canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
 
     #else
 
@@ -63,8 +92,6 @@ MTSwapChain::MTSwapChain(
     view_.framebufferOnly = NO; //TODO: make this optional with create/bind flag
 
     /* Initialize color and depth buffer */
-    //MTLPixelFormat colorFmt = metalLayer_.pixelFormat;
-
     view_.colorPixelFormat          = renderPass_.GetColorAttachments()[0].pixelFormat;
     view_.depthStencilPixelFormat   = renderPass_.GetDepthStencilFormat();
     view_.sampleCount               = renderPass_.GetSampleCount();

@@ -6,66 +6,62 @@
  */
 
 #include "IOSCanvas.h"
+#include "IOSDisplay.h"
 #include "../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
+#import <MetalKit/MetalKit.h>
 
-#if 0
 
-@interface AppDelegate : NSObject
+// VIEW CONTROLLER
 
-- (id)initWithWindow:(LLGL::IOSCanvas*)window isResizable:(BOOL)resizable;
-- (BOOL)isQuit;
-
-@end
-
-@implementation AppDelegate
+static LLGL::Extent2D GetScaledResolution(CGSize size, CGFloat screenScale = 1.0f)
 {
-    LLGL::IOSCanvas*    window_;
-    BOOL                resizable_;
-    BOOL                quit_;
+    LLGL::Extent2D resolution;
+    resolution.width    = static_cast<std::uint32_t>(size.width  * screenScale);
+    resolution.height   = static_cast<std::uint32_t>(size.height * screenScale);
+    return resolution;
 }
 
-- (id)initWithWindow:(LLGL::IOSCanvas*)window isResizable:(BOOL)resizable
+static LLGL::Extent2D GetScaledResolutionByDisplayScale(CGSize size, const LLGL::Display* display)
+{
+    if (display != nullptr)
+    {
+        UIScreen* screen = static_cast<const LLGL::IOSDisplay*>(display)->GetNative();
+        return GetScaledResolution(size, [screen nativeScale]);
+    }
+    return GetScaledResolution(size);
+}
+
+@interface IOSCanvasViewController : UIViewController
+@end
+
+@implementation IOSCanvasViewController
+{
+    LLGL::IOSCanvas* canvas_;
+}
+
+- (nonnull instancetype)initWithCanvas:(nonnull LLGL::IOSCanvas*)canvas;
 {
     self = [super init];
-
-    window_     = window;
-    resizable_  = resizable;
-    quit_       = FALSE;
-
-    return (self);
+    if (self)
+        canvas_ = canvas;
+    return self;
 }
 
-- (void)windowWillClose:(id)sender
+- (void)viewDidLoad
 {
-    window_->PostQuit();
-    quit_ = TRUE;
+    [super viewDidLoad];
 }
 
-- (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator;
 {
-    if (resizable_)
-        return frameSize;
-    else
-        return [sender frame].size;
-}
-
-- (void)windowDidResize:(NSNotification*)notification
-{
-    NSWindow* sender = [notification object];
-    NSRect frame = [sender frame];
-    window_->PostResize({ (int)frame.size.width, (int)frame.size.height });
-}
-
-- (BOOL) isQuit
-{
-    return (quit_);
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    const LLGL::Extent2D resolution = GetScaledResolutionByDisplayScale(size, canvas_->FindResidentDisplay());
+    canvas_->PostResize(resolution);
 }
 
 @end
-
-#endif
 
 
 namespace LLGL
@@ -86,31 +82,55 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
     return MakeUnique<IOSCanvas>(desc);
 }
 
+static IOSCanvasViewController* CreateIOSCanvasViewController(IOSCanvas* canvas)
+{
+    IOSCanvasViewController* viewCtrl = [[IOSCanvasViewController alloc] initWithCanvas:canvas];
+    return viewCtrl;
+}
+
+static UIWindow* CreateIOSUIWindow(UIViewController* viewCtrl)
+{
+    CGRect mainScreenBounds = [[UIScreen mainScreen] bounds];
+
+    UIWindow* wnd = [[UIWindow alloc] initWithFrame:mainScreenBounds];
+
+    //UINavigationController* navCtrl = [[UINavigationController alloc] initWithRootViewController:viewCtrl];
+
+    wnd.backgroundColor = [UIColor greenColor]; //TEST
+
+    wnd.rootViewController = viewCtrl;
+    [wnd makeKeyAndVisible];
+
+    return wnd;
+}
+
 IOSCanvas::IOSCanvas(const CanvasDescriptor& desc) :
-    desc_           { desc                       },
-    viewController_ { CreateViewController(desc) },
-    view_           { CreateView(desc)           }
+    desc_           { desc                                },
+    viewController_ { CreateIOSCanvasViewController(this) },
+    wnd_            { CreateIOSUIWindow(viewController_)  }
 {
 }
 
 IOSCanvas::~IOSCanvas()
 {
+    [viewController_ release];
+    [wnd_ release];
 }
 
 bool IOSCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        //auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
-        //handle->window = wnd_;
-        //return true;
+        NativeHandle* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle->view = wnd_;
+        return true;
     }
     return false;
 }
 
 Extent2D IOSCanvas::GetContentSize() const
 {
-    return { 0u, 0u }; //todo...
+    return GetScaledResolutionByDisplayScale(wnd_.bounds.size, FindResidentDisplay());
 }
 
 void IOSCanvas::SetTitle(const UTF8String& title)
@@ -131,16 +151,6 @@ UTF8String IOSCanvas::GetTitle() const
 void IOSCanvas::OnProcessEvents()
 {
     //TODO...
-}
-
-UIViewController* IOSCanvas::CreateViewController(const CanvasDescriptor& desc)
-{
-    return nullptr;
-}
-
-UIView* IOSCanvas::CreateView(const CanvasDescriptor& desc)
-{
-    return nullptr;
 }
 
 void IOSCanvas::ResetPixelFormat()

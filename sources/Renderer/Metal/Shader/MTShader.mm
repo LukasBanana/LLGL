@@ -99,10 +99,12 @@ NSUInteger MTShader::GetNumPatchControlPoints() const
 
 bool MTShader::Compile(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
 {
-    if (IsShaderSourceCode(shaderDesc.sourceType))
-        return CompileSource(device, shaderDesc);
+    if ((shaderDesc.flags & ShaderCompileFlags::DefaultLibrary) != 0)
+        return CompileFromDefaultLibrary(device, shaderDesc);
+    else if (IsShaderSourceCode(shaderDesc.sourceType))
+        return CompileFromLibraryWithSource(device, shaderDesc);
     else
-        return CompileBinary(device, shaderDesc);
+        return CompileFromLibraryWithData(device, shaderDesc);
 }
 
 static NSString* ToNSString(const char* s)
@@ -121,7 +123,13 @@ static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc
     return opt;
 }
 
-bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
+bool MTShader::CompileFromDefaultLibrary(id<MTLDevice> device, const ShaderDescriptor &shaderDesc)
+{
+    library_ = [device newDefaultLibrary];
+    return LoadShaderFunction(shaderDesc.entryPoint);
+}
+
+bool MTShader::CompileFromLibraryWithSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
 {
     /* Get source */
     NSString* sourceString = nil;
@@ -160,17 +168,14 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     [opt release];
 
     /* Load shader function with entry point */
-    const bool success = LoadFunction(shaderDesc.entryPoint);
-
-    const StringView errorText = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
-    report_.Reset(errorText, !success);
+    const bool success = LoadShaderFunction(shaderDesc.entryPoint, error);
     [error release];
 
     return success;
 }
 
 //TODO: this is untested!!!
-bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
+bool MTShader::CompileFromLibraryWithData(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
 {
     /* Get source */
     dispatch_data_t dispatchData = nil;
@@ -209,10 +214,7 @@ bool MTShader::CompileBinary(id<MTLDevice> device, const ShaderDescriptor& shade
     [dispatchData release];
 
     /* Load shader function with entry point */
-    const bool success = LoadFunction(shaderDesc.entryPoint);
-
-    const StringView errorText = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
-    report_.Reset(errorText, !success);
+    const bool success = LoadShaderFunction(shaderDesc.entryPoint, error);
     [error release];
 
     return success;
@@ -270,10 +272,11 @@ void MTShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
     }
 }
 
-bool MTShader::LoadFunction(const char* entryPoint)
+bool MTShader::LoadShaderFunction(const char* entryPoint, NSError* error)
 {
     bool result = false;
 
+    /* Load shader function from libary */
     if (library_)
     {
         NSString* entryPointStr = ToNSString(entryPoint);
@@ -284,6 +287,13 @@ bool MTShader::LoadFunction(const char* entryPoint)
             result = true;
 
         [entryPointStr release];
+    }
+
+    /* Post report if an error occurred */
+    if (error != nullptr)
+    {
+        const StringView errorText = [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding];
+        report_.Reset(errorText, !result);
     }
 
     return result;

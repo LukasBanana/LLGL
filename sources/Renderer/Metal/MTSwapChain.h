@@ -13,8 +13,16 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/SwapChain.h>
+#include <LLGL/Canvas.h>
 #include <LLGL/Platform/Platform.h>
 #include "RenderState/MTRenderPass.h"
+
+
+@interface MTSwapChainViewDelegate : NSObject <MTKViewDelegate>
+
+-(nonnull instancetype)initWithCanvas:(LLGL::Canvas&)canvas;
+
+@end
 
 
 namespace LLGL
@@ -75,9 +83,7 @@ class MTSwapChain final : public SwapChain
     private:
 
         MTKView*                    view_                       = nullptr;
-        #ifdef LLGL_OS_IOS
-        CAMetalLayer*               metalLayer_                 = nullptr;
-        #endif
+        MTSwapChainViewDelegate*    viewDelegate_               = nullptr;
 
         MTLRenderPassDescriptor*    nativeMutableRenderPass_    = nullptr; // Cannot be id<>
         MTRenderPass                renderPass_;

@@ -38,22 +38,22 @@ Display* Display::GetPrimary()
 
 bool Display::ShowCursor(bool show)
 {
-    return false;
+    return false; // dummy
 }
 
 bool Display::IsCursorShown()
 {
-    return false;
+    return false; // dummy
 }
 
 bool Display::SetCursorPosition(const Offset2D& position)
 {
-    return false;
+    return false; // dummy
 }
 
 Offset2D Display::GetCursorPosition()
 {
-    return { 0, 0 };
+    return { 0, 0 }; // dummy
 }
 
 
@@ -99,7 +99,7 @@ bool IOSDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
     return false;
 }
 
-static Extent2D GetScaledScreenResolution(CGSize size, CGFloat screenScale)
+static Extent2D GetScaledScreenResolution(CGSize size, CGFloat screenScale = 1.0f)
 {
     Extent2D resolution;
     resolution.width    = static_cast<std::uint32_t>(size.width  * screenScale);
@@ -109,10 +109,8 @@ static Extent2D GetScaledScreenResolution(CGSize size, CGFloat screenScale)
 
 static void ConvertUIScreenMode(DisplayModeDescriptor& dst, UIScreen* screen, UIScreenMode* mode)
 {
-    CGFloat     scale   = 1.0f;//[screen_ nativeScale];
-    NSInteger   maxFPS  = [screen maximumFramesPerSecond];
-
-    dst.resolution  = GetScaledScreenResolution(mode.size, scale);
+    const NSInteger maxFPS = [screen maximumFramesPerSecond];
+    dst.resolution  = GetScaledScreenResolution(mode.size);
     dst.refreshRate = static_cast<std::uint32_t>(maxFPS);
 }
 

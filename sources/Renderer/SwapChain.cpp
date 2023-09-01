@@ -166,6 +166,9 @@ void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, cons
         }
         pimpl_->surface = Canvas::Create(canvasDesc);
 
+        /* Take resolution from canvas since mobile platforms assign resolution per app */
+        pimpl_->resolution = pimpl_->surface->GetContentSize();
+
         #else
 
         /* Create new window for this swap-chain */

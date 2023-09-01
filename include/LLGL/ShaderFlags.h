@@ -57,6 +57,7 @@ enum class ShaderSourceType
 /**
 \brief Shader compilation flags enumeration.
 \see ShaderDescriptor::flags
+\todo Rename to CompileFlags.
 */
 struct ShaderCompileFlags
 {
@@ -145,6 +146,15 @@ struct ShaderCompileFlags
         \note Only supported with: GLSL.
         */
         SeparateShader          = (1 << 7),
+
+        /**
+        \brief Specifies whether to load the shader from the \c default.metallib file.
+        \remarks This is only used for Metal and primarily for iOS (but also available on macOS).
+        The default Xcode configuration will compile all Metal shaders into a single library named \c default.metallib.
+        All shader entry points must have unique names or linker errors will occur.
+        \note Only supported with: Metal.
+        */
+        DefaultLibrary          = (1 << 8),
     };
 };
 
