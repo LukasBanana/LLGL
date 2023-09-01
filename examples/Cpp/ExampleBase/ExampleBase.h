@@ -23,7 +23,7 @@
 #include <random>
 #include <map>
 #include <type_traits>
-#include "GeometryUtility.h"
+#include "GeometryUtils.h"
 #include "Stopwatch.h"
 
 #ifdef LLGL_OS_ANDROID
