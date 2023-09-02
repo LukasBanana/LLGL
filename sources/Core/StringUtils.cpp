@@ -10,16 +10,28 @@
 #include <codecvt>
 #include <locale>
 #include <stdio.h>
+#include "../Platform/Path.h"
 
 
 namespace LLGL
 {
 
 
+// Returns the specified filename either unchanged or as absolute path for mobile platforms.
+static UTF8String GetPlatformAppropriateFilename(const char* filename)
+{
+    #ifdef LLGL_MOBILE_PLATFORM
+    return Path::GetAbsolutePath(filename);
+    #else
+    return filename;
+    #endif
+}
+
 LLGL_EXPORT std::string ReadFileString(const char* filename)
 {
-    // Read file content into string
-    std::ifstream file{ filename };
+    /* Read file content into string */
+    const UTF8String path = GetPlatformAppropriateFilename(filename);
+    std::ifstream file{ path.c_str() };
     if (file.good())
     {
         return std::string
@@ -33,19 +45,20 @@ LLGL_EXPORT std::string ReadFileString(const char* filename)
 
 LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
 {
-    // Read file content into buffer
-    std::ifstream file{ filename, (std::ios_base::binary | std::ios_base::ate) };
+    /* Read file content into buffer */
+    const UTF8String path = GetPlatformAppropriateFilename(filename);
+    std::ifstream file{ path.c_str(), (std::ios_base::binary | std::ios_base::ate) };
+    if (file.good())
+    {
+        const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
+        std::vector<char> buffer(fileSize);
 
-    if (!file.good())
-        throw std::runtime_error("failed to open file: " + std::string(filename));
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
 
-    auto fileSize = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-
-    return buffer;
+        return buffer;
+    }
+    return {};
 }
 
 LLGL_EXPORT std::string ToUTF8String(const std::wstring& utf16)
