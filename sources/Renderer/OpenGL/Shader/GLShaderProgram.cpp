@@ -156,7 +156,11 @@ GLShaderProgram::GLShaderProgram(
     if (orderedShaders.fragmentShader == nullptr)
     {
         const GLchar* nullFragmentShaderSource =
+            #ifdef LLGL_OPENGLES3
+            "#version 300 es\n"
+            #else
             "#version 330 core\n"
+            #endif
             "void main() {}\n"
         ;
         const GLuint nullFragmentShader = g_nullFragmentShader.GetOrCreate(GL_FRAGMENT_SHADER, nullFragmentShaderSource);

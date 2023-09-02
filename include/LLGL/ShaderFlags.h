@@ -354,7 +354,7 @@ struct ShaderDescriptor
     \remarks Here are a few examples:
     - For HLSL: \c "vs_5_0" specifies vertex shader model 5.0.
     - For Metal: \c "2.1" specifies shader version 2.1.
-    \note Only supported with: HLSL, Metal.
+    - For GLSL: \c "320 es" specifies that the GLSL version must be patched to "#version 300 es".
     \see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx
     */
     const char*                 profile         = nullptr;

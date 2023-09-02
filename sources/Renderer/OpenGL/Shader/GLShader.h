@@ -105,7 +105,8 @@ class GLShader : public Shader
             const char*                 source,
             const ShaderMacro*          defines,
             bool                        pragmaOptimizeOff   = false,
-            const char*                 vertexTransformStmt = nullptr
+            const char*                 vertexTransformStmt = nullptr,
+            const char*                 versionOverride     = nullptr
         );
 
     protected:

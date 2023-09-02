@@ -54,6 +54,7 @@ enum class SamplerAddressMode
     \brief Sample border color for texture coordinates that are outside the interval [0, 1].
     \image html SamplerAddressMode_Border.png
     \image latex SamplerAddressMode_Border.png "SamplerAddressMode::Border example" width=0.3\textwidth
+    \note Only supported on: desktop platforms (Windows, Linux, macOS).
     */
     Border,
 
@@ -61,6 +62,7 @@ enum class SamplerAddressMode
     \brief Takes the absolute value of the texture coordinates and then clamps it to the interval [0, 1], i.e. mirror around 0.
     \image html SamplerAddressMode_MirrorOnce.png
     \image latex SamplerAddressMode_MirrorOnce.png "SamplerAddressMode::MirrorOnce example" width=0.3\textwidth
+    \note Only supported on: desktop platforms (Windows, Linux, macOS).
     */
     MirrorOnce,
 };

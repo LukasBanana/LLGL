@@ -85,6 +85,18 @@ static bool SkipComment(const char*& s)
     return false;
 }
 
+// Returns the source position that starts with the '#' character beginning the search from 'off' backwards.
+static std::size_t FindStartOfDirective(const char* source, std::size_t off)
+{
+    do
+    {
+        if (source[off] == '#')
+            return off;
+    }
+    while (off-- > 0);
+    return std::string::npos;
+}
+
 // Returns the source position after the '#version'-directive. This is always at the beginning of a new line.
 static std::size_t FindEndOfVersionDirective(const char* source)
 {
@@ -131,6 +143,29 @@ GLShaderSourcePatcher::GLShaderSourcePatcher(const char* source) :
     const auto posAfterVersion = FindEndOfVersionDirective(source);
     if (posAfterVersion != std::string::npos)
         statementInsertPos_ = posAfterVersion;
+}
+
+static std::string GenerateGlslVersionDirective(const char* version)
+{
+    std::string s = "#version ";
+    s += version;
+    s += '\n';
+    return s;
+}
+
+void GLShaderSourcePatcher::OverrideVersion(const char* version)
+{
+    /* First remove current '#version'-directive (in case new one must be at first source line) */
+    const std::size_t startOfVersionDirective = FindStartOfDirective(source_.c_str(), statementInsertPos_);
+    if (startOfVersionDirective != std::string::npos)
+        source_.erase(startOfVersionDirective, statementInsertPos_ - startOfVersionDirective);
+
+    /* Generate new '#version'-directive */
+    const std::string newVersionDirective = GenerateGlslVersionDirective(version);
+    source_.insert(0, newVersionDirective);
+
+    /* Replace old insertion point for statements after new directive */
+    ResetInsertionPoints(newVersionDirective.size());
 }
 
 void GLShaderSourcePatcher::AddDefines(const ShaderMacro* defines)
@@ -300,11 +335,7 @@ void GLShaderSourcePatcher::InsertAfterVersionDirective(const std::string& state
     source_.insert(statementInsertPos_, statement);
 
     /* Move source location for next insertion at the end of newly added code */
-    statementInsertPos_ += statement.size();
-
-    /* Move source loation of previously cached entry point by the length of newly added code */
-    if (entryPointStartPos_ != std::string::npos)
-        entryPointStartPos_ += statement.size();
+    ResetInsertionPoints(statementInsertPos_ + statement.size());
 }
 
 static std::size_t FindEntryPointSourceLocation(const char* source, std::size_t start)
@@ -358,6 +389,22 @@ void GLShaderSourcePatcher::CacheEntryPointSourceLocation()
 {
     if (entryPointStartPos_ == std::string::npos)
         entryPointStartPos_ = FindEntryPointSourceLocation(GetSource(), statementInsertPos_);
+}
+
+void GLShaderSourcePatcher::ResetInsertionPoints(std::size_t newStatementInsertPos)
+{
+    if (newStatementInsertPos > statementInsertPos_)
+    {
+        if (entryPointStartPos_ != std::string::npos)
+            entryPointStartPos_ += (newStatementInsertPos - statementInsertPos_);
+        statementInsertPos_ = newStatementInsertPos;
+    }
+    else if (newStatementInsertPos < statementInsertPos_)
+    {
+        if (entryPointStartPos_ != std::string::npos)
+            entryPointStartPos_ -= (statementInsertPos_ - newStatementInsertPos);
+        statementInsertPos_ = newStatementInsertPos;
+    }
 }
 
 

@@ -129,7 +129,14 @@ void GLShader::PatchShaderSource(
     const bool pragmaOptimizeOff = ((shaderFlags & ShaderCompileFlags::NoOptimization) != 0);
 
     /* Get source code */
-    GLShader::PatchShaderSourceWithOptions(sourceCallback, shaderSource, shaderDesc.defines, pragmaOptimizeOff, vertexTransformStmt);
+    GLShader::PatchShaderSourceWithOptions(
+        /*sourceCallback:*/         sourceCallback,
+        /*source:*/                 shaderSource,
+        /*defines:*/                shaderDesc.defines,
+        /*pragmaOptimizeOff:*/      pragmaOptimizeOff,
+        /*vertexTransformStmt:*/    vertexTransformStmt,
+        /*versionOverride:*/        shaderDesc.profile
+    );
 }
 
 void GLShader::PatchShaderSourceWithOptions(
@@ -137,15 +144,19 @@ void GLShader::PatchShaderSourceWithOptions(
     const char*                 source,
     const ShaderMacro*          defines,
     bool                        pragmaOptimizeOff,
-    const char*                 vertexTransformStmt)
+    const char*                 vertexTransformStmt,
+    const char*                 versionOverride)
 {
     if (sourceCallback)
     {
-        const bool hasDefines = (defines != nullptr && defines->name != nullptr);
-        const bool hasVertexStmt = (vertexTransformStmt != nullptr);
-        if (hasDefines || pragmaOptimizeOff || hasVertexStmt)
+        const bool hasDefines           = (defines != nullptr && defines->name != nullptr);
+        const bool hasVertexStmt        = (vertexTransformStmt != nullptr);
+        const bool hasVersionOverride   = (versionOverride != nullptr && *versionOverride != '\0');
+        if (hasDefines || pragmaOptimizeOff || hasVertexStmt || hasVersionOverride)
         {
             GLShaderSourcePatcher patcher{ source };
+            if (hasVersionOverride)
+                patcher.OverrideVersion(versionOverride);
             patcher.AddDefines(defines);
             if (pragmaOptimizeOff)
                 patcher.AddPragmaDirective("optimize(off)");

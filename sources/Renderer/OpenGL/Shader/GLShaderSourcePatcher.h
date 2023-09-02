@@ -27,6 +27,9 @@ class GLShaderSourcePatcher
         // Initialies the patcher with the specified shader source.
         GLShaderSourcePatcher(const char* source);
 
+        // Overrides the version directive (or adds it if it's missing), e.g "300 es" turns into "#version 300 es".
+        void OverrideVersion(const char* version);
+
         // Adds the specifies macro definitions to the shader source.
         void AddDefines(const ShaderMacro* defines);
 
@@ -53,6 +56,9 @@ class GLShaderSourcePatcher
 
         // Finds and stores the source location of the entry point, i.e. points to the first character after of the entry point declaration "void main()".
         void CacheEntryPointSourceLocation();
+
+        // Updates the source insertion points.
+        void ResetInsertionPoints(std::size_t newStatementInsertPos);
 
     private:
 
