@@ -8,6 +8,7 @@
 #include "MTRenderTarget.h"
 #include "MTTexture.h"
 #include "../MTTypes.h"
+#include "../MTDevice.h"
 #include "../../CheckedCast.h"
 #include "../../RenderTargetUtils.h"
 #include "../../../Core/Exception.h"
@@ -34,7 +35,7 @@ static void CopyMTLAttachmentDesc(MTLRenderPassAttachmentDescriptor* dst, const 
 MTRenderTarget::MTRenderTarget(id<MTLDevice> device, const RenderTargetDescriptor& desc) :
     resolution_          { desc.resolution                 },
     numColorAttachments_ { NumActiveColorAttachments(desc) },
-    renderPass_          { desc                            }
+    renderPass_          { device, desc                    }
 {
     /* Allocate native render pass descriptor */
     nativeRenderPass_ = [[MTLRenderPassDescriptor alloc] init];
@@ -232,6 +233,7 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
     MTLPixelFormat  pixelFormat,
     NSUInteger      sampleCount)
 {
+    sampleCount = MTDevice::FindSuitableSampleCount(device, static_cast<std::uint32_t>(sampleCount));
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
     {
         texDesc.textureType     = (sampleCount > 1 ? MTLTextureType2DMultisample : MTLTextureType2D);

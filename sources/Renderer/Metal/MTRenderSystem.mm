@@ -222,7 +222,7 @@ std::uint32_t MTRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std:
 
 RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& renderPassDesc)
 {
-    return renderPasses_.emplace<MTRenderPass>(renderPassDesc);
+    return renderPasses_.emplace<MTRenderPass>(device_, renderPassDesc);
 }
 
 void MTRenderSystem::Release(RenderPass& renderPass)

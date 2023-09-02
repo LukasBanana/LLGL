@@ -15,6 +15,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include "../MTTypes.h"
 #include "../Texture/MTTexture.h"
+#include "../MTDevice.h"
 #include "../../CheckedCast.h"
 #include "../../TextureUtils.h"
 #include "../../RenderPassUtils.h"
@@ -25,6 +26,11 @@
 namespace LLGL
 {
 
+
+static NSUInteger GetMTRenderPassSampleCount(id<MTLDevice> device, std::uint32_t sampleCount)
+{
+    return MTDevice::FindSuitableSampleCount(device, static_cast<NSUInteger>(GetClampedSamples(sampleCount)));
+}
 
 static void ConvertAttachmentFormat(MTAttachmentFormat& dst, const AttachmentFormatDescriptor& src)
 {
@@ -46,8 +52,8 @@ static MTAttachmentFormat MakeMTAttachmentFormat(const Format format)
 }
 
 // Initializer when a custom render pass is created
-MTRenderPass::MTRenderPass(const RenderPassDescriptor& desc) :
-    sampleCount_ { GetClampedSamples(desc.samples) }
+MTRenderPass::MTRenderPass(id<MTLDevice> device, const RenderPassDescriptor& desc) :
+    sampleCount_ { GetMTRenderPassSampleCount(device, desc.samples) }
 {
     const auto numColorAttachments = NumEnabledColorAttachments(desc);
     LLGL_ASSERT(numColorAttachments <= LLGL_MAX_NUM_COLOR_ATTACHMENTS);
@@ -59,8 +65,8 @@ MTRenderPass::MTRenderPass(const RenderPassDescriptor& desc) :
 }
 
 // Default initializer
-MTRenderPass::MTRenderPass(const RenderTargetDescriptor& desc) :
-    sampleCount_ { GetClampedSamples(desc.samples) }
+MTRenderPass::MTRenderPass(id<MTLDevice> device, const RenderTargetDescriptor& desc) :
+    sampleCount_ { GetMTRenderPassSampleCount(device, desc.samples) }
 {
     if (auto renderPass = desc.renderPass)
     {
@@ -124,22 +130,23 @@ static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBi
         #ifdef LLGL_OS_MACOS
         if (depthBits == 24 && device != nil && device.depth24Stencil8PixelFormatSupported)
             return MTLPixelFormatDepth24Unorm_Stencil8;
-        else
         #endif
-            return MTLPixelFormatDepth32Float_Stencil8;
+        return MTLPixelFormatDepth32Float_Stencil8;
     }
     else
     {
-        if (depthBits == 16)
-            return MTLPixelFormatDepth16Unorm;
-        else
-            return MTLPixelFormatDepth32Float;
+        if (@available(iOS 13.0, *))
+        {
+            if (depthBits == 16)
+                return MTLPixelFormatDepth16Unorm;
+        }
+        return MTLPixelFormatDepth32Float;
     }
 }
 
 // Swap-chain initializer
-MTRenderPass::MTRenderPass(const SwapChainDescriptor& desc, id<MTLDevice> device) :
-    sampleCount_ { GetClampedSamples(desc.samples) }
+MTRenderPass::MTRenderPass(id<MTLDevice> device, const SwapChainDescriptor& desc) :
+    sampleCount_ { GetMTRenderPassSampleCount(device, desc.samples) }
 {
     const MTLPixelFormat colorFormat        = GetColorMTLPixelFormat(desc.colorBits);
     const MTLPixelFormat depthStencilFormat = GetDepthStencilMTLPixelFormat(desc.depthBits, desc.stencilBits, device);

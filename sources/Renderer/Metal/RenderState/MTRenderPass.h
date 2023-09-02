@@ -38,9 +38,9 @@ class MTRenderPass final : public RenderPass
 
     public:
 
-        MTRenderPass(const RenderPassDescriptor& desc);
-        MTRenderPass(const RenderTargetDescriptor& desc);
-        MTRenderPass(const SwapChainDescriptor& desc, id<MTLDevice> device = nil);
+        MTRenderPass(id<MTLDevice> device, const RenderPassDescriptor& desc);
+        MTRenderPass(id<MTLDevice> device, const RenderTargetDescriptor& desc);
+        MTRenderPass(id<MTLDevice> device, const SwapChainDescriptor& desc);
 
     public:
 
