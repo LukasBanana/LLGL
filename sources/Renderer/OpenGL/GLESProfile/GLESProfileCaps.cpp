@@ -217,69 +217,11 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits, GLint version)
 {
-    #if 0 //TODO: determine texture limits without proxy textures for GLES
-    /* Query maximum texture dimensions */
-    GLint querySizeBase = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);
-
-    /* Query 1D texture max size */
-    GLint texSize = 0;
-    auto querySize = querySizeBase;
-
-    while (texSize == 0 && querySize > 0)
-    {
-        glTexImage1D(GL_PROXY_TEXTURE_1D, 0, GL_RGBA, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &texSize);
-        querySize /= 2;
-    }
-
-    limits.max1DTextureSize = static_cast<std::uint32_t>(texSize);
-
-    /* Query 2D texture max size */
-    texSize = 0;
-    querySize = querySizeBase;
-
-    while (texSize == 0 && querySize > 0)
-    {
-        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texSize);
-        querySize /= 2;
-    }
-
-    limits.max2DTextureSize = static_cast<std::uint32_t>(texSize);
-
-    /* Query 3D texture max size */
-    if (features.has3DTextures)
-    {
-        texSize = 0;
-        querySize = querySizeBase;
-
-        while (texSize == 0 && querySize > 0)
-        {
-            glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, querySize, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &texSize);
-            querySize /= 2;
-        }
-
-        limits.max3DTextureSize = static_cast<std::uint32_t>(texSize);
-    }
-
-    /* Query cube texture max size */
-    if (features.hasCubeTextures)
-    {
-        texSize = 0;
-        querySize = querySizeBase;
-
-        while (texSize == 0 && querySize > 0)
-        {
-            glTexImage2D(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_TEXTURE_WIDTH, &texSize);
-            querySize /= 2;
-        }
-
-        limits.maxCubeTextureSize = static_cast<std::uint32_t>(texSize);
-    }
-    #endif // /TODO
+    /* No proxy textures in GLES, so rely on glGet*() functions */
+    limits.max1DTextureSize     = GLGetUInt(GL_MAX_TEXTURE_SIZE);
+    limits.max2DTextureSize     = limits.max1DTextureSize;
+    limits.max3DTextureSize     = GLGetUInt(GL_MAX_3D_TEXTURE_SIZE);
+    limits.maxCubeTextureSize   = GLGetUInt(GL_MAX_CUBE_MAP_TEXTURE_SIZE);
 }
 
 void GLQueryRenderingCaps(RenderingCapabilities& caps)

@@ -43,12 +43,17 @@ class IOSGLContext : public GLContext
             return context_;
         }
 
+        // Returns the initial GL pixel format.
+        inline const GLPixelFormat& GetPixelFormat() const
+        {
+            return pixelFormat_;
+        }
+
     private:
 
         bool SetSwapInterval(int interval) override;
 
         void CreateContext(
-            const GLPixelFormat&                pixelFormat,
             const RendererConfigurationOpenGL&  profile,
             IOSGLContext*                       sharedContext
         );
@@ -57,7 +62,7 @@ class IOSGLContext : public GLContext
     private:
 
         EAGLContext*    context_    = nullptr;
-        int             samples_    = 1;
+        GLPixelFormat   pixelFormat_;
 
 };
 

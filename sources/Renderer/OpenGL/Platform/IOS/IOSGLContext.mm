@@ -40,9 +40,9 @@ IOSGLContext::IOSGLContext(
     const RendererConfigurationOpenGL&  profile,
     IOSGLContext*                       sharedContext)
 :
-    samples_ { pixelFormat.samples }
+    pixelFormat_ { pixelFormat }
 {
-    CreateContext(pixelFormat, profile, sharedContext);
+    CreateContext(profile, sharedContext);
 }
 
 IOSGLContext::~IOSGLContext()
@@ -57,7 +57,7 @@ void IOSGLContext::Resize(const Extent2D& resolution)
 
 int IOSGLContext::GetSamples() const
 {
-    return samples_;
+    return pixelFormat_.samples;
 }
 
 
@@ -79,7 +79,6 @@ static EAGLRenderingAPI GetOpenGLESApi(const RendererConfigurationOpenGL& profil
 }
 
 void IOSGLContext::CreateContext(
-    const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     IOSGLContext*                       sharedContext)
 {
@@ -101,6 +100,9 @@ void IOSGLContext::CreateContext(
             (apiEAGL == kEAGLRenderingAPIOpenGLES3 ? "3" : "2")
         );
     }
+
+    /* Make new context current */
+    [EAGLContext setCurrentContext:context_];
 }
 
 void IOSGLContext::DeleteContext()

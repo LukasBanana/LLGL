@@ -251,7 +251,7 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     #endif // /GL_ARB_shader_storage_buffer_object
 
     /* Query viewport limits */
-    limits.maxViewports                     = GLGetUInt(GL_MAX_VIEWPORTS);
+    limits.maxViewports                     = GLGetUInt(GL_MAX_VIEWPORTS); // GL 4.1: value must be at least 16
 
     GLint maxViewportDims[2];
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);

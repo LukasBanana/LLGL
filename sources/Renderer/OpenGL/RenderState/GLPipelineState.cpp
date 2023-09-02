@@ -12,6 +12,7 @@
 #include "../Shader/GLShaderProgram.h"
 #include "../Ext/GLExtensions.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -89,6 +90,7 @@ void GLPipelineState::Bind(GLStateManager& stateMngr)
     GLShaderPipeline* shaderPipeline = shaderPipelines_[shaderPipelinePermutation].get();
 
     /* Bind shader program and discard rasterizer if there is no fragment shader */
+    LLGL_ASSERT(shaderPipeline != nullptr, "GL shader permutation [%d] not compiled", static_cast<int>(shaderPipelinePermutation));
     shaderPipeline->Bind(stateMngr);
 
     /* Update resource slots in shader program (if necessary) */

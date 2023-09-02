@@ -9,10 +9,17 @@
 #define LLGL_IOS_GL_SWAP_CHAIN_CONTEXT_H
 
 
+#import <UIKit/UIKit.h>
+#import <GLKit/GLKit.h>
+
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"
 
 #include <OpenGLES/EAGL.h>
+
+
+@interface IOSGLSwapChainViewController : GLKViewController
+@end
 
 
 namespace LLGL
@@ -26,7 +33,7 @@ class IOSGLSwapChainContext final : public GLSwapChainContext
 
     public:
 
-        IOSGLSwapChainContext(IOSGLContext& context);
+        IOSGLSwapChainContext(IOSGLContext& context, Surface& surface);
 
         bool SwapBuffers() override;
 
@@ -36,7 +43,9 @@ class IOSGLSwapChainContext final : public GLSwapChainContext
 
     private:
 
-        EAGLContext* context_ = nullptr;
+        EAGLContext*                    context_        = nullptr;
+        GLKView*                        view_           = nullptr;
+        IOSGLSwapChainViewController*   viewController_ = nullptr;
 
 };
 
