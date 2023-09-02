@@ -198,7 +198,6 @@ function(find_project_source_files PROJECT_NAME OUTPUT_LIST)
         file(
             GLOB ProjectFiles
             ${ProjectDir}/*.cpp
-            ${ProjectDir}/*.hlsl
         )
     elseif(APPLE)
         if (LLGL_IOS_PLATFORM)

@@ -24,7 +24,7 @@ LLGL_EXPORT char GetSeparator()
 LLGL_EXPORT UTF8String GetWorkingDir()
 {
     const DWORD pathLen = ::GetCurrentDirectory(0, nullptr);
-    if (path > 0)
+    if (pathLen > 0)
     {
         /* Override content of string including the NUL-terminator, which is allowed since C++11 */
         #ifdef UNICODE
@@ -32,8 +32,8 @@ LLGL_EXPORT UTF8String GetWorkingDir()
         #else
         std::string path;
         #endif
-        path.resize(static_cast<std::size_t>(path - 1));
-        ::GetCurrentDirectory(static_cast<DWORD>(path.size()), &path[0]);
+        path.resize(static_cast<std::size_t>(pathLen - 1));
+        ::GetCurrentDirectory(pathLen, &path[0]);
         return path;
     }
     return "";

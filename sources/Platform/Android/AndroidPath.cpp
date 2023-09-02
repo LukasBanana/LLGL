@@ -23,9 +23,8 @@ LLGL_EXPORT char GetSeparator()
 
 LLGL_EXPORT UTF8String GetWorkingDir()
 {
-    char path[PATH_MAX] = { 0 };
-    ::getcwd(path, PATH_MAX);
-    return UTF8String{ path };
+    char path[4096] = { 0 };
+    return UTF8String{ ::getcwd(path, sizeof(path)) };
 }
 
 LLGL_EXPORT UTF8String GetAbsolutePath(const StringView& filename)

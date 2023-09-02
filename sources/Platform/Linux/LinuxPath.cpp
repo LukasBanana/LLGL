@@ -7,6 +7,7 @@
 
 #include "../Path.h"
 #include <unistd.h>
+#include <linux/limits.h>
 
 
 namespace LLGL
@@ -24,8 +25,7 @@ LLGL_EXPORT char GetSeparator()
 LLGL_EXPORT UTF8String GetWorkingDir()
 {
     char path[PATH_MAX] = { 0 };
-    ::getcwd(path, PATH_MAX);
-    return UTF8String{ path };
+    return UTF8String{ ::getcwd(path, sizeof(path)) };
 }
 
 LLGL_EXPORT UTF8String GetAbsolutePath(const StringView& filename)
