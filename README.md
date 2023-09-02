@@ -9,6 +9,13 @@
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
 
 
+## Abstract
+
+LLGL aims to be a thin abstraction layer for a wide variety of modern and legacy rendering APIs as well as a multitude of platforms targeting both desktop and mobile.
+LLGL provides close coupling with the underlying APIs for a rich feature set while also simplifying architectural hurdles.
+The library is written mostly in C++11 with the addition of a C99 wrapper.
+
+
 ## Documentation
 
 - **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
@@ -34,7 +41,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 ## Build Notes
 
-Build scripts are provided for [**CMake**]((https://cmake.org/)).
+Build scripts are provided for [**CMake**]((https://cmake.org/)). See [LLGL Build System](https://github.com/LukasBanana/LLGL/tree/master/docu#llgl-build-system) for more details.
 
 ### Windows
 
@@ -69,63 +76,18 @@ Alternatively, you can build and install LLGL using [vcpkg](https://github.com/M
     ./vcpkg install llgl
 ```
 
-The llgl port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+The LLGL port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
-## Thin Abstraction Layer
 
-```cpp
-// Unified Interface:
-CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex);
+## Showcase
 
-// OpenGL Implementation:
-void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    glDrawElements(
-        GetDrawMode(), static_cast<GLsizei>(numIndices), GetIndexType(), GetIndicesOffset(firstIndex)
-    );
-}
+<p align="center">
+    <img src="examples/Cpp/PostProcessing/Example.png" alt="Screenshot missing: Post processing example" style="width:300px;height:auto;">
+    <img src="examples/Cpp/ShadowMapping/Example.png" alt="Screenshot missing: Shadow mapping example" style="width:300px;height:auto;">
+</p>
 
-// Direct3D 11 Implementation
-void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    FlushConstantsCache();
-    context_->DrawIndexed(numIndices, firstIndex, 0);
-}
-
-// Direct3D 12 Implementation
-void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    FlushGraphicsStagingDescriptorTables();
-    commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, 0, 0);
-}
-
-// Vulkan Implementation
-void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    FlushDescriptorCache();
-    vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, 0, 0);
-}
-
-// Metal implementation
-void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex) {
-    if (numPatchControlPoints_ > 0) {
-        [renderEncoder_
-            drawIndexedPatches:             numPatchControlPoints_
-            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
-            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
-            patchIndexBuffer:               nil
-            patchIndexBufferOffset:         0
-            controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * (static_cast<NSUInteger>(firstIndex))
-            instanceCount:                  1
-            baseInstance:                   0
-        ];
-    } else {
-        [renderEncoder_
-            drawIndexedPrimitives:  primitiveType_
-            indexCount:             static_cast<NSUInteger>(numIndices)
-            indexType:              indexType_
-            indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
-        ];
-    }
-}
-```
-
+<p align="center">
+    <img src="examples/Cpp/Fonts/Example.iOS.png" alt="Screenshot missing: Fonts example (iOS)" style="height:400px;width:auto;">
+    <img src="examples/Cpp/ClothPhysics/Example.iOS.png" alt="Screenshot missing: Cloth physics example (iOS)" style="height:400px;width:auto;">
+</p>
 
