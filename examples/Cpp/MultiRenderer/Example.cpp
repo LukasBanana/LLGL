@@ -139,11 +139,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Matrices)));
 
     // Create textures
-    const std::string texturePath = "../../Media/Textures/";
-    texture = LoadTextureWithRenderer(
-        *renderer,
-        (texturePath + "Logo_" + rendererModule + ".png")
-    );
+    texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererModule + ".png");
 
     // Create samplers
     LLGL::SamplerDescriptor samplerDesc;

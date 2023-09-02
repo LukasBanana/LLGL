@@ -1,6 +1,6 @@
 // HLSL texturing shader
 
-cbuffer Settings : register(b0)
+cbuffer Settings : register(b1)
 {
     float4x4    wvpMatrix;
     float2      glyphTextureInvSize;

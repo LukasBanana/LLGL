@@ -78,7 +78,7 @@ public:
         vertexFormat.SetStride(sizeof(TexturedVertex));
 
         // Load models
-        auto vertices = LoadObjModel("../../Media/Models/Pyramid.obj");
+        auto vertices = LoadObjModel("Pyramid.obj");
         model0.numVertices = static_cast<std::uint32_t>(vertices.size());
 
         // Create vertex and constant buffer

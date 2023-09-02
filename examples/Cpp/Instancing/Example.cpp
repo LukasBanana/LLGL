@@ -207,7 +207,6 @@ private:
 
     void CreateTextures()
     {
-        const std::string texturePath = "../../Media/Textures/";
         std::string filename;
 
         std::vector<unsigned char> arrayImageBuffer;
@@ -221,9 +220,9 @@ private:
         {
             // Setup filename for "Plants_N.png" where N is from 0 to 9
             if (i < numPlantImages)
-                filename = texturePath + "Plants_" + std::to_string(i) + ".png";
+                filename = "Plants_" + std::to_string(i) + ".png";
             else
-                filename = texturePath + "Grass.jpg";
+                filename = "Grass.jpg";
 
             // Load all images from file (using STBI library, see https://github.com/nothings/stb)
             int w = 0, h = 0, c = 0;

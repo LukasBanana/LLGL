@@ -107,9 +107,9 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshStairsTop       = LoadObjModel(vertices, "../../Media/Models/PenroseStairs-Top.obj");
-        meshStairsBottom    = LoadObjModel(vertices, "../../Media/Models/PenroseStairs-Bottom.obj");
-        meshBall            = LoadObjModel(vertices, "../../Media/Models/IcoSphere.obj");
+        meshStairsTop       = LoadObjModel(vertices, "PenroseStairs-Top.obj");
+        meshStairsBottom    = LoadObjModel(vertices, "PenroseStairs-Bottom.obj");
+        meshBall            = LoadObjModel(vertices, "IcoSphere.obj");
 
         meshStairsTop.color     = { 1.0f, 1.0f, 1.0f, 1.0f };
         meshStairsBottom.color  = { 1.0f, 1.0f, 0.0f, 0.0f };
@@ -124,7 +124,7 @@ private:
     void CreateTextures()
     {
         // Load color map texture
-        colorMap = LoadTexture("../../Media/Textures/TilesGray512.jpg");
+        colorMap = LoadTexture("TilesGray512.jpg");
     }
 
     void CreateSamplers()

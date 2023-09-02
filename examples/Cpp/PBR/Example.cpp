@@ -98,8 +98,8 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshes.push_back(LoadObjModel(vertices, "../../Media/Models/UVSphere.obj"));
-        meshes.push_back(LoadObjModel(vertices, "../../Media/Models/WiredBox.obj"));
+        meshes.push_back(LoadObjModel(vertices, "UVSphere.obj"));
+        meshes.push_back(LoadObjModel(vertices, "WiredBox.obj"));
 
         // Create vertex and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateTangentSpaceVertices(vertices), vertexFormat);
@@ -267,8 +267,6 @@ private:
     // Loads multiple images into one texture array or cube-map array
     LLGL::Texture* LoadTextureArray(const LLGL::TextureType texType, const std::initializer_list<std::string>& texFilenames)
     {
-        const std::string texPath = "../../Media/Textures/PBR/";
-
         // Load image data
         int texWidth = 0, texHeight = 0;
         std::vector<std::uint8_t> imageData;
@@ -278,7 +276,7 @@ private:
             if (filename.empty())
                 FillImage(texWidth, texHeight, imageData);
             else
-                LoadImage(texPath + filename, texWidth, texHeight, imageData);
+                LoadImage("PBR/" + filename, texWidth, texHeight, imageData);
         }
 
         // Define initial texture data

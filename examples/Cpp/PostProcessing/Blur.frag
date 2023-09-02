@@ -2,6 +2,10 @@
 
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 layout(std140) uniform BlurSettings
 {
 	vec2 blurShift;
@@ -27,17 +31,17 @@ void main()
 	// Accumulate the samples with the gaussian kernel
 	vec4 c = vec4(0);
 	
-	c += texture(glossMap, vTexCoord - blurShift*5) * GAUSSIAN_KERNEL_1;
-	c += texture(glossMap, vTexCoord - blurShift*4) * GAUSSIAN_KERNEL_2;
-	c += texture(glossMap, vTexCoord - blurShift*3) * GAUSSIAN_KERNEL_3;
-	c += texture(glossMap, vTexCoord - blurShift*2) * GAUSSIAN_KERNEL_4;
-	c += texture(glossMap, vTexCoord - blurShift  ) * GAUSSIAN_KERNEL_5;
-	c += texture(glossMap, vTexCoord              ) * GAUSSIAN_KERNEL_6;
-	c += texture(glossMap, vTexCoord + blurShift  ) * GAUSSIAN_KERNEL_5;
-	c += texture(glossMap, vTexCoord + blurShift*2) * GAUSSIAN_KERNEL_4;
-	c += texture(glossMap, vTexCoord + blurShift*3) * GAUSSIAN_KERNEL_3;
-	c += texture(glossMap, vTexCoord + blurShift*4) * GAUSSIAN_KERNEL_2;
-	c += texture(glossMap, vTexCoord + blurShift*5) * GAUSSIAN_KERNEL_1;
+	c += texture(glossMap, vTexCoord - blurShift*5.0) * GAUSSIAN_KERNEL_1;
+	c += texture(glossMap, vTexCoord - blurShift*4.0) * GAUSSIAN_KERNEL_2;
+	c += texture(glossMap, vTexCoord - blurShift*3.0) * GAUSSIAN_KERNEL_3;
+	c += texture(glossMap, vTexCoord - blurShift*2.0) * GAUSSIAN_KERNEL_4;
+	c += texture(glossMap, vTexCoord - blurShift    ) * GAUSSIAN_KERNEL_5;
+	c += texture(glossMap, vTexCoord                ) * GAUSSIAN_KERNEL_6;
+	c += texture(glossMap, vTexCoord + blurShift    ) * GAUSSIAN_KERNEL_5;
+	c += texture(glossMap, vTexCoord + blurShift*2.0) * GAUSSIAN_KERNEL_4;
+	c += texture(glossMap, vTexCoord + blurShift*3.0) * GAUSSIAN_KERNEL_3;
+	c += texture(glossMap, vTexCoord + blurShift*4.0) * GAUSSIAN_KERNEL_2;
+	c += texture(glossMap, vTexCoord + blurShift*5.0) * GAUSSIAN_KERNEL_1;
 	
 	fragColor = c;
 }

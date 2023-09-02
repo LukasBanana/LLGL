@@ -2,6 +2,10 @@
 
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 layout(std140) uniform SceneSettings
 {
     mat4    wvpMatrix;

@@ -14,6 +14,6 @@ std::string FindNSResourcePath(const std::string& filename)
     NSString* filenameNS = [[NSString alloc] initWithCString:filename.c_str() encoding:NSASCIIStringEncoding];
     NSString* path = [[NSBundle mainBundle] pathForResource:filenameNS ofType:nil];
     [filenameNS release];
-    return std::string([path UTF8String]);
+    return (path != nil ? std::string([path UTF8String]) : "");
 }
 

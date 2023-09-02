@@ -340,7 +340,7 @@ public:
     void CreateTexture()
     {
         // Load color map from file
-        colorMap = LoadTexture("../../Media/Textures/Logo_LLGL.png");
+        colorMap = LoadTexture("Logo_LLGL.png");
     }
 
     void CreateSampler()

@@ -114,7 +114,7 @@ public:
         vertexFormatScene.SetStride(sizeof(TexturedVertex));
 
         // Create scene buffers
-        auto sceneVertices = LoadObjModel("../../Media/Models/WiredBox.obj");
+        auto sceneVertices = LoadObjModel("WiredBox.obj");
         numSceneVertices = static_cast<std::uint32_t>(sceneVertices.size());
 
         vertexBufferScene = CreateVertexBuffer(sceneVertices, vertexFormatScene);
@@ -149,7 +149,7 @@ public:
             shaderPipelineFinal.vs = shaderPipelineBlur.vs;
             shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PFinal", "ps_5_0" });
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             // Load scene shader program
             shaderPipelineScene.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormatScene });

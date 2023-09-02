@@ -89,8 +89,7 @@ private:
         static std::uint32_t instanceCounter;
         Model mdl;
         {
-            const std::string modelPath = "../../Media/Models/";
-            mdl.mesh = LoadObjModel(vertices, modelPath + filename);
+            mdl.mesh = LoadObjModel(vertices, filename);
             mdl.mesh.transform.LoadIdentity();
             Gs::Translate(mdl.mesh.transform, position);
             Gs::Scale(mdl.mesh.transform, Gs::Vector3f{ scale });
@@ -147,11 +146,9 @@ private:
 
     void CreateTextures()
     {
-        const std::string texturePath = "../../Media/Textures/";
-
-        colorMaps[0] = LoadTexture(texturePath + "Crate.jpg");
-        colorMaps[1] = LoadTexture(texturePath + "TilesGray512.jpg");
-        colorMaps[2] = LoadTexture(texturePath + "TilesBlue512.jpg");
+        colorMaps[0] = LoadTexture("Crate.jpg");
+        colorMaps[1] = LoadTexture("TilesGray512.jpg");
+        colorMaps[2] = LoadTexture("TilesBlue512.jpg");
     }
 
     void CreateSamplers()

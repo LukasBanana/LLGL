@@ -2,6 +2,10 @@
 
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 in vec2 vTexCoord;
 in vec4 vColor;
 

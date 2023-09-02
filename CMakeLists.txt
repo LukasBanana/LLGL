@@ -642,6 +642,11 @@ if(LLGL_IOS_PLATFORM)
         "${EXAMPLE_MEDIA_DIR}/Textures/FontAtlas_LucidaConsole_Bold_32.png"
     )
     list(
+        APPEND FilesExample_Texturing
+        "${EXAMPLE_MEDIA_DIR}/Textures/Crate-DXT1-MipMapped.dds"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Crate.jpg"
+    )
+    list(
         APPEND FilesExample_PostProcessing
         "${EXAMPLE_MEDIA_DIR}/Models/WiredBox.obj"
     )
@@ -668,11 +673,34 @@ if(LLGL_IOS_PLATFORM)
         "${EXAMPLE_MEDIA_DIR}/Models/Pyramid.obj"
     )
     list(
+        APPEND FilesExample_ShadowMapping
+        "${EXAMPLE_MEDIA_DIR}/Models/SimpleRoom.obj"
+        "${EXAMPLE_MEDIA_DIR}/Models/WiredBox.obj"
+    )
+    list(
         APPEND FilesExample_Animation
         "${EXAMPLE_MEDIA_DIR}/Models/PenroseStairs-Top.obj"
         "${EXAMPLE_MEDIA_DIR}/Models/PenroseStairs-Bottom.obj"
         "${EXAMPLE_MEDIA_DIR}/Models/IcoSphere.obj"
         "${EXAMPLE_MEDIA_DIR}/Textures/TilesGray512.jpg"
+    )
+    list(
+        APPEND FilesExample_VolumeRendering
+        "${EXAMPLE_MEDIA_DIR}/Models/Suzanne.obj"
+    )
+    list(
+        APPEND FilesExample_Instancing
+        "${EXAMPLE_MEDIA_DIR}/Textures/Grass.jpg"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_0.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_1.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_2.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_3.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_4.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_5.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_6.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_7.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_8.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/Plants_9.png"
     )
 endif()
 

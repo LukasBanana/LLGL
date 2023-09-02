@@ -76,10 +76,10 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshScene   = LoadObjModel(vertices, "../../Media/Models/Portal-Scene.obj");
-        meshPortal  = LoadObjModel(vertices, "../../Media/Models/Portal-Stencil.obj");
-        meshObject1 = LoadObjModel(vertices, "../../Media/Models/WiredBox.obj");
-        meshObject2 = LoadObjModel(vertices, "../../Media/Models/Pyramid.obj");
+        meshScene   = LoadObjModel(vertices, "Portal-Scene.obj");
+        meshPortal  = LoadObjModel(vertices, "Portal-Stencil.obj");
+        meshObject1 = LoadObjModel(vertices, "WiredBox.obj");
+        meshObject2 = LoadObjModel(vertices, "Pyramid.obj");
 
         meshObject1.color = { 0.2f, 0.9f, 0.1f };
         meshObject2.color = { 0.9f, 0.1f, 0.2f };

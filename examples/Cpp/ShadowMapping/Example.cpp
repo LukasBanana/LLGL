@@ -96,8 +96,8 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        meshes.push_back(LoadObjModel(vertices, "../../Media/Models/SimpleRoom.obj"));
-        meshes.push_back(LoadObjModel(vertices, "../../Media/Models/WiredBox.obj"));
+        meshes.push_back(LoadObjModel(vertices, "SimpleRoom.obj"));
+        meshes.push_back(LoadObjModel(vertices, "WiredBox.obj"));
 
         meshes[1].color = { 0.4f, 0.5f, 1.0f };
 

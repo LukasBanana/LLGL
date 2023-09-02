@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Platform/Platform.h>
 
 
 // Enable multi-sampling
@@ -244,13 +245,16 @@ private:
     void CreateColorMap()
     {
         // Load color map texture from file
-        colorMap = LoadTexture("../../Media/Textures/Crate.jpg");
+        colorMap = LoadTexture("Crate.jpg");
 
         // Create common sampler state for all textures
         LLGL::SamplerDescriptor samplerDesc;
         {
+            #if !defined LLGL_OS_IOS && !defined LLGL_OS_ANDROID
+            // Clamp to border is not supported on mobile platforms
             samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
             samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
+            #endif
             samplerDesc.maxAnisotropy   = 8;
             samplerDesc.borderColor[3]  = 1.0f;
         }

@@ -7,6 +7,7 @@
 
 #include "FileUtils.h"
 #include <fstream>
+#include <LLGL/Platform/Platform.h>
 
 #ifdef LLGL_OS_IOS
 #   include "iOS/AppUtils.h"

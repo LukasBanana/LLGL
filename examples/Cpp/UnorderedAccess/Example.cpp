@@ -147,7 +147,7 @@ public:
     void CreateTextures()
     {
         // Load texture from file
-        inputTexture = LoadTexture("../../Media/Textures/Crate.jpg");
+        inputTexture = LoadTexture("Crate.jpg");
 
         // Create texture with unordered access
         LLGL::TextureDescriptor outputTextureDesc = inputTexture->GetDesc();

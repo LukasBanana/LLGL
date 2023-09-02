@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <FileUtils.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <DDSImageReader.h>
 #include <stb/stb_image.h>
@@ -118,9 +119,11 @@ public:
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
-        unsigned char* imageBuffer = stbi_load(filename.c_str(), &texWidth, &texHeight, &texComponents, 0);
+        const std::string path = FindResourcePath(filename);
+
+        unsigned char* imageBuffer = stbi_load(path.c_str(), &texWidth, &texHeight, &texComponents, 0);
         if (!imageBuffer)
-            throw std::runtime_error("failed to load image from file: " + filename);
+            throw std::runtime_error("failed to load image from file: " + path);
 
         // Initialize source image descriptor to upload image data onto hardware texture
         LLGL::SrcImageDescriptor imageDesc;
@@ -207,8 +210,8 @@ public:
 
     void CreateTextures()
     {
-        LoadCompressedTexture("../../Media/Textures/Crate-DXT1-MipMapped.dds");
-        LoadUncompressedTexture("../../Media/Textures/Crate.jpg");
+        LoadCompressedTexture("Crate-DXT1-MipMapped.dds");
+        LoadUncompressedTexture("Crate.jpg");
     }
 
     void CreateSamplers()

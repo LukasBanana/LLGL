@@ -87,7 +87,7 @@ private:
 
         // Load 3D models
         std::vector<TexturedVertex> vertices;
-        mesh = LoadObjModel(vertices, "../../Media/Models/Suzanne.obj");
+        mesh = LoadObjModel(vertices, "Suzanne.obj");
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);

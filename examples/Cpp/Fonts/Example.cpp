@@ -6,11 +6,20 @@
  */
 
 #include <ExampleBase.h>
+#include <LLGL/Platform/Platform.h>
 
-#define FONT_COURIER_NEW_16     ( 0 )
-#define FONT_LUCIDA_CONSOLE_32  ( 1 )
+#define FONT_COURIER_NEW_16         ( 0 )
+#define FONT_LUCIDA_CONSOLE_32      ( 1 )
 
-#define SELECTED_FONT ( FONT_COURIER_NEW_16 )
+#ifdef LLGL_OS_IOS
+#   define SELECTED_FONT            ( FONT_LUCIDA_CONSOLE_32 )
+#   define FONTS_TEXT_MARGIN        ( 25 )
+#   define FONTS_PARAGRAPH_MARGIN   ( 140 )
+#else
+#   define SELECTED_FONT            ( FONT_COURIER_NEW_16 )
+#   define FONTS_TEXT_MARGIN        ( 5 )
+#   define FONTS_PARAGRAPH_MARGIN   ( 40 )
+#endif
 
 
 class Example_Fonts : public ExampleBase
@@ -93,8 +102,8 @@ class Example_Fonts : public ExampleBase
 
     struct Configuration
     {
-        bool vsync  = true;
-        bool shadow = true;
+        bool vsync  = false;
+        bool shadow = false;
     }
     config;
 
@@ -108,6 +117,7 @@ public:
         CreatePipelines(vertexFormat);
         CreateFontAtlas(fonts[SELECTED_FONT]);
         CreateResourceHeaps();
+        swapChain->SetVsyncInterval(config.vsync ? 1 : 0);
     }
 
 private:
@@ -146,7 +156,7 @@ private:
         pipelineLayout = renderer->CreatePipelineLayout(
             IsVulkan()
                 ? LLGL::Parse("heap{cbuffer(Settings@0):vert:frag, texture(glyphTexture@1):frag, sampler(linearSampler@2):frag}")
-                : LLGL::Parse("heap{cbuffer(Settings@0):vert:frag, texture(glyphTexture@0):frag, sampler(linearSampler@0):frag}")
+                : LLGL::Parse("heap{cbuffer(Settings@1):vert:frag, texture(glyphTexture@0):frag, sampler(linearSampler@0):frag}")
         );
 
         // Create graphics pipeline
@@ -174,7 +184,7 @@ private:
     {
         // Load glyph texture as alpha-only texture (automatically interprets color input as alpha channel for transparency)
         glyphTexture = LoadTexture(
-            "../../Media/Textures/FontAtlas_" + std::string(font.fontName) + ".png",
+            "FontAtlas_" + std::string(font.fontName) + ".png",
             (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
             LLGL::Format::A8UNorm
         );
@@ -390,41 +400,42 @@ private:
         const int screenWidth   = static_cast<int>(res.width);
         const int screenCenterX = screenWidth / 2;
 
-        constexpr int textMargin = 5;
+        constexpr int textMargin        = FONTS_TEXT_MARGIN;
+        constexpr int paragraphMargin   = FONTS_PARAGRAPH_MARGIN;
 
+        int paragraphPosY = paragraphMargin + fontHeight;
         DrawFont(
             "LLGL example for font rendering",
-            screenCenterX, 15, colorWhite, fontFlags | DrawCenteredX
+            screenCenterX, paragraphPosY, colorWhite, fontFlags | DrawCenteredX
         );
+        paragraphPosY += fontHeight + paragraphMargin;
 
-        // Draw current configuration
-        int paragraphPosY = 40 + fontHeight;
-
+        // Draw swap-chain configuration
         DrawFont(
             std::string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
-            15, paragraphPosY, colorYellow, fontFlags
+            paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
         paragraphPosY += fontHeight + textMargin;
 
-        DrawFont(
-            std::string("Draw Shadow (S): ") + (config.shadow ? "Enabled" : "Disabled"),
-            15, paragraphPosY, colorYellow, fontFlags
-        );
-
         // Draw frame counter
-        paragraphPosY = 40 + fontHeight;
-
         DrawFont(
             "Frame counter: " + std::to_string(displayNumbers.counter),
-            screenWidth - 15, paragraphPosY, colorYellow,
+            screenWidth - paragraphMargin, paragraphPosY, colorYellow,
             fontFlags | DrawRightAligned
         );
+        paragraphPosY += fontHeight + textMargin;
+
+        // Draw rendering configuration
+        DrawFont(
+            std::string("Draw Shadow (S): ") + (config.shadow ? "Enabled" : "Disabled"),
+            paragraphMargin, paragraphPosY, colorYellow, fontFlags
+        );
+        paragraphPosY += fontHeight + textMargin;
 
         // Draw number of frames per second (FPS)
-        paragraphPosY += (fontHeight + textMargin);
         DrawFont(
             "FPS = " + std::to_string(displayNumbers.fps),
-            screenWidth - 15, paragraphPosY, colorRed,
+            screenWidth - paragraphMargin, paragraphPosY, colorRed,
             fontFlags | DrawRightAligned
         );
 
@@ -435,9 +446,8 @@ private:
             "the screen using a font atlas and batched draw calls. "
         );
 
-        constexpr int paragraphMargin = 40;
         int paragraphPosX = paragraphMargin;
-        paragraphPosY += fontHeight + 40;
+        paragraphPosY += fontHeight + paragraphMargin;
         std::string word;
 
         for (std::size_t start = 0, end = 0; start < paragraph.size(); start = end)

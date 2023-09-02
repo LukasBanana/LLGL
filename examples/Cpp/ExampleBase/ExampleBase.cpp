@@ -173,6 +173,7 @@ ExampleBase::CanvasEventHandler::CanvasEventHandler(ExampleBase& app, LLGL::Swap
 void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
 {
     app_.DrawFrame();
+    swapChain_->GetSurface().ProcessEvents();
 }
 
 void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const LLGL::Extent2D& clientAreaSize)
@@ -392,9 +393,6 @@ ExampleBase::ExampleBase(
     auto rendererName = renderer->GetName();
     window.SetTitle(title + " ( " + rendererName + " )");
 
-    // Listen for window events
-    input.Listen(window);
-
     // Change window descriptor to allow resizing
     auto wndDesc = window.GetDesc();
     wndDesc.resizable = true;
@@ -413,6 +411,9 @@ ExampleBase::ExampleBase(
     window.Show();
 
     #endif // /LLGL_MOBILE_PLATFORM
+
+    // Listen for window/canvas events
+    input.Listen(swapChain->GetSurface());
 
     // Initialize default projection matrix
     projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
@@ -485,6 +486,10 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
                 deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::PatchClippingOrigin;
             }
         }
+
+        // Override version number for ESSL
+        if (Supported(LLGL::ShadingLanguage::ESSL))
+            deviceShaderDesc.profile = "300 es";
     }
     auto shader = renderer->CreateShader(deviceShaderDesc);
 
@@ -535,7 +540,7 @@ LLGL::Shader* ExampleBase::LoadStandardVertexShader(
     const LLGL::ShaderMacro*                    defines)
 {
     // Load shader program
-    if (Supported(LLGL::ShadingLanguage::GLSL))
+    if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.vert" }, vertexFormats, {}, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
         return LoadShader({ LLGL::ShaderType::Vertex, "Example.450core.vert.spv" }, vertexFormats, {}, defines);
@@ -551,7 +556,7 @@ LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
     const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
     const LLGL::ShaderMacro*                    defines)
 {
-    if (Supported(LLGL::ShadingLanguage::GLSL))
+    if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.frag" }, fragmentAttribs, defines);
     if (Supported(LLGL::ShadingLanguage::SPIRV))
         return LoadShader({ LLGL::ShaderType::Fragment, "Example.450core.frag.spv" }, fragmentAttribs, defines);
@@ -738,7 +743,11 @@ float ExampleBase::GetAspectRatio() const
 
 bool ExampleBase::IsOpenGL() const
 {
-    return (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
+    return
+    (
+        renderer->GetRendererID() == LLGL::RendererID::OpenGL ||
+        renderer->GetRendererID() == LLGL::RendererID::OpenGLES3
+    );
 }
 
 bool ExampleBase::IsVulkan() const
