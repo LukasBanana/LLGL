@@ -9,8 +9,9 @@
 #include "MTTypes.h"
 #include "RenderState/MTRenderPass.h"
 #include "../TextureUtils.h"
-#include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Assertion.h"
+#include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/TypeInfo.h>
 
 #import <QuartzCore/CAMetalLayer.h>
 
@@ -36,7 +37,7 @@
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
 {
-    //TODO
+    // dummy
 }
 
 @end
@@ -66,22 +67,27 @@ MTSwapChain::MTSwapChain(
     LLGL_ASSERT_PTR(nativeHandle.view);
     UIView* canvasView = nativeHandle.view;
 
+    /* Allocate MetalKit view */
     view_ = [[MTKView alloc] initWithFrame:canvasView.frame device:device];
 
-    viewDelegate_ = [[MTSwapChainViewDelegate alloc] initWithCanvas:static_cast<Canvas&>(GetSurface())];
+    /* Allocate view delegate to handle re-draw events */
+    viewDelegate_ = [[MTSwapChainViewDelegate alloc] initWithCanvas:CastTo<Canvas>(GetSurface())];
     [viewDelegate_ mtkView:view_ drawableSizeWillChange:view_.bounds.size];
-    view_.delegate = viewDelegate_;
+    [view_ setDelegate:viewDelegate_];
 
+    /* Register rotate/resize layout constraints */
     view_.translatesAutoresizingMaskIntoConstraints = NO;
     NSDictionary* viewsDictionary = @{@"mtkView":view_};
     [canvasView addSubview:view_];
     [canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
     [canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
 
-    #else
+    #else // LLGL_OS_IOS
 
+    LLGL_ASSERT_PTR(nativeHandle.window);
     NSWindow* wnd = nativeHandle.window;
 
+    /* Allocate MetalKit view */
     view_ = [[MTKView alloc] initWithFrame:wnd.frame device:device];
 
     [wnd setContentView:view_];
