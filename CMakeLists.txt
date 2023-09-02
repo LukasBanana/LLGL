@@ -64,6 +64,7 @@ set(EXAMPLE_CPP_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/Cpp")
 set(EXAMPLE_C99_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/C99")
 set(EXAMPLE_IOS_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/iOS")
 set(EXAMPLEBASE_PROJECT_DIR "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase")
+set(EXAMPLE_MEDIA_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/Media")
 
 
 # === Macros ===
@@ -141,8 +142,12 @@ macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
             string(SUBSTRING ${PROJECT_NAME} ${PROJECT_BUNDLE_NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
 
             set(RES_FILES "${SRC_FILES}")
-            list(FILTER RES_FILES INCLUDE REGEX ".+\\.(metal|png)")
+            list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds)")
             source_group("Resources" FILES ${RES_FILES})
+
+            set(SHADER_FILES "${SRC_FILES}")
+            list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag)")
+            source_group("Shaders" FILES ${SHADER_FILES})
 
             set_target_properties(
                 ${PROJECT_NAME} PROPERTIES
@@ -152,7 +157,7 @@ macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
                 MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
                 MACOSX_BUNDLE_BUNDLE_VERSION        1.0
                 MACOSX_BUNDLE_ICON_FILE             "AppIcon.png"
-                RESOURCE                            "${RES_FILES}"
+                RESOURCE                            "${RES_FILES};${SHADER_FILES}"
             )
             target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
         else()
@@ -201,6 +206,8 @@ function(find_project_source_files PROJECT_NAME OUTPUT_LIST)
                 GLOB ProjectFiles
                 ${ProjectDir}/*.cpp
                 ${ProjectDir}/*.metal
+                ${ProjectDir}/*.vert
+                ${ProjectDir}/*.frag
                 ${EXAMPLEBASE_PROJECT_DIR}/iOS/AppIcon.png
                 ${EXAMPLEBASE_PROJECT_DIR}/iOS/LaunchScreen.storyboard
             )
@@ -627,6 +634,48 @@ find_project_source_files(VolumeRendering   FilesExample_VolumeRendering)
 find_project_source_files(PrimitiveRestart  FilesExample_PrimitiveRestart)
 find_project_source_files(ResourceBinding   FilesExample_ResourceBinding)
 
+# Append extra resources for mobile platforms
+if(LLGL_IOS_PLATFORM)
+    list(
+        APPEND FilesExample_Fonts
+        "${EXAMPLE_MEDIA_DIR}/Textures/FontAtlas_CourierNew_Bold_16.png"
+        "${EXAMPLE_MEDIA_DIR}/Textures/FontAtlas_LucidaConsole_Bold_32.png"
+    )
+    list(
+        APPEND FilesExample_PostProcessing
+        "${EXAMPLE_MEDIA_DIR}/Models/WiredBox.obj"
+    )
+    list(
+        APPEND FilesExample_ClothPhysics
+        "${EXAMPLE_MEDIA_DIR}/Textures/Logo_LLGL.png"
+    )
+    list(
+        APPEND FilesExample_RenderTarget
+        "${EXAMPLE_MEDIA_DIR}/Textures/Crate.jpg"
+    )
+    list(
+        APPEND FilesExample_ResourceBinding
+        "${EXAMPLE_MEDIA_DIR}/Textures/Crate.jpg"
+        "${EXAMPLE_MEDIA_DIR}/Textures/TilesGray512.jpg"
+        "${EXAMPLE_MEDIA_DIR}/Textures/TilesBlue512.jpg"
+        "${EXAMPLE_MEDIA_DIR}/Models/UVSphere.obj"
+    )
+    list(
+        APPEND FilesExample_StencilBuffer
+        "${EXAMPLE_MEDIA_DIR}/Models/Portal-Scene.obj"
+        "${EXAMPLE_MEDIA_DIR}/Models/Portal-Stencil.obj"
+        "${EXAMPLE_MEDIA_DIR}/Models/WiredBox.obj"
+        "${EXAMPLE_MEDIA_DIR}/Models/Pyramid.obj"
+    )
+    list(
+        APPEND FilesExample_Animation
+        "${EXAMPLE_MEDIA_DIR}/Models/PenroseStairs-Top.obj"
+        "${EXAMPLE_MEDIA_DIR}/Models/PenroseStairs-Bottom.obj"
+        "${EXAMPLE_MEDIA_DIR}/Models/IcoSphere.obj"
+        "${EXAMPLE_MEDIA_DIR}/Textures/TilesGray512.jpg"
+    )
+endif()
+
 # Mobile example project files
 set(FilesExample_HelloAndroid ${EXAMPLE_CPP_PROJECTS_DIR}/HelloAndroid/cpp/Example.cpp)
 
@@ -949,7 +998,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         SET_RENDERER_PROJECT_PROPERTIES(LLGL_OpenGLES3)
         
         if(APPLE)
-            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES")
+            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES -framework GLKit")
             ADD_DEFINE(GLES_SILENCE_DEPRECATION)
         else()
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} EGL)
