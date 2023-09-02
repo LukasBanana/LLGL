@@ -34,6 +34,14 @@ class IOSCanvas : public Canvas
 
         void ResetPixelFormat() override;
 
+    public:
+
+        // Returns the native UIWindow.
+        inline UIWindow* GetUIWindow() const
+        {
+            return wnd_;
+        }
+
     private:
 
         void OnProcessEvents() override;

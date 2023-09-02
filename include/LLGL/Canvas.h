@@ -66,8 +66,14 @@ class LLGL_EXPORT Canvas : public Surface
                 */
                 virtual void OnDraw(Canvas& sender);
 
-                //! Send when the canvas has been resized. This can also happen when the orientation has changed.
+                //! Sent when the canvas has been resized. This can also happen when the orientation has changed.
                 virtual void OnResize(Canvas& sender, const Extent2D& clientAreaSize);
+
+                //! Sent when a tap gesture has been recognized only including the location within the canvas.
+                virtual void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches);
+
+                //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
+                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
 
         };
 
@@ -143,6 +149,18 @@ class LLGL_EXPORT Canvas : public Surface
         \see EventListener::OnResize
         */
         void PostResize(const Extent2D& clientAreaSize);
+
+        /**
+        \brief Posts a tap gesture event to all event listeners.
+        \see EventListener::OnTapGesture
+        */
+        void PostTapGesture(const Offset2D& position, std::uint32_t numTouches);
+
+        /**
+        \brief Posts a pan gesture event to all event listeners.
+        \see EventListener::OnPanGesture
+        */
+        void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
 
     protected:
 

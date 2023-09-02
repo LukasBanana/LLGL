@@ -104,6 +104,21 @@ struct Input::Pimpl
 
     std::vector<EventListenerSurfacePair<CanvasEventListener>>
                     canvasEventListeners;
+
+    void Reset()
+    {
+        /* Reset all input states to make room for next recordings */
+        wheelMotion = 0;
+        mouseMotion = { 0, 0 };
+
+        keyDownTracker.Reset(keyDown);
+        keyDownRepeatedTracker.Reset(keyDownRepeated);
+        keyUpTracker.Reset(keyUp);
+
+        ResetDoubleClickArray(doubleClick);
+
+        chars.clear();
+    }
 };
 
 
@@ -125,17 +140,7 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnProcessEvents(Window& sender) override
         {
-            /* Reset all input states to make room for next recordings */
-            data_.wheelMotion = 0;
-            data_.mouseMotion = { 0, 0 };
-
-            data_.keyDownTracker.Reset(data_.keyDown);
-            data_.keyDownRepeatedTracker.Reset(data_.keyDownRepeated);
-            data_.keyUpTracker.Reset(data_.keyUp);
-
-            ResetDoubleClickArray(data_.doubleClick);
-
-            data_.chars.clear();
+            data_.Reset();
         }
 
         void OnKeyDown(Window& sender, Key keyCode) override
@@ -249,8 +254,8 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     public:
 
-        CanvasEventListener(Input::Pimpl& data)// :
-            //data_ { data }
+        CanvasEventListener(Input::Pimpl& data) :
+            data_ { data }
         {
         }
 
@@ -258,12 +263,24 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
         void OnProcessEvents(Canvas& sender) override
         {
+            data_.Reset();
+        }
+
+        void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches) override
+        {
             //TODO
+        }
+
+        void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy) override
+        {
+            //TODO: Use separate field
+            data_.mouseMotion.x = static_cast<std::int32_t>(dx * 0.1f);
+            data_.mouseMotion.y = static_cast<std::int32_t>(dy * 0.1f);
         }
 
     private:
 
-        //Input::Pimpl& data_;
+        Input::Pimpl& data_;
 
 };
 

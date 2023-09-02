@@ -61,6 +61,36 @@ static LLGL::Extent2D GetScaledResolutionByDisplayScale(CGSize size, const LLGL:
     canvas_->PostResize(resolution);
 }
 
+- (void)allocGestureRecognizers:(UIWindow*)wnd
+{
+    UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
+    [wnd addGestureRecognizer:tapGestureRecognizer];
+
+    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
+    [wnd addGestureRecognizer:panGestureRecognizer];
+}
+
+static LLGL::Offset2D MapUIGestureLocation(UIGestureRecognizer* recognizer, UIView* view)
+{
+    CGPoint location = [recognizer locationInView:view];
+    return LLGL::Offset2D{ static_cast<std::int32_t>(location.x), static_cast<std::int32_t>(location.y) };
+}
+
+- (void)handleTapGesture:(UITapGestureRecognizer*)recognizer
+{
+    UIView* view = canvas_->GetUIWindow();
+    const std::uint32_t numTouches = static_cast<std::uint32_t>([recognizer numberOfTouches]);
+    canvas_->PostTapGesture(MapUIGestureLocation(recognizer, view), numTouches);
+}
+
+- (void)handlePanGesture:(UIPanGestureRecognizer*)recognizer
+{
+    UIView* view = canvas_->GetUIWindow();
+    const std::uint32_t numTouches = static_cast<std::uint32_t>([recognizer numberOfTouches]);
+    CGPoint velocity = [recognizer translationInView:view];
+    canvas_->PostPanGesture(MapUIGestureLocation(recognizer, view), numTouches, velocity.x, velocity.y);
+}
+
 @end
 
 
@@ -100,6 +130,8 @@ static UIWindow* CreateIOSUIWindow(UIViewController* viewCtrl)
 
     wnd.rootViewController = viewCtrl;
     [wnd makeKeyAndVisible];
+
+    [(IOSCanvasViewController*)viewCtrl allocGestureRecognizers:wnd];
 
     return wnd;
 }

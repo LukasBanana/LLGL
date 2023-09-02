@@ -53,6 +53,16 @@ void Canvas::EventListener::OnResize(Canvas& sender, const Extent2D& clientAreaS
     // dummy
 }
 
+void Canvas::EventListener::OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy)
+{
+    // dummy
+}
+
 
 /* ----- Window class ----- */
 
@@ -127,6 +137,16 @@ void Canvas::PostDraw()
 void Canvas::PostResize(const Extent2D& clientAreaSize)
 {
     FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
+}
+
+void Canvas::PostTapGesture(const Offset2D& position, std::uint32_t numTouches)
+{
+    FOREACH_LISTENER_CALL( OnTapGesture(*this, position, numTouches) );
+}
+
+void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy)
+{
+    FOREACH_LISTENER_CALL( OnPanGesture(*this, position, numTouches, dx, dy) );
 }
 
 #undef FOREACH_LISTENER_CALL
