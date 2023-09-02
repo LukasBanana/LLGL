@@ -40,6 +40,9 @@ class MacOSGLContext : public GLContext
 
     public:
 
+        // Makes the specified NSOpenGLContext current and caches it.
+        static void MakeNSOpenGLContextCurrent(NSOpenGLContext* context);
+
         // Returns the native NSOpenGLContext object.
         inline NSOpenGLContext* GetNSGLContext() const
         {

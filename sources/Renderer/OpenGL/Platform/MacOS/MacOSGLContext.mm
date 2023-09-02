@@ -55,6 +55,17 @@ int MacOSGLContext::GetSamples() const
     return samples_;
 }
 
+static NSOpenGLContext* g_currentNSGLContext;
+
+void MacOSGLContext::MakeNSOpenGLContextCurrent(NSOpenGLContext* context)
+{
+    if (g_currentNSGLContext != context)
+    {
+        [context makeCurrentContext];
+        g_currentNSGLContext = context;
+    }
+}
+
 
 /*
  * ======= Private: =======
@@ -139,6 +150,9 @@ void MacOSGLContext::CreateNSGLContext(MacOSGLContext* sharedContext)
     ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
     if (!ctx_)
         throw std::runtime_error("failed to create NSOpenGLContext");
+
+    /* Make new context current */
+    MacOSGLContext::MakeNSOpenGLContextCurrent(ctx_);
 }
 
 void MacOSGLContext::DeleteNSGLContext()

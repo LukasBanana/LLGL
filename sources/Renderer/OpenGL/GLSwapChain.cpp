@@ -97,7 +97,7 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
     if (swapChain)
     {
         /* Make OpenGL context of the specified render contex current and notify the state manager */
-        auto result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get());
+        bool result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get());
         GLStateManager::Get().ResetFramebufferHeight(swapChain->framebufferHeight_);
         return result;
     }

@@ -52,23 +52,12 @@ bool MacOSGLSwapChainContext::SwapBuffers()
     return true;
 }
 
-static NSOpenGLContext* g_currentNSGLContext;
-
-static void MakeNSOpenGLContextCurrent(NSOpenGLContext* context)
-{
-    if (g_currentNSGLContext != context)
-    {
-        [context makeCurrentContext];
-        g_currentNSGLContext = context;
-    }
-}
-
 bool MacOSGLSwapChainContext::MakeCurrentNSGLContext(MacOSGLSwapChainContext* context)
 {
     if (context != nullptr)
     {
         /* Make context current */
-        MakeNSOpenGLContextCurrent(context->ctx_);
+        MacOSGLContext::MakeNSOpenGLContextCurrent(context->ctx_);
 
         /* 'setView' is deprecated since macOS 10.14 together with OpenGL in general, so suppress this deprecation warning */
         #pragma clang diagnostic push
