@@ -32,6 +32,8 @@ class MacOSGLSwapChainContext final : public GLSwapChainContext
 
         bool SwapBuffers() override;
 
+        void Resize(const Extent2D& resolution) override;
+        
     public:
 
         static bool MakeCurrentNSGLContext(MacOSGLSwapChainContext* context);

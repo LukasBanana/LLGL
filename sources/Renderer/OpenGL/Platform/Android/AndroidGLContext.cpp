@@ -50,11 +50,6 @@ AndroidGLContext::~AndroidGLContext()
     DeleteContext();
 }
 
-void AndroidGLContext::Resize(const Extent2D& resolution)
-{
-    // dummy
-}
-
 int AndroidGLContext::GetSamples() const
 {
     return samples_;

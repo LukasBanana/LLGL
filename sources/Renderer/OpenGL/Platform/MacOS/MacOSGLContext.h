@@ -35,7 +35,6 @@ class MacOSGLContext : public GLContext
         );
         ~MacOSGLContext();
 
-        void Resize(const Extent2D& resolution) override;
         int GetSamples() const override;
 
     public:

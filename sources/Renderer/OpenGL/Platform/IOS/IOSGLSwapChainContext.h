@@ -37,6 +37,8 @@ class IOSGLSwapChainContext final : public GLSwapChainContext
 
         bool SwapBuffers() override;
 
+        void Resize(const Extent2D& resolution) override;
+
     public:
 
         static bool MakeCurrentEGLContext(IOSGLSwapChainContext* context);

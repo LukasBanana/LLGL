@@ -60,6 +60,11 @@ bool AndroidGLSwapChainContext::SwapBuffers()
     return true;
 }
 
+void AndroidGLSwapChainContext::Resize(const Extent2D& resolution)
+{
+    // dummy
+}
+
 bool AndroidGLSwapChainContext::MakeCurrentEGLContext(AndroidGLSwapChainContext* context)
 {
     if (context)

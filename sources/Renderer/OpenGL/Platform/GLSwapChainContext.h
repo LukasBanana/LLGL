@@ -34,6 +34,9 @@ class GLSwapChainContext
         // Swaps the back buffer with the front buffer (Win32: ::SwapBuffers, X11: glXSwapBuffers).
         virtual bool SwapBuffers() = 0;
 
+        // Resizes the GL swap-chain context. This is called after the context surface has been resized.
+        virtual void Resize(const Extent2D& resolution) = 0;
+
     public:
 
         inline GLContext& GetGLContext() const

@@ -52,6 +52,11 @@ bool MacOSGLSwapChainContext::SwapBuffers()
     return true;
 }
 
+void MacOSGLSwapChainContext::Resize(const Extent2D& resolution)
+{
+    [ctx_ update];
+}
+
 bool MacOSGLSwapChainContext::MakeCurrentNSGLContext(MacOSGLSwapChainContext* context)
 {
     if (context != nullptr)

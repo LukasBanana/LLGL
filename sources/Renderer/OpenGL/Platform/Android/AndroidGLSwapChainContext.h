@@ -30,6 +30,7 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
         ~AndroidGLSwapChainContext();
 
         bool SwapBuffers() override;
+        void Resize(const Extent2D& resolution) override;
 
     public:
 

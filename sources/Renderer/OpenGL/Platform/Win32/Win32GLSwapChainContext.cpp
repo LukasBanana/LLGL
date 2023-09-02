@@ -55,6 +55,11 @@ bool Win32GLSwapChainContext::SwapBuffers()
     return (::SwapBuffers(hDC_) != FALSE);
 }
 
+void Win32GLSwapChainContext::Resize(const Extent2D& resolution)
+{
+    // do nothing (WGL context does not need to be resized)
+}
+
 bool Win32GLSwapChainContext::MakeCurrentWGLContext(Win32GLSwapChainContext* context)
 {
     if (context)

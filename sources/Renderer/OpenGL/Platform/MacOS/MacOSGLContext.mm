@@ -45,11 +45,6 @@ MacOSGLContext::~MacOSGLContext()
     DeleteNSGLContext();
 }
 
-void MacOSGLContext::Resize(const Extent2D& resolution)
-{
-    [ctx_ update];
-}
-
 int MacOSGLContext::GetSamples() const
 {
     return samples_;

@@ -82,11 +82,6 @@ Win32GLContext::~Win32GLContext()
     DeleteGLContext(hGLRC_);
 }
 
-void Win32GLContext::Resize(const Extent2D& resolution)
-{
-    // do nothing (WGL context does not need to be resized)
-}
-
 int Win32GLContext::GetSamples() const
 {
     return formatDesc_.samples;

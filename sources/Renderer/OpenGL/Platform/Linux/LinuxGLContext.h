@@ -34,7 +34,6 @@ class LinuxGLContext : public GLContext
         );
         ~LinuxGLContext();
 
-        void Resize(const Extent2D& resolution) override;
         int GetSamples() const override;
 
     public:

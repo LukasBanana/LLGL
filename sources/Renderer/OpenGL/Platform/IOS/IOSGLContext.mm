@@ -50,11 +50,6 @@ IOSGLContext::~IOSGLContext()
     DeleteContext();
 }
 
-void IOSGLContext::Resize(const Extent2D& resolution)
-{
-    // dummy
-}
-
 int IOSGLContext::GetSamples() const
 {
     return pixelFormat_.samples;

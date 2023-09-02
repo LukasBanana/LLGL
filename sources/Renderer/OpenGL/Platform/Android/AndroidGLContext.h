@@ -32,7 +32,6 @@ class AndroidGLContext : public GLContext
         );
         ~AndroidGLContext();
 
-        void Resize(const Extent2D& resolution) override;
         int GetSamples() const override;
 
     public:

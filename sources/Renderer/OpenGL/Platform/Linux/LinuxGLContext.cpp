@@ -67,11 +67,6 @@ LinuxGLContext::~LinuxGLContext()
     DeleteContext();
 }
 
-void LinuxGLContext::Resize(const Extent2D& resolution)
-{
-    //TODO...
-}
-
 int LinuxGLContext::GetSamples() const
 {
     return samples_;

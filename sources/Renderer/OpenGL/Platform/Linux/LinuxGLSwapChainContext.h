@@ -29,6 +29,7 @@ class LinuxGLSwapChainContext final : public GLSwapChainContext
         LinuxGLSwapChainContext(LinuxGLContext& context, Surface& surface);
 
         bool SwapBuffers() override;
+        void Resize(const Extent2D& resolution) override;
 
     public:
 

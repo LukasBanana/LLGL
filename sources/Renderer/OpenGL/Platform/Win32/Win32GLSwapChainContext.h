@@ -28,6 +28,7 @@ class Win32GLSwapChainContext final : public GLSwapChainContext
         Win32GLSwapChainContext(Win32GLContext& context, Surface& surface);
 
         bool SwapBuffers() override;
+        void Resize(const Extent2D& resolution) override;
 
     public:
 

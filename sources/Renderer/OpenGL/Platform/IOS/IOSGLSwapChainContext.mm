@@ -121,7 +121,6 @@ IOSGLSwapChainContext::IOSGLSwapChainContext(IOSGLContext& context, Surface& sur
     /* Allocate view controller (also inherts from GLKViewDelegate) to handle re-draw events */
     viewController_ = [[IOSGLSwapChainViewController alloc] initWithEAGLContext:context_ withCanvas:canvas];
     [viewController_ setView:view_];
-    //[viewController_ setPreferredFramesPerSecond:60];
 
     /* Configure GLKView with initial GL pixel format */
     const GLPixelFormat& pixelFormat = context.GetPixelFormat();
@@ -139,6 +138,11 @@ IOSGLSwapChainContext::IOSGLSwapChainContext(IOSGLContext& context, Surface& sur
 bool IOSGLSwapChainContext::SwapBuffers()
 {
     return true; // dummy
+}
+
+void IOSGLSwapChainContext::Resize(const Extent2D& resolution)
+{
+    // dummy
 }
 
 bool IOSGLSwapChainContext::MakeCurrentEGLContext(IOSGLSwapChainContext* context)

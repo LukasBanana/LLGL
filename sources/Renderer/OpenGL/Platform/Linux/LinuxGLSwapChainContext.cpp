@@ -55,6 +55,11 @@ bool LinuxGLSwapChainContext::SwapBuffers()
     return true;
 }
 
+void LinuxGLSwapChainContext::Resize(const Extent2D& resolution)
+{
+    // dummy
+}
+
 bool LinuxGLSwapChainContext::MakeCurrentGLXContext(LinuxGLSwapChainContext* context)
 {
     if (context)

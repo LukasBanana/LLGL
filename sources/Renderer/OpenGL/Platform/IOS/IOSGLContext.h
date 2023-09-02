@@ -32,7 +32,6 @@ class IOSGLContext : public GLContext
         );
         ~IOSGLContext();
 
-        void Resize(const Extent2D& resolution) override;
         int GetSamples() const override;
 
     public:

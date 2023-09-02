@@ -113,7 +113,7 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
 bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Notify GL context of a resize */
-    context_->Resize(resolution);
+    swapChainContext_->Resize(resolution);
 
     /* Update context height */
     const GLint height = static_cast<GLint>(resolution.height);
