@@ -88,18 +88,15 @@ MyRenderer::MyRenderer(
     LLGL::NativeHandle mainWindowHandle;
     mainWindow.GetNativeHandle(&mainWindowHandle, sizeof(mainWindowHandle));
 
-    // Copy native handle from main window into context handle as parent window
-    LLGL::NativeContextHandle mainWindowContextHandle;
-    mainWindowContextHandle.parentWindow = mainWindowHandle.window;
-
     // Create sub window for swap-chain
     LLGL::WindowDescriptor windowDesc;
     {
-        windowDesc.position         = subWindowOffset;
-        windowDesc.size             = { static_cast<std::uint32_t>(viewport.width)/2, static_cast<std::uint32_t>(viewport.height)/2 };
-        windowDesc.borderless       = true;
-        windowDesc.visible          = true;
-        windowDesc.windowContext    = (&mainWindowContextHandle);
+        windowDesc.position             = subWindowOffset;
+        windowDesc.size                 = { static_cast<std::uint32_t>(viewport.width)/2, static_cast<std::uint32_t>(viewport.height)/2 };
+        windowDesc.borderless           = true;
+        windowDesc.visible              = true;
+        windowDesc.windowContext        = (&mainWindowHandle);
+        windowDesc.windowContextSize    = sizeof(mainWindowHandle);
     }
     subWindow = LLGL::Window::Create(windowDesc);
 

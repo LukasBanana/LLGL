@@ -200,8 +200,8 @@ void LinuxWindow::OnProcessEvents()
 void LinuxWindow::OpenWindow()
 {
     /* Get native context handle */
-    auto nativeHandle = reinterpret_cast<const NativeContextHandle*>(desc_.windowContext);
-    if (nativeHandle)
+    const NativeHandle* nativeHandle = reinterpret_cast<const NativeHandle*>(desc_.windowContext);
+    if (nativeHandle != nullptr && desc_.windowContextSize == sizeof(NativeHandle))
     {
         /* Get X11 display from context handle */
         display_    = nativeHandle->display;
@@ -219,7 +219,7 @@ void LinuxWindow::OpenWindow()
         throw std::runtime_error("failed to open X11 display");
 
     /* Setup common parameters for window creation */
-    ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->parentWindow : DefaultRootWindow(display_));
+    ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->window : DefaultRootWindow(display_));
     int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
     ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->visual->visual : DefaultVisual(display_, screen));
     int         depth       = (nativeHandle != nullptr ? nativeHandle->visual->depth : DefaultDepth(display_, screen));

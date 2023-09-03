@@ -77,12 +77,20 @@ struct WindowDescriptor
     \code
     #include <LLGL/Platform/NativeHandle.h>
     //...
-    LLGL::NativeContextHandle handle;
-    //handle.parentWindow = ...
-    windowDesc.windowContext = reinterpret_cast<const void*>(&handle);
+    LLGL::NativeHandle myParentWindowHandle;
+    myParentWindow->GetNativeHandle(&myParentWindowHandle, sizeof(myParentWindowHandle));
+    windowDesc.windowContext        = &myParentWindowHandle;
+    windowDesc.windowContextSize    = sizeof(myParentWindowHandle);
     \endcode
     */
     const void*     windowContext       = nullptr;
+
+    /**
+    \brief Specifies the size (in bytes) of the data type windowContext points to.
+    \remarks If windowContext is non-null, this must be equal to <code>sizeof(LLGL::NativeHandle)</code>.
+    \see windowContext
+    */
+    std::size_t     windowContextSize   = 0;
 };
 
 /**

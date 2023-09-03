@@ -94,8 +94,6 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
     wndDelegate_ { CreateNSWindowDelegate(desc) },
     wnd_         { CreateNSWindow(desc)         }
 {
-    if (!desc.centered)
-        SetPosition(desc.position);
 }
 
 MacOSWindow::~MacOSWindow()
@@ -128,22 +126,40 @@ Extent2D MacOSWindow::GetContentSize() const
     return GetSize(true);
 }
 
+static void SetRelativeNSWindowPosition(NSWindow* wnd, const Offset2D& position, NSWindow* parentWnd = nullptr)
+{
+    if (parentWnd != nullptr)
+    {
+        CGPoint parentWndOrigin = parentWnd.frame.origin;
+
+        /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
+        CGFloat x = static_cast<CGFloat>(position.x);
+        CGFloat y = [[parentWnd contentView] frame].size.height - static_cast<CGFloat>(position.y);
+
+        [wnd setFrameTopLeftPoint:NSMakePoint(parentWndOrigin.x + x, parentWndOrigin.y + y)];
+    }
+    else
+    {
+        /* Get visible screen size (without dock and menu bar) */
+        NSScreen* screen = [NSScreen mainScreen];
+
+        NSSize screenFrameSize = [screen frame].size;
+        NSRect screenVisibleFrame = [screen visibleFrame];
+
+        /* Calculate menu bar height */
+        CGFloat menuBarHeight = screenFrameSize.height - screenVisibleFrame.size.height - screenVisibleFrame.origin.y;
+
+        /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
+        CGFloat x = static_cast<CGFloat>(position.x);
+        CGFloat y = screenFrameSize.height - menuBarHeight - static_cast<CGFloat>(position.y);
+
+        [wnd setFrameTopLeftPoint:NSMakePoint(x, y)];
+    }
+}
+
 void MacOSWindow::SetPosition(const Offset2D& position)
 {
-    /* Get visible screen size (without dock and menu bar) */
-    NSScreen* screen = [NSScreen mainScreen];
-
-    NSSize frameSize = [screen frame].size;
-    NSRect visibleFrame = [screen visibleFrame];
-
-    /* Calculate menu bar height */
-    CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
-
-    /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
-    CGFloat x = (CGFloat)position.x;
-    CGFloat y = frameSize.height - menuBarHeight - (CGFloat)position.y;
-
-    [wnd_ setFrameTopLeftPoint:NSMakePoint(x, y)];
+    SetRelativeNSWindowPosition(wnd_, position);
 }
 
 Offset2D MacOSWindow::GetPosition() const
@@ -288,17 +304,32 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     [wnd setDelegate:wndDelegate_];
     [wnd setAcceptsMouseMovedEvents:YES];
     [wnd setTitle:ToNSString(desc.title.c_str())];
-    [wnd makeKeyAndOrderFront:nil];
-
-    /* Center window in the middle of the screen */
-    if (desc.centered)
-        [wnd center];
 
     #if 0
     /* Set window collection behavior for resize events */
     if (desc.resizable)
         [wnd setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary | NSWindowCollectionBehaviorManaged];
     #endif
+
+    if (desc.windowContext != nullptr && desc.windowContextSize == sizeof(NativeHandle))
+    {
+        /* Add to parent window if specified */
+        if (NSWindow* parentWnd = reinterpret_cast<const NativeHandle*>(desc.windowContext)->window)
+        {
+            [parentWnd addChildWindow:wnd ordered:NSWindowAbove];
+            if (!desc.centered)
+                SetRelativeNSWindowPosition(wnd, desc.position, parentWnd);
+        }
+    }
+    else
+    {
+        /* Move this window to the front of the screen list and center if requested */
+        [wnd makeKeyAndOrderFront:nil];
+        if (desc.centered)
+            [wnd center];
+        else
+            SetRelativeNSWindowPosition(wnd, desc.position);
+    }
 
     /* Show window */
     if (desc.visible)

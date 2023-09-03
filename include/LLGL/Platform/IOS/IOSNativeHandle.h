@@ -22,12 +22,6 @@ struct NativeHandle
     UIView* view;
 };
 
-//! iOS native context handle structure.
-struct NativeContextHandle
-{
-    UIView* parentView;
-};
-
 
 } // /namespace LLGL
 

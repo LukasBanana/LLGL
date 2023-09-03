@@ -22,12 +22,6 @@ struct NativeHandle
     NSWindow* window;
 };
 
-//! MacOS native context handle structure.
-struct NativeContextHandle
-{
-    NSWindow* parentWindow;
-};
-
 
 } // /namespace LLGL
 

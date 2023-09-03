@@ -53,7 +53,14 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
 {
     DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
-    if (desc.windowContext != nullptr && reinterpret_cast<const NativeContextHandle*>(desc.windowContext)->parentWindow != 0)
+    const bool hasWindowContext =
+    (
+        desc.windowContext != nullptr &&
+        desc.windowContextSize == sizeof(NativeHandle) &&
+        reinterpret_cast<const NativeHandle*>(desc.windowContext)->window != 0
+    );
+
+    if (hasWindowContext)
         style |= WS_CHILD;
     else if (desc.borderless)
         style |= WS_POPUP;
@@ -120,8 +127,7 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 Win32Window::Win32Window(const WindowDescriptor& desc) :
-    contextHandle_ { 0                        },
-    wnd_           { CreateWindowHandle(desc) }
+    wnd_ { CreateWindowHandle(desc) }
 {
 }
 
@@ -268,7 +274,11 @@ WindowDescriptor Win32Window::GetDesc() const
     desc.acceptDropFiles    = ((windowFlags & WM_DROPFILES) != 0);
     desc.centered           = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
 
-    desc.windowContext      = (contextHandle_.parentWindow != 0 ? (&contextHandle_) : nullptr);
+    if (parentWnd_ != nullptr)
+    {
+        desc.windowContext      = &parentWnd_;
+        desc.windowContextSize  = sizeof(parentWnd_);
+    }
 
     return desc;
 }
@@ -357,6 +367,14 @@ void Win32Window::OnProcessEvents()
  * ======= Private: =======
  */
 
+static HWND GetNativeWin32ParentWindow(const void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
+        return reinterpret_cast<const NativeHandle*>(nativeHandle)->window;
+    else
+        return nullptr;
+}
+
 HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
 {
     auto windowClass = Win32WindowClass::Instance();
@@ -365,16 +383,8 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     auto appearance = GetWindowAppearance(desc);
 
     /* Get parent window */
-    HWND parentWnd = HWND_DESKTOP;
-
-    if (auto nativeContext = reinterpret_cast<const NativeContextHandle*>(desc.windowContext))
-    {
-        if (nativeContext->parentWindow)
-        {
-            parentWnd = nativeContext->parentWindow;
-            contextHandle_ = *nativeContext;
-        }
-    }
+    parentWnd_ = GetNativeWin32ParentWindow(desc.windowContext, desc.windowContextSize);
+    HWND parentWndOrDesktop = (parentWnd_ != nullptr ? parentWnd_ : HWND_DESKTOP);
 
     #ifdef UNICODE
     auto title = desc.title.to_utf16();
@@ -391,7 +401,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
         appearance.position.y,
         static_cast<int>(appearance.size.width),
         static_cast<int>(appearance.size.height),
-        parentWnd,
+        parentWndOrDesktop,
         nullptr,
         GetModuleHandle(nullptr),
         nullptr

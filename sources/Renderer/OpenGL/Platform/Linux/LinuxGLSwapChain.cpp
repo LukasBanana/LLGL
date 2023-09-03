@@ -23,7 +23,7 @@ namespace LLGL
  * ======= Private: =======
  */
 
-void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeContextHandle& windowContext)
+void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeHandle& windowContext)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);

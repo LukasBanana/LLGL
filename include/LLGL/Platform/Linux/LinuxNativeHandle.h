@@ -20,18 +20,19 @@ namespace LLGL
 //! Linux native handle structure.
 struct NativeHandle
 {
+    //! X11 display connection.
     ::Display*      display;
-    ::Window        window;
-    ::XVisualInfo*  visual;
-};
 
-//! Linux native context handle structure.
-struct NativeContextHandle
-{
-    ::Display*      display;
-    ::Window        parentWindow;
+    //! X11 window object.
+    ::Window        window;
+
+    //! X11 visual information.
     ::XVisualInfo*  visual;
+
+    //! X11 colormap object. Used internally by the OpenGL backend.
     ::Colormap      colorMap;
+
+    //! X11 screen index.
     int             screen;
 };
 

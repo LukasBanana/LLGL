@@ -15,7 +15,7 @@
 
 @implementation MacOSWindowDelegate
 
-- (nonnull instancetype)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
+- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
 {
     self = [super init];
     

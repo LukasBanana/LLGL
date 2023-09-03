@@ -22,12 +22,6 @@ struct NativeHandle
     ANativeWindow* window;
 };
 
-//! Android native context handle structure.
-struct NativeContextHandle
-{
-    ANativeWindow* parentWindow;
-};
-
 
 } // /namespace LLGL
 

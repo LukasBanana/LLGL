@@ -131,6 +131,7 @@ IOSGLSwapChainContext::IOSGLSwapChainContext(IOSGLContext& context, Surface& sur
 
     //NSDictionary* viewsDictionary = @{@"glkView":view_};
     [canvasView addSubview:view_];
+    [canvasView setAutoresizesSubviews:YES];
     //[canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[glkView]|" options:0 metrics:nil views:viewsDictionary]];
     //[canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[glkView]|" options:0 metrics:nil views:viewsDictionary]];
 }
@@ -142,7 +143,8 @@ bool IOSGLSwapChainContext::SwapBuffers()
 
 void IOSGLSwapChainContext::Resize(const Extent2D& resolution)
 {
-    // dummy
+    [view_ setNeedsDisplay];
+    [view_ display];
 }
 
 bool IOSGLSwapChainContext::MakeCurrentEGLContext(IOSGLSwapChainContext* context)

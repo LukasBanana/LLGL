@@ -76,7 +76,7 @@ class GLSwapChain final : public SwapChain
         bool SetSwapInterval(int swapInterval);
 
         #ifdef __linux__
-        void ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeContextHandle& windowContext);
+        void ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeHandle& windowContext);
         #endif
 
     private:

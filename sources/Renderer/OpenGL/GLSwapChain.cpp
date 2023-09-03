@@ -32,7 +32,7 @@ GLSwapChain::GLSwapChain(
     #ifdef LLGL_OS_LINUX
 
     /* Set up surface for the swap-chain and pass native context handle */
-    NativeContextHandle windowContext;
+    NativeHandle windowContext = {};
     ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext);
 
