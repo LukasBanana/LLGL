@@ -9,8 +9,10 @@
 #define LLGL_MACOS_WINDOW_H
 
 
-#include <Cocoa/Cocoa.h>
 #include <LLGL/Window.h>
+#include "MacOSWindowDelegate.h"
+
+#import <Cocoa/Cocoa.h>
 
 
 namespace LLGL
@@ -23,6 +25,7 @@ class MacOSWindow : public Window
     public:
 
         MacOSWindow(const WindowDescriptor& desc);
+        ~MacOSWindow();
 
         bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
@@ -45,7 +48,7 @@ class MacOSWindow : public Window
         void SetDesc(const WindowDescriptor& desc) override;
         WindowDescriptor GetDesc() const override;
 
-        // Returns the native NSWindow* object.
+        // Returns the native NSWindow object.
         inline NSWindow* GetNSWindow() const
         {
             return wnd_;
@@ -61,12 +64,14 @@ class MacOSWindow : public Window
         void ProcessMouseMoveEvent(NSEvent* event);
         void ProcessMouseWheelEvent(NSEvent* event);
 
+        MacOSWindowDelegate* CreateNSWindowDelegate(const WindowDescriptor& desc);
         NSWindow* CreateNSWindow(const WindowDescriptor& desc);
 
     private:
 
-        NSWindow*   wnd_                = nullptr;
-        Offset2D    prevMotionOffset_;
+        MacOSWindowDelegate*    wndDelegate_        = nullptr;
+        NSWindow*               wnd_                = nullptr;
+        Offset2D                prevMotionOffset_;
 
 };
 
