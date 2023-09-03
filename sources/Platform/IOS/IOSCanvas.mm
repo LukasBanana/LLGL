@@ -126,9 +126,9 @@ static UIWindow* CreateIOSUIWindow(UIViewController* viewCtrl)
 
     //UINavigationController* navCtrl = [[UINavigationController alloc] initWithRootViewController:viewCtrl];
 
-    wnd.backgroundColor = [UIColor greenColor]; //TEST
-
     wnd.rootViewController = viewCtrl;
+
+    /* Always show UIWindow as there is no show/hide functionality for Canvas */
     [wnd makeKeyAndVisible];
 
     [(IOSCanvasViewController*)viewCtrl allocGestureRecognizers:wnd];
