@@ -25,6 +25,12 @@ class MTDevice
         // Returns the most suitable sample count for the Metal device
         static NSUInteger FindSuitableSampleCount(id<MTLDevice> device, NSUInteger samples);
 
+        /*
+        Returns the most suitable sample count unless the requested input is 1 in which case the return value is also 1.
+        Use the other function if a multisample texture must be created, in which case the return value cannot be less than or equal to 1.
+        */
+        static NSUInteger FindSuitableSampleCountOr1(id<MTLDevice> device, NSUInteger samples);
+
 };
 
 

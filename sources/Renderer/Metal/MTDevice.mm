@@ -14,7 +14,7 @@ namespace LLGL
 
 NSUInteger MTDevice::FindSuitableSampleCount(id<MTLDevice> device, NSUInteger samples)
 {
-    while (samples > 1)
+    while (samples > 1u)
     {
         if ([device supportsTextureSampleCount:samples])
             return samples;
@@ -23,6 +23,13 @@ NSUInteger MTDevice::FindSuitableSampleCount(id<MTLDevice> device, NSUInteger sa
     return 4u; // Supported by all macOS and iOS devices; 1 is not supported according to Metal validation layer
 }
 
+NSUInteger MTDevice::FindSuitableSampleCountOr1(id<MTLDevice> device, NSUInteger samples)
+{
+    if (samples > 1u)
+        return MTDevice::FindSuitableSampleCount(device, samples);
+    else
+        return 1u;
+}
 
 
 } // /namespace LLGL

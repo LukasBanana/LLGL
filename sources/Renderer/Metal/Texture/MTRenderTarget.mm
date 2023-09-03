@@ -233,7 +233,7 @@ MTLTextureDescriptor* MTRenderTarget::CreateTextureDesc(
     MTLPixelFormat  pixelFormat,
     NSUInteger      sampleCount)
 {
-    sampleCount = MTDevice::FindSuitableSampleCount(device, static_cast<std::uint32_t>(sampleCount));
+    sampleCount = MTDevice::FindSuitableSampleCountOr1(device, static_cast<std::uint32_t>(sampleCount));
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
     {
         texDesc.textureType     = (sampleCount > 1 ? MTLTextureType2DMultisample : MTLTextureType2D);

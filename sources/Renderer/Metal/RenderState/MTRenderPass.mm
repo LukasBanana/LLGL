@@ -29,7 +29,7 @@ namespace LLGL
 
 static NSUInteger GetMTRenderPassSampleCount(id<MTLDevice> device, std::uint32_t sampleCount)
 {
-    return MTDevice::FindSuitableSampleCount(device, static_cast<NSUInteger>(GetClampedSamples(sampleCount)));
+    return MTDevice::FindSuitableSampleCountOr1(device, static_cast<NSUInteger>(GetClampedSamples(sampleCount)));
 }
 
 static void ConvertAttachmentFormat(MTAttachmentFormat& dst, const AttachmentFormatDescriptor& src)
