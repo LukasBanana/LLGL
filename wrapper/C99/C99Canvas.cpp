@@ -53,8 +53,8 @@ static std::vector<std::unique_ptr<Canvas>> g_Canvases;
 
 static void ConvertCanvasDesc(CanvasDescriptor& dst, const LLGLCanvasDescriptor& src)
 {
-    dst.title       = src.title;
-    dst.borderless  = src.borderless;
+    dst.title = src.title;
+    dst.flags = src.flags;
 }
 
 LLGL_C_EXPORT LLGLCanvas llglCreateCanvas(const LLGLCanvasDescriptor* canvasDesc)

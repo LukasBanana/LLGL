@@ -67,17 +67,17 @@ void Window::EventListener::OnResize(Window& sender, const Extent2D& clientAreaS
     // dummy
 }
 
+void Window::EventListener::OnUpdate(Window& sender)
+{
+    // dummy
+}
+
 void Window::EventListener::OnGetFocus(Window& sender)
 {
     // dummy
 }
 
 void Window::EventListener::OnLostFocus(Window& sender)
-{
-    // dummy
-}
-
-void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
 {
     // dummy
 }
@@ -90,7 +90,6 @@ void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
 struct Window::Pimpl
 {
     std::vector<std::shared_ptr<EventListener>> eventListeners;
-    WindowBehavior                              behavior;
     bool                                        quit            = false;
     bool                                        focus           = false;
 };
@@ -202,16 +201,6 @@ Display* Window::FindResidentDisplay() const
     return nullptr;
 }
 
-void Window::SetBehavior(const WindowBehavior& behavior)
-{
-    pimpl_->behavior = behavior;
-}
-
-const WindowBehavior& Window::GetBehavior() const
-{
-    return pimpl_->behavior;
-}
-
 bool Window::HasFocus() const
 {
     return pimpl_->focus;
@@ -287,6 +276,11 @@ void Window::PostResize(const Extent2D& clientAreaSize)
     FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
 }
 
+void Window::PostUpdate()
+{
+    FOREACH_LISTENER_CALL( OnUpdate(*this) );
+}
+
 void Window::PostGetFocus()
 {
     pimpl_->focus = true;
@@ -297,11 +291,6 @@ void Window::PostLostFocus()
 {
     pimpl_->focus = false;
     FOREACH_LISTENER_CALL( OnLostFocus(*this) );
-}
-
-void Window::PostTimer(std::uint32_t timerID)
-{
-    FOREACH_LISTENER_CALL( OnTimer(*this, timerID) );
 }
 
 #undef FOREACH_LISTENER_CALL

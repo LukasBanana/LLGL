@@ -152,7 +152,7 @@ void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL:
     }
 }
 
-void ExampleBase::WindowEventHandler::OnTimer(LLGL::Window& sender, std::uint32_t timerID)
+void ExampleBase::WindowEventHandler::OnUpdate(LLGL::Window& sender)
 {
     // Re-draw frame
     if (app_.IsLoadingDone())
@@ -395,14 +395,8 @@ ExampleBase::ExampleBase(
 
     // Change window descriptor to allow resizing
     LLGL::WindowDescriptor wndDesc = window.GetDesc();
-    wndDesc.flags |= LLGL::WindowFlags::Resizable;
+    wndDesc.flags |= LLGL::WindowFlags::Resizable | LLGL::WindowFlags::DisableClearOnResize;
     window.SetDesc(wndDesc);
-
-    // Change window behavior
-    LLGL::WindowBehavior behavior = window.GetBehavior();
-    behavior.disableClearOnResize = true;
-    behavior.moveAndResizeTimerID = 1;
-    window.SetBehavior(behavior);
 
     // Add window resize listener
     window.AddEventListener(std::make_shared<WindowEventHandler>(*this, swapChain, projection));

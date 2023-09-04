@@ -24,9 +24,9 @@ typedef void (*LLGL_PFN_OnWindowWheelMotion)(LLGLWindow sender, int motion);
 typedef void (*LLGL_PFN_OnWindowLocalMotion)(LLGLWindow sender, const LLGLOffset2D* position);
 typedef void (*LLGL_PFN_OnWindowGlobalMotion)(LLGLWindow sender, const LLGLOffset2D* motion);
 typedef void (*LLGL_PFN_OnWindowResize)(LLGLWindow sender, const LLGLExtent2D* clientAreaSize);
+typedef void (*LLGL_PFN_OnWindowUpdate)(LLGLWindow sender);
 typedef void (*LLGL_PFN_OnWindowGetFocus)(LLGLWindow sender);
 typedef void (*LLGL_PFN_OnWindowLostFocus)(LLGLWindow sender);
-typedef void (*LLGL_PFN_OnWindowTimer)(LLGLWindow sender, uint32_t timerID);
 
 typedef struct LLGLWindowEventListener
 {
@@ -40,9 +40,9 @@ typedef struct LLGLWindowEventListener
     LLGL_PFN_OnWindowLocalMotion    onLocalMotion;
     LLGL_PFN_OnWindowGlobalMotion   onGlobalMotion;
     LLGL_PFN_OnWindowResize         onResize;
+    LLGL_PFN_OnWindowUpdate         onUpdate;
     LLGL_PFN_OnWindowGetFocus       onGetFocus;
     LLGL_PFN_OnWindowLostFocus      onLostFocus;
-    LLGL_PFN_OnWindowTimer          onTimer;
 }
 LLGLWindowEventListener;
 
@@ -60,8 +60,6 @@ LLGL_C_EXPORT void llglSetWindowDesc(LLGLWindow window, const LLGLWindowDescript
 LLGL_C_EXPORT void llglGetWindowDesc(LLGLWindow window, LLGLWindowDescriptor* outWindowDesc);
 LLGL_C_EXPORT bool llglHasWindowFocus(LLGLWindow window);
 LLGL_C_EXPORT bool llglHasWindowQuit(LLGLWindow window);
-LLGL_C_EXPORT void llglSetWindowBehavior(LLGLWindow window, const LLGLWindowBehavior* behavior);
-LLGL_C_EXPORT void llglGetWindowBehavior(LLGLWindow window, LLGLWindowBehavior* outBehavior);
 LLGL_C_EXPORT int llglAddWindowEventListener(LLGLWindow window, const LLGLWindowEventListener* eventListener);
 LLGL_C_EXPORT void llglRemoveWindowEventListener(LLGLWindow window, int eventListenerID);
 LLGL_C_EXPORT void llglPostWindowQuit(LLGLWindow window);
@@ -73,9 +71,9 @@ LLGL_C_EXPORT void llglPostWindowWheelMotion(LLGLWindow window, int motion);
 LLGL_C_EXPORT void llglPostWindowLocalMotion(LLGLWindow window, const LLGLOffset2D* position);
 LLGL_C_EXPORT void llglPostWindowGlobalMotion(LLGLWindow window, const LLGLOffset2D* motion);
 LLGL_C_EXPORT void llglPostWindowResize(LLGLWindow window, const LLGLExtent2D* clientAreaSize);
+LLGL_C_EXPORT void llglPostWindowUpdate(LLGLWindow window);
 LLGL_C_EXPORT void llglPostWindowGetFocus(LLGLWindow window);
 LLGL_C_EXPORT void llglPostWindowLostFocus(LLGLWindow window);
-LLGL_C_EXPORT void llglPostWindowTimer(LLGLWindow window, uint32_t timerID);
 
 
 #endif

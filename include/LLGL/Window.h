@@ -51,13 +51,13 @@ class LLGL_EXPORT Window : public Surface
                 friend class Window;
 
                 /**
-                \brief Send when the window events are about to be polled. The event listeners receive this event before the window itself.
+                \brief Sent when the window events are about to be polled. The event listeners receive this event before the window itself.
                 \see Window::OnProcessEvents
                 */
                 virtual void OnProcessEvents(Window& sender);
 
                 /**
-                \brief Send when the window is about to quit.
+                \brief Sent when the window is about to quit.
                 \param[in] sender Specifies the sender of this event.
                 \param[out] veto Specifies whether to cancel the quit event.
                 If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
@@ -66,41 +66,42 @@ class LLGL_EXPORT Window : public Surface
                 */
                 virtual void OnQuit(Window& sender, bool& veto);
 
-                //! Send when a key (from keyboard or mouse) has been pushed.
+                //! Sent when a key (from keyboard or mouse) has been pushed.
                 virtual void OnKeyDown(Window& sender, Key keyCode);
 
-                //! Send when a key (from keyboard or mouse) has been released.
+                //! Sent when a key (from keyboard or mouse) has been released.
                 virtual void OnKeyUp(Window& sender, Key keyCode);
 
-                //! Send when a mouse button has been double clicked.
+                //! Sent when a mouse button has been double clicked.
                 virtual void OnDoubleClick(Window& sender, Key keyCode);
 
-                //! Send when a character specific key has been typed on the sender window. This will repeat depending on the OS keyboard settings.
+                //! Sent when a character specific key has been typed on the sender window. This will repeat depending on the OS keyboard settings.
                 virtual void OnChar(Window& sender, wchar_t chr);
 
-                //! Send when the mouse wheel has been moved on the sender window.
+                //! Sent when the mouse wheel has been moved on the sender window.
                 virtual void OnWheelMotion(Window& sender, int motion);
 
-                //! Send when the mouse has been moved on the sender window.
+                //! Sent when the mouse has been moved on the sender window.
                 virtual void OnLocalMotion(Window& sender, const Offset2D& position);
 
-                //! Send when the global mouse position has changed. This is a raw input and independent of the screen resolution.
+                //! Sent when the global mouse position has changed. This is a raw input and independent of the screen resolution.
                 virtual void OnGlobalMotion(Window& sender, const Offset2D& motion);
 
-                //! Send when the window has been resized.
+                //! Sent when the window has been resized.
                 virtual void OnResize(Window& sender, const Extent2D& clientAreaSize);
 
-                //! Send when the window gets the keyboard focus.
+                /**
+                \brief Sent when the window received a timer update while it is being moved or resized.
+                \remarks This should be used to redraw the window content while the main loop is on hold.
+                \note Only supported on: MS/Windows.
+                */
+                virtual void OnUpdate(Window& sender);
+
+                //! Sent when the window gets the keyboard focus.
                 virtual void OnGetFocus(Window& sender);
 
-                //! Send when the window lost the keyboard focus.
+                //! Sent when the window lost the keyboard focus.
                 virtual void OnLostFocus(Window& sender);
-
-                /**
-                \brief Send when the window received a timer event with the specified timer ID number.
-                \note Only supported on: MS. Windows.
-                */
-                virtual void OnTimer(Window& sender, std::uint32_t timerID);
 
         };
 
@@ -184,12 +185,6 @@ class LLGL_EXPORT Window : public Surface
         */
         bool HasQuit() const;
 
-        //! Sets the new window behavior.
-        void SetBehavior(const WindowBehavior& behavior);
-
-        //! Returns the window heavior.
-        const WindowBehavior& GetBehavior() const;
-
         //! Adds the specified event listener to this window.
         void AddEventListener(const std::shared_ptr<EventListener>& eventListener);
 
@@ -235,18 +230,14 @@ class LLGL_EXPORT Window : public Surface
         //! \see PostKeyDown
         void PostResize(const Extent2D& clientAreaSize);
 
+        //! Posts an 'Update' timer event with to all event listeners.
+        void PostUpdate();
+
         //! Posts a 'GetFocus' event to all event listeners.
         void PostGetFocus();
 
         //! Posts a 'LostFocus' event to all event listeners.
         void PostLostFocus();
-
-        /**
-        \brief Posts a timer event with the specified timer ID number.
-        \remarks This can be used to refresh the screen while the underlying window is currently being moved or resized by the user.
-        \note Only supported on: MS. Windows.
-        */
-        void PostTimer(std::uint32_t timerID);
 
     protected:
 

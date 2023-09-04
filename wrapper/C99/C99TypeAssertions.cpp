@@ -981,10 +981,6 @@ LLGL_STATIC_ASSERT_SIZE(BindingSlot);
 LLGL_STATIC_ASSERT_OFFSET(BindingSlot, index);
 LLGL_STATIC_ASSERT_OFFSET(BindingSlot, set);
 
-LLGL_STATIC_ASSERT_SIZE(WindowBehavior);
-LLGL_STATIC_ASSERT_OFFSET(WindowBehavior, disableClearOnResize);
-LLGL_STATIC_ASSERT_OFFSET(WindowBehavior, moveAndResizeTimerID);
-
 LLGL_STATIC_ASSERT_SIZE(QueryPipelineStatistics);
 LLGL_STATIC_ASSERT_OFFSET(QueryPipelineStatistics, inputAssemblyVertices);
 LLGL_STATIC_ASSERT_OFFSET(QueryPipelineStatistics, inputAssemblyPrimitives);

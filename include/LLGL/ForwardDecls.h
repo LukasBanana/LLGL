@@ -94,7 +94,6 @@ struct VertexFormat;
 struct VideoAdapterDescriptor;
 struct VideoOutputDescriptor;
 struct Viewport;
-struct WindowBehavior;
 struct WindowDescriptor;
 
 

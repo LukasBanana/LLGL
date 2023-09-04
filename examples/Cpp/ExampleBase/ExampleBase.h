@@ -118,7 +118,7 @@ private:
             WindowEventHandler(ExampleBase& app, LLGL::SwapChain* swapChain, Gs::Matrix4f& projection);
 
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override;
-            void OnTimer(LLGL::Window& sender, std::uint32_t timerID) override;
+            void OnUpdate(LLGL::Window& sender) override;
 
         private:
 

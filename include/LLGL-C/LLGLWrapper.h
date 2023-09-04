@@ -11,9 +11,9 @@
 #define LLGL_C99_LLGLWRAPPER_H
 
 
-#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <LLGL-C/Types.h>
 
 #if defined LLGL_OS_ANDROID
@@ -747,6 +747,12 @@ LLGLTextureSwizzle;
 
 /* ----- Flags ----- */
 
+typedef enum LLGLCanvasFlags
+{
+    LLGLCanvasBorderless = (1 << 0),
+}
+LLGLCanvasFlags;
+
 typedef enum LLGLCommandBufferFlags
 {
     LLGLCommandBufferSecondary       = (1 << 0),
@@ -859,6 +865,7 @@ typedef enum LLGLShaderCompileFlags
     LLGLShaderCompileWarningsAreErrors   = (1 << 5),
     LLGLShaderCompilePatchClippingOrigin = (1 << 6),
     LLGLShaderCompileSeparateShader      = (1 << 7),
+    LLGLShaderCompileDefaultLibrary      = (1 << 8),
 }
 LLGLShaderCompileFlags;
 
@@ -884,13 +891,24 @@ typedef enum LLGLResizeBuffersFlags
 }
 LLGLResizeBuffersFlags;
 
+typedef enum LLGLWindowFlags
+{
+    LLGLWindowVisible              = (1 << 0),
+    LLGLWindowBorderless           = (1 << 1),
+    LLGLWindowResizable            = (1 << 2),
+    LLGLWindowCentered             = (1 << 3),
+    LLGLWindowAcceptDropFiles      = (1 << 4),
+    LLGLWindowDisableClearOnResize = (1 << 5),
+}
+LLGLWindowFlags;
+
 
 /* ----- Structures ----- */
 
 typedef struct LLGLCanvasDescriptor
 {
     const char* title;
-    bool        borderless; /* = false */
+    long        flags; /* = 0 */
 }
 LLGLCanvasDescriptor;
 
@@ -1138,13 +1156,6 @@ typedef struct LLGLOffset3D
     int32_t z; /* = 0 */
 }
 LLGLOffset3D;
-
-typedef struct LLGLWindowBehavior
-{
-    bool     disableClearOnResize; /* = false */
-    uint32_t moveAndResizeTimerID; /* = LLGLConstantsinvalidTimerID */
-}
-LLGLWindowBehavior;
 
 typedef struct LLGLBufferViewDescriptor
 {
@@ -1432,12 +1443,9 @@ typedef struct LLGLWindowDescriptor
     const char*  title;
     LLGLOffset2D position;
     LLGLExtent2D size;
-    bool         visible;         /* = false */
-    bool         borderless;      /* = false */
-    bool         resizable;       /* = false */
-    bool         acceptDropFiles; /* = false */
-    bool         centered;        /* = false */
-    const void*  windowContext;   /* = NULL */
+    long         flags;             /* = 0 */
+    const void*  windowContext;     /* = NULL */
+    size_t       windowContextSize; /* = 0 */
 }
 LLGLWindowDescriptor;
 

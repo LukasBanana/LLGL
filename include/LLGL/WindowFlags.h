@@ -28,10 +28,10 @@ struct WindowFlags
     enum
     {
         //! Specifies whether the window is visible at creation time.
-        Visible         = (1 << 0),
+        Visible                 = (1 << 0),
 
         //! Specifies whether the window is borderless. This is required for a fullscreen swap-chain.
-        Borderless      = (1 << 1),
+        Borderless              = (1 << 1),
 
         /**
         \brief Specifies whether the window can be resized.
@@ -56,19 +56,28 @@ struct WindowFlags
         \see Surface::GetSize
         \see Window::EventListener::OnResize
         */
-        Resizable       = (1 << 2),
+        Resizable               = (1 << 2),
 
         /**
         \brief Specifies whether the window is centered within the desktop screen at creation time.
         \remarks If this is specifies, the \c position field of the WindowDescriptor will be ignored.
         */
-        Centered        = (1 << 4),
+        Centered                = (1 << 3),
 
         /**
         \brief Specifies whether the window allows that files can be draged-and-droped onto the window.
         \note Only supported on: MS/Windows.
         */
-        AcceptDropFiles = (1 << 3),
+        AcceptDropFiles         = (1 << 4),
+
+        /**
+        \brief Specifies not to clear the content of the window when it is resized.
+        \remarks This is used by Win32 to erase (\c WM_ERASEBKGND message) or keep the background on a window resize.
+        It is recommended to enable this flag alongside \c Resizable when such a Window is re-drawn during the \c OnResize event to avoid flickering.
+        \note Only supported on: MS/Windows.
+        \see Window::EventListener::OnResize
+        */
+        DisableClearOnResize    = (1 << 5),
     };
 };
 
@@ -113,31 +122,6 @@ struct WindowDescriptor
     \see windowContext
     */
     std::size_t     windowContextSize   = 0;
-};
-
-/**
-\brief Window behavior structure.
-\see Window::SetBehavior
-*/
-struct WindowBehavior
-{
-    /**
-    \brief Specifies whether to clear the content of the window when it is resized. By default false.
-    \remarks This is used by Win32 to erase (\c WM_ERASEBKGND message) or keep the background on a window resize.
-    If this is false, some kind of flickering during a window resize can be avoided.
-    \note Only supported on: Win32.
-    */
-    bool            disableClearOnResize    = false;
-
-    /**
-    \brief Specifies an ID for a timer which will be activated when the window is moved or sized. By default invalidWindowTimerID.
-    \remarks This is used by Win32 to set a timer during a window is moved or resized to make continous scene updates.
-    Do not reset it during the 'OnTimer' event, otherwise a timer might be not be released correctly!
-    \note Only supported on: Win32.
-    \see Window::EventListener::OnTimer
-    \see invalidWindowTimerID
-    */
-    std::uint32_t   moveAndResizeTimerID    = Constants::invalidTimerID;
 };
 
 

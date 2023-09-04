@@ -8,8 +8,14 @@
 #include "Win32WindowCallback.h"
 #include "Win32Window.h"
 #include "MapKey.h"
+#include <atomic>
 
 #include <windowsx.h>
+
+
+namespace LLGL
+{
+
 
 #ifndef HID_USAGE_PAGE_GENERIC
 #   define HID_USAGE_PAGE_GENERIC   ((USHORT)0x01)
@@ -20,19 +26,12 @@
 #endif
 
 
-namespace LLGL
-{
-
-
-/* --- Internal functions --- */
+static constexpr UINT_PTR g_win32UpdateTimerID = 1;
 
 static Win32Window* GetWindowFromUserData(HWND wnd)
 {
     return reinterpret_cast<Win32Window*>(GetWindowLongPtr(wnd, GWLP_USERDATA));
 }
-
-
-/* --- Keyboard events --- */
 
 static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 {
@@ -83,10 +82,7 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bo
     }
 }
 
-
-/* --- Mouse events --- */
-
-static int g_mouseCaptureCounter = 0;
+static std::atomic_int g_mouseCaptureCounter = 0;
 
 static void ReleaseMouseCapture()
 {
@@ -354,7 +350,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             /* Do not erase background to avoid flickering when user resizes the window */
             if (Win32Window* window = GetWindowFromUserData(wnd))
             {
-                if (window->GetBehavior().disableClearOnResize)
+                if (window->SkipMsgERASEBKGND())
                     return 0;
             }
         }
@@ -362,38 +358,28 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_ENTERSIZEMOVE:
         {
+            /* Start timer to receive updates during moving and resizing the window */
             if (Win32Window* window = GetWindowFromUserData(wnd))
-            {
-                auto timerID = window->GetBehavior().moveAndResizeTimerID;
-                if (timerID != Constants::invalidTimerID)
-                {
-                    /* Start timer */
-                    SetTimer(wnd, timerID, USER_TIMER_MINIMUM, nullptr);
-                }
-            }
+                SetTimer(wnd, g_win32UpdateTimerID, USER_TIMER_MINIMUM, nullptr);
         }
         break;
 
         case WM_EXITSIZEMOVE:
         {
+            /* Stop previously started timer */
             if (Win32Window* window = GetWindowFromUserData(wnd))
-            {
-                auto timerID = window->GetBehavior().moveAndResizeTimerID;
-                if (timerID != Constants::invalidTimerID)
-                {
-                    /* Stop timer */
-                    KillTimer(wnd, timerID);
-                }
-            }
+                KillTimer(wnd, g_win32UpdateTimerID);
         }
         break;
 
         case WM_TIMER:
         {
+            /* Post update so client can redraw the window during moving/resizing a window */
             if (Win32Window* window = GetWindowFromUserData(wnd))
             {
-                auto timerID = static_cast<std::uint32_t>(wParam);
-                window->PostTimer(timerID);
+                const UINT_PTR timerID = static_cast<UINT_PTR>(wParam);
+                if (timerID == g_win32UpdateTimerID)
+                    window->PostUpdate();
             }
         };
         break;

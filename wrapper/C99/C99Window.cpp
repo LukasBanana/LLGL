@@ -86,6 +86,11 @@ class InternalWindowEventListener final : public Window::EventListener
             LLGL_CALLBACK_WRAPPER(onResize, (const LLGLExtent2D*)&clientAreaSize);
         }
 
+        void OnUpdate(Window& sender) override
+        {
+            LLGL_CALLBACK_WRAPPER(onUpdate);
+        }
+
         void OnGetFocus(Window& sender) override
         {
             LLGL_CALLBACK_WRAPPER(onGetFocus);
@@ -96,11 +101,6 @@ class InternalWindowEventListener final : public Window::EventListener
             LLGL_CALLBACK_WRAPPER(onLostFocus);
         }
 
-        void OnTimer(Window& sender, std::uint32_t timerID) override
-        {
-            LLGL_CALLBACK_WRAPPER(onTimer, timerID);
-        }
-
 };
 
 #undef LLGL_CALLBACK_WRAPPER
@@ -109,30 +109,24 @@ static std::vector<std::unique_ptr<Window>> g_Windows;
 
 static void ConvertWindowDesc(WindowDescriptor& dst, const LLGLWindowDescriptor& src)
 {
-    dst.title           = src.title;
-    dst.position        = { src.position.x, src.position.y };
-    dst.size            = { src.size.width, src.size.height };
-    dst.visible         = src.visible;
-    dst.borderless      = src.borderless;
-    dst.resizable       = src.resizable;
-    dst.acceptDropFiles = src.acceptDropFiles;
-    dst.centered        = src.centered;
-    dst.windowContext   = src.windowContext;
+    dst.title               = src.title;
+    dst.position            = { src.position.x, src.position.y };
+    dst.size                = { src.size.width, src.size.height };
+    dst.flags               = src.flags;
+    dst.windowContext       = src.windowContext;
+    dst.windowContextSize   = src.windowContextSize;
 }
 
 static void ConvertWindowDesc(LLGLWindowDescriptor& dst, const WindowDescriptor& src)
 {
     static thread_local std::string internalTitle;
     internalTitle = src.title.c_str();
-    dst.title           = internalTitle.c_str();
-    dst.position        = { src.position.x, src.position.y };
-    dst.size            = { src.size.width, src.size.height };
-    dst.visible         = src.visible;
-    dst.borderless      = src.borderless;
-    dst.resizable       = src.resizable;
-    dst.acceptDropFiles = src.acceptDropFiles;
-    dst.centered        = src.centered;
-    dst.windowContext   = src.windowContext;
+    dst.title               = internalTitle.c_str();
+    dst.position            = { src.position.x, src.position.y };
+    dst.size                = { src.size.width, src.size.height };
+    dst.flags               = src.flags;
+    dst.windowContext       = src.windowContext;
+    dst.windowContextSize   = src.windowContextSize;
 }
 
 LLGL_C_EXPORT LLGLWindow llglCreateWindow(const LLGLWindowDescriptor* windowDesc)
@@ -231,17 +225,6 @@ LLGL_C_EXPORT bool llglHasWindowQuit(LLGLWindow window)
     return LLGL_PTR(Window, window)->HasQuit();
 }
 
-LLGL_C_EXPORT void llglSetWindowBehavior(LLGLWindow window, const LLGLWindowBehavior* behavior)
-{
-    LLGL_PTR(Window, window)->SetBehavior(*(const WindowBehavior*)behavior);
-}
-
-LLGL_C_EXPORT void llglGetWindowBehavior(LLGLWindow window, LLGLWindowBehavior* outBehavior)
-{
-    WindowBehavior internalBehavior = LLGL_PTR(Window, window)->GetBehavior();
-    memcpy(outBehavior, &internalBehavior, sizeof(LLGLWindowBehavior));
-}
-
 LLGL_C_EXPORT int llglAddWindowEventListener(LLGLWindow window, const LLGLWindowEventListener* eventListener)
 {
     return 0; //todo
@@ -297,6 +280,11 @@ LLGL_C_EXPORT void llglPostWindowResize(LLGLWindow window, const LLGLExtent2D* c
     LLGL_PTR(Window, window)->PostResize(*(const Extent2D*)clientAreaSize);
 }
 
+LLGL_C_EXPORT void llglPostWindowUpdate(LLGLWindow window)
+{
+    LLGL_PTR(Window, window)->PostUpdate();
+}
+
 LLGL_C_EXPORT void llglPostWindowGetFocus(LLGLWindow window)
 {
     LLGL_PTR(Window, window)->PostGetFocus();
@@ -305,11 +293,6 @@ LLGL_C_EXPORT void llglPostWindowGetFocus(LLGLWindow window)
 LLGL_C_EXPORT void llglPostWindowLostFocus(LLGLWindow window)
 {
     LLGL_PTR(Window, window)->PostLostFocus();
-}
-
-LLGL_C_EXPORT void llglPostWindowTimer(LLGLWindow window, uint32_t timerID)
-{
-    LLGL_PTR(Window, window)->PostTimer(timerID);
 }
 
 
