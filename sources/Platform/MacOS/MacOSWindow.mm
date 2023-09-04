@@ -113,8 +113,7 @@ bool MacOSWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
         NativeHandle* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
-        handle->window  = wnd_;
-        handle->view    = nullptr;
+        handle->responder = wnd_;
         return true;
     }
     return false;
@@ -321,25 +320,12 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 
     const bool isCentered = ((desc.flags & WindowFlags::Centered) != 0);
 
-    if (desc.windowContext != nullptr && desc.windowContextSize == sizeof(NativeHandle))
-    {
-        /* Add to parent window if specified */
-        if (NSWindow* parentWnd = reinterpret_cast<const NativeHandle*>(desc.windowContext)->window)
-        {
-            [parentWnd addChildWindow:wnd ordered:NSWindowAbove];
-            if (!isCentered)
-                SetRelativeNSWindowPosition(wnd, desc.position, parentWnd);
-        }
-    }
+    /* Move this window to the front of the screen list and center if requested */
+    [wnd makeKeyAndOrderFront:nil];
+    if (isCentered)
+        [wnd center];
     else
-    {
-        /* Move this window to the front of the screen list and center if requested */
-        [wnd makeKeyAndOrderFront:nil];
-        if (isCentered)
-            [wnd center];
-        else
-            SetRelativeNSWindowPosition(wnd, desc.position);
-    }
+        SetRelativeNSWindowPosition(wnd, desc.position);
 
     /* Show window */
     if ((desc.flags & WindowFlags::Visible) != 0)

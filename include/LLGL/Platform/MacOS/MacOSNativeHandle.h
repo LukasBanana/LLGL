@@ -23,11 +23,14 @@ namespace LLGL
 */
 struct NativeHandle
 {
-    //! NSWindow object for top level windows.
-    NSWindow*   window;
-
-    //! NSView object for borderless windows that have a parent window.
-    NSView*     view;
+    /**
+    \brief Generic \c NSResponder object that must be either of type \c NSWindow or \c NSView.
+    \remarks When a SwapChain is created, the responder is interpreted as:
+    - \b Top-level window if it points to an \c NSWindow, in which case the respective \c MTKView (Metal) or \c GLKView (OpenGL) will \e replace its content view.
+    - \b Subview if it points to an \c NSView, in which case the respective \c MTKView (Metal) or \c GLKView (OpenGL) will be \e added as a subview.
+    \see WindowDescriptor::windowContext
+    */
+    NSResponder* responder;
 };
 
 

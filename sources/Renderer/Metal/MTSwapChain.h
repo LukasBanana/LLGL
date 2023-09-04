@@ -78,6 +78,9 @@ class MTSwapChain final : public SwapChain
 
     private:
 
+        // Allocates the MetalKit view and initializes it with the specified surface.
+        MTKView* AllocMTKViewAndInitWithSurface(id<MTLDevice> device, Surface& surface);
+
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
     private:

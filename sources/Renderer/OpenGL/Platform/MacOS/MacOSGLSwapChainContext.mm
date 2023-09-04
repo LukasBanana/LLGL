@@ -42,12 +42,12 @@ MacOSGLSwapChainContext::MacOSGLSwapChainContext(MacOSGLContext& context, Surfac
     /* Get native window handle */
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-    if (NSWindow* contentWindow = nativeHandle.window)
-        view_ = [contentWindow contentView];
-    else if (NSView* contentView = nativeHandle.view)
-        view_ = contentView;
+    if ([nativeHandle.responder isKindOfClass:[NSWindow class]])
+        view_ = [(NSWindow*)nativeHandle.responder contentView];
+    else if ([nativeHandle.responder isKindOfClass:[NSView class]])
+        view_ = (NSView*)nativeHandle.responder;
     else
-        LLGL_TRAP("neither NSWindow nor NSView is specified for GLKView");
+        LLGL_TRAP("NativeHandle::responder is neither of type NSWindow nor NSView for GLKView");
 }
 
 bool MacOSGLSwapChainContext::SwapBuffers()

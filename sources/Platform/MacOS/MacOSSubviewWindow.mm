@@ -35,8 +35,7 @@ bool MacOSSubviewWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeH
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
         NativeHandle* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
-        handle->window  = nullptr;
-        handle->view    = view_;
+        handle->responder = view_;
         return true;
     }
     return false;
@@ -160,14 +159,16 @@ NSView* MacOSSubviewWindow::CreateNSView(const WindowDescriptor& desc)
     {
         /* Add to parent window if specified */
         const NativeHandle* parentHandle = reinterpret_cast<const NativeHandle*>(desc.windowContext);
-        if (NSWindow* parentWindow = parentHandle->window)
+        if ([parentHandle->responder isKindOfClass:[NSWindow class]])
         {
+            NSWindow* parentWindow = (NSWindow*)parentHandle->responder;
             [[parentWindow contentView] addSubview:view];
             if (!isCentered)
                 SetRelativeNSViewPosition(view, desc.position, [parentWindow contentView]);
         }
-        else if (NSView* parentView = parentHandle->view)
+        else if ([parentHandle->responder isKindOfClass:[NSView class]])
         {
+            NSView* parentView = (NSView*)parentHandle->responder;
             [parentView addSubview:view];
             if (!isCentered)
                 SetRelativeNSViewPosition(view, desc.position, parentView);
