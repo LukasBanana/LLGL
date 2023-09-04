@@ -20,9 +20,8 @@
 #include "RenderState/MTBuiltinPSOFactory.h"
 #include <LLGL/ImageFlags.h>
 #include <LLGL/Platform/Platform.h>
-#include <AvailabilityMacros.h>
-
 #include <LLGL/Backend/Metal/NativeHandle.h>
+#include <AvailabilityMacros.h>
 
 
 namespace LLGL

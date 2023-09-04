@@ -16,10 +16,18 @@ namespace LLGL
 {
 
 
-//! MacOS native handle structure.
+/**
+\brief MacOS native handle structure.
+\see Window::GetNativeHandle
+\see WindowDescriptor::windowContext
+*/
 struct NativeHandle
 {
-    NSWindow* window;
+    //! NSWindow object for top level windows.
+    NSWindow*   window;
+
+    //! NSView object for borderless windows that have a parent window.
+    NSView*     view;
 };
 
 

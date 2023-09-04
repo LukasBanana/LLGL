@@ -7,6 +7,7 @@
 
 #include "MacOSGLSwapChainContext.h"
 #include "MacOSGLContext.h"
+#include "../../../../Core/Exception.h"
 #include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 
@@ -40,10 +41,13 @@ MacOSGLSwapChainContext::MacOSGLSwapChainContext(MacOSGLContext& context, Surfac
 {
     /* Get native window handle */
     NativeHandle nativeHandle = {};
-    if (surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
-        view_ = [nativeHandle.window contentView];
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+    if (NSWindow* contentWindow = nativeHandle.window)
+        view_ = [contentWindow contentView];
+    else if (NSView* contentView = nativeHandle.view)
+        view_ = contentView;
     else
-        throw std::runtime_error("failed to get NSWindow from swap-chain surface");
+        LLGL_TRAP("neither NSWindow nor NSView is specified for GLKView");
 }
 
 bool MacOSGLSwapChainContext::SwapBuffers()

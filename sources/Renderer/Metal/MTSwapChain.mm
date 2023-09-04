@@ -84,14 +84,27 @@ MTSwapChain::MTSwapChain(
 
     #else // LLGL_OS_IOS
 
-    LLGL_ASSERT_PTR(nativeHandle.window);
-    NSWindow* wnd = nativeHandle.window;
+    if (NSWindow* contentWindow = nativeHandle.window)
+    {
+        /* Allocate MetalKit view */
+        CGRect contentViewRect = [[contentWindow contentView] frame];
+        view_ = [[MTKView alloc] initWithFrame:contentViewRect device:device];
 
-    /* Allocate MetalKit view */
-    view_ = [[MTKView alloc] initWithFrame:wnd.frame device:device];
+        /* Replace content view of input window with MTKView */
+        [contentWindow setContentView:view_];
+        [contentWindow.contentViewController setView:view_];
+    }
+    else if (NSView* contentView = nativeHandle.view)
+    {
+        /* Allocate MetalKit view */
+        CGRect contentViewRect = [contentView frame];
+        view_ = [[MTKView alloc] initWithFrame:contentViewRect device:device];
 
-    [wnd setContentView:view_];
-    [wnd.contentViewController setView:view_];
+        /* Add MTKView as subview to the input view */
+        [contentView addSubview:view_];
+    }
+    else
+        LLGL_TRAP("neither NSWindow nor NSView is specified for MTKView");
 
     #endif // /LLGL_OS_IOS
 

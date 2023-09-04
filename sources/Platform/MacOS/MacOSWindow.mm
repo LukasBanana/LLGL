@@ -9,6 +9,7 @@
 #include "MacOSAppDelegate.h"
 #include "MacOSWindowDelegate.h"
 #include "MacOSWindow.h"
+#include "MacOSSubviewWindow.h"
 #include "MapKey.h"
 #include "../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -87,7 +88,10 @@ static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
-    return MakeUnique<MacOSWindow>(desc);
+    if (desc.windowContext != nullptr && desc.windowContextSize == sizeof(NativeHandle))
+        return MakeUnique<MacOSSubviewWindow>(desc);
+    else
+        return MakeUnique<MacOSWindow>(desc);
 }
 
 MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
@@ -108,8 +112,9 @@ bool MacOSWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
-        handle->window = wnd_;
+        NativeHandle* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        handle->window  = wnd_;
+        handle->view    = nullptr;
         return true;
     }
     return false;
