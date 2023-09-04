@@ -199,7 +199,13 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \see Surface::GetContentSize
         \see SwitchFullscreenMode
         */
-        void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext);
+        void SetOrCreateSurface(
+            const std::shared_ptr<Surface>& surface,
+            const Extent2D&                 size,
+            bool                            fullscreen,
+            const void*                     windowContext       = nullptr,
+            std::size_t                     windowContextSize   = 0
+        );
 
         /**
         \brief Shares the surface and resolution with another swap-chain.

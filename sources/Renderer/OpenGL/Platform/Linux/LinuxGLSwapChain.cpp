@@ -30,8 +30,8 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelForm
     if (!windowContext.display)
         throw std::runtime_error("failed to open X11 display");
 
-    windowContext.parentWindow  = DefaultRootWindow(windowContext.display);
-    windowContext.screen        = DefaultScreen(windowContext.display);
+    windowContext.window = DefaultRootWindow(windowContext.display);
+    windowContext.screen = DefaultScreen(windowContext.display);
 
     GLXFBConfig framebufferConfig = 0;
 
@@ -97,7 +97,7 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelForm
     }
 
     /* Create Colormap structure */
-    windowContext.colorMap = XCreateColormap(windowContext.display, windowContext.parentWindow, windowContext.visual->visual, AllocNone);
+    windowContext.colorMap = XCreateColormap(windowContext.display, windowContext.window, windowContext.visual->visual, AllocNone);
 
     if (!windowContext.visual)
         throw std::runtime_error("failed to choose X11 visual for OpenGL");

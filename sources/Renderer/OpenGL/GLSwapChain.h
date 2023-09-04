@@ -18,15 +18,12 @@
 #include "Platform/GLSwapChainContext.h"
 #include <memory>
 
-#ifdef __linux__
-#include <LLGL/Platform/NativeHandle.h>
-#endif
-
 
 namespace LLGL
 {
 
 
+struct NativeHandle;
 class GLRenderTarget;
 class GLContextManager;
 

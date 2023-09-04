@@ -9,6 +9,10 @@
 #include "../TextureUtils.h"
 #include "Platform/GLContextManager.h"
 
+#ifdef __linux__
+#include <LLGL/Platform/NativeHandle.h>
+#endif
+
 
 namespace LLGL
 {
@@ -29,17 +33,17 @@ GLSwapChain::GLSwapChain(
     pixelFormat.stencilBits = desc.stencilBits;
     pixelFormat.samples     = static_cast<int>(GetClampedSamples(desc.samples));
 
-    #ifdef LLGL_OS_LINUX
+    #ifdef __linux__
 
     /* Set up surface for the swap-chain and pass native context handle */
     NativeHandle windowContext = {};
     ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext, sizeof(windowContext));
 
     #else
 
     /* Setup surface for the swap-chain */
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
+    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen);
 
     #endif
 

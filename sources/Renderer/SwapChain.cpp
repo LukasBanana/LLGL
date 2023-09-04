@@ -144,7 +144,12 @@ Surface& SwapChain::GetSurface() const
  * ======= Protected: =======
  */
 
-void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, const Extent2D& size, bool fullscreen, const void* windowContext)
+void SwapChain::SetOrCreateSurface(
+    const std::shared_ptr<Surface>& surface,
+    const Extent2D&                 size,
+    bool                            fullscreen,
+    const void*                     windowContext,
+    std::size_t                     windowContextSize)
 {
     /* Use specified surface size as resolution by default */
     Extent2D resolution = size;
@@ -174,10 +179,11 @@ void SwapChain::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, cons
         /* Create new window for this swap-chain */
         WindowDescriptor windowDesc;
         {
-            windowDesc.size             = size;
-            windowDesc.borderless       = fullscreen;
-            windowDesc.centered         = !fullscreen;
-            windowDesc.windowContext    = windowContext;
+            windowDesc.size                 = size;
+            windowDesc.borderless           = fullscreen;
+            windowDesc.centered             = !fullscreen;
+            windowDesc.windowContext        = windowContext;
+            windowDesc.windowContextSize    = windowContextSize;
         }
         pimpl_->surface = Window::Create(windowDesc);
 
