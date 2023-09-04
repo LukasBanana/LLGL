@@ -10,6 +10,8 @@
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../../TextureUtils.h"
 #include "../../../../Platform/Linux/LinuxWindow.h"
+#include "../../../../Platform/Linux/LinuxDisplay.h"
+#include "../../../../Core/Assertion.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <string.h>
@@ -26,9 +28,8 @@ namespace LLGL
 void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeHandle& windowContext)
 {
     /* Open X11 display */
-    windowContext.display = XOpenDisplay(nullptr);
-    if (!windowContext.display)
-        throw std::runtime_error("failed to open X11 display");
+    windowContext.display = LinuxSharedX11Display::GetShared()->GetNative();
+    LLGL_ASSERT(windowContext.display != nullptr, "failed to obtain shared X11 display");
 
     windowContext.window = DefaultRootWindow(windowContext.display);
     windowContext.screen = DefaultScreen(windowContext.display);
