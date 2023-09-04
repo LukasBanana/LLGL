@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
         // Enter main loop
-        while (mainWindow->ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
+        while (LLGL::Surface::ProcessEvents() && !mainWindow->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
             // Update scene transformation
             if (input.KeyPressed(LLGL::Key::LButton))
@@ -353,6 +353,8 @@ int main(int argc, char* argv[])
             // Draw scene for all renderers
             for (int i = 0; i < 4; ++i)
                 myRenderers[i].Render(projMatrices[i] * viewMatrix, worldMatrix);
+
+            input.Reset();
         }
     }
     catch (const std::exception& e)

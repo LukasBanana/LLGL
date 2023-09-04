@@ -59,8 +59,6 @@ class MacOSSubviewWindow : public Window
 
         NSView* CreateNSView(const WindowDescriptor& desc);
 
-        void OnProcessEvents() override;
-
     private:
 
         NSView*     view_ = nullptr;

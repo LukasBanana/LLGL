@@ -49,6 +49,59 @@ static const auto g_EventTypeExtMouseUp         = LLGL_MACOS_NSEVENTTYPE_OTHERMO
 static const auto g_EventTypeScrollWheel        = LLGL_MACOS_NSEVENTTYPE_SCROLLWHEEL;
 
 
+/*
+ * Surface class
+ */
+
+bool Surface::ProcessEvents()
+{
+    LLGL_MACOS_AUTORELEASEPOOL_OPEN
+
+    /* Process NSWindow events with latest event types */
+    while (NSEvent* event = [NSApp nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES])
+    {
+        if (NSWindow* wnd = [event window])
+        {
+            if ([[wnd delegate] isKindOfClass:[MacOSWindowDelegate class]])
+            {
+                MacOSWindowDelegate* wndDelegate = [wnd delegate];
+                MacOSWindow* platformWindow = [wndDelegate windowInstance];
+                platformWindow->ProcessEvent(event);
+
+                /* Check for window signals */
+                if ([wndDelegate popResizeSignal])
+                {
+                    /* Get size of the NSWindow's content view */
+                    NSRect frame = [[wnd contentView] frame];
+
+                    auto w = static_cast<std::uint32_t>(frame.size.width);
+                    auto h = static_cast<std::uint32_t>(frame.size.height);
+
+                    /* Notify event listeners about resize */
+                    platformWindow->PostResize({ w, h });
+                }
+            }
+        }
+        
+        //TODO: ignore key events here to avoid 'failure sound'
+        #if 1
+        if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
+            [NSApp sendEvent:event];
+        #else
+        [NSApp sendEvent:event];
+        #endif
+    }
+
+    LLGL_MACOS_AUTORELEASEPOOL_CLOSE
+
+    return true;
+}
+
+
+/*
+ * Window class
+ */
+
 static NSString* ToNSString(const UTF8String& s)
 {
     return
@@ -93,6 +146,11 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
     else
         return MakeUnique<MacOSWindow>(desc);
 }
+
+
+/*
+ * MacOSWindow class
+ */
 
 MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
     wndDelegate_ { CreateNSWindowDelegate(desc) },
@@ -286,6 +344,58 @@ WindowDescriptor MacOSWindow::GetDesc() const
     return desc;
 }
 
+void MacOSWindow::ProcessEvent(NSEvent* event)
+{
+    switch ([event type])
+    {
+        case g_EventTypeKeyDown:
+            ProcessKeyEvent(event, true);
+            break;
+
+        case g_EventTypeKeyUp:
+            ProcessKeyEvent(event, false);
+            break;
+
+        case g_EventTypeLMouseDragged:
+        case g_EventTypeRMouseDragged:
+        case g_EventTypeExtMouseDragged:
+        case g_EventTypeMouseMoved:
+            ProcessMouseMoveEvent(event);
+            break;
+
+        case g_EventTypeLMouseDown:
+            ProcessMouseKeyEvent(Key::LButton, true);
+            break;
+
+        case g_EventTypeLMouseUp:
+            ProcessMouseKeyEvent(Key::LButton, false);
+            break;
+
+        case g_EventTypeRMouseDown:
+            ProcessMouseKeyEvent(Key::RButton, true);
+            break;
+
+        case g_EventTypeRMouseUp:
+            ProcessMouseKeyEvent(Key::RButton, false);
+            break;
+
+        case g_EventTypeExtMouseDown:
+            ProcessMouseKeyEvent(Key::MButton, true);
+            break;
+
+        case g_EventTypeExtMouseUp:
+            ProcessMouseKeyEvent(Key::MButton, false);
+            break;
+
+        case g_EventTypeScrollWheel:
+            ProcessMouseWheelEvent(event);
+            break;
+
+        default:
+            break;
+    }
+}
+
 
 /*
  * ======= Private: =======
@@ -339,92 +449,6 @@ MacOSWindowDelegate* MacOSWindow::CreateNSWindowDelegate(const WindowDescriptor&
     /* Set window application delegate */
     const bool isResizable = ((desc.flags & WindowFlags::Resizable) != 0);
     return [[MacOSWindowDelegate alloc] initWithWindow:this isResizable:isResizable];
-}
-
-void MacOSWindow::OnProcessEvents()
-{
-    LLGL_MACOS_AUTORELEASEPOOL_OPEN
-
-    NSEvent* event = nil;
-
-    /* Process NSWindow events with latest event types */
-    while ((event = [wnd_ nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES]) != nil)
-        ProcessEvent(event);
-
-    /* Check for window signals */
-    if ([wndDelegate_ popResizeSignal])
-    {
-        /* Get size of the NSWindow's content view */
-        NSRect frame = [[wnd_ contentView] frame];
-
-        auto w = static_cast<std::uint32_t>(frame.size.width);
-        auto h = static_cast<std::uint32_t>(frame.size.height);
-
-        /* Notify event listeners about resize */
-        PostResize({ w, h });
-    }
-
-    LLGL_MACOS_AUTORELEASEPOOL_CLOSE
-}
-
-void MacOSWindow::ProcessEvent(NSEvent* event)
-{
-    switch ([event type])
-    {
-        case g_EventTypeKeyDown:
-            ProcessKeyEvent(event, true);
-            break;
-
-        case g_EventTypeKeyUp:
-            ProcessKeyEvent(event, false);
-            break;
-
-        case g_EventTypeLMouseDragged:
-        case g_EventTypeRMouseDragged:
-        case g_EventTypeExtMouseDragged:
-        case g_EventTypeMouseMoved:
-            ProcessMouseMoveEvent(event);
-            break;
-
-        case g_EventTypeLMouseDown:
-            ProcessMouseKeyEvent(Key::LButton, true);
-            break;
-
-        case g_EventTypeLMouseUp:
-            ProcessMouseKeyEvent(Key::LButton, false);
-            break;
-
-        case g_EventTypeRMouseDown:
-            ProcessMouseKeyEvent(Key::RButton, true);
-            break;
-
-        case g_EventTypeRMouseUp:
-            ProcessMouseKeyEvent(Key::RButton, false);
-            break;
-
-        case g_EventTypeExtMouseDown:
-            ProcessMouseKeyEvent(Key::MButton, true);
-            break;
-
-        case g_EventTypeExtMouseUp:
-            ProcessMouseKeyEvent(Key::MButton, false);
-            break;
-
-        case g_EventTypeScrollWheel:
-            ProcessMouseWheelEvent(event);
-            break;
-
-        default:
-            break;
-    }
-
-    //TODO: ignore key events here to avoid 'failure sound'
-    #if 1
-    if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
-        [NSApp sendEvent:event];
-    #else
-    [NSApp sendEvent:event];
-    #endif
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)

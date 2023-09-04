@@ -36,10 +36,6 @@ class AndroidCanvas : public Canvas
 
     private:
 
-        void OnProcessEvents() override;
-
-    private:
-
         CanvasDescriptor    desc_;
         ANativeWindow*      window_         = nullptr;
         Extent2D            contentSize_;

@@ -47,11 +47,13 @@ class LinuxWindow : public Window
         void SetDesc(const WindowDescriptor& desc) override;
         WindowDescriptor GetDesc() const override;
 
+    public:
+
+        void ProcessEvent(XEvent& event);
+
     private:
 
-        void OnProcessEvents() override;
-
-        void OpenWindow();
+        void OpenX11Window();
 
         void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);

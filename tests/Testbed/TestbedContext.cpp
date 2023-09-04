@@ -307,7 +307,7 @@ TestResult TestbedContext::RunTest(const std::function<TestResult(unsigned)>& ca
 {
     TestResult result = TestResult::Continue;
 
-    for (unsigned frame = 0; swapChain->GetSurface().ProcessEvents() && result == TestResult::Continue; ++frame)
+    for (unsigned frame = 0; LLGL::Surface::ProcessEvents() && result == TestResult::Continue; ++frame)
     {
         result = callback(frame);
         swapChain->Present();

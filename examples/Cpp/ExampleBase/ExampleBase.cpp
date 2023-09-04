@@ -173,7 +173,8 @@ ExampleBase::CanvasEventHandler::CanvasEventHandler(ExampleBase& app, LLGL::Swap
 void ExampleBase::CanvasEventHandler::OnDraw(LLGL::Canvas& /*sender*/)
 {
     app_.DrawFrame();
-    swapChain_->GetSurface().ProcessEvents();
+    app_.input.Reset();
+    LLGL::Surface::ProcessEvents();
 }
 
 void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const LLGL::Extent2D& clientAreaSize)
@@ -226,8 +227,9 @@ void ExampleBase::Run()
     bool showTimeRecords = false;
     bool fullscreen = false;
     const auto initialResolution = swapChain->GetResolution();
+    LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
-    while (swapChain->GetSurface().ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
+    while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
     {
         // Update profiler (if debugging is enabled)
         if (debuggerObj_)
@@ -274,6 +276,8 @@ void ExampleBase::Run()
         #else
         DrawFrame();
         #endif
+
+        input.Reset();
     }
 }
 

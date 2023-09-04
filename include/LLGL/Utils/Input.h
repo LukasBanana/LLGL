@@ -26,7 +26,7 @@ Here is an example usage:
 \code
 auto myInput = std::make_shared<LLGL::Input>();
 myWindow->AddEventListener(myInput);
-while (myWindow->ProcessEvents()) {
+while (LLGL::Surface::ProcessEvents()) {
     // Quit main loop when user hit the escape key.
     if (myInput->KeyDown(LLGL::Key::Escape))
         break;
@@ -51,6 +51,13 @@ class LLGL_EXPORT Input : public Interface
 
         //! Releases the internal data.
         ~Input();
+
+        /**
+        \brief Resets the internal state.
+        remarks This should be called once \e before Surface::ProcessEvents is invoked.
+        \see Surface::ProcessEvents
+        */
+        void Reset();
 
         //! Adds an event listener for this input handler to the specified surface.
         void Listen(Surface& surface);

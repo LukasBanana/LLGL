@@ -27,6 +27,11 @@
     return self;
 }
 
+- (LLGL::MacOSWindow*) windowInstance
+{
+    return window_;
+}
+
 - (void)makeResizable:(BOOL)resizable
 {
     resizable_ = resizable;

@@ -220,8 +220,10 @@ int main(int argc, char* argv[])
         #endif
 
         // Enter main loop
-        while (window.ProcessEvents())
+        while (!window.HasQuit())
         {
+            LLGL::Surface::ProcessEvents();
+
             #ifdef ENABLE_TIMER
             timer.MeasureTime();
             auto end = std::chrono::system_clock::now();

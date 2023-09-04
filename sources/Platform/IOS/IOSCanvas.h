@@ -44,10 +44,6 @@ class IOSCanvas : public Canvas
 
     private:
 
-        void OnProcessEvents() override;
-
-    private:
-
         CanvasDescriptor    desc_;
 
         UIViewController*   viewController_ = nullptr;

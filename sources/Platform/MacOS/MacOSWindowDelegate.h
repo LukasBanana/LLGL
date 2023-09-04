@@ -23,6 +23,8 @@ namespace LLGL { class MacOSWindow; }
     BOOL                fullscreenMode_;
 }
 
+@property (nonatomic, nonnull) LLGL::MacOSWindow* windowInstance;
+
 - (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window isResizable:(BOOL)resizable;
 - (void)makeResizable:(BOOL)resizable;
 

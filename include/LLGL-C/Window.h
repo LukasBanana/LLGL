@@ -14,7 +14,6 @@
 #include <stdbool.h>
 
 
-typedef void (*LLGL_PFN_OnWindowProcessEvents)(LLGLWindow sender);
 typedef void (*LLGL_PFN_OnWindowQuit)(LLGLWindow sender, bool* veto);
 typedef void (*LLGL_PFN_OnWindowKeyDown)(LLGLWindow sender, LLGLKey keyCode);
 typedef void (*LLGL_PFN_OnWindowKeyUp)(LLGLWindow sender, LLGLKey keyCode);
@@ -30,7 +29,6 @@ typedef void (*LLGL_PFN_OnWindowLostFocus)(LLGLWindow sender);
 
 typedef struct LLGLWindowEventListener
 {
-    LLGL_PFN_OnWindowProcessEvents  onProcessEvents;
     LLGL_PFN_OnWindowQuit           onQuit;
     LLGL_PFN_OnWindowKeyDown        onKeyDown;
     LLGL_PFN_OnWindowKeyUp          onKeyUp;

@@ -77,7 +77,7 @@ int main()
 
         std::wcout << "Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height << std::endl;
 
-        while (window->ProcessEvents() && !input.KeyPressed(LLGL::Key::Escape))
+        while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
         {
             #ifdef __APPLE__
             if (input.KeyDown(LLGL::Key::D1))

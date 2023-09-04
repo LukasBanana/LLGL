@@ -186,7 +186,7 @@ int main()
         #endif
 
         // Main loop
-        while (window.ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
+        while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
             commands->Begin();
             {

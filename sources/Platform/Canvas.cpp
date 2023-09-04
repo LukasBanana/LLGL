@@ -33,11 +33,6 @@ Canvas::~Canvas()
 
 /* ----- Canvas EventListener class ----- */
 
-void Canvas::EventListener::OnProcessEvents(Canvas& sender)
-{
-    // dummy
-}
-
 void Canvas::EventListener::OnQuit(Canvas& sender, bool& veto)
 {
     // dummy
@@ -88,13 +83,6 @@ bool Canvas::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
 {
     /* Default implementation of this function always return false for the Canvas class */
     return false;
-}
-
-bool Canvas::ProcessEvents()
-{
-    FOREACH_LISTENER_CALL( OnProcessEvents(*this) );
-    OnProcessEvents();
-    return !HasQuit();
 }
 
 Display* Canvas::FindResidentDisplay() const

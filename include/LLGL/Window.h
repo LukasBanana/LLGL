@@ -51,18 +51,11 @@ class LLGL_EXPORT Window : public Surface
                 friend class Window;
 
                 /**
-                \brief Sent when the window events are about to be polled. The event listeners receive this event before the window itself.
-                \see Window::OnProcessEvents
-                */
-                virtual void OnProcessEvents(Window& sender);
-
-                /**
                 \brief Sent when the window is about to quit.
                 \param[in] sender Specifies the sender of this event.
                 \param[out] veto Specifies whether to cancel the quit event.
                 If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
-                If no event listener sets this parameter to true, \c sender is set to the 'Quit' state and \c ProcessEvents returns false from then on.
-                \see Window::ProcessEvents
+                If no event listener sets this parameter to true, \c sender is set into the 'Quit' state.
                 */
                 virtual void OnQuit(Window& sender, bool& veto);
 
@@ -161,15 +154,6 @@ class LLGL_EXPORT Window : public Surface
         */
         bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) override;
 
-        /**
-        \brief Processes the events for this window (i.e. mouse movement, key presses etc.).
-        \return True, as long as the window can process events.
-        Once the \c PostQuit function has set this window to the 'Quit' state, this function returns false.
-        This happens when the user clicks on the close button.
-        \see PostQuit
-        */
-        bool ProcessEvents() override final;
-
         //! Searches the entire list of displays until a display is found where more than the half of this window's client area is visible.
         Display* FindResidentDisplay() const override final;
 
@@ -181,7 +165,6 @@ class LLGL_EXPORT Window : public Surface
         /**
         \brief Returns true if this window is in the 'Quit' state.
         \see PostQuit
-        \see ProcessEvents
         */
         bool HasQuit() const;
 
@@ -193,19 +176,15 @@ class LLGL_EXPORT Window : public Surface
 
         /**
         \brief Posts a 'Quit' event to all event listeners if the window is not yet in the 'Quit' state.
-        \remarks If one or more event listeners set the \c veto parameter to true in the \c OnQuit callback, the window will not quit.
-        Otherwise, the \c ProcessEvents function will return false from then on.
+        \remarks If any of the event listener sets the \c veto flag to false within the \c OnQuit callback, the window will \e not be put into 'Quit' state.
         \see EventListener::OnQuit
-        \see ProcessEvents
         \see HasQuit
         */
         void PostQuit();
 
         /**
         \brief Posts a 'KeyDown' event to all event listeners.
-        \remarks This will be called automatically by the "ProcessEvents" function.
         \see EventListener::OnKeyDown
-        \see ProcessEvents
         */
         void PostKeyDown(Key keyCode);
 
@@ -243,13 +222,6 @@ class LLGL_EXPORT Window : public Surface
 
         //! Allocates the internal data.
         Window();
-
-        /**
-        \brief Called inside the "ProcessEvents" function after all event listeners received the same event.
-        \see ProcessEvents
-        \see EventListener::OnProcessEvents
-        */
-        virtual void OnProcessEvents() = 0;
 
     private:
 

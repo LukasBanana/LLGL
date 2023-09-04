@@ -184,11 +184,6 @@ NSView* MacOSSubviewWindow::CreateNSView(const WindowDescriptor& desc)
     return view;
 }
 
-void MacOSSubviewWindow::OnProcessEvents()
-{
-    // dummy
-}
-
 
 } // /namespace LLGL
 

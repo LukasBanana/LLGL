@@ -36,11 +36,6 @@ class InternalWindowEventListener final : public Window::EventListener
             memcpy(&callbacks_, callbacks, sizeof(LLGLWindowEventListener));
         }
 
-        void OnProcessEvents(Window& sender) override
-        {
-            LLGL_CALLBACK_WRAPPER(onProcessEvents);
-        }
-
         void OnQuit(Window& sender, bool& veto) override
         {
             LLGL_CALLBACK_WRAPPER(onQuit, &veto);

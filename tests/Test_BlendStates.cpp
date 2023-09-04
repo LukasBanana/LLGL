@@ -140,7 +140,7 @@ int main()
         auto y = static_cast<std::int32_t>(h);
 
         // Main loop
-        while (window.ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
+        while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
             // User input
             if (input.KeyDownRepeated(LLGL::Key::Tab))

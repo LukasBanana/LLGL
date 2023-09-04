@@ -138,11 +138,6 @@ class Input::WindowEventListener final : public Window::EventListener
 
     private:
 
-        void OnProcessEvents(Window& sender) override
-        {
-            data_.Reset();
-        }
-
         void OnKeyDown(Window& sender, Key keyCode) override
         {
             auto idx = KEY_IDX(keyCode);
@@ -261,11 +256,6 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     private:
 
-        void OnProcessEvents(Canvas& sender) override
-        {
-            data_.Reset();
-        }
-
         void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches) override
         {
             //TODO
@@ -330,6 +320,11 @@ bool HasEventListenerForSurface(
             }
         ) == eventListeners.end()
     );
+}
+
+void Input::Reset()
+{
+    pimpl_->Reset();
 }
 
 void Input::Listen(Surface& surface)

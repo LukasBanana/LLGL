@@ -44,19 +44,11 @@ class LLGL_EXPORT Canvas : public Surface
                 friend class Canvas;
 
                 /**
-                \brief Sent when the canvas events are about to be polled. The event listeners receive this event before the canvas itself.
-                \param[in] sender Specifies the sender of this event.
-                \see Canvas::OnProcessEvents
-                */
-                virtual void OnProcessEvents(Canvas& sender);
-
-                /**
                 \brief Sent when the canvas is about to quit.
                 \param[in] sender Specifies the sender of this event.
                 \param[out] veto Specifies whether to cancel the quit event.
                 If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
-                If no event listener sets this parameter to true, \c sender is set to the 'Quit' state and \c ProcessEvents returns false from then on.
-                \see Canvas::ProcessEvents
+                If no event listener sets this parameter to true, \c sender is set into 'Quit' state.
                 */
                 virtual void OnQuit(Canvas& sender, bool& veto);
 
@@ -102,20 +94,11 @@ class LLGL_EXPORT Canvas : public Surface
         /**
         \brief Returns true if this canvas is in the 'Quit' state.
         \see PostQuit
-        \see ProcessEvents
         */
         virtual bool HasQuit() const;
 
         //! This default implementation ignores the video mode descriptor completely and always return false.
         bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) override;
-
-        /**
-        \brief Processes the events for this canvas (i.e. touch input, key presses etc.).
-        \return True, as long as the window can process events.
-        Once the \c PostQuit function has set this canvas to the 'Quit' state, this function returns false.
-        \see PostQuit
-        */
-        bool ProcessEvents() override final;
 
         //! Always returns Display::GetPrimary.
         Display* FindResidentDisplay() const override final;
@@ -130,10 +113,8 @@ class LLGL_EXPORT Canvas : public Surface
 
         /**
         \brief Posts a 'Quit' event to all event listeners.
-        \remarks If at least one event listener returns false within the \c OnQuit callback, the canvas will not quit.
-        If all event listeners return true within the \c OnQuit callback, \c ProcessEvents will return false from now on.
+        \remarks If any of the event listener sets the \c veto flag to false within the \c OnQuit callback, the canvas will \e not be put into 'Quit' state.
         \see EventListener::OnQuit
-        \see ProcessEvents
         \see HasQuit
         */
         void PostQuit();
@@ -166,15 +147,6 @@ class LLGL_EXPORT Canvas : public Surface
 
         //! Allocates the internal data.
         Canvas();
-
-    protected:
-
-        /**
-        \brief Called inside the "ProcessEvents" function after all event listeners received the same event.
-        \see ProcessEvents
-        \see EventListener::OnProcessEvents
-        */
-        virtual void OnProcessEvents() = 0;
 
     private:
 

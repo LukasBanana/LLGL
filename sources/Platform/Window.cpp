@@ -17,11 +17,6 @@ namespace LLGL
  * Window::EventListener class
  */
 
-void Window::EventListener::OnProcessEvents(Window& sender)
-{
-    // dummy
-}
-
 void Window::EventListener::OnQuit(Window& sender, bool& veto)
 {
     // dummy
@@ -151,13 +146,6 @@ bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
         SetDesc(windowDesc);
     }
     return true;
-}
-
-bool Window::ProcessEvents()
-{
-    FOREACH_LISTENER_CALL( OnProcessEvents(*this) );
-    OnProcessEvents();
-    return !HasQuit();
 }
 
 Display* Window::FindResidentDisplay() const

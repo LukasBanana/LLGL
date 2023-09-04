@@ -54,11 +54,12 @@ class MacOSWindow : public Window
             return wnd_;
         }
 
+    public:
+    
+        void ProcessEvent(NSEvent* event);
+
     private:
 
-        void OnProcessEvents() override;
-
-        void ProcessEvent(NSEvent* event);
         void ProcessKeyEvent(NSEvent* event, bool down);
         void ProcessMouseKeyEvent(Key key, bool down);
         void ProcessMouseMoveEvent(NSEvent* event);

@@ -17,6 +17,23 @@ namespace LLGL
 {
 
 
+/*
+ * Surface class
+ */
+
+bool Surface::ProcessEvents()
+{
+    /* Peek all queued messages */
+    MSG message;
+    while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&message);
+        DispatchMessage(&message);
+    }
+    return true;
+}
+
+
 /* ----- Internal structures ----- */
 
 struct Win32FrameAndStyle
@@ -121,7 +138,9 @@ static Win32FrameAndStyle GetWin32FrameAndStyleFromDesc(const WindowDescriptor& 
 }
 
 
-/* ----- Win32Window class ----- */
+/*
+ * Win32Window class
+ */
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
@@ -356,17 +375,6 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
             static_cast<int>(frame.size.height),
             flags
         );
-    }
-}
-
-void Win32Window::OnProcessEvents()
-{
-    /* Peek all queued messages */
-    MSG message;
-    while (PeekMessage(&message, wnd_, 0, 0, PM_REMOVE))
-    {
-        TranslateMessage(&message);
-        DispatchMessage(&message);
     }
 }
 

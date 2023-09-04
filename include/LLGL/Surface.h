@@ -67,7 +67,7 @@ class LLGL_EXPORT Surface : public Interface
         virtual Extent2D GetContentSize() const = 0;
 
         /**
-        \brief Adapts the surface to fits the needs for the specified video mode.
+        \brief Adapts the surface to satisfy the needs for the specified video mode.
         \param[in,out] resolution Optional pointer to the input and output resolution.
         \param[in,out] fullscreen Optional pointer to the fullscreen bit.
         \return If the video mode has been accepted with no modifications and this surface has been updated then the return value is true.
@@ -84,19 +84,27 @@ class LLGL_EXPORT Surface : public Interface
         virtual void ResetPixelFormat() = 0;
 
         /**
-        \brief Processes all events for this surface, i.e. input-, movement-, resize-, and other events.
-        \remarks This function is only implemented by the Window and Canvas interfaces.
-        \see Window::ProcessEvents
-        \see Canvas::ProcessEvents
-        */
-        virtual bool ProcessEvents() = 0;
-
-        /**
         \brief Returns the Display interface where this surface is resident in.
         \remarks A surface is considered resident in a display if more than the half of its client area is visible in that display.
         \return New instance of a Display where this surface is resident or null if there no display has been found.
         */
         virtual Display* FindResidentDisplay() const = 0;
+
+    public:
+
+        /**
+        \brief Processes all windowing system events, i.e. input-, movement-, resize-, and other events for all surfaces associated with the host process.
+        \remarks This should be called once every frame to update all surfaces and their inputs.
+        \return True as long as events can be recevied. Otherwise, the connection to the window server might have been closed or an error occurred.
+        The return value is mostly used to allow having this function inside a conditional expression to be called before any other event based conditions are invoked,
+        like in the following example:
+        \code
+        while (LLGL::Surface::ProcessEvent() && !myWindow->HasQuit()) {
+           ...
+        }
+        \endcode
+        */
+        static bool ProcessEvents();
 
 };
 

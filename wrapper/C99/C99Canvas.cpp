@@ -35,11 +35,6 @@ class InternalCanvasEventListener final : public Canvas::EventListener
             memcpy(&callbacks_, callbacks, sizeof(LLGLCanvasEventListener));
         }
 
-        void OnProcessEvents(Canvas& sender) override
-        {
-            LLGL_CALLBACK_WRAPPER(onProcessEvents);
-        }
-
         void OnQuit(Canvas& sender, bool& veto) override
         {
             LLGL_CALLBACK_WRAPPER(onQuit, &veto);

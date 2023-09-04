@@ -15,6 +15,45 @@ namespace LLGL
 {
 
 
+
+/*
+ * Surface class
+ */
+
+bool Surface::ProcessEvents()
+{
+    if (android_app* appState = AndroidApp::Get().GetState())
+    {
+        /* Poll all Androdi app events */
+        int ident = 0, events = 0;
+        android_poll_source* source = nullptr;
+
+        while ((ident = ALooper_pollAll(0, nullptr, &events, reinterpret_cast<void**>(&source))) >= 0)
+        {
+            /* Process the event */
+            if (source != nullptr)
+                source->process(appState, source);
+
+            /* Process sensor data */
+            /*if (ident == LOOPER_ID_USER)
+            {
+                //TODO
+            }*/
+
+            /* Check if we are exiting */
+            if (appState->destroyRequested != 0)
+                PostQuit();
+        }
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * Canvas class
+ */
+
 std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 {
     return MakeUnique<AndroidCanvas>(desc);
@@ -32,6 +71,11 @@ static Extent2D GetAndroidWindowRect()
     }
     return Extent2D{};
 }
+
+
+/*
+ * AndroidCanvas class
+ */
 
 AndroidCanvas::AndroidCanvas(const CanvasDescriptor& desc) :
     desc_        { desc                                 },
@@ -73,37 +117,6 @@ UTF8String AndroidCanvas::GetTitle() const
 void AndroidCanvas::ResetPixelFormat()
 {
     // dummy
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void AndroidCanvas::OnProcessEvents()
-{
-    android_app* appState = AndroidApp::Get().GetState();
-
-    /* Poll all Androdi app events */
-    int ident = 0, events = 0;
-    android_poll_source* source = nullptr;
-
-    while ((ident = ALooper_pollAll(0, nullptr, &events, reinterpret_cast<void**>(&source))) >= 0)
-    {
-        /* Process the event */
-        if (source != nullptr)
-            source->process(appState, source);
-
-        /* Process sensor data */
-        /*if (ident == LOOPER_ID_USER)
-        {
-            //TODO
-        }*/
-
-        /* Check if we are exiting */
-        if (appState->destroyRequested != 0)
-            PostQuit();
-    }
 }
 
 

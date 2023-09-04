@@ -98,6 +98,20 @@ namespace LLGL
 {
 
 
+/*
+ * Surface class
+ */
+
+bool Surface::ProcessEvents()
+{
+    return true; // dummy
+}
+
+
+/*
+ * Canvas class
+ */
+
 /*static NSString* ToNSString(const wchar_t* s)
 {
     return [[NSString alloc]
@@ -111,6 +125,11 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 {
     return MakeUnique<IOSCanvas>(desc);
 }
+
+
+/*
+ * IOSCanvas class
+ */
 
 static IOSCanvasViewController* CreateIOSCanvasViewController(IOSCanvas* canvas)
 {
@@ -179,11 +198,6 @@ UTF8String IOSCanvas::GetTitle() const
 /*
  * ======= Private: =======
  */
-
-void IOSCanvas::OnProcessEvents()
-{
-    //TODO...
-}
 
 void IOSCanvas::ResetPixelFormat()
 {

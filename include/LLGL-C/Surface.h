@@ -19,7 +19,7 @@ LLGL_C_EXPORT bool llglGetSurfaceNativeHandle(LLGLSurface surface, void* nativeH
 LLGL_C_EXPORT void llglGetSurfaceContentSize(LLGLSurface surface, LLGLExtent2D* outSize);
 LLGL_C_EXPORT bool llglAdaptSurfaceForVideoMode(LLGLSurface surface, LLGLExtent2D* outResolution, bool* outFullscreen);
 LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface);
-LLGL_C_EXPORT bool llglProcessSurfaceEvents(LLGLSurface surface);
+LLGL_C_EXPORT bool llglProcessSurfaceEvents();
 LLGL_C_EXPORT LLGLDisplay llglFindSurfaceResidentDisplay(LLGLSurface surface);
 
 

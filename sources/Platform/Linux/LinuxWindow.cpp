@@ -11,11 +11,99 @@
 #include "MapKey.h"
 #include "../../Core/CoreUtils.h"
 #include <exception>
+#include <X11/Xresource.h>
 
 
 namespace LLGL
 {
 
+
+/*
+ * LinuxX11Context class
+ */
+
+// Wrapper for XContext singleton.
+class LinuxX11Context
+{
+
+    public:
+        
+        static void Save(::Display* display, XID id, void* userData);
+        static void* Find(::Display* display, XID id);
+        static void Remove(::Display* display, XID id);
+
+    private:
+
+        LinuxX11Context();
+
+        static LinuxX11Context& Get();
+
+    private:
+
+        ::XContext ctx_;
+
+};
+
+LinuxX11Context::LinuxX11Context() :
+    ctx_ { XUniqueContext() }
+{
+}
+
+void LinuxX11Context::Save(::Display* display, XID id, void* userData)
+{
+    XSaveContext(display, id, LinuxX11Context::Get().ctx_, reinterpret_cast<XPointer>(userData));
+}
+
+void* LinuxX11Context::Find(::Display* display, XID id)
+{
+    XPointer userData = nullptr;
+    XFindContext(display, id, LinuxX11Context::Get().ctx_, &userData);
+    return reinterpret_cast<void*>(userData);
+}
+
+void LinuxX11Context::Remove(::Display* display, XID id)
+{
+    XDeleteContext(display, id, LinuxX11Context::Get().ctx_);
+}
+
+LinuxX11Context& LinuxX11Context::Get()
+{
+    static LinuxX11Context instance;
+    return instance;
+}
+
+
+/*
+ * Surface class
+ */
+
+bool Surface::ProcessEvents()
+{
+    ::Display* display = LinuxSharedX11Display::GetShared()->GetNative();
+
+    XEvent event;
+
+    XPending(display);
+
+    while (XQLength(display))
+    {
+        XNextEvent(display, &event);
+        if (void* userData = LinuxX11Context::Find(display, event.xany.window))
+        {
+            LinuxWindow* wnd = reinterpret_cast<LinuxWindow*>(userData);
+            wnd->ProcessEvent(event);
+        }
+    }
+
+    XFlush(display);
+
+    return true;
+}
+
+
+/*
+ * Window class
+ */
 
 static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {
@@ -36,14 +124,21 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
     return MakeUnique<LinuxWindow>(desc);
 }
 
+
+/*
+ * LinuxWindow class
+ */
+
 LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
     desc_ { desc }
 {
-    OpenWindow();
+    OpenX11Window();
+    LinuxX11Context::Save(display_, wnd_, this);
 }
 
 LinuxWindow::~LinuxWindow()
 {
+    LinuxX11Context::Remove(display_, wnd_);
     XDestroyWindow(display_, wnd_);
 }
 
@@ -143,53 +238,42 @@ WindowDescriptor LinuxWindow::GetDesc() const
     return desc_; //todo...
 }
 
-void LinuxWindow::OnProcessEvents()
+void LinuxWindow::ProcessEvent(XEvent& event)
 {
-    XEvent event;
-
-    XPending(display_);
-
-    while (XQLength(display_))
+    switch (event.type)
     {
-        XNextEvent(display_, &event);
+        case KeyPress:
+            ProcessKeyEvent(event.xkey, true);
+            break;
 
-        switch (event.type)
-        {
-            case KeyPress:
-                ProcessKeyEvent(event.xkey, true);
-                break;
+        case KeyRelease:
+            ProcessKeyEvent(event.xkey, false);
+            break;
 
-            case KeyRelease:
-                ProcessKeyEvent(event.xkey, false);
-                break;
+        case ButtonPress:
+            ProcessMouseKeyEvent(event.xbutton, true);
+            break;
 
-            case ButtonPress:
-                ProcessMouseKeyEvent(event.xbutton, true);
-                break;
+        case ButtonRelease:
+            ProcessMouseKeyEvent(event.xbutton, false);
+            break;
 
-            case ButtonRelease:
-                ProcessMouseKeyEvent(event.xbutton, false);
-                break;
+        case Expose:
+            ProcessExposeEvent();
+            break;
 
-            case Expose:
-                ProcessExposeEvent();
-                break;
+        case MotionNotify:
+            ProcessMotionEvent(event.xmotion);
+            break;
 
-            case MotionNotify:
-                ProcessMotionEvent(event.xmotion);
-                break;
+        case DestroyNotify:
+            PostQuit();
+            break;
 
-            case DestroyNotify:
-                PostQuit();
-                break;
-
-            case ClientMessage:
-                ProcessClientMessage(event.xclient);
-                break;
-        }
+        case ClientMessage:
+            ProcessClientMessage(event.xclient);
+            break;
     }
-
-    XFlush(display_);
 }
 
 
@@ -197,7 +281,7 @@ void LinuxWindow::OnProcessEvents()
  * ======= Private: =======
  */
 
-void LinuxWindow::OpenWindow()
+void LinuxWindow::OpenX11Window()
 {
     /* Get native context handle */
     const NativeHandle* nativeHandle = reinterpret_cast<const NativeHandle*>(desc_.windowContext);
