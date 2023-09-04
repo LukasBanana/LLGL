@@ -73,12 +73,12 @@ static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 {
     NSUInteger mask = 0;
 
-    if (desc.borderless)
+    if ((desc.flags & WindowFlags::Borderless) != 0)
         mask |= g_WinStyleBorderless;
     else
     {
         mask |= g_WinStyleTitleBar;
-        if (desc.resizable)
+        if ((desc.flags & WindowFlags::Resizable) != 0)
             mask |= g_WinStyleResizable;
     }
 
@@ -242,11 +242,11 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
     if (![wndDelegate_ isFullscreenMode])
     {
         [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
-        [wndDelegate_ makeResizable:(desc.resizable)];
+        [wndDelegate_ makeResizable:((desc.flags & WindowFlags::Resizable) != 0)];
 
         #if 0
         /* Set window collection behavior for resize events */
-        if (desc.resizable)
+        if ((desc.flags & WindowFlags::Resizable) != 0)
             [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary | NSWindowCollectionBehaviorManaged];
         else
             [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorDefault];
@@ -254,7 +254,7 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 
         //TOOD: incomplete -> must be ignored right now, otherwise window is moved on a resize event
         #if 0
-        if (desc.centered)
+        if ((desc.flags & WindowFlags::Centered) != 0)
             [wnd_ center];
         else
             SetPosition(desc.position);
@@ -272,9 +272,12 @@ WindowDescriptor MacOSWindow::GetDesc() const
         desc.title      = GetTitle();
         desc.position   = GetPosition();
         desc.size       = GetSize();
-        desc.visible    = IsShown();
-        desc.borderless = (([wnd_ styleMask] & g_WinStyleBorderless) != 0);
-        desc.resizable  = (([wnd_ styleMask] & g_WinStyleResizable) != 0);
+        if (IsShown())
+            desc.flags |= WindowFlags::Visible;
+        if (([wnd_ styleMask] & g_WinStyleBorderless) != 0)
+            desc.flags |= WindowFlags::Borderless;
+        if (([wnd_ styleMask] & g_WinStyleResizable) != 0)
+            desc.flags |= WindowFlags::Resizable;
     }
     return desc;
 }
@@ -307,9 +310,11 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 
     #if 0
     /* Set window collection behavior for resize events */
-    if (desc.resizable)
+    if ((desc.flags & WindowFlags::Resizable) != 0)
         [wnd setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary | NSWindowCollectionBehaviorManaged];
     #endif
+
+    const bool isCentered = ((desc.flags & WindowFlags::Centered) != 0);
 
     if (desc.windowContext != nullptr && desc.windowContextSize == sizeof(NativeHandle))
     {
@@ -317,7 +322,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         if (NSWindow* parentWnd = reinterpret_cast<const NativeHandle*>(desc.windowContext)->window)
         {
             [parentWnd addChildWindow:wnd ordered:NSWindowAbove];
-            if (!desc.centered)
+            if (!isCentered)
                 SetRelativeNSWindowPosition(wnd, desc.position, parentWnd);
         }
     }
@@ -325,14 +330,14 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     {
         /* Move this window to the front of the screen list and center if requested */
         [wnd makeKeyAndOrderFront:nil];
-        if (desc.centered)
+        if (isCentered)
             [wnd center];
         else
             SetRelativeNSWindowPosition(wnd, desc.position);
     }
 
     /* Show window */
-    if (desc.visible)
+    if ((desc.flags & WindowFlags::Visible) != 0)
         [wnd setIsVisible:YES];
 
     return wnd;
@@ -341,7 +346,8 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 MacOSWindowDelegate* MacOSWindow::CreateNSWindowDelegate(const WindowDescriptor& desc)
 {
     /* Set window application delegate */
-    return [[MacOSWindowDelegate alloc] initWithWindow:this isResizable:(desc.resizable)];
+    const bool isResizable = ((desc.flags & WindowFlags::Resizable) != 0);
+    return [[MacOSWindowDelegate alloc] initWithWindow:this isResizable:isResizable];
 }
 
 void MacOSWindow::OnProcessEvents()

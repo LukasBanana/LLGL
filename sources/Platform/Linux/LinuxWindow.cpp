@@ -124,7 +124,7 @@ void LinuxWindow::Show(bool show)
     else
         XUnmapWindow(display_, wnd_);
 
-    if (desc_.borderless)
+    if ((desc_.flags & WindowFlags::Borderless) != 0)
         XSetInputFocus(display_, (show ? wnd_ : None), RevertToParent, CurrentTime);
 }
 
@@ -241,14 +241,15 @@ void LinuxWindow::OpenWindow()
     else
         valueMask |= CWBackPixel;
 
-    if (desc_.borderless) //WARNING -> input no longer works
+    const bool isBorderless = ((desc_.flags & WindowFlags::Borderless) != 0);
+    if (isBorderless) //TODO: -> input no longer works
     {
         valueMask |= CWOverrideRedirect;
         attribs.override_redirect = true;
     }
 
     /* Get final window position */
-    if (desc_.centered)
+    if ((desc_.flags & WindowFlags::Centered) != 0)
         desc_.position = GetScreenCenteredPosition(desc_.size);
 
     /* Create X11 window */
@@ -271,11 +272,11 @@ void LinuxWindow::OpenWindow()
     SetTitle(desc_.title);
 
     /* Show window */
-    if (desc_.visible)
+    if ((desc_.flags & WindowFlags::Visible) != 0)
         Show();
 
     /* Prepare borderless window */
-    if (desc_.borderless)
+    if (isBorderless)
     {
         XGrabKeyboard(display_, wnd_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
         XGrabPointer(display_, wnd_, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, wnd_, None, CurrentTime);

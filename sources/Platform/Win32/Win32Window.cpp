@@ -19,7 +19,7 @@ namespace LLGL
 
 /* ----- Internal structures ----- */
 
-struct WindowAppearance
+struct Win32FrameAndStyle
 {
     DWORD       style   = 0;
     Offset2D    position;
@@ -62,19 +62,19 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
 
     if (hasWindowContext)
         style |= WS_CHILD;
-    else if (desc.borderless)
+    else if ((desc.flags & WindowFlags::Borderless) != 0)
         style |= WS_POPUP;
     else
     {
         style |= (WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION);
-        if (desc.resizable)
+        if ((desc.flags & WindowFlags::Resizable) != 0)
             style |= (WS_SIZEBOX | WS_MAXIMIZEBOX);
     }
 
-    if (desc.visible)
+    if ((desc.flags & WindowFlags::Visible) != 0)
         style |= WS_VISIBLE;
 
-    if (desc.acceptDropFiles)
+    if ((desc.flags & WindowFlags::AcceptDropFiles) != 0)
         style |= WM_DROPFILES;
 
     return style;
@@ -89,33 +89,35 @@ static Offset2D GetScreenCenteredPosition(const Extent2D& size)
     };
 }
 
-static WindowAppearance GetWindowAppearance(const WindowDescriptor& desc)
+static Win32FrameAndStyle GetWin32FrameAndStyleFromDesc(const WindowDescriptor& desc)
 {
-    WindowAppearance appearance;
+    Win32FrameAndStyle frame;
 
     /* Get window style and client area */
-    appearance.style = GetWindowStyle(desc);
+    frame.style = GetWindowStyle(desc);
 
     auto rc = GetClientArea(
         static_cast<LONG>(desc.size.width),
         static_cast<LONG>(desc.size.height),
-        appearance.style
+        frame.style
     );
 
     /* Setup window size */
-    appearance.size.width   = static_cast<std::uint32_t>(rc.right - rc.left);
-    appearance.size.height  = static_cast<std::uint32_t>(rc.bottom - rc.top);
+    frame.size.width   = static_cast<std::uint32_t>(rc.right - rc.left);
+    frame.size.height  = static_cast<std::uint32_t>(rc.bottom - rc.top);
 
     /* Setup window position */
-    appearance.position = (desc.centered ? GetScreenCenteredPosition(desc.size) : desc.position);
+    const bool isCentered = ((desc.flags & WindowFlags::Centered) != 0);
 
-    if (desc.centered)
+    frame.position = (isCentered ? GetScreenCenteredPosition(desc.size) : desc.position);
+
+    if (isCentered)
     {
-        appearance.position.x += rc.left;
-        appearance.position.y += rc.top;
+        frame.position.x += rc.left;
+        frame.position.y += rc.top;
     }
 
-    return appearance;
+    return frame;
 }
 
 
@@ -257,49 +259,54 @@ bool Win32Window::IsShown() const
 WindowDescriptor Win32Window::GetDesc() const
 {
     /* Get window flags and other information for comparision */
-    auto windowFlags    = GetWindowLong(wnd_, GWL_STYLE);
-    auto windowSize     = GetSize();
-    auto centerPoint    = GetScreenCenteredPosition(windowSize);
+    const LONG      style       = GetWindowLong(wnd_, GWL_STYLE);
+    const Extent2D  windowSize  = GetSize();
+    const Offset2D  centerPoint = GetScreenCenteredPosition(windowSize);
 
     /* Setup window descriptor */
     WindowDescriptor desc;
-
-    desc.title              = GetTitle();
-    desc.position           = GetPosition();
-    desc.size               = windowSize;
-
-    desc.visible            = ((windowFlags & WS_VISIBLE  ) != 0);
-    desc.borderless         = ((windowFlags & WS_CAPTION  ) == 0);
-    desc.resizable          = ((windowFlags & WS_SIZEBOX  ) != 0);
-    desc.acceptDropFiles    = ((windowFlags & WM_DROPFILES) != 0);
-    desc.centered           = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
-
-    if (parentWnd_ != nullptr)
     {
-        desc.windowContext      = &parentWnd_;
-        desc.windowContextSize  = sizeof(parentWnd_);
-    }
+        desc.title      = GetTitle();
+        desc.position   = GetPosition();
+        desc.size       = windowSize;
 
+        if ((style & WS_VISIBLE  ) != 0)
+            desc.flags |= WindowFlags::Visible;
+        if ((style & WS_CAPTION  ) == 0)
+            desc.flags |= WindowFlags::Borderless;
+        if ((style & WS_SIZEBOX  ) != 0)
+            desc.flags |= WindowFlags::Resizable;
+        if ((style & WM_DROPFILES) != 0)
+            desc.flags |= WindowFlags::AcceptDropFiles;
+        if (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y)
+            desc.flags |= WindowFlags::Centered;
+
+        if (parentWnd_ != nullptr)
+        {
+            desc.windowContext      = &parentWnd_;
+            desc.windowContextSize  = sizeof(parentWnd_);
+        }
+    }
     return desc;
 }
 
 void Win32Window::SetDesc(const WindowDescriptor& desc)
 {
     /* Get current window flags */
-    auto windowFlags = GetWindowLong(wnd_, GWL_STYLE);
+    const LONG oldStyle = GetWindowLong(wnd_, GWL_STYLE);
 
-    auto borderless = ((windowFlags & WS_CAPTION) == 0);
-    auto resizable  = ((windowFlags & WS_SIZEBOX) != 0);
+    const bool isBorderless = ((oldStyle & WS_CAPTION) == 0);
+    const bool isResizable  = ((oldStyle & WS_SIZEBOX) != 0);
 
     /* Setup new window flags */
-    auto newWindowFlags = GetWindowStyle(desc);
+    DWORD newStyle = GetWindowStyle(desc);
 
-    if ((windowFlags & WS_MAXIMIZE) != 0)
-        newWindowFlags |= WS_MAXIMIZE;
-    if ((windowFlags & WS_MINIMIZE) != 0)
-        newWindowFlags |= WS_MINIMIZE;
+    if ((oldStyle & WS_MAXIMIZE) != 0)
+        newStyle |= WS_MAXIMIZE;
+    if ((oldStyle & WS_MINIMIZE) != 0)
+        newStyle |= WS_MINIMIZE;
 
-    auto flagsChanged = (windowFlags != newWindowFlags);
+    const bool haveFlagsChanged = (oldStyle != newStyle);
 
     /* Check if anything changed */
     auto position           = GetPosition();
@@ -308,30 +315,31 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
     bool positionChanged    = (desc.position.x != position.x || desc.position.y != position.y);
     bool sizeChanged        = (desc.size.width != size.width || desc.size.height != size.height);
 
-    if (flagsChanged || positionChanged || sizeChanged)
+    if (haveFlagsChanged || positionChanged || sizeChanged)
     {
         UINT flags = SWP_NOZORDER;
 
-        if (flagsChanged)
+        if (haveFlagsChanged)
         {
             /* Hide temporarily to avoid strange effects during frame change (if frame has changed) */
             ShowWindow(wnd_, SW_HIDE);
 
             /* Set new window style */
-            SetWindowLongPtr(wnd_, GWL_STYLE, newWindowFlags);
+            SetWindowLongPtr(wnd_, GWL_STYLE, newStyle);
             flags |= SWP_FRAMECHANGED;
         }
 
         /* Set new position and size */
-        auto appearance = GetWindowAppearance(desc);
+        const Win32FrameAndStyle frame = GetWin32FrameAndStyleFromDesc(desc);
 
-        if (desc.visible)
+        if ((desc.flags & WindowFlags::Visible) != 0)
             flags |= SWP_SHOWWINDOW;
 
-        if ((newWindowFlags & WS_MAXIMIZE) != 0)
+        if ((newStyle & WS_MAXIMIZE) != 0)
             flags |= (SWP_NOSIZE | SWP_NOMOVE);
 
-        if (borderless == desc.borderless && resizable == desc.resizable)
+        if (isBorderless == ((desc.flags & WindowFlags::Borderless) != 0) &&
+            isResizable  == ((desc.flags & WindowFlags::Resizable ) != 0))
         {
             if (!positionChanged)
                 flags |= SWP_NOMOVE;
@@ -342,10 +350,10 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
         SetWindowPos(
             wnd_,
             0, // ignore, due to SWP_NOZORDER flag
-            appearance.position.x,
-            appearance.position.y,
-            static_cast<int>(appearance.size.width),
-            static_cast<int>(appearance.size.height),
+            frame.position.x,
+            frame.position.y,
+            static_cast<int>(frame.size.width),
+            static_cast<int>(frame.size.height),
             flags
         );
     }
@@ -380,27 +388,27 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     auto windowClass = Win32WindowClass::Instance();
 
     /* Get final window size */
-    auto appearance = GetWindowAppearance(desc);
+    const Win32FrameAndStyle frame = GetWin32FrameAndStyleFromDesc(desc);
 
     /* Get parent window */
     parentWnd_ = GetNativeWin32ParentWindow(desc.windowContext, desc.windowContextSize);
     HWND parentWndOrDesktop = (parentWnd_ != nullptr ? parentWnd_ : HWND_DESKTOP);
 
     #ifdef UNICODE
-    auto title = desc.title.to_utf16();
+    SmallVector<wchar_t> title = desc.title.to_utf16();
     #else
-    const auto& title = desc.title;
+    const UTF8String& title = desc.title;
     #endif
 
     /* Create frame window object */
     HWND wnd = CreateWindow(
         windowClass->GetName(),
         title.data(),
-        appearance.style,
-        appearance.position.x,
-        appearance.position.y,
-        static_cast<int>(appearance.size.width),
-        static_cast<int>(appearance.size.height),
+        frame.style,
+        frame.position.x,
+        frame.position.y,
+        static_cast<int>(frame.size.width),
+        static_cast<int>(frame.size.height),
         parentWndOrDesktop,
         nullptr,
         GetModuleHandle(nullptr),
@@ -411,7 +419,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
 
     #ifndef LLGL_ARCH_ARM
     /* Set additional flags */
-    if (desc.acceptDropFiles)
+    if ((desc.flags & WindowFlags::AcceptDropFiles) != 0)
         DragAcceptFiles(wnd, TRUE);
     #endif
 

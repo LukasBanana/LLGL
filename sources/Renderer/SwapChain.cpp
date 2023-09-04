@@ -167,27 +167,26 @@ void SwapChain::SetOrCreateSurface(
         /* Create new canvas for this swap-chain */
         CanvasDescriptor canvasDesc;
         {
-            canvasDesc.borderless = fullscreen;
+            canvasDesc.flags = (fullscreen ? CanvasFlags::Borderless : 0);
         }
         pimpl_->surface = Canvas::Create(canvasDesc);
 
         /* Take resolution from canvas since mobile platforms assign resolution per app */
         pimpl_->resolution = pimpl_->surface->GetContentSize();
 
-        #else
+        #else // LLGL_MOBILE_PLATFORM
 
         /* Create new window for this swap-chain */
         WindowDescriptor windowDesc;
         {
             windowDesc.size                 = size;
-            windowDesc.borderless           = fullscreen;
-            windowDesc.centered             = !fullscreen;
+            windowDesc.flags                = (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered);
             windowDesc.windowContext        = windowContext;
             windowDesc.windowContextSize    = windowContextSize;
         }
         pimpl_->surface = Window::Create(windowDesc);
 
-        #endif
+        #endif // /LLGL_MOBILE_PLATFORM
     }
 
     /* Switch to fullscreen mode before storing new video mode */

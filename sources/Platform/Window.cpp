@@ -128,7 +128,7 @@ bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
     if (resolution != nullptr || fullscreen != nullptr)
     {
         /* Query current window descriptor */
-        auto windowDesc = GetDesc();
+        WindowDescriptor windowDesc = GetDesc();
 
         /* Adapt window size and position */
         if (resolution != nullptr)
@@ -138,13 +138,13 @@ bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
         {
             if (*fullscreen)
             {
-                windowDesc.borderless   = true;
+                windowDesc.flags |= WindowFlags::Borderless;
                 windowDesc.position     = { 0, 0 };
             }
             else
             {
-                windowDesc.borderless   = false;
-                windowDesc.centered     = true;
+                windowDesc.flags &= ~WindowFlags::Borderless;
+                windowDesc.flags |= WindowFlags::Centered;
             }
         }
 

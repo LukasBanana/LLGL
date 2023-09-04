@@ -93,8 +93,7 @@ MyRenderer::MyRenderer(
     {
         windowDesc.position             = subWindowOffset;
         windowDesc.size                 = { static_cast<std::uint32_t>(viewport.width)/2, static_cast<std::uint32_t>(viewport.height)/2 };
-        windowDesc.borderless           = true;
-        windowDesc.visible              = true;
+        windowDesc.flags                = (LLGL::WindowFlags::Visible | LLGL::WindowFlags::Borderless);
         windowDesc.windowContext        = (&mainWindowHandle);
         windowDesc.windowContextSize    = sizeof(mainWindowHandle);
     }
@@ -289,9 +288,9 @@ int main(int argc, char* argv[])
         {
             mainWindowDesc.title    = "LLGL Example: Multi Renderer ( OpenGL, Vulkan, Direct3D 11, Direct3D 12 )";
             mainWindowDesc.size     = resolution;
-            mainWindowDesc.centered = true;
+            mainWindowDesc.flags    = LLGL::WindowFlags::Centered;
         }
-        auto mainWindow = LLGL::Window::Create(mainWindowDesc);
+        std::unique_ptr<LLGL::Window> mainWindow = LLGL::Window::Create(mainWindowDesc);
 
         // Create renderers
         const int halfWidth     = static_cast<int>(resolution.width/2);

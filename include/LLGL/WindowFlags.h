@@ -19,57 +19,79 @@ namespace LLGL
 {
 
 
-//! Window descriptor structure.
+/**
+\brief Window creation flags.
+\see WindowDescriptor::flags
+*/
+struct WindowFlags
+{
+    enum
+    {
+        //! Specifies whether the window is visible at creation time.
+        Visible         = (1 << 0),
+
+        //! Specifies whether the window is borderless. This is required for a fullscreen swap-chain.
+        Borderless      = (1 << 1),
+
+        /**
+        \brief Specifies whether the window can be resized.
+        \remarks For every window representing the surface for a SwapChain which has been resized,
+        the video mode of that SwapChain must be updated with the resolution of the surface's content size.
+        This can be done by resizing the swap-chain buffers to the new resolution before the respective swap-chain is bound to a render pass,
+        or it can be handled by a window event listener inside a custom \c OnResize callback:
+        \code
+        // Alternative 1
+        class MyEventListener : public LLGL::Window::EventListener {
+            void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override {
+                mySwapChain->ResizeBuffers(clientAreaSize);
+            }
+        };
+        myWindow->AddEventListener(std::make_shared<MyEventListener>());
+
+        // Alternative 2
+        mySwapChain->ResizeBuffers(myWindow->GetSize());
+        myCmdBuffer->BeginRenderPass(*mySwapChain);
+        \endcode
+        \note Not updating the swap-chain on a resized window is undefined behavior.
+        \see Surface::GetSize
+        \see Window::EventListener::OnResize
+        */
+        Resizable       = (1 << 2),
+
+        /**
+        \brief Specifies whether the window is centered within the desktop screen at creation time.
+        \remarks If this is specifies, the \c position field of the WindowDescriptor will be ignored.
+        */
+        Centered        = (1 << 4),
+
+        /**
+        \brief Specifies whether the window allows that files can be draged-and-droped onto the window.
+        \note Only supported on: MS/Windows.
+        */
+        AcceptDropFiles = (1 << 3),
+    };
+};
+
+/**
+\brief Window descriptor structure.
+\see Window::Create
+*/
 struct WindowDescriptor
 {
-    //! Window title as unicode string.
+    //! Window title in UTF-8 encoding.
     UTF8String      title;
 
     //! Window position (relative to the client area).
     Offset2D        position;
 
-    //! Window size (this should be the client area size).
+    //! Specifies the content size, i.e. not including the frame and caption dimensions.
     Extent2D        size;
 
-    //! Specifies whether the window is visible at creation time. By default false.
-    bool            visible             = false;
-
-    //! Specifies whether the window is borderless. This is required for a fullscreen swap-chain. By default false.
-    bool            borderless          = false;
-
     /**
-    \brief Specifies whether the window can be resized. By default false.
-    \remarks For every window representing the surface for a SwapChain which has been resized,
-    the video mode of that SwapChain must be updated with the resolution of the surface's content size.
-    This can be done by setting the video mode with the new resolution before the respective swap-chain is bound as render target,
-    or it can be handled by a window event listener on the 'OnResize' callback:
-    \code
-    // Alternative 1
-    class MyEventListener : public LLGL::Window::EventListener {
-        void OnResize(Window& sender, const Extent2D& clientAreaSize) override {
-            mySwapChain->ResizeBuffers(clientAreaSize);
-        }
-    };
-    myWindow->AddEventListener(std::make_shared<MyEventListener>());
-
-    // Alternative 2
-    mySwapChain->ResizeBuffers(myWindow->GetContentSize());
-    myCmdBuffer->BeginRenderPass(*mySwapChain);
-    \endcode
-    \note Not updating the swap-chain on a resized window is undefined behavior.
-    \see Surface::GetContentSize
-    \see Window::EventListener::OnResize
+    \brief Specifies the window creation flags. This can be a bitwise OR combination of the WindowFlags entries.
+    \see WindowFlags
     */
-    bool            resizable           = false;
-
-    /**
-    \brief Specifies whether the window allows that files can be draged-and-droped onto the window. By default false.
-    \note Only supported on: MS/Windows.
-    */
-    bool            acceptDropFiles     = false;
-
-    //! Specifies whether the window is centered within the desktop screen. By default false.
-    bool            centered            = false;
+    long            flags               = 0;
 
     /**
     \brief Window context handle.

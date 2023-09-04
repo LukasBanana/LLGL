@@ -44,11 +44,9 @@ int main()
         // Create window
         LLGL::WindowDescriptor windowDesc;
 
-        windowDesc.title        = "LLGL Test 1";
-        windowDesc.visible      = true;
-        windowDesc.centered     = true;
-        windowDesc.resizable    = true;
-        windowDesc.size         = { 640, 480 };
+        windowDesc.title    = "LLGL Test 1";
+        windowDesc.flags    = LLGL::WindowFlags::Visible | LLGL::WindowFlags::Centered | LLGL::WindowFlags::Resizable;
+        windowDesc.size     = { 640, 480 };
 
         auto window = LLGL::Window::Create(windowDesc);
 

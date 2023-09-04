@@ -48,10 +48,8 @@ int main()
 
         LLGL::WindowDescriptor windowDesc;
         {
-            windowDesc.size         = swapChainDesc.resolution;
-            windowDesc.resizable    = false;
-            windowDesc.centered     = true;
-            windowDesc.visible      = true;
+            windowDesc.size     = swapChainDesc.resolution;
+            windowDesc.flags    = LLGL::WindowFlags::Visible | LLGL::WindowFlags::Centered;
         }
         auto window = std::shared_ptr<LLGL::Window>(std::move(LLGL::Window::Create(windowDesc)));
 

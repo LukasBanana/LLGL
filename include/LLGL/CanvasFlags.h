@@ -16,14 +16,33 @@ namespace LLGL
 {
 
 
-//! Canvas descriptor structure.
+/**
+\brief Canvas creation flags.
+\see CanvasDescriptor::flags
+*/
+struct CanvasFlags
+{
+    enum
+    {
+        //! Specifies whether the canvas is borderless. This is required for a fullscreen swap-chain.
+        Borderless = (1 << 0),
+    };
+};
+
+/**
+\brief Canvas descriptor structure.
+\see Canvas::Create
+*/
 struct CanvasDescriptor
 {
     //! Canvas title as UTF16 string.
     UTF8String  title;
 
-    //! Specifies whether the canvas is borderless. This is required for a fullscreen swap-chain.
-    bool        borderless = false;
+    /**
+    \brief Specifies the canvas creation flags. This can be a bitwise OR combination of the CanvasFlags entries.
+    \see CanvasFlags
+    */
+    long        flags = 0;
 };
 
 

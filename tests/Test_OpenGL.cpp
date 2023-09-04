@@ -61,10 +61,8 @@ int main()
 
         LLGL::WindowDescriptor windowDesc;
         {
-            windowDesc.size         = swapChainDesc.resolution;
-            windowDesc.borderless   = swapChainDesc.fullscreen;
-            windowDesc.centered     = !swapChainDesc.fullscreen;
-            windowDesc.resizable    = true;
+            windowDesc.size     = swapChainDesc.resolution;
+            windowDesc.flags    = LLGL::WindowFlags::Resizable | (swapChainDesc.fullscreen ? LLGL::WindowFlags::Borderless : LLGL::WindowFlags::Centered);
         }
         auto window = std::shared_ptr<LLGL::Window>(LLGL::Window::Create(windowDesc));
 
@@ -369,14 +367,12 @@ int main()
                     #ifndef __linux__
 
                     // Switch fullscreen mode
+                    static bool isFullscreen;
                     if (input.KeyDown(LLGL::Key::Return))
                     {
-                        windowDesc.borderless = !windowDesc.borderless;
-
-                        windowDesc.centered = true;//!windowDesc.borderless;
+                        isFullscreen = !isFullscreen;
+                        windowDesc.flags = LLGL::WindowFlags::Visible | LLGL::WindowFlags::Resizable | (isFullscreen ? LLGL::WindowFlags::Borderless : LLGL::WindowFlags::Centered);
                         windowDesc.position = { 0, 0 };
-                        windowDesc.resizable = true;
-                        windowDesc.visible = true;
                         window->SetDesc(windowDesc);
 
                         swapChain->SwitchFullscreen(true);

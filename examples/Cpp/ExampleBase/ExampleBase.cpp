@@ -394,12 +394,12 @@ ExampleBase::ExampleBase(
     window.SetTitle(title + " ( " + rendererName + " )");
 
     // Change window descriptor to allow resizing
-    auto wndDesc = window.GetDesc();
-    wndDesc.resizable = true;
+    LLGL::WindowDescriptor wndDesc = window.GetDesc();
+    wndDesc.flags |= LLGL::WindowFlags::Resizable;
     window.SetDesc(wndDesc);
 
     // Change window behavior
-    auto behavior = window.GetBehavior();
+    LLGL::WindowBehavior behavior = window.GetBehavior();
     behavior.disableClearOnResize = true;
     behavior.moveAndResizeTimerID = 1;
     window.SetBehavior(behavior);
