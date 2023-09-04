@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <FileUtils.h>
 #include <stb/stb_image.h>
 
 
@@ -220,11 +221,12 @@ private:
     void LoadImage(const std::string& filename, int& texWidth, int& texHeight, std::vector<std::uint8_t>& imageData)
     {
         // Print information about current texture
-        std::cout << "load image: \"" << filename << "\"" << std::endl;
+        const std::string path = FindResourcePath(filename);
+        std::cout << "load image: \"" << path << "\"" << std::endl;
 
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int w = 0, h = 0, n = 0;
-        unsigned char* buf = stbi_load(filename.c_str(), &w, &h, &n, 4);
+        unsigned char* buf = stbi_load(path.c_str(), &w, &h, &n, 4);
         if (!buf)
             throw std::runtime_error("failed to load image: \"" + filename + "\"");
 

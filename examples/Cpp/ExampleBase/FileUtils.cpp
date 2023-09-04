@@ -47,7 +47,7 @@ std::string FindResourcePath(const std::string& filename)
         if (FileExists(mediaRoot + "Models/" + filename))
             return mediaRoot + "Models/" + filename;
     }
-    else if (ext == "png" || ext == "jpg" || ext == "dds")
+    else if (ext == "png" || ext == "jpg" || ext == "tga" || ext == "dds")
     {
         if (FileExists(mediaRoot + "Textures/" + filename))
             return mediaRoot + "Textures/" + filename;
