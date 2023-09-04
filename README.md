@@ -87,6 +87,11 @@ The LLGL port in vcpkg is kept up to date by Microsoft team members and communit
 </p>
 
 <p align="center">
+    <img src="examples/Cpp/PBR/Example.png" alt="Screenshot missing: PBR example" style="width:300px;height:auto;">
+    <img src="examples/Cpp/ClothPhysics/Example.gif" alt="Screenshot missing: Cloth physics example" style="width:300px;height:auto;">
+</p>
+
+<p align="center">
     <img src="examples/Cpp/Fonts/Example.iOS.png" alt="Screenshot missing: Fonts example (iOS)" style="height:400px;width:auto;">
     <img src="examples/Cpp/ClothPhysics/Example.iOS.png" alt="Screenshot missing: Cloth physics example (iOS)" style="height:400px;width:auto;">
 </p>
