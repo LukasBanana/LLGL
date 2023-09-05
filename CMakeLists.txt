@@ -52,6 +52,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+if(APPLE AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
+    # Once Xcode schemes are generated for example, we also have to enable them globally or the main projects will disappear
+    set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
+endif()
+
 
 # === Build path ===
 
@@ -137,13 +142,15 @@ macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
         # Project configurations
         add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
 
+        string(LENGTH "Example_" EXAMPLE_PREFIX_LEN)
+        if (${PROJECT_NAME} MATCHES "Example_+")
+            string(SUBSTRING ${PROJECT_NAME} ${EXAMPLE_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
+        else()
+            set(PROJECT_BUNDLE_ID_BASE ${PROJECT_NAME})
+        endif()
+
         if(LLGL_IOS_PLATFORM)
-            string(LENGTH "Example_" PROJECT_BUNDLE_NAME_PREFIX_LEN)
-            if (${PROJECT_NAME} MATCHES "Example_+")
-                string(SUBSTRING ${PROJECT_NAME} ${PROJECT_BUNDLE_NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
-            else()
-                set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
-            endif()
+            set(PROJECT_BUNDLE_NAME ${PROJECT_BUNDLE_ID_BASE})
         else()
             set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
         endif()
@@ -168,7 +175,7 @@ macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
         set_target_properties(
             ${PROJECT_NAME} PROPERTIES
             OUTPUT_NAME                         "${PROJECT_BUNDLE_NAME}"
-            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_NAME}"
+            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_ID_BASE}"
             MACOSX_BUNDLE_LONG_VERSION_STRING   "LLGL-1.0"
             MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
             MACOSX_BUNDLE_BUNDLE_VERSION        1.0
