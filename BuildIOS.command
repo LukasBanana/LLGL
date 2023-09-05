@@ -27,7 +27,7 @@ print_help()
     echo "  -t, --target T ............ Sets deployment target to T (default is 11.0)"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
-    echo "  --gles .................... Include GLES3 renderer"
+    echo "  --gles .................... Include OpenGL ES 3 renderer"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
     echo "  Default output directory is 'build_ios'"

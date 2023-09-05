@@ -134,35 +134,49 @@ endmacro()
 
 macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
     if(APPLE)
+        # Project configurations
+        add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
+
         if(LLGL_IOS_PLATFORM)
-            # iOS Project configurations
-            add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
-
             string(LENGTH "Example_" PROJECT_BUNDLE_NAME_PREFIX_LEN)
-            string(SUBSTRING ${PROJECT_NAME} ${PROJECT_BUNDLE_NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
-
-            set(RES_FILES "${SRC_FILES}")
-            list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds)")
-            source_group("Resources" FILES ${RES_FILES})
-
-            set(SHADER_FILES "${SRC_FILES}")
-            list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag)")
-            source_group("Shaders" FILES ${SHADER_FILES})
-
-            set_target_properties(
-                ${PROJECT_NAME} PROPERTIES
-                OUTPUT_NAME                         "${PROJECT_BUNDLE_NAME}"
-                MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_NAME}"
-                MACOSX_BUNDLE_LONG_VERSION_STRING   "LLGL-1.0"
-                MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
-                MACOSX_BUNDLE_BUNDLE_VERSION        1.0
-                MACOSX_BUNDLE_ICON_FILE             "AppIcon.png"
-                RESOURCE                            "${RES_FILES};${SHADER_FILES}"
-            )
-            target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
+            if (${PROJECT_NAME} MATCHES "Example_+")
+                string(SUBSTRING ${PROJECT_NAME} ${PROJECT_BUNDLE_NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
+            else()
+                set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
+            endif()
         else()
-            add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
+            set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
         endif()
+
+        set(RES_FILES "${SRC_FILES}")
+        list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds|icns)")
+        source_group("Resources" FILES ${RES_FILES})
+
+        set(SHADER_FILES "${SRC_FILES}")
+        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag)")
+        source_group("Shaders" FILES ${SHADER_FILES})
+
+        set(BundleResourceFiles "${RES_FILES};${SHADER_FILES}")
+        if(LLGL_IOS_PLATFORM)
+            set(BundleInfoPlistFile "${PROJECT_SOURCE_DIR}/cmake/IOSBundleInfo.plist.in")
+            set(BundleIconFile "AppIcon.png")
+        else()
+            set(BundleInfoPlistFile "${PROJECT_SOURCE_DIR}/cmake/MacOSXBundleInfo.plist.in")
+            set(BundleIconFile "AppIcon.icns")
+        endif()
+
+        set_target_properties(
+            ${PROJECT_NAME} PROPERTIES
+            OUTPUT_NAME                         "${PROJECT_BUNDLE_NAME}"
+            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_NAME}"
+            MACOSX_BUNDLE_LONG_VERSION_STRING   "LLGL-1.0"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
+            MACOSX_BUNDLE_BUNDLE_VERSION        1.0
+            MACOSX_BUNDLE_ICON_FILE             "${BundleIconFile}"
+            MACOSX_BUNDLE                       ON
+            MACOSX_BUNDLE_INFO_PLIST            "${BundleInfoPlistFile}"
+            RESOURCE                            "${BundleResourceFiles}"
+        )
     elseif(LLGL_ANDROID_PLATFORM)
         # Android project configuratons
         add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
@@ -170,9 +184,12 @@ macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
     else()
         add_executable(${PROJECT_NAME} ${SRC_FILES})
     endif()
+
     target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
+
     set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples")
+
     SET_EXAMPLE_PROJECT_WORKING_DIR(${PROJECT_NAME})
     SET_EXAMPLE_PROJECT_FOLDER(${PROJECT_NAME})
 endmacro()
@@ -215,6 +232,9 @@ function(find_project_source_files PROJECT_NAME OUTPUT_LIST)
                 GLOB ProjectFiles
                 ${ProjectDir}/*.cpp
                 ${ProjectDir}/*.metal
+                ${ProjectDir}/*.vert
+                ${ProjectDir}/*.frag
+                ${EXAMPLEBASE_PROJECT_DIR}/macOS/AppIcon.icns
             )
         endif()
     else()

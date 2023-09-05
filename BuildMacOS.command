@@ -4,6 +4,7 @@ SOURCE_DIR="$(dirname $0)"
 OUTPUT_DIR="$SOURCE_DIR/build_macos"
 CLEAR_CACHE=0
 ENABLE_NULL="OFF"
+ENABLE_OPENGL="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 BUILD_TYPE="Release"
@@ -26,6 +27,7 @@ print_help()
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
+    echo "  --gl ...................... Include OpenGL renderer"
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
     echo "NOTES:"
@@ -49,6 +51,8 @@ for ARG in "$@"; do
         VERBOSE=1
     elif [ "$ARG" = "--null" ]; then
         ENABLE_NULL="ON"
+    elif [ "$ARG" = "--gl" ]; then
+        ENABLE_OPENGL="ON"
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
     elif [ "$ARG" = "--no-tests" ]; then
@@ -96,7 +100,7 @@ fi
 # Build into output directory
 OPTIONS=(
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
-    -DLLGL_BUILD_RENDERER_OPENGL=ON
+    -DLLGL_BUILD_RENDERER_OPENGL=$ENABLE_OPENGL
     -DLLGL_BUILD_RENDERER_METAL=ON
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS

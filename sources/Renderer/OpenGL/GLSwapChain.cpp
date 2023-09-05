@@ -23,8 +23,7 @@ GLSwapChain::GLSwapChain(
     const std::shared_ptr<Surface>& surface,
     GLContextManager&               contextMngr)
 :
-    SwapChain          { desc                                       },
-    framebufferHeight_ { static_cast<GLint>(desc.resolution.height) }
+    SwapChain { desc }
 {
     /* Set up pixel format for GL context */
     GLPixelFormat pixelFormat;
@@ -46,6 +45,12 @@ GLSwapChain::GLSwapChain(
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen);
 
     #endif
+
+    /*
+    Cache resolution height after surface has been created,
+    since high-resolution displays might provide a multiple of the input size.
+    */
+    framebufferHeight_ = static_cast<GLint>(GetResolution().height);
 
     /* Create platform dependent OpenGL context */
     context_ = contextMngr.AllocContext(&pixelFormat, &GetSurface());

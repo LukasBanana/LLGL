@@ -60,8 +60,9 @@ class LLGL_EXPORT Surface : public Interface
         virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) = 0;
 
         /**
-        \brief Returns the size of the surface context (or rather the drawing area).
-        \remarks For the Window interface this is equivalent of calling <code>Window::GetSize(true)</code> for instance.
+        \brief Returns the size (in pixels) of the surface content, i.e. the drawable area.
+        \remarks On platforms with high-resolution displays, this can be twice or even three times the size of the surface's frame,
+        since the frame's size is given in window coordinates whereas this function provides pixel resolutions.
         \see Window::GetSize
         */
         virtual Extent2D GetContentSize() const = 0;

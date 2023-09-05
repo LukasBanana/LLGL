@@ -151,13 +151,9 @@ void SwapChain::SetOrCreateSurface(
     const void*                     windowContext,
     std::size_t                     windowContextSize)
 {
-    /* Use specified surface size as resolution by default */
-    Extent2D resolution = size;
-
     if (surface)
     {
         /* Get and output resolution from specified window */
-        resolution = surface->GetContentSize();
         pimpl_->surface = surface;
     }
     else
@@ -170,9 +166,6 @@ void SwapChain::SetOrCreateSurface(
             canvasDesc.flags = (fullscreen ? CanvasFlags::Borderless : 0);
         }
         pimpl_->surface = Canvas::Create(canvasDesc);
-
-        /* Take resolution from canvas since mobile platforms assign resolution per app */
-        pimpl_->resolution = pimpl_->surface->GetContentSize();
 
         #else // LLGL_MOBILE_PLATFORM
 
@@ -189,9 +182,12 @@ void SwapChain::SetOrCreateSurface(
         #endif // /LLGL_MOBILE_PLATFORM
     }
 
+    /* Take resolution from surface content size */
+    pimpl_->resolution = pimpl_->surface->GetContentSize();
+
     /* Switch to fullscreen mode before storing new video mode */
     if (fullscreen)
-        SetDisplayFullscreenMode(resolution);
+        SetDisplayFullscreenMode(pimpl_->resolution);
 }
 
 void SwapChain::ShareSurfaceAndConfig(SwapChain& other)

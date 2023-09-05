@@ -184,8 +184,15 @@ void MacOSWindow::ResetPixelFormat()
 
 Extent2D MacOSWindow::GetContentSize() const
 {
-    /* Return the size of the client area */
-    return GetSize(true);
+    NSSize size = [[wnd_ contentView] frame].size;
+
+    const CGFloat scaleFactor = [wnd_ backingScaleFactor];
+
+    return Extent2D
+    {
+        static_cast<std::uint32_t>(size.width  * scaleFactor),
+        static_cast<std::uint32_t>(size.height * scaleFactor)
+    };
 }
 
 static void SetRelativeNSWindowPosition(NSWindow* wnd, const Offset2D& position, NSWindow* parentWnd = nullptr)

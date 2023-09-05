@@ -38,6 +38,8 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
             rendererModule = "Direct3D11";
         else if (rendererModule == "GL" || rendererModule == "gl")
             rendererModule = "OpenGL";
+        else if (rendererModule == "GLES3" || rendererModule == "gles3")
+            rendererModule = "OpenGLES3";
         else if (rendererModule == "VK" || rendererModule == "vk")
             rendererModule = "Vulkan";
         else if (rendererModule == "MT" || rendererModule == "mt")
@@ -137,7 +139,7 @@ void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL:
         const auto& resolution = clientAreaSize;
 
         // Update swap buffers
-        swapChain_->ResizeBuffers(resolution);
+        swapChain_->ResizeBuffers(sender.GetContentSize());
 
         // Update projection matrix
         auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
