@@ -6,7 +6,6 @@
  */
 
 #include "VKShaderBindingLayout.h"
-#include "../../SPIRV/SpirvModule.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/MacroUtils.h"
@@ -15,6 +14,7 @@
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SpirvReflect.h"
+#   include "../../SPIRV/SpirvModule.h"
 #endif
 
 
