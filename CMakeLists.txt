@@ -63,13 +63,14 @@ endif()
 set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
-set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
-set(EXAMPLE_PROJECTS_ROOT_DIR "${PROJECT_SOURCE_DIR}/examples")
-set(EXAMPLE_CPP_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/Cpp")
-set(EXAMPLE_C99_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/C99")
-set(EXAMPLE_IOS_PROJECTS_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/iOS")
-set(EXAMPLEBASE_PROJECT_DIR "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase")
-set(EXAMPLE_MEDIA_DIR "${EXAMPLE_PROJECTS_ROOT_DIR}/Media")
+
+set( PROJECT_INCLUDE_DIR        "${PROJECT_SOURCE_DIR}/include"           )
+set( EXAMPLE_PROJECTS_ROOT_DIR  "${PROJECT_SOURCE_DIR}/examples"          )
+set( EXAMPLE_CPP_PROJECTS_DIR   "${EXAMPLE_PROJECTS_ROOT_DIR}/Cpp"        )
+set( EXAMPLE_C99_PROJECTS_DIR   "${EXAMPLE_PROJECTS_ROOT_DIR}/C99"        )
+set( EXAMPLEBASE_PROJECT_DIR    "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase" )
+set( EXAMPLE_MEDIA_DIR          "${EXAMPLE_PROJECTS_ROOT_DIR}/Media"      )
+set( TEST_PROJECTS_DIR          "${PROJECT_SOURCE_DIR}/tests"             )
 
 
 # === Macros ===
@@ -137,14 +138,17 @@ macro(SET_EXAMPLE_PROJECT_FOLDER PROJECT_NAME)
     endif()
 endmacro()
 
-macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
+macro(ADD_EXAMPLE_PROJECT PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     if(APPLE)
         # Project configurations
         add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
 
-        string(LENGTH "Example_" EXAMPLE_PREFIX_LEN)
         if (${PROJECT_NAME} MATCHES "Example_+")
-            string(SUBSTRING ${PROJECT_NAME} ${EXAMPLE_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
+            string(LENGTH "Example_" NAME_PREFIX_LEN)
+            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
+        elseif (${PROJECT_NAME} MATCHES "Test_+")
+            string(LENGTH "Test_" NAME_PREFIX_LEN)
+            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
         else()
             set(PROJECT_BUNDLE_ID_BASE ${PROJECT_NAME})
         endif()
@@ -194,21 +198,7 @@ macro(ADD_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
 
     target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
 
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples")
-
-    SET_EXAMPLE_PROJECT_WORKING_DIR(${PROJECT_NAME})
-    SET_EXAMPLE_PROJECT_FOLDER(${PROJECT_NAME})
-endmacro()
-
-macro(ADD_C99_EXAMPLE_PROJECT PROJECT_NAME SRC_FILES LIB_FILES)
-    if(APPLE)
-        add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
-    else()
-        add_executable(${PROJECT_NAME} ${SRC_FILES})
-    endif()
-    target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C DEBUG_POSTFIX "D")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG} DEBUG_POSTFIX "D")
     SET_EXAMPLE_PROJECT_WORKING_DIR(${PROJECT_NAME})
     SET_EXAMPLE_PROJECT_FOLDER(${PROJECT_NAME})
 endmacro()
@@ -216,41 +206,50 @@ endmacro()
 
 # === Functions ===
 
-function(find_project_source_files PROJECT_NAME OUTPUT_LIST)
-    set(ProjectDir ${EXAMPLE_CPP_PROJECTS_DIR}/${PROJECT_NAME})
-    if(WIN32)
-        file(
-            GLOB ProjectFiles
-            ${ProjectDir}/*.cpp
-        )
-    elseif(APPLE)
+function(bundle_project_files OUTPUT_LIST SRC_FILES)
+    if(APPLE)
         if (LLGL_IOS_PLATFORM)
             file(
                 GLOB ProjectFiles
-                ${ProjectDir}/*.cpp
-                ${ProjectDir}/*.metal
-                ${ProjectDir}/*.vert
-                ${ProjectDir}/*.frag
                 ${EXAMPLEBASE_PROJECT_DIR}/iOS/AppIcon.png
                 ${EXAMPLEBASE_PROJECT_DIR}/iOS/LaunchScreen.storyboard
             )
         else()
             file(
                 GLOB ProjectFiles
-                ${ProjectDir}/*.cpp
-                ${ProjectDir}/*.metal
-                ${ProjectDir}/*.vert
-                ${ProjectDir}/*.frag
                 ${EXAMPLEBASE_PROJECT_DIR}/macOS/AppIcon.icns
             )
         endif()
+        list(APPEND ProjectFiles "${SRC_FILES}")
     else()
-        file(
-            GLOB ProjectFiles
-            ${ProjectDir}/*.cpp
-        )
+        set(ProjectFiles "${SRC_FILES}")
     endif()
     set(${OUTPUT_LIST} ${ProjectFiles} PARENT_SCOPE)
+endfunction()
+
+function(find_project_source_files OUTPUT_LIST PROJECT_DIR)
+    if("${PROJECT_DIR}" MATCHES ".+\\.(cpp|c)")
+        set(ProjectFiles "${PROJECT_DIR}")
+    else()
+        if(APPLE)
+            file(
+                GLOB ProjectFiles
+                ${PROJECT_DIR}/*.c
+                ${PROJECT_DIR}/*.cpp
+                ${PROJECT_DIR}/*.metal
+                ${PROJECT_DIR}/*.vert
+                ${PROJECT_DIR}/*.frag
+            )
+        else()
+            file(
+                GLOB ProjectFiles
+                ${PROJECT_DIR}/*.c
+                ${PROJECT_DIR}/*.cpp
+            )
+        endif()
+    endif()
+    bundle_project_files(BundleProjectFiles "${ProjectFiles}")
+    set(${OUTPUT_LIST} ${BundleProjectFiles} PARENT_SCOPE)
 endfunction()
 
 
@@ -597,24 +596,22 @@ set(
 )
 
 # Test project files
-set(TEST_PROFILES_DIR ${PROJECT_SOURCE_DIR}/tests)
+find_project_source_files( FilesTest_BlendStates        "${TEST_PROJECTS_DIR}/Test_BlendStates.cpp"     )
+find_project_source_files( FilesTest_Compute            "${TEST_PROJECTS_DIR}/Test_Compute.cpp"         )
+find_project_source_files( FilesTest_Container          "${TEST_PROJECTS_DIR}/Test_Container.cpp"       )
+find_project_source_files( FilesTest_D3D12              "${TEST_PROJECTS_DIR}/Test_D3D12.cpp"           )
+find_project_source_files( FilesTest_Display            "${TEST_PROJECTS_DIR}/Test_Display.cpp"         )
+find_project_source_files( FilesTest_Image              "${TEST_PROJECTS_DIR}/Test_Image.cpp"           )
+find_project_source_files( FilesTest_JIT                "${TEST_PROJECTS_DIR}/Test_JIT.cpp"             )
+find_project_source_files( FilesTest_Metal              "${TEST_PROJECTS_DIR}/Test_Metal.cpp"           )
+find_project_source_files( FilesTest_OpenGL             "${TEST_PROJECTS_DIR}/Test_OpenGL.cpp"          )
+find_project_source_files( FilesTest_Performance        "${TEST_PROJECTS_DIR}/Test_Performance.cpp"     )
+find_project_source_files( FilesTest_ShaderReflect      "${TEST_PROJECTS_DIR}/Test_ShaderReflect.cpp"   )
+find_project_source_files( FilesTest_SeparateShaders    "${TEST_PROJECTS_DIR}/Test_SeparateShaders.cpp" )
+find_project_source_files( FilesTest_Vulkan             "${TEST_PROJECTS_DIR}/Test_Vulkan.cpp"          )
+find_project_source_files( FilesTest_Window             "${TEST_PROJECTS_DIR}/Test_Window.cpp"          )
 
-set(FilesTest_BlendStates       ${TEST_PROFILES_DIR}/Test_BlendStates.cpp)
-set(FilesTest_Compute           ${TEST_PROFILES_DIR}/Test_Compute.cpp)
-set(FilesTest_Container         ${TEST_PROFILES_DIR}/Test_Container.cpp)
-set(FilesTest_D3D12             ${TEST_PROFILES_DIR}/Test_D3D12.cpp)
-set(FilesTest_Display           ${TEST_PROFILES_DIR}/Test_Display.cpp)
-set(FilesTest_Image             ${TEST_PROFILES_DIR}/Test_Image.cpp)
-set(FilesTest_JIT               ${TEST_PROFILES_DIR}/Test_JIT.cpp)
-set(FilesTest_Metal             ${TEST_PROFILES_DIR}/Test_Metal.cpp)
-set(FilesTest_OpenGL            ${TEST_PROFILES_DIR}/Test_OpenGL.cpp)
-set(FilesTest_Performance       ${TEST_PROFILES_DIR}/Test_Performance.cpp)
-set(FilesTest_ShaderReflect     ${TEST_PROFILES_DIR}/Test_ShaderReflect.cpp)
-set(FilesTest_SeparateShaders   ${TEST_PROFILES_DIR}/Test_SeparateShaders.cpp)
-set(FilesTest_Vulkan            ${TEST_PROFILES_DIR}/Test_Vulkan.cpp)
-set(FilesTest_Window            ${TEST_PROFILES_DIR}/Test_Window.cpp)
-
-file(GLOB FilesTestbed ${TEST_PROFILES_DIR}/Testbed/*.*)
+find_project_source_files( FilesTestbed                 "${TEST_PROJECTS_DIR}/Testbed"                  )
 
 # Example project files
 file(GLOB FilesExampleBase ${EXAMPLEBASE_PROJECT_DIR}/*.*)
@@ -635,30 +632,32 @@ if(APPLE)
     set_source_files_properties(${EXAMPLEBASE_PROJECT_DIR}/ExampleBase.cpp PROPERTIES COMPILE_FLAGS -xobjective-c++)
 endif()
 
-find_project_source_files(HelloTriangle     FilesExample_HelloTriangle)
-find_project_source_files(Tessellation      FilesExample_Tessellation)
-find_project_source_files(Texturing         FilesExample_Texturing)
-find_project_source_files(Queries           FilesExample_Queries)
-find_project_source_files(RenderTarget      FilesExample_RenderTarget)
-find_project_source_files(MultiContext      FilesExample_MultiContext)
-find_project_source_files(BufferArray       FilesExample_BufferArray)
-find_project_source_files(ClothPhysics      FilesExample_ClothPhysics)
-find_project_source_files(ComputeShader     FilesExample_ComputeShader)
-find_project_source_files(Fonts             FilesExample_Fonts)
-find_project_source_files(StreamOutput      FilesExample_StreamOutput)
-find_project_source_files(Instancing        FilesExample_Instancing)
-find_project_source_files(PostProcessing    FilesExample_PostProcessing)
-find_project_source_files(Mapping           FilesExample_Mapping)
-find_project_source_files(MultiRenderer     FilesExample_MultiRenderer)
-find_project_source_files(ShadowMapping     FilesExample_ShadowMapping)
-find_project_source_files(UnorderedAccess   FilesExample_UnorderedAccess)
-find_project_source_files(MultiThreading    FilesExample_MultiThreading)
-find_project_source_files(PBR               FilesExample_PBR)
-find_project_source_files(StencilBuffer     FilesExample_StencilBuffer)
-find_project_source_files(Animation         FilesExample_Animation)
-find_project_source_files(VolumeRendering   FilesExample_VolumeRendering)
-find_project_source_files(PrimitiveRestart  FilesExample_PrimitiveRestart)
-find_project_source_files(ResourceBinding   FilesExample_ResourceBinding)
+find_project_source_files( FilesExample_Animation        "${EXAMPLE_CPP_PROJECTS_DIR}/Animation"        )
+find_project_source_files( FilesExample_BufferArray      "${EXAMPLE_CPP_PROJECTS_DIR}/BufferArray"      )
+find_project_source_files( FilesExample_ClothPhysics     "${EXAMPLE_CPP_PROJECTS_DIR}/ClothPhysics"     )
+find_project_source_files( FilesExample_ComputeShader    "${EXAMPLE_CPP_PROJECTS_DIR}/ComputeShader"    )
+find_project_source_files( FilesExample_Fonts            "${EXAMPLE_CPP_PROJECTS_DIR}/Fonts"            )
+find_project_source_files( FilesExample_HelloTriangle    "${EXAMPLE_CPP_PROJECTS_DIR}/HelloTriangle"    )
+find_project_source_files( FilesExample_Instancing       "${EXAMPLE_CPP_PROJECTS_DIR}/Instancing"       )
+find_project_source_files( FilesExample_Mapping          "${EXAMPLE_CPP_PROJECTS_DIR}/Mapping"          )
+find_project_source_files( FilesExample_MultiContext     "${EXAMPLE_CPP_PROJECTS_DIR}/MultiContext"     )
+find_project_source_files( FilesExample_MultiRenderer    "${EXAMPLE_CPP_PROJECTS_DIR}/MultiRenderer"    )
+find_project_source_files( FilesExample_MultiThreading   "${EXAMPLE_CPP_PROJECTS_DIR}/MultiThreading"   )
+find_project_source_files( FilesExample_PBR              "${EXAMPLE_CPP_PROJECTS_DIR}/PBR"              )
+find_project_source_files( FilesExample_PostProcessing   "${EXAMPLE_CPP_PROJECTS_DIR}/PostProcessing"   )
+find_project_source_files( FilesExample_PrimitiveRestart "${EXAMPLE_CPP_PROJECTS_DIR}/PrimitiveRestart" )
+find_project_source_files( FilesExample_Queries          "${EXAMPLE_CPP_PROJECTS_DIR}/Queries"          )
+find_project_source_files( FilesExample_RenderTarget     "${EXAMPLE_CPP_PROJECTS_DIR}/RenderTarget"     )
+find_project_source_files( FilesExample_ResourceBinding  "${EXAMPLE_CPP_PROJECTS_DIR}/ResourceBinding"  )
+find_project_source_files( FilesExample_ShadowMapping    "${EXAMPLE_CPP_PROJECTS_DIR}/ShadowMapping"    )
+find_project_source_files( FilesExample_StencilBuffer    "${EXAMPLE_CPP_PROJECTS_DIR}/StencilBuffer"    )
+find_project_source_files( FilesExample_StreamOutput     "${EXAMPLE_CPP_PROJECTS_DIR}/StreamOutput"     )
+find_project_source_files( FilesExample_Tessellation     "${EXAMPLE_CPP_PROJECTS_DIR}/Tessellation"     )
+find_project_source_files( FilesExample_Texturing        "${EXAMPLE_CPP_PROJECTS_DIR}/Texturing"        )
+find_project_source_files( FilesExample_UnorderedAccess  "${EXAMPLE_CPP_PROJECTS_DIR}/UnorderedAccess"  )
+find_project_source_files( FilesExample_VolumeRendering  "${EXAMPLE_CPP_PROJECTS_DIR}/VolumeRendering"  )
+
+find_project_source_files( FilesExampleC99_HelloTriangle "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle"    )
 
 # Append extra resources for mobile platforms
 if(LLGL_IOS_PLATFORM)
@@ -729,11 +728,6 @@ if(LLGL_IOS_PLATFORM)
         "${EXAMPLE_MEDIA_DIR}/Textures/Plants_9.png"
     )
 endif()
-
-# Mobile example project files
-set(FilesExample_HelloAndroid ${EXAMPLE_CPP_PROJECTS_DIR}/HelloAndroid/cpp/Example.cpp)
-
-file(GLOB FilesExample_iOS_HelloTriangle ${EXAMPLE_IOS_PROJECTS_DIR}/HelloTriangle/*.*)
 
 
 # === Source group folders ===
@@ -1195,30 +1189,30 @@ if(GaussLib_INCLUDE_DIR)
     # Test Projects
     if(LLGL_BUILD_TESTS AND NOT LLGL_MOBILE_PLATFORM)
         # Platform specific test projects
-        ADD_EXAMPLE_PROJECT(Test_OpenGL "${FilesTest_OpenGL}" "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_OpenGL CXX "${FilesTest_OpenGL}" "${LLGL_DEPENDENCIES}")
         if(WIN32)
-            ADD_EXAMPLE_PROJECT(Test_D3D12 "${FilesTest_D3D12}" "${LLGL_DEPENDENCIES}")
+            ADD_EXAMPLE_PROJECT(Test_D3D12 CXX "${FilesTest_D3D12}" "${LLGL_DEPENDENCIES}")
         endif()
         if(APPLE)
-            ADD_EXAMPLE_PROJECT(Test_Metal "${FilesTest_Metal}" "${LLGL_DEPENDENCIES}")
+            ADD_EXAMPLE_PROJECT(Test_Metal CXX "${FilesTest_Metal}" "${LLGL_DEPENDENCIES}")
         elseif(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
-            ADD_EXAMPLE_PROJECT(Test_Vulkan "${FilesTest_Vulkan}" "${LLGL_DEPENDENCIES}")
+            ADD_EXAMPLE_PROJECT(Test_Vulkan CXX "${FilesTest_Vulkan}" "${LLGL_DEPENDENCIES}")
         endif()
         
         # Common tests
-        ADD_EXAMPLE_PROJECT(Test_BlendStates        "${FilesTest_BlendStates}"      "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_Compute            "${FilesTest_Compute}"          "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_Container          "${FilesTest_Container}"        "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_Display            "${FilesTest_Display}"          "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_Image              "${FilesTest_Image}"            "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_JIT                "${FilesTest_JIT}"              "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_Performance        "${FilesTest_Performance}"      "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_SeparateShaders    "${FilesTest_SeparateShaders}"  "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_ShaderReflect      "${FilesTest_ShaderReflect}"    "${LLGL_DEPENDENCIES}")
-        ADD_EXAMPLE_PROJECT(Test_Window             "${FilesTest_Window}"           "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_BlendStates        CXX "${FilesTest_BlendStates}"      "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Compute            CXX "${FilesTest_Compute}"          "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Container          CXX "${FilesTest_Container}"        "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Display            CXX "${FilesTest_Display}"          "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Image              CXX "${FilesTest_Image}"            "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_JIT                CXX "${FilesTest_JIT}"              "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Performance        CXX "${FilesTest_Performance}"      "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_SeparateShaders    CXX "${FilesTest_SeparateShaders}"  "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_ShaderReflect      CXX "${FilesTest_ShaderReflect}"    "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Test_Window             CXX "${FilesTest_Window}"           "${LLGL_DEPENDENCIES}")
         
         # Testbed
-        ADD_EXAMPLE_PROJECT(Testbed                 "${FilesTestbed}"               "${LLGL_DEPENDENCIES}")
+        ADD_EXAMPLE_PROJECT(Testbed                 CXX "${FilesTestbed}"               "${LLGL_DEPENDENCIES}")
     endif()
 
     # Example Projects
@@ -1241,39 +1235,38 @@ if(GaussLib_INCLUDE_DIR)
         if(LLGL_ANDROID_PLATFORM)
             # Android specific examples
             set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
-            ADD_EXAMPLE_PROJECT(Example_HelloAndroid "${FilesExample_HelloAndroid}" "${EXAMPLE_PROJECT_LIBS}")
-        else()
-            # Common examples
-            ADD_EXAMPLE_PROJECT(Example_Animation           "${FilesExample_Animation}"         "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_BufferArray         "${FilesExample_BufferArray}"       "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_ClothPhysics        "${FilesExample_ClothPhysics}"      "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_ComputeShader       "${FilesExample_ComputeShader}"     "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_Fonts               "${FilesExample_Fonts}"             "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_HelloTriangle       "${FilesExample_HelloTriangle}"     "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_Instancing          "${FilesExample_Instancing}"        "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_Mapping             "${FilesExample_Mapping}"           "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_MultiContext        "${FilesExample_MultiContext}"      "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_MultiRenderer       "${FilesExample_MultiRenderer}"     "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_MultiThreading      "${FilesExample_MultiThreading}"    "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_PBR                 "${FilesExample_PBR}"               "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_PostProcessing      "${FilesExample_PostProcessing}"    "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_PrimitiveRestart    "${FilesExample_PrimitiveRestart}"  "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_Queries             "${FilesExample_Queries}"           "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_RenderTarget        "${FilesExample_RenderTarget}"      "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_ResourceBinding     "${FilesExample_ResourceBinding}"   "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_ShadowMapping       "${FilesExample_ShadowMapping}"     "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_StencilBuffer       "${FilesExample_StencilBuffer}"     "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_StreamOutput        "${FilesExample_StreamOutput}"      "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_Tessellation        "${FilesExample_Tessellation}"      "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_Texturing           "${FilesExample_Texturing}"         "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_UnorderedAccess     "${FilesExample_UnorderedAccess}"   "${EXAMPLE_PROJECT_LIBS}")
-            ADD_EXAMPLE_PROJECT(Example_VolumeRendering     "${FilesExample_VolumeRendering}"   "${EXAMPLE_PROJECT_LIBS}")
-            
-            if (LLGL_BUILD_WRAPPER_C99)
-                # C99 wrapper examples
-                ADD_C99_EXAMPLE_PROJECT(Example_C99_HelloTriangle "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle/HelloTriangle.c" "${EXAMPLE_PROJECT_LIBS}")
-            endif(LLGL_BUILD_WRAPPER_C99)
         endif()
+
+        # Common examples
+        ADD_EXAMPLE_PROJECT(Example_Animation           CXX "${FilesExample_Animation}"         "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_BufferArray         CXX "${FilesExample_BufferArray}"       "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_ClothPhysics        CXX "${FilesExample_ClothPhysics}"      "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_ComputeShader       CXX "${FilesExample_ComputeShader}"     "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_Fonts               CXX "${FilesExample_Fonts}"             "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_HelloTriangle       CXX "${FilesExample_HelloTriangle}"     "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_Instancing          CXX "${FilesExample_Instancing}"        "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_Mapping             CXX "${FilesExample_Mapping}"           "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_MultiContext        CXX "${FilesExample_MultiContext}"      "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_MultiRenderer       CXX "${FilesExample_MultiRenderer}"     "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_MultiThreading      CXX "${FilesExample_MultiThreading}"    "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_PBR                 CXX "${FilesExample_PBR}"               "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_PostProcessing      CXX "${FilesExample_PostProcessing}"    "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_PrimitiveRestart    CXX "${FilesExample_PrimitiveRestart}"  "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_Queries             CXX "${FilesExample_Queries}"           "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_RenderTarget        CXX "${FilesExample_RenderTarget}"      "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_ResourceBinding     CXX "${FilesExample_ResourceBinding}"   "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_ShadowMapping       CXX "${FilesExample_ShadowMapping}"     "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_StencilBuffer       CXX "${FilesExample_StencilBuffer}"     "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_StreamOutput        CXX "${FilesExample_StreamOutput}"      "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_Tessellation        CXX "${FilesExample_Tessellation}"      "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_Texturing           CXX "${FilesExample_Texturing}"         "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_UnorderedAccess     CXX "${FilesExample_UnorderedAccess}"   "${EXAMPLE_PROJECT_LIBS}")
+        ADD_EXAMPLE_PROJECT(Example_VolumeRendering     CXX "${FilesExample_VolumeRendering}"   "${EXAMPLE_PROJECT_LIBS}")
+
+        if (LLGL_BUILD_WRAPPER_C99)
+            # C99 wrapper examples
+            ADD_EXAMPLE_PROJECT(Example_C99_HelloTriangle C "${FilesExampleC99_HelloTriangle}" "${EXAMPLE_PROJECT_LIBS}")
+        endif(LLGL_BUILD_WRAPPER_C99)
     endif(LLGL_BUILD_EXAMPLES)
 else(GaussLib_INCLUDE_DIR)
     # If GaussianLib is not available, tests and examples cannot be enabled
