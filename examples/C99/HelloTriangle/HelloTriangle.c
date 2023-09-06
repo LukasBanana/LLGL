@@ -136,12 +136,15 @@ int main(int argc, char* argv[])
     LLGLCommandBuffer cmdBuffer = llglCreateCommandBuffer(&cmdBufferDesc);
 
     // Initialize frame constants
+    LLGLExtent2D swapChainResolution;
+    llglGetSurfaceContentSize(surface, &swapChainResolution);
+
     const LLGLViewport viewport =
     {
         .x          = 0.0f,
         .y          = 0.0f,
-        .width      = (float)swapChainDesc.resolution.width,
-        .height     = (float)swapChainDesc.resolution.height,
+        .width      = (float)swapChainResolution.width,
+        .height     = (float)swapChainResolution.height,
         .minDepth   = 0.0f,
         .maxDepth   = 1.0f
     };
@@ -152,7 +155,7 @@ int main(int argc, char* argv[])
     };
 
     // Enter main loop
-    while (llglProcessSurfaceEvents(surface))
+    while (llglProcessSurfaceEvents(surface) && !llglHasWindowQuit(window))
     {
         // Begin recording commands
         llglBegin(cmdBuffer);
