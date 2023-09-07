@@ -46,5 +46,7 @@ endif()
 
 # === Find library ===
 
-find_path(GaussLib_INCLUDE_DIR Gauss/Gauss.h PATHS external/GaussianLib/include)
+find_path(GaussLib_INCLUDE_DIR Gauss/Gauss.h PATHS "external/GaussianLib/include" "GaussianLib/include")
+
+get_filename_component(GaussLib_INCLUDE_DIR "${GaussLib_INCLUDE_DIR}" ABSOLUTE)
 
