@@ -68,6 +68,9 @@ bool MacOSGLSwapChainContext::MakeCurrentNSGLContext(MacOSGLSwapChainContext* co
         /* Make context current */
         MacOSGLContext::MakeNSOpenGLContextCurrent(context->ctx_);
 
+        /* We have to flush the previous content or it will be lost */
+        [context->ctx_ flushBuffer];
+
         /* 'setView' is deprecated since macOS 10.14 together with OpenGL in general, so suppress this deprecation warning */
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wdeprecated-declarations"
