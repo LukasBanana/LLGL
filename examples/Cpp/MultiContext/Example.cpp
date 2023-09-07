@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
         fragShader = renderer->CreateShader(fragShaderDesc);
 
         // Print info log (warnings and errors)
-        for (auto shader : { vertShader, geomShader, fragShader })
+        for (LLGL::Shader* shader : { vertShader, geomShader, fragShader })
         {
             if (shader)
             {
@@ -201,9 +201,9 @@ int main(int argc, char* argv[])
         }
         pipeline[1] = renderer->CreatePipelineState(pipelineDesc);
 
-        for (auto p : pipeline)
+        for (LLGL::PipelineState* p : pipeline)
         {
-            if (auto report = p->GetReport())
+            if (const LLGL::Report* report = p->GetReport())
             {
                 if (report->HasErrors())
                     throw std::runtime_error(report->GetText());
@@ -211,10 +211,13 @@ int main(int argc, char* argv[])
         }
 
         // Initialize viewport array
-        LLGL::Viewport viewports[2] =
+        auto BuildViewports = [](const LLGL::SwapChain& swapChain, LLGL::Viewport (&outViewports)[2])
         {
-            LLGL::Viewport {   0.0f, 0.0f, 320.0f, 480.0f },
-            LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
+            const LLGL::Extent2D swapChainRes = swapChain.GetResolution();
+            const float w = static_cast<float>(swapChainRes.width);
+            const float h = static_cast<float>(swapChainRes.height);
+            outViewports[0] = LLGL::Viewport{ 0.0f, 0.0f, w/2, h };
+            outViewports[1] = LLGL::Viewport{  w/2, 0.0f, w/2, h };
         };
 
         const float backgroundColor[2][4] =
@@ -230,7 +233,7 @@ int main(int argc, char* argv[])
 
         // Generate multiple-instances via geometry shader.
         // Otherwise, use instanced rendering if geometry shaders are not supported (for Metal shading language).
-        std::uint32_t numInstances = (geomShader != nullptr ? 1 : 2);
+        const std::uint32_t numInstances = (geomShader != nullptr ? 1 : 2);
 
         // Enter main loop
         while (!(inputs[0].KeyPressed(LLGL::Key::Escape) || inputs[1].KeyPressed(LLGL::Key::Escape)))
@@ -262,11 +265,14 @@ int main(int argc, char* argv[])
                 // Set global render states: viewports, vertex buffer, and graphics pipeline
                 //commands->SetVertexBuffer(*vertexBuffer);
 
+                LLGL::Viewport viewports[2];
+
                 // Draw triangle with 3 vertices in 1st swap-chain
                 if (window1.IsShown())
                 {
                     commands->BeginRenderPass(*swapChain1);
                     {
+                        BuildViewports(*swapChain1, viewports);
                         commands->Clear(LLGL::ClearFlags::Color, backgroundColor[0]);
                         commands->SetPipelineState(*pipeline[0]);//[enableLogicOp[0] ? 1 : 0]);
                         commands->SetViewports(2, viewports);
@@ -281,12 +287,12 @@ int main(int argc, char* argv[])
                 {
                     commands->BeginRenderPass(*swapChain2);
                     {
+                        BuildViewports(*swapChain1, viewports);
                         commands->Clear(LLGL::ClearFlags::Color, backgroundColor[1]);
                         commands->SetPipelineState(*pipeline[1]);//[enableLogicOp[1] ? 1 : 0]);
                         commands->SetViewports(2, viewports);
                         commands->SetVertexBuffer(*vertexBuffer);
-                        commands->DrawInstanced(3, 0, numInstances);
-                        //commands->DrawInstanced(4, 3, numInstances);
+                        commands->DrawInstanced(4, 3, numInstances);
                     }
                     commands->EndRenderPass();
                 }

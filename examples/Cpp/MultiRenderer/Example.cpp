@@ -5,11 +5,9 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifdef _WIN32
-
 #include <ExampleBase.h>
 
-#include <LLGL/Platform/NativeHandle.h>
+//#include <LLGL/Platform/NativeHandle.h>
 
 
 struct Matrices
@@ -41,9 +39,10 @@ class MyRenderer
     LLGL::Shader*                       fragShader      = nullptr;
     LLGL::PipelineLayout*               layout          = nullptr;
     LLGL::PipelineState*                pipeline        = nullptr;
+    LLGL::Viewport                      viewport;
 
     const std::uint32_t                 samples;
-    const LLGL::Viewport                viewport;
+    const LLGL::ClearValue              background;
     const std::string                   rendererModule;
 
 public:
@@ -52,7 +51,8 @@ public:
         const char*             rendererModule,
         LLGL::Window&           mainWindow,
         const LLGL::Offset2D&   subWindowOffset,
-        const LLGL::Viewport&   viewport
+        const LLGL::Extent2D&   subWindowSize,
+        const LLGL::ClearValue& background
     );
 
     void CreateResources(
@@ -75,26 +75,28 @@ MyRenderer::MyRenderer(
     const char*             rendererModule,
     LLGL::Window&           mainWindow,
     const LLGL::Offset2D&   subWindowOffset,
-    const LLGL::Viewport&   viewport)
+    const LLGL::Extent2D&   subWindowSize,
+    const LLGL::ClearValue& background)
 :
-    viewport       { viewport       },
     samples        { 8u             },
+    background     { background     },
     rendererModule { rendererModule }
 {
     // Load render system module
     renderer = LLGL::RenderSystem::Load(rendererModule);
 
     // Get native handle (HWND for Win32) from main window
-    LLGL::NativeHandle mainWindowHandle;
-    mainWindow.GetNativeHandle(&mainWindowHandle, sizeof(mainWindowHandle));
+    //LLGL::NativeHandle mainWindowHandle;
+    std::uintptr_t mainWindowHandle[1];
+    mainWindow.GetNativeHandle(mainWindowHandle, sizeof(mainWindowHandle));
 
     // Create sub window for swap-chain
     LLGL::WindowDescriptor windowDesc;
     {
         windowDesc.position             = subWindowOffset;
-        windowDesc.size                 = { static_cast<std::uint32_t>(viewport.width)/2, static_cast<std::uint32_t>(viewport.height)/2 };
+        windowDesc.size                 = subWindowSize;
         windowDesc.flags                = (LLGL::WindowFlags::Visible | LLGL::WindowFlags::Borderless);
-        windowDesc.windowContext        = (&mainWindowHandle);
+        windowDesc.windowContext        = mainWindowHandle;
         windowDesc.windowContextSize    = sizeof(mainWindowHandle);
     }
     subWindow = LLGL::Window::Create(windowDesc);
@@ -102,10 +104,19 @@ MyRenderer::MyRenderer(
     // Create swap-chain with viewport size
     LLGL::SwapChainDescriptor swapChainDesc;
     {
-        swapChainDesc.resolution    = windowDesc.size;
+        swapChainDesc.resolution    = subWindow->GetContentSize();
         swapChainDesc.samples       = samples;
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc, subWindow);
+
+    // Build viewport
+    const LLGL::Extent2D resolution = swapChain->GetResolution();
+    const float scaleFactor = static_cast<float>(resolution.width) / static_cast<float>(subWindowSize.width);
+
+    viewport.x      = scaleFactor * static_cast<float>(-subWindowOffset.x);
+    viewport.y      = scaleFactor * static_cast<float>(-subWindowOffset.y);
+    viewport.width  = scaleFactor * static_cast<float>(subWindowSize.width * 2u);
+    viewport.height = scaleFactor * static_cast<float>(subWindowSize.height * 2u);
 
     // Enable V-sync
     swapChain->SetVsyncInterval(1);
@@ -164,6 +175,11 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
         vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.450core.vert.spv");
         fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.450core.frag.spv");
     }
+    else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::Metal) != languages.end())
+    {
+        vertShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1");
+        fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1");
+    }
     else
         throw std::runtime_error("shaders not supported for active renderer");
 
@@ -173,9 +189,9 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     fragShader = renderer->CreateShader(fragShaderDesc);
 
     // Print info log (warnings and errors)
-    for (auto shader : { vertShader, fragShader })
+    for (LLGL::Shader* shader : { vertShader, fragShader })
     {
-        if (auto report = shader->GetReport())
+        if (const LLGL::Report* report = shader->GetReport())
         {
             if (*report->GetText() != '\0')
                 std::cerr << report->GetText() << std::endl;
@@ -188,7 +204,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     if (compiledSampler)
         layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(0):vert, texture(0):frag, sampler(0):frag}"));
     else
-        layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(0):vert, texture(1):frag, sampler(2):frag}"));
+        layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(1):vert, texture(2):frag, sampler(3):frag}"));
 
     // Create resource heap
     resourceHeap = renderer->CreateResourceHeap(layout, { constantBuffer, texture, sampler });
@@ -205,7 +221,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     }
     pipeline = renderer->CreatePipelineState(pipelineDesc);
 
-    if (auto report = pipeline->GetReport())
+    if (const LLGL::Report* report = pipeline->GetReport())
     {
         if (*report->GetText() != '\0')
             std::cerr << report->GetText() << std::endl;
@@ -236,7 +252,7 @@ void MyRenderer::Render(const Gs::Matrix4f& vpMatrix, const Gs::Matrix4f& wMatri
         cmdBuffer->BeginRenderPass(*swapChain);
         {
             // Clear color buffer
-            cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, { 0.1f, 0.1f, 0.4f, 1.0f});
+            cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth, background);
 
             // Set viewport
             cmdBuffer->SetViewport(viewport);
@@ -293,16 +309,44 @@ int main(int argc, char* argv[])
         std::unique_ptr<LLGL::Window> mainWindow = LLGL::Window::Create(mainWindowDesc);
 
         // Create renderers
-        const int halfWidth     = static_cast<int>(resolution.width/2);
-        const int halfHeight    = static_cast<int>(resolution.height/2);
+        const LLGL::Extent2D subWindowSize{ resolution.width/2, resolution.height/2 };
+
+        const int halfWidth     = static_cast<int>(subWindowSize.width);
+        const int halfHeight    = static_cast<int>(subWindowSize.height);
+
+        const float bgColors[4][4] =
+        {
+            { 0.1f, 0.1f, 0.4f, 1.0f}, // Blue
+            { 0.4f, 0.1f, 0.1f, 1.0f}, // Red
+            { 0.1f, 0.4f, 0.1f, 1.0f}, // Green
+            { 0.4f, 0.4f, 0.1f, 1.0f}, // Yellow
+        };
+
+        #if defined _WIN32
 
         MyRenderer myRenderers[4] =
         {
-            { "Vulkan",       *mainWindow, { 0,         0          }, LLGL::Viewport{ { 0,          0           }, resolution } },
-            { "OpenGL",       *mainWindow, { halfWidth, 0          }, LLGL::Viewport{ { -halfWidth, 0           }, resolution } },
-            { "Direct3D11",   *mainWindow, { 0,         halfHeight }, LLGL::Viewport{ { 0,          -halfHeight }, resolution } },
-            { "Direct3D12",   *mainWindow, { halfWidth, halfHeight }, LLGL::Viewport{ { -halfWidth, -halfHeight }, resolution } },
+            { "Vulkan",     *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
+            { "OpenGL",     *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
+            { "Direct3D11", *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
+            { "Direct3D12", *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
         };
+
+        #elif defined __APPLE__
+
+        MyRenderer myRenderers[4] =
+        {
+            { "OpenGL",     *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
+            { "Metal",      *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
+            { "Metal",      *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
+            { "OpenGL",     *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
+        };
+
+        #else
+
+        #   error MultiRenderer example not supported on this platform yet!
+
+        #endif
 
         mainWindow->Show();
 
@@ -360,20 +404,10 @@ int main(int argc, char* argv[])
     catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
+        #ifdef _WIN32
         system("pause");
+        #endif
     }
     return 0;
 }
-
-#else
-
-#include <iostream>
-
-int main()
-{
-    std::cerr << "this tutorial is only available for the Win32 platform" << std::endl;
-    return 0;
-}
-
-#endif
 
