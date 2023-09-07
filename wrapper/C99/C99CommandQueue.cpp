@@ -8,7 +8,7 @@
 #include <LLGL/CommandQueue.h>
 #include <LLGL-C/CommandQueue.h>
 #include "C99Internal.h"
-#include "../../../sources/Core/Assertion.h"
+#include "../../sources/Core/Assertion.h"
 
 
 // namespace LLGL {

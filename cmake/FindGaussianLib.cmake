@@ -48,7 +48,3 @@ endif()
 
 find_path(GaussLib_INCLUDE_DIR Gauss/Gauss.h PATHS external/GaussianLib/include)
 
-if(GaussLib_INCLUDE_DIR)
-    include_directories(${GaussLib_INCLUDE_DIR})
-endif()
-

@@ -11,7 +11,7 @@
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
 #include "../../Core/Vendor.h"
-#include <LLGL/Shader.h>
+#include <LLGL/ShaderFlags.h>
 #include <stdexcept>
 #include <algorithm>
 #include <d3dcompiler.h>
@@ -99,20 +99,21 @@ static const char* DXErrorToStr(const HRESULT hr)
         // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476174(v=vs.85).aspx
         LLGL_CASE_TO_STR( D3D10_ERROR_FILE_NOT_FOUND );
         LLGL_CASE_TO_STR( D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS );
+
         LLGL_CASE_TO_STR( D3D11_ERROR_FILE_NOT_FOUND );
         LLGL_CASE_TO_STR( D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS );
         LLGL_CASE_TO_STR( D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS );
         LLGL_CASE_TO_STR( D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD );
 
-        LLGL_CASE_TO_STR( D3D12_ERROR_ADAPTER_NOT_FOUND );
-        LLGL_CASE_TO_STR( D3D12_ERROR_DRIVER_VERSION_MISMATCH );
+        LLGL_CASE_TO_STR( D3D12_ERROR_ADAPTER_NOT_FOUND );          // WinSDK 10.0.10240.0
+        LLGL_CASE_TO_STR( D3D12_ERROR_DRIVER_VERSION_MISMATCH );    // WinSDK 10.0.10240.0
     }
     return nullptr;
 }
 
-static std::string DXErrorToStrOrHex(const HRESULT hr)
+static const char* DXErrorToStrOrHex(const HRESULT hr)
 {
-    if (auto err = DXErrorToStr(hr))
+    if (const char* err = DXErrorToStr(hr))
         return err;
     else
         return IntToHex(hr);
@@ -121,11 +122,11 @@ static std::string DXErrorToStrOrHex(const HRESULT hr)
 [[noreturn]]
 static void TrapDXErrorCode(const HRESULT hr, const char* details)
 {
-    std::string errCode = DXErrorToStrOrHex(hr);
+    const char* errCode = DXErrorToStrOrHex(hr);
     if (details != nullptr && *details != '\0')
-        LLGL_TRAP("%s (error code = %s)", details, errCode.c_str());
+        LLGL_TRAP("%s (error code = %s)", details, errCode);
     else
-        LLGL_TRAP("Direct3D operation failed (error code = %s)", errCode.c_str());
+        LLGL_TRAP("Direct3D operation failed (error code = %s)", errCode);
 }
 
 void DXThrowIfFailed(const HRESULT hr, const char* info)

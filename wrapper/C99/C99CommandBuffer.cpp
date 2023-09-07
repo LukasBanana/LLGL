@@ -9,7 +9,7 @@
 #include <LLGL-C/CommandBuffer.h>
 #include <LLGL/Utils/ForRange.h>
 #include "C99Internal.h"
-#include "../../../sources/Core/Assertion.h"
+#include "../../sources/Core/Assertion.h"
 
 
 // namespace LLGL {
