@@ -322,31 +322,26 @@ int main(int argc, char* argv[])
             { 0.4f, 0.4f, 0.1f, 1.0f}, // Yellow
         };
 
-        #if defined _WIN32
+        const char* moduleNames[4] =
+        {
+            #if defined _WIN32
+            "OpenGL", "Vulkan", "Direct3D11", "Direct3D12"
+            #elif defined __APPLE__
+            "OpenGL", "Metal", "Metal", "OpenGL"
+            #elif defined __linux__
+            "OpenGL", "Vulkan", "Vulkan", "OpenGL"
+            #else
+            "Null", "Null", "Null", "Null"
+            #endif
+        };
 
         MyRenderer myRenderers[4] =
         {
-            { "Vulkan",     *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
-            { "OpenGL",     *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
-            { "Direct3D11", *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
-            { "Direct3D12", *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
+            { moduleNames[0], *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
+            { moduleNames[1], *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
+            { moduleNames[2], *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
+            { moduleNames[3], *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
         };
-
-        #elif defined __APPLE__
-
-        MyRenderer myRenderers[4] =
-        {
-            { "OpenGL",     *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
-            { "Metal",      *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
-            { "Metal",      *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
-            { "OpenGL",     *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
-        };
-
-        #else
-
-        #   error MultiRenderer example not supported on this platform yet!
-
-        #endif
 
         mainWindow->Show();
 
