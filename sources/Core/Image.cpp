@@ -100,7 +100,7 @@ void Image::Resize(const Extent3D& extent)
     if (extent.width > 0 && extent.height > 0 && extent.depth > 0)
         data_ = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
     else
-        data_.reset();
+        data_.clear();
 }
 
 void Image::Resize(const Extent3D& extent, const ColorRGBAf& fillColor)
@@ -161,7 +161,7 @@ void Image::Swap(Image& rhs)
 void Image::Reset()
 {
     ResetAttributes();
-    data_.reset();
+    data_.clear();
 }
 
 void Image::Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data)

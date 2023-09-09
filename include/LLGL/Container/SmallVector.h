@@ -267,7 +267,7 @@ class LLGL_EXPORT SmallVector
         }
 
         /**
-        \brief Returns a reference to first element in this vector. This must \e not be called on an empty vector!
+        \brief Returns a reference to first element in this vector.
         \remarks This must \e not be called on an empty vector!
         */
         reference front()
@@ -276,7 +276,7 @@ class LLGL_EXPORT SmallVector
         }
 
         /**
-        \brief Returns a constant reference to first element in this vector. This must \e not be called on an empty vector!
+        \brief Returns a constant reference to first element in this vector.
         \remarks This must \e not be called on an empty vector!
         */
         const_reference front() const
@@ -285,7 +285,7 @@ class LLGL_EXPORT SmallVector
         }
 
         /**
-        \brief Returns a reference to last element in this vector. This must \e not be called on an empty vector!
+        \brief Returns a reference to last element in this vector.
         \remarks This must \e not be called on an empty vector!
         */
         reference back()
@@ -294,7 +294,7 @@ class LLGL_EXPORT SmallVector
         }
 
         /**
-        \brief Returns a constant reference to last element in this vector. This must \e not be called on an empty vector!
+        \brief Returns a constant reference to last element in this vector.
         \remarks This must \e not be called on an empty vector!
         */
         const_reference back() const
@@ -697,8 +697,7 @@ class LLGL_EXPORT SmallVector
             if (cap > LocalCapacity)
             {
                 /* Allocate new container */
-                Allocator alloc;
-                pointer data = alloc.allocate(cap);
+                pointer data = Allocator{}.allocate(cap);
 
                 /* Move all elements into new container */
                 move_all(data);
@@ -771,8 +770,7 @@ class LLGL_EXPORT SmallVector
         {
             /* Allocate new container */
             const size_type cap = GrowStrategy::Grow(size() + count);
-            Allocator alloc;
-            pointer data = alloc.allocate(cap);
+            pointer data = Allocator{}.allocate(cap);
 
             /* Copy elements into new container, destroy old elements, and deallocate old container */
             construct_range(data, begin(), begin() + offset);

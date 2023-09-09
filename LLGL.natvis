@@ -10,6 +10,16 @@
             </ArrayItems>
         </Expand>
     </Type>
+    <Type Name="LLGL::DynamicArray&lt;*&gt;" Inheritable="false">
+        <DisplayString>{{size = {size_}}}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">size_</Item>
+            <ArrayItems>
+                <Size>size_</Size>
+                <ValuePointer>data_</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
     <Type Name="LLGL::SmallVector&lt;*&gt;" Inheritable="false">
         <DisplayString>{{size = {size_}}}</DisplayString>
         <DisplayString>{{capacity = {cap_}}}</DisplayString>

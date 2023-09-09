@@ -837,7 +837,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 
     /* Allocate image buffer */
     const std::size_t   bytesPerPixel   = GetMemoryFootprint(format, dataType, 1);
-    ByteBuffer          imageBuffer     = MakeUniqueArray<char>(bytesPerPixel * imageSize);
+    ByteBuffer          imageBuffer     = AllocateByteBuffer(bytesPerPixel * imageSize, UninitializeTag{});
 
     /* Initialize image buffer with fill color */
     DoConcurrentRange(
@@ -854,14 +854,14 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 
 LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize)
 {
-    auto buffer = AllocateByteBuffer(bufferSize, UninitializeTag{});
-    ::memset(buffer.get(), 0, bufferSize);
+    ByteBuffer buffer{ bufferSize, UninitializeTag{} };
+    ::memset(buffer.data(), 0, bufferSize);
     return buffer;
 }
 
 LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize, UninitializeTag)
 {
-    return MakeUniqueArray<char>(bufferSize);
+    return ByteBuffer{ bufferSize, UninitializeTag{} };
 }
 
 

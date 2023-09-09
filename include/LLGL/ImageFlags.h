@@ -14,6 +14,7 @@
 #include <LLGL/Tags.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/Container/DynamicArray.h>
 #include <memory>
 #include <cstdint>
 
@@ -31,7 +32,7 @@ where the default initialization of an std::vector is undesired.
 Therefore, the byte buffer type is an std::unique_ptr<char[]>.
 \see ConvertImageBuffer
 */
-using ByteBuffer = std::unique_ptr<char[]>;
+using ByteBuffer = DynamicArray<char>;
 
 
 /* ----- Structures ----- */
