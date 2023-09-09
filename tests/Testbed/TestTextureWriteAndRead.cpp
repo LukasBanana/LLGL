@@ -14,8 +14,7 @@ DEF_TEST( TextureWriteAndRead )
 {
     const ArrayView<ColorRGBAub> colorsRgbaUb4 = Testset::GetColorsRgbaUb4();
 
-    static RandomColorSet colorsRgbaUb16;
-    colorsRgbaUb16.Generate(16);
+    static std::vector<ColorRGBAub> colorsRgbaUb16 = Testset::GenerateColorsRgbaUb(16);
 
     auto CreateTextureAndTestImageData = [this](const char* name, const TextureDescriptor& texDesc, const TextureRegion& region, const void* data, std::size_t dataSize) -> TestResult
     {
@@ -117,8 +116,8 @@ DEF_TEST( TextureWriteAndRead )
         "tex2D{2D,4wh}:{MIP0-full-access}",
         tex2DDesc_4x4,
         TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 4, 1 } ),
-        colorsRgbaUb16.colors.data(),
-        colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
+        colorsRgbaUb16.data(),
+        colorsRgbaUb16.size() * sizeof(ColorRGBAub)
     );
 
     ////////////// Texture2DArray //////////////
@@ -140,8 +139,8 @@ DEF_TEST( TextureWriteAndRead )
             "tex2DArray{2D[2],8w,4h}:{MIP1-full-access}",
             tex2DArrayDesc_8x4x2,
             TextureRegion( TextureSubresource{ 0, 2, 1, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 4, 2, 1 } ),
-            colorsRgbaUb16.colors.data(),
-            colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
+            colorsRgbaUb16.data(),
+            colorsRgbaUb16.size() * sizeof(ColorRGBAub)
         );
 
         TEST_IMAGE_DATA(
@@ -180,7 +179,7 @@ DEF_TEST( TextureWriteAndRead )
             "tex3D{3D,8whd}:{MIP1-full-access}",
             tex3DDesc_4x4x4,
             TextureRegion( TextureSubresource{ 0, 1 }, Offset3D{ 0, 0, 0 }, Extent3D{ 2, 2, 2 } ),
-            colorsRgbaUb16.colors.data(),
+            colorsRgbaUb16.data(),
             8 * sizeof(ColorRGBAub)
         );
 
@@ -188,15 +187,15 @@ DEF_TEST( TextureWriteAndRead )
             "tex3D{3D,8whd}:{1-slice-access}",
             tex3DDesc_4x4x4,
             TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 0, 0, 2 }, Extent3D{ 4, 4, 1 } ),
-            colorsRgbaUb16.colors.data(),
-            colorsRgbaUb16.colors.size() * sizeof(ColorRGBAub)
+            colorsRgbaUb16.data(),
+            colorsRgbaUb16.size() * sizeof(ColorRGBAub)
         );
 
         TEST_IMAGE_DATA(
             "tex3D{3D,8whd}:{2-slice-access}",
             tex3DDesc_4x4x4,
             TextureRegion( TextureSubresource{ 0, 0 }, Offset3D{ 1, 1, 1 }, Extent3D{ 2, 2, 2 } ),
-            colorsRgbaUb16.colors.data(),
+            colorsRgbaUb16.data(),
             8 * sizeof(ColorRGBAub)
         );
     }

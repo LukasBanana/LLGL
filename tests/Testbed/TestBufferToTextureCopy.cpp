@@ -16,7 +16,7 @@ DEF_TEST( BufferToTextureCopy )
 
     const ArrayView<float> colorsRgF8 = Testset::GetColorsRgF8();
 
-    // Create buffer with initial texture data to copy from
+    // Create buffers with initial image data to copy from
     BufferDescriptor buf1Desc;
     {
         buf1Desc.size       = sizeof(colorsRgbaUb8[0]) * colorsRgbaUb8.size();
@@ -31,7 +31,8 @@ DEF_TEST( BufferToTextureCopy )
     }
     CREATE_BUFFER(buf2, buf2Desc, "buf2{RgF[8]}", colorsRgF8.data());
 
-    auto CopyToTextureAndReadback = [this, buf1](const char* name, TextureType type, Format format, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, Buffer* srcBuf) -> TestResult
+    auto CopyToTextureAndReadback = [this, buf1](
+        const char* name, TextureType type, Format format, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, Buffer* srcBuf) -> TestResult
     {
         const std::uint64_t t0 = Timer::Tick();
 
@@ -66,7 +67,7 @@ DEF_TEST( BufferToTextureCopy )
         }
 
         // Create texture to copy from source buffer and to destination buffer
-        const std::string texName = std::string("dst.") + name;
+        const std::string texName = std::string("interm.") + name;
         TextureDescriptor texDesc;
         {
             texDesc.type        = type;
@@ -124,8 +125,8 @@ DEF_TEST( BufferToTextureCopy )
 
                 if (::memcmp(srcData.data(), dstData.data(), srcBufSize) != 0)
                 {
-                    const std::string srcDataStr = TestbedContext::FormatByteArray(srcData.data(), srcBufSize, 4, formatAsFloats);
-                    const std::string dstDataStr = TestbedContext::FormatByteArray(dstData.data(), srcBufSize, 4, formatAsFloats);
+                    const std::string srcDataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
+                    const std::string dstDataStr = TestbedContext::FormatByteArray(dstData.data(), dstData.size(), 4, formatAsFloats);
                     Log::Errorf(
                         "Mismatch between data of texture %s [MIP %u, Layer %u] and copy result:\n"
                         " -> Expected: [%s]\n"
@@ -133,6 +134,15 @@ DEF_TEST( BufferToTextureCopy )
                         name, mip, layer, srcDataStr.c_str(), dstDataStr.c_str()
                     );
                     return TestResult::FailedMismatch;
+                }
+                else if (sanityCheck)
+                {
+                    const std::string dataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
+                    Log::Errorf(
+                        "Sanity check for %s [MIP %u, Layer %u]:\n"
+                        " -> Data: [%s]\n",
+                        name, mip, layer, dataStr.c_str()
+                    );
                 }
 
                 srcData.clear();
@@ -195,7 +205,7 @@ DEF_TEST( BufferToTextureCopy )
     if (caps.features.hasCubeArrayTextures)
     {
         // Don't test RG32Float format here as some backends don't support this format-texture combination (such as OpenGL)
-        TEST_BUFFER_TO_TEXTURE_COPY("tex{Cube[2],RgbaUb,16w}",  TextureType::TextureCubeArray,  Format::RGBA8UNorm, Extent3D(16, 16,  1), 2, 6*2, buf1);
+        TEST_BUFFER_TO_TEXTURE_COPY("tex{Cube[2],RgbaUb,16wh}", TextureType::TextureCubeArray,  Format::RGBA8UNorm, Extent3D(16, 16,  1), 2, 6*2, buf1);
     }
 
     // Delete old resources

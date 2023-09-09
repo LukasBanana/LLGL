@@ -61,11 +61,12 @@ static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
 }
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
-    moduleName { moduleName                                                            },
-    outputDir  { SanitizePath(FindOutputDir(argc, argv))                               },
-    verbose    { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose") },
-    showTiming { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")  },
-    fastTest   { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")    }
+    moduleName  { moduleName                                                                 },
+    outputDir   { SanitizePath(FindOutputDir(argc, argv))                                    },
+    verbose     { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
+    sanityCheck { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
+    showTiming  { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
+    fastTest    { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         }
 {
     RendererConfigurationOpenGL cfgGL;
 
@@ -145,7 +146,7 @@ static void PrintTestResult(TestResult result, const char* name)
     ::fflush(stdout);
 }
 
-void TestbedContext::RunAllTests()
+unsigned TestbedContext::RunAllTests()
 {
     #define RUN_TEST(TEST)                                                          \
         {                                                                           \
@@ -176,10 +177,14 @@ void TestbedContext::RunAllTests()
     #undef RUN_TEST
 
     // Print summary
-    if (failures == 1)
-        Log::Printf(" ==> 1 TEST FAILED\n", failures);
+    if (failures == 0)
+        Log::Printf(" ==> ALL TESTS PASSED\n");
+    else if (failures == 1)
+        Log::Printf(" ==> 1 TEST FAILED\n");
     else if (failures > 1)
         Log::Printf(" ==> %u TESTS FAILED\n", failures);
+
+    return failures;
 }
 
 static TestResult TestParseSamplerDesc()
@@ -593,17 +598,26 @@ TestResult TestbedContext::CreateRenderTarget(
     return TestResult::Passed;
 }
 
-static std::string FormatCharArray(const unsigned char* data, std::size_t count, std::size_t bytesPerGroup)
+static std::string FormatCharArray(const unsigned char* data, std::size_t count, std::size_t bytesPerGroup, std::size_t maxWidth)
 {
     std::string s;
     s.reserve(count * 3);
 
     char formatted[3] = {};
+    std::size_t lineLength = 0;
 
     for_range(i, count)
     {
         if (!s.empty() && (bytesPerGroup == 0 || i % bytesPerGroup == 0))
-            s += ' ';
+        {
+            if (s.size() - lineLength > maxWidth)
+            {
+                s += '\n';
+                lineLength = s.size();
+            }
+            else
+                s += ' ';
+        }
         ::snprintf(formatted, sizeof(formatted), "%02X", static_cast<unsigned>(data[i]));
         s += formatted;
     }
@@ -611,17 +625,26 @@ static std::string FormatCharArray(const unsigned char* data, std::size_t count,
     return s;
 }
 
-static std::string FormatFloatArray(const float* data, std::size_t count)
+static std::string FormatFloatArray(const float* data, std::size_t count, std::size_t maxWidth)
 {
     std::string s;
     s.reserve(count * 5);
 
     char formatted[16] = {};
+    std::size_t lineLength = 0;
 
     for_range(i, count)
     {
         if (!s.empty())
-            s += ' ';
+        {
+            if (s.size() - lineLength > maxWidth)
+            {
+                s += '\n';
+                lineLength = s.size();
+            }
+            else
+                s += ' ';
+        }
         ::snprintf(formatted, sizeof(formatted), "%.2f", data[i]);
         s += formatted;
     }
@@ -631,10 +654,11 @@ static std::string FormatFloatArray(const float* data, std::size_t count)
 
 std::string TestbedContext::FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup, bool formatAsFloats)
 {
+    constexpr std::size_t maxWidth = 80;
     if (formatAsFloats)
-        return FormatFloatArray(reinterpret_cast<const float*>(data), size/sizeof(float));
+        return FormatFloatArray(reinterpret_cast<const float*>(data), size/sizeof(float), maxWidth);
     else
-        return FormatCharArray(reinterpret_cast<const unsigned char*>(data), size, bytesPerGroup);
+        return FormatCharArray(reinterpret_cast<const unsigned char*>(data), size, bytesPerGroup, maxWidth);
 }
 
 double TestbedContext::ToMillisecs(std::uint64_t t0, std::uint64_t t1)
@@ -1154,35 +1178,5 @@ void TestbedContext::IndexedTriangleMeshBuffer::FinalizeMesh(IndexedTriangleMesh
 {
     outMesh.indexBufferOffset   = firstIndex * sizeof(std::uint32_t);
     outMesh.numIndices          = static_cast<std::uint32_t>(indices.size()) - firstIndex;
-}
-
-
-/*
- * RandomColorSet structure
- */
-
-std::uint8_t RandomUint8()
-{
-    return static_cast<std::uint8_t>(::rand() % 0xFF);
-}
-
-static void GenerateRandomColors(ColorRGBAub* colors, std::size_t count)
-{
-    for (std::size_t i = 0; i < count; ++i)
-    {
-        colors[i].r = RandomUint8();
-        colors[i].g = RandomUint8();
-        colors[i].b = RandomUint8();
-        colors[i].a = RandomUint8();
-    }
-}
-
-void TestbedContext::RandomColorSet::Generate(std::size_t count)
-{
-    if (colors.size() != count)
-    {
-        colors.resize(count);
-        GenerateRandomColors(colors.data(), colors.size());
-    }
 }
 

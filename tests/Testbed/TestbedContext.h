@@ -36,7 +36,8 @@ class TestbedContext
 
         TestbedContext(const char* moduleName, int version, int argc, char* argv[]);
 
-        void RunAllTests();
+        // Runs all tests and returns the number of failed ones. If all succeeded, the return value is 0.
+        unsigned RunAllTests();
 
     public:
 
@@ -95,13 +96,6 @@ class TestbedContext
 
     protected:
 
-        struct RandomColorSet
-        {
-            std::vector<LLGL::ColorRGBAub> colors;
-
-            void Generate(std::size_t count);
-        };
-
         struct Vertex
         {
             float position[3];
@@ -142,8 +136,9 @@ class TestbedContext
         const std::string           moduleName;
         const std::string           outputDir;
         const bool                  verbose;
+        const bool                  sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
         const bool                  showTiming;
-        const bool                  fastTest; // Skip slow buffer/texture creations to speed up test run
+        const bool                  fastTest;       // Skip slow buffer/texture creations to speed up test run
 
         unsigned                    failures                = 0;
 

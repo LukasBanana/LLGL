@@ -20,7 +20,7 @@ static void RunRendererIndependentTests()
     Log::Printf("=============================\n\n");
 }
 
-static void RunTestbedForRenderer(const char* moduleName, int version, int argc, char* argv[])
+static unsigned RunTestbedForRenderer(const char* moduleName, int version, int argc, char* argv[])
 {
     if (version != 0)
         Log::Printf("Run Testbed: %s (%d)\n", moduleName, version);
@@ -28,8 +28,9 @@ static void RunTestbedForRenderer(const char* moduleName, int version, int argc,
         Log::Printf("Run Testbed: %s\n", moduleName);
     Log::Printf("=============================\n");
     TestbedContext context{ moduleName, version, argc, argv };
-    context.RunAllTests();
+    unsigned failures = context.RunAllTests();
     Log::Printf("=============================\n\n");
+    return failures;
 }
 
 struct ModuleAndVersion
@@ -95,8 +96,21 @@ int main(int argc, char* argv[])
     RunRendererIndependentTests();
 
     // Run renderer specific tests
+    unsigned modulesWithFailedTests = 0;
+
     for (const ModuleAndVersion& module : enabledModules)
-        RunTestbedForRenderer(module.name.c_str(), module.version, argc - 1, argv + 1);
+    {
+        if (RunTestbedForRenderer(module.name.c_str(), module.version, argc - 1, argv + 1) != 0)
+            ++modulesWithFailedTests;
+    }
+
+    // Print summary
+    if (modulesWithFailedTests == 0)
+        Log::Printf(" ==> ALL MODULES PASSED\n");
+    else if (modulesWithFailedTests == 1)
+        Log::Printf(" ==> 1 MODULE FAILED\n");
+    else if (modulesWithFailedTests > 1)
+        Log::Printf(" ==> %u MODULES FAILED\n", modulesWithFailedTests);
 
     #ifdef _WIN32
     system("pause");

@@ -6,6 +6,7 @@
  */
 
 #include "Testset.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 using namespace LLGL;
@@ -84,6 +85,40 @@ LLGL::ArrayView<float> GetColorsRgF8()
         2.00f, 3.21f,
     };
     return colorsRgF8;
+}
+
+static std::uint8_t RandomUint8()
+{
+    return static_cast<std::uint8_t>(::rand() % 256);
+}
+
+std::vector<LLGL::ColorRGBAub> GenerateColorsRgbaUb(std::size_t count)
+{
+    std::vector<LLGL::ColorRGBAub> colors;
+    colors.resize(count);
+    for_range(i, count)
+    {
+        colors[i].r = RandomUint8();
+        colors[i].g = RandomUint8();
+        colors[i].b = RandomUint8();
+        colors[i].a = RandomUint8();
+    }
+    return colors;
+}
+
+static float RandomFloat32()
+{
+    return (static_cast<float>(::rand()) / static_cast<float>(RAND_MAX));
+}
+
+std::vector<float> GenerateFloats(std::size_t count)
+{
+    std::vector<float> colors;
+    count *= 2;
+    colors.resize(count);
+    for_range(i, count)
+        colors[i] = RandomFloat32();
+    return colors;
 }
 
 
