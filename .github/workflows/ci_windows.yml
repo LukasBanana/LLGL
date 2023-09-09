@@ -49,9 +49,9 @@ jobs:
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v3
-      if: matrix.generator == 'Visual Studio 17 2022' && matrix.arch == 'x64' && matrix.lib == 'Shared' && matrix.config == 'Release'
+      if: matrix.generator == 'Visual Studio 17 2022' && matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
-        name: LLGL-Windows-${{ matrix.config }}-${{ matrix.arch }}
+        name: LLGL-Windows-${{ matrix.config }}-${{ matrix.arch == 'x64' && 'x86_64' || 'x86' }}
         path: |
           ${{ env.README }}
           ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/LLGL*.dll
