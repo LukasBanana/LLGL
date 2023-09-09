@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
-#include <algorithm>
 #include <string.h>
 
 
@@ -85,7 +84,7 @@ class LLGL_EXPORT DynamicArray
         //! Initializes the array with the specified elements in the half-open range <code>[from, to)</code>.
         template <typename InputIter>
         DynamicArray(InputIter from, InputIter to) :
-            DynamicArray { std::distance(from, to), UninitializeTag{} }
+            DynamicArray { static_cast<size_type>(std::distance(from, to)), UninitializeTag{} }
         {
             for (iterator it = begin(); it != end() && from != to; ++it, ++from)
                 *it = *from;
@@ -102,7 +101,7 @@ class LLGL_EXPORT DynamicArray
         explicit DynamicArray(size_type count, const value_type& value = value_type{}) :
             DynamicArray { count, UninitializeTag{} }
         {
-            Memory::Memset<T>(data(), size(), value);
+            Memory::Memset<T>(data(), value, size());
         }
 
         //! Destroys all elements in this array.
@@ -254,7 +253,7 @@ class LLGL_EXPORT DynamicArray
                 pointer newData = Allocator{}.allocate(newSize);
                 if (data_ != nullptr)
                 {
-                    ::memcpy(newData, data_, size_);
+                    ::memcpy(newData, data_, size_ * sizeof(T));
                     Allocator{}.deallocate(data_, size_);
                 }
                 data_ = newData;
@@ -272,10 +271,12 @@ class LLGL_EXPORT DynamicArray
         void resize(size_type newSize, const value_type& value)
         {
             /* Resize uninitialized, then copy new value into tail */
-            const size_type oldSize = size_;
-            resize(newSize, UninitializeTag{});
-            for (iterator it = begin() + oldSize; it != end; ++it)
-                *it == value;
+            if (size_ < newSize)
+            {
+                const size_type oldSize = size_;
+                resize(newSize, UninitializeTag{});
+                Memory::Memset<T>(data() + oldSize, value, newSize - oldSize);
+            }
         }
 
         void swap(DynamicArray& other)
@@ -355,7 +356,7 @@ class LLGL_EXPORT DynamicArray
                 clear();
                 resize(rhs.size(), UninitializeTag{});
             }
-            ::memcpy(data(), rhs.data(), size());
+            ::memcpy(data(), rhs.data(), size() * sizeof(T));
             return *this;
         }
 

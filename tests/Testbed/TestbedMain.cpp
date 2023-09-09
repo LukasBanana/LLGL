@@ -12,12 +12,13 @@
 
 using namespace LLGL;
 
-static void RunRendererIndependentTests()
+static unsigned RunRendererIndependentTests()
 {
     Log::Printf("Run renderer independent tests\n");
     Log::Printf("=============================\n");
-    TestbedContext::RunRendererIndependentTests();
+    unsigned failures = TestbedContext::RunRendererIndependentTests();
     Log::Printf("=============================\n\n");
+    return failures;
 }
 
 static unsigned RunTestbedForRenderer(const char* moduleName, int version, int argc, char* argv[])
@@ -92,12 +93,13 @@ int main(int argc, char* argv[])
             enabledModules.push_back(module);
     }
 
-    // Run renderer independent tests
-    RunRendererIndependentTests();
-
-    // Run renderer specific tests
     unsigned modulesWithFailedTests = 0;
 
+    // Run renderer independent tests
+    if (RunRendererIndependentTests() != 0)
+        ++modulesWithFailedTests;
+
+    // Run renderer specific tests
     for (const ModuleAndVersion& module : enabledModules)
     {
         if (RunTestbedForRenderer(module.name.c_str(), module.version, argc - 1, argv + 1) != 0)

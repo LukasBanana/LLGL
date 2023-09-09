@@ -28,7 +28,7 @@ struct ByteCmpUtils
     static bool AllBytesEqual(const char* ptr)
     {
         /* Compare first 4 bytes individually */
-        if (!AllBytesEqual<ByteSize % 4>(ptr))
+        if (!ByteCmpUtils<ByteSize % 4u>::AllBytesEqual(ptr))
             return false;
 
         /* Compare tail as 32-bit values */
@@ -80,13 +80,22 @@ struct ByteCmpUtils<1>
     }
 };
 
+template <>
+struct ByteCmpUtils<0>
+{
+    static bool AllBytesEqual(const char* /*ptr*/)
+    {
+        return true;
+    }
+};
+
 template <typename TInner, bool IsTriviallyConstructible>
 struct MemsetUtils;
 
 template <typename TInner>
 struct MemsetUtils<TInner, false>
 {
-    static void MemsetInternal(TInner* dst, std::size_t count, const TInner& value)
+    static void MemsetInternal(TInner* dst, const TInner& value, std::size_t count)
     {
         for (TInner* dstEnd = dst + count; dst != dstEnd; ++dst)
             *dst = value;
@@ -96,12 +105,12 @@ struct MemsetUtils<TInner, false>
 template <typename TInner>
 struct MemsetUtils<TInner, true>
 {
-    static void MemsetInternal(TInner* dst, std::size_t count, const TInner& value)
+    static void MemsetInternal(TInner* dst, const TInner& value, std::size_t count)
     {
         if (ByteCmpUtils<sizeof(value)>::AllBytesEqual(reinterpret_cast<const char*>(&value)))
-            ::memset(dst, count * sizeof(TInner), reinterpret_cast<const char*>(&value)[0]);
+            ::memset(dst, reinterpret_cast<const char*>(&value)[0], count * sizeof(TInner));
         else
-            MemsetUtils<TInner, false>::MemsetInternal(dst, count, value);
+            MemsetUtils<TInner, false>::MemsetInternal(dst, value, count);
     }
 };
 
@@ -115,16 +124,16 @@ namespace Memory
 /**
 \brief Copies the specifies value 'count'-times into the specified memory location.
 \param[out] dst Specifies the memory location where the input value will be copied to.
-\param[in] count Specifies how many entries will be set to the input value.
 \param[in] value Specifies the input value that is meant to be copied into all entries.
+\param[in] count Specifies how many entries will be set to the input value.
 \remarks If the template typename \c <T> specifies a trivially constructible type, such as \c int or \c char,
 and all bytes in the input value are equal, the standard library function \c ::memset will be used.
 Otherwise, a standard for-loop will be used to initialize all entries.
 */
 template <typename T>
-void Memset(T* dst, std::size_t count, const T& value)
+void Memset(T* dst, const T& value, std::size_t count)
 {
-    Utils::MemsetUtils<T, std::is_trivially_copyable<T>::value>::MemsetInternal(dst, count, value);
+    Utils::MemsetUtils<T, std::is_trivially_copyable<T>::value>::MemsetInternal(dst, value, count);
 }
 
 
