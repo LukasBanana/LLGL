@@ -597,7 +597,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     {
         /* Convert image data type with intermediate buffer */
         const std::size_t   intermediateBufferSize  = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstImageDesc.dataType);
-        ByteBuffer          intermediateBuffer      = AllocateByteBuffer(intermediateBufferSize, UninitializeTag{});
+        DynamicByteArray    intermediateBuffer      = DynamicByteArray{ intermediateBufferSize, UninitializeTag{} };
 
         ConvertImageBufferDataType(
             srcImageDesc.dataType,
@@ -647,7 +647,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     return false;
 }
 
-LLGL_EXPORT ByteBuffer ConvertImageBuffer(
+LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     ImageFormat                 dstFormat,
     DataType                    dstDataType,
@@ -667,7 +667,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     const std::size_t srcNumPixels = srcImageDesc.dataSize / GetMemoryFootprint(srcImageDesc.format, srcImageDesc.dataType, 1);
     const std::size_t dstImageSize = GetMemoryFootprint(dstFormat, dstDataType, srcNumPixels);
 
-    ByteBuffer dstImage = AllocateByteBuffer(dstImageSize, UninitializeTag{});
+    DynamicByteArray dstImage{ dstImageSize, UninitializeTag{} };
 
     const DstImageDescriptor dstImageDesc{ dstFormat, dstDataType, dstImage.get(), dstImageSize };
 
@@ -680,7 +680,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     {
         /* Convert image data type with intermediate buffer */
         const std::size_t   intermediateBufferSize  = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
-        ByteBuffer          intermediateBuffer      = AllocateByteBuffer(intermediateBufferSize, UninitializeTag{});
+        DynamicByteArray    intermediateBuffer      = DynamicByteArray{ intermediateBufferSize, UninitializeTag{} };
 
         ConvertImageBufferDataType(
             srcImageDesc.dataType,
@@ -720,7 +720,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     return dstImage;
 }
 
-LLGL_EXPORT ByteBuffer DecompressImageBufferToRGBA8UNorm(
+LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
     const SrcImageDescriptor&   srcImageDesc,
     const Extent2D&             extent,
     unsigned                    threadCount)
@@ -812,7 +812,7 @@ LLGL_EXPORT void CopyImageBufferRegion(
     );
 }
 
-LLGL_EXPORT ByteBuffer GenerateImageBuffer(
+LLGL_EXPORT DynamicByteArray GenerateImageBuffer(
     ImageFormat format,
     DataType    dataType,
     std::size_t imageSize,
@@ -837,7 +837,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 
     /* Allocate image buffer */
     const std::size_t   bytesPerPixel   = GetMemoryFootprint(format, dataType, 1);
-    ByteBuffer          imageBuffer     = AllocateByteBuffer(bytesPerPixel * imageSize, UninitializeTag{});
+    DynamicByteArray    imageBuffer     = DynamicByteArray{ bytesPerPixel * imageSize, UninitializeTag{} };
 
     /* Initialize image buffer with fill color */
     DoConcurrentRange(
@@ -850,18 +850,6 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     );
 
     return imageBuffer;
-}
-
-LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize)
-{
-    ByteBuffer buffer{ bufferSize, UninitializeTag{} };
-    ::memset(buffer.data(), 0, bufferSize);
-    return buffer;
-}
-
-LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize, UninitializeTag)
-{
-    return ByteBuffer{ bufferSize, UninitializeTag{} };
 }
 
 

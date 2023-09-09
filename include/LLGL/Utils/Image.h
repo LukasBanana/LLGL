@@ -56,9 +56,9 @@ class LLGL_EXPORT Image
         /**
         \brief Constructor to initialize the image with all atributes, including the image buffer specified by the 'data' parameter.
         \note If the specified data does not manage an image buffer of the specified extent and format, the behavior is undefined.
-        \see Reset(const Extent3D&, const ImageFormat, const DataType, ByteBuffer&&)
+        \see Reset(const Extent3D&, const ImageFormat, const DataType, DynamicByteArray&&)
         */
-        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data);
+        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, DynamicByteArray&& data);
 
         //! Copy constructor which copies the entire image buffer from the specified source image.
         Image(const Image& rhs);
@@ -116,12 +116,11 @@ class LLGL_EXPORT Image
         \brief Resets all image attributes to the specified values.
         \note If the specified data does not manage an image buffer of the specified extent and format, the behavior is undefined.
         \see GenerateImageBuffer
-        \see AllocateByteBuffer
         */
-        void Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data);
+        void Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, DynamicByteArray&& data);
 
         //! Releases the ownership of the image buffer and resets all attributes.
-        ByteBuffer Release();
+        DynamicByteArray Release();
 
         /* ----- Pixels ----- */
 
@@ -256,10 +255,10 @@ class LLGL_EXPORT Image
 
     private:
 
-        Extent3D    extent_;
-        ImageFormat format_     = ImageFormat::RGBA;
-        DataType    dataType_   = DataType::UInt8;
-        ByteBuffer  data_;
+        Extent3D            extent_;
+        ImageFormat         format_     = ImageFormat::RGBA;
+        DataType            dataType_   = DataType::UInt8;
+        DynamicByteArray    data_;
 
 };
 

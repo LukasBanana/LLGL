@@ -10,8 +10,10 @@
 
 
 #include <LLGL/NonCopyable.h>
+#include <LLGL/Container/DynamicArray.h>
 #include <vector>
 #include <string>
+#include <memory>
 
 
 namespace LLGL
@@ -67,6 +69,13 @@ class LLGL_EXPORT Blob : public NonCopyable
         \return New instance of Blob that refers to the specified memory.
         */
         static Blob CreateWeakRef(const void* data, std::size_t size);
+
+        /**
+        \brief Creates a new Blob instance with a strong reference to the specified byte array container.
+        \param[in] cont Specifies the container whose data is to be moved into this Blob instance.
+        \return New instance of Blob that manages the specified unique pointer.
+        */
+        static Blob CreateStrongRef(DynamicByteArray&& cont);
 
         /**
         \brief Creates a new Blob instance with a strong reference to the specified vector container.

@@ -23,18 +23,6 @@ namespace LLGL
 {
 
 
-/* ----- Types ----- */
-
-/**
-\brief Common byte buffer type.
-\remarks Commonly this would be an std::vector<char>, but the buffer conversion is an optimized process,
-where the default initialization of an std::vector is undesired.
-Therefore, the byte buffer type is an std::unique_ptr<char[]>.
-\see ConvertImageBuffer
-*/
-using ByteBuffer = DynamicArray<char>;
-
-
 /* ----- Structures ----- */
 
 /**
@@ -156,10 +144,9 @@ This can be casted to the respective target data type (e.g. <code>unsigned char<
 \throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
 \throw std::invalid_argument If the source buffer is a null pointer.
 \see Constants::maxThreadCount
-\see ByteBuffer
 \see GetMemoryFootprint
 */
-LLGL_EXPORT ByteBuffer ConvertImageBuffer(
+LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     const SrcImageDescriptor&   srcImageDesc,
     ImageFormat                 dstFormat,
     DataType                    dstDataType,
@@ -175,7 +162,7 @@ If this is less than 2, no multi-threading is used. If this is 'Constants::maxTh
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the decompressed image data or null if the compression format is not supported for decompression.
 */
-LLGL_EXPORT ByteBuffer DecompressImageBufferToRGBA8UNorm(
+LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
     const SrcImageDescriptor&   srcImageDesc,
     const Extent2D&             extent,
     unsigned                    threadCount = 0
@@ -238,30 +225,12 @@ auto imageBuffer = LLGL::GenerateImageBuffer(
 );
 \endcode
 */
-LLGL_EXPORT ByteBuffer GenerateImageBuffer(
+LLGL_EXPORT DynamicByteArray GenerateImageBuffer(
     ImageFormat format,
     DataType    dataType,
     std::size_t imageSize,
     const float fillColor[4]
 );
-
-/**
-\brief Generates a new byte buffer with zeros in each byte.
-\param[in] bufferSize Specifies the size (in bytes) of the buffer.
-\return The new allocated and initialized byte buffer.
-\remarks Use GenerateImageBuffer to generate an image buffer with a fill color.
-\see GenerateImageBuffer
-\see AllocateByteBuffer(std::size_t, UninitializeTag)
-*/
-LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize);
-
-/**
-\brief Generates a new and uninitialized byte buffer.
-\param[in] bufferSize Specifies the size (in bytes) of the buffer.
-\return The new allocated and uninitialized byte buffer.
-\see AllocateByteBuffer(std::size_t)
-*/
-LLGL_EXPORT ByteBuffer AllocateByteBuffer(std::size_t bufferSize, UninitializeTag);
 
 /** @} */
 

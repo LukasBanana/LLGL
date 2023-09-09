@@ -61,7 +61,7 @@ static void InterpolateColor(std::uint8_t* dst, const std::uint8_t* src0, const 
     dst[2] = InterpolateColorComponent(src0[2], src1[2]);
 }
 
-ByteBuffer DecompressBC1ToRGBA8UNorm(
+DynamicByteArray DecompressBC1ToRGBA8UNorm(
     const Extent2D& extent,
     const char*     data,
     std::size_t     dataSize,
@@ -71,7 +71,7 @@ ByteBuffer DecompressBC1ToRGBA8UNorm(
     if (extent.width % 4 != 0 || extent.height % 4 != 0 || data == nullptr || dataSize < extent.width * extent.height / 2)
         return nullptr;
 
-    ByteBuffer dstImage = AllocateByteBuffer(extent.width * extent.height * 4, UninitializeTag{});
+    DynamicByteArray dstImage{ extent.width * extent.height * 4, UninitializeTag{} };
 
     std::uint8_t* output = reinterpret_cast<std::uint8_t*>(dstImage.get());
     std::uint16_t compressedColor[2];

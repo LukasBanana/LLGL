@@ -9,8 +9,9 @@
 #define LLGL_BC_DECOMPRESSOR_H
 
 
-#include <LLGL/ImageFlags.h>
-#include <cstdint>
+#include <LLGL/Types.h>
+#include <LLGL/Container/DynamicArray.h>
+#include <cstddef>
 
 
 namespace LLGL
@@ -25,7 +26,7 @@ struct Extent2D;
 Returns an image buffer in the Format::RGBA8UNorm format for the specified BC1 encoded data, or null on failure
 Width and height of the input image must be a multiple of 4.
 */
-ByteBuffer DecompressBC1ToRGBA8UNorm(
+DynamicByteArray DecompressBC1ToRGBA8UNorm(
     const Extent2D& extent,
     const char*     data,
     std::size_t     dataSize,

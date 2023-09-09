@@ -672,9 +672,10 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Copies the specified source image to the destination image.
         \remarks This function also performs image conversion if there is a mismatch between source and destination format.
+        \returns The number of bytes that have been written into the destination image buffer.
         \see ConvertImageBuffer
         */
-        static void CopyTextureImageData(
+        static std::size_t CopyTextureImageData(
             const DstImageDescriptor&   dstImageDesc,
             const SrcImageDescriptor&   srcImageDesc,
             std::uint32_t               numTexels,

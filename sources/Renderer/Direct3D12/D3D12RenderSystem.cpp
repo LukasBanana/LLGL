@@ -666,7 +666,7 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
 
     const auto  dataLayout      = CalcSubresourceLayout(format, srcExtent);
 
-    ByteBuffer intermediateData;
+    DynamicByteArray intermediateData;
     const void* srcData = imageDesc.data;
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&

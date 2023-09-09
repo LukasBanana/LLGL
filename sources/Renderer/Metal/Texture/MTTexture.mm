@@ -191,7 +191,7 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDe
     auto        imageData       = imageDesc.data;
 
     /* Check if image data must be converted */
-    ByteBuffer intermediateData;
+    DynamicByteArray intermediateData;
 
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
@@ -301,7 +301,7 @@ void MTTexture::ReadRegionFromSharedMemory(
     {
         /* Generate intermediate buffer for conversion */
         const std::uint32_t intermediateDataSize    = static_cast<std::uint32_t>(layout.dataSize * region.size.depth);
-        ByteBuffer          intermediateData        = AllocateByteBuffer(intermediateDataSize, UninitializeTag{});
+        DynamicByteArray    intermediateData        = DynamicByteArray{ intermediateDataSize, UninitializeTag{} };
 
         for_range(arrayLayer, subresource.numArrayLayers)
         {
@@ -316,7 +316,7 @@ void MTTexture::ReadRegionFromSharedMemory(
             ];
 
             /* Convert intermediate data into requested format */
-            ByteBuffer formattedData = ConvertImageBuffer(
+            DynamicByteArray formattedData = ConvertImageBuffer(
                 SrcImageDescriptor{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), intermediateDataSize },
                 imageDesc.format, imageDesc.dataType, /*GetConfiguration().threadCount*/0
             );

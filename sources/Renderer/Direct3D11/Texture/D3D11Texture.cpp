@@ -224,7 +224,7 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
     return tex3D;
 }
 
-void D3D11Texture::UpdateSubresource(
+HRESULT D3D11Texture::UpdateSubresource(
     ID3D11DeviceContext*        context,
     UINT                        mipLevel,
     UINT                        baseArrayLayer,
@@ -248,7 +248,7 @@ void D3D11Texture::UpdateSubresource(
         numArrayLayers
     );
 
-    ByteBuffer intermediateData;
+    DynamicByteArray intermediateData;
     const char* srcData = reinterpret_cast<const char*>(imageDesc.data);
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
@@ -257,17 +257,14 @@ void D3D11Texture::UpdateSubresource(
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
         intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
         srcData             = intermediateData.get();
+        if (intermediateData.size() < dataLayout.dataSize)
+            return E_BOUNDS;
     }
     else
     {
         /* Validate input data is large enough */
         if (imageDesc.dataSize < dataLayout.dataSize)
-        {
-            LLGL_TRAP(
-                "image data size (%zu) is too small to update subresource of D3D11 texture (%u is required)",
-                imageDesc.dataSize, dataLayout.dataSize
-            );
-        }
+            return E_BOUNDS;
     }
 
     /* Update subresource with specified image data */
@@ -284,6 +281,8 @@ void D3D11Texture::UpdateSubresource(
         );
         srcData += dataLayout.layerStride;
     }
+
+    return S_OK;
 }
 
 static void CreateD3D11TextureSubresourceCopyWithCPUAccess(

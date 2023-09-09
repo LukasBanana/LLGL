@@ -440,7 +440,7 @@ static void CopyRowAlignedData(void* dstData, std::size_t dstSize, std::size_t d
         ::memcpy(dst, src, dstStride);
 }
 
-void RenderSystem::CopyTextureImageData(
+std::size_t RenderSystem::CopyTextureImageData(
     const DstImageDescriptor&   dstImageDesc,
     const SrcImageDescriptor&   srcImageDesc,
     std::uint32_t               numTexels,
@@ -456,10 +456,10 @@ void RenderSystem::CopyTextureImageData(
         /* Check if padding must be removed */
         const void* data = srcImageDesc.data;
 
-        ByteBuffer unpaddedData;
+        DynamicByteArray unpaddedData;
         if (rowStride != 0 && unpaddedStride != rowStride)
         {
-            unpaddedData = AllocateByteBuffer(unpaddedImageSize, UninitializeTag{});
+            unpaddedData = DynamicByteArray{ unpaddedImageSize, UninitializeTag{} };
             CopyRowAlignedData(unpaddedData.get(), unpaddedImageSize, unpaddedStride, data, rowStride);
             data = unpaddedData.get();
         }
@@ -471,7 +471,7 @@ void RenderSystem::CopyTextureImageData(
         RenderSystem::AssertImageDataSize(dstImageDesc.dataSize, dstImageSize);
 
         /* Convert mapped data into requested format */
-        ByteBuffer formattedData = ConvertImageBuffer(
+        DynamicByteArray formattedData = ConvertImageBuffer(
             SrcImageDescriptor{ srcImageDesc.format, srcImageDesc.dataType, data, unpaddedImageSize },
             dstImageDesc.format,
             dstImageDesc.dataType,
@@ -480,6 +480,8 @@ void RenderSystem::CopyTextureImageData(
 
         /* Copy temporary data into output buffer */
         ::memcpy(dstImageDesc.data, formattedData.get(), dstImageSize);
+
+        return dstImageSize;
     }
     else
     {
@@ -491,6 +493,8 @@ void RenderSystem::CopyTextureImageData(
             CopyRowAlignedData(dstImageDesc.data, unpaddedImageSize, unpaddedStride, srcImageDesc.data, rowStride);
         else
             ::memcpy(dstImageDesc.data, srcImageDesc.data, unpaddedImageSize);
+
+        return unpaddedImageSize;
     }
 }
 

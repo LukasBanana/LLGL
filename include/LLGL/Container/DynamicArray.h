@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Tags.h>
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/Memory.h>
 #include <memory>
 #include <cstddef>
 #include <iterator>
@@ -98,11 +99,10 @@ class LLGL_EXPORT DynamicArray
         }
 
         //! Initializes the array with the specified number of elements and initial value.
-        explicit DynamicArray(size_type count, const value_type& value) :
+        explicit DynamicArray(size_type count, const value_type& value = value_type{}) :
             DynamicArray { count, UninitializeTag{} }
         {
-            for (iterator it = begin(); it != end(); ++it)
-                *it = value;
+            Memory::Memset<T>(data(), size(), value);
         }
 
         //! Destroys all elements in this array.
@@ -396,6 +396,16 @@ class LLGL_EXPORT DynamicArray
         size_type   size_   = 0;
 
 };
+
+
+/**
+\brief Common type for dynamic byte arrays.
+\remarks This is primarily used for image data conversion. It only manages a pointer of dynamically allocated memory and its size (in number of elements).
+\see ConvertImageBuffer
+\see DecompressImageBufferToRGBA8UNorm
+\see GenerateImageBuffer
+*/
+using DynamicByteArray = DynamicArray<char>;
 
 
 } // /namespace LLGL

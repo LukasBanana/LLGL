@@ -20,10 +20,10 @@ namespace LLGL
 /* ----- Common ----- */
 
 Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType) :
-    extent_   { extent                                               },
-    format_   { format                                               },
-    dataType_ { dataType                                             },
-    data_     { AllocateByteBuffer(GetDataSize(), UninitializeTag{}) }
+    extent_   { extent                           },
+    format_   { format                           },
+    dataType_ { dataType                         },
+    data_     { GetDataSize(), UninitializeTag{} }
 {
 }
 
@@ -35,7 +35,7 @@ Image::Image(const Extent3D& extent, const ImageFormat format, const DataType da
 {
 }
 
-Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data) :
+Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, DynamicByteArray&& data) :
     extent_   { extent          },
     format_   { format          },
     dataType_ { dataType        },
@@ -65,7 +65,7 @@ Image& Image::operator = (const Image& rhs)
     extent_     = rhs.GetExtent();
     format_     = rhs.GetFormat();
     dataType_   = rhs.GetDataType();
-    data_       = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
+    data_       = DynamicByteArray{ GetDataSize(), UninitializeTag{} };
     ::memcpy(data_.get(), rhs.data_.get(), rhs.GetDataSize());
     return *this;
 }
@@ -84,7 +84,7 @@ void Image::Convert(const ImageFormat format, const DataType dataType, unsigned 
     /* Convert image buffer (if necessary) */
     if (data_)
     {
-        if (ByteBuffer convertedData = ConvertImageBuffer(GetSrcDesc(), format, dataType, threadCount))
+        if (DynamicByteArray convertedData = ConvertImageBuffer(GetSrcDesc(), format, dataType, threadCount))
             data_ = std::move(convertedData);
     }
 
@@ -98,7 +98,7 @@ void Image::Resize(const Extent3D& extent)
     /* Allocate new image buffer or release it if the extent is zero */
     extent_ = extent;
     if (extent.width > 0 && extent.height > 0 && extent.depth > 0)
-        data_ = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
+        data_ = DynamicByteArray{ GetDataSize(), UninitializeTag{} };
     else
         data_.clear();
 }
@@ -142,7 +142,7 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAf& fillColor, const Of
         {
             /* Resize image buffer with uninitialized image buffer */
             extent_ = extent;
-            data_   = AllocateByteBuffer(GetDataSize(), UninitializeTag{});
+            data_   = DynamicByteArray{ GetDataSize(), UninitializeTag{} };
         }
 
         /* Copy previous image into new image */
@@ -164,7 +164,7 @@ void Image::Reset()
     data_.clear();
 }
 
-void Image::Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data)
+void Image::Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, DynamicByteArray&& data)
 {
     extent_     = extent;
     format_     = format;
@@ -172,7 +172,7 @@ void Image::Reset(const Extent3D& extent, const ImageFormat format, const DataTy
     data_       = std::move(data);
 }
 
-ByteBuffer Image::Release()
+DynamicByteArray Image::Release()
 {
     ResetAttributes();
     return std::move(data_);

@@ -6,7 +6,6 @@
  */
 
 #include <LLGL/Blob.h>
-#include <LLGL/ImageFlags.h>
 #include <fstream>
 #include "CoreUtils.h"
 
@@ -73,24 +72,22 @@ struct InternalVectorBlob final : Blob::Pimpl
 
 struct InternalBufferBlob final : Blob::Pimpl
 {
-    InternalBufferBlob(ByteBuffer&& buffer, std::size_t size) :
-        buffer { std::forward<ByteBuffer>(buffer) },
-        size   { size                             }
+    InternalBufferBlob(DynamicByteArray&& cont) :
+        container { std::forward<DynamicByteArray>(cont) }
     {
     }
 
     const void* GetData() const override
     {
-        return buffer.get();
+        return container.data();
     }
 
     std::size_t GetSize() const override
     {
-        return size;
+        return container.size();
     }
 
-    ByteBuffer  buffer;
-    std::size_t size;
+    DynamicByteArray container;
 };
 
 struct InternalUnmanagedBlob final : Blob::Pimpl
@@ -123,14 +120,14 @@ static Blob::Pimpl* MakeInternalBlob(const void* data, std::size_t size, bool is
         return new InternalUnmanagedBlob{ data, size };
 }
 
+static Blob::Pimpl* MakeInternalBlob(DynamicByteArray&& cont)
+{
+    return new InternalBufferBlob{ std::forward<DynamicByteArray>(cont) };
+}
+
 static Blob::Pimpl* MakeInternalBlob(std::vector<char>&& cont)
 {
     return new InternalVectorBlob{ std::forward<std::vector<char>>(cont) };
-}
-
-static Blob::Pimpl* MakeInternalBlob(ByteBuffer&& buf, std::size_t size)
-{
-    return new InternalBufferBlob{ std::forward<ByteBuffer>(buf), size };
 }
 
 static Blob::Pimpl* MakeInternalBlob(std::string&& str)
@@ -185,6 +182,13 @@ Blob Blob::CreateWeakRef(const void* data, std::size_t size)
     return Blob{ data, size, /*isWeakRef:*/ true };
 }
 
+Blob Blob::CreateStrongRef(DynamicByteArray&& cont)
+{
+    Blob blob;
+    blob.pimpl_ = MakeInternalBlob(std::forward<DynamicByteArray>(cont));
+    return blob;
+}
+
 Blob Blob::CreateStrongRef(std::vector<char>&& cont)
 {
     Blob blob;
@@ -211,16 +215,16 @@ Blob Blob::CreateFromFile(const char* filename)
 
     /* Determine file size */
     file.seekg(0, std::ios::end);
-    const auto fileSize = file.tellg();
+    const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
     file.seekg(0, std::ios::beg);
 
     /* Read binary file into container */
-    auto buffer = AllocateByteBuffer(static_cast<std::size_t>(fileSize), UninitializeTag{});
-    file.read(buffer.get(), fileSize);
+    DynamicByteArray buffer{ fileSize, UninitializeTag{} };
+    file.read(buffer.data(), fileSize);
 
     /* Return blob that manages the read buffer */
     Blob blob;
-    blob.pimpl_ = MakeInternalBlob(std::move(buffer), static_cast<std::size_t>(fileSize));
+    blob.pimpl_ = MakeInternalBlob(std::move(buffer));
     return blob;
 }
 

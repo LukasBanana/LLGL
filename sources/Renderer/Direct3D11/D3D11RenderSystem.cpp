@@ -272,20 +272,27 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
 
 void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
 {
-    LLGL_ASSERT_PTR(imageDesc.data);
+    if (imageDesc.data == nullptr)
+        return /*E_INVALIDARG*/;
+
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+
+    /* Map subresource for reading */
+    const Format            format              = textureD3D.GetFormat();
+    const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
+    const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
+    const std::uint32_t     numTexelsTotal      = numTexelsPerLayer * textureRegion.subresource.numArrayLayers;
+    const std::size_t       requiredImageSize   = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, numTexelsTotal);
+
+    if (imageDesc.dataSize < requiredImageSize)
+        return /*E_BOUNDS*/;
 
     /* Create a copy of the hardware texture with CPU read access */
     D3D11NativeTexture texCopy;
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, textureRegion);
 
-    /* Map subresource for reading */
     DstImageDescriptor      dstImageDesc        = imageDesc;
-    const Format            format              = textureD3D.GetFormat();
     const FormatAttributes& formatAttribs       = GetFormatAttribs(format);
-    const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
-    const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
-    const SubresourceLayout layoutPerLayer      = CalcSubresourceLayout(format, textureRegion.extent);
 
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
@@ -297,13 +304,13 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
 
         /* Copy host visible resource to CPU accessible resource */
         const SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, mappedSubresource.pData, mappedSubresource.DepthPitch };
-        RenderSystem::CopyTextureImageData(dstImageDesc, srcImageDesc, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
+        const std::size_t bytesWritten = RenderSystem::CopyTextureImageData(dstImageDesc, srcImageDesc, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
 
         /* Unmap resource */
         context_->Unmap(texCopy.resource.Get(), subresource);
 
         /* Move destination image pointer to next layer */
-        dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + layoutPerLayer.dataSize;
+        dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + bytesWritten;
     }
 }
 

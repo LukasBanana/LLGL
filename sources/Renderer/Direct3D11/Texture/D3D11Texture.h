@@ -62,7 +62,7 @@ class D3D11Texture final : public Texture
 
         D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc);
 
-        void UpdateSubresource(
+        HRESULT UpdateSubresource(
             ID3D11DeviceContext*        context,
             UINT                        mipLevel,
             UINT                        baseArrayLayer,

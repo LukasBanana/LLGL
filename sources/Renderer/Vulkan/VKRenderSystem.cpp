@@ -261,7 +261,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Set up initial image data */
     const void* initialData = nullptr;
-    ByteBuffer intermediateData;
+    DynamicByteArray intermediateData;
 
     if (imageDesc)
     {
@@ -300,7 +300,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
             intermediateData = GenerateImageBuffer(formatAttribs.format, formatAttribs.dataType, imageSize, textureDesc.clearValue.color);
         else
-            intermediateData = AllocateByteBuffer(initialDataSize, UninitializeTag{});
+            intermediateData = DynamicByteArray{ initialDataSize, UninitializeTag{} };
 
         initialData = intermediateData.get();
     }
@@ -387,7 +387,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
 
     /* Check if image data must be converted */
-    ByteBuffer intermediateData;
+    DynamicByteArray intermediateData;
 
     const auto& formatAttribs = GetFormatAttribs(format);
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
