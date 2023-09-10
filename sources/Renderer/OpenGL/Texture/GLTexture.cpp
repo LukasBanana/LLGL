@@ -290,7 +290,7 @@ Format GLTexture::GetFormat() const
 
 SubresourceFootprint GLTexture::GetSubresourceFootprint(std::uint32_t mipLevel) const
 {
-    const auto desc = GetDesc();
+    const TextureDescriptor desc = GetDesc();
     return CalcPackedSubresourceFootprint(desc.type, desc.format, desc.extent, mipLevel, desc.arrayLayers);
 }
 

@@ -182,7 +182,7 @@ void D3D11RenderTarget::CreateSubresourceDSV(
                 break;
         }
     }
-    auto hr = device->CreateDepthStencilView(resource, &dsvDesc, dsvOutput);
+    HRESULT hr = device->CreateDepthStencilView(resource, &dsvDesc, dsvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView", "for texture subresource");
 }
 
@@ -247,7 +247,7 @@ void D3D11RenderTarget::CreateSubresourceRTV(
                 break;
         }
     }
-    auto hr = device->CreateRenderTargetView(resource, &rtvDesc, rtvOutput);
+    HRESULT hr = device->CreateRenderTargetView(resource, &rtvDesc, rtvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11RenderTargetView", "for texture subresource");
 }
 
@@ -295,7 +295,7 @@ ID3D11Texture2D* D3D11RenderTarget::CreateInternalTexture(ID3D11Device* device, 
         texDesc.MiscFlags       = 0;
     }
     ComPtr<ID3D11Texture2D> tex2D;
-    auto hr = device->CreateTexture2D(&texDesc, nullptr, tex2D.GetAddressOf());
+    HRESULT hr = device->CreateTexture2D(&texDesc, nullptr, tex2D.GetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Texture2D", "for render-target internal texture");
 
     /* Append to container of internal textures and return reference to newly created texture */

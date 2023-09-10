@@ -419,11 +419,11 @@ void D3D12GraphicsPSO::CreateNativePSOFromDesc(
     {
         /* Get cached blob from native PSO */
         ComPtr<ID3DBlob> cachedBlob;
-        auto hr = GetNative()->GetCachedBlob(cachedBlob.GetAddressOf());
+        HRESULT hr = GetNative()->GetCachedBlob(cachedBlob.GetAddressOf());
         DXThrowIfFailed(hr, "failed to retrieve cached blob from ID3D12PipelineState");
 
         /* Get serialized root signature blob */
-        auto rootSignatureBlob = pipelineLayout.GetSerializedBlob();
+        ID3DBlob* rootSignatureBlob = pipelineLayout.GetSerializedBlob();
         if (rootSignatureBlob == nullptr)
             DXThrowIfFailed(E_POINTER, "failed to retrieve serialized root signature blob from ID3D12RootSignature");
 

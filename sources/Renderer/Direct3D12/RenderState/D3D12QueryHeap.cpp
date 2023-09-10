@@ -24,7 +24,7 @@ ComPtr<ID3D12Resource> DXCreateResultResource(
 {
     ComPtr<ID3D12Resource> resource;
 
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(heapType),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(size),
@@ -148,7 +148,7 @@ void* D3D12QueryHeap::Map(UINT firstQuery, UINT numQueries)
         static_cast<SIZE_T>(GetAlignedBufferOffest(firstQuery + numQueries))
     };
 
-    auto hr = resultResource_->Map(0, &readRange, &mappedData);
+    HRESULT hr = resultResource_->Map(0, &readRange, &mappedData);
     DXThrowIfFailed(hr, "failed to map result resource of D3D12 query heap");
 
     return mappedData;

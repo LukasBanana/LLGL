@@ -400,7 +400,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     resource_.transitionState   = D3D12_RESOURCE_STATE_COPY_DEST;
 
     /* Create generic buffer resource */
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc)),
@@ -430,7 +430,7 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlag
     }
 
     /* Create CPU access buffer */
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(heapType),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize()),
@@ -482,7 +482,7 @@ void D3D12Buffer::CreateIntermediateUAVBuffer()
     resource_.Get()->GetDevice(IID_PPV_ARGS(&device));
 
     /* Create intermediate resource with UAV support */
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS),

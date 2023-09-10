@@ -776,7 +776,7 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     }
 
     /* Create hardware resource for the texture */
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &descD3D,
@@ -845,11 +845,11 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
         heapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         heapDesc.NodeMask       = 0;
     }
-    auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(mipDescHeap_.ReleaseAndGetAddressOf()));
+    HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(mipDescHeap_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap for MIP-map chain");
 
-    auto descSize       = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    auto cpuDescHandle  = mipDescHeap_->GetCPUDescriptorHandleForHeapStart();
+    const UINT                  descSize        = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle   = mipDescHeap_->GetCPUDescriptorHandleForHeapStart();
 
     /* Create SRV for first MIP-map */
     CreateShaderResourceViewPrimary(
@@ -863,8 +863,8 @@ void D3D12Texture::CreateMipDescHeap(ID3D12Device* device)
     cpuDescHandle.ptr += descSize;
 
     /* Create UAVs for remaining MIP-maps */
-    auto uavDimension = GetMipChainUAVDimension(GetType());
-    auto resourceDesc = resource_.native->GetDesc();
+    D3D12_UAV_DIMENSION uavDimension = GetMipChainUAVDimension(GetType());
+    D3D12_RESOURCE_DESC resourceDesc = resource_.native->GetDesc();
 
     for_subrange(mipLevel, 1, GetNumMipLevels())
     {

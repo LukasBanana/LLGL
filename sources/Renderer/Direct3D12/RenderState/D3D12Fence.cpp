@@ -35,7 +35,7 @@ void D3D12NativeFence::Create(ID3D12Device* device, UINT64 initialValue)
     LLGL_ASSERT(native_.Get() == nullptr);
 
     /* Create D3D12 fence */
-    auto hr = device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(native_.ReleaseAndGetAddressOf()));
+    HRESULT hr = device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(native_.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12Fence");
 
     /* Create Win32 event handle */
@@ -47,7 +47,7 @@ void D3D12NativeFence::Create(ID3D12Device* device, UINT64 initialValue)
 bool D3D12NativeFence::WaitForSignal(UINT64 signal, DWORD timeoutMillisecs)
 {
     /* Wait until the fence has been crossed */
-    auto hr = native_->SetEventOnCompletion(signal, event_);
+    HRESULT hr = native_->SetEventOnCompletion(signal, event_);
     DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
     return (WaitForSingleObjectEx(event_, timeoutMillisecs, FALSE) == WAIT_OBJECT_0);
 }

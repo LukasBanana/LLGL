@@ -102,7 +102,7 @@ void D3D11PipelineLayout::BuildDynamicResourceBindings(const std::vector<Binding
 static ComPtr<ID3D11SamplerState> DXCreateSamplerState(ID3D11Device* device, const D3D11_SAMPLER_DESC& desc)
 {
     ComPtr<ID3D11SamplerState> nativeSamplerState;
-    auto hr = device->CreateSamplerState(&desc, nativeSamplerState.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateSamplerState(&desc, nativeSamplerState.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11SamplerState");
     return nativeSamplerState;
 }

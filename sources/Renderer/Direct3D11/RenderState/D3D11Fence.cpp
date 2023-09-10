@@ -21,7 +21,7 @@ D3D11Fence::D3D11Fence(ID3D11Device* device)
         queryDesc.Query     = D3D11_QUERY_EVENT;
         queryDesc.MiscFlags = 0;
     }
-    auto hr = device->CreateQuery(&queryDesc, query_.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateQuery(&queryDesc, query_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 query");
 }
 

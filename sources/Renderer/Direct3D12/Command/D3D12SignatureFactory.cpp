@@ -27,7 +27,7 @@ static void DXCreateCommandSignature(ID3D12Device* device, ComPtr<ID3D12CommandS
         signatureDesc.pArgumentDescs    = &argumentDesc;
         signatureDesc.NodeMask          = 0;
     }
-    auto hr = device->CreateCommandSignature(&signatureDesc, nullptr, IID_PPV_ARGS(signature.ReleaseAndGetAddressOf()));
+    HRESULT hr = device->CreateCommandSignature(&signatureDesc, nullptr, IID_PPV_ARGS(signature.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "ID3D12CommandSignature");
 }
 

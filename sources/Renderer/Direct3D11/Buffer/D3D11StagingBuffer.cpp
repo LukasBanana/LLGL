@@ -46,7 +46,7 @@ D3D11StagingBuffer::D3D11StagingBuffer(
         descD3D.MiscFlags           = 0; // MiscFlags cannot be used for buffers with D3D11_CPU_ACCESS flags
         descD3D.StructureByteStride = 0;
     }
-    auto hr = device->CreateBuffer(&descD3D, nullptr, native_.GetAddressOf());
+    HRESULT hr = device->CreateBuffer(&descD3D, nullptr, native_.GetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for CPU-access buffer");
 }
 

@@ -289,7 +289,7 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
         swapChainDesc.Windowed                  = TRUE;//(fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                = DXGI_SWAP_EFFECT_DISCARD;
     }
-    auto hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
+    HRESULT hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
 
@@ -351,7 +351,7 @@ void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
         bindingCommandBuffer_->ResetDeferredCommandList();
 
     /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
-    auto hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, 0);
+    HRESULT hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, 0);
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
 
     /* Recreate back buffer and reset default render target */

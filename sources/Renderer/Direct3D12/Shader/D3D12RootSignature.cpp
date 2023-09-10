@@ -114,7 +114,7 @@ static ComPtr<ID3DBlob> DXSerializeRootSignature(
 {
     ComPtr<ID3DBlob> signature, error;
 
-    auto hr = D3D12SerializeRootSignature(
+    HRESULT hr = D3D12SerializeRootSignature(
         &signatureDesc,
         signatureversion,
         signature.ReleaseAndGetAddressOf(),
@@ -173,7 +173,7 @@ static ComPtr<ID3D12RootSignature> DXCreateRootSignature(
 
     /* Create actual root signature */
     ComPtr<ID3D12RootSignature> rootSignature;
-    auto hr = device->CreateRootSignature(
+    HRESULT hr = device->CreateRootSignature(
         0,
         signature->GetBufferPointer(),
         signature->GetBufferSize(),

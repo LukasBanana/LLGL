@@ -87,7 +87,7 @@ void D3D12CommandContext::Close()
     FlushResourceBarrieres();
 
     /* Close native command list */
-    auto hr = commandList_->Close();
+    HRESULT hr = commandList_->Close();
     DXThrowIfFailed(hr, "failed to close D3D12 command list");
 }
 
@@ -104,7 +104,7 @@ void D3D12CommandContext::Reset()
     NextCommandAllocator();
 
     /* Reset graphics command list */
-    auto hr = commandList_->Reset(GetCommandAllocator(), nullptr);
+    HRESULT hr = commandList_->Reset(GetCommandAllocator(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 
     /* Invalidate state cache */
@@ -547,7 +547,7 @@ void D3D12CommandContext::NextCommandAllocator()
     allocatorFenceValues_[currentAllocatorIndex_] = currentFenceValue + 1;
 
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
-    auto hr = GetCommandAllocator()->Reset();
+    HRESULT hr = GetCommandAllocator()->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
     /* Reset descriptor heap pools before they are re-used */

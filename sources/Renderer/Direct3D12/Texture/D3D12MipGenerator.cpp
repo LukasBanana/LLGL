@@ -124,7 +124,7 @@ ComPtr<ID3D12PipelineState> D3D12MipGenerator::CreateComputePSO(
 {
     ComPtr<ID3D12PipelineState> pipelineState;
 
-    if (auto blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
+    if (ComPtr<ID3DBlob> blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
     {
         /* Create graphics pipeline state and graphics command list */
         D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
@@ -133,7 +133,7 @@ ComPtr<ID3D12PipelineState> D3D12MipGenerator::CreateComputePSO(
             psoDesc.CS.pShaderBytecode  = blob->GetBufferPointer();
             psoDesc.CS.BytecodeLength   = blob->GetBufferSize();
         }
-        auto hr = device_->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
+        HRESULT hr = device_->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
         DXThrowIfCreateFailed(hr, "ID3D12PipelineState");
     }
 

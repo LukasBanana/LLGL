@@ -338,7 +338,7 @@ D3D12Resource* D3D12RenderTarget::CreateInternalTexture(
 
     /* Create render target resource */
     D3D12Resource tex2D;
-    auto hr = device->CreateCommittedResource(
+    HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &tex2DDesc,

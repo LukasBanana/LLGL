@@ -55,7 +55,7 @@ void D3D11GraphicsPSO::CreateDepthStencilState(ID3D11Device* device, const Depth
 {
     D3D11_DEPTH_STENCIL_DESC descDX;
     D3D11Types::Convert(descDX, depthDesc, stencilDesc);
-    auto hr = device->CreateDepthStencilState(&descDX, depthStencilState_.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateDepthStencilState(&descDX, depthStencilState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil state");
 }
 
@@ -63,7 +63,7 @@ void D3D11GraphicsPSO::CreateRasterizerState(ID3D11Device* device, const Rasteri
 {
     D3D11_RASTERIZER_DESC descDX;
     D3D11Types::Convert(descDX, desc);
-    auto hr = device->CreateRasterizerState(&descDX, rasterizerState_.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateRasterizerState(&descDX, rasterizerState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 rasterizer state");
 }
 
@@ -71,7 +71,7 @@ void D3D11GraphicsPSO::CreateBlendState(ID3D11Device* device, const BlendDescrip
 {
     D3D11_BLEND_DESC descDX;
     D3D11Types::Convert(descDX, desc);
-    auto hr = device->CreateBlendState(&descDX, blendState_.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateBlendState(&descDX, blendState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 blend state");
 }
 

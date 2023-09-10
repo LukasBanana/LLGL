@@ -20,7 +20,7 @@ D3D11Sampler::D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc)
     /* Setup sampler state descriptor and create sampler state object */
     D3D11_SAMPLER_DESC nativeDesc;
     D3D11Sampler::ConvertDesc(nativeDesc, desc);
-    auto hr = device->CreateSamplerState(&nativeDesc, native_.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateSamplerState(&nativeDesc, native_.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11SamplerState");
 }
 

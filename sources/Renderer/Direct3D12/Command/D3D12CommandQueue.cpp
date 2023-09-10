@@ -125,7 +125,7 @@ void D3D12CommandQueue::WaitIdle()
 
 void D3D12CommandQueue::SignalFence(ID3D12Fence* fence, UINT64 value)
 {
-    auto hr = native_->Signal(fence, value);
+    HRESULT hr = native_->Signal(fence, value);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
     busy_ = true;
 }
@@ -151,7 +151,7 @@ void D3D12CommandQueue::DetermineTimestampFrequency()
 {
     /* Get timestamp frequency for command queue */
     UINT64 timestampFrequency = 0;
-    auto hr = native_->GetTimestampFrequency(&timestampFrequency);
+    HRESULT hr = native_->GetTimestampFrequency(&timestampFrequency);
     DXThrowIfInvocationFailed(hr, "ID3D12CommandQueue::GetTimestampFrequency");
 
     /* Determine if a conversion from timestamps to nanoseconds is necessary */

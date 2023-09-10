@@ -458,7 +458,7 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
 {
     ComPtr<IDXGISwapChain1> swapChain;
 
-    auto hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), wnd, &swapChainDescDXGI, nullptr, nullptr, &swapChain);
+    HRESULT hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), wnd, &swapChainDescDXGI, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
@@ -531,10 +531,10 @@ static bool FindHighestShaderModel(ID3D12Device* device, D3D_SHADER_MODEL& shade
 {
     D3D12_FEATURE_DATA_SHADER_MODEL feature;
 
-    for (auto model : { D3D_SHADER_MODEL_6_0, D3D_SHADER_MODEL_5_1 })
+    for (D3D_SHADER_MODEL model : { D3D_SHADER_MODEL_6_0, D3D_SHADER_MODEL_5_1 })
     {
         feature.HighestShaderModel = model;
-        auto hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
+        HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &feature, sizeof(feature));
         if (SUCCEEDED(hr))
         {
             shaderModel = model;

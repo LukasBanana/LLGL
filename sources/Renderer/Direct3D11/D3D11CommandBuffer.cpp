@@ -1559,7 +1559,7 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
         descD3D.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
         descD3D.StructureByteStride = 0;
     }
-    auto hr = device->CreateBuffer(&descD3D, nullptr, bufferOutput);
+    HRESULT hr = device->CreateBuffer(&descD3D, nullptr, bufferOutput);
     DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for byte addressable copy");
 
     if (ID3D11Resource* resource = *bufferOutput)

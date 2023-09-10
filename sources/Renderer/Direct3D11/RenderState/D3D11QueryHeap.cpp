@@ -19,7 +19,7 @@ static ComPtr<ID3D11Query> DXCreateQuery(ID3D11Device* device, const D3D11_QUERY
 {
     ComPtr<ID3D11Query> query;
 
-    auto hr = device->CreateQuery(&desc, query.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreateQuery(&desc, query.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Query");
 
     return query;
@@ -29,7 +29,7 @@ static ComPtr<ID3D11Predicate> DXCreatePredicate(ID3D11Device* device, const D3D
 {
     ComPtr<ID3D11Predicate> predicate;
 
-    auto hr = device->CreatePredicate(&desc, predicate.ReleaseAndGetAddressOf());
+    HRESULT hr = device->CreatePredicate(&desc, predicate.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Predicate");
 
     return predicate;

@@ -54,8 +54,8 @@ D3D12PipelineState::D3D12PipelineState(
     isGraphicsPSO_ { isGraphicsPSO }
 {
     /* Create root signature from cache */
-    auto seg = reader.ReadSegment(Serialization::D3D12Ident_RootSignature);
-    auto hr = device->CreateRootSignature(0, seg.data, seg.size, IID_PPV_ARGS(rootSignature_.ReleaseAndGetAddressOf()));
+    const Serialization::Segment seg = reader.ReadSegment(Serialization::D3D12Ident_RootSignature);
+    HRESULT hr = device->CreateRootSignature(0, seg.data, seg.size, IID_PPV_ARGS(rootSignature_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 root signature");
 }
 

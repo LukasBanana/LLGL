@@ -103,7 +103,7 @@ static void CreateD3D11BufferSubresourceSRV(
             desc.Buffer.NumElements     = numElements;
         }
     }
-    auto hr = device->CreateShaderResourceView(resource, &desc, srvOutput);
+    HRESULT hr = device->CreateShaderResourceView(resource, &desc, srvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", errorContextInfo);
 }
 
@@ -143,7 +143,7 @@ static void CreateD3D11BufferSubresourceUAV(
         desc.Buffer.NumElements     = numElements;
         desc.Buffer.Flags           = flags;
     }
-    auto hr = device->CreateUnorderedAccessView(resource, &desc, uavOutput);
+    HRESULT hr = device->CreateUnorderedAccessView(resource, &desc, uavOutput);
     DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", errorContextInfo);
 }
 
