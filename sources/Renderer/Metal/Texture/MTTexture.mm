@@ -300,7 +300,7 @@ void MTTexture::ReadRegionFromSharedMemory(
     if (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType)
     {
         /* Generate intermediate buffer for conversion */
-        const std::uint32_t intermediateDataSize    = static_cast<std::uint32_t>(layout.dataSize * region.size.depth);
+        const std::uint32_t intermediateDataSize    = static_cast<std::uint32_t>(layout.subresourceSize * region.size.depth);
         DynamicByteArray    intermediateData        = DynamicByteArray{ intermediateDataSize, UninitializeTag{} };
 
         for_range(arrayLayer, subresource.numArrayLayers)
@@ -355,7 +355,7 @@ void MTTexture::ReadRegionFromPrivateMemory(
     MTIntermediateBuffer&       intermediateBuffer)
 {
     /* Copy texture data into intermediate buffer in shared CPU/GPU memory */
-    const NSUInteger intermediateDataSize = layout.dataSize * region.size.depth * subresource.numArrayLayers;
+    const NSUInteger intermediateDataSize = layout.subresourceSize * region.size.depth * subresource.numArrayLayers;
     if (imageDesc.dataSize < intermediateDataSize)
         return /*Out of bounds*/;
 
