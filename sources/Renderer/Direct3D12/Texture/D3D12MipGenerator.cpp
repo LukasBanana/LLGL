@@ -63,7 +63,7 @@ HRESULT D3D12MipGenerator::GenerateMips(
         return E_INVALIDARG;
     }
 
-    if (subresource.numMipLevels == 0 || subresource.numArrayLayers == 0)
+    if (subresource.numMipLevels <= 1 || subresource.numArrayLayers == 0)
     {
         /* Ignore this call, no MIP-map range specified */
         return S_OK;
@@ -76,7 +76,7 @@ HRESULT D3D12MipGenerator::GenerateMips(
         return E_INVALIDARG;
     }
 
-    auto mipDescHeap = texture.GetMipDescHeap();
+    ID3D12DescriptorHeap* mipDescHeap = texture.GetMipDescHeap();
     if (mipDescHeap == nullptr)
     {
         /* At this point, the texture should have a valid descriptor heap */
@@ -241,7 +241,7 @@ void D3D12MipGenerator::GenerateMips1D(
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
     commandContext.SetDescriptorHeaps(1, descHeaps);
 
-    auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
 
     /* Set SRV to read from entire MIP-map chain */
     commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
@@ -249,9 +249,9 @@ void D3D12MipGenerator::GenerateMips1D(
 
     D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
 
-    const auto mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels;
+    const std::uint32_t mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels - 1;
 
-    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel + 1 < mipLevelEnd;)
+    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel < mipLevelEnd;)
     {
         /* Determine source and destination extents */
         UINT srcWidth = static_cast<UINT>(resourceDesc.Width) >> mipLevel;
@@ -311,7 +311,7 @@ void D3D12MipGenerator::GenerateMips2D(
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
     commandContext.SetDescriptorHeaps(1, descHeaps);
 
-    auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
 
     /* Set SRV to read from entire MIP-map chain */
     commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
@@ -319,9 +319,9 @@ void D3D12MipGenerator::GenerateMips2D(
 
     D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
 
-    const auto mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels;
+    const std::uint32_t mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels - 1;
 
-    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel + 1 < mipLevelEnd;)
+    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel < mipLevelEnd;)
     {
         /* Determine source and destination extents */
         UINT srcWidth   = static_cast<UINT>(resourceDesc.Width)  >> mipLevel;
@@ -384,7 +384,7 @@ void D3D12MipGenerator::GenerateMips3D(
     ID3D12DescriptorHeap* descHeaps[] = { mipDescHeap };
     commandContext.SetDescriptorHeaps(1, descHeaps);
 
-    auto gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = mipDescHeap->GetGPUDescriptorHandleForHeapStart();
 
     /* Set SRV to read from entire MIP-map chain */
     commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
@@ -392,9 +392,9 @@ void D3D12MipGenerator::GenerateMips3D(
 
     D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
 
-    const auto mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels;
+    const std::uint32_t mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels - 1;
 
-    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel + 1 < mipLevelEnd;)
+    for (std::uint32_t mipLevel = subresource.baseMipLevel; mipLevel < mipLevelEnd;)
     {
         /* Determine source and destination extents */
         UINT srcWidth   = static_cast<UINT>(resourceDesc.Width)            >> mipLevel;
