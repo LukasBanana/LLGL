@@ -12,8 +12,9 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../TextureUtils.h"
-#include "../../../Core/Exception.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Report.h>
 
 
 namespace LLGL
@@ -192,7 +193,7 @@ static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
 {
     ComPtr<ID3D11Texture1D> tex1D;
 
-    auto hr = device->CreateTexture1D(&desc, initialData, tex1D.GetAddressOf());
+    HRESULT hr = device->CreateTexture1D(&desc, initialData, tex1D.GetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Texture1D");
 
     return tex1D;
@@ -205,7 +206,7 @@ static ComPtr<ID3D11Texture2D> DXCreateTexture2D(
 {
     ComPtr<ID3D11Texture2D> tex2D;
 
-    auto hr = device->CreateTexture2D(&desc, initialData, tex2D.GetAddressOf());
+    HRESULT hr = device->CreateTexture2D(&desc, initialData, tex2D.GetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Texture2D");
 
     return tex2D;
@@ -218,7 +219,7 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
 {
     ComPtr<ID3D11Texture3D> tex3D;
 
-    auto hr = device->CreateTexture3D(&desc, initialData, tex3D.GetAddressOf());
+    HRESULT hr = device->CreateTexture3D(&desc, initialData, tex3D.GetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11Texture3D");
 
     return tex3D;
@@ -230,23 +231,34 @@ HRESULT D3D11Texture::UpdateSubresource(
     UINT                        baseArrayLayer,
     UINT                        numArrayLayers,
     const D3D11_BOX&            dstBox,
-    const SrcImageDescriptor&   imageDesc)
+    const SrcImageDescriptor&   imageDesc,
+    Report*                     report)
 {
     /* Check if source image must be converted */
     Format format = GetBaseFormat();
     const auto& formatAttribs = GetFormatAttribs(format);
 
     /* Get destination subresource index */
-    const SubresourceLayout dataLayout = CalcSubresourceLayout(
-        format,
-        Extent3D
+    const Extent3D extent
+    {
+        dstBox.right  - dstBox.left,
+        dstBox.bottom - dstBox.top,
+        dstBox.back   - dstBox.front
+    };
+
+    const SubresourceCPUMappingLayout dataLayout = CalcSubresourceCPUMappingLayout(format, extent, numArrayLayers, imageDesc.format, imageDesc.dataType);
+
+    if (imageDesc.dataSize < dataLayout.imageSize)
+    {
+        if (report != nullptr)
         {
-            dstBox.right  - dstBox.left,
-            dstBox.bottom - dstBox.top,
-            dstBox.back   - dstBox.front
-        },
-        numArrayLayers
-    );
+            report->Errorf(
+                "image data size (%zu) is too small to update subresource of D3D11 texture (%zu is required)",
+                imageDesc.dataSize, dataLayout.imageSize
+            );
+        }
+        return E_INVALIDARG;
+    }
 
     DynamicByteArray intermediateData;
     const char* srcData = reinterpret_cast<const char*>(imageDesc.data);
@@ -257,14 +269,7 @@ HRESULT D3D11Texture::UpdateSubresource(
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
         intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
         srcData             = intermediateData.get();
-        if (intermediateData.size() < dataLayout.dataSize)
-            return E_BOUNDS;
-    }
-    else
-    {
-        /* Validate input data is large enough */
-        if (imageDesc.dataSize < dataLayout.dataSize)
-            return E_BOUNDS;
+        LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }
 
     /* Update subresource with specified image data */
@@ -531,7 +536,7 @@ static void CreateD3D11TextureSubresourceSRV(
                 break;
         }
     }
-    auto hr = device->CreateShaderResourceView(resource, &srvDesc, srvOutput);
+    HRESULT hr = device->CreateShaderResourceView(resource, &srvDesc, srvOutput);
     DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", errorContextInfo);
 }
 
@@ -592,7 +597,7 @@ static void CreateD3D11TextureSubresourceUAV(
                 break;
         }
     }
-    auto hr = device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
+    HRESULT hr = device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
     DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", errorContextInfo);
 }
 
@@ -985,7 +990,7 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device)
     else
     {
         /* Create SRV with D3D default descriptor */
-        auto hr = device->CreateShaderResourceView(native_.resource.Get(), nullptr, srv_.ReleaseAndGetAddressOf());
+        HRESULT hr = device->CreateShaderResourceView(native_.resource.Get(), nullptr, srv_.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for texture");
     }
 }
@@ -1002,7 +1007,7 @@ void D3D11Texture::CreateDefaultUAV(ID3D11Device* device)
     else
     {
         /* Create UAV with D3D default descriptor */
-        auto hr = device->CreateUnorderedAccessView(native_.resource.Get(), nullptr, uav_.ReleaseAndGetAddressOf());
+        HRESULT hr = device->CreateUnorderedAccessView(native_.resource.Get(), nullptr, uav_.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "for texture");
     }
 }

@@ -19,6 +19,8 @@ namespace LLGL
 {
 
 
+class Report;
+
 // Union for easy handling of native D3D11 texture objects.
 union D3D11NativeTexture
 {
@@ -68,7 +70,8 @@ class D3D11Texture final : public Texture
             UINT                        baseArrayLayer,
             UINT                        numArrayLayers,
             const D3D11_BOX&            dstBox,
-            const SrcImageDescriptor&   imageDesc
+            const SrcImageDescriptor&   imageDesc,
+            Report*                     report          = nullptr
         );
 
         // Creates a copy of the specified subresource of the hardware texture with CPU read access.

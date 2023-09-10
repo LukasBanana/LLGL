@@ -222,7 +222,8 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                     textureRegion.offset.x,
                     textureRegion.extent.width
                 ),
-                imageDesc
+                imageDesc,
+                &(GetMutableReport())
             );
             break;
 
@@ -241,7 +242,8 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                     textureRegion.extent.width,
                     textureRegion.extent.height
                 ),
-                imageDesc
+                imageDesc,
+                &(GetMutableReport())
             );
             break;
 
@@ -264,7 +266,8 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                     textureRegion.extent.height,
                     textureRegion.extent.depth
                 ),
-                imageDesc
+                imageDesc,
+                &(GetMutableReport())
             );
             break;
     }
@@ -755,16 +758,16 @@ static void InitializeD3DColorTextureWithUploadBuffer(
         imageDescDefault.dataType   = formatDesc.dataType;
 
         /* Generate default image buffer */
-        const auto imageSize = extent.width * extent.height * extent.depth;
-        auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, clearValue.color);
+        const std::size_t   imageSize   = extent.width * extent.height * extent.depth;
+        DynamicByteArray    imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, clearValue.color);
 
         /* Update only the first MIP-map level for each array slice */
-        imageDescDefault.data       = imageBuffer.get();
+        imageDescDefault.data       = imageBuffer.data();
         imageDescDefault.dataSize   = GetMemoryFootprint(imageDescDefault.format, imageDescDefault.dataType, imageSize);
 
         for_range(layer, textureD3D.GetNumArrayLayers())
         {
-            textureD3D.UpdateSubresource(
+            HRESULT hr = textureD3D.UpdateSubresource(
                 /*context:*/        context,
                 /*mipLevel:*/       0,
                 /*baseArrayLayer:*/ layer,
@@ -772,6 +775,7 @@ static void InitializeD3DColorTextureWithUploadBuffer(
                 /*dstBox:*/         D3D11Types::MakeD3D11Box(0, 0, 0, extent.width, extent.height, extent.depth),
                 /*imageDesc:*/      imageDescDefault
             );
+            DXThrowIfFailed(hr, "in 'InitializeD3DColorTextureWithUploadBuffer': LLGL::D3D11Texture::UpdateSubresource failed");
         }
     }
 }
@@ -790,7 +794,8 @@ void D3D11RenderSystem::InitializeGpuTexture(
             /*baseArrayLayer:*/ 0,
             /*numArrayLayers:*/ textureDesc.arrayLayers,
             /*dstBox:*/         D3D11Types::MakeD3D11Box(0, 0, 0, textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth),
-            /*imageDesc:*/      *imageDesc
+            /*imageDesc:*/      *imageDesc,
+            /*report:*/         &(GetMutableReport())
         );
     }
     else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)

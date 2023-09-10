@@ -67,15 +67,41 @@ LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& e
     return {};
 }
 
+static void CalcSubresourceLayoutPrimary(
+    SubresourceLayout&  outLayout,
+    const Format        format,
+    const Extent3D&     extent,
+    std::uint32_t       numArrayLayers)
+{
+    const FormatAttributes& formatAttribs = GetFormatAttribs(format);
+    if (formatAttribs.blockWidth > 0 && formatAttribs.blockHeight > 0)
+    {
+        outLayout.rowStride         = (extent.width * formatAttribs.bitSize) / formatAttribs.blockWidth / 8;
+        outLayout.layerStride       = (extent.height * outLayout.rowStride) / formatAttribs.blockHeight;
+        outLayout.subresourceSize   = extent.depth * outLayout.layerStride * std::max(1u, numArrayLayers);
+    }
+}
+
 LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent, std::uint32_t numArrayLayers)
 {
     SubresourceLayout layout;
-    const auto& formatDesc = GetFormatAttribs(format);
-    if (formatDesc.blockWidth > 0 && formatDesc.blockHeight > 0)
+    CalcSubresourceLayoutPrimary(layout, format, extent, numArrayLayers);
+    return layout;
+}
+
+LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
+    const Format        format,
+    const Extent3D&     extent,
+    std::uint32_t       numArrayLayers,
+    const ImageFormat   imageFormat,
+    const DataType      imageDataType)
+{
+    SubresourceCPUMappingLayout layout;
     {
-        layout.rowStride    = (extent.width * formatDesc.bitSize) / formatDesc.blockWidth / 8;
-        layout.layerStride  = (extent.height * layout.rowStride) / formatDesc.blockHeight;
-        layout.dataSize     = extent.depth * layout.layerStride * std::max(1u, numArrayLayers);
+        CalcSubresourceLayoutPrimary(layout, format, extent, numArrayLayers);
+        layout.numTexelsPerLayer    = extent.width * extent.height * extent.depth;
+        layout.numTexelsTotal       = layout.numTexelsPerLayer * numArrayLayers;
+        layout.imageSize            = GetMemoryFootprint(imageFormat, imageDataType, layout.numTexelsTotal);
     }
     return layout;
 }
@@ -90,8 +116,8 @@ LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
 {
     SubresourceFootprint footprint;
     {
-        const auto mipExtent = GetMipExtent(type, extent, mipLevel);
-        const auto numLayers = mipExtent.depth * numArrayLayers;
+        const Extent3D      mipExtent = GetMipExtent(type, extent, mipLevel);
+        const std::uint32_t numLayers = mipExtent.depth * numArrayLayers;
         footprint.rowAlignment  = alignment;
         footprint.rowSize       = static_cast<std::uint32_t>(GetMemoryFootprint(format, mipExtent.width));
         footprint.rowStride     = GetAlignedSize(footprint.rowSize, alignment);

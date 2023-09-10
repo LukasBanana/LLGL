@@ -649,6 +649,13 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Returns the internal report of this render system to be modified by the renderer implementation.
         Report& GetMutableReport();
 
+        /**
+        \brief Prints a formatted string and \e replaces the current render system report with it as error.
+        \remarks This can be used to log non-fatal errors so the client programmer can query the last error message.
+        \see Report::Errorf
+        */
+        void Errorf(const char* format, ...);
+
         //! Sets the renderer information.
         void SetRendererInfo(const RendererInfo& info);
 

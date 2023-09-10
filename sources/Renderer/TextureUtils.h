@@ -15,16 +15,23 @@
 namespace LLGL
 {
 
-//TODO: merge this header and source with "DescriptorHelper.cpp/h"
 
 /* ----- Structures ----- */
 
-// Subresource data size structure with stride per row, stride per array layer, and whole data size.
+// Subresource layout structure with stride per row, stride per array layer, and whole data size.
 struct SubresourceLayout
 {
-    std::uint32_t rowStride     = 0; // Bytes per row
-    std::uint32_t layerStride   = 0; // Bytes per layer
-    std::uint32_t dataSize      = 0; // Bytes per resource
+    std::uint32_t rowStride         = 0; // Bytes per row
+    std::uint32_t layerStride       = 0; // Bytes per layer
+    std::uint32_t subresourceSize   = 0; // Bytes per resource
+};
+
+// Subresource layout structure for CPU-GPU mapping when initializing a texture with CPU image data or reading from a CPU texture.
+struct SubresourceCPUMappingLayout : SubresourceLayout
+{
+    std::uint32_t   numTexelsPerLayer   = 0; // Number of texture elements per layer
+    std::uint32_t   numTexelsTotal      = 0; // Total number of texture elements for the respective subresource (i.e. for a single MIP-map).
+    std::size_t     imageSize           = 0; // Required image size to read from or write to CPU image data.
 };
 
 // Compressed version of <TextureViewDescriptor> structure for faster insertion sort.
@@ -57,6 +64,15 @@ LLGL_EXPORT Extent3D CalcTextureExtent(const TextureType type, const Extent3D& e
 
 // Calculates the size and strides for a subresource of the specified format and extent.
 LLGL_EXPORT SubresourceLayout CalcSubresourceLayout(const Format format, const Extent3D& extent, std::uint32_t numArrayLayers = 1);
+
+// Calculates the required sizes and strides for a subresource when mapped between GPU and CPU.
+LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
+    const Format        format,
+    const Extent3D&     extent,
+    std::uint32_t       numArrayLayers,
+    const ImageFormat   imageFormat,
+    const DataType      imageDataType
+);
 
 // Calcualtes the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().
 LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(

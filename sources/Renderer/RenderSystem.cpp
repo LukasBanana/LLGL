@@ -10,6 +10,7 @@
 #include "../Core/StringUtils.h"
 #include "../Core/Assertion.h"
 #include "../Core/Exception.h"
+#include "../Core/StringUtils.h"
 #include "RenderTargetUtils.h"
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
@@ -344,6 +345,13 @@ const Report* RenderSystem::GetReport() const
 Report& RenderSystem::GetMutableReport()
 {
     return pimpl_->report;
+}
+
+void RenderSystem::Errorf(const char* format, ...)
+{
+    std::string report;
+    LLGL_STRING_PRINTF(report, format);
+    GetMutableReport().Reset(std::move(report), true);
 }
 
 void RenderSystem::SetRendererInfo(const RendererInfo& info)

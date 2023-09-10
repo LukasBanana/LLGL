@@ -658,13 +658,22 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     }
 
     /* Check if image data conversion is necessary */
-    const auto  format          = textureD3D.GetFormat();
-    const auto& formatAttribs   = GetFormatAttribs(format);
+    const Format            format          = textureD3D.GetFormat();
+    const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
 
-    const auto  texExtent       = textureD3D.GetMipExtent(region.subresource.baseMipLevel);
-    const auto  srcExtent       = CalcTextureExtent(textureD3D.GetType(), region.extent, region.subresource.numArrayLayers);
+    const Extent3D                      srcExtent   = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
+    const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageDesc.format, imageDesc.dataType);
 
-    const auto  dataLayout      = CalcSubresourceLayout(format, srcExtent);
+    if (imageDesc.dataSize < dataLayout.imageSize)
+    {
+        Errorf(
+            "image data size (%zu) is too small to update subresource of D3D12 texture (%zu is required)",
+            imageDesc.dataSize, dataLayout.imageSize
+        );
+        return E_INVALIDARG;
+    }
+
+    const Extent3D mipExtent = textureD3D.GetMipExtent(region.subresource.baseMipLevel);
 
     DynamicByteArray intermediateData;
     const void* srcData = imageDesc.data;
@@ -675,12 +684,7 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
         intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
         srcData             = intermediateData.get();
-    }
-    else
-    {
-        /* Validate input data is large enough */
-        if (imageDesc.dataSize < dataLayout.dataSize)
-            return E_INVALIDARG;
+        LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }
 
     /* Upload image data to subresource */
@@ -691,7 +695,7 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
         subresourceData.SlicePitch  = dataLayout.layerStride;
     }
 
-    const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == texExtent);
+    const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == mipExtent);
     if (isFullRegion)
         textureD3D.UpdateSubresource(subresourceContext, subresourceData, region.subresource);
     else
