@@ -174,7 +174,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( TextureTypes              );
     RUN_TEST( TextureWriteAndRead       );
     RUN_TEST( TextureCopy               );
-    //RUN_TEST( TextureToBufferCopy       ); //TODO: not implemented yet
+    RUN_TEST( TextureToBufferCopy       );
     RUN_TEST( BufferToTextureCopy       );
     RUN_TEST( DepthBuffer               );
     RUN_TEST( StencilBuffer             );
