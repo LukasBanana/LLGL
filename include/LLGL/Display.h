@@ -112,6 +112,15 @@ class LLGL_EXPORT Display : public Interface
         virtual Offset2D GetOffset() const = 0;
 
         /**
+        \brief Returns the scale factor for this display.
+        \remarks This value is used to convert between screen resolution coordinates (see SwapChainDescriptor::resolution) and window coordinates (see WindowDescriptor::size).
+        \remarks For high resolution displays, this may have a value of 3 or 2. Otherwise, 1 is the most common value if no extra scaling is necessariy.
+        \see SwapChainDescriptor::resolution
+        \see WindowDescriptor::size
+        */
+        virtual float GetScale() const = 0;
+
+        /**
         \brief Resets the display mode to its default value depending on the host system configuration.
         \see SetDisplayMode
         */

@@ -7,6 +7,7 @@
 
 #include "MacOSDisplay.h"
 #include "../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -54,11 +55,19 @@ static std::uint32_t GetDisplayModeRefreshRate(CGDisplayModeRef displayMode, CGD
 }
 
 // Converts a CGDisplayMode to a descriptor structure
-static void Convert(DisplayModeDescriptor& dst, CGDisplayModeRef src, CGDirectDisplayID displayID)
+static void ConvertCGDisplayMode(DisplayModeDescriptor& dst, CGDisplayModeRef src, CGDirectDisplayID displayID)
 {
-    dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetWidth(src));
-    dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetHeight(src));
-    dst.refreshRate         = GetDisplayModeRefreshRate(src, displayID);
+    if (@available(macOS 10.8, *))
+    {
+        dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetPixelWidth(src));
+        dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetPixelHeight(src));
+    }
+    else
+    {
+        dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetWidth(src));
+        dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetHeight(src));
+    }
+    dst.refreshRate = GetDisplayModeRefreshRate(src, displayID);
 }
 
 // Returns true if the specified descriptor matches the display mode
@@ -162,15 +171,78 @@ bool Display::IsCursorShown()
     return g_cursorVisible;
 }
 
+// Singleton for the custom NSCursor.
+class MacOSCustomNSCursor
+{
+
+    public:
+
+        ~MacOSCustomNSCursor();
+
+        static void SetHotSpot(const NSPoint& hotSpot);
+
+    private:
+
+        MacOSCustomNSCursor() = default;
+
+        void MakeNewNSCursor(NSImage* image, NSPoint hotSpot);
+
+    private:
+
+        NSCursor* cursor_ = nullptr;
+
+};
+
+MacOSCustomNSCursor::~MacOSCustomNSCursor()
+{
+    if (cursor_ != nullptr)
+        [cursor_ release];
+}
+
+void MacOSCustomNSCursor::SetHotSpot(const NSPoint &hotSpot)
+{
+    static MacOSCustomNSCursor instance;
+    if (NSCursor* oldCursor = [NSCursor currentSystemCursor])
+        instance.MakeNewNSCursor([oldCursor image], hotSpot);
+}
+
+void MacOSCustomNSCursor::MakeNewNSCursor(NSImage* image, NSPoint hotSpot)
+{
+    if (cursor_ != nullptr)
+        [cursor_ release];
+    cursor_ = [[NSCursor alloc] initWithImage:image hotSpot:hotSpot];
+    [cursor_ set];
+}
+
 bool Display::SetCursorPosition(const Offset2D& position)
 {
-    //TODO
-    return false;
+    /*
+    NSCursor API doesn't allow to change the cursor position,
+    so we create a new cursor at the requested location and make it the new cursor.
+    */
+    NSPoint newHotSpot = NSMakePoint(
+        static_cast<CGFloat>(position.x),
+        static_cast<CGFloat>(position.y)
+    );
+    MacOSCustomNSCursor::SetHotSpot(newHotSpot);
+    return true;
 }
 
 Offset2D Display::GetCursorPosition()
 {
-    //TODO
+    /*
+    Return 'hot spot' of current system cursor as primary cursor position.
+    This will return a value whether the cursor is hidden or visible.
+    */
+    if (NSCursor* cursor = [NSCursor currentSystemCursor])
+    {
+        NSPoint hotSpot = [cursor hotSpot];
+        return Offset2D
+        {
+            static_cast<std::int32_t>(hotSpot.x),
+            static_cast<std::int32_t>(hotSpot.y)
+        };
+    }
     return { 0, 0 };
 }
 
@@ -211,6 +283,20 @@ Offset2D MacOSDisplay::GetOffset() const
     };
 }
 
+float MacOSDisplay::GetScale() const
+{
+    if (@available(macOS 10.8, *))
+    {
+        CGDisplayModeRef modeRef = CGDisplayCopyDisplayMode(displayID_);
+        const float pixelWidth = static_cast<float>(CGDisplayModeGetPixelWidth(modeRef));
+        const float pointWidth = static_cast<float>(CGDisplayModeGetWidth(modeRef));
+        const float scale = pixelWidth / pointWidth;
+        CGDisplayModeRelease(modeRef);
+        return scale;
+    }
+    return 1.0f;
+}
+
 bool MacOSDisplay::ResetDisplayMode()
 {
     return (CGDisplaySetDisplayMode(displayID_, defaultDisplayModeRef_, nullptr) == kCGErrorSuccess);
@@ -244,7 +330,7 @@ DisplayModeDescriptor MacOSDisplay::GetDisplayMode() const
     DisplayModeDescriptor displayModeDesc;
     {
         CGDisplayModeRef modeRef = CGDisplayCopyDisplayMode(displayID_);
-        Convert(displayModeDesc, modeRef, displayID_);
+        ConvertCGDisplayMode(displayModeDesc, modeRef, displayID_);
         CGDisplayModeRelease(modeRef);
     }
     return displayModeDesc;
@@ -256,11 +342,11 @@ std::vector<DisplayModeDescriptor> MacOSDisplay::GetSupportedDisplayModes() cons
 
     CFArrayRef modeArrayRef = CGDisplayCopyAllDisplayModes(displayID_, nullptr);
 
-    for (CFIndex i = 0, n = CFArrayGetCount(modeArrayRef); i < n; ++i)
+    for_range(i, CFArrayGetCount(modeArrayRef))
     {
         DisplayModeDescriptor modeDesc;
         CGDisplayModeRef modeRef = (CGDisplayModeRef)CFArrayGetValueAtIndex(modeArrayRef, i);
-        Convert(modeDesc, modeRef, displayID_);
+        ConvertCGDisplayMode(modeDesc, modeRef, displayID_);
         displayModeDescs.push_back(modeDesc);
     }
 

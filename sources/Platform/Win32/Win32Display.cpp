@@ -262,6 +262,11 @@ Offset2D Win32Display::GetOffset() const
     };
 }
 
+float Win32Display::GetScale() const
+{
+    return 1.0f; // dummy
+}
+
 bool Win32Display::ResetDisplayMode()
 {
     /* Get display device name */

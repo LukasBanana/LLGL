@@ -185,6 +185,11 @@ Offset2D LinuxDisplay::GetOffset() const
     };
 }
 
+float LinuxDisplay::GetScale() const
+{
+    return 1.0f; // dummy
+}
+
 bool LinuxDisplay::ResetDisplayMode()
 {
     //TODO

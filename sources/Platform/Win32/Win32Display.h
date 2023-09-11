@@ -30,6 +30,7 @@ class Win32Display final : public Display
         UTF8String GetDeviceName() const override;
 
         Offset2D GetOffset() const override;
+        float GetScale() const override;
 
         bool ResetDisplayMode() override;
         bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) override;

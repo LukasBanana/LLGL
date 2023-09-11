@@ -77,6 +77,11 @@ Offset2D AndroidDisplay::GetOffset() const
     return Offset2D{};
 }
 
+float AndroidDisplay::GetScale() const
+{
+    return 1.0f; // dummy
+}
+
 bool AndroidDisplay::ResetDisplayMode()
 {
     //TODO

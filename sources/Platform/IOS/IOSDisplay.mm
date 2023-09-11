@@ -87,6 +87,11 @@ Offset2D IOSDisplay::GetOffset() const
     };
 }
 
+float IOSDisplay::GetScale() const
+{
+    return static_cast<float>([screen_ scale]);
+}
+
 bool IOSDisplay::ResetDisplayMode()
 {
     //TODO
