@@ -123,7 +123,7 @@ class LLGL_EXPORT Window : public Surface
         //! Sets the either the overall window size or the client area size. By default the client area size is set.
         virtual void SetSize(const Extent2D& size, bool useClientArea = true) = 0;
 
-        //! Returns either the overall window size or the client area size. By default the client area size is returned.
+        //! Returns either the window size (including frame and title bar) or the client area size (both in window coordinates). By default the client area size is returned.
         virtual Extent2D GetSize(bool useClientArea = true) const = 0;
 
         //! Sets the window title as UTF8 string.

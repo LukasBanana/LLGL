@@ -173,7 +173,7 @@ void SwapChain::SetOrCreateSurface(
         WindowDescriptor windowDesc;
         {
             windowDesc.size                 = size;
-            windowDesc.flags                = (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered);
+            windowDesc.flags                = (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered) | WindowFlags::DisableSizeScaling;
             windowDesc.windowContext        = windowContext;
             windowDesc.windowContextSize    = windowContextSize;
         }

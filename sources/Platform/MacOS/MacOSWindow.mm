@@ -53,6 +53,19 @@ static const auto g_EventTypeScrollWheel        = LLGL_MACOS_NSEVENTTYPE_SCROLLW
  * Surface class
  */
 
+// Returns true if the specified NSEventType must not be send to the NSApp singleton.
+static bool IsFilteredNSEventType(NSEventType type)
+{
+    switch (type)
+    {
+        case g_EventTypeKeyDown:
+        case g_EventTypeKeyUp:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool Surface::ProcessEvents()
 {
     LLGL_MACOS_AUTORELEASEPOOL_OPEN
@@ -62,34 +75,24 @@ bool Surface::ProcessEvents()
     {
         if (NSWindow* wnd = [event window])
         {
-            if ([[wnd delegate] isKindOfClass:[MacOSWindowDelegate class]])
+            /* Process this event for the respective MacOSWindow if its delegate is of type MacOSWindowDelegate */
+            MacOSWindowDelegate* wndDelegate = [wnd delegate];
+            if ([wndDelegate isKindOfClass:[MacOSWindowDelegate class]])
             {
-                MacOSWindowDelegate* wndDelegate = [wnd delegate];
                 MacOSWindow* platformWindow = [wndDelegate windowInstance];
                 platformWindow->ProcessEvent(event);
 
                 /* Check for window signals */
-                if ([wndDelegate popResizeSignal])
-                {
-                    /* Get size of the NSWindow's content view */
-                    NSRect frame = [[wnd contentView] frame];
-
-                    auto w = static_cast<std::uint32_t>(frame.size.width);
-                    auto h = static_cast<std::uint32_t>(frame.size.height);
-
-                    /* Notify event listeners about resize */
-                    platformWindow->PostResize({ w, h });
-                }
+                if (const Extent2D* contentSize = [wndDelegate pollResizeSignal])
+                    platformWindow->PostResize(*contentSize);
             }
         }
         
-        //TODO: ignore key events here to avoid 'failure sound'
-        #if 1
-        if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
-            [NSApp sendEvent:event];
-        #else
+        /* Filter events we handle ourselves to avoid 'failure sounds' when keys are pressed */
+        if (IsFilteredNSEventType([event type]))
+            continue;
+
         [NSApp sendEvent:event];
-        #endif
     }
 
     LLGL_MACOS_AUTORELEASEPOOL_CLOSE
@@ -311,7 +314,6 @@ void MacOSWindow::SetDesc(const WindowDescriptor& desc)
     if (![wndDelegate_ isFullscreenMode])
     {
         [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
-        [wndDelegate_ makeResizable:((desc.flags & WindowFlags::Resizable) != 0)];
 
         #if 0
         /* Set window collection behavior for resize events */
@@ -417,6 +419,13 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     CGFloat w = static_cast<CGFloat>(desc.size.width);
     CGFloat h = static_cast<CGFloat>(desc.size.height);
 
+    if ((desc.flags & WindowFlags::DisableSizeScaling) != 0)
+    {
+        const CGFloat scaleFactor = [[NSScreen mainScreen] backingScaleFactor];
+        w /= scaleFactor;
+        h /= scaleFactor;
+    }
+
     NSWindow* wnd = [[NSWindow alloc]
         initWithContentRect:    NSMakeRect(0, 0, w, h)
         styleMask:              GetNSWindowStyleMask(desc)
@@ -453,9 +462,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 
 MacOSWindowDelegate* MacOSWindow::CreateNSWindowDelegate(const WindowDescriptor& desc)
 {
-    /* Set window application delegate */
-    const bool isResizable = ((desc.flags & WindowFlags::Resizable) != 0);
-    return [[MacOSWindowDelegate alloc] initWithWindow:this isResizable:isResizable];
+    return [[MacOSWindowDelegate alloc] initWithWindow:this];
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)

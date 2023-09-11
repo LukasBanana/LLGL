@@ -9,6 +9,8 @@
 #define LLGL_MACOS_WINDOW_DELEGATE_H
 
 
+#include <LLGL/Types.h>
+
 #import <Cocoa/Cocoa.h>
 
 
@@ -18,17 +20,16 @@ namespace LLGL { class MacOSWindow; }
 @interface MacOSWindowDelegate : NSObject<NSWindowDelegate>
 {
     LLGL::MacOSWindow*  window_;
-    BOOL                resizable_;
     BOOL                resizeSignaled_;
+    LLGL::Extent2D      resizeSignaledExtent_;
     BOOL                fullscreenMode_;
 }
 
 @property (nonatomic, nonnull) LLGL::MacOSWindow* windowInstance;
 
-- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window isResizable:(BOOL)resizable;
-- (void)makeResizable:(BOOL)resizable;
+- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window;
 
-- (BOOL)popResizeSignal;
+- (nullable const LLGL::Extent2D*)pollResizeSignal;
 - (BOOL)isFullscreenMode;
 
 @end

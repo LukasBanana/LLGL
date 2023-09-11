@@ -78,6 +78,14 @@ struct WindowFlags
         \see Window::EventListener::OnResize
         */
         DisableClearOnResize    = (1 << 5),
+
+        /**
+        \brief Specifies not to multiply the window size by the backing scale factor.
+        \remarks This is to control whether to transform the size from window coordinates into screen resolution coordinates.
+        \note Only supported on: macOS and iOS.
+        \see Display::GetScale
+        */
+        DisableSizeScaling      = (1 << 6),
     };
 };
 
@@ -93,7 +101,12 @@ struct WindowDescriptor
     //! Window position (relative to the client area).
     Offset2D        position;
 
-    //! Specifies the content size, i.e. not including the frame and caption dimensions.
+    /**
+    \brief Specifies the content size (in window coordinates) of the window.
+    \remarks The content size does not including the frame and caption dimensions.
+    \see Display::GetScale
+    \see WindowFlags::DisableSizeScaling
+    */
     Extent2D        size;
 
     /**

@@ -48,8 +48,15 @@ void MacOSSubviewWindow::ResetPixelFormat()
 
 Extent2D MacOSSubviewWindow::GetContentSize() const
 {
-    /* Return the size of the client area */
-    return GetSize(true);
+    NSSize size = [view_ frame].size;
+
+    const CGFloat scaleFactor = [[view_ window] backingScaleFactor];
+
+    return Extent2D
+    {
+        static_cast<std::uint32_t>(size.width  * scaleFactor),
+        static_cast<std::uint32_t>(size.height * scaleFactor)
+    };
 }
 
 static void SetRelativeNSViewPosition(NSView* view, const Offset2D& position, NSView* parentView = nullptr)

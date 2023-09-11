@@ -294,6 +294,25 @@ void ExampleBase::DrawFrame()
     #endif
 }
 
+static LLGL::Extent2D ScaleResolution(const LLGL::Extent2D& res, float scale)
+{
+    const float wScaled = static_cast<float>(res.width) * scale;
+    const float hScaled = static_cast<float>(res.height) * scale;
+    return LLGL::Extent2D
+    {
+        static_cast<std::uint32_t>(wScaled + 0.5f),
+        static_cast<std::uint32_t>(hScaled + 0.5f)
+    };
+}
+
+static LLGL::Extent2D ScaleResolutionForDisplay(const LLGL::Extent2D& res, const LLGL::Display* display)
+{
+    if (display != nullptr)
+        return ScaleResolution(res, display->GetScale());
+    else
+        return res;
+}
+
 ExampleBase::ExampleBase(
     const LLGL::UTF8String& title,
     const LLGL::Extent2D&   resolution,
@@ -342,7 +361,7 @@ ExampleBase::ExampleBase(
     // Create swap-chain
     LLGL::SwapChainDescriptor swapChainDesc;
     {
-        swapChainDesc.resolution    = resolution;
+        swapChainDesc.resolution    = ScaleResolutionForDisplay(resolution, LLGL::Display::GetPrimary());
         swapChainDesc.samples       = GetSampleCount();
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);

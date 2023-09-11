@@ -15,12 +15,11 @@
 
 @implementation MacOSWindowDelegate
 
-- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
+- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window
 {
     self = [super init];
     
     window_         = window;
-    resizable_      = resizable;
     resizeSignaled_ = NO;
     fullscreenMode_ = NO;
 
@@ -32,19 +31,14 @@
     return window_;
 }
 
-- (void)makeResizable:(BOOL)resizable
-{
-    resizable_ = resizable;
-}
-
-- (BOOL)popResizeSignal
+- (nullable const LLGL::Extent2D*)pollResizeSignal
 {
     if (resizeSignaled_)
     {
         resizeSignaled_ = NO;
-        return YES;
+        return (&resizeSignaledExtent_);
     }
-    return NO;
+    return nullptr;
 }
 
 - (BOOL)isFullscreenMode
@@ -57,29 +51,14 @@
     window_->PostQuit();
 }
 
-- (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize
-{
-    if (resizable_)
-        return frameSize;
-    else
-        return [sender frame].size;
-}
-
 - (void)windowDidResize:(NSNotification*)notification
 {
     //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
     #if 0
-    /* Get size of the NSWindow's content view */
-    NSWindow* sender = [notification object];
-    NSRect frame = [[sender contentView] frame];
-
-    auto w = static_cast<std::uint32_t>(frame.size.width);
-    auto h = static_cast<std::uint32_t>(frame.size.height);
-
-    /* Notify event listeners about resize */
-    window_->PostResize({ w, h });
+    window_->PostResize(window_->GetContentSize());
     #else
-    resizeSignaled_ = YES;
+    resizeSignaled_         = YES;
+    resizeSignaledExtent_   = window_->GetContentSize();
     #endif
 }
 
@@ -111,9 +90,10 @@
 {
     //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
     #if 0
-    window_->PostResize(window_->GetSize());
+    window_->PostResize(window_->GetContentSize());
     #else
-    resizeSignaled_ = YES;
+    resizeSignaled_         = YES;
+    resizeSignaledExtent_   = window_->GetContentSize();
     #endif
 }
 
