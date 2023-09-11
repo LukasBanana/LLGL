@@ -11,7 +11,7 @@
 
 cbuffer Scene : register(b1)
 {
-    float4x4 wvpMatrix;
+    float4x4 vpMatrix;
     float4x4 wMatrix;
     float4   solidColor;
     float3   lightVec;
@@ -35,7 +35,7 @@ struct VertexOut
 
 void VSMain(VertexIn inp, out VertexOut outp)
 {
-    outp.position = mul(wvpMatrix, float4(inp.position, 1));
+    outp.position = mul(vpMatrix, mul(wMatrix, float4(inp.position, 1)));
     outp.normal   = normalize(mul(wMatrix, float4(inp.normal, 0)).xyz);
     #if ENABLE_TEXTURING
     outp.texCoord = inp.texCoord;

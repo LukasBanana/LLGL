@@ -13,7 +13,7 @@
 
 layout(std140) uniform Scene
 {
-    mat4 wvpMatrix;
+    mat4 vpMatrix;
     mat4 wMatrix;
     vec4 solidColor;
     vec3 lightVec;

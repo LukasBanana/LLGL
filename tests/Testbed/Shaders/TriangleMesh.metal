@@ -15,7 +15,7 @@ using namespace metal;
 
 struct Scene
 {
-    float4x4 wvpMatrix;
+    float4x4 vpMatrix;
     float4x4 wMatrix;
     float4   solidColor;
     float3   lightVec;
@@ -42,7 +42,7 @@ vertex VertexOut VSMain(
     constant Scene& scene [[buffer(1)]])
 {
     VertexOut outp;
-    outp.position = scene.wvpMatrix * float4(inp.position, 1);
+    outp.position = scene.vpMatrix * (scene.wMatrix * float4(inp.position, 1));
     outp.normal   = normalize(scene.wMatrix * float4(inp.normal, 0)).xyz;
     #if ENABLE_TEXTURING
     outp.texCoord = inp.texCoord;

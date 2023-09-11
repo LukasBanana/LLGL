@@ -72,6 +72,8 @@ DEF_TEST( StencilBuffer )
     }
 
     // Update scene constants
+    sceneConstants = SceneConstants{};
+
     sceneConstants.wMatrix.LoadIdentity();
     Gs::Translate(sceneConstants.wMatrix, Gs::Vector3f{ 0, 0, 2 });
     Gs::RotateFree(sceneConstants.wMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(20.0f));
@@ -81,8 +83,7 @@ DEF_TEST( StencilBuffer )
     Gs::Translate(vMatrix, Gs::Vector3f{ 0, 0, -3 });
     vMatrix.MakeInverse();
 
-    Gs::Matrix4f vpMatrix = projection * vMatrix;
-    sceneConstants.wvpMatrix = vpMatrix * sceneConstants.wMatrix;
+    sceneConstants.vpMatrix = projection * vMatrix;
 
     // Render scene
     constexpr std::uint32_t stencilRef = 50;

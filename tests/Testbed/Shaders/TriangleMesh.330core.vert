@@ -13,7 +13,7 @@
 
 layout(std140) uniform Scene
 {
-    mat4 wvpMatrix;
+    mat4 vpMatrix;
     mat4 wMatrix;
     vec4 solidColor;
     vec3 lightVec;
@@ -31,7 +31,7 @@ out vec2 vTexCoord;
 
 void main()
 {
-    gl_Position = wvpMatrix * vec4(position, 1);
+    gl_Position = vpMatrix * (wMatrix * vec4(position, 1));
     vNormal = normalize(wMatrix * vec4(normal, 0)).xyz;
     #if ENABLE_TEXTURING
     vTexCoord = texCoord;
