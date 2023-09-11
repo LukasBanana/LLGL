@@ -116,9 +116,25 @@ static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc
 {
     MTLCompileOptions* opt = [MTLCompileOptions alloc];
 
+    /* Configure language version and other flags */
     [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
+
     if ((shaderDesc.flags & (ShaderCompileFlags::OptimizationLevel1 | ShaderCompileFlags::OptimizationLevel2 | ShaderCompileFlags::OptimizationLevel3)) != 0)
         [opt setFastMathEnabled:YES];
+
+    /* Define preprocessor macros */
+    if (shaderDesc.defines != nullptr && shaderDesc.defines[0].name != nullptr)
+    {
+        NSMutableDictionary<NSString*, NSObject*>* preprocessorMacros = [[NSMutableDictionary<NSString*, NSObject*> alloc] init];
+        for (const ShaderMacro* defines = shaderDesc.defines; defines->name != nullptr; ++defines)
+        {
+            [preprocessorMacros
+                setValue:   (defines->definition != nullptr ? [[NSString alloc] initWithUTF8String:defines->definition] : @"1")
+                forKey:     [[NSString alloc] initWithUTF8String:defines->name]
+            ];
+        }
+        [opt setPreprocessorMacros:preprocessorMacros];
+    }
 
     return opt;
 }
