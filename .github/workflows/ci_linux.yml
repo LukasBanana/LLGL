@@ -52,16 +52,6 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/Linux-x86_64 --config ${{ matrix.config }}
-      
-    - name: Testbed
-      working-directory: tests/Testbed
-      run: |
-        mkdir Output/
-        mkdir Output/OpenGL
-        xvfb-run ${{github.workspace}}/Linux-x86_64/build/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }} gl -v -f -t
-        CURRENT_TIME=$(date)
-        echo "LLGL built with GCC for Linux on $CURRENT_TIME." > ${{ env.README }}
-        echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v3
@@ -73,3 +63,20 @@ jobs:
           ${{ github.workspace }}/Linux-x86_64/build/libLLGL*.so
           ${{ github.workspace }}/Linux-x86_64/build/Example_*
           ${{ github.workspace }}/Linux-x86_64/build/Testbed*
+      
+    - name: Testbed
+      working-directory: tests/Testbed
+      run: |
+        mkdir Output/
+        mkdir Output/OpenGL
+        xvfb-run ${{github.workspace}}/Linux-x86_64/build/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }} gl -v -f -t
+        CURRENT_TIME=$(date)
+        echo "LLGL built with GCC for Linux on $CURRENT_TIME." > ${{ env.README }}
+        echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
+
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v3
+      if: matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release'
+      with:
+        name: LLGL-Ubuntu-Test_Report
+        path: tests/Testbed/Output/
