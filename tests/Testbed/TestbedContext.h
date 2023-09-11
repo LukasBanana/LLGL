@@ -12,6 +12,7 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Utils/ColorRGBA.h>
+#include <LLGL/Utils/ColorRGB.h>
 #include <Gauss/Matrix.h>
 #include <Gauss/Vector4.h>
 #include <vector>
@@ -124,7 +125,7 @@ class TestbedContext
 
         struct SceneConstants
         {
-            Gs::Matrix4f wvpMatrix;
+            Gs::Matrix4f vpMatrix;
             Gs::Matrix4f wMatrix;
             Gs::Vector4f solidColor = { 1, 1, 1, 1 };
             Gs::Vector4f lightVec   = { 0, 0, -1, 0 };
@@ -177,7 +178,10 @@ class TestbedContext
         #define DECL_TEST(NAME) \
             TestResult Test##NAME(unsigned frame)
 
+        // Command buffer tests
         DECL_TEST( CommandBufferSubmit );
+
+        // Resource tests
         DECL_TEST( BufferWriteAndRead );
         DECL_TEST( BufferMap );
         DECL_TEST( BufferFill );
@@ -188,11 +192,14 @@ class TestbedContext
         DECL_TEST( TextureToBufferCopy );
         DECL_TEST( TextureWriteAndRead );
         DECL_TEST( TextureTypes );
-        DECL_TEST( DepthBuffer );
-        DECL_TEST( StencilBuffer );
         DECL_TEST( RenderTargetNoAttachments );
         DECL_TEST( RenderTarget1Attachment );
         DECL_TEST( RenderTargetNAttachments );
+
+        // Rendering tests
+        DECL_TEST( DepthBuffer );
+        DECL_TEST( StencilBuffer );
+        DECL_TEST( SceneUpdate );
 
         #undef DECL_TEST
 
@@ -215,6 +222,7 @@ class TestbedContext
 
         void CreateConstantBuffers();
 
+        void SaveColorImageTGA(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);
         void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
         void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
         void SaveStencilImageTGA(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);

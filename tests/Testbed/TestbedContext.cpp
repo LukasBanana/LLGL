@@ -164,8 +164,10 @@ unsigned TestbedContext::RunAllTests()
             RecordTestResult(result, #TEST);                                        \
         }
 
-    // Run all unit tests
+    // Run all command buffer tests
     RUN_TEST( CommandBufferSubmit       );
+
+    // Run all resource tests
     RUN_TEST( BufferWriteAndRead        );
     RUN_TEST( BufferMap                 );
     RUN_TEST( BufferFill                );
@@ -176,11 +178,14 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( TextureCopy               );
     RUN_TEST( TextureToBufferCopy       );
     RUN_TEST( BufferToTextureCopy       );
-    RUN_TEST( DepthBuffer               );
-    RUN_TEST( StencilBuffer             );
     RUN_TEST( RenderTargetNoAttachments );
     RUN_TEST( RenderTarget1Attachment   );
     RUN_TEST( RenderTargetNAttachments  );
+
+    // Run all rendering tests
+    RUN_TEST( DepthBuffer               );
+    RUN_TEST( StencilBuffer             );
+    RUN_TEST( SceneUpdate               );
 
     #undef RUN_TEST
 
@@ -927,6 +932,12 @@ static bool LoadImageTGA(std::vector<ColorRGBub>& pixels, Extent2D& extent, cons
         Log::Printf(" [ Ok ]\n");
 
     return true;
+}
+
+void TestbedContext::SaveColorImageTGA(const std::vector<ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name)
+{
+    const std::string path = outputDir + moduleName + "/";
+    SaveImageTGA(image, extent, path + name + ".Result.tga", verbose);
 }
 
 void TestbedContext::SaveDepthImageTGA(const std::vector<float>& image, const Extent2D& extent, const std::string& filename)
