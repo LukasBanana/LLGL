@@ -143,13 +143,13 @@ DEF_TEST( SceneUpdate )
 
     SaveColorImage(readbackColorBuffer, resolution, colorBufferName);
 
-    const int diff = DiffImages(colorBufferName);
+    const DiffResult diff = DiffImages(colorBufferName);
 
     // Evaluate readback result
     static bool diffFailed = false;
-    if (diff != 0)
+    if (diff)
     {
-        Log::Errorf("Mismatch between reference and result images for color buffer [frame %u] (diff = %d)\n", frame, diff);
+        Log::Errorf("Mismatch between reference and result images for color buffer [frame %u] (%s)\n", frame, diff.Print());
         diffFailed = true;
     }
 

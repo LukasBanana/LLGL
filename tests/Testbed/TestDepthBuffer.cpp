@@ -138,7 +138,7 @@ DEF_TEST( DepthBuffer )
 
     SaveDepthImage(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
 
-    const int diff = DiffImages("DepthBuffer");
+    const DiffResult diff = DiffImages("DepthBuffer");
 
     // Clear resources
     renderer->Release(*pso);
@@ -160,9 +160,9 @@ DEF_TEST( DepthBuffer )
         );
         return TestResult::FailedMismatch;
     }
-    if (diff != 0)
+    if (diff)
     {
-        Log::Errorf("Mismatch between reference and result images for depth buffer (diff = %d)\n", diff);
+        Log::Errorf("Mismatch between reference and result images for depth buffer (%s)\n", diff.Print());
         return TestResult::FailedMismatch;
     }
 

@@ -123,6 +123,28 @@ class TestbedContext
             void FinalizeMesh(IndexedTriangleMesh& outMesh);
         };
 
+        struct DiffResult
+        {
+            DiffResult() = default;
+            DiffResult(const DiffResult&) = default;
+            DiffResult& operator = (const DiffResult&) = default;
+
+            DiffResult(DiffErrors error);
+            explicit DiffResult(int threshold);
+
+            // Returns the difference result as a string.
+            const char* Print() const;
+
+            void Add(int val);
+
+            // Returns true if this difference is non-zero.
+            operator bool () const;
+
+            int         threshold   = 0;
+            int         value       = 0; // Maximum difference value
+            unsigned    count       = 0; // Number of different pixels;
+        };
+
         struct SceneConstants
         {
             Gs::Matrix4f vpMatrix;
@@ -228,7 +250,7 @@ class TestbedContext
         void SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
-        int DiffImages(const std::string& name, int threshold = 1, int scale = 1);
+        DiffResult DiffImages(const std::string& name, int threshold = 1, int scale = 1);
 
         void RecordTestResult(TestResult result, const char* name);
 

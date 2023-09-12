@@ -959,7 +959,7 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
     return ColorRGBub{ heapMapLUT[diff*3], heapMapLUT[diff*3+1], heapMapLUT[diff*3+2] };
 }
 
-int TestbedContext::DiffImages(const std::string& name, int threshold, int scale)
+TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, int scale)
 {
     // Load input images and validate they have the same dimensions
     std::vector<ColorRGBub> pixelsA, pixelsB, pixelsDiff;
@@ -978,7 +978,7 @@ int TestbedContext::DiffImages(const std::string& name, int threshold, int scale
         return DiffErrorExtentMismatch;
 
     // Generate heat-map image
-    int highestDiff = 0;
+    DiffResult result{ threshold };
     pixelsDiff.resize(extentA.width * extentA.height);
 
     for (std::size_t i = 0, n = pixelsDiff.size(); i < n; ++i)
@@ -991,20 +991,19 @@ int TestbedContext::DiffImages(const std::string& name, int threshold, int scale
             GetColorDiff(colorA.g, colorB.g),
             GetColorDiff(colorA.b, colorB.b),
         };
-        int maxDiff = std::max({ diff[0], diff[1], diff[2] });
+        const int maxDiff = std::max({ diff[0], diff[1], diff[2] });
         pixelsDiff[i] = GetHeatMapColor(maxDiff, scale);
-        highestDiff = std::max(highestDiff, maxDiff);
+        result.Add(maxDiff);
     }
 
-    if (highestDiff > threshold)
+    if (result)
     {
         // Save diff inage and return highest difference value
         if (!SaveImage(pixelsDiff, extentA, diffPath + name + ".Diff.png", verbose))
             return DiffErrorSaveDiffFailed;
-        return highestDiff;
     }
 
-    return 0;
+    return result;
 }
 
 void TestbedContext::RecordTestResult(TestResult result, const char* name)
@@ -1041,5 +1040,62 @@ void TestbedContext::IndexedTriangleMeshBuffer::FinalizeMesh(IndexedTriangleMesh
 {
     outMesh.indexBufferOffset   = firstIndex * sizeof(std::uint32_t);
     outMesh.numIndices          = static_cast<std::uint32_t>(indices.size()) - firstIndex;
+}
+
+
+/*
+ * DiffResult structure
+ */
+
+TestbedContext::DiffResult::DiffResult(DiffErrors error)
+{
+    Add(static_cast<int>(error));
+}
+
+TestbedContext::DiffResult::DiffResult(int threshold) :
+    threshold { threshold }
+{
+}
+
+const char* TestbedContext::DiffResult::Print() const
+{
+    static thread_local char str[128];
+    switch (value)
+    {
+        case DiffErrorLoadRefFailed:
+            return "loading reference failed";
+        case DiffErrorLoadResultFailed:
+            return "loading result failed";
+        case DiffErrorExtentMismatch:
+            return "extent mismatch";
+        case DiffErrorSaveDiffFailed:
+            return "saving difference failed";
+        default:
+            ::snprintf(str, sizeof(str), "diff = %d; count = %u", value, count);
+            return str;
+    }
+}
+
+void TestbedContext::DiffResult::Add(int val)
+{
+    // Don't update difference if an error code has already been encoded (see DiffErrors)
+    if (value >= 0)
+    {
+        if (val > 0)
+        {
+            value = std::max(value, val);
+            ++count;
+        }
+        else if (val < 0)
+        {
+            value = val;
+            count = 0;
+        }
+    }
+}
+
+TestbedContext::DiffResult::operator bool () const
+{
+    return (value < 0 || value > threshold);
 }
 
