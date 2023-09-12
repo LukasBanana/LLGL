@@ -79,6 +79,9 @@ int main()
 
         while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
         {
+            if (input.KeyPressed(LLGL::Key::C))
+                LLGL::Display::SetCursorPosition(LLGL::Offset2D{ 150, 150 });
+
             #ifdef __APPLE__
             if (input.KeyDown(LLGL::Key::D1))
                 window->Show(false);
@@ -142,6 +145,8 @@ int main()
                 window->SetPosition(pos);
                 printWindowPos(*window);
             }
+
+            input.Reset();
         }
     }
     catch (const std::exception& e)

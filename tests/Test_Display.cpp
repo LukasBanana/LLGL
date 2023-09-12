@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
             std::cout << "|-Width   = " << displayMode.resolution.width << std::endl;
             std::cout << "|-Height  = " << displayMode.resolution.height << std::endl;
             std::cout << "|-Hz      = " << displayMode.refreshRate << std::endl;
+            std::cout << "|-Scale   = " << display->GetScale() << std::endl;
 
             std::cout << "`-Settings:" << std::endl;
             auto supportedModes = display->GetSupportedDisplayModes();

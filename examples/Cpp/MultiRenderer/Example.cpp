@@ -9,6 +9,13 @@
 
 //#include <LLGL/Platform/NativeHandle.h>
 
+#define MIXED_BG_COLORS 0
+
+#define COLOR_BLUE      { 0.1f, 0.1f, 0.4f, 1.0f }
+#define COLOR_RED       { 0.4f, 0.1f, 0.1f, 1.0f }
+#define COLOR_GREEN     { 0.1f, 0.4f, 0.1f, 1.0f }
+#define COLOR_YELLOW    { 0.4f, 0.4f, 0.1f, 1.0f }
+
 
 struct Matrices
 {
@@ -23,7 +30,7 @@ struct Matrices
 class MyRenderer
 {
 
-    LLGL::RenderSystemPtr               renderer;
+    LLGL::RenderSystem*                 renderer        = nullptr;
     std::shared_ptr<LLGL::Window>       subWindow;
 
     LLGL::SwapChain*                    swapChain       = nullptr;
@@ -43,16 +50,15 @@ class MyRenderer
 
     const std::uint32_t                 samples;
     const LLGL::ClearValue              background;
-    const std::string                   rendererModule;
 
 public:
 
     MyRenderer(
-        const char*             rendererModule,
-        LLGL::Window&           mainWindow,
-        const LLGL::Offset2D&   subWindowOffset,
-        const LLGL::Extent2D&   subWindowSize,
-        const LLGL::ClearValue& background
+        LLGL::RenderSystem*         renderer,
+        LLGL::Window&               mainWindow,
+        const LLGL::Offset2D&       subWindowOffset,
+        const LLGL::Extent2D&       subWindowSize,
+        const LLGL::ClearValue&     background
     );
 
     void CreateResources(
@@ -72,19 +78,16 @@ public:
 };
 
 MyRenderer::MyRenderer(
-    const char*             rendererModule,
+    LLGL::RenderSystem*     renderer,
     LLGL::Window&           mainWindow,
     const LLGL::Offset2D&   subWindowOffset,
     const LLGL::Extent2D&   subWindowSize,
     const LLGL::ClearValue& background)
 :
-    samples        { 8u             },
-    background     { background     },
-    rendererModule { rendererModule }
+    samples    { 8u         },
+    background { background },
+    renderer   { renderer   }
 {
-    // Load render system module
-    renderer = LLGL::RenderSystem::Load(rendererModule);
-
     // Get native handle (HWND for Win32) from main window
     //LLGL::NativeHandle mainWindowHandle;
     std::uintptr_t mainWindowHandle[1];
@@ -146,7 +149,8 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Matrices)));
 
     // Create textures
-    texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererModule + ".png");
+    const std::string rendererName = renderer->GetName();
+    texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererName + ".png");
 
     // Create samplers
     LLGL::SamplerDescriptor samplerDesc;
@@ -231,7 +235,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     cmdQueue = renderer->GetCommandQueue();
 
     // Create command buffers
-    cmdBuffer = renderer->CreateCommandBuffer();
+    cmdBuffer = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);
 }
 
 void MyRenderer::Render(const Gs::Matrix4f& vpMatrix, const Gs::Matrix4f& wMatrix)
@@ -316,31 +320,63 @@ int main(int argc, char* argv[])
 
         const float bgColors[4][4] =
         {
-            { 0.1f, 0.1f, 0.4f, 1.0f}, // Blue
-            { 0.4f, 0.1f, 0.1f, 1.0f}, // Red
-            { 0.1f, 0.4f, 0.1f, 1.0f}, // Green
-            { 0.4f, 0.4f, 0.1f, 1.0f}, // Yellow
-        };
-
-        const char* moduleNames[4] =
-        {
-            #if defined _WIN32
-            "OpenGL", "Vulkan", "Direct3D11", "Direct3D12"
-            #elif defined __APPLE__
-            "OpenGL", "Metal", "Metal", "OpenGL"
-            #elif defined __linux__
-            "OpenGL", "Vulkan", "Vulkan", "OpenGL"
+            #if MIXED_BG_COLORS
+            COLOR_BLUE, COLOR_RED, COLOR_GREEN, COLOR_YELLOW,
             #else
-            "Null", "Null", "Null", "Null"
+            COLOR_BLUE, COLOR_BLUE, COLOR_BLUE, COLOR_BLUE,
             #endif
         };
 
+        // Load render system module
+        #if defined _WIN32
+        LLGL::RenderSystemPtr renderers[4] =
+        {
+            LLGL::RenderSystem::Load("OpenGL"),
+            LLGL::RenderSystem::Load("Vulkan"),
+            LLGL::RenderSystem::Load("Direct3D11"),
+            LLGL::RenderSystem::Load("Direct3D12"),
+        };
+        LLGL::RenderSystem* rendererRefs[4] =
+        {
+            renderers[0].get(), renderers[1].get(), renderers[2].get(), renderers[3].get()
+        };
+        #elif defined __APPLE__
+        LLGL::RenderSystemPtr renderers[2] =
+        {
+            LLGL::RenderSystem::Load("OpenGL"),
+            LLGL::RenderSystem::Load("Metal"),
+        };
+        LLGL::RenderSystem* rendererRefs[4] =
+        {
+            renderers[0].get(), renderers[1].get(), renderers[1].get(), renderers[0].get()
+        };
+        #elif defined __linux__
+        LLGL::RenderSystemPtr renderers[2] =
+        {
+            LLGL::RenderSystem::Load("OpenGL"),
+            LLGL::RenderSystem::Load("Vulkan"),
+        };
+        LLGL::RenderSystem* rendererRefs[4] =
+        {
+            renderers[0].get(), renderers[1].get(), renderers[1].get(), renderers[0].get()
+        };
+        #else
+        LLGL::RenderSystemPtr renderers[1] =
+        {
+            LLGL::RenderSystem::Load("Null"),
+        };
+        LLGL::RenderSystem* rendererRefs[4] =
+        {
+            renderers[0].get(), renderers[0].get(), renderers[0].get(), renderers[0].get()
+        };
+        #endif
+
         MyRenderer myRenderers[4] =
         {
-            { moduleNames[0], *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
-            { moduleNames[1], *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
-            { moduleNames[2], *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
-            { moduleNames[3], *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
+            { rendererRefs[0], *mainWindow, { 0,         0          }, subWindowSize, bgColors[0] },
+            { rendererRefs[1], *mainWindow, { halfWidth, 0          }, subWindowSize, bgColors[1] },
+            { rendererRefs[2], *mainWindow, { 0,         halfHeight }, subWindowSize, bgColors[2] },
+            { rendererRefs[3], *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
         };
 
         mainWindow->Show();

@@ -22,17 +22,23 @@ int main(int argc, char* argv[])
         LLGL::Log::Printf("LLGL Renderer: %s\n", renderer->GetName());
 
         // Create two swap-chains
+        std::uint32_t resolutionScale = 1;
+        if (const LLGL::Display* display = LLGL::Display::GetPrimary())
+            resolutionScale = static_cast<int>(display->GetScale());
+
+        const LLGL::Extent2D swapChainResolution{ 640 * resolutionScale, 480 * resolutionScale };
+
         LLGL::SwapChainDescriptor swapChainDesc[2];
         {
-            swapChainDesc[0].resolution     = { 640, 480 };
+            swapChainDesc[0].resolution     = swapChainResolution;
             swapChainDesc[0].samples        = 8;
             swapChainDesc[0].depthBits      = 0;
             swapChainDesc[0].stencilBits    = 0;
         }
         auto swapChain1 = renderer->CreateSwapChain(swapChainDesc[0]);
         {
-            swapChainDesc[1].resolution     = { 640, 480 };
-            swapChainDesc[1].samples        = 8;//8;
+            swapChainDesc[1].resolution     = swapChainResolution;
+            swapChainDesc[1].samples        = 8;
             swapChainDesc[1].depthBits      = 0;
             swapChainDesc[1].stencilBits    = 0;
         }
@@ -59,18 +65,19 @@ int main(int argc, char* argv[])
         window2.SetTitle(L"LLGL Example: Multi Context (2)");
 
         // Set window positions
-        LLGL::Extent2D desktopResolution;
-        if (auto display = LLGL::Display::GetPrimary())
-            desktopResolution = display->GetDisplayMode().resolution;
-
-        const LLGL::Offset2D desktopCenter
+        if (const LLGL::Display* display = LLGL::Display::GetPrimary())
         {
-            static_cast<int>(desktopResolution.width)/2,
-            static_cast<int>(desktopResolution.height)/2
-        };
+            const LLGL::Extent2D desktopResolution = display->GetDisplayMode().resolution;
+            const int scale = static_cast<int>(display->GetScale());
+            const LLGL::Offset2D desktopCenter
+            {
+                static_cast<int>(desktopResolution.width)/scale/2,
+                static_cast<int>(desktopResolution.height)/scale/2
+            };
 
-        window1.SetPosition({ desktopCenter.x - 700, desktopCenter.y - 480/2 });
-        window2.SetPosition({ desktopCenter.x + 700 - 640, desktopCenter.y - 480/2 });
+            window1.SetPosition({ desktopCenter.x - 700, desktopCenter.y - 480/2 });
+            window2.SetPosition({ desktopCenter.x + 700 - 640, desktopCenter.y - 480/2 });
+        }
 
         // Show windows
         window1.Show();
@@ -305,6 +312,9 @@ int main(int argc, char* argv[])
                 swapChain1->Present();
             if (window2.IsShown())
                 swapChain2->Present();
+
+            inputs[0].Reset();
+            inputs[1].Reset();
         }
     }
     catch (const std::exception& e)
