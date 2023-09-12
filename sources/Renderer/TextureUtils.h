@@ -74,6 +74,16 @@ LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     const DataType      imageDataType
 );
 
+// Calculates the required sizes and strides for a subresource when mapped between GPU and CPU.
+inline SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
+    const Format            format,
+    const TextureRegion&    textureRegion,
+    const ImageFormat       imageFormat,
+    const DataType          imageDataType)
+{
+    return CalcSubresourceCPUMappingLayout(format, textureRegion.extent, textureRegion.subresource.numArrayLayers, imageFormat, imageDataType);
+}
+
 // Calcualtes the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().
 LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
     const TextureType   type,

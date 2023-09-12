@@ -432,6 +432,11 @@ static void ReadDepthStencilValue(
         /* Read S8UInt format: Copy 8-bit unsigned integer */
         value.stencil = srcBuffer.uint8[idx];
     }
+    else if (srcFormat == ImageFormat::Stencil && dataType == DataType::UInt32)
+    {
+        /* Read S8X24UInt format: Copy 8-bit unsigned integer */
+        value.stencil = srcBuffer.uint32[idx] & 0xFF;
+    }
 }
 
 static void WriteDepthStencilValue(
@@ -463,6 +468,11 @@ static void WriteDepthStencilValue(
     {
         /* Write S8UInt format: Copy 8-bit unsigned integer */
         dstBuffer.uint8[idx] = value.stencil & 0xFF;
+    }
+    else if (dstFormat == ImageFormat::Stencil && dataType == DataType::UInt32)
+    {
+        /* Write S8X24UInt format: Copy 8-bit unsigned integer */
+        dstBuffer.uint32[idx] = value.stencil;
     }
 }
 

@@ -145,7 +145,7 @@ DEF_TEST( StencilBuffer )
 
     SaveStencilImage(readbackStencilBuffer, resolution, "StencilBuffer_Set50");
 
-    const int diff = DiffImages("StencilBuffer_Set50");
+    const DiffResult diff = DiffImages("StencilBuffer_Set50");
 
     // Clear resources
     renderer->Release(*pso);
@@ -167,9 +167,9 @@ DEF_TEST( StencilBuffer )
         );
         return TestResult::FailedMismatch;
     }
-    if (diff != 0)
+    if (diff)
     {
-        Log::Errorf("Mismatch between reference and result images for stencil buffer (diff = %d)\n", diff);
+        Log::Errorf("Mismatch between reference and result images for stencil buffer (%s)\n", diff.Print());
         return TestResult::FailedMismatch;
     }
 

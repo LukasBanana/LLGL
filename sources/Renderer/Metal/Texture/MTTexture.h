@@ -20,7 +20,7 @@ namespace LLGL
 
 struct SrcImageDescriptor;
 struct DstImageDescriptor;
-struct SubresourceLayout;
+struct SubresourceCPUMappingLayout;
 struct FormatAttributes;
 class MTIntermediateBuffer;
 
@@ -65,21 +65,21 @@ class MTTexture final : public Texture
     private:
 
         void ReadRegionFromSharedMemory(
-            const MTLRegion&            region,
-            const TextureSubresource&   subresource,
-            const FormatAttributes&     formatAttribs,
-            const SubresourceLayout&    layout,
-            const DstImageDescriptor&   imageDesc
+            const MTLRegion&                    region,
+            const TextureSubresource&           subresource,
+            const FormatAttributes&             formatAttribs,
+            const SubresourceCPUMappingLayout&  layout,
+            const DstImageDescriptor&           imageDesc
         );
 
         void ReadRegionFromPrivateMemory(
-            const MTLRegion&            region,
-            const TextureSubresource&   subresource,
-            const FormatAttributes&     formatAttribs,
-            const SubresourceLayout&    layout,
-            const DstImageDescriptor&   imageDesc,
-            id<MTLCommandQueue>         cmdQueue,
-            MTIntermediateBuffer&       intermediateBuffer
+            const MTLRegion&                    region,
+            const TextureSubresource&           subresource,
+            const FormatAttributes&             formatAttribs,
+            const SubresourceCPUMappingLayout&  layout,
+            const DstImageDescriptor&           imageDesc,
+            id<MTLCommandQueue>                 cmdQueue,
+            MTIntermediateBuffer&               intermediateBuffer
         );
 
     private:
