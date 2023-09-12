@@ -222,13 +222,13 @@ class TestbedContext
 
         void CreateConstantBuffers();
 
-        void SaveColorImageTGA(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);
-        void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
-        void SaveDepthImageTGA(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
-        void SaveStencilImageTGA(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
+        void SaveColorImage(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);
+        void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
+        void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
+        void SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
-        int DiffImagesTGA(const std::string& name, int threshold = 1, int scale = 1);
+        int DiffImages(const std::string& name, int threshold = 1, int scale = 1);
 
         void RecordTestResult(TestResult result, const char* name);
 

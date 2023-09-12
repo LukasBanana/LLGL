@@ -143,9 +143,9 @@ DEF_TEST( StencilBuffer )
     }
     renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
 
-    SaveStencilImageTGA(readbackStencilBuffer, resolution, "StencilBuffer_Set50");
+    SaveStencilImage(readbackStencilBuffer, resolution, "StencilBuffer_Set50");
 
-    const int diff = DiffImagesTGA("StencilBuffer_Set50");
+    const int diff = DiffImages("StencilBuffer_Set50");
 
     // Clear resources
     renderer->Release(*pso);

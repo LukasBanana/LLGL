@@ -136,9 +136,9 @@ DEF_TEST( DepthBuffer )
     }
     renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
 
-    SaveDepthImageTGA(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
+    SaveDepthImage(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
 
-    const int diff = DiffImagesTGA("DepthBuffer");
+    const int diff = DiffImages("DepthBuffer");
 
     // Clear resources
     renderer->Release(*pso);

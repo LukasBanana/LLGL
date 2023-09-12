@@ -32,7 +32,7 @@ DEF_TEST( SceneUpdate )
         // Create texture for readback
         TextureDescriptor texDesc;
         {
-            texDesc.format          = Format::RGBA8UNorm;
+            texDesc.format          = swapChain->GetColorFormat(); // Swap-chain format to use for screen capture
             texDesc.extent.width    = resolution.width;
             texDesc.extent.height   = resolution.height;
             texDesc.bindFlags       = BindFlags::CopyDst;
@@ -76,13 +76,12 @@ DEF_TEST( SceneUpdate )
 
     sceneConstants.vpMatrix = projection * vMatrix;
 
-    auto TransformWorldMatrix = [](Gs::Matrix4f& wMatrix, float posY, float rotation)
+    auto TransformWorldMatrix = [](Gs::Matrix4f& wMatrix, float pos, float scale, float turn)
     {
-        constexpr float posZ = 2.0f;
         wMatrix.LoadIdentity();
-        Gs::Translate(wMatrix, Gs::Vector3f{ 0, posY, posZ });
-        Gs::RotateFree(wMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(rotation));
-        Gs::Scale(wMatrix, Gs::Vector3f{ 1, 0.4f, 1 });
+        Gs::Translate(wMatrix, Gs::Vector3f{ 0, pos, 2.0f });
+        Gs::RotateFree(wMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(turn));
+        Gs::Scale(wMatrix, Gs::Vector3f{ 1, scale, 1 });
     };
 
     constexpr unsigned numFrames = 10;
@@ -104,20 +103,20 @@ DEF_TEST( SceneUpdate )
             cmdBuffer->SetResource(0, *sceneCbuffer);
 
             // Draw top part
-            sceneConstants.solidColor = { 1.0f, 0.7f, 0.6f, 1.0f };
-            TransformWorldMatrix(sceneConstants.wMatrix, 0.8f, rotation);
+            sceneConstants.solidColor = { 1.0f, 0.7f, 0.6f, 1.0f }; // red
+            TransformWorldMatrix(sceneConstants.wMatrix, 0.5f, 0.5f, rotation);
             cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
             cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
 
             // Draw middle part
-            sceneConstants.solidColor = { 0.5f, 1.0f, 0.4f, 1.0f };
-            TransformWorldMatrix(sceneConstants.wMatrix, 0.0f, rotation);
+            sceneConstants.solidColor = { 0.5f, 1.0f, 0.4f, 1.0f }; // green
+            TransformWorldMatrix(sceneConstants.wMatrix, -0.25f, 0.25f, rotation);
             cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
             cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
 
             // Draw bottom part
-            sceneConstants.solidColor = { 0.3f, 0.7f, 1.0f, 1.0f };
-            TransformWorldMatrix(sceneConstants.wMatrix, -0.8f, rotation);
+            sceneConstants.solidColor = { 0.3f, 0.7f, 1.0f, 1.0f }; // blue
+            TransformWorldMatrix(sceneConstants.wMatrix, -0.75f, 0.25f, rotation);
             cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
             cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
 
@@ -142,9 +141,9 @@ DEF_TEST( SceneUpdate )
 
     const std::string colorBufferName = "ColorBuffer_Frame" + std::to_string(frame);
 
-    SaveColorImageTGA(readbackColorBuffer, resolution, colorBufferName);
+    SaveColorImage(readbackColorBuffer, resolution, colorBufferName);
 
-    const int diff = DiffImagesTGA(colorBufferName);
+    const int diff = DiffImages(colorBufferName);
 
     // Evaluate readback result
     static bool diffFailed = false;
