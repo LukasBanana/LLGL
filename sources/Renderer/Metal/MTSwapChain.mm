@@ -179,7 +179,8 @@ MTKView* MTSwapChain::AllocMTKViewAndInitWithSurface(id<MTLDevice> device, Surfa
 
         /* Allocate MetalKit view */
         CGRect contentViewRect = [[contentWindow contentView] frame];
-        mtkView = [[MTKView alloc] initWithFrame:contentViewRect device:device];
+        CGRect relativeViewRect = CGRectMake(0.0f, 0.0f, contentViewRect.size.width, contentViewRect.size.height);
+        mtkView = [[MTKView alloc] initWithFrame:relativeViewRect device:device];
 
         /* Replace content view of input window with MTKView */
         [contentWindow setContentView:mtkView];
@@ -191,7 +192,8 @@ MTKView* MTSwapChain::AllocMTKViewAndInitWithSurface(id<MTLDevice> device, Surfa
 
         /* Allocate MetalKit view */
         CGRect contentViewRect = [contentView frame];
-        mtkView = [[MTKView alloc] initWithFrame:contentViewRect device:device];
+        CGRect relativeViewRect = CGRectMake(0.0f, 0.0f, contentViewRect.size.width, contentViewRect.size.height);
+        mtkView = [[MTKView alloc] initWithFrame:relativeViewRect device:device];
 
         /* Add MTKView as subview to the input view */
         [contentView addSubview:mtkView];
