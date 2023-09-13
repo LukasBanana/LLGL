@@ -182,7 +182,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         sourceLength,
         nullptr,                            // LPCSTR               pSourceName
         defines,                            // D3D_SHADER_MACRO*    pDefines
-        nullptr,                            // ID3DInclude*         pInclude
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,  // ID3DInclude*         pInclude
         entry,                              // LPCSTR               pEntrypoint
         target,                             // LPCSTR               pTarget
         DXGetFxcCompilerFlags(flags),       // UINT                 Flags1
