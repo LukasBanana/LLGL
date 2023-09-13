@@ -156,12 +156,14 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
     std::string fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
+    const char* sourceName      = nullptr;
 
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
         fileContent     = ReadFileString(shaderDesc.source);
         sourceCode      = fileContent.c_str();
         sourceLength    = fileContent.size();
+        sourceName      = shaderDesc.source;
     }
     else
     {
@@ -180,7 +182,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
     HRESULT hr = D3DCompile(
         sourceCode,
         sourceLength,
-        nullptr,                            // LPCSTR               pSourceName
+        sourceName,                         // LPCSTR               pSourceName
         defines,                            // D3D_SHADER_MACRO*    pDefines
         D3D_COMPILE_STANDARD_FILE_INCLUDE,  // ID3DInclude*         pInclude
         entry,                              // LPCSTR               pEntrypoint
