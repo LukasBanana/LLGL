@@ -246,16 +246,10 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         # Configure bundle name and ID
         if (${PROJECT_NAME} MATCHES "Example_+")
             string(LENGTH "Example_" NAME_PREFIX_LEN)
-            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
+            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
         elseif (${PROJECT_NAME} MATCHES "Test_+")
             string(LENGTH "Test_" NAME_PREFIX_LEN)
-            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
-        else()
-            set(PROJECT_BUNDLE_ID_BASE ${PROJECT_NAME})
-        endif()
-
-        if(LLGL_IOS_PLATFORM)
-            set(PROJECT_BUNDLE_NAME ${PROJECT_BUNDLE_ID_BASE})
+            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
         else()
             set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
         endif()
@@ -283,8 +277,9 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         # Configure Info.plist file for NSBundle
         set_target_properties(
             ${PROJECT_NAME} PROPERTIES
-            OUTPUT_NAME                         "${PROJECT_BUNDLE_NAME}"
-            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_ID_BASE}"
+            OUTPUT_NAME                         "${PROJECT_NAME}"
+            MACOSX_BUNDLE_BUNDLE_NAME           "${PROJECT_BUNDLE_NAME}"
+            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_NAME}"
             MACOSX_BUNDLE_LONG_VERSION_STRING   "LLGL-1.0"
             MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
             MACOSX_BUNDLE_BUNDLE_VERSION        1.0
