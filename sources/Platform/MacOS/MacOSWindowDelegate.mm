@@ -51,6 +51,16 @@
     window_->PostQuit();
 }
 
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+    window_->PostGetFocus();
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+    window_->PostLostFocus();
+}
+
 - (void)windowDidResize:(NSNotification*)notification
 {
     //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
@@ -99,7 +109,7 @@
 
 - (void)windowDidExitFullScreen:(NSNotification*)notification
 {
-    [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationDefault];
+    [NSApp setPresentationOptions:NSApplicationPresentationDefault];
     fullscreenMode_ = NO;
 }
 

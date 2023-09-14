@@ -164,7 +164,10 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
 MacOSWindow::~MacOSWindow()
 {
     if (wnd_ != nullptr)
+    {
+        [wnd_ setDelegate:nil];
         [wnd_ release];
+    }
     if (wndDelegate_ != nullptr)
         [wndDelegate_ release];
 }
