@@ -10,6 +10,7 @@ jobs:
   build_ios:
     strategy:
       matrix:
+        lib: [Shared, Static]
         config: [Release, Debug]
       fail-fast: false
     
@@ -17,6 +18,7 @@ jobs:
 
     env:
       DEPLOYMENT_TARGET: 13.0
+      README: ${{ github.workspace }}/README.txt
 
     steps:
     - name: Checkout Repository
@@ -32,10 +34,26 @@ jobs:
         -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.DEPLOYMENT_TARGET }}
         -DCMAKE_IOS_INSTALL_COMBINED=ON
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
         -DLLGL_BUILD_RENDERER_OPENGLES3=ON
         -DLLGL_BUILD_RENDERER_METAL=ON
-        -DLLGL_BUILD_EXAMPLES=OFF
+        -DLLGL_BUILD_EXAMPLES=ON
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/iOS-arm64 --config ${{ matrix.config }}
+      run: |
+        cmake --build ${{github.workspace}}/iOS-arm64 --config ${{ matrix.config }}
+        CURRENT_TIME=$(date)
+        echo "LLGL built with Xcode for iOS on $CURRENT_TIME." > ${{ env.README }}
+
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v3
+      if: matrix.lib == 'Shared' && matrix.config == 'Release'
+      with:
+        name: LLGL-iOS-${{ matrix.config }}-arm64
+        path: |
+          ${{ env.README }}
+          ${{ github.workspace }}/iOS-arm64/build/libLLGL*.dylib
+          ${{ github.workspace }}/iOS-arm64/build/libLLGL*.dylib.dSYM
+          ${{ github.workspace }}/iOS-arm64/build/Example_*.app
+          ${{ github.workspace }}/iOS-arm64/build/Example_*.app.dSYM
       
