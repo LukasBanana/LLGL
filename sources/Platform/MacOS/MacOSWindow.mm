@@ -81,10 +81,6 @@ bool Surface::ProcessEvents()
             {
                 MacOSWindow* platformWindow = [wndDelegate windowInstance];
                 platformWindow->ProcessEvent(event);
-
-                /* Check for window signals */
-                if (const Extent2D* contentSize = [wndDelegate pollResizeSignal])
-                    platformWindow->PostResize(*contentSize);
             }
         }
         

@@ -29,7 +29,6 @@ namespace LLGL { class MacOSWindow; }
 
 - (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window;
 
-- (nullable const LLGL::Extent2D*)pollResizeSignal;
 - (BOOL)isFullscreenMode;
 
 @end
