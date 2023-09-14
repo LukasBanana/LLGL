@@ -24,10 +24,11 @@ constexpr float epsilon = 0.00001f;
 
 enum class TestResult
 {
-    Continue,       // Continue testing.
-    Passed,         // Test passed.
-    FailedMismatch, // Test failed due to mismatch between expected and given data.
-    FailedErrors,   // Test failed due to interface errors.
+    Continue,           // Continue testing.
+    ContinueSkipFrame,  // Continue testing, skip frame output.
+    Passed,             // Test passed.
+    FailedMismatch,     // Test failed due to mismatch between expected and given data.
+    FailedErrors,       // Test failed due to interface errors.
 };
 
 class TestbedContext

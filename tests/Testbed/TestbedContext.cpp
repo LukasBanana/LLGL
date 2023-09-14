@@ -226,14 +226,20 @@ unsigned TestbedContext::RunRendererIndependentTests()
     return failures;
 }
 
+static bool IsContinueTest(TestResult result)
+{
+    return (result == TestResult::Continue || result == TestResult::ContinueSkipFrame);
+}
+
 TestResult TestbedContext::RunTest(const std::function<TestResult(unsigned)>& callback)
 {
     TestResult result = TestResult::Continue;
 
-    for (unsigned frame = 0; LLGL::Surface::ProcessEvents() && result == TestResult::Continue; ++frame)
+    for (unsigned frame = 0; LLGL::Surface::ProcessEvents() && IsContinueTest(result); ++frame)
     {
         result = callback(frame);
-        swapChain->Present();
+        if (result != TestResult::ContinueSkipFrame)
+            swapChain->Present();
     }
 
     return result;

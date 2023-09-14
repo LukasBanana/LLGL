@@ -66,6 +66,10 @@ DEF_TEST( SceneUpdate )
         }
     }
 
+    // Skip every other frame on fast test
+    if (fastTest && (frame % 2 == 0))
+        return TestResult::ContinueSkipFrame;
+
     // Update scene constants
     sceneConstants = SceneConstants{};
 
