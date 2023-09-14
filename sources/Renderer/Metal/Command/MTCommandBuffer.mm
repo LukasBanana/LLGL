@@ -26,12 +26,14 @@ namespace LLGL
 static constexpr NSUInteger g_tessFactorBufferAlignment = (sizeof(MTLQuadTessellationFactorsHalf) * 256);
 
 MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, long flags) :
-    device_            { device                         },
-    flags_             { flags                          },
-    stagingBufferPool_ { device, USHRT_MAX              },
-    tessFactorBuffer_  { device,
-                         MTLResourceStorageModePrivate,
-                         g_tessFactorBufferAlignment    }
+    device_             { device                         },
+    flags_              { flags                          },
+    stagingBufferPools_ { { device, USHRT_MAX },
+                          { device, USHRT_MAX },
+                          { device, USHRT_MAX }          },
+    tessFactorBuffer_   { device,
+                          MTLResourceStorageModePrivate,
+                          g_tessFactorBufferAlignment    }
 {
     ResetRenderStates();
 }
@@ -123,11 +125,12 @@ void MTCommandBuffer::ResetRenderStates()
     boundPipelineState_     = nullptr;
     descriptorCache_        = nullptr;
     constantsCache_         = nullptr;
+    currentStagingPool_     = (currentStagingPool_ + 1) % maxNumStagingPools;
 }
 
 void MTCommandBuffer::ResetStagingPool()
 {
-    stagingBufferPool_.Reset();
+    stagingBufferPools_[currentStagingPool_].Reset();
 }
 
 void MTCommandBuffer::WriteStagingBuffer(
@@ -136,7 +139,7 @@ void MTCommandBuffer::WriteStagingBuffer(
     id<MTLBuffer>&  outSrcBuffer,
     NSUInteger&     outSrcOffset)
 {
-    stagingBufferPool_.Write(data, dataSize, outSrcBuffer, outSrcOffset);
+    stagingBufferPools_[currentStagingPool_].Write(data, dataSize, outSrcBuffer, outSrcOffset);
 }
 
 MTKView* MTCommandBuffer::GetCurrentDrawableView() const

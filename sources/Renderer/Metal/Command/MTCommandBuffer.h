@@ -162,10 +162,13 @@ class MTCommandBuffer : public CommandBuffer
 
     private:
 
+        static constexpr NSUInteger     maxNumStagingPools      = 3;
+
         id<MTLDevice>                   device_                 = nil;
         long                            flags_                  = 0;
 
-        MTStagingBufferPool             stagingBufferPool_;
+        NSUInteger                      currentStagingPool_     = 0;
+        MTStagingBufferPool             stagingBufferPools_[MTCommandBuffer::maxNumStagingPools];
         SmallVector<id<MTLDrawable>, 2> queuedDrawables_;
 
         MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
