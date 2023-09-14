@@ -117,7 +117,9 @@ int main(int argc, char* argv[])
     #ifdef _WIN32
     system("pause");
     #endif
-    return 0;
+
+    // Return number of failed modules as error code
+    return static_cast<int>(modulesWithFailedTests);
 }
 
 
