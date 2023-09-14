@@ -19,6 +19,7 @@ jobs:
     env:
       DEPLOYMENT_TARGET: 13.0
       README: ${{ github.workspace }}/README.txt
+      GAUSSIAN_LIB_DIR: external/GaussianLib/include
 
     steps:
     - name: Checkout Repository
@@ -38,6 +39,7 @@ jobs:
         -DLLGL_BUILD_RENDERER_OPENGLES3=ON
         -DLLGL_BUILD_RENDERER_METAL=ON
         -DLLGL_BUILD_EXAMPLES=ON
+        -DGaussLib_INCLUDE_DIR:STRING="${{ env.GAUSSIAN_LIB_DIR }}"
 
     - name: Build
       run: |

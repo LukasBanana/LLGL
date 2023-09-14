@@ -117,6 +117,8 @@ function(find_source_files OUTPUT_LIST FILTERS)
         set(FILTERS "*.c;*.cpp;*.h;*.inl")
     elseif("${FILTERS}" STREQUAL "OBJC")
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm")
+    elseif("${FILTERS}" STREQUAL "RES")
+        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag")
     endif()
 
     # Collect all input directories for each filter
@@ -158,7 +160,7 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
     else()
         # Find all source files for project
         if(APPLE)
-            find_source_files(ProjectFiles "*.c;*.cpp;*.metal;*.vert;*.frag" ${SRC_FILES})
+            find_source_files(ProjectFiles RES ${SRC_FILES})
         else()
             find_source_files(ProjectFiles CXX ${SRC_FILES})
         endif()
@@ -242,6 +244,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     if(APPLE)
         # Project configurations
         add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
+        target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
 
         # Configure bundle name and ID
         if (${PROJECT_NAME} MATCHES "Example_+")
@@ -294,10 +297,10 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         target_link_libraries(${PROJECT_NAME} ${LIB_FILES} android_native_app_glue log)
     else()
         add_executable(${PROJECT_NAME} ${SRC_FILES})
+        target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
     endif()
 
     # Configure linker settings
-    target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
     set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG} DEBUG_POSTFIX "D")
     
     # Configure working directory and project solution folder

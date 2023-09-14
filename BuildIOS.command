@@ -10,6 +10,7 @@ ENABLE_TESTS="OFF"
 BUILD_TYPE="Release"
 DEPLOYMENT_TARGET="11.0"
 PROJECT_ONLY=0
+STATIC_LIB="OFF"
 VERBOSE=0
 
 # When this .command script is launched from Finder, we have to change to the source directory explicitly
@@ -24,6 +25,7 @@ print_help()
     echo "  -d, --debug ............... Configure Debug build (default is Release)"
     echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -p, --project-only ........ Build project solution only (no compilation)"
+    echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -t, --target T ............ Sets deployment target to T (default is 11.0)"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
@@ -49,6 +51,8 @@ for ARG in "$@"; do
             BUILD_TYPE="Debug"
         elif [ "$ARG" = "-p" ] || [ "$ARG" = "--project-only" ]; then
             PROJECT_ONLY=1
+        elif [ "$ARG" = "-s" ] || [ "$ARG" = "--static-lib" ]; then
+            STATIC_LIB="ON"
         elif [ "$ARG" = "-t" ] || [ "$ARG" = "--target" ]; then
             READ_TARGET=1
         elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
@@ -111,7 +115,7 @@ OPTIONS=(
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_OPENGLES3=$ENABLE_GLES3
     -DLLGL_BUILD_RENDERER_METAL=ON
-    -DLLGL_BUILD_STATIC_LIB=ON
+    -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
