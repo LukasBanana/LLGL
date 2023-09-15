@@ -2,7 +2,7 @@ name: GNU/Linux
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "release-0.03b" ]
   pull_request:
     branches: [ "master" ]
 
