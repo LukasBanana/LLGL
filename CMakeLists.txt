@@ -205,7 +205,12 @@ endfunction()
 
 function(append_global_property PROP_NAME OUTPUT_LIST NEW_ITEM)
     get_property(PropertyList GLOBAL PROPERTY ${PROP_NAME})
+
+    # Link base libs first to avoid wrong order in GCC.
+    # For Clang, this order can cause duplicate linking entries, but shouldn't hurt.
+    # For now it's not worth the trouble having to distinguish between compiler toolchains (see CMAKE_CXX_COMPILER_ID).
     list(APPEND PropertyList ${NEW_ITEM})
+
     set_property(GLOBAL PROPERTY ${PROP_NAME} "${PropertyList}")
     set(${OUTPUT_LIST} "${PropertyList}" PARENT_SCOPE)
 endfunction()
