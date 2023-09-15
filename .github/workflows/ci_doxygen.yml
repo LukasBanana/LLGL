@@ -1,0 +1,29 @@
+name: Doxygen
+
+on:
+  push:
+    branches: [ "release-0.04b" ]
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+
+    env:
+      VERSION: 0.04-Beta
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Generate Docs
+      uses: mattnotmitt/doxygen-action@v1.9.5
+      with:
+        doxyfile-path: docu/Doxyfile
+    
+    - name: Upload Docs
+      uses: actions/upload-artifact@v3
+      with:
+        name: LLGL-Docs-v${{ env.VERSION }}
+        path: |
+          ${{ github.workspace }}/doxygen
+      
