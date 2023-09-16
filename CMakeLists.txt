@@ -262,6 +262,9 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
             set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
         endif()
 
+        # macOS/iOS bundle names must not have "_" characters
+        string(REPLACE "_" "-" PROJECT_BUNDLE_NAME "${PROJECT_BUNDLE_NAME}")
+
         # Filter resource files into "Resources" folder
         set(RES_FILES "${SRC_FILES}")
         list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds|icns)")

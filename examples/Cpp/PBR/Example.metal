@@ -166,7 +166,7 @@ float3 BRDF(
     float alpha = roughness * roughness;
 
     float3 halfDir = normalize(viewDir + lightDir);
-    float3 reflection = -normalize(reflect(viewDir, normal));
+    //float3 reflection = -normalize(reflect(viewDir, normal));
 
     float3 diffuseColor  = (albedo * (1.0 - f0) * (1.0 - metallic));
     float3 specularColor = mix(f0, albedo, metallic);
@@ -177,7 +177,7 @@ float3 BRDF(
     float NdotL = clamp(dot(normal, lightDir), 0.001, 1.0);
     float NdotV = clamp(abs(dot(normal, viewDir)), 0.001, 1.0);
     float NdotH = saturate(dot(normal, halfDir));
-    float LdotH = saturate(dot(lightDir, halfDir));
+    //float LdotH = saturate(dot(lightDir, halfDir));
     float VdotH = saturate(dot(viewDir, halfDir));
 
     float3 F = SpecularReflection(specularColor, (float3)reflectance90, VdotH);
