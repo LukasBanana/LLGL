@@ -48,7 +48,7 @@ void SaveImagePNG(const LLGL::Image& img, const std::string& filename, std::uint
 
 void Test_PixelOperations()
 {
-    auto img1 = LoadImage("Media/Textures/Grid.png", LLGL::ImageFormat::RGBA);
+    auto img1 = LoadImage("Media/Textures/Grid10x10.png", LLGL::ImageFormat::RGBA);
 
     LLGL::Image img1Sub { LLGL::Extent3D { 109, 110, 1 }, LLGL::ImageFormat::BGR, img1.GetDataType() };
 
@@ -72,7 +72,7 @@ void Test_PixelOperations()
 
 void Test_Blit()
 {
-    auto img1 = LoadImage("Media/Textures/Grid.png", LLGL::ImageFormat::RGBA);
+    auto img1 = LoadImage("Media/Textures/Grid10x10.png", LLGL::ImageFormat::RGBA);
 
     img1.Blit(LLGL::Offset3D { -27, 0, 0 }, img1, LLGL::Offset3D { 383, 383, 0 }, LLGL::Extent3D { 54, 55, 1 });
 
@@ -81,11 +81,11 @@ void Test_Blit()
 
 void Test_Resize()
 {
-    auto img1 = LoadImage("Media/Textures/Grid.png", LLGL::ImageFormat::RGB);
+    auto img1 = LoadImage("Media/Textures/Grid10x10.png", LLGL::ImageFormat::RGB);
 
     const auto& extent = img1.GetExtent();
 
-    #if 1
+    #if 0
     img1.Resize(
         LLGL::Extent3D{ 512, 512, 1 },
         LLGL::ColorRGBAf{ 0.0f, 1.0f, 0.0f },
@@ -94,8 +94,8 @@ void Test_Resize()
     #else
     img1.Resize(
         img1.GetExtent() + LLGL::Extent3D{ 6, 6, 0 },
-        LLGL::ColorRGBAd { 1.0, 0.0, 1.0 },
-        LLGL::Offset3D { 3, 3, 0 }
+        LLGL::ColorRGBAf{ 1.0, 0.0, 1.0 },
+        LLGL::Offset3D{ 3, 3, 0 }
     );
     #endif
     SaveImagePNG(img1, "Output/img1-resize-larger.png");
@@ -112,8 +112,8 @@ int main(int argc, char* argv[])
 {
     try
     {
-        //Test_PixelOperations();
-        //Test_Blit();
+        Test_PixelOperations();
+        Test_Blit();
         Test_Resize();
     }
     catch (const std::exception& e)
