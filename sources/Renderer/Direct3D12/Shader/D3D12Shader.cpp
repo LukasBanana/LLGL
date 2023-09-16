@@ -256,7 +256,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     std::string fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
-    const char* sourceName = nullptr;
+    const char* sourceName      = nullptr;
 
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
@@ -269,6 +269,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     {
         sourceCode      = shaderDesc.source;
         sourceLength    = shaderDesc.sourceSize;
+        sourceName      = shaderDesc.name;
     }
 
     /* Get parameter from union */
