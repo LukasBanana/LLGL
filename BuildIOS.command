@@ -61,7 +61,7 @@ for ARG in "$@"; do
             ENABLE_NULL="ON"
         elif [ "$ARG" = "--gles" ]; then
             ENABLE_GLES3="ON"
-        elif [ "$ARG" = "-no-examples" ]; then
+        elif [ "$ARG" = "--no-examples" ]; then
             ENABLE_EXAMPLES="OFF"
         else
             OUTPUT_DIR="$ARG"
