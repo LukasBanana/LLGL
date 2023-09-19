@@ -176,6 +176,18 @@ TestResult TestbedContext::TestContainerSmallVector()
     TEST_SMALL_VECTOR(iv0_8,  cmpInt16);
     TEST_SMALL_VECTOR(iv0_16, cmpInt16);
 
+    // Test inserting elements beyond static capacity
+    SmallVector<int, 2> iv2_n;
+    std::vector<int> iv_std;
+
+    for (int i = 0; i < 1024; ++i)
+    {
+        iv2_n.push_back(i);
+        iv_std.push_back(i);
+    }
+
+    TEST_SMALL_VECTOR(iv2_n, iv_std.data());
+
     return TestResult::Passed;
 }
 
