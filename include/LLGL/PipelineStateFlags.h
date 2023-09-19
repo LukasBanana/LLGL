@@ -150,19 +150,19 @@ enum class BlendOp
 {
     Zero,               //!< Data source is the color black (0, 0, 0, 0).
     One,                //!< Data source is the color white (1, 1, 1, 1).
-    SrcColor,           //!< Data source is color data (RGB) from a fragment shader.
-    InvSrcColor,        //!< Data source is inverted color data (1 - RGB) from a fragment shader.
+    SrcColor,           //!< Data source is color data (RGB) from a fragment shader. \remarks This is a color-only blend operation.
+    InvSrcColor,        //!< Data source is inverted color data (1 - RGB) from a fragment shader. \remarks This is a color-only blend operation.
     SrcAlpha,           //!< Data source is alpha data (A) from a fragment shader.
     InvSrcAlpha,        //!< Data source is inverted alpha data (1 - A) from a fragment shader.
-    DstColor,           //!< Data source is color data (RGB) from a framebuffer.
-    InvDstColor,        //!< Data source is inverted color data (1 - RGB) from a framebuffer.
+    DstColor,           //!< Data source is color data (RGB) from a framebuffer. \remarks This is a color-only blend operation.
+    InvDstColor,        //!< Data source is inverted color data (1 - RGB) from a framebuffer. \remarks This is a color-only blend operation.
     DstAlpha,           //!< Data source is alpha data (A) from a framebuffer.
     InvDstAlpha,        //!< Data source is inverted alpha data (1 - A) from a framebuffer.
     SrcAlphaSaturate,   //!< Data source is alpha data (A) from a fragment shader which is clamped to 1 or less.
     BlendFactor,        //!< Data source is the blend factor (RGBA) from the blend state. \see CommandBuffer::SetBlendFactor
     InvBlendFactor,     //!< Data source is the inverted blend factor (1 - RGBA) from the blend state. \see CommandBuffer::SetBlendFactor
-    Src1Color,          //!< Data sources are both color data (RGB) from a fragment shader with dual-source color blending.
-    InvSrc1Color,       //!< Data sources are both inverted color data (1 - RGB) from a fragment shader with dual-source color blending.
+    Src1Color,          //!< Data sources are both color data (RGB) from a fragment shader with dual-source color blending. \remarks This is a color-only blend operation.
+    InvSrc1Color,       //!< Data sources are both inverted color data (1 - RGB) from a fragment shader with dual-source color blending. \remarks This is a color-only blend operation.
     Src1Alpha,          //!< Data sources are both alpha data (A) from a fragment shader with dual-source color blending.
     InvSrc1Alpha        //!< Data sources are both inverted alpha data (1 - A) from a fragment shader with dual-source color blending.
 };
@@ -621,10 +621,16 @@ struct BlendTargetDescriptor
     //! Color blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic colorArithmetic = BlendArithmetic::Add;
 
-    //! Source alpha blending operation. By default BlendOp::SrcAlpha.
+    /**
+    \brief Source alpha blending operation. By default BlendOp::SrcAlpha.
+    \remarks The source alpha channel <b>must not</b> have a color-only blend operation.
+    */
     BlendOp         srcAlpha        = BlendOp::SrcAlpha;
 
-    //! Destination alpha blending operation. By default BlendOp::InvSrcAlpha.
+    /**
+    \brief Destination alpha blending operation. By default BlendOp::InvSrcAlpha.
+    \remarks The destination alpha channel <b>must not</b> have a color-only blend operation.
+    */
     BlendOp         dstAlpha        = BlendOp::InvSrcAlpha;
 
     //! Alpha blending arithmetic. By default BlendArithmetic::Add.

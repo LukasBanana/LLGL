@@ -1541,7 +1541,23 @@ static std::string ColorMaskToString(std::uint8_t colorMask)
     return s;
 }
 
-void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx)
+static bool IsBlendOpColorOnly(BlendOp op)
+{
+    switch (op)
+    {
+        case BlendOp::SrcColor:
+        case BlendOp::InvSrcColor:
+        case BlendOp::DstColor:
+        case BlendOp::InvDstColor:
+        case BlendOp::Src1Color:
+        case BlendOp::InvSrc1Color:
+            return true;
+        default:
+            return false;
+    }
+};
+
+void DbgRenderSystem::ValidateBlendTargetDescriptor(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx)
 {
     if (blendTargetDesc.colorMask != 0)
     {
@@ -1549,6 +1565,20 @@ void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& b
             ErrorType::InvalidArgument,
             "cannot use color mask <" + ColorMaskToString(blendTargetDesc.colorMask) +
             "> of blend target <" + std::to_string(idx) + "> without a fragment shader"
+        );
+    }
+    if (IsBlendOpColorOnly(blendTargetDesc.srcAlpha))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot use color-only blend operation for source alpha channel (srcAlpha = LLGL::BlendOp::" + std::string(ToString(blendTargetDesc.srcAlpha)) + ")"
+        );
+    }
+    if (IsBlendOpColorOnly(blendTargetDesc.dstAlpha))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot use color-only blend operation for destination alpha channel (dstAlpha = LLGL::BlendOp::" + std::string(ToString(blendTargetDesc.dstAlpha)) + ")"
         );
     }
 }
@@ -1587,10 +1617,10 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, 
         if (blendDesc.independentBlendEnabled)
         {
             for_range(i, sizeof(blendDesc.targets) / sizeof(blendDesc.targets[0]))
-                ValidateColorMaskIsDisabled(blendDesc.targets[i], i);
+                ValidateBlendTargetDescriptor(blendDesc.targets[i], i);
         }
         else
-            ValidateColorMaskIsDisabled(blendDesc.targets[0], 0);
+            ValidateBlendTargetDescriptor(blendDesc.targets[0], 0);
     }
 }
 
@@ -1601,7 +1631,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     /* Validate shader pipeline stages */
     bool hasSeparableShaders = false;
-    if (auto vertexShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.vertexShader))
+    if (DbgShader* vertexShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.vertexShader))
         hasSeparableShaders = ((vertexShaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO without vertex shader");
@@ -1617,13 +1647,13 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         ShaderType  expectedType;
     };
 
-    for (auto pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
-                       ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
-                       ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
-                       ShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
-                       ShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
+    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
+                                 ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
+                                 ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
+                                 ShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
+                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
     {
-        if (auto shader = pair.shader)
+        if (Shader* shader = pair.shader)
         {
             auto shaderDbg = LLGL_CAST(DbgShader*, shader);
             const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
@@ -1654,7 +1684,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         }
     }
 
-    if (auto fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
+    if (DbgShader* fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
         ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass);
 
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader);

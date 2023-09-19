@@ -249,6 +249,32 @@ LLGL_EXPORT const char* ToString(const TextureType t)
     return nullptr;
 }
 
+LLGL_EXPORT const char* ToString(const BlendOp t)
+{
+    using T = BlendOp;
+    switch (t)
+    {
+        case T::Zero:               return "Zero";
+        case T::One:                return "One";
+        case T::SrcColor:           return "SrcColor";
+        case T::InvSrcColor:        return "InvSrcColor";
+        case T::SrcAlpha:           return "SrcAlpha";
+        case T::InvSrcAlpha:        return "InvSrcAlpha";
+        case T::DstColor:           return "DstColor";
+        case T::InvDstColor:        return "InvDstColor";
+        case T::DstAlpha:           return "DstAlpha";
+        case T::InvDstAlpha:        return "InvDstAlpha";
+        case T::SrcAlphaSaturate:   return "SrcAlphaSaturate";
+        case T::BlendFactor:        return "BlendFactor";
+        case T::InvBlendFactor:     return "InvBlendFactor";
+        case T::Src1Color:          return "Src1Color";
+        case T::InvSrc1Color:       return "InvSrc1Color";
+        case T::Src1Alpha:          return "Src1Alpha";
+        case T::InvSrc1Alpha:       return "InvSrc1Alpha";
+    }
+    return nullptr;
+}
+
 LLGL_EXPORT const char* ToString(const ResourceType t)
 {
     using T = ResourceType;
