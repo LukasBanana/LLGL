@@ -27,7 +27,7 @@ LLGL_EXPORT char GetSeparator();
 
 // Sanitizes the specified path:
 //  - Replaces wrong separators with the appropriate one for the host platform.
-//  - Replaces redundant upper-level directory entries, e.g. "Foo/../Bar/" to "Bar/".
+//  - Replaces redundant upper-level directory entries, e.g. "Foo/../Bar/" to "Bar".
 //  - Strips trailing separators.
 LLGL_EXPORT UTF8String Sanitize(const UTF8String& path);
 

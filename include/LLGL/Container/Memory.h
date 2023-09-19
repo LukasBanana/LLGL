@@ -122,7 +122,7 @@ namespace Memory
 
 
 /**
-\brief Copies the specifies value 'count'-times into the specified memory location.
+\brief Copies the specified value \c count times into the specified memory location.
 \param[out] dst Specifies the memory location where the input value will be copied to.
 \param[in] value Specifies the input value that is meant to be copied into all entries.
 \param[in] count Specifies how many entries will be set to the input value.

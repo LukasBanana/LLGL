@@ -30,7 +30,7 @@ void D3D11CommandQueue::Submit(CommandBuffer& commandBuffer)
     auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, commandBuffer);
     if (!cmdBufferD3D.IsSecondaryCmdBuffer())
     {
-        if (auto commandList = cmdBufferD3D.GetDeferredCommandList())
+        if (ID3D11CommandList* commandList = cmdBufferD3D.GetDeferredCommandList())
         {
             /* Execute encoded command list with immediate context but don't restore previous state */
             context_->ExecuteCommandList(commandList, FALSE);
