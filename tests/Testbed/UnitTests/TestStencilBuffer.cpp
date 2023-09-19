@@ -45,11 +45,9 @@ DEF_TEST( StencilBuffer )
     renderTarget->SetName("renderTarget");
 
     // Create PSO for rendering to the stencil buffer with dynamic reference value
-    PipelineLayout* psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@1):vert:frag"));
-
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout              = psoLayout;
+        psoDesc.pipelineLayout              = layouts[PipelineSolid];
         psoDesc.renderPass                  = renderTarget->GetRenderPass();
         psoDesc.vertexShader                = shaders[VSSolid];
         psoDesc.stencil.testEnabled         = true;
@@ -149,7 +147,6 @@ DEF_TEST( StencilBuffer )
 
     // Clear resources
     renderer->Release(*pso);
-    renderer->Release(*psoLayout);
     renderer->Release(*renderTarget);
     renderer->Release(*readbackTex);
 

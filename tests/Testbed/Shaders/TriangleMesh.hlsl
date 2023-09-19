@@ -43,8 +43,8 @@ void VSMain(VertexIn inp, out VertexOut outp)
 }
 
 #if ENABLE_TEXTURING
-Texture2D colorMap;
-SamplerState linearSampler;
+Texture2D colorMap : register(t2);
+SamplerState linearSampler : register(s3);
 #endif
 
 float4 PSMain(VertexOut inp) : SV_Target

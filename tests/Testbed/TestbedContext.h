@@ -74,8 +74,17 @@ class TestbedContext
         enum Models
         {
             ModelCube = 0,
+            ModelRect,
 
             ModelCount,
+        };
+
+        enum Pipelines
+        {
+            PipelineSolid,
+            PipelineTextured,
+
+            PipelineCount,
         };
 
         enum Shaders
@@ -86,6 +95,24 @@ class TestbedContext
             PSTextured,
 
             ShaderCount,
+        };
+
+        enum Textures
+        {
+            TextureGrid10x10 = 0,
+            TextureGradient,
+
+            TextureCount,
+        };
+
+        enum Samplers
+        {
+            SamplerNearest = 0,
+            SamplerNearestClamp,
+            SamplerLinear,
+            SamplerLinearClamp,
+
+            SamplerCount,
         };
 
         enum DiffErrors
@@ -180,6 +207,9 @@ class TestbedContext
         LLGL::VertexFormat          vertexFormat;
         IndexedTriangleMesh         models[ModelCount];
         LLGL::Shader*               shaders[ShaderCount]    = {};
+        LLGL::PipelineLayout*       layouts[PipelineCount]  = {};
+        LLGL::Texture*              textures[TextureCount]  = {};
+        LLGL::Sampler*              samplers[SamplerCount]  = {};
         Gs::Matrix4f                projection;
 
     private:
@@ -197,11 +227,15 @@ class TestbedContext
         void LogRendererInfo();
 
         bool LoadShaders();
+        void CreatePipelineLayouts();
+        bool LoadTextures();
+        void CreateSamplerStates();
         void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
 
         void CreateTriangleMeshes();
 
         void CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
+        void CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
 
         void CreateConstantBuffers();
 
@@ -209,6 +243,9 @@ class TestbedContext
         void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
         void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
         void SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
+
+        LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, LLGL::Format format, const LLGL::Extent2D& extent);
+        void SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly = false);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
         DiffResult DiffImages(const std::string& name, int threshold = 1, int scale = 1);

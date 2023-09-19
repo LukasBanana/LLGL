@@ -7,6 +7,7 @@
 
 #include "Testbed.h"
 #include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/Parse.h>
 #include <Gauss/ProjectionMatrix4.h>
 #include <string.h>
 #include <fstream>
@@ -129,6 +130,9 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         CreateTriangleMeshes();
         CreateConstantBuffers();
         LoadShaders();
+        CreatePipelineLayouts();
+        LoadTextures();
+        CreateSamplerStates();
         LoadProjectionMatrix();
     }
 }
@@ -192,6 +196,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( DepthBuffer               );
     RUN_TEST( StencilBuffer             );
     RUN_TEST( SceneUpdate               );
+    RUN_TEST( BlendStates               );
 
     #undef RUN_TEST
 
@@ -720,6 +725,81 @@ bool TestbedContext::LoadShaders()
     return true;
 }
 
+void TestbedContext::CreatePipelineLayouts()
+{
+    const bool hasCombinedSamplers = (renderer->GetRendererID() == RendererID::OpenGL);
+
+    layouts[PipelineSolid] = renderer->CreatePipelineLayout(
+        Parse("cbuffer(Scene@1):vert:frag")
+    );
+
+    layouts[PipelineTextured] = renderer->CreatePipelineLayout(
+        Parse(
+            hasCombinedSamplers
+                ?   "cbuffer(Scene@1):vert:frag,"
+                    "texture(colorMapSampler@2):frag,"
+                    "sampler(2):frag,"
+                :
+                    "cbuffer(Scene@1):vert:frag,"
+                    "texture(colorMap@2):frag,"
+                    "sampler(linearSampler@3):frag,"
+        )
+    );
+}
+
+bool TestbedContext::LoadTextures()
+{
+    auto LoadTextureFromFile = [this](const char* name, const std::string& filename) -> Texture*
+    {
+        // Load image
+        int w = 0, h = 0, c = 0;
+        stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, 4);
+
+        if (!imgBuf)
+        {
+            Log::Errorf("Failed to load image: %s\n", filename.c_str());
+            return nullptr;
+        }
+
+        // Create texture
+        SrcImageDescriptor imageDesc;
+        {
+            imageDesc.format    = ImageFormat::RGBA;
+            imageDesc.dataType  = DataType::UInt8;
+            imageDesc.data      = imgBuf;
+            imageDesc.dataSize  = static_cast<std::size_t>(w*h*4);
+        }
+        TextureDescriptor texDesc;
+        {
+            texDesc.format          = Format::RGBA8UNorm;
+            texDesc.extent.width    = static_cast<std::uint32_t>(w);
+            texDesc.extent.height   = static_cast<std::uint32_t>(h);
+        }
+        Texture* tex = nullptr;
+        (void)CreateTexture(texDesc, name, &tex, &imageDesc);
+
+        // Release image buffer
+        stbi_image_free(imgBuf);
+
+        return tex;
+    };
+
+    const std::string texturePath = "../Media/Textures/";
+
+    textures[TextureGrid10x10]  = LoadTextureFromFile("Grid10x10", texturePath + "Grid10x10.png");
+    textures[TextureGradient]   = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
+
+    return true;
+}
+
+void TestbedContext::CreateSamplerStates()
+{
+    samplers[SamplerNearest]        = renderer->CreateSampler(Parse("filter=nearest"));
+    samplers[SamplerNearestClamp]   = renderer->CreateSampler(Parse("filter=nearest,address=clamp"));
+    samplers[SamplerLinear]         = renderer->CreateSampler(Parse("filter=linear"));
+    samplers[SamplerLinearClamp]    = renderer->CreateSampler(Parse("filter=linear,address=clamp"));
+}
+
 void TestbedContext::LoadProjectionMatrix(float nearPlane, float farPlane, float fov)
 {
     // Initialize default projection matrix
@@ -747,6 +827,7 @@ void TestbedContext::CreateTriangleMeshes()
     IndexedTriangleMeshBuffer sceneBuffer;
 
     CreateModelCube(sceneBuffer, models[ModelCube]);
+    CreateModelRect(sceneBuffer, models[ModelRect]);
 
     const std::uint64_t vertexBufferSize = sceneBuffer.vertices.size() * sizeof(Vertex);
     const std::uint64_t indexBufferSize = sceneBuffer.indices.size() * sizeof(std::uint32_t);
@@ -817,6 +898,19 @@ void TestbedContext::CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTr
     scene.FinalizeMesh(outMesh);
 }
 
+void TestbedContext::CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh)
+{
+    scene.NewMesh();
+
+    scene.AddVertex(-1,+1,0,  0, 0,-1,  0, 0 );
+    scene.AddVertex(+1,+1,0,  0, 0,-1,  1, 0 );
+    scene.AddVertex(+1,-1,0,  0, 0,-1,  1, 1 );
+    scene.AddVertex(-1,-1,0,  0, 0,-1,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 0);
+
+    scene.FinalizeMesh(outMesh);
+}
+
 void TestbedContext::CreateConstantBuffers()
 {
     BufferDescriptor bufDesc;
@@ -828,7 +922,7 @@ void TestbedContext::CreateConstantBuffers()
     sceneCbuffer->SetName("sceneCbuffer");
 }
 
-static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, const std::string& filename, bool verbose)
 {
     auto PrintInfo = [&filename]
     {
@@ -842,8 +936,8 @@ static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& ext
         filename.c_str(),
         static_cast<int>(extent.width),
         static_cast<int>(extent.height),
-        3,
-        pixels.data(),
+        comp,
+        pixels,
         0
     );
 
@@ -851,6 +945,16 @@ static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& ext
         Log::Printf(" [ Ok ]\n");
 
     return (result != 0);
+}
+
+static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+{
+    return SaveImage(pixels.data(), 3, extent, filename, verbose);
+}
+
+static bool SaveImage(const std::vector<ColorRGBAub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+{
+    return SaveImage(pixels.data(), 4, extent, filename, verbose);
 }
 
 static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const std::string& filename, bool verbose = false)
@@ -950,6 +1054,95 @@ void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, co
     SaveImage(colors, extent, path + name + ".Result.png", verbose);
 }
 
+LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, Format format, const LLGL::Extent2D& extent)
+{
+    // Create temporary texture to capture framebuffer color
+    TextureDescriptor texDesc;
+    {
+        texDesc.format          = format;
+        texDesc.extent.width    = extent.width;
+        texDesc.extent.height   = extent.height;
+        texDesc.bindFlags       = BindFlags::CopyDst;
+        texDesc.mipLevels       = 1;
+    }
+    Texture* capture = renderer->CreateTexture(texDesc);
+    capture->SetName("readbackTex");
+
+    // Capture framebuffer
+    const TextureRegion texRegion{ Offset3D{}, Extent3D{ extent.width, extent.height, 1 } };
+    cmdBuffer.CopyTextureFromFramebuffer(*capture, texRegion, Offset2D{});
+
+    return capture;
+}
+
+void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly)
+{
+    if (capture != nullptr)
+    {
+        const TextureDescriptor texDesc = capture->GetDesc();
+        const Extent2D extent{ texDesc.extent.width, texDesc.extent.height };
+        const TextureRegion texRegion{ Offset3D{}, Extent3D{ extent.width, extent.height, 1 } };
+
+        if (IsDepthOrStencilFormat(texDesc.format))
+        {
+            if (writeStencilOnly)
+            {
+                // Readback framebuffer stencil indices
+                std::vector<std::uint8_t> stencilData;
+                stencilData.resize(extent.width * extent.height);
+
+                DstImageDescriptor dstImageDesc;
+                {
+                    dstImageDesc.format     = ImageFormat::Stencil;
+                    dstImageDesc.data       = stencilData.data();
+                    dstImageDesc.dataSize   = sizeof(decltype(stencilData)::value_type) * stencilData.size();
+                    dstImageDesc.dataType   = DataType::UInt8;
+                }
+                renderer->ReadTexture(*capture, texRegion, dstImageDesc);
+
+                SaveStencilImage(stencilData, extent, name);
+            }
+            else
+            {
+                // Readback framebuffer depth components
+                std::vector<float> depthData;
+                depthData.resize(extent.width * extent.height);
+
+                DstImageDescriptor dstImageDesc;
+                {
+                    dstImageDesc.format     = ImageFormat::Depth;
+                    dstImageDesc.data       = depthData.data();
+                    dstImageDesc.dataSize   = sizeof(decltype(depthData)::value_type) * depthData.size();
+                    dstImageDesc.dataType   = DataType::Float32;
+                }
+                renderer->ReadTexture(*capture, texRegion, dstImageDesc);
+
+                SaveDepthImage(depthData, extent, name);
+            }
+        }
+        else
+        {
+            // Readback framebuffer color
+            std::vector<ColorRGBub> colorData;
+            colorData.resize(extent.width * extent.height);
+
+            DstImageDescriptor dstImageDesc;
+            {
+                dstImageDesc.format     = ImageFormat::RGB;
+                dstImageDesc.data       = colorData.data();
+                dstImageDesc.dataSize   = sizeof(decltype(colorData)::value_type) * colorData.size();
+                dstImageDesc.dataType   = DataType::UInt8;
+            }
+            renderer->ReadTexture(*capture, texRegion, dstImageDesc);
+
+            SaveColorImage(colorData, extent, name);
+        }
+
+        // Release temporary resource
+        renderer->Release(*capture);
+    }
+}
+
 static int GetColorDiff(std::uint8_t a, std::uint8_t b)
 {
     return static_cast<int>(a < b ? b - a : a - b);
@@ -968,7 +1161,8 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
 TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, int scale)
 {
     // Load input images and validate they have the same dimensions
-    std::vector<ColorRGBub> pixelsA, pixelsB, pixelsDiff;
+    std::vector<ColorRGBub> pixelsA, pixelsB;
+    std::vector<ColorRGBAub> pixelsDiff;
     Extent2D extentA, extentB;
 
     const std::string resultPath    = outputDir + moduleName + "/";
@@ -987,7 +1181,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
     DiffResult result{ threshold };
     pixelsDiff.resize(extentA.width * extentA.height);
 
-    for (std::size_t i = 0, n = pixelsDiff.size(); i < n; ++i)
+    for_range(i, pixelsDiff.size())
     {
         const ColorRGBub& colorA = pixelsA[i];
         const ColorRGBub& colorB = pixelsB[i];
@@ -997,8 +1191,14 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
             GetColorDiff(colorA.g, colorB.g),
             GetColorDiff(colorA.b, colorB.b),
         };
-        const int maxDiff = std::max({ diff[0], diff[1], diff[2] });
-        pixelsDiff[i] = GetHeatMapColor(maxDiff, scale);
+        const int maxDiff = std::max(std::max(diff[0], diff[1]), diff[2]);
+        const ColorRGBub heatmapColor = GetHeatMapColor(maxDiff, scale);
+
+        pixelsDiff[i].r = heatmapColor.r;
+        pixelsDiff[i].g = heatmapColor.g;
+        pixelsDiff[i].b = heatmapColor.b;
+        pixelsDiff[i].a = (maxDiff > 0 ? 255 : 0);
+
         result.Add(maxDiff);
     }
 

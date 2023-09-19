@@ -44,11 +44,9 @@ DEF_TEST( DepthBuffer )
     renderTarget->SetName("renderTarget");
 
     // Create PSO for rendering to the depth buffer
-    PipelineLayout* psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@1):vert:frag"));
-
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout      = psoLayout;
+        psoDesc.pipelineLayout      = layouts[PipelineSolid];
         psoDesc.renderPass          = renderTarget->GetRenderPass();
         psoDesc.vertexShader        = shaders[VSSolid];
         psoDesc.depth.testEnabled   = true;
@@ -142,7 +140,6 @@ DEF_TEST( DepthBuffer )
 
     // Clear resources
     renderer->Release(*pso);
-    renderer->Release(*psoLayout);
     renderer->Release(*renderTarget);
     renderer->Release(*readbackTex);
 

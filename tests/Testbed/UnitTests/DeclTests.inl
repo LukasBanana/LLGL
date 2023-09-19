@@ -45,6 +45,7 @@ DECL_TEST( RenderTargetNAttachments );
 DECL_TEST( DepthBuffer );
 DECL_TEST( StencilBuffer );
 DECL_TEST( SceneUpdate );
+DECL_TEST( BlendStates );
 
 #undef DECL_TEST
 
