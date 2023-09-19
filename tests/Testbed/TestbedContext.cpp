@@ -44,6 +44,26 @@ static std::string FindOutputDir(int argc, char* argv[])
     return g_defaultOutputDir;
 }
 
+static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
+{
+    std::vector<std::string> selection;
+    for (int i = 0; i < argc; ++i)
+    {
+        if (::strncmp(argv[i], "-run=", 5) == 0)
+        {
+            const char* curr = argv[i] + 5;
+            while (const char* next = ::strchr(curr, ','))
+            {
+                selection.push_back(std::string(curr, next));
+                curr = next + 1;
+            }
+            if (*curr != '\0')
+                selection.push_back(curr);
+        }
+    }
+    return selection;
+}
+
 static std::string SanitizePath(std::string path)
 {
     for (char& chr : path)
@@ -66,12 +86,13 @@ static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
 }
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
-    moduleName  { moduleName                                                                 },
-    outputDir   { SanitizePath(FindOutputDir(argc, argv))                                    },
-    verbose     { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
-    sanityCheck { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
-    showTiming  { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
-    fastTest    { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         }
+    moduleName    { moduleName                                                                 },
+    outputDir     { SanitizePath(FindOutputDir(argc, argv))                                    },
+    verbose       { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
+    sanityCheck   { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
+    showTiming    { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
+    fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },
+    selectedTests { FindSelectedTests(argc, argv)                                              }
 {
     RendererConfigurationOpenGL cfgGL;
 
@@ -166,12 +187,14 @@ static void PrintTestSummary(unsigned failures)
 
 unsigned TestbedContext::RunAllTests()
 {
-    #define RUN_TEST(TEST)                                                          \
-        {                                                                           \
-            const TestResult result = RunTest(                                      \
-                std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1) \
-            );                                                                      \
-            RecordTestResult(result, #TEST);                                        \
+    #define RUN_TEST(TEST)                                                                          \
+        if (selectedTests.empty() ||                                                                \
+            std::find(selectedTests.begin(), selectedTests.end(), #TEST) != selectedTests.end())    \
+        {                                                                                           \
+            const TestResult result = RunTest(                                                      \
+                std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1)                 \
+            );                                                                                      \
+            RecordTestResult(result, #TEST);                                                        \
         }
 
     // Run all command buffer tests

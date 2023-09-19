@@ -184,33 +184,34 @@ class TestbedContext
 
     protected:
 
-        const std::string           moduleName;
-        const std::string           outputDir;
-        const bool                  verbose;
-        const bool                  sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
-        const bool                  showTiming;
-        const bool                  fastTest;       // Skip slow buffer/texture creations to speed up test run
+        const std::string               moduleName;
+        const std::string               outputDir;
+        const bool                      verbose;
+        const bool                      sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
+        const bool                      showTiming;
+        const bool                      fastTest;       // Skip slow buffer/texture creations to speed up test run
+        const std::vector<std::string>  selectedTests;
 
-        unsigned                    failures                = 0;
+        unsigned                        failures                = 0;
 
-        LLGL::RenderingProfiler     profiler;
-        LLGL::RenderingDebugger     debugger;
-        LLGL::RenderSystemPtr       renderer;
-        LLGL::RenderingCapabilities caps;
-        LLGL::SwapChain*            swapChain               = nullptr;
-        LLGL::CommandBuffer*        cmdBuffer               = nullptr;
-        LLGL::CommandQueue*         cmdQueue                = nullptr;
-        LLGL::Surface*              surface                 = nullptr;
-        LLGL::Buffer*               meshBuffer              = nullptr;
-        LLGL::Buffer*               sceneCbuffer            = nullptr;
+        LLGL::RenderingProfiler         profiler;
+        LLGL::RenderingDebugger         debugger;
+        LLGL::RenderSystemPtr           renderer;
+        LLGL::RenderingCapabilities     caps;
+        LLGL::SwapChain*                swapChain               = nullptr;
+        LLGL::CommandBuffer*            cmdBuffer               = nullptr;
+        LLGL::CommandQueue*             cmdQueue                = nullptr;
+        LLGL::Surface*                  surface                 = nullptr;
+        LLGL::Buffer*                   meshBuffer              = nullptr;
+        LLGL::Buffer*                   sceneCbuffer            = nullptr;
 
-        LLGL::VertexFormat          vertexFormat;
-        IndexedTriangleMesh         models[ModelCount];
-        LLGL::Shader*               shaders[ShaderCount]    = {};
-        LLGL::PipelineLayout*       layouts[PipelineCount]  = {};
-        LLGL::Texture*              textures[TextureCount]  = {};
-        LLGL::Sampler*              samplers[SamplerCount]  = {};
-        Gs::Matrix4f                projection;
+        LLGL::VertexFormat              vertexFormat;
+        IndexedTriangleMesh             models[ModelCount];
+        LLGL::Shader*                   shaders[ShaderCount]    = {};
+        LLGL::PipelineLayout*           layouts[PipelineCount]  = {};
+        LLGL::Texture*                  textures[TextureCount]  = {};
+        LLGL::Sampler*                  samplers[SamplerCount]  = {};
+        Gs::Matrix4f                    projection;
 
     private:
 
