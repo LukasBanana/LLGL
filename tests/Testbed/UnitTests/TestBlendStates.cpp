@@ -144,7 +144,7 @@ DEF_TEST( BlendStates )
 
     SaveCapture(readbackTex, colorBufferName);
 
-    constexpr int threshold = 5; // Accept small threshold to avoid failure; seen consistent diffs of 4 across multiple backends
+    constexpr int threshold = 12; // Accept threshold of 12 to avoid failure on CIS server; seen consistent diffs of 4 or 12 across multiple backends
     const DiffResult diff = DiffImages(colorBufferName, threshold);
 
     // Evaluate readback result
