@@ -191,12 +191,20 @@ T* FindInSortedArray(
     return nullptr;
 }
 
+// Returns numerator 'divided' by 'denominator' while always rounding up.
+template <typename T>
+T DivideRoundUp(T numerator, T denominator)
+{
+    static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: T must be an integral type");
+    return ((numerator + denominator - 1) / denominator);
+}
+
 // Returns the adjusted size with the specified alignment, which is always greater or equal to 'size' (T can be UINT or VkDeviceSize for instance).
 template <typename T>
 T GetAlignedSize(T size, T alignment)
 {
     if (alignment > 1)
-        return ((size + (alignment - 1)) / alignment) * alignment;
+        return DivideRoundUp(size, alignment) * alignment;
     else
         return size;
 }

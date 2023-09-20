@@ -11,6 +11,7 @@
 #include "../Command/D3D12CommandContext.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
@@ -278,7 +279,7 @@ void D3D12MipGenerator::GenerateMips1D(
         gpuDescHandle.ptr += descHandleSize_ * numMips;
 
         commandList->Dispatch(
-            std::max(1u, dstWidth  / 64u),
+            DivideRoundUp(dstWidth, 64u),
             subresource.numArrayLayers,
             1u
         );
@@ -351,8 +352,8 @@ void D3D12MipGenerator::GenerateMips2D(
         gpuDescHandle.ptr += descHandleSize_ * numMips;
 
         commandList->Dispatch(
-            std::max(1u, dstWidth  / 8u),
-            std::max(1u, dstHeight / 8u),
+            DivideRoundUp(dstWidth,  8u),
+            DivideRoundUp(dstHeight, 8u),
             subresource.numArrayLayers
         );
 
@@ -426,9 +427,9 @@ void D3D12MipGenerator::GenerateMips3D(
         gpuDescHandle.ptr += descHandleSize_ * numMips;
 
         commandList->Dispatch(
-            std::max(1u, dstWidth  / 4u),
-            std::max(1u, dstHeight / 4u),
-            std::max(1u, dstDepth  / 4u)
+            DivideRoundUp(dstWidth,  4u),
+            DivideRoundUp(dstHeight, 4u),
+            DivideRoundUp(dstDepth,  4u)
         );
 
         /* Insert UAV barrier and move to next four MIP-maps */
