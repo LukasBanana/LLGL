@@ -89,6 +89,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     moduleName    { moduleName                                                                 },
     outputDir     { SanitizePath(FindOutputDir(argc, argv))                                    },
     verbose       { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
+    pedantic      { HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic")     },
     sanityCheck   { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
     showTiming    { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
     fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },
@@ -1201,7 +1202,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
         return DiffErrorExtentMismatch;
 
     // Generate heat-map image
-    DiffResult result{ threshold };
+    DiffResult result{ (pedantic ? 0 : threshold) };
     pixelsDiff.resize(extentA.width * extentA.height);
 
     for_range(i, pixelsDiff.size())
