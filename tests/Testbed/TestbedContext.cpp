@@ -216,6 +216,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( RenderTargetNoAttachments );
     RUN_TEST( RenderTarget1Attachment   );
     RUN_TEST( RenderTargetNAttachments  );
+    RUN_TEST( MipMaps                   );
 
     // Run all rendering tests
     RUN_TEST( DepthBuffer               );
@@ -813,6 +814,7 @@ bool TestbedContext::LoadTextures()
 
     textures[TextureGrid10x10]  = LoadTextureFromFile("Grid10x10", texturePath + "Grid10x10.png");
     textures[TextureGradient]   = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
+    textures[TexturePaintingA]  = LoadTextureFromFile("PaintingA", texturePath + "VanGogh-starry_night.jpg");
 
     return true;
 }

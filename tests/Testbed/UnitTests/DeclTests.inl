@@ -40,6 +40,7 @@ DECL_TEST( TextureTypes );
 DECL_TEST( RenderTargetNoAttachments );
 DECL_TEST( RenderTarget1Attachment );
 DECL_TEST( RenderTargetNAttachments );
+DECL_TEST( MipMaps );
 
 // Rendering tests
 DECL_TEST( DepthBuffer );

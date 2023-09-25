@@ -101,6 +101,7 @@ class TestbedContext
         {
             TextureGrid10x10 = 0,
             TextureGradient,
+            TexturePaintingA,
 
             TextureCount,
         };
