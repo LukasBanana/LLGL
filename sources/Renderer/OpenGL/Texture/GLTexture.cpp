@@ -319,9 +319,6 @@ void GLTexture::BindAndAllocStorage(const TextureDescriptor& textureDesc, const 
         AllocRenderbufferStorage(textureDesc);
     else
         AllocTextureStorage(textureDesc, imageDesc);
-
-    /* Query and store internal format */
-    QueryInternalFormat();
 }
 
 static TextureSwizzleRGBA GetTextureSwizzlePermutationBGRA(const TextureSwizzleRGBA& swizzle)
@@ -992,7 +989,7 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     /* Initialize texture parameters for the first time (sampler states not supported for multisample textures) */
     if (!IsMultiSampleTexture(textureDesc.type))
     {
-        auto target = GLTypes::Map(textureDesc.type);
+        GLenum target = GLTypes::Map(textureDesc.type);
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
@@ -1014,6 +1011,9 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     //GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
     GLTexImage(textureDesc, imageDesc);
 
+    /* Store internal GL format */
+    internalFormat_ = GetTextureInternalFormat();
+
     /* Generate MIP-maps if enabled */
     if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
         GLMipGenerator::Get().GenerateMips(textureDesc.type);
@@ -1029,6 +1029,9 @@ void GLTexture::AllocRenderbufferStorage(const TextureDescriptor& textureDesc)
         static_cast<GLsizei>(textureDesc.extent.height),
         static_cast<GLsizei>(textureDesc.samples)
     );
+
+    /* Store internal GL format */
+    internalFormat_ = GetRenderbufferInternalFormat();
 }
 
 // Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
@@ -1037,24 +1040,22 @@ static void BindGLTextureNonPersistent(const GLTexture& textureGL)
     GLStateManager::Get().BindTexture(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
 }
 
-void GLTexture::QueryInternalFormat()
+GLenum GLTexture::GetTextureInternalFormat() const
 {
+    /* Bind texture and query attributes */
     GLint format = 0;
-    {
-        if (IsRenderbuffer())
-        {
-            /* Bind renderbuffer and query qttributes */
-            GLStateManager::Get().BindRenderbuffer(GetID());
-            glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
-        }
-        else
-        {
-            /* Bind texture and query attributes */
-            BindGLTextureNonPersistent(*this);
-            GLProfile::GetTexParameterInternalFormat(GetGLTexLevelTarget(), &format);
-        }
-    }
-    internalFormat_ = static_cast<GLenum>(format);
+    BindGLTextureNonPersistent(*this);
+    GLProfile::GetTexParameterInternalFormat(GetGLTexLevelTarget(), &format);
+    return static_cast<GLenum>(format);
+}
+
+GLenum GLTexture::GetRenderbufferInternalFormat() const
+{
+    /* Bind renderbuffer and query qttributes */
+    GLint format = 0;
+    GLStateManager::Get().BindRenderbuffer(GetID());
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+    return static_cast<GLenum>(format);
 }
 
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const

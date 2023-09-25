@@ -145,7 +145,8 @@ class GLTexture final : public Texture
         void AllocTextureStorage(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc);
         void AllocRenderbufferStorage(const TextureDescriptor& textureDesc);
 
-        void QueryInternalFormat();
+        GLenum GetTextureInternalFormat() const;
+        GLenum GetRenderbufferInternalFormat() const;
 
         void GetTextureParams(GLint* extent, GLint* samples) const;
         void GetRenderbufferParams(GLint* extent, GLint* samples) const;

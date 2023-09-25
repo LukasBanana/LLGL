@@ -462,6 +462,7 @@ DXGI_FORMAT ToDXGIFormatUInt(const DXGI_FORMAT format)
 
         /* --- RGBA color formats --- */
         case DXGI_FORMAT_R8G8B8A8_UNORM:            /* pass */
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:       /* pass */
         case DXGI_FORMAT_R8G8B8A8_SNORM:            /* pass */
         case DXGI_FORMAT_R8G8B8A8_UINT:             /* pass */
         case DXGI_FORMAT_R8G8B8A8_SINT:             return DXGI_FORMAT_R8G8B8A8_UINT;
@@ -537,6 +538,7 @@ DXGI_FORMAT ToDXGIFormatTypeless(const DXGI_FORMAT format)
 
         /* --- RGBA color formats --- */
         case DXGI_FORMAT_R8G8B8A8_UNORM:            /* pass */
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:       /* pass */
         case DXGI_FORMAT_R8G8B8A8_SNORM:            /* pass */
         case DXGI_FORMAT_R8G8B8A8_UINT:             /* pass */
         case DXGI_FORMAT_R8G8B8A8_SINT:             return DXGI_FORMAT_R8G8B8A8_TYPELESS;
