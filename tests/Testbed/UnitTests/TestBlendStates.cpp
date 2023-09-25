@@ -151,7 +151,7 @@ DEF_TEST( BlendStates )
     bool diffFailed = false;
     if (diff)
     {
-        Log::Errorf("Mismatch between reference and result images for blend states (%s)\n", diff.Print());
+        Log::Errorf("Mismatch between reference and result image for blend states (%s)\n", diff.Print());
         diffFailed = true;
     }
 

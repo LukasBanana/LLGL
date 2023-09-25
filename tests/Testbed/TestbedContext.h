@@ -188,6 +188,7 @@ class TestbedContext
         const std::string               outputDir;
         const bool                      verbose;
         const bool                      pedantic;       // Ignore thresholds, always compare strictly against reference values
+        const bool                      greedy;         // Continue testing on failure
         const bool                      sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
         const bool                      showTiming;
         const bool                      fastTest;       // Skip slow buffer/texture creations to speed up test run

@@ -90,6 +90,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     outputDir     { SanitizePath(FindOutputDir(argc, argv))                                    },
     verbose       { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
     pedantic      { HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic")     },
+    greedy        { HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy")       },
     sanityCheck   { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
     showTiming    { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
     fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },

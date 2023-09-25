@@ -10,6 +10,8 @@
 
 DEF_TEST( TextureTypes )
 {
+    TestResult result = TestResult::Passed;
+
     auto CreateDummyTextureAndMeasureTiming = [this](const char* name, TextureType type, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, std::uint32_t samples) -> TestResult
     {
         const std::uint64_t t0 = Timer::Tick();
@@ -36,11 +38,16 @@ DEF_TEST( TextureTypes )
         return TestResult::Passed;
     };
 
-    #define CREATE_DUMMY(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES)                                                         \
-        {                                                                                                                   \
-            TestResult result = CreateDummyTextureAndMeasureTiming((NAME), (TYPE), (EXTENT), (MIPS), (LAYERS), (SAMPLES));  \
-            if (result != TestResult::Passed)                                                                               \
-                return result;                                                                                              \
+    #define CREATE_DUMMY(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES)                                                                 \
+        {                                                                                                                           \
+            TestResult intermResult = CreateDummyTextureAndMeasureTiming((NAME), (TYPE), (EXTENT), (MIPS), (LAYERS), (SAMPLES));    \
+            if (intermResult != TestResult::Passed)                                                                                 \
+            {                                                                                                                       \
+                if (greedy)                                                                                                         \
+                    result = intermResult;                                                                                          \
+                else                                                                                                                \
+                    return intermResult;                                                                                            \
+            }                                                                                                                       \
         }
 
     #define CREATE_DUMMY_SLOW(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES) \
@@ -143,6 +150,6 @@ DEF_TEST( TextureTypes )
         CREATE_DUMMY_SLOW("tex{Cube[12],123wh,full-mips}", TextureType::TextureCubeArray, Extent3D(123, 123, 1), /*mips:*/ 0, /*layers:*/  12, /*samples:*/ 1);
     }
 
-    return TestResult::Passed;
+    return result;
 }
 
