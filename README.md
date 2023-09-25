@@ -18,7 +18,7 @@ The library is written mostly in C++11 with the addition of a C99 wrapper.
 
 ## Documentation
 
-- **Version**: 0.03 Beta (see [ChangeLog](docu/ChangeLog))
+- **Version**: 0.04 Beta (see [ChangeLog](docu/ChangeLog))
 - [Getting Started with LLGL](docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
