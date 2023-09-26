@@ -25,6 +25,7 @@ DECL_RITEST( ParseSamplerDesc );
 
 // Command buffer tests
 DECL_TEST( CommandBufferSubmit );
+DECL_TEST( CommandBufferMultiThreading );
 
 // Resource tests
 DECL_TEST( BufferWriteAndRead );

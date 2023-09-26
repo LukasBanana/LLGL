@@ -19,7 +19,7 @@
 #include <stb/stb_image_write.h>
 
 
-#define ENABLE_GPU_DEBUGGER 1
+#define ENABLE_GPU_DEBUGGER 0//1
 #define ENABLE_CPU_DEBUGGER 0
 
 static constexpr const char* g_defaultOutputDir = "Output/";
@@ -47,6 +47,8 @@ static std::string FindOutputDir(int argc, char* argv[])
 static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
 {
     std::vector<std::string> selection;
+
+    // Gather all selected tests
     for (int i = 0; i < argc; ++i)
     {
         if (::strncmp(argv[i], "-run=", 5) == 0)
@@ -61,6 +63,11 @@ static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
                 selection.push_back(curr);
         }
     }
+
+    // Sort and make test list unique
+    std::sort(selection.begin(), selection.end());
+    selection.erase(std::unique(selection.begin(), selection.end()), selection.end());
+
     return selection;
 }
 
@@ -156,7 +163,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         CreatePipelineLayouts();
         LoadTextures();
         CreateSamplerStates();
-        LoadProjectionMatrix();
+        LoadDefaultProjectionMatrix();
     }
 }
 
@@ -177,8 +184,43 @@ static void PrintTestResult(TestResult result, const char* name)
     ::fflush(stdout);
 }
 
-static void PrintTestSummary(unsigned failures)
+static void PrintTestSummary(unsigned failures, const std::vector<std::string>& selectedTests, const std::vector<const char*>& foundTests)
 {
+    // Check if there were unknown test names
+    if (selectedTests.size() != foundTests.size())
+    {
+        // Gather unknown test names
+        std::vector<std::string> unknownTests;
+        for (const std::string& name : selectedTests)
+        {
+            if (std::find_if(foundTests.begin(), foundTests.end(), [&name](const char* s) -> bool { return (name == s); }) == foundTests.end())
+            {
+                unknownTests.push_back(name);
+                if (foundTests.size() + unknownTests.size() == selectedTests.size())
+                {
+                    // Found all unknown test names => early exit
+                    break;
+                }
+            }
+        }
+
+        // Print unknown test names
+        if (!unknownTests.empty())
+        {
+            std::string unknwonTestsStr;
+            for (const std::string& name : unknownTests)
+            {
+                if (!unknwonTestsStr.empty())
+                    unknwonTestsStr += ", ";
+                unknwonTestsStr += name;
+            }
+            Log::Printf("//////////////////////////////////////////\n");
+            Log::Printf("  UNKNOWN TESTS: %s\n", unknwonTestsStr.c_str());
+            Log::Printf("//////////////////////////////////////////\n");
+        }
+    }
+
+    // Print test results
     if (failures == 0)
         Log::Printf(" ==> ALL TESTS PASSED\n");
     else if (failures == 1)
@@ -189,10 +231,14 @@ static void PrintTestSummary(unsigned failures)
 
 unsigned TestbedContext::RunAllTests()
 {
+    std::vector<const char*> foundTests;
+
     #define RUN_TEST(TEST)                                                                          \
         if (selectedTests.empty() ||                                                                \
             std::find(selectedTests.begin(), selectedTests.end(), #TEST) != selectedTests.end())    \
         {                                                                                           \
+            if (!selectedTests.empty())                                                             \
+                foundTests.push_back(#TEST);                                                        \
             const TestResult result = RunTest(                                                      \
                 std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1)                 \
             );                                                                                      \
@@ -200,34 +246,35 @@ unsigned TestbedContext::RunAllTests()
         }
 
     // Run all command buffer tests
-    RUN_TEST( CommandBufferSubmit       );
+    RUN_TEST( CommandBufferSubmit         );
 
     // Run all resource tests
-    RUN_TEST( BufferWriteAndRead        );
-    RUN_TEST( BufferMap                 );
-    RUN_TEST( BufferFill                );
-    RUN_TEST( BufferUpdate              );
-    RUN_TEST( BufferCopy                );
-    RUN_TEST( TextureTypes              );
-    RUN_TEST( TextureWriteAndRead       );
-    RUN_TEST( TextureCopy               );
-    RUN_TEST( TextureToBufferCopy       );
-    RUN_TEST( BufferToTextureCopy       );
-    RUN_TEST( RenderTargetNoAttachments );
-    RUN_TEST( RenderTarget1Attachment   );
-    RUN_TEST( RenderTargetNAttachments  );
-    RUN_TEST( MipMaps                   );
+    RUN_TEST( BufferWriteAndRead          );
+    RUN_TEST( BufferMap                   );
+    RUN_TEST( BufferFill                  );
+    RUN_TEST( BufferUpdate                );
+    RUN_TEST( BufferCopy                  );
+    RUN_TEST( TextureTypes                );
+    RUN_TEST( TextureWriteAndRead         );
+    RUN_TEST( TextureCopy                 );
+    RUN_TEST( TextureToBufferCopy         );
+    RUN_TEST( BufferToTextureCopy         );
+    RUN_TEST( RenderTargetNoAttachments   );
+    RUN_TEST( RenderTarget1Attachment     );
+    RUN_TEST( RenderTargetNAttachments    );
+    RUN_TEST( MipMaps                     );
 
     // Run all rendering tests
-    RUN_TEST( DepthBuffer               );
-    RUN_TEST( StencilBuffer             );
-    RUN_TEST( SceneUpdate               );
-    RUN_TEST( BlendStates               );
+    RUN_TEST( DepthBuffer                 );
+    RUN_TEST( StencilBuffer               );
+    RUN_TEST( SceneUpdate                 );
+    RUN_TEST( BlendStates                 );
+    RUN_TEST( CommandBufferMultiThreading );
 
     #undef RUN_TEST
 
     // Print summary
-    PrintTestSummary(failures);
+    PrintTestSummary(failures, selectedTests, foundTests);
 
     return failures;
 }
@@ -252,7 +299,7 @@ unsigned TestbedContext::RunRendererIndependentTests()
     #undef RUN_TEST
 
     // Print summary
-    PrintTestSummary(failures);
+    PrintTestSummary(failures, {}, {});
 
     return failures;
 }
@@ -827,17 +874,19 @@ void TestbedContext::CreateSamplerStates()
     samplers[SamplerLinearClamp]    = renderer->CreateSampler(Parse("filter=linear,address=clamp"));
 }
 
-void TestbedContext::LoadProjectionMatrix(float nearPlane, float farPlane, float fov)
+void TestbedContext::LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio, float nearPlane, float farPlane, float fov)
 {
     // Initialize default projection matrix
     const bool isClipSpaceUnitCube = (renderer->GetRenderingCaps().clippingRange == ClippingRange::MinusOneToOne);
+    const int flags = (isClipSpaceUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
+    outProjection = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fov), flags).ToMatrix4();
+}
 
+void TestbedContext::LoadDefaultProjectionMatrix()
+{
     const Extent2D resolution = swapChain->GetResolution();
     const float aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
-
-    const int flags = (isClipSpaceUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
-
-    projection = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fov), flags).ToMatrix4();
+    LoadProjectionMatrix(projection, aspectRatio);
 }
 
 void TestbedContext::CreateTriangleMeshes()

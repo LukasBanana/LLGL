@@ -234,7 +234,8 @@ class TestbedContext
         void CreatePipelineLayouts();
         bool LoadTextures();
         void CreateSamplerStates();
-        void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
+        void LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio = 1.0f, float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
+        void LoadDefaultProjectionMatrix();
 
         void CreateTriangleMeshes();
 
