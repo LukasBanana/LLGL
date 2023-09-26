@@ -229,7 +229,7 @@ void DbgCommandBuffer::FillBuffer(
         AssertRecording();
         ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
 
-        if (fillSize == Constants::wholeSize)
+        if (fillSize == LLGL_WHOLE_SIZE)
         {
             if (dstOffset != 0)
                 LLGL_DBG_WARN(WarningType::ImproperArgument, "non-zero argument for 'dstOffset' is ignored because 'fillSize' is set to LLGL::wholeSize");
@@ -695,7 +695,7 @@ void DbgCommandBuffer::BeginRenderPass(
         /* Record swap-chain frame to validate when submitting the command buffer */
         if (debugger_)
         {
-            const std::uint32_t actualSwapBufferIndex = (swapBufferIndex == Constants::currentSwapIndex ? swapChainDbg.GetCurrentSwapIndex() : swapBufferIndex);
+            const std::uint32_t actualSwapBufferIndex = (swapBufferIndex == LLGL_CURRENT_SWAP_INDEX ? swapChainDbg.GetCurrentSwapIndex() : swapBufferIndex);
             records_.swapChainFrames.push_back({ bindings_.swapChain, actualSwapBufferIndex });
             ValidateSwapBufferIndex(swapChainDbg, actualSwapBufferIndex);
         }
@@ -2053,7 +2053,7 @@ void DbgCommandBuffer::ValidateRenderTargetRange(DbgRenderTarget& renderTargetDb
 
 void DbgCommandBuffer::ValidateSwapBufferIndex(DbgSwapChain& swapChainDbg, std::uint32_t swapBufferIndex)
 {
-    if (swapBufferIndex != Constants::currentSwapIndex && swapBufferIndex >= swapChainDbg.desc.swapBuffers)
+    if (swapBufferIndex != LLGL_CURRENT_SWAP_INDEX && swapBufferIndex >= swapChainDbg.desc.swapBuffers)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,

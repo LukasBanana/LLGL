@@ -270,7 +270,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
         {
             /* Convert image format (will be null if no conversion is necessary) */
-            intermediateData = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+            intermediateData = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         }
 
         if (intermediateData)
@@ -393,7 +393,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
     }
 
     if (intermediateData)

@@ -109,7 +109,7 @@ struct DstImageDescriptor
 \param[in] srcImageDesc Specifies the source image descriptor.
 \param[out] dstImageDesc Specifies the destination image descriptor.
 \param[in] threadCount Specifies the number of threads to use for conversion.
-If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return True if any conversion was necessary. Otherwise, no conversion was necessary and the destination buffer is not modified!
 \note Compressed images and depth-stencil images cannot be converted.
@@ -119,7 +119,7 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 \throw std::invalid_argument If the source buffer is a null pointer.
 \throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
 \throw std::invalid_argument If the destination buffer is a null pointer.
-\see Constants::maxThreadCount
+\see LLGL_MAX_THREAD_COUNT
 \see GetMemoryFootprint
 */
 LLGL_EXPORT bool ConvertImageBuffer(
@@ -134,7 +134,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination image data type.
 \param[in] threadCount Specifies the number of threads to use for conversion.
-If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. <code>unsigned char</code>, <code>int</code>, <code>float</code> etc.).
@@ -143,7 +143,7 @@ This can be casted to the respective target data type (e.g. <code>unsigned char<
 \throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
 \throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
 \throw std::invalid_argument If the source buffer is a null pointer.
-\see Constants::maxThreadCount
+\see LLGL_MAX_THREAD_COUNT
 \see GetMemoryFootprint
 */
 LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
@@ -158,7 +158,7 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
 \param[in] srcImageDesc Specifies the source image descriptor.
 \param[in] extent Specifies the image extent. This is required as most compression formats work in block sizes.
 \param[in] threadCount Specifies the number of threads to use for decompression.
-If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the decompressed image data or null if the compression format is not supported for decompression.
 */

@@ -8,7 +8,7 @@
 #include "GLImmediateCommandBuffer.h"
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommandExecutor.h"
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Utils/ForRange.h>
 
@@ -131,7 +131,7 @@ void GLImmediateCommandBuffer::FillBuffer(
     std::uint64_t   fillSize)
 {
     auto& dstBufferGL = LLGL_CAST(GLBuffer&, dstBuffer);
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
         dstBufferGL.ClearBufferData(value);
     else
         dstBufferGL.ClearBufferSubData(static_cast<GLintptr>(dstOffset), static_cast<GLsizeiptr>(fillSize), value);

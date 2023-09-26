@@ -267,7 +267,7 @@ HRESULT D3D11Texture::UpdateSubresource(
         (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
         LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }

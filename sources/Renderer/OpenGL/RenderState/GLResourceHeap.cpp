@@ -101,7 +101,7 @@ LLGL_ASSERT_POD_TYPE(GLResourceHeapSegment);
 static bool IsGLBufferViewEnabled(const BufferViewDescriptor& bufferViewDesc)
 {
     /* For OpenGL buffer binding, only the range is relevant, no format is considerd */
-    return (bufferViewDesc.size != Constants::wholeSize);
+    return (bufferViewDesc.size != LLGL_WHOLE_SIZE);
 }
 
 // Converts the specified barrier flags into GLbitfield for glMemoryBarrier

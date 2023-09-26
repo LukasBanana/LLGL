@@ -6,7 +6,7 @@
  */
 
 #include "TextureUtils.h"
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include "../Core/CoreUtils.h"
 #include "../Core/MacroUtils.h"
 

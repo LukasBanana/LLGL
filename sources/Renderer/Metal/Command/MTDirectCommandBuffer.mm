@@ -229,7 +229,7 @@ void MTDirectCommandBuffer::FillBuffer(
 
     /* Determine buffer range for fill command */
     NSRange range;
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         NSUInteger bufferSize = [dstBufferMT.GetNative() length];
         range = NSMakeRange(0, bufferSize);

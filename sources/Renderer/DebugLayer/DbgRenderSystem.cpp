@@ -14,7 +14,7 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include <LLGL/ImageFlags.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 

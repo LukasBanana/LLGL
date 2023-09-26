@@ -714,7 +714,7 @@ static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& re
     {
         /* Set binding slot to invalid index */
         resource.binding.stageFlags = StageFlags::AllStages;
-        resource.binding.slot       = Constants::invalidSlot;
+        resource.binding.slot       = LLGL_INVALID_SLOT;
     }
 }
 
@@ -757,7 +757,7 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
             #else
             /* Set binding slot to invalid index */
             resource.binding.stageFlags = StageFlags::AllStages;
-            resource.binding.slot       = Constants::invalidSlot;
+            resource.binding.slot       = LLGL_INVALID_SLOT;
             #endif
         }
         reflection.resources.push_back(resource);

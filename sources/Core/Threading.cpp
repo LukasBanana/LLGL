@@ -51,7 +51,7 @@ LLGL_EXPORT void DoConcurrentRange(
     unsigned                                                        threadCount,
     unsigned                                                        threadMinWorkSize)
 {
-    if (threadCount >= Constants::maxThreadCount)
+    if (threadCount == LLGL_MAX_THREAD_COUNT)
         threadCount = std::thread::hardware_concurrency();
 
     threadCount = std::min(threadCount, static_cast<unsigned>(count / threadMinWorkSize));

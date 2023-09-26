@@ -11,7 +11,7 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/RenderingProfiler.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
 #include "RenderState/DbgQueryHeap.h"
 #include "DbgQueryTimerManager.h"

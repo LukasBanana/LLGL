@@ -595,7 +595,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     ValidateDestinationImageDesc(dstImageDesc);
     ValidateImageConversionParams(srcImageDesc, dstImageDesc.format, dstImageDesc.dataType);
 
-    if (threadCount >= Constants::maxThreadCount)
+    if (threadCount == LLGL_MAX_THREAD_COUNT)
         threadCount = std::thread::hardware_concurrency();
 
     if (IsDepthOrStencilFormat(srcImageDesc.format))
@@ -670,7 +670,7 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     ValidateSourceImageDesc(srcImageDesc);
     ValidateImageConversionParams(srcImageDesc, dstFormat, dstDataType);
 
-    if (threadCount >= Constants::maxThreadCount)
+    if (threadCount == LLGL_MAX_THREAD_COUNT)
         threadCount = std::thread::hardware_concurrency();
 
     /* Initialize destination image descriptor */
@@ -735,7 +735,7 @@ LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
     const Extent2D&             extent,
     unsigned                    threadCount)
 {
-    if (threadCount >= Constants::maxThreadCount)
+    if (threadCount == LLGL_MAX_THREAD_COUNT)
         threadCount = std::thread::hardware_concurrency();
 
     /* Check for BC compression */

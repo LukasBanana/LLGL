@@ -13,7 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/Format.h>
 #include <LLGL/ForwardDecls.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <vector>
 #include <cstdint>
 

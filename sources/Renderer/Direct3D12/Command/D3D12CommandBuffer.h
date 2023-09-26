@@ -76,7 +76,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetScissorRectsToDefault(UINT numScissorRects);
 
         void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
-        void BindSwapChain(D3D12SwapChain& swapChainD3D, std::uint32_t swapBufferIndex = Constants::currentSwapIndex);
+        void BindSwapChain(D3D12SwapChain& swapChainD3D, std::uint32_t swapBufferIndex = LLGL_CURRENT_SWAP_INDEX);
 
         std::uint32_t ClearAttachmentsWithRenderPass(
             const D3D12RenderPass&  renderPassD3D,

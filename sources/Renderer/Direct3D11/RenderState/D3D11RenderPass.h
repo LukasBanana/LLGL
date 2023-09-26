@@ -11,7 +11,7 @@
 
 #include <LLGL/RenderPass.h>
 #include <LLGL/ForwardDecls.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <cstdint>
 #include <d3d11.h>
 

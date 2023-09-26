@@ -16,7 +16,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Format.h>
 #include <LLGL/ImageFlags.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/Log.h>
 #include "BuildID.h"
 
@@ -483,7 +483,7 @@ std::size_t RenderSystem::CopyTextureImageData(
             SrcImageDescriptor{ srcImageDesc.format, srcImageDesc.dataType, data, unpaddedImageSize },
             dstImageDesc.format,
             dstImageDesc.dataType,
-            Constants::maxThreadCount
+            LLGL_MAX_THREAD_COUNT
         );
 
         /* Copy temporary data into output buffer */

@@ -7,7 +7,7 @@
 
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommand.h"
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 
 #include "../../TextureUtils.h"
 #include "../GLSwapChain.h"
@@ -170,7 +170,7 @@ void GLDeferredCommandBuffer::FillBuffer(
     std::uint32_t   value,
     std::uint64_t   fillSize)
 {
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         auto cmd = AllocCommand<GLCmdClearBufferData>(GLOpcodeClearBufferData);
         {

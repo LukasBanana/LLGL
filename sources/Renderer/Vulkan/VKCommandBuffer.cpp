@@ -25,7 +25,7 @@
 #include "../CheckedCast.h"
 #include "../../Core/Exception.h"
 #include <LLGL/Utils/ForRange.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/TypeInfo.h>
 #include <cstddef>
 
@@ -259,7 +259,7 @@ void VKCommandBuffer::FillBuffer(
 
     /* Determine destination buffer range and ignore <dstOffset> if the whole buffer is meant to be filled */
     VkDeviceSize offset, size;
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         offset  = 0;
         size    = VK_WHOLE_SIZE;

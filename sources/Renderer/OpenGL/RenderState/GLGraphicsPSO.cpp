@@ -16,7 +16,7 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/Utils/ForRange.h>
 #include <vector>
 

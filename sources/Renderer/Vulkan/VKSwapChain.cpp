@@ -190,7 +190,7 @@ bool VKSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 
 std::uint32_t VKSwapChain::TranslateSwapIndex(std::uint32_t swapBufferIndex) const
 {
-    if (swapBufferIndex == Constants::currentSwapIndex)
+    if (swapBufferIndex == LLGL_CURRENT_SWAP_INDEX)
         return currentColorBuffer_;
     else
         return std::min(swapBufferIndex, numColorBuffers_ - 1);

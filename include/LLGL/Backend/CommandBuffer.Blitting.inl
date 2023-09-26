@@ -35,7 +35,7 @@ virtual void FillBuffer(
     LLGL::Buffer&                   dstBuffer,
     std::uint64_t                   dstOffset,
     std::uint32_t                   value,
-    std::uint64_t                   fillSize    = LLGL::Constants::wholeSize
+    std::uint64_t                   fillSize    = LLGL_WHOLE_SIZE
 ) override final;
 
 virtual void CopyTexture(

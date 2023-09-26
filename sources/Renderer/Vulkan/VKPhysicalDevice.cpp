@@ -11,7 +11,7 @@
 #include "VKTypes.h"
 #include "RenderState/VKGraphicsPSO.h"
 #include "../../Core/Vendor.h"
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <string>
 #include <cstring>
 #include <set>
