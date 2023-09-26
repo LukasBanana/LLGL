@@ -53,8 +53,9 @@ struct ThreadBundle
 
 DEF_TEST( CommandBufferMultiThreading )
 {
-    constexpr unsigned numCmdBuffers    = 16;
-    constexpr unsigned numFrames        = 10;
+    constexpr unsigned  numCmdBuffers   = 16;
+    constexpr unsigned  numFrames       = 10;
+    constexpr int       diffThreshold   = 30; // Diff threshold of 30, because sampling MIP-mapped textures is backend dependent
 
     if (shaders[VSTextured] == nullptr || shaders[PSTextured] == nullptr)
     {
@@ -283,7 +284,7 @@ DEF_TEST( CommandBufferMultiThreading )
         const std::string outputImageName = "MultiThreading_Worker" + std::to_string(i);
         SaveColorImage(outputImage, texSize, outputImageName);
 
-        const DiffResult diff = DiffImages(outputImageName);
+        const DiffResult diff = DiffImages(outputImageName, diffThreshold);
         if (diff)
         {
             result = TestResult::FailedMismatch;
