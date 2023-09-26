@@ -67,7 +67,7 @@ jobs:
     - name: Testbed
       working-directory: tests/Testbed
       run: |
-        xvfb-run ${{github.workspace}}/Linux-x86_64/build/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }} gl -v -f -t
+        xvfb-run ${{github.workspace}}/Linux-x86_64/build/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }} gl -v -f -t -g
         CURRENT_TIME=$(date)
         echo "LLGL built with GCC for Linux on $CURRENT_TIME." > ${{ env.README }}
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
