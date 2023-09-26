@@ -22,6 +22,7 @@ namespace LLGL
 
 class D3D12Fence;
 class D3D12CommandContext;
+class D3D12CommandQueue;
 
 class D3D12Buffer : public Buffer
 {
@@ -62,13 +63,17 @@ class D3D12Buffer : public Buffer
         // Maps the buffer content to CPU memory space.
         HRESULT Map(
             D3D12CommandContext&    commandContext,
+            D3D12CommandQueue&      commandQueue,
             const D3D12_RANGE&      range,
             void**                  mappedData,
             const CPUAccess         access
         );
 
         // Unmaps the buffer content from CPU memory space.
-        void Unmap(D3D12CommandContext& commandContext);
+        void Unmap(
+            D3D12CommandContext&    commandContext,
+            D3D12CommandQueue&      commandQueue
+        );
 
         // Returns the resource wrapper.
         inline D3D12Resource& GetResource()

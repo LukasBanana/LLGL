@@ -28,6 +28,7 @@ D3D12BufferConstantsPool& D3D12BufferConstantsPool::Get()
 void D3D12BufferConstantsPool::InitializeDevice(
     ID3D12Device*           device,
     D3D12CommandContext&    commandContext,
+    D3D12CommandQueue&      commandQueue,
     D3D12StagingBufferPool& stagingBufferPool)
 {
     /* Register constants */
@@ -35,7 +36,7 @@ void D3D12BufferConstantsPool::InitializeDevice(
     {
         RegisterConstants(D3D12BufferConstants::ZeroUInt64, 0, 1, data);
     }
-    CreateImmutableBuffer(device, commandContext, stagingBufferPool, data);
+    CreateImmutableBuffer(device, commandContext, commandQueue, stagingBufferPool, data);
 }
 
 void D3D12BufferConstantsPool::Clear()
@@ -86,6 +87,7 @@ void D3D12BufferConstantsPool::RegisterConstants(
 void D3D12BufferConstantsPool::CreateImmutableBuffer(
     ID3D12Device*               device,
     D3D12CommandContext&        commandContext,
+    D3D12CommandQueue&          commandQueue,
     D3D12StagingBufferPool&     stagingBufferPool,
     std::vector<std::uint64_t>& data)
 {
@@ -108,7 +110,7 @@ void D3D12BufferConstantsPool::CreateImmutableBuffer(
 
     /* Initialize buffer with registered constants */
     stagingBufferPool.WriteImmediate(commandContext, resource_, 0, data.data(), bufferSize);
-    commandContext.Finish(true);
+    commandContext.FinishAndSync(commandQueue);
 }
 
 

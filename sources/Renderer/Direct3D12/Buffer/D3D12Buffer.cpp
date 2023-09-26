@@ -275,6 +275,7 @@ void D3D12Buffer::ClearSubresourceUInt(
 
 HRESULT D3D12Buffer::Map(
     D3D12CommandContext&    commandContext,
+    D3D12CommandQueue&      commandQueue,
     const D3D12_RANGE&      range,
     void**                  mappedData,
     const CPUAccess         access)
@@ -299,7 +300,7 @@ HRESULT D3D12Buffer::Map(
                 );
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
-            commandContext.Finish(true);
+            commandContext.FinishAndSync(commandQueue);
 
             /* Map with read range */
             return cpuAccessBuffer_.Get()->Map(0, &range, mappedData);
@@ -314,7 +315,9 @@ HRESULT D3D12Buffer::Map(
     return E_FAIL;
 }
 
-void D3D12Buffer::Unmap(D3D12CommandContext& commandContext)
+void D3D12Buffer::Unmap(
+    D3D12CommandContext&    commandContext,
+    D3D12CommandQueue&      commandQueue)
 {
     if (cpuAccessBuffer_.Get() != nullptr)
     {
@@ -335,7 +338,7 @@ void D3D12Buffer::Unmap(D3D12CommandContext& commandContext)
                 );
             }
             commandContext.TransitionResource(resource_, resource_.usageState, true);
-            commandContext.Finish(true);
+            commandContext.FinishAndSync(commandQueue);
         }
         else
         {

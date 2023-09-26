@@ -25,7 +25,7 @@ class D3D12SubresourceContext
 
     public:
 
-        D3D12SubresourceContext(D3D12CommandContext& commandContext);
+        D3D12SubresourceContext(D3D12CommandContext& commandContext, D3D12CommandQueue& commandQueue);
         ~D3D12SubresourceContext();
 
         // Creates a buffer resource in the upload heap (D3D12_HEAP_TYPE_UPLOAD).
@@ -62,6 +62,7 @@ class D3D12SubresourceContext
     private:
 
         D3D12CommandContext&                    commandContext_;
+        D3D12CommandQueue&                      commandQueue_;
         SmallVector<ComPtr<ID3D12Resource>, 2>  intermediateResources_;
 
 };

@@ -114,7 +114,6 @@ class D3D12RenderSystem final : public RenderSystem
         void QueryRenderingCaps();
 
         // Close, execute, and reset command list.
-        void ExecuteCommandList();
         void ExecuteCommandListAndSync();
 
         void UpdateBufferAndSync(

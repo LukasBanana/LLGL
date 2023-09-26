@@ -20,6 +20,7 @@ namespace LLGL
 
 struct D3D12Resource;
 class D3D12CommandContext;
+class D3D12CommandQueue;
 
 class D3D12StagingBufferPool
 {
@@ -57,6 +58,7 @@ class D3D12StagingBufferPool
         // Copies the specified subresource region into the global readback buffer and writes it into the output data.
         HRESULT ReadSubresourceRegion(
             D3D12CommandContext&    commandContext,
+            D3D12CommandQueue&      commandQueue,
             D3D12Resource&          srcBuffer,
             UINT64                  srcOffset,
             void*                   data,

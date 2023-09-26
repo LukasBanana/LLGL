@@ -24,6 +24,7 @@ namespace LLGL
 
 
 class D3D12RenderSystem;
+class D3D12CommandQueue;
 class D3D12SwapChain;
 class D3D12RenderTarget;
 class D3D12RenderPass;
@@ -50,8 +51,11 @@ class D3D12CommandBuffer final : public CommandBuffer
 
     public:
 
-        // Executes this command buffer.
-        void Execute();
+        // Returns the command context of this command buffer.
+        inline D3D12CommandContext& GetCommandContext()
+        {
+            return commandContext_;
+        }
 
         // Returns the native ID3D12GraphicsCommandList object.
         inline ID3D12GraphicsCommandList* GetNative() const
@@ -105,6 +109,7 @@ class D3D12CommandBuffer final : public CommandBuffer
     private:
 
         D3D12CommandContext             commandContext_;
+        D3D12CommandQueue*              commandQueue_           = nullptr;
         ID3D12GraphicsCommandList*      commandList_            = nullptr;
         const D3D12SignatureFactory*    cmdSignatureFactory_    = nullptr;
 

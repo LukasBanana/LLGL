@@ -80,6 +80,7 @@ HRESULT D3D12StagingBufferPool::WriteImmediate(
 
 HRESULT D3D12StagingBufferPool::ReadSubresourceRegion(
     D3D12CommandContext&    commandContext,
+    D3D12CommandQueue&      commandQueue,
     D3D12Resource&          srcBuffer,
     UINT64                  srcOffset,
     void*                   data,
@@ -94,7 +95,7 @@ HRESULT D3D12StagingBufferPool::ReadSubresourceRegion(
         commandContext.GetCommandList()->CopyBufferRegion(readbackBuffer.GetNative(), 0, srcBuffer.Get(), srcOffset, dataSize);
     }
     commandContext.TransitionResource(srcBuffer, srcBuffer.usageState, true);
-    commandContext.Finish(true);
+    commandContext.FinishAndSync(commandQueue);
 
     /* Map readback buffer to CPU memory space */
     char* mappedData = nullptr;

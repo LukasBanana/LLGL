@@ -57,7 +57,7 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
 
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
-    D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, stagingBufferPool_);
+    D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, *commandQueue_, stagingBufferPool_);
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -152,7 +152,7 @@ void D3D12RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const 
 void D3D12RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize);
+    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, *commandQueue_, bufferD3D.GetResource(), offset, data, dataSize);
     /* No ExecuteCommandListAndSync() here as it has already been flushed by the staging buffer pool */
 }
 
@@ -171,7 +171,7 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.Unmap(*commandContext_);
+    bufferD3D.Unmap(*commandContext_, *commandQueue_);
 }
 
 /* ----- Textures ----- */
@@ -188,7 +188,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             region.subresource.numArrayLayers   = textureDesc.arrayLayers;
             region.extent                       = textureDesc.extent;
         }
-        D3D12SubresourceContext subresourceContext{ *commandContext_ };
+        D3D12SubresourceContext subresourceContext{ *commandContext_, *commandQueue_ };
         UpdateTextureSubresourceFromImage(*textureD3D, region, *imageDesc, subresourceContext);
 
         /* Generate MIP-maps if enabled */
@@ -210,7 +210,7 @@ void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    D3D12SubresourceContext subresourceContext{ *commandContext_ };
+    D3D12SubresourceContext subresourceContext{ *commandContext_, *commandQueue_ };
     UpdateTextureSubresourceFromImage(textureD3D, textureRegion, imageDesc, subresourceContext);
 }
 
@@ -227,7 +227,7 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     ComPtr<ID3D12Resource> readbackBuffer;
     UINT rowStride = 0, layerSize = 0, layerStride = 0;
     {
-        D3D12SubresourceContext subresourceContext{ *commandContext_ };
+        D3D12SubresourceContext subresourceContext{ *commandContext_, *commandQueue_ };
         textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, texturePlane, rowStride, layerSize, layerStride);
         readbackBuffer = subresourceContext.TakeResource();
     }
@@ -610,14 +610,9 @@ void D3D12RenderSystem::QueryRenderingCaps()
     SetRenderingCaps(caps);
 }
 
-void D3D12RenderSystem::ExecuteCommandList()
-{
-    commandContext_->Finish();
-}
-
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
-    commandContext_->Finish(true);
+    commandContext_->FinishAndSync(*commandQueue_);
 }
 
 void D3D12RenderSystem::UpdateBufferAndSync(
@@ -636,7 +631,7 @@ void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess 
     void* mappedData = nullptr;
     const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(offset + length) };
 
-    if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
+    if (SUCCEEDED(bufferD3D.Map(*commandContext_, *commandQueue_, range, &mappedData, access)))
         return mappedData;
 
     return nullptr;

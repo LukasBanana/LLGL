@@ -47,8 +47,9 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
-    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                     },
-    immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) }
+    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                         },
+    immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)     },
+    commandQueue_        { LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue()) }
 {
     CreateCommandContext(renderSystem, desc);
 }
@@ -76,7 +77,7 @@ void D3D12CommandBuffer::End()
 
     /* Execute command list right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
-        Execute();
+        commandContext_.ExecuteAndSignal(*commandQueue_);
 }
 
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -1034,16 +1035,6 @@ bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
 
 
 /*
- * ======= Internal: =======
- */
-
-void D3D12CommandBuffer::Execute()
-{
-    commandContext_.Execute();
-}
-
-
-/*
  * ======= Private: =======
  */
 
@@ -1060,8 +1051,7 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
     auto& device = renderSystem.GetDevice();
 
     /* Create command context and store reference to command list */
-    auto commandQueueD3D = LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue());
-    commandContext_.Create(device, *commandQueueD3D, GetD3DCommandListType(desc), desc.numNativeBuffers, desc.minStagingPoolSize, true);
+    commandContext_.Create(device, GetD3DCommandListType(desc), desc.numNativeBuffers, desc.minStagingPoolSize, true);
     commandList_ = commandContext_.GetCommandList();
 
     /* Store increment size for descriptor heaps */

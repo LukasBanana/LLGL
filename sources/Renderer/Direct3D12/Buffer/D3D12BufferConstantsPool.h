@@ -31,6 +31,7 @@ struct D3D12BufferConstantsView
 };
 
 class D3D12CommandContext;
+class D3D12CommandQueue;
 class D3D12StagingBufferPool;
 
 // Pool manager for special buffer constants, e.g. zero initialized buffer ange.
@@ -49,6 +50,7 @@ class D3D12BufferConstantsPool
         void InitializeDevice(
             ID3D12Device*           device,
             D3D12CommandContext&    commandContext,
+            D3D12CommandQueue&      commandQueue,
             D3D12StagingBufferPool& stagingBufferPool
         );
 
@@ -80,6 +82,7 @@ class D3D12BufferConstantsPool
         void CreateImmutableBuffer(
             ID3D12Device*               device,
             D3D12CommandContext&        commandContext,
+            D3D12CommandQueue&          commandQueue,
             D3D12StagingBufferPool&     stagingBufferPool,
             std::vector<std::uint64_t>& data
         );
