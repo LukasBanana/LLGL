@@ -33,6 +33,23 @@ void VKDescriptorSetWriter::Reset()
     numImageInfos_ = 0;
 }
 
+void VKDescriptorSetWriter::Reset(
+    std::uint32_t numResourceViewsMax,
+    std::uint32_t numReservedWrites,
+    std::uint32_t numReservedCopies)
+{
+    if (bufferInfos_.size() < numResourceViewsMax)
+        bufferInfos_.resize(numResourceViewsMax);
+    if (imageInfos_.size() < numResourceViewsMax)
+        imageInfos_.resize(numResourceViewsMax);
+    writes_.clear();
+    copies_.clear();
+    writes_.reserve(numReservedWrites);
+    copies_.reserve(numReservedCopies);
+    numBufferInfos_ = 0;
+    numImageInfos_ = 0;
+}
+
 VkDescriptorBufferInfo* VKDescriptorSetWriter::NextBufferInfo()
 {
     if (numBufferInfos_ < bufferInfos_.size())

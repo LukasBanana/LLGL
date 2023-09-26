@@ -539,7 +539,7 @@ void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
     if (boundPipelineLayout_ != nullptr && descriptor < boundPipelineLayout_->GetLayoutDynamicBindings().size())
     {
         const auto& binding = boundPipelineLayout_->GetLayoutDynamicBindings()[descriptor];
-        descriptorCache_->EmplaceDescriptor(resource, binding);
+        descriptorCache_->EmplaceDescriptor(resource, binding, descriptorSetWriter_);
     }
 }
 
@@ -775,7 +775,10 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
     {
         descriptorCache_ = boundPipelineLayout_->GetDescriptorCache();
         if (descriptorCache_ != nullptr)
+        {
             descriptorCache_->Reset();
+            descriptorSetWriter_.Reset(descriptorCache_->GetNumDescriptors());
+        }
     }
     else
         descriptorCache_ = nullptr;
@@ -1255,7 +1258,7 @@ void VKCommandBuffer::FlushDescriptorCache()
 {
     if (descriptorCache_ != nullptr && descriptorCache_->IsInvalidated())
     {
-        VkDescriptorSet descriptorSet = descriptorCache_->FlushDescriptorSet(*descriptorSetPool_);
+        VkDescriptorSet descriptorSet = descriptorCache_->FlushDescriptorSet(*descriptorSetPool_, descriptorSetWriter_);
         boundPipelineState_->BindDynamicDescriptorSet(commandBuffer_, descriptorSet);
     }
 }
