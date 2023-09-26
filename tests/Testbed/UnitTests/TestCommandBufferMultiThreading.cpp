@@ -271,12 +271,26 @@ DEF_TEST( CommandBufferMultiThreading )
 
     const TextureRegion texRegion{ Offset3D{}, Extent3D{ texSize.width, texSize.height, 1 } };
 
+    TestResult result = TestResult::Passed;
+
     for_range(i, numCmdBuffers)
     {
+        if (fastTest && i % 2 == 1)
+            continue;
+
         renderer->ReadTexture(*outputTextures[i], texRegion, dstImageDesc);
 
         const std::string outputImageName = "MultiThreading_Worker" + std::to_string(i);
         SaveColorImage(outputImage, texSize, outputImageName);
+
+        const DiffResult diff = DiffImages(outputImageName);
+        if (diff)
+        {
+            result = TestResult::FailedMismatch;
+            Log::Errorf("Mismatch between reference and result image for \"%s\" (%s)\n", outputImageName.c_str(), diff.Print());
+            if (!greedy)
+                break;
+        }
     }
 
     // Release resources
@@ -291,7 +305,7 @@ DEF_TEST( CommandBufferMultiThreading )
     renderer->Release(*pso);
     renderer->Release(*renderPass);
 
-    return TestResult::Passed;
+    return result;
 }
 
 
