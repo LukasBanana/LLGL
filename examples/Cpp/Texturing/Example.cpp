@@ -126,19 +126,19 @@ public:
             throw std::runtime_error("failed to load image from file: " + path);
 
         // Initialize source image descriptor to upload image data onto hardware texture
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
             // Set image color format
-            imageDesc.format    = (texComponents == 4 ? LLGL::ImageFormat::RGBA : LLGL::ImageFormat::RGB);
+            imageView.format    = (texComponents == 4 ? LLGL::ImageFormat::RGBA : LLGL::ImageFormat::RGB);
 
             // Set image data type (unsigned char = 8-bit unsigned integer)
-            imageDesc.dataType  = LLGL::DataType::UInt8;
+            imageView.dataType  = LLGL::DataType::UInt8;
 
             // Set image buffer source for texture initial data
-            imageDesc.data      = imageBuffer;
+            imageView.data      = imageBuffer;
 
             // Set image buffer size
-            imageDesc.dataSize  = static_cast<std::size_t>(texWidth*texHeight*texComponents);
+            imageView.dataSize  = static_cast<std::size_t>(texWidth*texHeight*texComponents);
         }
 
         // Upload image data onto hardware texture and stop the time
@@ -159,7 +159,7 @@ public:
                 // Generate all MIP-map levels for this texture
                 texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
             }
-            colorMaps[1] = renderer->CreateTexture(texDesc, &imageDesc);
+            colorMaps[1] = renderer->CreateTexture(texDesc, &imageView);
         }
         auto texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
         std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
@@ -174,12 +174,12 @@ public:
         DDSImageReader imageReader;
         imageReader.LoadFromFile(filename);
 
-        auto texDesc    = imageReader.GetTextureDesc();
-        auto imageDesc  = imageReader.GetImageDesc();
+        LLGL::TextureDescriptor texDesc     = imageReader.GetTextureDesc();
+        LLGL::ImageView         imageView   = imageReader.GetImageView();
 
         // Create texture with MIP-map level 0
-        imageDesc.dataSize = LLGL::GetMemoryFootprint(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
-        colorMaps[0] = renderer->CreateTexture(texDesc, &imageDesc);
+        imageView.dataSize = LLGL::GetMemoryFootprint(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
+        colorMaps[0] = renderer->CreateTexture(texDesc, &imageView);
 
         // Write MIP-map levels 1...N
         const auto& formatDesc = LLGL::GetFormatAttribs(texDesc.format);
@@ -200,10 +200,10 @@ public:
             {
                 // Update image descriptor for subresource
                 std::size_t mipLevelDataSize    = LLGL::GetMemoryFootprint(texDesc.format, region.extent.width * region.extent.height * region.extent.depth);
-                imageDesc.data                  = reinterpret_cast<const std::int8_t*>(imageDesc.data) + imageDesc.dataSize;
-                imageDesc.dataSize              = mipLevelDataSize;
+                imageView.data                  = reinterpret_cast<const std::int8_t*>(imageView.data) + imageView.dataSize;
+                imageView.dataSize              = mipLevelDataSize;
 
-                renderer->WriteTexture(*colorMaps[0], region, imageDesc);
+                renderer->WriteTexture(*colorMaps[0], region, imageView);
             }
         }
     }
@@ -245,19 +245,19 @@ public:
     {
         #if 0//TESTING
         uint8_t imageData = 255;
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.format    = LLGL::ImageFormat::R;
-            imageDesc.dataType  = LLGL::DataType::UInt8;
-            imageDesc.data      = &imageData;
-            imageDesc.dataSize  = 1;
+            imageView.format    = LLGL::ImageFormat::R;
+            imageView.dataType  = LLGL::DataType::UInt8;
+            imageView.data      = &imageData;
+            imageView.dataSize  = 1;
         }
         LLGL::TextureDescriptor texDesc;
         {
             texDesc.extent = { 1, 1, 1 };
             texDesc.format = LLGL::Format::R8UInt;
         }
-        auto texUint = renderer->CreateTexture(texDesc, &imageDesc);
+        auto texUint = renderer->CreateTexture(texDesc, &imageView);
         texUint->SetName("texUint");
         #endif
 

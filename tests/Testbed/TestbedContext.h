@@ -60,7 +60,7 @@ class TestbedContext
             const LLGL::TextureDescriptor&  desc,
             const char*                     name,
             LLGL::Texture**                 output,
-            const LLGL::SrcImageDescriptor* initialImage = nullptr
+            const LLGL::ImageView*          initialImage = nullptr
         );
 
         TestResult CreateRenderTarget(

@@ -20,11 +20,11 @@ namespace LLGL
 
 // Uploads the image data to the specified texture region; requires extension "GL_ARB_direct_state_access".
 void GLTextureSubImage(
-    GLuint                      texID,
-    const TextureType           type,
-    const TextureRegion&        region,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat  = 0
+    GLuint                  texID,
+    const TextureType       type,
+    const TextureRegion&    region,
+    const ImageView&        imageView,
+    GLenum                  internalFormat  = 0
 );
 
 

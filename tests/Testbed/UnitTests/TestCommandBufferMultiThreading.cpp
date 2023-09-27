@@ -262,12 +262,12 @@ DEF_TEST( CommandBufferMultiThreading )
     std::vector<ColorRGBub> outputImage;
     outputImage.resize(texSize.width * texSize.height);
 
-    DstImageDescriptor dstImageDesc;
+    MutableImageView dstImageView;
     {
-        dstImageDesc.format     = ImageFormat::RGB;
-        dstImageDesc.dataType   = DataType::UInt8;
-        dstImageDesc.data       = outputImage.data();
-        dstImageDesc.dataSize   = outputImage.size() * sizeof(ColorRGBub);
+        dstImageView.format     = ImageFormat::RGB;
+        dstImageView.dataType   = DataType::UInt8;
+        dstImageView.data       = outputImage.data();
+        dstImageView.dataSize   = outputImage.size() * sizeof(ColorRGBub);
     }
 
     const TextureRegion texRegion{ Offset3D{}, Extent3D{ texSize.width, texSize.height, 1 } };
@@ -279,7 +279,7 @@ DEF_TEST( CommandBufferMultiThreading )
         if (fastTest && i % 2 == 1)
             continue;
 
-        renderer->ReadTexture(*outputTextures[i], texRegion, dstImageDesc);
+        renderer->ReadTexture(*outputTextures[i], texRegion, dstImageView);
 
         const std::string outputImageName = "MultiThreading_Worker" + std::to_string(i);
         SaveColorImage(outputImage, texSize, outputImageName);

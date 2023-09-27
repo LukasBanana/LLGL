@@ -12,7 +12,7 @@
 #import <MetalKit/MetalKit.h>
 
 #include <LLGL/CommandBuffer.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include "MTCommandContext.h"
 #include "../Buffer/MTIntermediateBuffer.h"
 #include "../Buffer/MTStagingBufferPool.h"

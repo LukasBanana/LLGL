@@ -228,8 +228,8 @@ enum class Format
 
 /**
 \brief Image format enumeration that applies to each pixel of an image.
-\see SrcImageDescriptor::format
-\see DstImageDescriptor::format
+\see ImageView::format
+\see MutableImageView::format
 \see GetMemoryFootprint
 \todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
 */
@@ -262,8 +262,8 @@ enum class ImageFormat
 /**
 \brief Data types enumeration used for CPU side operations.
 \remarks The counterpart of this enumeration for GPU side operations is LLGL::Format.
-\see SrcImageDescriptor::dataType
-\see DstImageDescriptor::dataType
+\see ImageView::dataType
+\see MutableImageView::dataType
 \todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
 */
 enum class DataType

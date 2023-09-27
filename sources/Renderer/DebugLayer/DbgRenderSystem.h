@@ -61,7 +61,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
         void ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc);
 
-        void ValidateTextureDesc(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr);
+        void ValidateTextureDesc(const TextureDescriptor& textureDesc, const ImageView* initialImage = nullptr);
         void ValidateTextureFormatSupported(const Format format);
         void ValidateTextureDescMipLevels(const TextureDescriptor& textureDesc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);

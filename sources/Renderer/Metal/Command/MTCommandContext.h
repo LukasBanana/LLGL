@@ -11,7 +11,7 @@
 
 #import <Metal/Metal.h>
 
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/CommandBufferFlags.h>
 #include <cstdint>
 

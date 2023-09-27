@@ -32,13 +32,13 @@ class NullTexture final : public Texture
 
     public:
 
-        NullTexture(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc = nullptr);
+        NullTexture(const TextureDescriptor& desc, const ImageView* initialImage = nullptr);
 
         // Returns the MIP-map level clamped to the number of MIP-map levels in this texture.
         std::uint32_t ClampMipLevel(std::uint32_t mipLevel) const;
 
-        void Write(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc);
-        void Read(const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc);
+        void Write(const TextureRegion& textureRegion, const ImageView& srcImageView);
+        void Read(const TextureRegion& textureRegion, const MutableImageView& dstImageView);
 
         // Generates the MIP-map images for either the entire resource or a rubresource.
         void GenerateMips(const TextureSubresource* subresource = nullptr);

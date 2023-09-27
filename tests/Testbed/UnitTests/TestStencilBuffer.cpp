@@ -119,14 +119,14 @@ DEF_TEST( StencilBuffer )
 
     std::uint8_t readbackStencilValue = invalidStencilValue;
 
-    DstImageDescriptor dstImageDesc;
+    MutableImageView dstImageView;
     {
-        dstImageDesc.format     = ImageFormat::Stencil;
-        dstImageDesc.data       = &readbackStencilValue;
-        dstImageDesc.dataSize   = sizeof(readbackStencilValue);
-        dstImageDesc.dataType   = DataType::UInt8;
+        dstImageView.format     = ImageFormat::Stencil;
+        dstImageView.data       = &readbackStencilValue;
+        dstImageView.dataSize   = sizeof(readbackStencilValue);
+        dstImageView.dataType   = DataType::UInt8;
     }
-    renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageDesc);
+    renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageView);
 
     const int deltaStencilValue = std::abs(static_cast<int>(readbackStencilValue) - static_cast<int>(stencilRef));
 
@@ -134,12 +134,12 @@ DEF_TEST( StencilBuffer )
     std::vector<std::uint8_t> readbackStencilBuffer;
     readbackStencilBuffer.resize(texDesc.extent.width * texDesc.extent.height, 0);
     {
-        dstImageDesc.format     = ImageFormat::Stencil;
-        dstImageDesc.data       = readbackStencilBuffer.data();
-        dstImageDesc.dataSize   = sizeof(decltype(readbackStencilBuffer)::value_type) * readbackStencilBuffer.size();
-        dstImageDesc.dataType   = DataType::UInt8;
+        dstImageView.format     = ImageFormat::Stencil;
+        dstImageView.data       = readbackStencilBuffer.data();
+        dstImageView.dataSize   = sizeof(decltype(readbackStencilBuffer)::value_type) * readbackStencilBuffer.size();
+        dstImageView.dataType   = DataType::UInt8;
     }
-    renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
+    renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageView);
 
     SaveStencilImage(readbackStencilBuffer, resolution, "StencilBuffer_Set50");
 

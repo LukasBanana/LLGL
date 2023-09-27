@@ -52,20 +52,20 @@ void Test_PixelOperations()
 
     LLGL::Image img1Sub { LLGL::Extent3D { 109, 110, 1 }, LLGL::ImageFormat::BGR, img1.GetDataType() };
 
-    img1.ReadPixels(LLGL::Offset3D { 0, 0, 0 }, img1Sub.GetExtent(), img1Sub.GetDstDesc());
+    img1.ReadPixels(LLGL::Offset3D { 0, 0, 0 }, img1Sub.GetExtent(), img1Sub.GetMutableView());
     SaveImagePNG(img1Sub, "Output/img1Sub-a.png");
 
-    img1.ReadPixels(LLGL::Offset3D { 109, 0, 0 }, img1Sub.GetExtent(), img1Sub.GetDstDesc());
+    img1.ReadPixels(LLGL::Offset3D { 109, 0, 0 }, img1Sub.GetExtent(), img1Sub.GetMutableView());
     SaveImagePNG(img1Sub, "Output/img1Sub-b.png");
 
-    img1.ReadPixels(LLGL::Offset3D { 328, 164, 0 }, img1Sub.GetExtent(), img1Sub.GetDstDesc());
+    img1.ReadPixels(LLGL::Offset3D { 328, 164, 0 }, img1Sub.GetExtent(), img1Sub.GetMutableView());
     SaveImagePNG(img1Sub, "Output/img1Sub-c.png");
 
     #if 0
-    img1.WritePixels(LLGL::Offset3D { 0, 110, 0 }, img1Sub.GetExtent(), img1Sub.GetSrcDesc());
+    img1.WritePixels(LLGL::Offset3D { 0, 110, 0 }, img1Sub.GetExtent(), img1Sub.GetView());
     SaveImagePNG(img1, "Output/img1.png");
     #elif 1
-    img1.WritePixels(LLGL::Offset3D { 0, 220, 0 }, LLGL::Extent3D { img1.GetExtent().width, 110, 1 }, img1.GetSrcDesc());
+    img1.WritePixels(LLGL::Offset3D { 0, 220, 0 }, LLGL::Extent3D { img1.GetExtent().width, 110, 1 }, img1.GetView());
     SaveImagePNG(img1, "Output/img1-write.png");
     #endif
 }

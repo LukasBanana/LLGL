@@ -11,9 +11,9 @@
 #define LLGL_C99_LLGLWRAPPER_H
 
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <LLGL-C/Types.h>
 
 #if defined LLGL_OS_ANDROID
@@ -899,6 +899,7 @@ typedef enum LLGLWindowFlags
     LLGLWindowCentered             = (1 << 3),
     LLGLWindowAcceptDropFiles      = (1 << 4),
     LLGLWindowDisableClearOnResize = (1 << 5),
+    LLGLWindowDisableSizeScaling   = (1 << 6),
 }
 LLGLWindowFlags;
 
@@ -1161,7 +1162,7 @@ typedef struct LLGLBufferViewDescriptor
 {
     LLGLFormat format; /* = LLGLFormatUndefined */
     uint64_t   offset; /* = 0 */
-    uint64_t   size;   /* = LLGLConstantswholeSize */
+    uint64_t   size;   /* = LLGL_WHOLE_SIZE */
 }
 LLGLBufferViewDescriptor;
 
@@ -1201,23 +1202,23 @@ typedef struct LLGLFragmentAttribute
 }
 LLGLFragmentAttribute;
 
-typedef struct LLGLSrcImageDescriptor
+typedef struct LLGLImageView
 {
     LLGLImageFormat format;   /* = LLGLImageFormatRGBA */
     LLGLDataType    dataType; /* = LLGLDataTypeUInt8 */
     const void*     data;     /* = NULL */
     size_t          dataSize; /* = 0 */
 }
-LLGLSrcImageDescriptor;
+LLGLImageView;
 
-typedef struct LLGLDstImageDescriptor
+typedef struct LLGLMutableImageView
 {
     LLGLImageFormat format;   /* = LLGLImageFormatRGBA */
     LLGLDataType    dataType; /* = LLGLDataTypeUInt8 */
     void*           data;     /* = NULL */
     size_t          dataSize; /* = 0 */
 }
-LLGLDstImageDescriptor;
+LLGLMutableImageView;
 
 typedef struct LLGLBindingDescriptor
 {

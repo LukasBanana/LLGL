@@ -84,7 +84,7 @@ void Image::Convert(const ImageFormat format, const DataType dataType, unsigned 
     /* Convert image buffer (if necessary) */
     if (data_)
     {
-        if (DynamicByteArray convertedData = ConvertImageBuffer(GetSrcDesc(), format, dataType, threadCount))
+        if (DynamicByteArray convertedData = ConvertImageBuffer(GetView(), format, dataType, threadCount))
             data_ = std::move(convertedData);
     }
 
@@ -266,11 +266,11 @@ void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRe
             const Extent3D dstExtent = GetExtent();
 
             CopyImageBufferRegion(
-                GetDstDesc(),
+                GetMutableView(),
                 dstRegionOffset,
                 dstExtent.width,
                 dstExtent.width * dstExtent.height,
-                srcImageRef->GetSrcDesc(),
+                srcImageRef->GetView(),
                 srcRegionOffset,
                 srcExtent.width,
                 srcExtent.width * srcExtent.height,
@@ -285,36 +285,36 @@ static std::size_t GetRequiredImageDataSize(const Extent3D& extent, const ImageF
     return GetMemoryFootprint(format, dataType, extent.width * extent.height * extent.depth);
 }
 
-static void ValidateImageDataSize(const Extent3D& extent, const DstImageDescriptor& imageDesc)
+static void ValidateImageDataSize(const Extent3D& extent, const MutableImageView& imageView)
 {
-    const std::uint64_t requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
-    if (imageDesc.dataSize < requiredDataSize)
+    const std::uint64_t requiredDataSize = GetRequiredImageDataSize(extent, imageView.format, imageView.dataType);
+    if (imageView.dataSize < requiredDataSize)
     {
         LLGL_TRAP(
             "data size of destinaton image descriptor is too small: 0x%016" PRIX64 " is required, but only 0x%016" PRIX64 " was specified",
-            requiredDataSize, imageDesc.dataSize
+            requiredDataSize, imageView.dataSize
         );
     }
 }
 
-static void ValidateImageDataSize(const Extent3D& extent, const SrcImageDescriptor& imageDesc)
+static void ValidateImageDataSize(const Extent3D& extent, const ImageView& imageView)
 {
-    const std::size_t requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
-    if (imageDesc.dataSize < requiredDataSize)
+    const std::size_t requiredDataSize = GetRequiredImageDataSize(extent, imageView.format, imageView.dataType);
+    if (imageView.dataSize < requiredDataSize)
     {
         LLGL_TRAP(
             "data size of source image descriptor is too small: 0x%016" PRIX64 " is required, but only 0x%016" PRIX64 " was specified",
-            requiredDataSize, imageDesc.dataSize
+            requiredDataSize, imageView.dataSize
         );
     }
 }
 
-void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, unsigned threadCount) const
+void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const MutableImageView& imageView, unsigned threadCount) const
 {
-    if (imageDesc.data && IsRegionInside(offset, extent))
+    if (imageView.data && IsRegionInside(offset, extent))
     {
         /* Validate required size */
-        ValidateImageDataSize(extent, imageDesc);
+        ValidateImageDataSize(extent, imageView);
 
         /* Get source image parameters */
         const std::uint32_t bpp             = GetBytesPerPixel();
@@ -322,12 +322,12 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
         const std::uint32_t srcDepthStride  = srcRowStride * GetExtent().height;
         const char*         src             = data_.get() + GetDataPtrOffset(offset);
 
-        if (GetFormat() == imageDesc.format && GetDataType() == imageDesc.dataType)
+        if (GetFormat() == imageView.format && GetDataType() == imageView.dataType)
         {
             /* Get destination image parameters */
             const std::uint32_t dstRowStride    = bpp * extent.width;
             const std::uint32_t dstDepthStride  = dstRowStride * extent.height;
-            char*               dst             = reinterpret_cast<char*>(imageDesc.data);
+            char*               dst             = reinterpret_cast<char*>(imageView.data);
 
             /* Blit region into destination image */
             BitBlit(
@@ -348,20 +348,20 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
             );
 
             /* Convert sub-image */
-            subImage.Convert(imageDesc.format, imageDesc.dataType, threadCount);
+            subImage.Convert(imageView.format, imageView.dataType, threadCount);
 
             /* Copy sub-image into output data */
-            ::memcpy(imageDesc.data, subImage.GetData(), imageDesc.dataSize);
+            ::memcpy(imageView.data, subImage.GetData(), imageView.dataSize);
         }
     }
 }
 
-void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, unsigned threadCount)
+void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const ImageView& imageView, unsigned threadCount)
 {
-    if (imageDesc.data && IsRegionInside(offset, extent))
+    if (imageView.data && IsRegionInside(offset, extent))
     {
         /* Validate required size */
-        ValidateImageDataSize(extent, imageDesc);
+        ValidateImageDataSize(extent, imageView);
 
         /* Get destination image parameters */
         const std::uint32_t bpp             = GetBytesPerPixel();
@@ -369,12 +369,12 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
         const std::uint32_t dstDepthStride  = dstRowStride * GetExtent().height;
         char*               dst             = data_.get() + GetDataPtrOffset(offset);
 
-        if (GetFormat() == imageDesc.format && GetDataType() == imageDesc.dataType)
+        if (GetFormat() == imageView.format && GetDataType() == imageView.dataType)
         {
             /* Get source image parameters */
             const std::uint32_t srcRowStride    = bpp * extent.width;
             const std::uint32_t srcDepthStride  = srcRowStride * extent.height;
-            const char*         src             = reinterpret_cast<const char*>(imageDesc.data);
+            const char*         src             = reinterpret_cast<const char*>(imageView.data);
 
             /* Blit source image into region */
             BitBlit(
@@ -386,8 +386,8 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
         else
         {
             /* Copy input data into sub-image into */
-            Image subImage{ extent, imageDesc.format, imageDesc.dataType };
-            ::memcpy(subImage.GetData(), imageDesc.data, imageDesc.dataSize);
+            Image subImage{ extent, imageView.format, imageView.dataType };
+            ::memcpy(subImage.GetData(), imageView.data, imageView.dataSize);
 
             /* Convert sub-image */
             subImage.Convert(GetFormat(), GetDataType(), threadCount);
@@ -404,28 +404,28 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
 
 /* ----- Attributes ----- */
 
-SrcImageDescriptor Image::GetSrcDesc() const
+ImageView Image::GetView() const
 {
-    SrcImageDescriptor imageDesc;
+    ImageView imageView;
     {
-        imageDesc.format    = GetFormat();
-        imageDesc.dataType  = GetDataType();
-        imageDesc.data      = GetData();
-        imageDesc.dataSize  = GetDataSize();
+        imageView.format    = GetFormat();
+        imageView.dataType  = GetDataType();
+        imageView.data      = GetData();
+        imageView.dataSize  = GetDataSize();
     }
-    return imageDesc;
+    return imageView;
 }
 
-DstImageDescriptor Image::GetDstDesc()
+MutableImageView Image::GetMutableView()
 {
-    DstImageDescriptor imageDesc;
+    MutableImageView imageView;
     {
-        imageDesc.format    = GetFormat();
-        imageDesc.dataType  = GetDataType();
-        imageDesc.data      = GetData();
-        imageDesc.dataSize  = GetDataSize();
+        imageView.format    = GetFormat();
+        imageView.dataType  = GetDataType();
+        imageView.data      = GetData();
+        imageView.dataSize  = GetDataSize();
     }
-    return imageDesc;
+    return imageView;
 }
 
 std::uint32_t Image::GetBytesPerPixel() const

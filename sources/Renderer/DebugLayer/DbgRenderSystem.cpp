@@ -256,14 +256,14 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateTextureDesc(textureDesc, imageDesc);
+        ValidateTextureDesc(textureDesc, initialImage);
     }
-    return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc);
+    return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, initialImage), textureDesc);
 }
 
 void DbgRenderSystem::Release(Texture& texture)
@@ -271,7 +271,7 @@ void DbgRenderSystem::Release(Texture& texture)
     ReleaseDbg(textures_, texture);
 }
 
-void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
@@ -279,16 +279,16 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     {
         LLGL_DBG_SOURCE;
         ValidateTextureRegion(textureDbg, textureRegion);
-        ValidateImageDataSize(textureDbg, textureRegion, imageDesc.format, imageDesc.dataType, imageDesc.dataSize);
+        ValidateImageDataSize(textureDbg, textureRegion, srcImageView.format, srcImageView.dataType, srcImageView.dataSize);
     }
 
-    instance_->WriteTexture(textureDbg.instance, textureRegion, imageDesc);
+    instance_->WriteTexture(textureDbg.instance, textureRegion, srcImageView);
 
     if (profiler_)
         profiler_->frameProfile.textureWrites++;
 }
 
-void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
@@ -296,10 +296,10 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
     {
         LLGL_DBG_SOURCE;
         ValidateTextureRegion(textureDbg, textureRegion);
-        ValidateImageDataSize(textureDbg, textureRegion, imageDesc.format, imageDesc.dataType, imageDesc.dataSize);
+        ValidateImageDataSize(textureDbg, textureRegion, dstImageView.format, dstImageView.dataType, dstImageView.dataSize);
     }
 
-    instance_->ReadTexture(textureDbg.instance, textureRegion, imageDesc);
+    instance_->ReadTexture(textureDbg.instance, textureRegion, dstImageView);
 
     if (profiler_)
         profiler_->frameProfile.textureReads++;
@@ -880,7 +880,7 @@ void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewD
     }
 }
 
-void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     switch (textureDesc.type)
     {
@@ -958,7 +958,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
     /* Check if MIP-map generation is requested  */
     if ((textureDesc.miscFlags & MiscFlags::GenerateMips) != 0)
     {
-        if (imageDesc == nullptr)
+        if (initialImage == nullptr)
         {
             #if 0
             LLGL_DBG_WARN(

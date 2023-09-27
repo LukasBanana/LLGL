@@ -365,7 +365,7 @@ TestResult TestbedContext::CreateTexture(
     const LLGL::TextureDescriptor&  desc,
     const char*                     name,
     LLGL::Texture**                 output,
-    const LLGL::SrcImageDescriptor* initialImage)
+    const LLGL::ImageView*          initialImage)
 {
     // Create texture
     Texture* tex = renderer->CreateTexture(desc, initialImage);
@@ -835,12 +835,12 @@ bool TestbedContext::LoadTextures()
         }
 
         // Create texture
-        SrcImageDescriptor imageDesc;
+        ImageView imageView;
         {
-            imageDesc.format    = ImageFormat::RGBA;
-            imageDesc.dataType  = DataType::UInt8;
-            imageDesc.data      = imgBuf;
-            imageDesc.dataSize  = static_cast<std::size_t>(w*h*4);
+            imageView.format    = ImageFormat::RGBA;
+            imageView.dataType  = DataType::UInt8;
+            imageView.data      = imgBuf;
+            imageView.dataSize  = static_cast<std::size_t>(w*h*4);
         }
         TextureDescriptor texDesc;
         {
@@ -849,7 +849,7 @@ bool TestbedContext::LoadTextures()
             texDesc.extent.height   = static_cast<std::uint32_t>(h);
         }
         Texture* tex = nullptr;
-        (void)CreateTexture(texDesc, name, &tex, &imageDesc);
+        (void)CreateTexture(texDesc, name, &tex, &imageView);
 
         // Release image buffer
         stbi_image_free(imgBuf);
@@ -1167,14 +1167,14 @@ void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name
                 std::vector<std::uint8_t> stencilData;
                 stencilData.resize(extent.width * extent.height);
 
-                DstImageDescriptor dstImageDesc;
+                MutableImageView dstImageView;
                 {
-                    dstImageDesc.format     = ImageFormat::Stencil;
-                    dstImageDesc.data       = stencilData.data();
-                    dstImageDesc.dataSize   = sizeof(decltype(stencilData)::value_type) * stencilData.size();
-                    dstImageDesc.dataType   = DataType::UInt8;
+                    dstImageView.format     = ImageFormat::Stencil;
+                    dstImageView.data       = stencilData.data();
+                    dstImageView.dataSize   = sizeof(decltype(stencilData)::value_type) * stencilData.size();
+                    dstImageView.dataType   = DataType::UInt8;
                 }
-                renderer->ReadTexture(*capture, texRegion, dstImageDesc);
+                renderer->ReadTexture(*capture, texRegion, dstImageView);
 
                 SaveStencilImage(stencilData, extent, name);
             }
@@ -1184,14 +1184,14 @@ void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name
                 std::vector<float> depthData;
                 depthData.resize(extent.width * extent.height);
 
-                DstImageDescriptor dstImageDesc;
+                MutableImageView dstImageView;
                 {
-                    dstImageDesc.format     = ImageFormat::Depth;
-                    dstImageDesc.data       = depthData.data();
-                    dstImageDesc.dataSize   = sizeof(decltype(depthData)::value_type) * depthData.size();
-                    dstImageDesc.dataType   = DataType::Float32;
+                    dstImageView.format     = ImageFormat::Depth;
+                    dstImageView.data       = depthData.data();
+                    dstImageView.dataSize   = sizeof(decltype(depthData)::value_type) * depthData.size();
+                    dstImageView.dataType   = DataType::Float32;
                 }
-                renderer->ReadTexture(*capture, texRegion, dstImageDesc);
+                renderer->ReadTexture(*capture, texRegion, dstImageView);
 
                 SaveDepthImage(depthData, extent, name);
             }
@@ -1202,14 +1202,14 @@ void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name
             std::vector<ColorRGBub> colorData;
             colorData.resize(extent.width * extent.height);
 
-            DstImageDescriptor dstImageDesc;
+            MutableImageView dstImageView;
             {
-                dstImageDesc.format     = ImageFormat::RGB;
-                dstImageDesc.data       = colorData.data();
-                dstImageDesc.dataSize   = sizeof(decltype(colorData)::value_type) * colorData.size();
-                dstImageDesc.dataType   = DataType::UInt8;
+                dstImageView.format     = ImageFormat::RGB;
+                dstImageView.data       = colorData.data();
+                dstImageView.dataSize   = sizeof(decltype(colorData)::value_type) * colorData.size();
+                dstImageView.dataType   = DataType::UInt8;
             }
-            renderer->ReadTexture(*capture, texRegion, dstImageDesc);
+            renderer->ReadTexture(*capture, texRegion, dstImageView);
 
             SaveColorImage(colorData, extent, name);
         }

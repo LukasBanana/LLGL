@@ -9,39 +9,39 @@
 #define LLGL_RENDER_SYSTEM_H
 
 
-#include <LLGL/Interface.h>
-#include <LLGL/SwapChain.h>
-#include <LLGL/CommandQueue.h>
-#include <LLGL/CommandBuffer.h>
-#include <LLGL/RenderSystemFlags.h>
-#include <LLGL/RenderingProfiler.h>
-#include <LLGL/RenderingDebugger.h>
 #include <LLGL/Blob.h>
-#include <LLGL/Container/ArrayView.h>
-
 #include <LLGL/Buffer.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/BufferArray.h>
-#include <LLGL/Texture.h>
-#include <LLGL/TextureFlags.h>
-#include <LLGL/Sampler.h>
-#include <LLGL/SamplerFlags.h>
-#include <LLGL/ResourceHeap.h>
-#include <LLGL/ResourceHeapFlags.h>
-#include <LLGL/RenderPass.h>
-#include <LLGL/RenderPassFlags.h>
-#include <LLGL/RenderTarget.h>
-#include <LLGL/RenderTargetFlags.h>
-#include <LLGL/Shader.h>
-#include <LLGL/ShaderFlags.h>
-#include <LLGL/ShaderReflection.h>
+#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandQueue.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/Fence.h>
+#include <LLGL/Interface.h>
+#include <LLGL/ImageFlags.h>
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/QueryHeap.h>
 #include <LLGL/QueryHeapFlags.h>
-#include <LLGL/Fence.h>
+#include <LLGL/RenderPass.h>
+#include <LLGL/RenderPassFlags.h>
+#include <LLGL/RenderTarget.h>
+#include <LLGL/RenderTargetFlags.h>
+#include <LLGL/RenderSystemFlags.h>
+#include <LLGL/RenderingProfiler.h>
+#include <LLGL/RenderingDebugger.h>
+#include <LLGL/ResourceHeap.h>
+#include <LLGL/ResourceHeapFlags.h>
+#include <LLGL/Sampler.h>
+#include <LLGL/SamplerFlags.h>
+#include <LLGL/Shader.h>
+#include <LLGL/ShaderFlags.h>
+#include <LLGL/ShaderReflection.h>
+#include <LLGL/SwapChain.h>
+#include <LLGL/Texture.h>
+#include <LLGL/TextureFlags.h>
 
 #include <string>
 #include <memory>
@@ -354,13 +354,13 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Creates a new texture.
         \param[in] textureDesc Specifies the texture descriptor.
-        \param[in] imageDesc Optional pointer to the image data descriptor.
+        \param[in] initialImage Optional pointer to an image view that provides the initial image data.
         If this is null, the texture will be initialized with the currently configured default image color (if this feature is enabled).
         If this is non-null, it is used to initialize the texture data.
         This parameter will be ignored if the texture type is a multi-sampled texture (i.e. TextureType::Texture2DMS or TextureType::Texture2DMSArray).
         \see WriteTexture
         */
-        virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
+        virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage = nullptr) = 0;
 
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
@@ -369,16 +369,16 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Updates the image data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
         \param[in] textureRegion Specifies the region where the texture is to be updated. The field TextureRegion::numMipLevels \b must be 1.
-        \param[in] imageDesc Specifies the image data descriptor. Its \c data member must not be null!
+        \param[in] srcImageView Specifies the source image view. Its \c data member must not be null!
         \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
         */
-        virtual void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc) = 0;
+        virtual void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView) = 0;
 
         /**
         \brief Reads the image data from the specified texture.
         \param[in] texture Specifies the texture object to read from.
         \param[in] textureRegion Specifies the region where the texture data is to be read.
-        \param[out] imageDesc Specifies the destination image descriptor to write the texture data to.
+        \param[out] dstImageView Specifies the destination image view to write the texture data to.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
         The Texture::GetDesc or Texture::GetMipExtent functions can be used to determine the texture dimensions.
         \code
@@ -389,7 +389,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         std::vector<std::uint8_t> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth * 4);
 
         // Initialize destination image descriptor
-        const DstImageDescriptor myImageDesc {
+        const MutableImageView myImageView {
             LLGL::ImageFormat::RGBA,                // RGBA image format, since the size of 'myImage' is a multiple of 4
             LLGL::DataType::UInt8,                  // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
             myImage.data(),                         // Output image buffer
@@ -397,16 +397,16 @@ class LLGL_EXPORT RenderSystem : public Interface
         };
 
         // Read texture data from first MIP-map level (index 0)
-        myRenderSystem->ReadTexture(*myTexture, 0, myImageDesc);
+        myRenderSystem->ReadTexture(*myTexture, 0, myImageView);
         \endcode
-        \note The behavior is undefined if <code>imageDesc.data</code> points to an invalid buffer,
-        or <code>imageDesc.data</code> points to a buffer that is smaller than specified by <code>imageDesc.dataSize</code>,
-        or <code>imageDesc.dataSize</code> is less than the required size.
-        \throws std::invalid_argument If <code>imageDesc.data</code> is null.
+        \note The behavior is undefined if <code>dstImageView.data</code> points to an invalid buffer,
+        or <code>dstImageView.data</code> points to a buffer that is smaller than specified by <code>dstImageView.dataSize</code>,
+        or <code>dstImageView.dataSize</code> is less than the required size.
+        \throws std::invalid_argument If <code>dstImageView.data</code> is null.
         \see Texture::GetDesc
         \see Texture::GetMipExtent
         */
-        virtual void ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc) = 0;
+        virtual void ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView) = 0;
 
         /* ----- Samplers ---- */
 
@@ -683,11 +683,11 @@ class LLGL_EXPORT RenderSystem : public Interface
         \see ConvertImageBuffer
         */
         static std::size_t CopyTextureImageData(
-            const DstImageDescriptor&   dstImageDesc,
-            const SrcImageDescriptor&   srcImageDesc,
-            std::uint32_t               numTexels,
-            std::uint32_t               numTexelsInRow,
-            std::uint32_t               rowStride       = 0
+            const MutableImageView& dstImageView,
+            const ImageView&        srcImageView,
+            std::uint32_t           numTexels,
+            std::uint32_t           numTexelsInRow,
+            std::uint32_t           rowStride       = 0
         );
 
     private:

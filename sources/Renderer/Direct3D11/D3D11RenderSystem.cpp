@@ -186,16 +186,16 @@ void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Create texture object */
     auto* textureD3D = textures_.emplace<D3D11Texture>(device_.Get(), textureDesc);
 
     /* Initialize texture data with or without initial image data */
-    InitializeGpuTexture(*textureD3D, textureDesc, imageDesc);
+    InitializeGpuTexture(*textureD3D, textureDesc, initialImage);
 
     /* Generate MIP-maps if enabled */
-    if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
+    if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))
         D3D11MipGenerator::Get().GenerateMips(context_.Get(), *textureD3D);
 
     return textureD3D;
@@ -206,7 +206,7 @@ void D3D11RenderSystem::Release(Texture& texture)
     textures_.erase(&texture);
 }
 
-void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     switch (texture.GetType())
@@ -222,7 +222,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                     textureRegion.offset.x,
                     textureRegion.extent.width
                 ),
-                imageDesc,
+                srcImageView,
                 &(GetMutableReport())
             );
             break;
@@ -242,7 +242,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                     textureRegion.extent.width,
                     textureRegion.extent.height
                 ),
-                imageDesc,
+                srcImageView,
                 &(GetMutableReport())
             );
             break;
@@ -266,16 +266,16 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const TextureRegion& text
                     textureRegion.extent.height,
                     textureRegion.extent.depth
                 ),
-                imageDesc,
+                srcImageView,
                 &(GetMutableReport())
             );
             break;
     }
 }
 
-void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
-    if (imageDesc.data == nullptr)
+    if (dstImageView.data == nullptr)
         return /*E_INVALIDARG*/;
 
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
@@ -285,16 +285,16 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
     const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
     const std::uint32_t     numTexelsTotal      = numTexelsPerLayer * textureRegion.subresource.numArrayLayers;
-    const std::size_t       requiredImageSize   = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, numTexelsTotal);
+    const std::size_t       requiredImageSize   = GetMemoryFootprint(dstImageView.format, dstImageView.dataType, numTexelsTotal);
 
-    if (imageDesc.dataSize < requiredImageSize)
+    if (dstImageView.dataSize < requiredImageSize)
         return /*E_BOUNDS*/;
 
     /* Create a copy of the hardware texture with CPU read access */
     D3D11NativeTexture texCopy;
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, textureRegion);
 
-    DstImageDescriptor      dstImageDesc        = imageDesc;
+    MutableImageView        intermediateDstView = dstImageView;
     const FormatAttributes& formatAttribs       = GetFormatAttribs(format);
 
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
@@ -306,14 +306,14 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
         /* Copy host visible resource to CPU accessible resource */
-        const SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, mappedSubresource.pData, mappedSubresource.DepthPitch };
-        const std::size_t bytesWritten = RenderSystem::CopyTextureImageData(dstImageDesc, srcImageDesc, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
+        const ImageView intermediateSrcView{ formatAttribs.format, formatAttribs.dataType, mappedSubresource.pData, mappedSubresource.DepthPitch };
+        const std::size_t bytesWritten = RenderSystem::CopyTextureImageData(intermediateDstView, intermediateSrcView, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
 
         /* Unmap resource */
         context_->Unmap(texCopy.resource.Get(), subresource);
 
         /* Move destination image pointer to next layer */
-        dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + bytesWritten;
+        intermediateDstView.data = reinterpret_cast<char*>(intermediateDstView.data) + bytesWritten;
     }
 }
 
@@ -748,22 +748,22 @@ static void InitializeD3DColorTextureWithUploadBuffer(
     const ClearValue&       clearValue)
 {
     /* Find suitable image format for texture hardware format */
-    SrcImageDescriptor imageDescDefault;
+    ImageView imageViewDefault;
 
     const auto& formatDesc = GetFormatAttribs(textureD3D.GetBaseFormat());
     if (formatDesc.bitSize > 0)
     {
         /* Copy image format and data type from descriptor */
-        imageDescDefault.format     = formatDesc.format;
-        imageDescDefault.dataType   = formatDesc.dataType;
+        imageViewDefault.format     = formatDesc.format;
+        imageViewDefault.dataType   = formatDesc.dataType;
 
         /* Generate default image buffer */
         const std::size_t   imageSize   = extent.width * extent.height * extent.depth;
-        DynamicByteArray    imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, clearValue.color);
+        DynamicByteArray    imageBuffer = GenerateImageBuffer(imageViewDefault.format, imageViewDefault.dataType, imageSize, clearValue.color);
 
         /* Update only the first MIP-map level for each array slice */
-        imageDescDefault.data       = imageBuffer.data();
-        imageDescDefault.dataSize   = GetMemoryFootprint(imageDescDefault.format, imageDescDefault.dataType, imageSize);
+        imageViewDefault.data       = imageBuffer.data();
+        imageViewDefault.dataSize   = GetMemoryFootprint(imageViewDefault.format, imageViewDefault.dataType, imageSize);
 
         for_range(layer, textureD3D.GetNumArrayLayers())
         {
@@ -773,7 +773,7 @@ static void InitializeD3DColorTextureWithUploadBuffer(
                 /*baseArrayLayer:*/ layer,
                 /*numArrayLayers:*/ 1,
                 /*dstBox:*/         D3D11Types::MakeD3D11Box(0, 0, 0, extent.width, extent.height, extent.depth),
-                /*imageDesc:*/      imageDescDefault
+                /*imageView:*/      imageViewDefault
             );
             DXThrowIfFailed(hr, "in 'InitializeD3DColorTextureWithUploadBuffer': LLGL::D3D11Texture::UpdateSubresource failed");
         }
@@ -783,9 +783,9 @@ static void InitializeD3DColorTextureWithUploadBuffer(
 void D3D11RenderSystem::InitializeGpuTexture(
     D3D11Texture&               textureD3D,
     const TextureDescriptor&    textureDesc,
-    const SrcImageDescriptor*   imageDesc)
+    const ImageView*            initialImage)
 {
-    if (imageDesc)
+    if (initialImage != nullptr)
     {
         /* Initialize texture with specified image descriptor */
         textureD3D.UpdateSubresource(
@@ -794,7 +794,7 @@ void D3D11RenderSystem::InitializeGpuTexture(
             /*baseArrayLayer:*/ 0,
             /*numArrayLayers:*/ textureDesc.arrayLayers,
             /*dstBox:*/         D3D11Types::MakeD3D11Box(0, 0, 0, textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth),
-            /*imageDesc:*/      *imageDesc,
+            /*imageView:*/      *initialImage,
             /*report:*/         &(GetMutableReport())
         );
     }

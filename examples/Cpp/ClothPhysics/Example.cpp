@@ -235,14 +235,14 @@ public:
             texDesc.extent.height   = clothSegmentsV + 1;
             texDesc.mipLevels       = 1;
         }
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.format    = LLGL::ImageFormat::RGBA;
-            imageDesc.dataType  = LLGL::DataType::Float32;
-            imageDesc.dataSize  = sizeof(Gs::Vector4f) * numClothVertices;
-            imageDesc.data      = initialData;
+            imageView.format    = LLGL::ImageFormat::RGBA;
+            imageView.dataType  = LLGL::DataType::Float32;
+            imageView.dataSize  = sizeof(Gs::Vector4f) * numClothVertices;
+            imageView.data      = initialData;
         }
-        particleBuffers[attrib] = renderer->CreateTexture(texDesc, &imageDesc);
+        particleBuffers[attrib] = renderer->CreateTexture(texDesc, &imageView);
 
         #else
 

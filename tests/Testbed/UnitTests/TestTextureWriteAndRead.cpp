@@ -25,7 +25,7 @@ DEF_TEST( TextureWriteAndRead )
             return result;
 
         // Write texture data
-        SrcImageDescriptor srcImage;
+        ImageView srcImage;
         {
             srcImage.format     = ImageFormat::RGBA;
             srcImage.dataType   = DataType::UInt8;
@@ -38,7 +38,7 @@ DEF_TEST( TextureWriteAndRead )
         std::vector<char> outputData;
         outputData.resize(dataSize, char(0xFF));
 
-        DstImageDescriptor dstImage;
+        MutableImageView dstImage;
         {
             dstImage.format     = srcImage.format;
             dstImage.dataType   = srcImage.dataType;

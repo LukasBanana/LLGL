@@ -131,7 +131,7 @@ class D3D12RenderSystem final : public RenderSystem
         HRESULT UpdateTextureSubresourceFromImage(
             D3D12Texture&               textureD3D,
             const TextureRegion&        region,
-            const SrcImageDescriptor&   imageDesc,
+            const ImageView&            imageView,
             D3D12SubresourceContext&    subresourceContext
         );
 

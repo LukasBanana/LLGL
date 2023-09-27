@@ -169,12 +169,12 @@ int main()
         if (!imageBuffer)
             throw std::runtime_error("failed to load texture from file: \"" + texFilename + "\"");
 
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.data      = imageBuffer;
-            imageDesc.dataSize  = texWidth*texHeight*4;
+            imageView.data      = imageBuffer;
+            imageView.dataSize  = texWidth*texHeight*4;
         };
-        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, texWidth, texHeight), &imageDesc);
+        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, texWidth, texHeight), &imageView);
 
         stbi_image_free(imageBuffer);
 

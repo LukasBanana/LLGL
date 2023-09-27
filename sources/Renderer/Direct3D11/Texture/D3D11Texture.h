@@ -65,13 +65,13 @@ class D3D11Texture final : public Texture
         D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc);
 
         HRESULT UpdateSubresource(
-            ID3D11DeviceContext*        context,
-            UINT                        mipLevel,
-            UINT                        baseArrayLayer,
-            UINT                        numArrayLayers,
-            const D3D11_BOX&            dstBox,
-            const SrcImageDescriptor&   imageDesc,
-            Report*                     report          = nullptr
+            ID3D11DeviceContext*    context,
+            UINT                    mipLevel,
+            UINT                    baseArrayLayer,
+            UINT                    numArrayLayers,
+            const D3D11_BOX&        dstBox,
+            const ImageView&        imageView,
+            Report*                 report          = nullptr
         );
 
         // Creates a copy of the specified subresource of the hardware texture with CPU read access.

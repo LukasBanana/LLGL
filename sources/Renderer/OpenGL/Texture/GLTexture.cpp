@@ -312,13 +312,13 @@ static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
     }
 }
 
-void GLTexture::BindAndAllocStorage(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+void GLTexture::BindAndAllocStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Allocate texture or renderbuffer storage */
     if (IsRenderbuffer())
         AllocRenderbufferStorage(textureDesc);
     else
-        AllocTextureStorage(textureDesc, imageDesc);
+        AllocTextureStorage(textureDesc, initialImage);
 }
 
 static TextureSwizzleRGBA GetTextureSwizzlePermutationBGRA(const TextureSwizzleRGBA& swizzle)
@@ -635,7 +635,7 @@ void GLTexture::CopyImageToBuffer(
     const auto& formatAttribs = GetFormatAttribs(GetFormat());
 
     /* Read data from unpack buffer with byte offset and equal texture format */
-    const DstImageDescriptor imageDesc
+    const MutableImageView dstImageView
     {
         formatAttribs.format,
         formatAttribs.dataType,
@@ -648,7 +648,7 @@ void GLTexture::CopyImageToBuffer(
     GLStateManager::Get().SetPixelStorePack(rowLength, imageHeight, 1);
     {
         /* Read image sub data and store into currently bound pack buffer */
-        GetTextureSubImage(region, imageDesc);
+        GetTextureSubImage(region, dstImageView);
     }
     GLStateManager::Get().SetPixelStorePack(0, 0, 1);
     GLStateManager::Get().BindBuffer(GLBufferTarget::PixelPackBuffer, 0);
@@ -672,7 +672,7 @@ void GLTexture::CopyImageFromBuffer(
     const auto& formatAttribs = GetFormatAttribs(GetFormat());
 
     /* Read data from unpack buffer with byte offset and equal texture format */
-    const SrcImageDescriptor imageDesc
+    const ImageView srcImageView
     {
         formatAttribs.format,
         formatAttribs.dataType,
@@ -685,13 +685,13 @@ void GLTexture::CopyImageFromBuffer(
     GLStateManager::Get().SetPixelStoreUnpack(rowLength, imageHeight, 1);
     {
         /* Write image sub data from currently bound unpack buffer */
-        TextureSubImage(region, imageDesc);
+        TextureSubImage(region, srcImageView);
     }
     GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
     GLStateManager::Get().BindBuffer(GLBufferTarget::PixelUnpackBuffer, 0);
 }
 
-void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescriptor& imageDesc, bool restoreBoundTexture)
+void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& srcImageView, bool restoreBoundTexture)
 {
     if (!IsRenderbuffer())
     {
@@ -699,7 +699,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             /* Transfer image data directly to GL texture */
-            GLTextureSubImage(GetID(), GetType(), region, imageDesc, GetGLInternalFormat());
+            GLTextureSubImage(GetID(), GetType(), region, srcImageView, GetGLInternalFormat());
         }
         else
         #endif
@@ -711,7 +711,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
                 GLStateManager::Get().PushBoundTexture(target);
                 {
                     GLStateManager::Get().BindTexture(target, GetID());
-                    GLTexSubImage(GetType(), region, imageDesc, GetGLInternalFormat());
+                    GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
                 }
                 GLStateManager::Get().PopBoundTexture();
             }
@@ -719,7 +719,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
             {
                 /* Bind texture and transfer image data to GL texture */
                 GLStateManager::Get().BindTexture(target, GetID());
-                GLTexSubImage(GetType(), region, imageDesc, GetGLInternalFormat());
+                GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
             }
         }
     }
@@ -730,7 +730,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const SrcImageDescr
 static void GLGetTextureSubImage(
     GLTexture&                  textureGL,
     const TextureRegion&        region,
-    const DstImageDescriptor&   imageDesc)
+    const MutableImageView&     dstImageView)
 {
     /* Translate source region into actual texture dimensions */
     const auto type         = textureGL.GetType();
@@ -748,10 +748,10 @@ static void GLGetTextureSubImage(
         static_cast<GLsizei>(extent.width),
         static_cast<GLsizei>(extent.height),
         static_cast<GLsizei>(extent.depth),
-        GLTypes::Map(imageDesc.format),
-        GLTypes::Map(imageDesc.dataType),
-        static_cast<GLsizei>(imageDesc.dataSize),
-        imageDesc.data
+        GLTypes::Map(dstImageView.format),
+        GLTypes::Map(dstImageView.dataType),
+        static_cast<GLsizei>(dstImageView.dataSize),
+        dstImageView.data
     );
 }
 
@@ -801,7 +801,7 @@ static void GLGetTexImage(
 static void GLGetTextureImage(
     GLTexture&                  textureGL,
     const TextureRegion&        region,
-    const DstImageDescriptor&   imageDesc)
+    const MutableImageView&     dstImageView)
 {
     /* Get texture type and texture unit target */
     const TextureType type = textureGL.GetType();
@@ -867,10 +867,10 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 stagingTextureID,
                 0,
-                GLTypes::Map(imageDesc.format),
-                GLTypes::Map(imageDesc.dataType),
-                static_cast<GLsizei>(imageDesc.dataSize),
-                imageDesc.data
+                GLTypes::Map(dstImageView.format),
+                GLTypes::Map(dstImageView.dataType),
+                static_cast<GLsizei>(dstImageView.dataSize),
+                dstImageView.data
             );
         }
         else
@@ -878,7 +878,7 @@ static void GLGetTextureImage(
         {
             /* Bind texture and read image data from texture */
             GLStateManager::Get().BindTexture(stagingTextureTarget, stagingTextureID);
-            GLGetTexImage(stagingTextureType, 0, imageDesc.format, imageDesc.dataType, imageDesc.data, numTexels);
+            GLGetTexImage(stagingTextureType, 0, dstImageView.format, dstImageView.dataType, dstImageView.data, numTexels);
         }
 
         /* Delete temporary staging texture */
@@ -895,10 +895,10 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 srcTextureID,
                 mipLevel,
-                GLTypes::Map(imageDesc.format),
-                GLTypes::Map(imageDesc.dataType),
-                static_cast<GLsizei>(imageDesc.dataSize),
-                imageDesc.data
+                GLTypes::Map(dstImageView.format),
+                GLTypes::Map(dstImageView.dataType),
+                static_cast<GLsizei>(dstImageView.dataSize),
+                dstImageView.data
             );
         }
         else
@@ -907,14 +907,14 @@ static void GLGetTextureImage(
             /* Bind texture and read image data from texture */
             const GLTextureTarget srcTextureTarget = GLStateManager::GetTextureTarget(type);
             GLStateManager::Get().BindTexture(srcTextureTarget, srcTextureID);
-            GLGetTexImage(type, mipLevel, imageDesc.format, imageDesc.dataType, imageDesc.data, numTexels);
+            GLGetTexImage(type, mipLevel, dstImageView.format, dstImageView.dataType, dstImageView.data, numTexels);
         }
     }
 }
 
 #endif // /LLGL_OPENGL
 
-void GLTexture::GetTextureSubImage(const TextureRegion& region, const DstImageDescriptor& imageDesc, bool restoreBoundTexture)
+void GLTexture::GetTextureSubImage(const TextureRegion& region, const MutableImageView& dstImageView, bool restoreBoundTexture)
 {
     if (!IsRenderbuffer())
     {
@@ -924,7 +924,7 @@ void GLTexture::GetTextureSubImage(const TextureRegion& region, const DstImageDe
         if (HasExtension(GLExt::ARB_get_texture_sub_image))
         {
             /* Use native function to retrieve sub image data */
-            GLGetTextureSubImage(*this, region, imageDesc);
+            GLGetTextureSubImage(*this, region, dstImageView);
         }
         else
         #endif // /GL_ARB_get_texture_sub_image
@@ -936,12 +936,12 @@ void GLTexture::GetTextureSubImage(const TextureRegion& region, const DstImageDe
                 /* Bind texture and transfer image data to GL texture, then restore previously bound texture with state manager */
                 GLStateManager::Get().PushBoundTexture(target);
                 {
-                    GLGetTextureImage(*this, region, imageDesc);
+                    GLGetTextureImage(*this, region, dstImageView);
                 }
                 GLStateManager::Get().PopBoundTexture();
             }
             else
-                GLGetTextureImage(*this, region, imageDesc);
+                GLGetTextureImage(*this, region, dstImageView);
         }
 
         #else
@@ -981,7 +981,7 @@ void GLTexture::BindTexParameters(const GL2XSampler& sampler)
  * ======= Private: =======
  */
 
-void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Bind texture */
     GLStateManager::Get().BindGLTexture(*this);
@@ -998,24 +998,24 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
 
     /* Convert initial image data for texture swizzle formats */
-    SrcImageDescriptor intermediateImageDesc;
+    ImageView intermediateImageView;
 
-    if (imageDesc != nullptr && GetSwizzleFormat() == GLSwizzleFormat::BGRA)
+    if (initialImage != nullptr && GetSwizzleFormat() == GLSwizzleFormat::BGRA)
     {
-        intermediateImageDesc = *imageDesc;
-        intermediateImageDesc.format = MapSwizzleImageFormat(imageDesc->format);
-        imageDesc = &intermediateImageDesc;
+        intermediateImageView = *initialImage;
+        intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
+        initialImage = &intermediateImageView;
     }
 
     /* Build texture storage and upload image dataa */
     //GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
-    GLTexImage(textureDesc, imageDesc);
+    GLTexImage(textureDesc, initialImage);
 
     /* Store internal GL format */
     internalFormat_ = GetTextureInternalFormat();
 
     /* Generate MIP-maps if enabled */
-    if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
+    if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))
         GLMipGenerator::Get().GenerateMips(textureDesc.type);
 }
 

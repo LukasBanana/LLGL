@@ -12,7 +12,7 @@
 DEF_TEST( TextureToBufferCopy )
 {
     auto CopyToBufferAndReadback = [this](
-        const char* name, TextureType type, Format format, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, const SrcImageDescriptor& srcImage) -> TestResult
+        const char* name, TextureType type, Format format, const Extent3D& extent, std::uint32_t mips, std::uint32_t layers, const ImageView& srcImage) -> TestResult
     {
         const std::uint64_t t0 = Timer::Tick();
 
@@ -69,7 +69,7 @@ DEF_TEST( TextureToBufferCopy )
 
         // First check that image data was written correctly to source texture
         DynamicByteArray srcImageFeedbackData = DynamicByteArray{ imgSizeMip0 };
-        DstImageDescriptor srcImageFeedback;
+        MutableImageView srcImageFeedback;
         {
             srcImageFeedback.format     = srcImage.format;
             srcImageFeedback.dataType   = srcImage.dataType;
@@ -154,25 +154,25 @@ DEF_TEST( TextureToBufferCopy )
 
                 // Read back image data from destination texture and compare it with source texture image
                 srcTexImage.resize(bufSize);
-                DstImageDescriptor srcTexImageDesc;
+                MutableImageView srcTexImageView;
                 {
-                    srcTexImageDesc.format      = formatAttribs.format;
-                    srcTexImageDesc.dataType    = formatAttribs.dataType;
-                    srcTexImageDesc.data        = srcTexImage.data();
-                    srcTexImageDesc.dataSize    = srcTexImage.size();
+                    srcTexImageView.format      = formatAttribs.format;
+                    srcTexImageView.dataType    = formatAttribs.dataType;
+                    srcTexImageView.data        = srcTexImage.data();
+                    srcTexImageView.dataSize    = srcTexImage.size();
                 }
 
                 dstTexImage.resize(bufSize);
-                DstImageDescriptor dstTexImageDesc;
+                MutableImageView dstTexImageView;
                 {
-                    dstTexImageDesc.format      = formatAttribs.format;
-                    dstTexImageDesc.dataType    = formatAttribs.dataType;
-                    dstTexImageDesc.data        = dstTexImage.data();
-                    dstTexImageDesc.dataSize    = dstTexImage.size();
+                    dstTexImageView.format      = formatAttribs.format;
+                    dstTexImageView.dataType    = formatAttribs.dataType;
+                    dstTexImageView.data        = dstTexImage.data();
+                    dstTexImageView.dataSize    = dstTexImage.size();
                 }
 
-                renderer->ReadTexture(*srcTex, srcRegion, srcTexImageDesc);
-                renderer->ReadTexture(*dstTex, dstRegion, dstTexImageDesc);
+                renderer->ReadTexture(*srcTex, srcRegion, srcTexImageView);
+                renderer->ReadTexture(*dstTex, dstRegion, dstTexImageView);
 
                 if (::memcmp(srcTexImage.data(), dstTexImage.data(), bufSize) != 0)
                 {
@@ -218,7 +218,7 @@ DEF_TEST( TextureToBufferCopy )
 
     // Generate random image data sets
     #define SRC_IMAGE_DESC(DECL, FORMAT, TYPE, SRC) \
-        const SrcImageDescriptor DECL{ (FORMAT), (TYPE), (SRC).data(), (SRC).size() * sizeof((SRC)[0]) }
+        const ImageView DECL{ (FORMAT), (TYPE), (SRC).data(), (SRC).size() * sizeof((SRC)[0]) }
 
     static std::vector<ColorRGBAub> colorsRgbaUb64 = Testset::GenerateColorsRgbaUb(64);
     SRC_IMAGE_DESC(srcImageRgbaUb64, ImageFormat::RGBA, DataType::UInt8,   colorsRgbaUb64);

@@ -29,7 +29,7 @@ DEF_TEST( CommandBufferSubmit )
     {
         // Create 1x1 texture for framebuffer result (i.e. to read a single pixel)
         const std::uint8_t initialImageData[4] = { 0xDE, 0xAD, 0xBE, 0xEF };
-        SrcImageDescriptor initialImage;
+        ImageView initialImage;
         {
             initialImage.data       = initialImageData;
             initialImage.dataSize   = sizeof(initialImageData);
@@ -80,7 +80,7 @@ DEF_TEST( CommandBufferSubmit )
 
         // Read framebuffer pixel value from intermediate texture
         std::uint8_t framebufferResult[4] = {};
-        DstImageDescriptor framebufferResultDesc;
+        MutableImageView framebufferResultDesc;
         {
             framebufferResultDesc.data      = framebufferResult;
             framebufferResultDesc.dataSize  = sizeof(framebufferResult);

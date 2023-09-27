@@ -636,24 +636,24 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
         throw std::runtime_error("failed to load texture from file: \"" + path + "\"");
 
     // Initialize source image descriptor to upload image data onto hardware texture
-    LLGL::SrcImageDescriptor imageDesc;
+    LLGL::ImageView imageView;
     {
         // Set image color format
-        imageDesc.format    = formatAttribs.format;
+        imageView.format    = formatAttribs.format;
 
         // Set image data type (unsigned char = 8-bit unsigned integer)
-        imageDesc.dataType  = LLGL::DataType::UInt8;
+        imageView.dataType  = LLGL::DataType::UInt8;
 
         // Set image buffer source for texture initial data
-        imageDesc.data      = imageBuffer;
+        imageView.data      = imageBuffer;
 
         // Set image buffer size
-        imageDesc.dataSize  = static_cast<std::size_t>(width*height*4);
+        imageView.dataSize  = static_cast<std::size_t>(width*height*4);
     }
 
     // Create texture and upload image data onto hardware texture
     auto tex = renderSys.CreateTexture(
-        LLGL::Texture2DDesc(format, width, height, bindFlags), &imageDesc
+        LLGL::Texture2DDesc(format, width, height, bindFlags), &imageView
     );
 
     // Release image data
@@ -689,7 +689,7 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
             LLGL::Offset3D{},
             texSize
         },
-        LLGL::DstImageDescriptor
+        LLGL::MutableImageView
         {
             LLGL::ImageFormat::RGBA,
             LLGL::DataType::UInt8,

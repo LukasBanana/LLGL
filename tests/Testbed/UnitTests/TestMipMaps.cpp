@@ -61,14 +61,14 @@ DEF_TEST( MipMaps )
 
             const TextureRegion texRegion{ TextureSubresource{ 0, mip }, Offset3D{}, mipExtent };
 
-            DstImageDescriptor imageDesc;
+            MutableImageView dstImageView;
             {
-                imageDesc.format    = ImageFormat::RGB;
-                imageDesc.dataType  = DataType::UInt8;
-                imageDesc.data      = mipData.data();
-                imageDesc.dataSize  = sizeof(decltype(mipData)::value_type) * mipData.size();
+                dstImageView.format     = ImageFormat::RGB;
+                dstImageView.dataType   = DataType::UInt8;
+                dstImageView.data       = mipData.data();
+                dstImageView.dataSize   = sizeof(decltype(mipData)::value_type) * mipData.size();
             }
-            renderer->ReadTexture(*tex, texRegion, imageDesc);
+            renderer->ReadTexture(*tex, texRegion, dstImageView);
 
             // Save result and diff against reference
             const std::string mipName = name + "_Mip" + std::to_string(mip);

@@ -306,7 +306,7 @@ void GLRenderSystem::ValidateGLTextureType(const TextureType type)
     }
 }
 
-Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     ValidateGLTextureType(textureDesc.type);
 
@@ -314,7 +314,7 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     auto* textureGL = textures_.emplace<GLTexture>(textureDesc);
 
     /* Initialize either renderbuffer or texture image storage */
-    textureGL->BindAndAllocStorage(textureDesc, imageDesc);
+    textureGL->BindAndAllocStorage(textureDesc, initialImage);
 
     return textureGL;
 }
@@ -324,19 +324,19 @@ void GLRenderSystem::Release(Texture& texture)
     textures_.erase(&texture);
 }
 
-void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    textureGL.TextureSubImage(textureRegion, imageDesc, false);
+    textureGL.TextureSubImage(textureRegion, srcImageView, false);
 }
 
-void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     /* Bind texture and write texture sub data */
-    LLGL_ASSERT_PTR(imageDesc.data);
+    LLGL_ASSERT_PTR(dstImageView.data);
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    textureGL.GetTextureSubImage(textureRegion, imageDesc, false);
+    textureGL.GetTextureSubImage(textureRegion, dstImageView, false);
 }
 
 /* ----- Sampler States ---- */

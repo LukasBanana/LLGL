@@ -110,14 +110,14 @@ DEF_TEST( DepthBuffer )
 
     float readbackDepthValue = invalidDepthValue;
 
-    DstImageDescriptor dstImageDesc;
+    MutableImageView dstImageView;
     {
-        dstImageDesc.format     = ImageFormat::Depth;
-        dstImageDesc.data       = &readbackDepthValue;
-        dstImageDesc.dataSize   = sizeof(readbackDepthValue);
-        dstImageDesc.dataType   = DataType::Float32;
+        dstImageView.format     = ImageFormat::Depth;
+        dstImageView.data       = &readbackDepthValue;
+        dstImageView.dataSize   = sizeof(readbackDepthValue);
+        dstImageView.dataType   = DataType::Float32;
     }
-    renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageDesc);
+    renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageView);
 
     constexpr float expectedDepthValue = 0.975574434f;
 
@@ -127,12 +127,12 @@ DEF_TEST( DepthBuffer )
     std::vector<float> readbackDepthBuffer;
     readbackDepthBuffer.resize(texDesc.extent.width * texDesc.extent.height, -1.0f);
     {
-        dstImageDesc.format     = ImageFormat::Depth;
-        dstImageDesc.data       = readbackDepthBuffer.data();
-        dstImageDesc.dataSize   = sizeof(decltype(readbackDepthBuffer)::value_type) * readbackDepthBuffer.size();
-        dstImageDesc.dataType   = DataType::Float32;
+        dstImageView.format     = ImageFormat::Depth;
+        dstImageView.data       = readbackDepthBuffer.data();
+        dstImageView.dataSize   = sizeof(decltype(readbackDepthBuffer)::value_type) * readbackDepthBuffer.size();
+        dstImageView.dataType   = DataType::Float32;
     }
-    renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
+    renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageView);
 
     SaveDepthImage(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
 
