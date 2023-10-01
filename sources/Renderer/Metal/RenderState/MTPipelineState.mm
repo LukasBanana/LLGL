@@ -20,26 +20,12 @@ MTPipelineState::MTPipelineState(bool isGraphicsPSO, const PipelineLayout* pipel
     isGraphicsPSO_ { isGraphicsPSO }
 {
     if (pipelineLayout != nullptr)
-    {
         pipelineLayout_ = LLGL_CAST(const MTPipelineLayout*, pipelineLayout);
-        if (!pipelineLayout_->GetDynamicBindings().empty())
-            descriptorCache_ = MakeUnique<MTDescriptorCache>(pipelineLayout_->GetDynamicBindings());
-    }
 }
 
 const Report* MTPipelineState::GetReport() const
 {
     return (report_ ? &report_ : nullptr);
-}
-
-MTDescriptorCache* MTPipelineState::ResetAndGetDescriptorCache() const
-{
-    if (descriptorCache_)
-    {
-        descriptorCache_->Reset();
-        return descriptorCache_.get();
-    }
-    return nullptr;
 }
 
 MTConstantsCache* MTPipelineState::ResetAndGetConstantsCache() const

@@ -50,12 +50,6 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
     SetIndexStream(bufferMT.GetNative(), static_cast<NSUInteger>(offset), (format == Format::R16UInt));
 }
 
-void MTCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
-{
-    if (descriptorCache_ != nullptr)
-        descriptorCache_->SetResource(descriptor, resource);
-}
-
 void MTCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     if (constantsCache_ != nullptr)
@@ -95,7 +89,6 @@ void MTCommandBuffer::SetSwapChain(MTSwapChain* swapChainMT)
 void MTCommandBuffer::SetPipelineRenderState(MTPipelineState& pipelineStateMT)
 {
     boundPipelineState_ = &pipelineStateMT;
-    descriptorCache_    = pipelineStateMT.GetDescriptorCache();
     constantsCache_     = pipelineStateMT.GetConstantsCache();
 }
 
@@ -123,7 +116,6 @@ void MTCommandBuffer::ResetRenderStates()
     tessPipelineState_      = nil;
     boundSwapChain_         = nullptr;
     boundPipelineState_     = nullptr;
-    descriptorCache_        = nullptr;
     constantsCache_         = nullptr;
     currentStagingPool_     = (currentStagingPool_ + 1) % maxNumStagingPools;
 }

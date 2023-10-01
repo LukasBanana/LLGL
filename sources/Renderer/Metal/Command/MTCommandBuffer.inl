@@ -9,7 +9,7 @@
 #include <LLGL/Backend/CommandBuffer.Blitting.inl>
 #include <LLGL/Backend/CommandBuffer.ViewportsAndScissors.inl>
 /*exclude<LLGL/Backend/CommandBuffer.InputAssembly.inl>*/
-/*exclude<LLGL/Backend/CommandBuffer.Resources.inl>*/
+#include <LLGL/Backend/CommandBuffer.Resources.inl>
 #include <LLGL/Backend/CommandBuffer.RenderPasses.inl>
 /*exclude<LLGL/Backend/CommandBuffer.PipelineStates.inl>*/
 #include <LLGL/Backend/CommandBuffer.Queries.inl>
@@ -28,21 +28,6 @@ virtual void SetVertexBuffer(
 
 virtual void SetVertexBufferArray(
     BufferArray&        bufferArray
-) override final;
-
-/* ----- Resources ----- */
-
-virtual void SetResourceHeap(
-    ResourceHeap&       resourceHeap,
-    std::uint32_t       descriptorSet   = 0
-) override final;
-
-virtual void ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags      = StageFlags::AllStages
 ) override final;
 
 /* ----- Pipeline States ----- */

@@ -441,6 +441,15 @@ void MTMultiSubmitCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std
     }
 }
 
+void MTMultiSubmitCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
+{
+    auto cmd = AllocCommand<MTCmdSetResource>(MTOpcodeSetResource);
+    {
+        cmd->descriptor = descriptor;
+        cmd->resource   = &resource;
+    }
+}
+
 void MTMultiSubmitCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,

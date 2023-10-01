@@ -157,6 +157,12 @@ struct MTCmdSetResourceHeap
     std::uint32_t   descriptorSet;
 };
 
+struct MTCmdSetResource
+{
+    std::uint32_t   descriptor;
+    Resource*       resource;
+};
+
 struct MTCmdBindRenderTarget
 {
     RenderTarget*       renderTarget;

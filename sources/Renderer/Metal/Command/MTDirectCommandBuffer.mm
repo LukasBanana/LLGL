@@ -52,11 +52,6 @@ MTDirectCommandBuffer::MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueu
     cmdBufferSemaphore_ = dispatch_semaphore_create(maxCmdBuffers);
 }
 
-MTDirectCommandBuffer::~MTDirectCommandBuffer()
-{
-    [cmdBuffer_ release];
-}
-
 /* ----- Encoding ----- */
 
 void MTDirectCommandBuffer::Begin()
@@ -487,6 +482,11 @@ void MTDirectCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uin
         if (resourceHeapMT.HasComputeResources())
             context_.SetComputeResourceHeap(&resourceHeapMT, descriptorSet);
     }
+}
+
+void MTDirectCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
+{
+    context_.SetResource(descriptor, resource);
 }
 
 void MTDirectCommandBuffer::ResetResourceSlots(

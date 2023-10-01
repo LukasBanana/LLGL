@@ -11,6 +11,7 @@
 
 #import <Metal/Metal.h>
 
+#include "../RenderState/MTDescriptorCache.h"
 #include <LLGL/Constants.h>
 #include <LLGL/CommandBufferFlags.h>
 #include <cstdint>
@@ -22,10 +23,10 @@ namespace LLGL
 
 struct Viewport;
 struct Scissor;
+class Resource;
 class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
-class MTDescriptorCache;
 class MTConstantsCache;
 
 struct MTInternalBindingTable
@@ -111,6 +112,12 @@ class MTCommandContext
             return blitEncoder_;
         }
 
+        // Sets the specified resource in the descriptor cache.
+        inline void SetResource(std::uint32_t descriptor, Resource& resource)
+        {
+            descriptorCache_.SetResource(descriptor, resource);
+        }
+
     public:
 
         // Table of all internal binding slots.
@@ -171,7 +178,7 @@ class MTCommandContext
         MTComputeEncoderState           computeEncoderState_;
 
         bool                            isRenderEncoderPaused_  = false;
-        MTDescriptorCache*              descriptorCache_        = nullptr;
+        MTDescriptorCache               descriptorCache_;
         MTConstantsCache*               constantsCache_         = nullptr;
 
         union

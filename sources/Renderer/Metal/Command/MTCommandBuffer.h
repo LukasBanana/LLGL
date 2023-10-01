@@ -44,10 +44,6 @@ class MTCommandBuffer : public CommandBuffer
         void SetIndexBuffer(Buffer& buffer) override final;
         void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override final;
 
-        /* ----- Resources ----- */
-
-        void SetResource(std::uint32_t descriptor, Resource& resource) override final;
-
         /* ----- Pipeline States ----- */
 
         void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override final;
@@ -181,7 +177,6 @@ class MTCommandBuffer : public CommandBuffer
         MTLSize                         threadsPerThreadgroup_  = MTLSizeMake(1, 1, 1);
         MTSwapChain*                    boundSwapChain_         = nullptr;
         MTPipelineState*                boundPipelineState_     = nullptr;
-        MTDescriptorCache*              descriptorCache_        = nullptr;
         MTConstantsCache*               constantsCache_         = nullptr;
 
         // Tessellator stage objects

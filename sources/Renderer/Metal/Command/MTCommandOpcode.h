@@ -39,6 +39,7 @@ enum MTOpcode : std::uint8_t
     MTOpcodeSetVertexBuffers,
     MTOpcodeSetGraphicsResourceHeap,
     MTOpcodeSetComputeResourceHeap,
+    MTOpcodeSetResource,
     MTOpcodeBindSwapChain,
     MTOpcodeBindRenderTarget,
     MTOpcodeClearRenderPass,
