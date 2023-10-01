@@ -50,12 +50,6 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
     SetIndexStream(bufferMT.GetNative(), static_cast<NSUInteger>(offset), (format == Format::R16UInt));
 }
 
-void MTCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
-{
-    if (constantsCache_ != nullptr)
-        constantsCache_->SetUniforms(first, data, dataSize);
-}
-
 
 /*
  * ======= Protected: =======
@@ -85,17 +79,10 @@ void MTCommandBuffer::SetSwapChain(MTSwapChain* swapChainMT)
     boundSwapChain_ = swapChainMT;
 }
 
-// private
-void MTCommandBuffer::SetPipelineRenderState(MTPipelineState& pipelineStateMT)
-{
-    boundPipelineState_ = &pipelineStateMT;
-    constantsCache_     = pipelineStateMT.GetConstantsCache();
-}
-
 void MTCommandBuffer::SetGraphicsPSORenderState(MTGraphicsPSO& graphicsPSO)
 {
     /* Store current primitive type and tessellation data */
-    SetPipelineRenderState(graphicsPSO);
+    boundPipelineState_     = &graphicsPSO;
     primitiveType_          = graphicsPSO.GetMTLPrimitiveType();
     numPatchControlPoints_  = graphicsPSO.GetNumPatchControlPoints();
     tessPipelineState_      = graphicsPSO.GetTessPipelineState();
@@ -105,7 +92,7 @@ void MTCommandBuffer::SetGraphicsPSORenderState(MTGraphicsPSO& graphicsPSO)
 void MTCommandBuffer::SetComputePSORenderState(MTComputePSO& computePSO)
 {
     /* Store work group size of shader program */
-    SetPipelineRenderState(computePSO);
+    boundPipelineState_ = &computePSO;
     if (const MTShader* computeShader = computePSO.GetComputeShader())
         threadsPerThreadgroup_ = computeShader->GetNumThreadsPerGroup();
 }
@@ -116,7 +103,6 @@ void MTCommandBuffer::ResetRenderStates()
     tessPipelineState_      = nil;
     boundSwapChain_         = nullptr;
     boundPipelineState_     = nullptr;
-    constantsCache_         = nullptr;
     currentStagingPool_     = (currentStagingPool_ + 1) % maxNumStagingPools;
 }
 

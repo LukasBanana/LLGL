@@ -11,26 +11,14 @@
 
 #import <Metal/Metal.h>
 
-#include "../Shader/MTShaderStage.h"
-#include <LLGL/PipelineLayoutFlags.h>
+#include "MTConstantsCacheLayout.h"
 #include <LLGL/Container/ArrayView.h>
-#include <LLGL/Container/SmallVector.h>
-#include <memory>
-#include <cstdint>
-#include <vector>
+#include <LLGL/Container/DynamicArray.h>
 
 
 namespace LLGL
 {
 
-
-class MTShader;
-
-struct MTShaderReflectionArguments
-{
-    long                            stage;
-    const NSArray<MTLArgument*>*    args;
-};
 
 // Manages the shader constants data for uniforms. Maximum size of such a cache is 4KB (as per Metal spec.).
 class MTConstantsCache
@@ -40,11 +28,8 @@ class MTConstantsCache
 
         MTConstantsCache() = default;
 
-        // Builds the internal descriptor lists for render and compute commands.
-        MTConstantsCache(
-            const ArrayView<MTShaderReflectionArguments>&   reflectionArgs,
-            const ArrayView<UniformDescriptor>&             uniformDescs
-        );
+        // Resets the cache layout and dirty bits.
+        void Reset(const MTConstantsCacheLayout* layout);
 
         // Resets the dirty bits which will bind all resources on the next flush, i.e. IsInvalidated() returns true.
         void Reset();
@@ -64,77 +49,23 @@ class MTConstantsCache
             return (dirtyBits_.bits != 0);
         }
 
-    private:
-
-        static constexpr std::uint16_t invalidOffset = 0xFFFF;
-
-        struct ConstantLocation
+        // Returns whether this cache is empty.
+        inline bool IsEmpty() const
         {
-            std::uint16_t offsetPerStage[MTShaderStage_CountPerPSO] = { invalidOffset, invalidOffset };
-            std::uint16_t size                                      = 0;
-        };
-
-        struct ConstantBuffer
-        {
-            long            stages : 16;
-            NSUInteger      index  : 16;
-            std::uint16_t   offset;
-            std::uint16_t   size;
-        };
-
-        struct MTShaderBufferField
-        {
-            NSUInteger uniformIndex;    // Index to the uniform descriptor
-            NSUInteger offset;          // Offset within the buffer
-            NSUInteger size;            // Data type size
-
-            static bool Equals(const MTShaderBufferField& lhs, const MTShaderBufferField& rhs);
-        };
-
-        struct MTShaderBuffer
-        {
-            ConstantBuffer                      cbuffer;
-            std::vector<MTShaderBufferField>    fields;
-
-            static bool EqualsFields(const MTShaderBuffer& lhs, const MTShaderBuffer& rhs);
-        };
+            return constantsMap_.empty();
+        }
 
     private:
 
-        static MTShaderBuffer* FindShaderBufferWithEqualField(
-            std::vector<MTShaderBuffer>&    shaderBuffers,
-            std::size_t                     compareBufferIndex
-        );
-
-        static MTShaderBuffer* FindOrAppendShaderBuffer(
-            long                            stage,
-            NSUInteger                      index,
-            NSUInteger                      size,
-            std::vector<MTShaderBuffer>&    shaderBuffers
-        );
-
-        static bool AppendUniformByName(
-            const MTShaderReflectionArguments&  reflection,
-            const UniformDescriptor&            uniformDesc,
-            std::size_t                         uniformIndex,
-            NSString*                           uniformName,
-            std::vector<MTShaderBuffer>&        shaderBuffers
-        );
-
-        static void AppendUniformByDesc(
-            const MTShaderReflectionArguments&  reflection,
-            const UniformDescriptor&            uniformDesc,
-            std::size_t                         uniformIndex,
-            std::vector<MTShaderBuffer>&        shaderBuffers
-        );
+        using ConstantLocation  = MTConstantsCacheLayout::ConstantLocation;
+        using ConstantBuffer    = MTConstantsCacheLayout::ConstantBuffer;
 
     private:
 
-      //SmallVector<ConstantLocation, 8>    constantsMap_;
-      //SmallVector<ConstantBuffer, 2>      constantBuffers_;
-        std::vector<ConstantLocation>       constantsMap_;
-        std::vector<ConstantBuffer>         constantBuffers_;
-        std::unique_ptr<char[]>             constants_;
+        ArrayView<ConstantLocation> constantsMap_;
+        ArrayView<ConstantBuffer>   constantBuffers_;
+
+        DynamicByteArray            constants_;
 
         union
         {

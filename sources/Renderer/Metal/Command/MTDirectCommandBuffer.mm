@@ -648,6 +648,11 @@ void MTDirectCommandBuffer::SetStencilReference(std::uint32_t reference, const S
     context_.SetStencilRef(reference, stencilFace);
 }
 
+void MTDirectCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    context_.SetUniforms(first, data, dataSize);
+}
+
 /* ----- Queries ----- */
 
 void MTDirectCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)

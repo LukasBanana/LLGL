@@ -214,6 +214,12 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             context.SetStencilRef(cmd->ref, cmd->face);
             return sizeof(*cmd);
         }
+        case MTOpcodeSetUniforms:
+        {
+            auto cmd = reinterpret_cast<const MTCmdSetUniforms*>(pc);
+            context.SetUniforms(cmd->first, cmd + 1, cmd->dataSize);
+            return (sizeof(*cmd) + cmd->dataSize);
+        }
         case MTOpcodeSetVertexBuffers:
         {
             auto cmd = reinterpret_cast<const MTCmdSetVertexBuffers*>(pc);

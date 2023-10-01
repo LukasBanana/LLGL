@@ -74,8 +74,8 @@ id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDes
     /* Invalidate descriptor and constant caches */
     if (!descriptorCache_.IsEmpty())
         descriptorCache_.Reset();
-    if (constantsCache_ != nullptr)
-        constantsCache_->Reset();
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.Reset();
 
     return renderEncoder_;
 }
@@ -93,8 +93,8 @@ id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
         /* Invalidate descriptor and constant caches */
         if (!descriptorCache_.IsEmpty())
             descriptorCache_.Reset();
-        if (constantsCache_ != nullptr)
-            constantsCache_->Reset();
+        if (!constantsCache_.IsEmpty())
+            constantsCache_.Reset();
     }
     return computeEncoder_;
 }
@@ -202,7 +202,7 @@ void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
         renderEncoderState_.stencilRefDynamic   = pipelineState->IsStencilRefDynamic();
         renderDirtyBits_.graphicsPSO = 1;
         descriptorCache_.Reset(pipelineState->GetPipelineLayout());
-        constantsCache_                         = pipelineState->ResetAndGetConstantsCache();
+        constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
     }
 }
 
@@ -247,7 +247,7 @@ void MTCommandContext::SetComputePSO(MTComputePSO* pipelineState)
         computeEncoderState_.computePSO = pipelineState;
         computeDirtyBits_.computePSO    = 1;
         descriptorCache_.Reset(pipelineState->GetPipelineLayout());
-        constantsCache_                 = pipelineState->ResetAndGetConstantsCache();
+        constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
     }
 }
 
@@ -269,8 +269,8 @@ void MTCommandContext::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEn
     }
     if (!descriptorCache_.IsEmpty())
         descriptorCache_.FlushComputeResourcesForced(computeEncoder);
-    if (constantsCache_ != nullptr)
-        constantsCache_->FlushComputeResourcesForced(computeEncoder);
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushComputeResourcesForced(computeEncoder);
 }
 
 id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
@@ -279,8 +279,8 @@ id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
         SubmitRenderEncoderState();
     if (!descriptorCache_.IsEmpty())
         descriptorCache_.FlushGraphicsResources(GetRenderEncoder());
-    if (constantsCache_ != nullptr)
-        constantsCache_->FlushGraphicsResources(GetRenderEncoder());
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushGraphicsResources(GetRenderEncoder());
     return GetRenderEncoder();
 }
 
@@ -292,8 +292,8 @@ id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
         SubmitComputeEncoderState();
     if (!descriptorCache_.IsEmpty())
         descriptorCache_.FlushComputeResources(GetComputeEncoder());
-    if (constantsCache_ != nullptr)
-        constantsCache_->FlushComputeResources(GetComputeEncoder());
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushComputeResources(GetComputeEncoder());
     return GetComputeEncoder();
 }
 

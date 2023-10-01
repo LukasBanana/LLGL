@@ -11,7 +11,7 @@
 /*exclude<LLGL/Backend/CommandBuffer.InputAssembly.inl>*/
 #include <LLGL/Backend/CommandBuffer.Resources.inl>
 #include <LLGL/Backend/CommandBuffer.RenderPasses.inl>
-/*exclude<LLGL/Backend/CommandBuffer.PipelineStates.inl>*/
+#include <LLGL/Backend/CommandBuffer.PipelineStates.inl>
 #include <LLGL/Backend/CommandBuffer.Queries.inl>
 #include <LLGL/Backend/CommandBuffer.StreamOutput.inl>
 #include <LLGL/Backend/CommandBuffer.Drawing.inl>
@@ -28,21 +28,6 @@ virtual void SetVertexBuffer(
 
 virtual void SetVertexBufferArray(
     BufferArray&        bufferArray
-) override final;
-
-/* ----- Pipeline States ----- */
-
-virtual void SetPipelineState(
-    PipelineState&      pipelineState
-) override final;
-
-virtual void SetBlendFactor(
-    const float         color[4]
-) override final;
-
-virtual void SetStencilReference(
-    std::uint32_t       reference,
-    const StencilFace   stencilFace     = StencilFace::FrontAndBack
 ) override final;
 
 

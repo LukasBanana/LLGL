@@ -13,7 +13,7 @@
 
 #include <LLGL/PipelineState.h>
 #include "MTDescriptorCache.h"
-#include "MTConstantsCache.h"
+#include "MTConstantsCacheLayout.h"
 #include <LLGL/Report.h>
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
@@ -49,13 +49,10 @@ class MTPipelineState : public PipelineState
         }
 
         // Returns the constants cache for this PSO or null if there is none.
-        inline MTConstantsCache* GetConstantsCache() const
+        inline const MTConstantsCacheLayout* GetConstantsCacheLayout() const
         {
-            return constantsCache_.get();
+            return constantsCacheLayout_.get();
         }
-
-        // Resets and returns the constants cache for this PSO or null if there is none.
-        MTConstantsCache* ResetAndGetConstantsCache() const;
 
     protected:
 
@@ -71,10 +68,10 @@ class MTPipelineState : public PipelineState
 
     private:
 
-        const bool                          isGraphicsPSO_      = false;
-        const MTPipelineLayout*             pipelineLayout_     = nullptr;
-        std::unique_ptr<MTConstantsCache>   constantsCache_;
-        Report                              report_;
+        const bool                              isGraphicsPSO_          = false;
+        const MTPipelineLayout*                 pipelineLayout_         = nullptr;
+        std::unique_ptr<MTConstantsCacheLayout> constantsCacheLayout_;
+        Report                                  report_;
 
 };
 

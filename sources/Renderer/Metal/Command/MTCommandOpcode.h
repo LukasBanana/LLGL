@@ -36,6 +36,7 @@ enum MTOpcode : std::uint8_t
     MTOpcodeSetScissorRects,
     MTOpcodeSetBlendColor,
     MTOpcodeSetStencilRef,
+    MTOpcodeSetUniforms,
     MTOpcodeSetVertexBuffers,
     MTOpcodeSetGraphicsResourceHeap,
     MTOpcodeSetComputeResourceHeap,

@@ -28,16 +28,6 @@ const Report* MTPipelineState::GetReport() const
     return (report_ ? &report_ : nullptr);
 }
 
-MTConstantsCache* MTPipelineState::ResetAndGetConstantsCache() const
-{
-    if (constantsCache_)
-    {
-        constantsCache_->Reset();
-        return constantsCache_.get();
-    }
-    return nullptr;
-}
-
 
 /*
  * ======= Protectd: =======
@@ -60,7 +50,7 @@ void MTPipelineState::CreateConstantsCacheForRenderPipeline(MTLRenderPipelineRef
         MTShaderReflectionArguments{ StageFlags::VertexStage,   reflection.vertexArguments   },
         MTShaderReflectionArguments{ StageFlags::FragmentStage, reflection.fragmentArguments },
     };
-    constantsCache_ = MakeUnique<MTConstantsCache>(args, pipelineLayout_->GetUniforms());
+    constantsCacheLayout_ = MakeUnique<MTConstantsCacheLayout>(args, pipelineLayout_->GetUniforms());
 }
 
 void MTPipelineState::CreateConstantsCacheForComputePipeline(MTLComputePipelineReflection* reflection)
@@ -69,7 +59,7 @@ void MTPipelineState::CreateConstantsCacheForComputePipeline(MTLComputePipelineR
     {
         MTShaderReflectionArguments{ StageFlags::ComputeStage, reflection.arguments },
     };
-    constantsCache_ = MakeUnique<MTConstantsCache>(args, pipelineLayout_->GetUniforms());
+    constantsCacheLayout_ = MakeUnique<MTConstantsCacheLayout>(args, pipelineLayout_->GetUniforms());
 }
 
 

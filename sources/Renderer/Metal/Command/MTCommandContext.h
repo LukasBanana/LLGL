@@ -12,6 +12,7 @@
 #import <Metal/Metal.h>
 
 #include "../RenderState/MTDescriptorCache.h"
+#include "../RenderState/MTConstantsCache.h"
 #include <LLGL/Constants.h>
 #include <LLGL/CommandBufferFlags.h>
 #include <cstdint>
@@ -27,7 +28,6 @@ class Resource;
 class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
-class MTConstantsCache;
 
 struct MTInternalBindingTable
 {
@@ -118,6 +118,12 @@ class MTCommandContext
             descriptorCache_.SetResource(descriptor, resource);
         }
 
+        // Sets the specified uniforms in the constants cache.
+        inline void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+        {
+            constantsCache_.SetUniforms(first, data, dataSize);
+        }
+
     public:
 
         // Table of all internal binding slots.
@@ -179,7 +185,7 @@ class MTCommandContext
 
         bool                            isRenderEncoderPaused_  = false;
         MTDescriptorCache               descriptorCache_;
-        MTConstantsCache*               constantsCache_         = nullptr;
+        MTConstantsCache                constantsCache_;
 
         union
         {

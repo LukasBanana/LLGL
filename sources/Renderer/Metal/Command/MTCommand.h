@@ -144,6 +144,13 @@ struct MTCmdSetStencilRef
     StencilFace     face;
 };
 
+struct MTCmdSetUniforms
+{
+    std::uint32_t   first;
+    std::uint16_t   dataSize;
+//  char            data[dataSize];
+};
+
 struct MTCmdSetVertexBuffers
 {
     NSUInteger      count;

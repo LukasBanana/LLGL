@@ -614,6 +614,16 @@ void MTMultiSubmitCommandBuffer::SetStencilReference(std::uint32_t reference, co
     }
 }
 
+void MTMultiSubmitCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    auto cmd = AllocCommand<MTCmdSetUniforms>(MTOpcodeSetUniforms, dataSize);
+    {
+        cmd->first      = first;
+        cmd->dataSize   = dataSize;
+        ::memcpy(cmd + 1, data, dataSize);
+    }
+}
+
 /* ----- Queries ----- */
 
 void MTMultiSubmitCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
