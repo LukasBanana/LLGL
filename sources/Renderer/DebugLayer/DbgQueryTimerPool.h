@@ -1,12 +1,12 @@
 /*
- * DbgQueryTimerManager.h
+ * DbgQueryTimerPool.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_DBG_QUERY_TIMER_MANAGER_H
-#define LLGL_DBG_QUERY_TIMER_MANAGER_H
+#ifndef LLGL_DBG_QUERY_TIMER_POOL_H
+#define LLGL_DBG_QUERY_TIMER_POOL_H
 
 
 #include <LLGL/ForwardDecls.h>
@@ -18,13 +18,12 @@ namespace LLGL
 {
 
 
-//TODO: rename to DbgQueryTimerPool
-class DbgQueryTimerManager
+class DbgQueryTimerPool
 {
 
     public:
 
-        DbgQueryTimerManager(
+        DbgQueryTimerPool(
             RenderSystem&   renderSystemInstance,
             CommandQueue&   commandQueueInstance,
             CommandBuffer&  commandBufferInstance

@@ -14,7 +14,7 @@
 #include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
 #include "RenderState/DbgQueryHeap.h"
-#include "DbgQueryTimerManager.h"
+#include "DbgQueryTimerPool.h"
 #include <cstdint>
 #include <string>
 #include <stack>
@@ -162,7 +162,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         std::stack<std::string>     debugGroups_;
 
-        DbgQueryTimerManager        timerMngr_;
+        DbgQueryTimerPool           queryTimerPool_;
         bool                        perfProfilerEnabled_                    = false;
 
         /* ----- Render states ----- */

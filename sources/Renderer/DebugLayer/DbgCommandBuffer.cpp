@@ -68,13 +68,13 @@ DbgCommandBuffer::DbgCommandBuffer(
     const CommandBufferDescriptor&  desc,
     const RenderingCapabilities&    caps)
 :
-    instance   { commandBufferInstance                                             },
-    desc       { desc                                                              },
-    debugger_  { debugger                                                          },
-    profiler_  { profiler                                                          },
-    features_  { caps.features                                                     },
-    limits_    { caps.limits                                                       },
-    timerMngr_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
+    instance        { commandBufferInstance                                             },
+    desc            { desc                                                              },
+    debugger_       { debugger                                                          },
+    profiler_       { profiler                                                          },
+    features_       { caps.features                                                     },
+    limits_         { caps.limits                                                       },
+    queryTimerPool_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
 {
 }
 
@@ -89,7 +89,7 @@ void DbgCommandBuffer::Begin()
     /* Enable performance profiler if it was scheduled */
     perfProfilerEnabled_ = (profiler_ != nullptr && profiler_->timeRecordingEnabled);
     if (perfProfilerEnabled_)
-        timerMngr_.Reset();
+        queryTimerPool_.Reset();
 
     /* Begin with command recording  */
     if (debugger_)
@@ -109,7 +109,7 @@ void DbgCommandBuffer::End()
 
     /* Resolve timer query results for performance profiler */
     if (perfProfilerEnabled_)
-        timerMngr_.TakeRecords(profile_.timeRecords);
+        queryTimerPool_.TakeRecords(profile_.timeRecords);
 }
 
 void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -2400,12 +2400,12 @@ void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayout
 
 void DbgCommandBuffer::StartTimer(const char* annotation)
 {
-    timerMngr_.Start(annotation);
+    queryTimerPool_.Start(annotation);
 }
 
 void DbgCommandBuffer::EndTimer()
 {
-    timerMngr_.Stop();
+    queryTimerPool_.Stop();
 }
 
 
