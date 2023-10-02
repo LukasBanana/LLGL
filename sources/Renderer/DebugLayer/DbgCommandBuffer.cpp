@@ -63,15 +63,15 @@ DbgCommandBuffer::DbgCommandBuffer(
     RenderSystem&                   renderSystemInstance,
     CommandQueue&                   commandQueueInstance,
     CommandBuffer&                  commandBufferInstance,
+    FrameProfile&                   commonProfile,
     RenderingDebugger*              debugger,
-    RenderingProfiler*              profiler,
     const CommandBufferDescriptor&  desc,
     const RenderingCapabilities&    caps)
 :
     instance        { commandBufferInstance                                             },
     desc            { desc                                                              },
     debugger_       { debugger                                                          },
-    profiler_       { profiler                                                          },
+    commonProfile_  { commonProfile                                                     },
     features_       { caps.features                                                     },
     limits_         { caps.limits                                                       },
     queryTimerPool_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
@@ -86,8 +86,8 @@ void DbgCommandBuffer::Begin()
     ResetStates();
     ResetRecords();
 
-    /* Enable performance profiler if it was scheduled */
-    perfProfilerEnabled_ = (profiler_ != nullptr && profiler_->timeRecordingEnabled);
+    /* Enable performance timer if it was scheduled */
+    perfProfilerEnabled_ = (debugger_ != nullptr && debugger_->GetTimeRecording());
     if (perfProfilerEnabled_)
         queryTimerPool_.Reset();
 
@@ -110,6 +110,16 @@ void DbgCommandBuffer::End()
     /* Resolve timer query results for performance profiler */
     if (perfProfilerEnabled_)
         queryTimerPool_.TakeRecords(profile_.timeRecords);
+
+    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+    {
+        /* Merge frame profile values into rendering profiler */
+        FrameProfile profile;
+        FlushProfile(profile);
+
+        commonProfile_.Accumulate(profile);
+        commonProfile_.commandBufferSubmittions++;
+    }
 }
 
 void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -1296,11 +1306,10 @@ bool DbgCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHan
 
 /* ----- Internal ----- */
 
-void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
+void DbgCommandBuffer::FlushProfile(FrameProfile& outProfile)
 {
-    /* Copy frame profile values to output profile */
-    ::memcpy(outputProfile.values, profile_.values, sizeof(profile_.values));
-    outputProfile.timeRecords = std::move(profile_.timeRecords);
+    outProfile = std::move(profile_);
+    profile_.Clear();
 }
 
 void DbgCommandBuffer::ValidateSubmit()
@@ -2364,7 +2373,7 @@ void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std
 void DbgCommandBuffer::ResetStates()
 {
     /* Reset all counters of frame profile, bindings, and other command buffer states */
-    ::memset(profile_.values, 0, sizeof(profile_.values));
+    profile_.Clear();
     ::memset(&bindings_, 0, sizeof(bindings_));
     ::memset(&states_, 0, sizeof(states_));
 }

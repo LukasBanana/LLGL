@@ -32,9 +32,8 @@ into a single braces block to highlight this function call, wher the input param
 All the actual render system objects are stored in the members named "instance", since they are the actual object instances.
 */
 
-DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
+DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingDebugger* debugger) :
     instance_ { std::forward<RenderSystemPtr&&>(instance) },
-    profiler_ { profiler                                  },
     debugger_ { debugger                                  },
     caps_     { GetRenderingCaps()                        },
     features_ { caps_.features                            },
@@ -44,21 +43,29 @@ DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* 
     UpdateRenderingCaps();
 }
 
+void DbgRenderSystem::FlushProfile()
+{
+    if (debugger_ != nullptr)
+        debugger_->RecordProfile(profile_);
+    profile_.Clear();
+}
+
 /* ----- Swap-chain ----- */
 
 SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
     /* Create primary swap-chain */
-    auto swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
+    auto* swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
 
     /* Instantiate command queue if not done and update rendering capabilities from wrapped instance */
     if (!commandQueue_)
     {
         UpdateRenderingCaps();
-        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
+        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profile_, debugger_);
     }
 
-    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance, swapChainDesc);
+    /* Flush frame profile on SwapChain::Present() calls */
+    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance, swapChainDesc, std::bind(&DbgRenderSystem::FlushProfile, this));
 }
 
 void DbgRenderSystem::Release(SwapChain& swapChain)
@@ -82,8 +89,8 @@ CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescripto
         *instance_,
         commandQueue_->instance,
         *instance_->CreateCommandBuffer(commandBufferDesc),
+        profile_,
         debugger_,
-        profiler_,
         commandBufferDesc,
         GetRenderingCaps()
     );
@@ -126,7 +133,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 
     for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
-        auto bufferDbg          = LLGL_CAST(DbgBuffer*, bufferArray[i]);
+        auto* bufferDbg         = LLGL_CAST(DbgBuffer*, bufferArray[i]);
         bufferInstanceArray[i]  = &(bufferDbg->instance);
         bufferDbgArray[i]       = bufferDbg;
     }
@@ -168,8 +175,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const vo
 
     instance_->WriteBuffer(bufferDbg.instance, offset, data, dataSize);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferWrites++;
+    profile_.bufferWrites++;
 }
 
 void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
@@ -190,8 +196,7 @@ void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* dat
 
     instance_->ReadBuffer(bufferDbg.instance, offset, data, dataSize);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferReads++;
+    profile_.bufferReads++;
 }
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
@@ -210,8 +215,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     if (result != nullptr)
         bufferDbg.OnMap(access, 0, bufferDbg.desc.size);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferMappings++;
+    profile_.bufferMappings++;
 
     return result;
 }
@@ -233,8 +237,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::ui
     if (result != nullptr)
         bufferDbg.OnMap(access, offset, length);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferMappings++;
+    profile_.bufferMappings++;
 
     return result;
 }
@@ -284,8 +287,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
 
     instance_->WriteTexture(textureDbg.instance, textureRegion, srcImageView);
 
-    if (profiler_)
-        profiler_->frameProfile.textureWrites++;
+    profile_.textureWrites++;
 }
 
 void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
@@ -301,8 +303,7 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
 
     instance_->ReadTexture(textureDbg.instance, textureRegion, dstImageView);
 
-    if (profiler_)
-        profiler_->frameProfile.textureReads++;
+    profile_.textureReads++;
 }
 
 /* ----- Sampler States ---- */

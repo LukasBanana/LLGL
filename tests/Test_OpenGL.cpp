@@ -25,16 +25,13 @@ int main()
     try
     {
         // Setup profiler and debugger
-        std::shared_ptr<LLGL::RenderingProfiler> profiler;
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
-        profiler = std::make_shared<LLGL::RenderingProfiler>();
         debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
         LLGL::RenderSystemDescriptor rendererDesc = "OpenGL";
         {
-            rendererDesc.profiler = profiler.get();
             rendererDesc.debugger = debugger.get();
         }
         auto renderer = LLGL::RenderSystem::Load(rendererDesc);
@@ -328,8 +325,7 @@ int main()
         // Main loop
         while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
-            if (profiler)
-                profiler->NextProfile();
+            debugger->FlushProfile();
 
             commands->Begin();
             {

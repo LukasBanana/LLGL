@@ -10,6 +10,8 @@
 
 
 #include <LLGL/RenderSystem.h>
+#include <LLGL/RenderingDebugger.h>
+
 #include "DbgSwapChain.h"
 #include "DbgCommandBuffer.h"
 #include "DbgCommandQueue.h"
@@ -42,7 +44,9 @@ class DbgRenderSystem final : public RenderSystem
 
     public:
 
-        DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
+        DbgRenderSystem(RenderSystemPtr&& instance, RenderingDebugger* debugger);
+
+        void FlushProfile();
 
     private:
 
@@ -114,8 +118,8 @@ class DbgRenderSystem final : public RenderSystem
 
         RenderSystemPtr                         instance_;
 
-        RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;
+        FrameProfile                            profile_;
 
         const RenderingCapabilities&            caps_;
         const RenderingFeatures&                features_;

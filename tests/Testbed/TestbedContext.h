@@ -197,7 +197,6 @@ class TestbedContext
 
         unsigned                        failures                = 0;
 
-        LLGL::RenderingProfiler         profiler;
         LLGL::RenderingDebugger         debugger;
         LLGL::RenderSystemPtr           renderer;
         LLGL::RenderingCapabilities     caps;

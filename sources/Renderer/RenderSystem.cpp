@@ -204,12 +204,12 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
     /* Allocate render system */
     RenderSystemPtr renderSystem{ StaticModule::AllocRenderSystem(renderSystemDesc) };
 
-    if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
+    if (renderSystemDesc.debugger != nullptr)
     {
         #ifdef LLGL_ENABLE_DEBUG_LAYER
 
         /* Create debug layer render system */
-        renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger } };
+        renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.debugger } };
 
         #else
 
@@ -266,12 +266,12 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
 
         if (renderSystem)
         {
-            if (renderSystemDesc.profiler != nullptr || renderSystemDesc.debugger != nullptr)
+            if (renderSystemDesc.debugger != nullptr)
             {
                 #ifdef LLGL_ENABLE_DEBUG_LAYER
 
                 /* Create debug layer render system */
-                renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.profiler, renderSystemDesc.debugger } };
+                renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.debugger } };
 
                 #else
 

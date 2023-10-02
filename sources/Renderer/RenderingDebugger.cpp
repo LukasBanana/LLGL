@@ -39,8 +39,10 @@ struct RenderingDebugger::Pimpl
 {
     UTF8StringMap<Message>  errors;
     UTF8StringMap<Message>  warnings;
-    const char*             source      = "";
-    const char*             groupName   = "";
+    FrameProfile            frameProfile;
+    const char*             source          = "";
+    const char*             groupName       = "";
+    bool                    isTimeRecording = false;
 };
 
 
@@ -62,6 +64,16 @@ void RenderingDebugger::SetSource(const char* source)
 void RenderingDebugger::SetDebugGroup(const char* name)
 {
     pimpl_->groupName = (name != nullptr ? name : "");
+}
+
+void RenderingDebugger::SetTimeRecording(bool enabled)
+{
+    pimpl_->isTimeRecording = enabled;
+}
+
+bool RenderingDebugger::GetTimeRecording() const
+{
+    return pimpl_->isTimeRecording;
 }
 
 void RenderingDebugger::PostError(const ErrorType type, const StringView& message)
@@ -100,6 +112,21 @@ void RenderingDebugger::PostWarning(const WarningType type, const StringView& me
         msg = Message{ message, pimpl_->source, pimpl_->groupName };
         OnWarning(type, msg);
     }
+}
+
+void RenderingDebugger::FlushProfile(FrameProfile* outputProfile)
+{
+    /* Copy current counters to the output profile (if set) */
+    if (outputProfile)
+        *outputProfile = std::move(pimpl_->frameProfile);
+
+    /* Clear values */
+    pimpl_->frameProfile.Clear();
+}
+
+void RenderingDebugger::RecordProfile(const FrameProfile& profile)
+{
+    pimpl_->frameProfile.Accumulate(profile);
 }
 
 

@@ -9,7 +9,6 @@
 #include "DbgCommandBuffer.h"
 #include "DbgCore.h"
 #include "../CheckedCast.h"
-#include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 
 
@@ -17,9 +16,9 @@ namespace LLGL
 {
 
 
-DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
+DbgCommandQueue::DbgCommandQueue(CommandQueue& instance, FrameProfile& profile, RenderingDebugger* debugger) :
     instance  { instance },
-    profiler_ { profiler },
+    profile_  { profile  },
     debugger_ { debugger }
 {
 }
@@ -38,15 +37,12 @@ void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 
     instance.Submit(commandBufferDbg.instance);
 
-    if (profiler_)
-    {
-        /* Merge frame profile values into rendering profiler */
-        FrameProfile profile;
-        commandBufferDbg.NextProfile(profile);
-        profile.commandBufferSubmittions++;
+    /* Merge frame profile values into rendering profiler */
+    FrameProfile profile;
+    commandBufferDbg.FlushProfile(profile);
 
-        profiler_->Accumulate(profile);
-    }
+    profile_.Accumulate(profile);
+    profile_.commandBufferSubmittions++;
 }
 
 /* ----- Queries ----- */
@@ -69,8 +65,7 @@ bool DbgCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery
 void DbgCommandQueue::Submit(Fence& fence)
 {
     instance.Submit(fence);
-    if (profiler_)
-        profiler_->frameProfile.fenceSubmissions++;
+    profile_.fenceSubmissions++;
 }
 
 bool DbgCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)

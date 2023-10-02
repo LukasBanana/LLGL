@@ -14,12 +14,11 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Constants.h>
 #include <LLGL/RendererConfiguration.h>
+#include <LLGL/Deprecated.h>
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
 #   include <android_native_app_glue.h>
-//#elif defined LLGL_OS_IOS
-//#   include <LLGL/Platform/>
 #endif
 
 #include <cstddef>
@@ -33,7 +32,6 @@ namespace LLGL
 {
 
 
-class RenderingProfiler;
 class RenderingDebugger;
 
 /* ----- Enumerations ----- */
@@ -295,11 +293,8 @@ struct RenderSystemDescriptor
     */
     long                flags               = 0;
 
-    /**
-    \brief profiler Optional pointer to a rendering profiler. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
-    \remarks If this is used, the counters of the profiler must be reset manually.
-    */
-    RenderingProfiler*  profiler            = nullptr;
+    //! \deprecated Since 0.04b; Use LLGL::RenderSystemDescriptor::debugger instead!
+    void*               profiler            = nullptr;
 
     /**
     \brief debugger Optional pointer to a rendering debugger. This is only supported if LLGL was compiled with the \c LLGL_ENABLE_DEBUG_LAYER flag.
@@ -382,7 +377,7 @@ struct RenderSystemDescriptor
     */
     android_app*    androidApp;
 
-    #endif
+    #endif // /LLGL_OS_ANDROID
 };
 
 /**

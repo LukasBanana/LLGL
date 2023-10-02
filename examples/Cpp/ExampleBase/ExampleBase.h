@@ -152,7 +152,6 @@ private:
     static android_app*                         androidApp_;
     #endif
 
-    std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
 
     bool                                        loadingDone_        = false;
@@ -185,9 +184,6 @@ protected:
 
     // Primary timer object
     Stopwatch                                   timer;
-
-    // Rendering profiler (read only)
-    const LLGL::RenderingProfiler&              profiler;
 
     // Primary camera projection
     Gs::Matrix4f                                projection;

@@ -155,14 +155,12 @@ class LLGL_EXPORT RenderSystem : public Interface
         LLGL::Log::RegisterCallbackStd();
 
         // Declare profiler and debugger (these classes can also be extended)
-        LLGL::RenderingProfiler myProfiler;
         LLGL::RenderingDebugger myDebugger;
 
         // Load the "Direct3D11" render system module
         LLGL::RenderSystemDescriptor myRendererDesc;
         {
             myRendererDesc.moduleName   = "Direct3D11";
-            myRendererDesc.profiler     = &myProfiler;
             myRendererDesc.debugger     = &myDebugger;
         }
         LLGL::RenderSystemPtr myRenderSystem = LLGL::RenderSystem::Load(myRendererDesc);

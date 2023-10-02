@@ -10,7 +10,7 @@
 
 
 #include <LLGL/ForwardDecls.h>
-#include <LLGL/RenderingProfiler.h>
+#include <LLGL/RenderingDebugger.h>
 #include <vector>
 
 

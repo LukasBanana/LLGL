@@ -236,23 +236,25 @@ void ExampleBase::Run()
         // Update profiler (if debugging is enabled)
         if (debuggerObj_)
         {
+            LLGL::FrameProfile frameProfile;
+            debuggerObj_->FlushProfile(&frameProfile);
+
             if (showTimeRecords)
             {
                 std::cout << "\n";
                 std::cout << "FRAME TIME RECORDS:\n";
                 std::cout << "-------------------\n";
-                for (const auto& rec : profilerObj_->frameProfile.timeRecords)
+                for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
                     std::cout << rec.annotation << ": " << rec.elapsedTime << " ns\n";
 
-                profilerObj_->timeRecordingEnabled = false;
+                debuggerObj_->SetTimeRecording(false);
                 showTimeRecords = false;
             }
             else if (input.KeyDown(LLGL::Key::F1))
             {
-                profilerObj_->timeRecordingEnabled = true;
+                debuggerObj_->SetTimeRecording(true);
                 showTimeRecords = true;
             }
-            profilerObj_->NextProfile();
         }
 
         // Check to switch to fullscreen
@@ -319,10 +321,6 @@ ExampleBase::ExampleBase(
     std::uint32_t           samples,
     bool                    vsync,
     bool                    debugger)
-:
-    profilerObj_ { new LLGL::RenderingProfiler() },
-    debuggerObj_ { new LLGL::RenderingDebugger() },
-    profiler     { *profilerObj_                 }
 {
     // Set report callback to standard output
     LLGL::Log::RegisterCallbackStd();
@@ -339,18 +337,15 @@ ExampleBase::ExampleBase(
 
     if (debugger)
     {
+        debuggerObj_            = std::unique_ptr<LLGL::RenderingDebugger>{ new LLGL::RenderingDebugger() };
         #ifdef LLGL_DEBUG
         rendererDesc.flags      = LLGL::RenderSystemFlags::DebugDevice;
         #endif
-        rendererDesc.profiler   = profilerObj_.get();
         rendererDesc.debugger   = debuggerObj_.get();
     }
 
     // Create render system
     renderer = LLGL::RenderSystem::Load(rendererDesc);
-
-    if (!debugger)
-        debuggerObj_.reset();
 
     // Apply device limits (not for GL, because we won't have a valid GL context until we create our first swap chain)
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
