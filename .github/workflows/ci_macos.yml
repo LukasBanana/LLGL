@@ -48,7 +48,7 @@ jobs:
       uses: actions/upload-artifact@v3
       if: matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
-        name: LLGL-Mac-${{ matrix.config }}-x86_64
+        name: LLGL-macOS-${{ matrix.config }}-x86_64
         path: |
           ${{ env.README }}
           ${{ github.workspace }}/macOS-x64/build/libLLGL*.dylib

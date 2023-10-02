@@ -26,7 +26,7 @@ for /F "TOKENS=* USEBACKQ" %%F in (`dir /B /AD examples\Cpp`) do (
 )
 
 :Start
-echo select example:
+echo Select example:
 
 echo  q.^)^ QUIT
 echo  --------

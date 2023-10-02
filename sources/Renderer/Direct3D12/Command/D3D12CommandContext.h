@@ -51,15 +51,11 @@ class D3D12CommandContext
 
         D3D12CommandContext();
 
-        D3D12CommandContext(
-            D3D12Device&        device,
-            D3D12CommandQueue&  commandQueue
-        );
+        D3D12CommandContext(D3D12Device& device);
 
         // Creats the command list and internal command allocators.
         void Create(
             D3D12Device&            device,
-            D3D12CommandQueue&      commandQueue,
             D3D12_COMMAND_LIST_TYPE commandListType         = D3D12_COMMAND_LIST_TYPE_DIRECT,
             UINT                    numAllocators           = ~0u,
             UINT64                  initialStagingChunkSize = (0xFFFF + 1),
@@ -67,11 +63,13 @@ class D3D12CommandContext
         );
 
         void Close();
-        void Execute();
+        void Execute(D3D12CommandQueue& commandQueue);
+        void ExecuteAndSignal(D3D12CommandQueue& commandQueue);
+        void Signal(D3D12CommandQueue& commandQueue);
         void Reset();
 
         // Calls Close, Execute, and Reset with the internal command queue and allocator.
-        void Finish(bool waitIdle = false);
+        void FinishAndSync(D3D12CommandQueue& commandQueue);
 
         // Returns the command list of this context.
         inline ID3D12GraphicsCommandList* GetCommandList() const
@@ -121,6 +119,8 @@ class D3D12CommandContext
         void SetComputeRootSignature(ID3D12RootSignature* rootSignature);
         void SetPipelineState(ID3D12PipelineState* pipelineState);
         void SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps);
+
+        void SetDescriptorHeapsOfOtherContext(const D3D12CommandContext& other);
 
         void PrepareStagingDescriptorHeaps(
             const D3D12DescriptorHeapSetLayout& layout,
@@ -248,7 +248,6 @@ class D3D12CommandContext
     private:
 
         ID3D12Device*                       device_                                     = nullptr;
-        D3D12CommandQueue*                  commandQueue_                               = nullptr;
 
         ComPtr<ID3D12CommandAllocator>      commandAllocators_[maxNumAllocators];
         UINT                                currentAllocatorIndex_                      = 0;

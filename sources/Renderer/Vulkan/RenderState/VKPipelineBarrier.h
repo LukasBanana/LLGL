@@ -13,6 +13,7 @@
 #include "../VKPtr.h"
 #include <vulkan/vulkan.h>
 #include <memory>
+#include <cstdint>
 
 
 namespace LLGL

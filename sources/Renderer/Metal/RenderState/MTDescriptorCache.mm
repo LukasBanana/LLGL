@@ -6,6 +6,7 @@
  */
 
 #include "MTDescriptorCache.h"
+#include "MTPipelineLayout.h"
 #include "../Buffer/MTBuffer.h"
 #include "../Texture/MTTexture.h"
 #include "../Texture/MTSampler.h"
@@ -20,11 +21,26 @@ namespace LLGL
 {
 
 
-MTDescriptorCache::MTDescriptorCache(const ArrayView<MTDynamicResourceLayout>& bindings)
+MTDescriptorCache::MTDescriptorCache()
 {
-    LLGL_ASSERT(bindings.size() <= 0xFF);
-    BuildResourceBindings(bindings);
     Clear();
+}
+
+void MTDescriptorCache::Reset(const MTPipelineLayout* pipelineLayout)
+{
+    if (pipelineLayout != nullptr)
+    {
+        /* Store reference to dynamic binding layouts */
+        layouts_ = pipelineLayout->GetDynamicBindings();
+        LLGL_ASSERT(layouts_.size() <= 0xFF);
+        bindings_.resize(layouts_.size());
+    }
+    else
+    {
+        /* Clear layout reference */
+        layouts_ = {};
+    }
+    Reset();
 }
 
 void MTDescriptorCache::Reset()
@@ -38,6 +54,7 @@ void MTDescriptorCache::Reset()
     dirtyRange_[1]      = static_cast<std::uint8_t>(bindings_.size());
 }
 
+// private
 void MTDescriptorCache::Clear()
 {
     /* Clear dirty range and resource bits */
@@ -51,14 +68,16 @@ void MTDescriptorCache::Clear()
 
 void MTDescriptorCache::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    if (descriptor >= bindings_.size())
+    if (descriptor >= layouts_.size())
         return /*Out of range*/;
 
-    auto& binding = bindings_[descriptor];
-    if (binding.layout.type != resource.GetResourceType())
+    const MTDynamicResourceLayout& layout = layouts_[descriptor];
+    if (layout.type != resource.GetResourceType())
         return /*Type mismatch*/;
 
-    switch (binding.layout.type)
+    LLGL_ASSERT(bindings_.size() >= layouts_.size());
+
+    switch (layout.type)
     {
         case ResourceType::Undefined:
         break;
@@ -66,21 +85,21 @@ void MTDescriptorCache::SetResource(std::uint32_t descriptor, Resource& resource
         case ResourceType::Buffer:
         {
             auto& bufferMT = LLGL_CAST(MTBuffer&, resource);
-            binding.resource = bufferMT.GetNative();
+            bindings_[descriptor] = bufferMT.GetNative();
         }
         break;
 
         case ResourceType::Texture:
         {
             auto& textureMT = LLGL_CAST(MTTexture&, resource);
-            binding.resource = textureMT.GetNative();
+            bindings_[descriptor] = textureMT.GetNative();
         }
         break;
 
         case ResourceType::Sampler:
         {
             auto& samplerMT = LLGL_CAST(MTSampler&, resource);
-            binding.resource = samplerMT.GetNative();
+            bindings_[descriptor] = samplerMT.GetNative();
         }
         break;
     }
@@ -92,10 +111,12 @@ void MTDescriptorCache::FlushGraphicsResources(id<MTLRenderCommandEncoder> rende
 {
     if (dirtyRange_[0] < dirtyRange_[1])
     {
+        LLGL_ASSERT(bindings_.size() >= dirtyRange_[1]);
+        LLGL_ASSERT(layouts_.size() >= dirtyRange_[1]);
         for_subrange(i, dirtyRange_[0], dirtyRange_[1])
         {
             if (IsBindingInvalidated(i))
-                BindGraphicsResource(renderEncoder, bindings_[i]);
+                BindGraphicsResource(renderEncoder, layouts_[i], bindings_[i]);
         }
         Clear();
     }
@@ -103,8 +124,9 @@ void MTDescriptorCache::FlushGraphicsResources(id<MTLRenderCommandEncoder> rende
 
 void MTDescriptorCache::FlushGraphicsResourcesForced(id<MTLRenderCommandEncoder> renderEncoder)
 {
-    for (const auto& binding : bindings_)
-        BindGraphicsResource(renderEncoder, binding);
+    LLGL_ASSERT(bindings_.size() >= layouts_.size());
+    for_range(i, layouts_.size())
+        BindGraphicsResource(renderEncoder, layouts_[i], bindings_[i]);
     Clear();
 }
 
@@ -112,10 +134,12 @@ void MTDescriptorCache::FlushComputeResources(id<MTLComputeCommandEncoder> compu
 {
     if (dirtyRange_[0] < dirtyRange_[1])
     {
+        LLGL_ASSERT(bindings_.size() >= dirtyRange_[1]);
+        LLGL_ASSERT(layouts_.size() >= dirtyRange_[1]);
         for_subrange(i, dirtyRange_[0], dirtyRange_[1])
         {
             if (IsBindingInvalidated(i))
-                BindComputeResource(computeEncoder, bindings_[i]);
+                BindComputeResource(computeEncoder, layouts_[i], bindings_[i]);
         }
         Clear();
     }
@@ -123,8 +147,9 @@ void MTDescriptorCache::FlushComputeResources(id<MTLComputeCommandEncoder> compu
 
 void MTDescriptorCache::FlushComputeResourcesForced(id<MTLComputeCommandEncoder> computeEncoder)
 {
-    for (const auto& binding : bindings_)
-        BindComputeResource(computeEncoder, binding);
+    LLGL_ASSERT(bindings_.size() >= layouts_.size());
+    for_range(i, layouts_.size())
+        BindComputeResource(computeEncoder, layouts_[i], bindings_[i]);
     Clear();
 }
 
@@ -133,36 +158,29 @@ void MTDescriptorCache::FlushComputeResourcesForced(id<MTLComputeCommandEncoder>
  * ======= Private: =======
  */
 
-void MTDescriptorCache::BuildResourceBindings(const ArrayView<MTDynamicResourceLayout>& bindings)
+void MTDescriptorCache::BindGraphicsResource(id<MTLRenderCommandEncoder> renderEncoder, const MTDynamicResourceLayout& layout, id resource)
 {
-    bindings_.resize(bindings.size());
-    for_range(i, bindings.size())
-        bindings_[i].layout = bindings[i];
-}
-
-void MTDescriptorCache::BindGraphicsResource(id<MTLRenderCommandEncoder> renderEncoder, const MTDynamicResourceBinding& binding)
-{
-    switch (binding.layout.type)
+    switch (layout.type)
     {
         case ResourceType::Undefined:
         break;
 
         case ResourceType::Buffer:
         {
-            if ((binding.layout.stages & StageFlags::VertexStage) != 0)
+            if ((layout.stages & StageFlags::VertexStage) != 0)
             {
                 [renderEncoder
-                    setVertexBuffer:    static_cast<id<MTLBuffer>>(binding.resource)
+                    setVertexBuffer:    static_cast<id<MTLBuffer>>(resource)
                     offset:             0
-                    atIndex:            binding.layout.slot
+                    atIndex:            layout.slot
                 ];
             }
-            if ((binding.layout.stages & StageFlags::FragmentStage) != 0)
+            if ((layout.stages & StageFlags::FragmentStage) != 0)
             {
                 [renderEncoder
-                    setFragmentBuffer:  static_cast<id<MTLBuffer>>(binding.resource)
+                    setFragmentBuffer:  static_cast<id<MTLBuffer>>(resource)
                     offset:             0
-                    atIndex:            binding.layout.slot
+                    atIndex:            layout.slot
                 ];
             }
         }
@@ -170,18 +188,18 @@ void MTDescriptorCache::BindGraphicsResource(id<MTLRenderCommandEncoder> renderE
 
         case ResourceType::Texture:
         {
-            if ((binding.layout.stages & StageFlags::VertexStage) != 0)
+            if ((layout.stages & StageFlags::VertexStage) != 0)
             {
                 [renderEncoder
-                    setVertexTexture:   static_cast<id<MTLTexture>>(binding.resource)
-                    atIndex:            binding.layout.slot
+                    setVertexTexture:   static_cast<id<MTLTexture>>(resource)
+                    atIndex:            layout.slot
                 ];
             }
-            if ((binding.layout.stages & StageFlags::FragmentStage) != 0)
+            if ((layout.stages & StageFlags::FragmentStage) != 0)
             {
                 [renderEncoder
-                    setFragmentTexture: static_cast<id<MTLTexture>>(binding.resource)
-                    atIndex:            binding.layout.slot
+                    setFragmentTexture: static_cast<id<MTLTexture>>(resource)
+                    atIndex:            layout.slot
                 ];
             }
         }
@@ -189,18 +207,18 @@ void MTDescriptorCache::BindGraphicsResource(id<MTLRenderCommandEncoder> renderE
 
         case ResourceType::Sampler:
         {
-            if ((binding.layout.stages & StageFlags::VertexStage) != 0)
+            if ((layout.stages & StageFlags::VertexStage) != 0)
             {
                 [renderEncoder
-                    setVertexSamplerState:  static_cast<id<MTLSamplerState>>(binding.resource)
-                    atIndex:                binding.layout.slot
+                    setVertexSamplerState:  static_cast<id<MTLSamplerState>>(resource)
+                    atIndex:                layout.slot
                 ];
             }
-            if ((binding.layout.stages & StageFlags::FragmentStage) != 0)
+            if ((layout.stages & StageFlags::FragmentStage) != 0)
             {
                 [renderEncoder
-                    setFragmentSamplerState:    static_cast<id<MTLSamplerState>>(binding.resource)
-                    atIndex:                    binding.layout.slot
+                    setFragmentSamplerState:    static_cast<id<MTLSamplerState>>(resource)
+                    atIndex:                    layout.slot
                 ];
             }
         }
@@ -208,21 +226,21 @@ void MTDescriptorCache::BindGraphicsResource(id<MTLRenderCommandEncoder> renderE
     }
 }
 
-void MTDescriptorCache::BindComputeResource(id<MTLComputeCommandEncoder> computeEncoder, const MTDynamicResourceBinding& binding)
+void MTDescriptorCache::BindComputeResource(id<MTLComputeCommandEncoder> computeEncoder, const MTDynamicResourceLayout& layout, id resource)
 {
-    switch (binding.layout.type)
+    switch (layout.type)
     {
         case ResourceType::Undefined:
         break;
 
         case ResourceType::Buffer:
         {
-            if ((binding.layout.stages & StageFlags::ComputeStage) != 0)
+            if ((layout.stages & StageFlags::ComputeStage) != 0)
             {
                 [computeEncoder
-                    setBuffer:  static_cast<id<MTLBuffer>>(binding.resource)
+                    setBuffer:  static_cast<id<MTLBuffer>>(resource)
                     offset:     0
-                    atIndex:    binding.layout.slot
+                    atIndex:    layout.slot
                 ];
             }
         }
@@ -230,11 +248,11 @@ void MTDescriptorCache::BindComputeResource(id<MTLComputeCommandEncoder> compute
 
         case ResourceType::Texture:
         {
-            if ((binding.layout.stages & StageFlags::ComputeStage) != 0)
+            if ((layout.stages & StageFlags::ComputeStage) != 0)
             {
                 [computeEncoder
-                    setTexture: static_cast<id<MTLTexture>>(binding.resource)
-                    atIndex:    binding.layout.slot
+                    setTexture: static_cast<id<MTLTexture>>(resource)
+                    atIndex:    layout.slot
                 ];
             }
         }
@@ -242,11 +260,11 @@ void MTDescriptorCache::BindComputeResource(id<MTLComputeCommandEncoder> compute
 
         case ResourceType::Sampler:
         {
-            if ((binding.layout.stages & StageFlags::ComputeStage) != 0)
+            if ((layout.stages & StageFlags::ComputeStage) != 0)
             {
                 [computeEncoder
-                    setSamplerState:    static_cast<id<MTLSamplerState>>(binding.resource)
-                    atIndex:            binding.layout.slot
+                    setSamplerState:    static_cast<id<MTLSamplerState>>(resource)
+                    atIndex:            layout.slot
                 ];
             }
         }

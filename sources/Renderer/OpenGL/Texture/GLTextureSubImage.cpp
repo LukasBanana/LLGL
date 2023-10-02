@@ -29,15 +29,15 @@ static void QueryGLInternalFormat(GLuint texID, GLenum& internalFormat)
 }
 
 static void GLTextureSubImage1DBase(
-    GLuint                      texID,
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::uint32_t               width,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLuint              texID,
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::uint32_t       width,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     QueryGLInternalFormat(texID, internalFormat);
-    if (IsCompressedFormat(imageDesc.format))
+    if (IsCompressedFormat(imageView.format))
     {
         glCompressedTextureSubImage1D(
             texID,
@@ -45,8 +45,8 @@ static void GLTextureSubImage1DBase(
             x,
             static_cast<GLsizei>(width),
             internalFormat,
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
+            static_cast<GLsizei>(imageView.dataSize),
+            imageView.data
         );
     }
     else
@@ -56,25 +56,25 @@ static void GLTextureSubImage1DBase(
             static_cast<GLint>(mipLevel),
             x,
             static_cast<GLsizei>(width),
-            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
+            GLTypes::Map(imageView.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
+            GLTypes::Map(imageView.dataType),
+            imageView.data
         );
     }
 }
 
 static void GLTextureSubImage2DBase(
-    GLuint                      texID,
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLuint              texID,
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     QueryGLInternalFormat(texID, internalFormat);
-    if (IsCompressedFormat(imageDesc.format))
+    if (IsCompressedFormat(imageView.format))
     {
         glCompressedTextureSubImage2D(
             texID,
@@ -84,8 +84,8 @@ static void GLTextureSubImage2DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             internalFormat,
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
+            static_cast<GLsizei>(imageView.dataSize),
+            imageView.data
         );
     }
     else
@@ -97,27 +97,27 @@ static void GLTextureSubImage2DBase(
             y,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
-            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
+            GLTypes::Map(imageView.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
+            GLTypes::Map(imageView.dataType),
+            imageView.data
         );
     }
 }
 
 static void GLTextureSubImage3DBase(
-    GLuint                      texID,
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::int32_t                z,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    std::uint32_t               depth,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLuint              texID,
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::int32_t        z,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     QueryGLInternalFormat(texID, internalFormat);
-    if (IsCompressedFormat(imageDesc.format))
+    if (IsCompressedFormat(imageView.format))
     {
         glCompressedTextureSubImage3D(
             texID,
@@ -129,8 +129,8 @@ static void GLTextureSubImage3DBase(
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
             internalFormat,
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
+            static_cast<GLsizei>(imageView.dataSize),
+            imageView.data
         );
     }
     else
@@ -144,26 +144,26 @@ static void GLTextureSubImage3DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
-            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
+            GLTypes::Map(imageView.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
+            GLTypes::Map(imageView.dataType),
+            imageView.data
         );
     }
 }
 
-static void GLTextureSubImage1D(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImage1D(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage1DBase(
         texID,
         region.subresource.baseMipLevel,
         region.offset.x,
         region.extent.width,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTextureSubImage2D(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImage2D(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage2DBase(
         texID,
@@ -172,12 +172,12 @@ static void GLTextureSubImage2D(GLuint texID, const TextureRegion& region, const
         region.offset.y,
         region.extent.width,
         region.extent.height,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTextureSubImage3D(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImage3D(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage3DBase(
         texID,
@@ -188,12 +188,12 @@ static void GLTextureSubImage3D(GLuint texID, const TextureRegion& region, const
         region.extent.width,
         region.extent.height,
         region.extent.depth,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTextureSubImageCube(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImageCube(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage3DBase(
         texID,
@@ -204,12 +204,12 @@ static void GLTextureSubImageCube(GLuint texID, const TextureRegion& region, con
         region.extent.width,
         region.extent.height,
         1,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTextureSubImage1DArray(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImage1DArray(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage2DBase(
         texID,
@@ -218,12 +218,12 @@ static void GLTextureSubImage1DArray(GLuint texID, const TextureRegion& region, 
         region.subresource.baseArrayLayer,
         region.extent.width,
         region.subresource.numArrayLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTextureSubImage2DArray(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImage2DArray(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage3DBase(
         texID,
@@ -234,12 +234,12 @@ static void GLTextureSubImage2DArray(GLuint texID, const TextureRegion& region, 
         region.extent.width,
         region.extent.height,
         region.subresource.numArrayLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTextureSubImageCubeArray(GLuint texID, const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTextureSubImageCubeArray(GLuint texID, const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTextureSubImage3DBase(
         texID,
@@ -250,7 +250,7 @@ static void GLTextureSubImageCubeArray(GLuint texID, const TextureRegion& region
         region.extent.width,
         region.extent.height,
         region.subresource.numArrayLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
@@ -258,41 +258,41 @@ static void GLTextureSubImageCubeArray(GLuint texID, const TextureRegion& region
 #endif // GL_ARB_direct_state_access && LLGL_GL_ENABLE_DSA_EXT
 
 void GLTextureSubImage(
-    GLuint                      texID,
-    const TextureType           type,
-    const TextureRegion&        region,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLuint                  texID,
+    const TextureType       type,
+    const TextureRegion&    region,
+    const ImageView&        imageView,
+    GLenum                  internalFormat)
 {
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     switch (type)
     {
         case TextureType::Texture1D:
-            GLTextureSubImage1D(texID, region, imageDesc, internalFormat);
+            GLTextureSubImage1D(texID, region, imageView, internalFormat);
             break;
 
         case TextureType::Texture2D:
-            GLTextureSubImage2D(texID, region, imageDesc, internalFormat);
+            GLTextureSubImage2D(texID, region, imageView, internalFormat);
             break;
 
         case TextureType::Texture3D:
-            GLTextureSubImage3D(texID, region, imageDesc, internalFormat);
+            GLTextureSubImage3D(texID, region, imageView, internalFormat);
             break;
 
         case TextureType::TextureCube:
-            GLTextureSubImageCube(texID, region, imageDesc, internalFormat);
+            GLTextureSubImageCube(texID, region, imageView, internalFormat);
             break;
 
         case TextureType::Texture1DArray:
-            GLTextureSubImage1DArray(texID, region, imageDesc, internalFormat);
+            GLTextureSubImage1DArray(texID, region, imageView, internalFormat);
             break;
 
         case TextureType::Texture2DArray:
-            GLTextureSubImage2DArray(texID, region, imageDesc, internalFormat);
+            GLTextureSubImage2DArray(texID, region, imageView, internalFormat);
             break;
 
         case TextureType::TextureCubeArray:
-            GLTextureSubImageCubeArray(texID, region, imageDesc, internalFormat);
+            GLTextureSubImageCubeArray(texID, region, imageView, internalFormat);
             break;
 
         default:

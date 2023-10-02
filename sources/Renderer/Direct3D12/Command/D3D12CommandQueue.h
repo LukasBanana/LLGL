@@ -11,7 +11,6 @@
 
 #include <LLGL/CommandQueue.h>
 #include "D3D12CommandContext.h"
-#include <LLGL/StaticLimits.h>
 #include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>

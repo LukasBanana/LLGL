@@ -1,11 +1,11 @@
 /*
- * DbgQueryTimerManager.cpp
+ * DbgQueryTimerPool.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "DbgQueryTimerManager.h"
+#include "DbgQueryTimerPool.h"
 #include "DbgCore.h"
 #include <LLGL/RenderSystem.h>
 #include <LLGL/CommandQueue.h>
@@ -20,7 +20,7 @@ namespace LLGL
 
 static constexpr std::uint32_t g_queryTimerHeapSize = 64;
 
-DbgQueryTimerManager::DbgQueryTimerManager(
+DbgQueryTimerPool::DbgQueryTimerPool(
     RenderSystem&   renderSystemInstance,
     CommandQueue&   commandQueueInstance,
     CommandBuffer&  commandBufferInstance)
@@ -31,14 +31,14 @@ DbgQueryTimerManager::DbgQueryTimerManager(
 {
 }
 
-void DbgQueryTimerManager::Reset()
+void DbgQueryTimerPool::Reset()
 {
     records_.clear();
     currentQuery_       = 0;
     currentQueryHeap_   = 0;
 }
 
-void DbgQueryTimerManager::Start(const char* annotation)
+void DbgQueryTimerPool::Start(const char* annotation)
 {
     /* Store annotation only first */
     ProfileTimeRecord record;
@@ -70,7 +70,7 @@ void DbgQueryTimerManager::Start(const char* annotation)
     commandBuffer_.BeginQuery(*queryHeaps_[currentQueryHeap_], currentQuery_);
 }
 
-void DbgQueryTimerManager::Stop()
+void DbgQueryTimerPool::Stop()
 {
     /* Stop timer query */
     commandBuffer_.EndQuery(*queryHeaps_[currentQueryHeap_], currentQuery_);
@@ -79,7 +79,7 @@ void DbgQueryTimerManager::Stop()
     ++currentQuery_;
 }
 
-void DbgQueryTimerManager::TakeRecords(std::vector<ProfileTimeRecord>& outRecords)
+void DbgQueryTimerPool::TakeRecords(std::vector<ProfileTimeRecord>& outRecords)
 {
     ResolveQueryResults();
     outRecords = std::move(records_);
@@ -90,7 +90,7 @@ void DbgQueryTimerManager::TakeRecords(std::vector<ProfileTimeRecord>& outRecord
  * ======= Private: =======
  */
 
-void DbgQueryTimerManager::ResolveQueryResults()
+void DbgQueryTimerPool::ResolveQueryResults()
 {
     constexpr int maxAttempts = 100;
 

@@ -118,6 +118,9 @@ class VKDeviceMemory
         // Inserts the specified region into the fragmented block list at the specified position and merges it with surrounding blocks if possible.
         void InsertBlockToFragmentsAt(std::unique_ptr<VKDeviceMemoryRegion>&& region, std::size_t position);
 
+        // Pops the last block off the fragments blocks and returns it.
+        std::unique_ptr<VKDeviceMemoryRegion> PopBackFragmentedBlock();
+
         // Merges the two fragmented blocks and records the maximal fragmented block size.
         bool MergeFragmentedBlockWith(VKDeviceMemoryRegion& region, VKDeviceMemoryRegion& appendixRegion);
 
@@ -126,6 +129,9 @@ class VKDeviceMemory
 
         // Increases the maximal fragmented block size.
         void IncMaxFragmentedBlockSize(VkDeviceSize size);
+
+        // Updates the maximal fragmented block size if the input size equals the current maximum size.
+        void DecMaxFragmentedBlockSize(VkDeviceSize size);
 
     private:
 

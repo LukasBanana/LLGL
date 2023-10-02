@@ -1,5 +1,5 @@
 /*
- * TestStencilBuffer.cpp
+ * TestDepthBuffer.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -10,10 +10,9 @@
 #include <Gauss/ProjectionMatrix4.h>
 #include <Gauss/Translate.h>
 #include <Gauss/Rotate.h>
-#include <limits.h>
 
 
-DEF_TEST( StencilBuffer )
+DEF_TEST( DepthBuffer )
 {
     const Extent2D resolution{ swapChain->GetResolution() };
 
@@ -26,7 +25,7 @@ DEF_TEST( StencilBuffer )
     // Create texture for readback with depth-only format (D32Float)
     TextureDescriptor texDesc;
     {
-        texDesc.format          = Format::D24UNormS8UInt;
+        texDesc.format          = Format::D32Float;
         texDesc.extent.width    = resolution.width;
         texDesc.extent.height   = resolution.height;
         texDesc.bindFlags       = BindFlags::DepthStencilAttachment;
@@ -44,21 +43,15 @@ DEF_TEST( StencilBuffer )
     RenderTarget* renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
     renderTarget->SetName("renderTarget");
 
-    // Create PSO for rendering to the stencil buffer with dynamic reference value
-    PipelineLayout* psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@1):vert:frag"));
-
+    // Create PSO for rendering to the depth buffer
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout              = psoLayout;
-        psoDesc.renderPass                  = renderTarget->GetRenderPass();
-        psoDesc.vertexShader                = shaders[VSSolid];
-        psoDesc.stencil.testEnabled         = true;
-        psoDesc.stencil.referenceDynamic    = true;
-        psoDesc.stencil.front.compareOp     = LLGL::CompareOp::Greater;
-        psoDesc.stencil.front.stencilFailOp = LLGL::StencilOp::Keep;
-        psoDesc.stencil.front.depthFailOp   = LLGL::StencilOp::Keep;
-        psoDesc.stencil.front.depthPassOp   = LLGL::StencilOp::Replace;
-        psoDesc.rasterizer.cullMode         = CullMode::Back;
+        psoDesc.pipelineLayout      = layouts[PipelineSolid];
+        psoDesc.renderPass          = renderTarget->GetRenderPass();
+        psoDesc.vertexShader        = shaders[VSSolid];
+        psoDesc.depth.testEnabled   = true;
+        psoDesc.depth.writeEnabled  = true;
+        psoDesc.rasterizer.cullMode = CullMode::Back;
     }
     PipelineState* pso = renderer->CreatePipelineState(psoDesc);
 
@@ -86,18 +79,14 @@ DEF_TEST( StencilBuffer )
     sceneConstants.vpMatrix = projection * vMatrix;
 
     // Render scene
-    constexpr std::uint32_t stencilRef = 50;
-    static_assert(stencilRef <= UINT8_MAX, "'stencilRef' must not be greater than UINT8_MAX");
-
     cmdBuffer->Begin();
     {
         cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
         cmdBuffer->BeginRenderPass(*renderTarget);
         {
             // Draw scene
-            cmdBuffer->Clear(ClearFlags::Stencil);
+            cmdBuffer->Clear(ClearFlags::Depth);
             cmdBuffer->SetPipelineState(*pso);
-            cmdBuffer->SetStencilReference(stencilRef);
             cmdBuffer->SetViewport(resolution);
             cmdBuffer->SetVertexBuffer(*meshBuffer);
             cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, models[ModelCube].indexBufferOffset);
@@ -117,59 +106,60 @@ DEF_TEST( StencilBuffer )
     };
     const TextureRegion readbackTexRegion{ readbackTexPosition, Extent3D{ 1, 1, 1 } };
 
-    constexpr std::uint8_t invalidStencilValue = 0xFF;
+    constexpr float invalidDepthValue = -1.0f;
 
-    std::uint8_t readbackStencilValue = invalidStencilValue;
+    float readbackDepthValue = invalidDepthValue;
 
-    DstImageDescriptor dstImageDesc;
+    MutableImageView dstImageView;
     {
-        dstImageDesc.format     = ImageFormat::Stencil;
-        dstImageDesc.data       = &readbackStencilValue;
-        dstImageDesc.dataSize   = sizeof(readbackStencilValue);
-        dstImageDesc.dataType   = DataType::UInt8;
+        dstImageView.format     = ImageFormat::Depth;
+        dstImageView.data       = &readbackDepthValue;
+        dstImageView.dataSize   = sizeof(readbackDepthValue);
+        dstImageView.dataType   = DataType::Float32;
     }
-    renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageDesc);
+    renderer->ReadTexture(*readbackTex, readbackTexRegion, dstImageView);
 
-    const int deltaStencilValue = std::abs(static_cast<int>(readbackStencilValue) - static_cast<int>(stencilRef));
+    constexpr float expectedDepthValue = 0.975574434f;
+
+    const float deltaDepthValue = std::abs(readbackDepthValue - expectedDepthValue);
 
     // Match entire depth and create delta heat map
-    std::vector<std::uint8_t> readbackStencilBuffer;
-    readbackStencilBuffer.resize(texDesc.extent.width * texDesc.extent.height, 0);
+    std::vector<float> readbackDepthBuffer;
+    readbackDepthBuffer.resize(texDesc.extent.width * texDesc.extent.height, -1.0f);
     {
-        dstImageDesc.format     = ImageFormat::Stencil;
-        dstImageDesc.data       = readbackStencilBuffer.data();
-        dstImageDesc.dataSize   = sizeof(decltype(readbackStencilBuffer)::value_type) * readbackStencilBuffer.size();
-        dstImageDesc.dataType   = DataType::UInt8;
+        dstImageView.format     = ImageFormat::Depth;
+        dstImageView.data       = readbackDepthBuffer.data();
+        dstImageView.dataSize   = sizeof(decltype(readbackDepthBuffer)::value_type) * readbackDepthBuffer.size();
+        dstImageView.dataType   = DataType::Float32;
     }
-    renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageDesc);
+    renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageView);
 
-    SaveStencilImage(readbackStencilBuffer, resolution, "StencilBuffer_Set50");
+    SaveDepthImage(readbackDepthBuffer, resolution, "DepthBuffer", 1.0f, 10.0f);
 
-    const DiffResult diff = DiffImages("StencilBuffer_Set50");
+    const DiffResult diff = DiffImages("DepthBuffer");
 
     // Clear resources
     renderer->Release(*pso);
-    renderer->Release(*psoLayout);
     renderer->Release(*renderTarget);
     renderer->Release(*readbackTex);
 
     // Evaluate readback result
-    if (readbackStencilValue == invalidStencilValue)
+    if (readbackDepthValue == -1.0f)
     {
-        Log::Errorf("Failed to read back value from stencil buffer texture at center\n");
+        Log::Errorf("Failed to read back value from depth buffer texture at center\n");
         return TestResult::FailedErrors;
     }
-    if (deltaStencilValue > 0)
+    if (deltaDepthValue > epsilon)
     {
         Log::Errorf(
-            "Mismatch between stencil buffer value at center (%d) and expected value (%d): delta = %d\n",
-            static_cast<int>(readbackStencilValue), static_cast<int>(stencilRef), deltaStencilValue
+            "Mismatch between depth buffer value at center (%f) and expected value (%f): delta = %f\n",
+            readbackDepthValue, expectedDepthValue, deltaDepthValue
         );
         return TestResult::FailedMismatch;
     }
     if (diff)
     {
-        Log::Errorf("Mismatch between reference and result images for stencil buffer (%s)\n", diff.Print());
+        Log::Errorf("Mismatch between reference and result images for depth buffer (%s)\n", diff.Print());
         return TestResult::FailedMismatch;
     }
 

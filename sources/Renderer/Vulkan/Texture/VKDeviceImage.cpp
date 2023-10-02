@@ -10,6 +10,8 @@
 #include "../Memory/VKDeviceMemory.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../VKCore.h"
+#include "../../../Core/Exception.h"
+#include "../../../Core/PrintfUtils.h"
 
 
 namespace LLGL
@@ -23,7 +25,7 @@ VKDeviceImage::VKDeviceImage(VkDevice device) :
 
 void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
 {
-    auto device = deviceMemoryMngr.GetVkDevice();
+    VkDevice device = deviceMemoryMngr.GetVkDevice();
 
     /* Get memory requirements for the image */
     vkGetImageMemoryRequirements(device, image_, &memoryRequirements_);
@@ -37,10 +39,15 @@ void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr
     );
 
     /* Bind image to device memory region */
-    if (memoryRegion_)
-        memoryRegion_->BindImage(device, image_);
-    else
-        throw std::runtime_error("failed to allocate device memory for Vulkan image");
+    if (memoryRegion_ == nullptr)
+    {
+        LLGL_TRAP(
+            "failed to allocate 0x%016" PRIX64 " bytes of device memory with alignment 0x%016" PRIX64 " for Vulkan image",
+            memoryRequirements_.size, memoryRequirements_.alignment
+        );
+    }
+
+    memoryRegion_->BindImage(device, image_);
 }
 
 void VKDeviceImage::ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)

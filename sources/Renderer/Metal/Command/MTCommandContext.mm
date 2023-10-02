@@ -72,10 +72,10 @@ id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDes
     renderDirtyBits_.bits = ~0;
 
     /* Invalidate descriptor and constant caches */
-    if (descriptorCache_ != nullptr)
-        descriptorCache_->Reset();
-    if (constantsCache_ != nullptr)
-        constantsCache_->Reset();
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.Reset();
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.Reset();
 
     return renderEncoder_;
 }
@@ -91,10 +91,10 @@ id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
         computeDirtyBits_.bits = ~0;
 
         /* Invalidate descriptor and constant caches */
-        if (descriptorCache_ != nullptr)
-            descriptorCache_->Reset();
-        if (constantsCache_ != nullptr)
-            constantsCache_->Reset();
+        if (!descriptorCache_.IsEmpty())
+            descriptorCache_.Reset();
+        if (!constantsCache_.IsEmpty())
+            constantsCache_.Reset();
     }
     return computeEncoder_;
 }
@@ -201,8 +201,8 @@ void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
         renderEncoderState_.blendColorDynamic   = pipelineState->IsBlendColorDynamic();
         renderEncoderState_.stencilRefDynamic   = pipelineState->IsStencilRefDynamic();
         renderDirtyBits_.graphicsPSO = 1;
-        descriptorCache_                        = pipelineState->ResetAndGetDescriptorCache();
-        constantsCache_                         = pipelineState->ResetAndGetConstantsCache();
+        descriptorCache_.Reset(pipelineState->GetPipelineLayout());
+        constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
     }
 }
 
@@ -246,8 +246,8 @@ void MTCommandContext::SetComputePSO(MTComputePSO* pipelineState)
     {
         computeEncoderState_.computePSO = pipelineState;
         computeDirtyBits_.computePSO    = 1;
-        descriptorCache_                = pipelineState->ResetAndGetDescriptorCache();
-        constantsCache_                 = pipelineState->ResetAndGetConstantsCache();
+        descriptorCache_.Reset(pipelineState->GetPipelineLayout());
+        constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
     }
 }
 
@@ -267,20 +267,20 @@ void MTCommandContext::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEn
             computeEncoderState_.computeResourceSet
         );
     }
-    if (descriptorCache_ != nullptr)
-        descriptorCache_->FlushComputeResourcesForced(computeEncoder);
-    if (constantsCache_ != nullptr)
-        constantsCache_->FlushComputeResourcesForced(computeEncoder);
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.FlushComputeResourcesForced(computeEncoder);
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushComputeResourcesForced(computeEncoder);
 }
 
 id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
 {
     if (renderDirtyBits_.bits != 0)
         SubmitRenderEncoderState();
-    if (descriptorCache_ != nullptr)
-        descriptorCache_->FlushGraphicsResources(GetRenderEncoder());
-    if (constantsCache_ != nullptr)
-        constantsCache_->FlushGraphicsResources(GetRenderEncoder());
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.FlushGraphicsResources(GetRenderEncoder());
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushGraphicsResources(GetRenderEncoder());
     return GetRenderEncoder();
 }
 
@@ -290,10 +290,10 @@ id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
     BindComputeEncoder();
     if (computeDirtyBits_.bits != 0)
         SubmitComputeEncoderState();
-    if (descriptorCache_ != nullptr)
-        descriptorCache_->FlushComputeResources(GetComputeEncoder());
-    if (constantsCache_ != nullptr)
-        constantsCache_->FlushComputeResources(GetComputeEncoder());
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.FlushComputeResources(GetComputeEncoder());
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushComputeResources(GetComputeEncoder());
     return GetComputeEncoder();
 }
 

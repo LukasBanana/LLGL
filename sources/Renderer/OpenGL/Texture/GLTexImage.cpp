@@ -484,19 +484,19 @@ static void GLTexImage2DMultisampleArray(
 
 #ifdef LLGL_OPENGL
 
-static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage1D(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image from descriptor */
         GLTexImage1D(
             NumMipLevels(desc),
             desc.format,
             desc.extent.width,
-            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data,
-            imageDesc->dataSize
+            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->dataType),
+            imageView->data,
+            imageView->dataSize
         );
     }
     else if (IsDepthOrStencilFormat(desc.format))
@@ -533,9 +533,9 @@ static void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor
 
 #endif
 
-static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image from descriptor */
         GLTexImage2D(
@@ -543,10 +543,10 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
             desc.format,
             desc.extent.width,
             desc.extent.height,
-            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data,
-            imageDesc->dataSize
+            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->dataType),
+            imageView->data,
+            imageView->dataSize
         );
     }
     else if (IsStencilFormat(desc.format))
@@ -638,9 +638,9 @@ static void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor
     }
 }
 
-static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage3D(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image from descriptor */
         GLTexImage3D(
@@ -649,10 +649,10 @@ static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor
             desc.extent.width,
             desc.extent.height,
             desc.extent.depth,
-            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data,
-            imageDesc->dataSize
+            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->dataType),
+            imageView->data,
+            imageView->dataSize
         );
     }
     else if (IsDepthOrStencilFormat(desc.format))
@@ -691,21 +691,21 @@ static void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor
     }
 }
 
-static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* imageView)
 {
     const auto numMipLevels = NumMipLevels(desc);
 
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image cube-faces from descriptor */
-        const char* imageFace       = reinterpret_cast<const char*>(imageDesc->data);
-        std::size_t imageFaceStride = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, desc.extent.width * desc.extent.height);
+        const char* imageFace       = reinterpret_cast<const char*>(imageView->data);
+        std::size_t imageFaceStride = GetMemoryFootprint(imageView->format, imageView->dataType, desc.extent.width * desc.extent.height);
 
         if (IsCompressedFormat(desc.format))
-            imageFaceStride = imageDesc->dataSize;
+            imageFaceStride = imageView->dataSize;
 
-        GLenum dataFormatGL       = GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format));
-        GLenum dataTypeGL         = GLTypes::Map(imageDesc->dataType);
+        GLenum dataFormatGL       = GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format));
+        GLenum dataTypeGL         = GLTypes::Map(imageView->dataType);
 
         for_range(arrayLayer, desc.arrayLayers)
         {
@@ -718,7 +718,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
                 dataFormatGL,
                 dataTypeGL,
                 imageFace,
-                imageDesc->dataSize
+                imageView->dataSize
             );
             imageFace += imageFaceStride;
         }
@@ -820,9 +820,9 @@ static void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescript
 
 #ifdef LLGL_OPENGL
 
-static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage1DArray(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image from descriptor */
         GLTexImage1DArray(
@@ -830,10 +830,10 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescr
             desc.format,
             desc.extent.width,
             desc.arrayLayers,
-            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data,
-            imageDesc->dataSize
+            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->dataType),
+            imageView->data,
+            imageView->dataSize
         );
     }
     else if (IsDepthOrStencilFormat(desc.format))
@@ -872,9 +872,9 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescr
 
 #endif
 
-static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image from descriptor */
         GLTexImage2DArray(
@@ -883,10 +883,10 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescr
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data,
-            imageDesc->dataSize
+            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->dataType),
+            imageView->data,
+            imageView->dataSize
         );
     }
     else if (IsStencilFormat(desc.format))
@@ -986,9 +986,9 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescr
 
 #ifdef LLGL_OPENGL
 
-static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    if (imageDesc)
+    if (imageView != nullptr)
     {
         /* Setup texture image cube-faces from descriptor */
         GLTexImageCubeArray(
@@ -997,10 +997,10 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDes
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            GLTypes::Map(imageDesc->format, IsIntegerTypedFormat(desc.format)),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data,
-            imageDesc->dataSize
+            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->dataType),
+            imageView->data,
+            imageView->dataSize
         );
     }
     else if (IsDepthOrStencilFormat(desc.format))
@@ -1066,7 +1066,7 @@ static void GLTexImage2DMSArray(const TextureDescriptor& desc)
 
 #endif
 
-bool GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
+bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
 {
     //TODO: on-the-fly decompression would be awesome (if GL_ARB_texture_compression is unsupported), but a lot of work :-/
     /* If compressed format is requested, GL_ARB_texture_compression must be supported */
@@ -1077,35 +1077,35 @@ bool GLTexImage(const TextureDescriptor& desc, const SrcImageDescriptor* imageDe
     {
         #ifdef LLGL_OPENGL
         case TextureType::Texture1D:
-            GLTexImage1D(desc, imageDesc);
+            GLTexImage1D(desc, imageView);
             break;
         #endif
 
         case TextureType::Texture2D:
-            GLTexImage2D(desc, imageDesc);
+            GLTexImage2D(desc, imageView);
             break;
 
         case TextureType::Texture3D:
-            GLTexImage3D(desc, imageDesc);
+            GLTexImage3D(desc, imageView);
             break;
 
         case TextureType::TextureCube:
-            GLTexImageCube(desc, imageDesc);
+            GLTexImageCube(desc, imageView);
             break;
 
         #ifdef LLGL_OPENGL
         case TextureType::Texture1DArray:
-            GLTexImage1DArray(desc, imageDesc);
+            GLTexImage1DArray(desc, imageView);
             break;
         #endif
 
         case TextureType::Texture2DArray:
-            GLTexImage2DArray(desc, imageDesc);
+            GLTexImage2DArray(desc, imageView);
             break;
 
         #ifdef LLGL_OPENGL
         case TextureType::TextureCubeArray:
-            GLTexImageCubeArray(desc, imageDesc);
+            GLTexImageCubeArray(desc, imageView);
             break;
 
         case TextureType::Texture2DMS:

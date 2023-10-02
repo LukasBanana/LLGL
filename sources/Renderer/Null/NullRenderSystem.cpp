@@ -214,9 +214,9 @@ void NullRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* NullRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* NullRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
-    return textures_.emplace<NullTexture>(textureDesc, imageDesc);
+    return textures_.emplace<NullTexture>(textureDesc, initialImage);
 }
 
 void NullRenderSystem::Release(Texture& texture)
@@ -224,16 +224,16 @@ void NullRenderSystem::Release(Texture& texture)
     textures_.erase(&texture);
 }
 
-void NullRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void NullRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageDesc)
 {
     auto& textureNull = LLGL_CAST(NullTexture&, texture);
-    textureNull.Write(textureRegion, imageDesc);
+    textureNull.Write(textureRegion, srcImageDesc);
 }
 
-void NullRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void NullRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     auto& textureNull = LLGL_CAST(NullTexture&, texture);
-    textureNull.Read(textureRegion, imageDesc);
+    textureNull.Read(textureRegion, dstImageView);
 }
 
 /* ----- Sampler States ---- */

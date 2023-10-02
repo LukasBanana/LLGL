@@ -13,7 +13,7 @@
 
 #include <LLGL/PipelineState.h>
 #include "MTDescriptorCache.h"
-#include "MTConstantsCache.h"
+#include "MTConstantsCacheLayout.h"
 #include <LLGL/Report.h>
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
@@ -42,23 +42,17 @@ class MTPipelineState : public PipelineState
             return isGraphicsPSO_;
         }
 
-        // Returns the descriptor cache for this PSO or null if there is none.
-        inline MTDescriptorCache* GetDescriptorCache() const
+        // Returns the pipeline layout this PSO was created with. May also be null.
+        inline const MTPipelineLayout* GetPipelineLayout() const
         {
-            return descriptorCache_.get();
+            return pipelineLayout_;
         }
-
-        // Resets and returns the descriptor cache for this PSO or null if there is none.
-        MTDescriptorCache* ResetAndGetDescriptorCache() const;
 
         // Returns the constants cache for this PSO or null if there is none.
-        inline MTConstantsCache* GetConstantsCache() const
+        inline const MTConstantsCacheLayout* GetConstantsCacheLayout() const
         {
-            return constantsCache_.get();
+            return constantsCacheLayout_.get();
         }
-
-        // Resets and returns the constants cache for this PSO or null if there is none.
-        MTConstantsCache* ResetAndGetConstantsCache() const;
 
     protected:
 
@@ -72,19 +66,12 @@ class MTPipelineState : public PipelineState
         void CreateConstantsCacheForRenderPipeline(MTLRenderPipelineReflection* reflection);
         void CreateConstantsCacheForComputePipeline(MTLComputePipelineReflection* reflection);
 
-        // Returns the pipeline layout this PSO was created with. May also be null.
-        inline const MTPipelineLayout* GetPipelineLayout() const
-        {
-            return pipelineLayout_;
-        }
-
     private:
 
-        const bool                          isGraphicsPSO_      = false;
-        const MTPipelineLayout*             pipelineLayout_     = nullptr;
-        std::unique_ptr<MTDescriptorCache>  descriptorCache_;
-        std::unique_ptr<MTConstantsCache>   constantsCache_;
-        Report                              report_;
+        const bool                              isGraphicsPSO_          = false;
+        const MTPipelineLayout*                 pipelineLayout_         = nullptr;
+        std::unique_ptr<MTConstantsCacheLayout> constantsCacheLayout_;
+        Report                                  report_;
 
 };
 

@@ -33,10 +33,10 @@ layout(location = 0) out vec4 outColor;
 
 #if ENABLE_TEXTURING
 #   if ENABLE_SPIRV
-layout(binding = 1) uniform texture2D colorMap;
-layout(binding = 2) uniform sampler linearSampler;
+layout(binding = 2) uniform texture2D colorMap;
+layout(binding = 3) uniform sampler linearSampler;
 #   else
-layout(binding = 1) uniform sampler2D colorMapSampler;
+layout(binding = 2) uniform sampler2D colorMapSampler;
 #   endif
 #endif
 

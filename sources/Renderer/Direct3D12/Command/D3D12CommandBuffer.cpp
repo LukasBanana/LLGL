@@ -47,8 +47,9 @@ namespace LLGL
 
 
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc) :
-    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                     },
-    immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0) }
+    cmdSignatureFactory_ { &(renderSystem.GetSignatureFactory())                         },
+    immediateSubmit_     { ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)     },
+    commandQueue_        { LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue()) }
 {
     CreateCommandContext(renderSystem, desc);
 }
@@ -76,12 +77,22 @@ void D3D12CommandBuffer::End()
 
     /* Execute command list right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
-        Execute();
+        commandContext_.ExecuteAndSignal(*commandQueue_);
 }
 
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
     auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, deferredCommandBuffer);
+
+    /*
+    TODO:
+      D3D12 bundles can bind descriptor heaps but they must match the primary command buffer's descriptor heaps.
+      As a workaround, always bind the descriptor heaps that were cached in the secondary command buffer,
+      since those that are shader visible will be the same throughout the command encoding (see D3D12StagingDescriptorHeapPool).
+      Some kind of descriptor heap sharing/pooling should be implemented next.
+    */
+    commandContext_.SetDescriptorHeapsOfOtherContext(cmdBufferD3D.commandContext_);
+
     commandList_->ExecuteBundle(cmdBufferD3D.GetNative());
 }
 
@@ -209,7 +220,7 @@ void D3D12CommandBuffer::FillBuffer(
     UINT valuesVec4[4] = { value, value, value, value };
 
     /* Clamp range to buffer size if whole buffer is meant to be filled */
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         dstOffset   = 0;
         fillSize    = dstBufferD3D.GetBufferSize();
@@ -421,15 +432,15 @@ void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport
 
         for_range(i, numViewports)
         {
-            const auto& src = viewports[i];
-            auto& dest = viewportsD3D[i];
+            const Viewport& src = viewports[i];
+            D3D12_VIEWPORT& dst = viewportsD3D[i];
 
-            dest.TopLeftX   = src.x;
-            dest.TopLeftY   = src.y;
-            dest.Width      = src.width;
-            dest.Height     = src.height;
-            dest.MinDepth   = src.minDepth;
-            dest.MaxDepth   = src.maxDepth;
+            dst.TopLeftX   = src.x;
+            dst.TopLeftY   = src.y;
+            dst.Width      = src.width;
+            dst.Height     = src.height;
+            dst.MinDepth   = src.minDepth;
+            dst.MaxDepth   = src.maxDepth;
         }
 
         commandList_->RSSetViewports(numViewports, viewportsD3D);
@@ -453,13 +464,13 @@ void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* s
 
     for_range(i, numScissors)
     {
-        const auto& src = scissors[i];
-        auto& dest = scissorsD3D[i];
+        const Scissor&  src = scissors[i];
+        D3D12_RECT&     dst = scissorsD3D[i];
 
-        dest.left   = src.x;
-        dest.top    = src.y;
-        dest.right  = src.x + src.width;
-        dest.bottom = src.y + src.height;
+        dst.left   = src.x;
+        dst.top    = src.y;
+        dst.right  = src.x + src.width;
+        dst.bottom = src.y + src.height;
     }
 
     commandList_->RSSetScissorRects(numScissors, scissorsD3D);
@@ -486,7 +497,7 @@ void D3D12CommandBuffer::Clear(long flags, const ClearValue& clearValue)
         /* Clear color buffers */
         if ((flags & ClearFlags::Color) != 0)
         {
-            auto rtvDescHandle = rtvDescHandle_;
+            D3D12_CPU_DESCRIPTOR_HANDLE rtvDescHandle = rtvDescHandle_;
             for_range(i, numColorBuffers_)
             {
                 commandList_->ClearRenderTargetView(rtvDescHandle, clearValue.color, 0, nullptr);
@@ -498,7 +509,7 @@ void D3D12CommandBuffer::Clear(long flags, const ClearValue& clearValue)
     if (dsvDescHandle_.ptr != 0)
     {
         /* Clear depth-stencil buffer */
-        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
+        if (D3D12_CLEAR_FLAGS clearFlagsDSV = GetClearFlagsDSV(flags))
         {
             commandList_->ClearDepthStencilView(
                 dsvDescHandle_,
@@ -516,14 +527,14 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 {
     for_range(i, numAttachments)
     {
-        const auto& clearOp = attachments[i];
+        const AttachmentClear& clearOp = attachments[i];
 
         if (rtvDescHandle_.ptr != 0)
         {
             /* Clear color buffers */
             if ((clearOp.flags & ClearFlags::Color) != 0)
             {
-                auto rtvDescHandle = rtvDescHandle_;
+                D3D12_CPU_DESCRIPTOR_HANDLE rtvDescHandle = rtvDescHandle_;
                 rtvDescHandle.ptr += (rtvDescSize_ * clearOp.colorAttachment);
                 commandList_->ClearRenderTargetView(rtvDescHandle, clearOp.clearValue.color, 0, nullptr);
             }
@@ -532,7 +543,7 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
         if (dsvDescHandle_.ptr != 0)
         {
             /* Clear depth-stencil buffer */
-            if (auto clearFlagsDSV = GetClearFlagsDSV(clearOp.flags))
+            if (D3D12_CLEAR_FLAGS clearFlagsDSV = GetClearFlagsDSV(clearOp.flags))
             {
                 commandList_->ClearDepthStencilView(
                     dsvDescHandle_,
@@ -574,7 +585,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    auto indexBufferView = bufferD3D.GetIndexBufferView();
+    D3D12_INDEX_BUFFER_VIEW indexBufferView = bufferD3D.GetIndexBufferView();
     if (indexBufferView.SizeInBytes > offset)
     {
         /* Update buffer location and size by offset, and override format */
@@ -601,7 +612,7 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
         if (resourceHeapD3D.GetDescriptorHeap(heapType) != nullptr)
         {
             /* Copies the entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
-            auto gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
                 heapType,
                 resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
                 0,
@@ -644,7 +655,7 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     if (!(descriptor < boundPipelineLayout_->GetNumBindings()))
         return /*E_INVALIDARG*/;
 
-    const auto& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
+    const D3D12DescriptorLocation& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
     if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
     {
         D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr = GetD3DResourceGPUAddr(resource);
@@ -660,7 +671,7 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     else
     {
         /* Bind resource with staging descriptor heap */
-        const auto& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
+        const D3D12DescriptorHeapLocation& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
         commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
     }
 }
@@ -706,7 +717,7 @@ void D3D12CommandBuffer::BeginRenderPass(
     /* Clear attachments */
     if (renderPass)
     {
-        auto renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
+        auto* renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
         ClearAttachmentsWithRenderPass(*renderPassD3D, numClearValues, clearValues);
     }
 }
@@ -779,16 +790,16 @@ void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std:
     if (boundPipelineLayout_ == nullptr || boundPipelineState_ == nullptr)
         return /*E_POINTER*/;
 
-    const std::uint32_t dataSizeInWords = dataSize / 4;
-    const std::uint32_t maxNumUniforms  = boundPipelineLayout_->GetNumUniforms();
-    const auto& rootConstantMap = boundPipelineState_->GetRootConstantMap();
+    const std::uint32_t                             dataSizeInWords = dataSize / 4;
+    const std::uint32_t                             maxNumUniforms  = boundPipelineLayout_->GetNumUniforms();
+    const std::vector<D3D12RootConstantLocation>&   rootConstantMap = boundPipelineState_->GetRootConstantMap();
 
     for (auto words = reinterpret_cast<const UINT*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
     {
         if (first >= maxNumUniforms)
             return /*E_INVALIDARG*/;
 
-        const auto& rootConstantLocation = rootConstantMap[first];
+        const D3D12RootConstantLocation& rootConstantLocation = rootConstantMap[first];
         UINT wordOffset = rootConstantLocation.wordOffset;
         for_range(i, rootConstantLocation.num32BitValues)
         {
@@ -858,7 +869,7 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
     /* Store native buffer views and transition resources */
     for_range(i, numBuffers)
     {
-        auto bufferD3D = LLGL_CAST(D3D12Buffer*, buffers[i]);
+        auto* bufferD3D = LLGL_CAST(D3D12Buffer*, buffers[i]);
         buffersD3D[i] = bufferD3D;
         soBufferViews[i] = bufferD3D->GetSOBufferView();
         commandContext_.TransitionResource(bufferD3D->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
@@ -866,7 +877,7 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
     commandContext_.FlushResourceBarrieres();
 
     /* Reset counter values in buffers by copying from a static zero-initialized buffer to the stream-output targets */
-    const auto srcBufferView = D3D12BufferConstantsPool::Get().FetchConstants(D3D12BufferConstants::ZeroUInt64);
+    const D3D12BufferConstantsView srcBufferView = D3D12BufferConstantsPool::Get().FetchConstants(D3D12BufferConstants::ZeroUInt64);
 
     for_range(i, numBuffers)
     {
@@ -1034,16 +1045,6 @@ bool D3D12CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
 
 
 /*
- * ======= Internal: =======
- */
-
-void D3D12CommandBuffer::Execute()
-{
-    commandContext_.Execute();
-}
-
-
-/*
  * ======= Private: =======
  */
 
@@ -1060,8 +1061,7 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
     auto& device = renderSystem.GetDevice();
 
     /* Create command context and store reference to command list */
-    auto commandQueueD3D = LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue());
-    commandContext_.Create(device, *commandQueueD3D, GetD3DCommandListType(desc), desc.numNativeBuffers, desc.minStagingPoolSize, true);
+    commandContext_.Create(device, GetD3DCommandListType(desc), desc.numNativeBuffers, desc.minStagingPoolSize, true);
     commandList_ = commandContext_.GetCommandList();
 
     /* Store increment size for descriptor heaps */
@@ -1143,8 +1143,8 @@ std::uint32_t D3D12CommandBuffer::ClearAttachmentsWithRenderPass(
 {
     std::uint32_t clearValueIndex = 0;
 
-    const auto* colorBuffers        = renderPassD3D.GetClearColorAttachments();
-    const auto  numColorClearValues = std::min(numClearValues, numColorBuffers_);
+    const std::uint8_t* colorBuffers        = renderPassD3D.GetClearColorAttachments();
+    const std::uint32_t numColorClearValues = std::min(numClearValues, numColorBuffers_);
 
     /* Clear color attachments */
     if (rtvDescHandle_.ptr != 0)
@@ -1161,7 +1161,7 @@ std::uint32_t D3D12CommandBuffer::ClearAttachmentsWithRenderPass(
             ++clearValueIndex;
 
         /* Clear active DSV with specified clear value */
-        if (auto clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
+        if (D3D12_CLEAR_FLAGS clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
             ClearDepthStencilView(clearFlagsDSV, numClearValues, clearValues, clearValueIndex, numRects, rects);
     }
 
@@ -1182,7 +1182,7 @@ std::uint32_t D3D12CommandBuffer::ClearRenderTargetViews(
     for_range(i, numClearValues)
     {
         /* Check if attachment list has ended */
-        const auto targetIndex = colorBuffers[i];
+        const std::uint8_t targetIndex = colorBuffers[i];
         if (targetIndex == 0xFF)
             return clearValueIndex;
 
@@ -1201,7 +1201,7 @@ std::uint32_t D3D12CommandBuffer::ClearRenderTargetViews(
     for_subrange(i, numClearValues, numColorBuffers_)
     {
         /* Check if attachment list has ended */
-        const auto targetIndex = colorBuffers[i];
+        const std::uint8_t targetIndex = colorBuffers[i];
         if (targetIndex == 0xFF)
             return clearValueIndex;
 

@@ -32,16 +32,16 @@ class DDSImageReader
         }
 
         // Returns the source image descriptor that can be passed as initial data to the RenderSystem::CreateTexture function.
-        inline const LLGL::SrcImageDescriptor& GetImageDesc() const
+        inline const LLGL::ImageView& GetImageView() const
         {
-            return imageDesc_;
+            return imageView_;
         }
 
     private:
 
-        LLGL::TextureDescriptor     texDesc_;
-        LLGL::SrcImageDescriptor    imageDesc_;
-        std::vector<char>           data_;
+        LLGL::TextureDescriptor texDesc_;
+        LLGL::ImageView         imageView_;
+        std::vector<char>       data_;
 
 };
 

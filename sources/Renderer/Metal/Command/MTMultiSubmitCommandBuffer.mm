@@ -189,7 +189,7 @@ void MTMultiSubmitCommandBuffer::FillBuffer(
 
     /* Determine buffer range for fill command */
     NSRange range;
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         NSUInteger bufferSize = [dstBufferMT.GetNative() length];
         range = NSMakeRange(0, bufferSize);
@@ -441,6 +441,15 @@ void MTMultiSubmitCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std
     }
 }
 
+void MTMultiSubmitCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
+{
+    auto cmd = AllocCommand<MTCmdSetResource>(MTOpcodeSetResource);
+    {
+        cmd->descriptor = descriptor;
+        cmd->resource   = &resource;
+    }
+}
+
 void MTMultiSubmitCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
@@ -602,6 +611,16 @@ void MTMultiSubmitCommandBuffer::SetStencilReference(std::uint32_t reference, co
     {
         cmd->ref    = reference;
         cmd->face   = stencilFace;
+    }
+}
+
+void MTMultiSubmitCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    auto cmd = AllocCommand<MTCmdSetUniforms>(MTOpcodeSetUniforms, dataSize);
+    {
+        cmd->first      = first;
+        cmd->dataSize   = dataSize;
+        ::memcpy(cmd + 1, data, dataSize);
     }
 }
 

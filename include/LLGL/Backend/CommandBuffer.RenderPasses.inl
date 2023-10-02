@@ -12,7 +12,7 @@ virtual void BeginRenderPass(
     const LLGL::RenderPass*         renderPass      = nullptr,
     std::uint32_t                   numClearValues  = 0,
     const LLGL::ClearValue*         clearValues     = nullptr,
-    std::uint32_t                   swapBufferIndex = LLGL::Constants::currentSwapIndex
+    std::uint32_t                   swapBufferIndex = LLGL_CURRENT_SWAP_INDEX
 ) override final;
 
 virtual void EndRenderPass(

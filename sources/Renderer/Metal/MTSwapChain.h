@@ -19,9 +19,6 @@
 
 
 @interface MTSwapChainViewDelegate : NSObject <MTKViewDelegate>
-
--(nonnull instancetype)initWithCanvas:(LLGL::Canvas&)canvas;
-
 @end
 
 

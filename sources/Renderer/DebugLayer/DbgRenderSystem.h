@@ -10,6 +10,8 @@
 
 
 #include <LLGL/RenderSystem.h>
+#include <LLGL/RenderingDebugger.h>
+
 #include "DbgSwapChain.h"
 #include "DbgCommandBuffer.h"
 #include "DbgCommandQueue.h"
@@ -42,7 +44,9 @@ class DbgRenderSystem final : public RenderSystem
 
     public:
 
-        DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
+        DbgRenderSystem(RenderSystemPtr&& instance, RenderingDebugger* debugger);
+
+        void FlushProfile();
 
     private:
 
@@ -61,7 +65,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
         void ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc);
 
-        void ValidateTextureDesc(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr);
+        void ValidateTextureDesc(const TextureDescriptor& textureDesc, const ImageView* initialImage = nullptr);
         void ValidateTextureFormatSupported(const Format format);
         void ValidateTextureDescMipLevels(const TextureDescriptor& textureDesc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
@@ -87,7 +91,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
 
-        void ValidateColorMaskIsDisabled(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx);
+        void ValidateBlendTargetDescriptor(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx);
         void ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc);
         void ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc);
@@ -114,8 +118,8 @@ class DbgRenderSystem final : public RenderSystem
 
         RenderSystemPtr                         instance_;
 
-        RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;
+        FrameProfile                            profile_;
 
         const RenderingCapabilities&            caps_;
         const RenderingFeatures&                features_;

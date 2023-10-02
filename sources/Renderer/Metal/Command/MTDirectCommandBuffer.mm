@@ -52,11 +52,6 @@ MTDirectCommandBuffer::MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueu
     cmdBufferSemaphore_ = dispatch_semaphore_create(maxCmdBuffers);
 }
 
-MTDirectCommandBuffer::~MTDirectCommandBuffer()
-{
-    [cmdBuffer_ release];
-}
-
 /* ----- Encoding ----- */
 
 void MTDirectCommandBuffer::Begin()
@@ -229,7 +224,7 @@ void MTDirectCommandBuffer::FillBuffer(
 
     /* Determine buffer range for fill command */
     NSRange range;
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         NSUInteger bufferSize = [dstBufferMT.GetNative() length];
         range = NSMakeRange(0, bufferSize);
@@ -489,6 +484,11 @@ void MTDirectCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uin
     }
 }
 
+void MTDirectCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
+{
+    context_.SetResource(descriptor, resource);
+}
+
 void MTDirectCommandBuffer::ResetResourceSlots(
     const ResourceType  resourceType,
     std::uint32_t       firstSlot,
@@ -646,6 +646,11 @@ void MTDirectCommandBuffer::SetBlendFactor(const float color[4])
 void MTDirectCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace stencilFace)
 {
     context_.SetStencilRef(reference, stencilFace);
+}
+
+void MTDirectCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+{
+    context_.SetUniforms(first, data, dataSize);
 }
 
 /* ----- Queries ----- */

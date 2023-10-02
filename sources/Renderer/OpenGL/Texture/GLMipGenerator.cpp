@@ -75,8 +75,7 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
         else
         {
             /* Generate MIP-maps in custom sub generation process */
-            auto extent = textureGL.GetMipExtent(baseMipLevel);
-
+            const Extent3D extent = textureGL.GetMipExtent(baseMipLevel);
             GenerateMipsRangeWithFBO(
                 stateMngr,
                 textureGL,
@@ -118,9 +117,9 @@ void GLMipGenerator::GenerateMipsPrimary(GLStateManager& stateMngr, GLuint texID
     }
 }
 
-static void GetNextMipSize(GLint& s)
+static void NextMipSize(GLint& s)
 {
-    s = std::max(1u, s / 2u);
+    s = std::max(1, s / 2);
 }
 
 static void BlitFramebufferLinear(GLint srcWidth, GLint srcHeight, GLint dstWidth, GLint dstHeight)
@@ -131,14 +130,14 @@ static void BlitFramebufferLinear(GLint srcWidth, GLint srcHeight, GLint dstWidt
 static void GenerateMipsRangeTexture1D(const Extent3D& extent, GLuint texID, GLint baseMipLevel, GLint numMipLevels)
 {
     /* Get extent of base MIP level */
-    auto srcWidth = static_cast<GLint>(extent.width);
+    GLint srcWidth = static_cast<GLint>(extent.width);
 
-    auto dstWidth = srcWidth;
+    GLint dstWidth = srcWidth;
 
     /* Blit current MIP level into next MIP level with linear sampling filter */
-    for (auto mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
+    for (GLint mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
     {
-        GetNextMipSize(dstWidth);
+        NextMipSize(dstWidth);
 
         GLProfile::FramebufferTexture1D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, texID, mipLevel);
         GLProfile::FramebufferTexture1D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, texID, mipLevel + 1);
@@ -152,17 +151,17 @@ static void GenerateMipsRangeTexture1D(const Extent3D& extent, GLuint texID, GLi
 static void GenerateMipsRangeTexture2D(const Extent3D& extent, GLuint texID, GLenum texTarget, GLint baseMipLevel, GLint numMipLevels)
 {
     /* Get extent of base MIP level */
-    auto srcWidth   = static_cast<GLint>(extent.width);
-    auto srcHeight  = static_cast<GLint>(extent.height);
+    GLint srcWidth  = static_cast<GLint>(extent.width);
+    GLint srcHeight = static_cast<GLint>(extent.height);
 
-    auto dstWidth   = srcWidth;
-    auto dstHeight  = srcHeight;
+    GLint dstWidth  = srcWidth;
+    GLint dstHeight = srcHeight;
 
     /* Blit current MIP level into next MIP level with linear sampling filter */
-    for (auto mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
+    for (GLint mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
     {
-        GetNextMipSize(dstWidth);
-        GetNextMipSize(dstHeight);
+        NextMipSize(dstWidth);
+        NextMipSize(dstHeight);
 
         GLProfile::FramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, mipLevel);
         GLProfile::FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, mipLevel + 1);
@@ -177,17 +176,17 @@ static void GenerateMipsRangeTexture2D(const Extent3D& extent, GLuint texID, GLe
 static void GenerateMipsRangeTextureLayer(const Extent3D& extent, GLuint texID, GLint baseMipLevel, GLint numMipLevels, GLint arrayLayer)
 {
     /* Get extent of base MIP level */
-    auto srcWidth   = static_cast<GLint>(extent.width);
-    auto srcHeight  = static_cast<GLint>(extent.height);
+    GLint srcWidth  = static_cast<GLint>(extent.width);
+    GLint srcHeight = static_cast<GLint>(extent.height);
 
-    auto dstWidth   = srcWidth;
-    auto dstHeight  = srcHeight;
+    GLint dstWidth  = srcWidth;
+    GLint dstHeight = srcHeight;
 
     /* Blit current MIP level into next MIP level with linear sampling filter */
-    for (auto mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
+    for (GLint mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
     {
-        GetNextMipSize(dstWidth);
-        GetNextMipSize(dstHeight);
+        NextMipSize(dstWidth);
+        NextMipSize(dstHeight);
 
         GLProfile::FramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, mipLevel, arrayLayer);
         GLProfile::FramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, mipLevel + 1, arrayLayer);
@@ -237,6 +236,9 @@ void GLMipGenerator::GenerateMipsRangeWithFBO(
             break;
 
             case TextureType::Texture3D:
+            {
+                //TODO
+            }
             break;
 
             case TextureType::TextureCube:
@@ -252,13 +254,16 @@ void GLMipGenerator::GenerateMipsRangeWithFBO(
             case TextureType::TextureCubeArray:
             {
                 /* Generate MIP-maps for each specified array layer */
-                for (auto arrayLayer = baseArrayLayer; arrayLayer < baseArrayLayer + numArrayLayers; ++arrayLayer)
+                for_subrange(arrayLayer, baseArrayLayer, baseArrayLayer + numArrayLayers)
                     GenerateMipsRangeTextureLayer(extent, texID, baseMipLevel, numMipLevels, arrayLayer);
             }
             break;
 
             case TextureType::Texture2DMS:
             case TextureType::Texture2DMSArray:
+            {
+                // Do nothing - multisample textures don't have MIP-maps
+            }
             break;
         }
     }
@@ -277,10 +282,10 @@ void GLMipGenerator::GenerateMipsRangeWithTextureView(
     GLuint          numArrayLayers)
 {
     /* Get GL texture ID and texture target */
-    auto texID          = textureGL.GetID();
-    auto texType        = textureGL.GetType();
-    auto texTarget      = GLTypes::Map(texType);
-    auto internalFormat = textureGL.GetGLInternalFormat();
+    TextureType texType         = textureGL.GetType();
+    GLuint      texID           = textureGL.GetID();
+    GLenum      texTarget       = GLTypes::Map(texType);
+    GLenum      internalFormat  = textureGL.GetGLInternalFormat();
 
     /* Generate new texture to be used as view (due to immutable storage) */
     GLuint texViewID = 0;

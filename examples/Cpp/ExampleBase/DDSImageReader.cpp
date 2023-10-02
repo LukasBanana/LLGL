@@ -195,19 +195,19 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     {
         // Read image with BC1 compression (DXT1)
         texDesc_.format     = LLGL::Format::BC1UNorm;
-        imageDesc_.format   = LLGL::ImageFormat::BC1;
+        imageView_.format   = LLGL::ImageFormat::BC1;
     }
     else if (IsFourCC("DXT2") || IsFourCC("DXT3"))
     {
         // Read image with BC2 compression (DXT2 or DXT3)
         texDesc_.format     = LLGL::Format::BC2UNorm;
-        imageDesc_.format   = LLGL::ImageFormat::BC2;
+        imageView_.format   = LLGL::ImageFormat::BC2;
     }
     else if (IsFourCC("DXT4") || IsFourCC("DXT5"))
     {
         // Read image with BC3 compression (DXT4 or DXT5)
         texDesc_.format     = LLGL::Format::BC3UNorm;
-        imageDesc_.format   = LLGL::ImageFormat::BC3;
+        imageView_.format   = LLGL::ImageFormat::BC3;
     }
     /*else if (IsFourCC("DX10"))
     {
@@ -251,9 +251,9 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     file.read(data_.data(), bufferSize);
 
     // Store final image source descriptor
-    imageDesc_.dataType = LLGL::DataType::UInt8;
-    imageDesc_.data     = data_.data();
-    imageDesc_.dataSize = data_.size();
+    imageView_.dataType = LLGL::DataType::UInt8;
+    imageView_.data     = data_.data();
+    imageView_.dataSize = data_.size();
 }
 
 

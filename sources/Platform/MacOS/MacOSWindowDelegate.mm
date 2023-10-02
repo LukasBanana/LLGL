@@ -18,27 +18,14 @@
 - (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window
 {
     self = [super init];
-    
-    window_         = window;
-    resizeSignaled_ = NO;
-    fullscreenMode_ = NO;
-
+    if (self != nil)
+        self->window_ = window;
     return self;
 }
 
 - (LLGL::MacOSWindow*) windowInstance
 {
     return window_;
-}
-
-- (nullable const LLGL::Extent2D*)pollResizeSignal
-{
-    if (resizeSignaled_)
-    {
-        resizeSignaled_ = NO;
-        return (&resizeSignaledExtent_);
-    }
-    return nullptr;
 }
 
 - (BOOL)isFullscreenMode
@@ -51,15 +38,19 @@
     window_->PostQuit();
 }
 
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+    window_->PostGetFocus();
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+    window_->PostLostFocus();
+}
+
 - (void)windowDidResize:(NSNotification*)notification
 {
-    //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
-    #if 0
     window_->PostResize(window_->GetContentSize());
-    #else
-    resizeSignaled_         = YES;
-    resizeSignaledExtent_   = window_->GetContentSize();
-    #endif
 }
 
 - (NSApplicationPresentationOptions)window:(NSWindow*)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
@@ -88,18 +79,12 @@
 
 - (void)windowDidEnterFullScreen:(NSNotification*)notification
 {
-    //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
-    #if 0
     window_->PostResize(window_->GetContentSize());
-    #else
-    resizeSignaled_         = YES;
-    resizeSignaledExtent_   = window_->GetContentSize();
-    #endif
 }
 
 - (void)windowDidExitFullScreen:(NSNotification*)notification
 {
-    [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationDefault];
+    [NSApp setPresentationOptions:NSApplicationPresentationDefault];
     fullscreenMode_ = NO;
 }
 

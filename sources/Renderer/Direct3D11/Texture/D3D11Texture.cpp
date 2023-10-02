@@ -226,13 +226,13 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
 }
 
 HRESULT D3D11Texture::UpdateSubresource(
-    ID3D11DeviceContext*        context,
-    UINT                        mipLevel,
-    UINT                        baseArrayLayer,
-    UINT                        numArrayLayers,
-    const D3D11_BOX&            dstBox,
-    const SrcImageDescriptor&   imageDesc,
-    Report*                     report)
+    ID3D11DeviceContext*    context,
+    UINT                    mipLevel,
+    UINT                    baseArrayLayer,
+    UINT                    numArrayLayers,
+    const D3D11_BOX&        dstBox,
+    const ImageView&        imageView,
+    Report*                 report)
 {
     /* Check if source image must be converted */
     Format format = GetBaseFormat();
@@ -246,28 +246,28 @@ HRESULT D3D11Texture::UpdateSubresource(
         dstBox.back   - dstBox.front
     };
 
-    const SubresourceCPUMappingLayout dataLayout = CalcSubresourceCPUMappingLayout(format, extent, numArrayLayers, imageDesc.format, imageDesc.dataType);
+    const SubresourceCPUMappingLayout dataLayout = CalcSubresourceCPUMappingLayout(format, extent, numArrayLayers, imageView.format, imageView.dataType);
 
-    if (imageDesc.dataSize < dataLayout.imageSize)
+    if (imageView.dataSize < dataLayout.imageSize)
     {
         if (report != nullptr)
         {
             report->Errorf(
                 "image data size (%zu) is too small to update subresource of D3D11 texture (%zu is required)",
-                imageDesc.dataSize, dataLayout.imageSize
+                imageView.dataSize, dataLayout.imageSize
             );
         }
         return E_INVALIDARG;
     }
 
     DynamicByteArray intermediateData;
-    const char* srcData = reinterpret_cast<const char*>(imageDesc.data);
+    const char* srcData = reinterpret_cast<const char*>(imageView.data);
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
-        (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
+        (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
         LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }

@@ -17,8 +17,8 @@ namespace LLGL
 {
 
 
-struct SrcImageDescriptor;
-struct DstImageDescriptor;
+struct ImageView;
+struct MutableImageView;
 struct TextureViewDescriptor;
 class GL2XSampler;
 
@@ -48,7 +48,7 @@ class GLTexture final : public Texture
         ~GLTexture();
 
         // Initializes the texture storage with an optional image data; the texture will be bound to the current active texture unit.
-        void BindAndAllocStorage(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr);
+        void BindAndAllocStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage = nullptr);
 
         // Copies the specified source texture into this texture.
         void CopyImageSubData(
@@ -81,10 +81,10 @@ class GLTexture final : public Texture
         );
 
         // Writes the specified image data to a subregion of this texture.
-        void TextureSubImage(const TextureRegion& region, const SrcImageDescriptor& imageDesc, bool restoreBoundTexture = true);
+        void TextureSubImage(const TextureRegion& region, const ImageView& srcImageView, bool restoreBoundTexture = true);
 
         // Reads the specified image data from a subregion of this texture.
-        void GetTextureSubImage(const TextureRegion& region, const DstImageDescriptor& imageDesc, bool restoreBoundTexture = true);
+        void GetTextureSubImage(const TextureRegion& region, const MutableImageView& dstImageView, bool restoreBoundTexture = true);
 
         // Returns the GL_TEXTURE_TARGET parameter of this texture.
         GLenum GetGLTexTarget() const;
@@ -142,10 +142,11 @@ class GLTexture final : public Texture
 
     private:
 
-        void AllocTextureStorage(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc);
+        void AllocTextureStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage);
         void AllocRenderbufferStorage(const TextureDescriptor& textureDesc);
 
-        void QueryInternalFormat();
+        GLenum GetTextureInternalFormat() const;
+        GLenum GetRenderbufferInternalFormat() const;
 
         void GetTextureParams(GLint* extent, GLint* samples) const;
         void GetRenderbufferParams(GLint* extent, GLint* samples) const;

@@ -126,7 +126,7 @@ bool D3D12SwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 
 UINT D3D12SwapChain::TranslateSwapIndex(std::uint32_t swapBufferIndex) const
 {
-    if (swapBufferIndex == Constants::currentSwapIndex)
+    if (swapBufferIndex == LLGL_CURRENT_SWAP_INDEX)
         return currentColorBuffer_;
     else
         return std::min(swapBufferIndex, numColorBuffers_ - 1);

@@ -24,10 +24,11 @@ constexpr float epsilon = 0.00001f;
 
 enum class TestResult
 {
-    Continue,       // Continue testing.
-    Passed,         // Test passed.
-    FailedMismatch, // Test failed due to mismatch between expected and given data.
-    FailedErrors,   // Test failed due to interface errors.
+    Continue,           // Continue testing.
+    ContinueSkipFrame,  // Continue testing, skip frame output.
+    Passed,             // Test passed.
+    FailedMismatch,     // Test failed due to mismatch between expected and given data.
+    FailedErrors,       // Test failed due to interface errors.
 };
 
 class TestbedContext
@@ -59,7 +60,7 @@ class TestbedContext
             const LLGL::TextureDescriptor&  desc,
             const char*                     name,
             LLGL::Texture**                 output,
-            const LLGL::SrcImageDescriptor* initialImage = nullptr
+            const LLGL::ImageView*          initialImage = nullptr
         );
 
         TestResult CreateRenderTarget(
@@ -73,8 +74,17 @@ class TestbedContext
         enum Models
         {
             ModelCube = 0,
+            ModelRect,
 
             ModelCount,
+        };
+
+        enum Pipelines
+        {
+            PipelineSolid,
+            PipelineTextured,
+
+            PipelineCount,
         };
 
         enum Shaders
@@ -85,6 +95,25 @@ class TestbedContext
             PSTextured,
 
             ShaderCount,
+        };
+
+        enum Textures
+        {
+            TextureGrid10x10 = 0,
+            TextureGradient,
+            TexturePaintingA,
+
+            TextureCount,
+        };
+
+        enum Samplers
+        {
+            SamplerNearest = 0,
+            SamplerNearestClamp,
+            SamplerLinear,
+            SamplerLinearClamp,
+
+            SamplerCount,
         };
 
         enum DiffErrors
@@ -156,74 +185,39 @@ class TestbedContext
 
     protected:
 
-        const std::string           moduleName;
-        const std::string           outputDir;
-        const bool                  verbose;
-        const bool                  sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
-        const bool                  showTiming;
-        const bool                  fastTest;       // Skip slow buffer/texture creations to speed up test run
+        const std::string               moduleName;
+        const std::string               outputDir;
+        const bool                      verbose;
+        const bool                      pedantic;       // Ignore thresholds, always compare strictly against reference values
+        const bool                      greedy;         // Continue testing on failure
+        const bool                      sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
+        const bool                      showTiming;
+        const bool                      fastTest;       // Skip slow buffer/texture creations to speed up test run
+        const std::vector<std::string>  selectedTests;
 
-        unsigned                    failures                = 0;
+        unsigned                        failures                = 0;
 
-        LLGL::RenderingProfiler     profiler;
-        LLGL::RenderingDebugger     debugger;
-        LLGL::RenderSystemPtr       renderer;
-        LLGL::RenderingCapabilities caps;
-        LLGL::SwapChain*            swapChain               = nullptr;
-        LLGL::CommandBuffer*        cmdBuffer               = nullptr;
-        LLGL::CommandQueue*         cmdQueue                = nullptr;
-        LLGL::Surface*              surface                 = nullptr;
-        LLGL::Buffer*               meshBuffer              = nullptr;
-        LLGL::Buffer*               sceneCbuffer            = nullptr;
+        LLGL::RenderingDebugger         debugger;
+        LLGL::RenderSystemPtr           renderer;
+        LLGL::RenderingCapabilities     caps;
+        LLGL::SwapChain*                swapChain               = nullptr;
+        LLGL::CommandBuffer*            cmdBuffer               = nullptr;
+        LLGL::CommandQueue*             cmdQueue                = nullptr;
+        LLGL::Surface*                  surface                 = nullptr;
+        LLGL::Buffer*                   meshBuffer              = nullptr;
+        LLGL::Buffer*                   sceneCbuffer            = nullptr;
 
-        LLGL::VertexFormat          vertexFormat;
-        IndexedTriangleMesh         models[ModelCount];
-        LLGL::Shader*               shaders[ShaderCount]    = {};
-        Gs::Matrix4f                projection;
+        LLGL::VertexFormat              vertexFormat;
+        IndexedTriangleMesh             models[ModelCount];
+        LLGL::Shader*                   shaders[ShaderCount]    = {};
+        LLGL::PipelineLayout*           layouts[PipelineCount]  = {};
+        LLGL::Texture*                  textures[TextureCount]  = {};
+        LLGL::Sampler*                  samplers[SamplerCount]  = {};
+        Gs::Matrix4f                    projection;
 
     private:
 
-        /* --- Renderer independent (RI) tests --- */
-
-        #define DECL_RITEST(NAME) \
-            static TestResult Test##NAME()
-
-        DECL_RITEST( ContainerDynamicArray );
-        DECL_RITEST( ContainerSmallVector );
-        DECL_RITEST( ContainerUTF8String );
-        DECL_RITEST( ParseSamplerDesc );
-
-        #undef DECL_RITEST
-
-        /* --- Main tests --- */
-
-        #define DECL_TEST(NAME) \
-            TestResult Test##NAME(unsigned frame)
-
-        // Command buffer tests
-        DECL_TEST( CommandBufferSubmit );
-
-        // Resource tests
-        DECL_TEST( BufferWriteAndRead );
-        DECL_TEST( BufferMap );
-        DECL_TEST( BufferFill );
-        DECL_TEST( BufferUpdate );
-        DECL_TEST( BufferCopy );
-        DECL_TEST( BufferToTextureCopy );
-        DECL_TEST( TextureCopy );
-        DECL_TEST( TextureToBufferCopy );
-        DECL_TEST( TextureWriteAndRead );
-        DECL_TEST( TextureTypes );
-        DECL_TEST( RenderTargetNoAttachments );
-        DECL_TEST( RenderTarget1Attachment );
-        DECL_TEST( RenderTargetNAttachments );
-
-        // Rendering tests
-        DECL_TEST( DepthBuffer );
-        DECL_TEST( StencilBuffer );
-        DECL_TEST( SceneUpdate );
-
-        #undef DECL_TEST
+        #include "UnitTests/DeclTests.inl"
 
     private:
 
@@ -236,11 +230,16 @@ class TestbedContext
         void LogRendererInfo();
 
         bool LoadShaders();
-        void LoadProjectionMatrix(float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
+        void CreatePipelineLayouts();
+        bool LoadTextures();
+        void CreateSamplerStates();
+        void LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio = 1.0f, float nearPlane = 0.1f, float farPlane = 100.0f, float fov = 45.0f);
+        void LoadDefaultProjectionMatrix();
 
         void CreateTriangleMeshes();
 
         void CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
+        void CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
 
         void CreateConstantBuffers();
 
@@ -248,6 +247,9 @@ class TestbedContext
         void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
         void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
         void SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
+
+        LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, LLGL::Format format, const LLGL::Extent2D& extent);
+        void SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly = false);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
         DiffResult DiffImages(const std::string& name, int threshold = 1, int scale = 1);

@@ -36,7 +36,7 @@ inline bool IsBufferViewEnabled(const BufferViewDescriptor& bufferViewDesc)
     (
         bufferViewDesc.format != Format::Undefined   ||
         bufferViewDesc.offset != 0                   ||
-        bufferViewDesc.size   != Constants::wholeSize
+        bufferViewDesc.size   != LLGL_WHOLE_SIZE
     );
 }
 

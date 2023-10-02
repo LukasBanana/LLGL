@@ -40,7 +40,6 @@
 #include "../RenderState/GLRenderPass.h"
 #include "../RenderState/GLQueryHeap.h"
 
-#include <LLGL/StaticLimits.h>
 #include <algorithm>
 
 

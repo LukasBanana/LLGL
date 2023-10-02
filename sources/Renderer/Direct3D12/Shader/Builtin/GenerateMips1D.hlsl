@@ -57,7 +57,7 @@ SamplerState                linearClampSampler  : register(s0);
         "addressU = TEXTURE_ADDRESS_CLAMP,"
         "addressV = TEXTURE_ADDRESS_CLAMP,"
         "addressW = TEXTURE_ADDRESS_CLAMP,"
-        "filter = FILTER_MIN_MAG_LINEAR_MIP_POINT"
+        "filter   = FILTER_MIN_MAG_LINEAR_MIP_POINT"
     ")"
 )]
 [numthreads(64, 1, 1)]

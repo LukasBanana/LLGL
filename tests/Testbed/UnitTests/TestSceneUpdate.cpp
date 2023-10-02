@@ -17,9 +17,7 @@ DEF_TEST( SceneUpdate )
 {
     const Extent2D resolution{ swapChain->GetResolution() };
 
-    static Texture*         readbackTex;
-    static PipelineLayout*  psoLayout;
-    static PipelineState*   pso;
+    static PipelineState* pso;
 
     if (frame == 0)
     {
@@ -29,24 +27,10 @@ DEF_TEST( SceneUpdate )
             return TestResult::FailedErrors;
         }
 
-        // Create texture for readback
-        TextureDescriptor texDesc;
-        {
-            texDesc.format          = swapChain->GetColorFormat(); // Swap-chain format to use for screen capture
-            texDesc.extent.width    = resolution.width;
-            texDesc.extent.height   = resolution.height;
-            texDesc.bindFlags       = BindFlags::CopyDst;
-            texDesc.mipLevels       = 1;
-        }
-        readbackTex = renderer->CreateTexture(texDesc);
-        readbackTex->SetName("readbackTex");
-
         // Create PSO for rendering to the depth buffer
-        psoLayout = renderer->CreatePipelineLayout(Parse("cbuffer(Scene@1):vert:frag"));
-
         GraphicsPipelineDescriptor psoDesc;
         {
-            psoDesc.pipelineLayout      = psoLayout;
+            psoDesc.pipelineLayout      = layouts[PipelineSolid];
             psoDesc.renderPass          = swapChain->GetRenderPass();
             psoDesc.vertexShader        = shaders[VSSolid];
             psoDesc.fragmentShader      = shaders[PSSolid];
@@ -65,6 +49,10 @@ DEF_TEST( SceneUpdate )
             }
         }
     }
+
+    // Skip every other frame on fast test
+    if (fastTest && (frame % 2 == 0))
+        return TestResult::ContinueSkipFrame;
 
     // Update scene constants
     sceneConstants = SceneConstants{};
@@ -87,7 +75,9 @@ DEF_TEST( SceneUpdate )
     constexpr unsigned numFrames = 10;
     const float rotation = static_cast<float>(frame) * 90.0f / static_cast<float>(numFrames - 1);
 
-    const TextureRegion texRegionFullRes{ Offset3D{}, Extent3D{ resolution.width, resolution.height, 1 } };
+    Texture* readbackTex = nullptr;
+
+    const IndexedTriangleMesh& mesh = models[ModelCube];
 
     // Render scene
     cmdBuffer->Begin();
@@ -99,54 +89,43 @@ DEF_TEST( SceneUpdate )
             cmdBuffer->SetPipelineState(*pso);
             cmdBuffer->SetViewport(resolution);
             cmdBuffer->SetVertexBuffer(*meshBuffer);
-            cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, models[ModelCube].indexBufferOffset);
+            cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
             cmdBuffer->SetResource(0, *sceneCbuffer);
 
             // Draw top part
             sceneConstants.solidColor = { 1.0f, 0.7f, 0.6f, 1.0f }; // red
             TransformWorldMatrix(sceneConstants.wMatrix, 0.5f, 0.5f, rotation);
             cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-            cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
+            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
             // Draw middle part
             sceneConstants.solidColor = { 0.5f, 1.0f, 0.4f, 1.0f }; // green
             TransformWorldMatrix(sceneConstants.wMatrix, -0.25f, 0.25f, rotation);
             cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-            cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
+            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
             // Draw bottom part
             sceneConstants.solidColor = { 0.3f, 0.7f, 1.0f, 1.0f }; // blue
             TransformWorldMatrix(sceneConstants.wMatrix, -0.75f, 0.25f, rotation);
             cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-            cmdBuffer->DrawIndexed(models[ModelCube].numIndices, 0);
+            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
-            cmdBuffer->CopyTextureFromFramebuffer(*readbackTex, texRegionFullRes, Offset2D{});
+            // Capture framebuffer
+            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), resolution);
         }
         cmdBuffer->EndRenderPass();
     }
     cmdBuffer->End();
 
     // Match entire color buffer and create delta heat map
-    std::vector<ColorRGBub> readbackColorBuffer;
-    readbackColorBuffer.resize(resolution.width * resolution.height);
-
-    DstImageDescriptor dstImageDesc;
-    {
-        dstImageDesc.format     = ImageFormat::RGB;
-        dstImageDesc.data       = readbackColorBuffer.data();
-        dstImageDesc.dataSize   = sizeof(decltype(readbackColorBuffer)::value_type) * readbackColorBuffer.size();
-        dstImageDesc.dataType   = DataType::UInt8;
-    }
-    renderer->ReadTexture(*readbackTex, texRegionFullRes, dstImageDesc);
-
     const std::string colorBufferName = "ColorBuffer_Frame" + std::to_string(frame);
 
-    SaveColorImage(readbackColorBuffer, resolution, colorBufferName);
+    SaveCapture(readbackTex, colorBufferName);
 
     const DiffResult diff = DiffImages(colorBufferName);
 
     // Evaluate readback result
-    static bool diffFailed = false;
+    bool diffFailed = false;
     if (diff)
     {
         Log::Errorf("Mismatch between reference and result images for color buffer [frame %u] (%s)\n", frame, diff.Print());
@@ -158,8 +137,6 @@ DEF_TEST( SceneUpdate )
 
     // Clear resources
     renderer->Release(*pso);
-    renderer->Release(*psoLayout);
-    renderer->Release(*readbackTex);
 
     return (diffFailed ? TestResult::FailedMismatch : TestResult::Passed);
 }

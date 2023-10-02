@@ -25,16 +25,13 @@ int main()
     try
     {
         // Setup profiler and debugger
-        std::shared_ptr<LLGL::RenderingProfiler> profiler;
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
-        profiler = std::make_shared<LLGL::RenderingProfiler>();
         debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
         LLGL::RenderSystemDescriptor rendererDesc = "OpenGL";
         {
-            rendererDesc.profiler = profiler.get();
             rendererDesc.debugger = debugger.get();
         }
         auto renderer = LLGL::RenderSystem::Load(rendererDesc);
@@ -205,12 +202,12 @@ int main()
             { 255, 0, 255 }
         };
 
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.format    = LLGL::ImageFormat::RGB;
-            imageDesc.dataType  = LLGL::DataType::UInt8;
-            imageDesc.data      = image;
-            imageDesc.dataSize  = 2*2*3;
+            imageView.format    = LLGL::ImageFormat::RGB;
+            imageView.dataType  = LLGL::DataType::UInt8;
+            imageView.data      = image;
+            imageView.dataSize  = 2*2*3;
         }
         LLGL::TextureDescriptor textureDesc;
         {
@@ -219,7 +216,7 @@ int main()
             textureDesc.extent.width    = 2;
             textureDesc.extent.height   = 2;
         }
-        auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
+        auto& texture = *renderer->CreateTexture(textureDesc, &imageView);
 
         LLGL::TextureRegion subTexDesc;
         {
@@ -232,7 +229,7 @@ int main()
             subTexDesc.subresource.baseMipLevel     = 0;
             subTexDesc.subresource.numMipLevels     = 1;
         }
-        //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
+        //renderer->WriteTexture(texture, subTexDesc, imageView); // update 2D texture
 
         //auto textureQueryDesc = texture.GetDesc();
 
@@ -328,8 +325,7 @@ int main()
         // Main loop
         while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
-            if (profiler)
-                profiler->NextProfile();
+            debugger->FlushProfile();
 
             commands->Begin();
             {

@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Format.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 
 
 namespace LLGL

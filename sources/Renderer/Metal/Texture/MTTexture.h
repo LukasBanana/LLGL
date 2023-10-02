@@ -18,8 +18,8 @@ namespace LLGL
 {
 
 
-struct SrcImageDescriptor;
-struct DstImageDescriptor;
+struct ImageView;
+struct MutableImageView;
 struct SubresourceCPUMappingLayout;
 struct FormatAttributes;
 class MTIntermediateBuffer;
@@ -40,14 +40,14 @@ class MTTexture final : public Texture
         MTLRegion GetSubresourceRegion(NSUInteger mipLevel) const;
 
         // Copies the source image data to the specified texture region; 'numMipLevel' must be 1.
-        void WriteRegion(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc);
+        void WriteRegion(const TextureRegion& textureRegion, const ImageView& srcImageView);
 
         // Copies the specified texture region to the destination image data; 'numMipLevel' must be 1.
         void ReadRegion(
-            const TextureRegion&        textureRegion,
-            const DstImageDescriptor&   imageDesc,
-            id<MTLCommandQueue>         cmdQueue            = nil,
-            MTIntermediateBuffer*       intermediateBuffer  = nullptr
+            const TextureRegion&    textureRegion,
+            const MutableImageView& dstImageView,
+            id<MTLCommandQueue>     cmdQueue            = nil,
+            MTIntermediateBuffer*   intermediateBuffer  = nullptr
         );
 
         // Creats a new MTLTexture object as subresource view from this texture.
@@ -69,7 +69,7 @@ class MTTexture final : public Texture
             const TextureSubresource&           subresource,
             const FormatAttributes&             formatAttribs,
             const SubresourceCPUMappingLayout&  layout,
-            const DstImageDescriptor&           imageDesc
+            const MutableImageView&             dstImageView
         );
 
         void ReadRegionFromPrivateMemory(
@@ -77,7 +77,7 @@ class MTTexture final : public Texture
             const TextureSubresource&           subresource,
             const FormatAttributes&             formatAttribs,
             const SubresourceCPUMappingLayout&  layout,
-            const DstImageDescriptor&           imageDesc,
+            const MutableImageView&             dstImageView,
             id<MTLCommandQueue>                 cmdQueue,
             MTIntermediateBuffer&               intermediateBuffer
         );

@@ -31,15 +31,15 @@ static void QueryGLInternalFormat(GLenum target, GLenum& internalFormat)
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1DBase(
-    GLenum                      target,
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::uint32_t               width,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLenum              target,
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::uint32_t       width,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     QueryGLInternalFormat(target, internalFormat);
-    if (IsCompressedFormat(imageDesc.format))
+    if (IsCompressedFormat(imageView.format))
     {
         glCompressedTexSubImage1D(
             target,
@@ -47,8 +47,8 @@ static void GLTexSubImage1DBase(
             x,
             static_cast<GLsizei>(width),
             internalFormat,
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
+            static_cast<GLsizei>(imageView.dataSize),
+            imageView.data
         );
     }
     else
@@ -58,9 +58,9 @@ static void GLTexSubImage1DBase(
             static_cast<GLint>(mipLevel),
             x,
             static_cast<GLsizei>(width),
-            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
+            GLTypes::Map(imageView.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
+            GLTypes::Map(imageView.dataType),
+            imageView.data
         );
     }
 }
@@ -68,17 +68,17 @@ static void GLTexSubImage1DBase(
 #endif
 
 static void GLTexSubImage2DBase(
-    GLenum                      target,
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLenum              target,
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     QueryGLInternalFormat(target, internalFormat);
-    if (IsCompressedFormat(imageDesc.format))
+    if (IsCompressedFormat(imageView.format))
     {
         glCompressedTexSubImage2D(
             target,
@@ -88,8 +88,8 @@ static void GLTexSubImage2DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             internalFormat,
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
+            static_cast<GLsizei>(imageView.dataSize),
+            imageView.data
         );
     }
     else
@@ -101,27 +101,27 @@ static void GLTexSubImage2DBase(
             y,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
-            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
+            GLTypes::Map(imageView.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
+            GLTypes::Map(imageView.dataType),
+            imageView.data
         );
     }
 }
 
 static void GLTexSubImage3DBase(
-    GLenum                      target,
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::int32_t                z,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    std::uint32_t               depth,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    GLenum              target,
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::int32_t        z,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     QueryGLInternalFormat(target, internalFormat);
-    if (IsCompressedFormat(imageDesc.format))
+    if (IsCompressedFormat(imageView.format))
     {
         glCompressedTexSubImage3D(
             target,
@@ -133,8 +133,8 @@ static void GLTexSubImage3DBase(
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
             internalFormat,
-            static_cast<GLsizei>(imageDesc.dataSize),
-            imageDesc.data
+            static_cast<GLsizei>(imageView.dataSize),
+            imageView.data
         );
     }
     else
@@ -148,9 +148,9 @@ static void GLTexSubImage3DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
-            GLTypes::Map(imageDesc.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
-            GLTypes::Map(imageDesc.dataType),
-            imageDesc.data
+            GLTypes::Map(imageView.format, GLTypes::IsIntegerTypedFormat(internalFormat)),
+            GLTypes::Map(imageView.dataType),
+            imageView.data
         );
     }
 }
@@ -158,18 +158,18 @@ static void GLTexSubImage3DBase(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1D(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::uint32_t               width,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::uint32_t       width,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage1DBase(
         GL_TEXTURE_1D,
         mipLevel,
         x,
         width,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
@@ -177,13 +177,13 @@ static void GLTexSubImage1D(
 #endif
 
 static void GLTexSubImage2D(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage2DBase(
         GL_TEXTURE_2D,
@@ -192,21 +192,21 @@ static void GLTexSubImage2D(
         y,
         width,
         height,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
 static void GLTexSubImage3D(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::int32_t                z,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    std::uint32_t               depth,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::int32_t        z,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage3DBase(
         GL_TEXTURE_3D,
@@ -217,20 +217,20 @@ static void GLTexSubImage3D(
         width,
         height,
         depth,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
 static void GLTexSubImageCube(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    std::uint32_t               cubeFaceIndex,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       cubeFaceIndex,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage2DBase(
         GLTypes::ToTextureCubeMap(cubeFaceIndex),
@@ -239,7 +239,7 @@ static void GLTexSubImageCube(
         y,
         width,
         height,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
@@ -247,13 +247,13 @@ static void GLTexSubImageCube(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1DArray(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::uint32_t               firstLayer,
-    std::uint32_t               width,
-    std::uint32_t               numLayers,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::uint32_t       firstLayer,
+    std::uint32_t       width,
+    std::uint32_t       numLayers,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage2DBase(
         GL_TEXTURE_1D_ARRAY,
@@ -262,7 +262,7 @@ static void GLTexSubImage1DArray(
         static_cast<std::int32_t>(firstLayer),
         width,
         numLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
@@ -270,15 +270,15 @@ static void GLTexSubImage1DArray(
 #endif
 
 static void GLTexSubImage2DArray(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::uint32_t               firstLayer,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    std::uint32_t               numLayers,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::uint32_t       firstLayer,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       numLayers,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage3DBase(
         GL_TEXTURE_2D_ARRAY,
@@ -289,7 +289,7 @@ static void GLTexSubImage2DArray(
         width,
         height,
         numLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
@@ -297,15 +297,15 @@ static void GLTexSubImage2DArray(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImageCubeArray(
-    std::uint32_t               mipLevel,
-    std::int32_t                x,
-    std::int32_t                y,
-    std::uint32_t               firstLayer,
-    std::uint32_t               width,
-    std::uint32_t               height,
-    std::uint32_t               numLayers,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    std::uint32_t       mipLevel,
+    std::int32_t        x,
+    std::int32_t        y,
+    std::uint32_t       firstLayer,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       numLayers,
+    const ImageView&    imageView,
+    GLenum              internalFormat)
 {
     GLTexSubImage3DBase(
         GL_TEXTURE_CUBE_MAP_ARRAY,
@@ -316,25 +316,25 @@ static void GLTexSubImageCubeArray(
         width,
         height,
         numLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTexSubImage1D(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImage1D(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImage1D(
         region.subresource.baseMipLevel,
         region.offset.x,
         region.extent.width,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
 #endif
 
-static void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImage2D(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImage2D(
         region.subresource.baseMipLevel,
@@ -342,12 +342,12 @@ static void GLTexSubImage2D(const TextureRegion& region, const SrcImageDescripto
         region.offset.y,
         region.extent.width,
         region.extent.height,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImage3D(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImage3D(
         region.subresource.baseMipLevel,
@@ -357,12 +357,12 @@ static void GLTexSubImage3D(const TextureRegion& region, const SrcImageDescripto
         region.extent.width,
         region.extent.height,
         region.extent.depth,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
-static void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImageCube(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImageCube(
         region.subresource.baseMipLevel,
@@ -371,14 +371,14 @@ static void GLTexSubImageCube(const TextureRegion& region, const SrcImageDescrip
         region.extent.width,
         region.extent.height,
         region.subresource.baseArrayLayer,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
 #ifdef LLGL_OPENGL
 
-static void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImage1DArray(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImage1DArray(
         region.subresource.baseMipLevel,
@@ -386,14 +386,14 @@ static void GLTexSubImage1DArray(const TextureRegion& region, const SrcImageDesc
         region.subresource.baseArrayLayer,
         region.extent.width,
         region.subresource.numArrayLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
 #endif
 
-static void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImage2DArray(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImage2DArray(
         region.subresource.baseMipLevel,
@@ -403,14 +403,14 @@ static void GLTexSubImage2DArray(const TextureRegion& region, const SrcImageDesc
         region.extent.width,
         region.extent.height,
         region.subresource.numArrayLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
 
 #ifdef LLGL_OPENGL
 
-static void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDescriptor& imageDesc, GLenum internalFormat)
+static void GLTexSubImageCubeArray(const TextureRegion& region, const ImageView& imageView, GLenum internalFormat)
 {
     GLTexSubImageCubeArray(
         region.subresource.baseMipLevel,
@@ -420,7 +420,7 @@ static void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDe
         region.extent.width,
         region.extent.height,
         region.subresource.numArrayLayers,
-        imageDesc,
+        imageView,
         internalFormat
     );
 }
@@ -428,49 +428,49 @@ static void GLTexSubImageCubeArray(const TextureRegion& region, const SrcImageDe
 #endif
 
 bool GLTexSubImage(
-    const TextureType           type,
-    const TextureRegion&        region,
-    const SrcImageDescriptor&   imageDesc,
-    GLenum                      internalFormat)
+    const TextureType       type,
+    const TextureRegion&    region,
+    const ImageView&        imageView,
+    GLenum                  internalFormat)
 {
     //TODO: on-the-fly decompression would be awesome (if GL_ARB_texture_compression is unsupported), but a lot of work :-/
     /* If compressed format is requested, GL_ARB_texture_compression must be supported */
-    if (IsCompressedFormat(imageDesc.format) && !HasExtension(GLExt::ARB_texture_compression))
+    if (IsCompressedFormat(imageView.format) && !HasExtension(GLExt::ARB_texture_compression))
         return false;
 
     switch (type)
     {
         #ifdef LLGL_OPENGL
         case TextureType::Texture1D:
-            GLTexSubImage1D(region, imageDesc, internalFormat);
+            GLTexSubImage1D(region, imageView, internalFormat);
             break;
         #endif
 
         case TextureType::Texture2D:
-            GLTexSubImage2D(region, imageDesc, internalFormat);
+            GLTexSubImage2D(region, imageView, internalFormat);
             break;
 
         case TextureType::Texture3D:
-            GLTexSubImage3D(region, imageDesc, internalFormat);
+            GLTexSubImage3D(region, imageView, internalFormat);
             break;
 
         case TextureType::TextureCube:
-            GLTexSubImageCube(region, imageDesc, internalFormat);
+            GLTexSubImageCube(region, imageView, internalFormat);
             break;
 
         #ifdef LLGL_OPENGL
         case TextureType::Texture1DArray:
-            GLTexSubImage1DArray(region, imageDesc, internalFormat);
+            GLTexSubImage1DArray(region, imageView, internalFormat);
             break;
         #endif
 
         case TextureType::Texture2DArray:
-            GLTexSubImage2DArray(region, imageDesc, internalFormat);
+            GLTexSubImage2DArray(region, imageView, internalFormat);
             break;
 
         #ifdef LLGL_OPENGL
         case TextureType::TextureCubeArray:
-            GLTexSubImageCubeArray(region, imageDesc, internalFormat);
+            GLTexSubImageCubeArray(region, imageView, internalFormat);
             break;
         #endif
 

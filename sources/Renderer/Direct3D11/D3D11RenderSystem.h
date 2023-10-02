@@ -93,7 +93,7 @@ class D3D11RenderSystem final : public RenderSystem
         void InitializeGpuTexture(
             D3D11Texture&               textureD3D,
             const TextureDescriptor&    textureDesc,
-            const SrcImageDescriptor*   imageDesc
+            const ImageView*            initialImage
         );
 
     private:

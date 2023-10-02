@@ -72,19 +72,19 @@ for ARG in "$@"; do
         VERBOSE=1
     elif [ "$ARG" = "-S" ] || [ "$ARG" = "--skip-validation" ]; then
         SKIP_VALIDATION=1
-    elif [ "$ARG" = "-null" ]; then
+    elif [ "$ARG" = "--null" ]; then
         ENABLE_NULL="ON"
-    elif [ "$ARG" = "-vulkan" ]; then
+    elif [ "$ARG" = "--vulkan" ]; then
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--d3d11" ]; then
         if [ $PLATFORM_MSYS -eq 1 ]; then
             ENABLE_D3D11="ON"
         else
-            echo warning: D3D11 backend is only supported for MSYS
+            echo "Warning: D3D11 backend is only supported for MSYS"
         fi
-    elif [ "$ARG" = "-no-examples" ]; then
+    elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
-    elif [ "$ARG" = "-no-tests" ]; then
+    elif [ "$ARG" = "--no-tests" ]; then
         ENABLE_TESTS="OFF"
     elif [ ! "$ARG" = "-msys" ]; then
         OUTPUT_DIR="$ARG"
@@ -98,7 +98,7 @@ fi
 
 # Ensure we are inside the repository folder
 if [ ! -f "CMakeLists.txt" ]; then
-    echo "error: file not found: CMakeLists.txt"
+    echo "Error: File not found: CMakeLists.txt"
     exit 1
 fi
 

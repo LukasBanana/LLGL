@@ -26,7 +26,7 @@ D3D12CommandQueue::D3D12CommandQueue(
     native_     { device.CreateDXCommandQueue(type) },
     queueFence_ { device.GetNative()                }
 {
-    commandContext_.Create(device, *this);
+    commandContext_.Create(device);
     DetermineTimestampFrequency();
 }
 
@@ -42,7 +42,7 @@ void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
     /* Execute command list */
     auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
     if (!commandBufferD3D.IsImmediateCmdBuffer())
-        commandBufferD3D.Execute();
+        commandBufferD3D.GetCommandContext().ExecuteAndSignal(*this);
 }
 
 /* ----- Queries ----- */
@@ -60,15 +60,15 @@ bool D3D12CommandQueue::QueryResult(
     if (queryHeapD3D.InsideDirtyRange(firstQuery, numQueries))
     {
         queryHeapD3D.FlushDirtyRange(commandContext_.GetCommandList());
-        commandContext_.Finish(true);
+        commandContext_.FinishAndSync(*this);
     }
 
     /* Map query result buffer to CPU local memory */
-    auto mappedData = queryHeapD3D.Map(firstQuery, numQueries);
+    void* mappedData = queryHeapD3D.Map(firstQuery, numQueries);
     if (mappedData == nullptr)
         return false;
 
-    const auto queryType = queryHeapD3D.GetNativeType();
+    const D3D12_QUERY_TYPE queryType = queryHeapD3D.GetNativeType();
     bool result = false;
 
     if (dataSize == numQueries * sizeof(std::uint32_t))

@@ -106,7 +106,7 @@ struct BufferViewDescriptor
     BufferViewDescriptor() = default;
 
     //! Initializes the descriptor with all or only some of the components.
-    inline BufferViewDescriptor(Format format, std::uint64_t offset = 0, std::uint64_t size = Constants::wholeSize) :
+    inline BufferViewDescriptor(Format format, std::uint64_t offset = 0, std::uint64_t size = LLGL_WHOLE_SIZE) :
         format { format },
         offset { offset },
         size   { size   }
@@ -123,7 +123,7 @@ struct BufferViewDescriptor
 
     /**
     \brief Specifies the memory offset (in bytes) into the buffer resource. By default 0.
-    \remarks If \c size is equal to \c Constants::wholeSize, the offset is ignored and the entire buffer resource will be occupied by this buffer view.
+    \remarks If \c size is equal to \c LLGL_WHOLE_SIZE, the offset is ignored and the entire buffer resource will be occupied by this buffer view.
     \remarks If \c format is Format::Undefined, this \b must be aligned to the \c stride the buffer resource was created with.
     \remarks If \c format is \e not Format::Undefined, this \b must be aligned to the size of \c format.
     \see RenderingLimits::minConstantBufferAlignment
@@ -134,16 +134,16 @@ struct BufferViewDescriptor
     std::uint64_t   offset  = 0;
 
     /**
-    \brief Specifies the memory offset (in bytes) into the buffer resource. By default \c Constants::wholeSize.
-    \remarks If \c size is \c Constants::wholeSize, then \c offset is ignored and the whole buffer range will be used.
-    \remarks If \c size is \e not \c Constants::wholeSize and \c format is Format::Undefined, this \b must be aligned to the \c stride the buffer resource was created with.
-    \remarks If \c size is \e not \c Constants::wholeSize and \c format is \e not Format::Undefined, this \b must be aligned to the size of \c format.
+    \brief Specifies the memory offset (in bytes) into the buffer resource. By default \c LLGL_WHOLE_SIZE.
+    \remarks If \c size is \c LLGL_WHOLE_SIZE, then \c offset is ignored and the whole buffer range will be used.
+    \remarks If \c size is \e not \c LLGL_WHOLE_SIZE and \c format is Format::Undefined, this \b must be aligned to the \c stride the buffer resource was created with.
+    \remarks If \c size is \e not \c LLGL_WHOLE_SIZE and \c format is \e not Format::Undefined, this \b must be aligned to the size of \c format.
     \see RenderingLimits::minConstantBufferAlignment
     \see RenderingLimits::minSampledBufferAlignment
     \see RenderingLimits::minStorageBufferAlignment
     \see GetFormatAttribs
     */
-    std::uint64_t   size    = Constants::wholeSize;
+    std::uint64_t   size    = LLGL_WHOLE_SIZE;
 };
 
 

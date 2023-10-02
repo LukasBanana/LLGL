@@ -15,14 +15,15 @@ namespace LLGL
 {
 
 
-D3D12SubresourceContext::D3D12SubresourceContext(D3D12CommandContext& commandContext) :
-    commandContext_ { commandContext }
+D3D12SubresourceContext::D3D12SubresourceContext(D3D12CommandContext& commandContext, D3D12CommandQueue& commandQueue) :
+    commandContext_ { commandContext },
+    commandQueue_   { commandQueue   }
 {
 }
 
 D3D12SubresourceContext::~D3D12SubresourceContext()
 {
-    commandContext_.Finish(true);
+    commandContext_.FinishAndSync(commandQueue_);
 }
 
 ID3D12Resource* D3D12SubresourceContext::CreateUploadBuffer(UINT64 size, D3D12_RESOURCE_STATES initialState)

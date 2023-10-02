@@ -349,7 +349,7 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
     auto bufferInfo = setWriter.NextBufferInfo();
     {
         bufferInfo->buffer = bufferVK->GetVkBuffer();
-        if (desc.bufferView.size == Constants::wholeSize)
+        if (desc.bufferView.size == LLGL_WHOLE_SIZE)
         {
             bufferInfo->offset  = 0;
             bufferInfo->range   = bufferVK->GetSize();

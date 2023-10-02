@@ -14,6 +14,7 @@
 #include "VKDescriptorSetWriter.h"
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Container/ArrayView.h>
+#include <mutex>
 
 
 namespace LLGL
@@ -45,13 +46,13 @@ class VKDescriptorCache
         void Reset();
 
         // Emplaces a descriptor into the cache for the specified resource.
-        void EmplaceDescriptor(Resource& resource, const VKLayoutBinding& binding);
+        void EmplaceDescriptor(Resource& resource, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter);
 
         /*
         Flushes all changed descriptor by allocating a new descriptor set.
         Otherwise, no changes took place (i.e. IsInvalidated() is false) and VK_NULL_HANDLE is returned.
         */
-        VkDescriptorSet FlushDescriptorSet(VKStagingDescriptorSetPool& pool);
+        VkDescriptorSet FlushDescriptorSet(VKStagingDescriptorSetPool& pool, VKDescriptorSetWriter& setWriter);
 
         // Returns true if any cache entries are invalidated and need to be flushed again.
         inline bool IsInvalidated() const
@@ -59,14 +60,20 @@ class VKDescriptorCache
             return dirty_;
         }
 
+        // Returns the total number of descriptors handled by this cache. The VKDescriptorSetWriter must hold at least this many descriptors.
+        inline std::uint32_t GetNumDescriptors() const
+        {
+            return numDescriptors_;
+        }
+
     private:
 
-        VkDescriptorBufferInfo* NextBufferInfoOrUpdateCache();
-        VkDescriptorImageInfo* NextImageInfoOrUpdateCache();
+        VkDescriptorBufferInfo* NextBufferInfoOrUpdateCache(VKDescriptorSetWriter& setWriter);
+        VkDescriptorImageInfo* NextImageInfoOrUpdateCache(VKDescriptorSetWriter& setWriter);
 
-        void EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding);
-        void EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding);
-        void EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKLayoutBinding& binding);
+        void EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter);
+        void EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter);
+        void EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter);
 
         void BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings);
         void UpdateCopyDescriptorSet(VkDescriptorSet dstSet);
@@ -79,8 +86,8 @@ class VKDescriptorCache
         SmallVector<VkDescriptorPoolSize, 4>    poolSizes_;
 
         std::uint32_t                           numDescriptors_ = 0;                // Total number of descriptors in cache.
-        VKDescriptorSetWriter                   setWriter_;
         SmallVector<VkCopyDescriptorSet, 4>     copyDescs_;
+        std::mutex                              copyDescMutex_;
 
         bool                                    dirty_          = false;
 

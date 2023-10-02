@@ -7,9 +7,12 @@
 
 #include "LinuxModule.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/Exception.h"
 #include <dlfcn.h>
 #include <unistd.h>
 #include <stdexcept>
+#include <errno.h>
+#include <string.h>
 
 
 namespace LLGL
@@ -21,7 +24,12 @@ static std::string GetProgramPath()
 {
     /* Get filename of running program */
     char buf[1024] = { 0 };
-    (void)readlink("/proc/self/exe", buf, sizeof(buf));
+    ssize_t bufSize = readlink("/proc/self/exe", buf, sizeof(buf));
+    if (bufSize == -1)
+    {
+        int errorCode = errno;
+        LLGL_TRAP("readlink(/proc/self/exe) failed: errno=%d (%s)", errorCode, strerror(errorCode));
+    }
 
     /* Get path from program */
     std::string path = buf;

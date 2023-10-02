@@ -410,7 +410,7 @@ void D3D11CommandBuffer::FillBuffer(
     UINT valuesVec4[4] = { value, value, value, value };
 
     /* Clamp range to buffer size if whole buffer is meant to be filled */
-    if (fillSize == Constants::wholeSize)
+    if (fillSize == LLGL_WHOLE_SIZE)
     {
         dstOffset   = 0;
         fillSize    = dstBufferD3D.GetSize();

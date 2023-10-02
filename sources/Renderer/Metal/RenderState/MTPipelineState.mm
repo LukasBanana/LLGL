@@ -20,36 +20,12 @@ MTPipelineState::MTPipelineState(bool isGraphicsPSO, const PipelineLayout* pipel
     isGraphicsPSO_ { isGraphicsPSO }
 {
     if (pipelineLayout != nullptr)
-    {
         pipelineLayout_ = LLGL_CAST(const MTPipelineLayout*, pipelineLayout);
-        if (!pipelineLayout_->GetDynamicBindings().empty())
-            descriptorCache_ = MakeUnique<MTDescriptorCache>(pipelineLayout_->GetDynamicBindings());
-    }
 }
 
 const Report* MTPipelineState::GetReport() const
 {
     return (report_ ? &report_ : nullptr);
-}
-
-MTDescriptorCache* MTPipelineState::ResetAndGetDescriptorCache() const
-{
-    if (descriptorCache_)
-    {
-        descriptorCache_->Reset();
-        return descriptorCache_.get();
-    }
-    return nullptr;
-}
-
-MTConstantsCache* MTPipelineState::ResetAndGetConstantsCache() const
-{
-    if (constantsCache_)
-    {
-        constantsCache_->Reset();
-        return constantsCache_.get();
-    }
-    return nullptr;
 }
 
 
@@ -74,7 +50,7 @@ void MTPipelineState::CreateConstantsCacheForRenderPipeline(MTLRenderPipelineRef
         MTShaderReflectionArguments{ StageFlags::VertexStage,   reflection.vertexArguments   },
         MTShaderReflectionArguments{ StageFlags::FragmentStage, reflection.fragmentArguments },
     };
-    constantsCache_ = MakeUnique<MTConstantsCache>(args, pipelineLayout_->GetUniforms());
+    constantsCacheLayout_ = MakeUnique<MTConstantsCacheLayout>(args, pipelineLayout_->GetUniforms());
 }
 
 void MTPipelineState::CreateConstantsCacheForComputePipeline(MTLComputePipelineReflection* reflection)
@@ -83,7 +59,7 @@ void MTPipelineState::CreateConstantsCacheForComputePipeline(MTLComputePipelineR
     {
         MTShaderReflectionArguments{ StageFlags::ComputeStage, reflection.arguments },
     };
-    constantsCache_ = MakeUnique<MTConstantsCache>(args, pipelineLayout_->GetUniforms());
+    constantsCacheLayout_ = MakeUnique<MTConstantsCacheLayout>(args, pipelineLayout_->GetUniforms());
 }
 
 

@@ -12,12 +12,7 @@ project(LLGL_Tests)
 
 # === Source files ===
 
-# Test project files
-find_project_source_files( FilesTestbed                 "${TEST_PROJECTS_DIR}/Testbed"                  )
-
-find_project_source_files( FilesTest_BlendStates        "${TEST_PROJECTS_DIR}/Test_BlendStates.cpp"     )
 find_project_source_files( FilesTest_Compute            "${TEST_PROJECTS_DIR}/Test_Compute.cpp"         )
-find_project_source_files( FilesTest_Container          "${TEST_PROJECTS_DIR}/Test_Container.cpp"       )
 find_project_source_files( FilesTest_D3D12              "${TEST_PROJECTS_DIR}/Test_D3D12.cpp"           )
 find_project_source_files( FilesTest_Display            "${TEST_PROJECTS_DIR}/Test_Display.cpp"         )
 find_project_source_files( FilesTest_Image              "${TEST_PROJECTS_DIR}/Test_Image.cpp"           )
@@ -58,9 +53,7 @@ if(LLGL_BUILD_TESTS)
     endif()
     
     # Common tests
-    add_llgl_example_project(Test_BlendStates       CXX "${FilesTest_BlendStates}"      "${LLGL_MODULE_LIBS}")
     add_llgl_example_project(Test_Compute           CXX "${FilesTest_Compute}"          "${LLGL_MODULE_LIBS}")
-    add_llgl_example_project(Test_Container         CXX "${FilesTest_Container}"        "${LLGL_MODULE_LIBS}")
     add_llgl_example_project(Test_Display           CXX "${FilesTest_Display}"          "${LLGL_MODULE_LIBS}")
     add_llgl_example_project(Test_Image             CXX "${FilesTest_Image}"            "${LLGL_MODULE_LIBS}")
     add_llgl_example_project(Test_JIT               CXX "${FilesTest_JIT}"              "${LLGL_MODULE_LIBS}")
@@ -70,7 +63,7 @@ if(LLGL_BUILD_TESTS)
     add_llgl_example_project(Test_Window            CXX "${FilesTest_Window}"           "${LLGL_MODULE_LIBS}")
     
     # Testbed
-    add_llgl_example_project(Testbed                CXX "${FilesTestbed}"               "${LLGL_MODULE_LIBS}")
+    add_subdirectory(Testbed)
 endif(LLGL_BUILD_TESTS)
 
 

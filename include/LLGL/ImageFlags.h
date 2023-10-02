@@ -15,8 +15,10 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Container/DynamicArray.h>
+#include <LLGL/Deprecated.h>
 #include <memory>
 #include <cstdint>
+#include <cstddef>
 
 
 namespace LLGL
@@ -26,20 +28,80 @@ namespace LLGL
 /* ----- Structures ----- */
 
 /**
-\brief Descriptor structure for an image that is used as source for reading the image data.
-\remarks This kind of 'Image' is mainly used to fill a MIP-map within a hardware texture by reading from a source image.
-The counterpart for reading a MIP-map from a hardware texture by writing to a destination image is the DstImageDescriptor structure.
-\see DstImageDescriptor
+\brief Image view structure used as source when writing the image data to a hardware texture.
+\remarks This kind of image is mainly used to fill a MIP-map within a hardware texture by reading from a source image.
+The counterpart for reading a MIP-map from a hardware texture by writing to a destination image is the MutableImageView structure.
+\see MutableImageView
 \see ConvertImageBuffer
 \see RenderSystem::CreateTexture
 \see RenderSystem::WriteTexture
 */
-struct SrcImageDescriptor
+struct ImageView
+{
+    ImageView() = default;
+    ImageView(const ImageView&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
+        format   { format   },
+        dataType { dataType },
+        data     { data     },
+        dataSize { dataSize }
+    {
+    }
+
+    //! Specifies the image format. By default ImageFormat::RGBA.
+    ImageFormat format      = ImageFormat::RGBA;
+
+    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
+    DataType    dataType    = DataType::UInt8;
+
+    //! Read-only pointer to the image data.
+    const void* data        = nullptr;
+
+    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    std::size_t dataSize    = 0;
+};
+
+/**
+\brief Mutable image view structure used as destination when reading the image data from a hardware texture.
+\remarks This kind of image is mainly used to fill the image data of a hardware texture.
+\see ImageView
+\see ConvertImageBuffer
+\see RenderSystem::ReadTexture
+*/
+struct MutableImageView
+{
+    MutableImageView() = default;
+    MutableImageView(const MutableImageView&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline MutableImageView(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
+        format   { format   },
+        dataType { dataType },
+        data     { data     },
+        dataSize { dataSize }
+    {
+    }
+
+    //! Specifies the image format. By default ImageFormat::RGBA.
+    ImageFormat format      = ImageFormat::RGBA;
+
+    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
+    DataType    dataType    = DataType::UInt8;
+
+    //! Mutable pointer to the image data.
+    void*       data        = nullptr;
+
+    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    std::size_t dataSize    = 0;
+};
+
+struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use LLGL::ImageView instead!", "ImageView") SrcImageDescriptor
 {
     SrcImageDescriptor() = default;
     SrcImageDescriptor(const SrcImageDescriptor&) = default;
 
-    //! Constructor to initialize all attributes.
     inline SrcImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
         format   { format   },
         dataType { dataType },
@@ -48,32 +110,37 @@ struct SrcImageDescriptor
     {
     }
 
-    //! Specifies the image format. By default ImageFormat::RGBA.
+    inline SrcImageDescriptor(const ImageView& view) :
+        format   { view.format   },
+        dataType { view.dataType },
+        data     { view.data     },
+        dataSize { view.dataSize }
+    {
+    }
+
+    inline operator ImageView() const
+    {
+        #ifdef _MSC_VER
+        #pragma warning(push)
+        #pragma warning(disable : 4996)
+        #endif
+        return ImageView{ format, dataType, data, dataSize };
+        #ifdef _MSC_VER
+        #pragma warning(pop)
+        #endif
+    }
+
     ImageFormat format      = ImageFormat::RGBA;
-
-    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
     DataType    dataType    = DataType::UInt8;
-
-    //! Pointer to the read-only image data.
     const void* data        = nullptr;
-
-    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
     std::size_t dataSize    = 0;
 };
 
-/**
-\brief Descriptor structure for an image that is used as destination for writing the image data.
-\remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
-\see SrcImageDescriptor
-\see ConvertImageBuffer
-\see RenderSystem::ReadTexture
-*/
-struct DstImageDescriptor
+struct LLGL_DEPRECATED("LLGL::DstImageDescriptor is deprecated since 0.04b; Use LLGL::MutableImageView instead!", "MutableImageView") DstImageDescriptor
 {
     DstImageDescriptor() = default;
     DstImageDescriptor(const DstImageDescriptor&) = default;
 
-    //! Constructor to initialize all attributes.
     inline DstImageDescriptor(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
         format   { format   },
         dataType { dataType },
@@ -82,16 +149,29 @@ struct DstImageDescriptor
     {
     }
 
-    //! Specifies the image format. By default ImageFormat::RGBA.
+    inline DstImageDescriptor(const MutableImageView& view) :
+        format   { view.format   },
+        dataType { view.dataType },
+        data     { view.data     },
+        dataSize { view.dataSize }
+    {
+    }
+
+    inline operator MutableImageView() const
+    {
+        #ifdef _MSC_VER
+        #pragma warning(push)
+        #pragma warning(disable : 4996)
+        #endif
+        return MutableImageView{ format, dataType, data, dataSize };
+        #ifdef _MSC_VER
+        #pragma warning(pop)
+        #endif
+    }
+
     ImageFormat format      = ImageFormat::RGBA;
-
-    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
     DataType    dataType    = DataType::UInt8;
-
-    //! Pointer to the read/write image data.
     void*       data        = nullptr;
-
-    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
     std::size_t dataSize    = 0;
 };
 
@@ -106,10 +186,10 @@ struct DstImageDescriptor
 
 /**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
-\param[in] srcImageDesc Specifies the source image descriptor.
-\param[out] dstImageDesc Specifies the destination image descriptor.
+\param[in] srcImageView Specifies the source image view.
+\param[out] dstImageView Specifies the destination image view.
 \param[in] threadCount Specifies the number of threads to use for conversion.
-If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return True if any conversion was necessary. Otherwise, no conversion was necessary and the destination buffer is not modified!
 \note Compressed images and depth-stencil images cannot be converted.
@@ -119,22 +199,22 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 \throw std::invalid_argument If the source buffer is a null pointer.
 \throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
 \throw std::invalid_argument If the destination buffer is a null pointer.
-\see Constants::maxThreadCount
+\see LLGL_MAX_THREAD_COUNT
 \see GetMemoryFootprint
 */
 LLGL_EXPORT bool ConvertImageBuffer(
-    const SrcImageDescriptor&   srcImageDesc,
-    const DstImageDescriptor&   dstImageDesc,
-    unsigned                    threadCount = 0
+    const ImageView&        srcImageView,
+    const MutableImageView& dstImageView,
+    unsigned                threadCount = 0
 );
 
 /**
 \brief Converst the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
-\param[in] srcImageDesc Specifies the source image descriptor.
+\param[in] srcImageView Specifies the source image view.
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination image data type.
 \param[in] threadCount Specifies the number of threads to use for conversion.
-If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. <code>unsigned char</code>, <code>int</code>, <code>float</code> etc.).
@@ -143,38 +223,38 @@ This can be casted to the respective target data type (e.g. <code>unsigned char<
 \throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
 \throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
 \throw std::invalid_argument If the source buffer is a null pointer.
-\see Constants::maxThreadCount
+\see LLGL_MAX_THREAD_COUNT
 \see GetMemoryFootprint
 */
 LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
-    const SrcImageDescriptor&   srcImageDesc,
-    ImageFormat                 dstFormat,
-    DataType                    dstDataType,
-    unsigned                    threadCount = 0
+    const ImageView&    srcImageView,
+    ImageFormat         dstFormat,
+    DataType            dstDataType,
+    unsigned            threadCount = 0
 );
 
 /**
 \brief Decompresses the specified image buffer to RGBA format with 8-bit unsigned normalized integers.
-\param[in] srcImageDesc Specifies the source image descriptor.
+\param[in] srcImageView Specifies the source image image.
 \param[in] extent Specifies the image extent. This is required as most compression formats work in block sizes.
 \param[in] threadCount Specifies the number of threads to use for decompression.
-If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the decompressed image data or null if the compression format is not supported for decompression.
 */
 LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
-    const SrcImageDescriptor&   srcImageDesc,
-    const Extent2D&             extent,
-    unsigned                    threadCount = 0
+    const ImageView&    srcImageView,
+    const Extent2D&     extent,
+    unsigned            threadCount = 0
 );
 
 /**
 \brief Copies an image buffer region from the source buffer to the destination buffer.
-\param[out] dstImageDesc Specifies the destination image descriptor.
+\param[out] dstImageView Specifies the destination image view.
 \param[in] dstOffset Specifies the 3D offset of the destination image.
 \param[in] dstRowStride Specifies the number of pixels for each row in the destination image.
 \param[in] dstLayerStride Specifies the number of pixels for each slice in the destination image.
-\param[in] srcImageDesc Specifies the source image descriptor.
+\param[in] srcImageView Specifies the source image view.
 \param[in] srcOffset Specifies the 3D offset of the source image.
 \param[in] srcRowStride Specifies the number of pixels for each row in the source image.
 \param[in] srcLayerStride Specifies the number of pixels for each slice in the source image.
@@ -190,19 +270,19 @@ LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
 */
 LLGL_EXPORT void CopyImageBufferRegion(
     // Destination
-    const DstImageDescriptor&   dstImageDesc,
-    const Offset3D&             dstOffset,
-    std::uint32_t               dstRowStride,
-    std::uint32_t               dstLayerStride,
+    const MutableImageView& dstImageView,
+    const Offset3D&         dstOffset,
+    std::uint32_t           dstRowStride,
+    std::uint32_t           dstLayerStride,
 
     // Source
-    const SrcImageDescriptor&   srcImageDesc,
-    const Offset3D&             srcOffset,
-    std::uint32_t               srcRowStride,
-    std::uint32_t               srcLayerStride,
+    const ImageView&        srcImageView,
+    const Offset3D&         srcOffset,
+    std::uint32_t           srcRowStride,
+    std::uint32_t           srcLayerStride,
 
     // Region
-    const Extent3D&             extent
+    const Extent3D&         extent
 );
 
 /**

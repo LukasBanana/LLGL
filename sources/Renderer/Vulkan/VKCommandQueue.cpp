@@ -47,7 +47,7 @@ void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
     auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
     if (!commandBufferVK.IsImmediateCmdBuffer())
     {
-        auto result = VKSubmitCommandBuffer(
+        VkResult result = VKSubmitCommandBuffer(
             native_,
             commandBufferVK.GetVkCommandBuffer(),
             commandBufferVK.GetQueueSubmitFence()
