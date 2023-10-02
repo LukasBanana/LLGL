@@ -328,6 +328,12 @@ void D3D12CommandContext::SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12Desc
     }
 }
 
+void D3D12CommandContext::SetDescriptorHeapsOfOtherContext(const D3D12CommandContext& other)
+{
+    if (other.stateCache_.numDescriptorHeaps > 0)
+        SetDescriptorHeaps(other.stateCache_.numDescriptorHeaps, other.stateCache_.descriptorHeaps);
+}
+
 void D3D12CommandContext::PrepareStagingDescriptorHeaps(
     const D3D12DescriptorHeapSetLayout& layout,
     const D3D12RootParameterIndices&    indices)

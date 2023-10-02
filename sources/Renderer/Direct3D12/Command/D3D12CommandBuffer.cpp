@@ -83,6 +83,16 @@ void D3D12CommandBuffer::End()
 void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 {
     auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, deferredCommandBuffer);
+
+    /*
+    TODO:
+      D3D12 bundles can bind descriptor heaps but they must match the primary command buffer's descriptor heaps.
+      As a workaround, always bind the descriptor heaps that were cached in the secondary command buffer,
+      since those that are shader visible will be the same throughout the command encoding (see D3D12StagingDescriptorHeapPool).
+      Some kind of descriptor heap sharing/pooling should be implemented next.
+    */
+    commandContext_.SetDescriptorHeapsOfOtherContext(cmdBufferD3D.commandContext_);
+
     commandList_->ExecuteBundle(cmdBufferD3D.GetNative());
 }
 

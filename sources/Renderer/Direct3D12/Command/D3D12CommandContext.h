@@ -120,6 +120,8 @@ class D3D12CommandContext
         void SetPipelineState(ID3D12PipelineState* pipelineState);
         void SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps);
 
+        void SetDescriptorHeapsOfOtherContext(const D3D12CommandContext& other);
+
         void PrepareStagingDescriptorHeaps(
             const D3D12DescriptorHeapSetLayout& layout,
             const D3D12RootParameterIndices&    indices
