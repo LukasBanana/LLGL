@@ -163,9 +163,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         fileContent     = ReadFileString(shaderDesc.source);
         sourceCode      = fileContent.c_str();
         sourceLength    = fileContent.size();
-
-        if (shaderDesc.source != nullptr)
-            sourceName      = shaderDesc.source;
+        sourceName      = shaderDesc.name ? shaderDesc.name : shaderDesc.source;
     }
     else
     {

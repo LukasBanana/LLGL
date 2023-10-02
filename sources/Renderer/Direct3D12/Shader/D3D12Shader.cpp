@@ -263,7 +263,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         fileContent     = ReadFileString(shaderDesc.source);
         sourceCode      = fileContent.c_str();
         sourceLength    = fileContent.size();
-        sourceName      = shaderDesc.source;
+        sourceName      = shaderDesc.name ? shaderDesc.name : shaderDesc.source;
     }
     else
     {
