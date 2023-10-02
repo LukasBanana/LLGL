@@ -256,17 +256,20 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     std::string fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
+    const char* sourceName      = nullptr;
 
     if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
     {
         fileContent     = ReadFileString(shaderDesc.source);
         sourceCode      = fileContent.c_str();
         sourceLength    = fileContent.size();
+        sourceName      = shaderDesc.name ? shaderDesc.name : shaderDesc.source;
     }
     else
     {
         sourceCode      = shaderDesc.source;
         sourceLength    = shaderDesc.sourceSize;
+        sourceName      = shaderDesc.name;
     }
 
     /* Get parameter from union */
@@ -337,7 +340,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         hr = D3DCompile(
             sourceCode,
             sourceLength,
-            nullptr,                            // LPCSTR               pSourceName
+            sourceName,                         // LPCSTR               pSourceName
             defines,                            // D3D_SHADER_MACRO*    pDefines
             D3D_COMPILE_STANDARD_FILE_INCLUDE,  // ID3DInclude*         pInclude
             entry,                              // LPCSTR               pEntrypoint

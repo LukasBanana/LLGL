@@ -325,6 +325,16 @@ struct ShaderDescriptor
     const char*                 source          = nullptr;
 
     /**
+    \brief Pointer to the shader's name string. This is either a null terminated string or nullptr.
+    \remarks HLSL will automatically detect if this is NULL, and if the shader type is
+    ShaderSourceType::CodeFile the value at 'source' will automatically be used.
+    This is currently only supported on HLSL, and other backends will ignore this parameter.
+    \see sourceType
+    \note Only supported with: HLSL.
+    */
+    const char*                 name            = nullptr;
+
+    /**
     \brief Specifies the size of the shader source (excluding the null terminator).
     \remarks If this is zero, the 'source' member is expected to point to a null terminated string and the size is automatically determined.
     For the binary buffer source type (i.e. ShaderSourceType::BinaryBuffer), this must not be zero!
