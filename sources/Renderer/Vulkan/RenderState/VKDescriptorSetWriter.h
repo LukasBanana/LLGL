@@ -33,6 +33,12 @@ class VKDescriptorSetWriter
 
         void Reset();
 
+        void Reset(
+            std::uint32_t numResourceViewsMax,
+            std::uint32_t numReservedWrites     = 0,
+            std::uint32_t numReservedCopies     = 0
+        );
+
         VkDescriptorBufferInfo* NextBufferInfo();
         VkDescriptorImageInfo* NextImageInfo();
 

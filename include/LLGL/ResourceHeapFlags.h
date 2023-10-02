@@ -120,7 +120,7 @@ struct ResourceViewDescriptor
     \remarks This attribute is ignored if \e all of the following sub members have the respective value listed below:
     - \c bufferView.format is Format::Undefined;
     - \c bufferView.offset is 0.
-    - \c bufferView.size is \c Constants::wholeSize.
+    - \c bufferView.size is \c LLGL_WHOLE_SIZE.
     */
     BufferViewDescriptor    bufferView;
 

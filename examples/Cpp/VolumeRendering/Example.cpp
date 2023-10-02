@@ -166,12 +166,12 @@ private:
         {
             perlinNoise.GenerateBuffer(imageData, noiseTextureSize, noiseTextureSize, noiseTextureSize, 4);
         }
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.format    = LLGL::ImageFormat::R;
-            imageDesc.dataType  = LLGL::DataType::UInt8;
-            imageDesc.data      = imageData.data();
-            imageDesc.dataSize  = imageData.size();
+            imageView.format    = LLGL::ImageFormat::R;
+            imageView.dataType  = LLGL::DataType::UInt8;
+            imageView.data      = imageData.data();
+            imageView.dataSize  = imageData.size();
         }
         LLGL::TextureDescriptor texDesc;
         {
@@ -180,7 +180,7 @@ private:
             texDesc.extent      = { noiseTextureSize, noiseTextureSize, noiseTextureSize };
             texDesc.mipLevels   = 1;
         }
-        noiseTexture = renderer->CreateTexture(texDesc, &imageDesc);
+        noiseTexture = renderer->CreateTexture(texDesc, &imageView);
 
         // Create render target texture for depth-range
         CreateDepthRangeTextureAndRenderTarget(swapChain->GetResolution());

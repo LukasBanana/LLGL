@@ -36,9 +36,10 @@ static RenderPassDescriptor MakeRenderPassDesc(const SwapChain& swapChain)
     return renderPassDesc;
 }
 
-DbgSwapChain::DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc) :
-    instance { instance },
-    desc     { desc     }
+DbgSwapChain::DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc, const PresentCallback& presentCallback) :
+    instance         { instance        },
+    desc             { desc            },
+    presentCallback_ { presentCallback }
 {
     ShareSurfaceAndConfig(instance);
     if (const auto* renderPass = instance.GetRenderPass())
@@ -53,6 +54,8 @@ void DbgSwapChain::SetName(const char* name)
 void DbgSwapChain::Present()
 {
     instance.Present();
+    if (presentCallback_)
+        presentCallback_();
 }
 
 std::uint32_t DbgSwapChain::GetCurrentSwapIndex() const

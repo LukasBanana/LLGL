@@ -7,6 +7,7 @@
 
 #include "Testbed.h"
 #include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/Parse.h>
 #include <Gauss/ProjectionMatrix4.h>
 #include <string.h>
 #include <fstream>
@@ -18,7 +19,7 @@
 #include <stb/stb_image_write.h>
 
 
-#define ENABLE_GPU_DEBUGGER 1
+#define ENABLE_GPU_DEBUGGER 0//1
 #define ENABLE_CPU_DEBUGGER 0
 
 static constexpr const char* g_defaultOutputDir = "Output/";
@@ -43,6 +44,33 @@ static std::string FindOutputDir(int argc, char* argv[])
     return g_defaultOutputDir;
 }
 
+static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
+{
+    std::vector<std::string> selection;
+
+    // Gather all selected tests
+    for (int i = 0; i < argc; ++i)
+    {
+        if (::strncmp(argv[i], "-run=", 5) == 0)
+        {
+            const char* curr = argv[i] + 5;
+            while (const char* next = ::strchr(curr, ','))
+            {
+                selection.push_back(std::string(curr, next));
+                curr = next + 1;
+            }
+            if (*curr != '\0')
+                selection.push_back(curr);
+        }
+    }
+
+    // Sort and make test list unique
+    std::sort(selection.begin(), selection.end());
+    selection.erase(std::unique(selection.begin(), selection.end()), selection.end());
+
+    return selection;
+}
+
 static std::string SanitizePath(std::string path)
 {
     for (char& chr : path)
@@ -65,12 +93,15 @@ static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
 }
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
-    moduleName  { moduleName                                                                 },
-    outputDir   { SanitizePath(FindOutputDir(argc, argv))                                    },
-    verbose     { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
-    sanityCheck { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
-    showTiming  { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
-    fastTest    { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         }
+    moduleName    { moduleName                                                                 },
+    outputDir     { SanitizePath(FindOutputDir(argc, argv))                                    },
+    verbose       { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
+    pedantic      { HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic")     },
+    greedy        { HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy")       },
+    sanityCheck   { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
+    showTiming    { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
+    fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },
+    selectedTests { FindSelectedTests(argc, argv)                                              }
 {
     RendererConfigurationOpenGL cfgGL;
 
@@ -129,7 +160,10 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         CreateTriangleMeshes();
         CreateConstantBuffers();
         LoadShaders();
-        LoadProjectionMatrix();
+        CreatePipelineLayouts();
+        LoadTextures();
+        CreateSamplerStates();
+        LoadDefaultProjectionMatrix();
     }
 }
 
@@ -150,8 +184,43 @@ static void PrintTestResult(TestResult result, const char* name)
     ::fflush(stdout);
 }
 
-static void PrintTestSummary(unsigned failures)
+static void PrintTestSummary(unsigned failures, const std::vector<std::string>& selectedTests, const std::vector<const char*>& foundTests)
 {
+    // Check if there were unknown test names
+    if (selectedTests.size() != foundTests.size())
+    {
+        // Gather unknown test names
+        std::vector<std::string> unknownTests;
+        for (const std::string& name : selectedTests)
+        {
+            if (std::find_if(foundTests.begin(), foundTests.end(), [&name](const char* s) -> bool { return (name == s); }) == foundTests.end())
+            {
+                unknownTests.push_back(name);
+                if (foundTests.size() + unknownTests.size() == selectedTests.size())
+                {
+                    // Found all unknown test names => early exit
+                    break;
+                }
+            }
+        }
+
+        // Print unknown test names
+        if (!unknownTests.empty())
+        {
+            std::string unknwonTestsStr;
+            for (const std::string& name : unknownTests)
+            {
+                if (!unknwonTestsStr.empty())
+                    unknwonTestsStr += ", ";
+                unknwonTestsStr += name;
+            }
+            Log::Printf("//////////////////////////////////////////\n");
+            Log::Printf("  UNKNOWN TESTS: %s\n", unknwonTestsStr.c_str());
+            Log::Printf("//////////////////////////////////////////\n");
+        }
+    }
+
+    // Print test results
     if (failures == 0)
         Log::Printf(" ==> ALL TESTS PASSED\n");
     else if (failures == 1)
@@ -162,41 +231,50 @@ static void PrintTestSummary(unsigned failures)
 
 unsigned TestbedContext::RunAllTests()
 {
-    #define RUN_TEST(TEST)                                                          \
-        {                                                                           \
-            const TestResult result = RunTest(                                      \
-                std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1) \
-            );                                                                      \
-            RecordTestResult(result, #TEST);                                        \
+    std::vector<const char*> foundTests;
+
+    #define RUN_TEST(TEST)                                                                          \
+        if (selectedTests.empty() ||                                                                \
+            std::find(selectedTests.begin(), selectedTests.end(), #TEST) != selectedTests.end())    \
+        {                                                                                           \
+            if (!selectedTests.empty())                                                             \
+                foundTests.push_back(#TEST);                                                        \
+            const TestResult result = RunTest(                                                      \
+                std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1)                 \
+            );                                                                                      \
+            RecordTestResult(result, #TEST);                                                        \
         }
 
     // Run all command buffer tests
-    RUN_TEST( CommandBufferSubmit       );
+    RUN_TEST( CommandBufferSubmit         );
 
     // Run all resource tests
-    RUN_TEST( BufferWriteAndRead        );
-    RUN_TEST( BufferMap                 );
-    RUN_TEST( BufferFill                );
-    RUN_TEST( BufferUpdate              );
-    RUN_TEST( BufferCopy                );
-    RUN_TEST( TextureTypes              );
-    RUN_TEST( TextureWriteAndRead       );
-    RUN_TEST( TextureCopy               );
-    RUN_TEST( TextureToBufferCopy       );
-    RUN_TEST( BufferToTextureCopy       );
-    RUN_TEST( RenderTargetNoAttachments );
-    RUN_TEST( RenderTarget1Attachment   );
-    RUN_TEST( RenderTargetNAttachments  );
+    RUN_TEST( BufferWriteAndRead          );
+    RUN_TEST( BufferMap                   );
+    RUN_TEST( BufferFill                  );
+    RUN_TEST( BufferUpdate                );
+    RUN_TEST( BufferCopy                  );
+    RUN_TEST( TextureTypes                );
+    RUN_TEST( TextureWriteAndRead         );
+    RUN_TEST( TextureCopy                 );
+    RUN_TEST( TextureToBufferCopy         );
+    RUN_TEST( BufferToTextureCopy         );
+    RUN_TEST( RenderTargetNoAttachments   );
+    RUN_TEST( RenderTarget1Attachment     );
+    RUN_TEST( RenderTargetNAttachments    );
+    RUN_TEST( MipMaps                     );
 
     // Run all rendering tests
-    RUN_TEST( DepthBuffer               );
-    RUN_TEST( StencilBuffer             );
-    RUN_TEST( SceneUpdate               );
+    RUN_TEST( DepthBuffer                 );
+    RUN_TEST( StencilBuffer               );
+    RUN_TEST( SceneUpdate                 );
+    RUN_TEST( BlendStates                 );
+    RUN_TEST( CommandBufferMultiThreading );
 
     #undef RUN_TEST
 
     // Print summary
-    PrintTestSummary(failures);
+    PrintTestSummary(failures, selectedTests, foundTests);
 
     return failures;
 }
@@ -221,19 +299,25 @@ unsigned TestbedContext::RunRendererIndependentTests()
     #undef RUN_TEST
 
     // Print summary
-    PrintTestSummary(failures);
+    PrintTestSummary(failures, {}, {});
 
     return failures;
+}
+
+static bool IsContinueTest(TestResult result)
+{
+    return (result == TestResult::Continue || result == TestResult::ContinueSkipFrame);
 }
 
 TestResult TestbedContext::RunTest(const std::function<TestResult(unsigned)>& callback)
 {
     TestResult result = TestResult::Continue;
 
-    for (unsigned frame = 0; LLGL::Surface::ProcessEvents() && result == TestResult::Continue; ++frame)
+    for (unsigned frame = 0; LLGL::Surface::ProcessEvents() && IsContinueTest(result); ++frame)
     {
         result = callback(frame);
-        swapChain->Present();
+        if (result != TestResult::ContinueSkipFrame)
+            swapChain->Present();
     }
 
     return result;
@@ -281,7 +365,7 @@ TestResult TestbedContext::CreateTexture(
     const LLGL::TextureDescriptor&  desc,
     const char*                     name,
     LLGL::Texture**                 output,
-    const LLGL::SrcImageDescriptor* initialImage)
+    const LLGL::ImageView*          initialImage)
 {
     // Create texture
     Texture* tex = renderer->CreateTexture(desc, initialImage);
@@ -714,17 +798,95 @@ bool TestbedContext::LoadShaders()
     return true;
 }
 
-void TestbedContext::LoadProjectionMatrix(float nearPlane, float farPlane, float fov)
+void TestbedContext::CreatePipelineLayouts()
+{
+    const bool hasCombinedSamplers = (renderer->GetRendererID() == RendererID::OpenGL);
+
+    layouts[PipelineSolid] = renderer->CreatePipelineLayout(
+        Parse("cbuffer(Scene@1):vert:frag")
+    );
+
+    layouts[PipelineTextured] = renderer->CreatePipelineLayout(
+        Parse(
+            hasCombinedSamplers
+                ?   "cbuffer(Scene@1):vert:frag,"
+                    "texture(colorMapSampler@2):frag,"
+                    "sampler(2):frag,"
+                :
+                    "cbuffer(Scene@1):vert:frag,"
+                    "texture(colorMap@2):frag,"
+                    "sampler(linearSampler@3):frag,"
+        )
+    );
+}
+
+bool TestbedContext::LoadTextures()
+{
+    auto LoadTextureFromFile = [this](const char* name, const std::string& filename) -> Texture*
+    {
+        // Load image
+        int w = 0, h = 0, c = 0;
+        stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, 4);
+
+        if (!imgBuf)
+        {
+            Log::Errorf("Failed to load image: %s\n", filename.c_str());
+            return nullptr;
+        }
+
+        // Create texture
+        ImageView imageView;
+        {
+            imageView.format    = ImageFormat::RGBA;
+            imageView.dataType  = DataType::UInt8;
+            imageView.data      = imgBuf;
+            imageView.dataSize  = static_cast<std::size_t>(w*h*4);
+        }
+        TextureDescriptor texDesc;
+        {
+            texDesc.format          = Format::RGBA8UNorm;
+            texDesc.extent.width    = static_cast<std::uint32_t>(w);
+            texDesc.extent.height   = static_cast<std::uint32_t>(h);
+        }
+        Texture* tex = nullptr;
+        (void)CreateTexture(texDesc, name, &tex, &imageView);
+
+        // Release image buffer
+        stbi_image_free(imgBuf);
+
+        return tex;
+    };
+
+    const std::string texturePath = "../Media/Textures/";
+
+    textures[TextureGrid10x10]  = LoadTextureFromFile("Grid10x10", texturePath + "Grid10x10.png");
+    textures[TextureGradient]   = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
+    textures[TexturePaintingA]  = LoadTextureFromFile("PaintingA", texturePath + "VanGogh-starry_night.jpg");
+
+    return true;
+}
+
+void TestbedContext::CreateSamplerStates()
+{
+    samplers[SamplerNearest]        = renderer->CreateSampler(Parse("filter=nearest"));
+    samplers[SamplerNearestClamp]   = renderer->CreateSampler(Parse("filter=nearest,address=clamp"));
+    samplers[SamplerLinear]         = renderer->CreateSampler(Parse("filter=linear"));
+    samplers[SamplerLinearClamp]    = renderer->CreateSampler(Parse("filter=linear,address=clamp"));
+}
+
+void TestbedContext::LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio, float nearPlane, float farPlane, float fov)
 {
     // Initialize default projection matrix
     const bool isClipSpaceUnitCube = (renderer->GetRenderingCaps().clippingRange == ClippingRange::MinusOneToOne);
+    const int flags = (isClipSpaceUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
+    outProjection = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fov), flags).ToMatrix4();
+}
 
+void TestbedContext::LoadDefaultProjectionMatrix()
+{
     const Extent2D resolution = swapChain->GetResolution();
     const float aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
-
-    const int flags = (isClipSpaceUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
-
-    projection = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fov), flags).ToMatrix4();
+    LoadProjectionMatrix(projection, aspectRatio);
 }
 
 void TestbedContext::CreateTriangleMeshes()
@@ -741,6 +903,7 @@ void TestbedContext::CreateTriangleMeshes()
     IndexedTriangleMeshBuffer sceneBuffer;
 
     CreateModelCube(sceneBuffer, models[ModelCube]);
+    CreateModelRect(sceneBuffer, models[ModelRect]);
 
     const std::uint64_t vertexBufferSize = sceneBuffer.vertices.size() * sizeof(Vertex);
     const std::uint64_t indexBufferSize = sceneBuffer.indices.size() * sizeof(std::uint32_t);
@@ -811,6 +974,19 @@ void TestbedContext::CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTr
     scene.FinalizeMesh(outMesh);
 }
 
+void TestbedContext::CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh)
+{
+    scene.NewMesh();
+
+    scene.AddVertex(-1,+1,0,  0, 0,-1,  0, 0 );
+    scene.AddVertex(+1,+1,0,  0, 0,-1,  1, 0 );
+    scene.AddVertex(+1,-1,0,  0, 0,-1,  1, 1 );
+    scene.AddVertex(-1,-1,0,  0, 0,-1,  0, 1 );
+    scene.AddIndices({ 0,1,2,  0,2,3 }, 0);
+
+    scene.FinalizeMesh(outMesh);
+}
+
 void TestbedContext::CreateConstantBuffers()
 {
     BufferDescriptor bufDesc;
@@ -822,7 +998,7 @@ void TestbedContext::CreateConstantBuffers()
     sceneCbuffer->SetName("sceneCbuffer");
 }
 
-static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, const std::string& filename, bool verbose)
 {
     auto PrintInfo = [&filename]
     {
@@ -836,8 +1012,8 @@ static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& ext
         filename.c_str(),
         static_cast<int>(extent.width),
         static_cast<int>(extent.height),
-        3,
-        pixels.data(),
+        comp,
+        pixels,
         0
     );
 
@@ -845,6 +1021,16 @@ static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& ext
         Log::Printf(" [ Ok ]\n");
 
     return (result != 0);
+}
+
+static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+{
+    return SaveImage(pixels.data(), 3, extent, filename, verbose);
+}
+
+static bool SaveImage(const std::vector<ColorRGBAub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+{
+    return SaveImage(pixels.data(), 4, extent, filename, verbose);
 }
 
 static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const std::string& filename, bool verbose = false)
@@ -944,6 +1130,95 @@ void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, co
     SaveImage(colors, extent, path + name + ".Result.png", verbose);
 }
 
+LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, Format format, const LLGL::Extent2D& extent)
+{
+    // Create temporary texture to capture framebuffer color
+    TextureDescriptor texDesc;
+    {
+        texDesc.format          = format;
+        texDesc.extent.width    = extent.width;
+        texDesc.extent.height   = extent.height;
+        texDesc.bindFlags       = BindFlags::CopyDst;
+        texDesc.mipLevels       = 1;
+    }
+    Texture* capture = renderer->CreateTexture(texDesc);
+    capture->SetName("readbackTex");
+
+    // Capture framebuffer
+    const TextureRegion texRegion{ Offset3D{}, Extent3D{ extent.width, extent.height, 1 } };
+    cmdBuffer.CopyTextureFromFramebuffer(*capture, texRegion, Offset2D{});
+
+    return capture;
+}
+
+void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly)
+{
+    if (capture != nullptr)
+    {
+        const TextureDescriptor texDesc = capture->GetDesc();
+        const Extent2D extent{ texDesc.extent.width, texDesc.extent.height };
+        const TextureRegion texRegion{ Offset3D{}, Extent3D{ extent.width, extent.height, 1 } };
+
+        if (IsDepthOrStencilFormat(texDesc.format))
+        {
+            if (writeStencilOnly)
+            {
+                // Readback framebuffer stencil indices
+                std::vector<std::uint8_t> stencilData;
+                stencilData.resize(extent.width * extent.height);
+
+                MutableImageView dstImageView;
+                {
+                    dstImageView.format     = ImageFormat::Stencil;
+                    dstImageView.data       = stencilData.data();
+                    dstImageView.dataSize   = sizeof(decltype(stencilData)::value_type) * stencilData.size();
+                    dstImageView.dataType   = DataType::UInt8;
+                }
+                renderer->ReadTexture(*capture, texRegion, dstImageView);
+
+                SaveStencilImage(stencilData, extent, name);
+            }
+            else
+            {
+                // Readback framebuffer depth components
+                std::vector<float> depthData;
+                depthData.resize(extent.width * extent.height);
+
+                MutableImageView dstImageView;
+                {
+                    dstImageView.format     = ImageFormat::Depth;
+                    dstImageView.data       = depthData.data();
+                    dstImageView.dataSize   = sizeof(decltype(depthData)::value_type) * depthData.size();
+                    dstImageView.dataType   = DataType::Float32;
+                }
+                renderer->ReadTexture(*capture, texRegion, dstImageView);
+
+                SaveDepthImage(depthData, extent, name);
+            }
+        }
+        else
+        {
+            // Readback framebuffer color
+            std::vector<ColorRGBub> colorData;
+            colorData.resize(extent.width * extent.height);
+
+            MutableImageView dstImageView;
+            {
+                dstImageView.format     = ImageFormat::RGB;
+                dstImageView.data       = colorData.data();
+                dstImageView.dataSize   = sizeof(decltype(colorData)::value_type) * colorData.size();
+                dstImageView.dataType   = DataType::UInt8;
+            }
+            renderer->ReadTexture(*capture, texRegion, dstImageView);
+
+            SaveColorImage(colorData, extent, name);
+        }
+
+        // Release temporary resource
+        renderer->Release(*capture);
+    }
+}
+
 static int GetColorDiff(std::uint8_t a, std::uint8_t b)
 {
     return static_cast<int>(a < b ? b - a : a - b);
@@ -962,7 +1237,8 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
 TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, int scale)
 {
     // Load input images and validate they have the same dimensions
-    std::vector<ColorRGBub> pixelsA, pixelsB, pixelsDiff;
+    std::vector<ColorRGBub> pixelsA, pixelsB;
+    std::vector<ColorRGBAub> pixelsDiff;
     Extent2D extentA, extentB;
 
     const std::string resultPath    = outputDir + moduleName + "/";
@@ -978,10 +1254,10 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
         return DiffErrorExtentMismatch;
 
     // Generate heat-map image
-    DiffResult result{ threshold };
+    DiffResult result{ (pedantic ? 0 : threshold) };
     pixelsDiff.resize(extentA.width * extentA.height);
 
-    for (std::size_t i = 0, n = pixelsDiff.size(); i < n; ++i)
+    for_range(i, pixelsDiff.size())
     {
         const ColorRGBub& colorA = pixelsA[i];
         const ColorRGBub& colorB = pixelsB[i];
@@ -991,8 +1267,14 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
             GetColorDiff(colorA.g, colorB.g),
             GetColorDiff(colorA.b, colorB.b),
         };
-        const int maxDiff = std::max({ diff[0], diff[1], diff[2] });
-        pixelsDiff[i] = GetHeatMapColor(maxDiff, scale);
+        const int maxDiff = std::max(std::max(diff[0], diff[1]), diff[2]);
+        const ColorRGBub heatmapColor = GetHeatMapColor(maxDiff, scale);
+
+        pixelsDiff[i].r = heatmapColor.r;
+        pixelsDiff[i].g = heatmapColor.g;
+        pixelsDiff[i].b = heatmapColor.b;
+        pixelsDiff[i].a = (maxDiff > 0 ? 255 : 0);
+
         result.Add(maxDiff);
     }
 

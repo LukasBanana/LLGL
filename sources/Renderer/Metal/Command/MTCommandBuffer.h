@@ -12,7 +12,7 @@
 #import <MetalKit/MetalKit.h>
 
 #include <LLGL/CommandBuffer.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include "MTCommandContext.h"
 #include "../Buffer/MTIntermediateBuffer.h"
 #include "../Buffer/MTStagingBufferPool.h"
@@ -43,14 +43,6 @@ class MTCommandBuffer : public CommandBuffer
 
         void SetIndexBuffer(Buffer& buffer) override final;
         void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override final;
-
-        /* ----- Resources ----- */
-
-        void SetResource(std::uint32_t descriptor, Resource& resource) override final;
-
-        /* ----- Pipeline States ----- */
-
-        void SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize) override final;
 
     public:
 
@@ -158,14 +150,15 @@ class MTCommandBuffer : public CommandBuffer
 
         void SetIndexStream(id<MTLBuffer> indexBuffer, NSUInteger offset, bool indexType16Bits);
 
-        void SetPipelineRenderState(MTPipelineState& pipelineStateMT);
-
     private:
+
+        static constexpr NSUInteger     maxNumStagingPools      = 3;
 
         id<MTLDevice>                   device_                 = nil;
         long                            flags_                  = 0;
 
-        MTStagingBufferPool             stagingBufferPool_;
+        NSUInteger                      currentStagingPool_     = 0;
+        MTStagingBufferPool             stagingBufferPools_[MTCommandBuffer::maxNumStagingPools];
         SmallVector<id<MTLDrawable>, 2> queuedDrawables_;
 
         MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
@@ -178,8 +171,6 @@ class MTCommandBuffer : public CommandBuffer
         MTLSize                         threadsPerThreadgroup_  = MTLSizeMake(1, 1, 1);
         MTSwapChain*                    boundSwapChain_         = nullptr;
         MTPipelineState*                boundPipelineState_     = nullptr;
-        MTDescriptorCache*              descriptorCache_        = nullptr;
-        MTConstantsCache*               constantsCache_         = nullptr;
 
         // Tessellator stage objects
         MTIntermediateBuffer            tessFactorBuffer_;

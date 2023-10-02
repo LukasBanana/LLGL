@@ -14,7 +14,7 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include <LLGL/ImageFlags.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 
@@ -32,9 +32,8 @@ into a single braces block to highlight this function call, wher the input param
 All the actual render system objects are stored in the members named "instance", since they are the actual object instances.
 */
 
-DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
+DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingDebugger* debugger) :
     instance_ { std::forward<RenderSystemPtr&&>(instance) },
-    profiler_ { profiler                                  },
     debugger_ { debugger                                  },
     caps_     { GetRenderingCaps()                        },
     features_ { caps_.features                            },
@@ -44,21 +43,29 @@ DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingProfiler* 
     UpdateRenderingCaps();
 }
 
+void DbgRenderSystem::FlushProfile()
+{
+    if (debugger_ != nullptr)
+        debugger_->RecordProfile(profile_);
+    profile_.Clear();
+}
+
 /* ----- Swap-chain ----- */
 
 SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
     /* Create primary swap-chain */
-    auto swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
+    auto* swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
 
     /* Instantiate command queue if not done and update rendering capabilities from wrapped instance */
     if (!commandQueue_)
     {
         UpdateRenderingCaps();
-        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
+        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profile_, debugger_);
     }
 
-    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance, swapChainDesc);
+    /* Flush frame profile on SwapChain::Present() calls */
+    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance, swapChainDesc, std::bind(&DbgRenderSystem::FlushProfile, this));
 }
 
 void DbgRenderSystem::Release(SwapChain& swapChain)
@@ -82,8 +89,8 @@ CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescripto
         *instance_,
         commandQueue_->instance,
         *instance_->CreateCommandBuffer(commandBufferDesc),
+        profile_,
         debugger_,
-        profiler_,
         commandBufferDesc,
         GetRenderingCaps()
     );
@@ -126,7 +133,7 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 
     for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
-        auto bufferDbg          = LLGL_CAST(DbgBuffer*, bufferArray[i]);
+        auto* bufferDbg         = LLGL_CAST(DbgBuffer*, bufferArray[i]);
         bufferInstanceArray[i]  = &(bufferDbg->instance);
         bufferDbgArray[i]       = bufferDbg;
     }
@@ -168,8 +175,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const vo
 
     instance_->WriteBuffer(bufferDbg.instance, offset, data, dataSize);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferWrites++;
+    profile_.bufferWrites++;
 }
 
 void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
@@ -190,8 +196,7 @@ void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* dat
 
     instance_->ReadBuffer(bufferDbg.instance, offset, data, dataSize);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferReads++;
+    profile_.bufferReads++;
 }
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
@@ -210,8 +215,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     if (result != nullptr)
         bufferDbg.OnMap(access, 0, bufferDbg.desc.size);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferMappings++;
+    profile_.bufferMappings++;
 
     return result;
 }
@@ -233,8 +237,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::ui
     if (result != nullptr)
         bufferDbg.OnMap(access, offset, length);
 
-    if (profiler_)
-        profiler_->frameProfile.bufferMappings++;
+    profile_.bufferMappings++;
 
     return result;
 }
@@ -256,14 +259,14 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateTextureDesc(textureDesc, imageDesc);
+        ValidateTextureDesc(textureDesc, initialImage);
     }
-    return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc);
+    return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, initialImage), textureDesc);
 }
 
 void DbgRenderSystem::Release(Texture& texture)
@@ -271,7 +274,7 @@ void DbgRenderSystem::Release(Texture& texture)
     ReleaseDbg(textures_, texture);
 }
 
-void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
@@ -279,16 +282,15 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     {
         LLGL_DBG_SOURCE;
         ValidateTextureRegion(textureDbg, textureRegion);
-        ValidateImageDataSize(textureDbg, textureRegion, imageDesc.format, imageDesc.dataType, imageDesc.dataSize);
+        ValidateImageDataSize(textureDbg, textureRegion, srcImageView.format, srcImageView.dataType, srcImageView.dataSize);
     }
 
-    instance_->WriteTexture(textureDbg.instance, textureRegion, imageDesc);
+    instance_->WriteTexture(textureDbg.instance, textureRegion, srcImageView);
 
-    if (profiler_)
-        profiler_->frameProfile.textureWrites++;
+    profile_.textureWrites++;
 }
 
-void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
@@ -296,13 +298,12 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
     {
         LLGL_DBG_SOURCE;
         ValidateTextureRegion(textureDbg, textureRegion);
-        ValidateImageDataSize(textureDbg, textureRegion, imageDesc.format, imageDesc.dataType, imageDesc.dataSize);
+        ValidateImageDataSize(textureDbg, textureRegion, dstImageView.format, dstImageView.dataType, dstImageView.dataSize);
     }
 
-    instance_->ReadTexture(textureDbg.instance, textureRegion, imageDesc);
+    instance_->ReadTexture(textureDbg.instance, textureRegion, dstImageView);
 
-    if (profiler_)
-        profiler_->frameProfile.textureReads++;
+    profile_.textureReads++;
 }
 
 /* ----- Sampler States ---- */
@@ -880,7 +881,7 @@ void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewD
     }
 }
 
-void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     switch (textureDesc.type)
     {
@@ -958,7 +959,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
     /* Check if MIP-map generation is requested  */
     if ((textureDesc.miscFlags & MiscFlags::GenerateMips) != 0)
     {
-        if (imageDesc == nullptr)
+        if (initialImage == nullptr)
         {
             #if 0
             LLGL_DBG_WARN(
@@ -1541,7 +1542,23 @@ static std::string ColorMaskToString(std::uint8_t colorMask)
     return s;
 }
 
-void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx)
+static bool IsBlendOpColorOnly(BlendOp op)
+{
+    switch (op)
+    {
+        case BlendOp::SrcColor:
+        case BlendOp::InvSrcColor:
+        case BlendOp::DstColor:
+        case BlendOp::InvDstColor:
+        case BlendOp::Src1Color:
+        case BlendOp::InvSrc1Color:
+            return true;
+        default:
+            return false;
+    }
+};
+
+void DbgRenderSystem::ValidateBlendTargetDescriptor(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx)
 {
     if (blendTargetDesc.colorMask != 0)
     {
@@ -1549,6 +1566,20 @@ void DbgRenderSystem::ValidateColorMaskIsDisabled(const BlendTargetDescriptor& b
             ErrorType::InvalidArgument,
             "cannot use color mask <" + ColorMaskToString(blendTargetDesc.colorMask) +
             "> of blend target <" + std::to_string(idx) + "> without a fragment shader"
+        );
+    }
+    if (IsBlendOpColorOnly(blendTargetDesc.srcAlpha))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot use color-only blend operation for source alpha channel (srcAlpha = LLGL::BlendOp::" + std::string(ToString(blendTargetDesc.srcAlpha)) + ")"
+        );
+    }
+    if (IsBlendOpColorOnly(blendTargetDesc.dstAlpha))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot use color-only blend operation for destination alpha channel (dstAlpha = LLGL::BlendOp::" + std::string(ToString(blendTargetDesc.dstAlpha)) + ")"
         );
     }
 }
@@ -1587,10 +1618,10 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, 
         if (blendDesc.independentBlendEnabled)
         {
             for_range(i, sizeof(blendDesc.targets) / sizeof(blendDesc.targets[0]))
-                ValidateColorMaskIsDisabled(blendDesc.targets[i], i);
+                ValidateBlendTargetDescriptor(blendDesc.targets[i], i);
         }
         else
-            ValidateColorMaskIsDisabled(blendDesc.targets[0], 0);
+            ValidateBlendTargetDescriptor(blendDesc.targets[0], 0);
     }
 }
 
@@ -1601,7 +1632,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     /* Validate shader pipeline stages */
     bool hasSeparableShaders = false;
-    if (auto vertexShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.vertexShader))
+    if (DbgShader* vertexShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.vertexShader))
         hasSeparableShaders = ((vertexShaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
     else
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create graphics PSO without vertex shader");
@@ -1617,13 +1648,13 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         ShaderType  expectedType;
     };
 
-    for (auto pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
-                       ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
-                       ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
-                       ShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
-                       ShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
+    for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
+                                 ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
+                                 ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
+                                 ShaderTypePair{ pipelineStateDesc.geometryShader,       ShaderType::Geometry       },
+                                 ShaderTypePair{ pipelineStateDesc.fragmentShader,       ShaderType::Fragment       } })
     {
-        if (auto shader = pair.shader)
+        if (Shader* shader = pair.shader)
         {
             auto shaderDbg = LLGL_CAST(DbgShader*, shader);
             const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
@@ -1654,7 +1685,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         }
     }
 
-    if (auto fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
+    if (DbgShader* fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
         ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass);
 
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader);

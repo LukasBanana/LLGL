@@ -282,12 +282,12 @@ private:
         }
 
         // Define initial texture data
-        LLGL::SrcImageDescriptor srcImageDesc;
+        LLGL::ImageView srcImageView;
         {
-            srcImageDesc.format     = LLGL::ImageFormat::RGBA;
-            srcImageDesc.dataType   = LLGL::DataType::UInt8;
-            srcImageDesc.data       = imageData.data();
-            srcImageDesc.dataSize   = imageData.size();
+            srcImageView.format     = LLGL::ImageFormat::RGBA;
+            srcImageView.dataType   = LLGL::DataType::UInt8;
+            srcImageView.data       = imageData.data();
+            srcImageView.dataSize   = imageData.size();
         }
 
         // Create texture
@@ -300,7 +300,7 @@ private:
             texDesc.extent.depth    = 1;
             texDesc.arrayLayers     = static_cast<std::uint32_t>(texFilenames.size());
         }
-        auto tex = renderer->CreateTexture(texDesc, &srcImageDesc);
+        auto tex = renderer->CreateTexture(texDesc, &srcImageView);
 
         return tex;
     }

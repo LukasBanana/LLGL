@@ -14,13 +14,11 @@ int main()
     try
     {
         // Setup profiler and debugger
-        auto profiler = std::make_shared<LLGL::RenderingProfiler>();
         auto debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
         LLGL::RenderSystemDescriptor rendererDesc = "Vulkan";
         {
-            rendererDesc.profiler = profiler.get();
             rendererDesc.debugger = debugger.get();
         }
         auto renderer = LLGL::RenderSystem::Load(rendererDesc);

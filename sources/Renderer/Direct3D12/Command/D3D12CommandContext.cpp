@@ -32,24 +32,20 @@ D3D12CommandContext::D3D12CommandContext()
     ClearCache();
 }
 
-D3D12CommandContext::D3D12CommandContext(
-    D3D12Device&        device,
-    D3D12CommandQueue&  commandQueue)
+D3D12CommandContext::D3D12CommandContext(D3D12Device& device)
 {
-    Create(device, commandQueue);
+    Create(device);
 }
 
 void D3D12CommandContext::Create(
     D3D12Device&            device,
-    D3D12CommandQueue&      commandQueue,
     D3D12_COMMAND_LIST_TYPE commandListType,
     UINT                    numAllocators,
     UINT64                  initialStagingChunkSize,
     bool                    initialClose)
 {
     /* Store reference to device and command queue */
-    device_         = device.GetNative();
-    commandQueue_   = &commandQueue;
+    device_ = device.GetNative();
 
     /* Create fence for command allocators */
     allocatorFence_.Create(device.GetNative());
@@ -91,11 +87,21 @@ void D3D12CommandContext::Close()
     DXThrowIfFailed(hr, "failed to close D3D12 command list");
 }
 
-void D3D12CommandContext::Execute()
+void D3D12CommandContext::Execute(D3D12CommandQueue& commandQueue)
 {
     /* Submit command list to queue and signal current allocator fence */
-    commandQueue_->ExecuteCommandList(GetCommandList());
-    commandQueue_->SignalFence(allocatorFence_.Get(), allocatorFenceValues_[currentAllocatorIndex_]);
+    commandQueue.ExecuteCommandList(GetCommandList());
+}
+
+void D3D12CommandContext::ExecuteAndSignal(D3D12CommandQueue& commandQueue)
+{
+    Execute(commandQueue);
+    Signal(commandQueue);
+}
+
+void D3D12CommandContext::Signal(D3D12CommandQueue& commandQueue)
+{
+    commandQueue.SignalFence(allocatorFence_.Get(), allocatorFenceValues_[currentAllocatorIndex_]);
 }
 
 void D3D12CommandContext::Reset()
@@ -111,22 +117,20 @@ void D3D12CommandContext::Reset()
     ClearCache();
 }
 
-void D3D12CommandContext::Finish(bool waitIdle)
+void D3D12CommandContext::FinishAndSync(D3D12CommandQueue& commandQueue)
 {
     /* Close command list and execute, then reset command allocator for next encoding */
     Close();
-    Execute();
-
-    /* Synchronize GPU/CPU */
-    if (waitIdle)
-        commandQueue_->WaitIdle();
-
+    ExecuteAndSignal(commandQueue);
     Reset();
+
+    /* Sync CPU/GPU */
+    commandQueue.WaitIdle();
 }
 
 void D3D12CommandContext::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES newState, D3D12_RESOURCE_STATES oldState, bool flushImmediate)
 {
-    auto& barrier = NextResourceBarrier();
+    D3D12_RESOURCE_BARRIER& barrier = NextResourceBarrier();
 
     /* Initialize resource barrier for resource transition */
     barrier.Type                    = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -145,7 +149,7 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
 {
     if (resource.transitionState != newState)
     {
-        auto& barrier = NextResourceBarrier();
+        D3D12_RESOURCE_BARRIER& barrier = NextResourceBarrier();
 
         /* Initialize resource barrier for resource transition */
         barrier.Type                    = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -166,7 +170,7 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
 
 void D3D12CommandContext::InsertUAVBarrier(D3D12Resource& resource, bool flushImmediate)
 {
-    auto& barrier = NextResourceBarrier();
+    D3D12_RESOURCE_BARRIER& barrier = NextResourceBarrier();
 
     barrier.Type            = D3D12_RESOURCE_BARRIER_TYPE_UAV;
     barrier.Flags           = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -324,6 +328,12 @@ void D3D12CommandContext::SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12Desc
     }
 }
 
+void D3D12CommandContext::SetDescriptorHeapsOfOtherContext(const D3D12CommandContext& other)
+{
+    if (other.stateCache_.numDescriptorHeaps > 0)
+        SetDescriptorHeaps(other.stateCache_.numDescriptorHeaps, other.stateCache_.descriptorHeaps);
+}
+
 void D3D12CommandContext::PrepareStagingDescriptorHeaps(
     const D3D12DescriptorHeapSetLayout& layout,
     const D3D12RootParameterIndices&    indices)
@@ -397,7 +407,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DE
     /* Get current descriptor heap pool via allocator- and type index */
     const UINT typeIndex = static_cast<UINT>(type);
     LLGL_ASSERT(typeIndex < D3D12CommandContext::maxNumDescriptorHeaps);
-    auto& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
+    const D3D12StagingDescriptorHeapPool& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
 
     /* Return CPU descriptor handle for the specified descriptor in the pool */
     return descriptorHeapPool.GetCpuHandleWithOffset(descriptor);
@@ -412,7 +422,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
     /* Get current descriptor heap pool via allocator- and type index */
     const UINT typeIndex = static_cast<UINT>(type);
     LLGL_ASSERT(typeIndex < D3D12CommandContext::maxNumDescriptorHeaps);
-    auto& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
+    D3D12StagingDescriptorHeapPool& descriptorHeapPool = stagingDescriptorPools_[currentAllocatorIndex_][typeIndex];
 
     /* Copy descriptors into shader-visible descriptor heap */
     return descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
@@ -429,7 +439,7 @@ void D3D12CommandContext::EmplaceDescriptorForStaging(
 // private
 void D3D12CommandContext::FlushGraphicsStagingDescriptorTables()
 {
-    auto& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
+    D3D12DescriptorCache& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
     if (descriptorCache.IsInvalidated())
     {
         auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
@@ -451,7 +461,7 @@ void D3D12CommandContext::FlushGraphicsStagingDescriptorTables()
 // private
 void D3D12CommandContext::FlushComputeStagingDescriptorTables()
 {
-    auto& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
+    D3D12DescriptorCache& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
     if (descriptorCache.IsInvalidated())
     {
         auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];

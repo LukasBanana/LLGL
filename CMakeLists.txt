@@ -117,6 +117,8 @@ function(find_source_files OUTPUT_LIST FILTERS)
         set(FILTERS "*.c;*.cpp;*.h;*.inl")
     elseif("${FILTERS}" STREQUAL "OBJC")
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm")
+    elseif("${FILTERS}" STREQUAL "RES")
+        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag")
     endif()
 
     # Collect all input directories for each filter
@@ -158,7 +160,7 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
     else()
         # Find all source files for project
         if(APPLE)
-            find_source_files(ProjectFiles "*.c;*.cpp;*.metal;*.vert;*.frag" ${SRC_FILES})
+            find_source_files(ProjectFiles RES ${SRC_FILES})
         else()
             find_source_files(ProjectFiles CXX ${SRC_FILES})
         endif()
@@ -203,7 +205,12 @@ endfunction()
 
 function(append_global_property PROP_NAME OUTPUT_LIST NEW_ITEM)
     get_property(PropertyList GLOBAL PROPERTY ${PROP_NAME})
+
+    # Link base libs first to avoid wrong order in GCC.
+    # For Clang, this order can cause duplicate linking entries, but shouldn't hurt.
+    # For now it's not worth the trouble having to distinguish between compiler toolchains (see CMAKE_CXX_COMPILER_ID).
     list(APPEND PropertyList ${NEW_ITEM})
+
     set_property(GLOBAL PROPERTY ${PROP_NAME} "${PropertyList}")
     set(${OUTPUT_LIST} "${PropertyList}" PARENT_SCOPE)
 endfunction()
@@ -242,23 +249,21 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     if(APPLE)
         # Project configurations
         add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC_FILES})
+        target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
 
         # Configure bundle name and ID
         if (${PROJECT_NAME} MATCHES "Example_+")
             string(LENGTH "Example_" NAME_PREFIX_LEN)
-            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
+            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
         elseif (${PROJECT_NAME} MATCHES "Test_+")
             string(LENGTH "Test_" NAME_PREFIX_LEN)
-            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_ID_BASE)
-        else()
-            set(PROJECT_BUNDLE_ID_BASE ${PROJECT_NAME})
-        endif()
-
-        if(LLGL_IOS_PLATFORM)
-            set(PROJECT_BUNDLE_NAME ${PROJECT_BUNDLE_ID_BASE})
+            string(SUBSTRING ${PROJECT_NAME} ${NAME_PREFIX_LEN} -1 PROJECT_BUNDLE_NAME)
         else()
             set(PROJECT_BUNDLE_NAME ${PROJECT_NAME})
         endif()
+
+        # macOS/iOS bundle names must not have "_" characters
+        string(REPLACE "_" "-" PROJECT_BUNDLE_NAME "${PROJECT_BUNDLE_NAME}")
 
         # Filter resource files into "Resources" folder
         set(RES_FILES "${SRC_FILES}")
@@ -283,8 +288,9 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         # Configure Info.plist file for NSBundle
         set_target_properties(
             ${PROJECT_NAME} PROPERTIES
-            OUTPUT_NAME                         "${PROJECT_BUNDLE_NAME}"
-            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_ID_BASE}"
+            OUTPUT_NAME                         "${PROJECT_NAME}"
+            MACOSX_BUNDLE_BUNDLE_NAME           "${PROJECT_BUNDLE_NAME}"
+            MACOSX_BUNDLE_GUI_IDENTIFIER        "LLGL.Examples.${PROJECT_BUNDLE_NAME}"
             MACOSX_BUNDLE_LONG_VERSION_STRING   "LLGL-1.0"
             MACOSX_BUNDLE_SHORT_VERSION_STRING  "1.0"
             MACOSX_BUNDLE_BUNDLE_VERSION        1.0
@@ -299,10 +305,10 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         target_link_libraries(${PROJECT_NAME} ${LIB_FILES} android_native_app_glue log)
     else()
         add_executable(${PROJECT_NAME} ${SRC_FILES})
+        target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
     endif()
 
     # Configure linker settings
-    target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
     set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG} DEBUG_POSTFIX "D")
     
     # Configure working directory and project solution folder

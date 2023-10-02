@@ -10,11 +10,11 @@
 
 
 #include <LLGL/CommandBuffer.h>
-#include <LLGL/RenderingProfiler.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/RenderingDebugger.h>
+#include <LLGL/Constants.h>
 #include <LLGL/Container/ArrayView.h>
 #include "RenderState/DbgQueryHeap.h"
-#include "DbgQueryTimerManager.h"
+#include "DbgQueryTimerPool.h"
 #include <cstdint>
 #include <string>
 #include <stack>
@@ -31,8 +31,6 @@ class DbgRenderTarget;
 class DbgPipelineState;
 class DbgPipelineLayout;
 class DbgShader;
-class RenderingDebugger;
-class RenderingProfiler;
 
 class DbgCommandBuffer final : public CommandBuffer
 {
@@ -47,15 +45,15 @@ class DbgCommandBuffer final : public CommandBuffer
             RenderSystem&                   renderSystemInstance,
             CommandQueue&                   commandQueueInstance,
             CommandBuffer&                  commandBufferInstance,
+            FrameProfile&                   commonProfile,
             RenderingDebugger*              debugger,
-            RenderingProfiler*              profiler,
             const CommandBufferDescriptor&  desc,
             const RenderingCapabilities&    caps
         );
 
     public:
 
-        void NextProfile(FrameProfile& outputProfile);
+        void FlushProfile(FrameProfile& outProfile);
 
         void ValidateSubmit();
 
@@ -155,14 +153,14 @@ class DbgCommandBuffer final : public CommandBuffer
         /* ----- Common objects ----- */
 
         RenderingDebugger*          debugger_                               = nullptr;
-        RenderingProfiler*          profiler_                               = nullptr;
+        FrameProfile&               commonProfile_;
 
         const RenderingFeatures&    features_;
         const RenderingLimits&      limits_;
 
         std::stack<std::string>     debugGroups_;
 
-        DbgQueryTimerManager        timerMngr_;
+        DbgQueryTimerPool           queryTimerPool_;
         bool                        perfProfilerEnabled_                    = false;
 
         /* ----- Render states ----- */

@@ -88,17 +88,17 @@ int main()
         if (!imageBuffer)
             throw std::runtime_error("failed to load texture from file: \"" + textureFilename + "\"");
 
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.format    = LLGL::ImageFormat::RGBA;
-            imageDesc.dataType  = LLGL::DataType::UInt8;
-            imageDesc.data      = imageBuffer;
-            imageDesc.dataSize  = static_cast<std::size_t>(width*height*4);
+            imageView.format    = LLGL::ImageFormat::RGBA;
+            imageView.dataType  = LLGL::DataType::UInt8;
+            imageView.data      = imageBuffer;
+            imageView.dataSize  = static_cast<std::size_t>(width*height*4);
         }
 
         // Create texture and upload image data onto hardware texture
         auto texture = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height), &imageDesc
+            LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height), &imageView
         );
         
         stbi_image_free(imageBuffer);

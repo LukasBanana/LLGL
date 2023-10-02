@@ -40,8 +40,7 @@ VKDescriptorCache::VKDescriptorCache(
     device_         { device                                  },
     setLayout_      { setLayout                               },
     poolSizes_      { sizes, sizes + numSizes                 },
-    numDescriptors_ { SumDescriptorPoolSizes(numSizes, sizes) },
-    setWriter_      { numDescriptors_                         }
+    numDescriptors_ { SumDescriptorPoolSizes(numSizes, sizes) }
 {
     /* Allocate descriptor set for immutable samplers */
     VkDescriptorSetAllocateInfo allocInfo;
@@ -61,26 +60,25 @@ VKDescriptorCache::VKDescriptorCache(
 
 void VKDescriptorCache::Reset()
 {
-    setWriter_.Reset();
     dirty_ = true;
 }
 
-void VKDescriptorCache::EmplaceDescriptor(Resource& resource, const VKLayoutBinding& binding)
+void VKDescriptorCache::EmplaceDescriptor(Resource& resource, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
     switch (resource.GetResourceType())
     {
         case ResourceType::Buffer:
-            EmplaceBufferDescriptor(LLGL_CAST(VKBuffer&, resource), binding);
+            EmplaceBufferDescriptor(LLGL_CAST(VKBuffer&, resource), binding, setWriter);
             dirty_ = true;
             break;
 
         case ResourceType::Texture:
-            EmplaceTextureDescriptor(LLGL_CAST(VKTexture&, resource), binding);
+            EmplaceTextureDescriptor(LLGL_CAST(VKTexture&, resource), binding, setWriter);
             dirty_ = true;
             break;
 
         case ResourceType::Sampler:
-            EmplaceSamplerDescriptor(LLGL_CAST(VKSampler&, resource), binding);
+            EmplaceSamplerDescriptor(LLGL_CAST(VKSampler&, resource), binding, setWriter);
             dirty_ = true;
             break;
 
@@ -89,7 +87,7 @@ void VKDescriptorCache::EmplaceDescriptor(Resource& resource, const VKLayoutBind
     }
 }
 
-VkDescriptorSet VKDescriptorCache::FlushDescriptorSet(VKStagingDescriptorSetPool& pool)
+VkDescriptorSet VKDescriptorCache::FlushDescriptorSet(VKStagingDescriptorSetPool& pool, VKDescriptorSetWriter& setWriter)
 {
     if (!dirty_ || setLayout_ == VK_NULL_HANDLE)
         return VK_NULL_HANDLE;
@@ -101,12 +99,15 @@ VkDescriptorSet VKDescriptorCache::FlushDescriptorSet(VKStagingDescriptorSetPool
     */
     VkDescriptorSet descriptorSetCopy = pool.AllocateDescriptorSet(setLayout_, static_cast<std::uint32_t>(poolSizes_.size()), poolSizes_.data());
 
+    /* Lock mutex to guard copy descriptors since they are shared across threads */
+    std::lock_guard<std::mutex> guard{ copyDescMutex_ };
+
     UpdateCopyDescriptorSet(descriptorSetCopy);
 
     vkUpdateDescriptorSets(
         device_,
-        setWriter_.GetNumWrites(),
-        setWriter_.GetWrites(),
+        setWriter.GetNumWrites(),
+        setWriter.GetWrites(),
         static_cast<std::uint32_t>(copyDescs_.size()),
         copyDescs_.data()
     );
@@ -122,41 +123,41 @@ VkDescriptorSet VKDescriptorCache::FlushDescriptorSet(VKStagingDescriptorSetPool
  * ======= Private: =======
  */
 
-VkDescriptorBufferInfo* VKDescriptorCache::NextBufferInfoOrUpdateCache()
+VkDescriptorBufferInfo* VKDescriptorCache::NextBufferInfoOrUpdateCache(VKDescriptorSetWriter& setWriter)
 {
-    auto info = setWriter_.NextBufferInfo();
+    auto info = setWriter.NextBufferInfo();
     if (info == nullptr)
     {
         /* Flush descriptor set update */
-        setWriter_.UpdateDescriptorSets(device_);
-        setWriter_.Reset();
-        return setWriter_.NextBufferInfo();
+        setWriter.UpdateDescriptorSets(device_);
+        setWriter.Reset();
+        return setWriter.NextBufferInfo();
     }
     return info;
 }
 
-VkDescriptorImageInfo* VKDescriptorCache::NextImageInfoOrUpdateCache()
+VkDescriptorImageInfo* VKDescriptorCache::NextImageInfoOrUpdateCache(VKDescriptorSetWriter& setWriter)
 {
-    auto info = setWriter_.NextImageInfo();
+    auto info = setWriter.NextImageInfo();
     if (info == nullptr)
     {
         /* Flush descriptor set update */
-        setWriter_.UpdateDescriptorSets(device_);
-        setWriter_.Reset();
-        return setWriter_.NextImageInfo();
+        setWriter.UpdateDescriptorSets(device_);
+        setWriter.Reset();
+        return setWriter.NextImageInfo();
     }
     return info;
 }
 
-void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding)
+void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
-    auto bufferInfo = NextBufferInfoOrUpdateCache();
+    auto bufferInfo = NextBufferInfoOrUpdateCache(setWriter);
     {
         bufferInfo->buffer  = bufferVK.GetVkBuffer();
         bufferInfo->offset  = 0;
         bufferInfo->range   = VK_WHOLE_SIZE;
     }
-    auto writeDesc = setWriter_.NextWriteDescriptor();
+    auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
@@ -169,15 +170,15 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
     }
 }
 
-void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding)
+void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
-    auto imageInfo = NextImageInfoOrUpdateCache();
+    auto imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
         imageInfo->imageView     = textureVK.GetVkImageView();
         imageInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
-    auto writeDesc = setWriter_.NextWriteDescriptor();
+    auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
@@ -190,15 +191,15 @@ void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKL
     }
 }
 
-void VKDescriptorCache::EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKLayoutBinding& binding)
+void VKDescriptorCache::EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
-    auto imageInfo = NextImageInfoOrUpdateCache();
+    auto imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler          = samplerVK.GetVkSampler();
         imageInfo->imageView        = VK_NULL_HANDLE;
         imageInfo->imageLayout      = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    auto writeDesc = setWriter_.NextWriteDescriptor();
+    auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
@@ -287,7 +288,7 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
 
 void VKDescriptorCache::UpdateCopyDescriptorSet(VkDescriptorSet dstSet)
 {
-    for (auto& copyDesc : copyDescs_)
+    for (VkCopyDescriptorSet& copyDesc : copyDescs_)
         copyDesc.dstSet = dstSet;
 }
 

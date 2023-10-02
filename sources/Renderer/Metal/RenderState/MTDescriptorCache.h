@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+class MTPipelineLayout;
+
 struct MTDynamicResourceLayout
 {
     ResourceType    type    = ResourceType::Undefined;
@@ -33,16 +35,14 @@ class MTDescriptorCache
 
     public:
 
-        MTDescriptorCache() = default;
+        // Initialiyes the cache by clearing all dirty bits.
+        MTDescriptorCache();
 
-        // Builds the internal descriptor lists for render and compute commands.
-        MTDescriptorCache(const ArrayView<MTDynamicResourceLayout>& bindings);
+        // Resets the binding layouts and dirty bits.
+        void Reset(const MTPipelineLayout* pipelineLayout);
 
         // Resets the dirty bits which will bind all resources on the next flush, i.e. IsInvalidated() returns true.
         void Reset();
-
-        // Clears all dirty bits, i.e IsInvalidated() returns false.
-        void Clear();
 
         // Sets the specified resource in this cache.
         void SetResource(std::uint32_t descriptor, Resource& resource);
@@ -59,23 +59,24 @@ class MTDescriptorCache
             return (dirtyRange_[0] < dirtyRange_[1]);
         }
 
-    private:
-
-        struct MTDynamicResourceBinding
+        // Returns true if this cache is empty and does not contain any binding layouts.
+        inline bool IsEmpty() const
         {
-            id                      resource    = nil;
-            MTDynamicResourceLayout layout;
-        };
+            return layouts_.empty();
+        }
 
     private:
 
         void BuildResourceBindings(const ArrayView<MTDynamicResourceLayout>& bindings);
 
-        void BindGraphicsResource(id<MTLRenderCommandEncoder> renderEncoder, const MTDynamicResourceBinding& binding);
-        void BindComputeResource(id<MTLComputeCommandEncoder> computeEncoder, const MTDynamicResourceBinding& binding);
+        void BindGraphicsResource(id<MTLRenderCommandEncoder> renderEncoder, const MTDynamicResourceLayout& layout, id resource);
+        void BindComputeResource(id<MTLComputeCommandEncoder> computeEncoder, const MTDynamicResourceLayout& layout, id resource);
 
         // Marks the specified binding as invalidated.
         void InvalidateBinding(std::uint8_t index);
+
+        // Clears all dirty bits, i.e IsInvalidated() returns false.
+        void Clear();
 
         // Returns true if the specified binding is invalidated.
         inline bool IsBindingInvalidated(std::uint8_t index) const
@@ -85,9 +86,10 @@ class MTDescriptorCache
 
     private:
 
-        std::vector<MTDynamicResourceBinding>   bindings_;
-        std::uint64_t                           dirtyBindings_[4]   = {};
-        std::uint8_t                            dirtyRange_[2]      = {};
+        ArrayView<MTDynamicResourceLayout>  layouts_;
+        std::vector<id>                     bindings_;
+        std::uint64_t                       dirtyBindings_[4]   = {};
+        std::uint8_t                        dirtyRange_[2]      = {};
 
 };
 

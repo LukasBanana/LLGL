@@ -10,7 +10,7 @@
 
 
 #include <LLGL/ForwardDecls.h>
-#include <LLGL/StaticLimits.h>
+#include <LLGL/Constants.h>
 #include "../OpenGL.h"
 #include <memory>
 #include <cstdint>

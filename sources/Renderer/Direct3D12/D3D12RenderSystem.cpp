@@ -57,7 +57,7 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
 
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
-    D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, stagingBufferPool_);
+    D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, *commandQueue_, stagingBufferPool_);
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -152,7 +152,7 @@ void D3D12RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const 
 void D3D12RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize);
+    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, *commandQueue_, bufferD3D.GetResource(), offset, data, dataSize);
     /* No ExecuteCommandListAndSync() here as it has already been flushed by the staging buffer pool */
 }
 
@@ -171,16 +171,16 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.Unmap(*commandContext_);
+    bufferD3D.Unmap(*commandContext_, *commandQueue_);
 }
 
 /* ----- Textures ----- */
 
-Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     auto* textureD3D = textures_.emplace<D3D12Texture>(device_.GetNative(), textureDesc);
 
-    if (imageDesc != nullptr)
+    if (initialImage != nullptr)
     {
         /* Update base MIP-map */
         TextureRegion region;
@@ -188,8 +188,8 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             region.subresource.numArrayLayers   = textureDesc.arrayLayers;
             region.extent                       = textureDesc.extent;
         }
-        D3D12SubresourceContext subresourceContext{ *commandContext_ };
-        UpdateTextureSubresourceFromImage(*textureD3D, region, *imageDesc, subresourceContext);
+        D3D12SubresourceContext subresourceContext{ *commandContext_, *commandQueue_ };
+        UpdateTextureSubresourceFromImage(*textureD3D, region, *initialImage, subresourceContext);
 
         /* Generate MIP-maps if enabled */
         if (MustGenerateMipsOnCreate(textureDesc))
@@ -205,35 +205,35 @@ void D3D12RenderSystem::Release(Texture& texture)
     textures_.erase(&texture);
 }
 
-void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void D3D12RenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    D3D12SubresourceContext subresourceContext{ *commandContext_ };
-    UpdateTextureSubresourceFromImage(textureD3D, textureRegion, imageDesc, subresourceContext);
+    D3D12SubresourceContext subresourceContext{ *commandContext_, *commandQueue_ };
+    UpdateTextureSubresourceFromImage(textureD3D, textureRegion, srcImageView, subresourceContext);
 }
 
-void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
 
     /* Determine what plane to read from */
-    const bool isStencilOnlyFormat  = (imageDesc.format == ImageFormat::Stencil);
-    const bool isDepthOnlyFormat    = (imageDesc.format == ImageFormat::Depth);
+    const bool isStencilOnlyFormat  = (dstImageView.format == ImageFormat::Stencil);
+    const bool isDepthOnlyFormat    = (dstImageView.format == ImageFormat::Depth);
     const UINT texturePlane         = (isStencilOnlyFormat ? 1 : 0);
 
     /* Create CPU accessible readback buffer for texture and execute command list */
     ComPtr<ID3D12Resource> readbackBuffer;
     UINT rowStride = 0, layerSize = 0, layerStride = 0;
     {
-        D3D12SubresourceContext subresourceContext{ *commandContext_ };
+        D3D12SubresourceContext subresourceContext{ *commandContext_, *commandQueue_ };
         textureD3D.CreateSubresourceCopyAsReadbackBuffer(subresourceContext, textureRegion, texturePlane, rowStride, layerSize, layerStride);
         readbackBuffer = subresourceContext.TakeResource();
     }
 
     /* Map readback buffer to CPU memory space */
-    DstImageDescriptor      dstImageDesc        = imageDesc;
+    MutableImageView        intermediateDstView = dstImageView;
     const Format            format              = textureD3D.GetFormat();
     const FormatAttributes& formatAttribs       = GetFormatAttribs(format);
     const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
@@ -244,27 +244,27 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
 
     const char* srcData = reinterpret_cast<const char*>(mappedData);
-    SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, srcData, layerStride };
+    ImageView intermediateSrcView{ formatAttribs.format, formatAttribs.dataType, srcData, layerStride };
 
     if (isStencilOnlyFormat)
     {
-        srcImageDesc.format     = ImageFormat::Stencil;
-        srcImageDesc.dataType   = DataType::UInt8;
+        intermediateSrcView.format      = ImageFormat::Stencil;
+        intermediateSrcView.dataType    = DataType::UInt8;
     }
     else if (isDepthOnlyFormat)
     {
-        srcImageDesc.format     = ImageFormat::Depth;
-        srcImageDesc.dataType   = DataType::Float32;
+        intermediateSrcView.format      = ImageFormat::Depth;
+        intermediateSrcView.dataType    = DataType::Float32;
     }
 
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
         /* Copy CPU accessible buffer to output data */
-        RenderSystem::CopyTextureImageData(dstImageDesc, srcImageDesc, numTexelsPerLayer, extent.width, rowStride);
+        RenderSystem::CopyTextureImageData(intermediateDstView, intermediateSrcView, numTexelsPerLayer, extent.width, rowStride);
 
         /* Move destination image pointer to next layer */
-        dstImageDesc.data = reinterpret_cast<char*>(dstImageDesc.data) + layerSize;
-        srcImageDesc.data = reinterpret_cast<const char*>(srcImageDesc.data) + layerStride;
+        intermediateDstView.data = reinterpret_cast<char*>(intermediateDstView.data) + layerSize;
+        intermediateSrcView.data = reinterpret_cast<const char*>(intermediateSrcView.data) + layerStride;
     }
 
     /* Unmap buffer */
@@ -610,14 +610,9 @@ void D3D12RenderSystem::QueryRenderingCaps()
     SetRenderingCaps(caps);
 }
 
-void D3D12RenderSystem::ExecuteCommandList()
-{
-    commandContext_->Finish();
-}
-
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
-    commandContext_->Finish(true);
+    commandContext_->FinishAndSync(*commandQueue_);
 }
 
 void D3D12RenderSystem::UpdateBufferAndSync(
@@ -636,7 +631,7 @@ void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess 
     void* mappedData = nullptr;
     const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(offset + length) };
 
-    if (SUCCEEDED(bufferD3D.Map(*commandContext_, range, &mappedData, access)))
+    if (SUCCEEDED(bufferD3D.Map(*commandContext_, *commandQueue_, range, &mappedData, access)))
         return mappedData;
 
     return nullptr;
@@ -645,7 +640,7 @@ void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess 
 HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     D3D12Texture&               textureD3D,
     const TextureRegion&        region,
-    const SrcImageDescriptor&   imageDesc,
+    const ImageView&            imageView,
     D3D12SubresourceContext&    subresourceContext)
 {
     /* Validate subresource range */
@@ -662,13 +657,13 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
 
     const Extent3D                      srcExtent   = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
-    const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageDesc.format, imageDesc.dataType);
+    const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageView.format, imageView.dataType);
 
-    if (imageDesc.dataSize < dataLayout.imageSize)
+    if (imageView.dataSize < dataLayout.imageSize)
     {
         Errorf(
             "image data size (%zu) is too small to update subresource of D3D12 texture (%zu is required)",
-            imageDesc.dataSize, dataLayout.imageSize
+            imageView.dataSize, dataLayout.imageSize
         );
         return E_INVALIDARG;
     }
@@ -676,13 +671,13 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     const Extent3D mipExtent = textureD3D.GetMipExtent(region.subresource.baseMipLevel);
 
     DynamicByteArray intermediateData;
-    const void* srcData = imageDesc.data;
+    const void* srcData = imageView.data;
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
-        (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType))
+        (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
         LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }

@@ -1,19 +1,36 @@
 #!/bin/sh
 
+DEFAULT_BUILD_DIRS=("build_macos/build" "build_macos/build/Debug" "bin/macOS-x64/build")
+
 SOURCE_DIR="$(dirname $0)"
-BUILD_DIR="$SOURCE_DIR/build_macos/build"
+BUILD_DIR="$SOURCE_DIR/${DEFAULT_BUILD_DIRS[0]}"
 
 # When this .command script is launched from Finder, we have to change to the source directory explicitly
 cd $SOURCE_DIR
 
 if [ "$#" -eq 1 ]; then
     BUILD_DIR=$1
-elif [ -d "$SOURCE_DIR/build_macos/build/Example_HelloTriangle.app" ]; then
-    BUILD_DIR="build_macos/build"
-elif [ -d "$SOURCE_DIR/bin/x64/MacOS/Example_HelloTriangle.app" ]; then
-    BUILD_DIR="bin/x64/MacOS"
 else
-    echo "error: build folder not found: $BUILD_DIR"
+    for DIR in "${DEFAULT_BUILD_DIRS[@]}"; do
+        if [ -d "$DIR" ]; then
+            if [ -f "$DIR/libLLGL.dylib" ] || [ -f "$DIR/libLLGLD.dylib" ] || [ -f "$DIR/libLLGL.a" ] || [ -f "$DIR/libLLGLD.a" ]; then
+                BUILD_DIR="$DIR"
+                break
+            fi
+        fi
+    done
+fi
+
+# Validate build folder: Check for libLLGL.dylib/.a or libLLGLD.dylib/.a files
+if [ -d "$BUILD_DIR" ]; then
+    if [ -f "$BUILD_DIR/libLLGL.dylib" ] || [ -f "$BUILD_DIR/libLLGLD.dylib" ] || [ -f "$BUILD_DIR/libLLGL.a" ] || [ -f "$BUILD_DIR/libLLGLD.a" ]; then
+        echo "Run examples from build directory: $BUILD_DIR"
+    else
+        echo "Error: Missing LLGL base lib (libLLGL.dylib/.a or libLLGLD.dylib/.a) in build folder: $BUILD_DIR"
+        exit 1
+    fi
+else
+    echo "Error: Build folder not found: $BUILD_DIR"
     exit 1
 fi
 
@@ -23,7 +40,8 @@ list_examples()
     EXAMPLE_DIRS=($(ls examples/Cpp))
     for DIR in "${EXAMPLE_DIRS[@]}"; do
         if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
-            if [ -f "examples/Cpp/$DIR/Example.cpp" ]; then
+            # Include example if its source and binary files exist
+            if [ -f "examples/Cpp/$DIR/Example.cpp" ] && [ -f "$BUILD_DIR/Example_${DIR}.app/Contents/MacOS/Example_${DIR}" ]; then
                 echo "$DIR"
             fi
         fi

@@ -917,17 +917,17 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxDepthBufferSamples);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxStencilBufferSamples);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxNoAttachmentSamples);
 
-LLGL_STATIC_ASSERT_SIZE(SrcImageDescriptor);
-LLGL_STATIC_ASSERT_OFFSET(SrcImageDescriptor, format);
-LLGL_STATIC_ASSERT_OFFSET(SrcImageDescriptor, dataType);
-LLGL_STATIC_ASSERT_OFFSET(SrcImageDescriptor, data);
-LLGL_STATIC_ASSERT_OFFSET(SrcImageDescriptor, dataSize);
+LLGL_STATIC_ASSERT_SIZE(ImageView);
+LLGL_STATIC_ASSERT_OFFSET(ImageView, format);
+LLGL_STATIC_ASSERT_OFFSET(ImageView, dataType);
+LLGL_STATIC_ASSERT_OFFSET(ImageView, data);
+LLGL_STATIC_ASSERT_OFFSET(ImageView, dataSize);
 
-LLGL_STATIC_ASSERT_SIZE(DstImageDescriptor);
-LLGL_STATIC_ASSERT_OFFSET(DstImageDescriptor, format);
-LLGL_STATIC_ASSERT_OFFSET(DstImageDescriptor, dataType);
-LLGL_STATIC_ASSERT_OFFSET(DstImageDescriptor, data);
-LLGL_STATIC_ASSERT_OFFSET(DstImageDescriptor, dataSize);
+LLGL_STATIC_ASSERT_SIZE(MutableImageView);
+LLGL_STATIC_ASSERT_OFFSET(MutableImageView, format);
+LLGL_STATIC_ASSERT_OFFSET(MutableImageView, dataType);
+LLGL_STATIC_ASSERT_OFFSET(MutableImageView, data);
+LLGL_STATIC_ASSERT_OFFSET(MutableImageView, dataSize);
 
 LLGL_STATIC_ASSERT_SIZE(SamplerDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(SamplerDescriptor, addressModeU);

@@ -7,7 +7,6 @@
 
 #include "GLTypes.h"
 #include "../../Core/Exception.h"
-#include <LLGL/StaticLimits.h>
 
 
 namespace LLGL

@@ -10,7 +10,6 @@
 
 
 #include "VKPipelineState.h"
-#include <LLGL/StaticLimits.h>
 
 
 namespace LLGL

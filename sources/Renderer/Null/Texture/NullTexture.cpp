@@ -23,15 +23,15 @@ static TextureDescriptor MakeNullTextureDesc(const TextureDescriptor& inDesc)
     return outDesc;
 }
 
-NullTexture::NullTexture(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc) :
+NullTexture::NullTexture(const TextureDescriptor& desc, const ImageView* initialImage) :
     Texture       { desc.type, desc.bindFlags },
     desc          { MakeNullTextureDesc(desc) },
     extent_       { LLGL::GetMipExtent(desc)  }
 {
     AllocImages();
-    if (imageDesc != nullptr)
+    if (initialImage != nullptr)
     {
-        Write(TextureRegion{ Offset3D{}, extent_ }, *imageDesc);
+        Write(TextureRegion{ Offset3D{}, extent_ }, *initialImage);
         if ((desc.miscFlags & MiscFlags::GenerateMips) != 0)
             GenerateMips();
     }
@@ -70,7 +70,7 @@ std::uint32_t NullTexture::ClampMipLevel(std::uint32_t mipLevel) const
     return std::min(mipLevel, desc.mipLevels - 1);
 }
 
-void NullTexture::Write(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void NullTexture::Write(const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     if (textureRegion.subresource.baseMipLevel < images_.size() && textureRegion.subresource.numMipLevels == 1)
     {
@@ -78,11 +78,11 @@ void NullTexture::Write(const TextureRegion& textureRegion, const SrcImageDescri
         Image& mipMap = images_[textureRegion.subresource.baseMipLevel];
         const Offset3D offset = CalcTextureOffset(GetType(), textureRegion.offset, textureRegion.subresource.baseArrayLayer);
         const Extent3D extent = CalcTextureExtent(GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
-        mipMap.WritePixels(offset, extent, imageDesc);
+        mipMap.WritePixels(offset, extent, srcImageView);
     }
 }
 
-void NullTexture::Read(const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void NullTexture::Read(const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     if (textureRegion.subresource.baseMipLevel < images_.size() && textureRegion.subresource.numMipLevels == 1)
     {
@@ -90,7 +90,7 @@ void NullTexture::Read(const TextureRegion& textureRegion, const DstImageDescrip
         Image& mipMap = images_[textureRegion.subresource.baseMipLevel];
         const Offset3D offset = CalcTextureOffset(GetType(), textureRegion.offset, textureRegion.subresource.baseArrayLayer);
         const Extent3D extent = CalcTextureExtent(GetType(), textureRegion.extent, textureRegion.subresource.numArrayLayers);
-        mipMap.ReadPixels(offset, extent, imageDesc);
+        mipMap.ReadPixels(offset, extent, dstImageView);
     }
 }
 

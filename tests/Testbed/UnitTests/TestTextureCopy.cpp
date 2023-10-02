@@ -104,7 +104,7 @@ DEF_TEST( TextureCopy )
             for_range(layer, layers)
             {
                 // Write image into source texture
-                SrcImageDescriptor srcImage;
+                ImageView srcImage;
                 {
                     srcImage.format     = ImageFormat::RGBA;
                     srcImage.dataType   = DataType::UInt8;
@@ -129,7 +129,7 @@ DEF_TEST( TextureCopy )
 
                 // Read results from destination texture
                 ColorRGBAub outputData[8];
-                DstImageDescriptor dstImage;
+                MutableImageView dstImage;
                 {
                     dstImage.format     = ImageFormat::RGBA;
                     dstImage.dataType   = DataType::UInt8;

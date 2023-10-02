@@ -253,7 +253,7 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Determine size of image for staging buffer */
     const std::uint32_t imageSize       = NumMipTexels(textureDesc, 0);
@@ -263,14 +263,14 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     const void* initialData = nullptr;
     DynamicByteArray intermediateData;
 
-    if (imageDesc)
+    if (initialImage != nullptr)
     {
         /* Check if image data must be converted */
         const auto& formatAttribs = GetFormatAttribs(textureDesc.format);
         if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
         {
             /* Convert image format (will be null if no conversion is necessary) */
-            intermediateData = ConvertImageBuffer(*imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+            intermediateData = ConvertImageBuffer(*initialImage, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         }
 
         if (intermediateData)
@@ -279,8 +279,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             Validate that source image data was large enough so conversion is valid,
             then use temporary image buffer as source for initial data
             */
-            const std::size_t srcImageDataSize = GetMemoryFootprint(imageDesc->format, imageDesc->dataType, imageSize);
-            RenderSystem::AssertImageDataSize(imageDesc->dataSize, srcImageDataSize);
+            const std::size_t srcImageDataSize = GetMemoryFootprint(initialImage->format, initialImage->dataType, imageSize);
+            RenderSystem::AssertImageDataSize(initialImage->dataSize, srcImageDataSize);
             initialData = intermediateData.get();
         }
         else
@@ -289,8 +289,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             Validate that image data is large enough,
             then use input data as source for initial data
             */
-            RenderSystem::AssertImageDataSize(imageDesc->dataSize, initialDataSize);
-            initialData = imageDesc->data;
+            RenderSystem::AssertImageDataSize(initialImage->dataSize, initialDataSize);
+            initialData = initialImage->data;
         }
     }
     else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
@@ -340,7 +340,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             textureVK->TransitionImageLayout(device_, cmdBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
             /* Generate MIP-maps if enabled */
-            if (imageDesc != nullptr && MustGenerateMipsOnCreate(textureDesc))
+            if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))
             {
                 device_.GenerateMips(
                     cmdBuffer,
@@ -371,7 +371,7 @@ void VKRenderSystem::Release(Texture& texture)
     textures_.erase(&texture);
 }
 
-void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
@@ -393,7 +393,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, Constants::maxThreadCount);
+        intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
     }
 
     if (intermediateData)
@@ -402,8 +402,8 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         Validate that source image data was large enough so conversion is valid,
         then use temporary image buffer as source for initial data
         */
-        const std::size_t srcImageDataSize = GetMemoryFootprint(imageDesc.format, imageDesc.dataType, imageSize);
-        RenderSystem::AssertImageDataSize(imageDesc.dataSize, srcImageDataSize);
+        const std::size_t srcImageDataSize = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, imageSize);
+        RenderSystem::AssertImageDataSize(srcImageView.dataSize, srcImageDataSize);
         imageData = intermediateData.get();
     }
     else
@@ -412,8 +412,8 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         Validate that image data is large enough,
         then use input data as source for initial data
         */
-        RenderSystem::AssertImageDataSize(imageDesc.dataSize, static_cast<std::size_t>(imageDataSize));
-        imageData = imageDesc.data;
+        RenderSystem::AssertImageDataSize(srcImageView.dataSize, static_cast<std::size_t>(imageDataSize));
+        imageData = srcImageView.data;
     }
 
     /* Create staging buffer */
@@ -449,7 +449,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
 }
 
-void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
@@ -496,8 +496,8 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
         if (void* memory = deviceMemory->Map(device_, region->GetOffset(), imageDataSize))
         {
             /* Copy data to buffer object */
-            const SrcImageDescriptor srcImageDesc{ formatAttribs.format, formatAttribs.dataType, memory, static_cast<std::size_t>(imageDataSize) };
-            RenderSystem::CopyTextureImageData(imageDesc, srcImageDesc, imageSize, extent.width);
+            const ImageView srcImageView{ formatAttribs.format, formatAttribs.dataType, memory, static_cast<std::size_t>(imageDataSize) };
+            RenderSystem::CopyTextureImageData(dstImageView, srcImageView, imageSize, extent.width);
             deviceMemory->Unmap(device_);
         }
     }

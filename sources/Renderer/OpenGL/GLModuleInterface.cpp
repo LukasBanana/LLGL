@@ -14,8 +14,8 @@ namespace LLGL
 {
 
 
-#ifdef LLGL_BUILD_RENDERER_OPENGLES3
-#define ModuleOpenGL ModuleOpenGLES3
+#ifdef LLGL_OPENGLES3
+#   define ModuleOpenGL ModuleOpenGLES3
 #endif
 
 namespace ModuleOpenGL
@@ -77,10 +77,6 @@ LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int rend
 } // /extern "C"
 
 #endif // /LLGL_BUILD_STATIC_LIB
-
-#ifdef LLGL_BUILD_RENDERER_OPENGLES3
-#undef ModuleOpenGL
-#endif
 
 
 

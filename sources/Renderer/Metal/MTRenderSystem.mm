@@ -135,11 +135,11 @@ void MTRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
+Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     auto* textureMT = textures_.emplace<MTTexture>(device_, textureDesc);
 
-    if (imageDesc)
+    if (initialImage != nullptr)
     {
         textureMT->WriteRegion(
             //TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->GetMipExtent(0) },
@@ -149,7 +149,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 Offset3D{ 0, 0, 0 },
                 textureDesc.extent
             },
-            *imageDesc
+            *initialImage
         );
 
         /* Generate MIP-maps if enabled */
@@ -173,18 +173,18 @@ void MTRenderSystem::Release(Texture& texture)
     textures_.erase(&texture);
 }
 
-void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void MTRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     commandQueue_->WaitIdle();
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    textureMT.WriteRegion(textureRegion, imageDesc);
+    textureMT.WriteRegion(textureRegion, srcImageView);
 }
 
-void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const DstImageDescriptor& imageDesc)
+void MTRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
 {
     commandQueue_->WaitIdle();
     auto& textureMT = LLGL_CAST(MTTexture&, texture);
-    textureMT.ReadRegion(textureRegion, imageDesc, commandQueue_->GetNative(), intermediateBuffer_.get());
+    textureMT.ReadRegion(textureRegion, dstImageView, commandQueue_->GetNative(), intermediateBuffer_.get());
 }
 
 /* ----- Sampler States ---- */

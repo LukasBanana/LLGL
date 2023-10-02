@@ -13,6 +13,7 @@
 #include "RenderState/DbgRenderPass.h"
 #include <string>
 #include <memory>
+#include <functional>
 
 
 namespace LLGL
@@ -23,6 +24,10 @@ class DbgBuffer;
 
 class DbgSwapChain final : public SwapChain
 {
+
+    public:
+
+        using PresentCallback = std::function<void()>;
 
     public:
 
@@ -43,7 +48,7 @@ class DbgSwapChain final : public SwapChain
 
     public:
 
-        DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc);
+        DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc, const PresentCallback& presentCallback);
 
     public:
 
@@ -57,7 +62,8 @@ class DbgSwapChain final : public SwapChain
 
     private:
 
-        std::unique_ptr<DbgRenderPass> renderPass_;
+        std::unique_ptr<DbgRenderPass>  renderPass_;
+        PresentCallback                 presentCallback_;
 
 };
 

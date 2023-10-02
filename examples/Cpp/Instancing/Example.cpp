@@ -251,17 +251,17 @@ private:
         }
 
         // Create array texture object with 'numImages' layers
-        LLGL::SrcImageDescriptor imageDesc;
+        LLGL::ImageView imageView;
         {
-            imageDesc.format    = LLGL::ImageFormat::RGBA;
-            imageDesc.dataType  = LLGL::DataType::UInt8;
-            imageDesc.data      = arrayImageBuffer.data();
-            imageDesc.dataSize  = arrayImageBuffer.size();
+            imageView.format    = LLGL::ImageFormat::RGBA;
+            imageView.dataType  = LLGL::DataType::UInt8;
+            imageView.data      = arrayImageBuffer.data();
+            imageView.dataSize  = arrayImageBuffer.size();
         };
 
         arrayTexture = renderer->CreateTexture(
             LLGL::Texture2DArrayDesc(LLGL::Format::RGBA8UNorm, width, height, numImages),
-            &imageDesc
+            &imageView
         );
     }
 

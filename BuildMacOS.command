@@ -64,7 +64,7 @@ done
 
 # Ensure we are inside the repository folder
 if [ ! -f "$SOURCE_DIR/CMakeLists.txt" ]; then
-    echo "error: file not found: CMakeLists.txt"
+    echo "Error: File not found: CMakeLists.txt"
     exit 1
 fi
 

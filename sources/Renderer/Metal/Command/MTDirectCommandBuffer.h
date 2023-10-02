@@ -27,7 +27,6 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
     public:
 
         MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueue& cmdQueue, const CommandBufferDescriptor& desc);
-        ~MTDirectCommandBuffer();
 
     public:
 

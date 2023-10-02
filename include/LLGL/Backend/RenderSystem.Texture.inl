@@ -9,7 +9,7 @@
 
 virtual LLGL::Texture* CreateTexture(
     const LLGL::TextureDescriptor&  textureDesc,
-    const LLGL::SrcImageDescriptor* imageDesc       = nullptr
+    const LLGL::ImageView*          initialImage    = nullptr
 ) override final;
 
 virtual void Release(
@@ -19,13 +19,13 @@ virtual void Release(
 virtual void WriteTexture(
     LLGL::Texture&                  texture,
     const LLGL::TextureRegion&      textureRegion,
-    const LLGL::SrcImageDescriptor& imageDesc
+    const LLGL::ImageView&          srcImageView
 ) override final;
 
 virtual void ReadTexture(
     LLGL::Texture&                  texture,
     const LLGL::TextureRegion&      textureRegion,
-    const LLGL::DstImageDescriptor& imageDesc
+    const LLGL::MutableImageView&   dstImageView
 ) override final;
 
 

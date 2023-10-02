@@ -298,7 +298,7 @@ ParseContext::ParseContext(const StringView& source) :
     /* Reserve token array with average token length */
     constexpr std::size_t averageTokenLength = 8;
     tokens_.reserve(source_.size() / averageTokenLength);
-    ScanTokens(source.begin(), source.end(), tokens_);
+    ScanTokens(source_.begin(), source_.end(), tokens_);
 }
 
 template <typename T>

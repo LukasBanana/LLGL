@@ -638,6 +638,15 @@ class Parser:
                 mod.enums.append(enum)
             elif self.scanner.acceptIf('struct'):
                 self.scanner.acceptIf('LLGL_EXPORT')
+
+                # Ignore deprecated records
+                ignoreRecord = False
+                if self.scanner.acceptIf('LLGL_DEPRECATED'):
+                    ignoreRecord = True
+                    while self.scanner.accept() != ')':
+                        pass
+                
+                # Parse record name
                 name = self.scanner.accept()
                 self.scanner.acceptOrFail('{')
                 if self.scanner.acceptIf('enum'):
@@ -647,12 +656,14 @@ class Parser:
                         flag.base = self.parseType()
                     self.scanner.acceptOrFail('{')
                     flag.fields = self.parseEnumEntries()
-                    mod.flags.append(flag)
+                    if not ignoreRecord:
+                        mod.flags.append(flag)
                 else:
                     # Parse structure
                     struct = LLGLRecord(name)
                     struct.fields = self.parseStructMembers(name)
-                    mod.structs.append(struct)
+                    if not ignoreRecord:
+                        mod.structs.append(struct)
                 self.scanner.acceptOrFail('}')
             else:
                 self.scanner.accept()

@@ -36,9 +36,18 @@ class SwapChain;
 
 /**
 \brief Command buffer interface used for storing and encoding GPU commands.
+
 \remarks This is the main interface to encode graphics, compute, and blit commands to be submitted to the GPU.
 All states that can be changed with a setter function are not persistent across several encoding sections.
 Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
+
+\remarks In a multi-threaded environment, all blit commands (e.g. CommandBuffer::UpdateBuffer, CommandBuffer::CopyBuffer etc.) <b>must not</b> be called simultaneously
+with the same source and/or destination resources even if their ranges do not collide.
+Depending on the backend, those resources might be transitioned into difference states during those commands.
+The same applies to CommandBuffer::BeginRenderPass where the specified RenderTarget might be transitioned into rendering state.
+Binding resources (CommandBuffer::SetResource, CommandBuffer::SetResourceHeap) as well as vertex (CommandBuffer::SetVertexBuffer) and
+index streams (CommandBuffer::SetIndexBuffer) can be performed in a multi-threaded fashion with either the same or separate resources.
+
 \see RenderSystem::CreateCommandBuffer
 */
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
@@ -188,8 +197,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \param[in] value Specifies the 32-bit value to fill the buffer with.
 
-        \param[in] fillSize Specifies the fill size (in bytes) of the buffer region. This \b must be a multiple of 4. By default Constants::wholeSize.
-        If this is equal to \c Constants::wholeSize, \c dstOffset is ignored and the entire buffer will be filled.
+        \param[in] fillSize Specifies the fill size (in bytes) of the buffer region. This \b must be a multiple of 4. By default LLGL_WHOLE_SIZE.
+        If this is equal to \c LLGL_WHOLE_SIZE, \c dstOffset is ignored and the entire buffer will be filled.
 
         \remarks For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
@@ -198,7 +207,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             Buffer&         dstBuffer,
             std::uint64_t   dstOffset,
             std::uint32_t   value,
-            std::uint64_t   fillSize    = Constants::wholeSize
+            std::uint64_t   fillSize    = LLGL_WHOLE_SIZE
         ) = 0;
 
         /**
@@ -504,7 +513,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
 
         \param[in] swapBufferIndex Optional index into what swap-chain buffer the render pass is meant to be rendered.
-        If this is Constants::currentSwapIndex, the current buffer in the swap-chain is used.
+        If this is equal to \c LLGL_CURRENT_SWAP_INDEX, the current buffer in the swap-chain is used.
         Otherwise, this should be the current value returned by SwapChain::GetCurrentSwapIndex.
         This parameter is ignored for regular render targets, i.e. if \c renderTarget is \e not a SwapChain.
 
@@ -559,7 +568,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             const RenderPass*   renderPass      = nullptr,
             std::uint32_t       numClearValues  = 0,
             const ClearValue*   clearValues     = nullptr,
-            std::uint32_t       swapBufferIndex = Constants::currentSwapIndex
+            std::uint32_t       swapBufferIndex = LLGL_CURRENT_SWAP_INDEX
         ) = 0;
 
         /**

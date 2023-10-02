@@ -144,6 +144,13 @@ struct MTCmdSetStencilRef
     StencilFace     face;
 };
 
+struct MTCmdSetUniforms
+{
+    std::uint32_t   first;
+    std::uint16_t   dataSize;
+//  char            data[dataSize];
+};
+
 struct MTCmdSetVertexBuffers
 {
     NSUInteger      count;
@@ -155,6 +162,12 @@ struct MTCmdSetResourceHeap
 {
     MTResourceHeap* resourceHeap;
     std::uint32_t   descriptorSet;
+};
+
+struct MTCmdSetResource
+{
+    std::uint32_t   descriptor;
+    Resource*       resource;
 };
 
 struct MTCmdBindRenderTarget

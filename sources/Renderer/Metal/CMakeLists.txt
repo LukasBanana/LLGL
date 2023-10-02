@@ -61,7 +61,7 @@ if(LLGL_BUILD_RENDERER_METAL)
         add_llgl_module(LLGL_Metal LLGL_BUILD_RENDERER_METAL "${FilesMT}")
         
         if(LLGL_MOBILE_PLATFORM)
-            target_link_libraries(LLGL_Metal PUBLIC LLGL "-framework Foundation -framework UIKit -framework QuartzCore -framework Metal -framework MetalKit")
+            target_link_libraries(LLGL_Metal LLGL "-framework Foundation -framework UIKit -framework QuartzCore -framework Metal -framework MetalKit")
         else()
             target_link_libraries(LLGL_Metal LLGL ${METAL_LIBRARY} ${METALKIT_LIBRARY})
         endif()

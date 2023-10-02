@@ -14,6 +14,7 @@
 #include <LLGL/ImageFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/Utils/ColorRGBA.h>
+#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -138,47 +139,47 @@ class LLGL_EXPORT Image
         void Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent);
 
         /**
-        \brief Reads a region of pixels from this image into the destination image buffer specified by 'imageDesc'.
+        \brief Reads a region of pixels from this image into the destination image buffer specified by \c imageView.
         \param[in] offset Specifies the region offset within this image to read from.
         \param[in] extent Specifies the region extent within this image to read from.
-        \param[in] imageDesc Specifies the destination image descriptor to write the region to.
+        \param[in] imageView Specifies the destination image view to write the region to.
         If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
         \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details). By default 0.
         \remarks To read a single pixel, use the following code example:
         \code
         LLGL::ColorRGBAub ReadSinglePixelRGBAub(const LLGL::Image& image, const LLGL::Offset3D& position) {
             LLGL::ColorRGBAub pixelColor;
-            const DstImageDescriptor imageDesc { LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, &pixelColor, sizeof(pixelColor) };
-            image.ReadPixels(position, { 1, 1, 1 }, imageDesc);
+            const MutableImageView imageView{ LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, &pixelColor, sizeof(pixelColor) };
+            image.ReadPixels(position, { 1, 1, 1 }, imageView);
             return pixelColor;
         }
         \endcode
-        \throws std::invalid_argument If the 'data' member of the image descriptor is non-null, the sub-image region is inside the image,
-        but the 'dataSize' member of the image descriptor is too small.
+        \throws std::invalid_argument If the \c data member of the image descriptor is non-null, the sub-image region is inside the image,
+        but the \c dataSize member of the image descriptor is too small.
         \see IsRegionInside
         \see ConvertImageBuffer
         */
-        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, unsigned threadCount = 0) const;
+        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const MutableImageView& imageView, unsigned threadCount = 0) const;
 
         /**
-        \brief Writes a region of pixels to this image from the source image buffer specified by 'imageDesc'.
+        \brief Writes a region of pixels to this image from the source image buffer specified by \c imageView.
         \param[in] offset Specifies the region offset within this image to write to.
         \param[in] extent Specifies the region extent within this image to write to.
-        \param[in] imageDesc Specifies the source image descriptor to read the region from.
-        If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
+        \param[in] imageView Specifies the source image view to read the region from.
+        If the \c data member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
         \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details). By default 0.
         \see IsRegionInside
         \see ConvertImageBuffer
         */
-        void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, unsigned threadCount = 0);
+        void WritePixels(const Offset3D& offset, const Extent3D& extent, const ImageView& imageView, unsigned threadCount = 0);
 
         /* ----- Attributes ----- */
 
         //! Returns a source image descriptor for this image with read-only access to the image data.
-        SrcImageDescriptor GetSrcDesc() const;
+        ImageView GetView() const;
 
         //! Returns a destination image descriptor for this image with read/write access to the image data.
-        DstImageDescriptor GetDstDesc();
+        MutableImageView GetMutableView();
 
         //! Returns the extent of the image as 3D vector.
         inline const Extent3D& GetExtent() const
@@ -244,6 +245,20 @@ class LLGL_EXPORT Image
 
         //! Returns true if the specified sub-image region is inside the image.
         bool IsRegionInside(const Offset3D& offset, const Extent3D& extent) const;
+
+        LLGL_DEPRECATED("LLGL::Image::GetSrcDesc is deprecated since 0.04b; Use LLGL::Image::GetView instead!", "GetView")
+        //! \deprecated Since 0.04b; use Image::GetView instead.
+        inline ImageView GetSrcDesc() const
+        {
+            return GetView();
+        }
+
+        LLGL_DEPRECATED("LLGL::Image::GetDstDesc is deprecated since 0.04b; Use LLGL::Image::GetMutableView instead!", "GetMutableView")
+        //! \deprecated Since 0.04b; use Image::GetMutableView instead.
+        inline MutableImageView GetDstDesc()
+        {
+            return GetMutableView();
+        }
 
     private:
 

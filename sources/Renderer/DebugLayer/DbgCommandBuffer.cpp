@@ -63,18 +63,18 @@ DbgCommandBuffer::DbgCommandBuffer(
     RenderSystem&                   renderSystemInstance,
     CommandQueue&                   commandQueueInstance,
     CommandBuffer&                  commandBufferInstance,
+    FrameProfile&                   commonProfile,
     RenderingDebugger*              debugger,
-    RenderingProfiler*              profiler,
     const CommandBufferDescriptor&  desc,
     const RenderingCapabilities&    caps)
 :
-    instance   { commandBufferInstance                                             },
-    desc       { desc                                                              },
-    debugger_  { debugger                                                          },
-    profiler_  { profiler                                                          },
-    features_  { caps.features                                                     },
-    limits_    { caps.limits                                                       },
-    timerMngr_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
+    instance        { commandBufferInstance                                             },
+    desc            { desc                                                              },
+    debugger_       { debugger                                                          },
+    commonProfile_  { commonProfile                                                     },
+    features_       { caps.features                                                     },
+    limits_         { caps.limits                                                       },
+    queryTimerPool_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
 {
 }
 
@@ -86,10 +86,10 @@ void DbgCommandBuffer::Begin()
     ResetStates();
     ResetRecords();
 
-    /* Enable performance profiler if it was scheduled */
-    perfProfilerEnabled_ = (profiler_ != nullptr && profiler_->timeRecordingEnabled);
+    /* Enable performance timer if it was scheduled */
+    perfProfilerEnabled_ = (debugger_ != nullptr && debugger_->GetTimeRecording());
     if (perfProfilerEnabled_)
-        timerMngr_.Reset();
+        queryTimerPool_.Reset();
 
     /* Begin with command recording  */
     if (debugger_)
@@ -109,7 +109,17 @@ void DbgCommandBuffer::End()
 
     /* Resolve timer query results for performance profiler */
     if (perfProfilerEnabled_)
-        timerMngr_.TakeRecords(profile_.timeRecords);
+        queryTimerPool_.TakeRecords(profile_.timeRecords);
+
+    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+    {
+        /* Merge frame profile values into rendering profiler */
+        FrameProfile profile;
+        FlushProfile(profile);
+
+        commonProfile_.Accumulate(profile);
+        commonProfile_.commandBufferSubmittions++;
+    }
 }
 
 void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
@@ -229,7 +239,7 @@ void DbgCommandBuffer::FillBuffer(
         AssertRecording();
         ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
 
-        if (fillSize == Constants::wholeSize)
+        if (fillSize == LLGL_WHOLE_SIZE)
         {
             if (dstOffset != 0)
                 LLGL_DBG_WARN(WarningType::ImproperArgument, "non-zero argument for 'dstOffset' is ignored because 'fillSize' is set to LLGL::wholeSize");
@@ -695,7 +705,7 @@ void DbgCommandBuffer::BeginRenderPass(
         /* Record swap-chain frame to validate when submitting the command buffer */
         if (debugger_)
         {
-            const std::uint32_t actualSwapBufferIndex = (swapBufferIndex == Constants::currentSwapIndex ? swapChainDbg.GetCurrentSwapIndex() : swapBufferIndex);
+            const std::uint32_t actualSwapBufferIndex = (swapBufferIndex == LLGL_CURRENT_SWAP_INDEX ? swapChainDbg.GetCurrentSwapIndex() : swapBufferIndex);
             records_.swapChainFrames.push_back({ bindings_.swapChain, actualSwapBufferIndex });
             ValidateSwapBufferIndex(swapChainDbg, actualSwapBufferIndex);
         }
@@ -1296,11 +1306,10 @@ bool DbgCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHan
 
 /* ----- Internal ----- */
 
-void DbgCommandBuffer::NextProfile(FrameProfile& outputProfile)
+void DbgCommandBuffer::FlushProfile(FrameProfile& outProfile)
 {
-    /* Copy frame profile values to output profile */
-    ::memcpy(outputProfile.values, profile_.values, sizeof(profile_.values));
-    outputProfile.timeRecords = std::move(profile_.timeRecords);
+    outProfile = std::move(profile_);
+    profile_.Clear();
 }
 
 void DbgCommandBuffer::ValidateSubmit()
@@ -2053,7 +2062,7 @@ void DbgCommandBuffer::ValidateRenderTargetRange(DbgRenderTarget& renderTargetDb
 
 void DbgCommandBuffer::ValidateSwapBufferIndex(DbgSwapChain& swapChainDbg, std::uint32_t swapBufferIndex)
 {
-    if (swapBufferIndex != Constants::currentSwapIndex && swapBufferIndex >= swapChainDbg.desc.swapBuffers)
+    if (swapBufferIndex != LLGL_CURRENT_SWAP_INDEX && swapBufferIndex >= swapChainDbg.desc.swapBuffers)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
@@ -2364,7 +2373,7 @@ void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std
 void DbgCommandBuffer::ResetStates()
 {
     /* Reset all counters of frame profile, bindings, and other command buffer states */
-    ::memset(profile_.values, 0, sizeof(profile_.values));
+    profile_.Clear();
     ::memset(&bindings_, 0, sizeof(bindings_));
     ::memset(&states_, 0, sizeof(states_));
 }
@@ -2400,12 +2409,12 @@ void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayout
 
 void DbgCommandBuffer::StartTimer(const char* annotation)
 {
-    timerMngr_.Start(annotation);
+    queryTimerPool_.Start(annotation);
 }
 
 void DbgCommandBuffer::EndTimer()
 {
-    timerMngr_.Stop();
+    queryTimerPool_.Stop();
 }
 
 

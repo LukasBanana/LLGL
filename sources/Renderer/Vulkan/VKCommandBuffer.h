@@ -174,6 +174,7 @@ class VKCommandBuffer final : public CommandBuffer
         VKStagingDescriptorSetPool      descriptorSetPoolArray_[maxNumCommandBuffers];
         VKStagingDescriptorSetPool*     descriptorSetPool_          = nullptr;
         VKDescriptorCache*              descriptorCache_            = nullptr;
+        VKDescriptorSetWriter           descriptorSetWriter_;
 
         #if 1//TODO: optimize usage of query pools
         std::vector<VKQueryHeap*>       queryHeapsInFlight_;

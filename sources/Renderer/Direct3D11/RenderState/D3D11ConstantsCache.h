@@ -11,7 +11,6 @@
 
 #include <LLGL/RenderPass.h>
 #include <LLGL/ForwardDecls.h>
-#include <LLGL/StaticLimits.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
 #include "../Shader/D3D11Shader.h"

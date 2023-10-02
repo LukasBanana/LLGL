@@ -177,7 +177,7 @@ SubresourceFootprint MTTexture::GetSubresourceFootprint(std::uint32_t mipLevel) 
     return CalcPackedSubresourceFootprint(GetType(), GetFormat(), GetMipExtent(0), mipLevel, numArrayLayers);
 }
 
-void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDescriptor& imageDesc)
+void MTTexture::WriteRegion(const TextureRegion& textureRegion, const ImageView& srcImageView)
 {
     /* Convert region to MTLRegion */
     MTLRegion region;
@@ -187,12 +187,12 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDe
     /* Get dimensions */
     const Format                        format          = MTTypes::ToFormat([native_ pixelFormat]);
     const FormatAttributes&             formatAttribs   = GetFormatAttribs(format);
-    const SubresourceCPUMappingLayout   layout          = CalcSubresourceCPUMappingLayout(format, textureRegion, imageDesc.format, imageDesc.dataType);
+    const SubresourceCPUMappingLayout   layout          = CalcSubresourceCPUMappingLayout(format, textureRegion, srcImageView.format, srcImageView.dataType);
 
-    if (imageDesc.dataSize < layout.imageSize)
+    if (srcImageView.dataSize < layout.imageSize)
         return /*Out of bounds*/;
 
-    const void* imageData = imageDesc.data;
+    const void* imageData = srcImageView.data;
 
     /* Check if image data must be converted */
     DynamicByteArray intermediateData;
@@ -200,7 +200,7 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDe
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(imageDesc, formatAttribs.format, formatAttribs.dataType, /*cfg.threadCount*/0);
+        intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, /*cfg.threadCount*/0);
         if (intermediateData)
         {
             /* User converted tempoary buffer as image source */
@@ -226,10 +226,10 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const SrcImageDe
 }
 
 void MTTexture::ReadRegion(
-    const TextureRegion&        textureRegion,
-    const DstImageDescriptor&   imageDesc,
-    id<MTLCommandQueue>         cmdQueue,
-    MTIntermediateBuffer*       intermediateBuffer)
+    const TextureRegion&    textureRegion,
+    const MutableImageView& dstImageView,
+    id<MTLCommandQueue>     cmdQueue,
+    MTIntermediateBuffer*   intermediateBuffer)
 {
     /* Convert region to MTLRegion */
     MTLRegion region;
@@ -239,9 +239,9 @@ void MTTexture::ReadRegion(
     /* Get dimensions */
     const Format                        format          = MTTypes::ToFormat([native_ pixelFormat]);
     const FormatAttributes&             formatAttribs   = GetFormatAttribs(format);
-    const SubresourceCPUMappingLayout   layout          = CalcSubresourceCPUMappingLayout(format, textureRegion, imageDesc.format, imageDesc.dataType);
+    const SubresourceCPUMappingLayout   layout          = CalcSubresourceCPUMappingLayout(format, textureRegion, dstImageView.format, dstImageView.dataType);
 
-    if (imageDesc.dataSize < layout.imageSize)
+    if (dstImageView.dataSize < layout.imageSize)
         return /*Out of bounds*/;
 
     if ([native_ storageMode] == MTLStorageModePrivate)
@@ -254,7 +254,7 @@ void MTTexture::ReadRegion(
             textureRegion.subresource,
             formatAttribs,
             layout,
-            imageDesc,
+            dstImageView,
             cmdQueue,
             *intermediateBuffer
         );
@@ -266,7 +266,7 @@ void MTTexture::ReadRegion(
             textureRegion.subresource,
             formatAttribs,
             layout,
-            imageDesc
+            dstImageView
         );
     }
 }
@@ -302,9 +302,9 @@ void MTTexture::ReadRegionFromSharedMemory(
     const TextureSubresource&           subresource,
     const FormatAttributes&             formatAttribs,
     const SubresourceCPUMappingLayout&  layout,
-    const DstImageDescriptor&           imageDesc)
+    const MutableImageView&             dstImageView)
 {
-    if (formatAttribs.format != imageDesc.format || formatAttribs.dataType != imageDesc.dataType)
+    if (formatAttribs.format != dstImageView.format || formatAttribs.dataType != dstImageView.dataType)
     {
         /* Generate intermediate buffer for conversion */
         DynamicByteArray intermediateData = DynamicByteArray{ layout.subresourceSize, UninitializeTag{} };
@@ -323,17 +323,17 @@ void MTTexture::ReadRegionFromSharedMemory(
 
             /* Convert intermediate data into requested format */
             DynamicByteArray formattedData = ConvertImageBuffer(
-                SrcImageDescriptor{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), layout.subresourceSize },
-                imageDesc.format, imageDesc.dataType, /*GetConfiguration().threadCount*/0
+                ImageView{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), layout.subresourceSize },
+                dstImageView.format, dstImageView.dataType, /*GetConfiguration().threadCount*/0
             );
 
             /* Copy temporary data into output buffer */
-            ::memcpy(imageDesc.data, formattedData.get(), imageDesc.dataSize);
+            ::memcpy(dstImageView.data, formattedData.get(), dstImageView.dataSize);
         }
     }
     else
     {
-        char* dstImageData = reinterpret_cast<char*>(imageDesc.data);
+        char* dstImageData = reinterpret_cast<char*>(dstImageView.data);
 
         for_range(arrayLayer, subresource.numArrayLayers)
         {
@@ -398,23 +398,23 @@ static void MTBlitBufferFromTextureAndSync(
 }
 
 static void CopyIntermediateBufferToImageBuffer(
-    MTIntermediateBuffer&       srcBuffer,
-    std::size_t                 srcBufferSize,
-    ImageFormat                 srcImageFormat,
-    DataType                    srcDataType,
-    const DstImageDescriptor&   dstImageDesc)
+    MTIntermediateBuffer&   srcBuffer,
+    std::size_t             srcBufferSize,
+    ImageFormat             srcImageFormat,
+    DataType                srcDataType,
+    const MutableImageView& dstImageView)
 {
-    if (srcImageFormat != dstImageDesc.format || srcDataType != dstImageDesc.dataType)
+    if (srcImageFormat != dstImageView.format || srcDataType != dstImageView.dataType)
     {
         ConvertImageBuffer(
-            SrcImageDescriptor{ srcImageFormat, srcDataType, srcBuffer.GetBytes(), srcBufferSize },
-            dstImageDesc
+            ImageView{ srcImageFormat, srcDataType, srcBuffer.GetBytes(), srcBufferSize },
+            dstImageView
         );
     }
     else
     {
         /* Copy bytes from intermediate shared buffer into output CPU buffer */
-        ::memcpy(dstImageDesc.data, srcBuffer.GetBytes(), dstImageDesc.dataSize);
+        ::memcpy(dstImageView.data, srcBuffer.GetBytes(), dstImageView.dataSize);
     }
 }
 
@@ -423,16 +423,16 @@ void MTTexture::ReadRegionFromPrivateMemory(
     const TextureSubresource&           subresource,
     const FormatAttributes&             formatAttribs,
     const SubresourceCPUMappingLayout&  layout,
-    const DstImageDescriptor&           imageDesc,
+    const MutableImageView&             dstImageView,
     id<MTLCommandQueue>                 cmdQueue,
     MTIntermediateBuffer&               intermediateBuffer)
 {
     /* Copy texture data into intermediate buffer in shared CPU/GPU memory */
     intermediateBuffer.Grow(layout.subresourceSize);
 
-    MTLBlitOption options = GetMTLBlitOptionForImageFormat(imageDesc.format);
+    MTLBlitOption options = GetMTLBlitOptionForImageFormat(dstImageView.format);
 
-    if (imageDesc.format == ImageFormat::Stencil)
+    if (dstImageView.format == ImageFormat::Stencil)
     {
         MTBlitBufferFromTextureAndSync(
             /*cmdQueue:*/       cmdQueue,
@@ -448,10 +448,10 @@ void MTTexture::ReadRegionFromPrivateMemory(
             /*srcBufferSize:*/  layout.subresourceSize,
             /*srcImageFormat:*/ ImageFormat::Stencil,
             /*srcDataType:*/    DataType::UInt8,
-            /*dstImageDesc:*/   imageDesc
+            /*dstImageView:*/   dstImageView
         );
     }
-    else if (imageDesc.format == ImageFormat::DepthStencil)
+    else if (dstImageView.format == ImageFormat::DepthStencil)
     {
         //TODO: Blit depth and stencil separately; MTLBlitEncoder does not allow blitting combined depth-stencil buffers at once
     }
@@ -471,7 +471,7 @@ void MTTexture::ReadRegionFromPrivateMemory(
             /*srcBufferSize:*/  layout.subresourceSize,
             /*srcImageFormat:*/ formatAttribs.format,
             /*srcDataType:*/    formatAttribs.dataType,
-            /*dstImageDesc:*/   imageDesc
+            /*dstImageView:*/   dstImageView
         );
     }
 }

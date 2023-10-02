@@ -10,14 +10,13 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include <LLGL/RenderingDebugger.h>
 
 
 namespace LLGL
 {
 
 
-class RenderingProfiler;
-class RenderingDebugger;
 class DbgQueryHeap;
 
 class DbgCommandQueue final : public CommandQueue
@@ -29,11 +28,7 @@ class DbgCommandQueue final : public CommandQueue
 
     public:
 
-        DbgCommandQueue(
-            CommandQueue&       instance,
-            RenderingProfiler*  profiler,
-            RenderingDebugger*  debugger
-        );
+        DbgCommandQueue(CommandQueue& instance, FrameProfile& profile, RenderingDebugger* debugger);
 
     public:
 
@@ -51,8 +46,8 @@ class DbgCommandQueue final : public CommandQueue
 
     private:
 
-        RenderingProfiler* profiler_ = nullptr;
-        RenderingDebugger* debugger_ = nullptr;
+        RenderingDebugger*  debugger_ = nullptr;
+        FrameProfile&       profile_;
 
 };
 

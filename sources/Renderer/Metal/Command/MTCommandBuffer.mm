@@ -26,12 +26,14 @@ namespace LLGL
 static constexpr NSUInteger g_tessFactorBufferAlignment = (sizeof(MTLQuadTessellationFactorsHalf) * 256);
 
 MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, long flags) :
-    device_            { device                         },
-    flags_             { flags                          },
-    stagingBufferPool_ { device, USHRT_MAX              },
-    tessFactorBuffer_  { device,
-                         MTLResourceStorageModePrivate,
-                         g_tessFactorBufferAlignment    }
+    device_             { device                         },
+    flags_              { flags                          },
+    stagingBufferPools_ { { device, USHRT_MAX },
+                          { device, USHRT_MAX },
+                          { device, USHRT_MAX }          },
+    tessFactorBuffer_   { device,
+                          MTLResourceStorageModePrivate,
+                          g_tessFactorBufferAlignment    }
 {
     ResetRenderStates();
 }
@@ -46,18 +48,6 @@ void MTCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::u
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
     SetIndexStream(bufferMT.GetNative(), static_cast<NSUInteger>(offset), (format == Format::R16UInt));
-}
-
-void MTCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
-{
-    if (descriptorCache_ != nullptr)
-        descriptorCache_->SetResource(descriptor, resource);
-}
-
-void MTCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
-{
-    if (constantsCache_ != nullptr)
-        constantsCache_->SetUniforms(first, data, dataSize);
 }
 
 
@@ -89,18 +79,10 @@ void MTCommandBuffer::SetSwapChain(MTSwapChain* swapChainMT)
     boundSwapChain_ = swapChainMT;
 }
 
-// private
-void MTCommandBuffer::SetPipelineRenderState(MTPipelineState& pipelineStateMT)
-{
-    boundPipelineState_ = &pipelineStateMT;
-    descriptorCache_    = pipelineStateMT.GetDescriptorCache();
-    constantsCache_     = pipelineStateMT.GetConstantsCache();
-}
-
 void MTCommandBuffer::SetGraphicsPSORenderState(MTGraphicsPSO& graphicsPSO)
 {
     /* Store current primitive type and tessellation data */
-    SetPipelineRenderState(graphicsPSO);
+    boundPipelineState_     = &graphicsPSO;
     primitiveType_          = graphicsPSO.GetMTLPrimitiveType();
     numPatchControlPoints_  = graphicsPSO.GetNumPatchControlPoints();
     tessPipelineState_      = graphicsPSO.GetTessPipelineState();
@@ -110,7 +92,7 @@ void MTCommandBuffer::SetGraphicsPSORenderState(MTGraphicsPSO& graphicsPSO)
 void MTCommandBuffer::SetComputePSORenderState(MTComputePSO& computePSO)
 {
     /* Store work group size of shader program */
-    SetPipelineRenderState(computePSO);
+    boundPipelineState_ = &computePSO;
     if (const MTShader* computeShader = computePSO.GetComputeShader())
         threadsPerThreadgroup_ = computeShader->GetNumThreadsPerGroup();
 }
@@ -121,13 +103,12 @@ void MTCommandBuffer::ResetRenderStates()
     tessPipelineState_      = nil;
     boundSwapChain_         = nullptr;
     boundPipelineState_     = nullptr;
-    descriptorCache_        = nullptr;
-    constantsCache_         = nullptr;
+    currentStagingPool_     = (currentStagingPool_ + 1) % maxNumStagingPools;
 }
 
 void MTCommandBuffer::ResetStagingPool()
 {
-    stagingBufferPool_.Reset();
+    stagingBufferPools_[currentStagingPool_].Reset();
 }
 
 void MTCommandBuffer::WriteStagingBuffer(
@@ -136,7 +117,7 @@ void MTCommandBuffer::WriteStagingBuffer(
     id<MTLBuffer>&  outSrcBuffer,
     NSUInteger&     outSrcOffset)
 {
-    stagingBufferPool_.Write(data, dataSize, outSrcBuffer, outSrcOffset);
+    stagingBufferPools_[currentStagingPool_].Write(data, dataSize, outSrcBuffer, outSrcOffset);
 }
 
 MTKView* MTCommandBuffer::GetCurrentDrawableView() const

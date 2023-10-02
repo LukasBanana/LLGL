@@ -301,11 +301,11 @@ LLGL_C_EXPORT void llglReleaseBufferArray(LLGLBufferArray bufferArray)
     LLGL_RELEASE(BufferArray, bufferArray);
 }
 
-LLGL_C_EXPORT LLGLTexture llglCreateTexture(const LLGLTextureDescriptor* textureDesc, const LLGLSrcImageDescriptor* imageDesc)
+LLGL_C_EXPORT LLGLTexture llglCreateTexture(const LLGLTextureDescriptor* textureDesc, const LLGLImageView* initialImage)
 {
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(textureDesc);
-    return LLGLTexture{ g_CurrentRenderSystem->CreateTexture(*reinterpret_cast<const TextureDescriptor*>(textureDesc), reinterpret_cast<const SrcImageDescriptor*>(imageDesc)) };
+    return LLGLTexture{ g_CurrentRenderSystem->CreateTexture(*reinterpret_cast<const TextureDescriptor*>(textureDesc), reinterpret_cast<const ImageView*>(initialImage)) };
 }
 
 LLGL_C_EXPORT void llglReleaseTexture(LLGLTexture texture)
@@ -313,20 +313,20 @@ LLGL_C_EXPORT void llglReleaseTexture(LLGLTexture texture)
     LLGL_RELEASE(Texture, texture);
 }
 
-LLGL_C_EXPORT void llglWriteTexture(LLGLTexture texture, const LLGLTextureRegion* textureRegion, const LLGLSrcImageDescriptor* imageDesc)
+LLGL_C_EXPORT void llglWriteTexture(LLGLTexture texture, const LLGLTextureRegion* textureRegion, const LLGLImageView* srcImageView)
 {
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(textureRegion);
-    LLGL_ASSERT_PTR(imageDesc);
-    g_CurrentRenderSystem->WriteTexture(LLGL_REF(Texture, texture), *reinterpret_cast<const TextureRegion*>(textureRegion), *reinterpret_cast<const SrcImageDescriptor*>(imageDesc));
+    LLGL_ASSERT_PTR(srcImageView);
+    g_CurrentRenderSystem->WriteTexture(LLGL_REF(Texture, texture), *reinterpret_cast<const TextureRegion*>(textureRegion), *reinterpret_cast<const ImageView*>(srcImageView));
 }
 
-LLGL_C_EXPORT void llglReadTexture(LLGLTexture texture, const LLGLTextureRegion* textureRegion, const LLGLDstImageDescriptor* imageDesc)
+LLGL_C_EXPORT void llglReadTexture(LLGLTexture texture, const LLGLTextureRegion* textureRegion, const LLGLMutableImageView* dstImageView)
 {
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(textureRegion);
-    LLGL_ASSERT_PTR(imageDesc);
-    g_CurrentRenderSystem->ReadTexture(LLGL_REF(Texture, texture), *reinterpret_cast<const TextureRegion*>(textureRegion), *reinterpret_cast<const DstImageDescriptor*>(imageDesc));
+    LLGL_ASSERT_PTR(dstImageView);
+    g_CurrentRenderSystem->ReadTexture(LLGL_REF(Texture, texture), *reinterpret_cast<const TextureRegion*>(textureRegion), *reinterpret_cast<const MutableImageView*>(dstImageView));
 }
 
 LLGL_C_EXPORT LLGLSampler llglCreateSampler(const LLGLSamplerDescriptor* samplerDesc)
