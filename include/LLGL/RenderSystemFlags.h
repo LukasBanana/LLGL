@@ -193,7 +193,7 @@ struct RenderSystemFlags
           See https://learn.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-devices-layers#debug-layer
         - Vulkan: A debug callback will be registered via \c vkCreateDebugReportCallbackEXT if the Vulkan extension \c "VK_EXT_debug_report" is available.<br>
           See https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VK_EXT_debug_report.html
-        - OpenGL: A debug callback will be registered via \c glDebugMessageCallback if the OpenGL extension \c "GL_KHR_debug" is vailable.<br>
+        - OpenGL: A debug callback will be registered via \c glDebugMessageCallback if the OpenGL extension \c "GL_KHR_debug" is available.<br>
           See https://www.khronos.org/opengl/wiki/Debug_Output
         - Metal: Not supported.
         */
