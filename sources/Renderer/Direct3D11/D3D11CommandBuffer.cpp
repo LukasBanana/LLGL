@@ -98,7 +98,7 @@ void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
     auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, deferredCommandBuffer);
     if (cmdBufferD3D.IsSecondaryCmdBuffer())
     {
-        if (auto commandList = cmdBufferD3D.GetDeferredCommandList())
+        if (ID3D11CommandList* commandList = cmdBufferD3D.GetDeferredCommandList())
         {
             /* Execute encoded command list with immediate context */
             context_->ExecuteCommandList(commandList, TRUE);

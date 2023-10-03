@@ -53,7 +53,7 @@ HRESULT D3D12StagingBufferPool::WriteStaged(
     HRESULT hr;
     commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
-        auto& chunk = chunks_[chunkIdx_];
+        D3D12StagingBuffer& chunk = chunks_[chunkIdx_];
         hr = chunk.WriteAndIncrementOffset(commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
     }
     commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
@@ -87,7 +87,7 @@ HRESULT D3D12StagingBufferPool::ReadSubresourceRegion(
     UINT64                  dataSize,
     UINT64                  alignment)
 {
-    auto& readbackBuffer = GetReadbackBufferAndGrow(dataSize, alignment);
+    D3D12StagingBuffer& readbackBuffer = GetReadbackBufferAndGrow(dataSize, alignment);
 
     /* Copy source buffer region to readback buffer and flush command list */
     commandContext.TransitionResource(srcBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, true);

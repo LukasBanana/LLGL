@@ -43,14 +43,14 @@ D3D11StagingBufferPool::D3D11StagingBufferPool(
 
 void D3D11StagingBufferPool::Reset()
 {
-    for (auto& chunk : chunks_)
+    for (D3D11StagingBuffer& chunk : chunks_)
         chunk.Reset();
     chunkIdx_ = 0;
 }
 
 D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize, UINT alignment)
 {
-    const auto alignedSize = GetAlignedSize(dataSize, alignment);
+    const UINT alignedSize = GetAlignedSize(dataSize, alignment);
 
     /* Check if a new chunk must be allocated */
     if (chunkIdx_ == chunks_.size())
@@ -63,7 +63,7 @@ D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize, 
     }
 
     /* Write data to current chunk */
-    auto& chunk = chunks_[chunkIdx_];
+    D3D11StagingBuffer& chunk = chunks_[chunkIdx_];
     D3D11BufferRange range = { chunk.GetNative(), chunk.GetOffset(), alignedSize };
     {
         if (incrementOffsets_)

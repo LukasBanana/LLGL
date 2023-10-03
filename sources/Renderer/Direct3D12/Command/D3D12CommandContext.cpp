@@ -54,7 +54,7 @@ void D3D12CommandContext::Create(
     numAllocators_ = std::max(1u, std::min(numAllocators, D3D12CommandContext::maxNumAllocators));
 
     /* Create command allocators and descriptor heap pools */
-    constexpr UINT64 minStagingChunkSize = (0xFF + 1);
+    constexpr UINT64 minStagingChunkSize = 256;
     initialStagingChunkSize = std::max(minStagingChunkSize, initialStagingChunkSize);
 
     for_range(i, numAllocators_)

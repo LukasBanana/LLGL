@@ -16,6 +16,7 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
+#include <LLGL/Utils/ForRange.h>
 #include <stdexcept>
 
 
@@ -40,7 +41,7 @@ void D3D11GraphicsPSOBase::Bind(D3D11StateManager& stateMngr)
     SetStaticViewportsAndScissors(stateMngr);
 
     /* Set static samplers */
-    if (const auto* pipelineLayoutD3D = GetPipelineLayout())
+    if (const D3D11PipelineLayout* pipelineLayoutD3D = GetPipelineLayout())
         pipelineLayoutD3D->BindGraphicsStaticSamplers(stateMngr);
 }
 
@@ -53,10 +54,10 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& des
     D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
     /* Validate pointers and get D3D shader objects */
-    if (auto vertexShaderD3D = LLGL_CAST(const D3D11Shader*, desc.vertexShader))
+    if (auto* vertexShaderD3D = LLGL_CAST(const D3D11Shader*, desc.vertexShader))
         inputLayout_ = vertexShaderD3D->GetInputLayout();
     else
-        throw std::invalid_argument("cannot create D3D graphics pipeline without vertex shader");
+        ResetReport("cannot create D3D graphics PSO without vertex shader", true);
 
     GetD3DNativeShaders(desc);
 
@@ -105,11 +106,11 @@ void D3D11GraphicsPSOBase::SetStaticViewportsAndScissors(D3D11StateManager& stat
 
 void D3D11GraphicsPSOBase::GetD3DNativeShaders(const GraphicsPipelineDescriptor& desc)
 {
-    if (auto vs = desc.vertexShader        ) { vs_ = LLGL_CAST(D3D11Shader*, vs)->GetNative().vs; }
-    if (auto hs = desc.tessControlShader   ) { hs_ = LLGL_CAST(D3D11Shader*, hs)->GetNative().hs; }
-    if (auto ds = desc.tessEvaluationShader) { ds_ = LLGL_CAST(D3D11Shader*, ds)->GetNative().ds; }
-    if (auto gs = desc.geometryShader      ) { gs_ = LLGL_CAST(D3D11Shader*, gs)->GetNative().gs; }
-    if (auto ps = desc.fragmentShader      ) { ps_ = LLGL_CAST(D3D11Shader*, ps)->GetNative().ps; }
+    if (Shader* vs = desc.vertexShader        ) { vs_ = LLGL_CAST(D3D11Shader*, vs)->GetNative().vs; }
+    if (Shader* hs = desc.tessControlShader   ) { hs_ = LLGL_CAST(D3D11Shader*, hs)->GetNative().hs; }
+    if (Shader* ds = desc.tessEvaluationShader) { ds_ = LLGL_CAST(D3D11Shader*, ds)->GetNative().ds; }
+    if (Shader* gs = desc.geometryShader      ) { gs_ = LLGL_CAST(D3D11Shader*, gs)->GetNative().gs; }
+    if (Shader* ps = desc.fragmentShader      ) { ps_ = LLGL_CAST(D3D11Shader*, ps)->GetNative().ps; }
 }
 
 void D3D11GraphicsPSOBase::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)
@@ -140,16 +141,18 @@ void D3D11GraphicsPSOBase::BuildStaticViewports(std::size_t numViewports, const 
 
     if (numStaticViewports_ > D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
     {
-        throw std::invalid_argument(
-            "too many viewports in graphics pipeline state (" + std::to_string(numStaticViewports_) +
-            " specified, but limit is " + std::to_string(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        GetMutableReport().Errorf(
+            "too many viewports in graphics PSO: %u specified, but limit is %d\n",
+            numStaticViewports_,
+            D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE
         );
+        numStaticViewports_ = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
     }
 
     /* Build <D3D11_VIEWPORT> entries */
-    for (std::size_t i = 0; i < numViewports; ++i)
+    for_range(i, numViewports)
     {
-        auto dst = byteBufferIter.Next<D3D11_VIEWPORT>();
+        D3D11_VIEWPORT* dst = byteBufferIter.Next<D3D11_VIEWPORT>();
         {
             dst->TopLeftX   = viewports[i].x;
             dst->TopLeftY   = viewports[i].y;
@@ -168,16 +171,18 @@ void D3D11GraphicsPSOBase::BuildStaticScissors(std::size_t numScissors, const Sc
 
     if (numStaticScissors_ > D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
     {
-        throw std::invalid_argument(
-            "too many viewports in graphics pipeline state (" + std::to_string(numStaticScissors_) +
-            " specified, but limit is " + std::to_string(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        GetMutableReport().Errorf(
+            "too many scissor rectangles in graphics PSO: %u specified, but limit is %d\n",
+            numStaticScissors_,
+            D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE
         );
+        numStaticScissors_ = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
     }
 
     /* Build <D3D11_RECT> entries */
-    for (std::size_t i = 0; i < numScissors; ++i)
+    for_range(i, numScissors)
     {
-        auto dst = byteBufferIter.Next<D3D11_RECT>();
+        D3D11_RECT* dst = byteBufferIter.Next<D3D11_RECT>();
         {
             dst->left   = static_cast<LONG>(scissors[i].x);
             dst->top    = static_cast<LONG>(scissors[i].y);
