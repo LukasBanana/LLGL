@@ -69,7 +69,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateTextureFormatSupported(const Format format);
         void ValidateTextureDescMipLevels(const TextureDescriptor& textureDesc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
-        void ValidateTextureSizeDefault(std::uint32_t size);
+        void ValidateTextureSizePassiveDimension(std::uint32_t size, const char* textureTypeName, const char* axisName);
         void Validate1DTextureSize(std::uint32_t size);
         void Validate2DTextureSize(std::uint32_t size);
         void Validate3DTextureSize(std::uint32_t size);

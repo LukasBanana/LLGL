@@ -13,6 +13,8 @@
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/Container/Strings.h>
 #include "../CheckedCast.h"
+#include "../../Core/MacroUtils.h"
+#include "../../Core/PrintfUtils.h"
 #include <type_traits>
 
 
@@ -20,36 +22,21 @@ namespace LLGL
 {
 
 
-#define LLGL_DBG_SOURCE \
-    DbgSetSource(debugger_, __FUNCTION__)
+#define LLGL_DBG_SOURCE()                   \
+    if (debugger_ != nullptr)               \
+        debugger_->SetSource(__FUNCTION__)
 
-#define LLGL_DBG_ERROR(TYPE, MESSAGE) \
-    DbgPostError(debugger_, (TYPE), (MESSAGE))
+#define LLGL_DBG_ERROR(TYPE, FORMAT, ...)                               \
+    if (debugger_ != nullptr)                                           \
+        debugger_->Errorf((TYPE), (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
 
-#define LLGL_DBG_WARN(TYPE, MESSAGE) \
-    DbgPostWarning(debugger_, (TYPE), (MESSAGE))
+#define LLGL_DBG_WARN(TYPE, FORMAT, ...)                                \
+    if (debugger_ != nullptr)                                           \
+        debugger_->Warningf((TYPE), (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
 
 #define LLGL_DBG_ERROR_NOT_SUPPORTED(FEATURE) \
     LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, UTF8String(FEATURE) + " not supported")
 
-
-inline void DbgSetSource(RenderingDebugger* debugger, const char* source)
-{
-    if (debugger)
-        debugger->SetSource(source);
-}
-
-inline void DbgPostError(RenderingDebugger* debugger, ErrorType type, const StringView& message)
-{
-    if (debugger)
-        debugger->PostError(type, message);
-}
-
-inline void DbgPostWarning(RenderingDebugger* debugger, WarningType type, const StringView& message)
-{
-    if (debugger)
-        debugger->PostWarning(type, message);
-}
 
 // Sets the name of the specified debug layer object.
 template <typename T>

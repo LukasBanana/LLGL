@@ -13,10 +13,8 @@
 #include <LLGL/Container/StringView.h>
 #include <string>
 #include <cstddef>
+#include "MacroUtils.h"
 
-
-#define LLGL_VA_ARGS(...) \
-    , ## __VA_ARGS__
 
 #define LLGL_TRAP(FORMAT, ...) \
     LLGL::Trap(__FUNCTION__, (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))

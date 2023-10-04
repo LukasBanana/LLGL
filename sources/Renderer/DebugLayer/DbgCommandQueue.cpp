@@ -10,6 +10,7 @@
 #include "DbgCore.h"
 #include "../CheckedCast.h"
 #include <LLGL/RenderingDebugger.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -31,7 +32,7 @@ void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         commandBufferDbg.ValidateSubmit();
     }
 
@@ -53,7 +54,7 @@ bool DbgCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateQueryResult(queryHeapDbg, firstQuery, numQueries, data, dataSize);
     }
 
@@ -108,18 +109,18 @@ void DbgCommandQueue::ValidateQueryResult(
 
     if (firstQuery + numQueries <= queryHeap.states.size())
     {
-        for (std::uint32_t i = 0; i < numQueries; ++i)
+        for_range(i, numQueries)
         {
             if (queryHeap.states[firstQuery + i] != DbgQueryHeap::State::Ready)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "result for query with index " + std::to_string(i) + " is not ready");
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "result for query with index %u is not ready", i);
         }
     }
     else
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "query index range out of bounds: [" + std::to_string(firstQuery) + ".." + std::to_string(firstQuery + numQueries) + ")" +
-            " specified, but valid range is [0.." + std::to_string(queryHeap.states.size()) + ")"
+            "query index range out of bounds: [%u, %u) specified, but valid range is [0, %zu)",
+            firstQuery, (firstQuery + numQueries), queryHeap.states.size()
         );
     }
 }

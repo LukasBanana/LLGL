@@ -36,6 +36,9 @@
 #define LLGL_PS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::FragmentStage      ) != 0 )
 #define LLGL_CS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::ComputeStage       ) != 0 )
 
+#define LLGL_VA_ARGS(...) \
+    , ## __VA_ARGS__
+
 
 #endif
 

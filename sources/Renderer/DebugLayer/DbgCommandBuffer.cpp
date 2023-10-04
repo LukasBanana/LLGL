@@ -7,6 +7,7 @@
 
 #include "DbgCommandBuffer.h"
 #include "DbgCore.h"
+#include "DbgReportUtils.h"
 #include "../CheckedCast.h"
 #include "../ResourceUtils.h"
 #include "../PipelineStateUtils.h"
@@ -128,7 +129,7 @@ void DbgCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
 
         if (&deferredCommandBuffer == this)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer tried to execute itself");
@@ -156,7 +157,7 @@ void DbgCommandBuffer::UpdateBuffer(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBufferRange(dstBufferDbg, dstOffset, dataSize, "destination range");
     }
@@ -178,7 +179,7 @@ void DbgCommandBuffer::CopyBuffer(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBufferRange(dstBufferDbg, dstOffset, size, "destination range");
         ValidateBufferRange(srcBufferDbg, srcOffset, size, "source range");
@@ -211,7 +212,7 @@ void DbgCommandBuffer::CopyBufferFromTexture(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
         ValidateBufferRange(dstBufferDbg, dstOffset, GetTextureRegionMinFootprint(srcTextureDbg, srcRegion));
@@ -235,7 +236,7 @@ void DbgCommandBuffer::FillBuffer(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindBufferFlags(dstBufferDbg, BindFlags::CopyDst);
 
@@ -269,7 +270,7 @@ void DbgCommandBuffer::CopyTexture(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateBindTextureFlags(srcTextureDbg, BindFlags::CopySrc);
@@ -293,7 +294,7 @@ void DbgCommandBuffer::CopyTextureFromBuffer(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateTextureRegion(dstTextureDbg, dstRegion);
@@ -316,14 +317,14 @@ void DbgCommandBuffer::CopyTextureFromFramebuffer(
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateTextureRegion(dstTextureDbg, dstRegion);
         if (dstRegion.subresource.numArrayLayers > 1)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with number of array layers greater than 1");
         if (dstRegion.extent.depth != 1)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of " + std::to_string(dstRegion.extent.depth));
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of %u", dstRegion.extent.depth);
         if (bindings_.swapChain == nullptr)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "copy texture from framebuffer is only supported for SwapChain framebuffers");
         if (DbgRenderTarget* renderTargetDbg = bindings_.renderTarget)
@@ -341,7 +342,7 @@ void DbgCommandBuffer::GenerateMips(Texture& texture)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateGenerateMips(textureDbg);
     }
@@ -357,7 +358,7 @@ void DbgCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& 
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateGenerateMips(textureDbg, &subresource);
     }
@@ -373,7 +374,7 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateViewport(viewport);
 
@@ -388,7 +389,7 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
 
         AssertRecording();
         LLGL_DBG_ASSERT_PTR(viewports);
@@ -405,8 +406,8 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "viewport array index out of bounds: " +
-                std::to_string(numViewports) + " specified but limit is " + std::to_string(limits_.maxViewports)
+                "viewport array index out of bounds: %u specified but limit is %u",
+                numViewports, limits_.maxViewports
             );
         }
         else if (numViewports == 0)
@@ -421,7 +422,7 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
 
 void DbgCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    LLGL_DBG_SOURCE;
+    LLGL_DBG_SOURCE();
     AssertRecording();
     LLGL_DBG_COMMAND( "SetScissor", instance.SetScissor(scissor) );
 }
@@ -430,7 +431,7 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         LLGL_DBG_ASSERT_PTR(scissors);
         if (numScissors == 0)
@@ -448,7 +449,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindBufferFlags(bufferDbg, BindFlags::VertexBuffer);
 
@@ -468,7 +469,7 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateBindFlags(bufferArrayDbg.GetBindFlags(), BindFlags::VertexBuffer, BindFlags::VertexBuffer, "LLGL::BufferArray");
 
@@ -487,7 +488,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
@@ -510,7 +511,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndexBuffer);
@@ -524,8 +525,8 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "index buffer offset out of bounds: " + std::to_string(offset) +
-                " specified but limit is " + std::to_string(bufferDbg.desc.size)
+                "index buffer offset out of bounds: %" PRIu64 " specified but limit is %" PRIu64,
+                offset, bufferDbg.desc.size
             );
         }
     }
@@ -544,7 +545,7 @@ void DbgCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateDescriptorSetIndex(descriptorSet, resourceHeapDbg.GetNumDescriptorSets(), resourceHeapDbg.label.c_str());
         bindings_.bindingTable.resourceHeap = &resourceHeap;
@@ -561,7 +562,7 @@ void DbgCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         if (auto* pso = bindings_.pipelineState)
@@ -665,7 +666,7 @@ void DbgCommandBuffer::ResetResourceSlots(
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         if (numSlots == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no slots are specified to reset");
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
@@ -685,7 +686,7 @@ void DbgCommandBuffer::BeginRenderPass(
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         if (states_.insideRenderPass)
@@ -729,7 +730,7 @@ void DbgCommandBuffer::EndRenderPass()
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         if (!states_.insideRenderPass)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot end render pass while no render pass is currently active");
@@ -743,7 +744,7 @@ void DbgCommandBuffer::Clear(long flags, const ClearValue& clearValue)
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         AssertInsideRenderPass();
     }
@@ -757,7 +758,7 @@ void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Atta
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         AssertInsideRenderPass();
         for_range(i, numAttachments)
@@ -777,7 +778,7 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         /* Bind graphics pipeline and unbind compute pipeline */
@@ -835,7 +836,7 @@ void DbgCommandBuffer::SetBlendFactor(const float color[4])
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         if (auto pipelineStateDbg = AssertAndGetGraphicsPSO())
         {
             if (pipelineStateDbg->graphicsDesc.blend.blendFactorDynamic)
@@ -852,7 +853,7 @@ void DbgCommandBuffer::SetStencilReference(std::uint32_t reference, const Stenci
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         if (auto pipelineStateDbg = AssertAndGetGraphicsPSO())
         {
             if (pipelineStateDbg->graphicsDesc.stencil.referenceDynamic)
@@ -869,7 +870,7 @@ void DbgCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::u
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         LLGL_DBG_ASSERT_PTR(data);
         if (auto* pso = bindings_.pipelineState)
@@ -892,7 +893,7 @@ void DbgCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
         {
@@ -913,7 +914,7 @@ void DbgCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
         {
@@ -932,7 +933,7 @@ void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t 
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
         ValidateRenderCondition(queryHeapDbg, query);
     }
@@ -946,7 +947,7 @@ void DbgCommandBuffer::EndRenderCondition()
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
     }
     instance.EndRenderCondition();
@@ -961,7 +962,7 @@ void DbgCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         ValidateStreamOutputs(numBuffers);
@@ -979,10 +980,7 @@ void DbgCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const
             }
             else
             {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "null pointer in array of stream-output buffers"
-                );
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer in array of stream-output buffers");
                 validationFailed = true;
             }
         }
@@ -1018,7 +1016,7 @@ void DbgCommandBuffer::EndStreamOutput()
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertRecording();
 
         /* Validate stream-outputs are currently active */
@@ -1038,7 +1036,7 @@ void DbgCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateDrawCmd(numVertices, firstVertex, 1, 0);
     }
 
@@ -1051,7 +1049,7 @@ void DbgCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t first
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateDrawIndexedCmd(numIndices, 1, firstIndex, 0, 0);
     }
 
@@ -1064,7 +1062,7 @@ void DbgCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t first
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateDrawIndexedCmd(numIndices, 1, firstIndex, vertexOffset, 0);
     }
 
@@ -1077,7 +1075,7 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertInstancingSupported();
         ValidateDrawCmd(numVertices, firstVertex, numInstances, 0);
     }
@@ -1091,7 +1089,7 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertInstancingSupported();
         AssertOffsetInstancingSupported();
         ValidateDrawCmd(numVertices, firstVertex, numInstances, firstInstance);
@@ -1106,7 +1104,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertInstancingSupported();
         ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, 0, 0);
     }
@@ -1120,7 +1118,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertInstancingSupported();
         ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, vertexOffset, 0);
     }
@@ -1134,7 +1132,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint3
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertInstancingSupported();
         AssertOffsetInstancingSupported();
         ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
@@ -1151,7 +1149,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertIndirectDrawingSupported();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndirectArguments));
@@ -1169,7 +1167,7 @@ void DbgCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::u
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertIndirectDrawingSupported();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
@@ -1188,7 +1186,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertIndirectDrawingSupported();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DrawIndexedIndirectArguments));
@@ -1206,7 +1204,7 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         AssertIndirectDrawingSupported();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, stride*numCommands);
@@ -1225,7 +1223,7 @@ void DbgCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numW
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
 
         if (numWorkGroupsX * numWorkGroupsY * numWorkGroupsZ == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
@@ -1248,7 +1246,7 @@ void DbgCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateBindBufferFlags(bufferDbg, BindFlags::IndirectBuffer);
         ValidateBufferRange(bufferDbg, offset, sizeof(DispatchIndirectArguments));
         ValidateAddressAlignment(offset, 4, "<offset> parameter");
@@ -1266,7 +1264,7 @@ void DbgCommandBuffer::PushDebugGroup(const char* name)
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         LLGL_DBG_ASSERT_PTR(name);
         debugger_->SetDebugGroup(name);
     }
@@ -1318,12 +1316,11 @@ void DbgCommandBuffer::ValidateSubmit()
     {
         if (pair.swapChain->GetCurrentSwapIndex() != pair.frame)
         {
+            const std::string labelStr = (pair.swapChain->label.empty() ? "" : " ['" + pair.swapChain->label + "']");
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
-                "command buffer submitted with swap-chain " +
-                std::string(pair.swapChain->label.empty() ? "" : "['" + pair.swapChain->label + "'] ") +
-                "back-buffer [" + std::to_string(pair.frame) + "] while swap-chain has current back buffer [" +
-                std::to_string(pair.swapChain->GetCurrentSwapIndex()) + "]"
+                "command buffer submitted with swap-chain%s back-buffer [%" PRIu64 "] while swap-chain has current back buffer [%u]",
+                labelStr.c_str(), pair.frame, pair.swapChain->GetCurrentSwapIndex()
             );
         }
     }
@@ -1342,7 +1339,7 @@ void DbgCommandBuffer::EnableRecording(bool enable)
     {
         if (enable == states_.recording)
         {
-            LLGL_DBG_SOURCE;
+            LLGL_DBG_SOURCE();
             if (enable)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin nested recording of command buffer");
             else
@@ -1376,10 +1373,8 @@ void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const Textur
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot generate MIP-maps for texture with subresource being out of bounds: "
-                "MIP-map range is [0, " + std::to_string(textureDbg.mipLevels) +
-                "), but [" + std::to_string(subresource->baseMipLevel) + ", " +
-                std::to_string(subresource->baseMipLevel + subresource->numMipLevels) + ") was specified"
+                "cannot generate MIP-maps for texture with subresource being out of bounds: MIP-map range is [0, %u), but [%u, %u) was specified",
+                textureDbg.mipLevels, subresource->baseMipLevel, (subresource->baseMipLevel + subresource->numMipLevels)
             );
         }
 
@@ -1394,10 +1389,8 @@ void DbgCommandBuffer::ValidateGenerateMips(DbgTexture& textureDbg, const Textur
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot generate MIP-maps for texture with subresource being out of bounds: "
-                "array layer range is [0, " + std::to_string(textureDbg.desc.arrayLayers) +
-                "), but [" + std::to_string(subresource->baseArrayLayer) + ", " +
-                std::to_string(subresource->baseArrayLayer + subresource->numArrayLayers) + ") was specified"
+                "cannot generate MIP-maps for texture with subresource being out of bounds: array layer range is [0, %u), but [%u, %u) was specified",
+                textureDbg.desc.arrayLayers, subresource->baseArrayLayer, (subresource->baseArrayLayer + subresource->numArrayLayers)
             );
         }
     }
@@ -1429,8 +1422,8 @@ void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "viewport exceeded maximal size: [" + std::to_string(w) + " x " + std::to_string(h) +
-            "] specified but limit is [" + std::to_string(limits_.maxViewportSize[0]) + " x " + std::to_string(limits_.maxViewportSize[1]) + "])"
+            "viewport exceeded maximal size: [%u x %u] specified but limit is [%u x %u])",
+            w, h, limits_.maxViewportSize[0], limits_.maxViewportSize[1]
         );
     }
 }
@@ -1565,7 +1558,10 @@ void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
             {
                 auto numPatchVertices = static_cast<std::uint32_t>(topology_) - static_cast<std::uint32_t>(PrimitiveTopology::Patches1) + 1;
                 if (numVertices % numPatchVertices != 0)
-                    WarnImproperVertices("patches" + std::to_string(numPatchVertices), (numVertices % numPatchVertices));
+                {
+                    const std::string topologyLabel = "patches" + std::to_string(numPatchVertices);
+                    WarnImproperVertices(topologyLabel.c_str(), (numVertices % numPatchVertices));
+                }
             }
             break;
     }
@@ -1581,13 +1577,14 @@ void DbgCommandBuffer::ValidateVertexID(std::uint32_t firstVertex)
 {
     if (firstVertex > 0)
     {
-        if (auto vertexShaderDbg = bindings_.vertexShader)
+        if (const DbgShader* vertexShaderDbg = bindings_.vertexShader)
         {
-            if (auto vertexID = vertexShaderDbg->GetVertexID())
+            if (const char* vertexID = vertexShaderDbg->GetVertexID())
             {
                 LLGL_DBG_WARN(
                     WarningType::VaryingBehavior,
-                    "bound shader program uses '" + std::string(vertexID) + "' while firstVertex > 0, which may result in varying behavior between different native APIs"
+                    "bound shader program uses '%s' while firstVertex > 0, which may result in varying behavior between different native APIs",
+                    vertexID
                 );
             }
         }
@@ -1598,13 +1595,14 @@ void DbgCommandBuffer::ValidateInstanceID(std::uint32_t firstInstance)
 {
     if (firstInstance > 0)
     {
-        if (auto vertexShaderDbg = bindings_.vertexShader)
+        if (const DbgShader* vertexShaderDbg = bindings_.vertexShader)
         {
-            if (auto instanceID = vertexShaderDbg->GetInstanceID())
+            if (const char* instanceID = vertexShaderDbg->GetInstanceID())
             {
                 LLGL_DBG_WARN(
                     WarningType::VaryingBehavior,
-                    "bound shader program uses '" + std::string(instanceID) + "' while firstInstance > 0, which may result in varying behavior between different native APIs"
+                    "bound shader program uses '%s' while firstInstance > 0, which may result in varying behavior between different native APIs",
+                    instanceID
                 );
             }
         }
@@ -1672,8 +1670,8 @@ void DbgCommandBuffer::ValidateVertexLimit(std::uint32_t vertexCount, std::uint3
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "vertex count out of bounds: " + std::to_string(vertexCount) +
-            " specified but limit is " + std::to_string(vertexLimit)
+            "vertex count out of bounds: %u specified but limit is %u",
+            vertexCount, vertexLimit
         );
     }
 }
@@ -1684,8 +1682,8 @@ void DbgCommandBuffer::ValidateThreadGroupLimit(std::uint32_t size, std::uint32_
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "thread group size X out of bounds: " + std::to_string(size) +
-            " specified but limit is " + std::to_string(limit)
+            "thread group size X out of bounds: %u specified but limit is %u",
+            size, limit
         );
     }
 }
@@ -1696,8 +1694,8 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "color attachment index out of bounds: " + std::to_string(attachmentIndex) +
-            " specified but upper bound is " + std::to_string(attachmentUpperBound)
+            "color attachment index out of bounds: %u specified but upper bound is %u",
+            attachmentIndex, attachmentUpperBound
         );
     }
 }
@@ -1706,16 +1704,19 @@ void DbgCommandBuffer::ValidateDescriptorSetIndex(std::uint32_t setIndex, std::u
 {
     if (setIndex >= setUpperBound)
     {
-        std::string s = "descriptor set index out of bounds: " + std::to_string(setIndex) + " specified but upper bound is " + std::to_string(setUpperBound);
-
+        std::string resHeapLabel;
         if (resourceHeapName != nullptr && *resourceHeapName != '\0')
         {
-            s += " for resource heap \"";
-            s += resourceHeapName;
-            s += '\"';
+            resHeapLabel += " for resource heap \"";
+            resHeapLabel += resourceHeapName;
+            resHeapLabel += '\"';
         }
 
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, s);
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "descriptor set index out of bounds: %u specified but upper bound is %u%s",
+            setIndex, setUpperBound, resHeapLabel.c_str()
+        );
     }
 }
 
@@ -1752,7 +1753,7 @@ static std::string BindFlagsToStringList(long bindFlags)
                 s += ", ";
 
             const long bitmask = (bindFlags & (0x1u << i));
-            if (auto flagStr = BindFlagToString(bitmask))
+            if (const char* flagStr = BindFlagToString(bitmask))
             {
                 s += "LLGL::BindFlags::";
                 s += flagStr;
@@ -1771,21 +1772,26 @@ void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, lon
     const long invalidFlags = (bindFlags & ~validFlags);
     const long missingFlags = ((resourceFlags & bindFlags) ^ bindFlags) & (~invalidFlags);
 
+    if (resourceName == nullptr || *resourceName == '\0')
+        resourceName = "resource";
+
     if (invalidFlags != 0)
     {
+        const std::string invalidFlagsLabel = BindFlagsToStringList(invalidFlags);
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot bind " + std::string(resourceName != nullptr ? resourceName : "resource") +
-            " with the following bind flags: " + BindFlagsToStringList(missingFlags)
+            "cannot bind %s with the following bind flags: %s",
+            resourceName, invalidFlagsLabel.c_str()
         );
     }
 
     if (missingFlags != 0)
     {
+        const std::string missingFlagsLabel = BindFlagsToStringList(missingFlags);
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            std::string(resourceName != nullptr ? resourceName : "resource") +
-            " was not created with the the following bind flags: " + BindFlagsToStringList(missingFlags)
+            "%s was not created with the the following bind flags: %s",
+            resourceName, missingFlagsLabel.c_str()
         );
     }
 
@@ -1794,8 +1800,8 @@ void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, lon
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot bind " + std::string(resourceName != nullptr ? resourceName : "resource") +
-            " as both input and output"
+            "cannot bind %s as both input and output",
+            resourceName
         );
     }
 }
@@ -1831,9 +1837,8 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid texture region with MIP-map range [" + std::to_string(region.subresource.baseMipLevel) +
-            ", +" + std::to_string(region.subresource.numMipLevels) +
-            ") for texture with " + std::to_string(textureDbg.mipLevels) + " MIP-maps"
+            "invalid texture region with MIP-map range [%u, +%u) for texture with %u MIP-maps",
+            region.subresource.baseMipLevel, region.subresource.numMipLevels, textureDbg.mipLevels
         );
     }
 
@@ -1849,14 +1854,13 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid texture region with array range [" + std::to_string(region.subresource.baseArrayLayer) +
-            ", +" + std::to_string(region.subresource.numArrayLayers) +
-            ") for texture with " + std::to_string(textureDbg.desc.arrayLayers) + " layers"
+            "invalid texture region with array range [%u, +%u) for texture with %u layers",
+            region.subresource.baseArrayLayer, region.subresource.numArrayLayers, textureDbg.desc.arrayLayers
         );
     }
 
     /* Validate extent and offset */
-    const auto mipExtent = textureDbg.GetMipExtent(region.subresource.baseMipLevel);
+    const Extent3D mipExtent = textureDbg.GetMipExtent(region.subresource.baseMipLevel);
 
     if (region.extent.width  == 0 ||
         region.extent.height == 0 ||
@@ -1864,8 +1868,8 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid texture region with zero extent (" + std::to_string(region.extent.width) +
-            ", " + std::to_string(region.extent.height) + ", " + std::to_string(region.extent.depth) + ")"
+            "invalid texture region with zero extent (%u, %u, %u)",
+            region.extent.width, region.extent.height, region.extent.depth
         );
     }
     else if (region.offset.x < 0 ||
@@ -1874,8 +1878,8 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid texture region with negative offset (" + std::to_string(region.offset.x) +
-            ", " + std::to_string(region.offset.y) + ", " + std::to_string(region.offset.z) + ")"
+            "invalid texture region with negative offset (%d, %d, %d)",
+            region.offset.x, region.offset.y, region.offset.z
         );
     }
     else
@@ -1884,24 +1888,24 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid texture region with X-range [" + std::to_string(region.offset.x) + ", +" + std::to_string(region.extent.width) +
-                ") out of bounds [0, " + std::to_string(mipExtent.width) + ") for MIP-level " + std::to_string(region.subresource.baseMipLevel)
+                "invalid texture region with X-range [%d, +%u) out of bounds [0, %u) for MIP-level %u",
+                region.offset.x, region.extent.width, mipExtent.width, region.subresource.baseMipLevel
             );
         }
         if (static_cast<std::uint32_t>(region.offset.y) + region.extent.height > mipExtent.height)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid texture region with Y-range [" + std::to_string(region.offset.y) + ", +" + std::to_string(region.extent.height) +
-                ") out of bounds [0, " + std::to_string(mipExtent.height) + ") for MIP-level " + std::to_string(region.subresource.baseMipLevel)
+                "invalid texture region with Y-range [%d, +%u) out of bounds [0, %u) for MIP-level %u",
+                region.offset.y, region.extent.height, mipExtent.height, region.subresource.baseMipLevel
             );
         }
         if (static_cast<std::uint32_t>(region.offset.z) + region.extent.depth > mipExtent.depth)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid texture region with Z-range [" + std::to_string(region.offset.z) + ", +" + std::to_string(region.extent.depth) +
-                ") out of bounds [0, " + std::to_string(mipExtent.depth) + ") for MIP-level " + std::to_string(region.subresource.baseMipLevel)
+                "invalid texture region with Z-range [%d, +%u) out of bounds [0, %u) for MIP-level %u",
+                region.offset.z, region.extent.depth, mipExtent.depth, region.subresource.baseMipLevel
             );
         }
     }
@@ -1911,10 +1915,10 @@ void DbgCommandBuffer::ValidateIndexType(const Format format)
 {
     if (format != Format::R16UInt && format != Format::R32UInt)
     {
-        if (auto formatName = ToString(format))
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
+        if (const char* formatName = ToString(format))
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::%s", formatName);
         else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + std::string(IntToHex(static_cast<std::uint32_t>(format))));
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: %s", IntToHex(static_cast<std::uint32_t>(format)));
     }
 }
 
@@ -1927,8 +1931,8 @@ void DbgCommandBuffer::ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, 
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid argument for texture/buffer copy command: 'rowStride' (" + std::to_string(rowStride) + ") "
-                "must be greater than or equal to the size of each row in the destination region (rowSize)"
+                "invalid argument for texture/buffer copy command: 'rowStride' (%u) must be greater than or equal to the size of each row in the destination region (rowSize)",
+                rowStride
             );
         }
     }
@@ -1938,16 +1942,16 @@ void DbgCommandBuffer::ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, 
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid argument for texture/buffer copy command: 'layerStride' (" + std::to_string(layerStride) + ") "
-                "is non-zero while 'rowStride' is zero"
+                "invalid argument for texture/buffer copy command: 'layerStride' (%u) is non-zero while 'rowStride' is zero",
+                layerStride
             );
         }
         else if (layerStride % rowStride != 0)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid argument for texture/buffer copy command: 'layerStride' (" + std::to_string(layerStride) + ") "
-                "is not a multiple of 'rowStride' (" + std::to_string(rowStride) + ")"
+                "invalid argument for texture/buffer copy command: 'layerStride' (%u) is not a multiple of 'rowStride' (%u)",
+                layerStride, rowStride
             );
         }
     }
@@ -1965,11 +1969,11 @@ void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t o
 {
     if (offset + size > bufferDbg.desc.size)
     {
+        const std::string bufferLabel = (bufferDbg.label.empty() ? "" : " for \"" + bufferDbg.label + "\"");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            std::string(rangeName != nullptr ? rangeName : "range") + " out of bounds" +
-            std::string(bufferDbg.label.empty() ? "" : " for \"" + bufferDbg.label + "\"") + ": " +
-            std::to_string(offset + size) + " specified but limit is " + std::to_string(bufferDbg.desc.size)
+            "%s out of bounds%s: %" PRIu64 " specified but limit is %" PRIu64,
+            (rangeName != nullptr ? rangeName : "range"), bufferLabel.c_str(), (offset + size), bufferDbg.desc.size
         );
     }
     else if (size > 0)
@@ -1985,7 +1989,8 @@ void DbgCommandBuffer::ValidateAddressAlignment(std::uint64_t address, std::uint
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            std::string(addressName) + " not aligned to " + std::to_string(alignment) + " byte(s)"
+            "%s not aligned to %" PRIu64 " %s",
+            addressName, alignment, ToByteLabel(alignment)
         );
     }
 }
@@ -1996,8 +2001,8 @@ bool DbgCommandBuffer::ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint3
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "query index out of bounds: " + std::to_string(query) +
-            " specified but upper bound is " + std::to_string(queryHeapDbg.states.size())
+            "query index out of bounds: %u specified but upper bound is %zu",
+            query, queryHeapDbg.states.size()
         );
         return false;
     }
@@ -2029,14 +2034,16 @@ void DbgCommandBuffer::ValidateRenderTargetRange(DbgRenderTarget& renderTargetDb
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid swap-chain region with zero extent (" + std::to_string(extent.width) + ", " + std::to_string(extent.height) + ")"
+            "invalid swap-chain region with zero extent (%u, %u)",
+            extent.width, extent.height
         );
     }
     else if (offset.x < 0 || offset.y < 0)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid swap-chain region with negative offset (" + std::to_string(offset.x) + ", " + std::to_string(offset.y) + ")"
+            "invalid swap-chain region with negative offset (%d, %d)",
+            offset.x, offset.y
         );
     }
     else
@@ -2045,16 +2052,16 @@ void DbgCommandBuffer::ValidateRenderTargetRange(DbgRenderTarget& renderTargetDb
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid swap-chain region with X-range [" + std::to_string(offset.x) + ", +" + std::to_string(extent.width) +
-                ") out of bounds [0, " + std::to_string(resolution.width) + ")"
+                "invalid swap-chain region with X-range [%d, +%u) out of bounds [0, %u)",
+                offset.x, extent.width, resolution.width
             );
         }
         if (static_cast<std::uint32_t>(offset.y) + extent.height > resolution.height)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invalid swap-chain region with Y-range [" + std::to_string(offset.y) + ", +" + std::to_string(extent.height) +
-                ") out of bounds [0, " + std::to_string(resolution.height) + ")"
+                "invalid swap-chain region with Y-range [%d, +%u) out of bounds [0, %u)",
+                offset.y, extent.height, resolution.height
             );
         }
     }
@@ -2066,8 +2073,8 @@ void DbgCommandBuffer::ValidateSwapBufferIndex(DbgSwapChain& swapChainDbg, std::
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot begin render pass with swap-buffer index " + std::to_string(swapBufferIndex) +
-            " for swap-chain with only " + std::to_string(swapChainDbg.desc.swapBuffers) + " buffer(s)"
+            "cannot begin render pass with swap-buffer index %u for swap-chain with only %u buffer(s)",
+            swapBufferIndex, swapChainDbg.desc.swapBuffers
         );
     }
 }
@@ -2078,8 +2085,8 @@ void DbgCommandBuffer::ValidateStreamOutputs(std::uint32_t numBuffers)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "maximum number of stream-output buffers exceeded limit: " +
-            std::to_string(numBuffers) + " specified but limit is " + std::to_string(limits_.maxStreamOutputs)
+            "maximum number of stream-output buffers exceeded limit: %u specified but limit is %u",
+            numBuffers, limits_.maxStreamOutputs
         );
     }
 }
@@ -2090,8 +2097,8 @@ const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipelin
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "descriptor index out of bounds: " + std::to_string(descriptor) +
-            " specified but upper bound is " + std::to_string(pipelineLayoutDbg.desc.bindings.size())
+            "descriptor index out of bounds: %u specified but upper bound is %zu",
+            descriptor, pipelineLayoutDbg.desc.bindings.size()
         );
         return nullptr;
     }
@@ -2100,8 +2107,8 @@ const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipelin
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid resource type in pipeline for descriptor[" + std::to_string(descriptor) + "]: " +
-            std::string(ToString(resource.GetResourceType())) + " specified but expected " + std::string(ToString(bindingDesc->type))
+            "invalid resource type in pipeline for descriptor[%u]: %s specified but expected %s",
+            descriptor, ToString(resource.GetResourceType()), ToString(bindingDesc->type)
         );
         return nullptr;
     }
@@ -2122,31 +2129,34 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot set uniforms with a data size of " + std::to_string(dataSize) + "; must be a multiple of 4"
+            "cannot set uniforms with a data size of %u; must be a multiple of 4",
+            static_cast<std::uint32_t>(dataSize)
         );
     }
 
     /* Validate number of uniforms */
     if (first < pipelineLayoutDbg.desc.uniforms.size())
     {
+        std::uint16_t remainingDataSize = dataSize;
+
         for (; first < pipelineLayoutDbg.desc.uniforms.size(); ++first)
         {
             /* Get size information for current uniform that is to be updated */
-            const auto& uniformDesc = pipelineLayoutDbg.desc.uniforms[first];
-            const auto uniformTypeSize = static_cast<decltype(dataSize)>(GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize));
+            const UniformDescriptor&    uniformDesc     = pipelineLayoutDbg.desc.uniforms[first];
+            const std::uint16_t         uniformTypeSize = static_cast<std::uint16_t>(GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize));
 
-            if (dataSize >= uniformTypeSize)
-                dataSize -= uniformTypeSize;
+            if (remainingDataSize >= uniformTypeSize)
+                remainingDataSize -= uniformTypeSize;
             else
                 break;
         }
 
-        if (dataSize > 0)
+        if (remainingDataSize > 0)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot set uniforms with data size of " + std::to_string(dataSize) + "; exceeded limit by " +
-                std::to_string(dataSize) + (dataSize == 1 ? " byte" : " bytes")
+                "cannot set uniforms with data size of %u; exceeded limit by %u%s",
+                static_cast<std::uint32_t>(dataSize), static_cast<std::uint32_t>(remainingDataSize), ToByteLabel(remainingDataSize)
             );
         }
     }
@@ -2154,8 +2164,8 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "uniform index out of bounds: " + std::to_string(first) +
-            " specified but upper bound is " + std::to_string(pipelineLayoutDbg.desc.uniforms.size())
+            "uniform index out of bounds: %u specified but upper bound is %zu",
+            first, pipelineLayoutDbg.desc.uniforms.size()
         );
     }
 }
@@ -2180,59 +2190,25 @@ void DbgCommandBuffer::ValidateDynamicStates()
     }
 }
 
-// Returns a descriptive string for the specified binding
-static std::string GetBindingDescStr(const BindingDescriptor& binding)
-{
-    std::string s;
-
-    s = "slot ";
-    s += std::to_string(binding.slot.index);
-
-    if (binding.slot.set != 0)
-    {
-        s += ", set ";
-        s += std::to_string(binding.slot.set);
-    }
-
-    if (!binding.name.empty())
-    {
-        s += ", name '";
-        s += binding.name;
-        s += "'";
-    }
-
-    return s;
-}
-
-static std::string GetPipelineBindingDescStr(const DbgPipelineState& pso, const PipelineLayoutDescriptor& layoutDesc, std::size_t bindingIndex)
-{
-    std::string s;
-
-    s = "missing descriptor [";
-    s += std::to_string(bindingIndex);
-    s += "] in pipeline state ";
-    if (!pso.label.empty())
-    {
-        s += "'";
-        s += pso.label;
-        s += "' ";
-    }
-    s += "for binding (";
-    s += GetBindingDescStr(layoutDesc.bindings[bindingIndex]);
-    s += ")";
-
-    return s;
-}
-
 void DbgCommandBuffer::ValidateBindingTable()
 {
     auto ValidateBindingTableWithLayout = [this](const DbgPipelineState& pso, const Bindings::BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
     {
+        const std::string psoLabel = (!pso.label.empty() ? " \'" + pso.label + '\'' : "");
         LLGL_ASSERT(table.resources.size() == layoutDesc.bindings.size());
         for_range(i, table.resources.size())
         {
             if (table.resources[i] == nullptr)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, GetPipelineBindingDescStr(pso, layoutDesc, i));
+            {
+                const BindingDescriptor& binding = layoutDesc.bindings[i];
+                const std::string bindingSetLabel = (binding.slot.set != 0 ? ", set " + std::to_string(binding.slot.set) : "");
+                const std::string bindingNameLabel = (!binding.name.empty() ? ", name '" + binding.name + '\'' : "");
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidState,
+                    "missing descriptor [%zu] in pipeline state%s for binding (slot %u%s%s)",
+                    i, psoLabel.c_str(), binding.slot.index, bindingSetLabel.c_str(), bindingNameLabel.c_str()
+               );
+            }
         }
     };
 
@@ -2299,12 +2275,12 @@ void DbgCommandBuffer::AssertVertexBufferBound()
 {
     if (bindings_.numVertexBuffers > 0)
     {
-        for (std::uint32_t i = 0; i < bindings_.numVertexBuffers; ++i)
+        for_range(i, bindings_.numVertexBuffers)
         {
             /* Check if buffer is initialized (ignore empty buffers) */
             auto buffer = bindings_.vertexBuffers[i];
             if (buffer->elements > 0 && !buffer->initialized)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot %u", i);
             if (buffer->IsMappedForCPUAccess())
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex buffer used for drawing while being mapped to CPU memory space");
         }
@@ -2315,7 +2291,7 @@ void DbgCommandBuffer::AssertVertexBufferBound()
 
 void DbgCommandBuffer::AssertIndexBufferBound()
 {
-    if (auto buffer = bindings_.indexBuffer)
+    if (const DbgBuffer* buffer = bindings_.indexBuffer)
     {
         if (!buffer->initialized)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound");
@@ -2356,17 +2332,18 @@ void DbgCommandBuffer::AssertNullPointer(const void* ptr, const char* name)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "argument '" + std::string(name) + "' must not be a null pointer"
+            "argument '%s' must not be a null pointer",
+            name
         );
     }
 }
 
-void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices)
+void DbgCommandBuffer::WarnImproperVertices(const char* topologyName, std::uint32_t unusedVertices)
 {
     LLGL_DBG_WARN(
         WarningType::ImproperArgument,
-        "improper number of vertices for " + topologyName + " (" + std::to_string(unusedVertices) +
-        " unused " + std::string(unusedVertices > 1 ? "vertices" : "vertex") + ")"
+        "improper number of vertices for %s (%u unused %s)",
+        topologyName, unusedVertices, ToVertexLabel(unusedVertices)
     );
 }
 

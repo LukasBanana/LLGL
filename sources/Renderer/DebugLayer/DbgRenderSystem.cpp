@@ -7,6 +7,7 @@
 
 #include "DbgRenderSystem.h"
 #include "DbgCore.h"
+#include "DbgReportUtils.h"
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
@@ -110,7 +111,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateBufferDesc(bufferDesc, &formatSize);
     }
 
@@ -159,7 +160,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const vo
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
 
         if (dataSize > 0)
         {
@@ -184,7 +185,7 @@ void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* dat
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
 
         if (!bufferDbg.initialized)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "reading uninitialized buffer");
@@ -205,7 +206,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateResourceCPUAccess(bufferDbg.desc.cpuAccessFlags, access, "buffer");
         ValidateBufferMapping(bufferDbg, true);
     }
@@ -226,7 +227,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::ui
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateResourceCPUAccess(bufferDbg.desc.cpuAccessFlags, access, "buffer");
         ValidateBufferMapping(bufferDbg, true);
         ValidateBufferBoundary(bufferDbg.desc.size, offset, length);
@@ -248,7 +249,7 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateBufferMapping(bufferDbg, false);
     }
 
@@ -263,7 +264,7 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateTextureDesc(textureDesc, initialImage);
     }
     return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, initialImage), textureDesc);
@@ -280,7 +281,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateTextureRegion(textureDbg, textureRegion);
         ValidateImageDataSize(textureDbg, textureRegion, srcImageView.format, srcImageView.dataType, srcImageView.dataSize);
     }
@@ -296,7 +297,7 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateTextureRegion(textureDbg, textureRegion);
         ValidateImageDataSize(textureDbg, textureRegion, dstImageView.format, dstImageView.dataType, dstImageView.dataSize);
     }
@@ -331,7 +332,7 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
     for_range(i, resourceViews.size())
     {
         ResourceViewDescriptor resourceViewCopy = resourceViews[i];
-        if (auto resource = resourceViewCopy.resource)
+        if (Resource* resource = resourceViewCopy.resource)
         {
             switch (resource->GetResourceType())
             {
@@ -355,14 +356,16 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
             {
                 LLGL_DBG_WARN(
                     WarningType::ImproperArgument,
-                    "texture view is enabled in ResourceViewDescriptor[" + std::to_string(i) +  "] but resource is null"
+                    "texture view is enabled in ResourceViewDescriptor[%zu] but resource is null",
+                    i
                 );
             }
             if (IsBufferViewEnabled(resourceViewCopy.bufferView))
             {
                 LLGL_DBG_WARN(
                     WarningType::ImproperArgument,
-                    "buffer view is enabled in ResourceViewDescriptor[" + std::to_string(i) +  "] but resource is null"
+                    "buffer view is enabled in ResourceViewDescriptor[%zu] but resource is null",
+                    i
                 );
             }
         }
@@ -376,7 +379,7 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
 {
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateResourceHeapDesc(resourceHeapDesc, initialResourceViews);
     }
 
@@ -406,7 +409,7 @@ std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std
 
     if (debugger_)
     {
-        LLGL_DBG_SOURCE;
+        LLGL_DBG_SOURCE();
         ValidateResourceHeapRange(resourceHeapDbg, firstDescriptor, resourceViews);
     }
 
@@ -436,7 +439,7 @@ void DbgRenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
-    LLGL_DBG_SOURCE;
+    LLGL_DBG_SOURCE();
 
     auto instanceDesc = renderTargetDesc;
     {
@@ -500,7 +503,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const Blob& serializedCache)
 
 PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
 {
-    LLGL_DBG_SOURCE;
+    LLGL_DBG_SOURCE();
 
     if (debugger_)
         ValidateGraphicsPipelineDesc(pipelineStateDesc);
@@ -522,7 +525,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
 
 PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
 {
-    LLGL_DBG_SOURCE;
+    LLGL_DBG_SOURCE();
 
     if (debugger_)
         ValidateComputePipelineDesc(pipelineStateDesc);
@@ -647,10 +650,8 @@ void DbgRenderSystem::ValidateCPUAccessFlags(long flags, long validFlags, const 
 {
     if ((flags & (~validFlags)) != 0)
     {
-        std::string msg = "unknown CPU access flags specified";
-        if (contextDesc)
-            msg += (" for " + std::string(contextDesc));
-        LLGL_DBG_WARN(WarningType::ImproperArgument, msg);
+        const std::string contextLabel = (contextDesc != nullptr ? " for " + std::string(contextDesc) : "");
+        LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown CPU access flags specified%s", contextLabel.c_str());
     }
 }
 
@@ -658,10 +659,8 @@ void DbgRenderSystem::ValidateMiscFlags(long flags, long validFlags, const char*
 {
     if ((flags & (~validFlags)) != 0)
     {
-        std::string msg = "unknown miscellaneous flags specified";
-        if (contextDesc)
-            msg += (" for " + std::string(contextDesc));
-        LLGL_DBG_WARN(WarningType::ImproperArgument, msg);
+        const std::string contextLabel = (contextDesc != nullptr ? " for " + std::string(contextDesc) : "");
+        LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown miscellaneous flags specified%s", contextLabel.c_str());
     }
 }
 
@@ -673,7 +672,8 @@ void DbgRenderSystem::ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAc
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
-                "cannot map " + std::string(resourceTypeName) + " with CPU read access, because the resource was not created with 'LLGL::CPUAccessFlags::Read' flag"
+                "cannot map %s with CPU read access, because the resource was not created with 'LLGL::CPUAccessFlags::Read' flag",
+                resourceTypeName
             );
         }
     }
@@ -683,7 +683,8 @@ void DbgRenderSystem::ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAc
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
-                "cannot map " + std::string(resourceTypeName) + " with CPU write access, because the resource was not created with 'LLGL::CPUAccessFlags::Write' flag"
+                "cannot map %s with CPU write access, because the resource was not created with 'LLGL::CPUAccessFlags::Write' flag",
+                resourceTypeName
             );
         }
     }
@@ -730,7 +731,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
         /* Validate buffer size for specified vertex format */
         formatSize = bufferDesc.vertexAttribs.front().stride;
         if (formatSize > 0 && bufferDesc.size % formatSize != 0)
-            LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
+            LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of %u %s", formatSize, ToByteLabel(formatSize));
     }
 
     if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
@@ -739,10 +740,10 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
         if (bufferDesc.format != Format::R16UInt &&
             bufferDesc.format != Format::R32UInt)
         {
-            if (auto formatName = ToString(bufferDesc.format))
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::" + std::string(formatName));
+            if (const char* formatName = ToString(bufferDesc.format))
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::%s", formatName);
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: " + std::string(IntToHex(static_cast<std::uint32_t>(bufferDesc.format))));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: %s", IntToHex(static_cast<std::uint32_t>(bufferDesc.format)));
         }
 
         /* Validate buffer size for specified index format */
@@ -751,7 +752,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
         {
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
-                "improper index buffer size with index format of " + std::to_string(formatSize) + " bytes"
+                "improper index buffer size with index format of %u %s", formatSize, ToByteLabel(formatSize)
             );
         }
     }
@@ -778,8 +779,8 @@ void DbgRenderSystem::ValidateVertexAttributesForBuffer(const VertexAttribute& l
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "vertex attributes must have equal slot, stride, and instance divisor within the same buffer, "
-            "but found mismatch between \"" + lhs.name + "\" and \"" + rhs.name + "\""
+            "vertex attributes must have equal slot, stride, and instance divisor within the same buffer, but found mismatch between \"%s\" and \"%s\"",
+            lhs.name.c_str(), rhs.name.c_str()
         );
     }
 }
@@ -790,8 +791,8 @@ void DbgRenderSystem::ValidateBufferSize(std::uint64_t size)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "buffer size exceeded limit (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(limits_.maxBufferSize) + ")"
+            "buffer size exceeded limit: %" PRIu64 " specified but limit is %" PRIu64,
+            size, limits_.maxBufferSize
         );
     }
 }
@@ -802,8 +803,8 @@ void DbgRenderSystem::ValidateConstantBufferSize(std::uint64_t size)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "constant buffer size exceeded limit (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(limits_.maxConstantBufferSize) + ")"
+            "constant buffer size exceeded limit: %" PRIu64 " specified but limit is %" PRIu64,
+            size, limits_.maxConstantBufferSize
         );
     }
 }
@@ -814,16 +815,16 @@ void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::uint
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "buffer offset out of bounds (" + std::to_string(dstOffset) +
-            " specified but upper bound is " + std::to_string(bufferSize) + ")"
+            "buffer offset out of bounds: %" PRIu64 " specified but upper bound is %" PRIu64,
+            dstOffset, bufferSize
         );
     }
     else if (dataSize + dstOffset > bufferSize)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "data size for buffer offset out of bounds (" + std::to_string(dstOffset) + "+" + std::to_string(dataSize) +
-            " specified but limit is " + std::to_string(bufferSize) + ")"
+            "data size for buffer offset out of bounds: %" PRIu64 "+%" PRIu64 " specified but limit is %" PRIu64,
+            dstOffset, dataSize, bufferSize
         );
     }
 }
@@ -854,29 +855,16 @@ static std::uint64_t GetMinAlignmentForBufferBinding(const BindingDescriptor& bi
     return alignment;
 }
 
-static std::string BindingSlotToString(const BindingSlot& slot)
-{
-    std::string s;
-    s += "slot ";
-    s += std::to_string(slot.index);
-    if (slot.set != 0)
-    {
-        s += " (set ";
-        s += std::to_string(slot.set);
-        s += ')';
-    }
-    return s;
-}
-
 void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewDescriptor& viewDesc, const BindingDescriptor& bindingDesc)
 {
     const std::uint64_t minAlignment = GetMinAlignmentForBufferBinding(bindingDesc, limits_);
     if (minAlignment > 0 && (viewDesc.offset % minAlignment != 0 || viewDesc.size % minAlignment != 0))
     {
+        const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? "(set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "buffer view '" + bindingDesc.name + "' at " + BindingSlotToString(bindingDesc.slot) +
-            " does not satisfy minimum alignment of " + std::to_string(minAlignment) + " bytes"
+            "buffer view '%s' at slot %u%s does not satisfy minimum alignment of %" PRIu64 " %s",
+            bindingDesc.name.c_str(), bindingDesc.slot.index, bindingSetLabel.c_str(), minAlignment, ToByteLabel(minAlignment)
         );
     }
 }
@@ -887,20 +875,20 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
     {
         case TextureType::Texture1D:
             Validate1DTextureSize(textureDesc.extent.width);
-            ValidateTextureSizeDefault(textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.height, "1D", "Y");
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "1D", "Z");
             break;
 
         case TextureType::Texture2D:
             Validate2DTextureSize(textureDesc.extent.width);
             Validate2DTextureSize(textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "2D", "Z");
             break;
 
         case TextureType::TextureCube:
             AssertCubeTextures();
             ValidateCubeTextureSize(textureDesc.extent.width, textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "cube", "Z");
             break;
 
         case TextureType::Texture3D:
@@ -913,28 +901,28 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
         case TextureType::Texture1DArray:
             AssertArrayTextures();
             Validate1DTextureSize(textureDesc.extent.width);
-            ValidateTextureSizeDefault(textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.height, "1D-array", "Y");
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "1D-array", "Z");
             break;
 
         case TextureType::Texture2DArray:
             AssertArrayTextures();
             Validate1DTextureSize(textureDesc.extent.width);
             Validate1DTextureSize(textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "2D-array", "Z");
             break;
 
         case TextureType::TextureCubeArray:
             AssertCubeArrayTextures();
             ValidateCubeTextureSize(textureDesc.extent.width, textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "cube-array", "Z");
             break;
 
         case TextureType::Texture2DMS:
             AssertMultiSampleTextures();
             Validate2DTextureSize(textureDesc.extent.width);
             Validate2DTextureSize(textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "2DMS", "Z");
             break;
 
         case TextureType::Texture2DMSArray:
@@ -942,7 +930,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
             AssertArrayTextures();
             Validate2DTextureSize(textureDesc.extent.width);
             Validate2DTextureSize(textureDesc.extent.height);
-            ValidateTextureSizeDefault(textureDesc.extent.depth);
+            ValidateTextureSizePassiveDimension(textureDesc.extent.depth, "2DMS-array", "Z");
             break;
 
         default:
@@ -985,7 +973,7 @@ void DbgRenderSystem::ValidateTextureFormatSupported(const Format format)
     {
         LLGL_DBG_ERROR(
             ErrorType::UnsupportedFeature,
-            "cannot create texture with unsupported format: " + std::string(ToString(format))
+            "cannot create texture with unsupported format: %s", ToString(format)
         );
     }
 }
@@ -1003,8 +991,8 @@ void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& text
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "number of MIP-map levels exceeded limit (" + std::to_string(textureDesc.mipLevels) +
-                " specified but limit is " + std::to_string(maxNumMipLevels) + ")"
+                "number of MIP-map levels exceeded limit: %u specified but limit is %u",
+                textureDesc.mipLevels, maxNumMipLevels
             );
         }
     }
@@ -1018,21 +1006,28 @@ void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limi
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            std::string(textureTypeName) + " texture size exceeded limit (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(limit) + ")"
+            "%s texture size exceeded limit: %u specified but limit is %u",
+            textureTypeName, size, limit
         );
     }
 }
 
-void DbgRenderSystem::ValidateTextureSizeDefault(std::uint32_t size)
+void DbgRenderSystem::ValidateTextureSizePassiveDimension(std::uint32_t size, const char* textureTypeName, const char* axisName)
 {
     if (size == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be 0");
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "%s texture size for %s-axis must not be 0",
+            textureTypeName, axisName
+        );
+    }
     if (size > 1)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "unused texture dimension must be one (but " + std::to_string(size) + " was specified)"
+            "%s texture size of %s-axis must be 1, but %u was specified",
+            textureTypeName, axisName, size
         );
     }
 }
@@ -1075,8 +1070,8 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
                 {
                     LLGL_DBG_ERROR(
                         ErrorType::InvalidArgument,
-                        "number of texture layers must be 6 for cube textures (but " +
-                        std::to_string(layers) + " was specified)"
+                        "number of texture layers must be 6 for cube textures, but %u was specified",
+                        layers
                     );
                 }
             }
@@ -1088,8 +1083,8 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
                 {
                     LLGL_DBG_ERROR(
                         ErrorType::InvalidArgument,
-                        "number of texture layers must be a multiple of 6 for cube array textures (but " +
-                        std::to_string(layers) + " was specified)"
+                        "number of texture layers must be a multiple of 6 for cube array textures, but %u was specified",
+                        layers
                     );
                 }
             }
@@ -1099,13 +1094,13 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
             {
                 if (IsArrayTexture(type))
                 {
-                    const auto maxNumLayers = limits_.maxTextureArrayLayers;
+                    const std::uint32_t maxNumLayers = limits_.maxTextureArrayLayers;
                     if (layers > maxNumLayers)
                     {
                         LLGL_DBG_ERROR(
                             ErrorType::InvalidArgument,
-                            "number of texture layers exceeded limit (" + std::to_string(layers) +
-                            " specified but limit is " + std::to_string(maxNumLayers) + ")"
+                            "number of texture layers exceeded limit: %u specified but limit is %u",
+                            layers, maxNumLayers
                         );
                     }
                 }
@@ -1113,8 +1108,8 @@ void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::ui
                 {
                     LLGL_DBG_ERROR(
                         ErrorType::InvalidArgument,
-                        "number of texture array layers must be 1 for non-array textures (but " +
-                        std::to_string(layers) + " was specified)"
+                        "number of texture array layers must be 1 for non-array textures, but %u was specified",
+                        layers
                     );
                 }
             }
@@ -1129,8 +1124,8 @@ void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uin
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "mip level out of bounds (" + std::to_string(baseMipLevel + numMipLevels) +
-            " exceeded limit of " + std::to_string(numMipLevels) + ")"
+            "mip level out of bounds: %u exceeded limit of %u",
+            (baseMipLevel + numMipLevels), numMipLevels
         );
     }
 }
@@ -1151,16 +1146,16 @@ void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const 
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "image data size too small for texture: " + std::to_string(dataSize) +
-                " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
+                "image data size too small for texture: %zu %s specified but required is %zu %s",
+                dataSize, ToByteLabel(dataSize), requiredDataSize, ToByteLabel(requiredDataSize)
             );
         }
         else if (dataSize > requiredDataSize)
         {
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
-                "image data size larger than expected for texture: " + std::to_string(dataSize) +
-                " byte(s) specified but required is " + std::to_string(requiredDataSize) + " byte(s)"
+                "image data size larger than expected for texture: %zu %s specified but required is %zu %s",
+                dataSize, ToByteLabel(dataSize), requiredDataSize, ToByteLabel(requiredDataSize)
             );
         }
     }
@@ -1176,13 +1171,13 @@ void DbgRenderSystem::ValidateTextureArrayRange(const DbgTexture& textureDbg, st
 
 void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit)
 {
-    const auto arrayLayerRangeEnd = baseArrayLayer + numArrayLayers;
+    const std::uint32_t arrayLayerRangeEnd = baseArrayLayer + numArrayLayers;
     if (arrayLayerRangeEnd > arrayLayerLimit)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "array layer out of range for array texture (" + std::to_string(arrayLayerRangeEnd) +
-            " specified but limit is " + std::to_string(arrayLayerLimit) + ")"
+            "array layer out of range for array texture: %u specified but limit is %u",
+            arrayLayerRangeEnd, arrayLayerLimit
         );
     }
 }
@@ -1205,12 +1200,7 @@ void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const 
 
     /* Validate offset */
     if (textureRegion.offset.x < 0 || textureRegion.offset.y < 0 || textureRegion.offset.z < 0)
-    {
-        LLGL_DBG_ERROR(
-            ErrorType::UndefinedBehavior,
-            "negative offset not allowed to write a texture region"
-        );
-    }
+        LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "negative offset not allowed to write a texture region");
 
     /* Validate offset plus extent */
     auto IsRegionOutside = [](std::int32_t offset, std::uint32_t extent, std::uint32_t limit)
@@ -1222,10 +1212,7 @@ void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const 
          IsRegionOutside(textureRegion.offset.y, textureRegion.extent.height, textureDbg.desc.extent.height) ||
          IsRegionOutside(textureRegion.offset.z, textureRegion.extent.depth,  textureDbg.desc.extent.depth ) )
     {
-        LLGL_DBG_ERROR(
-            ErrorType::UndefinedBehavior,
-            "texture region exceeded size of texture"
-        );
+        LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "texture region exceeded size of texture");
     }
 }
 
@@ -1241,19 +1228,19 @@ void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, co
     if (sharedTextureDbg.isTextureView)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture view cannot be shared with another texture view");
 
-    const auto mipLevelUpperBound = textureViewDesc.subresource.baseMipLevel + textureViewDesc.subresource.numMipLevels;
+    const std::uint32_t mipLevelUpperBound = textureViewDesc.subresource.baseMipLevel + textureViewDesc.subresource.numMipLevels;
     if (mipLevelUpperBound > sharedTextureDbg.mipLevels)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "texture-view exceeded number of MIP-map levels (" +
-            std::to_string(mipLevelUpperBound) + " specified but limit is " + std::to_string(sharedTextureDbg.mipLevels) + ")"
+            "texture-view exceeded number of MIP-map levels: %u specified but limit is %u",
+            mipLevelUpperBound, sharedTextureDbg.mipLevels
         );
     }
 
     /* Validate type mapping for texture-view */
-    const auto srcType = sharedTextureDbg.GetType();
-    const auto dstType = textureViewDesc.type;
+    const TextureType srcType = sharedTextureDbg.GetType();
+    const TextureType dstType = textureViewDesc.type;
 
     using T = TextureType;
 
@@ -1295,17 +1282,17 @@ void DbgRenderSystem::ValidateTextureViewType(const TextureType sharedTextureTyp
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot share texture of type <" + std::string(ToString(sharedTextureType)) +
-            "> with texture-view of type <" + std::string(ToString(textureViewType)) + ">"
+            "cannot share texture of type <LLGL::TextureType::%s> with texture-view of type <LLGL::TextureType::%s>",
+            ToString(sharedTextureType), ToString(textureViewType)
         );
     }
 }
 
 void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment)
 {
-    if (auto texture = attachmentDesc.texture)
+    if (Texture* texture = attachmentDesc.texture)
     {
-        auto textureDbg = LLGL_CAST(DbgTexture*, texture);
+        auto* textureDbg = LLGL_CAST(DbgTexture*, texture);
 
         /* Validate attachment type for this texture */
         const Format format = GetAttachmentFormat(attachmentDesc);
@@ -1322,8 +1309,8 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot have color attachment [" + std::to_string(colorTarget) +
-                    "] with texture that was not created with the 'LLGL::BindFlags::ColorAttachment' flag"
+                    "cannot have color attachment [%u] with texture that was not created with the 'LLGL::BindFlags::ColorAttachment' flag",
+                    colorTarget
                 );
             }
         }
@@ -1333,14 +1320,16 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot use depth-stencil format for resolve attachment [" + std::to_string(colorTarget) + "]"
+                    "cannot use depth-stencil format for resolve attachment [%u]",
+                    colorTarget
                 );
             }
             else if (!isDepthStencilAttachment)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot use depth-stencil format for color attachment [" + std::to_string(colorTarget) + "]"
+                    "cannot use depth-stencil format for color attachment [%u]",
+                    colorTarget
                 );
             }
             else if ((textureDbg->desc.bindFlags & BindFlags::DepthStencilAttachment) == 0)
@@ -1357,8 +1346,8 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "render-target attachment exceeded number of MIP-map levels (" +
-                std::to_string(attachmentDesc.mipLevel) + " specified but upper bound is " + std::to_string(textureDbg->mipLevels) + ")"
+                "render-target attachment exceeded number of MIP-map levels: %u specified but upper bound is %u",
+                attachmentDesc.mipLevel, textureDbg->mipLevels
             );
         }
 
@@ -1367,8 +1356,8 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "render-target attachment exceeded number of array layers (" +
-                std::to_string(attachmentDesc.arrayLayer) + " specified but upper bound is " + std::to_string(textureDbg->desc.arrayLayers) + ")"
+                "render-target attachment exceeded number of array layers: %u specified but upper bound is %u",
+                attachmentDesc.arrayLayer, textureDbg->desc.arrayLayers
             );
         }
     }
@@ -1388,11 +1377,11 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
 {
     if (resourceHeapDesc.pipelineLayout != nullptr)
     {
-        auto pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
+        auto* pipelineLayoutDbg = LLGL_CAST(DbgPipelineLayout*, resourceHeapDesc.pipelineLayout);
         const auto& bindings = pipelineLayoutDbg->desc.heapBindings;
 
-        const auto numResourceViews = (resourceHeapDesc.numResourceViews > 0 ? resourceHeapDesc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
-        const auto numBindings      = bindings.size();
+        const std::uint32_t numResourceViews    = (resourceHeapDesc.numResourceViews > 0 ? resourceHeapDesc.numResourceViews : static_cast<std::uint32_t>(initialResourceViews.size()));
+        const std::size_t   numBindings         = bindings.size();
 
         if (numBindings == 0)
         {
@@ -1412,16 +1401,16 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create resource heap with less resources (" + std::to_string(numResourceViews) +
-                ") than bindings in pipeline layout (" + std::to_string(numBindings) + ")"
+                "cannot create resource heap with less resources (%u) than bindings in pipeline layout (%zu)",
+                numResourceViews, numBindings
             );
         }
         else if (numResourceViews % numBindings != 0)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create resource heap with number of resource views (" + std::to_string(numResourceViews) +
-                ") not being a multiple of bindings in pipeline layout (" + std::to_string(numBindings) + ")"
+                "cannot create resource heap with number of resource views (%u) not being a multiple of bindings in pipeline layout (%zu)",
+                numResourceViews, numBindings
             );
         }
         else if (!initialResourceViews.empty())
@@ -1436,9 +1425,8 @@ void DbgRenderSystem::ValidateResourceHeapDesc(const ResourceHeapDescriptor& res
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "mismatch between number of initial resource views and resource heap descriptor (" +
-                    std::to_string(initialResourceViews.size()) + " specified but expected " +
-                    std::to_string(resourceHeapDesc.numResourceViews) + ")"
+                    "mismatch between number of initial resource views and resource heap descriptor: %zu specified but expected %u",
+                    initialResourceViews.size(), resourceHeapDesc.numResourceViews
                 );
             }
         }
@@ -1453,17 +1441,16 @@ void DbgRenderSystem::ValidateResourceHeapRange(const DbgResourceHeap& resourceH
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "first descriptor in resource heap out of bounds (" + std::to_string(firstDescriptor) +
-            " specified but upper bound is " + std::to_string(resourceHeapDbg.desc.numResourceViews) + ")"
+            "first descriptor in resource heap out of bounds: %u specified but upper bound is %u",
+            firstDescriptor, resourceHeapDbg.desc.numResourceViews
         );
     }
     else if (resourceViews.size() + firstDescriptor > resourceHeapDbg.desc.numResourceViews)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "number of resource views for first descriptor in resource heap out of bounds (" +
-            std::to_string(firstDescriptor) + "+" + std::to_string(resourceViews.size()) +
-            " specified but limit is " + std::to_string(resourceHeapDbg.desc.numResourceViews) + ")"
+            "number of resource views for first descriptor in resource heap out of bounds: %u+%zu specified but limit is %u",
+            firstDescriptor, resourceViews.size(), resourceHeapDbg.desc.numResourceViews
         );
     }
 }
@@ -1509,10 +1496,11 @@ void DbgRenderSystem::ValidateBufferForBinding(const DbgBuffer& bufferDbg, const
 {
     if ((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
     {
+        const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "binding flags mismatch between buffer resource at " +
-            BindingSlotToString(bindingDesc.slot) + " and binding descriptor"
+            "binding flags mismatch between buffer resource at %u%s and binding descriptor",
+            bindingDesc.slot.index, bindingSetLabel.c_str()
         );
     }
 }
@@ -1521,10 +1509,11 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
 {
     if ((textureDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
     {
+        const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "binding flags mismatch between texture resource at " +
-            BindingSlotToString(bindingDesc.slot) + " and binding descriptor"
+            "binding flags mismatch between texture resource at %u%s and binding descriptor",
+            bindingDesc.slot.index, bindingSetLabel.c_str()
         );
     }
 }
@@ -1533,6 +1522,7 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
 static std::string ColorMaskToString(std::uint8_t colorMask)
 {
     std::string s;
+    s.reserve(4);
 
     s += ((colorMask & ColorMaskFlags::R) != 0 ? 'R' : '_');
     s += ((colorMask & ColorMaskFlags::G) != 0 ? 'G' : '_');
@@ -1562,24 +1552,27 @@ void DbgRenderSystem::ValidateBlendTargetDescriptor(const BlendTargetDescriptor&
 {
     if (blendTargetDesc.colorMask != 0)
     {
+        const std::string colorMaskLabel = ColorMaskToString(blendTargetDesc.colorMask);
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot use color mask <" + ColorMaskToString(blendTargetDesc.colorMask) +
-            "> of blend target <" + std::to_string(idx) + "> without a fragment shader"
+            "cannot use color mask {%s} of blend target [%zu] without a fragment shader",
+            colorMaskLabel.c_str(), idx
         );
     }
     if (IsBlendOpColorOnly(blendTargetDesc.srcAlpha))
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot use color-only blend operation for source alpha channel (srcAlpha = LLGL::BlendOp::" + std::string(ToString(blendTargetDesc.srcAlpha)) + ")"
+            "cannot use color-only blend operation for source alpha channel (srcAlpha = LLGL::BlendOp::%s)",
+            ToString(blendTargetDesc.srcAlpha)
         );
     }
     if (IsBlendOpColorOnly(blendTargetDesc.dstAlpha))
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot use color-only blend operation for destination alpha channel (dstAlpha = LLGL::BlendOp::" + std::string(ToString(blendTargetDesc.dstAlpha)) + ")"
+            "cannot use color-only blend operation for destination alpha channel (dstAlpha = LLGL::BlendOp::%s)",
+            ToString(blendTargetDesc.dstAlpha)
         );
     }
 }
@@ -1656,30 +1649,30 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     {
         if (Shader* shader = pair.shader)
         {
-            auto shaderDbg = LLGL_CAST(DbgShader*, shader);
+            auto* shaderDbg = LLGL_CAST(DbgShader*, shader);
             const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
             if (isSeparableShaders && !hasSeparableShaders)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot mix and match separable " + std::string(ToString(shader->GetType())) +
-                    " shader with non-separable shaders in graphics PSO; see LLGL::ShaderCompileFlags::SeparateShader"
+                    "cannot mix and match separable %s shader with non-separable shaders in graphics PSO; see LLGL::ShaderCompileFlags::SeparateShader",
+                    ToString(shader->GetType())
                 );
             }
             else if (!isSeparableShaders && hasSeparableShaders)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot mix and match non-separable " + std::string(ToString(shader->GetType())) +
-                    " shader with separable shaders in graphics PSO; see LLGL::ShaderCompileFlags::SeparateShader"
+                    "cannot mix and match non-separable %s shader with separable shaders in graphics PSO; see LLGL::ShaderCompileFlags::SeparateShader",
+                    ToString(shader->GetType())
                 );
             }
             if (shader != nullptr && shader->GetType() != pair.expectedType)
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot create graphics PSO with " + std::string(ToString(shader->GetType())) +
-                    " shader being assigned to " + std::string(ToString(pair.expectedType)) + " stage"
+                    "cannot create graphics PSO with %s shader being assigned to %s stage",
+                    ToString(shader->GetType()), ToString(pair.expectedType)
                 );
             }
         }
@@ -1700,8 +1693,8 @@ void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescripto
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot create compute PSO with " + std::string(ToString(pipelineStateDesc.computeShader->GetType())) +
-                " shader being assigned to compute stage"
+                "cannot create compute PSO with %s shader being assigned to compute stage",
+                ToString(pipelineStateDesc.computeShader->GetType())
             );
         }
     }
@@ -1751,16 +1744,16 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "cannot use render pass with undefined color attachment [" + std::to_string(numColorOutputAttribs) +
-                    "] in conjunction with fragment shader that writes to that color target"
+                    "cannot use render pass with undefined color attachment [%u] in conjunction with fragment shader that writes to that color target",
+                    numColorOutputAttribs
                 );
             }
             else if (!AreFragmentOutputFormatsCompatible(attachmentFormat, attrib.format))
             {
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
-                    "render pass attachment [" + std::to_string(numColorOutputAttribs) + "] format (" + std::string(ToString(attachmentFormat)) +
-                    ") is incompatible with fragment shader output format (" + std::string(ToString(attrib.format)) + ")"
+                    "render pass attachment [%u] format (LLGL::Format::%s) is incompatible with fragment shader output format (LLGL::Format::%s)",
+                    numColorOutputAttribs, ToString(attachmentFormat), ToString(attrib.format)
                 );
             }
             ++numColorOutputAttribs;
@@ -1783,8 +1776,8 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "mismatch between number of color attachments in render pass (" + std::to_string(numColorAttachments) +
-            ") and fragment shader color outputs (" + std::to_string(numColorOutputAttribs) + ")"
+            "mismatch between number of color attachments in render pass (%u) and fragment shader color outputs (%u)",
+            numColorAttachments, numColorOutputAttribs
         );
     }
 }
@@ -1810,7 +1803,8 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& f
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "cannot use fragment shader with " + std::to_string(numColorOutputAttribs) + " color outputs for PSO without render pass"
+            "cannot use fragment shader with %u color outputs for PSO without render pass",
+            numColorOutputAttribs
         );
     }
 }

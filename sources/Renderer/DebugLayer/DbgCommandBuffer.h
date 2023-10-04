@@ -131,7 +131,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void AssertNullPointer(const void* ptr, const char* name);
 
-        void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
+        void WarnImproperVertices(const char* topologyName, std::uint32_t unusedVertices);
 
         void ResetStates();
         void ResetRecords();
