@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/Strings.h>
+#include <LLGL/Deprecated.h>
 #include <vector>
 #include <cstdint>
 #include <string.h>
@@ -344,16 +345,16 @@ class LLGL_EXPORT RenderingDebugger
         /**
         \brief Posts an error message.
         \param[in] type Specifies the type of error.
-        \param[in] message Specifies the string which describes the failure.
+        \param[in] format Specifies the formatted message. Same as \c ::printf.
         */
-        void PostError(const ErrorType type, const StringView& message);
+        void Errorf(const ErrorType type, const char* format, ...);
 
         /**
         \brief Posts a warning message.
         \param[in] type Specifies the type of error.
-        \param[in] message Specifies the string which describes the warning.
+        \param[in] format Specifies the formatted message. Same as \c ::printf.
         */
-        void PostWarning(const WarningType type, const StringView& message);
+        void Warningf(const WarningType type, const char* format, ...);
 
         /**
         \brief Returns the current frame profile and resets the counters for the next frame.
@@ -368,11 +369,20 @@ class LLGL_EXPORT RenderingDebugger
         */
         void RecordProfile(const FrameProfile& profile);
 
+        //! \deprecated Since 0.04b; Use Errorf instead!
+        LLGL_DEPRECATED("LLGL::RenderingDebugger::PostError is deprecated since 0.04b; Use LLGL::RenderingDebugger::Errorf instead!", "Errorf")
+        void PostError(const ErrorType type, const StringView& message);
+
+        //! \deprecated Since 0.04b; Use Warningf instead!
+        LLGL_DEPRECATED("LLGL::RenderingDebugger::PostWarning is deprecated since 0.04b; Use LLGL::RenderingDebugger::Warningf instead!", "Warningf")
+        void PostWarning(const WarningType type, const StringView& message);
+
     protected:
 
         /**
         \brief Rendering debugger message class.
-        \todo Rename to "Report"
+        \see RenderingDebugger::OnError
+        \see RenderingDebugger::OnWarning
         */
         class LLGL_EXPORT Message
         {

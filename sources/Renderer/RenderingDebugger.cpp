@@ -9,6 +9,7 @@
 #include <LLGL/Log.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Container/Strings.h>
+#include "../Core/StringUtils.h"
 #include <map>
 
 
@@ -76,8 +77,13 @@ bool RenderingDebugger::GetTimeRecording() const
     return pimpl_->isTimeRecording;
 }
 
-void RenderingDebugger::PostError(const ErrorType type, const StringView& message)
+void RenderingDebugger::Errorf(const ErrorType type, const char* format, ...)
 {
+    /* Print formatted string */
+    std::string message;
+    LLGL_STRING_PRINTF(message, format);
+
+    /* Check if there is already an entry for the exact same message */
     auto it = pimpl_->errors.find(message);
     if (it != pimpl_->errors.end())
     {
@@ -89,14 +95,20 @@ void RenderingDebugger::PostError(const ErrorType type, const StringView& messag
     }
     else
     {
-        auto& msg = pimpl_->errors[message];
+        /* Allocate new error entry */
+        Message& msg = pimpl_->errors[message];
         msg = Message{ message, pimpl_->source, pimpl_->groupName };
         OnError(type, msg);
     }
 }
 
-void RenderingDebugger::PostWarning(const WarningType type, const StringView& message)
+void RenderingDebugger::Warningf(const WarningType type, const char* format, ...)
 {
+    /* Print formatted string */
+    std::string message;
+    LLGL_STRING_PRINTF(message, format);
+
+    /* Check if there is already an entry for the exact same message */
     auto it = pimpl_->warnings.find(message);
     if (it != pimpl_->warnings.end())
     {
@@ -108,7 +120,8 @@ void RenderingDebugger::PostWarning(const WarningType type, const StringView& me
     }
     else
     {
-        auto& msg = pimpl_->warnings[message];
+        /* Allocate new warning entry */
+        Message& msg = pimpl_->warnings[message];
         msg = Message{ message, pimpl_->source, pimpl_->groupName };
         OnWarning(type, msg);
     }
@@ -127,6 +140,18 @@ void RenderingDebugger::FlushProfile(FrameProfile* outputProfile)
 void RenderingDebugger::RecordProfile(const FrameProfile& profile)
 {
     pimpl_->frameProfile.Accumulate(profile);
+}
+
+void RenderingDebugger::PostError(const ErrorType type, const StringView& message)
+{
+    const std::string str(message.begin(), message.end());
+    Errorf(type, "%s", str.c_str());
+}
+
+void RenderingDebugger::PostWarning(const WarningType type, const StringView& message)
+{
+    const std::string str(message.begin(), message.end());
+    Warningf(type, "%s", str.c_str());
 }
 
 
