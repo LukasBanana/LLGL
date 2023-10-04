@@ -231,7 +231,7 @@ enum class Format
 \see ImageView::format
 \see MutableImageView::format
 \see GetMemoryFootprint
-\todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
+\todo Maybe find better name to not confuse this enum with LLGL::Format.
 */
 enum class ImageFormat
 {
@@ -264,7 +264,6 @@ enum class ImageFormat
 \remarks The counterpart of this enumeration for GPU side operations is LLGL::Format.
 \see ImageView::dataType
 \see MutableImageView::dataType
-\todo Maybe replace \c DataType and \c ImageFormat by LLGL::Format.
 */
 enum class DataType
 {

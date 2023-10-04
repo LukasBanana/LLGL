@@ -12,13 +12,13 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT const char* ToString(const ShaderType t)
+LLGL_EXPORT const char* ToString(const ShaderType val)
 {
     using T = ShaderType;
 
-    switch (t)
+    switch (val)
     {
-        case T::Undefined:      return "<undefined>";
+        case T::Undefined:      return "undefined";
         case T::Vertex:         return "vertex";
         case T::TessControl:    return "tessellation control";
         case T::TessEvaluation: return "tessellation evaluation";
@@ -30,11 +30,11 @@ LLGL_EXPORT const char* ToString(const ShaderType t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const ErrorType t)
+LLGL_EXPORT const char* ToString(const ErrorType val)
 {
     using T = ErrorType;
 
-    switch (t)
+    switch (val)
     {
         case T::InvalidArgument:    return "invalid argument";
         case T::InvalidState:       return "invalid state";
@@ -45,11 +45,11 @@ LLGL_EXPORT const char* ToString(const ErrorType t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const WarningType t)
+LLGL_EXPORT const char* ToString(const WarningType val)
 {
     using T = WarningType;
 
-    switch (t)
+    switch (val)
     {
         case T::ImproperArgument:   return "improper argument";
         case T::ImproperState:      return "improper state";
@@ -60,11 +60,11 @@ LLGL_EXPORT const char* ToString(const WarningType t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const ShadingLanguage t)
+LLGL_EXPORT const char* ToString(const ShadingLanguage val)
 {
     using T = ShadingLanguage;
 
-    switch (t)
+    switch (val)
     {
         case T::GLSL:       return "GLSL";
         case T::GLSL_110:   return "GLSL 110";
@@ -96,11 +96,18 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage t)
         case T::HLSL_4_1:   return "HLSL 4.1";
         case T::HLSL_5_0:   return "HLSL 5.0";
         case T::HLSL_5_1:   return "HLSL 5.1";
+        case T::HLSL_6_0:   return "HLSL 6.0";
+        case T::HLSL_6_1:   return "HLSL 6.1";
+        case T::HLSL_6_2:   return "HLSL 6.2";
+        case T::HLSL_6_3:   return "HLSL 6.3";
+        case T::HLSL_6_4:   return "HLSL 6.4";
 
         case T::Metal:      return "Metal";
         case T::Metal_1_0:  return "Metal 1.0";
         case T::Metal_1_1:  return "Metal 1.1";
         case T::Metal_1_2:  return "Metal 1.2";
+        case T::Metal_2_0:  return "Metal 2.0";
+        case T::Metal_2_1:  return "Metal 2.1";
 
         case T::SPIRV:      return "SPIR-V";
         case T::SPIRV_100:  return "SPIR-V 1.00";
@@ -111,13 +118,13 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const Format t)
+LLGL_EXPORT const char* ToString(const Format val)
 {
     using T = Format;
 
-    switch (t)
+    switch (val)
     {
-        case T::Undefined:          return "<undefined>";
+        case T::Undefined:          return "Undefined";
 
         /* --- Alpha channel color formats --- */
         case T::A8UNorm:            return "A8UNorm";
@@ -231,10 +238,10 @@ LLGL_EXPORT const char* ToString(const Format t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const TextureType t)
+LLGL_EXPORT const char* ToString(const TextureType val)
 {
     using T = TextureType;
-    switch (t)
+    switch (val)
     {
         case T::Texture1D:          return "Texture1D";
         case T::Texture2D:          return "Texture2D";
@@ -249,10 +256,10 @@ LLGL_EXPORT const char* ToString(const TextureType t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const BlendOp t)
+LLGL_EXPORT const char* ToString(const BlendOp val)
 {
     using T = BlendOp;
-    switch (t)
+    switch (val)
     {
         case T::Zero:               return "Zero";
         case T::One:                return "One";
@@ -275,10 +282,10 @@ LLGL_EXPORT const char* ToString(const BlendOp t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const ResourceType t)
+LLGL_EXPORT const char* ToString(const ResourceType val)
 {
     using T = ResourceType;
-    switch (t)
+    switch (val)
     {
         case T::Undefined:  return "undefined";
         case T::Buffer:     return "buffer";

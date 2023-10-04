@@ -52,7 +52,7 @@ template <typename Dst, typename Src>
 inline Dst CastColorValue(const Src& value)
 {
     /* Use double as intermediate type, if either source or destination type is double */
-    using T = typename std::conditional
+    using TReal = typename std::conditional
         <
             (std::is_same<Src, double>::value || std::is_same<Dst, double>::value),
             double,
@@ -61,11 +61,11 @@ inline Dst CastColorValue(const Src& value)
         ::type;
 
     /* Get data type ranges */
-    const auto srcRange = static_cast<T>(MaxColorValue<Src>());
-    const auto dstRange = static_cast<T>(MaxColorValue<Dst>());
+    const TReal srcRange = static_cast<TReal>(MaxColorValue<Src>());
+    const TReal dstRange = static_cast<TReal>(MaxColorValue<Dst>());
 
     /* Transform input value into new range */
-    return static_cast<Dst>(static_cast<T>(value) * dstRange / srcRange);
+    return static_cast<Dst>(static_cast<TReal>(value) * dstRange / srcRange);
 }
 
 //! Specialized template which merely passes the input value as output.
