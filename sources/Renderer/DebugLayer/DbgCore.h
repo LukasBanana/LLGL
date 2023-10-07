@@ -22,17 +22,27 @@ namespace LLGL
 {
 
 
-#define LLGL_DBG_SOURCE()                   \
-    if (debugger_ != nullptr)               \
-        debugger_->SetSource(__FUNCTION__)
+#define LLGL_DBG_SOURCE()                       \
+    {                                           \
+        if (debugger_ != nullptr)               \
+            debugger_->SetSource(__FUNCTION__); \
+    }
 
-#define LLGL_DBG_ERROR(TYPE, FORMAT, ...)                               \
-    if (debugger_ != nullptr)                                           \
-        debugger_->Errorf((TYPE), (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
+#define LLGL_DBG_ERROR(TYPE, FORMAT, ...)                                   \
+    do                                                                      \
+    {                                                                       \
+        if (debugger_ != nullptr)                                           \
+            debugger_->Errorf((TYPE), (FORMAT) LLGL_VA_ARGS(__VA_ARGS__));  \
+    }                                                                       \
+    while (false)
 
-#define LLGL_DBG_WARN(TYPE, FORMAT, ...)                                \
-    if (debugger_ != nullptr)                                           \
-        debugger_->Warningf((TYPE), (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
+#define LLGL_DBG_WARN(TYPE, FORMAT, ...)                                        \
+    do                                                                          \
+    {                                                                           \
+        if (debugger_ != nullptr)                                               \
+            debugger_->Warningf((TYPE), (FORMAT) LLGL_VA_ARGS(__VA_ARGS__));    \
+    }                                                                           \
+    while (false)
 
 #define LLGL_DBG_ERROR_NOT_SUPPORTED(FEATURE) \
     LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, UTF8String(FEATURE) + " not supported")
