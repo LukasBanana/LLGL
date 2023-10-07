@@ -55,7 +55,7 @@ Blob GLPipelineCache::GetBlob() const
         if (!entry.data.empty())
         {
             if (permutation > 0)
-                header.permutationOffsets[permutation - 1] = cacheSize;
+                header.permutationOffsets[permutation - 1] = static_cast<std::uint32_t>(cacheSize);
             cacheSize += sizeof(GLPipelineCacheEntry);
             cacheSize += entry.length;
         }

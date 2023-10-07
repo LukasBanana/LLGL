@@ -80,7 +80,7 @@ VKCommandBuffer::VKCommandBuffer(
         if ((desc.flags & CommandBufferFlags::Secondary) != 0)
         {
             bufferLevel = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-            usageFlags_ |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+            usageFlags_ |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
         }
         if ((desc.flags & CommandBufferFlags::MultiSubmit) == 0)
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -756,7 +756,7 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         /* Scissor rectangle must be updated (if scissor test is disabled) */
         scissorEnabled_ = graphicsPSO.IsScissorEnabled();
-        if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor())
+        if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor() && (usageFlags_ & VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT) == 0)
         {
             /* Set scissor to render target resolution */
             vkCmdSetScissor(commandBuffer_, 0, 1, &framebufferRenderArea_);

@@ -115,10 +115,10 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         DXThrowIfCreateFailed(hr, "ID3D11DeviceContext", "for deferred command buffer");
 
         /* Create state manager dedicated to deferred context */
-        auto deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext);
+        std::shared_ptr<D3D11StateManager> deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext);
 
         /* Create command buffer with deferred context and dedicated state manager */
-        return commandBuffers_.emplace<D3D11CommandBuffer>(device_.Get(), deferredContext, deferredStateMngr, commandBufferDesc);
+        return commandBuffers_.emplace<D3D11CommandBuffer>(device_.Get(), deferredContext, std::move(deferredStateMngr), commandBufferDesc);
     }
 }
 

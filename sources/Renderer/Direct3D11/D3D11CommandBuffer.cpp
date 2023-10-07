@@ -65,9 +65,8 @@ D3D11CommandBuffer::D3D11CommandBuffer(
     /* Store information whether the command buffer has an immediate or deferred context */
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) == 0)
     {
-        hasDeferredContext_ = true;
-        if ((desc.flags & CommandBufferFlags::Secondary) != 0)
-            isSecondaryCmdBuffer_ = true;
+        hasDeferredContext_     = true;
+        isSecondaryCmdBuffer_   = ((desc.flags & CommandBufferFlags::Secondary) != 0);
     }
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
@@ -100,7 +99,7 @@ void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
     {
         if (ID3D11CommandList* commandList = cmdBufferD3D.GetDeferredCommandList())
         {
-            /* Execute encoded command list with immediate context */
+            /* Execute encoded command list with immediate context and restore previous state */
             context_->ExecuteCommandList(commandList, TRUE);
         }
     }
