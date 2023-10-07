@@ -5,6 +5,7 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 ## Table of Contents
 
 - [Image descriptors](#image-descriptors)
+- [Debug layer](#debug-layer)
 
 
 ## Image descriptors
@@ -27,4 +28,9 @@ struct LLGL::ImageView;
 struct LLGL::MutableImageView;
 ```
 
+
+## Debug layer
+
+The `RenderingProfiler` and `RenderingDebugger` interfaces have been merged into the latter one.
+Also the single string functions `PostError` and `PostWarning` have been deprecated and replaced by `Errorf` and `Warningf` to follow the same pattern as the `Report` class.
 
