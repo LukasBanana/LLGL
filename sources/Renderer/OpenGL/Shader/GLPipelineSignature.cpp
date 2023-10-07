@@ -59,7 +59,7 @@ static GLuint SortShaderArray(std::size_t numShaders, const Shader* const* shade
     return outIndex;
 }
 
-GLPipelineSignature::GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation)
+GLPipelineSignature::GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation, void* /*pipelineCache*/)
 {
     Build(numShaders, shaders, permutation);
 }

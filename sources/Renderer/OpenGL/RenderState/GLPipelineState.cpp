@@ -8,6 +8,7 @@
 #include "GLPipelineState.h"
 #include "GLStatePool.h"
 #include "GLStateManager.h"
+#include "GLPipelineCache.h"
 #include "../GLTypes.h"
 #include "../Shader/GLShaderProgram.h"
 #include "../Ext/GLExtensions.h"
@@ -23,17 +24,21 @@ namespace LLGL
 GLPipelineState::GLPipelineState(
     bool                        isGraphicsPSO,
     const PipelineLayout*       pipelineLayout,
+    PipelineCache*              pipelineCache,
     const ArrayView<Shader*>&   shaders)
 :
     isGraphicsPSO_ { isGraphicsPSO }
 {
+    /* Get GL pipeline cache if specified */
+    GLPipelineCache* pipelineCacheGL = (pipelineCache != nullptr ? LLGL_CAST(GLPipelineCache*, pipelineCache) : nullptr);
+
     for_range(permutationIndex, GLShader::PermutationCount)
     {
         const GLShader::Permutation permutation = static_cast<GLShader::Permutation>(permutationIndex);
         if (GLShader::HasAnyShaderPermutation(permutation, shaders))
         {
             /* Create shader pipeline for current permutation */
-            shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(shaders.size(), shaders.data(), permutation);
+            shaderPipelines_[permutation] = GLStatePool::Get().CreateShaderPipeline(shaders.size(), shaders.data(), permutation, pipelineCacheGL);
 
             /* Query information log and stop linking shader pipelines if the default permutation has errors */
             if (permutation == GLShader::PermutationDefault)
@@ -68,7 +73,7 @@ GLPipelineState::GLPipelineState(
 
 GLPipelineState::~GLPipelineState()
 {
-    for (auto& shaderPipeline : shaderPipelines_)
+    for (GLShaderPipelineSPtr& shaderPipeline : shaderPipelines_)
         GLStatePool::Get().ReleaseShaderPipeline(std::move(shaderPipeline));
     GLStatePool::Get().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
 }

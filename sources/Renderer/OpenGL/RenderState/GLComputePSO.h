@@ -17,6 +17,7 @@ namespace LLGL
 
 
 struct ComputePipelineDescriptor;
+class PipelineCache;
 class GLShaderProgram;
 class GLStateManager;
 
@@ -25,7 +26,7 @@ class GLComputePSO final : public GLPipelineState
 
     public:
 
-        GLComputePSO(const ComputePipelineDescriptor& desc);
+        GLComputePSO(const ComputePipelineDescriptor& desc, PipelineCache* pipelineCache = nullptr);
 
 };
 

@@ -41,6 +41,7 @@ struct InterfaceID
         CommandBuffer,          //!< Extends RenderSystemChild. \see CommandBuffer
         CommandQueue,           //!< Extends RenderSystemChild. \see CommandQueue
         Fence,                  //!< Extends RenderSystemChild. \see Fence
+        PipelineCache,          //!< Extends RenderSystemChild. \see PipelineCache
         PipelineLayout,         //!< Extends RenderSystemChild. \see PipelineLayout
         PipelineState,          //!< Extends RenderSystemChild. \see PipelineState
         QueryHeap,              //!< Extends RenderSystemChild. \see QueryHeap

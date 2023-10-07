@@ -6,10 +6,10 @@
  */
 
 #include "D3D12PipelineState.h"
+#include "D3D12PipelineCache.h"
 #include "D3D12PipelineLayout.h"
 #include "../D3D12Device.h"
 #include "../D3D12ObjectUtils.h"
-#include "../D3D12Serialization.h"
 #include "../Shader/D3D12Shader.h"
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
@@ -46,19 +46,6 @@ D3D12PipelineState::D3D12PipelineState(
     }
 }
 
-D3D12PipelineState::D3D12PipelineState(
-    bool                            isGraphicsPSO,
-    ID3D12Device*                   device,
-    Serialization::Deserializer&    reader)
-:
-    isGraphicsPSO_ { isGraphicsPSO }
-{
-    /* Create root signature from cache */
-    const Serialization::Segment seg = reader.ReadSegment(Serialization::D3D12Ident_RootSignature);
-    HRESULT hr = device->CreateRootSignature(0, seg.data, seg.size, IID_PPV_ARGS(rootSignature_.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
-}
-
 void D3D12PipelineState::SetName(const char* name)
 {
     D3D12SetObjectName(native_.Get(), name);
@@ -69,9 +56,19 @@ const Report* D3D12PipelineState::GetReport() const
     return (*report_.GetText() != '\0' || report_.HasErrors() ? &report_ : nullptr);
 }
 
-void D3D12PipelineState::SetNative(ComPtr<ID3D12PipelineState>&& native)
+void D3D12PipelineState::SetNativeAndUpdateCache(ComPtr<ID3D12PipelineState>&& native, D3D12PipelineCache* pipelineCache)
 {
+    /* Store native pipeline state */
     native_ = std::move(native);
+
+    /* Get cached PSO if specified but not initialized */
+    if (pipelineCache != nullptr && !pipelineCache->HasInitialBlob())
+    {
+        ComPtr<ID3DBlob> cachedBlob;
+        HRESULT hr = native_->GetCachedBlob(cachedBlob.GetAddressOf());
+        DXThrowIfFailed(hr, "failed to retrieve cached blob from ID3D12PipelineState");
+        pipelineCache->SetNativeBlob(std::move(cachedBlob));
+    }
 }
 
 void D3D12PipelineState::ResetReport(std::string&& text, bool hasErrors)

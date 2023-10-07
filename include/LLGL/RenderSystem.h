@@ -21,6 +21,7 @@
 #include <LLGL/ImageFlags.h>
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/PipelineCache.h>
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/QueryHeap.h>
@@ -513,68 +514,54 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Releases the specified PipelineLayout object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineLayout& pipelineLayout) = 0;
 
+        /* ----- Pipeline Caches ----- */
+
+        /**
+        \brief Creates a new pipeline cache with optional initial data.
+        \param[in] initialBlob Specifies an optional blob to initialize the pipeline cache.
+        If no initial blob is provided, the pipeline cache will be initialized the first time it is used to create a PSO.
+        If the backend does not support pipeline caching, the initial blob may be ignored and the pipeline cache cannot be used to store arbitrary blobs of data.
+        \remarks Backends that do not support pipeline caching might be using only a single pipeline cache object with a reference counter,
+        in which case the return value might always point to the same instance.
+        \see CreatePipelineState
+        */
+        virtual PipelineCache* CreatePipelineCache(const Blob& initialBlob = {}) = 0;
+
+        /**
+        \brief Releases the specified PipelineCache object. After this call, the specified object must no longer be used.
+        \remarks Backends that do not support pipeline caching might be using only a single pipeline cache object with a refernece counter,
+        in which case releaseing such object will only decrement its internal counter and only delete the object until this counter reaches zero.
+        */
+        virtual void Release(PipelineCache& pipelineCache)  = 0;
+
         /* ----- Pipeline States ----- */
 
         /**
-        \brief Creates a new graphics or compute pipeline state object (PSO) from the specified cache.
-        \param[in] serializedCache Specifies the serialized cache that was created from the same pipeline state.
-        This is usually created during a previous application run, stored to file, and restored on a later run.
-        \remarks Here is an example how to use pipeline state caches:
-        \code
-        // Try to read PSO cache file
-        if (auto myCache = LLGL::Blob::CreateFromFile("MyPSOCacheFile.bin"))
-        {
-            // Create PSO from cache
-            myPipelineState = myRenderer->CreatePipelineState(*myCache);
-        }
-        else
-        {
-            // Setup initial pipeline state
-            LLGL::ComputePipelineDescritpor myPipelineDesc;
-            myPipelineDesc.pipelineLayout = myPipelineLayout;
-            myPipelineDesc.computeShader  = myComputeShader;
-
-            // Create new PSO
-            LLGL::Blob myCache;
-            myRenderer->CreatePipelineState(myPipelineDesc, &myCache);
-
-            // Store PSO to file
-            std::ofstream myCacheFile{ "MyPSOCacheFile.bin", std::ios::out | std::ios::binary };
-            myCacheFile.write(
-                reinterpret_cast<const char*>(myCache.GetData()),
-                static_cast<std::streamsize>(myCache.GetSize())
-            );
-        }
-        \endcode
-        \see CreatePipelineState(const GraphicsPipelineDescriptor&, Blob*)
-        \see CreatePipelineState(const ComputePipelineDescriptor&, Blob*)
-        */
-        virtual PipelineState* CreatePipelineState(const Blob& serializedCache) = 0;
-
-        /**
         \brief Creates a new graphics pipeline state object (PSO).
+
         \param[in] pipelineStateDesc Specifies the graphics PSO descriptor.
         This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
         The \c vertexShader member of the descriptor must never be null!
-        \param[out] serializedCache Optional pointer to a Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
-        This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
-        It can be used to faster restore a pipeline state on next application run.
+
+        \param[out] pipelineCache Optional pointer to pipeline cache.
+
         \see GraphicsPipelineDescriptor
         \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache = nullptr) = 0;
+        virtual PipelineState* CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache = nullptr) = 0;
 
         /**
         \brief Creates a new compute pipeline state object (PSO).
+
         \param[in] pipelineStateDesc Specifies the compute PSO descriptor. This will describe the entire pipeline state.
         The \c computeShader member of the descriptor must never be null!
-        \param[out] serializedCache Optional pointer to a Blob instance. If this is not null, the renderer returns the pipeline state as serialized cache.
-        This cache may be unique to the respective hardware and driver the application is running on. The behavior is undefined if this cache is used in a different software environment.
-        It can be used to faster restore a pipeline state on next application run.
+
+        \param[out] pipelineCache Optional pointer to pipeline cache.
+
         \see ComputePipelineDescriptor
         \see CreatePipelineState(const Blob&)
         */
-        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* serializedCache = nullptr) = 0;
+        virtual PipelineState* CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache = nullptr) = 0;
 
         //! Releases the specified PipelineState object. After this call, the specified object must no longer be used.
         virtual void Release(PipelineState& pipelineState) = 0;

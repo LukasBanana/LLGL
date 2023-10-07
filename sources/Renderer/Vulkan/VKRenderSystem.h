@@ -32,6 +32,7 @@
 #include "RenderState/VKFence.h"
 #include "RenderState/VKRenderPass.h"
 #include "RenderState/VKPipelineLayout.h"
+#include "RenderState/VKPipelineCache.h"
 #include "RenderState/VKGraphicsPSO.h"
 #include "RenderState/VKResourceHeap.h"
 
@@ -105,6 +106,7 @@ class VKRenderSystem final : public RenderSystem
         HWObjectContainer<VKRenderTarget>       renderTargets_;
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;
+        HWObjectContainer<VKPipelineCache>      pipelineCaches_;
         HWObjectContainer<VKPipelineState>      pipelineStates_;
         HWObjectContainer<VKResourceHeap>       resourceHeaps_;
         HWObjectContainer<VKQueryHeap>          queryHeaps_;

@@ -396,14 +396,21 @@ void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
     pipelineLayouts_.erase(&pipelineLayout);
 }
 
-/* ----- Pipeline States ----- */
+/* ----- Pipeline Caches ----- */
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+PipelineCache* D3D11RenderSystem::CreatePipelineCache(const Blob& /*initialBlob*/)
 {
-    return nullptr;//TODO
+    return ProxyPipelineCache::CreateInstance(pipelineCacheProxy_);
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+void D3D11RenderSystem::Release(PipelineCache& pipelineCache)
+{
+    ProxyPipelineCache::ReleaseInstance(pipelineCacheProxy_, pipelineCache);
+}
+
+/* ----- Pipeline States ----- */
+
+PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_)
@@ -433,7 +440,7 @@ PipelineState* D3D11RenderSystem::CreatePipelineState(const GraphicsPipelineDesc
     return pipelineStates_.emplace<D3D11GraphicsPSO>(device_.Get(), pipelineStateDesc);
 }
 
-PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+PipelineState* D3D11RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
     return pipelineStates_.emplace<D3D11ComputePSO>(pipelineStateDesc);
 }

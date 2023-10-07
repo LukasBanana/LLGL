@@ -28,6 +28,7 @@
 #include "Texture/D3D12RenderTarget.h"
 
 #include "RenderState/D3D12Fence.h"
+#include "RenderState/D3D12PipelineCache.h"
 #include "RenderState/D3D12PipelineState.h"
 #include "RenderState/D3D12PipelineLayout.h"
 #include "RenderState/D3D12ResourceHeap.h"
@@ -161,6 +162,7 @@ class D3D12RenderSystem final : public RenderSystem
         HWObjectContainer<D3D12RenderTarget>    renderTargets_;
         HWObjectContainer<D3D12Shader>          shaders_;
         HWObjectContainer<D3D12PipelineLayout>  pipelineLayouts_;
+        HWObjectContainer<D3D12PipelineCache>   pipelineCaches_;
         HWObjectContainer<D3D12PipelineState>   pipelineStates_;
         HWObjectContainer<D3D12ResourceHeap>    resourceHeaps_;
         HWObjectContainer<D3D12QueryHeap>       queryHeaps_;

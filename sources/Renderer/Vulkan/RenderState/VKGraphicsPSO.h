@@ -24,8 +24,9 @@ struct VKGraphicsPipelineLimits
 };
 
 struct GraphicsPipelineDescriptor;
-class VKRenderPass;
 class RenderPass;
+class VKRenderPass;
+class PipelineCache;
 
 class VKGraphicsPSO final : public VKPipelineState
 {
@@ -36,7 +37,8 @@ class VKGraphicsPSO final : public VKPipelineState
             VkDevice                            device,
             const RenderPass*                   defaultRenderPass,
             const GraphicsPipelineDescriptor&   desc,
-            const VKGraphicsPipelineLimits&     limits
+            const VKGraphicsPipelineLimits&     limits,
+            PipelineCache*                      pipelineCache       = nullptr
         );
 
         // Returns true if scissors are enabled.
@@ -57,7 +59,8 @@ class VKGraphicsPSO final : public VKPipelineState
             VkDevice                            device,
             const VKRenderPass&                 renderPass,
             const VKGraphicsPipelineLimits&     limits,
-            const GraphicsPipelineDescriptor&   desc
+            const GraphicsPipelineDescriptor&   desc,
+            VkPipelineCache                     pipelineCache   = VK_NULL_HANDLE
         );
 
     private:

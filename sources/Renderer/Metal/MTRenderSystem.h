@@ -13,6 +13,7 @@
 
 #include <LLGL/RenderSystem.h>
 #include "../ContainerTypes.h"
+#include "../ProxyPipelineCache.h"
 
 #include "Command/MTCommandQueue.h"
 #include "Command/MTCommandBuffer.h"
@@ -84,6 +85,7 @@ class MTRenderSystem final : public RenderSystem
         HWObjectContainer<MTRenderTarget>       renderTargets_;
         HWObjectContainer<MTShader>             shaders_;
         HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;
+        HWObjectInstance<ProxyPipelineCache>    pipelineCacheProxy_;
         HWObjectContainer<MTPipelineState>  	pipelineStates_;
         HWObjectContainer<MTResourceHeap>       resourceHeaps_;
         //HWObjectContainer<MTQueryHeap>          queryHeaps_;

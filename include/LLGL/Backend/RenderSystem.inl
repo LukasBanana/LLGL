@@ -16,6 +16,7 @@
 #include <LLGL/Backend/RenderSystem.RenderTarget.inl>
 #include <LLGL/Backend/RenderSystem.Shader.inl>
 #include <LLGL/Backend/RenderSystem.PipelineLayout.inl>
+#include <LLGL/Backend/RenderSystem.PipelineCache.inl>
 #include <LLGL/Backend/RenderSystem.PipelineState.inl>
 #include <LLGL/Backend/RenderSystem.QueryHeap.inl>
 #include <LLGL/Backend/RenderSystem.Fence.inl>

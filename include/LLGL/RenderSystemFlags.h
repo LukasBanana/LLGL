@@ -250,6 +250,16 @@ struct RendererInfo
 
     //! List of enabled renderer extensions (e.g. "GL_ARB_direct_state_access" or "VK_EXT_conditional_rendering").
     std::vector<std::string>    extensionNames;
+
+    /**
+    \brief Arbitrary string used to identify invalidated pipeline caches.
+    \remarks This may include meta data about the driver version, the shader binary format, the GPU identifier etc.
+    Use this string to identify if all instances of PipelineCache must be cleared when creating PSOs.
+    This may also be empty for backends that do not support pipeline caching.
+    \see RenderSystem::CreatePipelineCache
+    \see RenderingFeatures::hasPipelineCaching
+    */
+    std::vector<char>           pipelineCacheID;
 };
 
 /**
@@ -386,7 +396,11 @@ struct RenderSystemDescriptor
 */
 struct RenderingFeatures
 {
-    //! Specifies whether render targets (also "framebuffer objects") are supported.
+    /**
+    \brief Specifies whether render targets (also "framebuffer objects") are supported.
+    \todo Deprecate this field: All backends should support render targets.
+    GL 2.x can use \c glCopyTexSubImage2D to emulate this feature if \c ARB_framebuffer_object is unavailable.
+    */
     bool hasRenderTargets               = false;
 
     /**
@@ -555,6 +569,13 @@ struct RenderingFeatures
     \see BlendDescriptor::logicOp
     */
     bool hasLogicOp                     = false;
+
+    /**
+    \brief Specifies whether pipeline caching is supported.
+    \remarks If pipeline caching is not supported, RenderSystem::CreatePipelineCache will return a proxy instance of the PipelineCache interface.
+    \see RenderSystem::CreatePipelineCache
+    */
+    bool hasPipelineCaching             = false;
 
     /**
     \brief Specifies whether queries for pipeline statistics are supported.

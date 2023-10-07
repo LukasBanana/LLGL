@@ -24,13 +24,14 @@ namespace LLGL
 
 struct GraphicsPipelineDescriptor;
 class ByteBufferIterator;
+class PipelineCache;
 
 class GLGraphicsPSO final : public GLPipelineState
 {
 
     public:
 
-        GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits);
+        GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits, PipelineCache* pipelineCache = nullptr);
         ~GLGraphicsPSO();
 
         // Binds this graphics pipeline state with the specified GL state manager.

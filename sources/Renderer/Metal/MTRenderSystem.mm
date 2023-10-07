@@ -266,19 +266,26 @@ void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
     pipelineLayouts_.erase(&pipelineLayout);
 }
 
-/* ----- Pipeline States ----- */
+/* ----- Pipeline Caches ----- */
 
-PipelineState* MTRenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+PipelineCache* MTRenderSystem::CreatePipelineCache(const Blob& /*initialBlob*/)
 {
-    return nullptr;//TODO
+    return ProxyPipelineCache::CreateInstance(pipelineCacheProxy_);
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+void MTRenderSystem::Release(PipelineCache& pipelineCache)
+{
+    ProxyPipelineCache::ReleaseInstance(pipelineCacheProxy_, pipelineCache);
+}
+
+/* ----- Pipeline States ----- */
+
+PipelineState* MTRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
     return pipelineStates_.emplace<MTGraphicsPSO>(device_, pipelineStateDesc, GetDefaultRenderPass());
 }
 
-PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+PipelineState* MTRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
     return pipelineStates_.emplace<MTComputePSO>(device_, pipelineStateDesc);
 }

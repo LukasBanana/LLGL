@@ -172,6 +172,11 @@ Blob::~Blob()
     delete pimpl_;
 }
 
+Blob Blob::CreateCopy(const Blob& other)
+{
+    return (other ? Blob{ other.GetData(), other.GetSize() } : Blob{});
+}
+
 Blob Blob::CreateCopy(const void* data, std::size_t size)
 {
     return Blob{ data, size };

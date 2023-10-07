@@ -8,6 +8,7 @@
 #include "VKGraphicsPSO.h"
 #include "VKPipelineLayout.h"
 #include "VKRenderPass.h"
+#include "VKPipelineCache.h"
 #include "../Ext/VKExtensionRegistry.h"
 #include "../Shader/VKShader.h"
 #include "../VKTypes.h"
@@ -29,20 +30,24 @@ VKGraphicsPSO::VKGraphicsPSO(
     VkDevice                            device,
     const RenderPass*                   defaultRenderPass,
     const GraphicsPipelineDescriptor&   desc,
-    const VKGraphicsPipelineLimits&     limits)
+    const VKGraphicsPipelineLimits&     limits,
+    PipelineCache*                      pipelineCache)
 :
     VKPipelineState    { device, VK_PIPELINE_BIND_POINT_GRAPHICS, GetShadersAsArray(desc), desc.pipelineLayout },
     scissorEnabled_    { desc.rasterizer.scissorTestEnabled                                                    },
     hasDynamicScissor_ { desc.scissors.empty()                                                                 }
 {
-    if (auto renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass))
-    {
-        /* Create Vulkan graphics pipeline object */
-        auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
-        CreateVkPipeline(device, *renderPassVK, limits, desc);
-    }
-    else
+    /* Get render pass from descriptor or default render pass */
+    const RenderPass* renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass);
+    if (renderPass == nullptr)
         throw std::invalid_argument("cannot create Vulkan graphics pipeline without render pass");
+
+    /* Create Vulkan graphics pipeline object */
+    const VKRenderPass* renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
+    if (VKPipelineCache* pipelineCacheVK = (pipelineCache != nullptr ? LLGL_CAST(VKPipelineCache*, pipelineCache) : nullptr))
+        CreateVkPipeline(device, *renderPassVK, limits, desc, pipelineCacheVK->GetNative());
+    else
+        CreateVkPipeline(device, *renderPassVK, limits, desc);
 }
 
 
@@ -78,8 +83,8 @@ static void CreateViewportState(
     std::vector<VkViewport>&            viewportsVK,
     std::vector<VkRect2D>&              scissorsVK)
 {
-    const auto numViewports = desc.viewports.size();
-    const auto numScissors = desc.scissors.size();
+    const std::size_t numViewports = desc.viewports.size();
+    const std::size_t numScissors = desc.scissors.size();
 
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     createInfo.pNext = nullptr;
@@ -291,11 +296,12 @@ void VKGraphicsPSO::CreateVkPipeline(
     VkDevice                            device,
     const VKRenderPass&                 renderPass,
     const VKGraphicsPipelineLimits&     limits,
-    const GraphicsPipelineDescriptor&   desc)
+    const GraphicsPipelineDescriptor&   desc,
+    VkPipelineCache                     pipelineCache)
 {
     /* Get shader program object */
-    auto vertexShaderVK = LLGL_CAST(const VKShader*, desc.vertexShader);
-    if (!vertexShaderVK)
+    const VKShader* vertexShaderVK = LLGL_CAST(const VKShader*, desc.vertexShader);
+    if (vertexShaderVK == nullptr)
         throw std::invalid_argument("cannot create Vulkan graphics pipeline without vertex shader");
 
     auto FillAndAppendShaderStageCreateInfo = [this](
@@ -304,8 +310,8 @@ void VKGraphicsPSO::CreateVkPipeline(
     {
         if (shader != nullptr)
         {
-            auto shaderIndex = createInfos.size();
-            auto& shaderVK = LLGL_CAST(VKShader&, *shader);
+            std::size_t shaderIndex = createInfos.size();
+            VKShader& shaderVK = LLGL_CAST(VKShader&, *shader);
             createInfos.resize(shaderIndex + 1);
             this->GetShaderCreateInfoAndOptionalPermutation(shaderVK, createInfos.back());
         }
@@ -344,7 +350,7 @@ void VKGraphicsPSO::CreateVkPipeline(
 
     /* Initialize multi-sample state */
     VkPipelineMultisampleStateCreateInfo multisampleState;
-    const auto sampleCountBits = (desc.rasterizer.multiSampleEnabled ? renderPass.GetSampleCountBits() : VK_SAMPLE_COUNT_1_BIT);
+    const VkSampleCountFlagBits sampleCountBits = (desc.rasterizer.multiSampleEnabled ? renderPass.GetSampleCountBits() : VK_SAMPLE_COUNT_1_BIT);
     CreateMultisampleState(sampleCountBits, desc.blend, multisampleState);
 
     /* Initialize depth-stencil state */
@@ -384,7 +390,7 @@ void VKGraphicsPSO::CreateVkPipeline(
         createInfo.basePipelineHandle           = VK_NULL_HANDLE;
         createInfo.basePipelineIndex            = 0;
     }
-    auto result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
+    VkResult result = vkCreateGraphicsPipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan graphics pipeline");
 }
 

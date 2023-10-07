@@ -393,8 +393,8 @@ class LLGL_EXPORT DynamicArray
 
     private:
 
-        pointer     data_   = nullptr;
-        size_type   size_   = 0;
+        pointer     data_ = nullptr;
+        size_type   size_ = 0;
 
 };
 

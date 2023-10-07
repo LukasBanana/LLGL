@@ -1029,6 +1029,8 @@ typedef struct LLGLRendererInfo
     const char*        shadingLanguageName;
     size_t             numExtensionNames;   /* = 0 */
     const char* const* extensionNames;      /* = NULL */
+    size_t             numPipelineCacheID;  /* = 0 */
+    const char*        pipelineCacheID;     /* = NULL */
 }
 LLGLRendererInfo;
 
@@ -1059,6 +1061,7 @@ typedef struct LLGLRenderingFeatures
     bool hasConservativeRasterization; /* = false */
     bool hasStreamOutputs;             /* = false */
     bool hasLogicOp;                   /* = false */
+    bool hasPipelineCaching;           /* = false */
     bool hasPipelineStatistics;        /* = false */
     bool hasRenderCondition;           /* = false */
 }
@@ -1317,7 +1320,7 @@ typedef struct LLGLRenderSystemDescriptor
 {
     const char*           moduleName;
     long                  flags;              /* = 0 */
-    LLGLRenderingProfiler profiler;           /* = LLGL_NULL_OBJECT */
+    void*                 profiler;           /* = NULL */
     LLGLRenderingDebugger debugger;           /* = LLGL_NULL_OBJECT */
     const void*           rendererConfig;     /* = NULL */
     size_t                rendererConfigSize; /* = 0 */
@@ -1600,6 +1603,7 @@ typedef struct LLGLShaderDescriptor
     const char*                  profile;    /* = NULL */
     const LLGLShaderMacro*       defines;    /* = NULL */
     long                         flags;      /* = 0 */
+    const char*                  name;       /* = NULL */
     LLGLVertexShaderAttributes   vertex;
     LLGLFragmentShaderAttributes fragment;
     LLGLComputeShaderAttributes  compute;

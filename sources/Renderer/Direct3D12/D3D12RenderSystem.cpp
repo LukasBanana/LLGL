@@ -7,7 +7,6 @@
 
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
-#include "D3D12Serialization.h"
 #include "D3D12SubresourceContext.h"
 #include "../DXCommon/DXCore.h"
 #include "../TextureUtils.h"
@@ -356,51 +355,29 @@ void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
     pipelineLayouts_.erase(&pipelineLayout);
 }
 
+/* ----- Pipeline Caches ----- */
+
+PipelineCache* D3D12RenderSystem::CreatePipelineCache(const Blob& initialBlob)
+{
+    return pipelineCaches_.emplace<D3D12PipelineCache>(initialBlob);
+}
+
+void D3D12RenderSystem::Release(PipelineCache& pipelineCache)
+{
+    /* No GPU sync necessary for PSO caches; they only store an ID3DBlob that is used synchronously */
+    pipelineCaches_.erase(&pipelineCache);
+}
+
 /* ----- Pipeline States ----- */
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const Blob& serializedCache)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    Serialization::Deserializer reader{ serializedCache };
-
-    /* Read type of PSO */
-    auto seg = reader.ReadSegment();
-    if (seg.ident == Serialization::D3D12Ident_GraphicsPSOIdent)
-    {
-        /* Create graphics PSO from cache */
-        return pipelineStates_.emplace<D3D12GraphicsPSO>(device_, reader);
-    }
-    #if 0//TODO
-    else if (seg.ident == Serialization::D3D12Ident_ComputePSOIdent)
-    {
-        /* Create compute PSO from cache */
-        return pipelineStates_.emplace<D3D12ComputePSO>(device_, reader);
-    }
-    #endif
-
-    LLGL_TRAP("serialized cache does not denote a D3D12 graphics or compute PSO");
+    return pipelineStates_.emplace<D3D12GraphicsPSO>(device_, defaultPipelineLayout_, pipelineStateDesc, GetDefaultRenderPass(), pipelineCache);
 }
 
-PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
+PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    Serialization::Serializer writer;
-
-    D3D12GraphicsPSO* pipelineState = pipelineStates_.emplace<D3D12GraphicsPSO>(
-        device_,
-        defaultPipelineLayout_,
-        pipelineStateDesc,
-        GetDefaultRenderPass(),
-        (serializedCache != nullptr ? &writer : nullptr)
-    );
-
-    if (serializedCache != nullptr)
-        *serializedCache = writer.Finalize();
-
-    return pipelineState;
-}
-
-PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
-{
-    return pipelineStates_.emplace<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc);
+    return pipelineStates_.emplace<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc, pipelineCache);
 }
 
 void D3D12RenderSystem::Release(PipelineState& pipelineState)
@@ -594,6 +571,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
         /* Set extended attributes */
         caps.features.hasConservativeRasterization  = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
         caps.features.hasTextureViewSwizzle         = true;
+        caps.features.hasPipelineCaching            = true;
 
         caps.limits.maxViewports                    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]              = D3D12_VIEWPORT_BOUNDS_MAX;

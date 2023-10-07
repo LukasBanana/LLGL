@@ -16,9 +16,11 @@ namespace LLGL
 {
 
 
+class PipelineCache;
 class D3D12Device;
 class D3D12ShaderProgram;
 class D3D12PipelineLayout;
+class D3D12PipelineCache;
 
 class D3D12ComputePSO final : public D3D12PipelineState
 {
@@ -28,14 +30,19 @@ class D3D12ComputePSO final : public D3D12PipelineState
         D3D12ComputePSO(
             D3D12Device&                        device,
             D3D12PipelineLayout&                defaultPipelineLayout,
-            const ComputePipelineDescriptor&    desc
+            const ComputePipelineDescriptor&    desc,
+            PipelineCache*                      pipelineCache           = nullptr
         );
 
         void Bind(D3D12CommandContext& commandContext) override;
 
     private:
 
-        void CreateNativePSO(D3D12Device& device, const D3D12_SHADER_BYTECODE& csBytecode);
+        void CreateNativePSO(
+            D3D12Device&                    device,
+            const D3D12_SHADER_BYTECODE&    csBytecode,
+            D3D12PipelineCache*             pipelineCache   = nullptr
+        );
 
 };
 

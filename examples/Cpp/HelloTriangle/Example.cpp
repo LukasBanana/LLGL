@@ -11,24 +11,28 @@
 
 
 // Enable multi-sampling
-#define ENABLE_MULTISAMPLING
-
-// Enable timer to show render times every second
-//#define ENABLE_TIMER
+#define ENABLE_MULTISAMPLING    1
 
 // Enable caching of pipeline state objects (PSO)
-#define ENABLE_CACHED_PSO
+#define ENABLE_CACHED_PSO       1
 
 int main(int argc, char* argv[])
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         // Let the user choose an available renderer
         std::string rendererModule = GetSelectedRendererModule(argc, argv);
 
         // Load render system module
         LLGL::Report report;
         LLGL::RenderSystemPtr renderer = LLGL::RenderSystem::Load(rendererModule, &report);
+        if (!renderer)
+        {
+            LLGL::Log::Errorf("%s", report.GetText());
+            return 1;
+        }
 
         // Create swap-chain
         LLGL::SwapChainDescriptor swapChainDesc;
@@ -36,7 +40,7 @@ int main(int argc, char* argv[])
             swapChainDesc.resolution    = { 800, 600 };
             swapChainDesc.depthBits     = 0; // We don't need a depth buffer for this example
             swapChainDesc.stencilBits   = 0; // We don't need a stencil buffer for this example
-            #ifdef ENABLE_MULTISAMPLING
+            #if ENABLE_MULTISAMPLING
             swapChainDesc.samples       = 8; // check if LLGL adapts sample count that is too high
             #endif
         }
@@ -45,12 +49,20 @@ int main(int argc, char* argv[])
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
 
-        std::cout << "Renderer:             " << info.rendererName << std::endl;
-        std::cout << "Device:               " << info.deviceName << std::endl;
-        std::cout << "Vendor:               " << info.vendorName << std::endl;
-        std::cout << "Shading Language:     " << info.shadingLanguageName << std::endl;
-        std::cout << "Swap Chain Format:    " << LLGL::ToString(swapChain->GetColorFormat()) << std::endl;
-        std::cout << "Depth/Stencil Format: " << LLGL::ToString(swapChain->GetDepthStencilFormat()) << std::endl;
+        LLGL::Log::Printf(
+            "Renderer:             %s\n"
+            "Device:               %s\n"
+            "Vendor:               %s\n"
+            "Shading Language:     %s\n"
+            "Swap Chain Format:    %s\n"
+            "Depth/Stencil Format: %s\n",
+            info.rendererName.c_str(),
+            info.deviceName.c_str(),
+            info.vendorName.c_str(),
+            info.shadingLanguageName.c_str(),
+            LLGL::ToString(swapChain->GetColorFormat()),
+            LLGL::ToString(swapChain->GetDepthStencilFormat())
+        );
 
         // Enable V-sync
         swapChain->SetVsyncInterval(1);
@@ -147,93 +159,86 @@ int main(int argc, char* argv[])
         vertShader = renderer->CreateShader(vertShaderDesc);
         fragShader = renderer->CreateShader(fragShaderDesc);
 
-        for (auto shader : { vertShader, fragShader })
+        for (LLGL::Shader* shader : { vertShader, fragShader })
         {
-            if (auto report = shader->GetReport())
-                std::cerr << report->GetText() << std::endl;
+            if (const LLGL::Report* report = shader->GetReport())
+                LLGL::Log::Errorf("%s", report->GetText());
         }
 
         // Create graphics pipeline
         LLGL::PipelineState* pipeline = nullptr;
-        LLGL::Blob pipelineCache;
+        LLGL::PipelineCache* pipelineCache = nullptr;
 
-        #ifdef ENABLE_CACHED_PSO
+        #if ENABLE_CACHED_PSO
+
         // Try to read PSO cache from file
         const std::string cacheFilename = "GraphicsPSO." + rendererModule + ".cache";
-        pipelineCache = LLGL::Blob::CreateFromFile(cacheFilename);
-        if (pipelineCache)
+        bool hasInitialCache = false;
+
+        LLGL::Blob pipelineCacheBlob = LLGL::Blob::CreateFromFile(cacheFilename);
+        if (pipelineCacheBlob)
         {
-            // Create graphics PSO from cache
-            pipeline = renderer->CreatePipelineState(pipelineCache);
-            std::cout << "Pipeline cache restored: " << pipelineCache.GetSize() << " bytes" << std::endl;
+            LLGL::Log::Printf("Pipeline cache restored: %zu bytes\n", pipelineCacheBlob.GetSize());
+            hasInitialCache = true;
         }
-        else
+
+        pipelineCache = renderer->CreatePipelineCache(pipelineCacheBlob);
+
         #endif
+
+        LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            LLGL::GraphicsPipelineDescriptor pipelineDesc;
-            {
-                pipelineDesc.vertexShader                   = vertShader;
-                pipelineDesc.fragmentShader                 = fragShader;
-                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-                #ifdef ENABLE_MULTISAMPLING
-                pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
-                #endif
-            }
+            pipelineDesc.vertexShader                   = vertShader;
+            pipelineDesc.fragmentShader                 = fragShader;
+            pipelineDesc.renderPass                     = swapChain->GetRenderPass();
+            #if ENABLE_MULTISAMPLING
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc.samples > 1);
+            #endif
+        }
 
-            #ifdef ENABLE_CACHED_PSO
+        // Create and cache graphics PSO
+        std::uint64_t psoStartTime = LLGL::Timer::Tick();
+        pipeline = renderer->CreatePipelineState(pipelineDesc, pipelineCache);
+        std::uint64_t psoEndTime = LLGL::Timer::Tick();
 
-            // Create and cache graphics PSO
-            pipeline = renderer->CreatePipelineState(pipelineDesc, &pipelineCache);
-            if (pipelineCache)
+        #if ENABLE_CACHED_PSO
+
+        const double psoTime = static_cast<double>(psoEndTime - psoStartTime) / static_cast<double>(LLGL::Timer::Frequency()) * 1000.0;
+        LLGL::Log::Printf("PSO creation time: %f ms\n", psoTime);
+
+        if (!hasInitialCache)
+        {
+            if (LLGL::Blob psoCache = pipelineCache->GetBlob())
             {
-                std::cout << "Pipeline cache created: " << pipelineCache.GetSize() << " bytes" << std::endl;
+                LLGL::Log::Printf("Pipeline cache created: %zu bytes", psoCache.GetSize());
 
                 // Store PSO cache to file
                 std::ofstream file{ cacheFilename, std::ios::out | std::ios::binary };
                 file.write(
-                    reinterpret_cast<const char*>(pipelineCache.GetData()),
-                    static_cast<std::streamsize>(pipelineCache.GetSize())
+                    reinterpret_cast<const char*>(psoCache.GetData()),
+                    static_cast<std::streamsize>(psoCache.GetSize())
                 );
             }
+        }
 
-            #else
+        #endif
 
-            // Create graphics PSO
-            pipeline = renderer->CreatePipelineState(pipelineDesc);
-
-            #endif
-
-            // Link shader program and check for errors
-            if (auto report = pipeline->GetReport())
+        // Link shader program and check for errors
+        if (const LLGL::Report* report = pipeline->GetReport())
+        {
+            if (report->HasErrors())
             {
-                if (report->HasErrors())
-                    throw std::runtime_error(report->GetText());
+                LLGL::Log::Errorf("%s\n", report->GetText());
+                return 1;
             }
         }
 
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);
 
-        #ifdef ENABLE_TIMER
-        Stopwatch timer;
-        auto start = std::chrono::system_clock::now();
-        #endif
-
         // Enter main loop
-        while (!window.HasQuit())
+        while (LLGL::Surface::ProcessEvents() && !window.HasQuit())
         {
-            LLGL::Surface::ProcessEvents();
-
-            #ifdef ENABLE_TIMER
-            timer.MeasureTime();
-            auto end = std::chrono::system_clock::now();
-            if (std::chrono::duration_cast<std::chrono::seconds>(end - start).count() > 0)
-            {
-                std::cout << "Rendertime: " << timer.GetDeltaTime() << ", FPS: " << 1.0 / timer.GetDeltaTime() << '\n';
-                start = end;
-            }
-            #endif
-
             // Begin recording commands
             commands->Begin();
             {
@@ -265,7 +270,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
         #ifdef _WIN32
         system("pause");
         #endif

@@ -38,7 +38,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     debugLayerEnabled_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0) }
 {
     /* Extract optional renderer configuartion */
-    auto rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
+    auto* rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
 
     /* Create Vulkan instance and device objects */
     CreateInstance(rendererConfigVK);
@@ -585,26 +585,35 @@ void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
     pipelineLayouts_.erase(&pipelineLayout);
 }
 
-/* ----- Pipeline States ----- */
+/* ----- Pipeline Caches ----- */
 
-PipelineState* VKRenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+PipelineCache* VKRenderSystem::CreatePipelineCache(const Blob& initialBlob)
 {
-    return nullptr;//TODO
+    return pipelineCaches_.emplace<VKPipelineCache>(device_, initialBlob);
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+void VKRenderSystem::Release(PipelineCache& pipelineCache)
+{
+    pipelineCaches_.erase(&pipelineCache);
+}
+
+
+/* ----- Pipeline States ----- */
+
+PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
     return pipelineStates_.emplace<VKGraphicsPSO>(
         device_,
         (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
         pipelineStateDesc,
-        gfxPipelineLimits_
+        gfxPipelineLimits_,
+        pipelineCache
     );
 }
 
-PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+PipelineState* VKRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return pipelineStates_.emplace<VKComputePSO>(device_, pipelineStateDesc);
+    return pipelineStates_.emplace<VKComputePSO>(device_, pipelineStateDesc, pipelineCache);
 }
 
 void VKRenderSystem::Release(PipelineState& pipelineState)

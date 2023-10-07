@@ -17,17 +17,26 @@ namespace LLGL
 
 
 struct ComputePipelineDescriptor;
+class PipelineCache;
 
 class VKComputePSO final : public VKPipelineState
 {
 
     public:
 
-        VKComputePSO(VkDevice device, const ComputePipelineDescriptor& desc);
+        VKComputePSO(
+            VkDevice                            device,
+            const ComputePipelineDescriptor&    desc,
+            PipelineCache*                      pipelineCache = nullptr
+        );
 
     private:
 
-        void CreateVkPipeline(VkDevice device, const ComputePipelineDescriptor& desc);
+        void CreateVkPipeline(
+            VkDevice                            device,
+            const ComputePipelineDescriptor&    desc,
+            VkPipelineCache                     pipelineCache = VK_NULL_HANDLE
+        );
 
 };
 

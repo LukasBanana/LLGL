@@ -25,6 +25,7 @@
 #include "Texture/NullTexture.h"
 #include "Texture/NullRenderTarget.h"
 #include "Texture/NullSampler.h"
+#include "../ProxyPipelineCache.h"
 
 #include "../ContainerTypes.h"
 
@@ -62,6 +63,7 @@ class NullRenderSystem final : public RenderSystem
         HWObjectContainer<NullRenderTarget>     renderTargets_;
         HWObjectContainer<NullShader>           shaders_;
         HWObjectContainer<NullPipelineLayout>   pipelineLayouts_;
+        HWObjectInstance<ProxyPipelineCache>    pipelineCacheProxy_;
         HWObjectContainer<NullPipelineState>    pipelineStates_;
         HWObjectContainer<NullResourceHeap>     resourceHeaps_;
         HWObjectContainer<NullSampler>          samplers_;

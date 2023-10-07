@@ -35,8 +35,11 @@
 #include "RenderState/GLFence.h"
 #include "RenderState/GLRenderPass.h"
 #include "RenderState/GLPipelineLayout.h"
+#include "RenderState/GLPipelineCache.h"
 #include "RenderState/GLPipelineState.h"
 #include "RenderState/GLResourceHeap.h"
+
+#include "../ProxyPipelineCache.h"
 
 #include <string>
 #include <memory>
@@ -77,27 +80,29 @@ class GLRenderSystem final : public RenderSystem
 
         /* ----- Hardware object containers ----- */
 
-        GLContextManager                    contextMngr_;
-        bool                                debugContext_   = false;
+        GLContextManager                        contextMngr_;
+        bool                                    debugContext_   = false;
 
-        HWObjectContainer<GLSwapChain>      swapChains_;
-        HWObjectInstance<GLCommandQueue>    commandQueue_;
-        HWObjectContainer<GLCommandBuffer>  commandBuffers_;
-        HWObjectContainer<GLBuffer>         buffers_;
-        HWObjectContainer<GLBufferArray>    bufferArrays_;
-        HWObjectContainer<GLTexture>        textures_;
-        HWObjectContainer<GLSampler>        samplers_;
+        HWObjectContainer<GLSwapChain>          swapChains_;
+        HWObjectInstance<GLCommandQueue>        commandQueue_;
+        HWObjectContainer<GLCommandBuffer>      commandBuffers_;
+        HWObjectContainer<GLBuffer>             buffers_;
+        HWObjectContainer<GLBufferArray>        bufferArrays_;
+        HWObjectContainer<GLTexture>            textures_;
+        HWObjectContainer<GLSampler>            samplers_;
         #ifdef LLGL_GL_ENABLE_OPENGL2X
-        HWObjectContainer<GL2XSampler>      samplersGL2X_;
+        HWObjectContainer<GL2XSampler>          samplersGL2X_;
         #endif
-        HWObjectContainer<GLRenderPass>     renderPasses_;
-        HWObjectContainer<GLRenderTarget>   renderTargets_;
-        HWObjectContainer<GLShader>         shaders_;
-        HWObjectContainer<GLPipelineLayout> pipelineLayouts_;
-        HWObjectContainer<GLPipelineState>  pipelineStates_;
-        HWObjectContainer<GLResourceHeap>   resourceHeaps_;
-        HWObjectContainer<GLQueryHeap>      queryHeaps_;
-        HWObjectContainer<GLFence>          fences_;
+        HWObjectContainer<GLRenderPass>         renderPasses_;
+        HWObjectContainer<GLRenderTarget>       renderTargets_;
+        HWObjectContainer<GLShader>             shaders_;
+        HWObjectContainer<GLPipelineLayout>     pipelineLayouts_;
+        HWObjectInstance<ProxyPipelineCache>    pipelineCacheProxy_;
+        HWObjectContainer<GLPipelineCache>      pipelineCaches_;
+        HWObjectContainer<GLPipelineState>      pipelineStates_;
+        HWObjectContainer<GLResourceHeap>       resourceHeaps_;
+        HWObjectContainer<GLQueryHeap>          queryHeaps_;
+        HWObjectContainer<GLFence>              fences_;
 
 };
 

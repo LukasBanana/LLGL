@@ -428,7 +428,7 @@ void DbgRenderSystem::Release(RenderPass& renderPass)
 {
     /* Render passes have to be deleted manually with an explicitly multable instance, because they can be queried from RenderTarget::GetRenderPass() */
     auto& renderPassDbg = LLGL_CAST(DbgRenderPass&, renderPass);
-    if (auto instance = renderPassDbg.mutableInstance)
+    if (RenderPass* instance = renderPassDbg.mutableInstance)
     {
         instance_->Release(*instance);
         renderPasses_.erase(&renderPass);
@@ -441,7 +441,7 @@ RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& 
 {
     LLGL_DBG_SOURCE();
 
-    auto instanceDesc = renderTargetDesc;
+    RenderTargetDescriptor instanceDesc = renderTargetDesc;
     {
         instanceDesc.renderPass = DbgGetInstance<DbgRenderPass>(renderTargetDesc.renderPass);
 
@@ -494,21 +494,28 @@ void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
     ReleaseDbg(pipelineLayouts_, pipelineLayout);
 }
 
-/* ----- Pipeline States ----- */
+/* ----- Pipeline Caches ----- */
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const Blob& serializedCache)
+PipelineCache* DbgRenderSystem::CreatePipelineCache(const Blob& initialBlob)
 {
-    return nullptr;//TODO
+    return instance_->CreatePipelineCache(initialBlob);
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
+void DbgRenderSystem::Release(PipelineCache& pipelineCache)
+{
+    instance_->Release(pipelineCache);
+}
+
+/* ----- Pipeline States ----- */
+
+PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
     LLGL_DBG_SOURCE();
 
     if (debugger_)
         ValidateGraphicsPipelineDesc(pipelineStateDesc);
 
-    auto instanceDesc = pipelineStateDesc;
+    GraphicsPipelineDescriptor instanceDesc = pipelineStateDesc;
     {
         if (pipelineStateDesc.pipelineLayout != nullptr)
             instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
@@ -520,24 +527,24 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
         instanceDesc.geometryShader         = DbgGetInstance<DbgShader>(pipelineStateDesc.geometryShader);
         instanceDesc.fragmentShader         = DbgGetInstance<DbgShader>(pipelineStateDesc.fragmentShader);
     }
-    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
+    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, pipelineCache), pipelineStateDesc);
 }
 
-PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* serializedCache)
+PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
     LLGL_DBG_SOURCE();
 
     if (debugger_)
         ValidateComputePipelineDesc(pipelineStateDesc);
 
-    auto instanceDesc = pipelineStateDesc;
+    ComputePipelineDescriptor instanceDesc = pipelineStateDesc;
     {
         if (pipelineStateDesc.pipelineLayout != nullptr)
             instanceDesc.pipelineLayout = &(LLGL_CAST(const DbgPipelineLayout*, pipelineStateDesc.pipelineLayout)->instance);
 
         instanceDesc.computeShader = DbgGetInstance<DbgShader>(pipelineStateDesc.computeShader);
     }
-    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, serializedCache), pipelineStateDesc);
+    return pipelineStates_.emplace<DbgPipelineState>(*instance_->CreatePipelineState(instanceDesc, pipelineCache), pipelineStateDesc);
 }
 
 void DbgRenderSystem::Release(PipelineState& pipelineState)
@@ -566,7 +573,7 @@ Fence* DbgRenderSystem::CreateFence()
 
 void DbgRenderSystem::Release(Fence& fence)
 {
-    return instance_->Release(fence);
+    instance_->Release(fence);
 }
 
 /* ----- Extensions ----- */

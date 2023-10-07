@@ -26,6 +26,7 @@ namespace LLGL
 
 class GLLegacyShader;
 class GLSeparableShader;
+class GLPipelineCache;
 
 /*
 Singleton pool for OpenGL depth-stencil-, rasterizer-, and blend states.
@@ -67,7 +68,12 @@ class GLStatePool
 
         /* ----- Shader pipelines ----- */
 
-        GLShaderPipelineSPtr CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders, GLShader::Permutation permutation = GLShader::PermutationDefault);
+        GLShaderPipelineSPtr CreateShaderPipeline(
+            std::size_t             numShaders,
+            Shader* const*          shaders,
+            GLShader::Permutation   permutation     = GLShader::PermutationDefault,
+            GLPipelineCache*        pipelineCache   = nullptr
+        );
         void ReleaseShaderPipeline(GLShaderPipelineSPtr&& shaderPipeline);
 
     private:

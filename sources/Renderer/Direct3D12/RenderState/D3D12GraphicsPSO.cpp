@@ -11,9 +11,9 @@
 #include "../D3D12ObjectUtils.h"
 #include "../Shader/D3D12Shader.h"
 #include "D3D12RenderPass.h"
+#include "D3D12PipelineCache.h"
 #include "D3D12PipelineLayout.h"
 #include "../Command/D3D12CommandContext.h"
-#include "../D3D12Serialization.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
@@ -37,7 +37,7 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     D3D12PipelineLayout&                defaultPipelineLayout,
     const GraphicsPipelineDescriptor&   desc,
     const D3D12RenderPass*              defaultRenderPass,
-    Serialization::Serializer*          writer)
+    PipelineCache*                      pipelineCache)
 :
     D3D12PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc), defaultPipelineLayout }
 {
@@ -77,13 +77,13 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
         pipelineLayoutD3D = &defaultPipelineLayout;
 
     /* Create native graphics PSO */
-    CreateNativePSOFromDesc(device, *pipelineLayoutD3D, renderPassD3D, desc, writer);
-}
-
-D3D12GraphicsPSO::D3D12GraphicsPSO(D3D12Device& device, Serialization::Deserializer& reader) :
-    D3D12PipelineState { /*isGraphicsPSO:*/ true, device.GetNative(), reader }
-{
-    CreateNativePSOFromCache(device, reader);
+    if (pipelineCache != nullptr)
+    {
+        auto* pipelineCacheD3D = LLGL_CAST(D3D12PipelineCache*, pipelineCache);
+        CreateNativePSO(device, *pipelineLayoutD3D, renderPassD3D, desc, pipelineCacheD3D);
+    }
+    else
+        CreateNativePSO(device, *pipelineLayoutD3D, renderPassD3D, desc);
 }
 
 void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
@@ -93,7 +93,7 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
     commandContext.SetPipelineState(GetNative());
 
     /* Set dynamic pipeline states */
-    auto commandList = commandContext.GetCommandList();
+    ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
 
     commandList->IASetPrimitiveTopology(primitiveTopology_);
 
@@ -362,12 +362,12 @@ static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const S
     return desc;
 }
 
-void D3D12GraphicsPSO::CreateNativePSOFromDesc(
+void D3D12GraphicsPSO::CreateNativePSO(
     D3D12Device&                        device,
     const D3D12PipelineLayout&          pipelineLayout,
     const D3D12RenderPass*              renderPass,
     const GraphicsPipelineDescriptor&   desc,
-    Serialization::Serializer*          writer)
+    D3D12PipelineCache*                 pipelineCache)
 {
     /* Get number of render-target attachments */
     const UINT numAttachments = (renderPass != nullptr ? renderPass->GetNumColorAttachments() : 1);
@@ -411,46 +411,12 @@ void D3D12GraphicsPSO::CreateNativePSOFromDesc(
     stateDesc.SampleDesc.Count      = (renderPass != nullptr ? renderPass->GetSampleDesc().Count : 1);
     stateDesc.SampleDesc.Quality    = 0;
 
-    /* Create native PSO */
-    SetNative(device.CreateDXGraphicsPipelineState(stateDesc));
-
-    /* Serialize graphics PSO */
-    if (writer != nullptr)
-    {
-        /* Get cached blob from native PSO */
-        ComPtr<ID3DBlob> cachedBlob;
-        HRESULT hr = GetNative()->GetCachedBlob(cachedBlob.GetAddressOf());
-        DXThrowIfFailed(hr, "failed to retrieve cached blob from ID3D12PipelineState");
-
-        /* Get serialized root signature blob */
-        ID3DBlob* rootSignatureBlob = pipelineLayout.GetSerializedBlob();
-        if (rootSignatureBlob == nullptr)
-            DXThrowIfFailed(E_POINTER, "failed to retrieve serialized root signature blob from ID3D12RootSignature");
-
-        /* Serialize entire PSO */
-        SerializePSO(*writer, stateDesc, rootSignatureBlob, cachedBlob.Get());
-    }
-}
-
-void D3D12GraphicsPSO::CreateNativePSOFromCache(
-    D3D12Device&                    device,
-    Serialization::Deserializer&    reader)
-{
-    /* Read graphics PSO descriptor */
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc = {};
-    reader.ReadSegment(Serialization::D3D12Ident_GraphicsDesc, &stateDesc, sizeof(stateDesc));
-
-    stateDesc.pRootSignature = GetRootSignature();
-
-    /* Deserialize PSO from cache */
-    std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements;
-    std::vector<D3D12_SO_DECLARATION_ENTRY> soDeclEntries;
-    std::vector<UINT>                       soBufferStrides;
-
-    DeserializePSO(reader, stateDesc, inputElements, soDeclEntries, soBufferStrides);
+    /* Set PSO cache if specified */
+    if (pipelineCache != nullptr)
+        stateDesc.CachedPSO = pipelineCache->GetCachedPSO();
 
     /* Create native PSO */
-    SetNative(device.CreateDXGraphicsPipelineState(stateDesc));
+    SetNativeAndUpdateCache(device.CreateDXGraphicsPipelineState(stateDesc), pipelineCache);
 }
 
 // Returns the size (in bytes) for the static-state buffer with the specified number of viewports and scissor rectangles
@@ -459,207 +425,10 @@ static std::size_t GetStaticStateBufferSize(std::size_t numViewports, std::size_
     return (numViewports * sizeof(D3D12_VIEWPORT) + numScissors * sizeof(D3D12_RECT));
 }
 
-void D3D12GraphicsPSO::SerializePSO(
-    Serialization::Serializer&                  writer,
-    const D3D12_GRAPHICS_PIPELINE_STATE_DESC&   stateDesc,
-    ID3DBlob*                                   rootSignatureBlob,
-    ID3DBlob*                                   psoCacheBlob)
-{
-    /* Write graphics PSO identifier */
-    writer.Begin(Serialization::D3D12Ident_GraphicsPSOIdent);
-    writer.End();
-
-    /* Write root signature blob */
-    Serialization::D3D12WriteSegmentBlob(writer, Serialization::D3D12Ident_RootSignature, rootSignatureBlob);
-
-    /* Write graphics PSO descriptor */
-    writer.WriteSegment(Serialization::D3D12Ident_GraphicsDesc, &stateDesc, sizeof(stateDesc));
-
-    /* Write PSO cache blob */
-    Serialization::D3D12WriteSegmentBlob(writer, Serialization::D3D12Ident_CachedPSO, psoCacheBlob);
-
-    /* Write shader entries */
-    Serialization::D3D12WriteSegmentBytecode(writer, Serialization::D3D12Ident_VS, stateDesc.VS);
-    Serialization::D3D12WriteSegmentBytecode(writer, Serialization::D3D12Ident_PS, stateDesc.PS);
-    Serialization::D3D12WriteSegmentBytecode(writer, Serialization::D3D12Ident_DS, stateDesc.DS);
-    Serialization::D3D12WriteSegmentBytecode(writer, Serialization::D3D12Ident_HS, stateDesc.HS);
-    Serialization::D3D12WriteSegmentBytecode(writer, Serialization::D3D12Ident_GS, stateDesc.GS);
-
-    /* Write input layout declarations */
-    if (stateDesc.InputLayout.NumElements > 0)
-    {
-        /* Write input layout entries */
-        writer.WriteSegment(
-            Serialization::D3D12Ident_InputElements,
-            stateDesc.InputLayout.pInputElementDescs,
-            stateDesc.InputLayout.NumElements * sizeof(D3D12_INPUT_ELEMENT_DESC)
-        );
-
-        /* Write input semantic names */
-        writer.Begin(Serialization::D3D12Ident_InputSemanticNames);
-        {
-            for_range(i, stateDesc.InputLayout.NumElements)
-                writer.WriteCString(stateDesc.InputLayout.pInputElementDescs[i].SemanticName);
-        }
-        writer.End();
-    }
-
-    /* Write stream-output declarations */
-    if (stateDesc.StreamOutput.NumEntries > 0)
-    {
-        /* Write stream-output entries */
-        writer.WriteSegment(
-            Serialization::D3D12Ident_SODeclEntries,
-            stateDesc.StreamOutput.pSODeclaration,
-            stateDesc.StreamOutput.NumEntries * sizeof(D3D12_SO_DECLARATION_ENTRY)
-        );
-
-        /* Write output semantic names */
-        writer.Begin(Serialization::D3D12Ident_SOSemanticNames);
-        {
-            for_range(i, stateDesc.StreamOutput.NumEntries)
-                writer.WriteCString(stateDesc.StreamOutput.pSODeclaration[i].SemanticName);
-        }
-        writer.End();
-    }
-
-    /* Write buffer strides */
-    if (stateDesc.StreamOutput.NumStrides > 0)
-    {
-        writer.WriteSegment(
-            Serialization::D3D12Ident_SOBufferStrides,
-            stateDesc.StreamOutput.pBufferStrides,
-            stateDesc.StreamOutput.NumStrides * sizeof(UINT)
-        );
-    }
-
-    /* Write static state */
-    writer.Begin(Serialization::D3D12Ident_StaticState);
-    {
-        writer.WriteTyped(primitiveTopology_);
-        writer.WriteTyped(blendFactorEnabled_);
-        writer.WriteTyped(blendFactor_);
-        writer.WriteTyped(stencilRefEnabled_);
-        writer.WriteTyped(stencilRef_);
-        writer.WriteTyped(scissorEnabled_);
-        writer.WriteTyped(numStaticViewports_);
-        writer.WriteTyped(numStaticScissors_);
-
-        if (numStaticViewports_ > 0 || numStaticScissors_ > 0)
-        {
-            const auto bufferSize = GetStaticStateBufferSize(numStaticViewports_, numStaticScissors_);
-            writer.Write(staticStateBuffer_.get(), bufferSize);
-        }
-    }
-    writer.End();
-}
-
-void D3D12GraphicsPSO::DeserializePSO(
-    Serialization::Deserializer&                reader,
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC&         stateDesc,
-    std::vector<D3D12_INPUT_ELEMENT_DESC>&      inputElements,
-    std::vector<D3D12_SO_DECLARATION_ENTRY>&    soDeclEntries,
-    std::vector<UINT>&                          soBufferStrides)
-{
-    /* Read PSO cache blob */
-    Serialization::D3D12ReadSegmentBlob(reader, Serialization::D3D12Ident_CachedPSO, stateDesc.CachedPSO);
-
-    /* Read shader byte codes */
-    Serialization::D3D12ReadSegmentBytecode(reader, Serialization::D3D12Ident_VS, stateDesc.VS);
-    Serialization::D3D12ReadSegmentBytecode(reader, Serialization::D3D12Ident_PS, stateDesc.PS);
-    Serialization::D3D12ReadSegmentBytecode(reader, Serialization::D3D12Ident_DS, stateDesc.DS);
-    Serialization::D3D12ReadSegmentBytecode(reader, Serialization::D3D12Ident_HS, stateDesc.HS);
-    Serialization::D3D12ReadSegmentBytecode(reader, Serialization::D3D12Ident_GS, stateDesc.GS);
-
-    /* Read input layout declarations */
-    if (stateDesc.InputLayout.NumElements > 0)
-    {
-        inputElements.resize(stateDesc.InputLayout.NumElements);
-
-        /* Read input layout entries */
-        reader.ReadSegment(
-            Serialization::D3D12Ident_InputElements,
-            inputElements.data(),
-            inputElements.size() * sizeof(D3D12_INPUT_ELEMENT_DESC)
-        );
-
-        /* Write input semantic names */
-        reader.Begin(Serialization::D3D12Ident_InputSemanticNames);
-        {
-            for_range(i, stateDesc.InputLayout.NumElements)
-                inputElements[i].SemanticName = reader.ReadCString();
-        }
-        reader.End();
-
-        /* Patch descritpor field */
-        stateDesc.InputLayout.pInputElementDescs = inputElements.data();
-    }
-
-    /* Read stream-output declarations */
-    if (stateDesc.StreamOutput.NumEntries > 0)
-    {
-        soDeclEntries.resize(stateDesc.StreamOutput.NumEntries);
-
-        /* Read stream-output entries */
-        reader.ReadSegment(
-            Serialization::D3D12Ident_SODeclEntries,
-            soDeclEntries.data(),
-            soDeclEntries.size() * sizeof(D3D12_SO_DECLARATION_ENTRY)
-        );
-
-        /* Write semantic names */
-        reader.Begin(Serialization::D3D12Ident_SOSemanticNames);
-        {
-            for_range(i, stateDesc.StreamOutput.NumEntries)
-                soDeclEntries[i].SemanticName = reader.ReadCString();
-        }
-        reader.End();
-
-        /* Patch descritpor field */
-        stateDesc.StreamOutput.pSODeclaration = soDeclEntries.data();
-    }
-
-    if (stateDesc.StreamOutput.NumStrides > 0)
-    {
-        soBufferStrides.resize(stateDesc.StreamOutput.NumStrides);
-
-        /* Read buffer strides */
-        reader.ReadSegment(
-            Serialization::D3D12Ident_SOBufferStrides,
-            soBufferStrides.data(),
-            soBufferStrides.size() * sizeof(UINT)
-        );
-
-        /* Patch descriptor field */
-        stateDesc.StreamOutput.pBufferStrides = soBufferStrides.data();
-    }
-
-    /* Write static state */
-    reader.Begin(Serialization::D3D12Ident_StaticState);
-    {
-        reader.ReadTyped(primitiveTopology_);
-        reader.ReadTyped(blendFactorEnabled_);
-        reader.ReadTyped(blendFactor_);
-        reader.ReadTyped(stencilRefEnabled_);
-        reader.ReadTyped(stencilRef_);
-        reader.ReadTyped(scissorEnabled_);
-        reader.ReadTyped(numStaticViewports_);
-        reader.ReadTyped(numStaticScissors_);
-
-        if (numStaticViewports_ > 0 || numStaticScissors_ > 0)
-        {
-            const auto bufferSize = GetStaticStateBufferSize(numStaticViewports_, numStaticScissors_);
-            staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
-            reader.Read(staticStateBuffer_.get(), bufferSize);
-        }
-    }
-    reader.End();
-}
-
 void D3D12GraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)
 {
     /* Allocate packed raw buffer */
-    const auto bufferSize = GetStaticStateBufferSize(desc.viewports.size(), desc.scissors.size());
+    const std::size_t bufferSize = GetStaticStateBufferSize(desc.viewports.size(), desc.scissors.size());
     staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
 
     ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
@@ -689,7 +458,7 @@ void D3D12GraphicsPSO::BuildStaticViewports(std::size_t numViewports, const View
     /* Build <D3D12_VIEWPORT> entries */
     for_range(i, numViewports)
     {
-        auto dst = byteBufferIter.Next<D3D12_VIEWPORT>();
+        D3D12_VIEWPORT* dst = byteBufferIter.Next<D3D12_VIEWPORT>();
         {
             dst->TopLeftX   = viewports[i].x;
             dst->TopLeftY   = viewports[i].y;
@@ -717,7 +486,7 @@ void D3D12GraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scisso
     /* Build <D3D12_RECT> entries */
     for_range(i, numScissors)
     {
-        auto dst = byteBufferIter.Next<D3D12_RECT>();
+        D3D12_RECT* dst = byteBufferIter.Next<D3D12_RECT>();
         {
             dst->left   = static_cast<LONG>(scissors[i].x);
             dst->top    = static_cast<LONG>(scissors[i].y);

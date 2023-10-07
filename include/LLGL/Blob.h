@@ -54,6 +54,9 @@ class LLGL_EXPORT Blob : public NonCopyable
 
     public:
 
+        //! Creates a new BLob instance with a copy of the specified blob data.
+        static Blob CreateCopy(const Blob& other);
+
         /**
         \brief Creates a new Blob instance with a copy of the specified data.
         \param[in] data Pointer to the data that is to be copied and managed by this blob.

@@ -13,8 +13,8 @@ namespace LLGL
 {
 
 
-GLComputePSO::GLComputePSO(const ComputePipelineDescriptor& desc) :
-    GLPipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, { desc.computeShader } }
+GLComputePSO::GLComputePSO(const ComputePipelineDescriptor& desc, PipelineCache* pipelineCache) :
+    GLPipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, pipelineCache, { desc.computeShader } }
 {
 }
 

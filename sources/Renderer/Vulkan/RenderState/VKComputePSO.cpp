@@ -6,6 +6,7 @@
  */
 
 #include "VKComputePSO.h"
+#include "VKPipelineCache.h"
 #include "../Shader/VKShader.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
@@ -19,12 +20,18 @@ namespace LLGL
 {
 
 
-VKComputePSO::VKComputePSO(VkDevice device, const ComputePipelineDescriptor& desc)
+VKComputePSO::VKComputePSO(
+    VkDevice                            device,
+    const ComputePipelineDescriptor&    desc,
+    PipelineCache*                      pipelineCache)
 :
     VKPipelineState { device, VK_PIPELINE_BIND_POINT_COMPUTE, GetShadersAsArray(desc), desc.pipelineLayout }
 {
     /* Create Vulkan compute pipeline object */
-    CreateVkPipeline(device, desc);
+    if (VKPipelineCache* pipelineCacheVK = (pipelineCache != nullptr ? LLGL_CAST(VKPipelineCache*, pipelineCache) : nullptr))
+        CreateVkPipeline(device, desc, pipelineCacheVK->GetNative());
+    else
+        CreateVkPipeline(device, desc);
 }
 
 
@@ -32,11 +39,14 @@ VKComputePSO::VKComputePSO(VkDevice device, const ComputePipelineDescriptor& des
  * ======= Private: =======
  */
 
-void VKComputePSO::CreateVkPipeline(VkDevice device, const ComputePipelineDescriptor& desc)
+void VKComputePSO::CreateVkPipeline(
+    VkDevice                            device,
+    const ComputePipelineDescriptor&    desc,
+    VkPipelineCache                     pipelineCache)
 {
     /* Get compute shader */
-    auto computeShaderVK = LLGL_CAST(VKShader*, desc.computeShader);
-    if (!computeShaderVK)
+    VKShader* computeShaderVK = LLGL_CAST(VKShader*, desc.computeShader);
+    if (computeShaderVK == nullptr)
         throw std::invalid_argument("cannot create Vulkan compute pipeline without compute shader");
 
     /* Get shader stages */
@@ -54,7 +64,7 @@ void VKComputePSO::CreateVkPipeline(VkDevice device, const ComputePipelineDescri
         createInfo.basePipelineHandle   = VK_NULL_HANDLE;
         createInfo.basePipelineIndex    = 0;
     }
-    auto result = vkCreateComputePipelines(device, VK_NULL_HANDLE, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
+    VkResult result = vkCreateComputePipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan compute pipeline");
 }
 

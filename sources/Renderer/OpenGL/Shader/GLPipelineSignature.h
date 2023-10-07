@@ -30,8 +30,11 @@ class GLPipelineSignature
 
         GLPipelineSignature() = default;
 
-        // Initializes the signature with the specified shaders. Equivalent of calling Build.
-        GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation);
+        /*
+        Initializes the signature with the specified shaders. Equivalent of calling Build.
+        Pipeline cache parameter is just for compatiblity in GLStatePool template functions.
+        */
+        GLPipelineSignature(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation, void* /*pipelineCache*/ = nullptr);
 
         /*
         Initializes the signature with the specified shaders.

@@ -314,19 +314,26 @@ void NullRenderSystem::Release(PipelineLayout& pipelineLayout)
     pipelineLayouts_.erase(&pipelineLayout);
 }
 
-/* ----- Pipeline States ----- */
+/* ----- Pipeline Caches ----- */
 
-PipelineState* NullRenderSystem::CreatePipelineState(const Blob& serializedCache)
+PipelineCache* NullRenderSystem::CreatePipelineCache(const Blob& /*initialBlob*/)
 {
-    return nullptr;//TODO
+    return ProxyPipelineCache::CreateInstance(pipelineCacheProxy_);
 }
 
-PipelineState* NullRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+void NullRenderSystem::Release(PipelineCache& pipelineCache)
+{
+    ProxyPipelineCache::ReleaseInstance(pipelineCacheProxy_, pipelineCache);
+}
+
+/* ----- Pipeline States ----- */
+
+PipelineState* NullRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
     return pipelineStates_.emplace<NullPipelineState>(pipelineStateDesc);
 }
 
-PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+PipelineState* NullRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* /*pipelineCache*/)
 {
     return pipelineStates_.emplace<NullPipelineState>(pipelineStateDesc);
 }

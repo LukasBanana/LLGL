@@ -15,7 +15,6 @@
 #include <LLGL/Report.h>
 #include "D3D12PipelineLayout.h"
 #include "../../DXCommon/ComPtr.h"
-#include "../../Serialization.h"
 #include <d3d12.h>
 #include <memory>
 
@@ -25,6 +24,7 @@ namespace LLGL
 
 
 class D3D12CommandContext;
+class D3D12PipelineCache;
 
 class D3D12PipelineState : public PipelineState
 {
@@ -66,14 +66,8 @@ class D3D12PipelineState : public PipelineState
             D3D12PipelineLayout&        defaultPipelineLayout
         );
 
-        D3D12PipelineState(
-            bool                            isGraphicsPSO,
-            ID3D12Device*                   device,
-            Serialization::Deserializer&    reader
-        );
-
-        // Stores the native PSO.
-        void SetNative(ComPtr<ID3D12PipelineState>&& native);
+        // Stores the native PSO and updates an optional PSO cache.
+        void SetNativeAndUpdateCache(ComPtr<ID3D12PipelineState>&& native, D3D12PipelineCache* pipelineCache);
 
         // Writes the report with the specified message and error bit.
         void ResetReport(std::string&& text, bool hasErrors = false);

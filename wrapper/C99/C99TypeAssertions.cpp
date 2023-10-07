@@ -888,6 +888,7 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasViewportArrays);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasConservativeRasterization);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasStreamOutputs);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasLogicOp);
+LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasPipelineCaching);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasPipelineStatistics);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasRenderCondition);
 

@@ -13,45 +13,32 @@ namespace LLGL
 {
 
 
-// Structure for the cache data header
-struct VKPipelineCacheDataHeader
-{
-    std::uint32_t length;
-    std::uint32_t version;                          // VkPipelineCacheHeaderVersion (VK_PIPELINE_CACHE_HEADER_VERSION_ONE)
-    std::uint32_t vendorID;                         // VkPhysicalDeviceProperties::vendorID
-    std::uint32_t deviceID;                         // VkPhysicalDeviceProperties::deviceID
-    std::uint8_t  pipelineCacheUUID[VK_UUID_SIZE];  // VkPhysicalDeviceProperties::pipelineCacheUUID
-};
-
-VKPipelineCache::VKPipelineCache(
-    VkDevice                            device,
-    const VkPhysicalDeviceProperties&   physicalDeviceProperties,
-    const void*                         initialData,
-    std::size_t                         initialDataSize)
+VKPipelineCache::VKPipelineCache(VkDevice device, const Blob& initialBlob)
 :
-    cache_ { device, vkDestroyPipelineCache }
+    device_ { device                         },
+    cache_  { device, vkDestroyPipelineCache }
 {
     VkPipelineCacheCreateInfo createInfo;
     {
         createInfo.sType            = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
-        createInfo.initialDataSize  = initialDataSize;
-        createInfo.pInitialData     = initialData;
+        createInfo.initialDataSize  = initialBlob.GetSize();
+        createInfo.pInitialData     = initialBlob.GetData();
     }
     vkCreatePipelineCache(device, &createInfo, nullptr, cache_.ReleaseAndGetAddressOf());
 }
 
-std::size_t VKPipelineCache::GetDataSize() const
+Blob VKPipelineCache::GetBlob() const
 {
+    /* Determine cache size and return binary data */
     std::size_t dataSize = 0;
     vkGetPipelineCacheData(device_, cache_, &dataSize, nullptr);
-    return dataSize;
-}
 
-void VKPipelineCache::GetData(void* data, std::size_t dataSize) const
-{
-    vkGetPipelineCacheData(device_, cache_, &dataSize, data);
+    DynamicByteArray data{ dataSize, UninitializeTag{} };
+    vkGetPipelineCacheData(device_, cache_, &dataSize, data.get());
+
+    return Blob::CreateStrongRef(std::move(data));
 }
 
 

@@ -473,21 +473,41 @@ void GLRenderSystem::Release(PipelineLayout& pipelineLayout)
     pipelineLayouts_.erase(&pipelineLayout);
 }
 
+/* ----- Pipeline Caches ----- */
+
+PipelineCache* GLRenderSystem::CreatePipelineCache(const Blob& initialBlob)
+{
+    if (GetRenderingCaps().features.hasPipelineCaching)
+        return pipelineCaches_.emplace<GLPipelineCache>(initialBlob);
+    else
+        return ProxyPipelineCache::CreateInstance(pipelineCacheProxy_);
+}
+
+void GLRenderSystem::Release(PipelineCache& pipelineCache)
+{
+    if (GetRenderingCaps().features.hasPipelineCaching)
+        pipelineCaches_.erase(&pipelineCache);
+    else
+        ProxyPipelineCache::ReleaseInstance(pipelineCacheProxy_, pipelineCache);
+}
+
 /* ----- Pipeline States ----- */
 
-PipelineState* GLRenderSystem::CreatePipelineState(const Blob& /*serializedCache*/)
+PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return nullptr;//TODO
+    return pipelineStates_.emplace<GLGraphicsPSO>(
+        pipelineStateDesc,
+        GetRenderingCaps().limits,
+        (GetRenderingCaps().features.hasPipelineCaching ? pipelineCache : nullptr)
+    );
 }
 
-PipelineState* GLRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
+PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return pipelineStates_.emplace<GLGraphicsPSO>(pipelineStateDesc, GetRenderingCaps().limits);
-}
-
-PipelineState* GLRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, Blob* /*serializedCache*/)
-{
-    return pipelineStates_.emplace<GLComputePSO>(pipelineStateDesc);
+    return pipelineStates_.emplace<GLComputePSO>(
+        pipelineStateDesc,
+        (GetRenderingCaps().features.hasPipelineCaching ? pipelineCache : nullptr)
+    );
 }
 
 void GLRenderSystem::Release(PipelineState& pipelineState)
@@ -600,8 +620,47 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
 
 static std::string GLGetString(GLenum name)
 {
-    auto bytes = glGetString(name);
+    const GLubyte* bytes = glGetString(name);
     return (bytes != nullptr ? std::string(reinterpret_cast<const char*>(bytes)) : "");
+}
+
+static void AppendCacheIDBytes(std::vector<char>& cacheID, const void* bytes, std::size_t count)
+{
+    const std::size_t offset = cacheID.size();
+    cacheID.resize(offset + count);
+    ::memcpy(&cacheID[offset], bytes, count);
+}
+
+template <typename T>
+static void AppendCacheIDValue(std::vector<char>& cacheID, const T& val)
+{
+    AppendCacheIDBytes(cacheID, &val, sizeof(val));
+}
+
+void GLQueryPipelineCacheID(std::vector<char>& cacheID)
+{
+    #ifdef GL_ARB_get_program_binary
+    if (HasExtension(GLExt::ARB_get_program_binary))
+    {
+        GLint numBinaryFormats = 0;
+        glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &numBinaryFormats);
+        if (numBinaryFormats > 0)
+        {
+            /* Append number of binary formats */
+            AppendCacheIDValue(cacheID, numBinaryFormats);
+
+            /* Append binary format values themselves */
+            std::vector<GLint> formats;
+            formats.resize(numBinaryFormats);
+            glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, formats.data());
+            AppendCacheIDBytes(cacheID, formats.data(), sizeof(GLint) * formats.size());
+
+            /* Append GL version string */
+            if (const GLubyte* versionStr = glGetString(GL_VERSION))
+                AppendCacheIDBytes(cacheID, versionStr, ::strlen(reinterpret_cast<const char*>(versionStr)));
+        }
+    }
+    #endif // /GL_ARB_get_program_binary
 }
 
 void GLRenderSystem::QueryRendererInfo()
@@ -612,6 +671,7 @@ void GLRenderSystem::QueryRendererInfo()
     info.deviceName             = GLGetString(GL_RENDERER);
     info.vendorName             = GLGetString(GL_VENDOR);
     info.shadingLanguageName    = GLProfile::GetShadingLanguageName() + std::string(" ") + GLGetString(GL_SHADING_LANGUAGE_VERSION);
+    GLQueryPipelineCacheID(info.pipelineCacheID);
 
     SetRendererInfo(info);
 }

@@ -126,7 +126,6 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT(ARB_draw_instanced);
     ENABLE_GLEXT(ARB_draw_indirect);
     ENABLE_GLEXT(ARB_framebuffer_object);
-    ENABLE_GLEXT(ARB_get_program_binary);
     ENABLE_GLEXT(ARB_geometry_shader4);               // no procedures
     ENABLE_GLEXT(ARB_instanced_arrays);
     ENABLE_GLEXT(ARB_internalformat_query);
@@ -174,6 +173,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     if (version >= 300)
     {
         ENABLE_GLEXT(ARB_ES3_compatibility);
+        ENABLE_GLEXT(ARB_get_program_binary);
         ENABLE_GLEXT(ARB_shader_objects_30);
     }
 

@@ -8,17 +8,13 @@
 /* ----- Pipeline States ----- */
 
 virtual LLGL::PipelineState* CreatePipelineState(
-    const LLGL::Blob&                       serializedCache
-) override final;
-
-virtual LLGL::PipelineState* CreatePipelineState(
     const LLGL::GraphicsPipelineDescriptor& pipelineStateDesc,
-    LLGL::Blob*                             serializedCache = nullptr
+    LLGL::PipelineCache*                    pipelineCache       = nullptr
 ) override final;
 
 virtual LLGL::PipelineState* CreatePipelineState(
     const LLGL::ComputePipelineDescriptor&  pipelineStateDesc,
-    LLGL::Blob*                             serializedCache = nullptr
+    LLGL::PipelineCache*                    pipelineCache       = nullptr
 ) override final;
 
 virtual void Release(

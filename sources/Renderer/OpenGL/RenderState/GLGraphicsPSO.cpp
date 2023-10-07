@@ -45,8 +45,8 @@ static std::vector<Shader*> GetShaderArrayFromDesc(const GraphicsPipelineDescrip
     return shaders;
 }
 
-GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits) :
-    GLPipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShaderArrayFromDesc(desc) }
+GLGraphicsPSO::GLGraphicsPSO(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits, PipelineCache* pipelineCache) :
+    GLPipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, pipelineCache, GetShaderArrayFromDesc(desc) }
 {
     /* Convert input-assembler state */
     drawMode_       = GLTypes::ToDrawMode(desc.primitiveTopology);

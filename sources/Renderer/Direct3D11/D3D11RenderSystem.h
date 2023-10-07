@@ -35,6 +35,7 @@
 
 #include "../ContainerTypes.h"
 #include "../DXCommon/ComPtr.h"
+#include "../ProxyPipelineCache.h"
 
 #include <dxgi.h>
 #include "Direct3D11.h"
@@ -135,6 +136,7 @@ class D3D11RenderSystem final : public RenderSystem
         HWObjectContainer<D3D11RenderTarget>    renderTargets_;
         HWObjectContainer<D3D11Shader>          shaders_;
         HWObjectContainer<D3D11PipelineLayout>  pipelineLayouts_;
+        HWObjectInstance<ProxyPipelineCache>    pipelineCacheProxy_;
         HWObjectContainer<D3D11PipelineState>   pipelineStates_;
         HWObjectContainer<D3D11ResourceHeap>    resourceHeaps_;
         HWObjectContainer<D3D11QueryHeap>       queryHeaps_;

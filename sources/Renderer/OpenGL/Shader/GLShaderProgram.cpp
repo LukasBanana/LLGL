@@ -11,6 +11,7 @@
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
 #include "../RenderState/GLStateManager.h"
+#include "../RenderState/GLPipelineCache.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../CheckedCast.h"
@@ -81,124 +82,25 @@ static SharedGLShader g_nullFragmentShader;
 
 #endif // /__APPLE__
 
-struct GLOrderedShaders
-{
-    const GLShader* vertexShader                = nullptr;
-    const GLShader* geometryShader              = nullptr;
-    const GLShader* fragmentShader              = nullptr;
-    const GLShader* shaderWithFlippedYPosition  = nullptr; // Last shader that modifies gl_Position (vertex, tessellation-evaluation, or geometry)
-
-    GLuint GetGLShaderID(const GLShader* shader) const
-    {
-        const GLShader::Permutation permutation =
-        (
-            shader == shaderWithFlippedYPosition
-                ? GLShader::PermutationFlippedYPosition
-                : GLShader::PermutationDefault
-        );
-        return shader->GetID(permutation);
-    }
-};
-
-static void AttachGLLegacyShaders(
-    GLuint                  program,
-    std::size_t             numShaders,
-    const Shader* const*    shaders,
-    GLOrderedShaders&       orderedShaders)
-{
-    for_range(i, numShaders)
-    {
-        if (const Shader* shader = shaders[i])
-        {
-            /* Attach shader to shader program */
-            auto shaderGL = LLGL_CAST(const GLLegacyShader*, shader);
-            glAttachShader(program, orderedShaders.GetGLShaderID(shaderGL));
-
-            switch (shaderGL->GetType())
-            {
-                case ShaderType::Vertex:
-                    orderedShaders.vertexShader = shaderGL;
-                    break;
-                case ShaderType::Geometry:
-                    orderedShaders.geometryShader = shaderGL;
-                    break;
-                case ShaderType::Fragment:
-                    orderedShaders.fragmentShader = shaderGL;
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-}
-
 GLShaderProgram::GLShaderProgram(
     std::size_t             numShaders,
     const Shader* const*    shaders,
-    GLShader::Permutation   permutation)
+    GLShader::Permutation   permutation,
+    GLPipelineCache*        pipelineCache)
 :
     GLShaderPipeline { glCreateProgram() }
 {
-    GLOrderedShaders orderedShaders;
-
-    /* Find last shader in pipeline that transforms gl_Position if such permutation is requested */
-    if (permutation == GLShader::PermutationFlippedYPosition)
-        orderedShaders.shaderWithFlippedYPosition = GLPipelineSignature::FindFinalGLPositionShader(numShaders, shaders);
-
-    /* Attach all specified shaders to this shader program */
-    AttachGLLegacyShaders(GetID(), numShaders, shaders, orderedShaders);
-
-    #ifdef __APPLE__
-    /*
-    Mac implementation of OpenGL violates GL spec and always requires a fragment shader,
-    so we create a dummy if not specified by client.
-    */
-    if (orderedShaders.fragmentShader == nullptr)
+    /* Try to load cached program binary first */
+    if (pipelineCache != nullptr)
     {
-        const GLchar* nullFragmentShaderSource =
-            #ifdef LLGL_OPENGLES3
-            "#version 300 es\n"
-            #else
-            "#version 330 core\n"
-            #endif
-            "void main() {}\n"
-        ;
-        const GLuint nullFragmentShader = g_nullFragmentShader.GetOrCreate(GL_FRAGMENT_SHADER, nullFragmentShaderSource);
-        glAttachShader(GetID(), nullFragmentShader);
-        hasNullFragmentShader_ = true;
-    }
-    #endif
-
-    /* Build input layout for vertex shader */
-    if (const GLShader* vs = orderedShaders.vertexShader)
-        GLShaderProgram::BindAttribLocations(GetID(), vs->GetNumVertexAttribs(), vs->GetVertexAttribs());
-
-    /* Build output layout for fragment shader */
-    if (const GLShader* fs = orderedShaders.fragmentShader)
-        GLShaderProgram::BindFragDataLocations(GetID(), fs->GetNumFragmentAttribs(), fs->GetFragmentAttribs());
-
-    /* Build transform feedback varyings for vertex or geometry shader and link program */
-    const GLShader* shaderWithVaryings = nullptr;
-
-    if (const GLShader* gs = orderedShaders.geometryShader)
-    {
-        if (!gs->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = gs;
-    }
-    else if (const GLShader* vs = orderedShaders.vertexShader)
-    {
-        if (!vs->GetTransformFeedbackVaryings().empty())
-            shaderWithVaryings = vs;
-    }
-
-    /* Link shader program */
-    if (shaderWithVaryings != nullptr)
-    {
-        const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
-        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings.size(), varyings.data());
+        if (!(pipelineCache->HasProgramBinary(permutation) && pipelineCache->ProgramBinary(permutation, GetID())))
+        {
+            BuildProgramBinary(numShaders, shaders, permutation);
+            pipelineCache->GetProgramBinary(permutation, GetID());
+        }
     }
     else
-        GLShaderProgram::LinkProgram(GetID());
+        BuildProgramBinary(numShaders, shaders, permutation);
 
     /* Build pipeline signature */
     BuildSignature(numShaders, shaders, permutation);
@@ -928,6 +830,129 @@ void GLShaderProgram::QueryReflection(GLuint program, GLenum shaderStage, Shader
     if (shaderStage == GL_COMPUTE_SHADER)
         GLQueryWorkGroupSize(program, reflection);
     #endif
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+struct GLOrderedShaders
+{
+    const GLShader* vertexShader                = nullptr;
+    const GLShader* geometryShader              = nullptr;
+    const GLShader* fragmentShader              = nullptr;
+    const GLShader* shaderWithFlippedYPosition  = nullptr; // Last shader that modifies gl_Position (vertex, tessellation-evaluation, or geometry)
+
+    GLuint GetGLShaderID(const GLShader* shader) const
+    {
+        const GLShader::Permutation permutation =
+        (
+            shader == shaderWithFlippedYPosition
+                ? GLShader::PermutationFlippedYPosition
+                : GLShader::PermutationDefault
+        );
+        return shader->GetID(permutation);
+    }
+};
+
+static void AttachGLLegacyShaders(
+    GLuint                  program,
+    std::size_t             numShaders,
+    const Shader* const*    shaders,
+    GLOrderedShaders&       orderedShaders)
+{
+    for_range(i, numShaders)
+    {
+        if (const Shader* shader = shaders[i])
+        {
+            /* Attach shader to shader program */
+            auto shaderGL = LLGL_CAST(const GLLegacyShader*, shader);
+            glAttachShader(program, orderedShaders.GetGLShaderID(shaderGL));
+
+            switch (shaderGL->GetType())
+            {
+                case ShaderType::Vertex:
+                    orderedShaders.vertexShader = shaderGL;
+                    break;
+                case ShaderType::Geometry:
+                    orderedShaders.geometryShader = shaderGL;
+                    break;
+                case ShaderType::Fragment:
+                    orderedShaders.fragmentShader = shaderGL;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+void GLShaderProgram::BuildProgramBinary(
+    std::size_t             numShaders,
+    const Shader* const*    shaders,
+    GLShader::Permutation   permutation)
+{
+    GLOrderedShaders orderedShaders;
+
+    /* Find last shader in pipeline that transforms gl_Position if such permutation is requested */
+    if (permutation == GLShader::PermutationFlippedYPosition)
+        orderedShaders.shaderWithFlippedYPosition = GLPipelineSignature::FindFinalGLPositionShader(numShaders, shaders);
+
+    /* Attach all specified shaders to this shader program */
+    AttachGLLegacyShaders(GetID(), numShaders, shaders, orderedShaders);
+
+    #ifdef __APPLE__
+    /*
+    Mac implementation of OpenGL violates GL spec and always requires a fragment shader,
+    so we create a dummy if not specified by client.
+    */
+    if (orderedShaders.fragmentShader == nullptr)
+    {
+        const GLchar* nullFragmentShaderSource =
+            #ifdef LLGL_OPENGLES3
+            "#version 300 es\n"
+            #else
+            "#version 330 core\n"
+            #endif
+            "void main() {}\n"
+        ;
+        const GLuint nullFragmentShader = g_nullFragmentShader.GetOrCreate(GL_FRAGMENT_SHADER, nullFragmentShaderSource);
+        glAttachShader(GetID(), nullFragmentShader);
+        hasNullFragmentShader_ = true;
+    }
+    #endif
+
+    /* Build input layout for vertex shader */
+    if (const GLShader* vs = orderedShaders.vertexShader)
+        GLShaderProgram::BindAttribLocations(GetID(), vs->GetNumVertexAttribs(), vs->GetVertexAttribs());
+
+    /* Build output layout for fragment shader */
+    if (const GLShader* fs = orderedShaders.fragmentShader)
+        GLShaderProgram::BindFragDataLocations(GetID(), fs->GetNumFragmentAttribs(), fs->GetFragmentAttribs());
+
+    /* Build transform feedback varyings for vertex or geometry shader and link program */
+    const GLShader* shaderWithVaryings = nullptr;
+
+    if (const GLShader* gs = orderedShaders.geometryShader)
+    {
+        if (!gs->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = gs;
+    }
+    else if (const GLShader* vs = orderedShaders.vertexShader)
+    {
+        if (!vs->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = vs;
+    }
+
+    /* Link shader program */
+    if (shaderWithVaryings != nullptr)
+    {
+        const auto& varyings = shaderWithVaryings->GetTransformFeedbackVaryings();
+        GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GetID(), varyings.size(), varyings.data());
+    }
+    else
+        GLShaderProgram::LinkProgram(GetID());
 }
 
 

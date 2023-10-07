@@ -10,6 +10,7 @@
 
 
 #include <vulkan/vulkan.h>
+#include <LLGL/PipelineCache.h>
 #include "../VKPtr.h"
 
 
@@ -17,23 +18,16 @@ namespace LLGL
 {
 
 
-class VKPipelineCache
+class VKPipelineCache final : public PipelineCache
 {
 
     public:
 
-        VKPipelineCache(
-            VkDevice                            device,
-            const VkPhysicalDeviceProperties&   physicalDeviceProperties,
-            const void*                         initialData,
-            std::size_t                         initialDataSize
-        );
+        VKPipelineCache(VkDevice device, const Blob& initialBlob);
 
-        // Returns the size (in bytes) of the serialized cache data.
-        std::size_t GetDataSize() const;
+        Blob GetBlob() const override;
 
-        // Writes the serialized cache data to the output buffer <data>.
-        void GetData(void* data, std::size_t dataSize) const;
+    public:
 
         // Returns the native pipeline cache object.
         inline VkPipelineCache GetNative() const

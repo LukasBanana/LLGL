@@ -147,6 +147,27 @@ static std::vector<Format> GetCompressedVKTextureFormatsS3TC()
     };
 }
 
+// Structure for the Vulkan pipeline cache ID
+struct VKPipelineCacheID
+{
+    std::uint32_t version;                          // VkPipelineCacheHeaderVersion (VK_PIPELINE_CACHE_HEADER_VERSION_ONE)
+    std::uint32_t vendorID;                         // VkPhysicalDeviceProperties::vendorID
+    std::uint32_t deviceID;                         // VkPhysicalDeviceProperties::deviceID
+    std::uint8_t  pipelineCacheUUID[VK_UUID_SIZE];  // VkPhysicalDeviceProperties::pipelineCacheUUID
+};
+
+static void GetVKPipelineCacheID(const VkPhysicalDeviceProperties& properties, std::vector<char>& outCacheID)
+{
+    outCacheID.resize(sizeof(VKPipelineCacheID));
+    VKPipelineCacheID* dst = reinterpret_cast<VKPipelineCacheID*>(outCacheID.data());
+    {
+        dst->version  = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
+        dst->vendorID = properties.vendorID;
+        dst->deviceID = properties.deviceID;
+        ::memcpy(dst->pipelineCacheUUID, properties.pipelineCacheUUID, sizeof(properties.pipelineCacheUUID));
+    }
+}
+
 void VKPhysicalDevice::QueryDeviceProperties(
     RendererInfo&               info,
     RenderingCapabilities&      caps,
@@ -157,6 +178,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     info.deviceName             = properties_.deviceName;
     info.vendorName             = GetVendorName(GetVendorByID(properties_.vendorID));
     info.shadingLanguageName    = "SPIR-V";
+    GetVKPipelineCacheID(properties_, info.pipelineCacheID);
 
     /* Map limits to output rendering capabilites */
     const auto& limits = properties_.limits;
@@ -201,6 +223,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
     caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
     caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
+    caps.features.hasPipelineCaching                = true;
 
     /* Query limits */
     caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];

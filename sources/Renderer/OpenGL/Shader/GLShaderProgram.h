@@ -20,6 +20,7 @@ namespace LLGL
 
 struct GLShaderAttribute;
 class GLShaderBindingLayout;
+class GLPipelineCache;
 
 class GLShaderProgram final : public GLShaderPipeline
 {
@@ -35,7 +36,8 @@ class GLShaderProgram final : public GLShaderPipeline
         GLShaderProgram(
             std::size_t             numShaders,
             const Shader* const*    shaders,
-            GLShader::Permutation   permutation = GLShader::PermutationDefault
+            GLShader::Permutation   permutation     = GLShader::PermutationDefault,
+            GLPipelineCache*        pipelineCache   = nullptr
         );
         ~GLShaderProgram();
 
@@ -61,6 +63,15 @@ class GLShaderProgram final : public GLShaderPipeline
 
         // Queries the shader reflection for the specified program.
         static void QueryReflection(GLuint program, GLenum shaderStage, ShaderReflection& reflection);
+
+    private:
+
+        // Main function for constructor to attach shaders, build attributes, and link program.
+        void BuildProgramBinary(
+            std::size_t             numShaders,
+            const Shader* const*    shaders,
+            GLShader::Permutation   permutation
+        );
 
     private:
 

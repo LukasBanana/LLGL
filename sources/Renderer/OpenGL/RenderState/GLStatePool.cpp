@@ -208,7 +208,11 @@ static bool HasGLSeparableShaders(std::size_t numShaders, Shader* const* shaders
     return (numShaders > 0 && IsGLSeparableShader(shaders[0]));
 }
 
-GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, Shader* const* shaders, GLShader::Permutation permutation)
+GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(
+    std::size_t             numShaders,
+    Shader* const*          shaders,
+    GLShader::Permutation   permutation,
+    GLPipelineCache*        pipelineCache)
 {
     #ifdef LLGL_OPENGL
     if (HasExtension(GLExt::ARB_separate_shader_objects) && HasGLSeparableShaders(numShaders, shaders))
@@ -221,7 +225,7 @@ GLShaderPipelineSPtr GLStatePool::CreateShaderPipeline(std::size_t numShaders, S
     #endif
     {
         return std::static_pointer_cast<GLShaderPipeline>(
-            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders, permutation)
+            CreateRenderStateObjectExt<GLShaderProgram, GLPipelineSignature>(shaderPipelines_, numShaders, shaders, permutation, pipelineCache)
         );
     }
 }

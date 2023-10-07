@@ -25,6 +25,7 @@ namespace LLGL
 
 
 class PipelineLayout;
+class PipelineCache;
 class GLStateManager;
 class GLShaderProgram;
 
@@ -46,6 +47,7 @@ class GLPipelineState : public PipelineState
         GLPipelineState(
             bool                        isGraphicsPSO,
             const PipelineLayout*       pipelineLayout,
+            PipelineCache*              pipelineCache,
             const ArrayView<Shader*>&   shaders
         );
         ~GLPipelineState();

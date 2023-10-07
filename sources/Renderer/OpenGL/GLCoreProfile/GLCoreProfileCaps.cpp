@@ -205,6 +205,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasConservativeRasterization   = (HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization));
     features.hasStreamOutputs               = (HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasLogicOp                     = true;
+    features.hasPipelineCaching             = (HasExtension(GLExt::ARB_get_program_binary) && GLGetInt(GL_NUM_PROGRAM_BINARY_FORMATS) > 0);
     features.hasPipelineStatistics          = HasExtension(GLExt::ARB_pipeline_statistics_query);
     features.hasRenderCondition             = true;
 }
