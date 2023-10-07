@@ -23,6 +23,7 @@
 #include <LLGL-C/Texture.h>
 #include <LLGL-C/Shader.h>
 #include <LLGL-C/PipelineLayout.h>
+#include <LLGL-C/PipelineCache.h>
 #include <LLGL-C/PipelineState.h>
 #include <LLGL-C/RenderTarget.h>
 #include <LLGL-C/QueryHeap.h>

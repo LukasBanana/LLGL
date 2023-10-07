@@ -516,6 +516,17 @@ LLGL_C_EXPORT void llglReleasePipelineLayout(LLGLPipelineLayout pipelineLayout)
     LLGL_RELEASE(PipelineLayout, pipelineLayout);
 }
 
+LLGL_C_EXPORT LLGLPipelineCache llglCreatePipelineCache(const void* initialBlobData, size_t initialBlobsize)
+{
+    Blob initialBlob = (initialBlobData != nullptr ? Blob::CreateWeakRef(initialBlobData, initialBlobsize) : Blob{});
+    return LLGLPipelineCache{ g_CurrentRenderSystem->CreatePipelineCache(initialBlob) };
+}
+
+LLGL_C_EXPORT void llglReleasePipelineCache(LLGLPipelineCache pipelineCache)
+{
+    LLGL_RELEASE(PipelineCache, pipelineCache);
+}
+
 static void ConvertGraphicsPipelineDesc(GraphicsPipelineDescriptor& dst, const LLGLGraphicsPipelineDescriptor& src)
 {
     dst.pipelineLayout          = LLGL_PTR(PipelineLayout, src.pipelineLayout);
@@ -542,11 +553,16 @@ static void ConvertGraphicsPipelineDesc(GraphicsPipelineDescriptor& dst, const L
 
 LLGL_C_EXPORT LLGLPipelineState llglCreateGraphicsPipelineState(const LLGLGraphicsPipelineDescriptor* pipelineStateDesc)
 {
+    return llglCreateGraphicsPipelineStateExt(pipelineStateDesc, LLGL_NULL_OBJECT);
+}
+
+LLGL_C_EXPORT LLGLPipelineState llglCreateGraphicsPipelineStateExt(const LLGLGraphicsPipelineDescriptor* pipelineStateDesc, LLGLPipelineCache pipelineCache)
+{
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(pipelineStateDesc);
     GraphicsPipelineDescriptor internalPipelineStateDesc;
     ConvertGraphicsPipelineDesc(internalPipelineStateDesc, *pipelineStateDesc);
-    return LLGLPipelineState{ g_CurrentRenderSystem->CreatePipelineState(internalPipelineStateDesc) };
+    return LLGLPipelineState{ g_CurrentRenderSystem->CreatePipelineState(internalPipelineStateDesc, LLGL_PTR(PipelineCache, pipelineCache)) };
 }
 
 static void ConvertComputePipelineDesc(ComputePipelineDescriptor& dst, const LLGLComputePipelineDescriptor& src)
@@ -557,11 +573,16 @@ static void ConvertComputePipelineDesc(ComputePipelineDescriptor& dst, const LLG
 
 LLGL_C_EXPORT LLGLPipelineState llglCreateComputePipelineState(const LLGLComputePipelineDescriptor* pipelineStateDesc)
 {
+    return llglCreateComputePipelineStateExt(pipelineStateDesc, LLGL_NULL_OBJECT);
+}
+
+LLGL_C_EXPORT LLGLPipelineState llglCreateComputePipelineStateExt(const LLGLComputePipelineDescriptor* pipelineStateDesc, LLGLPipelineCache pipelineCache)
+{
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(pipelineStateDesc);
     ComputePipelineDescriptor internalPipelineStateDesc;
     ConvertComputePipelineDesc(internalPipelineStateDesc, *pipelineStateDesc);
-    return LLGLPipelineState{ g_CurrentRenderSystem->CreatePipelineState(internalPipelineStateDesc) };
+    return LLGLPipelineState{ g_CurrentRenderSystem->CreatePipelineState(internalPipelineStateDesc, LLGL_PTR(PipelineCache, pipelineCache)) };
 }
 
 LLGL_C_EXPORT void llglReleasePipelineState(LLGLPipelineState pipelineState)

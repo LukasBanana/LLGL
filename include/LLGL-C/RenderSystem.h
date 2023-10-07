@@ -67,8 +67,13 @@ LLGL_C_EXPORT void llglReleaseShader(LLGLShader shader);
 LLGL_C_EXPORT LLGLPipelineLayout llglCreatePipelineLayout(const LLGLPipelineLayoutDescriptor* pipelineLayoutDesc);
 LLGL_C_EXPORT void llglReleasePipelineLayout(LLGLPipelineLayout pipelineLayout);
 
+LLGL_C_EXPORT LLGLPipelineCache llglCreatePipelineCache(const void* initialBlobData, size_t initialBlobsize);
+LLGL_C_EXPORT void llglReleasePipelineCache(LLGLPipelineCache pipelineCache);
+
 LLGL_C_EXPORT LLGLPipelineState llglCreateGraphicsPipelineState(const LLGLGraphicsPipelineDescriptor* pipelineStateDesc);
+LLGL_C_EXPORT LLGLPipelineState llglCreateGraphicsPipelineStateExt(const LLGLGraphicsPipelineDescriptor* pipelineStateDesc, LLGLPipelineCache pipelineCache);
 LLGL_C_EXPORT LLGLPipelineState llglCreateComputePipelineState(const LLGLComputePipelineDescriptor* pipelineStateDesc);
+LLGL_C_EXPORT LLGLPipelineState llglCreateComputePipelineStateExt(const LLGLComputePipelineDescriptor* pipelineStateDesc, LLGLPipelineCache pipelineCache);
 LLGL_C_EXPORT void llglReleasePipelineState(LLGLPipelineState pipelineState);
 
 LLGL_C_EXPORT LLGLQueryHeap llglCreateQueryHeap(const LLGLQueryHeapDescriptor* queryHeapDesc);
