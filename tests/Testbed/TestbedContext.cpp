@@ -19,7 +19,7 @@
 #include <stb/stb_image_write.h>
 
 
-#define ENABLE_GPU_DEBUGGER 0//1
+#define ENABLE_GPU_DEBUGGER 0
 #define ENABLE_CPU_DEBUGGER 0
 
 static constexpr const char* g_defaultOutputDir = "Output/";
@@ -270,6 +270,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( SceneUpdate                 );
     RUN_TEST( BlendStates                 );
     RUN_TEST( CommandBufferMultiThreading );
+    RUN_TEST( CommandBufferSecondary      );
 
     #undef RUN_TEST
 
