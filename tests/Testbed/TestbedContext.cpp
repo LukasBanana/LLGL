@@ -263,6 +263,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( RenderTarget1Attachment     );
     RUN_TEST( RenderTargetNAttachments    );
     RUN_TEST( MipMaps                     );
+    RUN_TEST( PipelineCaching             );
 
     // Run all rendering tests
     RUN_TEST( DepthBuffer                 );
