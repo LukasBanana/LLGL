@@ -53,7 +53,7 @@ DEF_TEST( CommandBufferSecondary )
     }
     PipelineState* pso = renderer->CreatePipelineState(psoDesc);
 
-    // Create scene buffers
+    // Create scene buffers:
     const ModelTransform transforms[numCmdBuffers] =
     {
         ModelTransform{ Gs::Vector3f{ -2.0f, +1.0f, 4.0f }, Gs::Vector3f{ 0.5f, 1.5f, 0.5f }, Gs::Vector3f{ 1.0f, 0.6f, 0.6f }, 45.0f, 30.0f },
@@ -169,8 +169,9 @@ DEF_TEST( CommandBufferSecondary )
     const std::string readbackImageName = "SecondaryCommandBuffer";
     SaveColorImage(readbackImage, resolution, readbackImageName);
 
+    // Ignore single pixel differences because GL implementation of CIS server might produce slightyl different rasterization
     const DiffResult diff = DiffImages(readbackImageName, diffThreshold);
-    if (diff)
+    if (diff && diff.count > 1)
     {
         result = TestResult::FailedMismatch;
         Log::Errorf("Mismatch between reference and result image for \"%s\" (%s)\n", readbackImageName.c_str(), diff.Print());
