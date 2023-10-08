@@ -579,7 +579,7 @@ void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    commandList_->IASetIndexBuffer(&(bufferD3D.GetIndexBufferView()));
+    commandContext_.SetIndexBuffer(bufferD3D.GetIndexBufferView());
 }
 
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
@@ -592,7 +592,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
         indexBufferView.BufferLocation  += offset;
         indexBufferView.SizeInBytes     -= static_cast<UINT>(offset);
         indexBufferView.Format          = DXTypes::ToDXGIFormat(format);
-        commandList_->IASetIndexBuffer(&indexBufferView);
+        commandContext_.SetIndexBuffer(indexBufferView);
     }
 }
 

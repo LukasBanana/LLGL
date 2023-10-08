@@ -117,7 +117,10 @@ class D3D12CommandContext
 
         void SetGraphicsRootSignature(ID3D12RootSignature* rootSignature);
         void SetComputeRootSignature(ID3D12RootSignature* rootSignature);
+
         void SetPipelineState(ID3D12PipelineState* pipelineState);
+        void SetDeferredPipelineState(ID3D12PipelineState* pipelineStateUI16, ID3D12PipelineState* pipelineStateUI32);
+
         void SetDescriptorHeaps(UINT numDescriptorHeaps, ID3D12DescriptorHeap* const* descriptorHeaps);
 
         void SetDescriptorHeapsOfOtherContext(const D3D12CommandContext& other);
@@ -132,6 +135,8 @@ class D3D12CommandContext
 
         void SetGraphicsRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr);
         void SetComputeRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr);
+
+        void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView);
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const;
 
@@ -218,9 +223,21 @@ class D3D12CommandContext
             }
             dirtyBits;
 
+            union
+            {
+                struct
+                {
+                    std::uint32_t   isDeferredPSO           : 1;
+                    std::uint32_t   is16BitIndexFormat      : 1;
+                };
+                std::uint32_t       value;
+            }
+            stateBits;
+
             ID3D12RootSignature*    graphicsRootSignature                   = nullptr;
             ID3D12RootSignature*    computeRootSignature                    = nullptr;
             ID3D12PipelineState*    pipelineState                           = nullptr;
+            ID3D12PipelineState*    deferredPipelineStates[2]               = {};
             UINT                    numDescriptorHeaps                      = 0;
             ID3D12DescriptorHeap*   descriptorHeaps[maxNumDescriptorHeaps]  = {};
         };
@@ -235,6 +252,10 @@ class D3D12CommandContext
 
         // Switches to the next command allocator and resets it.
         void NextCommandAllocator();
+
+        void SetPipelineStateCached(ID3D12PipelineState* pipelineState);
+
+        void FlushDeferredPipelineState();
 
         void FlushGraphicsStagingDescriptorTables();
         void FlushComputeStagingDescriptorTables();

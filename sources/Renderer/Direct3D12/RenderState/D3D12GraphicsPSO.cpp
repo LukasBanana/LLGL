@@ -90,7 +90,10 @@ void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)
 {
     /* Set root signature and pipeline state */
     commandContext.SetGraphicsRootSignature(GetRootSignature());
-    commandContext.SetPipelineState(GetNative());
+    if (secondaryPSO_)
+        commandContext.SetDeferredPipelineState(GetNative(), secondaryPSO_.Get());
+    else
+        commandContext.SetPipelineState(GetNative());
 
     /* Set dynamic pipeline states */
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
@@ -362,6 +365,11 @@ static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const S
     return desc;
 }
 
+static D3D12_INDEX_BUFFER_STRIP_CUT_VALUE GetIndexFormatStripCutValue(Format format)
+{
+    return (format == Format::R16UInt ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF);
+}
+
 void D3D12GraphicsPSO::CreateNativePSO(
     D3D12Device&                        device,
     const D3D12PipelineLayout&          pipelineLayout,
@@ -404,7 +412,7 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Convert other states */
     stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
     stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.geometryShader);
-    stateDesc.IBStripCutValue       = (IsPrimitiveTopologyStrip(desc.primitiveTopology) ? D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
+    stateDesc.IBStripCutValue       = (IsPrimitiveTopologyStrip(desc.primitiveTopology) ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
@@ -416,7 +424,25 @@ void D3D12GraphicsPSO::CreateNativePSO(
         stateDesc.CachedPSO = pipelineCache->GetCachedPSO();
 
     /* Create native PSO */
-    SetNativeAndUpdateCache(device.CreateDXGraphicsPipelineState(stateDesc), pipelineCache);
+    ComPtr<ID3D12PipelineState> primaryPSO;
+
+    if (IsPrimitiveTopologyStrip(desc.primitiveTopology))
+    {
+        if (desc.indexFormat == Format::Undefined)
+        {
+            /* Create primary PSO with 32-bit index cut off value */
+            primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
+
+            /* Create secondary PSO with 16-bit index cut off value */
+            stateDesc.IBStripCutValue   = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
+            stateDesc.CachedPSO         = {};
+            secondaryPSO_ = device.CreateDXGraphicsPipelineState(stateDesc);
+        }
+    }
+    else
+        primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
+
+    SetNativeAndUpdateCache(std::move(primaryPSO), pipelineCache);
 }
 
 // Returns the size (in bytes) for the static-state buffer with the specified number of viewports and scissor rectangles

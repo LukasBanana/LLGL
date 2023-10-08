@@ -68,6 +68,13 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
 
     private:
 
+        /*
+        Secondary PSO if index format is undefined for strip topologies:
+        - Primary PSO for D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF
+        - Secondary PSO for D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF
+        */
+        ComPtr<ID3D12PipelineState> secondaryPSO_;
+
         D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         bool                        scissorEnabled_     = false;
 

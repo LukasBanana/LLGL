@@ -151,9 +151,6 @@ private:
             // Set viewport and scissor rectangle
             commands->SetViewport(swapChain->GetResolution());
 
-            // Set graphics pipeline
-            commands->SetPipelineState(*pipeline);
-
             // Set vertex buffer
             commands->SetVertexBuffer(*vertexBuffer);
 
@@ -163,10 +160,11 @@ private:
                 // Clear color buffer
                 commands->Clear(LLGL::ClearFlags::Color, backgroundColor);
 
+                // Set graphics pipeline
+                commands->SetPipelineState(*pipeline);
+
                 if (indexCount16 > 0)
                 {
-                    // TODO: This does not work for D3D12 at the moment as the primitive restart index
-                    //       (aka. strip cut value) needs to be specified at PSO creation time.
                     commands->SetIndexBuffer(*indexBuffer, LLGL::Format::R16UInt, indexOffset16);
                     commands->DrawIndexed(indexCount16, 0);
                 }

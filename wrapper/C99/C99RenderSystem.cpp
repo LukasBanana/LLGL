@@ -536,6 +536,7 @@ static void ConvertGraphicsPipelineDesc(GraphicsPipelineDescriptor& dst, const L
     dst.tessEvaluationShader    = LLGL_PTR(Shader, src.tessEvaluationShader);
     dst.geometryShader          = LLGL_PTR(Shader, src.geometryShader);
     dst.fragmentShader          = LLGL_PTR(Shader, src.fragmentShader);
+    dst.indexFormat             = static_cast<Format>(src.indexFormat);
     dst.primitiveTopology       = static_cast<PrimitiveTopology>(src.primitiveTopology);
 
     dst.viewports.resize(src.numViewports);

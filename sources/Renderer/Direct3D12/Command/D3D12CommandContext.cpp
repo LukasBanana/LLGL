@@ -286,13 +286,15 @@ void D3D12CommandContext::SetComputeRootSignature(ID3D12RootSignature* rootSigna
 
 void D3D12CommandContext::SetPipelineState(ID3D12PipelineState* pipelineState)
 {
-    if (stateCache_.dirtyBits.pipelineState != 0 || stateCache_.pipelineState != pipelineState)
-    {
-        /* Bind pipeline state to command list and cache state */
-        commandList_->SetPipelineState(pipelineState);
-        stateCache_.pipelineState           = pipelineState;
-        stateCache_.dirtyBits.pipelineState = 0;
-    }
+    stateCache_.stateBits.isDeferredPSO = 0;
+    SetPipelineStateCached(pipelineState);
+}
+
+void D3D12CommandContext::SetDeferredPipelineState(ID3D12PipelineState* pipelineStateUI16, ID3D12PipelineState* pipelineStateUI32)
+{
+    stateCache_.stateBits.isDeferredPSO = 1;
+    stateCache_.deferredPipelineStates[0] = pipelineStateUI16;
+    stateCache_.deferredPipelineStates[1] = pipelineStateUI32;
 }
 
 static bool CompareDescriptorHeapRefs(
@@ -402,6 +404,12 @@ void D3D12CommandContext::SetComputeRootParameter(UINT parameterIndex, D3D12_ROO
     }
 }
 
+void D3D12CommandContext::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& indexBufferView)
+{
+    commandList_->IASetIndexBuffer(&indexBufferView);
+    stateCache_.stateBits.is16BitIndexFormat = (indexBufferView.Format == DXGI_FORMAT_R16_UINT ? 1 : 0);
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12CommandContext::GetCPUDescriptorHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor) const
 {
     /* Get current descriptor heap pool via allocator- and type index */
@@ -436,56 +444,13 @@ void D3D12CommandContext::EmplaceDescriptorForStaging(
     descriptorCaches_[currentAllocatorIndex_].EmplaceDescriptor(resource, location, descRangeType);
 }
 
-// private
-void D3D12CommandContext::FlushGraphicsStagingDescriptorTables()
-{
-    D3D12DescriptorCache& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
-    if (descriptorCache.IsInvalidated())
-    {
-        auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
-        if (stagingDescriptorSetLayout_.numResourceViews > 0)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
-            if (gpuDescHandle.ptr != 0)
-                commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
-        }
-        if (stagingDescriptorSetLayout_.numSamplers > 0)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
-            if (gpuDescHandle.ptr != 0)
-                commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
-        }
-    }
-}
-
-// private
-void D3D12CommandContext::FlushComputeStagingDescriptorTables()
-{
-    D3D12DescriptorCache& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
-    if (descriptorCache.IsInvalidated())
-    {
-        auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
-        if (stagingDescriptorSetLayout_.numResourceViews > 0)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
-            if (gpuDescHandle.ptr != 0)
-                commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
-        }
-        if (stagingDescriptorSetLayout_.numSamplers > 0)
-        {
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
-            if (gpuDescHandle.ptr != 0)
-                commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
-        }
-    }
-}
-
 void D3D12CommandContext::DrawInstanced(
     UINT vertexCountPerInstance,
     UINT instanceCount,
     UINT startVertexLocation,
     UINT startInstanceLocation)
 {
+    FlushDeferredPipelineState();
     FlushGraphicsStagingDescriptorTables();
     commandList_->DrawInstanced(vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
 }
@@ -497,6 +462,7 @@ void D3D12CommandContext::DrawIndexedInstanced(
     INT     baseVertexLocation,
     UINT    startInstanceLocation)
 {
+    FlushDeferredPipelineState();
     FlushGraphicsStagingDescriptorTables();
     commandList_->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
@@ -509,6 +475,7 @@ void D3D12CommandContext::DrawIndirect(
     ID3D12Resource*         countBuffer,
     UINT64                  countBufferOffset)
 {
+    FlushDeferredPipelineState();
     FlushGraphicsStagingDescriptorTables();
     commandList_->ExecuteIndirect(commandSignature, maxCommandCount, argumentBuffer, argumentBufferOffset, countBuffer, countBufferOffset);
 }
@@ -538,6 +505,12 @@ void D3D12CommandContext::DispatchIndirect(
 /*
  * ======= Private: =======
  */
+
+void D3D12CommandContext::ClearCache()
+{
+    stateCache_.dirtyBits.value = ~0u;
+    stateCache_.stateBits.value = 0;
+}
 
 D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
 {
@@ -570,9 +543,63 @@ void D3D12CommandContext::NextCommandAllocator()
     intermediateBufferPools_[currentAllocatorIndex_].Reset();
 }
 
-void D3D12CommandContext::ClearCache()
+void D3D12CommandContext::SetPipelineStateCached(ID3D12PipelineState* pipelineState)
 {
-    stateCache_.dirtyBits.value = ~0u;
+    if (stateCache_.dirtyBits.pipelineState != 0 || stateCache_.pipelineState != pipelineState)
+    {
+        /* Bind pipeline state to command list and cache state */
+        commandList_->SetPipelineState(pipelineState);
+        stateCache_.pipelineState           = pipelineState;
+        stateCache_.dirtyBits.pipelineState = 0;
+    }
+}
+
+void D3D12CommandContext::FlushDeferredPipelineState()
+{
+    if (stateCache_.stateBits.isDeferredPSO != 0)
+        SetPipelineStateCached(stateCache_.deferredPipelineStates[stateCache_.stateBits.is16BitIndexFormat]);
+}
+
+void D3D12CommandContext::FlushGraphicsStagingDescriptorTables()
+{
+    D3D12DescriptorCache& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
+    if (descriptorCache.IsInvalidated())
+    {
+        auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
+        if (stagingDescriptorSetLayout_.numResourceViews > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
+        }
+        if (stagingDescriptorSetLayout_.numSamplers > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetGraphicsRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
+        }
+    }
+}
+
+void D3D12CommandContext::FlushComputeStagingDescriptorTables()
+{
+    D3D12DescriptorCache& descriptorCache = descriptorCaches_[currentAllocatorIndex_];
+    if (descriptorCache.IsInvalidated())
+    {
+        auto& currentPoolSet = stagingDescriptorPools_[currentAllocatorIndex_];
+        if (stagingDescriptorSetLayout_.numResourceViews > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushCbvSrvUavDescriptors(currentPoolSet[0]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[0], gpuDescHandle);
+        }
+        if (stagingDescriptorSetLayout_.numSamplers > 0)
+        {
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = descriptorCache.FlushSamplerDescriptors(currentPoolSet[1]);
+            if (gpuDescHandle.ptr != 0)
+                commandList_->SetComputeRootDescriptorTable(stagingDescriptorIndices_.rootParamDescriptors[1], gpuDescHandle);
+        }
+    }
 }
 
 

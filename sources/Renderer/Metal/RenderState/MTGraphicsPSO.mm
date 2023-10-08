@@ -242,7 +242,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
             #endif
             psoDesc.tessellationFactorScaleEnabled      = NO;
             psoDesc.tessellationFactorFormat            = MTLTessellationFactorFormatHalf; // Can only be <half>
-            psoDesc.tessellationControlPointIndexType   = MTTypes::ToMTLPatchIndexType(desc.tessellation.indexFormat);
+            psoDesc.tessellationControlPointIndexType   = MTTypes::ToMTLPatchIndexType(desc.indexFormat);
             psoDesc.tessellationFactorStepFunction      = MTLTessellationFactorStepFunctionPerPatchAndPerInstance; // Same behavior as in D3D
             psoDesc.tessellationOutputWindingOrder      = (desc.tessellation.outputWindingCCW ? MTLWindingCounterClockwise : MTLWindingClockwise);
             psoDesc.tessellationPartitionMode           = MTTypes::ToMTLPartitionMode(desc.tessellation.partition);

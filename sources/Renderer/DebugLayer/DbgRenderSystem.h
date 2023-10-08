@@ -91,6 +91,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateBufferForBinding(const DbgBuffer& bufferDbg, const BindingDescriptor& bindingDesc);
         void ValidateTextureForBinding(const DbgTexture& textureDbg, const BindingDescriptor& bindingDesc);
 
+        void ValidateInputAssemblyDescriptor(const GraphicsPipelineDescriptor& pipelineStateDesc);
         void ValidateBlendTargetDescriptor(const BlendTargetDescriptor& blendTargetDesc, std::size_t idx);
         void ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader);
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc);

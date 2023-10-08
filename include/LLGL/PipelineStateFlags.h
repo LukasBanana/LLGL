@@ -29,7 +29,6 @@ namespace LLGL
 \remarks All strip topologies (i.e. PrimitiveTopology::LineStrip, PrimitiveTopology::LineStripAdjacency,
 PrimitiveTopology::TriangleStrip, and PrimitiveTopology::TriangleStripAdjacency) use a fixed index value to restart the primitives.
 This fixed index value is the maximum possible value for the respective index buffer format, i.e. <code>2^16-1</code> (or \c 0xFFFF) for Format::R16UInt and <code>2^32-1</code> (or \c 0xFFFFFFFF) for Format::R32UInt.
-\todo For Direct3D 12, the restart primitive index value (aka. strip cut value) can only be \c 0xFFFFFFFF at the moment as this needs to be specified at PSO creation time.
 \see GraphicsPipelineDescriptor::primitiveTopology
 */
 enum class PrimitiveTopology
@@ -724,14 +723,6 @@ struct TessellationDescriptor
     TessellationPartition   partition           = TessellationPartition::Undefined;
 
     /**
-    \brief Specifies the index buffer format. By default
-    \remarks If patches are rendered with an index buffer (i.e. \c DrawIndexed or \c DrawIndexedInstanced) this must be either Format::R16UInt or Format::R32UInt.
-    \see CommandBuffer::DrawIndexed
-    \see CommandBuffer::DrawIndexedInstanced
-    */
-    Format                  indexFormat         = Format::Undefined;
-
-    /**
     \brief Specifies the maximum tessellation factor. By default 64.
     \remarks Depending on the partition mode, this value must be:
     - TessellationPartition::Integer: An odd or even number.
@@ -811,6 +802,20 @@ struct GraphicsPipelineDescriptor
     If a depth buffer is attached to the current render target, omitting the fragment shader can be utilized to render a standard shadow map.
     */
     Shader*                 fragmentShader          = nullptr;
+
+    /**
+    \brief Specifies the index buffer format. This can either be Format::Undefined, Format::R16UInt, or Format::R32UInt. By default Format::Undefined.
+    \remarks For patches (PrimitiveTopology::Patches1 - PrimitiveTopology::Patches32),
+    line strips (PrimitiveTopology::LineStrip, PrimitiveTopology::LineStripAdjacency),
+    and triangle strips (PrimitiveTopology::TriangleStrip, PrimitiveTopology::TriangleStripAdjacency)
+    some backends might generate two internal PSOs if the index format is undefined.
+    For instance, the D3D12 backend needs to specify the strip index cut value for either 16 or 32 bit indices at PSO creation time.
+    For performance reasons, it is therefore recommended to set this value to either Format::R16UInt or Format::R32UInt
+    when the primitive toplogy is one of the aforementioned types.
+    \see CommandBuffer::DrawIndexed
+    \see CommandBuffer::DrawIndexedInstanced
+    */
+    Format                  indexFormat             = Format::Undefined;
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.

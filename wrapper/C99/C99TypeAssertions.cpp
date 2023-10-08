@@ -778,7 +778,6 @@ LLGL_STATIC_ASSERT_OFFSET(BlendDescriptor, targets);
 
 LLGL_STATIC_ASSERT_SIZE(TessellationDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(TessellationDescriptor, partition);
-LLGL_STATIC_ASSERT_OFFSET(TessellationDescriptor, indexFormat);
 LLGL_STATIC_ASSERT_OFFSET(TessellationDescriptor, maxTessFactor);
 LLGL_STATIC_ASSERT_OFFSET(TessellationDescriptor, outputWindingCCW);
 

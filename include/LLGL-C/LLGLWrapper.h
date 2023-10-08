@@ -1294,7 +1294,6 @@ LLGLBlendTargetDescriptor;
 typedef struct LLGLTessellationDescriptor
 {
     LLGLTessellationPartition partition;        /* = LLGLTessellationPartitionUndefined */
-    LLGLFormat                indexFormat;      /* = LLGLFormatUndefined */
     uint32_t                  maxTessFactor;    /* = 64 */
     bool                      outputWindingCCW; /* = false */
 }
@@ -1571,6 +1570,7 @@ typedef struct LLGLGraphicsPipelineDescriptor
     LLGLShader                 tessEvaluationShader; /* = LLGL_NULL_OBJECT */
     LLGLShader                 geometryShader;       /* = LLGL_NULL_OBJECT */
     LLGLShader                 fragmentShader;       /* = LLGL_NULL_OBJECT */
+    LLGLFormat                 indexFormat;          /* = LLGLFormatUndefined */
     LLGLPrimitiveTopology      primitiveTopology;    /* = LLGLPrimitiveTopologyTriangleList */
     size_t                     numViewports;         /* = 0 */
     const LLGLViewport*        viewports;            /* = NULL */

@@ -1584,6 +1584,19 @@ void DbgRenderSystem::ValidateBlendTargetDescriptor(const BlendTargetDescriptor&
     }
 }
 
+void DbgRenderSystem::ValidateInputAssemblyDescriptor(const GraphicsPipelineDescriptor& pipelineStateDesc)
+{
+    const Format indexFormat = pipelineStateDesc.indexFormat;
+    if (!(indexFormat == Format::Undefined || indexFormat == Format::R16UInt || indexFormat == Format::R32UInt))
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "input assembly index format must be LLGL::Format::Undefined, LLGL::Format::R16UInt, or LLGL::Format::R32UInt, but %s was specified",
+            ToString(indexFormat)
+        );
+    }
+}
+
 void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader)
 {
     /* Validate proper use of logic pixel operations */
@@ -1688,6 +1701,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     if (DbgShader* fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
         ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass);
 
+    ValidateInputAssemblyDescriptor(pipelineStateDesc);
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader);
 }
 
