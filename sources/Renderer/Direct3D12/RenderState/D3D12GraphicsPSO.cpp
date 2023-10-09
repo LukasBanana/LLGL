@@ -410,9 +410,10 @@ void D3D12GraphicsPSO::CreateNativePSO(
     ConvertDepthStencilDesc(stateDesc.DepthStencilState, desc.depth, desc.stencil);
 
     /* Convert other states */
+    const bool isStripTopology = IsPrimitiveTopologyStrip(desc.primitiveTopology);
     stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
     stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.geometryShader);
-    stateDesc.IBStripCutValue       = (IsPrimitiveTopologyStrip(desc.primitiveTopology) ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
+    stateDesc.IBStripCutValue       = (isStripTopology ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
@@ -426,18 +427,15 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Create native PSO */
     ComPtr<ID3D12PipelineState> primaryPSO;
 
-    if (IsPrimitiveTopologyStrip(desc.primitiveTopology))
+    if (isStripTopology && desc.indexFormat == Format::Undefined)
     {
-        if (desc.indexFormat == Format::Undefined)
-        {
-            /* Create primary PSO with 32-bit index cut off value */
-            primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
+        /* Create primary PSO with 32-bit index cut off value */
+        primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
 
-            /* Create secondary PSO with 16-bit index cut off value */
-            stateDesc.IBStripCutValue   = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
-            stateDesc.CachedPSO         = {};
-            secondaryPSO_ = device.CreateDXGraphicsPipelineState(stateDesc);
-        }
+        /* Create secondary PSO with 16-bit index cut off value */
+        stateDesc.IBStripCutValue   = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
+        stateDesc.CachedPSO         = {};
+        secondaryPSO_ = device.CreateDXGraphicsPipelineState(stateDesc);
     }
     else
         primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
