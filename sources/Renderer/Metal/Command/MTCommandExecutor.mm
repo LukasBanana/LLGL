@@ -35,7 +35,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         case MTOpcodeExecute:
         {
             auto cmd = reinterpret_cast<const MTCmdExecute*>(pc);
-
+            ExecuteMTMultiSubmitCommandBuffer(*(cmd->commandBuffer), context);
             return sizeof(*cmd);
         }
         case MTOpcodeCopyBuffer:
