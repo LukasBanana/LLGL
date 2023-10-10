@@ -11,16 +11,19 @@
 
 // Macro to support deprecation warnings before C++14
 
+#define LLGL_DEPRECATED_VA_ARGS(...) \
+    , ## __VA_ARGS__
+
 #if defined __clang__ // Prefer Clang deprecation attribute as it provides better diagnostics than the C++14 attribute
-#   define LLGL_DEPRECATED(MESSAGE, SUGGESTION) __attribute__((deprecated(MESSAGE, SUGGESTION)))
+#   define LLGL_DEPRECATED(MESSAGE, ...) __attribute__((deprecated(MESSAGE LLGL_DEPRECATED_VA_ARGS(__VA_ARGS__))))
 #elif __cplusplus >= 201402L // C++14
-#   define LLGL_DEPRECATED(MESSAGE, SUGGESTION) [[deprecated(MESSAGE)]]
+#   define LLGL_DEPRECATED(MESSAGE, ...) [[deprecated(MESSAGE)]]
 #elif defined __GNUC__
-#   define LLGL_DEPRECATED(MESSAGE, SUGGESTION) __attribute__((deprecated(MESSAGE)))
+#   define LLGL_DEPRECATED(MESSAGE, ...) __attribute__((deprecated(MESSAGE)))
 #elif defined _MSC_VER
-#   define LLGL_DEPRECATED(MESSAGE, SUGGESTION) __declspec(deprecated(MESSAGE))
+#   define LLGL_DEPRECATED(MESSAGE, ...) __declspec(deprecated(MESSAGE))
 #else
-#   define LLGL_DEPRECATED(MESSAGE, SUGGESTION)
+#   define LLGL_DEPRECATED(MESSAGE, ...)
 #endif
 
 
