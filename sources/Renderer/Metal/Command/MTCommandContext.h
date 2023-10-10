@@ -148,8 +148,8 @@ class MTCommandContext
             NSUInteger      viewportCount                               = 0;
             MTLScissorRect  scissorRects[maxNumViewportsAndScissors]    = {};
             NSUInteger      scissorRectCount                            = 0;
-            id<MTLBuffer>   vertexBuffers[maxNumVertexBuffers];
-            NSUInteger      vertexBufferOffsets[maxNumVertexBuffers];
+            id<MTLBuffer>   vertexBuffers[maxNumVertexBuffers]          = {};
+            NSUInteger      vertexBufferOffsets[maxNumVertexBuffers]    = {};
             NSRange         vertexBufferRange                           = { 0, 0 };
 
             MTGraphicsPSO*  graphicsPSO                                 = nullptr;

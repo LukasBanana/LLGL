@@ -109,7 +109,7 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
         ];
     }
 
-    if (auto* pipelineLayout = GetPipelineLayout())
+    if (const MTPipelineLayout* pipelineLayout = GetPipelineLayout())
     {
         pipelineLayout->SetStaticVertexSamplers(renderEncoder);
         pipelineLayout->SetStaticFragmentSamplers(renderEncoder);
@@ -186,7 +186,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     const MTRenderPass*                 defaultRenderPass)
 {
     /* Get native shader functions */
-    auto vertexShaderMT = GetVertexOrPostTessVertexShader(desc);
+    const MTShader* vertexShaderMT = GetVertexOrPostTessVertexShader(desc);
 
     /* Get number of patch control points if a post-tessellation vertex function is specified */
     numPatchControlPoints_ = vertexShaderMT->GetNumPatchControlPoints();
@@ -196,7 +196,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
 
     /* Get render pass object */
     const MTRenderPass* renderPassMT = nullptr;
-    if (auto renderPass = desc.renderPass)
+    if (const RenderPass* renderPass = desc.renderPass)
         renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
     else if (defaultRenderPass != nullptr)
         renderPassMT = defaultRenderPass;
@@ -216,7 +216,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
             psoDesc.inputPrimitiveTopology = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
 
         /* Initialize pixel formats from render pass */
-        const auto& colorAttachments = renderPassMT->GetColorAttachments();
+        const MTColorAttachmentFormatVector& colorAttachments = renderPassMT->GetColorAttachments();
         for_range(i, std::min(colorAttachments.size(), std::size_t(LLGL_MAX_NUM_COLOR_ATTACHMENTS)))
         {
             FillColorAttachmentDesc(
@@ -257,7 +257,7 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     /* Create compute PSO for tessellation stage */
     if (numPatchControlPoints_ > 0)
     {
-        if (auto tessComputeShaderMT = LLGL_CAST(const MTShader*, desc.tessControlShader))
+        if (auto* tessComputeShaderMT = LLGL_CAST(const MTShader*, desc.tessControlShader))
         {
             tessPipelineState_ = [device newComputePipelineStateWithFunction:tessComputeShaderMT->GetNative() error:&error];
             if (!tessPipelineState_)

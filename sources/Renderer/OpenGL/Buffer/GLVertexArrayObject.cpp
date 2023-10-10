@@ -49,11 +49,11 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute)
     }
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
-    auto dataType       = GLTypes::Map(formatAttribs.dataType);
-    auto components     = static_cast<GLint>(formatAttribs.components);
-    auto attribIndex    = static_cast<GLuint>(attribute.location);
-    auto stride         = static_cast<GLsizei>(attribute.stride);
-    auto offsetPtrSized = static_cast<GLsizeiptr>(attribute.offset);
+    const GLenum        dataType        = GLTypes::Map(formatAttribs.dataType);
+    const GLint         components      = static_cast<GLint>(formatAttribs.components);
+    const GLuint        attribIndex     = static_cast<GLuint>(attribute.location);
+    const GLsizei       stride          = static_cast<GLsizei>(attribute.stride);
+    const GLsizeiptr    offsetPtrSized  = static_cast<GLsizeiptr>(attribute.offset);
 
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(attribIndex);
@@ -76,11 +76,12 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute)
     }
     else
     {
+        const GLboolean normalized = GLBoolean((formatAttribs.flags & FormatFlags::IsNormalized) != 0);
         glVertexAttribPointer(
             attribIndex,
             components,
             dataType,
-            GLBoolean((formatAttribs.flags & FormatFlags::IsNormalized) != 0),
+            normalized,
             stride,
             reinterpret_cast<const void*>(offsetPtrSized)
         );
