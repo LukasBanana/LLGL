@@ -35,7 +35,8 @@ namespace LLGL
 
 
 MTMultiSubmitCommandBuffer::MTMultiSubmitCommandBuffer(id<MTLDevice> device, const CommandBufferDescriptor& desc) :
-    MTCommandBuffer { device, desc.flags }
+    MTCommandBuffer       { device, desc.flags                                  },
+    isSecondaryCmdBuffer_ { ((desc.flags & CommandBufferFlags::Secondary) != 0) }
 {
 }
 
@@ -57,8 +58,12 @@ void MTMultiSubmitCommandBuffer::Begin()
 
 void MTMultiSubmitCommandBuffer::End()
 {
-    FlushContext();
-    PresentDrawables();
+    /* Don't flush context nor present drawables in a secondary command buffer */
+    if (!isSecondaryCmdBuffer_)
+    {
+        FlushContext();
+        PresentDrawables();
+    }
     buffer_.Pack();
 }
 

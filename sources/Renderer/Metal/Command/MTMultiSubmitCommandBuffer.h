@@ -72,6 +72,8 @@ class MTMultiSubmitCommandBuffer final : public MTCommandBuffer
 
     private:
 
+        const bool                      isSecondaryCmdBuffer_   = false;
+
         MTVirtualCommandBuffer          buffer_;
         MTOpcode                        lastOpcode_             = MTOpcodeNop;
 
