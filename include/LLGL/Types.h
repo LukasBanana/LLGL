@@ -23,7 +23,7 @@ namespace LLGL
 \brief 2-Dimensional extent structure.
 \remarks Used for unsigned integral 2D extents (for sizes in window-space, screen-space, and texture-space).
 */
-struct Extent2D
+struct LLGL_EXPORT Extent2D
 {
     Extent2D() = default;
     Extent2D(const Extent2D&) = default;
@@ -42,7 +42,7 @@ struct Extent2D
 \brief 3-Dimensional extent structure.
 \remarks Used for unsigned integral 3D extents (for sizes in texture-space).
 */
-struct Extent3D
+struct LLGL_EXPORT Extent3D
 {
     Extent3D() = default;
     Extent3D(const Extent3D&) = default;
@@ -63,7 +63,7 @@ struct Extent3D
 \brief 2-Dimensional offset structure.
 \remarks Used for signed integral 2D offsets (for coordinates in window-space, screen-space, and texture-space).
 */
-struct Offset2D
+struct LLGL_EXPORT Offset2D
 {
     Offset2D() = default;
     Offset2D(const Offset2D&) = default;
@@ -82,7 +82,7 @@ struct Offset2D
 \brief 3-Dimensional offset structure.
 \remarks Used for signed integral 3D offsets (for coordinates in texture-space).
 */
-struct Offset3D
+struct LLGL_EXPORT Offset3D
 {
     Offset3D() = default;
     Offset3D(const Offset3D&) = default;
