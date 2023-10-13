@@ -81,14 +81,16 @@ DEF_TEST( SceneUpdate )
     // Render scene
     cmdBuffer->Begin();
     {
+        // Graphics can be set inside and outside a render pass, so test binding this PSO outside the render pass
+        cmdBuffer->SetVertexBuffer(*meshBuffer);
+        cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
+        cmdBuffer->SetPipelineState(*pso);
+
         cmdBuffer->BeginRenderPass(*swapChain);
         {
             // Draw scene
             cmdBuffer->Clear(ClearFlags::ColorDepth);
-            cmdBuffer->SetPipelineState(*pso);
             cmdBuffer->SetViewport(resolution);
-            cmdBuffer->SetVertexBuffer(*meshBuffer);
-            cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
             cmdBuffer->SetResource(0, *sceneCbuffer);
 
             // Draw top part
