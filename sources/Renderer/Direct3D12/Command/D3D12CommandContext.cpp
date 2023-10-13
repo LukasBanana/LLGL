@@ -225,6 +225,9 @@ void D3D12CommandContext::CopyTextureRegion(
     const D3D12_BOX*    srcBox)
 {
     /* Transition both resources */
+    const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.transitionState;
+    const D3D12_RESOURCE_STATES srcResourceOldState = srcResource.transitionState;
+
     TransitionResource(dstResource, D3D12_RESOURCE_STATE_COPY_DEST);
     TransitionResource(srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
 
@@ -244,8 +247,8 @@ void D3D12CommandContext::CopyTextureRegion(
     commandList_->CopyTextureRegion(&dstLocation, dstX, dstY, dstZ, &srcLocation, srcBox);
 
     /* Transition both resources */
-    TransitionResource(dstResource, dstResource.usageState);
-    TransitionResource(srcResource, srcResource.usageState, true);
+    TransitionResource(dstResource, dstResourceOldState);
+    TransitionResource(srcResource, srcResourceOldState, true);
 }
 
 void D3D12CommandContext::UpdateSubresource(
