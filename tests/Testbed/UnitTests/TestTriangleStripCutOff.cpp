@@ -64,7 +64,7 @@ DEF_TEST( TriangleStripCutOff )
     // Create PSO for rendering triangle strips
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout      = layouts[PipelineSolid];
+        psoDesc.pipelineLayout      = nullptr; // No resource bindings, therefore no pipeline layout
         psoDesc.renderPass          = swapChain->GetRenderPass();
         psoDesc.vertexShader        = shaders[VSUnprojected];
         psoDesc.fragmentShader      = shaders[PSUnprojected];
