@@ -147,7 +147,7 @@ void D3D12CommandContext::TransitionResource(ID3D12Resource* resource, D3D12_RES
 
 void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate)
 {
-    if (resource.transitionState != newState)
+    if (resource.currentState != newState)
     {
         D3D12_RESOURCE_BARRIER& barrier = NextResourceBarrier();
 
@@ -156,11 +156,11 @@ void D3D12CommandContext::TransitionResource(D3D12Resource& resource, D3D12_RESO
         barrier.Flags                   = D3D12_RESOURCE_BARRIER_FLAG_NONE;
         barrier.Transition.pResource    = resource.Get();
         barrier.Transition.Subresource  = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        barrier.Transition.StateBefore  = resource.transitionState;
+        barrier.Transition.StateBefore  = resource.currentState;
         barrier.Transition.StateAfter   = newState;
 
         /* Store new transition state */
-        resource.transitionState = newState;
+        resource.currentState = newState;
     }
 
     /* Flush resource barrieres if required */
@@ -197,6 +197,9 @@ void D3D12CommandContext::ResolveSubresource(
     DXGI_FORMAT     format)
 {
     /* Transition both resources */
+    const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.currentState;
+    const D3D12_RESOURCE_STATES srcResourceOldState = srcResource.currentState;
+
     TransitionResource(dstResource, D3D12_RESOURCE_STATE_RESOLVE_DEST);
     TransitionResource(srcResource, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, true);
 
@@ -210,8 +213,8 @@ void D3D12CommandContext::ResolveSubresource(
     );
 
     /* Transition both resources */
-    TransitionResource(dstResource, dstResource.usageState);
-    TransitionResource(srcResource, srcResource.usageState, true);
+    TransitionResource(dstResource, dstResourceOldState);
+    TransitionResource(srcResource, srcResourceOldState, true);
 }
 
 void D3D12CommandContext::CopyTextureRegion(
@@ -225,8 +228,8 @@ void D3D12CommandContext::CopyTextureRegion(
     const D3D12_BOX*    srcBox)
 {
     /* Transition both resources */
-    const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.transitionState;
-    const D3D12_RESOURCE_STATES srcResourceOldState = srcResource.transitionState;
+    const D3D12_RESOURCE_STATES dstResourceOldState = dstResource.currentState;
+    const D3D12_RESOURCE_STATES srcResourceOldState = srcResource.currentState;
 
     TransitionResource(dstResource, D3D12_RESOURCE_STATE_COPY_DEST);
     TransitionResource(srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, true);

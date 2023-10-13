@@ -398,16 +398,12 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
         internalSize_ += g_soBufferFillSizeLen;
 
-    /* Determine initial resource state */
-    resource_.usageState        = GetD3DUsageState(desc.bindFlags);
-    resource_.transitionState   = D3D12_RESOURCE_STATE_COPY_DEST;
-
     /* Create generic buffer resource */
     HRESULT hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc)),
-        resource_.transitionState,
+        resource_.SetInitialAndUsageStates(D3D12_RESOURCE_STATE_COPY_DEST, GetD3DUsageState(desc.bindFlags)),
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );

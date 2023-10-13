@@ -18,24 +18,31 @@ namespace LLGL
 {
 
 
-//TODO: Rename to "D3D12GpuResource" to avoid overlapping terminology with <Resource> interface.
 // Helper struct to store a D3D12 resource with its usage state and transition state.
 struct D3D12Resource
 {
     D3D12Resource() = default;
 
     inline D3D12Resource(ComPtr<ID3D12Resource>&& native, D3D12_RESOURCE_STATES initialState) :
-        native          { std::move(native) },
-        usageState      { initialState      },
-        transitionState { initialState      }
+        native       { std::move(native) },
+        usageState   { initialState      },
+        currentState { initialState      }
     {
     }
 
-    // Sets both the current usage and the transition states to the specified initial state.
+    // Sets both the resource state for common usage and the inital states.
     inline void SetInitialState(D3D12_RESOURCE_STATES initialState)
     {
         usageState      = initialState;
-        transitionState = initialState;
+        currentState    = initialState;
+    }
+
+    // Sets the resource state for common usage and the initial state individually and returns the initial state.
+    inline D3D12_RESOURCE_STATES SetInitialAndUsageStates(D3D12_RESOURCE_STATES initialState, D3D12_RESOURCE_STATES usageState)
+    {
+        this->usageState    = usageState;
+        this->currentState  = initialState;
+        return initialState;
     }
 
     // Returns the natvie resource object.
@@ -46,7 +53,7 @@ struct D3D12Resource
 
     ComPtr<ID3D12Resource>  native;
     D3D12_RESOURCE_STATES   usageState      = D3D12_RESOURCE_STATE_COMMON;
-    D3D12_RESOURCE_STATES   transitionState = D3D12_RESOURCE_STATE_COMMON;
+    D3D12_RESOURCE_STATES   currentState    = D3D12_RESOURCE_STATE_COMMON;
 };
 
 

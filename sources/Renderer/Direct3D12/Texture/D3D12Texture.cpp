@@ -778,15 +778,11 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &descD3D,
-        D3D12_RESOURCE_STATE_COPY_DEST,
+        resource_.SetInitialAndUsageStates(D3D12_RESOURCE_STATE_COPY_DEST, GetInitialD3D12ResourceState(desc)),
         (useClearValue ? &optClearValue : nullptr),
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware texture");
-
-    /* Determine resource usage */
-    resource_.transitionState   = D3D12_RESOURCE_STATE_COPY_DEST;
-    resource_.usageState        = GetInitialD3D12ResourceState(desc);
 }
 
 // Determine SRV dimension for descriptor heaps used in D3D12MipGenerator: either 1D array, 2D array, or 3D

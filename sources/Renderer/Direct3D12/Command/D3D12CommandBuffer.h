@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBuffer.h>
+#include <LLGL/Constants.h>
 #include <cstddef>
 #include "D3D12CommandContext.h"
 #include "../../DXCommon/ComPtr.h"
@@ -109,26 +110,28 @@ class D3D12CommandBuffer final : public CommandBuffer
     private:
 
         D3D12CommandContext             commandContext_;
-        D3D12CommandQueue*              commandQueue_           = nullptr;
-        ID3D12GraphicsCommandList*      commandList_            = nullptr;
-        const D3D12SignatureFactory*    cmdSignatureFactory_    = nullptr;
+        D3D12CommandQueue*              commandQueue_                               = nullptr;
+        ID3D12GraphicsCommandList*      commandList_                                = nullptr;
+        const D3D12SignatureFactory*    cmdSignatureFactory_                        = nullptr;
 
-        bool                            immediateSubmit_        = false;
+        bool                            immediateSubmit_                            = false;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE     rtvDescHandle_          = {};
-        UINT                            rtvDescSize_            = 0;
-        D3D12_CPU_DESCRIPTOR_HANDLE     dsvDescHandle_          = {};
-        UINT                            dsvDescSize_            = 0;
+        D3D12_CPU_DESCRIPTOR_HANDLE     rtvDescHandle_                              = {};
+        UINT                            rtvDescSize_                                = 0;
+        D3D12_CPU_DESCRIPTOR_HANDLE     dsvDescHandle_                              = {};
+        UINT                            dsvDescSize_                                = 0;
 
-        bool                            scissorEnabled_         = false;
-        UINT                            numBoundScissorRects_   = 0;
-        UINT                            numColorBuffers_        = 0;
-        UINT                            currentColorBuffer_     = 0;
+        bool                            scissorEnabled_                             = false;
+        UINT                            numBoundScissorRects_                       = 0;
+        UINT                            numColorBuffers_                            = 0;
+        UINT                            currentColorBuffer_                         = 0;
+        UINT                            numSOBuffers_                               = 0;
 
-        D3D12SwapChain*                 boundSwapChain_         = nullptr;
-        D3D12RenderTarget*              boundRenderTarget_      = nullptr;
-        const D3D12PipelineLayout*      boundPipelineLayout_    = nullptr;
-        D3D12PipelineState*             boundPipelineState_     = nullptr;
+        D3D12SwapChain*                 boundSwapChain_                             = nullptr;
+        D3D12RenderTarget*              boundRenderTarget_                          = nullptr;
+        const D3D12PipelineLayout*      boundPipelineLayout_                        = nullptr;
+        D3D12PipelineState*             boundPipelineState_                         = nullptr;
+        D3D12Buffer*                    boundSOBuffers_[LLGL_MAX_NUM_SO_BUFFERS]    = {};
 
 };
 

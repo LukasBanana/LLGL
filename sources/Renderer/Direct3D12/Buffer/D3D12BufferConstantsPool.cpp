@@ -91,10 +91,6 @@ void D3D12BufferConstantsPool::CreateImmutableBuffer(
     D3D12StagingBufferPool&     stagingBufferPool,
     std::vector<std::uint64_t>& data)
 {
-    /* Create native buffer resource */
-    resource_.usageState        = D3D12_RESOURCE_STATE_COPY_SOURCE;
-    resource_.transitionState   = D3D12_RESOURCE_STATE_COPY_DEST;
-
     /* Create generic buffer resource */
     const UINT64 bufferSize = data.size() * sizeof(UINT64);
 
@@ -102,7 +98,7 @@ void D3D12BufferConstantsPool::CreateImmutableBuffer(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
-        resource_.transitionState,
+        resource_.SetInitialAndUsageStates(D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE),
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
