@@ -50,6 +50,7 @@ DECL_TEST( DepthBuffer );
 DECL_TEST( StencilBuffer );
 DECL_TEST( SceneUpdate );
 DECL_TEST( BlendStates );
+DECL_TEST( TriangleStripCutOff );
 
 #undef DECL_TEST
 

@@ -79,6 +79,14 @@ class TestbedContext
             ModelCount,
         };
 
+        enum VertFmt
+        {
+            VertFmtStd = 0,
+            VertFmtUnprojected,
+
+            VertFmtCount,
+        };
+
         enum Pipelines
         {
             PipelineSolid,
@@ -93,6 +101,8 @@ class TestbedContext
             PSSolid,
             VSTextured,
             PSTextured,
+            VSUnprojected,
+            PSUnprojected,
 
             ShaderCount,
         };
@@ -126,11 +136,17 @@ class TestbedContext
 
     protected:
 
-        struct Vertex
+        struct StandardVertex
         {
             float position[3];
             float normal[3];
             float texCoord[2];
+        };
+
+        struct UnprojectedVertex
+        {
+            float           position[2];
+            std::uint8_t    color[4];
         };
 
         struct IndexedTriangleMesh
@@ -141,7 +157,7 @@ class TestbedContext
 
         struct IndexedTriangleMeshBuffer
         {
-            std::vector<Vertex>         vertices;
+            std::vector<StandardVertex> vertices;
             std::vector<std::uint32_t>  indices;
             std::uint32_t               firstVertex = 0;
             std::uint32_t               firstIndex  = 0;
@@ -207,7 +223,7 @@ class TestbedContext
         LLGL::Buffer*                   meshBuffer              = nullptr;
         LLGL::Buffer*                   sceneCbuffer            = nullptr;
 
-        LLGL::VertexFormat              vertexFormat;
+        LLGL::VertexFormat              vertexFormats[VertFmtCount];
         IndexedTriangleMesh             models[ModelCount];
         LLGL::Shader*                   shaders[ShaderCount]    = {};
         LLGL::PipelineLayout*           layouts[PipelineCount]  = {};
@@ -242,6 +258,15 @@ class TestbedContext
         void CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
 
         void CreateConstantBuffers();
+
+        LLGL::Shader* LoadShaderFromFile(
+            const std::string&          filename,
+            LLGL::ShaderType            type,
+            const char*                 entry       = nullptr,
+            const char*                 profile     = nullptr,
+            const LLGL::ShaderMacro*    defines     = nullptr,
+            VertFmt                     vertFmt     = VertFmtStd
+        );
 
         void SaveColorImage(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);
         void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);

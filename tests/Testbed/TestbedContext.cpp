@@ -159,9 +159,11 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         // Create common scene resources
         CreateTriangleMeshes();
         CreateConstantBuffers();
-        LoadShaders();
+        if (!LoadShaders())
+            ++failures;
         CreatePipelineLayouts();
-        LoadTextures();
+        if (!LoadTextures())
+            ++failures;
         CreateSamplerStates();
         LoadDefaultProjectionMatrix();
     }
@@ -231,6 +233,13 @@ static void PrintTestSummary(unsigned failures, const std::vector<std::string>& 
 
 unsigned TestbedContext::RunAllTests()
 {
+    // Loading failed if there are already failures
+    if (failures > 0)
+    {
+        Log::Printf(" ==> LOADING FAILED\n", failures);
+        return failures;
+    }
+
     std::vector<const char*> foundTests;
 
     #define RUN_TEST(TEST)                                                                          \
@@ -272,6 +281,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( BlendStates                 );
     RUN_TEST( CommandBufferMultiThreading );
     RUN_TEST( CommandBufferSecondary      );
+    RUN_TEST( TriangleStripCutOff         );
 
     #undef RUN_TEST
 
@@ -704,57 +714,6 @@ bool TestbedContext::LoadShaders()
         return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
     };
 
-    auto StringEndsWith = [](const std::string& str, const std::string& suffix) -> bool
-    {
-        return (str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix.c_str()) == 0);
-    };
-
-    auto LoadShaderFromFile = [this, &StringEndsWith](const std::string& filename, ShaderType type, const char* entry = nullptr, const char* profile = nullptr, const ShaderMacro* defines = nullptr) -> Shader*
-    {
-        const bool isFileBinary = (StringEndsWith(filename, ".spv") || StringEndsWith(filename, ".dxbc"));
-
-        auto PrintLoadingInfo = [type, &filename]()
-        {
-            Log::Printf("Loading %s shader: %s", ToString(type), filename.c_str());
-        };
-
-        if (verbose)
-            PrintLoadingInfo();
-
-        ShaderDescriptor shaderDesc;
-        {
-            shaderDesc.type                 = type;
-            shaderDesc.source               = filename.c_str();
-            shaderDesc.sourceType           = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
-            shaderDesc.entryPoint           = entry;
-            shaderDesc.profile              = profile;
-            shaderDesc.defines              = defines;
-            shaderDesc.flags                = ShaderCompileFlags::PatchClippingOrigin;
-            shaderDesc.vertex.inputAttribs  = vertexFormat.attributes;
-        }
-        Shader* shader = renderer->CreateShader(shaderDesc);
-
-        if (shader != nullptr)
-        {
-            if (const Report* report = shader->GetReport())
-            {
-                if (report->HasErrors())
-                {
-                    if (!verbose)
-                        PrintLoadingInfo();
-                    Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
-                    Log::Errorf("%s", report->GetText());
-                    return nullptr;
-                }
-            }
-        }
-
-        if (verbose)
-            Log::Printf(" [ Ok ]\n");
-
-        return shader;
-    };
-
     const ShaderMacro definesEnableTexturing[] =
     {
         ShaderMacro{ "ENABLE_TEXTURING", "1" },
@@ -765,36 +724,50 @@ bool TestbedContext::LoadShaders()
 
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
-        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Vertex,   "VSMain", "vs_5_0");
-        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Fragment, "PSMain", "ps_5_0");
-        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
-        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl", ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
+        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Vertex,   "VSMain", "vs_5_0");
+        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Fragment, "PSMain", "ps_5_0");
+        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
+        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
+        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",   ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",   ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtUnprojected);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
-        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert", ShaderType::Vertex);
-        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag", ShaderType::Fragment);
-        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert", ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
-        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag", ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",      ShaderType::Vertex);
+        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",      ShaderType::Fragment);
+        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",      ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
+        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",      ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",   ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
-        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Vertex,   "VSMain", "1.1");
-        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Fragment, "PSMain", "1.1");
-        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
-        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.metal", ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
+        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Vertex,   "VSMain", "1.1");
+        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Fragment, "PSMain", "1.1");
+        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
+        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
+        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",  ShaderType::Vertex,   "VSMain", "1.1", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",  ShaderType::Fragment, "PSMain", "1.1", nullptr, VertFmtUnprojected);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
-        shaders[VSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert.spv", ShaderType::Vertex);
-        shaders[PSSolid]    = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv", ShaderType::Fragment);
-        shaders[VSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
-        shaders[PSTextured] = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert.spv",          ShaderType::Vertex);
+        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
+        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
     }
     else
     {
         Log::Errorf("No shaders provided for this backend");
         return false;
+    }
+
+    for (int i = 0; i < ShaderCount; ++i)
+    {
+        if (shaders[i] == nullptr)
+            return false;
     }
 
     return true;
@@ -893,12 +866,18 @@ void TestbedContext::LoadDefaultProjectionMatrix()
 
 void TestbedContext::CreateTriangleMeshes()
 {
-    // Create vertex format
-    vertexFormat.attributes =
+    // Create vertex formats
+    vertexFormats[VertFmtStd].attributes =
     {
-        VertexAttribute{ "position", Format::RGB32Float, 0, offsetof(Vertex, position), sizeof(Vertex) },
-        VertexAttribute{ "normal",   Format::RGB32Float, 1, offsetof(Vertex, normal  ), sizeof(Vertex) },
-        VertexAttribute{ "texCoord", Format::RG32Float,  2, offsetof(Vertex, texCoord), sizeof(Vertex) },
+        VertexAttribute{ "position", Format::RGB32Float, 0, offsetof(StandardVertex, position), sizeof(StandardVertex) },
+        VertexAttribute{ "normal",   Format::RGB32Float, 1, offsetof(StandardVertex, normal  ), sizeof(StandardVertex) },
+        VertexAttribute{ "texCoord", Format::RG32Float,  2, offsetof(StandardVertex, texCoord), sizeof(StandardVertex) },
+    };
+
+    vertexFormats[VertFmtUnprojected].attributes =
+    {
+        VertexAttribute{ "position", Format::RG32Float,  0, offsetof(UnprojectedVertex, position), sizeof(UnprojectedVertex) },
+        VertexAttribute{ "color",    Format::RGBA8UNorm, 1, offsetof(UnprojectedVertex, color   ), sizeof(UnprojectedVertex) },
     };
 
     // Create models
@@ -907,7 +886,7 @@ void TestbedContext::CreateTriangleMeshes()
     CreateModelCube(sceneBuffer, models[ModelCube]);
     CreateModelRect(sceneBuffer, models[ModelRect]);
 
-    const std::uint64_t vertexBufferSize = sceneBuffer.vertices.size() * sizeof(Vertex);
+    const std::uint64_t vertexBufferSize = sceneBuffer.vertices.size() * sizeof(StandardVertex);
     const std::uint64_t indexBufferSize = sceneBuffer.indices.size() * sizeof(std::uint32_t);
 
     for (int i = ModelCube; i < ModelCount; ++i)
@@ -918,12 +897,12 @@ void TestbedContext::CreateTriangleMeshes()
     {
         meshBufferDesc.size             = vertexBufferSize + indexBufferSize;
         meshBufferDesc.bindFlags        = BindFlags::VertexBuffer | BindFlags::IndexBuffer;
-        meshBufferDesc.vertexAttribs    = vertexFormat.attributes;
+        meshBufferDesc.vertexAttribs    = vertexFormats[VertFmtStd].attributes;
     }
     meshBuffer = renderer->CreateBuffer(meshBufferDesc);
 
     // Write vertices and indices into GPU buffer
-    renderer->WriteBuffer(*meshBuffer, 0, sceneBuffer.vertices.data(), sceneBuffer.vertices.size() * sizeof(Vertex));
+    renderer->WriteBuffer(*meshBuffer, 0, sceneBuffer.vertices.data(), sceneBuffer.vertices.size() * sizeof(StandardVertex));
     renderer->WriteBuffer(*meshBuffer, vertexBufferSize, sceneBuffer.indices.data(), sceneBuffer.indices.size() * sizeof(std::uint32_t));
 }
 
@@ -999,6 +978,63 @@ void TestbedContext::CreateConstantBuffers()
     sceneCbuffer = renderer->CreateBuffer(bufDesc, &sceneCbuffer);
     sceneCbuffer->SetName("sceneCbuffer");
 }
+
+Shader* TestbedContext::LoadShaderFromFile(
+    const std::string&  filename,
+    ShaderType          type,
+    const char*         entry,
+    const char*         profile,
+    const ShaderMacro*  defines,
+    VertFmt             vertFmt)
+{
+    auto StringEndsWith = [](const std::string& str, const std::string& suffix) -> bool
+    {
+        return (str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix.c_str()) == 0);
+    };
+
+    const bool isFileBinary = (StringEndsWith(filename, ".spv") || StringEndsWith(filename, ".dxbc"));
+
+    auto PrintLoadingInfo = [type, &filename]()
+    {
+        Log::Printf("Loading %s shader: %s", ToString(type), filename.c_str());
+    };
+
+    if (verbose)
+        PrintLoadingInfo();
+
+    ShaderDescriptor shaderDesc;
+    {
+        shaderDesc.type                 = type;
+        shaderDesc.source               = filename.c_str();
+        shaderDesc.sourceType           = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
+        shaderDesc.entryPoint           = entry;
+        shaderDesc.profile              = profile;
+        shaderDesc.defines              = defines;
+        shaderDesc.flags                = ShaderCompileFlags::PatchClippingOrigin;
+        shaderDesc.vertex.inputAttribs  = vertexFormats[vertFmt].attributes;
+    }
+    Shader* shader = renderer->CreateShader(shaderDesc);
+
+    if (shader != nullptr)
+    {
+        if (const Report* report = shader->GetReport())
+        {
+            if (report->HasErrors())
+            {
+                if (!verbose)
+                    PrintLoadingInfo();
+                Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
+                Log::Errorf("%s", report->GetText());
+                return nullptr;
+            }
+        }
+    }
+
+    if (verbose)
+        Log::Printf(" [ Ok ]\n");
+
+    return shader;
+};
 
 static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, const std::string& filename, bool verbose)
 {
@@ -1310,7 +1346,7 @@ void TestbedContext::IndexedTriangleMeshBuffer::NewMesh()
 
 void TestbedContext::IndexedTriangleMeshBuffer::AddVertex(float x, float y, float z, float nx, float ny, float nz, float tx, float ty)
 {
-    this->vertices.push_back(Vertex{ {x,y,z}, {nx,ny,nz}, {tx,ty} });
+    this->vertices.push_back(StandardVertex{ {x,y,z}, {nx,ny,nz}, {tx,ty} });
 }
 
 void TestbedContext::IndexedTriangleMeshBuffer::AddIndices(const std::initializer_list<std::uint32_t>& indices, std::uint32_t offset)

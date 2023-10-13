@@ -27,7 +27,6 @@ DEF_TEST( SceneUpdate )
             return TestResult::FailedErrors;
         }
 
-        // Create PSO for rendering to the depth buffer
         GraphicsPipelineDescriptor psoDesc;
         {
             psoDesc.pipelineLayout      = layouts[PipelineSolid];
