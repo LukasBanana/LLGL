@@ -19,9 +19,6 @@
 #include <stb/stb_image_write.h>
 
 
-#define ENABLE_GPU_DEBUGGER 0
-#define ENABLE_CPU_DEBUGGER 0
-
 static constexpr const char* g_defaultOutputDir = "Output/";
 
 static bool HasArgument(int argc, char* argv[], const char* search)
@@ -103,18 +100,19 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },
     selectedTests { FindSelectedTests(argc, argv)                                              }
 {
+    const bool isDebugMode = (HasArgument(argc, argv, "-d") || HasArgument(argc, argv, "--debug"));
+
     RendererConfigurationOpenGL cfgGL;
 
     RenderSystemDescriptor rendererDesc;
     {
         rendererDesc.moduleName = this->moduleName;
-        #if ENABLE_GPU_DEBUGGER
-        rendererDesc.flags      = RenderSystemFlags::DebugDevice;
-        #endif
-        #if ENABLE_CPU_DEBUGGER
-        rendererDesc.profiler   = &profiler;
-        rendererDesc.debugger   = &debugger;
-        #endif
+
+        if (isDebugMode)
+        {
+            rendererDesc.flags      = RenderSystemFlags::DebugDevice;
+            rendererDesc.debugger   = &debugger;
+        }
 
         if (::strcmp(moduleName, "OpenGL") == 0)
         {
@@ -143,11 +141,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         cmdQueue = renderer->GetCommandQueue();
 
         // Create primary command buffer
-        CommandBufferDescriptor cmdBufferDesc;
-        {
-            cmdBufferDesc.flags = CommandBufferFlags::ImmediateSubmit;
-        }
-        cmdBuffer = renderer->CreateCommandBuffer(cmdBufferDesc);
+        cmdBuffer = renderer->CreateCommandBuffer(CommandBufferFlags::ImmediateSubmit);
 
         // Print renderer information
         if (verbose)
@@ -1177,6 +1171,7 @@ LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer
         texDesc.extent.width    = extent.width;
         texDesc.extent.height   = extent.height;
         texDesc.bindFlags       = BindFlags::CopyDst;
+        texDesc.miscFlags       = MiscFlags::NoInitialData;
         texDesc.mipLevels       = 1;
     }
     Texture* capture = renderer->CreateTexture(texDesc);
