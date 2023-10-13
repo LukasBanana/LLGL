@@ -530,7 +530,6 @@ void D3D12Texture::CreateShaderResourceViewPrimary(
 
 void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
 {
-    LLGL_DEBUG_BREAK();
     CreateUnorderedAccessViewPrimary(
         device,
         D3D12Types::MapUavDimension(GetType()),
@@ -542,7 +541,6 @@ void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DES
 
 void D3D12Texture::CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const TextureViewDescriptor& desc)
 {
-    LLGL_DEBUG_BREAK();
     CreateUnorderedAccessViewPrimary(
         device,
         D3D12Types::MapUavDimension(desc.type),
