@@ -165,7 +165,8 @@ private:
         }
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
+            // Patch clipping origin in vertex shader in case the GL server does not support GL_ARB_clip_control
+            shaderPipeline.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });
             shaderPipeline.ps = LoadShader(
                 #ifdef __APPLE__
                 { LLGL::ShaderType::Fragment, "Example.410core.frag" },
@@ -389,15 +390,6 @@ private:
     {
         // Update model transformation with render-target projection
         UpdateModelTransform(settings, renderTargetProj, rotation.y, Gs::Vector3f(1));
-
-        if (IsOpenGL() && IsScreenOriginLowerLeft())
-        {
-            /*
-            Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
-            world-view-projection matrix to render vertically flipped into the render-target
-            */
-            Gs::FlipAxis(settings.wvpMatrix, 1);
-        }
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
