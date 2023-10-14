@@ -10,7 +10,6 @@
 
 
 #include <LLGL/RenderSystem.h>
-#include <LLGL/VideoAdapter.h>
 
 #include "D3D12Device.h"
 #include "D3D12SwapChain.h"
@@ -37,6 +36,7 @@
 
 #include "Shader/D3D12Shader.h"
 
+#include "../VideoAdapter.h"
 #include "../ContainerTypes.h"
 #include "../DXCommon/ComPtr.h"
 #include <d3d12.h>
@@ -108,8 +108,8 @@ class D3D12RenderSystem final : public RenderSystem
         void EnableDebugLayer();
 
         void CreateFactory(bool debugDevice = false);
-        void QueryVideoAdapters();
-        void CreateDevice();
+        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+        HRESULT CreateDevice(IDXGIAdapter* preferredAdapter);
 
         void QueryRendererInfo();
         void QueryRenderingCaps();
@@ -170,7 +170,7 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Other members ----- */
 
-        std::vector<VideoAdapterDescriptor>     videoAdatperDescs_;
+        VideoAdapterInfo                        videoAdatperInfo_;
 
 };
 

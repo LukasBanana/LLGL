@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
-#include <LLGL/VideoAdapter.h>
+#include <LLGL/Container/ArrayView.h>
 
 #include "D3D11CommandQueue.h"
 #include "D3D11CommandBuffer.h"
@@ -33,6 +33,7 @@
 #include "Texture/D3D11Sampler.h"
 #include "Texture/D3D11RenderTarget.h"
 
+#include "../VideoAdapter.h"
 #include "../ContainerTypes.h"
 #include "../DXCommon/ComPtr.h"
 #include "../ProxyPipelineCache.h"
@@ -80,9 +81,9 @@ class D3D11RenderSystem final : public RenderSystem
     private:
 
         void CreateFactory();
-        void QueryVideoAdapters();
-        void CreateDevice(IDXGIAdapter* adapter, bool debugDevice = false);
-        bool CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr);
+        void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+        HRESULT CreateDevice(IDXGIAdapter* adapter, bool debugDevice = false);
+        HRESULT CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, UINT flags);
         void CreateStateManagerAndCommandQueue();
 
         void QueryRendererInfo();
@@ -144,7 +145,7 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Other members ----- */
 
-        std::vector<VideoAdapterDescriptor>     videoAdatperDescs_;
+        VideoAdapterInfo                        videoAdatperInfo_;
 
 };
 

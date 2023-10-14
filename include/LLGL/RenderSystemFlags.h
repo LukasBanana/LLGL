@@ -197,7 +197,21 @@ struct RenderSystemFlags
           See https://www.khronos.org/opengl/wiki/Debug_Output
         - Metal: Not supported.
         */
-        DebugDevice = (1 << 0),
+        DebugDevice     = (1 << 0),
+
+        /**
+        \brief Hints the render system to prefer a video adapter from NVIDIA.
+        \remarks This can be used on multi-GPU systems to select a specific video adapter when more than one is available.
+        \remarks This is merely a hint to the render system bebacause not all rendering APIs support selecting a specific video adapter (such as OpenGL).
+        \note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
+        */
+        PreferNVIDIA    = (1 << 1),
+
+        //! \see PreferNVIDIA
+        PreferAMD       = (1 << 2),
+
+        //! \see PreferNVIDIA
+        PreferIntel     = (1 << 3),
     };
 };
 

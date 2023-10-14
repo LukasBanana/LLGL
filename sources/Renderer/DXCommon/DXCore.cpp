@@ -7,11 +7,14 @@
 
 #include "DXCore.h"
 #include "ComPtr.h"
+#include "../../Core/Assertion.h"
 #include "../../Core/Exception.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
 #include "../../Core/Vendor.h"
+#include <LLGL/Utils/ForRange.h>
 #include <LLGL/ShaderFlags.h>
+#include <LLGL/RenderSystemFlags.h>
 #include <stdexcept>
 #include <algorithm>
 #include <d3dcompiler.h>
@@ -472,23 +475,15 @@ UINT DXGetFxcCompilerFlags(int flags)
     return dxFlags;
 }
 
-VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
+static std::vector<VideoAdapterOutputInfo> GetDXGIAdapterOutputInfos(IDXGIAdapter* adapter)
 {
-    ComPtr<IDXGIOutput> output;
+    LLGL_ASSERT_PTR(adapter);
 
-    /* Query adapter description */
-    DXGI_ADAPTER_DESC desc;
-    adapter->GetDesc(&desc);
-
-    /* Setup adapter information */
-    VideoAdapterDescriptor videoAdapterDesc;
-
-    videoAdapterDesc.name           = std::wstring(desc.Description);
-    videoAdapterDesc.vendor         = GetVendorName(GetVendorByID(desc.VendorId));
-    videoAdapterDesc.videoMemory    = static_cast<uint64_t>(desc.DedicatedVideoMemory);
+    std::vector<VideoAdapterOutputInfo> outputInfos;
 
     /* Enumerate over all adapter outputs */
-    for (UINT j = 0; adapter->EnumOutputs(j, &output) != DXGI_ERROR_NOT_FOUND; ++j)
+    ComPtr<IDXGIOutput> output;
+    for (UINT outputIndex = 0; adapter->EnumOutputs(outputIndex, output.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++outputIndex)
     {
         /* Get output description */
         DXGI_OUTPUT_DESC desc;
@@ -505,9 +500,9 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
         DXThrowIfFailed(hr, "failed to get display mode list with format DXGI_FORMAT_R8G8B8A8_UNORM");
 
         /* Add output information to the current adapter */
-        VideoOutputDescriptor videoOutput;
+        VideoAdapterOutputInfo videoOutput;
 
-        for (UINT i = 0; i < numModes; ++i)
+        for_range(i, numModes)
         {
             DisplayModeDescriptor displayMode;
             {
@@ -527,12 +522,56 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
         );
 
         /* Add output to the list and release handle */
-        videoAdapterDesc.outputs.push_back(videoOutput);
-
-        output.Reset();
+        outputInfos.push_back(videoOutput);
     }
 
-    return videoAdapterDesc;
+    return outputInfos;
+}
+
+static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, VideoAdapterInfo& outInfo, IDXGIAdapter** outPreferredAdatper)
+{
+    /* Enumerate over all video adapters */
+    ComPtr<IDXGIAdapter> adapter;
+    for (UINT i = 0; factory->EnumAdapters(i, adapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i)
+    {
+        /* Get adapter descriptor and check if this is either the preferred or the default adapter */
+        DXGI_ADAPTER_DESC desc;
+        adapter->GetDesc(&desc);
+        const DeviceVendor vendor = GetVendorByID(desc.VendorId);
+
+        const bool isPreferredAdapter = MatchPreferredVendor(vendor, preferredAdapterFlags);
+        if (preferredAdapterFlags == 0 || isPreferredAdapter)
+        {
+            outInfo.name        = desc.Description;
+            outInfo.vendor      = vendor;
+            outInfo.videoMemory = static_cast<uint64_t>(desc.DedicatedVideoMemory);
+            outInfo.outputs     = GetDXGIAdapterOutputInfos(adapter.Get());
+            if (isPreferredAdapter && outPreferredAdatper != nullptr)
+                *outPreferredAdatper = adapter.Detach();
+            return true;
+        }
+    }
+    return false;
+}
+
+VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, IDXGIAdapter** outPreferredAdatper)
+{
+    LLGL_ASSERT_PTR(factory);
+
+    constexpr long preferrenceFlags = (RenderSystemFlags::PreferNVIDIA | RenderSystemFlags::PreferAMD | RenderSystemFlags::PreferIntel);
+
+    VideoAdapterInfo info;
+
+    if ((preferredAdapterFlags & preferrenceFlags) != 0)
+    {
+        if (GetDXGIAdapterInfo(factory, preferrenceFlags, info, outPreferredAdatper))
+            return info;
+    }
+
+    if (GetDXGIAdapterInfo(factory, 0, info, outPreferredAdatper))
+        return info;
+
+    return VideoAdapterInfo{};
 }
 
 Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)

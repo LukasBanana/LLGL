@@ -16,8 +16,10 @@ namespace LLGL
 
 /* ----- Device creation ----- */
 
-bool D3D12Device::CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels)
+HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, IDXGIAdapter* adapter)
 {
+    HRESULT hr = S_OK;
+
     for (D3D_FEATURE_LEVEL level : featureLevels)
     {
         /* Try to create D3D12 device with current feature level */
@@ -32,10 +34,11 @@ bool D3D12Device::CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::
                 DenyLowSeverityWarnings();
             #endif
 
-            return true;
+            break;
         }
     }
-    return false;
+
+    return hr;
 }
 
 ComPtr<ID3D12CommandQueue> D3D12Device::CreateDXCommandQueue(D3D12_COMMAND_LIST_TYPE type)

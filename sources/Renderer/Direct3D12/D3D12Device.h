@@ -12,7 +12,7 @@
 #include "../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
-#include <vector>
+#include <LLGL/Container/ArrayView.h>
 
 
 namespace LLGL
@@ -27,7 +27,7 @@ class D3D12Device
 
         /* ----- Device creation ----- */
 
-        bool CreateDXDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
+        HRESULT CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, IDXGIAdapter* adapter = nullptr);
 
         ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue            (D3D12_COMMAND_LIST_TYPE type);
         ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator        (D3D12_COMMAND_LIST_TYPE type);

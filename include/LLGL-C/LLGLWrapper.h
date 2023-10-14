@@ -808,7 +808,10 @@ LLGLColorMaskFlags;
 
 typedef enum LLGLRenderSystemFlags
 {
-    LLGLRenderSystemDebugDevice = (1 << 0),
+    LLGLRenderSystemDebugDevice  = (1 << 0),
+    LLGLRenderSystemPreferNVIDIA = (1 << 1),
+    LLGLRenderSystemPreferAMD    = (1 << 2),
+    LLGLRenderSystemPreferIntel  = (1 << 3),
 }
 LLGLRenderSystemFlags;
 

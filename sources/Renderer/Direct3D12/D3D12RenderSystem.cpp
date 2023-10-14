@@ -43,8 +43,12 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
 
     /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
     CreateFactory(debugDevice);
-    QueryVideoAdapters();
-    CreateDevice();
+
+    ComPtr<IDXGIAdapter> preferredAdatper;
+    QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
+
+    HRESULT hr = CreateDevice(preferredAdatper.Get());
+    DXThrowIfFailed(hr, "failed to create D3D12 device");
 
     /* Create command queue interface */
     commandQueue_   = MakeUnique<D3D12CommandQueue>(device_);
@@ -475,33 +479,37 @@ void D3D12RenderSystem::CreateFactory(bool debugDevice)
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
 }
 
-void D3D12RenderSystem::QueryVideoAdapters()
+void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
 {
-    /* Enumerate over all video adapters */
-    ComPtr<IDXGIAdapter> adapter;
-    for (UINT i = 0; factory_->EnumAdapters(i, adapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i)
-    {
-        /* Add adapter to the list and release handle */
-        videoAdatperDescs_.push_back(DXGetVideoAdapterDesc(adapter.Get()));
-        adapter.Reset();
-    }
+    videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
 }
 
-void D3D12RenderSystem::CreateDevice()
+HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter)
 {
-    /* Use default adapter (null) and try all feature levels */
-    auto featureLevels = DXGetFeatureLevels(D3D_FEATURE_LEVEL_12_1);
+    std::vector<D3D_FEATURE_LEVEL> featureLevels = DXGetFeatureLevels(D3D_FEATURE_LEVEL_12_1);
+    HRESULT hr = S_OK;
 
-    /* Try to create a feature level with an hardware adapter */
-    HRESULT hr = 0;
-    if (!device_.CreateDXDevice(hr, nullptr, featureLevels))
+    if (preferredAdapter != nullptr)
     {
-        /* Use software adapter as fallback */
-        ComPtr<IDXGIAdapter> adapter;
-        factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
-        if (!device_.CreateDXDevice(hr, adapter.Get(), featureLevels))
-            DXThrowIfFailed(hr, "failed to create D3D12 device");
+        /* Try to create device with perferred adatper */
+        hr = device_.CreateDXDevice(featureLevels, preferredAdapter);
+        if (SUCCEEDED(hr))
+            return hr;
     }
+
+    /* Try to create device with default adapter */
+    hr = device_.CreateDXDevice(featureLevels);
+    if (SUCCEEDED(hr))
+    {
+        /* Update video adapter info with default adapter */
+        videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
+        return hr;
+    }
+
+    /* Use software adapter as fallback */
+    ComPtr<IDXGIAdapter> adapter;
+    factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
+    return device_.CreateDXDevice(featureLevels, adapter.Get());
 }
 
 static bool FindHighestShaderModel(ID3D12Device* device, D3D_SHADER_MODEL& shaderModel)
@@ -549,14 +557,8 @@ void D3D12RenderSystem::QueryRendererInfo()
         info.shadingLanguageName += DXFeatureLevelToShaderModel(GetFeatureLevel());
 
     /* Get device and vendor name from adapter */
-    if (!videoAdatperDescs_.empty())
-    {
-        const auto& videoAdapterDesc = videoAdatperDescs_.front();
-        info.deviceName = ToUTF8String(videoAdapterDesc.name);
-        info.vendorName = videoAdapterDesc.vendor;
-    }
-    else
-        info.deviceName = info.vendorName = "<no adapter found>";
+    info.deviceName = videoAdatperInfo_.name.c_str();
+    info.vendorName = GetVendorName(videoAdatperInfo_.vendor);
 
     SetRendererInfo(info);
 }

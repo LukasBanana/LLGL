@@ -6,6 +6,7 @@
  */
 
 #include "Vendor.h"
+#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL
@@ -42,6 +43,24 @@ LLGL_EXPORT const char* GetVendorName(DeviceVendor vendor)
         case DeviceVendor::Oracle:      return "Oracle Corporation";
         case DeviceVendor::VMware:      return "VMware Inc.";
         default:                        return "";
+    }
+}
+
+LLGL_EXPORT bool MatchPreferredVendor(DeviceVendor vendor, long renderSystemFlags)
+{
+    switch (vendor)
+    {
+        case DeviceVendor::NVIDIA:
+            return ((renderSystemFlags & RenderSystemFlags::PreferNVIDIA) != 0);
+
+        case DeviceVendor::AMD:
+            return ((renderSystemFlags & RenderSystemFlags::PreferAMD) != 0);
+
+        case DeviceVendor::Intel:
+            return ((renderSystemFlags & RenderSystemFlags::PreferIntel) != 0);
+
+        default:
+            return false;
     }
 }
 

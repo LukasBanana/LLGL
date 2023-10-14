@@ -57,8 +57,12 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
 
     /* Create DXGU factory, query video adapters, and create D3D11 device */
     CreateFactory();
-    QueryVideoAdapters();
-    CreateDevice(nullptr, debugDevice);
+
+    ComPtr<IDXGIAdapter> preferredAdatper;
+    QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
+
+    HRESULT hr = CreateDevice(preferredAdatper.Get(), debugDevice);
+    DXThrowIfFailed(hr, "failed to create D3D11 device");
 
     /* Initialize states and renderer information */
     CreateStateManagerAndCommandQueue();
@@ -528,27 +532,19 @@ DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device,
 void D3D11RenderSystem::CreateFactory()
 {
     /* Create DXGI factory */
-    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
+    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
     DXThrowIfCreateFailed(hr, "IDXGIFactory");
 }
 
-void D3D11RenderSystem::QueryVideoAdapters()
+void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
 {
-    /* Enumerate over all video adapters */
-    ComPtr<IDXGIAdapter> adapter;
-
-    for (UINT i = 0; factory_->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
-    {
-        /* Add adapter to the list and release handle */
-        videoAdatperDescs_.push_back(DXGetVideoAdapterDesc(adapter.Get()));
-        adapter.Reset();
-    }
+    videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
 }
 
-void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice)
+HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice)
 {
     /* Find list of feature levels to select from, and statically determine maximal feature level */
-    auto featureLevels = DXGetFeatureLevels(
+    const std::vector<D3D_FEATURE_LEVEL> featureLevels = DXGetFeatureLevels(
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         D3D_FEATURE_LEVEL_11_1
         #else
@@ -561,16 +557,26 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice)
     if (debugDevice)
     {
         /* Try to create device with debug layer (only supported if Windows 8.1 SDK is installed) */
-        if (!CreateDeviceWithFlags(adapter, featureLevels, D3D11_CREATE_DEVICE_DEBUG, hr))
-            CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
+        hr = CreateDeviceWithFlags(adapter, featureLevels, D3D11_CREATE_DEVICE_DEBUG);
+        if (FAILED(hr))
+            hr = CreateDeviceWithFlags(adapter, featureLevels, 0);
     }
     else
     {
         /* Create device without debug layer */
-        CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
+        hr = CreateDeviceWithFlags(adapter, featureLevels, 0);
     }
 
-    DXThrowIfCreateFailed(hr, "ID3D11Device");
+    /* Try to create device with default adapter if preferred one failed */
+    if (FAILED(hr) && adapter != nullptr)
+    {
+        /* Update video adapter info with default adapter */
+        videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
+        hr = CreateDeviceWithFlags(nullptr, featureLevels, 0);
+    }
+
+    if (FAILED(hr))
+        return hr;
 
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
@@ -588,10 +594,14 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice)
             #endif
         }
     }
+
+    return S_OK;
 }
 
-bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr)
+HRESULT D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, UINT flags)
 {
+    HRESULT hr = S_OK;
+
     for (D3D_DRIVER_TYPE driver : { D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP, D3D_DRIVER_TYPE_SOFTWARE })
     {
         hr = D3D11CreateDevice(
@@ -607,9 +617,10 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
             context_.ReleaseAndGetAddressOf()           // Output device context
         );
         if (SUCCEEDED(hr))
-            return true;
+            break;
     }
-    return false;
+
+    return hr;
 }
 
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
@@ -623,7 +634,7 @@ void D3D11RenderSystem::QueryRendererInfo()
     RendererInfo info;
 
     /* Initialize Direct3D version string */
-    const auto minorVersion = GetMinorVersion();
+    const int minorVersion = GetMinorVersion();
     switch (minorVersion)
     {
         case 3:
@@ -644,14 +655,8 @@ void D3D11RenderSystem::QueryRendererInfo()
     info.shadingLanguageName = "HLSL " + std::string(DXFeatureLevelToShaderModel(GetFeatureLevel()));
 
     /* Initialize video adapter strings */
-    if (!videoAdatperDescs_.empty())
-    {
-        const auto& videoAdapterDesc = videoAdatperDescs_.front();
-        info.deviceName = ToUTF8String(videoAdapterDesc.name);
-        info.vendorName = videoAdapterDesc.vendor;
-    }
-    else
-        info.deviceName = info.vendorName = "<no adapter found>";
+    info.deviceName = videoAdatperInfo_.name.c_str();
+    info.vendorName = GetVendorName(videoAdatperInfo_.vendor);
 
     SetRendererInfo(info);
 }

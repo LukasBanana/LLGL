@@ -6,6 +6,7 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 
 - [Image descriptors](#image-descriptors)
 - [Debug layer](#debug-layer)
+- [Video adapter descriptors](#video-adapter-descriptors)
 
 
 ## Image descriptors
@@ -33,4 +34,22 @@ struct LLGL::MutableImageView;
 
 The `RenderingProfiler` and `RenderingDebugger` interfaces have been merged into the latter one.
 Also the single string functions `PostError` and `PostWarning` have been deprecated and replaced by `Errorf` and `Warningf` to follow the same pattern as the `Report` class.
+
+
+## Video adapter descriptors
+
+The structures `VideoAdapterDescriptor` and `VideoOutputDescriptor` have been deprecated. They can be substituted with custom structures if neeeded.
+Instead of public information about video adpaters, the render system flags have been extended to specify a preferred video adpater for multi-GPU systems.
+
+```cpp
+// Usage:
+LLGL::RenderSystemDescriptor myRenderSystemDesc;
+myRenderSystemDesc.moduleName = "Direct3D12";
+
+myRenderSystemDesc.flags = LLGL::RenderSystemFlags::PreferNVIDIA;
+LLGL::RenderSystemPtr myRenderSystemNV = LLGL::RenderSystem::Load(myRenderSystemDesc);
+
+myRenderSystemDesc.flags = LLGL::RenderSystemFlags::PreferAMD;
+LLGL::RenderSystemPtr myRenderSystemAMD = LLGL::RenderSystem::Load(myRenderSystemDesc);
+```
 

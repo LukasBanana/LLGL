@@ -5,10 +5,11 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_VIDEO_ADAPTER_H
-#define LLGL_VIDEO_ADAPTER_H
+#ifndef LLGL_VIDEO_ADAPTER_DEPRECATED_H
+#define LLGL_VIDEO_ADAPTER_DEPRECATED_H
 
 
+#include <LLGL/Deprecated.h>
 #include <LLGL/Export.h>
 #include <LLGL/DisplayFlags.h>
 #include <vector>
@@ -20,38 +21,20 @@ namespace LLGL
 {
 
 
-//TODO: this header is currently only included by internal classes
-
 /* ----- Structures ----- */
 
-/**
-\brief Video output structure.
-\see VideoAdapterDescriptor::outputs
-\todo Currently unused in the interface.
-*/
-struct VideoOutputDescriptor
+//! \deprecated Since 0.04b; Write custom structure instead!
+struct LLGL_DEPRECATED("LLGL::VideoOutputDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoOutputDescriptor
 {
-    //! List of all display mode descriptors for this video output.
     std::vector<DisplayModeDescriptor> displayModes;
 };
 
-/**
-\brief Video adapter descriptor structure.
-\remarks A video adapter determines the output capabilities of a GPU.
-\todo Currently unused in the interface.
-*/
-struct VideoAdapterDescriptor
+//! \deprecated Since 0.04b; Write custom structure instead!
+struct LLGL_DEPRECATED("LLGL::VideoAdapterDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoAdapterDescriptor
 {
-    //! Hardware adapter name (name of the GPU).
     std::wstring                        name;
-
-    //! Vendor name (e.g. "NVIDIA Corporation", "Advanced Micro Devices, Inc." etc.).
     std::string                         vendor;
-
-    //! Video memory size (in bytes).
     std::uint64_t                       videoMemory = 0;
-
-    //! List of all adapter output descriptors.
     std::vector<VideoOutputDescriptor>  outputs;
 };
 

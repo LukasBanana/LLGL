@@ -39,6 +39,9 @@ LLGL_EXPORT DeviceVendor GetVendorByID(std::uint16_t id);
 // Returns the name of the hardware vendor by the specified ID number.
 LLGL_EXPORT const char* GetVendorName(DeviceVendor vendor);
 
+// Returns true if the vendor ID and the render system flags for a preferred vendor match.
+LLGL_EXPORT bool MatchPreferredVendor(DeviceVendor vendor, long renderSystemFlags);
+
 
 } // /namespace LLGL
 

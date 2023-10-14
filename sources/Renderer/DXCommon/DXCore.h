@@ -11,7 +11,7 @@
 
 #include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/RenderSystemFlags.h>
-#include <LLGL/VideoAdapter.h>
+#include "../VideoAdapter.h"
 #include <LLGL/ImageFlags.h>
 #include "ComPtr.h"
 #include <dxgi.h>
@@ -23,16 +23,6 @@
 
 namespace LLGL
 {
-
-
-/* ----- Structure ----- */
-
-// Small descriptor structure for internal D3D texture format.
-struct D3DTextureFormatDescriptor
-{
-    ImageFormat format;
-    DataType    dataType;
-};
 
 
 /* ----- Functions ----- */
@@ -83,7 +73,7 @@ const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
 UINT DXGetFxcCompilerFlags(int flags);
 
 // Returns the video adapter descriptor from the specified DXGI adapter.
-VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);
+VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags = 0, IDXGIAdapter** outPreferredAdatper = nullptr);
 
 // Returns the format for the specified signature parameter type (by its component type and mask).
 Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask);
