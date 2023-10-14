@@ -68,7 +68,6 @@ public:
         // Validate required rendering capabilities
         LLGL::RenderingCapabilities caps;
         {
-            caps.features.hasSamplers           = true;
             caps.features.hasArrayTextures      = true;
             caps.features.hasCubeArrayTextures  = true;
         }

@@ -350,7 +350,6 @@ void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLe
     caps.features.hasTextureViews                   = true;
     caps.features.hasTextureViewSwizzle             = false; // not supported by D3D11
     caps.features.hasBufferViews                    = true;
-    caps.features.hasSamplers                       = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.features.hasConstantBuffers                = true;
     caps.features.hasStorageBuffers                 = true;
     caps.features.hasUniforms                       = false; // not supported by D3D11

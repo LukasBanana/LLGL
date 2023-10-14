@@ -480,7 +480,8 @@ struct RenderingFeatures
 
     //! Specifies whether samplers are supported.
     //! \todo Rename to \c hasNativeSamplerStates or remove entirely.
-    bool hasSamplers                    = false;
+    LLGL_DEPRECATED("LLGL::RenderingFeatures::hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.", "true")
+    bool hasSamplers                    = true;
 
     /**
     \brief Specifies whether constant buffers (also "uniform buffer objects") are supported.

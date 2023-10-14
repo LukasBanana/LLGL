@@ -355,7 +355,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
     #endif
     {
         /* Create native GL sampler state */
-        LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasSamplers);
+        LLGL_ASSERT(HasNativeSamplers(), "LLGL was not compiled with LLGL_GL_ENABLE_OPENGL2X but \"GL_ARB_sampler_objects\" is not supported");
         auto* samplerGL = samplers_.emplace<GLSampler>();
         samplerGL->SamplerParameters(samplerDesc);
         return samplerGL;

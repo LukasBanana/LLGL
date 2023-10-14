@@ -147,7 +147,7 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
             textureFormats,
             [](Format format) -> bool
             {
-                if (auto internalformat = GLTypes::MapOrZero(format))
+                if (GLenum internalformat = GLTypes::MapOrZero(format))
                 {
                     GLint supported = 0;
                     glGetInternalformativ(GL_TEXTURE_2D, internalformat, GL_INTERNALFORMAT_SUPPORTED, 1, &supported);
@@ -162,7 +162,7 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 
     #ifdef GL_EXT_texture_compression_s3tc
 
-    const auto numCompressedTexFormats = GLGetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
+    const std::uint32_t numCompressedTexFormats = GLGetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
 
     std::vector<GLint> compressedTexFormats(numCompressedTexFormats);
     glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, compressedTexFormats.data());
@@ -190,7 +190,6 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasTextureViews                = HasExtension(GLExt::ARB_texture_view);
     features.hasTextureViewSwizzle          = features.hasTextureViews; // Same extension
     features.hasBufferViews                 = (HasExtension(GLExt::ARB_multi_bind) || HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
-    features.hasSamplers                    = HasNativeSamplers();
     features.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
     features.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);
     features.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
@@ -320,7 +319,7 @@ static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimit
 
     /* Query 1D texture max size */
     GLint texSize = 0;
-    auto querySize = querySizeBase;
+    GLint querySize = querySizeBase;
 
     while (texSize == 0 && querySize > 0)
     {

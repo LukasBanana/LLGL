@@ -48,7 +48,6 @@ static void InitNullRendererFeatures(RenderingFeatures& features)
     features.hasTextureViews                = true;
     features.hasTextureViewSwizzle          = true;
     features.hasBufferViews                 = true;
-    features.hasSamplers                    = true;
     features.hasConstantBuffers             = true;
     features.hasStorageBuffers              = true;
     features.hasUniforms                    = true;

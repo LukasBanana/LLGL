@@ -38,7 +38,6 @@ public:
         // Validate that required rendering capabilities are present
         LLGL::RenderingCapabilities caps;
 
-        caps.features.hasSamplers       = true;
         caps.features.hasComputeShaders = true;
         caps.features.hasStorageBuffers = true;
 

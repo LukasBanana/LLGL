@@ -144,7 +144,6 @@ static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
     features.hasTextureViews                = false;
     features.hasTextureViewSwizzle          = false;
     features.hasBufferViews                 = (version >= 300); // GLES 3.0
-    features.hasSamplers                    = (version >= 300); // GLES 3.0
     features.hasConstantBuffers             = (version >= 300); // GLES 3.0
     features.hasStorageBuffers              = (version >= 300); // GLES 3.0
     features.hasUniforms                    = (version >= 200); // GLES 2.0

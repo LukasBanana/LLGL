@@ -7,6 +7,7 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 - [Image descriptors](#image-descriptors)
 - [Debug layer](#debug-layer)
 - [Video adapter descriptors](#video-adapter-descriptors)
+- [Rendering features](#rendering-features)
 
 
 ## Image descriptors
@@ -52,4 +53,10 @@ LLGL::RenderSystemPtr myRenderSystemNV = LLGL::RenderSystem::Load(myRenderSystem
 myRenderSystemDesc.flags = LLGL::RenderSystemFlags::PreferAMD;
 LLGL::RenderSystemPtr myRenderSystemAMD = LLGL::RenderSystem::Load(myRenderSystemDesc);
 ```
+
+
+## Rendering features
+
+The following entries from `RenderingFeatures` have been deprecated:
+- `hasSamplers`: All backends must support sampler states either natively or emulated. This can be substituted with `true`.
 

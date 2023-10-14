@@ -40,7 +40,7 @@ static bool CheckDeviceExtensionSupport(
     supportedExtensions = VKQueryDeviceExtensionProperties(physicalDevice);
     std::set<std::string> unsupported(requiredExtensions, requiredExtensions + numRequiredExtensions);
 
-    for (const auto& ext : supportedExtensions)
+    for (const VkExtensionProperties& ext : supportedExtensions)
     {
         if (unsupported.empty())
             break;
@@ -206,7 +206,6 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.features.hasTextureViews                   = true;
     caps.features.hasTextureViewSwizzle             = true;
     caps.features.hasBufferViews                    = true;
-    caps.features.hasSamplers                       = true;
     caps.features.hasConstantBuffers                = true;
     caps.features.hasStorageBuffers                 = true;
     caps.features.hasUniforms                       = true;

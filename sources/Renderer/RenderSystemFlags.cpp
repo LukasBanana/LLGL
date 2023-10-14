@@ -38,7 +38,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     /* Validate shading languages */
     for (std::size_t i = 0; i < requiredCaps.shadingLanguages.size(); ++i)
     {
-        auto shaderLang = requiredCaps.shadingLanguages[i];
+        const ShadingLanguage shaderLang = requiredCaps.shadingLanguages[i];
         if (!Contains(presentCaps.shadingLanguages, shaderLang))
         {
             bool continueValidation = ReportValidationFailure(
@@ -53,7 +53,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     /* Validate texture formats */
     for (std::size_t i = 0; i < requiredCaps.textureFormats.size(); ++i)
     {
-        auto texFormat = requiredCaps.textureFormats[i];
+        const Format texFormat = requiredCaps.textureFormats[i];
         if (!Contains(presentCaps.textureFormats, texFormat))
         {
             bool continueValidation = ReportValidationFailure(
@@ -84,7 +84,6 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_FEATURE( hasMultiSampleArrayTextures,  "multi-sample array textures" );
     LLGL_VALIDATE_FEATURE( hasTextureViews,              "texture views"               );
     LLGL_VALIDATE_FEATURE( hasTextureViewSwizzle,        "texture view swizzle"        );
-    LLGL_VALIDATE_FEATURE( hasSamplers,                  "sampler states"              );
     LLGL_VALIDATE_FEATURE( hasConstantBuffers,           "constant buffers"            );
     LLGL_VALIDATE_FEATURE( hasStorageBuffers,            "storage buffers"             );
     LLGL_VALIDATE_FEATURE( hasUniforms,                  "uniforms"                    );
