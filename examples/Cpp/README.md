@@ -55,13 +55,6 @@ Shows the following rendering techniques: multiple render contexts (one window e
 <p align="center"><img src="MultiContext/Example.png" width="752" height="300"/></p>
 
 
-### [Buffer Array](BufferArray)
-
-Shows how to use buffer arrays, i.e. render with multiple vertex buffers simultaneously, and hardware instancing.
-
-<p align="center"><img src="BufferArray/Example.png" width="400" height="300"/></p>
-
-
 ### [Compute Shader](ComputeShader)
 
 Small example with a compute shader and a storage buffer.

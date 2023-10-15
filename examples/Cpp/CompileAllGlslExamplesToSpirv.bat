@@ -5,11 +5,6 @@ call :CompileGlslToSpirv Animation/Example.450core.vert
 call :CompileGlslToSpirv Animation/Example.450core.frag
 echo DONE
 
-echo ####### BufferArray #######
-call :CompileGlslToSpirv BufferArray/Example.450core.vert
-call :CompileGlslToSpirv BufferArray/Example.450core.frag
-echo DONE
-
 echo ####### ClothPhysics #######
 call :CompileGlslToSpirv ClothPhysics/Example.VS.450core.vert
 call :CompileGlslToSpirv ClothPhysics/Example.PS.450core.frag
@@ -111,12 +106,6 @@ echo DONE
 echo ####### Texturing #######
 call :CompileGlslToSpirv Texturing/Example.450core.vert
 call :CompileGlslToSpirv Texturing/Example.450core.frag
-echo DONE
-
-echo ####### UnorderedAccess #######
-call :CompileGlslToSpirv UnorderedAccess/Example.450core.vert
-call :CompileGlslToSpirv UnorderedAccess/Example.450core.frag
-call :CompileGlslToSpirv UnorderedAccess/Example.450core.comp
 echo DONE
 
 echo ####### VolumeRendering #######
