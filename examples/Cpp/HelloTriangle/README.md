@@ -8,17 +8,16 @@ The first thing we need for LLGL is an instance of the `RenderSystem` interface.
 ```cpp
 LLGL::RenderSystemPtr myRenderer = LLGL::RenderSystem::Load("Vulkan");
 ```
-This is one of the few functions that takes a string rather than an enumeration to select something. This is because LLGL loads a render system dynamically at runtime from a module (i.e. a shared library, **.dll** on Windows, **.so** on GNU/Linux, and **.dylib** on macOS). On the one hand, we only need to link our project against **LLGL.lib**, and on the other hand we can catch an exception if our desired Vulkan renderer is not supported on the target platform. In this case we can load another renderer (e.g. "OpenGL") rather than disturbing the user with an error message such as "vulkan-1.dll could not be loaded".
+This is one of the few functions that takes a string rather than an enumeration to select something. This is because LLGL loads a render system dynamically at runtime from a module (i.e. a shared library, **.dll** on Windows, **.so** on GNU/Linux, and **.dylib** on macOS). On the one hand, we only need to link our project against **LLGL.lib** and on the other hand we can handle failures dynamically without bothering the user with error messages like "vulkan-1.dll could not be loaded".
 
-The exception handling to find a suitable render system can look like this:
+The routine to find a suitable render system can look like this:
 ```cpp
 LLGL::RenderSystemPtr myRenderer;
-for (const char* module : { "Direct3D12", "Direct3D11", "Metal", "Vulkan", "OpenGL" }) {
-    try {
-        myRenderer = LLGL::RenderSystem::Load(module);
-        break;
-    } catch (const std::exception& e) {
-        /* Log exception or ignore ... */
+for (const char* module : { "Direct3D12", "Direct3D11", "Vulkan", "OpenGL" }) {
+    LLGL::Report report;
+    myRenderer = LLGL::RenderSystem::Load(module, &report);
+    if (myRenderer == nullptr) {
+        LLGL::Log::Errorf("%s", report.GetText());
     }
 }
 if (myRenderer == nullptr) {

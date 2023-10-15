@@ -1,17 +1,27 @@
 // GLSL texturing vertex shader
+
 #version 140
 
-// Vertex attributes (these names must match out vertex format attributes)
-in vec2 position;
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+layout(std140) uniform Scene
+{
+	mat4 wvpMatrix;
+	mat4 wMatrix;
+};
+
+in vec3 position;
+in vec3 normal;
 in vec2 texCoord;
 
-// Vertex output to the fragment shader
+out vec3 vNormal;
 out vec2 vTexCoord;
 
-// Vertex shader main function
 void main()
 {
-	// Pass vertex data to tessellation control shader
-	gl_Position = vec4(position, 0, 1);
+	gl_Position = wvpMatrix * vec4(position, 1);
+    vNormal = normalize((wMatrix * vec4(normal, 0)).xyz);
 	vTexCoord = texCoord;
 }

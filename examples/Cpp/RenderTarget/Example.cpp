@@ -65,7 +65,7 @@ class Example_RenderTarget : public ExampleBase
 
     Gs::Matrix4f            renderTargetProj;
 
-    Gs::Vector2f            rotation;
+    Gs::Vector2f            rotation                = { Gs::Deg2Rad(-20.0f), Gs::Deg2Rad(-30.0f) };
 
     #ifdef ENABLE_CBUFFER_RANGE
     std::uint64_t           cbufferAlignment        = 0;

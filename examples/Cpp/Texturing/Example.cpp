@@ -16,24 +16,30 @@ class Example_Texturing : public ExampleBase
 {
 
     ShaderPipeline              shaderPipeline;
-    LLGL::PipelineLayout*       pipelineLayout  = nullptr;
-    LLGL::PipelineState*        pipeline        = nullptr;
-    LLGL::Buffer*               vertexBuffer    = nullptr;
-    LLGL::Texture*              colorMaps[2]    = {};
-    LLGL::Sampler*              sampler[5]      = {};
-    LLGL::ResourceHeap*         resourceHeap    = nullptr;
+    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
+    LLGL::PipelineState*        pipeline            = nullptr;
+    LLGL::Buffer*               vertexBuffer        = nullptr;
+    LLGL::Buffer*               indexBuffer         = nullptr;
+    LLGL::Buffer*               sceneBuffer         = nullptr;
+    LLGL::Texture*              colorMaps[2]        = {};
+    LLGL::Sampler*              samplers[3]         = {};
 
-    unsigned                    resourceIndex   = 0;
+    unsigned                    resourceIndex       = 0;
 
-    std::array<std::string, 6>  resourceLabels
-    {{
-        "format = BC1UNorm",
-        "format = RGBA8UNorm",
-        "mipMapLODBias = 3",
-        "minFilter = Nearest",
-        "addressModeU = MirrorOnce, addressModeV = Border",
-        "addressModeU = Mirror, addressModeV = Mirror",
-    }};
+    const char*                 resourceLabels[4]   =
+    {
+        "compressed (BC1UNorm)",
+        "uncompressed (RGBA8UNorm)",
+        "uncompressed (RGBA8UNorm), lod bias",
+        "uncompressed (RGBA8UNorm), lod bias, nearest filter",
+    };
+
+    struct Scene
+    {
+        Gs::Matrix4f wvpMatrix;
+        Gs::Matrix4f wMatrix;
+    }
+    scene;
 
 public:
 
@@ -46,18 +52,10 @@ public:
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
-        CreateResourceHeap();
-
-        // Update resource labels
-        for (int i = 0; i < 2; ++i)
-        {
-            if (auto formatStr = LLGL::ToString(colorMaps[i]->GetDesc().format))
-                resourceLabels[i] = (std::string("format = ") + formatStr);
-        }
 
         // Print some information on the standard output
         std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
-        std::cout << "texture attributes: " << resourceLabels[0] << "\r";
+        std::cout << "texture: " << resourceLabels[0] << "\r";
         std::flush(std::cout);
     }
 
@@ -65,26 +63,16 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
-        // Define vertex buffer data
-        struct Vertex
-        {
-            Gs::Vector2f position;
-            Gs::Vector2f texCoord;
-        };
+        // Create vertex and index buffers
+        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), vertexFormat);
+        indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::Format::R32UInt);
 
-        std::vector<Vertex> vertices =
-        {
-            { { -1,  1 }, { -2, -2 } },
-            { { -1, -1 }, { -2,  2 } },
-            { {  1,  1 }, {  2, -2 } },
-            { {  1, -1 }, {  2,  2 } },
-        };
-
-        // Create vertex buffer
-        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
+        // Create constant buffer
+        sceneBuffer = CreateConstantBuffer(scene);
 
         return vertexFormat;
     }
@@ -92,12 +80,15 @@ public:
     void CreatePipelines()
     {
         // Create pipeline layout
+        const bool          hasCombinedSamplers = IsOpenGL();
+        const std::uint32_t samplerStateSlot    = (hasCombinedSamplers ? 2u : 3u);
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
-            layoutDesc.heapBindings =
+            layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Sampler, 0,                        LLGL::StageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage, (IsOpenGL() ? 0u : 1u) },
+                LLGL::BindingDescriptor{ "Scene",        LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   1                },
+                LLGL::BindingDescriptor{ "colorMap",     LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage, 2                },
+                LLGL::BindingDescriptor{ "samplerState", LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, samplerStateSlot },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -108,7 +99,10 @@ public:
             pipelineDesc.vertexShader                   = shaderPipeline.vs;
             pipelineDesc.fragmentShader                 = shaderPipeline.ps;
             pipelineDesc.pipelineLayout                 = pipelineLayout;
-            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.renderPass                     = swapChain->GetRenderPass();
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleList;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
@@ -217,61 +211,28 @@ public:
     void CreateSamplers()
     {
         // Create 1st sampler state with default settings
-        LLGL::SamplerDescriptor samplerDesc;
-        sampler[0] = renderer->CreateSampler(samplerDesc);
+        LLGL::SamplerDescriptor anisotropySamplerDesc;
+        {
+            anisotropySamplerDesc.maxAnisotropy = 8;
+        }
+        samplers[0] = renderer->CreateSampler(anisotropySamplerDesc);
 
         // Create 2nd sampler state with MIP-map bias
-        samplerDesc.mipMapLODBias = 3.0f;
-        sampler[1] = renderer->CreateSampler(samplerDesc);
-
-        // Create 3rd sampler state with nearest filtering
-        samplerDesc.minFilter = LLGL::SamplerFilter::Nearest;
-        sampler[2] = renderer->CreateSampler(samplerDesc);
-
-        // Create 4th sampler state with clamped texture wrap mode
-        samplerDesc.minFilter = LLGL::SamplerFilter::Linear;
-        samplerDesc.mipMapLODBias = 0.0f;
-        samplerDesc.addressModeU = LLGL::SamplerAddressMode::MirrorOnce;
-        samplerDesc.addressModeV = LLGL::SamplerAddressMode::Border;
-        sampler[3] = renderer->CreateSampler(samplerDesc);
-
-        // Create 5th sampler state with mirrored texture wrap mode
-        samplerDesc.addressModeU = LLGL::SamplerAddressMode::Mirror;
-        samplerDesc.addressModeV = LLGL::SamplerAddressMode::Mirror;
-        sampler[4] = renderer->CreateSampler(samplerDesc);
-    }
-
-    void CreateResourceHeap()
-    {
-        #if 0//TESTING
-        uint8_t imageData = 255;
-        LLGL::ImageView imageView;
+        LLGL::SamplerDescriptor lodSamplerDesc;
         {
-            imageView.format    = LLGL::ImageFormat::R;
-            imageView.dataType  = LLGL::DataType::UInt8;
-            imageView.data      = &imageData;
-            imageView.dataSize  = 1;
+            lodSamplerDesc.mipMapLODBias        = 3;
         }
-        LLGL::TextureDescriptor texDesc;
-        {
-            texDesc.extent = { 1, 1, 1 };
-            texDesc.format = LLGL::Format::R8UInt;
-        }
-        auto texUint = renderer->CreateTexture(texDesc, &imageView);
-        texUint->SetName("texUint");
-        #endif
+        samplers[1] = renderer->CreateSampler(lodSamplerDesc);
 
-        // Create resource heap with two resources: a sampler-state and a texture to sample from
-        const LLGL::ResourceViewDescriptor resourceViews[2] =
+        // Create 2nd sampler state with MIP-map bias
+        LLGL::SamplerDescriptor nearestSamplerDesc;
         {
-            sampler[0], colorMaps[0]
-        };
-        LLGL::ResourceHeapDescriptor resourceHeapDesc;
-        {
-            resourceHeapDesc.pipelineLayout     = pipelineLayout;
-            resourceHeapDesc.numResourceViews   = 2;
+            nearestSamplerDesc.minFilter        = LLGL::SamplerFilter::Nearest;
+            nearestSamplerDesc.magFilter        = LLGL::SamplerFilter::Nearest;
+            nearestSamplerDesc.minLOD           = 4;
+            nearestSamplerDesc.maxLOD           = 4;
         }
-        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViews);
+        samplers[2] = renderer->CreateSampler(nearestSamplerDesc);
     }
 
 private:
@@ -283,40 +244,49 @@ private:
         {
             // Switch to next resource we want to present
             if (input.KeyPressed(LLGL::Key::Shift))
-                resourceIndex = ((resourceIndex - 1) % 6 + 6) % 6;
+                resourceIndex = ((resourceIndex - 1) % 4 + 4) % 4;
             else
-                resourceIndex = (resourceIndex + 1) % 6;
-            std::cout << "texture attributes: " << resourceLabels[resourceIndex] << std::string(30, ' ') << "\r";
+                resourceIndex = (resourceIndex + 1) % 4;
+            std::cout << "texture: " << resourceLabels[resourceIndex] << std::string(30, ' ') << "\r";
             std::flush(std::cout);
-
-            // Update resource heap with new selected sampler state and texture resources
-            LLGL::Sampler* selectedSampler = sampler[resourceIndex > 0 ? resourceIndex - 1 : 0];
-            LLGL::Texture* selectedTexture = colorMaps[resourceIndex == 0 ? 0 : 1];
-            renderer->WriteResourceHeap(*resourceHeap, 0, { selectedSampler, selectedTexture });
         }
+
+        // Update scene constants
+        static float rotation = Gs::Deg2Rad(-20.0f);
+        if (input.KeyPressed(LLGL::Key::LButton) || input.KeyPressed(LLGL::Key::RButton))
+            rotation += static_cast<float>(input.GetMouseMotion().x)*0.005f;
+
+        scene.wMatrix.LoadIdentity();
+        Gs::Translate(scene.wMatrix, Gs::Vector3f{ 0, 0, 5 });
+        Gs::RotateFree(scene.wMatrix, Gs::Vector3f{ 0, 1, 0 }, rotation);
+
+        scene.wvpMatrix = projection;
+        scene.wvpMatrix *= scene.wMatrix;
 
         // Set render target
         commands->Begin();
         {
+            // Update scene constant buffer
+            commands->UpdateBuffer(*sceneBuffer, 0, &scene, sizeof(scene));
+
             // Set vertex buffer
             commands->SetVertexBuffer(*vertexBuffer);
+            commands->SetIndexBuffer(*indexBuffer);
 
             commands->BeginRenderPass(*swapChain);
             {
-                // Clear color buffer
-                commands->Clear(LLGL::ClearFlags::Color);
-
-                // Set viewports
+                // Clear color and depth buffers
+                commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
 
-                // Set graphics pipeline and vertex buffer
+                // Bind graphics PSO
                 commands->SetPipelineState(*pipeline);
 
-                // Set graphics shader resources
-                commands->SetResourceHeap(*resourceHeap);
+                commands->SetResource(0, *sceneBuffer);
+                commands->SetResource(1, *colorMaps[resourceIndex == 0 ? 0 : 1]);
+                commands->SetResource(2, *samplers[resourceIndex == 0 ? 0 : resourceIndex - 1]);
 
-                // Draw fullscreen quad
-                commands->Draw(4, 0);
+                commands->DrawIndexed(36, 0);
             }
             commands->EndRenderPass();
         }

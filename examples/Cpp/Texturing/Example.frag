@@ -1,16 +1,32 @@
-// GLSL texturing shader
+// GLSL texturing fragment shader
+
 #version 140
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+layout(std140) uniform Scene
+{
+	mat4 wvpMatrix;
+	mat4 wMatrix;
+};
 
 uniform sampler2D colorMap;
 
-// Fragment input from the vertex shader
+in vec3 vNormal;
 in vec2 vTexCoord;
 
-// Fragment output color
 out vec4 fragColor;
 
-// Fragment shader main function
 void main()
 {
-	fragColor = texture(colorMap, vTexCoord);
+    vec4 color = texture(colorMap, vTexCoord);
+    
+	// Apply lambert factor for simple shading
+	const vec3 lightVec = vec3(0, 0, -1);
+	float NdotL = dot(lightVec, normalize(vNormal));
+	color.rgb *= mix(0.2, 1.0, NdotL);
+    
+    fragColor = color;
 }
