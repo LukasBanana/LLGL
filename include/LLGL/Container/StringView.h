@@ -268,6 +268,18 @@ class LLGL_EXPORT BasicStringView
             return substr(pos1, count1).compare(str.substr(pos2, count2));
         }
 
+        //! \return Position of the first character that equals the input character starting from position \c pos. Otherwise, StringView::npos is returned.
+        size_type find(TChar chr, size_type pos = 0) const noexcept
+        {
+            while (pos < size())
+            {
+                if (Traits::eq(data_[pos], chr))
+                    return pos;
+                ++pos;
+            }
+            return BasicStringView::npos;
+        }
+
     public:
 
         //! \see at
