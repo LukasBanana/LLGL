@@ -187,7 +187,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         int GetRendererID() const;
 
-        //! Returns the name of this render system.
+        //! Returns the name of this render system, e.g. "Direct3D 12".
         const char* GetName() const;
 
         /**

@@ -94,9 +94,9 @@ static const char* VKResultToStr(const VkResult result)
     return nullptr;
 }
 
-static std::string VKResultToStrOrHex(const VkResult result)
+static const char* VKResultToStrOrHex(const VkResult result)
 {
-    if (auto err = VKResultToStr(result))
+    if (const char* err = VKResultToStr(result))
         return err;
     else
         return IntToHex(static_cast<int>(result));
@@ -106,11 +106,11 @@ void VKThrowIfFailed(const VkResult result, const char* details)
 {
     if (result != VK_SUCCESS)
     {
-        std::string resultStr = VKResultToStrOrHex(result);
+        const char* resultStr = VKResultToStrOrHex(result);
         if (details != nullptr && *details != '\0')
-            LLGL_TRAP("%s (error code = %s)", details, resultStr.c_str());
+            LLGL_TRAP("%s (error code = %s)", details, resultStr);
         else
-            LLGL_TRAP("Vulkan operation failed (error code = %s)", resultStr.c_str());
+            LLGL_TRAP("Vulkan operation failed (error code = %s)", resultStr);
     }
 }
 
@@ -159,7 +159,7 @@ VkBool32 VKBoolean(bool value)
 std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
 {
     std::uint32_t propertyCount = 0;
-    auto result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
+    VkResult result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance layer properties");
 
     std::vector<VkLayerProperties> properties(propertyCount);
@@ -172,7 +172,7 @@ std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
 std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties(const char* layerName)
 {
     std::uint32_t propertyCount = 0;
-    auto result = vkEnumerateInstanceExtensionProperties(layerName, &propertyCount, nullptr);
+    VkResult result = vkEnumerateInstanceExtensionProperties(layerName, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance extension properties");
 
     std::vector<VkExtensionProperties> properties(propertyCount);
@@ -185,7 +185,7 @@ std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties(const char
 std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
 {
     std::uint32_t deviceCount = 0;
-    auto result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+    VkResult result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan physical devices");
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -198,7 +198,7 @@ std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
 std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device)
 {
     std::uint32_t propertyCount = 0;
-    auto result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, nullptr);
+    VkResult result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan device extension properties");
 
     std::vector<VkExtensionProperties> properties(propertyCount);
@@ -224,7 +224,7 @@ SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKH
     SurfaceSupportDetails details;
 
     /* Query surface capabilities */
-    auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);
+    VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);
     VKThrowIfFailed(result, "failed to query Vulkan surface capabilities");
 
     /* Query surface formats */
@@ -258,10 +258,10 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
 {
     QueueFamilyIndices indices;
 
-    auto queueFamilies = VKQueryQueueFamilyProperties(device);
+    const std::vector<VkQueueFamilyProperties> queueFamilies = VKQueryQueueFamilyProperties(device);
 
     std::uint32_t i = 0;
-    for (const auto& family : queueFamilies)
+    for (const VkQueueFamilyProperties& family : queueFamilies)
     {
         /* Get graphics family index */
         if (family.queueCount > 0 && (family.queueFlags & flags) != 0)
@@ -296,7 +296,7 @@ VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* can
 {
     for_range(i, numCandidates)
     {
-        auto format = candidates[i];
+        VkFormat format = candidates[i];
 
         /* Query physics device properties of current image format */
         VkFormatProperties properties;

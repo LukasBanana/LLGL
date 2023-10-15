@@ -38,10 +38,10 @@ LLGL::Image LoadImage(const std::string& filename, const LLGL::ImageFormat forma
 
 void SaveImagePNG(const LLGL::Image& img, const std::string& filename, std::uint32_t slice = 0)
 {
-    int  w    = static_cast<int>(img.GetExtent().width);
-    int  h    = static_cast<int>(img.GetExtent().height);
-    int  comp = static_cast<int>(LLGL::ImageFormatSize(img.GetFormat()));
-    auto buf  = reinterpret_cast<const char*>(img.GetData()) + img.GetDepthStride() * slice;
+    int         w       = static_cast<int>(img.GetExtent().width);
+    int         h       = static_cast<int>(img.GetExtent().height);
+    int         comp    = static_cast<int>(LLGL::ImageFormatSize(img.GetFormat()));
+    const char* buf     = reinterpret_cast<const char*>(img.GetData()) + img.GetDepthStride() * slice;
 
     stbi_write_png(filename.c_str(), w, h, comp, buf, img.GetRowStride());
 }

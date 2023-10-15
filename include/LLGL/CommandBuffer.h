@@ -518,6 +518,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         This parameter is ignored for regular render targets, i.e. if \c renderTarget is \e not a SwapChain.
 
         \remarks This function starts a new render pass section and must be ended with the \c EndRenderPass function.
+        Render passes must not be interleaved, i.e. each render pass must end before a new render pass can begin.
+
         \remarks The following example shows how to use a render pass to clear a render target with two color attachments and a depth-stencil attachment:
         \code
         LLGL::ClearValue myClearValues[3];
@@ -758,6 +760,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \param[in] buffers Array to the stream-output buffers. This must be a valid pointer to an array of \c numBuffers buffer objects.
         Each of these buffers must have been created with the binding flag BindFlags::StreamOutputBuffer.
+
+        \remarks This function starts a new stream output section and must be ended with the \c EndStreamOutput function.
+        Stream outputs must not be interleaved, i.e. each stream output must end before a new stream output can begin.
 
         \remarks This must only be called if a graphics pipeline is currently bound.
 

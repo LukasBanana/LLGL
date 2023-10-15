@@ -450,7 +450,7 @@ void VKCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
 
     /* Convert viewport to VkViewport types */
     numViewports = std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
-    for (std::uint32_t i = 0; i < numViewports; ++i)
+    for_range(i, numViewports)
         VKTypes::Convert(viewportsVK[i], viewports[i]);
 
     vkCmdSetViewport(commandBuffer_, 0, numViewports, viewportsVK);
@@ -475,7 +475,7 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
         VkRect2D scissorsVK[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
 
         numScissors = std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
-        for (std::uint32_t i = 0; i < numScissors; ++i)
+        for_range(i, numScissors)
             VKTypes::Convert(scissorsVK[i], scissors[i]);
 
         vkCmdSetScissor(commandBuffer_, 0, numScissors, scissorsVK);
