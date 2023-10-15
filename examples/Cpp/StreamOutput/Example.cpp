@@ -35,7 +35,7 @@ class Example_StreamOutput : public ExampleBase
 public:
 
     Example_StreamOutput() :
-        ExampleBase { L"LLGL Example: StreamOutput" }
+        ExampleBase { "LLGL Example: StreamOutput" }
     {
         // Create all graphics objects
         LLGL::VertexFormat vertexFormat;

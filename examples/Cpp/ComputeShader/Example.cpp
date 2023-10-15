@@ -52,7 +52,7 @@ class Example_ComputeShader : public ExampleBase
 public:
 
     Example_ComputeShader() :
-        ExampleBase { L"LLGL Example: Compute Shader", { 800, 800 } }
+        ExampleBase { "LLGL Example: Compute Shader" }
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();

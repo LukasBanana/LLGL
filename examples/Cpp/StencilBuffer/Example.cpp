@@ -18,9 +18,9 @@ class Example_StencilBuffer : public ExampleBase
     LLGL::Shader*               fsScene                 = nullptr;
     LLGL::Shader*               vsStencil               = nullptr;
 
-    LLGL::PipelineState*        pipelineScene           = {};
-    LLGL::PipelineState*        pipelineStencilWrite    = {};
-    LLGL::PipelineState*        pipelineStencilRead     = {};
+    LLGL::PipelineState*        pipelineScene           = nullptr;
+    LLGL::PipelineState*        pipelineStencilWrite    = nullptr;
+    LLGL::PipelineState*        pipelineStencilRead     = nullptr;
 
     LLGL::Buffer*               vertexBuffer            = nullptr;
     LLGL::Buffer*               constantBuffer          = nullptr;
@@ -47,7 +47,7 @@ class Example_StencilBuffer : public ExampleBase
 public:
 
     Example_StencilBuffer() :
-        ExampleBase { L"LLGL Example: StencilBuffer" }
+        ExampleBase { "LLGL Example: StencilBuffer" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

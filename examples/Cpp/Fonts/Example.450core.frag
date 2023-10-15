@@ -7,8 +7,8 @@ layout(location = 1) in vec4 vColor;
 
 layout(location = 0) out vec4 fragColor;
 
-layout(binding = 1) uniform texture2D glyphTexture;
-layout(binding = 2) uniform sampler linearSampler;
+layout(binding = 2) uniform texture2D glyphTexture;
+layout(binding = 3) uniform sampler linearSampler;
 
 void main()
 {

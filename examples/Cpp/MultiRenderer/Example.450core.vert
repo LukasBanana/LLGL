@@ -11,7 +11,7 @@ layout(location = 2) in vec2 texCoord;
 layout(location = 0) out vec3 xsv_NORMAL0;
 layout(location = 1) out vec2 xsv_TEXCOORD0;
 
-layout(std140, binding = 0) uniform Matrices
+layout(std140, binding = 1) uniform Matrices
 {
     mat4 wvpMatrix;
     mat4 wMatrix;

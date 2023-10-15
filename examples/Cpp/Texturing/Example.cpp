@@ -38,7 +38,7 @@ class Example_Texturing : public ExampleBase
 public:
 
     Example_Texturing() :
-        ExampleBase { L"LLGL Example: Texturing" }
+        ExampleBase { "LLGL Example: Texturing" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

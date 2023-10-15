@@ -19,7 +19,7 @@ class Example_BufferArray : public ExampleBase
 public:
 
     Example_BufferArray() :
-        ExampleBase { L"LLGL Example: BufferArray" }
+        ExampleBase { "LLGL Example: BufferArray" }
     {
         // Create all graphics objects
         auto vertexFormats = CreateBuffers();

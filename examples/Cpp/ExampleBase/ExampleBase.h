@@ -72,7 +72,7 @@ class ExampleBase
 public:
 
     // Lets the user select a renderer module from the standard input.
-    static void SelectRendererModule(int argc, char* argv[]);
+    static void ParseProgramArgs(int argc, char* argv[]);
 
     #if defined LLGL_OS_ANDROID
     static void SetAndroidApp(android_app* androidApp);
@@ -88,14 +88,14 @@ public:
 
 protected:
 
-    struct TutorialShaderDescriptor
+    struct ShaderDescWrapper
     {
-        TutorialShaderDescriptor(
+        ShaderDescWrapper(
             LLGL::ShaderType    type,
             const std::string&  filename
         );
 
-        TutorialShaderDescriptor(
+        ShaderDescWrapper(
             LLGL::ShaderType    type,
             const std::string&  filename,
             const std::string&  entryPoint,
@@ -156,8 +156,6 @@ private:
 
     bool                                        loadingDone_        = false;
 
-    static std::string                          rendererModule_;
-
     std::uint32_t                               samples_            = 1;
 
 protected:
@@ -190,13 +188,7 @@ protected:
 
 protected:
 
-    ExampleBase(
-        const LLGL::UTF8String& title,
-        const LLGL::Extent2D&   resolution  = { 800, 600 },
-        std::uint32_t           samples     = 8,
-        bool                    vsync       = true,
-        bool                    debugger    = true
-    );
+    ExampleBase(const LLGL::UTF8String& title);
 
     // Callback to draw each frame
     virtual void OnDrawFrame() = 0;
@@ -208,7 +200,7 @@ private:
 
     // Internal function to load a shader.
     LLGL::Shader* LoadShaderInternal(
-        const TutorialShaderDescriptor&             shaderDesc,
+        const ShaderDescWrapper&                    shaderDesc,
         const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
         const LLGL::VertexFormat&                   streamOutputFormat,
         const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
@@ -220,7 +212,7 @@ protected:
 
     // Loads a shader from file with optional vertex formats and stream-output format.
     LLGL::Shader* LoadShader(
-        const TutorialShaderDescriptor&             shaderDesc,
+        const ShaderDescWrapper&                    shaderDesc,
         const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
         const LLGL::VertexFormat&                   streamOutputFormat  = {},
         const LLGL::ShaderMacro*                    defines             = nullptr
@@ -228,14 +220,14 @@ protected:
 
     // Loads a shader from file with fragment attributes.
     LLGL::Shader* LoadShader(
-        const TutorialShaderDescriptor&             shaderDesc,
+        const ShaderDescWrapper&                    shaderDesc,
         const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
         const LLGL::ShaderMacro*                    defines             = nullptr
     );
 
     // Load a shader from file and adds 'PatchClippingOrigin' to the compile flags if the screen origin is lower-left; see IsScreenOriginLowerLeft().
     LLGL::Shader* LoadShaderAndPatchClippingOrigin(
-        const TutorialShaderDescriptor&             shaderDesc,
+        const ShaderDescWrapper&                    shaderDesc,
         const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats       = {},
         const LLGL::VertexFormat&                   streamOutputFormat  = {},
         const LLGL::ShaderMacro*                    defines             = nullptr
@@ -367,7 +359,8 @@ protected:
 
 #if defined LLGL_OS_ANDROID
 
-#define LLGL_ANDROID_STDERR(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__))
+#define LLGL_ANDROID_STDERR(...) \
+    ((void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__))
 
 template <typename T>
 void RunExample(android_app* state)
@@ -375,8 +368,8 @@ void RunExample(android_app* state)
     try
     {
         ExampleBase::SetAndroidApp(state);
-        auto tutorial = std::unique_ptr<T>(new T());
-        tutorial->Run();
+        T tutorial;
+        tutorial.Run();
     }
     catch (const std::exception& e)
     {
@@ -407,9 +400,9 @@ int RunExample(int argc, char* argv[])
 {
     try
     {
-        ExampleBase::SelectRendererModule(argc, argv);
-        auto tutorial = std::unique_ptr<T>(new T());
-        tutorial->Run();
+        ExampleBase::ParseProgramArgs(argc, argv);
+        T tutorial;
+        tutorial.Run();
     }
     catch (const std::exception& e)
     {

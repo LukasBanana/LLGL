@@ -63,7 +63,7 @@ class Example_PBR : public ExampleBase
 public:
 
     Example_PBR() :
-        ExampleBase { L"LLGL Example: PBR" }
+        ExampleBase { "LLGL Example: PBR" }
     {
         // Validate required rendering capabilities
         LLGL::RenderingCapabilities caps;

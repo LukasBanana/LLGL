@@ -40,7 +40,7 @@ class Example_Mapping : public ExampleBase
 public:
 
     Example_Mapping() :
-        ExampleBase { L"LLGL Example: Mapping", { 800, 600 }, 1 }
+        ExampleBase { "LLGL Example: Mapping" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

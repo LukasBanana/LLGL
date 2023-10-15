@@ -26,7 +26,7 @@ class Example_PrimitiveRestart : public ExampleBase
 public:
 
     Example_PrimitiveRestart() :
-        ExampleBase { L"LLGL Example: PrimitiveRestart" }
+        ExampleBase { "LLGL Example: PrimitiveRestart" }
     {
         auto vertexFormats = CreateBuffers();
         shaderPipeline = LoadStandardShaderPipeline(vertexFormats);

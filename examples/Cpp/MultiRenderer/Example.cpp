@@ -6,6 +6,7 @@
  */
 
 #include <ExampleBase.h>
+#include <regex>
 
 //#include <LLGL/Platform/NativeHandle.h>
 
@@ -125,6 +126,12 @@ MyRenderer::MyRenderer(
     swapChain->SetVsyncInterval(1);
 }
 
+static std::string GetRendererModuleName(std::string rendererName)
+{
+    // Remove white spaces from name
+    return std::regex_replace(rendererName, std::regex("\\s+"), "");
+}
+
 void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices, const LLGL::ArrayView<std::uint32_t>& indices)
 {
     // Vertex format
@@ -149,7 +156,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Matrices)));
 
     // Create textures
-    const std::string rendererName = renderer->GetName();
+    const std::string rendererName = GetRendererModuleName(renderer->GetName());
     texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererName + ".png");
 
     // Create samplers
@@ -203,7 +210,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     }
 
     // Create pipeline layout
-    bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
+    const bool compiledSampler = (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
 
     if (compiledSampler)
         layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(0):vert, texture(0):frag, sampler(0):frag}"));
@@ -385,7 +392,7 @@ int main(int argc, char* argv[])
         auto cubeVertices = GenerateTexturedCubeVertices();
         auto cubeIndices = GenerateTexturedCubeTriangleIndices();
 
-        for (auto& renderer : myRenderers)
+        for (MyRenderer& renderer : myRenderers)
             renderer.CreateResources(cubeVertices, cubeIndices);
 
         LLGL::Input input{ *mainWindow };

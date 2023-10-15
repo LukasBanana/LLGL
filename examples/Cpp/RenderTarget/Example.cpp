@@ -88,7 +88,7 @@ class Example_RenderTarget : public ExampleBase
 public:
 
     Example_RenderTarget() :
-        ExampleBase { L"LLGL Example: RenderTarget" }
+        ExampleBase { "LLGL Example: RenderTarget" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -247,6 +247,7 @@ private:
     {
         // Load color map texture from file
         colorMap = LoadTexture("Crate.jpg");
+        colorMap->SetName("ColorMap");
 
         // Create common sampler state for all textures
         LLGL::SamplerDescriptor samplerDesc;
@@ -275,6 +276,7 @@ private:
         renderTargetTex = renderer->CreateTexture(
             LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height)
         );
+        renderTargetTex->SetName("RenderTargetTex");
 
         #ifdef ENABLE_DEPTH_TEXTURE
 
@@ -291,6 +293,7 @@ private:
             depthTexDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;
         }
         renderTargetDepthTex = renderer->CreateTexture(depthTexDesc);
+        renderTargetDepthTex->SetName("RenderTargetDepthTex");
 
         #endif // /ENABLE_DEPTH_TEXTURE
 
@@ -340,6 +343,7 @@ private:
             #endif
         }
         renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
+        renderTarget->SetName("RenderTarget");
 
         // Initialize projection matrix for render-target scene rendering
         renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));

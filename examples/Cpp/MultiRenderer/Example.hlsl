@@ -1,6 +1,6 @@
 // HLSL shader version 4.0 (for Direct3D 11/ 12)
 
-cbuffer Matrices : register(b0)
+cbuffer Matrices : register(b1)
 {
 	float4x4 wvpMatrix;
 	float4x4 wMatrix;
@@ -30,8 +30,8 @@ OutputVS VS(InputVS inp)
 	return outp;
 }
 
-Texture2D colorMap : register(t1);
-SamplerState colorMapSampler : register(s2);
+Texture2D colorMap : register(t2);
+SamplerState colorMapSampler : register(s3);
 
 // Pixel shader main function
 float4 PS(OutputVS inp) : SV_Target

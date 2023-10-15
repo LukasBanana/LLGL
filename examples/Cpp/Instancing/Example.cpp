@@ -53,7 +53,7 @@ class Example_Instancing : public ExampleBase
 public:
 
     Example_Instancing() :
-        ExampleBase { L"LLGL Example: Instancing" }
+        ExampleBase { "LLGL Example: Instancing" }
     {
         UpdateAnimation();
 

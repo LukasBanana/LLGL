@@ -56,7 +56,7 @@ class Example_Queries : public ExampleBase
 public:
 
     Example_Queries() :
-        ExampleBase { L"LLGL Example: Query" }
+        ExampleBase { "LLGL Example: Query" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

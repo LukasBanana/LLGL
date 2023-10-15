@@ -59,7 +59,7 @@ class Example_VolumeRendering : public ExampleBase
 public:
 
     Example_VolumeRendering() :
-        ExampleBase { L"LLGL Example: VolumeRendering", { 800, 600 }, 0 }
+        ExampleBase { "LLGL Example: VolumeRendering" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

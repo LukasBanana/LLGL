@@ -155,7 +155,7 @@ private:
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
             IsVulkan()
-                ? LLGL::Parse("heap{cbuffer(Settings@0):vert:frag, texture(glyphTexture@1):frag, sampler(linearSampler@2):frag}")
+                ? LLGL::Parse("heap{cbuffer(Settings@1):vert:frag, texture(glyphTexture@2):frag, sampler(linearSampler@3):frag}")
                 : LLGL::Parse("heap{cbuffer(Settings@1):vert:frag, texture(glyphTexture@0):frag, sampler(linearSampler@0):frag}")
         );
 

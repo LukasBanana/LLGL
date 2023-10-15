@@ -84,7 +84,7 @@ class Example_PostProcessing : public ExampleBase
 public:
 
     Example_PostProcessing() :
-        ExampleBase { L"LLGL Example: PostProcessing" }
+        ExampleBase { "LLGL Example: PostProcessing" }
     {
         // Create all graphics objects
         CreateBuffers();

@@ -53,7 +53,7 @@ class Example_ShadowMapping : public ExampleBase
 public:
 
     Example_ShadowMapping() :
-        ExampleBase { L"LLGL Example: ShadowMapping" }
+        ExampleBase { "LLGL Example: ShadowMapping" }
     {
         // Create all graphics objects
         CreateShadowMap();

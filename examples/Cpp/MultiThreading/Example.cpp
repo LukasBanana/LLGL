@@ -14,7 +14,7 @@
 
 
 // Enables/disables the use of two secondary command buffers
-#define ENABLE_SECONDARY_COMMAND_BUFFERS 0
+#define ENABLE_SECONDARY_COMMAND_BUFFERS 1
 
 class Measure
 {
@@ -122,7 +122,7 @@ class Example_MultiThreading : public ExampleBase
 public:
 
     Example_MultiThreading() :
-        ExampleBase { L"LLGL Example: MultiThreading", { 800, 600 }, 8, true, false }
+        ExampleBase { "LLGL Example: MultiThreading" }
     {
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat);

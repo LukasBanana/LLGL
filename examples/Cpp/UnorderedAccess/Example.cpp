@@ -33,7 +33,7 @@ class Example_UnorderedAccess : public ExampleBase
 public:
 
     Example_UnorderedAccess() :
-        ExampleBase { L"LLGL Example: UnorderedAccess" }
+        ExampleBase { "LLGL Example: UnorderedAccess" }
     {
         // Validate that required rendering capabilities are present
         LLGL::RenderingCapabilities caps;

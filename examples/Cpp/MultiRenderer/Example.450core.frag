@@ -9,9 +9,9 @@ layout(location = 1) in vec2 xsv_TEXCOORD0;
 
 layout(location = 0) out vec4 SV_Target0;
 
-layout(binding = 1) uniform texture2D colorMap;
+layout(binding = 2) uniform texture2D colorMap;
 
-layout(binding = 2) uniform sampler colorMapSampler;
+layout(binding = 3) uniform sampler colorMapSampler;
 
 void main()
 {

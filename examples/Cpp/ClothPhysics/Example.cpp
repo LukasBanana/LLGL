@@ -113,7 +113,7 @@ class Example_ClothPhysics : public ExampleBase
 public:
 
     Example_ClothPhysics() :
-        ExampleBase { L"LLGL Example: Cloth Physics" }
+        ExampleBase { "LLGL Example: Cloth Physics" }
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();

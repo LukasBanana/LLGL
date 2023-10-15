@@ -7,6 +7,7 @@
 
 #include <ExampleBase.h>
 #include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 #include <iostream>
 #include "FileUtils.h"
 
@@ -21,84 +22,175 @@
  * Global helper functions
  */
 
-std::string GetSelectedRendererModule(int argc, char* argv[])
+static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
 {
-    /* Select renderer module */
+    /* Find available modules */
+    std::vector<std::string> modules = LLGL::RenderSystem::FindModules();
+
+    if (modules.empty())
+    {
+        /* No modules available -> throw error */
+        throw std::runtime_error("no renderer modules available on target platform");
+    }
+    else if (modules.size() == 1)
+    {
+        /* Use the only available module */
+        return modules.front();
+    }
+
+    /* Let user select a renderer */
     std::string rendererModule;
 
-    if (argc > 1)
+    while (rendererModule.empty())
     {
-        /* Get renderer module name from command line argument */
-        rendererModule = argv[1];
+        /* Print list of available modules */
+        std::cout << "select renderer:" << std::endl;
 
-        /* Replace shortcuts */
-        if (rendererModule == "D3D12" || rendererModule == "d3d12" || rendererModule == "DX12" || rendererModule == "dx12")
-            rendererModule = "Direct3D12";
-        else if (rendererModule == "D3D11" || rendererModule == "d3d11" || rendererModule == "DX11" || rendererModule == "dx11")
-            rendererModule = "Direct3D11";
-        else if (rendererModule == "GL" || rendererModule == "gl")
-            rendererModule = "OpenGL";
-        else if (rendererModule == "GLES3" || rendererModule == "gles3")
-            rendererModule = "OpenGLES3";
-        else if (rendererModule == "VK" || rendererModule == "vk")
-            rendererModule = "Vulkan";
-        else if (rendererModule == "MT" || rendererModule == "mt")
-            rendererModule = "Metal";
-        else if (rendererModule == "NULL" || rendererModule == "null")
-            rendererModule = "Null";
-    }
-    else
-    {
-        /* Find available modules */
-        auto modules = LLGL::RenderSystem::FindModules();
+        int i = 0;
+        for (const std::string& mod : modules)
+            std::cout << " " << (++i) << ".) " << mod << std::endl;
 
-        if (modules.empty())
-        {
-            /* No modules available -> throw error */
-            throw std::runtime_error("no renderer modules available on target platform");
-        }
-        else if (modules.size() == 1)
-        {
-            /* Use the only available module */
-            rendererModule = modules.front();
-        }
+        /* Wait for user input */
+        std::size_t selection = 0;
+        std::cin >> selection;
+        --selection;
+
+        if (selection < modules.size())
+            rendererModule = modules[selection];
         else
-        {
-            /* Let user select a renderer */
-            while (rendererModule.empty())
-            {
-                /* Print list of available modules */
-                std::cout << "select renderer:" << std::endl;
-
-                int i = 0;
-                for (const auto& mod : modules)
-                    std::cout << " " << (++i) << ".) " << mod << std::endl;
-
-                /* Wait for user input */
-                std::size_t selection = 0;
-                std::cin >> selection;
-                --selection;
-
-                if (selection < modules.size())
-                    rendererModule = modules[selection];
-                else
-                    std::cerr << "invalid input" << std::endl;
-            }
-        }
+            std::cerr << "invalid input" << std::endl;
     }
-
-    /* Choose final renderer module */
-    std::cout << "selected renderer: " << rendererModule << std::endl;
 
     return rendererModule;
 }
 
+static const char* GetRendererModuleFromCommandArgs(int argc, char* argv[])
+{
+    /* Get renderer module name from command line argument */
+    for_subrange(i, 1, argc)
+    {
+        const LLGL::StringView arg = argv[i];
+
+        /* Replace shortcuts */
+        if (arg == "Direct3D12" || arg == "D3D12" || arg == "d3d12" || arg == "DX12" || arg == "dx12")
+            return "Direct3D12";
+        else if (arg == "Direct3D11" || arg == "D3D11" || arg == "d3d11" || arg == "DX11" || arg == "dx11")
+            return "Direct3D11";
+        else if (arg == "OpenGL" || arg == "GL" || arg == "gl")
+            return "OpenGL";
+        else if (arg == "OpenGLES3" || arg == "GLES3" || arg == "gles3")
+            return "OpenGLES3";
+        else if (arg == "Vulkan" || arg == "VK" || arg == "vk")
+            return "Vulkan";
+        else if (arg == "Metal" || arg == "MT" || arg == "mt")
+            return "Metal";
+        else if (arg == "Null" || arg == "NULL" || arg == "null")
+            return "Null";
+    }
+
+    /* No specific renderer module specified */
+    return nullptr;
+}
+
+static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int argc, char* argv[])
+{
+    /* Get renderer module name from command line argument */
+    if (const char* specificModule = GetRendererModuleFromCommandArgs(argc, argv))
+    {
+        /* Select specific renderer module */
+        rendererModule = specificModule;
+    }
+    else
+    {
+        /* Check if user should select renderer module */
+        for_subrange(i, 1, argc)
+        {
+            const LLGL::StringView arg = argv[i];
+            if (arg == "-m" || arg == "--modules")
+            {
+                rendererModule = GetRendererModuleFromUserSelection(argc, argv);
+                break;
+            }
+        }
+    }
+    std::cout << "selected renderer: " << rendererModule << std::endl;
+}
+
+std::string GetSelectedRendererModule(int argc, char* argv[])
+{
+    std::string rendererModule;
+    if (const char* specificModule = GetRendererModuleFromCommandArgs(argc, argv))
+        rendererModule = specificModule;
+    else
+        rendererModule = GetRendererModuleFromUserSelection(argc, argv);
+    std::cout << "selected renderer: " << rendererModule << std::endl;
+    return rendererModule;
+}
+
+static bool HasArgument(const char* search, int argc, char* argv[])
+{
+    for_subrange(i, 1, argc)
+    {
+        if (::strcmp(search, argv[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
+static bool ParseWindowSize(LLGL::Extent2D& size, int argc, char* argv[])
+{
+    const LLGL::StringView resArg = "-res=";
+    for_subrange(i, 1, argc)
+    {
+        const LLGL::StringView arg = argv[i];
+        if (arg.compare(0, resArg.size(), resArg) == 0)
+        {
+            if (arg.size() < resArg.size() + 3)
+                return false;
+
+            char* tok = ::strtok(argv[i] + resArg.size(), "x");
+            int values[2] = {};
+            for (int tokIndex = 0; tok != nullptr && tokIndex < 2; ++tokIndex)
+            {
+                values[tokIndex] = ::atoi(tok);
+                tok = ::strtok(nullptr, "x");
+            }
+
+            size.width  = static_cast<std::uint32_t>(std::max(1, std::min(values[0], 16384)));
+            size.height = static_cast<std::uint32_t>(std::max(1, std::min(values[1], 16384)));
+
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool ParseSamples(std::uint32_t& samples, int argc, char* argv[])
+{
+    const LLGL::StringView msArg = "-ms=";
+    for_subrange(i, 1, argc)
+    {
+        const LLGL::StringView arg = argv[i];
+        if (arg.compare(0, msArg.size(), msArg) == 0)
+        {
+            if (arg.size() < msArg.size() + 1)
+                return false;
+
+            int value = ::atoi(argv[i] + msArg.size());
+            samples = static_cast<std::uint32_t>(std::max(1, std::min(value, 16)));
+
+            return true;
+        }
+    }
+    return false;
+}
+
 
 /*
- * TutorialShaderDescriptor struct
+ * ShaderDescWrapper struct
  */
 
-ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
+ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
     LLGL::ShaderType    type,
     const std::string&  filename)
 :
@@ -107,7 +199,7 @@ ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
 {
 }
 
-ExampleBase::TutorialShaderDescriptor::TutorialShaderDescriptor(
+ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
     LLGL::ShaderType    type,
     const std::string&  filename,
     const std::string&  entryPoint,
@@ -197,21 +289,43 @@ void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const L
  * ExampleBase class
  */
 
-#if defined LLGL_OS_IOS
-std::string ExampleBase::rendererModule_ = "Metal";
-#elif defined LLGL_OS_ANDROID
-std::string ExampleBase::rendererModule_ = "OpenGLES3";
-#else
-std::string ExampleBase::rendererModule_;
-#endif
+static constexpr const char* GetDefaultRendererModule()
+{
+    #if defined LLGL_OS_WIN32
+    return "Direct3D11";
+    #elif defined LLGL_OS_IOS || defined LLGL_OS_MACOS
+    return "Metal";
+    #elif defined LLGL_OS_ANDROID
+    return "OpenGLES3";
+    #else
+    return "OpenGL";
+    #endif
+}
+
+struct ExampleConfig
+{
+    std::string     rendererModule  = GetDefaultRendererModule();
+    LLGL::Extent2D  windowSize      = { 800, 600 };
+    std::uint32_t   samples         = 8;
+    bool            vsync           = true;
+    bool            debugger        = false;
+};
+
+static ExampleConfig g_Config;
 
 #ifdef LLGL_OS_ANDROID
 android_app* ExampleBase::androidApp_;
 #endif
 
-void ExampleBase::SelectRendererModule(int argc, char* argv[])
+void ExampleBase::ParseProgramArgs(int argc, char* argv[])
 {
-    rendererModule_ = GetSelectedRendererModule(argc, argv);
+    GetSelectedRendererModuleOrDefault(g_Config.rendererModule, argc, argv);
+    ParseWindowSize(g_Config.windowSize, argc, argv);
+    ParseSamples(g_Config.samples, argc, argv);
+    if (HasArgument("-v0", argc, argv) || HasArgument("--novsync", argc, argv))
+        g_Config.vsync = false;
+    if (HasArgument("-d", argc, argv) || HasArgument("--debug", argc, argv))
+        g_Config.debugger = true;
 }
 
 #if defined LLGL_OS_ANDROID
@@ -228,7 +342,7 @@ void ExampleBase::Run()
 {
     bool showTimeRecords = false;
     bool fullscreen = false;
-    const auto initialResolution = swapChain->GetResolution();
+    const LLGL::Extent2D initialResolution = swapChain->GetResolution();
     LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
     while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
@@ -260,12 +374,11 @@ void ExampleBase::Run()
         // Check to switch to fullscreen
         if (input.KeyDown(LLGL::Key::F5))
         {
-            if (auto display = swapChain->GetSurface().FindResidentDisplay())
+            if (LLGL::Display* display = swapChain->GetSurface().FindResidentDisplay())
             {
-                const auto resolution = display->GetDisplayMode().resolution;
                 fullscreen = !fullscreen;
                 if (fullscreen)
-                    swapChain->ResizeBuffers(resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
+                    swapChain->ResizeBuffers(display->GetDisplayMode().resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
                 else
                     swapChain->ResizeBuffers(initialResolution, LLGL::ResizeBuffersFlags::WindowedMode);
             }
@@ -315,27 +428,22 @@ static LLGL::Extent2D ScaleResolutionForDisplay(const LLGL::Extent2D& res, const
         return res;
 }
 
-ExampleBase::ExampleBase(
-    const LLGL::UTF8String& title,
-    const LLGL::Extent2D&   resolution,
-    std::uint32_t           samples,
-    bool                    vsync,
-    bool                    debugger)
+ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 {
     // Set report callback to standard output
     LLGL::Log::RegisterCallbackStd();
 
     // Set up renderer descriptor
-    LLGL::RenderSystemDescriptor rendererDesc = rendererModule_;
+    LLGL::RenderSystemDescriptor rendererDesc = g_Config.rendererModule;
 
     #if defined LLGL_OS_ANDROID
-    if (auto state = ExampleBase::androidApp_)
-        rendererDesc.androidApp = state;
+    if (android_app* app = ExampleBase::androidApp_)
+        rendererDesc.androidApp = app;
     else
         throw std::invalid_argument("'android_app' state was not specified");
     #endif
 
-    if (debugger)
+    if (g_Config.debugger)
     {
         debuggerObj_            = std::unique_ptr<LLGL::RenderingDebugger>{ new LLGL::RenderingDebugger() };
         #ifdef LLGL_DEBUG
@@ -349,19 +457,19 @@ ExampleBase::ExampleBase(
 
     // Apply device limits (not for GL, because we won't have a valid GL context until we create our first swap chain)
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
-        samples_ = samples;
+        samples_ = g_Config.samples;
     else
-        samples_ = std::min(samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
+        samples_ = std::min(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
 
     // Create swap-chain
     LLGL::SwapChainDescriptor swapChainDesc;
     {
-        swapChainDesc.resolution    = ScaleResolutionForDisplay(resolution, LLGL::Display::GetPrimary());
+        swapChainDesc.resolution    = ScaleResolutionForDisplay(g_Config.windowSize, LLGL::Display::GetPrimary());
         swapChainDesc.samples       = GetSampleCount();
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
 
-    swapChain->SetVsyncInterval(vsync ? 1 : 0);
+    swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
     swapChain->SetName("SwapChain");
 
     // Create command buffer
@@ -443,7 +551,7 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
 
 //private
 LLGL::Shader* ExampleBase::LoadShaderInternal(
-    const TutorialShaderDescriptor&             shaderDesc,
+    const ShaderDescWrapper&                    shaderDesc,
     const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
     const LLGL::VertexFormat&                   streamOutputFormat,
     const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
@@ -523,7 +631,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
 }
 
 LLGL::Shader* ExampleBase::LoadShader(
-    const TutorialShaderDescriptor&                 shaderDesc,
+    const ShaderDescWrapper&                        shaderDesc,
     const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
     const LLGL::VertexFormat&                       streamOutputFormat,
     const LLGL::ShaderMacro*                        defines)
@@ -532,7 +640,7 @@ LLGL::Shader* ExampleBase::LoadShader(
 }
 
 LLGL::Shader* ExampleBase::LoadShader(
-    const TutorialShaderDescriptor&             shaderDesc,
+    const ShaderDescWrapper&                    shaderDesc,
     const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
     const LLGL::ShaderMacro*                    defines)
 {
@@ -540,7 +648,7 @@ LLGL::Shader* ExampleBase::LoadShader(
 }
 
 LLGL::Shader* ExampleBase::LoadShaderAndPatchClippingOrigin(
-    const TutorialShaderDescriptor&                 shaderDesc,
+    const ShaderDescWrapper&                        shaderDesc,
     const LLGL::ArrayView<LLGL::VertexFormat>&      vertexFormats,
     const LLGL::VertexFormat&                       streamOutputFormat,
     const LLGL::ShaderMacro*                        defines)
@@ -815,6 +923,6 @@ bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const
 
 const std::string& ExampleBase::GetModuleName()
 {
-    return rendererModule_;
+    return g_Config.rendererModule;
 }
 

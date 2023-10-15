@@ -78,7 +78,7 @@ class Example_Animation : public ExampleBase
 public:
 
     Example_Animation() :
-        ExampleBase { L"LLGL Example: Animation" }
+        ExampleBase { "LLGL Example: Animation" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
