@@ -12,8 +12,6 @@
 
 DEF_TEST( TriangleStripCutOff )
 {
-    const Extent2D resolution{ swapChain->GetResolution() };
-
     // Create unprojected 2D vertices
     auto GenerateRectVertices = [](UnprojectedVertex* vertices, float centerX, float centerY, float size) -> void
     {

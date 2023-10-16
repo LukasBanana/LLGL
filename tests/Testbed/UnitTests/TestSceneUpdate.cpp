@@ -15,8 +15,6 @@
 
 DEF_TEST( SceneUpdate )
 {
-    const Extent2D resolution{ swapChain->GetResolution() };
-
     static PipelineState* pso;
 
     if (frame == 0)

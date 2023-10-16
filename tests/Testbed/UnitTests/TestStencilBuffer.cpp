@@ -15,8 +15,6 @@
 
 DEF_TEST( StencilBuffer )
 {
-    const Extent2D resolution{ swapChain->GetResolution() };
-
     if (shaders[VSSolid] == nullptr || shaders[PSSolid] == nullptr)
     {
         Log::Errorf("Missing shaders for backend\n");

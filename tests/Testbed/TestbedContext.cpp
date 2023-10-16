@@ -89,6 +89,8 @@ static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
     }
 }
 
+static constexpr std::uint32_t g_testbedWinSize[2] = { 800, 600 };
+
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
     moduleName    { moduleName                                                                 },
     outputDir     { SanitizePath(FindOutputDir(argc, argv))                                    },
@@ -98,6 +100,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     sanityCheck   { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
     showTiming    { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
     fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },
+    resolution    { g_testbedWinSize[0], g_testbedWinSize[1]                                   },
     selectedTests { FindSelectedTests(argc, argv)                                              }
 {
     const bool isDebugMode = (HasArgument(argc, argv, "-d") || HasArgument(argc, argv, "--debug"));
@@ -127,8 +130,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         // Create swap chain
         SwapChainDescriptor swapChainDesc;
         {
-            swapChainDesc.resolution.width  = 800;
-            swapChainDesc.resolution.height = 600;
+            swapChainDesc.resolution = resolution;
         }
         swapChain = renderer->CreateSwapChain(swapChainDesc);
 

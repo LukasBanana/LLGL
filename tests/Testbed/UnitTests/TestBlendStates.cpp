@@ -15,8 +15,6 @@
 
 DEF_TEST( BlendStates )
 {
-    const Extent2D resolution{ swapChain->GetResolution() };
-
     if (shaders[VSTextured] == nullptr || shaders[PSTextured] == nullptr)
     {
         Log::Errorf("Missing shaders for backend\n");

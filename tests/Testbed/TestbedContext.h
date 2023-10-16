@@ -209,6 +209,7 @@ class TestbedContext
         const bool                      sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
         const bool                      showTiming;
         const bool                      fastTest;       // Skip slow buffer/texture creations to speed up test run
+        const LLGL::Extent2D            resolution;
         const std::vector<std::string>  selectedTests;
 
         unsigned                        failures                = 0;
