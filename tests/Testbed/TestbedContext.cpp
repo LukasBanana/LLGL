@@ -275,6 +275,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( StencilBuffer               );
     RUN_TEST( SceneUpdate                 );
     RUN_TEST( BlendStates                 );
+    RUN_TEST( DualSourceBlending          );
     RUN_TEST( CommandBufferMultiThreading );
     RUN_TEST( CommandBufferSecondary      );
     RUN_TEST( TriangleStripCutOff         );
@@ -720,39 +721,47 @@ bool TestbedContext::LoadShaders()
 
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
-        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Vertex,   "VSMain", "vs_5_0");
-        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Fragment, "PSMain", "ps_5_0");
-        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
-        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",      ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
-        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",   ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",   ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtUnprojected);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Vertex,   "VSMain", "vs_5_0");
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Fragment, "PSMain", "ps_5_0");
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",                   ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",                   ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",                ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",                ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtEmpty);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
-        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",      ShaderType::Vertex);
-        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",      ShaderType::Fragment);
-        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",      ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
-        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",      ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
-        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",   ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",              ShaderType::Vertex);
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment);
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",              ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",           ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.vert",        ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.frag",        ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
-        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Vertex,   "VSMain", "1.1");
-        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Fragment, "PSMain", "1.1");
-        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
-        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",     ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
-        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",  ShaderType::Vertex,   "VSMain", "1.1", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",  ShaderType::Fragment, "PSMain", "1.1", nullptr, VertFmtUnprojected);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Vertex,   "VSMain", "1.1");
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Fragment, "PSMain", "1.1");
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",                  ShaderType::Vertex,   "VSMain", "1.1", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",                  ShaderType::Fragment, "PSMain", "1.1", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",               ShaderType::Vertex,   "VSMain", "1.2", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",               ShaderType::Fragment, "PSMain", "1.2", nullptr, VertFmtEmpty);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
-        shaders[VSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert.spv",          ShaderType::Vertex);
-        shaders[PSSolid]        = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
-        shaders[VSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
-        shaders[PSTextured]     = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
-        shaders[VSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]  = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert.spv",          ShaderType::Vertex);
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.vert.spv",    ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.frag.spv",    ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
     }
     else
     {
@@ -787,6 +796,14 @@ void TestbedContext::CreatePipelineLayouts()
                     "cbuffer(Scene@1):vert:frag,"
                     "texture(colorMap@2):frag,"
                     "sampler(linearSampler@3):frag,"
+        )
+    );
+
+    layouts[PipelineDualSourceBlend] = renderer->CreatePipelineLayout(
+        Parse(
+            hasCombinedSamplers
+                ?   "texture(colorMapA@1,colorMapB@2):frag,sampler(1,2):frag"
+                :   "texture(colorMapA@1,colorMapB@2):frag,sampler(3,4):frag"
         )
     );
 }

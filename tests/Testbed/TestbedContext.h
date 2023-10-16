@@ -83,6 +83,7 @@ class TestbedContext
         {
             VertFmtStd = 0,
             VertFmtUnprojected,
+            VertFmtEmpty,
 
             VertFmtCount,
         };
@@ -91,6 +92,7 @@ class TestbedContext
         {
             PipelineSolid,
             PipelineTextured,
+            PipelineDualSourceBlend,
 
             PipelineCount,
         };
@@ -103,6 +105,8 @@ class TestbedContext
             PSTextured,
             VSUnprojected,
             PSUnprojected,
+            VSDualSourceBlend,
+            PSDualSourceBlend,
 
             ShaderCount,
         };
