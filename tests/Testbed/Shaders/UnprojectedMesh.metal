@@ -12,7 +12,7 @@ using namespace metal;
 struct VertexIn
 {
     float2 position [[attribute(0)]];
-    float4 normal   [[attribute(1)]];
+    float4 color    [[attribute(1)]];
 };
 
 struct VertexOut
