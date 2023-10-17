@@ -35,9 +35,12 @@ int main(int argc, char* argv[])
         }
 
         // Create swap-chain
+        const LLGL::Display* display = LLGL::Display::GetPrimary();
+        const std::uint32_t resScale = (display != nullptr ? static_cast<std::uint32_t>(display->GetScale()) : 1u);
+
         LLGL::SwapChainDescriptor swapChainDesc;
         {
-            swapChainDesc.resolution    = { 800, 600 };
+            swapChainDesc.resolution    = { 800 * resScale, 600 * resScale };
             swapChainDesc.depthBits     = 0; // We don't need a depth buffer for this example
             swapChainDesc.stencilBits   = 0; // We don't need a stencil buffer for this example
             #if ENABLE_MULTISAMPLING
