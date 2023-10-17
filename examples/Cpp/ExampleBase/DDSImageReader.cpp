@@ -253,7 +253,7 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
 
     data_.resize(bufferSize);
 
-    file.read(data_.data(), bufferSize);
+    file.read(data_.data(), static_cast<std::streamsize>(data_.size()));
 }
 
 LLGL::ImageView DDSImageReader::GetImageView(std::uint32_t mipLevel) const

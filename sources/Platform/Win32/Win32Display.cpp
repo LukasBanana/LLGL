@@ -31,7 +31,7 @@ struct Win32DisplayContainer
     }
 
     std::unique_ptr<Win32Display>   display;
-    int                             cacheIndex;
+    int                             cacheIndex = 0;
 };
 
 static std::vector<Win32DisplayContainer>   g_displayList;

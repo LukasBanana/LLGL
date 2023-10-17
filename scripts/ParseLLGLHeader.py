@@ -160,16 +160,16 @@ class LLGLType:
             self.arraySize = arraySize
 
     def __str__(self):
-        str = self.typename
+        s = self.typename
         if self.arraySize > 0:
-            str += '[{}]'.format(self.arraySize)
+            s += '[{}]'.format(self.arraySize)
         elif self.arraySize == -1:
-            str += '[]'
+            s += '[]'
         if self.isPointer:
-            str += '*'
+            s += '*'
         if self.isConst:
-            str += '+'
-        return str
+            s += '+'
+        return s
 
     def toBaseType(typename):
         if typename != '':
@@ -194,11 +194,11 @@ class LLGLType:
     def getFixedBitsize(self):
         if self.baseType in [StdType.INT8, StdType.UINT8]:
             return 8
-        elif type.baseType in [StdType.INT16, StdType.UINT16]:
+        elif self.baseType in [StdType.INT16, StdType.UINT16]:
             return 16
-        elif type.baseType in [StdType.INT32, StdType.UINT32]:
+        elif self.baseType in [StdType.INT32, StdType.UINT32]:
             return 32
-        elif type.baseType in [StdType.INT64, StdType.UINT64]:
+        elif self.baseType in [StdType.INT64, StdType.UINT64]:
             return 64
         return 0
 
@@ -207,20 +207,20 @@ class LLGLField:
     type = LLGLType()
     init = None
 
-    def __init__(self, name, type = LLGLType()):
-        self.name = name
-        self.type = type
+    def __init__(self, inName, inType = LLGLType()):
+        self.name = inName
+        self.type = inType
         self.init = None
 
     def __str__(self):
-        str = ''
+        s = ''
         if self.type.baseType != StdType.UNDEFINED:
-            str += f'{self.name}:{self.type}'
+            s += f'{self.name}:{self.type}'
         else:
-            str += f'{self.name}'
+            s += f'{self.name}'
         if self.init:
-            str += f'({self.init})'
-        return str
+            s += f'({self.init})'
+        return s
 
 class LLGLRecord:
     name = ''
@@ -349,7 +349,7 @@ def scanTokens(filename):
                 else:
                     break
             return text
-        
+
         # Remove comments and preprocessor directives
         text = removeRange(text, '#', '\n')
 
@@ -357,6 +357,7 @@ def scanTokens(filename):
         text = removeRange(text, '/*', '*/') #TMP
 
         # Replace multi-line comments with single line comments
+        """
         def convertComments(text, start, end, filler):
             assert len(filler) == len(start)
             assert len(filler) == len(end)
@@ -383,6 +384,7 @@ def scanTokens(filename):
             return text
 
         #text = convertComments(text, '/*', '*/', '//')
+        """
 
         return text
     
@@ -441,39 +443,39 @@ class Scanner:
         self.readPos += count
         return tok
     
-    def match(self, filter, equality=True):
-        if (self.tok() == filter) == equality:
+    def match(self, search, equality=True):
+        if (self.tok() == search) == equality:
             return 1
-        elif hasattr(filter, '__len__'):
+        elif hasattr(search, '__len__'):
             filterIndex = 0
-            while filterIndex < len(filter):
-                if not ((self.tok(filterIndex) == filter[filterIndex]) == equality):
+            while filterIndex < len(search):
+                if not ((self.tok(filterIndex) == search[filterIndex]) == equality):
                     return 0
                 filterIndex += 1
             return filterIndex
         return 0
 
-    def acceptIf(self, filter):
-        count = self.match(filter)
+    def acceptIf(self, search):
+        count = self.match(search)
         if count > 0:
             self.accept(count)
             return True
         return False
 
-    def acceptIfNot(self, match):
-        count = self.match(filter, equality=False)
+    def acceptIfNot(self, search):
+        count = self.match(search, equality=False)
         if count > 0:
             self.accept(count)
             return True
         return False
 
-    def acceptOrFail(self, match):
-        if not self.acceptIf(match):
-            fatal(f"{self.filename}: error: expected token '{match}', but got '{self.tok()}'; predecessors: {self.tokens[self.readPos - 5:self.readPos]}")
+    def acceptOrFail(self, search):
+        if not self.acceptIf(search):
+            fatal(f"{self.filename}: error: expected token '{search}', but got '{self.tok()}'; predecessors: {self.tokens[self.readPos - 5:self.readPos]}")
 
-    def ignoreUntil(self, filter):
+    def ignoreUntil(self, search):
         while self.good():
-            if self.acceptIf(filter):
+            if self.acceptIf(search):
                 break
             self.accept()
 
@@ -523,19 +525,18 @@ class Parser:
                 typename = self.scanner.accept()
                 isPointer = self.scanner.acceptIf('*')
                 self.scanner.acceptOrFail('>')
-                type = LLGLType(typename, isConst, isPointer)
-                type.setArraySize(LLGLType.DYNAMIC_ARRAY)
-                return type
+                outType = LLGLType(typename, isConst, isPointer)
+                outType.setArraySize(LLGLType.DYNAMIC_ARRAY)
+                return outType
             else:
                 isPointer = self.scanner.acceptIf('*')
-                type = LLGLType(typename, isConst, isPointer)
-                return type
+                return LLGLType(typename, isConst, isPointer)
 
     def parseStructMembers(self, structName):
         members = []
         while self.scanner.tok() != '}':
-            type = self.parseType()
-            isCtor = type.typename == structName
+            fieldType = self.parseType()
+            isCtor = fieldType.typename == structName
             isOper = self.scanner.tok() == 'operator'
             isFunc = self.scanner.tok(1) == '('
             if isCtor or isOper or isFunc:
@@ -565,7 +566,7 @@ class Parser:
                     self.scanner.ignoreUntil(';')
             else:
                 member = LLGLField(self.scanner.accept())
-                member.type = type
+                member.type = fieldType
                 if self.scanner.acceptIf('['):
                     member.type.setArraySize(self.scanner.accept())
                     self.scanner.acceptOrFail(']')
@@ -677,16 +678,16 @@ def parseFile(filename, processFunctions = False):
     return mod
 
 def printModule(module):
-    def printField(field, type):
-        print('@' + type + '{' + str(field) + '}')
+    def printField(field, fieldType):
+        print('@' + fieldType + '{' + str(field) + '}')
 
-    def printRecord(record, type):
-        print('@' + type + '{' + record.name + '}')
+    def printRecord(record, recordType):
+        print('@' + recordType + '{' + record.name + '}')
         iterate(lambda field: printField(field, 'FIELD'), record.fields)
         print('@END')
 
-    def printFunc(func, type):
-        print('@' + type + '{' + func.name + '}=>' + str(func.returnType))
+    def printFunc(func, funcType):
+        print('@' + funcType + '{' + func.name + '}=>' + str(func.returnType))
         iterate(lambda param: printField(param, 'PARAM'), func.params)
         print('@END')
 
@@ -708,11 +709,11 @@ class Translator:
         init = None
         directive = None
 
-        def __init__(self, type = '', name = '', init = None, directive = None):
-            self.type = type
-            self.name = name
-            self.init = init
-            self.directive = directive
+        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None):
+            self.type = inType
+            self.name = inName
+            self.init = inInit
+            self.directive = inDirective
 
     class DeclarationList:
         decls = []
@@ -729,8 +730,8 @@ class Translator:
                 self.maxLen[1] = max(self.maxLen[1], len(decl.name))
                 self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init else 0)
 
-        def spaces(self, index, str):
-            return ' ' * (self.maxLen[index] - len(str) + 1)
+        def spaces(self, index, s):
+            return ' ' * (self.maxLen[index] - len(s) + 1)
 
     def indentation(self):
         return ' ' * (self.indent * self.tabSize)
@@ -753,16 +754,16 @@ class Translator:
         return re.sub(r'([A-Z]+)', r'_\1', name).upper()
 
     def translateModuleToC99(self, doc):
-        def translateDependency(type):
-            if type.baseType in [StdType.BOOL]:
+        def translateDependency(inType):
+            if inType.baseType in [StdType.BOOL]:
                 return '<stdbool.h>', True
-            elif type.baseType in [StdType.INT8, StdType.INT16, StdType.INT32, StdType.INT64, StdType.UINT8, StdType.UINT16, StdType.UINT32, StdType.UINT64]:
+            elif inType.baseType in [StdType.INT8, StdType.INT16, StdType.INT32, StdType.INT64, StdType.UINT8, StdType.UINT16, StdType.UINT32, StdType.UINT64]:
                 return '<stdint.h>', True
-            elif type.baseType in [StdType.SIZE_T]:
+            elif inType.baseType in [StdType.SIZE_T]:
                 return '<stddef.h>', True
-            elif type.baseType in [StdType.CHAR, StdType.LONG, StdType.FLOAT]:
+            elif inType.baseType in [StdType.CHAR, StdType.LONG, StdType.FLOAT]:
                 return None, True
-            return f'<LLGL-C/{type.typename}Flags.h>', False
+            return f'<LLGL-C/{inType.typename}Flags.h>', False
 
         def translateIncludes(typeDeps):
             stdIncludes = set()
@@ -797,8 +798,8 @@ class Translator:
         # Write all include directives
         includeHeaders = translateIncludes(doc.typeDeps)
         if len(includeHeaders[0]) > 0 or len(includeHeaders[1]) > 0:
-            for i in range(0, len(includeHeaders)):
-                for inc in includeHeaders[i]:
+            for headers in includeHeaders:
+                for inc in headers:
                     self.statement('#include {}'.format(inc))
 
             for external in LLGLMeta.externals:
@@ -866,10 +867,10 @@ class Translator:
         # Write all flags
         if len(doc.flags) > 0:
             def translateFlagInitializer(basename, init):
-                str = init
-                str = re.sub(r'([a-zA-Z_]\w*)', 'LLGL{}{}'.format(basename, r'\1'), str)
-                str = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', str)
-                return str
+                s = init
+                s = re.sub(r'([a-zA-Z_]\w*)', 'LLGL{}{}'.format(basename, r'\1'), s)
+                s = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', s)
+                return s
 
             def translateFieldName(name):
                 exceptions = [
@@ -912,51 +913,51 @@ class Translator:
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
 
         if len(commonStructs) > 0:
-            def translateStructField(type, name):
+            def translateStructField(fieldType, name):
                 nonlocal sizedTypes
                 typeStr = ''
                 declStr = ''
 
                 # Write type specifier
-                if type.isDynamicArray() and not type.isPointerOrString():
+                if fieldType.isDynamicArray() and not fieldType.isPointerOrString():
                     typeStr += 'const '
 
-                if type.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
+                if fieldType.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
                     typeStr += 'const char*'
-                elif type.baseType == StdType.STRUCT and type.typename in LLGLMeta.interfaces:
-                    typeStr += 'LLGL' + type.typename
+                elif fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.interfaces:
+                    typeStr += 'LLGL' + fieldType.typename
                 else:
-                    if type.isConst:
+                    if fieldType.isConst:
                         typeStr += 'const '
-                    if type.baseType == StdType.STRUCT and not type.externalCond:
+                    if fieldType.baseType == StdType.STRUCT and not fieldType.externalCond:
                         typeStr += 'LLGL'
-                    typeStr += type.typename
-                    if type.isPointer:
+                    typeStr += fieldType.typename
+                    if fieldType.isPointer:
                         typeStr += '*'
                 
-                if type.isDynamicArray():
-                    typeStr += ' const*' if type.isPointerOrString() else '*'
+                if fieldType.isDynamicArray():
+                    typeStr += ' const*' if fieldType.isPointerOrString() else '*'
 
                 # Write field name
                 declStr += name
 
                 # Write optional bit size for enumerations with underlying type (C does not support explicit underlying enum types)
-                bitsize = sizedTypes.get(type.typename)
+                bitsize = sizedTypes.get(fieldType.typename)
                 if bitsize:
                     declStr += f' : {bitsize}'
 
                 # Write fixed size array dimension
-                if type.arraySize > 0:
-                    declStr += f'[{type.arraySize}]'
+                if fieldType.arraySize > 0:
+                    declStr += f'[{fieldType.arraySize}]'
 
                 return (typeStr, declStr)
 
-            def translateFieldInitializer(type, init):
-                if type.isDynamicArray():
+            def translateFieldInitializer(fieldType, init):
+                if fieldType.isDynamicArray():
                     return 'NULL'
                 if init:
                     if init == 'nullptr':
-                        return 'LLGL_NULL_OBJECT' if type.isInterface() else 'NULL'
+                        return 'LLGL_NULL_OBJECT' if fieldType.isInterface() else 'NULL'
                     else:
                         return re.sub(r'(\w+::)', r'LLGL\1', init).replace('::', '').replace('|', ' | ').replace('Flags', '')
                 return None
@@ -1111,9 +1112,9 @@ class Translator:
         # Write all flags
         if len(doc.flags) > 0:
             def translateFlagInitializer(init):
-                str = init
-                str = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', str)
-                return str
+                s = init
+                s = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', s)
+                return s
 
             self.statement('/* ----- Flags ----- */')
             self.statement('')
@@ -1121,7 +1122,7 @@ class Translator:
             for flag in doc.flags:
                 self.statement('[Flags]')
                 self.statement('public enum {} : uint'.format(flag.name))
-                basename = flag.name[:-len('Flags')]
+                #basename = flag.name[:-len('Flags')]
                 self.openScope()
 
                 # Write flag entry declarations
@@ -1153,7 +1154,7 @@ class Translator:
                 self.type = ''
                 self.ident = ident
 
-        def translateDecl(type, ident = None, isInsideStruct = False):
+        def translateDecl(declType, ident = None, isInsideStruct = False):
             decl = CsharpDeclaration(ident)
 
             def sanitizeTypename(typename):
@@ -1166,25 +1167,25 @@ class Translator:
 
             nonlocal builtinTypenames
 
-            if type.baseType == StdType.STRUCT and type.typename in LLGLMeta.interfaces:
-                decl.type = sanitizeTypename(type.typename)
+            if declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.interfaces:
+                decl.type = sanitizeTypename(declType.typename)
             else:
-                builtin = builtinTypenames.get(type.baseType)
+                builtin = builtinTypenames.get(declType.baseType)
                 if isInsideStruct:
-                    if type.arraySize > 0 and builtin:
+                    if declType.arraySize > 0 and builtin:
                         decl.type += 'fixed '
-                    decl.type += builtin if builtin else sanitizeTypename(type.typename)
-                    if type.isPointer:
+                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
+                    if declType.isPointer:
                         decl.type += '*'
-                    elif type.arraySize > 0:
+                    elif declType.arraySize > 0:
                         if builtin:
-                            decl.ident += f'[{type.arraySize}]'
+                            decl.ident += f'[{declType.arraySize}]'
                         else:
-                            decl.marshal = f'MarshalAs(UnmanagedType.ByValArray, SizeConst = {type.arraySize})'
+                            decl.marshal = f'MarshalAs(UnmanagedType.ByValArray, SizeConst = {declType.arraySize})'
                             decl.type += '[]'
                 else:
-                    decl.type += builtin if builtin else sanitizeTypename(type.typename)
-                    if type.isPointer or type.arraySize > 0:
+                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
+                    if declType.isPointer or declType.arraySize > 0:
                         decl.type += '*'
 
             return decl

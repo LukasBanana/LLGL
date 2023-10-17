@@ -5,7 +5,6 @@
 # Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
 #
 
-import os
 import sys
 
 def printHelp():
@@ -20,6 +19,10 @@ def printHelp():
     print("  -paren:         prints parenthesis around the output (disabled by default)")
     print("  -offsets STYLE: prints address offsets for each row (disabled by default); accepted styles: 'c', 'cxx'/'c++'")
 
+def fatal(msg):
+    print(sys.argv[0] + ': ' + msg)
+    sys.exit(1)
+
 def readBytes(filename, chunkSize=8192):
     try:
         with open(filename, mode="rb") as file:
@@ -31,8 +34,7 @@ def readBytes(filename, chunkSize=8192):
                 else:
                     break
     except IOError:
-        print('failed to open file: ' + filename)
-        sys.exit(1)
+        fatal('failed to open file: ' + filename)
 
 # Generates the C/C++ header file with a string that contains the binary content
 def printHexString(filename, columns=16, spaces=0, offsets='', paren=False):
@@ -66,7 +68,7 @@ def printHexString(filename, columns=16, spaces=0, offsets='', paren=False):
 
 def printFileSize(filename, paren=False):
     n = 0
-    for b in readBytes(filename):
+    for _ in readBytes(filename):
         n += 1
     if paren:
         print(f'( {str(n)} )')
@@ -76,10 +78,6 @@ def printFileSize(filename, paren=False):
 args = sys.argv
 if len(args) < 2:
     printHelp()
-    sys.exit(1)
-
-def fatal(msg):
-    print(sys.argv[0] + ': ' + msg)
     sys.exit(1)
 
 def main():

@@ -131,7 +131,7 @@ class Input::WindowEventListener final : public Window::EventListener
 
     public:
 
-        WindowEventListener(Input::Pimpl& data) :
+        explicit WindowEventListener(Input::Pimpl& data) :
             data_ { data }
         {
         }
@@ -249,7 +249,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     public:
 
-        CanvasEventListener(Input::Pimpl& data) :
+        explicit CanvasEventListener(Input::Pimpl& data) :
             data_ { data }
         {
         }
