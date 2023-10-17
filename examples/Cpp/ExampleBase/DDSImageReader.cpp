@@ -16,7 +16,7 @@
 #include <algorithm>
 
 
-static const std::uint32_t ddsMagicNumber = 0x20534444;
+static const std::uint32_t ddsMagicNumber = 0x20534444; // 'DDS '
 
 enum DDSFourCCTypes
 {
@@ -195,19 +195,16 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     {
         // Read image with BC1 compression (DXT1)
         texDesc_.format     = LLGL::Format::BC1UNorm;
-        imageView_.format   = LLGL::ImageFormat::BC1;
     }
     else if (IsFourCC("DXT2") || IsFourCC("DXT3"))
     {
         // Read image with BC2 compression (DXT2 or DXT3)
         texDesc_.format     = LLGL::Format::BC2UNorm;
-        imageView_.format   = LLGL::ImageFormat::BC2;
     }
     else if (IsFourCC("DXT4") || IsFourCC("DXT5"))
     {
         // Read image with BC3 compression (DXT4 or DXT5)
         texDesc_.format     = LLGL::Format::BC3UNorm;
-        imageView_.format   = LLGL::ImageFormat::BC3;
     }
     /*else if (IsFourCC("DX10"))
     {
@@ -234,26 +231,43 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     // Read image buffer
     LLGL::Extent3D extent = texDesc_.extent;
     std::uint32_t bufferSize = 0;
+    MipSection mip = {};
 
     for (std::int32_t mipLevel = 0; mipLevel < header.mipMapCount; ++mipLevel)
     {
-        bufferSize += extent.width * extent.height * extent.depth;
+        // Save offset and size of current MIP-map into data container
+        mip.offset  = bufferSize;
+        mip.size    = extent.width * extent.height * extent.depth;
+        if (texDesc_.format == LLGL::Format::BC1UNorm)
+            mip.size /= 2;
+        mips_.push_back(mip);
+
+        // Reduce extent to keep track of next MIP-map extent
         extent.width    = std::max(extent.width  / 2, 1u);
         extent.height   = std::max(extent.height / 2, 1u);
         extent.depth    = std::max(extent.depth  / 2, 1u);
-    }
 
-    if (texDesc_.format == LLGL::Format::BC1UNorm)
-        bufferSize /= 2;
+        // Accumulate buffer size to read data at once
+        bufferSize += mip.size;
+    }
 
     data_.resize(bufferSize);
 
     file.read(data_.data(), bufferSize);
-
-    // Store final image source descriptor
-    imageView_.dataType = LLGL::DataType::UInt8;
-    imageView_.data     = data_.data();
-    imageView_.dataSize = data_.size();
 }
 
+LLGL::ImageView DDSImageReader::GetImageView(std::uint32_t mipLevel) const
+{
+    if (mipLevel >= mips_.size())
+        return {};
+    const MipSection& mip = mips_[mipLevel];
+    LLGL::ImageView imageView;
+    {
+        imageView.format    = LLGL::GetFormatAttribs(texDesc_.format).format;
+        imageView.dataType  = LLGL::DataType::UInt8;
+        imageView.data      = &(data_[mip.offset]);
+        imageView.dataSize  = mip.size;
+    }
+    return imageView;
+}
 

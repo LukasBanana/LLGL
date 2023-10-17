@@ -168,36 +168,29 @@ public:
         DDSImageReader imageReader;
         imageReader.LoadFromFile(filename);
 
-        LLGL::TextureDescriptor texDesc     = imageReader.GetTextureDesc();
-        LLGL::ImageView         imageView   = imageReader.GetImageView();
+        // Create hardware texture with compressed format
+        LLGL::TextureDescriptor texDesc = imageReader.GetTextureDesc();
+        colorMaps[0] = renderer->CreateTexture(texDesc);
 
-        // Create texture with MIP-map level 0
-        imageView.dataSize = LLGL::GetMemoryFootprint(texDesc.format, texDesc.extent.width * texDesc.extent.height * texDesc.extent.depth);
-        colorMaps[0] = renderer->CreateTexture(texDesc, &imageView);
-
-        // Write MIP-map levels 1...N
+        // For compressed textures, we have to write each MIP-map manually - no automatic MIP-map generation available
         const auto& formatDesc = LLGL::GetFormatAttribs(texDesc.format);
 
-        for (std::uint32_t mipLevel = 1; mipLevel < texDesc.mipLevels; ++mipLevel)
+        for (std::uint32_t mipLevel = 0; mipLevel < texDesc.mipLevels; ++mipLevel)
         {
             // Determine texture region for next MIP-map level
             LLGL::TextureRegion region;
-            region.extent.width             = std::max(texDesc.extent.width  >> mipLevel, 1u);
-            region.extent.height            = std::max(texDesc.extent.height >> mipLevel, 1u);
-            region.extent.depth             = std::max(texDesc.extent.depth  >> mipLevel, 1u);
-            region.subresource.baseMipLevel = mipLevel;
-            region.subresource.numMipLevels = 1;
+            {
+                region.extent                   = colorMaps[0]->GetMipExtent(mipLevel);
+                region.subresource.baseMipLevel = mipLevel;
+                region.subresource.numMipLevels = 1;
+            }
 
             // MIP-maps of block compression must be a multiple of the block size, so we cannot go smaller
             if (region.extent.width  >= formatDesc.blockWidth &&
                 region.extent.height >= formatDesc.blockHeight)
             {
-                // Update image descriptor for subresource
-                std::size_t mipLevelDataSize    = LLGL::GetMemoryFootprint(texDesc.format, region.extent.width * region.extent.height * region.extent.depth);
-                imageView.data                  = reinterpret_cast<const std::int8_t*>(imageView.data) + imageView.dataSize;
-                imageView.dataSize              = mipLevelDataSize;
-
-                renderer->WriteTexture(*colorMaps[0], region, imageView);
+                // Write image data into MIP-map
+                renderer->WriteTexture(*colorMaps[0], region, imageReader.GetImageView(mipLevel));
             }
         }
     }

@@ -29,11 +29,11 @@ struct VertexOut
 
 vertex VertexOut VS(
     VertexIn        inp   [[stage_in]],
-    constant Scene& scene [[buffer(1)]]))
+    constant Scene& scene [[buffer(1)]])
 {
     VertexOut outp;
-    outp.position = settings.wvpMatrix * float4(inp.position, 1);
-    outp.normal   = normalize((settings.wMatrix * float4(inp.normal, 0)).xyz);
+    outp.position = scene.wvpMatrix * float4(inp.position, 1);
+    outp.normal   = normalize((scene.wMatrix * float4(inp.normal, 0)).xyz);
     outp.texCoord = inp.texCoord;
     return outp;
 }
