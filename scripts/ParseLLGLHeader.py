@@ -206,11 +206,13 @@ class LLGLField:
     name = ''
     type = LLGLType()
     init = None
+    isDeprecated = False
 
     def __init__(self, inName, inType = LLGLType()):
         self.name = inName
         self.type = inType
         self.init = None
+        self.isDeprecated = False
 
     def __str__(self):
         s = ''
@@ -485,6 +487,13 @@ class Parser:
     def __init__(self):
         self.scanner = Scanner()
 
+    def tryParseDeprecated(self):
+        if self.scanner.acceptIf('LLGL_DEPRECATED'):
+            while self.scanner.accept() != ')':
+                pass
+            return True
+        return False
+
     def parseInitializer(self):
         value = ''
         if self.scanner.acceptIf('{'):
@@ -535,10 +544,12 @@ class Parser:
     def parseStructMembers(self, structName):
         members = []
         while self.scanner.tok() != '}':
+            isDeprecated = self.tryParseDeprecated()
             fieldType = self.parseType()
             isCtor = fieldType.typename == structName
             isOper = self.scanner.tok() == 'operator'
             isFunc = self.scanner.tok(1) == '('
+
             if isCtor or isOper or isFunc:
                 # Ignore operators
                 if isOper:
@@ -572,6 +583,7 @@ class Parser:
                     self.scanner.acceptOrFail(']')
                 if self.scanner.acceptIf('='):
                     member.init = self.parseInitializer()
+                member.isDeprecated = isDeprecated
                 members.append(member)
                 self.scanner.acceptOrFail(';')
         return members
@@ -641,14 +653,21 @@ class Parser:
                 self.scanner.acceptIf('LLGL_EXPORT')
 
                 # Ignore deprecated records
-                ignoreRecord = False
-                if self.scanner.acceptIf('LLGL_DEPRECATED'):
-                    ignoreRecord = True
-                    while self.scanner.accept() != ')':
-                        pass
+                ignoreRecord = self.tryParseDeprecated()
                 
                 # Parse record name
                 name = self.scanner.accept()
+
+                # Parse optional inheritance
+                inheritedFields = []
+                if self.scanner.acceptIf(':'):
+                    baseName = self.scanner.accept()
+                    baseRecord = mod.findStructByName(baseName)
+                    if baseRecord != None:
+                        inheritedFields = baseRecord.fields
+                    else:
+                        fatal(f'failed to find base record "{baseName}" when parsing struct "{name}"')
+
                 self.scanner.acceptOrFail('{')
                 if self.scanner.acceptIf('enum'):
                     # Parse flags
@@ -662,7 +681,7 @@ class Parser:
                 else:
                     # Parse structure
                     struct = LLGLRecord(name)
-                    struct.fields = self.parseStructMembers(name)
+                    struct.fields = inheritedFields + self.parseStructMembers(name)
                     if not ignoreRecord:
                         mod.structs.append(struct)
                 self.scanner.acceptOrFail('}')
@@ -708,12 +727,14 @@ class Translator:
         name = ''
         init = None
         directive = None
+        comment = None
 
-        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None):
+        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None, inComment = None):
             self.type = inType
             self.name = inName
             self.init = inInit
             self.directive = inDirective
+            self.comment = inComment
 
     class DeclarationList:
         decls = []
@@ -975,17 +996,24 @@ class Translator:
                     # Write two fields for dynamic arrays
                     externalCond = field.type.externalCond
                     if externalCond:
-                        declList.append(Translator.Declaration(directive = f'#if {externalCond}'))
+                        declList.append(Translator.Declaration(inDirective = f'#if {externalCond}'))
                     if field.type.isDynamicArray():
                         declList.append(Translator.Declaration('size_t', f'num{field.name[0].upper()}{field.name[1:]}', '0'))
                     declStr = translateStructField(field.type, field.name)
-                    declList.append(Translator.Declaration(declStr[0], declStr[1], translateFieldInitializer(field.type, field.init)))
+                    declList.append(Translator.Declaration(
+                        declStr[0],
+                        declStr[1],
+                        translateFieldInitializer(field.type, field.init),
+                        inComment = 'DEPRECATED' if field.isDeprecated else None)
+                    )
                     if externalCond:
-                        declList.append(Translator.Declaration(directive = f'#endif /* {externalCond} */'))
+                        declList.append(Translator.Declaration(inDirective = f'#endif /* {externalCond} */'))
 
                 for decl in declList.decls:
                     if decl.directive:
                         self.statement(decl.directive)
+                    elif decl.comment:
+                        self.statement(f'{decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* {decl.comment} */')
                     elif decl.init:
                         self.statement(f'{decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {decl.init} */')
                     else:
