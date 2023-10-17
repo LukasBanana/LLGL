@@ -313,7 +313,7 @@ int main(int argc, char* argv[])
 
         LLGL::WindowDescriptor mainWindowDesc;
         {
-            mainWindowDesc.title    = "LLGL Example: Multi Renderer ( OpenGL, Vulkan, Direct3D 11, Direct3D 12 )";
+            mainWindowDesc.title    = "LLGL Example: Multi Renderer";
             mainWindowDesc.size     = resolution;
             mainWindowDesc.flags    = LLGL::WindowFlags::Centered;
         }
@@ -386,6 +386,16 @@ int main(int argc, char* argv[])
             { rendererRefs[3], *mainWindow, { halfWidth, halfHeight }, subWindowSize, bgColors[3] },
         };
 
+        // Set window title with all renderer names
+        std::string rendererNames;
+        for (LLGL::RenderSystem* sys : rendererRefs)
+        {
+            if (!rendererNames.empty())
+                rendererNames += ", ";
+            rendererNames += sys->GetName();
+        }
+
+        mainWindow->SetTitle(std::string(mainWindowDesc.title) + " ( " + rendererNames + " )");
         mainWindow->Show();
 
         // Create resources

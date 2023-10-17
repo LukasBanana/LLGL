@@ -231,14 +231,14 @@ void ExampleBase::WindowEventHandler::OnResize(LLGL::Window& sender, const LLGL:
         const auto& resolution = clientAreaSize;
 
         // Update swap buffers
-        swapChain_->ResizeBuffers(sender.GetContentSize());
+        swapChain_->ResizeBuffers(resolution);
 
         // Update projection matrix
         auto aspectRatio = static_cast<float>(resolution.width) / static_cast<float>(resolution.height);
         projection_ = app_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
         // Notify application about resize event
-        app_.OnResize(clientAreaSize);
+        app_.OnResize(resolution);
 
         // Re-draw frame
         if (app_.IsLoadingDone())
