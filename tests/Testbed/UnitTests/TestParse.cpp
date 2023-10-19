@@ -9,31 +9,31 @@
 #include <LLGL/Utils/Parse.h>
 
 
-TestResult TestbedContext::TestParseSamplerDesc()
+TestResult TestbedContext::TestParseUtil()
 {
-    #define TEST_SAMPLER_ATTRIB(ATTR)           \
+    #define TEST_ATTRIB(ATTR)                   \
         if (lhs.ATTR != rhs.ATTR)               \
             return TestResult::FailedMismatch
 
     auto CompareSamplerDescs = [](const LLGL::SamplerDescriptor& lhs, const LLGL::SamplerDescriptor& rhs) -> TestResult
     {
-        TEST_SAMPLER_ATTRIB(addressModeU  );
-        TEST_SAMPLER_ATTRIB(addressModeV  );
-        TEST_SAMPLER_ATTRIB(addressModeW  );
-        TEST_SAMPLER_ATTRIB(minFilter     );
-        TEST_SAMPLER_ATTRIB(magFilter     );
-        TEST_SAMPLER_ATTRIB(mipMapFilter  );
-        TEST_SAMPLER_ATTRIB(mipMapEnabled );
-        TEST_SAMPLER_ATTRIB(mipMapLODBias );
-        TEST_SAMPLER_ATTRIB(minLOD        );
-        TEST_SAMPLER_ATTRIB(maxLOD        );
-        TEST_SAMPLER_ATTRIB(maxAnisotropy );
-        TEST_SAMPLER_ATTRIB(compareEnabled);
-        TEST_SAMPLER_ATTRIB(compareOp     );
-        TEST_SAMPLER_ATTRIB(borderColor[0]);
-        TEST_SAMPLER_ATTRIB(borderColor[1]);
-        TEST_SAMPLER_ATTRIB(borderColor[2]);
-        TEST_SAMPLER_ATTRIB(borderColor[3]);
+        TEST_ATTRIB(addressModeU  );
+        TEST_ATTRIB(addressModeV  );
+        TEST_ATTRIB(addressModeW  );
+        TEST_ATTRIB(minFilter     );
+        TEST_ATTRIB(magFilter     );
+        TEST_ATTRIB(mipMapFilter  );
+        TEST_ATTRIB(mipMapEnabled );
+        TEST_ATTRIB(mipMapLODBias );
+        TEST_ATTRIB(minLOD        );
+        TEST_ATTRIB(maxLOD        );
+        TEST_ATTRIB(maxAnisotropy );
+        TEST_ATTRIB(compareEnabled);
+        TEST_ATTRIB(compareOp     );
+        TEST_ATTRIB(borderColor[0]);
+        TEST_ATTRIB(borderColor[1]);
+        TEST_ATTRIB(borderColor[2]);
+        TEST_ATTRIB(borderColor[3]);
         return TestResult::Passed;
     };
 
@@ -111,6 +111,49 @@ TestResult TestbedContext::TestParseSamplerDesc()
         "\tborder = white,\n"
     );
     TEST_SAMPLER_DESCS(samplerDesc2A, samplerDesc2B);
+
+    // Test texture swizzling parser
+    auto CompareTextureSwizzles = [](const TextureSwizzleRGBA& lhs, const TextureSwizzleRGBA& rhs) -> TestResult
+    {
+        TEST_ATTRIB(r);
+        TEST_ATTRIB(g);
+        TEST_ATTRIB(b);
+        TEST_ATTRIB(a);
+        return TestResult::Passed;
+    };
+
+    #define TEST_TEXTURE_SWIZZLE(LHS, RHS)                              \
+        {                                                               \
+            const TestResult result = CompareTextureSwizzles(LHS, RHS); \
+            if (result != TestResult::Passed)                           \
+            {                                                           \
+                Log::Errorf("LLGL::Parse(%s) failed\n", #RHS);          \
+                return result;                                          \
+            }                                                           \
+        }
+
+    TextureSwizzleRGBA texSwizzle0A;
+    {
+        texSwizzle0A.r = TextureSwizzle::One;
+        texSwizzle0A.g = TextureSwizzle::Zero;
+        texSwizzle0A.b = TextureSwizzle::Red;
+        texSwizzle0A.a = TextureSwizzle::Green;
+    }
+    TextureSwizzleRGBA texSwizzle0B = Parse("10rG");
+    TEST_TEXTURE_SWIZZLE(texSwizzle0A, texSwizzle0B);
+
+    TextureSwizzleRGBA texSwizzle1A;
+    {
+        texSwizzle1A.r = TextureSwizzle::Alpha;
+        texSwizzle1A.g = TextureSwizzle::Blue;
+        texSwizzle1A.b = TextureSwizzle::Green;
+        texSwizzle1A.a = TextureSwizzle::Red;
+    }
+    TextureSwizzleRGBA texSwizzle1B = Parse("abgr");
+    TEST_TEXTURE_SWIZZLE(texSwizzle1A, texSwizzle1B);
+
+    TextureSwizzleRGBA texSwizzle1C = Parse("ABGR");
+    TEST_TEXTURE_SWIZZLE(texSwizzle1A, texSwizzle1C);
 
     return TestResult::Passed;
 }

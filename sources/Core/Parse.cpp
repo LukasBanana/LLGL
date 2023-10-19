@@ -273,7 +273,7 @@ bool Parser::Feed() const
 bool Parser::Fork(const StringView& matchEnd, Parser& outForkedParser)
 {
     /* Find matching end token */
-    for (auto start = iter_; Feed(); Accept())
+    for (std::size_t start = iter_; Feed(); Accept())
     {
         if (Match(matchEnd))
         {
@@ -1434,6 +1434,34 @@ StencilDescriptor ParseContext::AsStencilDesc() const
     if (!ParseStencilDesc(parser, desc))
         RaiseParsingError(parser, "StencilDescriptor");
     return desc;
+}
+
+static TextureSwizzle ParseTextureSwizzle(const char* s, char c)
+{
+    switch (c)
+    {
+        case '1':           return TextureSwizzle::One;
+        case '0':           return TextureSwizzle::Zero;
+        case 'r': case 'R': return TextureSwizzle::Red;
+        case 'g': case 'G': return TextureSwizzle::Green;
+        case 'b': case 'B': return TextureSwizzle::Blue;
+        case 'a': case 'A': return TextureSwizzle::Alpha;
+        default:
+            LLGL_TRAP("parsing %s failed: invalid character", s);
+    }
+}
+
+TextureSwizzleRGBA ParseContext::AsTextureSwizzleRGBA() const
+{
+    TextureSwizzleRGBA swizzle;
+    if (!(tokens_.size() == 1 && tokens_.front().size() == 4))
+        LLGL_TRAP("parsing %s failed: texture swizzle must consist of four characters in {1,2,R,G,B,A}", source_.data());
+    const char* tok = tokens_.front().data();
+    swizzle.r = ParseTextureSwizzle(tok, tok[0]);
+    swizzle.g = ParseTextureSwizzle(tok, tok[1]);
+    swizzle.b = ParseTextureSwizzle(tok, tok[2]);
+    swizzle.a = ParseTextureSwizzle(tok, tok[3]);
+    return swizzle;
 }
 
 

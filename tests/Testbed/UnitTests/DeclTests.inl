@@ -14,7 +14,7 @@
 DECL_RITEST( ContainerDynamicArray );
 DECL_RITEST( ContainerSmallVector );
 DECL_RITEST( ContainerUTF8String );
-DECL_RITEST( ParseSamplerDesc );
+DECL_RITEST( ParseUtil );
 
 #undef DECL_RITEST
 

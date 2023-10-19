@@ -13,6 +13,7 @@
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/TextureFlags.h>
 #include <LLGL/SamplerFlags.h>
 
 
@@ -228,6 +229,18 @@ class LLGL_EXPORT ParseContext
         */
         StencilDescriptor AsStencilDesc() const;
 
+        /**
+        \brief Generates a texture swizzle descriptor from this parse context.
+        \remarks This conversion always requires 4 characters from the parse string and the characters are interpreted as follows:
+        - \c '1' translates to TextureSwizzle::One
+        - \c '0' translates to TextureSwizzle::One
+        - \c 'r' or 'R' translates to TextureSwizzle::Red
+        - \c 'g' or 'G' translates to TextureSwizzle::Green
+        - \c 'b' or 'B' translates to TextureSwizzle::Blue
+        - \c 'a' or 'A' translates to TextureSwizzle::Alpha
+        */
+        TextureSwizzleRGBA AsTextureSwizzleRGBA() const;
+
     public:
 
         /**
@@ -273,6 +286,15 @@ class LLGL_EXPORT ParseContext
         inline operator StencilDescriptor() const
         {
             return AsStencilDesc();
+        }
+
+        /**
+        \brief Implicit conversion to TextureSwizzleRGBA.
+        \see AsTextureSwizzleRGBA
+        */
+        inline operator TextureSwizzleRGBA() const
+        {
+            return AsTextureSwizzleRGBA();
         }
 
     private:

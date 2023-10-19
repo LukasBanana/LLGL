@@ -303,7 +303,7 @@ unsigned TestbedContext::RunRendererIndependentTests()
     RUN_TEST( ContainerDynamicArray );
     RUN_TEST( ContainerSmallVector );
     RUN_TEST( ContainerUTF8String );
-    RUN_TEST( ParseSamplerDesc );
+    RUN_TEST( ParseUtil );
 
     #undef RUN_TEST
 
