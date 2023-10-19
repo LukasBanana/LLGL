@@ -102,7 +102,7 @@ DEF_TEST( MipMaps )
 
     READ_MIPMAPS(textures[TextureGrid10x10], "Grid10x10");
     READ_MIPMAPS(textures[TextureGradient], "Gradient");
-    READ_MIPMAPS(textures[TexturePaintingA], "PaintingA");
+    READ_MIPMAPS(textures[TexturePaintingA_NPOT], "PaintingA");
 
     return result;
 }

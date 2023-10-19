@@ -27,6 +27,7 @@ enum class TestResult
     Continue,           // Continue testing.
     ContinueSkipFrame,  // Continue testing, skip frame output.
     Passed,             // Test passed.
+    Skipped,            // Test was skipped due to unsupported features. Cannot be treated as error.
     FailedMismatch,     // Test failed due to mismatch between expected and given data.
     FailedErrors,       // Test failed due to interface errors.
 };
@@ -68,6 +69,8 @@ class TestbedContext
             const char*                         name,
             LLGL::RenderTarget**                output
         );
+
+        bool HasCombinedSamplers() const;
 
     protected:
 
@@ -115,7 +118,8 @@ class TestbedContext
         {
             TextureGrid10x10 = 0,
             TextureGradient,
-            TexturePaintingA,
+            TexturePaintingA_NPOT,  // NPOT texture 600x479
+            TexturePaintingB,       // 512x512
 
             TextureCount,
         };

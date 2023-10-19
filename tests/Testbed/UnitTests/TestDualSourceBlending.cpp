@@ -33,7 +33,7 @@ DEF_TEST( DualSourceBlending )
     PipelineState* pso = renderer->CreatePipelineState(psoDesc);
 
     Sampler* samplerA = renderer->CreateSampler(Parse("filter=linear"));
-    Sampler* samplerB = renderer->CreateSampler(Parse("filter=linear"));
+    Sampler* samplerB = renderer->CreateSampler(Parse("filter=linear")); // <-- Also linear filtering or CIS tests may fail (due to one-off pixels)
 
     // Render scene
     Texture* readbackTex = nullptr;
@@ -49,7 +49,7 @@ DEF_TEST( DualSourceBlending )
             cmdBuffer->Clear(LLGL::ClearFlags::Color, LLGL::ClearValue{ 1.0f, 1.0f, 1.0f, 1.0f });
 
             cmdBuffer->SetPipelineState(*pso);
-            cmdBuffer->SetResource(0, *textures[TexturePaintingA]);
+            cmdBuffer->SetResource(0, *textures[TexturePaintingA_NPOT]);
             cmdBuffer->SetResource(1, *textures[TextureGrid10x10]);
             cmdBuffer->SetResource(2, *samplerA);
             cmdBuffer->SetResource(3, *samplerB);

@@ -89,6 +89,11 @@ static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
     }
 }
 
+static bool TestFailed(TestResult result)
+{
+    return (result >= TestResult::FailedMismatch);
+}
+
 static constexpr std::uint32_t g_testbedWinSize[2] = { 800, 600 };
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
@@ -170,6 +175,7 @@ static const char* TestResultToStr(TestResult result)
     switch (result)
     {
         case TestResult::Passed:            return "Ok";
+        case TestResult::Skipped:           return "Skipped";
         case TestResult::FailedMismatch:    return "FAILED - MISMATCH";
         case TestResult::FailedErrors:      return "FAILED - ERRORS";
         default:                            return "UNDEFINED";
@@ -279,6 +285,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CommandBufferMultiThreading );
     RUN_TEST( CommandBufferSecondary      );
     RUN_TEST( TriangleStripCutOff         );
+    RUN_TEST( TextureViews                );
 
     #undef RUN_TEST
 
@@ -296,7 +303,7 @@ unsigned TestbedContext::RunRendererIndependentTests()
         {                                                           \
             const TestResult result = TestbedContext::Test##TEST(); \
             PrintTestResult(result, #TEST);                         \
-            if (result != TestResult::Passed)                       \
+            if (TestFailed(result))                                 \
                 ++failures;                                         \
         }
 
@@ -609,6 +616,11 @@ TestResult TestbedContext::CreateRenderTarget(
     return TestResult::Passed;
 }
 
+bool TestbedContext::HasCombinedSamplers() const
+{
+    return (renderer->GetRendererID() == RendererID::OpenGL);
+}
+
 static std::string FormatCharArray(const unsigned char* data, std::size_t count, std::size_t bytesPerGroup, std::size_t maxWidth)
 {
     std::string s;
@@ -780,15 +792,13 @@ bool TestbedContext::LoadShaders()
 
 void TestbedContext::CreatePipelineLayouts()
 {
-    const bool hasCombinedSamplers = (renderer->GetRendererID() == RendererID::OpenGL);
-
     layouts[PipelineSolid] = renderer->CreatePipelineLayout(
         Parse("cbuffer(Scene@1):vert:frag")
     );
 
     layouts[PipelineTextured] = renderer->CreatePipelineLayout(
         Parse(
-            hasCombinedSamplers
+            HasCombinedSamplers()
                 ?   "cbuffer(Scene@1):vert:frag,"
                     "texture(colorMapSampler@2):frag,"
                     "sampler(2):frag,"
@@ -801,7 +811,7 @@ void TestbedContext::CreatePipelineLayouts()
 
     layouts[PipelineDualSourceBlend] = renderer->CreatePipelineLayout(
         Parse(
-            hasCombinedSamplers
+            HasCombinedSamplers()
                 ?   "texture(colorMapA@1,colorMapB@2):frag,sampler(1,2):frag"
                 :   "texture(colorMapA@1,colorMapB@2):frag,sampler(3,4):frag"
         )
@@ -847,9 +857,10 @@ bool TestbedContext::LoadTextures()
 
     const std::string texturePath = "../Media/Textures/";
 
-    textures[TextureGrid10x10]  = LoadTextureFromFile("Grid10x10", texturePath + "Grid10x10.png");
-    textures[TextureGradient]   = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
-    textures[TexturePaintingA]  = LoadTextureFromFile("PaintingA", texturePath + "VanGogh-starry_night.jpg");
+    textures[TextureGrid10x10]      = LoadTextureFromFile("Grid10x10", texturePath + "Grid10x10.png");
+    textures[TextureGradient]       = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
+    textures[TexturePaintingA_NPOT] = LoadTextureFromFile("PaintingA_NPOT", texturePath + "VanGogh-starry_night.jpg");
+    textures[TexturePaintingB]      = LoadTextureFromFile("PaintingB", texturePath + "JohannesVermeer-girl_with_a_pearl_earring.jpg");
 
     return true;
 }
@@ -1108,6 +1119,7 @@ static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const s
         if (!verbose)
             PrintInfo();
         Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        return false;
     }
 
     if (verbose)
@@ -1297,9 +1309,9 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
     const std::string refPath       = "Reference/";
     const std::string diffPath      = outputDir + moduleName + "/";
 
-    if (!LoadImage(pixelsA, extentA, refPath + name + ".Ref.png"))
+    if (!LoadImage(pixelsA, extentA, refPath + name + ".Ref.png", verbose))
         return DiffErrorLoadRefFailed;
-    if (!LoadImage(pixelsB, extentB, resultPath + name + ".Result.png"))
+    if (!LoadImage(pixelsB, extentB, resultPath + name + ".Result.png", verbose))
         return DiffErrorLoadResultFailed;
 
     if (extentA != extentB)
@@ -1343,7 +1355,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
 void TestbedContext::RecordTestResult(TestResult result, const char* name)
 {
     PrintTestResult(result, name);
-    if (result != TestResult::Passed)
+    if (TestFailed(result))
         ++failures;
 }
 
