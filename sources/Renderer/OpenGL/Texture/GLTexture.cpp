@@ -321,14 +321,24 @@ void GLTexture::BindAndAllocStorage(const TextureDescriptor& textureDesc, const 
         AllocTextureStorage(textureDesc, initialImage);
 }
 
+static TextureSwizzle GetTextureSwizzlePermutationBGRAComponent(const TextureSwizzle swizzleComponent)
+{
+    switch (swizzleComponent)
+    {
+        case TextureSwizzle::Red:   return TextureSwizzle::Blue;    // Swap red with blue component
+        case TextureSwizzle::Blue:  return TextureSwizzle::Red;     // Swap blue with red component
+        default:                    return swizzleComponent;        // Use input value for all other components
+    }
+}
+
 static TextureSwizzleRGBA GetTextureSwizzlePermutationBGRA(const TextureSwizzleRGBA& swizzle)
 {
     TextureSwizzleRGBA permutation;
     {
-        permutation.r = swizzle.b;
-        permutation.g = swizzle.g;
-        permutation.b = swizzle.r;
-        permutation.a = swizzle.a;
+        permutation.r = GetTextureSwizzlePermutationBGRAComponent(swizzle.r);
+        permutation.g = GetTextureSwizzlePermutationBGRAComponent(swizzle.g);
+        permutation.b = GetTextureSwizzlePermutationBGRAComponent(swizzle.b);
+        permutation.a = GetTextureSwizzlePermutationBGRAComponent(swizzle.a);
     }
     return permutation;
 }
@@ -338,9 +348,9 @@ static TextureSwizzle GetTextureSwizzlePermutationAlphaComponent(const TextureSw
 {
     switch (swizzleAlpha)
     {
-        case TextureSwizzle::Alpha: return TextureSwizzle::Red;     // Only alpha component can be mapped to another component
         case TextureSwizzle::Zero:  return TextureSwizzle::Zero;    // Zero is allowed as fixed value
         case TextureSwizzle::One:   return TextureSwizzle::One;     // One is allowed as fixed value
+        case TextureSwizzle::Alpha: return TextureSwizzle::Red;     // Only alpha component can be mapped to another component
         default:                    return TextureSwizzle::Zero;    // Use zero as default value
     }
 }
