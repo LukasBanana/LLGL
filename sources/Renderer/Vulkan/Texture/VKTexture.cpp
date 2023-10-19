@@ -303,6 +303,10 @@ static VkImageCreateFlags GetVkImageCreateFlags(const TextureDescriptor& desc)
 {
     VkImageCreateFlags createFlags = 0;
 
+    /* Allow all SRVs to be interpreted with a different image format */
+    if ((desc.bindFlags & BindFlags::Sampled) != 0)
+        createFlags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+
     /*
     We only use VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT at the moment, to support cube maps.
     VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT is only required to make 3D textures compatible with 2D-array views, which LLGL does not support.
