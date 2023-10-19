@@ -370,25 +370,25 @@ void VKGraphicsPSO::CreateVkPipeline(
     /* Create graphics pipeline state object */
     VkGraphicsPipelineCreateInfo createInfo;
     {
-        createInfo.sType                        = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        createInfo.pNext                        = nullptr;
-        createInfo.flags                        = 0;
-        createInfo.stageCount                   = static_cast<std::uint32_t>(shaderStageCreateInfos.size());
-        createInfo.pStages                      = shaderStageCreateInfos.data();
-        createInfo.pVertexInputState            = (&vertexInputCreateInfo);
-        createInfo.pInputAssemblyState          = (&inputAssembly);
-        createInfo.pTessellationState           = (inputAssembly.topology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ? &tessellationState : nullptr);
-        createInfo.pViewportState               = (&viewportState);
-        createInfo.pRasterizationState          = (&rasterizerState);
-        createInfo.pMultisampleState            = (&multisampleState);
-        createInfo.pDepthStencilState           = (&depthStencilState);
-        createInfo.pColorBlendState             = (&colorBlendState);
-        createInfo.pDynamicState                = (!dynamicStatesVK.empty() ? &dynamicState : nullptr);
-        createInfo.layout                       = GetVkPipelineLayout();
-        createInfo.renderPass                   = renderPass.GetVkRenderPass();
-        createInfo.subpass                      = 0;
-        createInfo.basePipelineHandle           = VK_NULL_HANDLE;
-        createInfo.basePipelineIndex            = 0;
+        createInfo.sType                = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        createInfo.pNext                = nullptr;
+        createInfo.flags                = 0;
+        createInfo.stageCount           = static_cast<std::uint32_t>(shaderStageCreateInfos.size());
+        createInfo.pStages              = shaderStageCreateInfos.data();
+        createInfo.pVertexInputState    = (&vertexInputCreateInfo);
+        createInfo.pInputAssemblyState  = (&inputAssembly);
+        createInfo.pTessellationState   = (inputAssembly.topology == VK_PRIMITIVE_TOPOLOGY_PATCH_LIST ? &tessellationState : nullptr);
+        createInfo.pViewportState       = (&viewportState);
+        createInfo.pRasterizationState  = (&rasterizerState);
+        createInfo.pMultisampleState    = (&multisampleState);
+        createInfo.pDepthStencilState   = (&depthStencilState);
+        createInfo.pColorBlendState     = (&colorBlendState);
+        createInfo.pDynamicState        = (!dynamicStatesVK.empty() ? &dynamicState : nullptr);
+        createInfo.layout               = GetVkPipelineLayout();
+        createInfo.renderPass           = renderPass.GetVkRenderPass();
+        createInfo.subpass              = 0;
+        createInfo.basePipelineHandle   = VK_NULL_HANDLE;
+        createInfo.basePipelineIndex    = 0;
     }
     VkResult result = vkCreateGraphicsPipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan graphics pipeline");

@@ -96,9 +96,9 @@ bool VKShaderBindingLayout::MatchesBindingSlots(
 {
     std::uint32_t dstBinding = 0;
 
-    while (auto slot = iter.Next())
+    while (const BindingSlot* slot = iter.Next())
     {
-        const auto* binding = FindInSortedArray<const ModuleBinding>(
+        const ModuleBinding* binding = FindInSortedArray<const ModuleBinding>(
             bindings_.data(), bindings_.size(),
             [slot](const ModuleBinding& entry) -> int
             {
@@ -152,9 +152,9 @@ std::uint32_t VKShaderBindingLayout::AssignBindingSlots(
 {
     std::uint32_t numBindings = 0, dstBinding = 0;
 
-    while (auto slot = iter.Next())
+    while (const BindingSlot* slot = iter.Next())
     {
-        auto* binding = FindInSortedArray<ModuleBinding>(
+        ModuleBinding* binding = FindInSortedArray<ModuleBinding>(
             bindings_.data(), bindings_.size(),
             [slot](const ModuleBinding& entry) -> int
             {
@@ -176,9 +176,9 @@ std::uint32_t VKShaderBindingLayout::AssignBindingSlots(
 void VKShaderBindingLayout::UpdateSpirvModule(void* data, std::size_t size)
 {
     auto* words = reinterpret_cast<std::uint32_t*>(data);
-    const auto numWords = size/4;
+    const std::size_t numWords = size/4;
 
-    for (const auto& binding : bindings_)
+    for (const ModuleBinding& binding : bindings_)
     {
         if (binding.spirvDescriptorSet < numWords)
             words[binding.spirvDescriptorSet] = binding.dstDescriptorSet;

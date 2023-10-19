@@ -38,7 +38,7 @@ static VKPtr<VkShaderModule> CreateVkShaderModule(VkDevice device, const std::ve
         createInfo.pCode    = shaderCode.data();
     }
     VKPtr<VkShaderModule> shaderModule{ device, vkDestroyShaderModule };
-    auto result = vkCreateShaderModule(device, &createInfo, nullptr, shaderModule.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateShaderModule(device, &createInfo, nullptr, shaderModule.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan shader module");
     return shaderModule;
 }
@@ -127,7 +127,7 @@ VKPtr<VkShaderModule> VKShader::CreateVkShaderModulePermutation(const Permutatio
         return VK_NULL_HANDLE;
 
     /* Re-assign binding slots with a permutation of the binding layout */
-    auto bindingLayoutPerm = bindingLayout_;
+    VKShaderBindingLayout bindingLayoutPerm = bindingLayout_;
 
     ConstFieldRangeIterator<BindingSlot> bindingSlotIter;
     std::uint32_t dstSet;
@@ -142,7 +142,7 @@ VKPtr<VkShaderModule> VKShader::CreateVkShaderModulePermutation(const Permutatio
     /* Create shader module permuation if there is at least one modified binding slot */
     if (modified)
     {
-        auto shaderCodePerm = shaderCode_;
+        VKShaderCode shaderCodePerm = shaderCode_;
         bindingLayoutPerm.UpdateSpirvModule(shaderCodePerm.data(), shaderCodePerm.size() * sizeof(std::uint32_t));
         return CreateVkShaderModule(device_, shaderCodePerm);
     }
@@ -297,7 +297,7 @@ static SystemValue SpvBuiltinToSystemValue(spv::BuiltIn type)
 
 static SystemValue SpvBuiltinToFragmentOutputSV(spv::BuiltIn type)
 {
-    auto sv = SpvBuiltinToSystemValue(type);
+    SystemValue sv = SpvBuiltinToSystemValue(type);
     return (sv == SystemValue::Undefined ? SystemValue::Color : sv);
 }
 
@@ -306,7 +306,7 @@ static const SpirvReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
 {
     if (varType != nullptr)
     {
-        if (auto derefType = varType->Deref())
+        if (const SpirvReflect::SpvType* derefType = varType->Deref())
         {
             switch (derefType->opcode)
             {
@@ -345,7 +345,7 @@ static const SpirvReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
 static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& reflection, const SpirvReflect::SpvUniform& var)
 {
     /* Check if there already is a resource at the specified binding slot */
-    for (auto& resource : reflection.resources)
+    for (ShaderResourceReflection& resource : reflection.resources)
     {
         if (resource.binding.slot == BindingSlot{ var.binding, var.set })
             return &resource;
@@ -357,7 +357,7 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
         resource.binding.name = GetOptString(var.name);
         resource.binding.slot = var.binding;
 
-        if (auto varType = var.type)
+        if (const SpirvReflect::SpvType* varType = var.type)
         {
             //if (varType->opcode == spv::Op::OpTypeArray)
             //    resource.binding.arraySize = varType->elements;
@@ -365,7 +365,7 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
             if (varType->storage == spv::StorageClassUniform ||
                 varType->storage == spv::StorageClassUniformConstant)
             {
-                if (auto derefType = ReflectSpvBinding(resource.binding, varType))
+                if (const SpirvReflect::SpvType* derefType = ReflectSpvBinding(resource.binding, varType))
                 {
                     if (derefType->opcode == spv::Op::OpTypeStruct)
                         resource.constantBufferSize = var.size;
@@ -388,7 +388,7 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     /* Gather input/output attributes */
     for (const auto& it : spvReflect.GetVaryings())
     {
-        const auto& var = it.second;
+        const SpirvReflect::SpvVarying& var = it.second;
         if (GetType() == ShaderType::Vertex)
         {
             std::uint32_t numVectors = 1;
@@ -429,8 +429,8 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     /* Gather shader resources */
     for (const auto& it : spvReflect.GetUniforms())
     {
-        const auto& var = it.second;
-        if (auto resource = FindOrAppendShaderResource(reflection, var))
+        const SpirvReflect::SpvUniform& var = it.second;
+        if (ShaderResourceReflection* resource = FindOrAppendShaderResource(reflection, var))
             resource->binding.stageFlags |= ShaderTypeToStageFlags(GetType());
     }
 
@@ -474,12 +474,12 @@ bool VKShader::ReflectPushConstants(
     for_range(i, inUniformDescs.size())
     {
         /* Find name of uniform descriptor in push-constant block fields */
-        const auto& uniformDesc = inUniformDescs[i];
-        for (const auto& field : block.fields)
+        const UniformDescriptor& uniformDesc = inUniformDescs[i];
+        for (const SpirvReflect::SpvBlockField& field : block.fields)
         {
             if (field.name != nullptr && ::strcmp(field.name, uniformDesc.name.c_str()) == 0)
             {
-                auto& range = outUniformRanges[i];
+                VKUniformRange& range = outUniformRanges[i];
                 {
                     range.offset    = field.offset;
                     range.size      = GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize);
@@ -492,7 +492,7 @@ bool VKShader::ReflectPushConstants(
     return true;
 }
 
-#else
+#else // LLGL_ENABLE_SPIRV_REFLECT
 
 bool VKShader::Reflect(ShaderReflection& /*reflection*/) const
 {
@@ -546,7 +546,7 @@ void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
     for (std::size_t i = 0; i < numVertexAttribs; ++i)
     {
-        const auto& attr = vertexAttribs[i];
+        const VertexAttribute& attr = vertexAttribs[i];
 
         if (attr.instanceDivisor > 1)
         {
@@ -638,7 +638,7 @@ bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
     }
     else
     {
-        auto* words = reinterpret_cast<const std::uint32_t*>(binaryBuffer);
+        const std::uint32_t* words = reinterpret_cast<const std::uint32_t*>(binaryBuffer);
         shaderCode_ = std::vector<std::uint32_t>(words, words + binaryLength/sizeof(std::uint32_t));
     }
 

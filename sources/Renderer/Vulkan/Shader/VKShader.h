@@ -25,6 +25,9 @@ namespace LLGL
 struct ShaderReflection;
 struct Extent3D;
 
+// Container type of 32-bit words for Vulkan shader binary code.
+using VKShaderCode = std::vector<std::uint32_t>;
+
 struct VKUniformRange
 {
     std::uint32_t offset;
@@ -112,17 +115,17 @@ class VKShader final : public Shader
 
     private:
 
-        VkDevice                    device_             = VK_NULL_HANDLE;
+        VkDevice                device_             = VK_NULL_HANDLE;
 
-        VKPtr<VkShaderModule>       shaderModule_;
-        std::vector<std::uint32_t>  shaderCode_;
-        VKShaderBindingLayout       bindingLayout_;
+        VKPtr<VkShaderModule>   shaderModule_;
+        VKShaderCode            shaderCode_;
+        VKShaderBindingLayout   bindingLayout_;
 
-        LoadBinaryResult            loadBinaryResult_   = LoadBinaryResult::Undefined;
-        VertexInputLayout           inputLayout_;
+        LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
+        VertexInputLayout       inputLayout_;
 
-        std::string                 entryPoint_;
-        Report                      report_;
+        std::string             entryPoint_;
+        Report                  report_;
 
 };
 
