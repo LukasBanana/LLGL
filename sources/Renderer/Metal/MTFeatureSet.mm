@@ -68,7 +68,8 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
 
 static NSUInteger GetMaxMTBufferSize(id<MTLDevice> device)
 {
-    constexpr NSUInteger minBufferSize256MB = 268435456;
+    /* Assume minimum of 256 MB (268,435,456 bytes) if maxBufferLength is not supported */
+    constexpr NSUInteger minBufferSize256MB = 1024 * 1024 * 256;
     if (@available(iOS 12.0, macOS 10.14, *))
         return [device maxBufferLength];
     else

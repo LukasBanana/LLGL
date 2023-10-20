@@ -48,22 +48,30 @@ MTShader::~MTShader()
 
 static MTLLanguageVersion GetMTLLanguageVersion(const ShaderDescriptor& desc)
 {
+    #define CHECK_MTL_LANGUAGE_VERSION(MAJOR, MINOR, ...)                                       \
+        if (std::strcmp(desc.profile, #MAJOR "." #MINOR) == 0)                                  \
+        {                                                                                       \
+            if (@available(__VA_ARGS__))                                                        \
+                return MTLLanguageVersion ## MAJOR ## _ ## MINOR;                               \
+            else                                                                                \
+                LLGL_TRAP("Metal shader version %d.%d not supported on device", MAJOR, MINOR);  \
+        }
+
     if (desc.profile != nullptr)
     {
-        if (std::strcmp(desc.profile, "2.1") == 0)
-            return MTLLanguageVersion2_1;
-        if (std::strcmp(desc.profile, "2.0") == 0)
-            return MTLLanguageVersion2_0;
-        if (std::strcmp(desc.profile, "1.2") == 0)
-            return MTLLanguageVersion1_2;
-        if (std::strcmp(desc.profile, "1.1") == 0)
-            return MTLLanguageVersion1_1;
+        CHECK_MTL_LANGUAGE_VERSION(2, 2, macOS 10.15, iOS 13.0, *);
+        CHECK_MTL_LANGUAGE_VERSION(2, 1, macOS 10.14, iOS 12.0, *);
+        CHECK_MTL_LANGUAGE_VERSION(2, 0, macOS 10.13, iOS 11.0, *);
+        CHECK_MTL_LANGUAGE_VERSION(1, 2, macOS 10.12, iOS 10.0, *);
+        CHECK_MTL_LANGUAGE_VERSION(1, 1, macOS 10.11, iOS 9.0, *);
         #ifdef LLGL_OS_IOS
         if (std::strcmp(desc.profile, "1.0") == 0)
             return MTLLanguageVersion1_0;
         #endif // /LLGL_OS_IOS
     }
     LLGL_TRAP("invalid Metal shader version specified");
+
+    #undef CHECK_MTL_LANGUAGE_VERSION
 }
 
 const Report* MTShader::GetReport() const

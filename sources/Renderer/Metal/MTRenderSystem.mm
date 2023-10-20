@@ -79,7 +79,7 @@ void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    RenderSystem::AssertCreateBuffer(bufferDesc, device_.maxBufferLength);
+    RenderSystem::AssertCreateBuffer(bufferDesc, GetRenderingCaps().limits.maxBufferSize);
     return buffers_.emplace<MTBuffer>(device_, bufferDesc, initialData);
 }
 
