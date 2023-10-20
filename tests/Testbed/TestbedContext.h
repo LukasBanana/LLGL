@@ -290,6 +290,10 @@ class TestbedContext
 
         void RecordTestResult(TestResult result, const char* name);
 
+    private:
+
+        bool loadingShadersFailed_ = false;
+
 };
 
 

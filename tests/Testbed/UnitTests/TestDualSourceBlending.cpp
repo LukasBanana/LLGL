@@ -12,10 +12,7 @@
 DEF_TEST( DualSourceBlending )
 {
     if (shaders[VSDualSourceBlend] == nullptr || shaders[PSDualSourceBlend] == nullptr)
-    {
-        Log::Errorf("Missing shaders for backend\n");
-        return TestResult::FailedErrors;
-    }
+        return TestResult::Skipped;
 
     // Create all blend states
     GraphicsPipelineDescriptor psoDesc;

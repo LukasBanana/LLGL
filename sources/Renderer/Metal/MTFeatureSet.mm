@@ -7,6 +7,7 @@
 
 #include "MTFeatureSet.h"
 #include "MTDevice.h"
+#include "OSXAvailability.h"
 #include <AvailabilityMacros.h>
 #include <initializer_list>
 #include <algorithm>
@@ -110,7 +111,7 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasMultiSampleTextures         = true;
     features.hasMultiSampleArrayTextures    = false;
     features.hasTextureViews                = true;
-    features.hasTextureViewSwizzle          = true;
+    features.hasTextureViewSwizzle          = LLGL_OSX_AVAILABLE(macOS 10.15, iOS 13.0, *);
     features.hasBufferViews                 = true;
     features.hasConstantBuffers             = true;
     features.hasStorageBuffers              = true;

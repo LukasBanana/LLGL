@@ -750,8 +750,11 @@ bool TestbedContext::LoadShaders()
         shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
         shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
         shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",           ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.vert",        ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.frag",        ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+        if (IsShadingLanguageSupported(ShadingLanguage::GLSL_420))
+        {
+            shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.vert",        ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.frag",        ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+        }
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
@@ -781,13 +784,7 @@ bool TestbedContext::LoadShaders()
         return false;
     }
 
-    for (int i = 0; i < ShaderCount; ++i)
-    {
-        if (shaders[i] == nullptr)
-            return false;
-    }
-
-    return true;
+    return !loadingShadersFailed_;
 }
 
 void TestbedContext::CreatePipelineLayouts()
@@ -1049,6 +1046,7 @@ Shader* TestbedContext::LoadShaderFromFile(
                     PrintLoadingInfo();
                 Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
                 Log::Errorf("%s", report->GetText());
+                loadingShadersFailed_ = true;
                 return nullptr;
             }
         }

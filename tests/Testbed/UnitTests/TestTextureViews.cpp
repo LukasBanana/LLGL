@@ -110,7 +110,6 @@ DEF_TEST( TextureViews )
     // Render scene
     const IndexedTriangleMesh& mesh = models[ModelRect];
 
-    constexpr float offset = 0.16f;
     constexpr float bgColor[4] = { 127.0f/255.0f, 127.0f/255.0f, 1.0f, 1.0f };
 
     Texture* readbackTex = nullptr;
