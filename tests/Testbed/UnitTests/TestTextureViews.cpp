@@ -36,7 +36,7 @@ DEF_TEST( TextureViews )
         Parse(
             HasCombinedSamplers()
                 ?   "cbuffer(Scene@1):vert:frag,"
-                    "heap{texture(colorMapSampler@2):frag},"
+                    "heap{texture(colorMap@2):frag},"
                     "sampler(2):frag,"
                 :
                     "cbuffer(Scene@1):vert:frag,"

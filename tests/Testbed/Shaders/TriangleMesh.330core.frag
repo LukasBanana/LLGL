@@ -28,7 +28,7 @@ in vec2 vTexCoord;
 out vec4 outColor;
 
 #if ENABLE_TEXTURING
-uniform sampler2D colorMapSampler;
+uniform sampler2D colorMap;
 #endif
 
 void main()
@@ -37,7 +37,7 @@ void main()
     float NdotL = clamp(dot(lightVec, normal), 0.0, 1.0);
     float shading = mix(0.2, 1.0, NdotL);
     #if ENABLE_TEXTURING
-    vec4 albedo = texture(colorMapSampler, vTexCoord);
+    vec4 albedo = texture(colorMap, vTexCoord);
     #else
     vec4 albedo = vec4(1);
     #endif

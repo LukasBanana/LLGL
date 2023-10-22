@@ -36,7 +36,7 @@ layout(location = 0) out vec4 outColor;
 layout(binding = 2) uniform texture2D colorMap;
 layout(binding = 3) uniform sampler linearSampler;
 #   else
-layout(binding = 2) uniform sampler2D colorMapSampler;
+layout(binding = 2) uniform sampler2D colorMap;
 #   endif
 #endif
 
@@ -49,7 +49,7 @@ void main()
     #   if ENABLE_SPIRV
     vec4 albedo = texture(sampler2D(colorMap, linearSampler), vTexCoord);
     #   else
-    vec4 albedo = texture(colorMapSampler, vTexCoord);
+    vec4 albedo = texture(colorMap, vTexCoord);
     #   endif
     #else
     vec4 albedo = vec4(1);

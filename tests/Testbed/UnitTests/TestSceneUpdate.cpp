@@ -7,7 +7,6 @@
 
 #include "Testbed.h"
 #include <LLGL/Utils/Parse.h>
-#include <Gauss/ProjectionMatrix4.h>
 #include <Gauss/Translate.h>
 #include <Gauss/Rotate.h>
 #include <Gauss/Scale.h>

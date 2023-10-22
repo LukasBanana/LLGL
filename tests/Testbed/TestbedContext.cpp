@@ -817,7 +817,7 @@ void TestbedContext::CreatePipelineLayouts()
         Parse(
             HasCombinedSamplers()
                 ?   "cbuffer(Scene@1):vert:frag,"
-                    "texture(colorMapSampler@2):frag,"
+                    "texture(colorMap@2):frag,"
                     "sampler(2):frag,"
                 :
                     "cbuffer(Scene@1):vert:frag,"
