@@ -73,9 +73,52 @@ static ModuleAndVersion GetRendererModule(const std::string& name)
     return name.c_str();
 }
 
+// Returns true of the specified list of program arguments contains the search string
+static bool HasProgramArgument(int argc, char* argv[], const char* search)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        if (::strcmp(argv[i], search) == 0)
+            return true;
+    }
+    return false;
+}
+
+static void PrintHelpDocs()
+{
+    Log::Printf(
+        "Testbed MODULES* OPTIONS*\n"
+        "  -> Runs LLGL's unit tests\n"
+        "\n"
+        "MODULE:\n"
+        "  gl, gl[VER], opengl, opengl[VER] ... OpenGL module with optional version, e.g. gl330\n"
+        "  vk, vulkan ......................... Vulkan module\n"
+        "  mt, mtl, metal ..................... Metal module\n"
+        "  d3d11, dx11, direct3d11 ............ Direct3D 11 module\n"
+        "  d3d12, dx12, direct3d12 ............ Direct3D 12 module\n"
+        "\n"
+        "OPTIONS:\n"
+        "  -d, --debug ........................ Enable validation debug layers\n"
+        "  -f, --fast ......................... Run fast test; skips certain configurations\n"
+        "  -g, --greedy ....................... Keep running each test even after failure\n"
+        "  -h, --help ......................... Print this help document\n"
+        "  -p, --pedantic ..................... Disable diff-checking threshold\n"
+        "  -s, --santiy-check ................. Print some test results even on success\n"
+        "  -t, --timing ....................... Print timing results\n"
+        "  -v, --verbose ...................... Print more information\n"
+    );
+}
+
 int main(int argc, char* argv[])
 {
     Log::RegisterCallbackStd();
+
+    // If -h or --help is specified, only print help documentation and exit
+    if (HasProgramArgument(argc, argv, "-h") || HasProgramArgument(argc, argv, "--help"))
+    {
+        PrintHelpDocs();
+        return 0;
+    }
 
     // Gather all explicitly specified module names
     std::vector<ModuleAndVersion> enabledModules;
