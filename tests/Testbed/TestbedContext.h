@@ -190,8 +190,13 @@ class TestbedContext
 
             void Add(int val);
 
+            bool FoundDiff(unsigned countTolerance = 0) const;
+
             // Returns true if this difference is non-zero.
-            operator bool () const;
+            inline operator bool () const
+            {
+                return FoundDiff();
+            }
 
             int         threshold   = 0;
             int         value       = 0; // Maximum difference value

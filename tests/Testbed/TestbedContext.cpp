@@ -1425,21 +1425,23 @@ void TestbedContext::DiffResult::Add(int val)
     // Don't update difference if an error code has already been encoded (see DiffErrors)
     if (value >= 0)
     {
-        if (val > 0)
+        if (val > threshold)
         {
+            // Store highest difference and count them
             value = std::max(value, val);
             ++count;
         }
         else if (val < 0)
         {
+            // Store error value
             value = val;
             count = 0;
         }
     }
 }
 
-TestbedContext::DiffResult::operator bool () const
+bool TestbedContext::DiffResult::FoundDiff(unsigned countTolerance) const
 {
-    return (value < 0 || value > threshold);
+    return (value != 0 && count > countTolerance);
 }
 

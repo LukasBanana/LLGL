@@ -164,9 +164,9 @@ DEF_TEST( TextureViews )
     constexpr int threshold = 5;
     const DiffResult diff = DiffImages(colorBufferName, threshold);
 
-    // Evaluate readback result
+    // Evaluate readback result and tolerate 5 pixel that are beyond the threshold due to GPU differences with the reinterpretation of pixel formats
     bool diffFailed = false;
-    if (diff)
+    if (diff.FoundDiff(5))
     {
         Log::Errorf("Mismatch between reference and result image for texture views (%s)\n", diff.Print());
         diffFailed = true;
