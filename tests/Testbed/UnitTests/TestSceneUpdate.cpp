@@ -72,11 +72,11 @@ DEF_TEST( SceneUpdate )
     constexpr unsigned numFrames = 10;
     const float rotation = static_cast<float>(frame) * 90.0f / static_cast<float>(numFrames - 1);
 
+    // Render scene
     Texture* readbackTex = nullptr;
 
     const IndexedTriangleMesh& mesh = models[ModelCube];
 
-    // Render scene
     cmdBuffer->Begin();
     {
         // Graphics can be set inside and outside a render pass, so test binding this PSO outside the render pass
@@ -117,7 +117,7 @@ DEF_TEST( SceneUpdate )
     cmdBuffer->End();
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "ColorBuffer_Frame" + std::to_string(frame);
+    const std::string colorBufferName = "SceneUpdate_Frame" + std::to_string(frame);
 
     SaveCapture(readbackTex, colorBufferName);
 
