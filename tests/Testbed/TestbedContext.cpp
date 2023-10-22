@@ -21,6 +21,7 @@
 
 static constexpr const char* g_defaultOutputDir = "Output/";
 
+// Returns true of the specified list of (generic) arguments contains the search string
 static bool HasArgument(int argc, char* argv[], const char* search)
 {
     for (int i = 0; i < argc; ++i)
@@ -182,9 +183,28 @@ static const char* TestResultToStr(TestResult result)
     }
 }
 
-static void PrintTestResult(TestResult result, const char* name)
+void TestbedContext::PrintSeparator()
 {
-    Log::Printf("Test %s: [ %s ]\n", name, TestResultToStr(result));
+    constexpr char              separatorChar   = '=';
+    constexpr std::size_t       separatorLen    = 80;
+    static const std::string    separatorLine(separatorLen, separatorChar);
+    Log::Printf("%s\n", separatorLine.c_str());
+}
+
+static void PrintTestResult(TestResult result, const char* name, bool highlighted = false)
+{
+    if (highlighted)
+    {
+        // Print test result with highlighted frame
+        TestbedContext::PrintSeparator();
+        Log::Printf("   Test %s: [ %s ]\n", name, TestResultToStr(result));
+        TestbedContext::PrintSeparator();
+    }
+    else
+    {
+        // Print test result as simple line
+        Log::Printf("Test %s: [ %s ]\n", name, TestResultToStr(result));
+    }
     ::fflush(stdout);
 }
 
@@ -1352,7 +1372,8 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
 
 void TestbedContext::RecordTestResult(TestResult result, const char* name)
 {
-    PrintTestResult(result, name);
+    const bool highlighted = verbose;
+    PrintTestResult(result, name, highlighted);
     if (TestFailed(result))
         ++failures;
 }

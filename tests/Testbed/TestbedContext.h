@@ -46,6 +46,8 @@ class TestbedContext
 
         static unsigned RunRendererIndependentTests();
 
+        static void PrintSeparator();
+
     protected:
 
         TestResult RunTest(const std::function<TestResult(unsigned)>& callback);

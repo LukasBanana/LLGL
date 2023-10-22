@@ -56,16 +56,19 @@ DEF_TEST( PipelineCaching )
         "Elapsed times for cached PSOs:             ",
     };
 
-    auto PrintElapsedTimes = [&elapsedTime, numPSOs](const char* caption) -> void
+    auto PrintElapsedTimes = [this, &elapsedTime, numPSOs](const char* caption) -> void
     {
-        Log::Printf(caption);
-        for_range(i, numPSOs)
+        if (this->showTiming)
         {
-            if (i > 0)
-                Log::Printf(", ");
-            Log::Printf("%.2f ms", elapsedTime[i]);
+            Log::Printf(caption);
+            for_range(i, numPSOs)
+            {
+                if (i > 0)
+                    Log::Printf(", ");
+                Log::Printf("%.2f ms", elapsedTime[i]);
+            }
+            Log::Printf("\n");
         }
-        Log::Printf("\n");
     };
 
     for_range(i, numPSOs)

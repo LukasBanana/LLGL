@@ -15,9 +15,9 @@ using namespace LLGL;
 static unsigned RunRendererIndependentTests()
 {
     Log::Printf("Run renderer independent tests\n");
-    Log::Printf("=============================\n");
+    TestbedContext::PrintSeparator();
     unsigned failures = TestbedContext::RunRendererIndependentTests();
-    Log::Printf("=============================\n\n");
+    TestbedContext::PrintSeparator();
     return failures;
 }
 
@@ -27,10 +27,11 @@ static unsigned RunTestbedForRenderer(const char* moduleName, int version, int a
         Log::Printf("Run Testbed: %s (%d)\n", moduleName, version);
     else
         Log::Printf("Run Testbed: %s\n", moduleName);
-    Log::Printf("=============================\n");
+    TestbedContext::PrintSeparator();
     TestbedContext context{ moduleName, version, argc, argv };
     unsigned failures = context.RunAllTests();
-    Log::Printf("=============================\n\n");
+    TestbedContext::PrintSeparator();
+    Log::Printf("\n");
     return failures;
 }
 
