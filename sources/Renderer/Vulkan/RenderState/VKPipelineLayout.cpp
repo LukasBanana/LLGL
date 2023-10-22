@@ -119,8 +119,31 @@ static void BuildPushConstantRanges(
             outUniformRanges[j].stageFlags |= outStageRanges[i].stageFlags;
 
             //TODO: shader permutations must be generated if uniforms have different offsets between stages
-            outUniformRanges[j].offset  = uniformRanges[i][j].offset;
-            outUniformRanges[j].size    = uniformRanges[i][j].size;
+            const std::uint32_t stageUniformOffset = uniformRanges[i][j].offset;
+            if (stageUniformOffset != 0)
+            {
+                if (!(outUniformRanges[j].offset == 0 || outUniformRanges[j].offset == stageUniformOffset))
+                {
+                    LLGL_TRAP(
+                        "cannot handle different push constant offsets between shader stages for uniform '%s'; got %u and %u",
+                        uniformDescs[j].name.c_str(), outUniformRanges[j].offset, stageUniformOffset
+                    );
+                }
+                outUniformRanges[j].offset = stageUniformOffset;
+            }
+
+            const std::uint32_t stageUniformSize = uniformRanges[i][j].size;
+            if (stageUniformSize != 0)
+            {
+                if (!(outUniformRanges[j].size == 0 || outUniformRanges[j].size == stageUniformSize))
+                {
+                    LLGL_TRAP(
+                        "cannot handle different push constant sizes between shader stages for uniform '%s'; got %u and %u",
+                        uniformDescs[j].name.c_str(), outUniformRanges[j].size, stageUniformSize
+                    );
+                }
+                outUniformRanges[j].size = stageUniformSize;
+            }
 
             /* Use offset and size as start and end pointers and resolve size after all elements are inserted into the range */
             pushConstantBlockRanges[i].offset   = std::min(outUniformRanges[j].offset, pushConstantBlockRanges[i].offset);

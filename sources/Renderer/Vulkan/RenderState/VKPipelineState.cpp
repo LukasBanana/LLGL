@@ -96,7 +96,7 @@ void VKPipelineState::PushConstants(VkCommandBuffer commandBuffer, std::uint32_t
 {
     VkPipelineLayout layout = GetVkPipelineLayout();
 
-    for (auto end = static_cast<std::uint32_t>(uniformRanges_.size()); first < end; ++first)
+    for (std::uint32_t end = static_cast<std::uint32_t>(uniformRanges_.size()); first < end; ++first)
     {
         const auto& pushConstantRange = uniformRanges_[first];
         if (size < pushConstantRange.size)
