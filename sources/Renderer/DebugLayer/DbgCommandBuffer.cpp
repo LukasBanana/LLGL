@@ -2152,7 +2152,7 @@ void DbgCommandBuffer::ValidateUniforms(const DbgPipelineLayout& pipelineLayoutD
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "cannot set uniforms with data size of %u; exceeded limit by %u%s",
+                "cannot set uniforms with data size of %u; exceeded limit by %u %s",
                 static_cast<std::uint32_t>(dataSize), static_cast<std::uint32_t>(remainingDataSize), ToByteLabel(remainingDataSize)
             );
         }
