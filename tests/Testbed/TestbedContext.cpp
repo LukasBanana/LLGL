@@ -1348,6 +1348,9 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
     DiffResult result{ (pedantic ? DiffResult{ 0 } : DiffResult{ threshold, tolerance }) };
     pixelsDiff.resize(extentA.width * extentA.height);
 
+    if (verbose)
+        result.ResetHistogram(&histogram_);
+
     for_range(i, pixelsDiff.size())
     {
         const ColorRGBub& colorA = pixelsA[i];
@@ -1418,6 +1421,76 @@ void TestbedContext::IndexedTriangleMeshBuffer::FinalizeMesh(IndexedTriangleMesh
 
 
 /*
+ * Histogram structure
+ */
+
+void TestbedContext::Histogram::Reset()
+{
+    for (unsigned& count : diffRangeCounts)
+        count = 0;
+}
+
+void TestbedContext::Histogram::Add(int val)
+{
+    val = std::max(0, std::min(val, 255));
+    val = static_cast<int>((static_cast<float>(val) / 255.0f) * static_cast<float>(rangeSize - 1));
+    diffRangeCounts[val]++;
+}
+
+void TestbedContext::Histogram::Print(unsigned rows) const
+{
+    if (rows < 2)
+        return;
+
+    // Find maximum count in ranges
+    unsigned maxCount = 0;
+    for (unsigned count : diffRangeCounts)
+        maxCount = std::max(maxCount, count);
+
+    const float countScale = static_cast<float>(rows) / static_cast<float>(maxCount);
+
+    const unsigned minCount = std::max(1u, maxCount / rows);
+
+    const std::string minCountStr = std::to_string(minCount);
+    const std::string maxCountStr = std::to_string(maxCount);
+    const std::string blankCountStr = std::string(maxCountStr.size(), ' ');
+
+    const char* indent = "  ";
+    const std::string caption = "Histogram:";
+    const std::size_t captionPos = (caption.size() < rangeSize ? rangeSize - caption.size() : 0)/2;
+
+    Log::Printf("%s%s%s\n", indent, std::string(captionPos + blankCountStr.size() + 3, ' ').c_str(), caption.c_str());
+
+    // Print each row of histogram
+    for_range(y, rows)
+    {
+        Log::Printf(indent);
+
+        if (y == 0)
+            Log::Printf("%s | ", maxCountStr.c_str());
+        else if (y + 1 == rows)
+            Log::Printf("%s%s | ", std::string(maxCountStr.size() - minCountStr.size(), ' ').c_str(), minCountStr.c_str());
+        else
+            Log::Printf("%s | ", blankCountStr.c_str());
+
+        // Print pixel character for each column in the current row
+        for_range(x, rangeSize)
+        {
+            const bool isCellSet = (static_cast<unsigned>(static_cast<float>(diffRangeCounts[x]) * countScale + 0.5f) > (rows - y - 1));
+            Log::Printf(isCellSet ? "@" : " ");
+        }
+
+        Log::Printf("\n");
+    }
+
+    // Print diff ranges
+    static_assert(rangeSize > 3, "Histogram::rangeSize must be greater than 3");
+    Log::Printf("%s%s --%s\n", indent, blankCountStr.c_str(), std::string(rangeSize, '-').c_str());
+    Log::Printf("%s%s   1%sFF\n", indent, blankCountStr.c_str(), std::string(rangeSize - 3, ' ').c_str());
+}
+
+
+/*
  * DiffResult structure
  */
 
@@ -1456,11 +1529,14 @@ void TestbedContext::DiffResult::Add(int val)
     // Don't update difference if an error code has already been encoded (see DiffErrors)
     if (value >= 0)
     {
-        if (val > threshold)
+        if (val > 0)
         {
             // Store highest difference and count them
             value = std::max(value, val);
-            ++count;
+            if (histogram != nullptr)
+                histogram->Add(val);
+            if (val > threshold)
+                ++count;
         }
         else if (val < 0)
         {
@@ -1473,7 +1549,14 @@ void TestbedContext::DiffResult::Add(int val)
 
 bool TestbedContext::DiffResult::Mismatch() const
 {
-    return (value != 0 && count > tolerance);
+    return (value > threshold && count > tolerance);
+}
+
+void TestbedContext::DiffResult::ResetHistogram(Histogram* histogram)
+{
+    this->histogram = histogram;
+    if (this->histogram != nullptr)
+        this->histogram->Reset();
 }
 
 TestResult TestbedContext::DiffResult::Evaluate(const char* name, unsigned frame) const
@@ -1484,6 +1567,8 @@ TestResult TestbedContext::DiffResult::Evaluate(const char* name, unsigned frame
             Log::Errorf("Mismatch between reference and result image for %s [frame %u] (%s)\n", name, frame, Print());
         else
             Log::Errorf("Mismatch between reference and result image for %s (%s)\n", name, Print());
+        if (histogram != nullptr)
+            histogram->Print();
         return TestResult::FailedMismatch;
     }
     return TestResult::Passed;

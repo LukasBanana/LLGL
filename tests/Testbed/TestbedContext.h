@@ -180,6 +180,17 @@ class TestbedContext
             void FinalizeMesh(IndexedTriangleMesh& outMesh);
         };
 
+        struct Histogram
+        {
+            static constexpr int rangeSize = 32;
+
+            void Reset();
+            void Add(int val);
+            void Print(unsigned rows = 10) const;
+
+            unsigned diffRangeCounts[rangeSize] = {};
+        };
+
         struct DiffResult
         {
             DiffResult() = default;
@@ -196,9 +207,12 @@ class TestbedContext
 
             bool Mismatch() const;
 
+            void ResetHistogram(Histogram* histogram);
+
             // Returns TestResult::Passed or TestResult::FailedMismatch depending on diff result.
             TestResult Evaluate(const char* name, unsigned frame = ~0u) const;
 
+            Histogram*  histogram   = nullptr;
             int         threshold   = 0; // Difference threshold (related to 'value').
             unsigned    tolerance   = 0; // Number of pixels to tolerate over the threshold (related to 'count').
             int         value       = 0; // Maximum difference value
@@ -299,7 +313,8 @@ class TestbedContext
 
     private:
 
-        bool loadingShadersFailed_ = false;
+        bool        loadingShadersFailed_ = false;
+        Histogram   histogram_;
 
 };
 
