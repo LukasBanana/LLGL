@@ -127,8 +127,12 @@ void VKCommandBuffer::Begin()
     ResetQueryPoolsInFlight();
     #endif
 
-    /* Store new record state */
-    recordState_ = RecordState::OutsideRenderPass;
+    /* Reset record states to default values */
+    recordState_                            = RecordState::OutsideRenderPass;
+    framebufferRenderArea_.offset.x         = 0;
+    framebufferRenderArea_.offset.y         = 0;
+    framebufferRenderArea_.extent.width     = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
+    framebufferRenderArea_.extent.height    = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
 }
 
 void VKCommandBuffer::End()
