@@ -9,6 +9,8 @@ glslangValidator -V -DENABLE_SPIRV=1 -o UnprojectedMesh.450core.vert.spv Unproje
 glslangValidator -V -DENABLE_SPIRV=1 -o UnprojectedMesh.450core.frag.spv UnprojectedMesh.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -o DualSourceBlending.450core.vert.spv DualSourceBlending.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o DualSourceBlending.450core.frag.spv DualSourceBlending.450core.frag
+glslangValidator -V -DENABLE_SPIRV=1 -o DynamicTriangleMesh.450core.vert.spv DynamicTriangleMesh.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -o DynamicTriangleMesh.450core.frag.spv DynamicTriangleMesh.450core.frag
 echo DONE
 
 pause

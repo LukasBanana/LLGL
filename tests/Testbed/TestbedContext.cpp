@@ -757,6 +757,8 @@ bool TestbedContext::LoadShaders()
         shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Fragment, "PSMain", "ps_5_0");
         shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
         shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",               ShaderType::Vertex,   "VSMain", "vs_5_0");
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",               ShaderType::Fragment, "PSMain", "ps_5_0");
         shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",                   ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtUnprojected);
         shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",                   ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtUnprojected);
         shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",                ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtEmpty);
@@ -768,6 +770,8 @@ bool TestbedContext::LoadShaders()
         shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment);
         shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",              ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
         shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.vert",       ShaderType::Vertex,   nullptr, nullptr);
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.frag",       ShaderType::Fragment, nullptr, nullptr);
         shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
         shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",           ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_420))
@@ -782,6 +786,8 @@ bool TestbedContext::LoadShaders()
         shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Fragment, "PSMain", "1.1");
         shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
         shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",              ShaderType::Vertex,   "VSMain", "1.1");
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",              ShaderType::Fragment, "PSMain", "1.1");
         shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",                  ShaderType::Vertex,   "VSMain", "1.1", nullptr, VertFmtUnprojected);
         shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",                  ShaderType::Fragment, "PSMain", "1.1", nullptr, VertFmtUnprojected);
         shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",               ShaderType::Vertex,   "VSMain", "1.2", nullptr, VertFmtEmpty);
@@ -793,6 +799,8 @@ bool TestbedContext::LoadShaders()
         shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
         shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
         shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.450core.vert.spv",   ShaderType::Vertex);
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.450core.frag.spv",   ShaderType::Fragment);
         shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
         shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
         shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.vert.spv",    ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);

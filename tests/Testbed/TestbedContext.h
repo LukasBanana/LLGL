@@ -108,6 +108,8 @@ class TestbedContext
             PSSolid,
             VSTextured,
             PSTextured,
+            VSDynamic,
+            PSDynamic,
             VSUnprojected,
             PSUnprojected,
             VSDualSourceBlend,
