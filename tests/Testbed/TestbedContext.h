@@ -185,22 +185,20 @@ class TestbedContext
             DiffResult& operator = (const DiffResult&) = default;
 
             DiffResult(DiffErrors error);
-            explicit DiffResult(int threshold);
+            explicit DiffResult(int threshold, unsigned tolerance = 0);
 
             // Returns the difference result as a string.
             const char* Print() const;
 
             void Add(int val);
 
-            bool FoundDiff(unsigned countTolerance = 0) const;
+            bool Mismatch() const;
 
-            // Returns true if this difference is non-zero.
-            inline operator bool () const
-            {
-                return FoundDiff();
-            }
+            // Returns TestResult::Passed or TestResult::FailedMismatch depending on diff result.
+            TestResult Evaluate(const char* name, unsigned frame = ~0u) const;
 
-            int         threshold   = 0;
+            int         threshold   = 0; // Difference threshold (related to 'value').
+            unsigned    tolerance   = 0; // Number of pixels to tolerate over the threshold (related to 'count').
             int         value       = 0; // Maximum difference value
             unsigned    count       = 0; // Number of different pixels;
         };
@@ -293,7 +291,7 @@ class TestbedContext
         void SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly = false);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
-        DiffResult DiffImages(const std::string& name, int threshold = 1, int scale = 1);
+        DiffResult DiffImages(const std::string& name, int threshold = 1, unsigned tolerance = 0, int scale = 1);
 
         void RecordTestResult(TestResult result, const char* name);
 

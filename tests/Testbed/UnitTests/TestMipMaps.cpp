@@ -76,10 +76,10 @@ DEF_TEST( MipMaps )
 
             const DiffResult diff = DiffImages(mipName, diffThreshold);
 
-            if (diff)
+            TestResult intermediateResult = diff.Evaluate(mipName.c_str());
+            if (intermediateResult != TestResult::Passed)
             {
-                result = TestResult::FailedMismatch;
-                Log::Errorf("Mismatch between reference and result image for \"%s\" MIP-map [%u] (%s)\n", name.c_str(), mip, diff.Print());
+                result = intermediateResult;
                 if (!greedy)
                     break;
             }

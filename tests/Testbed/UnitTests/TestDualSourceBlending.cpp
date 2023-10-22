@@ -68,19 +68,11 @@ DEF_TEST( DualSourceBlending )
     constexpr int threshold = 12; // Accept threshold of 12 to avoid failure on CIS server; seen consistent diffs of 4 or 12 across multiple backends
     const DiffResult diff = DiffImages(colorBufferName, threshold);
 
-    // Evaluate readback result
-    bool diffFailed = false;
-    if (diff)
-    {
-        Log::Errorf("Mismatch between reference and result image for dual source blending (%s)\n", diff.Print());
-        diffFailed = true;
-    }
-
     // Clear resources
     renderer->Release(*samplerA);
     renderer->Release(*samplerB);
     renderer->Release(*pso);
 
-    return (diffFailed ? TestResult::FailedMismatch : TestResult::Passed);
+    return diff.Evaluate("dual source blending");
 }
 

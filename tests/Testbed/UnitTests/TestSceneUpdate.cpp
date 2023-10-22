@@ -124,19 +124,16 @@ DEF_TEST( SceneUpdate )
     const DiffResult diff = DiffImages(colorBufferName);
 
     // Evaluate readback result
-    bool diffFailed = false;
-    if (diff)
+    TestResult result = diff.Evaluate("scene update", frame);
+    if (result == TestResult::Passed)
     {
-        Log::Errorf("Mismatch between reference and result images for color buffer [frame %u] (%s)\n", frame, diff.Print());
-        diffFailed = true;
+        if (frame + 1 < numFrames)
+            return TestResult::Continue;
     }
-
-    if (frame + 1 < numFrames)
-        return TestResult::Continue;
 
     // Clear resources
     renderer->Release(*pso);
 
-    return (diffFailed ? TestResult::FailedMismatch : TestResult::Passed);
+    return result;
 }
 

@@ -35,6 +35,7 @@ DEF_TEST( CommandBufferSecondary )
 
     constexpr unsigned  numCmdBuffers = 3;
     constexpr int       diffThreshold = 1;
+    constexpr unsigned  diffTolerance = 1;
 
     // Initialize scene constants
     sceneConstants          = {};
@@ -170,12 +171,7 @@ DEF_TEST( CommandBufferSecondary )
     SaveColorImage(readbackImage, resolution, readbackImageName);
 
     // Ignore single pixel differences because GL implementation of CIS server might produce slightyl different rasterization
-    const DiffResult diff = DiffImages(readbackImageName, diffThreshold);
-    if (diff && diff.count > 1)
-    {
-        result = TestResult::FailedMismatch;
-        Log::Errorf("Mismatch between reference and result image for \"%s\" (%s)\n", readbackImageName.c_str(), diff.Print());
-    }
+    const DiffResult diff = DiffImages(readbackImageName, diffThreshold, diffTolerance);
 
     // Release resources
     for_range(i, numCmdBuffers)
@@ -187,7 +183,7 @@ DEF_TEST( CommandBufferSecondary )
     renderer->Release(*readbackTex);
     renderer->Release(*pso);
 
-    return result;
+    return diff.Evaluate("secondary command buffer");
 }
 
 

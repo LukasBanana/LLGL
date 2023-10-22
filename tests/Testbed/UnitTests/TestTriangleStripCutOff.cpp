@@ -136,21 +136,17 @@ DEF_TEST( TriangleStripCutOff )
     SaveCapture(readbackTex[0], colorBuffer0Name);
     const DiffResult diff0 = DiffImages(colorBuffer0Name);
 
-    if (diff0)
-    {
-        Log::Errorf("Mismatch between reference and result image for triangle strip with undefined format (%s)\n", diff0.Print());
+    TestResult result0 = diff0.Evaluate("triangle strip with undefined format");
+    if (result0 != TestResult::Passed)
         diffFailed = true;
-    }
 
     const std::string colorBuffer1Name = "TriangleStrip_FixedFormat";
     SaveCapture(readbackTex[1], colorBuffer1Name);
     const DiffResult diff1 = DiffImages(colorBuffer1Name);
 
-    if (diff1)
-    {
-        Log::Errorf("Mismatch between reference and result image for triangle strip with fixed format (%s)\n", diff1.Print());
+    TestResult result1 = diff1.Evaluate("triangle strip with fixed format");
+    if (result1 != TestResult::Passed)
         diffFailed = true;
-    }
 
     // Clear resources
     for_range(i, numFormats)

@@ -161,21 +161,15 @@ DEF_TEST( TextureViews )
 
     SaveCapture(readbackTex, colorBufferName);
 
-    constexpr int threshold = 5;
-    const DiffResult diff = DiffImages(colorBufferName, threshold);
-
     // Evaluate readback result and tolerate 5 pixel that are beyond the threshold due to GPU differences with the reinterpretation of pixel formats
-    bool diffFailed = false;
-    if (diff.FoundDiff(5))
-    {
-        Log::Errorf("Mismatch between reference and result image for texture views (%s)\n", diff.Print());
-        diffFailed = true;
-    }
+    constexpr int threshold = 5;
+    constexpr unsigned tolerance = 5;
+    const DiffResult diff = DiffImages(colorBufferName, threshold, tolerance);
 
     // Clear resources
     renderer->Release(*pso);
     renderer->Release(*psoLayout);
 
-    return (diffFailed ? TestResult::FailedMismatch : TestResult::Passed);
+    return diff.Evaluate("texture views");
 }
 

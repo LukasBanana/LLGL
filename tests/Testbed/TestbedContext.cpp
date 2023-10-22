@@ -1316,7 +1316,7 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
     return ColorRGBub{ heapMapLUT[diff*3], heapMapLUT[diff*3+1], heapMapLUT[diff*3+2] };
 }
 
-TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, int scale)
+TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, unsigned tolerance, int scale)
 {
     // Load input images and validate they have the same dimensions
     std::vector<ColorRGBub> pixelsA, pixelsB;
@@ -1336,7 +1336,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
         return DiffErrorExtentMismatch;
 
     // Generate heat-map image
-    DiffResult result{ (pedantic ? 0 : threshold) };
+    DiffResult result{ (pedantic ? DiffResult{ 0 } : DiffResult{ threshold, tolerance }) };
     pixelsDiff.resize(extentA.width * extentA.height);
 
     for_range(i, pixelsDiff.size())
@@ -1360,7 +1360,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
         result.Add(maxDiff);
     }
 
-    if (result)
+    if (result.Mismatch())
     {
         // Save diff inage and return highest difference value
         if (!SaveImage(pixelsDiff, extentA, diffPath + name + ".Diff.png", verbose))
@@ -1417,8 +1417,9 @@ TestbedContext::DiffResult::DiffResult(DiffErrors error)
     Add(static_cast<int>(error));
 }
 
-TestbedContext::DiffResult::DiffResult(int threshold) :
-    threshold { threshold }
+TestbedContext::DiffResult::DiffResult(int threshold, unsigned tolerance) :
+    threshold { threshold },
+    tolerance { tolerance }
 {
 }
 
@@ -1461,8 +1462,21 @@ void TestbedContext::DiffResult::Add(int val)
     }
 }
 
-bool TestbedContext::DiffResult::FoundDiff(unsigned countTolerance) const
+bool TestbedContext::DiffResult::Mismatch() const
 {
-    return (value != 0 && count > countTolerance);
+    return (value != 0 && count > tolerance);
+}
+
+TestResult TestbedContext::DiffResult::Evaluate(const char* name, unsigned frame) const
+{
+    if (Mismatch())
+    {
+        if (frame != ~0u)
+            Log::Errorf("Mismatch between reference and result image for %s [frame %u] (%s)\n", name, frame, Print());
+        else
+            Log::Errorf("Mismatch between reference and result image for %s (%s)\n", name, Print());
+        return TestResult::FailedMismatch;
+    }
+    return TestResult::Passed;
 }
 

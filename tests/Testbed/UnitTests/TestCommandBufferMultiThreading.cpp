@@ -285,10 +285,11 @@ DEF_TEST( CommandBufferMultiThreading )
         SaveColorImage(outputImage, texSize, outputImageName);
 
         const DiffResult diff = DiffImages(outputImageName, diffThreshold);
-        if (diff)
+
+        TestResult intermediateResult = diff.Evaluate(outputImageName.c_str());
+        if (intermediateResult != TestResult::Passed)
         {
-            result = TestResult::FailedMismatch;
-            Log::Errorf("Mismatch between reference and result image for \"%s\" (%s)\n", outputImageName.c_str(), diff.Print());
+            result = intermediateResult;
             if (!greedy)
                 break;
         }

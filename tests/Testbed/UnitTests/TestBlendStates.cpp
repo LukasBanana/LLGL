@@ -145,14 +145,6 @@ DEF_TEST( BlendStates )
     constexpr int threshold = 12; // Accept threshold of 12 to avoid failure on CIS server; seen consistent diffs of 4 or 12 across multiple backends
     const DiffResult diff = DiffImages(colorBufferName, threshold);
 
-    // Evaluate readback result
-    bool diffFailed = false;
-    if (diff)
-    {
-        Log::Errorf("Mismatch between reference and result image for blend states (%s)\n", diff.Print());
-        diffFailed = true;
-    }
-
     // Clear resources
     for_range(i, numBlendOps)
     {
@@ -160,6 +152,6 @@ DEF_TEST( BlendStates )
             renderer->Release(*pso[i][j]);
     }
 
-    return (diffFailed ? TestResult::FailedMismatch : TestResult::Passed);
+    return diff.Evaluate("blend states");
 }
 

@@ -155,12 +155,7 @@ DEF_TEST( DepthBuffer )
         );
         return TestResult::FailedMismatch;
     }
-    if (diff)
-    {
-        Log::Errorf("Mismatch between reference and result images for depth buffer (%s)\n", diff.Print());
-        return TestResult::FailedMismatch;
-    }
 
-    return TestResult::Passed;
+    return diff.Evaluate("depth buffer");
 }
 

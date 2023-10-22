@@ -162,12 +162,7 @@ DEF_TEST( StencilBuffer )
         );
         return TestResult::FailedMismatch;
     }
-    if (diff)
-    {
-        Log::Errorf("Mismatch between reference and result images for stencil buffer (%s)\n", diff.Print());
-        return TestResult::FailedMismatch;
-    }
 
-    return TestResult::Passed;
+    return diff.Evaluate("stencil buffer");
 }
 
