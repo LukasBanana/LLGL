@@ -138,19 +138,22 @@ bool MTConstantsCacheLayout::AppendUniformByName(
 {
     for (MTLArgument* arg in reflection.args)
     {
-        if (MTLStructType* structType = arg.bufferStructType)
+        if (arg.type == MTLArgumentTypeBuffer)
         {
-            if (MTLStructMember* member = [structType memberByName:uniformName])
+            if (MTLStructType* structType = arg.bufferStructType)
             {
-                MTShaderBuffer* dstBuffer = FindOrAppendShaderBuffer(reflection.stage, arg.index, arg.bufferDataSize, shaderBuffers);
-                MTShaderBufferField field;
+                if (MTLStructMember* member = [structType memberByName:uniformName])
                 {
-                    field.uniformIndex  = static_cast<NSUInteger>(uniformIndex);
-                    field.offset        = member.offset;
-                    field.size          = GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize);
+                    MTShaderBuffer* dstBuffer = FindOrAppendShaderBuffer(reflection.stage, arg.index, arg.bufferDataSize, shaderBuffers);
+                    MTShaderBufferField field;
+                    {
+                        field.uniformIndex  = static_cast<NSUInteger>(uniformIndex);
+                        field.offset        = member.offset;
+                        field.size          = GetUniformTypeSize(uniformDesc.type, uniformDesc.arraySize);
+                    }
+                    dstBuffer->fields.push_back(field);
+                    return true;
                 }
-                dstBuffer->fields.push_back(field);
-                return true;
             }
         }
     }
