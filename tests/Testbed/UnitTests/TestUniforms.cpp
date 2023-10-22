@@ -14,11 +14,14 @@
 
 DEF_TEST( Uniforms )
 {
+    static TestResult result = TestResult::Passed;
     static PipelineState* pso;
     static PipelineLayout* psoLayout;
 
     if (frame == 0)
     {
+        result = TestResult::Passed;
+
         if (shaders[VSDynamic] == nullptr || shaders[PSDynamic] == nullptr)
         {
             Log::Errorf("Missing shaders for backend\n");
@@ -175,8 +178,11 @@ DEF_TEST( Uniforms )
     const DiffResult diff = DiffImages(colorBufferName, threshold, tolerance);
 
     // Evaluate readback result and tolerate 5 pixel that are beyond the threshold due to GPU differences with the reinterpretation of pixel formats
-    TestResult result = diff.Evaluate("uniforms", frame);
-    if (result == TestResult::Passed)
+    TestResult intermediateResult = diff.Evaluate("uniforms", frame);
+    if (intermediateResult != TestResult::Passed)
+        result = intermediateResult;
+
+    if (intermediateResult == TestResult::Passed || greedy)
     {
         if (frame + 1 < numFrames)
             return TestResult::Continue;

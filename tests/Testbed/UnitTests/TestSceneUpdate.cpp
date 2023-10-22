@@ -14,10 +14,13 @@
 
 DEF_TEST( SceneUpdate )
 {
+    static TestResult result = TestResult::Passed;
     static PipelineState* pso;
 
     if (frame == 0)
     {
+        result = TestResult::Passed;
+
         if (shaders[VSSolid] == nullptr || shaders[PSSolid] == nullptr)
         {
             Log::Errorf("Missing shaders for backend\n");
@@ -123,8 +126,11 @@ DEF_TEST( SceneUpdate )
     const DiffResult diff = DiffImages(colorBufferName);
 
     // Evaluate readback result
-    TestResult result = diff.Evaluate("scene update", frame);
-    if (result == TestResult::Passed)
+    TestResult intermediateResult = diff.Evaluate("scene update", frame);
+    if (intermediateResult != TestResult::Passed)
+        result = intermediateResult;
+
+    if (intermediateResult == TestResult::Passed || greedy)
     {
         if (frame + 1 < numFrames)
             return TestResult::Continue;
