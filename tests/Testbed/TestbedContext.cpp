@@ -1476,8 +1476,14 @@ void TestbedContext::Histogram::Print(unsigned rows) const
         // Print pixel character for each column in the current row
         for_range(x, rangeSize)
         {
-            const bool isCellSet = (static_cast<unsigned>(static_cast<float>(diffRangeCounts[x]) * countScale + 0.5f) > (rows - y - 1));
-            Log::Printf(isCellSet ? "@" : " ");
+            const float cellWeight = static_cast<float>(diffRangeCounts[x]) * countScale - static_cast<float>(rows - y - 1);
+            if (cellWeight > 0.0f)
+            {
+                const int cellValue = std::max(0, std::min(static_cast<int>(cellWeight * 4.0f), 4));
+                Log::Printf("%c", ".,oO@"[cellValue]);
+            }
+            else
+                Log::Printf(" ");
         }
 
         Log::Printf("\n");
