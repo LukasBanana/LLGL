@@ -94,25 +94,50 @@ void VKPipelineState::BindHeapDescriptorSet(VkCommandBuffer commandBuffer, VkDes
 
 void VKPipelineState::PushConstants(VkCommandBuffer commandBuffer, std::uint32_t first, const char* data, std::uint32_t size)
 {
+    if (first >= uniformRanges_.size())
+        return /*OutOfBounds*/;
+
     VkPipelineLayout layout = GetVkPipelineLayout();
 
-    for (std::uint32_t end = static_cast<std::uint32_t>(uniformRanges_.size()); first < end; ++first)
+    const char* pendingData = data;
+    VkPushConstantRange pendingRange = {};
+
+    auto FlushPushConstants = [&pendingRange, &pendingData, layout, commandBuffer]()
     {
-        const auto& pushConstantRange = uniformRanges_[first];
-        if (size < pushConstantRange.size)
-            return /*OutOfBounds*/;
+        if (pendingRange.size > 0)
+        {
+            vkCmdPushConstants(
+                commandBuffer,
+                layout,
+                pendingRange.stageFlags,
+                pendingRange.offset,
+                pendingRange.size,
+                pendingData
+            );
+            pendingData += pendingRange.size;
+            pendingRange.size = 0;
+        }
+    };
 
-        vkCmdPushConstants(
-            commandBuffer,
-            layout,
-            pushConstantRange.stageFlags,
-            pushConstantRange.offset,
-            pushConstantRange.size,
-            data
-        );
+    for (const std::uint32_t end = static_cast<std::uint32_t>(uniformRanges_.size()); first < end; ++first)
+    {
+        /* Stop once we reached end of input data */
+        const VkPushConstantRange& currentRange = uniformRanges_[first];
+        if (size < currentRange.size)
+            break;
 
-        data += pushConstantRange.size;
+        if (currentRange.offset > pendingRange.offset + pendingRange.size || currentRange.stageFlags != pendingRange.stageFlags)
+        {
+            FlushPushConstants();
+            pendingRange.stageFlags = currentRange.stageFlags;
+            pendingRange.offset     = currentRange.offset;
+        }
+
+        pendingRange.size   += currentRange.size;
+        size                -= currentRange.size;
     }
+
+    FlushPushConstants();
 }
 
 
