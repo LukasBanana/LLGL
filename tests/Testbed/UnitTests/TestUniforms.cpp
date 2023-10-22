@@ -29,6 +29,7 @@ DEF_TEST( Uniforms )
         }
 
         // Create graphics PSO
+        SamplerDescriptor staticSamplerDesc = Parse("filter.min=nearest,filter.mag=nearest,address=clamp");
         PipelineLayoutDescriptor psoLayoutDesc;
         {
             psoLayoutDesc.bindings  =
@@ -38,7 +39,7 @@ DEF_TEST( Uniforms )
             };
             psoLayoutDesc.staticSamplers =
             {
-                StaticSamplerDescriptor{ "linearSampler", StageFlags::FragmentStage, (HasCombinedSamplers() ? 3 : 4), Parse("filter=nearest,address=clamp") }
+                StaticSamplerDescriptor{ "linearSampler", StageFlags::FragmentStage, (HasCombinedSamplers() ? 3 : 4), staticSamplerDesc }
             };
             psoLayoutDesc.uniforms =
             {
@@ -173,8 +174,8 @@ DEF_TEST( Uniforms )
 
     SaveCapture(readbackTex, colorBufferName);
 
-    constexpr int threshold = 32;       // High threshold because of clamp texture filter
-    constexpr unsigned tolerance = 300; // High tolerance because of clamp texture filter
+    constexpr int threshold = 20;       // High threshold because of nearest texture filter
+    constexpr unsigned tolerance = 100; // High tolerance because of nearest texture filter
     const DiffResult diff = DiffImages(colorBufferName, threshold, tolerance);
 
     // Evaluate readback result and tolerate 5 pixel that are beyond the threshold due to GPU differences with the reinterpretation of pixel formats
