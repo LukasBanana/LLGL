@@ -53,6 +53,7 @@ DECL_TEST( BlendStates );
 DECL_TEST( DualSourceBlending );
 DECL_TEST( TriangleStripCutOff );
 DECL_TEST( TextureViews );
+DECL_TEST( Uniforms );
 
 #undef DECL_TEST
 

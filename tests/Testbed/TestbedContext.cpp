@@ -306,6 +306,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CommandBufferSecondary      );
     RUN_TEST( TriangleStripCutOff         );
     RUN_TEST( TextureViews                );
+    RUN_TEST( Uniforms                    );
 
     #undef RUN_TEST
 
