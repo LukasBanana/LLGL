@@ -39,6 +39,7 @@ set INPUT=^
 set INPUT_FN=^
     %INPUT% ^
     %CINCLUDE%\Buffer.h ^
+    %CINCLUDE%\Canvas.h ^
     %CINCLUDE%\CommandBuffer.h ^
     %CINCLUDE%\CommandQueue.h ^
     %CINCLUDE%\PipelineLayout.h ^
@@ -52,12 +53,11 @@ set INPUT_FN=^
     %CINCLUDE%\Surface.h ^
     %CINCLUDE%\SwapChain.h ^
     %CINCLUDE%\Texture.h ^
-    %CINCLUDE%\Timer.h
+    %CINCLUDE%\Timer.h ^
+    %CINCLUDE%\Window.h
 
-REM    %CINCLUDE%\Canvas.h ^
 REM    %CINCLUDE%\Display.h ^
 REM    %CINCLUDE%\Log.h ^
-REM    %CINCLUDE%\Window.h ^
 
 REM Generate wrapper for C99, C#
 call :Generate .\LLGLWrapper.h -c99

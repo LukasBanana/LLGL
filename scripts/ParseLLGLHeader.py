@@ -33,21 +33,23 @@ class StdType(Enum):
     VOID = 1
     BOOL = 2
     CHAR = 3
-    INT8 = 4
-    INT16 = 5
-    INT32 = 6
-    INT64 = 7
-    UINT8 = 8
-    UINT16 = 9
-    UINT32 = 10
-    UINT64 = 11
-    LONG = 12
-    SIZE_T = 13
-    FLOAT = 14
-    ENUM = 15
-    FLAGS = 16
-    STRUCT = 17
-    CONST = 18 # static constexpr int
+    WCHAR = 4
+    INT8 = 5
+    INT16 = 6
+    INT32 = 7
+    INT64 = 8
+    UINT8 = 9
+    UINT16 = 10
+    UINT32 = 11
+    UINT64 = 12
+    LONG = 13
+    SIZE_T = 14
+    FLOAT = 15
+    ENUM = 16
+    FLAGS = 17
+    STRUCT = 18
+    FUNC = 19 # Function pointer
+    CONST = 20 # static constexpr int
 
 class ConditionalType:
     name = ''
@@ -69,6 +71,7 @@ class LLGLMeta:
         'void': StdType.VOID,
         'bool': StdType.BOOL,
         'char': StdType.CHAR,
+        'wchar_t': StdType.WCHAR,
         'int8_t': StdType.INT8,
         'int16_t': StdType.INT16,
         'short': StdType.INT16,
@@ -97,11 +100,11 @@ class LLGLMeta:
         'Display',
         'Fence',
         'Image',
+        'PipelineCache',
         'PipelineLayout',
         'PipelineState',
         'QueryHeap',
         'RenderPass',
-        'RenderSystem',
         'RenderTarget',
         'RenderingDebugger',
         'RenderingProfiler',
@@ -173,8 +176,11 @@ class LLGLType:
 
     def toBaseType(typename):
         if typename != '':
-            builtin = LLGLMeta.builtins.get(typename)
-            return builtin if builtin else StdType.STRUCT
+            if typename.startswith('LLGL_PFN_'):
+                return StdType.FUNC
+            else:
+                builtin = LLGLMeta.builtins.get(typename)
+                return builtin if builtin else StdType.STRUCT
         return StdType.UNDEFINED
 
     # Returns true if this type is a custom LLGL enum, flags, or struct declaration
@@ -591,14 +597,21 @@ class Parser:
     def parseParameter(self):
         # Only parse return type name parameter name as C does not support default arguments
         paramType = self.parseType()
-        param = LLGLField(self.scanner.accept(), paramType)
+
+        paramName = ''
+        if self.scanner.acceptIf('LLGL_NULLABLE'):
+            self.scanner.acceptOrFail('(')
+            paramName = self.scanner.accept()
+            self.scanner.acceptOrFail(')')
+        else:
+            paramName = self.scanner.accept()
+
+        param = LLGLField(paramName, paramType)
 
         # Parse optional fixed size array
         if self.scanner.acceptIf('['):
             param.type.setArraySize(self.scanner.accept())
             self.scanner.acceptOrFail(']')
-
-        self.scanner.acceptIf('LLGL_NULLABLE')
 
         return param
 
@@ -655,15 +668,17 @@ class Parser:
                 # Ignore deprecated records
                 ignoreRecord = self.tryParseDeprecated()
                 
-                # Parse record name
+                # Parse record name and trim 'LLGL' prefix (occurs in custom structs of C99 wrapper such as LLGLWindowEventListener)
                 name = self.scanner.accept()
+                if name.startswith('LLGL'):
+                    name = name[len('LLGL'):]
 
                 # Parse optional inheritance
                 inheritedFields = []
                 if self.scanner.acceptIf(':'):
                     baseName = self.scanner.accept()
                     baseRecord = mod.findStructByName(baseName)
-                    if baseRecord != None:
+                    if baseRecord:
                         inheritedFields = baseRecord.fields
                     else:
                         fatal(f'failed to find base record "{baseName}" when parsing struct "{name}"')
@@ -758,7 +773,9 @@ class Translator:
         return ' ' * (self.indent * self.tabSize)
 
     def statement(self, line):
-        if len(line) > 0 and line[0] == '#':
+        if len(line) == 0:
+            print('')
+        elif len(line) > 0 and line[0] == '#':
             print(line)
         else:
             print(self.indentation() + line)
@@ -782,7 +799,7 @@ class Translator:
                 return '<stdint.h>', True
             elif inType.baseType in [StdType.SIZE_T]:
                 return '<stddef.h>', True
-            elif inType.baseType in [StdType.CHAR, StdType.LONG, StdType.FLOAT]:
+            elif inType.baseType in [StdType.CHAR, StdType.WCHAR, StdType.LONG, StdType.FLOAT]:
                 return None, True
             return f'<LLGL-C/{inType.typename}Flags.h>', False
 
@@ -1036,6 +1053,7 @@ class Translator:
             StdType.VOID: 'void',
             StdType.BOOL: 'bool',
             StdType.CHAR: 'byte',
+            StdType.WCHAR: 'char',
             StdType.INT8: 'sbyte',
             StdType.INT16: 'short',
             StdType.INT32: 'int',
@@ -1044,9 +1062,10 @@ class Translator:
             StdType.UINT16: 'ushort',
             StdType.UINT32: 'uint',
             StdType.UINT64: 'ulong',
-            StdType.LONG: 'long',
+            StdType.LONG: 'uint',
             StdType.SIZE_T: 'UIntPtr',
-            StdType.FLOAT: 'float'
+            StdType.FLOAT: 'float',
+            StdType.FUNC: 'IntPtr',
         }
 
         self.statement('/*')
@@ -1103,10 +1122,33 @@ class Translator:
         self.statement('/* ----- Handles ----- */')
         self.statement('')
 
+        def writeInterfaceCtor(self, interface, parent):
+            self.statement(f'public {interface}({parent} instance)')
+            self.openScope()
+            self.statement('ptr = instance.ptr;')
+            self.closeScope()
+
+        def writeInterfaceInterpret(self, interface):
+            self.statement(f'public {interface} As{interface}()')
+            self.openScope()
+            self.statement(f'return new {interface}(this);')
+            self.closeScope()
+
+        def writeInterfaceRelation(self, interface, parent, children):
+            if interface in children:
+                writeInterfaceCtor(self, interface, parent)
+                writeInterfaceInterpret(self, parent)
+            elif interface == parent:
+                for child in children:
+                    writeInterfaceCtor(self, parent, child)
+                    writeInterfaceInterpret(self, child)
+
         for interface in LLGLMeta.interfaces:
             self.statement(f'public unsafe struct {interface}')
             self.openScope()
             self.statement('internal unsafe void* ptr;')
+            writeInterfaceRelation(self, interface, 'Surface', ['Window', 'Canvas'])
+            writeInterfaceRelation(self, interface, 'RenderTarget', ['SwapChain'])
             self.closeScope()
             self.statement('')
 
@@ -1186,10 +1228,11 @@ class Translator:
             decl = CsharpDeclaration(ident)
 
             def sanitizeTypename(typename):
+                nonlocal isInsideStruct
                 if typename.startswith(LLGLMeta.typePrefix):
                     return typename[len(LLGLMeta.typePrefix):]
                 elif typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
-                    return 'string'
+                    return 'string' if not isInsideStruct else 'byte*'
                 else:
                     return typename
 
@@ -1203,18 +1246,28 @@ class Translator:
                     if declType.arraySize > 0 and builtin:
                         decl.type += 'fixed '
                     decl.type += builtin if builtin else sanitizeTypename(declType.typename)
-                    if declType.isPointer:
+                    if declType.isPointer or declType.arraySize == -1:
                         decl.type += '*'
                     elif declType.arraySize > 0:
                         if builtin:
                             decl.ident += f'[{declType.arraySize}]'
                         else:
-                            decl.marshal = f'MarshalAs(UnmanagedType.ByValArray, SizeConst = {declType.arraySize})'
-                            decl.type += '[]'
+                            decl.marshal = '<unroll>'
+                    elif declType.baseType == StdType.BOOL:
+                        decl.marshal = 'MarshalAs(UnmanagedType.I1)'
                 else:
                     decl.type += builtin if builtin else sanitizeTypename(declType.typename)
                     if declType.isPointer or declType.arraySize > 0:
-                        decl.type += '*'
+                        if declType.baseType == StdType.STRUCT:
+                            decl.marshal = 'ref'
+                        elif declType.baseType == StdType.CHAR:
+                            decl.type = 'string'
+                            decl.marshal = 'MarshalAs(UnmanagedType.LPStr)'
+                        elif declType.baseType == StdType.WCHAR:
+                            decl.type = 'string'
+                            decl.marshal = 'MarshalAs(UnmanagedType.LPWStr)'
+                        else:
+                            decl.type += '*'
 
             return decl
 
@@ -1234,9 +1287,13 @@ class Translator:
                         if field.type.arraySize == -1:
                             declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
                         fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
-                        if fieldDecl.marshal:
-                            declList.append(Translator.Declaration(None, fieldDecl.marshal))
-                        declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init))
+                        if fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
+                            for i in range(0, field.type.arraySize):
+                                declList.append(Translator.Declaration(fieldDecl.type, f'{fieldDecl.ident}{i}', field.init))
+                        else:
+                            if fieldDecl.marshal:
+                                declList.append(Translator.Declaration(None, fieldDecl.marshal))
+                            declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init))
 
                 for decl in declList.decls:
                     if not decl.type:
@@ -1257,15 +1314,27 @@ class Translator:
 
             for func in doc.funcs:
                 self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
-                returnTypeStr = translateDecl(func.returnType).type
+
+                returnType = translateDecl(func.returnType)
+                if returnType.type == 'bool':
+                    self.statement(f'[return: MarshalAs(UnmanagedType.I1)]')
+                elif returnType.marshal:
+                    self.statement(f'[return: {returnType.marshal}]')
+
                 paramListStr = ''
                 for param in func.params:
                     if len(paramListStr) > 0:
                         paramListStr += ', '
                     paramDecl = translateDecl(param.type, param.name)
+                    if paramDecl.marshal:
+                        if paramDecl.marshal == 'ref':
+                            paramListStr += f'{paramDecl.marshal} '
+                        else:
+                            paramListStr += f'[{paramDecl.marshal}] '
                     paramListStr += f'{paramDecl.type} {paramDecl.ident}'
+
                 funcName = func.name[len(LLGLMeta.funcPrefix):]
-                self.statement(f'public static extern unsafe {returnTypeStr} {funcName}({paramListStr});');
+                self.statement(f'public static extern unsafe {returnType.type} {funcName}({paramListStr});');
                 self.statement('')
 
             self.statement('')
