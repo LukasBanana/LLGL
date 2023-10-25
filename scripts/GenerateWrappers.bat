@@ -1,6 +1,6 @@
 @echo off
 
-if not exist .\ParseLLGLHeader.py (
+if not exist WrapperGen\ParseLLGLHeader.py (
     echo Error: Missing ParseLLGLHeader.py script in current folder
     exit 1
 )
@@ -72,9 +72,9 @@ set FUNCTIONS=%~3
 
 REM Generate wrapper
 if "%FUNCTIONS%"=="" (
-    set ARGS=.\ParseLLGLHeader.py "-name=LLGLWrapper" %LANGUAGE% %INPUT%
+    set ARGS=WrapperGen\ParseLLGLHeader.py "-name=LLGLWrapper" %LANGUAGE% %INPUT%
 ) else (
-    set ARGS=.\ParseLLGLHeader.py "-name=LLGLWrapper" %LANGUAGE% %FUNCTIONS% %INPUT_FN%
+    set ARGS=WrapperGen\ParseLLGLHeader.py "-name=LLGLWrapper" %LANGUAGE% %FUNCTIONS% %INPUT_FN%
 )
 
 REM Run Python script to parse LLGL headers and write result into output file
