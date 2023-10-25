@@ -772,7 +772,7 @@ class Translator:
     def indentation(self):
         return ' ' * (self.indent * self.tabSize)
 
-    def statement(self, line):
+    def statement(self, line = ''):
         if len(line) == 0:
             print('')
         elif len(line) > 0 and line[0] == '#':
@@ -821,17 +821,17 @@ class Translator:
         for line in LLGLMeta.copyright:
             self.statement(' * ' + line)
         self.statement(' */')
-        self.statement('')
+        self.statement()
         for line in LLGLMeta.info:
             self.statement('/* {} */'.format(line))
-        self.statement('')
+        self.statement()
 
         # Write header guard
         headerGuardName = 'LLGL_C99{}_H'.format(Translator.convertNameToHeaderGuard(doc.name))
         self.statement('#ifndef ' + headerGuardName)
         self.statement('#define ' + headerGuardName)
-        self.statement('')
-        self.statement('')
+        self.statement()
+        self.statement()
 
         # Write all include directives
         includeHeaders = translateIncludes(doc.typeDeps)
@@ -842,20 +842,20 @@ class Translator:
 
             for external in LLGLMeta.externals:
                 if external.cond and external.include:
-                    self.statement('')
+                    self.statement()
                     self.statement(f'#if {external.cond}')
                     self.statement(f'#   include {external.include}')
                     self.statement(f'#endif /* {external.cond} */')
 
-            self.statement('')
-            self.statement('')
+            self.statement()
+            self.statement()
 
         # Write all constants
         constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
 
         if len(constStructs) > 0:
             self.statement('/* ----- Constants ----- */')
-            self.statement('')
+            self.statement()
 
             for struct in constStructs:
                 # Write struct field declarations
@@ -865,16 +865,16 @@ class Translator:
 
                 for decl in declList.decls:
                     self.statement('#define ' + decl.name + declList.spaces(1, decl.name) + ' ( ' + decl.init + ' )')
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+            self.statement()
 
         # Write all enumerations
         sizedTypes = dict()
 
         if len(doc.enums) > 0:
             self.statement('/* ----- Enumerations ----- */')
-            self.statement('')
+            self.statement()
 
             for enum in doc.enums:
                 if enum.base:
@@ -898,9 +898,9 @@ class Translator:
 
                 self.closeScope()
                 self.statement('LLGL{};'.format(enum.name))
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+            self.statement()
 
         # Write all flags
         if len(doc.flags) > 0:
@@ -921,7 +921,7 @@ class Translator:
 
 
             self.statement('/* ----- Flags ----- */')
-            self.statement('')
+            self.statement()
 
             for flag in doc.flags:
                 self.statement('typedef enum LLGL{}'.format(flag.name))
@@ -943,9 +943,9 @@ class Translator:
 
                 self.closeScope()
                 self.statement('LLGL{};'.format(flag.name))
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+            self.statement()
 
         # Write all structures
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
@@ -1001,7 +1001,7 @@ class Translator:
                 return None
 
             self.statement('/* ----- Structures ----- */')
-            self.statement('')
+            self.statement()
 
             for struct in commonStructs:
                 self.statement('typedef struct LLGL{}'.format(struct.name))
@@ -1037,16 +1037,16 @@ class Translator:
                         self.statement(f'{decl.type}{declList.spaces(0, decl.type)}{decl.name};')
                 self.closeScope()
                 self.statement('LLGL{};'.format(struct.name))
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+            self.statement()
 
         self.statement('#endif /* {} */'.format(headerGuardName))
-        self.statement('')
-        self.statement('')
-        self.statement('')
+        self.statement()
+        self.statement()
+        self.statement()
         self.statement('/* ================================================================================ */')
-        self.statement('')
+        self.statement()
 
     def translateModuleToCsharp(self, doc):
         builtinTypenames = {
@@ -1074,32 +1074,22 @@ class Translator:
         for line in LLGLMeta.copyright:
             self.statement(' * ' + line)
         self.statement(' */')
-        self.statement('')
+        self.statement()
         for line in LLGLMeta.info:
             self.statement('/* {} */'.format(line))
-        self.statement('')
+        self.statement()
         self.statement('using System;')
         self.statement('using System.Runtime.InteropServices;')
-        self.statement('')
-        self.statement('namespace LLGLModule')
+        self.statement()
+        self.statement('namespace LLGL')
         self.openScope()
-        self.statement('public static partial class LLGL')
-        self.openScope()
-
-        # Write DLL name
-        self.statement('#if DEBUG')
-        self.statement('const string DllName = "LLGLD.dll";')
-        self.statement('#else')
-        self.statement('const string DllName = "LLGL.dll";')
-        self.statement('#endif')
-        self.statement('')
 
         # Write all constants
         constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
 
         if len(constStructs) > 0:
             self.statement('/* ----- Constants ----- */')
-            self.statement('')
+            self.statement()
 
             for struct in constStructs:
                 self.statement('public enum {} : int'.format(struct.name))
@@ -1114,13 +1104,84 @@ class Translator:
                     self.statement(decl.name + declList.spaces(1, decl.name) + ' = ' + decl.init + ',')
 
                 self.closeScope()
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+            self.statement()
+
+        # Write all enumerations
+        if len(doc.enums) > 0:
+            self.statement('/* ----- Enumerations ----- */')
+            self.statement()
+
+            for enum in doc.enums:
+                self.statement('public enum ' + enum.name)
+                self.openScope()
+
+                # Write enumeration entry declarations
+                declList = Translator.DeclarationList()
+                for field in enum.fields:
+                    declList.append(Translator.Declaration('', field.name, field.init))
+
+                for decl in declList.decls:
+                    if decl.init:
+                        self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
+                    else:
+                        self.statement(decl.name + ',')
+
+                self.closeScope()
+                self.statement()
+
+            self.statement()
+
+        # Write all flags
+        if len(doc.flags) > 0:
+            def translateFlagInitializer(init):
+                s = init
+                s = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', s)
+                return s
+
+            self.statement('/* ----- Flags ----- */')
+            self.statement()
+
+            for flag in doc.flags:
+                self.statement('[Flags]')
+                self.statement('public enum {} : uint'.format(flag.name))
+                #basename = flag.name[:-len('Flags')]
+                self.openScope()
+
+                # Write flag entry declarations
+                declList = Translator.DeclarationList()
+                for field in flag.fields:
+                    declList.append(Translator.Declaration('', field.name, translateFlagInitializer(field.init) if field.init else None))
+
+                for decl in declList.decls:
+                    if decl.init:
+                        self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
+                    else:
+                        self.statement(decl.name + ',')
+
+                self.closeScope()
+                self.statement()
+
+            self.statement()
+
+        # Write native LLGL interface
+        self.statement('internal static class NativeLLGL')
+        self.openScope()
+
+        # Write DLL name
+        self.statement('#if DEBUG')
+        self.statement('const string DllName = "LLGLD";')
+        self.statement('#else')
+        self.statement('const string DllName = "LLGL";')
+        self.statement('#endif')
+        self.statement()
+        self.statement('#pragma warning disable 0649 // Disable warning about unused fields')
+        self.statement()
 
         # Write all interface handles
         self.statement('/* ----- Handles ----- */')
-        self.statement('')
+        self.statement()
 
         def writeInterfaceCtor(self, interface, parent):
             self.statement(f'public {interface}({parent} instance)')
@@ -1150,66 +1211,9 @@ class Translator:
             writeInterfaceRelation(self, interface, 'Surface', ['Window', 'Canvas'])
             writeInterfaceRelation(self, interface, 'RenderTarget', ['SwapChain'])
             self.closeScope()
-            self.statement('')
+            self.statement()
 
-        self.statement('')
-
-        # Write all enumerations
-        if len(doc.enums) > 0:
-            self.statement('/* ----- Enumerations ----- */')
-            self.statement('')
-
-            for enum in doc.enums:
-                self.statement('public enum ' + enum.name)
-                self.openScope()
-
-                # Write enumeration entry declarations
-                declList = Translator.DeclarationList()
-                for field in enum.fields:
-                    declList.append(Translator.Declaration('', field.name, field.init))
-
-                for decl in declList.decls:
-                    if decl.init:
-                        self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
-                    else:
-                        self.statement(decl.name + ',')
-
-                self.closeScope()
-                self.statement('')
-
-            self.statement('')
-
-        # Write all flags
-        if len(doc.flags) > 0:
-            def translateFlagInitializer(init):
-                s = init
-                s = re.sub(r'(\||<<|>>|\+|\-|\*|\/)', r' \1 ', s)
-                return s
-
-            self.statement('/* ----- Flags ----- */')
-            self.statement('')
-
-            for flag in doc.flags:
-                self.statement('[Flags]')
-                self.statement('public enum {} : uint'.format(flag.name))
-                #basename = flag.name[:-len('Flags')]
-                self.openScope()
-
-                # Write flag entry declarations
-                declList = Translator.DeclarationList()
-                for field in flag.fields:
-                    declList.append(Translator.Declaration('', field.name, translateFlagInitializer(field.init) if field.init else None))
-
-                for decl in declList.decls:
-                    if decl.init:
-                        self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
-                    else:
-                        self.statement(decl.name + ',')
-
-                self.closeScope()
-                self.statement('')
-
-            self.statement('')
+        self.statement()
 
         # Write all structures
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
@@ -1273,7 +1277,7 @@ class Translator:
 
         if len(commonStructs) > 0:
             self.statement('/* ----- Structures ----- */')
-            self.statement('')
+            self.statement()
 
             for struct in commonStructs:
                 self.statement('public unsafe struct ' + struct.name)
@@ -1303,14 +1307,14 @@ class Translator:
                     else:
                         self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};')
                 self.closeScope()
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+            self.statement()
 
         # Write all functions
         if len(doc.funcs) > 0:
             self.statement('/* ----- Functions ----- */')
-            self.statement('')
+            self.statement()
 
             for func in doc.funcs:
                 self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
@@ -1335,16 +1339,17 @@ class Translator:
 
                 funcName = func.name[len(LLGLMeta.funcPrefix):]
                 self.statement(f'public static extern unsafe {returnType.type} {funcName}({paramListStr});');
-                self.statement('')
+                self.statement()
 
-            self.statement('')
+        self.statement('#pragma warning restore 0649 // Restore warning about unused fields')
+        self.statement()
 
         self.closeScope()
         self.closeScope()
-        self.statement('')
-        self.statement('')
-        self.statement('')
-        self.statement('')
+        self.statement()
+        self.statement()
+        self.statement()
+        self.statement()
         self.statement('// ================================================================================')
 
 def main():
