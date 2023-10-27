@@ -109,6 +109,7 @@ class LLGLMeta:
     ]
     funcPrefix = 'llgl'
     typePrefix = 'LLGL'
+    delegatePrefix = 'LLGL_PFN_'
 
 class LLGLMacros:
     def translateArraySize(ident):
@@ -249,6 +250,7 @@ class LLGLModule:
     flags = [] # Array of LLGLRecord
     structs = [] # Array of LLGLRecord
     funcs = [] # Array of LLGLFunction
+    delegates = [] # Array of LLGLFunction
     typeDeps = set() # Set of types used in this header
 
     def __init__(self):
@@ -257,6 +259,7 @@ class LLGLModule:
         self.flags = []
         self.structs = []
         self.funcs = []
+        self.delegates = []
         self.typeDeps = set()
 
     def deriveDependencies(self):
@@ -269,6 +272,7 @@ class LLGLModule:
         self.flags.extend(other.flags)
         self.structs.extend(other.structs)
         self.funcs.extend(other.funcs)
+        self.delegates.extend(other.delegates)
         self.typeDeps.update(other.typeDeps)
 
     def findStructByName(self, name):

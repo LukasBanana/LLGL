@@ -51,6 +51,7 @@ def printModule(module):
     iterate(lambda record: printRecord(record, 'FLAG'), module.flags)
     iterate(lambda record: printRecord(record, 'STRUCT'), filter(lambda record: not record.hasConstFieldsOnly(), module.structs))
     iterate(lambda func: printFunc(func, 'FUNC'), module.funcs)
+    iterate(lambda delegate: printFunc(delegate, 'DELEGATE'), module.delegates)
     print('@END')
 
 args = sys.argv[1:]

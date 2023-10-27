@@ -282,6 +282,24 @@ class Parser:
 
         return param
 
+    def parseParameterList(self):
+        params = []
+
+        self.scanner.acceptOrFail('(')
+        if not self.scanner.match(')'):
+            if self.scanner.match(['void', ')']):
+                # Ignore explicit empty parameter list
+                self.scanner.accept()
+            else:
+                # Parse parameters until no more ',' is scanned
+                while True:
+                    params.append(self.parseParameter())
+                    if not self.scanner.acceptIf(','):
+                        break
+        self.scanner.acceptOrFail(')')
+
+        return params
+
     def parseFunctionDecl(self):
         # Parse return type
         returnType = self.parseType()
@@ -292,21 +310,24 @@ class Parser:
         # Parse parameter list
         func = LLGLFunction(name, returnType)
 
-        self.scanner.acceptOrFail('(')
-        if not self.scanner.match(')'):
-            if self.scanner.match(['void', ')']):
-                # Ignore explicit empty parameter list
-                self.scanner.accept()
-            else:
-                # Parse parameters until no more ',' is scanned
-                while True:
-                    func.params.append(self.parseParameter())
-                    if not self.scanner.acceptIf(','):
-                        break
-        self.scanner.acceptOrFail(')')
+        func.params = self.parseParameterList()
         self.scanner.acceptOrFail(';')
 
         return func
+
+    def parseDelegateDecl(self, returnType):
+        # Parse delegate name
+        self.scanner.acceptOrFail(['(', '*'])
+        name = self.scanner.accept()
+        self.scanner.acceptOrFail(')')
+
+        delegate = LLGLFunction(name, returnType)
+
+        # Parse parameter list
+        delegate.params = self.parseParameterList()
+        self.scanner.acceptOrFail(';')
+
+        return delegate
 
     # Parses input file by filename and returns LLGLModule
     def parseHeader(self, filename, processFunctions = False):
@@ -319,6 +340,16 @@ class Parser:
             if processFunctions and self.scanner.acceptIf('LLGL_C_EXPORT'):
                 # Parse function declaration
                 mod.funcs.append(self.parseFunctionDecl())
+            elif self.scanner.acceptIf('typedef') and not self.scanner.match('struct'):
+                # Parse type alias
+                typeDecl = self.parseType()
+
+                if self.scanner.match('('):
+                    # Parse delegate delcaration
+                    mod.delegates.append(self.parseDelegateDecl(typeDecl))
+                else:
+                    # Ignore type definition
+                    self.scanner.ignoreUntil(';')
             elif self.scanner.acceptIf(['enum', 'class']):
                 # Parse enumeration
                 name = self.scanner.accept()

@@ -27,6 +27,21 @@ class CsharpTranslator(Translator):
             StdType.FLOAT: 'float',
             StdType.FUNC: 'IntPtr',
         }
+        saveStructs = [
+            'Offset2D',
+            'Offset3D',
+            'Extent2D',
+            'Extent3D',
+            'Viewport',
+            'Scissor',
+            'BindingSlot',
+            'DrawIndirectArguments',
+            'DrawIndexedIndirectArguments',
+            'DrawPatchIndirectArguments',
+        ]
+        trivialClasses = [
+            'RenderingFeatures',
+        ]
 
         self.statement('/*')
         self.statement(' * {}.cs'.format(doc.name))
@@ -43,6 +58,63 @@ class CsharpTranslator(Translator):
         self.statement()
         self.statement('namespace LLGL')
         self.openScope()
+
+        class CsharpDeclaration:
+            marshal = None
+            type = ''
+            ident = ''
+
+            def __init__(self, ident):
+                self.marshal = None
+                self.type = ''
+                self.ident = ident
+
+        def translateDecl(declType, ident = None, isInsideStruct = False):
+            decl = CsharpDeclaration(ident)
+
+            def sanitizeTypename(typename):
+                nonlocal isInsideStruct
+                if typename.startswith(LLGLMeta.typePrefix):
+                    return typename[len(LLGLMeta.typePrefix):]
+                elif typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
+                    return 'string' if not isInsideStruct else 'byte*'
+                else:
+                    return typename
+
+            nonlocal builtinTypenames
+
+            if declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.interfaces:
+                decl.type = sanitizeTypename(declType.typename)
+            else:
+                builtin = builtinTypenames.get(declType.baseType)
+                if isInsideStruct:
+                    if declType.arraySize > 0 and builtin:
+                        decl.type += 'fixed '
+                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
+                    if declType.isPointer or declType.arraySize == -1:
+                        decl.type += '*'
+                    elif declType.arraySize > 0:
+                        if builtin:
+                            decl.ident += f'[{declType.arraySize}]'
+                        else:
+                            decl.marshal = '<unroll>'
+                    elif declType.baseType == StdType.BOOL:
+                        decl.marshal = 'MarshalAs(UnmanagedType.I1)'
+                else:
+                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
+                    if declType.isPointer or declType.arraySize > 0:
+                        if declType.baseType == StdType.STRUCT:
+                            decl.marshal = 'ref'
+                        elif declType.baseType == StdType.CHAR:
+                            decl.type = 'string'
+                            decl.marshal = 'MarshalAs(UnmanagedType.LPStr)'
+                        elif declType.baseType == StdType.WCHAR:
+                            decl.type = 'string'
+                            decl.marshal = 'MarshalAs(UnmanagedType.LPWStr)'
+                        else:
+                            decl.type += '*'
+
+            return decl
 
         # Write all constants
         constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
@@ -125,6 +197,48 @@ class CsharpTranslator(Translator):
 
             self.statement()
 
+        # Write records that are trivial to map between unmanaged and managed code
+        commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
+
+        def writeStruct(struct, modifier = None):
+            self.statement(f'public {modifier + " " if modifier != None else ""}struct {struct.name}')
+            self.openScope()
+
+            # Write struct field declarations
+            declList = Translator.DeclarationList()
+            for field in struct.fields:
+                if not field.type.externalCond:
+                    # Write two fields for dynamic arrays
+                    if field.type.arraySize == -1:
+                        declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
+                    fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
+                    if fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
+                        for i in range(0, field.type.arraySize):
+                            declList.append(Translator.Declaration(fieldDecl.type, f'{fieldDecl.ident}{i}', field.init))
+                    else:
+                        if fieldDecl.marshal:
+                            declList.append(Translator.Declaration(None, fieldDecl.marshal))
+                        declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init))
+
+            for decl in declList.decls:
+                if not decl.type:
+                    self.statement(f'[{decl.name}]')
+                elif decl.init:
+                    self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {decl.init} */')
+                else:
+                    self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};')
+            self.closeScope()
+            self.statement()
+
+        # Write all trivial structures
+        if len(commonStructs) > 0:
+            self.statement('/* ----- Structures ----- */')
+            self.statement()
+            for struct in commonStructs:
+                if struct.name in saveStructs:
+                    writeStruct(struct)
+            self.statement()
+
         # Write native LLGL interface
         self.statement('internal static class NativeLLGL')
         self.openScope()
@@ -175,105 +289,54 @@ class CsharpTranslator(Translator):
 
         self.statement()
 
-        # Write all structures
-        commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
-
-        class CsharpDeclaration:
-            marshal = None
-            type = ''
-            ident = ''
-
-            def __init__(self, ident):
-                self.marshal = None
-                self.type = ''
-                self.ident = ident
-
-        def translateDecl(declType, ident = None, isInsideStruct = False):
-            decl = CsharpDeclaration(ident)
-
-            def sanitizeTypename(typename):
-                nonlocal isInsideStruct
-                if typename.startswith(LLGLMeta.typePrefix):
-                    return typename[len(LLGLMeta.typePrefix):]
-                elif typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
-                    return 'string' if not isInsideStruct else 'byte*'
-                else:
-                    return typename
-
-            nonlocal builtinTypenames
-
-            if declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.interfaces:
-                decl.type = sanitizeTypename(declType.typename)
-            else:
-                builtin = builtinTypenames.get(declType.baseType)
-                if isInsideStruct:
-                    if declType.arraySize > 0 and builtin:
-                        decl.type += 'fixed '
-                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
-                    if declType.isPointer or declType.arraySize == -1:
-                        decl.type += '*'
-                    elif declType.arraySize > 0:
-                        if builtin:
-                            decl.ident += f'[{declType.arraySize}]'
-                        else:
-                            decl.marshal = '<unroll>'
-                    elif declType.baseType == StdType.BOOL:
-                        decl.marshal = 'MarshalAs(UnmanagedType.I1)'
-                else:
-                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
-                    if declType.isPointer or declType.arraySize > 0:
-                        if declType.baseType == StdType.STRUCT:
-                            decl.marshal = 'ref'
-                        elif declType.baseType == StdType.CHAR:
-                            decl.type = 'string'
-                            decl.marshal = 'MarshalAs(UnmanagedType.LPStr)'
-                        elif declType.baseType == StdType.WCHAR:
-                            decl.type = 'string'
-                            decl.marshal = 'MarshalAs(UnmanagedType.LPWStr)'
-                        else:
-                            decl.type += '*'
-
-            return decl
-
+        # Write all non-trivial native structures
         if len(commonStructs) > 0:
-            self.statement('/* ----- Structures ----- */')
+            self.statement('/* ----- Native structures ----- */')
+            self.statement()
+            for struct in commonStructs:
+                if not struct.name in saveStructs:
+                    writeStruct(struct, 'unsafe')
             self.statement()
 
-            for struct in commonStructs:
-                self.statement('public unsafe struct ' + struct.name)
-                self.openScope()
+        def translateParamList(func):
+            paramListStr = ''
 
-                # Write struct field declarations
-                declList = Translator.DeclarationList()
-                for field in struct.fields:
-                    if not field.type.externalCond:
-                        # Write two fields for dynamic arrays
-                        if field.type.arraySize == -1:
-                            declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
-                        fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
-                        if fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
-                            for i in range(0, field.type.arraySize):
-                                declList.append(Translator.Declaration(fieldDecl.type, f'{fieldDecl.ident}{i}', field.init))
-                        else:
-                            if fieldDecl.marshal:
-                                declList.append(Translator.Declaration(None, fieldDecl.marshal))
-                            declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init))
-
-                for decl in declList.decls:
-                    if not decl.type:
-                        self.statement(f'[{decl.name}]')
-                    elif decl.init:
-                        self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {decl.init} */')
+            for param in func.params:
+                if len(paramListStr) > 0:
+                    paramListStr += ', '
+                paramDecl = translateDecl(param.type, param.name)
+                if paramDecl.marshal:
+                    if paramDecl.marshal == 'ref':
+                        paramListStr += f'{paramDecl.marshal} '
                     else:
-                        self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};')
-                self.closeScope()
+                        paramListStr += f'[{paramDecl.marshal}] '
+                paramListStr += f'{paramDecl.type} {paramDecl.ident}'
+
+            return paramListStr
+
+        # Write all native delegates
+        if len(doc.delegates) > 0:
+            self.statement('/* ----- Native delegates ----- */')
+            self.statement()
+
+            for delegate in doc.delegates:
+                self.statement(f'[UnmanagedFunctionPointer(CallingConvention.Cdecl)]');
+
+                returnType = translateDecl(delegate.returnType)
+                if returnType.type == 'bool':
+                    self.statement(f'[return: MarshalAs(UnmanagedType.I1)]')
+                elif returnType.marshal:
+                    self.statement(f'[return: {returnType.marshal}]')
+
+                delegateName = delegate.name[len(LLGLMeta.delegatePrefix):]
+                self.statement(f'public unsafe delegate {returnType.type} {delegateName}Delegate({translateParamList(delegate)});');
                 self.statement()
 
             self.statement()
 
-        # Write all functions
+        # Write all native functions
         if len(doc.funcs) > 0:
-            self.statement('/* ----- Functions ----- */')
+            self.statement('/* ----- Native functions ----- */')
             self.statement()
 
             for func in doc.funcs:
@@ -285,20 +348,8 @@ class CsharpTranslator(Translator):
                 elif returnType.marshal:
                     self.statement(f'[return: {returnType.marshal}]')
 
-                paramListStr = ''
-                for param in func.params:
-                    if len(paramListStr) > 0:
-                        paramListStr += ', '
-                    paramDecl = translateDecl(param.type, param.name)
-                    if paramDecl.marshal:
-                        if paramDecl.marshal == 'ref':
-                            paramListStr += f'{paramDecl.marshal} '
-                        else:
-                            paramListStr += f'[{paramDecl.marshal}] '
-                    paramListStr += f'{paramDecl.type} {paramDecl.ident}'
-
                 funcName = func.name[len(LLGLMeta.funcPrefix):]
-                self.statement(f'public static extern unsafe {returnType.type} {funcName}({paramListStr});');
+                self.statement(f'public static extern unsafe {returnType.type} {funcName}({translateParamList(func)});');
                 self.statement()
 
         self.statement('#pragma warning restore 0649 // Restore warning about unused fields')
