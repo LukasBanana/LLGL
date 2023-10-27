@@ -33,20 +33,20 @@ class C99Translator(Translator):
             return stdIncludes, llglIncludes
 
         self.statement('/*')
-        self.statement(' * {}.h'.format(doc.name))
+        self.statement(f' * {doc.name}.h')
         self.statement(' *')
         for line in LLGLMeta.copyright:
-            self.statement(' * ' + line)
+            self.statement(f' * {line}')
         self.statement(' */')
         self.statement()
         for line in LLGLMeta.info:
-            self.statement('/* {} */'.format(line))
+            self.statement(f'/* {line} */')
         self.statement()
 
         # Write header guard
-        headerGuardName = 'LLGL_C99{}_H'.format(Translator.convertNameToHeaderGuard(doc.name))
-        self.statement('#ifndef ' + headerGuardName)
-        self.statement('#define ' + headerGuardName)
+        headerGuardName = f'LLGL_C99{Translator.convertNameToHeaderGuard(doc.name)}_H'
+        self.statement(f'#ifndef {headerGuardName}')
+        self.statement(f'#define {headerGuardName}')
         self.statement()
         self.statement()
 
@@ -55,7 +55,7 @@ class C99Translator(Translator):
         if len(includeHeaders[0]) > 0 or len(includeHeaders[1]) > 0:
             for headers in includeHeaders:
                 for inc in headers:
-                    self.statement('#include {}'.format(inc))
+                    self.statement(f'#include {inc}')
 
             for external in LLGLMeta.externals:
                 if external.cond and external.include:
@@ -78,10 +78,10 @@ class C99Translator(Translator):
                 # Write struct field declarations
                 declList = Translator.DeclarationList()
                 for field in struct.fields:
-                    declList.append(Translator.Declaration('', 'LLGL_{}_{}'.format(struct.name.upper(), field.name.upper()), field.init))
+                    declList.append(Translator.Declaration('', f'LLGL_{struct.name.upper()}_{field.name.upper()}', field.init))
 
                 for decl in declList.decls:
-                    self.statement('#define ' + decl.name + declList.spaces(1, decl.name) + ' ( ' + decl.init + ' )')
+                    self.statement(f'#define {decl.name}{declList.spaces(1, decl.name)} ( {decl.init} )')
                 self.statement()
 
             self.statement()
@@ -99,22 +99,22 @@ class C99Translator(Translator):
                     if bitsize > 0:
                         sizedTypes[enum.name] = bitsize
 
-                self.statement('typedef enum LLGL{}'.format(enum.name))
+                self.statement(f'typedef enum LLGL{enum.name}')
                 self.openScope()
 
                 # Write enumeration entry declarations
                 declList = Translator.DeclarationList()
                 for field in enum.fields:
-                    declList.append(Translator.Declaration('', 'LLGL{}{}'.format(enum.name, field.name), field.init))
+                    declList.append(Translator.Declaration('', f'LLGL{enum.name}{field.name}', field.init))
 
                 for decl in declList.decls:
                     if decl.init:
-                        self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
+                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {decl.init},')
                     else:
-                        self.statement(decl.name + ',')
+                        self.statement(f'{decl.name},')
 
                 self.closeScope()
-                self.statement('LLGL{};'.format(enum.name))
+                self.statement(f'LLGL{enum.name};')
                 self.statement()
 
             self.statement()
@@ -154,12 +154,12 @@ class C99Translator(Translator):
 
                 for decl in declList.decls:
                     if decl.init:
-                        self.statement(decl.name + declList.spaces(1, decl.name) + '= ' + decl.init + ',')
+                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {decl.init},')
                     else:
-                        self.statement(decl.name + ',')
+                        self.statement(f'{decl.name},')
 
                 self.closeScope()
-                self.statement('LLGL{};'.format(flag.name))
+                self.statement(f'LLGL{flag.name};')
                 self.statement()
 
             self.statement()
@@ -253,12 +253,12 @@ class C99Translator(Translator):
                     else:
                         self.statement(f'{decl.type}{declList.spaces(0, decl.type)}{decl.name};')
                 self.closeScope()
-                self.statement('LLGL{};'.format(struct.name))
+                self.statement(f'LLGL{struct.name};')
                 self.statement()
 
             self.statement()
 
-        self.statement('#endif /* {} */'.format(headerGuardName))
+        self.statement(f'#endif /* {headerGuardName} */')
         self.statement()
         self.statement()
         self.statement()

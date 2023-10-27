@@ -91,7 +91,7 @@ class CsharpTranslator(Translator):
                     if declType.arraySize > 0 and builtin:
                         decl.type += 'fixed '
                     decl.type += builtin if builtin else sanitizeTypename(declType.typename)
-                    if declType.isPointer or declType.arraySize == -1:
+                    if declType.isPointer or declType.arraySize == LLGLType.DYNAMIC_ARRAY:
                         decl.type += '*'
                     elif declType.arraySize > 0:
                         if builtin:
@@ -209,7 +209,7 @@ class CsharpTranslator(Translator):
             for field in struct.fields:
                 if not field.type.externalCond:
                     # Write two fields for dynamic arrays
-                    if field.type.arraySize == -1:
+                    if field.type.arraySize == LLGLType.DYNAMIC_ARRAY:
                         declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
                     fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
                     if fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
