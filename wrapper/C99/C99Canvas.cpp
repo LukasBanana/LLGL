@@ -94,6 +94,16 @@ LLGL_C_EXPORT bool llglHasCanvasQuit(LLGLCanvas canvas)
     return LLGL_PTR(Canvas, canvas)->HasQuit();
 }
 
+LLGL_C_EXPORT void llglSetCanvasUserData(LLGLCanvas canvas, void* userData)
+{
+    LLGL_PTR(Canvas, canvas)->SetUserData(userData);
+}
+
+LLGL_C_EXPORT void* llglGetCanvasUserData(LLGLCanvas canvas)
+{
+    return LLGL_PTR(const Canvas, canvas)->GetUserData();
+}
+
 LLGL_C_EXPORT int llglAddCanvasEventListener(LLGLCanvas canvas, const LLGLCanvasEventListener* eventListener)
 {
     return 0; //todo

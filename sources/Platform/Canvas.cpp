@@ -18,6 +18,7 @@ struct Canvas::Pimpl
 {
     std::vector<std::shared_ptr<EventListener>> eventListeners;
     bool                                        quit            = false;
+    void*                                       userData        = nullptr;
 };
 
 Canvas::Canvas() :
@@ -90,7 +91,15 @@ Display* Canvas::FindResidentDisplay() const
     return Display::GetPrimary();
 }
 
-/* --- Event handling --- */
+void Canvas::SetUserData(void* userData)
+{
+    pimpl_->userData = userData;
+}
+
+void* Canvas::GetUserData() const
+{
+    return pimpl_->userData;
+}
 
 void Canvas::AddEventListener(const std::shared_ptr<EventListener>& eventListener)
 {

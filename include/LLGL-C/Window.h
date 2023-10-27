@@ -58,6 +58,8 @@ LLGL_C_EXPORT void llglSetWindowDesc(LLGLWindow window, const LLGLWindowDescript
 LLGL_C_EXPORT void llglGetWindowDesc(LLGLWindow window, LLGLWindowDescriptor* outWindowDesc);
 LLGL_C_EXPORT bool llglHasWindowFocus(LLGLWindow window);
 LLGL_C_EXPORT bool llglHasWindowQuit(LLGLWindow window);
+LLGL_C_EXPORT void llglSetWindowUserData(LLGLWindow window, void* userData);
+LLGL_C_EXPORT void* llglGetWindowUserData(LLGLWindow window);
 LLGL_C_EXPORT int llglAddWindowEventListener(LLGLWindow window, const LLGLWindowEventListener* eventListener);
 LLGL_C_EXPORT void llglRemoveWindowEventListener(LLGLWindow window, int eventListenerID);
 LLGL_C_EXPORT void llglPostWindowQuit(LLGLWindow window);

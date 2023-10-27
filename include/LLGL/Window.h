@@ -168,6 +168,18 @@ class LLGL_EXPORT Window : public Surface
         */
         bool HasQuit() const;
 
+        /**
+        \brief Sets a raw pointer to some user defined data. The initial value is null.
+        \remarks This can be used to quickly associate an instance of this class with custom data, especially during event handling.
+        */
+        void SetUserData(void* userData);
+
+        /**
+        \brief Returns the raw pointer that was previously set with SetUserData. The initial value is null.
+        \see SetUserData
+        */
+        void* GetUserData() const;
+
         //! Adds the specified event listener to this window.
         void AddEventListener(const std::shared_ptr<EventListener>& eventListener);
 

@@ -14,6 +14,9 @@
 #include <string>
 #include <string.h>
 #include <algorithm>
+#include <unordered_map>
+#include <mutex>
+#include <limits.h>
 
 
 // namespace LLGL {
@@ -98,9 +101,48 @@ class InternalWindowEventListener final : public Window::EventListener
 
 };
 
+using InternalWindowEventListenerSPtr = std::shared_ptr<InternalWindowEventListener>;
+
+class WindowEventListenerContainer
+{
+
+    public:
+
+        std::pair<int, InternalWindowEventListenerSPtr> Create(const LLGLWindowEventListener* callbacks)
+        {
+            LLGL_ASSERT(idCounter_ < INT_MAX);
+            std::lock_guard<std::mutex> guard{ mutex_ };
+            const int id = ++idCounter_;
+            std::pair<int, InternalWindowEventListenerSPtr> result{ id, std::make_shared<InternalWindowEventListener>(callbacks) };
+            eventListeners_.insert(result);
+            return result;
+        }
+
+        InternalWindowEventListenerSPtr Release(int id)
+        {
+            std::lock_guard<std::mutex> guard{ mutex_ };
+            auto it = eventListeners_.find(id);
+            if (it != eventListeners_.end())
+            {
+                InternalWindowEventListenerSPtr result = std::move(it->second);
+                eventListeners_.erase(it);
+                return result;
+            }
+            return nullptr;
+        }
+
+    private:
+
+        int                                                         idCounter_      = 0;
+        std::unordered_map<int, InternalWindowEventListenerSPtr>    eventListeners_;
+        std::mutex                                                  mutex_;
+
+};
+
 #undef LLGL_CALLBACK_WRAPPER
 
 static std::vector<std::unique_ptr<Window>> g_Windows;
+static WindowEventListenerContainer         g_WindowEventListenerContainer;
 
 static void ConvertWindowDesc(WindowDescriptor& dst, const LLGLWindowDescriptor& src)
 {
@@ -220,14 +262,27 @@ LLGL_C_EXPORT bool llglHasWindowQuit(LLGLWindow window)
     return LLGL_PTR(Window, window)->HasQuit();
 }
 
+LLGL_C_EXPORT void llglSetWindowUserData(LLGLWindow window, void* userData)
+{
+    LLGL_PTR(Window, window)->SetUserData(userData);
+}
+
+LLGL_C_EXPORT void* llglGetWindowUserData(LLGLWindow window)
+{
+    return LLGL_PTR(const Window, window)->GetUserData();
+}
+
 LLGL_C_EXPORT int llglAddWindowEventListener(LLGLWindow window, const LLGLWindowEventListener* eventListener)
 {
-    return 0; //todo
+    auto eventListenerWrapper = g_WindowEventListenerContainer.Create(eventListener);
+    LLGL_PTR(Window, window)->AddEventListener(eventListenerWrapper.second);
+    return eventListenerWrapper.first;
 }
 
 LLGL_C_EXPORT void llglRemoveWindowEventListener(LLGLWindow window, int eventListenerID)
 {
-    //todo
+    if (InternalWindowEventListenerSPtr eventListener = g_WindowEventListenerContainer.Release(eventListenerID))
+        LLGL_PTR(Window, window)->RemoveEventListener(eventListener.get());
 }
 
 LLGL_C_EXPORT void llglPostWindowQuit(LLGLWindow window)

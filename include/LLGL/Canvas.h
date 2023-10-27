@@ -91,6 +91,8 @@ class LLGL_EXPORT Canvas : public Surface
         //! Returns the canvas title as UTF16 string.
         virtual UTF8String GetTitle() const = 0;
 
+    public:
+
         /**
         \brief Returns true if this canvas is in the 'Quit' state.
         \see PostQuit
@@ -103,7 +105,19 @@ class LLGL_EXPORT Canvas : public Surface
         //! Always returns Display::GetPrimary.
         Display* FindResidentDisplay() const override final;
 
-        /* --- Event handling --- */
+    public:
+
+        /**
+        \brief Sets a raw pointer to some user defined data. The initial value is null.
+        \remarks This can be used to quickly associate an instance of this class with custom data, especially during event handling.
+        */
+        void SetUserData(void* userData);
+
+        /**
+        \brief Returns the raw pointer that was previously set with SetUserData. The initial value is null.
+        \see SetUserData
+        */
+        void* GetUserData() const;
 
         //! Adds a new event listener to this canvas.
         void AddEventListener(const std::shared_ptr<EventListener>& eventListener);

@@ -87,6 +87,7 @@ struct Window::Pimpl
     std::vector<std::shared_ptr<EventListener>> eventListeners;
     bool                                        quit            = false;
     bool                                        focus           = false;
+    void*                                       userData        = nullptr;
 };
 
 
@@ -197,6 +198,16 @@ bool Window::HasFocus() const
 bool Window::HasQuit() const
 {
     return pimpl_->quit;
+}
+
+void Window::SetUserData(void* userData)
+{
+    pimpl_->userData = userData;
+}
+
+void* Window::GetUserData() const
+{
+    return pimpl_->userData;
 }
 
 void Window::AddEventListener(const std::shared_ptr<EventListener>& eventListener)

@@ -14,8 +14,11 @@
 #include <stdbool.h>
 
 
+LLGL_C_EXPORT LLGLReport llglAllocReport();
+LLGL_C_EXPORT void llglFreeReport(LLGLReport report);
 LLGL_C_EXPORT const char* llglGetReportText(LLGLReport report);
 LLGL_C_EXPORT bool llglHasReportErrors(LLGLReport report);
+LLGL_C_EXPORT void llglResetReport(LLGLReport report, const char* text, bool hasErrors);
 
 
 #endif

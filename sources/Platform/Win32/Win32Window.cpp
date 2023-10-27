@@ -46,7 +46,7 @@ struct Win32FrameAndStyle
 
 /* ----- Internal functions ----- */
 
-static void SetUserData(HWND wnd, void* userData)
+static void SetWin32UserData(HWND wnd, void* userData)
 {
     SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(userData));
 }
@@ -393,8 +393,6 @@ static HWND GetNativeWin32ParentWindow(const void* nativeHandle, std::size_t nat
 
 HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
 {
-    auto windowClass = Win32WindowClass::Instance();
-
     /* Get final window size */
     const Win32FrameAndStyle frame = GetWin32FrameAndStyleFromDesc(desc);
 
@@ -410,7 +408,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
 
     /* Create frame window object */
     HWND wnd = CreateWindow(
-        windowClass->GetName(),
+        Win32WindowClass::Get()->GetName(),
         title.data(),
         frame.style,
         frame.position.x,
@@ -432,7 +430,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     #endif
 
     /* Set reference of this object to the window user-data */
-    SetUserData(wnd, this);
+    SetWin32UserData(wnd, this);
 
     return wnd;
 }

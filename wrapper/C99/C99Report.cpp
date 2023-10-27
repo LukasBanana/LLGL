@@ -15,6 +15,16 @@
 
 using namespace LLGL;
 
+LLGL_C_EXPORT LLGLReport llglAllocReport()
+{
+    return LLGLReport{ new Report };
+}
+
+LLGL_C_EXPORT void llglFreeReport(LLGLReport report)
+{
+    delete LLGL_PTR(Report, report);
+}
+
 LLGL_C_EXPORT const char* llglGetReportText(LLGLReport report)
 {
     if (const Report* internalReport = LLGL_PTR(Report, report))
@@ -29,6 +39,12 @@ LLGL_C_EXPORT bool llglHasReportErrors(LLGLReport report)
         return internalReport->HasErrors();
     else
         return false;
+}
+
+LLGL_C_EXPORT void llglResetReport(LLGLReport report, const char* text, bool hasErrors)
+{
+    if (Report* internalReport = LLGL_PTR(Report, report))
+        return internalReport->Reset(text, hasErrors);
 }
 
 

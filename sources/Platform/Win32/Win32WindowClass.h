@@ -26,7 +26,7 @@ class Win32WindowClass
 
         ~Win32WindowClass();
 
-        static Win32WindowClass* Instance();
+        static Win32WindowClass* Get();
 
         const TCHAR* GetName() const;
 

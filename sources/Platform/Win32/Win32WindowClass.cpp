@@ -45,7 +45,7 @@ Win32WindowClass::~Win32WindowClass()
     UnregisterClass(GetName(), GetModuleHandle(nullptr));
 }
 
-Win32WindowClass* Win32WindowClass::Instance()
+Win32WindowClass* Win32WindowClass::Get()
 {
     static Win32WindowClass instance;
     return &instance;
