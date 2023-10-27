@@ -21,7 +21,7 @@ Texture3D<uint4> srcTexture : register(t0);
 
 
 /* Read source texture with dynamic format */
-uint4 ReadSourceTexutre(uint3 coord)
+uint4 ReadSourceTexture(uint3 coord)
 {
     /* Calculate texture coordinate from linear index */
     uint3 pos = texOffset + coord;
@@ -214,7 +214,7 @@ void CopyBufferFromTexture(uint3 threadID : SV_DispatchThreadID)
     uint groupIndex = threadID.x + (threadID.y + threadID.z * texExtent.y) * texExtent.x;
     
     /* Read value from source texture */
-    uint4 value = ReadSourceTexutre(threadID);
+    uint4 value = ReadSourceTexture(threadID);
     
     /* Write value to destination buffer */
     WriteDestinationBuffer(groupIndex, threadID, value);

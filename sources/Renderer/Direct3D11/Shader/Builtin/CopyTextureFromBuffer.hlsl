@@ -167,7 +167,7 @@ uint4 ReadSourceBuffer(uint idx, uint3 coord)
 }
 
 /* Write destination texture with dynamic format */
-void WriteDestinationTexutre(uint3 coord, uint4 value)
+void WriteDestinationTexture(uint3 coord, uint4 value)
 {
     /* Calculate texture coordinate from linear index */
     uint3 pos = texOffset + coord;
@@ -191,6 +191,6 @@ void CopyTextureFromBuffer(uint3 threadID : SV_DispatchThreadID)
     uint4 value = ReadSourceBuffer(groupIndex, threadID);
     
     /* Write value to destination texture */
-    WriteDestinationTexutre(threadID, value);
+    WriteDestinationTexture(threadID, value);
 }
 
