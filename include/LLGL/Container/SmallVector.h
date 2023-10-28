@@ -140,8 +140,12 @@ class LLGL_EXPORT SmallVector
 
         //! Default initializes an empty vector.
         SmallVector() :
-            data_ { local_.data() }
+            local_ {               },
+            data_  { local_.data() }
         {
+            /* If local capacity is 0, initialize capacity last so it becomes the active union member */
+            if (LocalCapacity == 0)
+                cap_ = 0;
         }
 
         //! Initializes the vector with a copy of all elements from the \c other vector.
@@ -231,7 +235,7 @@ class LLGL_EXPORT SmallVector
         //! Returns the internal capacity (in number of elements) of this vector. This refers to the memory allocated for this vector.
         size_type capacity() const noexcept
         {
-            return cap_;
+            return (is_dynamic() ? cap_ : LocalCapacity);
         }
 
         //! Returns a pointer to the beginning of this vector.
@@ -355,7 +359,7 @@ class LLGL_EXPORT SmallVector
         */
         void reserve(size_type size)
         {
-            if (cap_ < size)
+            if (capacity() < size)
                 realloc(GrowStrategy::Grow(size));
         }
 
@@ -365,13 +369,13 @@ class LLGL_EXPORT SmallVector
         */
         void shrink_to_fit()
         {
-            if (size_ < cap_)
+            if (size_ < capacity())
                 realloc();
         }
 
         void push_back(const value_type& value)
         {
-            if (size_ == cap_)
+            if (size_ == capacity())
                 realloc(GrowStrategy::Grow(size_ + 1));
             Allocator alloc;
             std::allocator_traits<Allocator>::construct(alloc, end(), value);
@@ -406,7 +410,7 @@ class LLGL_EXPORT SmallVector
         {
             if (from < to)
             {
-                const auto count = static_cast<size_type>(std::distance(from, to));
+                const size_type count = static_cast<size_type>(std::distance(from, to));
                 if (pos == end())
                 {
                     /* Append elements at the end of the list */
@@ -415,7 +419,7 @@ class LLGL_EXPORT SmallVector
                 }
                 else if (pos >= begin() && pos < end())
                 {
-                    const auto offset = static_cast<size_type>(std::distance(cbegin(), pos));
+                    const size_type offset = static_cast<size_type>(std::distance(cbegin(), pos));
                     if (size() + count <= capacity())
                     {
                         /* Move tail to new end and insert new elements in-place */
@@ -446,7 +450,7 @@ class LLGL_EXPORT SmallVector
         {
             if (from < to && from < end() && to >= begin())
             {
-                const auto count = static_cast<size_type>(std::distance(from, to));
+                const size_type count = static_cast<size_type>(std::distance(from, to));
                 if (to == end())
                 {
                     /* Destroy range and reduce container size */
@@ -477,27 +481,19 @@ class LLGL_EXPORT SmallVector
             }
             else if (is_dynamic())
             {
-                /* Copy local buffer of other container into local buffer of this container */
-                move_range(local_.data(), other.begin(), other.end());
-                std::swap(cap_, other.cap_);
-                std::swap(size_, other.size_);
-                other.data_ = data_;
-                data_ = local_.data();
+                /* Swap this dynamic vector with other static vector */
+                SmallVector::swap_dynamic_from_static(*this, other);
             }
             else if (other.is_dynamic())
             {
-                /* Copy local buffer of this container into local buffer of other container */
-                move_range(other.local_.data(), begin(), end());
-                std::swap(cap_, other.cap_);
-                std::swap(size_, other.size_);
-                data_ = other.data_;
-                other.data_ = other.local_.data();
+                /* Swap this static vector with other dynamic vector */
+                SmallVector::swap_dynamic_from_static(other, *this);
             }
             else
             {
                 /* Copy local buffer into intermediate buffer */
                 char intermediate[LocalCapacity * sizeof(T)];
-                auto intermediateBegin = reinterpret_cast<pointer>(intermediate);
+                pointer intermediateBegin = reinterpret_cast<pointer>(intermediate);
                 move_range(intermediateBegin, begin(), end());
 
                 /* Copy local buffer of other container into local buffer of this container */
@@ -606,7 +602,8 @@ class LLGL_EXPORT SmallVector
                 if (rhs.is_dynamic())
                 {
                     /* Take ownership of dynamic buffer */
-                    data_ = rhs.data_;
+                    data_   = rhs.data_;
+                    cap_    = rhs.cap_;
                 }
                 else
                 {
@@ -616,13 +613,12 @@ class LLGL_EXPORT SmallVector
                     rhs.destroy_range(rhs.begin(), rhs.end());
                 }
 
-                cap_    = rhs.cap_;
-                size_   = rhs.size_;
+                /* Copy container size */
+                size_ = rhs.size_;
 
-                /* Drop old container */
-                rhs.data_   = rhs.local_.data();
-                rhs.cap_    = LocalCapacity;
-                rhs.size_   = 0;
+                /* Drop old container and don't reset its local capacity (implied to LocalCapacity) */
+                rhs.data_ = rhs.local_.data();
+                rhs.size_ = 0;
             }
             return *this;
         }
@@ -640,6 +636,23 @@ class LLGL_EXPORT SmallVector
         operator ArrayView<T> () const
         {
             return ArrayView<T>{ data(), size() };
+        }
+
+    private:
+
+        static void swap_dynamic_from_static(SmallVector& dynamicVector, SmallVector& staticVector)
+        {
+            /* Store copy of dynamic capacity as that container will get an implied capacity after swap (LocalCapacity) */
+            const size_type dynamicCap = dynamicVector.cap_;
+
+            /* Copy local buffer of other container into local buffer of this container */
+            staticVector.move_range(dynamicVector.local_.data(), staticVector.begin(), staticVector.end());
+
+            /* Swap remaining attributes */
+            std::swap(dynamicVector.size_, staticVector.size_);
+            staticVector.cap_ = dynamicCap;
+            staticVector.data_ = dynamicVector.data_;
+            dynamicVector.data_ = dynamicVector.local_.data();
         }
 
     private:
@@ -678,9 +691,9 @@ class LLGL_EXPORT SmallVector
         {
             if (is_dynamic())
             {
+                /* Don't reset capacity to LocalCapacity here, it is implied by data pointing to the local buffer */
                 Allocator{}.deallocate(data_, cap_);
-                data_   = local_.data();
-                cap_    = LocalCapacity;
+                data_ = local_.data();
             }
         }
 
@@ -702,7 +715,7 @@ class LLGL_EXPORT SmallVector
                 /* Move all elements into new container */
                 move_all(data);
 
-                /* Take new container */
+                /* Take new container and reset capacity */
                 data_   = data;
                 cap_    = cap;
             }
@@ -711,9 +724,8 @@ class LLGL_EXPORT SmallVector
                 /* Move all elements into local buffer */
                 move_all(local_.data());
 
-                /* Use local buffer */
-                data_   = local_.data();
-                cap_    = cap;
+                /* Use local buffer and don't reset capacity here (implied to LocalCapacity) */
+                data_ = local_.data();
             }
         }
 
@@ -739,7 +751,7 @@ class LLGL_EXPORT SmallVector
         void move_tail_right(iterator dst, iterator from, iterator to)
         {
             Allocator alloc;
-            const auto count = static_cast<size_type>(std::distance(from, to));
+            const size_type count = static_cast<size_type>(std::distance(from, to));
             auto rdst = reverse_iterator{ dst + count };
             for (auto rfrom = reverse_iterator{ to }, rto = reverse_iterator{ from }; rfrom != rto; ++rfrom, ++rdst)
             {
@@ -794,10 +806,13 @@ class LLGL_EXPORT SmallVector
 
     private:
 
-        AlignedArray<T, LocalCapacity>  local_;
-        pointer                         data_   = nullptr;
-        size_type                       cap_    = LocalCapacity;
-        size_type                       size_   = 0;
+        union
+        {
+            AlignedArray<T, LocalCapacity>  local_;
+            size_type                       cap_;
+        };
+        pointer                             data_   = nullptr;
+        size_type                           size_   = 0;
 
 };
 

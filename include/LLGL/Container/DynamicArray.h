@@ -240,7 +240,7 @@ class LLGL_EXPORT DynamicArray
         }
 
         /**
-        \brief Resizes this array to the new size and default initializes all newly allocated elements.
+        \brief Resizes this array to the new size if the new size is larger than the old size. This will also leave all new elements uninitialized.
         \param[in] newSize Specifies the new array size (in number of elements).
         \remarks After this call, \c size() returns the same value as the input parameter \c size.
         \see resize(size_type, const value_type&)
@@ -262,7 +262,7 @@ class LLGL_EXPORT DynamicArray
         }
 
         /**
-        \brief Resizes this array to the new size and explicitly initializes all newly allocated elements.
+        \brief Resizes this array to the new size if the new size is larger than the old size and explicitly initializes all newly allocated elements.
         \param[in] newSize Specifies the new array size (in number of elements).
         \param[in] value Specifies the value all newly allocated elements will be initialized with.
         \remarks After this call, \c size() returns the same value as the input parameter \c size.

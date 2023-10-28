@@ -149,12 +149,24 @@ TestResult TestbedContext::TestContainerSmallVector()
         return TestResult::Passed;
     };
 
-    #define TEST_SMALL_VECTOR(VEC, CMP)                                                                     \
+    #define TEST_SMALL_VECTOR_EXT(VEC, CMP, SIZE)                                                           \
         {                                                                                                   \
+            const std::size_t expectedSize = (SIZE);                                                        \
+            if (VEC.size() != expectedSize)                                                                 \
+            {                                                                                               \
+                Log::Errorf(                                                                                \
+                    "Mismatch between SmallVector '%s' size (%zu) and expected size (%zu\n)",               \
+                    #VEC, VEC.size(), expectedSize                                                          \
+                );                                                                                          \
+                return TestResult::FailedMismatch;                                                          \
+            }                                                                                               \
             const TestResult result = TestSmallVector(#VEC, VEC.data(), CMP, VEC.size() * sizeof(VEC[0]));  \
             if (result != TestResult::Passed)                                                               \
                 return result;                                                                              \
         }
+
+    #define TEST_SMALL_VECTOR(VEC, CMP) \
+        TEST_SMALL_VECTOR_EXT(VEC, CMP, VEC.size())
 
     // Test basic initialization with local capacity
     SmallVector<int, 4> iv4_4 = { 1, 2, 3, 4 };
@@ -187,6 +199,13 @@ TestResult TestbedContext::TestContainerSmallVector()
     }
 
     TEST_SMALL_VECTOR(iv2_n, iv_std.data());
+
+    // Test swapping containers
+    iv4_4.swap(iv4_8);
+    TEST_SMALL_VECTOR_EXT(iv4_4, cmpInt16, 8);
+
+    iv4_4.swap(iv4_8);
+    TEST_SMALL_VECTOR_EXT(iv4_4, cmpInt16, 4);
 
     return TestResult::Passed;
 }
