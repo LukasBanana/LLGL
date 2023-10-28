@@ -21,32 +21,34 @@ namespace LLGL
 
 /* ----- Structures ----- */
 
-struct QueueFamilyIndices
+struct alignas(alignof(std::uint32_t)) QueueFamilyIndices
 {
-    static const std::uint32_t invalidIndex = 0xffffffff;
+    static constexpr std::uint32_t invalidIndex = ~0u;
 
-    QueueFamilyIndices() :
-        graphicsFamily { invalidIndex },
-        presentFamily  { invalidIndex }
+    std::uint32_t graphicsFamily    = invalidIndex;
+    std::uint32_t presentFamily     = invalidIndex;
+//  std::uint32_t transferFamily    = invalidIndex;
+
+    // Returns a pointer to the number of indices
+    inline const std::uint32_t* Ptr() const
     {
+        return (&graphicsFamily);
     }
 
-    union
+    // Returns the number of indices this structure has.
+    inline std::uint32_t Count() const
     {
-        std::uint32_t indices[2];
-        struct
-        {
-            std::uint32_t graphicsFamily;
-            std::uint32_t presentFamily;
-            //std::uint32_t transferFamily;
-        };
-    };
+        return sizeof(QueueFamilyIndices)/sizeof(std::uint32_t);
+    }
 
+    // Returns true if all indices have been set to a valid index.
     inline bool Complete() const
     {
         return (graphicsFamily != invalidIndex && presentFamily != invalidIndex);
     }
 };
+
+static_assert(offsetof(QueueFamilyIndices, graphicsFamily) == 0, "LLGL::QueueFamilyIndices::graphicsFamily is expected to have memory offset 0");
 
 struct SurfaceSupportDetails
 {

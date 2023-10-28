@@ -62,7 +62,7 @@ void KeyTracker::Reset(KeyStateArray& keyStates)
     while (resetCount > 0)
     {
         --resetCount;
-        auto idx = KEY_IDX(keys[resetCount]);
+        const std::uint8_t idx = KEY_IDX(keys[resetCount]);
         keyStates[idx] = false;
     }
 }
@@ -140,7 +140,7 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnKeyDown(Window& sender, Key keyCode) override
         {
-            auto idx = KEY_IDX(keyCode);
+            const std::uint8_t idx = KEY_IDX(keyCode);
 
             if (!data_.keyPressed[idx])
             {
@@ -168,8 +168,10 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnKeyUp(Window& sender, Key keyCode) override
         {
+            const std::uint8_t idx = KEY_IDX(keyCode);
+
             /* Store key released state */
-            data_.keyUp[KEY_IDX(keyCode)] = true;
+            data_.keyUp[idx] = true;
             data_.keyUpTracker.Add(keyCode);
 
             /* Store key released state for 'any'-key */
@@ -185,7 +187,7 @@ class Input::WindowEventListener final : public Window::EventListener
             }
 
             /* Reset key pressed state */
-            data_.keyPressed[KEY_IDX(keyCode)] = false;
+            data_.keyPressed[idx] = false;
         }
 
         void OnDoubleClick(Window& sender, Key keyCode) override

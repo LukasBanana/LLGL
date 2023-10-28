@@ -172,7 +172,7 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         sourceName      = shaderDesc.name;
     }
 
-    /* Get parameter from union */
+    /* Get parameters from shader descriptor */
     const char* entry   = shaderDesc.entryPoint;
     const char* target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
     auto        defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);

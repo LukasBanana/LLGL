@@ -209,27 +209,19 @@ class D3D12CommandContext
 
         struct StateCache
         {
-            union
+            struct
             {
-                struct
-                {
-                    std::uint32_t   pipelineState           : 1;
-                    std::uint32_t   graphicsRootSignature   : 1;
-                    std::uint32_t   computeRootSignature    : 1;
-                    std::uint32_t   descriptorHeaps         : 1;
-                };
-                std::uint32_t       value;
+                std::uint32_t   pipelineState           : 1;
+                std::uint32_t   graphicsRootSignature   : 1;
+                std::uint32_t   computeRootSignature    : 1;
+                std::uint32_t   descriptorHeaps         : 1;
             }
             dirtyBits;
 
-            union
+            struct
             {
-                struct
-                {
-                    std::uint32_t   isDeferredPSO           : 1;
-                    std::uint32_t   is16BitIndexFormat      : 1;
-                };
-                std::uint32_t       value;
+                std::uint32_t   isDeferredPSO           : 1;
+                std::uint32_t   is16BitIndexFormat      : 1;
             }
             stateBits;
 

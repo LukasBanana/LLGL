@@ -50,7 +50,7 @@ D3D11QueryHeap::D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& 
     groupSize_  { GetDXQueryGroupSize(nativeType_) }
 {
     /* Allocate native queries and initialize descriptor for primary query */
-    auto numNativeQueries = groupSize_ * desc.numQueries;
+    const std::uint32_t numNativeQueries = groupSize_ * desc.numQueries;
     nativeQueries_.reserve(numNativeQueries);
 
     D3D11_QUERY_DESC queryDesc;

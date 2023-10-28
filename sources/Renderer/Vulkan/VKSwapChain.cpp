@@ -439,8 +439,8 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
         if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily)
         {
             createInfo.imageSharingMode         = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount    = 2;
-            createInfo.pQueueFamilyIndices      = queueFamilyIndices.indices;
+            createInfo.queueFamilyIndexCount    = queueFamilyIndices.Count();
+            createInfo.pQueueFamilyIndices      = queueFamilyIndices.Ptr();
         }
         else
         {

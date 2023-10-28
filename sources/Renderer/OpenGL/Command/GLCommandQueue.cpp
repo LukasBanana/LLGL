@@ -15,6 +15,8 @@
 #include "../../CheckedCast.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include <algorithm>
+#include <cstring>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -97,55 +99,46 @@ static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_
     if (HasExtension(GLExt::ARB_pipeline_statistics_query))
     {
         /* Parameter setup for 32-bit and 64-bit version of query function */
-        static const auto memberCount = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
+        constexpr std::uint32_t memberCount = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
+        const std::uint32_t     numResults  = std::min(queryHeapGL.GetGroupSize(), memberCount);
+        const auto&             idList      = queryHeapGL.GetIDs();
 
-        union
-        {
-            GLuint      ui32;
-            GLuint64    ui64;
-        }
-        params[memberCount];
-
-        const auto  numResults  = std::min(queryHeapGL.GetGroupSize(), memberCount);
-        const auto& idList      = queryHeapGL.GetIDs();
+        GLuint64 params[memberCount];
 
         for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; query += queryHeapGL.GetGroupSize(), ++data)
         {
             if (HasExtension(GLExt::ARB_timer_query))
             {
                 /* Get query result with 64-bit version */
-                for (std::uint32_t i = 0; i < numResults; ++i)
-                {
-                    params[i].ui64 = 0;
-                    glGetQueryObjectui64v(idList[query + i], GL_QUERY_RESULT, &(params[i].ui64));
-                }
+                for_range(i, numResults)
+                    glGetQueryObjectui64v(idList[query + i], GL_QUERY_RESULT, &params[i]);
             }
             else
             {
                 /* Get query result with 32-bit version and convert to 64-bit */
-                for (std::uint32_t i = 0; i < numResults; ++i)
+                for_range(i, numResults)
                 {
-                    params[i].ui64 = 0;
-                    glGetQueryObjectuiv(idList[query + i], GL_QUERY_RESULT, &(params[i].ui32));
+                    GLuint paramUint32 = 0;
+                    glGetQueryObjectuiv(idList[query + i], GL_QUERY_RESULT, &paramUint32);
+                    params[i] = paramUint32;
                 }
             }
 
             /* Reset remaining output parameters (just for safety) */
-            for (auto i = numResults; i < memberCount; ++i)
-                params[i].ui64 = 0;
+            std::memset(&params[numResults], 0, (memberCount - numResults)*sizeof(std::uint32_t));
 
             /* Copy result to output parameter */
-            data->inputAssemblyVertices             = params[ 0].ui64;
-            data->inputAssemblyPrimitives           = params[ 1].ui64;
-            data->vertexShaderInvocations           = params[ 2].ui64;
-            data->geometryShaderInvocations         = params[ 3].ui64;
-            data->geometryShaderPrimitives          = params[ 4].ui64;
-            data->clippingInvocations               = params[ 5].ui64;
-            data->clippingPrimitives                = params[ 6].ui64;
-            data->fragmentShaderInvocations         = params[ 7].ui64;
-            data->tessControlShaderInvocations      = params[ 8].ui64;
-            data->tessEvaluationShaderInvocations   = params[ 9].ui64;
-            data->computeShaderInvocations          = params[10].ui64;
+            data->inputAssemblyVertices             = params[ 0];
+            data->inputAssemblyPrimitives           = params[ 1];
+            data->vertexShaderInvocations           = params[ 2];
+            data->geometryShaderInvocations         = params[ 3];
+            data->geometryShaderPrimitives          = params[ 4];
+            data->clippingInvocations               = params[ 5];
+            data->clippingPrimitives                = params[ 6];
+            data->fragmentShaderInvocations         = params[ 7];
+            data->tessControlShaderInvocations      = params[ 8];
+            data->tessEvaluationShaderInvocations   = params[ 9];
+            data->computeShaderInvocations          = params[10];
         }
     }
     #endif // /GL_ARB_pipeline_statistics_query
@@ -161,17 +154,17 @@ bool GLCommandQueue::QueryResult(
     auto& queryHeapGL = LLGL_CAST(GLQueryHeap&, queryHeap);
 
     /* Multiply query range by the query group size */
-    firstQuery *= queryHeapGL.GetGroupSize();
-    numQueries *= queryHeapGL.GetGroupSize();
+    const std::uint32_t firstGroupQuery = firstQuery * queryHeapGL.GetGroupSize();
+    const std::uint32_t numGroupQueries = numQueries * queryHeapGL.GetGroupSize();
 
-    if (AreQueryResultsAvailable(queryHeapGL, firstQuery, numQueries))
+    if (AreQueryResultsAvailable(queryHeapGL, firstGroupQuery, numGroupQueries))
     {
         if (dataSize == numQueries * sizeof(std::uint32_t))
-            QueryResultUInt32(queryHeapGL, firstQuery, numQueries, reinterpret_cast<std::uint32_t*>(data));
+            QueryResultUInt32(queryHeapGL, firstGroupQuery, numGroupQueries, reinterpret_cast<std::uint32_t*>(data));
         else if (dataSize == numQueries * sizeof(std::uint64_t))
-            QueryResultUInt64(queryHeapGL, firstQuery, numQueries, reinterpret_cast<std::uint64_t*>(data));
+            QueryResultUInt64(queryHeapGL, firstGroupQuery, numGroupQueries, reinterpret_cast<std::uint64_t*>(data));
         else if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
-            QueryResultPipelineStatistics(queryHeapGL, firstQuery, numQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
+            QueryResultPipelineStatistics(queryHeapGL, firstGroupQuery, numGroupQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
         else
             return false;
         return true;

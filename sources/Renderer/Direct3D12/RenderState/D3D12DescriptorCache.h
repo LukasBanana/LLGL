@@ -56,7 +56,11 @@ class D3D12DescriptorCache
         // Returns true if any cache entries are invalidated and need to be flushed again.
         inline bool IsInvalidated() const
         {
-            return (dirtyBits_.bits != 0);
+            return
+            (
+                dirtyBits_.descHeapCbvSrvUav != 0 ||
+                dirtyBits_.descHeapSampler   != 0
+            );
         }
 
     private:
@@ -71,14 +75,10 @@ class D3D12DescriptorCache
         D3D12DescriptorHeap descriptorHeaps_[2];
         UINT                currentStrides_[2]  = {};
 
-        union
+        struct
         {
-            struct
-            {
-                UINT        descHeapCbvSrvUav   : 1;
-                UINT        descHeapSampler     : 1;
-            };
-            UINT            bits;
+            UINT            descHeapCbvSrvUav   : 1;
+            UINT            descHeapSampler     : 1;
         }
         dirtyBits_;
 

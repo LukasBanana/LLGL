@@ -493,10 +493,10 @@ void GLDeferredCommandBuffer::ResetResourceSlots(
     long                /*stageFlags*/)
 {
     GLCmdUnbindResources cmd;
-    cmd.resetFlags = 0;
 
-    cmd.first = static_cast<GLuint>(std::min(firstSlot, GLStateManager::g_maxNumResourceSlots - 1u));
-    cmd.count = static_cast<GLsizei>(std::min(numSlots, GLStateManager::g_maxNumResourceSlots - cmd.first));
+    cmd.first       = static_cast<GLuint>(std::min(firstSlot, GLStateManager::g_maxNumResourceSlots - 1u));
+    cmd.count       = static_cast<GLsizei>(std::min(numSlots, GLStateManager::g_maxNumResourceSlots - cmd.first));
+    cmd.resetFlags  = 0;
 
     if (cmd.count > 0)
     {
@@ -508,26 +508,26 @@ void GLDeferredCommandBuffer::ResetResourceSlots(
             case ResourceType::Buffer:
             {
                 if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-                    cmd.resetUBO = 1;
+                    cmd.resetFlags |= GLCmdUnbindResources::ResetFlags::UBO;
                 if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-                    cmd.resetSSAO = 1;
+                    cmd.resetFlags |= GLCmdUnbindResources::ResetFlags::SSBO;
                 if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-                    cmd.resetTransformFeedback = 1;
+                    cmd.resetFlags |= GLCmdUnbindResources::ResetFlags::TransformFeedback;
             }
             break;
 
             case ResourceType::Texture:
             {
                 if ((bindFlags & BindFlags::Sampled) != 0)
-                    cmd.resetTextures = 1;
+                    cmd.resetFlags |= GLCmdUnbindResources::ResetFlags::Textures;
                 if ((bindFlags & BindFlags::Storage) != 0)
-                    cmd.resetImages = 1;
+                    cmd.resetFlags |= GLCmdUnbindResources::ResetFlags::Images;
             }
             break;
 
             case ResourceType::Sampler:
             {
-                cmd.resetSamplers = 1;
+                cmd.resetFlags |= GLCmdUnbindResources::ResetFlags::Samplers;
             }
             break;
         }

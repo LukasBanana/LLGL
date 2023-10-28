@@ -464,17 +464,17 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeUnbindResources:
         {
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
-            if (cmd->resetUBO)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::UBO) != 0)
                 stateMngr->UnbindBuffersBase(GLBufferTarget::UniformBuffer, cmd->first, cmd->count);
-            if (cmd->resetSSAO)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::SSBO) != 0)
                 stateMngr->UnbindBuffersBase(GLBufferTarget::ShaderStorageBuffer, cmd->first, cmd->count);
-            if (cmd->resetTransformFeedback)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::TransformFeedback) != 0)
                 stateMngr->UnbindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, cmd->first, cmd->count);
-            if (cmd->resetTextures)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::Textures) != 0)
                 stateMngr->UnbindTextures(cmd->first, cmd->count);
-            if (cmd->resetImages)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::Images) != 0)
                 stateMngr->UnbindImageTextures(cmd->first, cmd->count);
-            if (cmd->resetSamplers)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::Samplers) != 0)
                 stateMngr->UnbindSamplers(cmd->first, cmd->count);
             return sizeof(*cmd);
         }

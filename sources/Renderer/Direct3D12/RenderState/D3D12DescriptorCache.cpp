@@ -60,7 +60,8 @@ void D3D12DescriptorCache::Reset(UINT numResources, UINT numSamplers)
 
 void D3D12DescriptorCache::Clear()
 {
-    dirtyBits_.bits = ~0u;
+    dirtyBits_.descHeapCbvSrvUav    = 1;
+    dirtyBits_.descHeapSampler      = 1;
 }
 
 void D3D12DescriptorCache::EmplaceDescriptor(Resource& resource, UINT location, D3D12_DESCRIPTOR_RANGE_TYPE descRangeType)

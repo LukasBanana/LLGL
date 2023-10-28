@@ -36,10 +36,10 @@ SpirvInstruction::SpirvInstruction(spv::Op opcode, spv::Id type, spv::Id result,
 SpirvInstruction::SpirvInstruction(const std::uint32_t* words) :
     opcode { SpirvConstForwardIterator{ words }.Opcode() }
 {
-    auto wordCount = SpirvConstForwardIterator{ words }.WordCount();
+    std::uint32_t wordCount = SpirvConstForwardIterator{ words }.WordCount();
 
     /* Read type (if used) */
-    const auto info = GetSpirvInstructionInfo(opcode);
+    const SpirvInstructionInfo info = GetSpirvInstructionInfo(opcode);
     std::uint32_t operandOffset = 1;
 
     if (wordCount > operandOffset && info.hasType)
@@ -65,8 +65,8 @@ std::uint32_t SpirvInstruction::GetUInt32(std::uint32_t operand) const
 
 std::uint64_t SpirvInstruction::GetUInt64(std::uint32_t operand) const
 {
-    LLGL_ASSERT(operand + 1 < numOperands);
     /* Extract 64-bit integral */
+    LLGL_ASSERT(operand + 1 < numOperands);
     std::uint64_t ui = 0;
 
     ui = operands[operand];
@@ -83,38 +83,16 @@ float SpirvInstruction::GetFloat16(std::uint32_t operand) const
 
 float SpirvInstruction::GetFloat32(std::uint32_t operand) const
 {
+    /* Extract 32-bit floating-point from 32-bit integer operands */
     LLGL_ASSERT(operand < numOperands);
-
-    /* Extract 32-bit floating-point */
-    union
-    {
-        std::uint32_t   ui;
-        float           f;
-    }
-    data;
-
-    data.ui = operands[operand];
-
-    return data.f;
+    return *reinterpret_cast<const float*>(&(operands[operand]));
 }
 
 double SpirvInstruction::GetFloat64(std::uint32_t operand) const
 {
-    LLGL_ASSERT(operand + 1 < numOperands);
-
-    /* Extract 32-bit floating-point */
-    union
-    {
-        std::uint64_t   ui;
-        double          f;
-    }
-    data;
-
-    data.ui = operands[operand];
-    data.ui <<= 32;
-    data.ui |= operands[operand + 1];
-
-    return data.f;
+    /* Extract 64-bit floating-point from 64-bit integer operand */
+    const std::uint64_t ui = GetUInt64(operand);
+    return *reinterpret_cast<const double*>(&ui);
 }
 
 const char* SpirvInstruction::GetString(std::uint32_t operand) const
@@ -128,7 +106,7 @@ std::uint32_t SpirvInstruction::FindStringEndOperand(std::uint32_t operand) cons
     for (; operand < numOperands; ++operand)
     {
         /* Check for null terminator in current word */
-        auto word = operands[operand];
+        spv::Id word = operands[operand];
         for (int i = 0; i < 4; ++i)
         {
             /* Check if current byte is zero */

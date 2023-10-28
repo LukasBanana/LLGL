@@ -272,7 +272,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         sourceName      = shaderDesc.name;
     }
 
-    /* Get parameter from union */
+    /* Get parameters from shader descriptor */
     const char*             entry   = shaderDesc.entryPoint;
     const char*             target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
     const D3D_SHADER_MACRO* defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);

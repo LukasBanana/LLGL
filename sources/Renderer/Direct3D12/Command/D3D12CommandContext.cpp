@@ -514,8 +514,15 @@ void D3D12CommandContext::DispatchIndirect(
 
 void D3D12CommandContext::ClearCache()
 {
-    stateCache_.dirtyBits.value = ~0u;
-    stateCache_.stateBits.value = 0;
+    /* Invalidate dirty bits */
+    stateCache_.dirtyBits.pipelineState         = 1;
+    stateCache_.dirtyBits.graphicsRootSignature = 1;
+    stateCache_.dirtyBits.computeRootSignature  = 1;
+    stateCache_.dirtyBits.descriptorHeaps       = 1;
+
+    /* Clear state bits */
+    stateCache_.stateBits.isDeferredPSO         = 0;
+    stateCache_.stateBits.is16BitIndexFormat    = 0;
 }
 
 D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()

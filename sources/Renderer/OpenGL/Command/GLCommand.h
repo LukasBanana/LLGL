@@ -432,21 +432,22 @@ struct GLCmdBindGL2XSampler
 
 struct GLCmdUnbindResources
 {
-    GLuint              first;
-    GLsizei             count;
-    union
+    struct ResetFlags
     {
-        std::uint8_t    resetFlags;
-        struct
+        enum
         {
-            std::uint8_t    resetUBO                : 1;
-            std::uint8_t    resetSSAO               : 1;
-            std::uint8_t    resetTransformFeedback  : 1;
-            std::uint8_t    resetTextures           : 1;
-            std::uint8_t    resetImages             : 1;
-            std::uint8_t    resetSamplers           : 1;
+            UBO                 = (1 << 0),
+            SSBO                = (1 << 1),
+            TransformFeedback   = (1 << 2),
+            Textures            = (1 << 3),
+            Images              = (1 << 4),
+            Samplers            = (1 << 5),
         };
     };
+
+    GLuint      first;
+    GLsizei     count;
+    GLbitfield  resetFlags;
 };
 
 struct GLCmdPushDebugGroup

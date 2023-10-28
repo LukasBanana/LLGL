@@ -12,6 +12,7 @@
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Utils/TypeNames.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -73,18 +74,13 @@ static bool HasSeparableShaders(std::size_t numShaders, const Shader* const* sha
 void GLPipelineSignature::Build(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation)
 {
     LLGL_ASSERT(numShaders <= LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE);
-    isSeparablePpeline_ = HasSeparableShaders(numShaders, shaders);
-    numShaders_ = SortShaderArray(numShaders, shaders, permutation, shaders_);
+    data_.isSeparablePipeline = HasSeparableShaders(numShaders, shaders);
+    data_.numShaders = SortShaderArray(numShaders, shaders, permutation, data_.shaders);
 }
 
 int GLPipelineSignature::CompareSWO(const GLPipelineSignature& lhs, const GLPipelineSignature& rhs)
 {
-    LLGL_COMPARE_MEMBER_SWO(typeBitAndNumShaders_);
-    for_range(i, lhs.numShaders_)
-    {
-        LLGL_COMPARE_MEMBER_SWO(shaders_[i]);
-    }
-    return 0;
+    return std::memcmp(&(lhs.data_), &(rhs.data_), sizeof(GLuint)*(1 + lhs.GetNumShaders()));
 }
 
 static int GetShaderPipelineOrder(const Shader* shader)

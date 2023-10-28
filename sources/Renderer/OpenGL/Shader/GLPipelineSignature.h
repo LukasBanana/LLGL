@@ -12,6 +12,7 @@
 #include "../OpenGL.h"
 #include "GLShader.h"
 #include <cstddef>
+#include <type_traits>
 
 
 namespace LLGL
@@ -56,28 +57,31 @@ class GLPipelineSignature
         // Returns the number of shaders in this pipeline.
         inline GLuint GetNumShaders() const
         {
-            return numShaders_;
+            return data_.numShaders;
         }
 
         // Returns a pointer to the array of shader IDs.
         inline const GLuint* GetShaders() const
         {
-            return shaders_;
+            return data_.shaders;
         }
 
     private:
 
-        // IDs of shaders in this pipeline: glCreateShader/glCreateProgram/glCreateShaderProgramv
-        union
+        // Have signature data in separate struct to use as trivially copyable struct for std::memcmp().
+        struct alignas(alignof(GLuint)) SignatureData
         {
-            struct
-            {
-                GLuint isSeparablePpeline_  :  1;
-                GLuint numShaders_          : 31;
-            };
-            GLuint typeBitAndNumShaders_;
+            // IDs of shaders in this pipeline: glCreateShader/glCreateProgram/glCreateShaderProgramv
+            GLuint isSeparablePipeline  :  1;
+            GLuint numShaders           : 31;
+            GLuint shaders[LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE] = {};
         };
-        GLuint shaders_[LLGL_MAX_NUM_GL_SHADERS_PER_PIPELINE] = {};
+
+        static_assert(std::is_trivially_copyable<SignatureData>::value, "GLPipelineSignature::SignatureData must be trivially copyable");
+
+    private:
+
+        SignatureData data_;
 
 };
 

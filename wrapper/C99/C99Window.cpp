@@ -110,8 +110,8 @@ class WindowEventListenerContainer
 
         std::pair<int, InternalWindowEventListenerSPtr> Create(const LLGLWindowEventListener* callbacks)
         {
-            LLGL_ASSERT(idCounter_ < INT_MAX);
             std::lock_guard<std::mutex> guard{ mutex_ };
+            LLGL_ASSERT(idCounter_ < INT_MAX);
             const int id = ++idCounter_;
             std::pair<int, InternalWindowEventListenerSPtr> result{ id, std::make_shared<InternalWindowEventListener>(callbacks) };
             eventListeners_.insert(result);
