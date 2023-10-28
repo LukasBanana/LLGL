@@ -37,17 +37,10 @@ struct SubresourceCPUMappingLayout : SubresourceLayout
 // Compressed version of <TextureViewDescriptor> structure for faster insertion sort.
 struct CompressedTexView
 {
-    union
-    {
-        struct
-        {
-            std::uint32_t type      : 4;
-            std::uint32_t format    : 8;
-            std::uint32_t numMips   : 8;
-            std::uint32_t swizzle   : 12;
-        };
-        std::uint32_t base;
-    };
+    std::uint32_t type      : 4;
+    std::uint32_t format    : 8;
+    std::uint32_t numMips   : 8;
+    std::uint32_t swizzle   : 12;
     std::uint32_t firstMip;
     std::uint32_t numLayers;
     std::uint32_t firstLayer;

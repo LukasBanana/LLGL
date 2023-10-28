@@ -9,6 +9,7 @@
 #include <LLGL/Constants.h>
 #include "../Core/CoreUtils.h"
 #include "../Core/MacroUtils.h"
+#include <cstring>
 
 
 namespace LLGL
@@ -173,11 +174,7 @@ LLGL_EXPORT void CompressTextureViewDesc(CompressedTexView& dst, const TextureVi
 
 LLGL_EXPORT int CompareCompressedTexViewSWO(const CompressedTexView& lhs, const CompressedTexView& rhs)
 {
-    LLGL_COMPARE_MEMBER_SWO( base       );
-    LLGL_COMPARE_MEMBER_SWO( firstMip   );
-    LLGL_COMPARE_MEMBER_SWO( numLayers  );
-    LLGL_COMPARE_MEMBER_SWO( firstLayer );
-    return 0;
+    return std::memcmp(&lhs, &rhs, sizeof(CompressedTexView));
 }
 
 

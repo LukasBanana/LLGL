@@ -29,19 +29,18 @@ struct D3D12Resource;
 class D3D12Device;
 class D3D12CommandQueue;
 
-union D3D12Constant
+struct D3D12Constant
 {
     inline D3D12Constant(UINT value) :
-        u32 { value }
+        bits32 { value }
     {
     }
     inline D3D12Constant(FLOAT value) :
-        f32 { value }
+        bits32 { *reinterpret_cast<UINT*>(&value) }
     {
     }
 
-    UINT    u32;
-    FLOAT   f32;
+    UINT bits32;
 };
 
 class D3D12CommandContext

@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstddef>
-#include <string.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -108,7 +108,7 @@ struct MemsetUtils<TInner, true>
     static void MemsetInternal(TInner* dst, const TInner& value, std::size_t count)
     {
         if (ByteCmpUtils<sizeof(value)>::AllBytesEqual(reinterpret_cast<const char*>(&value)))
-            ::memset(dst, reinterpret_cast<const char*>(&value)[0], count * sizeof(TInner));
+            std::memset(dst, reinterpret_cast<const char*>(&value)[0], count * sizeof(TInner));
         else
             MemsetUtils<TInner, false>::MemsetInternal(dst, value, count);
     }

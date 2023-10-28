@@ -366,12 +366,12 @@ void D3D12CommandContext::PrepareStagingDescriptorHeaps(
 
 void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
 {
-    commandList_->SetGraphicsRoot32BitConstant(parameterIndex, value.u32, offset);
+    commandList_->SetGraphicsRoot32BitConstant(parameterIndex, value.bits32, offset);
 }
 
 void D3D12CommandContext::SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset)
 {
-    commandList_->SetComputeRoot32BitConstant(parameterIndex, value.u32, offset);
+    commandList_->SetComputeRoot32BitConstant(parameterIndex, value.bits32, offset);
 }
 
 void D3D12CommandContext::SetGraphicsRootParameter(UINT parameterIndex, D3D12_ROOT_PARAMETER_TYPE parameterType, D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr)

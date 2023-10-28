@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
-#include <string.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -253,7 +253,7 @@ class LLGL_EXPORT DynamicArray
                 pointer newData = Allocator{}.allocate(newSize);
                 if (data_ != nullptr)
                 {
-                    ::memcpy(newData, data_, size_ * sizeof(T));
+                    std::memcpy(newData, data_, size_ * sizeof(T));
                     Allocator{}.deallocate(data_, size_);
                 }
                 data_ = newData;
@@ -356,7 +356,7 @@ class LLGL_EXPORT DynamicArray
                 clear();
                 resize(rhs.size(), UninitializeTag{});
             }
-            ::memcpy(data(), rhs.data(), size() * sizeof(T));
+            std::memcpy(data(), rhs.data(), size() * sizeof(T));
             return *this;
         }
 
