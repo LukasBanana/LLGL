@@ -61,15 +61,17 @@ class CsharpTranslator(Translator):
 
         class CsharpDeclaration:
             marshal = None
+            deprecated = None
             type = ''
             ident = ''
 
             def __init__(self, ident):
                 self.marshal = None
+                self.deprecated = None
                 self.type = ''
                 self.ident = ident
 
-        def translateDecl(declType, ident = None, isInsideStruct = False):
+        def translateDecl(declType, ident = None, isInsideStruct = False, isReturnType = False):
             decl = CsharpDeclaration(ident)
 
             def sanitizeTypename(typename):
@@ -98,8 +100,6 @@ class CsharpTranslator(Translator):
                             decl.ident += f'[{declType.arraySize}]'
                         else:
                             decl.marshal = '<unroll>'
-                    elif declType.baseType == StdType.BOOL:
-                        decl.marshal = 'MarshalAs(UnmanagedType.I1)'
                 else:
                     decl.type += builtin if builtin else sanitizeTypename(declType.typename)
                     if declType.isPointer or declType.arraySize > 0:
@@ -114,7 +114,23 @@ class CsharpTranslator(Translator):
                         else:
                             decl.type += '*'
 
+                if declType.baseType == StdType.BOOL and not (declType.isPointer or declType.arraySize > 0):
+                    decl.marshal = 'MarshalAs(UnmanagedType.I1)'
+
             return decl
+
+        def translateDeprecationMessage(msg):
+            if msg is not None:
+                msg = msg.replace('::', '.')
+                return f'Obsolete({msg})'
+            return None
+
+        def translateInitializer(init):
+            if init is not None:
+                init = init.replace('::', '.')
+                init = init.replace('nullptr', 'null')
+                return init
+            return None
 
         # Write all constants
         constStructs = list(filter(lambda record: record.hasConstFieldsOnly(), doc.structs))
@@ -201,7 +217,7 @@ class CsharpTranslator(Translator):
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
 
         def writeStruct(struct, modifier = None):
-            self.statement(f'public {modifier + " " if modifier != None else ""}struct {struct.name}')
+            self.statement(f'public {modifier + " " if modifier is not None else ""}struct {struct.name}')
             self.openScope()
 
             # Write struct field declarations
@@ -211,20 +227,22 @@ class CsharpTranslator(Translator):
                     # Write two fields for dynamic arrays
                     if field.type.arraySize == LLGLType.DYNAMIC_ARRAY:
                         declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
+                    if field.deprecated:
+                        declList.append(Translator.Declaration(None, translateDeprecationMessage(field.deprecated)))
                     fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
                     if fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
                         for i in range(0, field.type.arraySize):
-                            declList.append(Translator.Declaration(fieldDecl.type, f'{fieldDecl.ident}{i}', field.init))
+                            declList.append(Translator.Declaration(fieldDecl.type, f'{fieldDecl.ident}{i}', field.init if field.deprecated is None else None))
                     else:
                         if fieldDecl.marshal:
                             declList.append(Translator.Declaration(None, fieldDecl.marshal))
-                        declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init))
+                        declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init if field.deprecated is None else None))
 
             for decl in declList.decls:
                 if not decl.type:
                     self.statement(f'[{decl.name}]')
                 elif decl.init:
-                    self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {decl.init} */')
+                    self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {translateInitializer(decl.init)} */')
                 else:
                     self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};')
             self.closeScope()
@@ -323,9 +341,7 @@ class CsharpTranslator(Translator):
                 self.statement(f'[UnmanagedFunctionPointer(CallingConvention.Cdecl)]');
 
                 returnType = translateDecl(delegate.returnType)
-                if returnType.type == 'bool':
-                    self.statement(f'[return: MarshalAs(UnmanagedType.I1)]')
-                elif returnType.marshal:
+                if returnType.marshal:
                     self.statement(f'[return: {returnType.marshal}]')
 
                 delegateName = delegate.name[len(LLGLMeta.delegatePrefix):]
@@ -343,9 +359,7 @@ class CsharpTranslator(Translator):
                 self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
 
                 returnType = translateDecl(func.returnType)
-                if returnType.type == 'bool':
-                    self.statement(f'[return: MarshalAs(UnmanagedType.I1)]')
-                elif returnType.marshal:
+                if returnType.marshal:
                     self.statement(f'[return: {returnType.marshal}]')
 
                 funcName = func.name[len(LLGLMeta.funcPrefix):]

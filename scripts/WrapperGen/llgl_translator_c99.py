@@ -32,6 +32,15 @@ class C99Translator(Translator):
                     #    llglIncludes.add(inc[0])
             return stdIncludes, llglIncludes
 
+        def translateDeprecationMessage(msg):
+            if msg is not None:
+                if msg.startswith('"') and msg.endswith('"'):
+                    msg = msg[1:-1] # Remove quotation marks
+                msg = msg.replace('LLGL::', 'LLGL')
+                msg = msg.replace('::', '.')
+                return msg
+            return None
+
         self.statement('/*')
         self.statement(f' * {doc.name}.h')
         self.statement(' *')
@@ -234,12 +243,12 @@ class C99Translator(Translator):
                     if field.type.isDynamicArray():
                         declList.append(Translator.Declaration('size_t', f'num{field.name[0].upper()}{field.name[1:]}', '0'))
                     declStr = translateStructField(field.type, field.name)
-                    declList.append(Translator.Declaration(
-                        declStr[0],
-                        declStr[1],
-                        translateFieldInitializer(field.type, field.init),
-                        inComment = 'DEPRECATED' if field.isDeprecated else None)
-                    )
+                    declList.append(
+                        Translator.Declaration(
+                            declStr[0],
+                            declStr[1],
+                            translateFieldInitializer(field.type, field.init),
+                            inComment = translateDeprecationMessage(field.deprecated)))
                     if externalCond:
                         declList.append(Translator.Declaration(inDirective = f'#endif /* {externalCond} */'))
 

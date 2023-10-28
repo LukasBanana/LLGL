@@ -192,13 +192,13 @@ class LLGLField:
     name = ''
     type = LLGLType()
     init = None
-    isDeprecated = False
+    deprecated = None
 
     def __init__(self, inName, inType = LLGLType()):
         self.name = inName
         self.type = inType
         self.init = None
-        self.isDeprecated = False
+        self.deprecated = None
 
     def __str__(self):
         s = ''

@@ -87,7 +87,7 @@ class Scanner:
         try:
             with open(filename, 'r') as file:
                 text = preprocessSource(file.read())
-                return re.findall(r'//[^\n]*|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|<<|>>|[+-=,;<>\|]|[*]|[(]|[)]', text)
+                return re.findall(r'//[^\n]*|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|<<|>>|[+-=,;<>\|]|[*]|[(]|[)]', text)
         except UnicodeDecodeError:
             fatal('UnicodeDecodeError exception while reading file: ' + filename)
         return None
@@ -162,10 +162,11 @@ class Parser:
 
     def tryParseDeprecated(self):
         if self.scanner.acceptIf('LLGL_DEPRECATED'):
-            while self.scanner.accept() != ')':
-                pass
-            return True
-        return False
+            self.scanner.acceptOrFail('(')
+            msg = self.scanner.accept()
+            self.scanner.ignoreUntil(')')
+            return msg
+        return None
 
     def parseInitializer(self):
         value = ''
@@ -217,7 +218,7 @@ class Parser:
     def parseStructMembers(self, structName):
         members = []
         while self.scanner.tok() != '}':
-            isDeprecated = self.tryParseDeprecated()
+            deprecated = self.tryParseDeprecated()
             fieldType = self.parseType()
             isCtor = fieldType.typename == structName
             isOper = self.scanner.tok() == 'operator'
@@ -256,7 +257,7 @@ class Parser:
                     self.scanner.acceptOrFail(']')
                 if self.scanner.acceptIf('='):
                     member.init = self.parseInitializer()
-                member.isDeprecated = isDeprecated
+                member.deprecated = deprecated
                 members.append(member)
                 self.scanner.acceptOrFail(';')
         return members
@@ -364,7 +365,7 @@ class Parser:
                 self.scanner.acceptIf('LLGL_EXPORT')
 
                 # Ignore deprecated records
-                ignoreRecord = self.tryParseDeprecated()
+                ignoreRecord = self.tryParseDeprecated() is not None
                 
                 # Parse record name and trim 'LLGL' prefix (occurs in custom structs of C99 wrapper such as LLGLWindowEventListener)
                 name = self.scanner.accept()

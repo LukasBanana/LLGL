@@ -35,7 +35,7 @@ class Translator:
 
         def append(self, decl):
             self.decls.append(decl)
-            if not decl.directive:
+            if not decl.directive and decl.type is not None:
                 self.maxLen[0] = max(self.maxLen[0], len(decl.type) if decl.type else 0)
                 self.maxLen[1] = max(self.maxLen[1], len(decl.name))
                 self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init else 0)

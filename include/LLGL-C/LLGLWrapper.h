@@ -1049,7 +1049,7 @@ typedef struct LLGLRenderingFeatures
     bool hasTextureViews;              /* = false */
     bool hasTextureViewSwizzle;        /* = false */
     bool hasBufferViews;               /* = false */
-    bool hasSamplers;                  /* = false */
+    bool hasSamplers;                  /* LLGLRenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated. */
     bool hasConstantBuffers;           /* = false */
     bool hasStorageBuffers;            /* = false */
     bool hasUniforms;                  /* = false */
