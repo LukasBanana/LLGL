@@ -400,7 +400,6 @@ endif()
 if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project (experimental)" OFF)
-    option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C#" OFF)
 endif()
 
 option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
@@ -673,11 +672,6 @@ else(GaussLib_INCLUDE_DIR)
     endif()
 endif(GaussLib_INCLUDE_DIR)
 
-# Wrapper: C#
-if(WIN32 AND LLGL_BUILD_WRAPPER_CSHARP)
-    add_subdirectory(wrapper/CSharp)
-endif()
-
 # Install targets, headers, and CMake config files
 get_property(LLGL_ALL_TARGETS GLOBAL PROPERTY LLGL_GLOBAL_MODULE_LIST)
 if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
@@ -740,10 +734,6 @@ endif()
 
 if(LLGL_BUILD_WRAPPER_C99)
     message("Build Wrapper: C99")
-endif()
-
-if(WIN32 AND LLGL_BUILD_WRAPPER_CSHARP)
-    message("Build Wrapper: C#")
 endif()
 
 if(LLGL_BUILD_EXAMPLES)
