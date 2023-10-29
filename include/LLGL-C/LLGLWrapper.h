@@ -182,6 +182,13 @@ typedef enum LLGLDataType
 }
 LLGLDataType;
 
+typedef enum LLGLReportType
+{
+    LLGLReportTypeDefault = 0,
+    LLGLReportTypeError,
+}
+LLGLReportType;
+
 typedef enum LLGLKey
 {
     LLGLKeyLButton,

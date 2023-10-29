@@ -17,6 +17,7 @@ set INPUT=^
     %INCLUDE%\FragmentAttribute.h ^
     %INCLUDE%\ImageFlags.h ^
     %INCLUDE%\IndirectArguments.h ^
+    %INCLUDE%\Log.h ^
     %INCLUDE%\Key.h ^
     %INCLUDE%\PipelineLayoutFlags.h ^
     %INCLUDE%\PipelineStateFlags.h ^
@@ -42,22 +43,24 @@ set INPUT_FN=^
     %CINCLUDE%\Canvas.h ^
     %CINCLUDE%\CommandBuffer.h ^
     %CINCLUDE%\CommandQueue.h ^
+    %CINCLUDE%\Display.h ^
+    %CINCLUDE%\Log.h ^
+    %CINCLUDE%\PipelineCache.h ^
     %CINCLUDE%\PipelineLayout.h ^
     %CINCLUDE%\PipelineState.h ^
     %CINCLUDE%\QueryHeap.h ^
     %CINCLUDE%\RenderSystem.h ^
+    %CINCLUDE%\RenderSystemChild.h ^
     %CINCLUDE%\RenderTarget.h ^
     %CINCLUDE%\Report.h ^
     %CINCLUDE%\Resource.h ^
+    %CINCLUDE%\ResourceHeap.h ^
     %CINCLUDE%\Shader.h ^
     %CINCLUDE%\Surface.h ^
     %CINCLUDE%\SwapChain.h ^
     %CINCLUDE%\Texture.h ^
     %CINCLUDE%\Timer.h ^
     %CINCLUDE%\Window.h
-
-REM    %CINCLUDE%\Display.h ^
-REM    %CINCLUDE%\Log.h ^
 
 REM Generate wrapper for C99, C#
 call :Generate .\LLGLWrapper.h -c99

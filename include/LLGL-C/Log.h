@@ -10,17 +10,7 @@
 
 
 #include <LLGL-C/Export.h>
-#include <LLGL-C/Types.h>
-
-
-/* ----- Enumerations ----- */
-
-typedef enum LLGLReportType
-{
-    LLGLReportTypeDefault = 0,
-    LLGLReportTypeError,
-}
-LLGLReportType;
+#include <LLGL-C/LLGLWrapper.h>
 
 
 /* ----- Types ----- */

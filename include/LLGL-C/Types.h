@@ -20,6 +20,7 @@
 #define LLGL_DECL_CONST_WRAPPER_TYPE(NAME) \
     typedef struct NAME { const void* internal; } NAME
 
+LLGL_DECL_WRAPPER_TYPE( LLGLRenderSystemChild );
 LLGL_DECL_WRAPPER_TYPE( LLGLBuffer );
 LLGL_DECL_WRAPPER_TYPE( LLGLBufferArray );
 LLGL_DECL_WRAPPER_TYPE( LLGLCanvas );
