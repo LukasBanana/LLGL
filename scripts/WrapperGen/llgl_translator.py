@@ -13,17 +13,23 @@ class Translator:
 
     class Declaration:
         type = ''
+        originalType = ''
         name = ''
+        originalName = ''
         init = None
         directive = None
         comment = None
+        deprecated = False
 
-        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None, inComment = None):
+        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None, inComment = None, inDeprecated = False, inOriginalType = None, inOriginalName = None):
             self.type = inType
+            self.originalType = inType if inOriginalType is None else inOriginalType
             self.name = inName
+            self.originalName = inName if inOriginalName is None else inOriginalName
             self.init = inInit
             self.directive = inDirective
             self.comment = inComment
+            self.deprecated = inDeprecated
 
     class DeclarationList:
         decls = []

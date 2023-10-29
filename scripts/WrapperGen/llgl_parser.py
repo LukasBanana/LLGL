@@ -87,7 +87,7 @@ class Scanner:
         try:
             with open(filename, 'r') as file:
                 text = preprocessSource(file.read())
-                return re.findall(r'//[^\n]*|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|<<|>>|[+-=,;<>\|]|[*]|[(]|[)]', text)
+                return re.findall(r'//[^\n]*|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|\.\.\.|<<|>>|[+-=,;<>\|]|[*]|[(]|[)]', text)
         except UnicodeDecodeError:
             fatal('UnicodeDecodeError exception while reading file: ' + filename)
         return None
@@ -199,6 +199,8 @@ class Parser:
     def parseType(self):
         if self.scanner.acceptIf(['static', 'constexpr', 'int']):
             return LLGLType('const')
+        elif self.scanner.acceptIf('...'):
+            return LLGLType('...');
         else:
             isConst = self.scanner.acceptIf('const')
             typename = self.scanner.accept()
@@ -267,12 +269,13 @@ class Parser:
         paramType = self.parseType()
 
         paramName = ''
-        if self.scanner.acceptIf('LLGL_NULLABLE'):
-            self.scanner.acceptOrFail('(')
-            paramName = self.scanner.accept()
-            self.scanner.acceptOrFail(')')
-        else:
-            paramName = self.scanner.accept()
+        if paramType.baseType != StdType.VARGS:
+            if self.scanner.acceptIf('LLGL_NULLABLE'):
+                self.scanner.acceptOrFail('(')
+                paramName = self.scanner.accept()
+                self.scanner.acceptOrFail(')')
+            else:
+                paramName = self.scanner.accept()
 
         param = LLGLField(paramName, paramType)
 

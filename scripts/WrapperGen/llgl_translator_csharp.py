@@ -7,6 +7,14 @@
 
 from llgl_translator import *
 
+class CsharpProperty:
+    setter = False
+    getter = False
+
+    def __init__(self, setter = False, getter = False):
+        self.setter = setter
+        self.getter = getter
+
 class CsharpTranslator(Translator):
     def translateModule(self, doc):
         builtinTypenames = {
@@ -28,20 +36,32 @@ class CsharpTranslator(Translator):
             StdType.FUNC: 'IntPtr',
         }
         saveStructs = [
-            'Offset2D',
-            'Offset3D',
+            'BindingSlot',
+            'DisplayModeDescriptor',
+            'DrawIndexedIndirectArguments',
+            'DrawIndirectArguments',
+            'DrawPatchIndirectArguments',
             'Extent2D',
             'Extent3D',
-            'Viewport',
+            'FormatAttributes',
+            'Offset2D',
+            'Offset3D',
+            'QueryPipelineStatistics',
             'Scissor',
-            'BindingSlot',
-            'DrawIndirectArguments',
-            'DrawIndexedIndirectArguments',
-            'DrawPatchIndirectArguments',
+            'SubresourceFootprint',
+            'TextureSubresource',
+            'Viewport',
         ]
-        trivialClasses = [
-            'RenderingFeatures',
-        ]
+        trivialClasses = {
+            'BlendTargetDescriptor': CsharpProperty(getter = True), 
+            'BufferViewDescriptor': CsharpProperty(getter = True),
+            'CommandBufferDescriptor': CsharpProperty(getter = True),
+            'DepthBiasDescriptor': CsharpProperty(getter = True),
+            'DepthDescriptor': CsharpProperty(getter = True),
+            'RasterizerDescriptor': CsharpProperty(getter = True),
+            'RenderingFeatures': CsharpProperty(setter = True),
+            'StencilFaceDescriptor': CsharpProperty(getter = True),
+        }
 
         self.statement('/*')
         self.statement(' * {}.cs'.format(doc.name))
@@ -87,6 +107,8 @@ class CsharpTranslator(Translator):
 
             if declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.interfaces:
                 decl.type = sanitizeTypename(declType.typename)
+            elif declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.handles:
+                decl.type = 'IntPtr' # Translate any handle to generic pointer type
             else:
                 builtin = builtinTypenames.get(declType.baseType)
                 if isInsideStruct:
@@ -125,10 +147,24 @@ class CsharpTranslator(Translator):
                 return f'Obsolete({msg})'
             return None
 
-        def translateInitializer(init):
+        def translateInitializer(init, type):
             if init is not None:
                 init = init.replace('::', '.')
                 init = init.replace('nullptr', 'null')
+
+                constant = LLGLMeta.constants.get(init)
+                if constant:
+                    if constant < 0:
+                        if type == 'byte':
+                            constant = StdTypeLimits.MAX_UINT8 + constant + 1
+                        elif type == 'ushort':
+                            constant = StdTypeLimits.MAX_UINT16 + constant + 1
+                        elif type == 'uint':
+                            constant = StdTypeLimits.MAX_UINT32 + constant + 1
+                        elif type == 'ulong':
+                            constant = StdTypeLimits.MAX_UINT64 + constant + 1
+                    return f'({type})0x{constant:X}'
+                    
                 return init
             return None
 
@@ -213,11 +249,43 @@ class CsharpTranslator(Translator):
 
             self.statement()
 
+        def identToPropertyIdent(ident):
+            return ident[0].upper() + ident[1:] if len(ident) > 0 else ident;
+
+        def classNameToFlagsName(className):
+            return f'{className[:-len("Descriptor")] if className.endswith("Descriptor") else className}Flags'
+
+        def typeToPropertyType(type, propName, className):
+            nonlocal doc
+
+            if propName == 'Flags':
+                # Try to find flags type that matches the class name, e.g. 'CommandBufferFlags'
+                flags = doc.findFlagsByName(classNameToFlagsName(className))
+                if flags:
+                    return flags.name
+
+            elif propName.endswith('Flags'):
+                # Try to find flags type that matches the property name, e.g. 'BindFlags'
+                flags = doc.findFlagsByName(propName)
+                if flags:
+                    return flags.name
+
+            elif propName in LLGLMeta.specialFlags:
+                # Try to find flags type that matches the property name with 'Flags' added, e.g. 'ColorMaskFlags'
+                flags = doc.findFlagsByName(propName + 'Flags')
+                if flags:
+                    return flags.name
+
+            return type
+
+
         # Write records that are trivial to map between unmanaged and managed code
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
 
-        def writeStruct(struct, modifier = None):
-            self.statement(f'public {modifier + " " if modifier is not None else ""}struct {struct.name}')
+        def writeStruct(struct, modifier = None, managedTypeProperties = None, fieldsAsProperties = False):
+            nonlocal trivialClasses
+
+            self.statement(f'public {modifier + " " if modifier is not None else ""}{"class" if managedTypeProperties is not None else "struct"} {struct.name}')
             self.openScope()
 
             # Write struct field declarations
@@ -227,34 +295,108 @@ class CsharpTranslator(Translator):
                     # Write two fields for dynamic arrays
                     if field.type.arraySize == LLGLType.DYNAMIC_ARRAY:
                         declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
+
                     if field.deprecated:
                         declList.append(Translator.Declaration(None, translateDeprecationMessage(field.deprecated)))
+
                     fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
-                    if fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
+                    declName = identToPropertyIdent(fieldDecl.ident) if fieldsAsProperties else fieldDecl.ident
+
+                    if managedTypeProperties:
+                        declType = typeToPropertyType(fieldDecl.type, declName, struct.name)
+                        declList.append(Translator.Declaration(declType, declName, field.init, inDeprecated = field.deprecated, inOriginalType = fieldDecl.type, inOriginalName = fieldDecl.ident))
+                    elif fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
                         for i in range(0, field.type.arraySize):
-                            declList.append(Translator.Declaration(fieldDecl.type, f'{fieldDecl.ident}{i}', field.init if field.deprecated is None else None))
+                            declList.append(Translator.Declaration(fieldDecl.type, f'{declName}{i}', field.init if field.deprecated is None else None))
                     else:
                         if fieldDecl.marshal:
                             declList.append(Translator.Declaration(None, fieldDecl.marshal))
-                        declList.append(Translator.Declaration(fieldDecl.type, fieldDecl.ident, field.init if field.deprecated is None else None))
+                        declList.append(Translator.Declaration(fieldDecl.type, declName, field.init if field.deprecated is None else None))
 
+            # Write all fields as variables or properties
             for decl in declList.decls:
                 if not decl.type:
                     self.statement(f'[{decl.name}]')
-                elif decl.init:
-                    self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};{declList.spaces(1, decl.name)}/* = {translateInitializer(decl.init)} */')
                 else:
-                    self.statement(f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name};')
+                    fieldStmt = f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name}'
+                    if fieldsAsProperties:
+                        fieldStmt += ' { get; set; }'
+                        if decl.init:
+                            fieldStmt += declList.spaces(1, decl.name)
+                            if managedTypeProperties:
+                                fieldStmt += f' = {translateInitializer(decl.init, decl.type)};'
+                            else:
+                                fieldStmt += f'/* = {translateInitializer(decl.init, decl.type)} */'
+                    else:
+                        fieldStmt += ';'
+                        if decl.init:
+                            fieldStmt += f'{declList.spaces(1, decl.name)}/* = {translateInitializer(decl.init, decl.type)} */'
+                    self.statement(fieldStmt)
+
+            # Write optional conversion to native type
+            if managedTypeProperties:
+                self.statement()
+                self.statement(f'internal NativeLLGL.{struct.name} Native')
+                self.openScope()
+
+                if managedTypeProperties.getter:
+                    self.statement('get')
+                    self.openScope()
+                    self.statement(f'var native = new NativeLLGL.{struct.name}();')
+
+                    for decl in declList.decls:
+                        if decl.type and not decl.deprecated:
+                            assignStmt = f'native.{decl.originalName}{declList.spaces(1, decl.name)}= '
+                            if decl.type != decl.originalType:
+                                assignStmt += f'({decl.originalType}){decl.name}'
+                            else:
+                                assignStmt += decl.name
+                            if decl.type in trivialClasses:
+                                assignStmt += '.Native'
+                            self.statement(assignStmt + ';')
+
+                    self.statement('return native;')
+                    self.closeScope()
+
+                if managedTypeProperties.setter:
+                    self.statement('set')
+                    self.openScope()
+
+                    for decl in declList.decls:
+                        if decl.type and not decl.deprecated:
+                            assignStmt = decl.name
+                            if decl.type in trivialClasses:
+                                assignStmt += '.Native'
+                            assignStmt += f'{declList.spaces(1, assignStmt)}= '
+                            if decl.type != decl.originalType:
+                                assignStmt += f'({decl.type})value.{decl.originalName}'
+                            else:
+                                assignStmt += f'value.{decl.originalName}'
+                            self.statement(assignStmt + ';')
+
+                    self.closeScope()
+
+                self.closeScope()
+
             self.closeScope()
             self.statement()
 
-        # Write all trivial structures
         if len(commonStructs) > 0:
+            # Write all trivial structures
             self.statement('/* ----- Structures ----- */')
             self.statement()
             for struct in commonStructs:
                 if struct.name in saveStructs:
-                    writeStruct(struct)
+                    writeStruct(struct, fieldsAsProperties = True)
+            self.statement()
+
+            # Write all trivial classes (with conversion to native struct)
+            self.statement('/* ----- Classes ----- */')
+            self.statement()
+            for struct in commonStructs:
+                property = trivialClasses.get(struct.name)
+                if property:
+                    writeStruct(struct, managedTypeProperties = trivialClasses.get(struct.name), fieldsAsProperties = True)
             self.statement()
 
         # Write native LLGL interface
@@ -302,6 +444,7 @@ class CsharpTranslator(Translator):
             self.statement('internal unsafe void* ptr;')
             writeInterfaceRelation(self, interface, 'Surface', ['Window', 'Canvas'])
             writeInterfaceRelation(self, interface, 'RenderTarget', ['SwapChain'])
+            writeInterfaceRelation(self, interface, 'Resource', ['Buffer', 'Texture', 'Sampler'])
             self.closeScope()
             self.statement()
 
@@ -313,7 +456,7 @@ class CsharpTranslator(Translator):
             self.statement()
             for struct in commonStructs:
                 if not struct.name in saveStructs:
-                    writeStruct(struct, 'unsafe')
+                    writeStruct(struct, modifier = 'unsafe')
             self.statement()
 
         def translateParamList(func):
@@ -341,7 +484,7 @@ class CsharpTranslator(Translator):
                 self.statement(f'[UnmanagedFunctionPointer(CallingConvention.Cdecl)]');
 
                 returnType = translateDecl(delegate.returnType)
-                if returnType.marshal:
+                if returnType.marshal and returnType.marshal != 'ref':
                     self.statement(f'[return: {returnType.marshal}]')
 
                 delegateName = delegate.name[len(LLGLMeta.delegatePrefix):]
@@ -356,10 +499,14 @@ class CsharpTranslator(Translator):
             self.statement()
 
             for func in doc.funcs:
+                # Ignore functions with variadic arguments for now
+                if func.hasVargs():
+                    continue
+
                 self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
 
                 returnType = translateDecl(func.returnType)
-                if returnType.marshal:
+                if returnType.marshal and returnType.marshal != 'ref':
                     self.statement(f'[return: {returnType.marshal}]')
 
                 funcName = func.name[len(LLGLMeta.funcPrefix):]
