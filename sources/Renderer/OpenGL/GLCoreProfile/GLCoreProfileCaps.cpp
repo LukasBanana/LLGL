@@ -189,6 +189,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasMultiSampleArrayTextures    = features.hasMultiSampleTextures; // Same extension
     features.hasTextureViews                = HasExtension(GLExt::ARB_texture_view);
     features.hasTextureViewSwizzle          = features.hasTextureViews; // Same extension
+    features.hasTextureViewFormatSwizzle    = features.hasTextureViews; // Same extension
     features.hasBufferViews                 = (HasExtension(GLExt::ARB_multi_bind) || HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
     features.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);

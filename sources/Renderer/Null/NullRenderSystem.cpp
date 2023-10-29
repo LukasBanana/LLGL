@@ -47,6 +47,7 @@ static void InitNullRendererFeatures(RenderingFeatures& features)
     features.hasMultiSampleTextures         = true;
     features.hasTextureViews                = true;
     features.hasTextureViewSwizzle          = true;
+    features.hasTextureViewFormatSwizzle    = true;
     features.hasBufferViews                 = true;
     features.hasConstantBuffers             = true;
     features.hasStorageBuffers              = true;

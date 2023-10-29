@@ -472,6 +472,16 @@ struct RenderingFeatures
     bool hasTextureViewSwizzle          = false;
 
     /**
+    \brief Specifies whether texture views can have formats with a different layout than their parent texture.
+    \remarks An example of this feature is a texture view with format Format::RG16UInt where as its parent texture has format Format::RGBA8UInt.
+    If this feature is not supported, the number of components and their size must match between the parent texture and its texture views,
+    i.e. a parent texture with format Format::RGBA8UNorm can still have texture views with format Format::RGBA8UInt for instance but not with Format::RG16UInt.
+    \remarks This feature implies that \c hasTextureViews is true.
+    \note Only supported with: Vulkan, OpenGL, Metal.
+    */
+    bool hasTextureViewFormatSwizzle    = false;
+
+    /**
     \brief Specifies whether buffer views are supported.
     \remarks Buffer views can shared their data with another buffer resource in a different range and format.
     \see BufferViewDescriptor

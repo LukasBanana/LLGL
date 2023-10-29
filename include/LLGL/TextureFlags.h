@@ -377,17 +377,33 @@ struct TextureViewDescriptor
 
     /**
     \brief Hardware texture format. By default Format::RGBA8UNorm.
-    \remarks The format of the shared texture and the texture-view must be in the same format class:
+    \remarks The format of the parent texture and the texture view must be in the same format class.
+    There are two classes of format compatiblity between the texture view and its parent texture.
+    What class of formats is supported for texture views depends on whether the backend supports format swizzling (see RenderingFeatures::hasTextureViewFormatSwizzle).
+    \remarks Format compatibility classes for backends that <b>do support</b> format swizzling:
     | Class | Compatible texture formats |
     |------:|----------------------------|
     | 128 Bits | Format::RGBA32UInt, Format::RGBA32SInt, Format::RGBA32Float |
     | 96 Bits | Format::RGB32UInt, Format::RGB32SInt, Format::RGB32Float |
     | 64 Bits | Format::RG32UInt, Format::RG32SInt, Format::RG32Float, Format::RGBA16UNorm, Format::RGBA16SNorm, Format::RGBA16UInt, Format::RGBA16SInt, Format::RGBA16Float |
     | 48 Bits | Format::RGB16UNorm, Format::RGB16SNorm, Format::RGB16UInt, Format::RGB16SInt, Format::RGB16Float |
-    | 32 Bits | Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float, Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt |
+    | 32 Bits | Format::R32UInt, Format::R32SInt, Format::R32Float, Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float, Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt |
     | 24 Bits | Format::RGB8UNorm, Format::RGB8SNorm, Format::RGB8UInt, Format::RGB8SInt |
     | 16 Bits | Format::R16UNorm, Format::R16SNorm, Format::R16UInt, Format::R16SInt, Format::R16Float, Format::RG8UNorm, Format::RG8SNorm, Format::RG8UInt, Format::RG8SInt |
     | 8 Bits | Format::R8UNorm, Format::R8SNorm, Format::R8UInt, Format::R8SInt |
+    \remarks Format compatibility classes for backends that <b>do not support</b> format swizzling:
+    | Class | Compatible texture formats |
+    |------:|----------------------------|
+    | RGBA 128 Bits | Format::RGBA32UInt, Format::RGBA32SInt, Format::RGBA32Float |
+    | RGBA 64 Bits | Format::RGBA16UNorm, Format::RGBA16SNorm, Format::RGBA16UInt, Format::RGBA16SInt, Format::RGBA16Float |
+    | RG 64 Bits | Format::RG32UInt, Format::RG32SInt, Format::RG32Float |
+    | RGBA 32 Bits | Format::RGBA8UNorm, Format::RGBA8SNorm, Format::RGBA8UInt, Format::RGBA8SInt |
+    | RG 32 Bits | Format::RG16UNorm, Format::RG16SNorm, Format::RG16UInt, Format::RG16SInt, Format::RG16Float |
+    | R 32 Bits | Format::R32UInt, Format::R32SInt, Format::R32Float |
+    | RG 16 Bits | Format::RG8UNorm, Format::RG8SNorm, Format::RG8UInt, Format::RG8SInt |
+    | R 16 Bits | Format::R16UNorm, Format::R16SNorm, Format::R16UInt, Format::R16SInt, Format::R16Float |
+    | R 8 Bits | Format::R8UNorm, Format::R8SNorm, Format::R8UInt, Format::R8SInt |
+    \see RenderingFeatures::hasTextureViewFormatSwizzle
     */
     Format              format          = Format::RGBA8UNorm;
 

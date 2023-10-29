@@ -871,6 +871,7 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasMultiSampleTextures);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasMultiSampleArrayTextures);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasTextureViews);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasTextureViewSwizzle);
+LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasTextureViewFormatSwizzle);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasBufferViews);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasConstantBuffers);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasStorageBuffers);

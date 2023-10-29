@@ -56,7 +56,7 @@ DEF_TEST( TextureViews )
     PipelineState* pso = renderer->CreatePipelineState(psoDesc);
 
     // D3D does not support reinterpretation of texture view formats, i.e. RGBA8 cannot be reinterpreted to RG16, but Vulkan, GL, and Metal support it.
-    const bool isTextureFormatReinterpretationSupported = !(renderer->GetRendererID() == RendererID::Direct3D11 || renderer->GetRendererID() == RendererID::Direct3D12);
+    const bool isTextureFormatReinterpretationSupported = renderer->GetRenderingCaps().features.hasTextureViewFormatSwizzle;
 
     // Create all resource heap with all texture swizzle configurations
     struct ViewPair

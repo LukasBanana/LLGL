@@ -1223,6 +1223,33 @@ void DbgRenderSystem::ValidateTextureRegion(const DbgTexture& textureDbg, const 
     }
 }
 
+enum class DbgTextureFormatCompatibility
+{
+    Equal,          // Texture formats are equal
+    Class1,         // Requires RenderingFeatures::hasTextureViews
+    Class2,         // Requires RenderingFeatures::hasTextureViewFormatSwizzle
+    Incompatible,   // Incompatible texture formats
+};
+
+static DbgTextureFormatCompatibility GetTextureFormatCompatibility(Format sharedTextureFormat, Format textureViewFormat)
+{
+    if (sharedTextureFormat == textureViewFormat)
+        return DbgTextureFormatCompatibility::Equal;
+
+    const FormatAttributes& sharedFormatAttribs = GetFormatAttribs(sharedTextureFormat);
+    const FormatAttributes& viewFormatAttribs = GetFormatAttribs(textureViewFormat);
+
+    if (sharedFormatAttribs.bitSize == viewFormatAttribs.bitSize)
+    {
+        if (sharedFormatAttribs.components == viewFormatAttribs.components)
+            return DbgTextureFormatCompatibility::Class1;
+        else
+            return DbgTextureFormatCompatibility::Class2;
+    }
+
+    return DbgTextureFormatCompatibility::Incompatible;
+}
+
 void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& textureViewDesc)
 {
     /* Validate texture-view features are supported */
@@ -1230,6 +1257,25 @@ void DbgRenderSystem::ValidateTextureView(const DbgTexture& sharedTextureDbg, co
         LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "texture views not supported");
     if (!GetRenderingCaps().features.hasTextureViewSwizzle && !IsTextureSwizzleIdentity(textureViewDesc.swizzle))
         LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, "texture view swizzle not supported, but mapping is not equal to identity");
+
+    /* Validate texture view compatibility */
+    const DbgTextureFormatCompatibility formatCompatibility = GetTextureFormatCompatibility(sharedTextureDbg.desc.format, textureViewDesc.format);
+    if (formatCompatibility == DbgTextureFormatCompatibility::Incompatible)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::UnsupportedFeature,
+            "texture view format (LLGL::Format::%s) is incompatible with parent format (LLGL::Format::%s)",
+            ToString(textureViewDesc.format), ToString(sharedTextureDbg.desc.format)
+        );
+    }
+    else if (formatCompatibility == DbgTextureFormatCompatibility::Class2 && !GetRenderingCaps().features.hasTextureViewFormatSwizzle)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::UnsupportedFeature,
+            "texture view format swizzle not supported, but view format (LLGL::Format::%s) is incompatible with parent format (LLGL::Format::%s)",
+            ToString(textureViewDesc.format), ToString(sharedTextureDbg.desc.format)
+        );
+    }
 
     /* Validate attributes of shared texture against texture-view descriptor */
     if (sharedTextureDbg.isTextureView)
