@@ -100,8 +100,9 @@ class CsharpTranslator(Translator):
                 self.type = ''
                 self.ident = ident
 
-        def translateDecl(declType, ident = None, isInsideStruct = False, isReturnType = False):
-            decl = CsharpDeclaration(ident)
+        def translateField(field, isInsideStruct = False, isReturnType = False):
+            fieldType = field.type
+            decl = CsharpDeclaration(field.name)
 
             def sanitizeTypename(typename):
                 nonlocal isInsideStruct
@@ -114,41 +115,46 @@ class CsharpTranslator(Translator):
 
             nonlocal builtinTypenames
 
-            if declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.interfaces:
-                decl.type = sanitizeTypename(declType.typename)
-            elif declType.baseType == StdType.STRUCT and declType.typename in LLGLMeta.handles:
+            if fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.interfaces:
+                decl.type = sanitizeTypename(fieldType.typename)
+            elif fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.handles:
                 decl.type = 'IntPtr' # Translate any handle to generic pointer type
             else:
-                builtin = builtinTypenames.get(declType.baseType)
+                builtin = builtinTypenames.get(fieldType.baseType)
                 if isInsideStruct:
-                    if declType.arraySize > 0 and builtin:
+                    if fieldType.arraySize > 0 and builtin:
                         decl.type += 'fixed '
-                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
-                    if declType.isPointer or declType.arraySize == LLGLType.DYNAMIC_ARRAY:
+                    decl.type += builtin if builtin else sanitizeTypename(fieldType.typename)
+                    if fieldType.isPointer or fieldType.arraySize == LLGLType.DYNAMIC_ARRAY:
                         decl.type += '*'
-                    elif declType.arraySize > 0:
+                    elif fieldType.arraySize > 0:
                         if builtin:
-                            decl.ident += f'[{declType.arraySize}]'
+                            decl.ident += f'[{fieldType.arraySize}]'
                         else:
                             decl.marshal = '<unroll>'
                 else:
-                    decl.type += builtin if builtin else sanitizeTypename(declType.typename)
-                    if declType.isPointer or declType.arraySize > 0:
-                        if declType.baseType == StdType.STRUCT:
+                    decl.type += builtin if builtin else sanitizeTypename(fieldType.typename)
+                    if fieldType.isPointer or fieldType.arraySize > 0:
+                        if LLGLAnnotation.NULLABLE in field.annotations or LLGLAnnotation.ARRAY in field.annotations:
+                            decl.type += '*'
+                        elif fieldType.baseType == StdType.STRUCT:
                             decl.marshal = 'ref'
-                        elif declType.baseType == StdType.CHAR:
+                        elif fieldType.baseType == StdType.CHAR:
                             decl.type = 'string'
                             decl.marshal = 'MarshalAs(UnmanagedType.LPStr)'
-                        elif declType.baseType == StdType.WCHAR:
+                        elif fieldType.baseType == StdType.WCHAR:
                             decl.type = 'string'
                             decl.marshal = 'MarshalAs(UnmanagedType.LPWStr)'
                         else:
                             decl.type += '*'
 
-                if declType.baseType == StdType.BOOL and not (declType.isPointer or declType.arraySize > 0):
+                if fieldType.baseType == StdType.BOOL and not (fieldType.isPointer or fieldType.arraySize > 0):
                     decl.marshal = 'MarshalAs(UnmanagedType.I1)'
 
             return decl
+
+        def translateReturnType(type):
+            return translateField(LLGLField(inName = None, inType = type))
 
         def translateDeprecationMessage(msg):
             if msg is not None:
@@ -157,7 +163,7 @@ class CsharpTranslator(Translator):
             return None
 
         def identToPropertyIdent(ident):
-            return ident[0].upper() + ident[1:] if len(ident) > 0 else ident;
+            return Translator.convertCamelCaseToPascalCase(ident)
 
         def classNameToFlagsName(className):
             return f'{className[:-len("Descriptor")] if className.endswith("Descriptor") else className}Flags'
@@ -340,7 +346,7 @@ class CsharpTranslator(Translator):
                     if field.deprecated:
                         declList.append(Translator.Declaration(None, translateDeprecationMessage(field.deprecated)))
 
-                    fieldDecl = translateDecl(field.type, field.name, isInsideStruct = True)
+                    fieldDecl = translateField(field, isInsideStruct = True)
                     declName = identToPropertyIdent(fieldDecl.ident) if fieldsAsProperties else fieldDecl.ident
 
                     if managedTypeProperties:
@@ -586,7 +592,7 @@ class CsharpTranslator(Translator):
             for param in func.params:
                 if len(paramListStr) > 0:
                     paramListStr += ', '
-                paramDecl = translateDecl(param.type, param.name)
+                paramDecl = translateField(param)
                 if paramDecl.marshal:
                     if paramDecl.marshal == 'ref':
                         paramListStr += f'{paramDecl.marshal} '
@@ -604,7 +610,7 @@ class CsharpTranslator(Translator):
             for delegate in doc.delegates:
                 self.statement(f'[UnmanagedFunctionPointer(CallingConvention.Cdecl)]');
 
-                returnType = translateDecl(delegate.returnType)
+                returnType = translateReturnType(delegate.returnType)
                 if returnType.marshal and returnType.marshal != 'ref':
                     self.statement(f'[return: {returnType.marshal}]')
 
@@ -626,7 +632,7 @@ class CsharpTranslator(Translator):
 
                 self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
 
-                returnType = translateDecl(func.returnType)
+                returnType = translateReturnType(func.returnType)
                 if returnType.marshal and returnType.marshal != 'ref':
                     self.statement(f'[return: {returnType.marshal}]')
 

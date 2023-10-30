@@ -264,18 +264,22 @@ class Parser:
                 self.scanner.acceptOrFail(';')
         return members
 
+    def parseAnnotationArgument(self):
+        if self.scanner.acceptIf('NULL'):
+            return LLGLAnnotation.NULLABLE
+        elif self.scanner.acceptIf('['):
+            self.scanner.accept()
+            self.scanner.acceptOrFail(']')
+            return LLGLAnnotation.ARRAY
+        else:
+            fatal(f"error: unknwon annotation argument '{self.scanner.tok()}'")
+        return LLGLAnnotation.UNDEFINED
+
     def parseParameter(self):
         # Only parse return type name parameter name as C does not support default arguments
         paramType = self.parseType()
 
-        paramName = ''
-        if paramType.baseType != StdType.VARGS:
-            if self.scanner.acceptIf('LLGL_NULLABLE'):
-                self.scanner.acceptOrFail('(')
-                paramName = self.scanner.accept()
-                self.scanner.acceptOrFail(')')
-            else:
-                paramName = self.scanner.accept()
+        paramName = self.scanner.accept() if paramType.baseType != StdType.VARGS else ''
 
         param = LLGLField(paramName, paramType)
 
@@ -283,6 +287,15 @@ class Parser:
         if self.scanner.acceptIf('['):
             param.type.setArraySize(self.scanner.accept())
             self.scanner.acceptOrFail(']')
+
+        # Parse optional annotations
+        if self.scanner.acceptIf('LLGL_ANNOTATE'):
+            self.scanner.acceptOrFail('(')
+            while self.scanner.good():
+                param.annotations.append(self.parseAnnotationArgument())
+                if not self.scanner.acceptIf(','):
+                    break
+            self.scanner.acceptOrFail(')')
 
         return param
 

@@ -27,7 +27,7 @@ LLGLCanvasEventListener;
 LLGL_C_EXPORT LLGLCanvas llglCreateCanvas(const LLGLCanvasDescriptor* canvasDesc);
 LLGL_C_EXPORT void llglReleaseCanvas(LLGLCanvas canvas);
 LLGL_C_EXPORT void llglSetCanvasTitle(LLGLCanvas canvas, const wchar_t* title);
-LLGL_C_EXPORT size_t llglGetCanvasTitle(LLGLCanvas canvas, size_t outTitleLength, wchar_t* LLGL_NULLABLE(outTitle));
+LLGL_C_EXPORT size_t llglGetCanvasTitle(LLGLCanvas canvas, size_t outTitleLength, wchar_t* outTitle LLGL_ANNOTATE(NULL));
 LLGL_C_EXPORT bool llglHasCanvasQuit(LLGLCanvas canvas);
 LLGL_C_EXPORT void llglSetCanvasUserData(LLGLCanvas canvas, void* userData);
 LLGL_C_EXPORT void* llglGetCanvasUserData(LLGLCanvas canvas);

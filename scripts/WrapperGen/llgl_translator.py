@@ -68,6 +68,22 @@ class Translator:
         self.indent -= 1
         self.statement(stmt)
 
+    @staticmethod
     def convertNameToHeaderGuard(name):
         return re.sub(r'([A-Z]+)', r'_\1', name).upper()
+
+    @staticmethod
+    def convertCamelCaseToPascalCase(ident):
+        def makeAbbreviationUpperCase(abbr):
+            nonlocal ident
+            if len(ident) >= len(abbr):
+                identPrefixUpper = ident[:len(abbr)].upper()
+                if identPrefixUpper == abbr:
+                    ident = identPrefixUpper + ident[len(abbr):]
+
+        # Check for certain abbreviations
+        makeAbbreviationUpperCase('CPU')
+
+        # Just change first character to upper case
+        return ident[0].upper() + ident[1:] if len(ident) > 0 else ident;
 

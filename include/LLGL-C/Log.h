@@ -24,7 +24,7 @@ typedef void (*LLGL_PFN_ReportCallback)(LLGLReportType type, const char* text, v
 
 LLGL_C_EXPORT void llglLogPrintf(const char* format, ...);
 LLGL_C_EXPORT void llglLogErrorf(const char* format, ...);
-LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallback(LLGL_PFN_ReportCallback callback, void* LLGL_NULLABLE(userData));
+LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallback(LLGL_PFN_ReportCallback callback, void* userData LLGL_ANNOTATE(NULL));
 LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallbackReport(LLGLReport report);
 LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallbackStd();
 LLGL_C_EXPORT void llglUnregisterLogCallback(LLGLLogHandle handle);

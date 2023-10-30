@@ -47,6 +47,11 @@ class ConditionalType:
         self.cond = cond
         self.include = include
 
+class LLGLAnnotation(Enum):
+    UNDEFINED = 0
+    NULLABLE = 1
+    ARRAY = 2
+
 class LLGLMeta:
     UTF8STRING = 'UTF8String'
     STRING = 'string'
@@ -223,12 +228,14 @@ class LLGLField:
     type = LLGLType()
     init = None
     deprecated = None
+    annotations = []
 
     def __init__(self, inName, inType = LLGLType()):
         self.name = inName
         self.type = inType
         self.init = None
         self.deprecated = None
+        self.annotations = []
 
     def __str__(self):
         s = ''

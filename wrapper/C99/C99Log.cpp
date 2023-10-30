@@ -30,7 +30,7 @@ LLGL_C_EXPORT void llglLogErrorf(const char* format, ...)
     Log::Errorf("%s", text.c_str());
 }
 
-LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallback(LLGL_PFN_ReportCallback callback, void* LLGL_NULLABLE(userData))
+LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallback(LLGL_PFN_ReportCallback callback, void* userData)
 {
     LLGL_ASSERT_PTR(callback);
     return Log::RegisterCallback(

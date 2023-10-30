@@ -25,12 +25,12 @@ LLGL_C_EXPORT bool llglSetCursorPosition(const LLGLOffset2D* position);
 LLGL_C_EXPORT void llglGetCursorPosition(LLGLOffset2D* outPosition);
 
 LLGL_C_EXPORT bool llglIsDisplayPrimary(LLGLDisplay display);
-LLGL_C_EXPORT size_t llglGetDisplayDeviceName(LLGLDisplay display, size_t outNameLength, wchar_t* LLGL_NULLABLE(outName));
+LLGL_C_EXPORT size_t llglGetDisplayDeviceName(LLGLDisplay display, size_t outNameLength, wchar_t* outName LLGL_ANNOTATE(NULL, [outNameLength]));
 LLGL_C_EXPORT void llglGetDisplayOffset(LLGLDisplay display, LLGLOffset2D* outOffset);
 LLGL_C_EXPORT bool llglResetDisplayMode(LLGLDisplay display);
 LLGL_C_EXPORT bool llglSetDisplayMode(LLGLDisplay display, const LLGLDisplayModeDescriptor* displayModeDesc);
 LLGL_C_EXPORT void llglGetDisplayMode(LLGLDisplay display, LLGLDisplayModeDescriptor* outDisplayModeDesc);
-LLGL_C_EXPORT size_t llglGetSupportedDisplayModes(LLGLDisplay display, size_t maxNumDisplayModes, LLGLDisplayModeDescriptor* LLGL_NULLABLE(outDisplayModes));
+LLGL_C_EXPORT size_t llglGetSupportedDisplayModes(LLGLDisplay display, size_t maxNumDisplayModes, LLGLDisplayModeDescriptor* outDisplayModes LLGL_ANNOTATE(NULL, [maxNumDisplayModes]));
 
 
 #endif

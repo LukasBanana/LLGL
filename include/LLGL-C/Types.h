@@ -9,10 +9,11 @@
 #define LLGL_C99_TYPES_H
 
 
-#define LLGL_NULL_OBJECT        { NULL }
-#define LLGL_GET(OBJ)           ((OBJ).internal)
-#define LLGL_GET_AS(TYPE, OBJ)  (TYPE){ LLGL_GET(OBJ) }
-#define LLGL_NULLABLE(IDENT)    IDENT
+/* Object conversion macros */
+
+#define LLGL_NULL_OBJECT            { NULL }
+#define LLGL_GET(OBJ)               ((OBJ).internal)
+#define LLGL_GET_AS(TYPE, OBJ)      (TYPE){ LLGL_GET(OBJ) }
 
 #define LLGL_DECL_WRAPPER_TYPE(NAME) \
     typedef struct NAME { void* internal; } NAME
@@ -51,6 +52,11 @@ LLGL_DECL_CONST_WRAPPER_TYPE( LLGLReport );
 
 #undef LLGL_DECL_WRAPPER_TYPE
 #undef LLGL_DECL_CONST_WRAPPER_TYPE
+
+
+/* Annotation macros used for wrapper generator */
+
+#define LLGL_ANNOTATE(...)
 
 
 #endif
