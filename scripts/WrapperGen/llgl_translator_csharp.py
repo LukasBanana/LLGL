@@ -7,13 +7,15 @@
 
 from llgl_translator import *
 
-class CsharpProperty:
+class CsharpProperties:
     setter = False
     getter = False
+    fullCtor = False
 
-    def __init__(self, setter = False, getter = False):
+    def __init__(self, setter = False, getter = False, fullCtor = False):
         self.setter = setter
         self.getter = getter
+        self.fullCtor = fullCtor
 
 class CsharpTranslator(Translator):
     def translateModule(self, doc):
@@ -35,32 +37,38 @@ class CsharpTranslator(Translator):
             StdType.FLOAT: 'float',
             StdType.FUNC: 'IntPtr',
         }
-        saveStructs = [
-            'BindingSlot',
-            'DisplayModeDescriptor',
-            'DrawIndexedIndirectArguments',
-            'DrawIndirectArguments',
-            'DrawPatchIndirectArguments',
-            'Extent2D',
-            'Extent3D',
-            'FormatAttributes',
-            'Offset2D',
-            'Offset3D',
-            'QueryPipelineStatistics',
-            'Scissor',
-            'SubresourceFootprint',
-            'TextureSubresource',
-            'Viewport',
-        ]
+        saveStructs = {
+            'BindingSlot': CsharpProperties(fullCtor = True),
+            'DrawIndexedIndirectArguments': None,
+            'DrawIndirectArguments': None,
+            'DrawPatchIndirectArguments': None,
+            'Extent2D': CsharpProperties(fullCtor = True),
+            'Extent3D': CsharpProperties(fullCtor = True),
+            'FormatAttributes': None,
+            'Offset2D': CsharpProperties(fullCtor = True),
+            'Offset3D': CsharpProperties(fullCtor = True),
+            'QueryPipelineStatistics': None,
+            'Scissor': CsharpProperties(fullCtor = True),
+            'SubresourceFootprint': None,
+            'TextureLocation': None,
+            'TextureRegion': None,
+            'TextureSubresource': None,
+            'Viewport': CsharpProperties(fullCtor = True),
+        }
         trivialClasses = {
-            'BlendTargetDescriptor': CsharpProperty(getter = True), 
-            'BufferViewDescriptor': CsharpProperty(getter = True),
-            'CommandBufferDescriptor': CsharpProperty(getter = True),
-            'DepthBiasDescriptor': CsharpProperty(getter = True),
-            'DepthDescriptor': CsharpProperty(getter = True),
-            'RasterizerDescriptor': CsharpProperty(getter = True),
-            'RenderingFeatures': CsharpProperty(setter = True),
-            'StencilFaceDescriptor': CsharpProperty(getter = True),
+            'AttachmentClear': CsharpProperties(getter = True),
+            'BlendTargetDescriptor': CsharpProperties(getter = True), 
+            'BufferViewDescriptor': CsharpProperties(getter = True),
+            'CommandBufferDescriptor': CsharpProperties(getter = True),
+            'DepthBiasDescriptor': CsharpProperties(getter = True),
+            'DepthDescriptor': CsharpProperties(getter = True),
+            'DisplayModeDescriptor': CsharpProperties(getter = True, setter = True),
+            'RasterizerDescriptor': CsharpProperties(getter = True),
+            'RenderingFeatures': CsharpProperties(setter = True),
+            'StencilFaceDescriptor': CsharpProperties(getter = True),
+            'SwapChainDescriptor': CsharpProperties(getter = True, fullCtor = True),
+            'TextureDescriptor': CsharpProperties(getter = True, setter = True),
+            'VertexAttribute': CsharpProperties(getter = True, fullCtor = True),
         }
 
         self.statement('/*')
@@ -74,6 +82,7 @@ class CsharpTranslator(Translator):
             self.statement('/* {} */'.format(line))
         self.statement()
         self.statement('using System;')
+        self.statement('using System.Text;')
         self.statement('using System.Runtime.InteropServices;')
         self.statement()
         self.statement('namespace LLGL')
@@ -147,25 +156,57 @@ class CsharpTranslator(Translator):
                 return f'Obsolete({msg})'
             return None
 
+        def identToPropertyIdent(ident):
+            return ident[0].upper() + ident[1:] if len(ident) > 0 else ident;
+
+        def classNameToFlagsName(className):
+            return f'{className[:-len("Descriptor")] if className.endswith("Descriptor") else className}Flags'
+
         def translateInitializer(init, type):
-            if init is not None:
+            nonlocal doc
+
+            if init:
+                # Replace common C-to-C# syntax
                 init = init.replace('::', '.')
                 init = init.replace('nullptr', 'null')
+                init = init.replace('|', ' | ')
 
-                constant = LLGLMeta.constants.get(init)
-                if constant:
-                    if constant < 0:
-                        if type == 'byte':
-                            constant = StdTypeLimits.MAX_UINT8 + constant + 1
-                        elif type == 'ushort':
-                            constant = StdTypeLimits.MAX_UINT16 + constant + 1
-                        elif type == 'uint':
-                            constant = StdTypeLimits.MAX_UINT32 + constant + 1
-                        elif type == 'ulong':
-                            constant = StdTypeLimits.MAX_UINT64 + constant + 1
-                    return f'({type})0x{constant:X}'
+                if init.startswith('{') and init.endswith('}'):
+                    # Extract sub expressions from initializer list
+                    fieldExprs = init[1:-1].split(',')
+
+                    # Write initializer list as structure field initializer
+                    struct = doc.findStructByName(type)
+                    if struct:
+                        if len(fieldExprs) != len(struct.fields):
+                            fatal(f"error: mismatch between initializer expressions ({len(fieldExprs)}) and record fields ({len(struct.fields)}) for '{struct.name}'")
+                        initExpr = ''
+                        for fieldIndex in range(0, len(struct.fields)):
+                            if len(initExpr) > 0:
+                                initExpr += ', '
+                            initExpr += f'{identToPropertyIdent(struct.fields[fieldIndex].name)} = {fieldExprs[fieldIndex]}'
+                        return f'new {type}() ' + '{ ' + initExpr + ' }'
+                else:
+                    # Map known constant name to its value
+                    constant = LLGLMeta.constants.get(init)
+                    if constant:
+                        if constant < 0:
+                            if type == 'byte':
+                                constant = StdTypeLimits.MAX_UINT8 + constant + 1
+                            elif type == 'ushort':
+                                constant = StdTypeLimits.MAX_UINT16 + constant + 1
+                            elif type == 'uint':
+                                constant = StdTypeLimits.MAX_UINT32 + constant + 1
+                            elif type == 'ulong':
+                                constant = StdTypeLimits.MAX_UINT64 + constant + 1
+                        return f'({type})0x{constant:X}'
                     
                 return init
+            else:
+                struct = doc.findStructByName(type)
+                if struct:
+                    return f'new {struct.name}()'
+
             return None
 
         # Write all constants
@@ -249,32 +290,28 @@ class CsharpTranslator(Translator):
 
             self.statement()
 
-        def identToPropertyIdent(ident):
-            return ident[0].upper() + ident[1:] if len(ident) > 0 else ident;
-
-        def classNameToFlagsName(className):
-            return f'{className[:-len("Descriptor")] if className.endswith("Descriptor") else className}Flags'
-
         def typeToPropertyType(type, propName, className):
             nonlocal doc
 
+            if type == 'byte*':
+                return 'string'
+
+            # Try to find flags type that matches the class name, e.g. 'CommandBufferFlags'
             if propName == 'Flags':
-                # Try to find flags type that matches the class name, e.g. 'CommandBufferFlags'
                 flags = doc.findFlagsByName(classNameToFlagsName(className))
                 if flags:
                     return flags.name
 
-            elif propName.endswith('Flags'):
+            if propName.endswith('Flags') or propName in LLGLMeta.structFlagProperties:
                 # Try to find flags type that matches the property name, e.g. 'BindFlags'
                 flags = doc.findFlagsByName(propName)
                 if flags:
                     return flags.name
 
-            elif propName in LLGLMeta.specialFlags:
-                # Try to find flags type that matches the property name with 'Flags' added, e.g. 'ColorMaskFlags'
-                flags = doc.findFlagsByName(propName + 'Flags')
-                if flags:
-                    return flags.name
+                # Try to map class name to known flags, e.g. 'BlendTargetDescriptor' to 'ColorMaskFlags'
+                knownFlags = LLGLMeta.structFlags.get(className)
+                if knownFlags:
+                    return knownFlags
 
             return type
 
@@ -282,8 +319,12 @@ class CsharpTranslator(Translator):
         # Write records that are trivial to map between unmanaged and managed code
         commonStructs = list(filter(lambda record: not record.hasConstFieldsOnly(), doc.structs))
 
+        def findRecordProperties(name):
+            properties = saveStructs.get(name)
+            return properties if properties is not None else trivialClasses.get(name)
+
         def writeStruct(struct, modifier = None, managedTypeProperties = None, fieldsAsProperties = False):
-            nonlocal trivialClasses
+            nonlocal doc
 
             self.statement(f'public {modifier + " " if modifier is not None else ""}{"class" if managedTypeProperties is not None else "struct"} {struct.name}')
             self.openScope()
@@ -307,34 +348,101 @@ class CsharpTranslator(Translator):
                         declList.append(Translator.Declaration(declType, declName, field.init, inDeprecated = field.deprecated, inOriginalType = fieldDecl.type, inOriginalName = fieldDecl.ident))
                     elif fieldDecl.marshal and fieldDecl.marshal == '<unroll>':
                         for i in range(0, field.type.arraySize):
-                            declList.append(Translator.Declaration(fieldDecl.type, f'{declName}{i}', field.init if field.deprecated is None else None))
+                            declList.append(Translator.Declaration(fieldDecl.type, f'{declName}{i}', field.init if field.deprecated is None else None, inOriginalName = fieldDecl.ident))
                     else:
                         if fieldDecl.marshal:
                             declList.append(Translator.Declaration(None, fieldDecl.marshal))
-                        declList.append(Translator.Declaration(fieldDecl.type, declName, field.init if field.deprecated is None else None))
+                        declList.append(Translator.Declaration(fieldDecl.type, declName, field.init if field.deprecated is None else None, inOriginalName = fieldDecl.ident))
+
+            # Write optionally constructor that initializes all fields
+            if fieldsAsProperties:
+                structProperties = findRecordProperties(struct.name)
+                if structProperties and structProperties.fullCtor:
+                    paramList = ''
+                    defaultArgsStarted = False
+                    for decl in declList.decls:
+                        if len(paramList) > 0:
+                            paramList += ', '
+                        paramList += f'{decl.type} {decl.originalName}'
+                        declInit = translateInitializer(decl.init, decl.type)
+                        if declInit:
+                            defaultArgsStarted = True
+                            paramList += f' = {declInit}'
+                        else:
+                            if defaultArgsStarted:
+                                fatal(f"error: no initializer defined for parameter '{decl.originalName}' in constructor '{struct.name}', but default argument list has already started")
+
+                    self.statement(f'public {struct.name}({paramList})')
+                    self.openScope()
+
+                    for decl in declList.decls:
+                        self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= {decl.originalName};')
+
+                    self.closeScope()
+                    self.statement()
 
             # Write all fields as variables or properties
+            hasUnsafeContext = False
+
             for decl in declList.decls:
                 if not decl.type:
                     self.statement(f'[{decl.name}]')
                 else:
-                    fieldStmt = f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name}'
-                    if fieldsAsProperties:
-                        fieldStmt += ' { get; set; }'
-                        if decl.init:
-                            fieldStmt += declList.spaces(1, decl.name)
-                            if managedTypeProperties:
-                                fieldStmt += f' = {translateInitializer(decl.init, decl.type)};'
-                            else:
-                                fieldStmt += f'/* = {translateInitializer(decl.init, decl.type)} */'
+                    if managedTypeProperties and decl.originalType == 'byte*':
+                        # Translate string fields with internal ASCII string array
+                        hasUnsafeContext = True
+
+                        self.statement(f'private string {decl.originalName};')
+                        self.statement(f'private byte[] {decl.originalName}Ascii;')
+                        self.statement(f'public string {decl.name}')
+                        self.openScope()
+
+                        self.statement('get')
+                        self.openScope()
+                        self.statement(f'return {decl.originalName};')
+                        self.closeScope()
+
+                        self.statement('set')
+                        self.openScope()
+                        self.statement(f'{decl.originalName} = value;')
+                        self.statement(f'{decl.originalName}Ascii = Encoding.ASCII.GetBytes({decl.originalName} + "\\0");')
+                        self.closeScope()
+
+                        self.closeScope()
+
                     else:
-                        fieldStmt += ';'
-                        if decl.init:
-                            fieldStmt += f'{declList.spaces(1, decl.name)}/* = {translateInitializer(decl.init, decl.type)} */'
-                    self.statement(fieldStmt)
+                        fieldStmt = f'public {decl.type}{declList.spaces(0, decl.type)}{decl.name}'
+                        if fieldsAsProperties:
+                            fieldStmt += ' { get; set; }'
+                            declInit = translateInitializer(decl.init, decl.type)
+                            if declInit:
+                                fieldStmt += declList.spaces(1, decl.name)
+                                if managedTypeProperties:
+                                    fieldStmt += f'= {declInit};'
+                                else:
+                                    fieldStmt += f'/* = {declInit} */'
+                        else:
+                            fieldStmt += ';'
+                            if decl.init:
+                                fieldStmt += f'{declList.spaces(1, decl.name)}/* = {translateInitializer(decl.init, decl.type)} */'
+                        self.statement(fieldStmt)
+
+            def typeNeedsNativeConversion(type):
+                nonlocal doc
+                return doc.findStructByName(decl.type) and decl.type not in saveStructs
 
             # Write optional conversion to native type
             if managedTypeProperties:
+                if managedTypeProperties.setter:
+                    # Write constructors for implicit conversion
+                    self.statement()
+                    self.statement(f'public {struct.name}() ' + '{ }')
+                    self.statement()
+                    self.statement(f'internal {struct.name}(NativeLLGL.{struct.name} native)')
+                    self.openScope()
+                    self.statement('Native = native;')
+                    self.closeScope()
+
                 self.statement()
                 self.statement(f'internal NativeLLGL.{struct.name} Native')
                 self.openScope()
@@ -344,16 +452,29 @@ class CsharpTranslator(Translator):
                     self.openScope()
                     self.statement(f'var native = new NativeLLGL.{struct.name}();')
 
+                    if hasUnsafeContext:
+                        self.statement('unsafe')
+                        self.openScope()
+
                     for decl in declList.decls:
                         if decl.type and not decl.deprecated:
-                            assignStmt = f'native.{decl.originalName}{declList.spaces(1, decl.name)}= '
-                            if decl.type != decl.originalType:
-                                assignStmt += f'({decl.originalType}){decl.name}'
+                            if decl.originalType == 'byte*':
+                                self.statement(f'fixed (byte* {decl.originalName}Ptr = {decl.originalName}Ascii)')
+                                self.openScope()
+                                self.statement(f'native.{decl.originalName} = {decl.originalName}Ptr;')
+                                self.closeScope()
                             else:
-                                assignStmt += decl.name
-                            if decl.type in trivialClasses:
-                                assignStmt += '.Native'
-                            self.statement(assignStmt + ';')
+                                assignStmt = f'native.{decl.originalName}{declList.spaces(1, decl.name)}= '
+                                if decl.type != decl.originalType:
+                                    assignStmt += f'({decl.originalType}){decl.name}'
+                                else:
+                                    assignStmt += decl.name
+                                if typeNeedsNativeConversion(decl.type):
+                                    assignStmt += '.Native'
+                                self.statement(assignStmt + ';')
+
+                    if hasUnsafeContext:
+                        self.closeScope()
 
                     self.statement('return native;')
                     self.closeScope()
@@ -365,7 +486,7 @@ class CsharpTranslator(Translator):
                     for decl in declList.decls:
                         if decl.type and not decl.deprecated:
                             assignStmt = decl.name
-                            if decl.type in trivialClasses:
+                            if typeNeedsNativeConversion(decl.type):
                                 assignStmt += '.Native'
                             assignStmt += f'{declList.spaces(1, assignStmt)}= '
                             if decl.type != decl.originalType:

@@ -109,7 +109,11 @@ class LLGLMeta:
     handles = [
         'LLGLLogHandle'
     ]
-    specialFlags = [
+    structFlags = {
+        'BlendTargetDescriptor': 'ColorMaskFlags',
+        'AttachmentClear': 'ClearFlags'
+    }
+    structFlagProperties = [
         'ColorMask'
     ]
     constants = {
