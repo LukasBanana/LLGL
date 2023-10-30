@@ -35,9 +35,9 @@ DIGIT       := '0'-'9'
 HEX_DIGIT   := '0'-'9' | 'a'-'f' | 'A'-'F'
 BOOL_TRUE   := 'true' | 'yes' | 'on' | '1'
 BOOL_FALSE  := 'false' | 'no' | 'off' | '0'
-uint        := DIGIT+ | '0x' HEX_DIGIT+
-float       := uint | uint '.' uint
-boolean     := BOOL_TRUE | BOOL_FALSE
+BOOL        := BOOL_TRUE | BOOL_FALSE
+INT         := DIGIT+ | '0x' HEX_DIGIT+
+FLOAT       := INT | INT '.' INT
 \endcode
 \see Parse
 */

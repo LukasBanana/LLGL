@@ -14,7 +14,7 @@
 #include <LLGL/Deprecated.h>
 #include <vector>
 #include <cstdint>
-#include <string.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -72,7 +72,7 @@ struct FrameProfile
     //! Clears all counter values.
     inline void Clear()
     {
-        ::memset(values, 0, sizeof(values));
+        std::memset(values, 0, sizeof(values));
         timeRecords.clear();
     }
 
