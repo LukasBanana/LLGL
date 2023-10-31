@@ -193,7 +193,6 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasBufferViews                 = (HasExtension(GLExt::ARB_multi_bind) || HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
     features.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);
-    features.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
     features.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
     features.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
     features.hasTessellatorStage            = features.hasTessellationShaders; // Same extension

@@ -488,8 +488,7 @@ struct RenderingFeatures
     */
     bool hasBufferViews                 = false;
 
-    //! Specifies whether samplers are supported.
-    //! \todo Rename to \c hasNativeSamplerStates or remove entirely.
+    //! \deprecated Since 0.04b; Can be substituted with \c true.
     LLGL_DEPRECATED("LLGL::RenderingFeatures::hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated.", "true")
     bool hasSamplers                    = true;
 
@@ -506,13 +505,9 @@ struct RenderingFeatures
     */
     bool hasStorageBuffers              = false;
 
-    /**
-    \brief Specifies whether individual shader uniforms are supported.
-    \note Only supported with: OpenGL.
-    \see CommandBuffer::SetUniform
-    \see CommandBuffer::SetUniforms
-    */
-    bool hasUniforms                    = false;
+    //! \deprecated Since 0.04b; Can be substituted with \c true.
+    LLGL_DEPRECATED("LLGL::RenderingFeatures::hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated.", "true")
+    bool hasUniforms                    = true;
 
     /**
     \brief Specifies whether geometry shaders are supported.

@@ -875,7 +875,6 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasTextureViewFormatSwizzle);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasBufferViews);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasConstantBuffers);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasStorageBuffers);
-LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasUniforms);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasGeometryShaders);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasTessellationShaders);
 LLGL_STATIC_ASSERT_OFFSET(RenderingFeatures, hasTessellatorStage);

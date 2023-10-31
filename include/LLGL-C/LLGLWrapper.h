@@ -1060,7 +1060,7 @@ typedef struct LLGLRenderingFeatures
     bool hasSamplers;                  /* LLGLRenderingFeatures.hasSamplers is deprecated since 0.04b; All backends must support sampler states either natively or emulated. */
     bool hasConstantBuffers;           /* = false */
     bool hasStorageBuffers;            /* = false */
-    bool hasUniforms;                  /* = false */
+    bool hasUniforms;                  /* LLGLRenderingFeatures.hasUniforms is deprecated since 0.04b; All backends must support uniforms either natively or emulated. */
     bool hasGeometryShaders;           /* = false */
     bool hasTessellationShaders;       /* = false */
     bool hasTessellatorStage;          /* = false */
@@ -1267,8 +1267,8 @@ typedef struct LLGLStencilFaceDescriptor
     LLGLStencilOp depthFailOp;   /* = LLGLStencilOpKeep */
     LLGLStencilOp depthPassOp;   /* = LLGLStencilOpKeep */
     LLGLCompareOp compareOp;     /* = LLGLCompareOpLess */
-    uint32_t      readMask;      /* = 0u */
-    uint32_t      writeMask;     /* = 0u */
+    uint32_t      readMask;      /* = ~0u */
+    uint32_t      writeMask;     /* = ~0u */
     uint32_t      reference;     /* = 0u */
 }
 LLGLStencilFaceDescriptor;
@@ -1498,7 +1498,7 @@ typedef struct LLGLBlendDescriptor
 {
     bool                      alphaToCoverageEnabled;  /* = false */
     bool                      independentBlendEnabled; /* = false */
-    uint32_t                  sampleMask;              /* = 0u */
+    uint32_t                  sampleMask;              /* = ~0u */
     LLGLLogicOp               logicOp;                 /* = LLGLLogicOpDisabled */
     float                     blendFactor[4];          /* = {0.0f,0.0f,0.0f,0.0f} */
     bool                      blendFactorDynamic;      /* = false */

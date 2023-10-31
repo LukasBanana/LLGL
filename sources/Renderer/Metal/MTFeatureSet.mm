@@ -117,7 +117,6 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     features.hasBufferViews                 = true;
     features.hasConstantBuffers             = true;
     features.hasStorageBuffers              = true;
-    features.hasUniforms                    = false;
     features.hasGeometryShaders             = false;
     features.hasTessellationShaders         = false;
     features.hasTessellatorStage            = true;

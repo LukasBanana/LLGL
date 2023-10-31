@@ -59,4 +59,5 @@ LLGL::RenderSystemPtr myRenderSystemAMD = LLGL::RenderSystem::Load(myRenderSyste
 
 The following entries from `RenderingFeatures` have been deprecated:
 - `hasSamplers`: All backends must support sampler states either natively or emulated. This can be substituted with `true`.
+- `hasUniforms`: All backends must support uniforms either natively or emulated. This can be substituted with `true`.
 
