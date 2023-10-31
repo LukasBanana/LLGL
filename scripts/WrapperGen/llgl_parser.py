@@ -87,7 +87,7 @@ class Scanner:
         try:
             with open(filename, 'r') as file:
                 text = preprocessSource(file.read())
-                return re.findall(r'//[^\n]*|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|\.\.\.|<<|>>|[+-=,;<>\|]|[*]|[(]|[)]', text)
+                return re.findall(r'//[^\n]*|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|\.\.\.|<<|>>|[+-=,;<>\|~]|[*]|[(]|[)]', text)
         except UnicodeDecodeError:
             fatal('UnicodeDecodeError exception while reading file: ' + filename)
         return None

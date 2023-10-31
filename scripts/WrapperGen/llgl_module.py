@@ -318,6 +318,12 @@ class LLGLModule:
         self.delegates.extend(other.delegates)
         self.typeDeps.update(other.typeDeps)
 
+    def findEnumByName(self, name):
+        for enum in self.enums:
+            if enum.name == name:
+                return enum
+        return None
+
     def findFlagsByName(self, name):
         for flag in self.flags:
             if flag.name == name:
