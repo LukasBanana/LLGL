@@ -11,9 +11,9 @@
 #define LLGL_C99_LLGLWRAPPER_H
 
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 #include <LLGL-C/Types.h>
 
 #if defined LLGL_OS_ANDROID
@@ -558,6 +558,24 @@ typedef enum LLGLQueryType
 }
 LLGLQueryType;
 
+typedef enum LLGLErrorType
+{
+    LLGLErrorTypeInvalidArgument,
+    LLGLErrorTypeInvalidState,
+    LLGLErrorTypeUnsupportedFeature,
+    LLGLErrorTypeUndefinedBehavior,
+}
+LLGLErrorType;
+
+typedef enum LLGLWarningType
+{
+    LLGLWarningTypeImproperArgument,
+    LLGLWarningTypeImproperState,
+    LLGLWarningTypePointlessOperation,
+    LLGLWarningTypeVaryingBehavior,
+}
+LLGLWarningType;
+
 typedef enum LLGLAttachmentLoadOp
 {
     LLGLAttachmentLoadOpUndefined,
@@ -1031,6 +1049,54 @@ typedef struct LLGLQueryPipelineStatistics
 }
 LLGLQueryPipelineStatistics;
 
+typedef struct LLGLProfileTimeRecord
+{
+    const char* annotation;  /* = "" */
+    uint64_t    elapsedTime; /* = 0 */
+}
+LLGLProfileTimeRecord;
+
+typedef struct LLGLProfileCommandQueueRecord
+{
+    uint32_t bufferWrites;             /* = 0 */
+    uint32_t bufferReads;              /* = 0 */
+    uint32_t bufferMappings;           /* = 0 */
+    uint32_t textureWrites;            /* = 0 */
+    uint32_t textureReads;             /* = 0 */
+    uint32_t commandBufferSubmittions; /* = 0 */
+    uint32_t fenceSubmissions;         /* = 0 */
+}
+LLGLProfileCommandQueueRecord;
+
+typedef struct LLGLProfileCommandBufferRecord
+{
+    uint32_t encodings;                /* = 0 */
+    uint32_t mipMapsGenerations;       /* = 0 */
+    uint32_t vertexBufferBindings;     /* = 0 */
+    uint32_t indexBufferBindings;      /* = 0 */
+    uint32_t constantBufferBindings;   /* = 0 */
+    uint32_t sampledBufferBindings;    /* = 0 */
+    uint32_t storageBufferBindings;    /* = 0 */
+    uint32_t sampledTextureBindings;   /* = 0 */
+    uint32_t storageTextureBindings;   /* = 0 */
+    uint32_t samplerBindings;          /* = 0 */
+    uint32_t resourceHeapBindings;     /* = 0 */
+    uint32_t graphicsPipelineBindings; /* = 0 */
+    uint32_t computePipelineBindings;  /* = 0 */
+    uint32_t attachmentClears;         /* = 0 */
+    uint32_t bufferUpdates;            /* = 0 */
+    uint32_t bufferCopies;             /* = 0 */
+    uint32_t bufferFills;              /* = 0 */
+    uint32_t textureCopies;            /* = 0 */
+    uint32_t renderPassSections;       /* = 0 */
+    uint32_t streamOutputSections;     /* = 0 */
+    uint32_t querySections;            /* = 0 */
+    uint32_t renderConditionSections;  /* = 0 */
+    uint32_t drawCommands;             /* = 0 */
+    uint32_t dispatchCommands;         /* = 0 */
+}
+LLGLProfileCommandBufferRecord;
+
 typedef struct LLGLRendererInfo
 {
     const char*        rendererName;
@@ -1317,6 +1383,15 @@ typedef struct LLGLQueryHeapDescriptor
     bool          renderCondition; /* = false */
 }
 LLGLQueryHeapDescriptor;
+
+typedef struct LLGLFrameProfile
+{
+    LLGLProfileCommandQueueRecord  commandQueueRecord;
+    LLGLProfileCommandBufferRecord commandBufferRecord;
+    size_t                         numTimeRecords;      /* = 0 */
+    const LLGLProfileTimeRecord*   timeRecords;         /* = NULL */
+}
+LLGLFrameProfile;
 
 typedef struct LLGLAttachmentFormatDescriptor
 {

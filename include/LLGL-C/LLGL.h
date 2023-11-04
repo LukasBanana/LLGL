@@ -15,6 +15,7 @@
 #include <LLGL-C/Display.h>
 #include <LLGL-C/Timer.h>
 #include <LLGL-C/Report.h>
+#include <LLGL-C/RenderingDebugger.h>
 #include <LLGL-C/RenderSystem.h>
 #include <LLGL-C/CommandBuffer.h>
 #include <LLGL-C/SwapChain.h>

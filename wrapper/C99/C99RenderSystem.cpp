@@ -48,8 +48,7 @@ static void ConvertRenderSystemDesc(RenderSystemDescriptor& dst, const LLGLRende
 {
     dst.moduleName          = src.moduleName;
     dst.flags               = src.flags;
-  //dst.profiler            = src.profiler;
-  //dst.debugger            = src.debugger;
+    dst.debugger            = LLGL_PTR(RenderingDebugger, src.debugger);
     dst.rendererConfig      = src.rendererConfig;
     dst.rendererConfigSize  = src.rendererConfigSize;
     #ifdef LLGL_OS_ANDROID

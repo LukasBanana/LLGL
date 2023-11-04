@@ -605,6 +605,16 @@ LLGL_STATIC_ASSERT_ENUM(AttachmentLoadOp, Clear);
 LLGL_STATIC_ASSERT_ENUM(AttachmentStoreOp, Undefined);
 LLGL_STATIC_ASSERT_ENUM(AttachmentStoreOp, Store);
 
+LLGL_STATIC_ASSERT_ENUM(ErrorType, InvalidArgument);
+LLGL_STATIC_ASSERT_ENUM(ErrorType, InvalidState);
+LLGL_STATIC_ASSERT_ENUM(ErrorType, UnsupportedFeature);
+LLGL_STATIC_ASSERT_ENUM(ErrorType, UndefinedBehavior);
+
+LLGL_STATIC_ASSERT_ENUM(WarningType, ImproperArgument);
+LLGL_STATIC_ASSERT_ENUM(WarningType, ImproperState);
+LLGL_STATIC_ASSERT_ENUM(WarningType, PointlessOperation);
+LLGL_STATIC_ASSERT_ENUM(WarningType, VaryingBehavior);
+
 
 /* ----- Flags ----- */
 
@@ -1034,6 +1044,41 @@ LLGL_STATIC_ASSERT_OFFSET(DrawPatchIndirectArguments, firstInstance);
 
 LLGL_STATIC_ASSERT_SIZE(DispatchIndirectArguments);
 LLGL_STATIC_ASSERT_OFFSET(DispatchIndirectArguments, numThreadGroups);
+
+LLGL_STATIC_ASSERT_SIZE(ProfileCommandQueueRecord);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, bufferWrites);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, bufferReads);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, bufferMappings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, textureWrites);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, textureReads);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, commandBufferSubmittions);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandQueueRecord, fenceSubmissions);
+
+LLGL_STATIC_ASSERT_SIZE(ProfileCommandBufferRecord);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, encodings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, mipMapsGenerations);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, vertexBufferBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, indexBufferBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, constantBufferBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, sampledBufferBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, storageBufferBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, sampledTextureBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, storageTextureBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, samplerBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, resourceHeapBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, graphicsPipelineBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, computePipelineBindings);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, attachmentClears);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, bufferUpdates);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, bufferCopies);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, bufferFills);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, textureCopies);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, renderPassSections);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, streamOutputSections);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, querySections);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, renderConditionSections);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, drawCommands);
+LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, dispatchCommands);
 
 
 // } /namespace LLGL
