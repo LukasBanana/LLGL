@@ -7,6 +7,7 @@
 
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Utils/TypeNames.h>
+#include <LLGL/Utils/ForRange.h>
 #include "../Core/CoreUtils.h"
 
 
@@ -36,7 +37,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
             result = false
 
     /* Validate shading languages */
-    for (std::size_t i = 0; i < requiredCaps.shadingLanguages.size(); ++i)
+    for_range(i, requiredCaps.shadingLanguages.size())
     {
         const ShadingLanguage shaderLang = requiredCaps.shadingLanguages[i];
         if (!Contains(presentCaps.shadingLanguages, shaderLang))
@@ -51,7 +52,7 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     }
 
     /* Validate texture formats */
-    for (std::size_t i = 0; i < requiredCaps.textureFormats.size(); ++i)
+    for_range(i, requiredCaps.textureFormats.size())
     {
         const Format texFormat = requiredCaps.textureFormats[i];
         if (!Contains(presentCaps.textureFormats, texFormat))
@@ -86,7 +87,6 @@ LLGL_EXPORT bool ValidateRenderingCaps(
     LLGL_VALIDATE_FEATURE( hasTextureViewSwizzle,        "texture view swizzle"        );
     LLGL_VALIDATE_FEATURE( hasConstantBuffers,           "constant buffers"            );
     LLGL_VALIDATE_FEATURE( hasStorageBuffers,            "storage buffers"             );
-    LLGL_VALIDATE_FEATURE( hasUniforms,                  "uniforms"                    );
     LLGL_VALIDATE_FEATURE( hasGeometryShaders,           "geometry shaders"            );
     LLGL_VALIDATE_FEATURE( hasTessellationShaders,       "tessellation shaders"        );
     LLGL_VALIDATE_FEATURE( hasTessellatorStage,          "tessellator stage"           );
