@@ -10,6 +10,7 @@ from llgl_parser import *
 class Translator:
     indent = 0
     tabSize = 4
+    indentDirectives = False
 
     class Declaration:
         type = ''
@@ -20,8 +21,9 @@ class Translator:
         directive = None
         comment = None
         deprecated = False
+        fixedArray = 0
 
-        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None, inComment = None, inDeprecated = False, inOriginalType = None, inOriginalName = None):
+        def __init__(self, inType = '', inName = '', inInit = None, inDirective = None, inComment = None, inDeprecated = False, inOriginalType = None, inOriginalName = None, inFixedArray = 0):
             self.type = inType
             self.originalType = inType if inOriginalType is None else inOriginalType
             self.name = inName
@@ -30,6 +32,7 @@ class Translator:
             self.directive = inDirective
             self.comment = inComment
             self.deprecated = inDeprecated
+            self.fixedArray = inFixedArray
 
     class DeclarationList:
         decls = []
@@ -46,6 +49,11 @@ class Translator:
                 self.maxLen[1] = max(self.maxLen[1], len(decl.name))
                 self.maxLen[2] = max(self.maxLen[2], len(decl.init) if decl.init else 0)
 
+        def appendSubscriptSpaces(self):
+            for decl in self.decls:
+                if not decl.directive and decl.type is not None:
+                    self.maxLen[1] = max(self.maxLen[1], len(decl.name) + (2 + len(str(decl.fixedArray)) if decl.fixedArray > 0 else 0))
+
         def spaces(self, index, s):
             return ' ' * (self.maxLen[index] - len(s) + 1)
 
@@ -56,7 +64,7 @@ class Translator:
         if len(line) == 0:
             print('')
         elif len(line) > 0 and line[0] == '#':
-            print(line)
+            print(self.indentation() + line if self.indentDirectives else line)
         else:
             print(self.indentation() + line)
 

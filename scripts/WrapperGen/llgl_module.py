@@ -81,7 +81,9 @@ class LLGLMeta:
     }
     containers = [
         'vector',
-        'ArrayView'
+        'ArrayView',
+        'SmallVector',
+        'DynamicVector'
     ]
     interfaces = [
         'Buffer',

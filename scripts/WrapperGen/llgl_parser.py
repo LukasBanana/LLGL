@@ -14,15 +14,65 @@ def fatal(msg):
     print(sys.argv[0] + ': ' + msg)
     sys.exit(1)
 
+class DebugContext:
+    record = ''
+    func = ''
+    isOper = False
+    isCtor = False
+
+    def __init__(self):
+        self.record = ''
+        self.func = ''
+        self.isOper = False
+        self.isCtor = False
+
+    def __str__(self):
+        info = ''
+        def appendInfo(newInfo):
+            nonlocal info
+            if len(info) > 0:
+                info += ', '
+            info += newInfo
+
+        if self.record != '':
+            appendInfo(f"record = '{self.record}'")
+        if self.func != '':
+            if self.isOper:
+                appendInfo(f"operator '{self.func}'")
+            elif self.isCtor:
+                appendInfo(f"constructor = '{self.func}'")
+            else:
+                appendInfo(f"function = '{self.func}'")
+
+        return info
+
+    def reset(self, record = None, func = None, oper = None, ctor = None):
+        if record != None:
+            self.record = record
+        if func != None:
+            self.func = func
+            self.isOper = False
+            self.isCtor = False
+        elif oper != None:
+            self.func = oper
+            self.isOper = True
+            self.isCtor = False
+        elif ctor != None:
+            self.func = ctor
+            self.isOper = False
+            self.isCtor = True
+
 class Scanner:
     filename = ''
     tokens = []
     readPos = 0
+    context = DebugContext()
 
     def __init__(self):
         self.filename = ''
         self.tokens = []
         self.readPos = 0
+        self.context = DebugContext()
 
     def good(self):
         return self.readPos < len(self.tokens)
@@ -87,7 +137,7 @@ class Scanner:
         try:
             with open(filename, 'r') as file:
                 text = preprocessSource(file.read())
-                return re.findall(r'//[^\n]*|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|\.\.\.|<<|>>|[+-=,;<>\|~]|[*]|[(]|[)]', text)
+                return re.findall(r'//[^\n]*|""|"[^"]+"|[a-zA-Z_]\w*|\d+\.\d+[fF]|\d+[uU]|\d+|[{}\[\]]|::|:|\.\.\.|<<|>>|->|\+=|-=|[+-=,;<>\|~]|[*]|[(]|[)]', text)
         except UnicodeDecodeError:
             fatal('UnicodeDecodeError exception while reading file: ' + filename)
         return None
@@ -137,6 +187,12 @@ class Scanner:
             return True
         return False
 
+    def acceptIfAny(self, search):
+        for tok in search:
+            if self.acceptIf(tok):
+                return True
+        return False
+
     def acceptIfNot(self, search):
         count = self.match(search, equality=False)
         if count > 0:
@@ -146,13 +202,26 @@ class Scanner:
 
     def acceptOrFail(self, search):
         if not self.acceptIf(search):
-            fatal(f"{self.filename}: error: expected token '{search}', but got '{self.tok()}'; predecessors: {self.tokens[self.readPos - 5:self.readPos]}")
+            contextInfo = str(self.context)
+            contextInfo = f' [{contextInfo}]' if contextInfo != '' else ''
+            fatal(f"{self.filename}: error: expected token '{search}', but got '{self.tok()}'; predecessors: {self.tokens[self.readPos - 5:self.readPos]}{contextInfo}")
 
     def ignoreUntil(self, search):
         while self.good():
             if self.acceptIf(search):
                 break
             self.accept()
+
+    def acceptBlockOrFail(self, openTok = '{', closeTok = '}'):
+        self.acceptOrFail(openTok)
+        while self.good():
+            if self.match(openTok):
+                self.acceptBlockOrFail(openTok, closeTok)
+            elif self.match(closeTok):
+                break
+            else:
+                self.accept()
+        self.acceptOrFail(closeTok)
 
 class Parser:
     scanner = None
@@ -208,46 +277,63 @@ class Parser:
             if typename in LLGLMeta.containers and self.scanner.acceptIf('<'):
                 isConst = self.scanner.acceptIf('const') or isConst
                 typename = self.scanner.accept()
-                isPointer = self.scanner.acceptIf('*')
+                isPointer = self.scanner.acceptIfAny(['*', '&'])
                 self.scanner.acceptOrFail('>')
                 outType = LLGLType(typename, isConst, isPointer)
                 outType.setArraySize(LLGLType.DYNAMIC_ARRAY)
                 return outType
             else:
-                isPointer = self.scanner.acceptIf('*')
+                isPointer = self.scanner.acceptIfAny(['*', '&'])
                 return LLGLType(typename, isConst, isPointer)
 
     def parseStructMembers(self, structName):
         members = []
+
+        self.scanner.context.reset(record = structName)
+
         while self.scanner.tok() != '}':
             deprecated = self.tryParseDeprecated()
+
+            # Ignore unions inside structs
+            if self.scanner.acceptIf('union'):
+                self.scanner.acceptBlockOrFail()
+                self.scanner.acceptOrFail(';')
+                continue
+
             fieldType = self.parseType()
             isCtor = fieldType.typename == structName
             isOper = self.scanner.tok() == 'operator'
             isFunc = self.scanner.tok(1) == '('
+
+            self.scanner.context.reset(
+                ctor = structName if isCtor else None,
+                oper = self.scanner.tok(1) if isOper else None,
+                func = self.scanner.tok() if isFunc else None)
 
             if isCtor or isOper or isFunc:
                 # Ignore operators
                 if isOper:
                     self.scanner.accept(2)
                 elif isFunc:
-                    self.scanner.accept()
+                    self.scanner.context.currentFunc = self.scanner.accept()
 
                 # Ingore constructs
                 self.scanner.acceptOrFail('(')
                 self.scanner.ignoreUntil(')')
+                self.scanner.acceptIf('noexcept')
                 if self.scanner.acceptIf(':'):
                     # Ignore initializer list
                     while self.scanner.good():
                         self.scanner.accept() # Member
-                        self.scanner.acceptOrFail('{')
-                        self.scanner.ignoreUntil('}')
+                        self.scanner.acceptBlockOrFail()
                         if not self.scanner.acceptIf(','):
                             break
 
                     # Ignore c'tor body
-                    self.scanner.acceptOrFail('{')
-                    self.scanner.ignoreUntil('}')
+                    self.scanner.acceptBlockOrFail()
+                elif self.scanner.match('{'):
+                    # Ignore function body
+                    self.scanner.acceptBlockOrFail()
                 else:
                     # Ignore tokens until end of declaration ';', e.g. 'Ctor();' or 'Ctor() = default;'
                     self.scanner.ignoreUntil(';')
@@ -262,6 +348,7 @@ class Parser:
                 member.deprecated = deprecated
                 members.append(member)
                 self.scanner.acceptOrFail(';')
+
         return members
 
     def parseAnnotationArgument(self):

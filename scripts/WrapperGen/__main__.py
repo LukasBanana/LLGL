@@ -24,6 +24,13 @@ def printHelp():
     print("  -csharp ...... Translate header to C#")
     print("  -name=NAME ... Override name for consolidated headers")
     print("  -fn .......... Also parse exported C function declarations")
+    print("  -tok ......... Scan tokens only")
+
+def scanAndPrintTokens(filename):
+    prs = parser.Parser()
+    prs.scanner.scan(filename)
+    for tok in prs.scanner.tokens:
+        print(tok)
 
 def parseFile(filename, processFunctions = False):
     prs = parser.Parser()
@@ -69,28 +76,33 @@ if len(files) > 0:
 
     singleName = findArgValue(args, '-name')
 
-    # Are function declarations includes?
-    processFunctions = '-fn' in args
-    
-    # Parse input headers
-    modules = iterate(lambda filename: parseFile(filename, processFunctions), files)
-    if singleName and len(modules) > 0:
-        singleModule = modules[0]
-        singleModule.name = singleName
-        if len(modules) > 1:
-            for module in modules[1:]:
-                singleModule.merge(module)
-        singleModule.structs = singleModule.sortStructsByDependencies()
-        modules = [singleModule]
-
-    # Translate or just print meta data of input header files
-    if '-c99' in args:
-        trans = translator_c99.C99Translator()
-        iterate(trans.translateModule, modules)
-    elif '-csharp' in args:
-        trans = translator_csharp.CsharpTranslator()
-        iterate(trans.translateModule, modules)
+    # Scan and print tokens only?
+    if '-tok' in args:
+        for file in files:
+            scanAndPrintTokens(file)
     else:
-        iterate(printModule, modules)
+        # Are function declarations includes?
+        processFunctions = '-fn' in args
+        
+        # Parse input headers
+        modules = iterate(lambda filename: parseFile(filename, processFunctions), files)
+        if singleName and len(modules) > 0:
+            singleModule = modules[0]
+            singleModule.name = singleName
+            if len(modules) > 1:
+                for module in modules[1:]:
+                    singleModule.merge(module)
+            singleModule.structs = singleModule.sortStructsByDependencies()
+            modules = [singleModule]
+
+        # Translate or just print meta data of input header files
+        if '-c99' in args:
+            trans = translator_c99.C99Translator()
+            iterate(trans.translateModule, modules)
+        elif '-csharp' in args:
+            trans = translator_csharp.CsharpTranslator()
+            iterate(trans.translateModule, modules)
+        else:
+            iterate(printModule, modules)
 else:
     printHelp()
