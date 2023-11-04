@@ -134,12 +134,12 @@ void RenderingDebugger::FlushProfile(FrameProfile* outputProfile)
         *outputProfile = std::move(pimpl_->frameProfile);
 
     /* Clear values */
-    pimpl_->frameProfile.Clear();
+    pimpl_->frameProfile = {};
 }
 
 void RenderingDebugger::RecordProfile(const FrameProfile& profile)
 {
-    pimpl_->frameProfile.Accumulate(profile);
+    RenderingDebugger::MergeProfiles(pimpl_->frameProfile, profile);
 }
 
 void RenderingDebugger::PostError(const ErrorType type, const StringView& message)
@@ -152,6 +152,60 @@ void RenderingDebugger::PostWarning(const WarningType type, const StringView& me
 {
     const std::string str(message.begin(), message.end());
     Warningf(type, "%s", str.c_str());
+}
+
+#define LLGL_ASSERT_STRUCT_FIELDS(TYPE, FIELDS) \
+    static_assert(sizeof(TYPE) == alignof(TYPE)*(FIELDS), "unexpected number of fields in struct 'LLGL::" #TYPE "'");
+
+static void MergeProfileCommandQueueRecords(ProfileCommandQueueRecord& dst, const ProfileCommandQueueRecord& src)
+{
+    LLGL_ASSERT_STRUCT_FIELDS(ProfileCommandQueueRecord, 7);
+    dst.bufferWrites                += src.bufferWrites             ;
+    dst.bufferReads                 += src.bufferReads              ;
+    dst.bufferMappings              += src.bufferMappings           ;
+    dst.textureWrites               += src.textureWrites            ;
+    dst.textureReads                += src.textureReads             ;
+    dst.commandBufferSubmittions    += src.commandBufferSubmittions ;
+    dst.fenceSubmissions            += src.fenceSubmissions         ;
+}
+
+static void MergeProfileCommandBufferRecords(ProfileCommandBufferRecord& dst, const ProfileCommandBufferRecord& src)
+{
+    LLGL_ASSERT_STRUCT_FIELDS(ProfileCommandBufferRecord, 24);
+    dst.encodings                   += src.encodings                ;
+    dst.mipMapsGenerations          += src.mipMapsGenerations       ;
+    dst.vertexBufferBindings        += src.vertexBufferBindings     ;
+    dst.indexBufferBindings         += src.indexBufferBindings      ;
+    dst.constantBufferBindings      += src.constantBufferBindings   ;
+    dst.sampledBufferBindings       += src.sampledBufferBindings    ;
+    dst.storageBufferBindings       += src.storageBufferBindings    ;
+    dst.sampledTextureBindings      += src.sampledTextureBindings   ;
+    dst.storageTextureBindings      += src.storageTextureBindings   ;
+    dst.samplerBindings             += src.samplerBindings          ;
+    dst.resourceHeapBindings        += src.resourceHeapBindings     ;
+    dst.graphicsPipelineBindings    += src.graphicsPipelineBindings ;
+    dst.computePipelineBindings     += src.computePipelineBindings  ;
+    dst.attachmentClears            += src.attachmentClears         ;
+    dst.bufferUpdates               += src.bufferUpdates            ;
+    dst.bufferCopies                += src.bufferCopies             ;
+    dst.bufferFills                 += src.bufferFills              ;
+    dst.textureCopies               += src.textureCopies            ;
+    dst.renderPassSections          += src.renderPassSections       ;
+    dst.streamOutputSections        += src.streamOutputSections     ;
+    dst.querySections               += src.querySections            ;
+    dst.renderConditionSections     += src.renderConditionSections  ;
+    dst.drawCommands                += src.drawCommands             ;
+    dst.dispatchCommands            += src.dispatchCommands         ;
+}
+
+void RenderingDebugger::MergeProfiles(FrameProfile& dst, const FrameProfile& src)
+{
+    /* Accumulate counters */
+    MergeProfileCommandQueueRecords(dst.commandQueueRecord, src.commandQueueRecord);
+    MergeProfileCommandBufferRecords(dst.commandBufferRecord, src.commandBufferRecord);
+
+    /* Append time records */
+    dst.timeRecords.insert(dst.timeRecords.end(), src.timeRecords.begin(), src.timeRecords.end());
 }
 
 

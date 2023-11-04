@@ -42,8 +42,8 @@ void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
     FrameProfile profile;
     commandBufferDbg.FlushProfile(profile);
 
-    profile_.Accumulate(profile);
-    profile_.commandBufferSubmittions++;
+    RenderingDebugger::MergeProfiles(profile_, profile);
+    profile_.commandQueueRecord.commandBufferSubmittions++;
 }
 
 /* ----- Queries ----- */
@@ -66,7 +66,7 @@ bool DbgCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery
 void DbgCommandQueue::Submit(Fence& fence)
 {
     instance.Submit(fence);
-    profile_.fenceSubmissions++;
+    profile_.commandQueueRecord.fenceSubmissions++;
 }
 
 bool DbgCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)

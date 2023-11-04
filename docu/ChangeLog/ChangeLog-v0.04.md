@@ -8,6 +8,7 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 - [Debug layer](#debug-layer)
 - [Video adapter descriptors](#video-adapter-descriptors)
 - [Rendering features](#rendering-features)
+- [`FrameProfile` structure](frameprofile-structure)
 
 
 ## Image descriptors
@@ -60,4 +61,9 @@ LLGL::RenderSystemPtr myRenderSystemAMD = LLGL::RenderSystem::Load(myRenderSyste
 The following entries from `RenderingFeatures` have been deprecated:
 - `hasSamplers`: All backends must support sampler states either natively or emulated. This can be substituted with `true`.
 - `hasUniforms`: All backends must support uniforms either natively or emulated. This can be substituted with `true`.
+
+
+## `FrameProfile` structure
+
+The entire union inside the `LLGL::FrameProfile` structure has been deprecated and replaced by `LLGL::ProfileCommandQueueRecord` and `LLGL::ProfileCommandBufferRecord`.
 

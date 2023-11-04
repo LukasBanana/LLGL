@@ -79,7 +79,7 @@ void DbgQueryTimerPool::Stop()
     ++currentQuery_;
 }
 
-void DbgQueryTimerPool::TakeRecords(std::vector<ProfileTimeRecord>& outRecords)
+void DbgQueryTimerPool::TakeRecords(DynamicVector<ProfileTimeRecord>& outRecords)
 {
     ResolveQueryResults();
     outRecords = std::move(records_);
@@ -96,13 +96,13 @@ void DbgQueryTimerPool::ResolveQueryResults()
 
     for_range(i, records_.size())
     {
-        auto&   rec         = records_[i];
-        auto    query       = static_cast<std::uint32_t>(i % g_queryTimerHeapSize);
-        auto    queryHeap   = static_cast<std::uint32_t>(i / g_queryTimerHeapSize);
+        ProfileTimeRecord&  rec         = records_[i];
+        const std::uint32_t query       = static_cast<std::uint32_t>(i % g_queryTimerHeapSize);
+        const std::uint32_t heapIndex   = static_cast<std::uint32_t>(i / g_queryTimerHeapSize);
 
         for_range(i, maxAttempts)
         {
-            if (!commandQueue_.QueryResult(*queryHeaps_[queryHeap], query, 1, &(rec.elapsedTime), sizeof(rec.elapsedTime)))
+            if (!commandQueue_.QueryResult(*queryHeaps_[heapIndex], query, 1, &(rec.elapsedTime), sizeof(rec.elapsedTime)))
                 std::this_thread::yield();
             else
                 break;

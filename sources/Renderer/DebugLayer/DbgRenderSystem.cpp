@@ -48,7 +48,7 @@ void DbgRenderSystem::FlushProfile()
 {
     if (debugger_ != nullptr)
         debugger_->RecordProfile(profile_);
-    profile_.Clear();
+    profile_ = {};
 }
 
 /* ----- Swap-chain ----- */
@@ -176,7 +176,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const vo
 
     instance_->WriteBuffer(bufferDbg.instance, offset, data, dataSize);
 
-    profile_.bufferWrites++;
+    profile_.commandQueueRecord.bufferWrites++;
 }
 
 void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
@@ -197,7 +197,7 @@ void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* dat
 
     instance_->ReadBuffer(bufferDbg.instance, offset, data, dataSize);
 
-    profile_.bufferReads++;
+    profile_.commandQueueRecord.bufferReads++;
 }
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
@@ -216,7 +216,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
     if (result != nullptr)
         bufferDbg.OnMap(access, 0, bufferDbg.desc.size);
 
-    profile_.bufferMappings++;
+    profile_.commandQueueRecord.bufferMappings++;
 
     return result;
 }
@@ -238,7 +238,7 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::ui
     if (result != nullptr)
         bufferDbg.OnMap(access, offset, length);
 
-    profile_.bufferMappings++;
+    profile_.commandQueueRecord.bufferMappings++;
 
     return result;
 }
@@ -288,7 +288,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
 
     instance_->WriteTexture(textureDbg.instance, textureRegion, srcImageView);
 
-    profile_.textureWrites++;
+    profile_.commandQueueRecord.textureWrites++;
 }
 
 void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureRegion, const MutableImageView& dstImageView)
@@ -304,7 +304,7 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
 
     instance_->ReadTexture(textureDbg.instance, textureRegion, dstImageView);
 
-    profile_.textureReads++;
+    profile_.commandQueueRecord.textureReads++;
 }
 
 /* ----- Sampler States ---- */
