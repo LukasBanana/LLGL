@@ -22,6 +22,7 @@ set INPUT=^
     %INCLUDE%\PipelineLayoutFlags.h ^
     %INCLUDE%\PipelineStateFlags.h ^
     %INCLUDE%\QueryHeapFlags.h ^
+    %INCLUDE%\RenderingDebuggerFlags.h ^
     %INCLUDE%\RenderPassFlags.h ^
     %INCLUDE%\RenderSystemFlags.h ^
     %INCLUDE%\RenderTargetFlags.h ^
@@ -49,6 +50,7 @@ set INPUT_FN=^
     %CINCLUDE%\PipelineLayout.h ^
     %CINCLUDE%\PipelineState.h ^
     %CINCLUDE%\QueryHeap.h ^
+    %CINCLUDE%\RenderingDebugger.h ^
     %CINCLUDE%\RenderSystem.h ^
     %CINCLUDE%\RenderSystemChild.h ^
     %CINCLUDE%\RenderTarget.h ^
@@ -60,6 +62,7 @@ set INPUT_FN=^
     %CINCLUDE%\SwapChain.h ^
     %CINCLUDE%\Texture.h ^
     %CINCLUDE%\Timer.h ^
+    %CINCLUDE%\TypeNames.h ^
     %CINCLUDE%\Window.h
 
 REM Generate wrapper for C99, C#
