@@ -616,8 +616,8 @@ class LLGL_EXPORT SmallVector
                 /* Copy container size */
                 size_ = rhs.size_;
 
-                /* Drop old container and don't reset its local capacity (implied to LocalCapacity) */
-                rhs.data_ = rhs.local_.data();
+                /* Drop old container */
+                rhs.drop_data();
                 rhs.size_ = 0;
             }
             return *this;
@@ -691,8 +691,22 @@ class LLGL_EXPORT SmallVector
         {
             if (is_dynamic())
             {
-                /* Don't reset capacity to LocalCapacity here, it is implied by data pointing to the local buffer */
                 Allocator{}.deallocate(data_, cap_);
+                drop_data();
+            }
+        }
+
+        void drop_data()
+        {
+            if (LocalCapacity == 0)
+            {
+                /* If vector remains dynamic, reset capacity and pointer */
+                cap_ = 0;
+                data_ = nullptr;
+            }
+            else
+            {
+                /* Don't reset capacity to LocalCapacity here, it is implied by data pointing to the local buffer */
                 data_ = local_.data();
             }
         }

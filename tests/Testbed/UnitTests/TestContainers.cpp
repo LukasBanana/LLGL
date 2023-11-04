@@ -132,7 +132,9 @@ TestResult TestbedContext::TestContainerDynamicArray()
 
 TestResult TestbedContext::TestContainerSmallVector()
 {
-    const int cmpInt16[16] = { 1,2,3,4, 42,3476,93,-12, 0xFF,0xCD,0x10,0xDE, 384723,901872,-874673,1234567 };
+    constexpr int cmpInt16[16] = { 1,2,3,4, 42,3476,93,-12, 0xFF,0xCD,0x10,0xDE, 384723,901872,-874673,1234567 };
+    constexpr int cmpInt4[4] = { 4,3,2,1 };
+    constexpr int cmpInt0[1] = { 0 };
 
     auto TestSmallVector = [](const char* name, const void* vec, const void* cmp, std::size_t size) -> TestResult
     {
@@ -206,6 +208,24 @@ TestResult TestbedContext::TestContainerSmallVector()
 
     iv4_4.swap(iv4_8);
     TEST_SMALL_VECTOR_EXT(iv4_4, cmpInt16, 4);
+
+    // Test move semantics
+    iv0_4 = std::move(iv0_8);
+    TEST_SMALL_VECTOR_EXT(iv0_4, cmpInt16, 8);
+    TEST_SMALL_VECTOR_EXT(iv0_8, cmpInt0, 0);
+
+    iv4_4 = std::move(iv4_16);
+    TEST_SMALL_VECTOR_EXT(iv4_4,  cmpInt16, 16);
+    TEST_SMALL_VECTOR_EXT(iv4_16, cmpInt0,   0);
+
+    SmallVector<int, 5> iv5_4a = { 4,3,2,1 };
+    SmallVector<int, 5> iv5_4b = { 1,2,3,4 };
+
+    TEST_SMALL_VECTOR_EXT(iv5_4a, cmpInt4,  4);
+    TEST_SMALL_VECTOR_EXT(iv5_4b, cmpInt16, 4);
+    iv5_4a = std::move(iv5_4b);
+    TEST_SMALL_VECTOR_EXT(iv5_4a, cmpInt16, 4);
+    TEST_SMALL_VECTOR_EXT(iv5_4b, cmpInt0,  0);
 
     return TestResult::Passed;
 }
