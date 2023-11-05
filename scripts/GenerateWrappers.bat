@@ -41,6 +41,7 @@ set INPUT=^
 set INPUT_FN=^
     %INPUT% ^
     %CINCLUDE%\Buffer.h ^
+    %CINCLUDE%\BufferArray.h ^
     %CINCLUDE%\Canvas.h ^
     %CINCLUDE%\CommandBuffer.h ^
     %CINCLUDE%\CommandQueue.h ^
