@@ -27,16 +27,16 @@ class CsharpTranslator(Translator):
             StdType.BOOL: 'bool',
             StdType.CHAR: 'byte',
             StdType.WCHAR: 'char',
-            StdType.INT8: 'sbyte',
+            StdType.INT8: 'byte', # sbyte is not CLS compliant
             StdType.INT16: 'short',
             StdType.INT32: 'int',
             StdType.INT64: 'long',
             StdType.UINT8: 'byte',
-            StdType.UINT16: 'ushort',
-            StdType.UINT32: 'uint',
-            StdType.UINT64: 'ulong',
-            StdType.LONG: 'uint',
-            StdType.SIZE_T: 'UIntPtr',
+            StdType.UINT16: 'short', # ushort is not CLS compliant
+            StdType.UINT32: 'int', # uint is not CLS compliant
+            StdType.UINT64: 'long', # ulong is not CLS compliant
+            StdType.LONG: 'int', # uint is not CLS compliant
+            StdType.SIZE_T: 'IntPtr', # UIntPtr is not CLS compliant
             StdType.FLOAT: 'float',
             StdType.FUNC: 'IntPtr',
         }
@@ -219,7 +219,7 @@ class CsharpTranslator(Translator):
 
             if init:
                 # Replace common C-to-C# syntax
-                for substitute in [['::', '.'], ['nullptr', 'null'], ['|', ' | '], [',', ', '], ['{', '{ '], ['}', ' }']]:
+                for substitute in [['::', '.'], ['nullptr', 'null'], ['|', ' | '], [',', ', '], ['{', '{ '], ['}', ' }'], ['~0u', '-1'], ['0u', '0']]:
                     init = init.replace(substitute[0], substitute[1])
 
                 if init.startswith('{') and init.endswith('}'):
@@ -254,6 +254,8 @@ class CsharpTranslator(Translator):
                                 constant = StdTypeLimits.MAX_UINT32 + constant + 1
                             elif type == 'ulong':
                                 constant = StdTypeLimits.MAX_UINT64 + constant + 1
+                            else:
+                                return constant
                         return f'({type})0x{constant:X}'
                     
                 return init
@@ -325,7 +327,7 @@ class CsharpTranslator(Translator):
 
             for flag in doc.flags:
                 self.statement('[Flags]')
-                self.statement('public enum {} : uint'.format(flag.name))
+                self.statement('public enum {} : int'.format(flag.name))
                 #basename = flag.name[:-len('Flags')]
                 self.openScope()
 
@@ -353,7 +355,7 @@ class CsharpTranslator(Translator):
                     return f'{type[:-1]}[]'
 
             # Use 'int' for sized-types
-            if type == 'UIntPtr':
+            if type == 'IntPtr':
                 return 'int'
 
             # Try to find flags type that matches the class name, e.g. 'CommandBufferFlags'
@@ -401,7 +403,7 @@ class CsharpTranslator(Translator):
                 if not field.type.externalCond:
                     # Write two fields for dynamic arrays
                     if field.type.arraySize == LLGLType.DYNAMIC_ARRAY and not managedTypeProperties:
-                        declList.append(Translator.Declaration('UIntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
+                        declList.append(Translator.Declaration('IntPtr', 'num{}{}'.format(field.name[0].upper(), field.name[1:])))
 
                     if field.deprecated:
                         declList.append(Translator.Declaration(None, translateDeprecationMessage(field.deprecated)))
@@ -613,7 +615,7 @@ class CsharpTranslator(Translator):
                                 if subType in saveStructs:
                                     self.statement(f'if ({decl.name} != null)')
                                     self.openScope()
-                                    self.statement(f'native.num{decl.name} = (UIntPtr){decl.name}.Length;')
+                                    self.statement(f'native.num{decl.name} = (IntPtr){decl.name}.Length;')
                                     self.statement(f'fixed ({decl.originalType} {decl.originalName}Ptr = {decl.name})')
                                     self.openScope()
                                     self.statement(f'native.{decl.originalName} = {decl.originalName}Ptr;')
@@ -622,7 +624,7 @@ class CsharpTranslator(Translator):
                                 else:
                                     self.statement(f'if ({decl.originalName} != null)')
                                     self.openScope()
-                                    self.statement(f'native.num{decl.name} = (UIntPtr){decl.originalName}.Length;')
+                                    self.statement(f'native.num{decl.name} = (IntPtr){decl.originalName}.Length;')
                                     self.statement(f'fixed (NativeLLGL.{decl.originalType} {decl.originalName}Ptr = {decl.originalName}Native)')
                                     self.openScope()
                                     self.statement(f'native.{decl.originalName} = {decl.originalName}Ptr;')
