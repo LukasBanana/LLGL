@@ -15,7 +15,7 @@
 
 using namespace LLGL;
 
-LLGL_C_EXPORT LLGLResourceType lgllGetResourceType(LLGLResource resource)
+LLGL_C_EXPORT LLGLResourceType llglGetResourceType(LLGLResource resource)
 {
     return static_cast<LLGLResourceType>(LLGL_PTR(Resource, resource)->GetResourceType());
 }

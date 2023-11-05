@@ -15,7 +15,7 @@
 
 using namespace LLGL;
 
-LLGL_C_EXPORT uint32_t lgllGetResourceHeapNumDescriptorSets(LLGLResourceHeap resourceHeap)
+LLGL_C_EXPORT uint32_t llglGetResourceHeapNumDescriptorSets(LLGLResourceHeap resourceHeap)
 {
     return static_cast<LLGLResourceType>(LLGL_PTR(ResourceHeap, resourceHeap)->GetNumDescriptorSets());
 }

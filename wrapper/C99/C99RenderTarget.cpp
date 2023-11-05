@@ -7,6 +7,8 @@
 
 #include <LLGL/RenderTarget.h>
 #include <LLGL-C/RenderTarget.h>
+#include <LLGL/SwapChain.h>
+#include <LLGL/TypeInfo.h>
 #include "C99Internal.h"
 
 
@@ -45,6 +47,11 @@ LLGL_C_EXPORT bool llglHasRenderTargetStencilAttachment(LLGLRenderTarget renderT
 LLGL_C_EXPORT LLGLRenderPass llglGetRenderTargetRenderPass(LLGLRenderTarget renderTarget)
 {
     return LLGLRenderPass{ const_cast<RenderPass*>(LLGL_PTR(RenderTarget, renderTarget)->GetRenderPass()) };
+}
+
+LLGL_C_EXPORT bool llglIsInstanceOfSwapChain(LLGLRenderTarget renderTarget)
+{
+    return IsInstanceOf<SwapChain>(LLGL_PTR(RenderTarget, renderTarget));
 }
 
 

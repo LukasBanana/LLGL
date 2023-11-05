@@ -39,7 +39,7 @@ LLGL_C_EXPORT void* llglMapBuffer(LLGLBuffer buffer, LLGLCPUAccess access);
 LLGL_C_EXPORT void* llglMapBufferRange(LLGLBuffer buffer, LLGLCPUAccess access, uint64_t offset, uint64_t length);
 LLGL_C_EXPORT void llglUnmapBuffer(LLGLBuffer buffer);
 
-LLGL_C_EXPORT LLGLBufferArray CreateBufferArray(uint32_t numBuffers, const LLGLBuffer* buffers LLGL_ANNOTATE([numBuffers]));
+LLGL_C_EXPORT LLGLBufferArray llglCreateBufferArray(uint32_t numBuffers, const LLGLBuffer* buffers LLGL_ANNOTATE([numBuffers]));
 LLGL_C_EXPORT void llglReleaseBufferArray(LLGLBufferArray bufferArray);
 
 LLGL_C_EXPORT LLGLTexture llglCreateTexture(const LLGLTextureDescriptor* textureDesc, const LLGLImageView* initialImage LLGL_ANNOTATE(NULL));
@@ -51,9 +51,9 @@ LLGL_C_EXPORT LLGLSampler llglCreateSampler(const LLGLSamplerDescriptor* sampler
 LLGL_C_EXPORT void llglReleaseSampler(LLGLSampler sampler);
 
 LLGL_C_EXPORT LLGLResourceHeap llglCreateResourceHeap(const LLGLResourceHeapDescriptor* resourceHeapDesc);
-LLGL_C_EXPORT LLGLResourceHeap llglCreateResourceHeapExt(const LLGLResourceHeapDescriptor* resourceHeapDesc, size_t numInitialResourceViews, const LLGLResourceViewDescriptor* initialResourceViews);
+LLGL_C_EXPORT LLGLResourceHeap llglCreateResourceHeapExt(const LLGLResourceHeapDescriptor* resourceHeapDesc, size_t numInitialResourceViews, const LLGLResourceViewDescriptor* initialResourceViews LLGL_ANNOTATE([numInitialResourceViews]));
 LLGL_C_EXPORT void llglReleaseResourceHeap(LLGLResourceHeap resourceHeap);
-LLGL_C_EXPORT uint32_t llglWriteResourceHeap(LLGLResourceHeap resourceHeap, uint32_t firstDescriptor, size_t numResourceViews, const LLGLResourceViewDescriptor* resourceViews);
+LLGL_C_EXPORT uint32_t llglWriteResourceHeap(LLGLResourceHeap resourceHeap, uint32_t firstDescriptor, size_t numResourceViews, const LLGLResourceViewDescriptor* resourceViews LLGL_ANNOTATE([numResourceViews]));
 
 LLGL_C_EXPORT LLGLRenderPass llglCreateRenderPass(const LLGLRenderPassDescriptor* renderPassDesc);
 LLGL_C_EXPORT void llglReleaseRenderPass(LLGLRenderPass renderPass);

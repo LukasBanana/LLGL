@@ -288,7 +288,7 @@ LLGL_C_EXPORT void llglUnmapBuffer(LLGLBuffer buffer)
     g_CurrentRenderSystem->UnmapBuffer(LLGL_REF(Buffer, buffer));
 }
 
-LLGL_C_EXPORT LLGLBufferArray CreateBufferArray(uint32_t numBuffers, const LLGLBuffer* buffers)
+LLGL_C_EXPORT LLGLBufferArray llglCreateBufferArray(uint32_t numBuffers, const LLGLBuffer* buffers)
 {
     LLGL_ASSERT_RENDER_SYSTEM();
     LLGL_ASSERT_PTR(buffers);

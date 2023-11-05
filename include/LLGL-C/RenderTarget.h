@@ -20,6 +20,7 @@ LLGL_C_EXPORT uint32_t llglGetRenderTargetNumColorAttachments(LLGLRenderTarget r
 LLGL_C_EXPORT bool llglHasRenderTargetDepthAttachment(LLGLRenderTarget renderTarget);
 LLGL_C_EXPORT bool llglHasRenderTargetStencilAttachment(LLGLRenderTarget renderTarget);
 LLGL_C_EXPORT LLGLRenderPass llglGetRenderTargetRenderPass(LLGLRenderTarget renderTarget);
+LLGL_C_EXPORT bool llglIsInstanceOfSwapChain(LLGLRenderTarget renderTarget);
 
 
 #endif

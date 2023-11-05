@@ -13,7 +13,7 @@
 #include <LLGL-C/LLGLWrapper.h>
 
 
-LLGL_C_EXPORT LLGLResourceType lgllGetResourceType(LLGLResource resource);
+LLGL_C_EXPORT LLGLResourceType llglGetResourceType(LLGLResource resource);
 
 
 #endif
