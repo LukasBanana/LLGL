@@ -40,6 +40,10 @@ class CsharpTranslator(Translator):
             StdType.FLOAT: 'float',
             StdType.FUNC: 'IntPtr',
         }
+        nativeBaseTypes = [
+            'Resource',
+            'Surface'
+        ]
         saveStructs = {
             'BindingSlot': CsharpProperties(fullCtor = True),
             'DrawIndexedIndirectArguments': None,
@@ -56,15 +60,19 @@ class CsharpTranslator(Translator):
             'TextureLocation': None,
             'TextureRegion': None,
             'TextureSubresource': None,
+            'TextureSwizzleRGBA': None,
             'Viewport': CsharpProperties(fullCtor = True),
         }
         trivialClasses = {
             'AttachmentClear': CsharpProperties(getter = True),
+            'AttachmentDescriptor': CsharpProperties(getter = True),
+            'AttachmentFormatDescriptor': CsharpProperties(getter = True),
             'BlendTargetDescriptor': CsharpProperties(getter = True),
-            'BindingDescriptor': CsharpProperties(getter = True, setter = True),
+            'BindingDescriptor': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'BufferDescriptor': CsharpProperties(getter = True, setter = True),
             'BufferViewDescriptor': CsharpProperties(getter = True),
             'CommandBufferDescriptor': CsharpProperties(getter = True),
+            'ComputePipelineDescriptor': CsharpProperties(getter = True),
             'ComputeShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'DepthBiasDescriptor': CsharpProperties(getter = True),
             'DepthDescriptor': CsharpProperties(getter = True),
@@ -77,10 +85,13 @@ class CsharpTranslator(Translator):
             'ProfileCommandBufferRecord': CsharpProperties(setter = True),
             'ProfileCommandQueueRecord': CsharpProperties(setter = True),
             'ProfileTimeRecord': CsharpProperties(getter = True, setter = True),
+            'QueryHeapDescriptor': CsharpProperties(getter = True),
             'RasterizerDescriptor': CsharpProperties(getter = True),
             'RenderingFeatures': CsharpProperties(setter = True),
             'RenderingLimits': CsharpProperties(setter = True),
             'RenderingCapabilities': CsharpProperties(setter = True),
+            'ResourceHeapDescriptor': CsharpProperties(getter = True),
+            'ResourceViewDescriptor': CsharpProperties(getter = True),
             'SamplerDescriptor': CsharpProperties(getter = True, setter = True),
             'ShaderMacro': CsharpProperties(getter = True, fullCtor = True),
             'ShaderReflection': CsharpProperties(setter = True),
@@ -91,6 +102,7 @@ class CsharpTranslator(Translator):
             'SwapChainDescriptor': CsharpProperties(getter = True, fullCtor = True),
             'TessellationDescriptor': CsharpProperties(getter = True),
             'TextureDescriptor': CsharpProperties(getter = True, setter = True),
+            'TextureViewDescriptor': CsharpProperties(getter = True),
             'UniformDescriptor': CsharpProperties(getter = True, setter = True),
             'VertexAttribute': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'VertexShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
@@ -441,7 +453,8 @@ class CsharpTranslator(Translator):
                         else:
                             hasParamsWithoutDefualtArg = True
                             if defaultArgsStarted:
-                                fatal(f"error: no initializer defined for parameter '{decl.originalName}' in constructor '{struct.name}', but default argument list has already started")
+                                paramList += f' = new {decl.type}()'
+                                #fatal(f"error: no initializer defined for parameter '{decl.originalName}' in constructor '{struct.name}', but default argument list has already started")
 
                     if hasParamsWithoutDefualtArg and len(paramList) > 0:
                         self.statement(f'public {struct.name}() ' + '{ }')
@@ -553,9 +566,10 @@ class CsharpTranslator(Translator):
                                 fieldStmt += f'{declList.spaces(1, decl.name)}/* = {translateInitializer(decl.init, decl.type)} */'
                         self.statement(fieldStmt)
 
-            def typeNeedsNativeConversion(type):
-                nonlocal doc
-                return (type in LLGLMeta.interfaces or doc.findStructByName(type)) and type not in saveStructs
+            def getNativeTypeAttrib(type):
+                if (type in LLGLMeta.interfaces or doc.findStructByName(type)) and type not in saveStructs:
+                    return 'NativeBase' if type in nativeBaseTypes else 'Native'
+                return None
 
             # Write optional conversion to native type
             if managedTypeProperties:
@@ -615,13 +629,14 @@ class CsharpTranslator(Translator):
                                     self.closeScope()
                                     self.closeScope()
                         else:
-                            if typeNeedsNativeConversion(decl.type):
+                            nativeAttrib = getNativeTypeAttrib(decl.type)
+                            if nativeAttrib is not None:
                                 self.statement(f'if ({decl.name} != null)')
                                 self.openScope()
                                 assignStmt = f'native.{decl.originalName}{subscript} = '
                                 if decl.type != decl.originalType:
                                     assignStmt += f'({decl.originalType})'
-                                assignStmt += f'{decl.name}{subscript}.Native'
+                                assignStmt += f'{decl.name}{subscript}.{nativeAttrib}'
                                 self.statement(assignStmt + ';')
                                 self.closeScope()
                             else:
@@ -665,15 +680,17 @@ class CsharpTranslator(Translator):
                                 self.statement(f'{decl.name}{declList.spaces(1, decl.name)}= new {subType}[(int)value.num{decl.name}];')
                                 self.statement(f'for (int i = 0; i < {decl.name}.Length; ++i)')
                                 self.openScope()
-                                if typeNeedsNativeConversion(subType):
+                                nativeAttribs = getNativeTypeAttrib(subType)
+                                if nativeAttribs is not None:
                                     self.statement(f'{decl.name}[i] = new {subType}(value.{decl.originalName}[i]);')
                                 else:
                                     self.statement(f'{decl.name}[i] = value.{decl.originalName}[i];')
                                 self.closeScope()
                         else:
                             assignStmt = f'{decl.name}{subscript}'
-                            if typeNeedsNativeConversion(decl.type):
-                                assignStmt += '.Native'
+                            nativeAttribs = getNativeTypeAttrib(decl.type)
+                            if nativeAttribs is not None:
+                                assignStmt += f'.{nativeAttribs}'
                             assignStmt += f'{declList.spaces(1, assignStmt)}= '
                             if decl.type != decl.originalType:
                                 assignStmt += f'({decl.type})'
@@ -812,9 +829,16 @@ class CsharpTranslator(Translator):
             self.statement('/* ----- Native functions ----- */')
             self.statement()
 
+            errFuncNames = []
+
             for func in doc.funcs:
                 # Ignore functions with variadic arguments for now
                 if func.hasVargs():
+                    continue
+
+                # All exported function are expected to start with 'llgl' prefix
+                if func.name[:len(LLGLMeta.funcPrefix)] != LLGLMeta.funcPrefix:
+                    errFuncNames.append(func.name)
                     continue
 
                 self.statement(f'[DllImport(DllName, EntryPoint="{func.name}", CallingConvention=CallingConvention.Cdecl)]');
@@ -826,6 +850,14 @@ class CsharpTranslator(Translator):
                 funcName = func.name[len(LLGLMeta.funcPrefix):]
                 self.statement(f'public static extern unsafe {returnType.type} {funcName}({translateParamList(func)});');
                 self.statement()
+
+            if len(errFuncNames) > 0:
+                errFuncNameList = ''
+                for name in errFuncNames:
+                    if len(errFuncNameList) > 0:
+                        errFuncNameList += ', '
+                    errFuncNameList += name
+                fatal(f"error: the following functions were exported but do not match the prefix '{LLGLMeta.funcPrefix}': {errFuncNameList}")
 
         self.statement('#pragma warning restore 0649 // Restore warning about unused fields')
         self.closeScope()
