@@ -70,15 +70,16 @@ set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
 
-set( EXTERNAL_MODULE_DIR        "${PROJECT_SOURCE_DIR}/cmake"             )
-set( PROJECT_INCLUDE_DIR        "${PROJECT_SOURCE_DIR}/include"           )
-set( EXTERNAL_INCLUDE_DIR       "${PROJECT_SOURCE_DIR}/external"          )
-set( EXAMPLE_PROJECTS_ROOT_DIR  "${PROJECT_SOURCE_DIR}/examples"          )
-set( EXAMPLE_CPP_PROJECTS_DIR   "${EXAMPLE_PROJECTS_ROOT_DIR}/Cpp"        )
-set( EXAMPLE_C99_PROJECTS_DIR   "${EXAMPLE_PROJECTS_ROOT_DIR}/C99"        )
-set( EXAMPLEBASE_PROJECT_DIR    "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase" )
-set( EXAMPLE_MEDIA_DIR          "${EXAMPLE_PROJECTS_ROOT_DIR}/Media"      )
-set( TEST_PROJECTS_DIR          "${PROJECT_SOURCE_DIR}/tests"             )
+set( EXTERNAL_MODULE_DIR            "${PROJECT_SOURCE_DIR}/cmake"             )
+set( PROJECT_INCLUDE_DIR            "${PROJECT_SOURCE_DIR}/include"           )
+set( EXTERNAL_INCLUDE_DIR           "${PROJECT_SOURCE_DIR}/external"          )
+set( EXAMPLE_PROJECTS_ROOT_DIR      "${PROJECT_SOURCE_DIR}/examples"          )
+set( EXAMPLE_CPP_PROJECTS_DIR       "${EXAMPLE_PROJECTS_ROOT_DIR}/Cpp"        )
+set( EXAMPLE_C99_PROJECTS_DIR       "${EXAMPLE_PROJECTS_ROOT_DIR}/C99"        )
+set( EXAMPLE_CSHARP_PROJECTS_DIR    "${EXAMPLE_PROJECTS_ROOT_DIR}/CSharp"     )
+set( EXAMPLEBASE_PROJECT_DIR        "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase" )
+set( EXAMPLE_MEDIA_DIR              "${EXAMPLE_PROJECTS_ROOT_DIR}/Media"      )
+set( TEST_PROJECTS_DIR              "${PROJECT_SOURCE_DIR}/tests"             )
 
 
 # === Macros ===
@@ -155,7 +156,7 @@ endfunction()
 # Main function to find and bundle project source files.
 # @param SRC_FILES: can either be a directory or a list of specific source files if it sends with ".cpp", ".c", ".h", ".m", or ".mm".
 function(find_project_source_files OUTPUT_LIST SRC_FILES)
-    if("${SRC_FILES}" MATCHES ".+\\.(cpp|c|h|m|mm)")
+    if("${SRC_FILES}" MATCHES ".+\\.(cpp|c|h|m|mm|cs)")
         set(ProjectFiles "${SRC_FILES}")
     else()
         # Find all source files for project
@@ -316,6 +317,10 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         string(SUBSTRING ${PROJECT_NAME} 12 -1 PROJECT_BASE_NAME)
         set_project_working_dir(${PROJECT_NAME} "${EXAMPLE_C99_PROJECTS_DIR}/${PROJECT_BASE_NAME}")
         set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples (C99)")
+    elseif(${PROJECT_NAME} MATCHES "Example_CSharp_+")
+        string(SUBSTRING ${PROJECT_NAME} 15 -1 PROJECT_BASE_NAME)
+        set_project_working_dir(${PROJECT_NAME} "${EXAMPLE_CSHARP_PROJECTS_DIR}/${PROJECT_BASE_NAME}")
+        set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples (CSharp)")
     elseif(${PROJECT_NAME} MATCHES "Example_+")
         string(SUBSTRING ${PROJECT_NAME} 8 -1 PROJECT_BASE_NAME)
         set_project_working_dir(${PROJECT_NAME} "${EXAMPLE_CPP_PROJECTS_DIR}/${PROJECT_BASE_NAME}")
@@ -403,6 +408,7 @@ if(WIN32)
 endif()
 
 option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
+option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C#" OFF)
 
 if(LLGL_ENABLE_CHECKED_CAST)
     ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
@@ -672,6 +678,11 @@ else(GaussLib_INCLUDE_DIR)
     endif()
 endif(GaussLib_INCLUDE_DIR)
 
+# Wrapper: C#
+if(LLGL_BUILD_WRAPPER_CSHARP)
+    add_subdirectory(wrapper/CSharp)
+endif()
+
 # Install targets, headers, and CMake config files
 get_property(LLGL_ALL_TARGETS GLOBAL PROPERTY LLGL_GLOBAL_MODULE_LIST)
 if(LLGL_BUILD_RENDERER_DIRECT3D11 OR LLGL_BUILD_RENDERER_DIRECT3D12)
@@ -734,6 +745,10 @@ endif()
 
 if(LLGL_BUILD_WRAPPER_C99)
     message("Build Wrapper: C99")
+endif()
+
+if(LLGL_BUILD_WRAPPER_CSHARP)
+    message("Build Wrapper: C#")
 endif()
 
 if(LLGL_BUILD_EXAMPLES)
