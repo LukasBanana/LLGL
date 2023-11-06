@@ -109,14 +109,14 @@ D3D11ResourceHeap::D3D11ResourceHeap(
     const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
 {
     /* Get pipeline layout object */
-    auto pipelineLayoutD3D = LLGL_CAST(D3D11PipelineLayout*, desc.pipelineLayout);
+    auto* pipelineLayoutD3D = LLGL_CAST(D3D11PipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutD3D)
         throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
-    const auto& bindings            = pipelineLayoutD3D->GetHeapBindings();
-    const auto  numBindings         = static_cast<std::uint32_t>(bindings.size());
-    const auto  numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
+    const auto&         bindings            = pipelineLayoutD3D->GetHeapBindings();
+    const std::uint32_t numBindings         = static_cast<std::uint32_t>(bindings.size());
+    const std::uint32_t numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 
     /* Allocate array to map binding index to descriptor index */
     bindingMap_.resize(numBindings);
@@ -140,7 +140,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(
     CacheResourceUsage();
 
     /* Finalize segments in buffer */
-    const auto numSegmentSets = (numResourceViews / numBindings);
+    const std::uint32_t numSegmentSets = (numResourceViews / numBindings);
     heap_.FinalizeSegments(numSegmentSets);
 
     /* Write initial resource views */
@@ -159,9 +159,9 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
     if (resourceViews.empty())
         return 0;
 
-    const auto numSets          = GetNumDescriptorSets();
-    const auto numBindings      = static_cast<std::uint32_t>(bindingMap_.size());
-    const auto numDescriptors   = numSets * numBindings;
+    const std::uint32_t numSets         = GetNumDescriptorSets();
+    const std::uint32_t numBindings     = static_cast<std::uint32_t>(bindingMap_.size());
+    const std::uint32_t numDescriptors  = numSets * numBindings;
 
     /* Silently quit on out of bounds; debug layer must report these errors */
     if (firstDescriptor >= numDescriptors)
@@ -172,17 +172,17 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
     /* Write each resource view into respective segment */
     std::uint32_t numWritten = 0;
 
-    for (const auto& desc : resourceViews)
+    for (const ResourceViewDescriptor& desc : resourceViews)
     {
         /* Skip over empty resource descriptors */
         if (desc.resource == nullptr)
             continue;
 
         /* Get binding information and heap start for descriptor set */
-        const auto& binding = bindingMap_[firstDescriptor % numBindings];
+        const BindingSegmentLocation& binding = bindingMap_[firstDescriptor % numBindings];
 
-        auto descriptorSet  = firstDescriptor / numBindings;
-        auto heapStartPtr   = heap_.SegmentData(descriptorSet);
+        const std::uint32_t descriptorSet = firstDescriptor / numBindings;
+        char* heapStartPtr = heap_.SegmentData(descriptorSet);
 
         /* Get SRV and UAV objects for textures and buffers */
         ID3D11ShaderResourceView* srv = nullptr;
@@ -205,13 +205,13 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
         /* Write descriptor into respective heap segment for each affected shader stage */
         for_range(stage, static_cast<int>(D3DShaderStage_Count))
         {
-            auto offset     = binding.stages[stage].segmentOffset;
+            const std::uint32_t offset = binding.stages[stage].segmentOffset;
             if (offset == BindingSegmentLocation::invalidOffset)
                 continue;
 
-            auto heapPtr    = heapStartPtr + offset;
-            auto segment    = D3DRESOURCEHEAP_CONST_SEGMENT(heapPtr);
-            auto index      = binding.stages[stage].descriptorIndex;
+            char*                           heapPtr = heapStartPtr + offset;
+            const D3DResourceHeapSegment*   segment = D3DRESOURCEHEAP_CONST_SEGMENT(heapPtr);
+            const std::uint32_t             index   = binding.stages[stage].descriptorIndex;
 
             switch (segment->type)
             {
@@ -320,10 +320,10 @@ std::vector<D3D11ResourceHeap::D3DResourceBinding> D3D11ResourceHeap::FilterAndS
     std::vector<D3DResourceBinding> resourceBindings;
     resourceBindings.reserve(bindingIter.GetCount());
 
-    for (auto type : resourceTypes)
+    for (ResourceType type : resourceTypes)
     {
         bindingIter.Reset(type, resourceBindFlags, affectedStage);
-        for (std::size_t index = 0; const auto* bindingDesc = bindingIter.Next(&index);)
+        for (std::size_t index = 0; const BindingDescriptor* bindingDesc = bindingIter.Next(&index);)
         {
             D3DResourceBinding resourceBinding;
             {
@@ -367,7 +367,7 @@ void D3D11ResourceHeap::AllocConstantBufferSegments(BindingDescriptorIterator& b
     );
 
     /* Build all resource segments for ranged and unragned CBVs */
-    auto numSegments = D3D11ResourceHeap::ConsolidateSegments(
+    const std::uint32_t numSegments = D3D11ResourceHeap::ConsolidateSegments(
         cbvBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc3PartSegment, stage, D3DResourceType_CBV,
@@ -400,7 +400,7 @@ void D3D11ResourceHeap::AllocShaderResourceViewSegments(BindingDescriptorIterato
 
     /* Build all resource segments for SRVs */
     const int initialSubresourceIndices = -1;
-    auto numSegments = D3D11ResourceHeap::ConsolidateSegments(
+    const std::uint32_t numSegments = D3D11ResourceHeap::ConsolidateSegments(
         srvBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc2PartSegment, stage, D3DResourceType_SRV,
@@ -433,7 +433,7 @@ void D3D11ResourceHeap::AllocUnorderedAccessViewSegments(BindingDescriptorIterat
 
     /* Build all resource segments for UAVs */
     const int initialSubresourceIndices = -1;
-    auto numSegments = D3D11ResourceHeap::ConsolidateSegments(
+    const std::uint32_t numSegments = D3D11ResourceHeap::ConsolidateSegments(
         uavBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc3PartSegment, stage, D3DResourceType_UAV,
@@ -462,7 +462,7 @@ void D3D11ResourceHeap::AllocSamplerSegments(BindingDescriptorIterator& bindingI
     );
 
     /* Build all resource segments for samplers */
-    auto numSegments = D3D11ResourceHeap::ConsolidateSegments(
+    const std::uint32_t numSegments = D3D11ResourceHeap::ConsolidateSegments(
         samplerBindingSlots,
         BIND_SEGMENT_ALLOCATOR(
             D3D11ResourceHeap::Alloc1PartSegment, stage, D3DResourceType_Sampler,
@@ -493,11 +493,11 @@ void D3D11ResourceHeap::Alloc1PartSegment(
     WriteBindingMappings(stage, type, first, count);
 
     /* Allocate space for segment */
-    const auto  payloadSize     = static_cast<std::uint32_t>(payload0Stride * count);
-    auto        segmentAlloc    = heap_.AllocSegment<D3DResourceHeapSegment>(payloadSize);
+    const std::uint32_t payloadSize     = static_cast<std::uint32_t>(payload0Stride * count);
+    auto                segmentAlloc    = heap_.AllocSegment<D3DResourceHeapSegment>(payloadSize);
 
     /* Write segment header */
-    auto header = segmentAlloc.Header();
+    D3DResourceHeapSegment* header = segmentAlloc.Header();
     {
         header->size        = segmentAlloc.Size();
         header->type        = type;
@@ -521,12 +521,12 @@ void D3D11ResourceHeap::Alloc2PartSegment(
     WriteBindingMappings(stage, type, first, count);
 
     /* Allocate space for segment */
-    const auto  payloadData1Offset  = static_cast<std::uint32_t>(payload0Stride * count);
-    const auto  payloadSize         = static_cast<std::uint32_t>(payload1Stride * count + payloadData1Offset);
-    auto        segmentAlloc        = heap_.AllocSegment<D3DResourceHeapSegment>(payloadSize);
+    const std::uint32_t payloadData1Offset  = static_cast<std::uint32_t>(payload0Stride * count);
+    const std::uint32_t payloadSize         = static_cast<std::uint32_t>(payload1Stride * count + payloadData1Offset);
+    auto                segmentAlloc        = heap_.AllocSegment<D3DResourceHeapSegment>(payloadSize);
 
     /* Write segment header */
-    auto header = segmentAlloc.Header();
+    D3DResourceHeapSegment* header = segmentAlloc.Header();
     {
         header->size        = segmentAlloc.Size();
         header->type        = type;
@@ -555,13 +555,13 @@ void D3D11ResourceHeap::Alloc3PartSegment(
     WriteBindingMappings(stage, type, first, count);
 
     /* Allocate space for segment */
-    const auto  payloadData1Offset  = static_cast<std::uint32_t>(payload0Stride * count);
-    const auto  payloadData2Offset  = static_cast<std::uint32_t>(payload1Stride * count + payloadData1Offset);
-    const auto  payloadSize         = static_cast<std::uint32_t>(payload2Stride * count + payloadData2Offset);
-    auto        segmentAlloc        = heap_.AllocSegment<D3DResourceHeapSegment>(payloadSize);
+    const std::uint32_t payloadData1Offset  = static_cast<std::uint32_t>(payload0Stride * count);
+    const std::uint32_t payloadData2Offset  = static_cast<std::uint32_t>(payload1Stride * count + payloadData1Offset);
+    const std::uint32_t payloadSize         = static_cast<std::uint32_t>(payload2Stride * count + payloadData2Offset);
+    auto                segmentAlloc        = heap_.AllocSegment<D3DResourceHeapSegment>(payloadSize);
 
     /* Write segment header */
-    auto header = segmentAlloc.Header();
+    D3DResourceHeapSegment* header = segmentAlloc.Header();
     {
         header->size        = segmentAlloc.Size();
         header->type        = type;
@@ -581,7 +581,7 @@ void D3D11ResourceHeap::WriteBindingMappings(D3DShaderStage stage, D3DResourceTy
     for_range(i, count)
     {
         LLGL_ASSERT(first[i].index < bindingMap_.size());
-        auto& mapping = bindingMap_[first[i].index];
+        BindingSegmentLocation& mapping = bindingMap_[first[i].index];
         mapping.stages[stage].segmentOffset     = static_cast<std::uint32_t>(heap_.Size());
         mapping.stages[stage].descriptorIndex   = i;
         mapping.type                            = type;
@@ -618,7 +618,7 @@ void D3D11ResourceHeap::CacheResourceUsage()
 #define D3DRESOURCEHEAP_BIND_CONSTANTBUFFERS1(CONTEXT, PTR, STAGE)      \
     for_range(i, segmentation_.numCBVSegments##STAGE)                   \
     {                                                                   \
-        auto segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);              \
+        auto* segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);             \
         if ((segment->flags & D3DResourceFlags_HasBufferRange) != 0)    \
         {                                                               \
             CONTEXT->STAGE##SetConstantBuffers1(                        \
@@ -643,7 +643,7 @@ void D3D11ResourceHeap::CacheResourceUsage()
 #define D3DRESOURCEHEAP_BIND_UNORDEREDACCESSVIEWS_PS(CONTEXT, PTR)  \
     for_range(i, segmentation_.numUAVSegmentsPS)                    \
     {                                                               \
-        auto segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);          \
+        auto* segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);         \
         CONTEXT->OMSetRenderTargetsAndUnorderedAccessViews(         \
             D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,            \
             nullptr,                                                \
@@ -659,7 +659,7 @@ void D3D11ResourceHeap::CacheResourceUsage()
 #define D3DRESOURCEHEAP_BIND_UNORDEREDACCESSVIEWS_CS(CONTEXT, PTR)  \
     for_range(i, segmentation_.numUAVSegmentsCS)                    \
     {                                                               \
-        auto segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);          \
+        auto* segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);         \
         CONTEXT->CSSetUnorderedAccessViews(                         \
             segment->startSlot,                                     \
             segment->numViews,                                      \
@@ -672,7 +672,7 @@ void D3D11ResourceHeap::CacheResourceUsage()
 #define D3DRESOURCEHEAP_BIND_RESOURCE_GENERIC(CONTEXT, PTR, COUNT, FUNC, DATA)  \
     for_range(i, segmentation_.COUNT)                                           \
     {                                                                           \
-        auto segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);                      \
+        auto* segment = D3DRESOURCEHEAP_CONST_SEGMENT(PTR);                     \
         CONTEXT->FUNC(segment->startSlot, segment->numViews, DATA(PTR));        \
         heapPtr += segment->size;                                               \
     }
@@ -825,7 +825,7 @@ const char* D3D11ResourceHeap::BindCSResources1(ID3D11DeviceContext1* context1, 
 void D3D11ResourceHeap::WriteResourceViewCBV(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index)
 {
     /* Get buffer resource and its size parameter */
-    auto bufferD3D = LLGL_CAST(D3D11Buffer*, GetAsExpectedBuffer(desc.resource, BindFlags::ConstantBuffer));
+    auto* bufferD3D = LLGL_CAST(D3D11Buffer*, GetAsExpectedBuffer(desc.resource, BindFlags::ConstantBuffer));
 
     const UINT bufferSize = bufferD3D->GetSize();
 
@@ -872,7 +872,7 @@ void D3D11ResourceHeap::WriteResourceViewUAV(ID3D11UnorderedAccessView* uav, cha
 void D3D11ResourceHeap::WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index)
 {
     /* Get sampler resource */
-    auto samplerD3D = LLGL_CAST(D3D11Sampler*, GetAsExpectedSampler(desc.resource));
+    auto* samplerD3D = LLGL_CAST(D3D11Sampler*, GetAsExpectedSampler(desc.resource));
 
     /* Write D3D ComPtr */
     D3DRESOURCEHEAP_DATA0_SAMPLER(heapPtr)[index] = samplerD3D->GetNative();
@@ -880,7 +880,7 @@ void D3D11ResourceHeap::WriteResourceViewSampler(const ResourceViewDescriptor& d
 
 ID3D11ShaderResourceView* D3D11ResourceHeap::GetOrCreateSRV(const ResourceViewDescriptor& desc, std::size_t& outIndex)
 {
-    auto& resource = *(desc.resource);
+    Resource& resource = *(desc.resource);
     if (resource.GetResourceType() == ResourceType::Buffer)
     {
         auto& buffer = LLGL_CAST(Buffer&, resource);
@@ -898,7 +898,7 @@ ID3D11ShaderResourceView* D3D11ResourceHeap::GetOrCreateSRV(const ResourceViewDe
 
 ID3D11UnorderedAccessView* D3D11ResourceHeap::GetOrCreateUAV(const ResourceViewDescriptor& desc, std::size_t& outIndex)
 {
-    auto& resource = *(desc.resource);
+    Resource& resource = *(desc.resource);
     if (resource.GetResourceType() == ResourceType::Buffer)
     {
         auto& buffer = LLGL_CAST(Buffer&, resource);
@@ -971,7 +971,7 @@ ID3D11UnorderedAccessView* D3D11ResourceHeap::GetOrCreateTextureUAV(D3D11Texture
 static UINT GetFormatBufferStride(const Format format)
 {
     /* Get buffer stride by format */
-    const auto& formatAttribs = GetFormatAttribs(format);
+    const FormatAttributes& formatAttribs = GetFormatAttribs(format);
     const UINT stride = (formatAttribs.bitSize / formatAttribs.blockWidth / formatAttribs.blockHeight / 8);
     if (stride == 0)
         throw std::runtime_error("cannot create buffer subresource with format stride of 0");
