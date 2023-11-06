@@ -231,15 +231,15 @@ static void PrintTestSummary(unsigned failures, const std::vector<std::string>& 
         // Print unknown test names
         if (!unknownTests.empty())
         {
-            std::string unknwonTestsStr;
+            std::string unknownTestsStr;
             for (const std::string& name : unknownTests)
             {
-                if (!unknwonTestsStr.empty())
-                    unknwonTestsStr += ", ";
-                unknwonTestsStr += name;
+                if (!unknownTestsStr.empty())
+                    unknownTestsStr += ", ";
+                unknownTestsStr += name;
             }
             Log::Printf("//////////////////////////////////////////\n");
-            Log::Printf("  UNKNOWN TESTS: %s\n", unknwonTestsStr.c_str());
+            Log::Printf("  UNKNOWN TESTS: %s\n", unknownTestsStr.c_str());
             Log::Printf("//////////////////////////////////////////\n");
         }
     }

@@ -70,7 +70,7 @@ enum class SystemValue
 
     /**
     \brief Index of the input instance.
-    \note This value behalves differently between Direct3D and OpenGL.
+    \note This value behaves differently between Direct3D and OpenGL.
     \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
     */
     InstanceID,
@@ -98,7 +98,7 @@ enum class SystemValue
 
     /**
     \brief Index of the input vertex.
-    \note This value behalves differently between Direct3D and OpenGL.
+    \note This value behaves differently between Direct3D and OpenGL.
     \see CommandBuffer::Draw
     */
     VertexID,

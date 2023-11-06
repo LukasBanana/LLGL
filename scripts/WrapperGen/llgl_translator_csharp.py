@@ -139,7 +139,7 @@ class CsharpTranslator(Translator):
                 self.ident = ident
                 self.arraySize = arraySize
 
-        def translateField(field, isInsideStruct = False, noFixedScope = False):
+        def translateField(field, isInsideStruct = False, noFixedScope = False, noRefTypes = False):
             nonlocal builtinTypenames
 
             fieldType = field.type
@@ -179,7 +179,10 @@ class CsharpTranslator(Translator):
                         if LLGLAnnotation.NULLABLE in field.annotations or LLGLAnnotation.ARRAY in field.annotations:
                             decl.type += '*'
                         elif fieldType.baseType == StdType.STRUCT:
-                            decl.marshal = 'ref'
+                            if noRefTypes:
+                                decl.type += '*'
+                            else:
+                                decl.marshal = 'ref'
                         elif fieldType.baseType == StdType.CHAR:
                             decl.type = 'string'
                             decl.marshal = 'MarshalAs(UnmanagedType.LPStr)'
@@ -195,7 +198,7 @@ class CsharpTranslator(Translator):
             return decl
 
         def translateReturnType(type):
-            return translateField(LLGLField(inName = None, inType = type))
+            return translateField(LLGLField(inName = None, inType = type), noRefTypes = True)
 
         def translateDeprecationMessage(msg):
             if msg is not None:

@@ -27,13 +27,24 @@ namespace LLGL
             }
         }
 
-        /*public static List<Display> List
+        private static List<Display> displayList = new List<Display>();
+        public static List<Display> List
         {
             get
             {
-                return new List<Display>(); //TODO
+                int count = Count;
+                displayList.Clear();
+                unsafe
+                {
+                    NativeLLGL.Display* nativeDisplayList = NativeLLGL.GetDisplayList();
+                    for (int i = 0; i < count; ++i)
+                    {
+                        displayList.Add(new Display(nativeDisplayList[i]));
+                    }
+                }
+                return displayList;
             }
-        }*/
+        }
 
         public static Display Get(int index)
         {

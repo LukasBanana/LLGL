@@ -4361,7 +4361,7 @@ namespace LLGL
         public static extern unsafe IntPtr DisplayCount();
 
         [DllImport(DllName, EntryPoint="llglGetDisplayList", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe Display GetDisplayList();
+        public static extern unsafe Display* GetDisplayList();
 
         [DllImport(DllName, EntryPoint="llglGetDisplay", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe Display GetDisplay(IntPtr index);
