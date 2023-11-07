@@ -383,7 +383,7 @@ option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
 
 option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
 
-option(LLGL_BUILD_STATIC_LIB "Build LLGL as static lib (Only allows a single render system!)" OFF)
+option(LLGL_BUILD_STATIC_LIB "Build LLGL as static library" OFF)
 option(LLGL_BUILD_TESTS "Include test projects" OFF)
 option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
@@ -408,7 +408,13 @@ if(WIN32)
 endif()
 
 option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
-option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C#" OFF)
+option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C# (requires LLGL_BUILD_WRAPPER_C99)" OFF)
+
+if(NOT LLGL_BUILD_WRAPPER_C99)
+    if(LLGL_BUILD_WRAPPER_CSHARP)
+        message(SEND_ERROR "LLGL_BUILD_WRAPPER_CSHARP is enabled but not LLGL_BUILD_WRAPPER_C99; The C# wrapper depends on the C99 wrapper!")
+    endif()
+endif()
 
 if(LLGL_ENABLE_CHECKED_CAST)
     ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
