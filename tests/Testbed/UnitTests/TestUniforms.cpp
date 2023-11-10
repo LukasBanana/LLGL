@@ -34,12 +34,12 @@ DEF_TEST( Uniforms )
         {
             psoLayoutDesc.bindings  =
             {
-                BindingDescriptor{ "Scene",    ResourceType::Buffer,  BindFlags::ConstantBuffer, StageFlags::VertexStage,   1 },
-                BindingDescriptor{ "colorMap", ResourceType::Texture, BindFlags::Sampled,        StageFlags::FragmentStage, 3 },
+                BindingDescriptor{ "Scene",    ResourceType::Buffer,  BindFlags::ConstantBuffer, StageFlags::VertexStage,   1u },
+                BindingDescriptor{ "colorMap", ResourceType::Texture, BindFlags::Sampled,        StageFlags::FragmentStage, 3u },
             };
             psoLayoutDesc.staticSamplers =
             {
-                StaticSamplerDescriptor{ "linearSampler", StageFlags::FragmentStage, (HasCombinedSamplers() ? 3 : 4), staticSamplerDesc }
+                StaticSamplerDescriptor{ "linearSampler", StageFlags::FragmentStage, (HasCombinedSamplers() ? 3u : 4u), staticSamplerDesc }
             };
             psoLayoutDesc.uniforms =
             {

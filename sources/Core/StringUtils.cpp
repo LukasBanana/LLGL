@@ -147,7 +147,7 @@ LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColu
                     const std::size_t indent = (multiRowQueue[col].empty() ? 0 : std::min<std::size_t>(entry.multiLineIndent, columnWidths[col]/2));
                     s.append(indent, ' ');
 
-                    const StringView cell = (!multiRowQueue[col].empty() ? multiRowQueue[col] : entry.cells[row]);
+                    const StringView cell = (!multiRowQueue[col].empty() ? multiRowQueue[col] : entry.cells[row].c_str());
                     if (!(col < columnWidths.size() && cell.size() + indent > columnWidths[col]))
                     {
                         /* Append cell */
