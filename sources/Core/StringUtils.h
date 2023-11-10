@@ -10,6 +10,8 @@
 
 
 #include <LLGL/Export.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/UTF8String.h>
 #include "Exception.h"
 #include <string>
 #include <vector>
@@ -126,6 +128,16 @@ LLGL_EXPORT std::wstring ToUTF16String(const char* utf8);
 
 // Writes a formatted string into an STL string.
 LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2);
+
+struct FormattedTableColumn
+{
+    unsigned                maxWidth        = -1;
+    unsigned                multiLineIndent = 0; // Nuber of blanks for each multi-line cell
+    ArrayView<UTF8String>   cells;
+};
+
+// Writes the specified table into a formatted string.
+LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns);
 
 
 } // /namespace LLGL

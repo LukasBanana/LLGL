@@ -48,6 +48,8 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
     #   ifdef LLGL_DEBUG
 
     /* Print debug report */
+    report = DebugStackTrace().c_str() + report;
+
     DebugPuts(report.c_str());
 
     /* Break execution if there's a debugger attached */

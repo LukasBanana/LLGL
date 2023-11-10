@@ -10,6 +10,9 @@
 #include <codecvt>
 #include <locale>
 #include <stdio.h>
+#include <algorithm>
+#include <LLGL/Container/SmallVector.h>
+#include <LLGL/Utils/ForRange.h>
 #include "../Platform/Path.h"
 
 
@@ -95,6 +98,104 @@ void StringPrintf(std::string& str, const char* format, va_list args1, va_list a
         str.resize(appendOff + formatLen);
         ::vsnprintf(&str[appendOff], formatLen + 1, format, args2);
     }
+}
+
+LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns)
+{
+    UTF8String s;
+
+    if (columns.empty())
+        return s;
+
+    /* Determine maximum width for each column */
+    SmallVector<std::size_t> columnWidths;
+    columnWidths.resize(columns.size() - 1);
+
+    std::size_t maxNumRows = 0;
+
+    for_range(i, columns.size() - 1)
+    {
+        const FormattedTableColumn& col = columns[i];
+
+        /* Find longest row width for current column */
+        for (const UTF8String& cell : col.cells)
+            columnWidths[i] = std::max<std::size_t>(columnWidths[i], cell.size());
+
+        /* Apply limit per column and find maximum number of rows */
+        columnWidths[i] = std::min<std::size_t>(columnWidths[i], col.maxWidth);
+        maxNumRows      = std::max<std::size_t>(maxNumRows, col.cells.size());
+    }
+
+    SmallVector<StringView> multiRowQueue;
+    multiRowQueue.resize(columns.size());
+
+    bool hasMultiLineCells = false;
+
+    /* Format each row for all columns */
+    for_range(row, maxNumRows)
+    {
+        do
+        {
+            hasMultiLineCells = false;
+
+            for_range(col, columns.size())
+            {
+                const auto& entry = columns[col];
+                if (row < entry.cells.size())
+                {
+                    /* Append indentation */
+                    const std::size_t indent = (multiRowQueue[col].empty() ? 0 : std::min<std::size_t>(entry.multiLineIndent, columnWidths[col]/2));
+                    s.append(indent, ' ');
+
+                    const StringView cell = (!multiRowQueue[col].empty() ? multiRowQueue[col] : entry.cells[row]);
+                    if (!(col < columnWidths.size() && cell.size() + indent > columnWidths[col]))
+                    {
+                        /* Append cell */
+                        s += cell;
+                        if (col + 1 < columns.size())
+                            s.append(columnWidths[col] - cell.size() - indent, ' ');
+                        multiRowQueue[col] = StringView{};
+                    }
+                    else
+                    {
+                        /* Find position where to split current cell */
+                        const std::size_t maxCellWidth  = columnWidths[col] - indent;
+                        const std::size_t delimiterPos  = cell.find_last_of(":;., ", maxCellWidth);
+                        const std::size_t splitPos      = (delimiterPos == StringView::npos ? maxCellWidth : delimiterPos + 1);
+
+                        /* Split cell into head and tail */
+                        const StringView cellHead = cell.substr(0, splitPos);
+                        const StringView cellTail = cell.substr(cellHead.size());
+
+                        /* Append partial cell and add tail to multi-row list */
+                        s += cellHead;
+                        s.append(columnWidths[col] - cellHead.size() - indent, ' ');
+
+                        /* Trim cell via delimiter characters */
+                        multiRowQueue[col] = cellTail;
+                        if (!cellTail.empty())
+                            hasMultiLineCells = true;
+                    }
+                }
+                else if (col + 1 < columns.size())
+                {
+                    /* Fill with blanks */
+                    s.append(columnWidths[col], ' ');
+                }
+
+                if (col + 1 < columns.size())
+                {
+                    /* Append column separator */
+                    s += " | ";
+                }
+            }
+
+            s += '\n';
+        }
+        while (hasMultiLineCells);
+    }
+
+    return s;
 }
 
 

@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Export.h>
+#include <LLGL/Container/UTF8String.h>
 
 #ifdef LLGL_DEBUG
 #   include <LLGL/Platform/Platform.h>
@@ -38,6 +39,9 @@ LLGL_EXPORT void DebugPuts(const char* text);
 
 // Prints the specified formatted text to the debug output. Calls DebugPuts with the formatted string.
 LLGL_EXPORT void DebugPrintf(const char* format, ...);
+
+// Returns a string containing the callstack. The formatting is platform dependent but each line always ends with a newline character '\n'.
+LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame = 0, unsigned maxNumStackFrames = 64);
 
 
 } // /namespace LLGL
