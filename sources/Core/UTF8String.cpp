@@ -7,6 +7,7 @@
 
 #include <LLGL/Container/UTF8String.h>
 #include <algorithm>
+#include <iterator>
 #include "Exception.h"
 #include "Assertion.h"
 
@@ -23,7 +24,7 @@ static std::size_t GetUTF16CharCount(const StringView& s)
 static SmallVector<wchar_t> ConvertToUTF16WCharArray(const StringView& s)
 {
     /* Allocate buffer for UTF-16 string */
-    const auto len = GetUTF16CharCount(s);
+    const std::size_t len = GetUTF16CharCount(s);
 
     SmallVector<wchar_t> utf16;
     utf16.reserve(len + 1);
@@ -43,17 +44,17 @@ static SmallVector<wchar_t> ConvertToUTF16WCharArray(const StringView& s)
         else if ((c & 0xE0) == 0xC0)
         {
             /* Read two bytes */
-            auto w0 = static_cast<wchar_t>(c & 0x1F); c = *it++;
-            auto w1 = static_cast<wchar_t>(c & 0x3F);
+            wchar_t w0 = static_cast<wchar_t>(c & 0x1F); c = *it++;
+            wchar_t w1 = static_cast<wchar_t>(c & 0x3F);
             utf16.push_back(w0 << 5 | w1);
         }
         /* Check for bit pattern 1110xxxx */
         else if ((c & 0xF0) == 0xE0)
         {
             /* Read three bytes */
-            auto w0 = static_cast<wchar_t>(c & 0x0F); c = *it++;
-            auto w1 = static_cast<wchar_t>(c & 0x3F); c = *it++;
-            auto w2 = static_cast<wchar_t>(c & 0x3F);
+            wchar_t w0 = static_cast<wchar_t>(c & 0x0F); c = *it++;
+            wchar_t w1 = static_cast<wchar_t>(c & 0x3F); c = *it++;
+            wchar_t w2 = static_cast<wchar_t>(c & 0x3F);
             utf16.push_back(w0 << 12 | w1 << 6 | w2);
         }
         else
@@ -111,12 +112,14 @@ static void AppendUTF8Character(SmallVector<char>& str, int code)
     else if (code < 0x07FF)
     {
         /* U+0080 ... U+07FF */
+        str.reserve(str.size() + 2);
         str.push_back(static_cast<char>(0xC0 | ((code >>  6) & 0x1F))); // 110ccccc
         str.push_back(static_cast<char>(0x80 | ( code        & 0x3F))); // 10cccccc
     }
     else if (code < 0xFFFF)
     {
         /* U+0800 ... U+FFFF */
+        str.reserve(str.size() + 3);
         str.push_back(static_cast<char>(0xE0 | ((code >> 12) & 0x0F))); // 1110cccc
         str.push_back(static_cast<char>(0x80 | ((code >>  6) & 0x3F))); // 10cccccc
         str.push_back(static_cast<char>(0x80 | ( code        & 0x3F))); // 10cccccc
@@ -124,6 +127,7 @@ static void AppendUTF8Character(SmallVector<char>& str, int code)
     else
     {
         /* U+10000 ... U+10FFFF */
+        str.reserve(str.size() + 4);
         str.push_back(static_cast<char>(0xF0 | ((code >> 18) & 0x07))); // 11110ccc
         str.push_back(static_cast<char>(0x80 | ((code >> 12) & 0x3F))); // 10cccccc
         str.push_back(static_cast<char>(0x80 | ((code >>  6) & 0x3F))); // 10cccccc
@@ -131,7 +135,7 @@ static void AppendUTF8Character(SmallVector<char>& str, int code)
     }
 }
 
-LLGL_EXPORT SmallVector<char> ConvertToUTF8CharArray(const WStringView& s)
+LLGL_EXPORT SmallVector<char> ConvertWStringViewToUTF8CharArray(const WStringView& s)
 {
     /* Allocate buffer for UTF-16 string */
     const auto len = GetUTF8CharCount(s);
@@ -146,6 +150,15 @@ LLGL_EXPORT SmallVector<char> ConvertToUTF8CharArray(const WStringView& s)
     utf8.push_back('\0');
 
     return utf8;
+}
+
+static SmallVector<char> ConvertStringViewToCharArray(const StringView& str)
+{
+    SmallVector<char> data;
+    data.reserve(str.size() + 1);
+    data.insert(data.end(), str.begin(), str.end());
+    data.push_back('\0');
+    return data;
 }
 
 
@@ -169,22 +182,13 @@ UTF8String::UTF8String(UTF8String&& rhs) :
     rhs.clear();
 }
 
-static SmallVector<char> ConvertStringViewToCharArray(const StringView& str)
-{
-    SmallVector<char> data;
-    data.reserve(str.size() + 1);
-    data.insert(data.end(), str.begin(), str.end());
-    data.push_back('\0');
-    return data;
-}
-
 UTF8String::UTF8String(const StringView& str) :
     data_ { ConvertStringViewToCharArray(str) }
 {
 }
 
 UTF8String::UTF8String(const WStringView& str) :
-    data_ { ConvertToUTF8CharArray(str) }
+    data_ { ConvertWStringViewToUTF8CharArray(str) }
 {
 }
 
@@ -213,41 +217,35 @@ UTF8String& UTF8String::operator = (UTF8String&& rhs)
 
 UTF8String& UTF8String::operator += (const UTF8String& rhs)
 {
-    data_.insert(end(), rhs.begin(), rhs.end());
-    return *this;
+    return append(rhs.begin(), rhs.end());
 }
 
 UTF8String& UTF8String::operator += (const StringView& rhs)
 {
-    data_.insert(end(), rhs.begin(), rhs.end());
-    return *this;
+    return append(rhs.begin(), rhs.end());
 }
 
 UTF8String& UTF8String::operator += (const WStringView& rhs)
 {
-    auto utf8String = ConvertToUTF8CharArray(rhs);
-    data_.insert(end(), utf8String.begin(), utf8String.end());
-    return *this;
+    auto utf8String = ConvertWStringViewToUTF8CharArray(rhs);
+    return append(utf8String.begin(), utf8String.end());
 }
 
 UTF8String& UTF8String::operator += (const char* rhs)
 {
     const StringView rhsView{ rhs };
-    data_.insert(end(), rhsView.begin(), rhsView.end());
-    return *this;
+    return append(rhsView.begin(), rhsView.end());
 }
 
 UTF8String& UTF8String::operator += (const wchar_t* rhs)
 {
-    auto utf8String = ConvertToUTF8CharArray(rhs);
-    data_.insert(end(), utf8String.begin(), utf8String.end());
-    return *this;
+    auto utf8String = ConvertWStringViewToUTF8CharArray(rhs);
+    return append(utf8String.begin(), utf8String.end());
 }
 
 UTF8String& UTF8String::operator += (char chr)
 {
-    data_.insert(end(), chr);
-    return *this;
+    return append(1u, chr);
 }
 
 UTF8String& UTF8String::operator += (wchar_t chr)
@@ -255,12 +253,10 @@ UTF8String& UTF8String::operator += (wchar_t chr)
     if (GetUTF8CharCount(chr) > 1)
     {
         wchar_t str[] = { chr, L'\0' };
-        auto utf8String = ConvertToUTF8CharArray(str);
-        data_.insert(end(), utf8String.begin(), utf8String.end());
+        auto utf8String = ConvertWStringViewToUTF8CharArray(str);
+        return append(utf8String.begin(), utf8String.end());
     }
-    else
-        data_.insert(end(), static_cast<char>(chr));
-    return *this;
+    return append(1u, static_cast<char>(chr));
 }
 
 void UTF8String::clear()
@@ -285,19 +281,19 @@ int UTF8String::compare(size_type pos1, size_type count1, const StringView& str,
 
 int UTF8String::compare(const WStringView& str) const
 {
-    auto utf8String = ConvertToUTF8CharArray(str);
+    auto utf8String = ConvertWStringViewToUTF8CharArray(str);
     return compare(StringView{ utf8String.data(), utf8String.size() });
 }
 
 int UTF8String::compare(size_type pos1, size_type count1, const WStringView& str) const
 {
-    auto utf8String = ConvertToUTF8CharArray(str);
+    auto utf8String = ConvertWStringViewToUTF8CharArray(str);
     return compare(pos1, count1, StringView{ utf8String.data(), utf8String.size() });
 }
 
 int UTF8String::compare(size_type pos1, size_type count1, const WStringView& str, size_type pos2, size_type count2) const
 {
-    auto utf8String = ConvertToUTF8CharArray(str.substr(pos2, count2));
+    auto utf8String = ConvertWStringViewToUTF8CharArray(str.substr(pos2, count2));
     return compare(pos1, count1, StringView{ utf8String.data(), utf8String.size() });
 }
 
@@ -311,21 +307,33 @@ UTF8String UTF8String::substr(size_type pos, size_type count) const
 
 void UTF8String::resize(size_type size, char ch)
 {
-    const size_type oldDataSize = data_.size();
-    const size_type newDataSize = size + 1;
-    if (newDataSize > oldDataSize)
+    if (size != this->size())
     {
-        data_.resize(newDataSize, ch);
-        data_[oldDataSize - 1] = ch;
+        /* Remove NUL-terminator temporarily to avoid unnecessary reallocations and copy operations of the internal container */
+        data_.pop_back();
+        data_.reserve(size + 1);
+        data_.resize(size, ch);
+        data_.push_back('\0');
     }
-    else
-        data_.resize(newDataSize, ch);
-    data_.back() = '\0';
 }
 
 UTF8String& UTF8String::append(size_type count, char ch)
 {
     resize(size() + count, ch);
+    return *this;
+}
+
+UTF8String& UTF8String::append(const char* first, const char* last)
+{
+    /* Remove NUL-terminator temporarily to avoid unnecessary reallocations and copy operations of the internal container */
+    const difference_type dist = std::distance(first, last);
+    if (dist > 0)
+    {
+        data_.pop_back();
+        data_.reserve(static_cast<size_type>(dist) + 1);
+        data_.insert(data_.end(), first, last);
+        data_.push_back('\0');
+    }
     return *this;
 }
 

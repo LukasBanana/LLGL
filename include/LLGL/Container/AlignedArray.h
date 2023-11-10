@@ -63,7 +63,7 @@ class LLGL_EXPORT AlignedArray
 \tparam T specifies the element type and the aligned of this array.
 */
 template <typename T>
-class AlignedArray<T, 0u>
+class LLGL_EXPORT AlignedArray<T, 0u>
 {
 
     public:

@@ -181,6 +181,7 @@ class LLGL_EXPORT UTF8String
         void resize(size_type size, char ch = '\0');
 
         UTF8String& append(size_type count, char ch);
+        UTF8String& append(const char* first, const char* last);
 
     public:
 
