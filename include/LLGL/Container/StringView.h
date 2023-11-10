@@ -280,6 +280,46 @@ class LLGL_EXPORT BasicStringView
             return BasicStringView::npos;
         }
 
+        size_type find_first_of(const TChar* sequence, size_type pos = 0) const noexcept
+        {
+            return FindFirstPositionOf<true>(sequence, pos, size());
+        }
+
+        size_type find_first_of(const TChar* sequence, size_type pos, size_type count) const noexcept
+        {
+            return FindFirstPositionOf<true>(sequence, pos, (std::min)(count, size()));
+        }
+
+        size_type find_first_not_of(const TChar* sequence, size_type pos = 0) const noexcept
+        {
+            return FindFirstPositionOf<false>(sequence, pos, size());
+        }
+
+        size_type find_first_not_of(const TChar* sequence, size_type pos, size_type count) const noexcept
+        {
+            return FindFirstPositionOf<false>(sequence, pos, (std::min)(count, size()));
+        }
+
+        size_type find_last_of(const TChar* sequence, size_type pos = BasicStringView::npos) const noexcept
+        {
+            return FindLastPositionOf<true>(sequence, pos, size());
+        }
+
+        size_type find_last_of(const TChar* sequence, size_type pos, size_type count) const noexcept
+        {
+            return FindLastPositionOf<true>(sequence, pos, (std::min)(count, size()));
+        }
+
+        size_type find_last_not_of(const TChar* sequence, size_type pos = BasicStringView::npos) const noexcept
+        {
+            return FindLastPositionOf<false>(sequence, pos, size());
+        }
+
+        size_type find_last_not_of(const TChar* sequence, size_type pos, size_type count) const noexcept
+        {
+            return FindLastPositionOf<false>(sequence, pos, (std::min)(count, size()));
+        }
+
     public:
 
         //! \see at
@@ -305,6 +345,38 @@ class LLGL_EXPORT BasicStringView
                 return (s - str);
             }
             return 0;
+        }
+
+        template <bool Predicate>
+        size_type FindFirstPositionOf(const TChar* sequence, size_type pos, size_type count) const noexcept
+        {
+            pos = (std::min)(pos, count);
+            while (pos < size())
+            {
+                for (const TChar* s = sequence; *s != TChar('\0'); ++s)
+                {
+                    if (Traits::eq(data_[pos], *s) == Predicate)
+                        return pos;
+                }
+                ++pos;
+            }
+            return BasicStringView::npos;
+        }
+
+        template <bool Predicate>
+        size_type FindLastPositionOf(const TChar* sequence, size_type pos, size_type count) const noexcept
+        {
+            pos = (std::min)(pos, count);
+            while (pos > 0)
+            {
+                --pos;
+                for (const TChar* s = sequence; *s != TChar('\0'); ++s)
+                {
+                    if (Traits::eq(data_[pos], *s) == Predicate)
+                        return pos;
+                }
+            }
+            return BasicStringView::npos;
         }
 
 };

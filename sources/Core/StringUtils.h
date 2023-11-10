@@ -35,9 +35,9 @@ namespace LLGL
 
 /* ----- Templates ----- */
 
-// Returns the specified integral value as hexadecimal string.
-template <typename T, T Radix>
-const char* IntToStr(T value, const char* prefix = nullptr)
+// Returns the specified integral value as string with leading zeros.
+template <typename T, T Radix = 10>
+const char* IntToStr(T value, const char* prefix = nullptr, bool leadingZeros = false)
 {
     static_assert(std::is_integral<T>::value, "IntToStr<T>: template parameter 'T' must be an integral type");
     static_assert(Radix == 2 || Radix == 8 || Radix == 10 || Radix == 16, "IntToStr<T>: radix must be 2, 8, 10, or 16");
@@ -68,21 +68,33 @@ const char* IntToStr(T value, const char* prefix = nullptr)
     /* Insert hex digits from right-to-left */
     constexpr char alphabet[] = "0123456789ABCDEF";
 
-    while (numLen > 0)
+    if (leadingZeros)
     {
-        --numLen;
-        str[prefixOffset + numLen] = alphabet[value % Radix];
-        value /= Radix;
+        while (numLen > 0)
+        {
+            --numLen;
+            str[prefixOffset + numLen] = alphabet[value % Radix];
+            value /= Radix;
+        }
+        return str;
     }
-
-    return str;
+    else
+    {
+        while (numLen > 0 && value != 0)
+        {
+            --numLen;
+            str[prefixOffset + numLen] = alphabet[value % Radix];
+            value /= Radix;
+        }
+        return str + numLen;
+    }
 }
 
 // Returns the specified integral value as hexadecimal string.
 template <typename T>
 const char* IntToHex(T value, const char* prefix = "0x")
 {
-    return IntToStr<T, 16>(value, prefix);
+    return IntToStr<T, 16>(value, prefix, /*leadingZeros:*/ true);
 }
 
 // Returns the length of the specified null-terminated string.
