@@ -166,6 +166,7 @@ UTF8String::UTF8String(const UTF8String& rhs) :
 UTF8String::UTF8String(UTF8String&& rhs) :
     data_ { std::move(rhs.data_) }
 {
+    rhs.clear();
 }
 
 static SmallVector<char> ConvertStringViewToCharArray(const StringView& str)
@@ -206,6 +207,7 @@ UTF8String& UTF8String::operator = (const UTF8String& rhs)
 UTF8String& UTF8String::operator = (UTF8String&& rhs)
 {
     data_ = std::move(rhs.data_);
+    rhs.clear();
     return *this;
 }
 
@@ -244,7 +246,7 @@ UTF8String& UTF8String::operator += (const wchar_t* rhs)
 
 UTF8String& UTF8String::operator += (char chr)
 {
-    data_.push_back(chr);
+    data_.insert(end(), chr);
     return *this;
 }
 
@@ -257,7 +259,7 @@ UTF8String& UTF8String::operator += (wchar_t chr)
         data_.insert(end(), utf8String.begin(), utf8String.end());
     }
     else
-        data_.push_back(static_cast<char>(chr));
+        data_.insert(end(), static_cast<char>(chr));
     return *this;
 }
 
@@ -305,6 +307,26 @@ UTF8String UTF8String::substr(size_type pos, size_type count) const
         LLGL_TRAP("start position for UTF8 string out of range");
     count = std::min(count, size() - pos);
     return StringView{ &(data_[pos]), count };
+}
+
+void UTF8String::resize(size_type size, char ch)
+{
+    const size_type oldDataSize = data_.size();
+    const size_type newDataSize = size + 1;
+    if (newDataSize > oldDataSize)
+    {
+        data_.resize(newDataSize, ch);
+        data_[oldDataSize - 1] = ch;
+    }
+    else
+        data_.resize(newDataSize, ch);
+    data_.back() = '\0';
+}
+
+UTF8String& UTF8String::append(size_type count, char ch)
+{
+    resize(size() + count, ch);
+    return *this;
 }
 
 SmallVector<wchar_t> UTF8String::to_utf16() const

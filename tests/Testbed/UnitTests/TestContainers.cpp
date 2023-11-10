@@ -277,6 +277,47 @@ TestResult TestbedContext::TestContainerUTF8String()
         return TestResult::FailedMismatch;
     }
 
+    // Test resize
+    UTF8String sa5 = "Hello";
+    sa5 += ' ';
+    sa5 += "World";
+
+    const char* sa5Expected = "Hello World";
+    if (sa5 != sa4Expected)
+    {
+        Log::Errorf(
+            "Mismatch between UTF8String concatenation 'sa5' \"%s\" and initial value \"%s\"\n",
+            sa5.c_str(), sa5Expected
+        );
+        return TestResult::FailedMismatch;
+    }
+
+    const StringView boilerplate = "This is a simple boilerplate text to be used for testing purposes only";
+
+    UTF8String sa6;
+
+    for_range(i, 10)
+    {
+        const StringView subA = boilerplate.substr(i, 5);
+        const StringView subB = boilerplate.substr(20 + i, 10 + i);
+
+        sa6 = subA;
+        sa6 += subB;
+
+        const std::string sa6Expected = std::string(subA.begin(), subA.end()) + std::string(subB.begin(), subB.end());
+
+        if (sa6.size() != subA.size() + subB.size() || ::memcmp(sa6.data(), sa6Expected.data(), sa6Expected.size()) != 0)
+        {
+            Log::Errorf(
+                "Mismatch between UTF8String concatenation 'sa6' \"%s\" and initial value \"%s\"\n",
+                sa6.c_str(), sa6Expected.c_str()
+            );
+            return TestResult::FailedMismatch;
+        }
+
+        sa6.clear();
+    }
+
     return TestResult::Passed;
 }
 

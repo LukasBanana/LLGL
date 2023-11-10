@@ -178,6 +178,10 @@ class LLGL_EXPORT UTF8String
 
         UTF8String substr(size_type pos = 0, size_type cout = npos) const;
 
+        void resize(size_type size, char ch = '\0');
+
+        UTF8String& append(size_type count, char ch);
+
     public:
 
         //! Convert this string to a NUL-terminated UTF-16 string.
