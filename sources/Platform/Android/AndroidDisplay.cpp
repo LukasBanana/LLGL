@@ -88,29 +88,29 @@ bool AndroidDisplay::ResetDisplayMode()
     return false;
 }
 
-bool AndroidDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
+bool AndroidDisplay::SetDisplayMode(const DisplayMode& displayMode)
 {
     //TODO
     return false;
 }
 
-DisplayModeDescriptor AndroidDisplay::GetDisplayMode() const
+DisplayMode AndroidDisplay::GetDisplayMode() const
 {
-    DisplayModeDescriptor displayModeDesc;
+    DisplayMode displayMode;
     {
         //TODO
     }
-    return displayModeDesc;
+    return displayMode;
 }
 
-std::vector<DisplayModeDescriptor> AndroidDisplay::GetSupportedDisplayModes() const
+std::vector<DisplayMode> AndroidDisplay::GetSupportedDisplayModes() const
 {
-    std::vector<DisplayModeDescriptor> displayModeDescs;
+    std::vector<DisplayMode> displayModes;
 
     //TODO
-    displayModeDescs.push_back(GetDisplayMode());
+    displayModes.push_back(GetDisplayMode());
 
-    return displayModeDescs;
+    return displayModes;
 }
 
 

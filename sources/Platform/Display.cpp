@@ -17,15 +17,15 @@ namespace LLGL
  * ======= Protected: =======
  */
 
-void Display::FinalizeDisplayModes(std::vector<DisplayModeDescriptor>& displayModeDescs)
+void Display::FinalizeDisplayModes(std::vector<DisplayMode>& displayMode)
 {
     /* Sort display mode descriptors in ascending order (with, height, frequency) */
-    std::sort(displayModeDescs.begin(), displayModeDescs.end(), CompareSWO);
+    std::sort(displayMode.begin(), displayMode.end(), CompareSWO);
 
     /* Remove all duplicates */
-    displayModeDescs.erase(
-        std::unique(displayModeDescs.begin(), displayModeDescs.end()),
-        displayModeDescs.end()
+    displayMode.erase(
+        std::unique(displayMode.begin(), displayMode.end()),
+        displayMode.end()
     );
 }
 

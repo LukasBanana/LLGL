@@ -98,7 +98,7 @@ bool IOSDisplay::ResetDisplayMode()
     return false;
 }
 
-bool IOSDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
+bool IOSDisplay::SetDisplayMode(const DisplayMode& displayMode)
 {
     //TODO
     return false;
@@ -112,39 +112,39 @@ static Extent2D GetScaledScreenResolution(CGSize size, CGFloat screenScale = 1.0
     return resolution;
 }
 
-static void ConvertUIScreenMode(DisplayModeDescriptor& dst, UIScreen* screen, UIScreenMode* mode)
+static void ConvertUIScreenMode(DisplayMode& dst, UIScreen* screen, UIScreenMode* mode)
 {
     const NSInteger maxFPS = [screen maximumFramesPerSecond];
     dst.resolution  = GetScaledScreenResolution(mode.size);
     dst.refreshRate = static_cast<std::uint32_t>(maxFPS);
 }
 
-DisplayModeDescriptor IOSDisplay::GetDisplayMode() const
+DisplayMode IOSDisplay::GetDisplayMode() const
 {
-    DisplayModeDescriptor displayModeDesc;
+    DisplayMode displayMode;
     {
-        ConvertUIScreenMode(displayModeDesc, screen_, [screen_ currentMode]);
+        ConvertUIScreenMode(displayMode, screen_, [screen_ currentMode]);
     }
-    return displayModeDesc;
+    return displayMode;
 }
 
-std::vector<DisplayModeDescriptor> IOSDisplay::GetSupportedDisplayModes() const
+std::vector<DisplayMode> IOSDisplay::GetSupportedDisplayModes() const
 {
     const NSUInteger numModes = [[screen_ availableModes] count];
 
-    std::vector<DisplayModeDescriptor> displayModeDescs;
-    displayModeDescs.reserve(static_cast<std::size_t>(numModes));
+    std::vector<DisplayMode> displayModes;
+    displayModes.reserve(static_cast<std::size_t>(numModes));
 
     for_range(i, numModes)
     {
-        DisplayModeDescriptor modeDesc;
+        DisplayMode displayMode;
         {
-            ConvertUIScreenMode(modeDesc, screen_, [[screen_ availableModes] objectAtIndex:i]);
+            ConvertUIScreenMode(displayMode, screen_, [[screen_ availableModes] objectAtIndex:i]);
         }
-        displayModeDescs.push_back(modeDesc);
+        displayModes.push_back(displayMode);
     }
 
-    return displayModeDescs;
+    return displayModes;
 }
 
 

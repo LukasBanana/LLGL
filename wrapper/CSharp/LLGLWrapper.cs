@@ -1567,23 +1567,23 @@ namespace LLGL
         }
     }
 
-    public class DisplayModeDescriptor
+    public class DisplayMode
     {
         public Extent2D Resolution { get; set; }  = new Extent2D();
         public int      RefreshRate { get; set; } = 0;
 
-        public DisplayModeDescriptor() { }
+        public DisplayMode() { }
 
-        internal DisplayModeDescriptor(NativeLLGL.DisplayModeDescriptor native)
+        internal DisplayMode(NativeLLGL.DisplayMode native)
         {
             Native = native;
         }
 
-        internal NativeLLGL.DisplayModeDescriptor Native
+        internal NativeLLGL.DisplayMode Native
         {
             get
             {
-                var native = new NativeLLGL.DisplayModeDescriptor();
+                var native = new NativeLLGL.DisplayMode();
                 native.resolution  = Resolution;
                 native.refreshRate = RefreshRate;
                 return native;
@@ -3660,7 +3660,7 @@ namespace LLGL
             public ClearValue clearValue;
         }
 
-        public unsafe struct DisplayModeDescriptor
+        public unsafe struct DisplayMode
         {
             public Extent2D resolution;
             public int      refreshRate; /* = 0 */
@@ -4400,13 +4400,13 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglSetDisplayMode", CallingConvention=CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]
-        public static extern unsafe bool SetDisplayMode(Display display, ref DisplayModeDescriptor displayModeDesc);
+        public static extern unsafe bool SetDisplayMode(Display display, ref DisplayMode displayMode);
 
         [DllImport(DllName, EntryPoint="llglGetDisplayMode", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void GetDisplayMode(Display display, ref DisplayModeDescriptor outDisplayModeDesc);
+        public static extern unsafe void GetDisplayMode(Display display, ref DisplayMode outDisplayMode);
 
         [DllImport(DllName, EntryPoint="llglGetSupportedDisplayModes", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe IntPtr GetSupportedDisplayModes(Display display, IntPtr maxNumDisplayModes, DisplayModeDescriptor* outDisplayModes);
+        public static extern unsafe IntPtr GetSupportedDisplayModes(Display display, IntPtr maxNumDisplayModes, DisplayMode* outDisplayModes);
 
         [DllImport(DllName, EntryPoint="llglRegisterLogCallback", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr RegisterLogCallback(IntPtr callback, void* userData);

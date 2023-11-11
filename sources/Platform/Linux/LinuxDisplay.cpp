@@ -26,7 +26,7 @@ LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
 
 static bool UpdateDisplayList()
 {
-    auto sharedX11Display = LinuxSharedX11Display::GetShared();
+    LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedX11Display::GetShared();
 
     const int screenCount = ScreenCount(sharedX11Display->GetNative());
     if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
@@ -196,24 +196,24 @@ bool LinuxDisplay::ResetDisplayMode()
     return false;
 }
 
-bool LinuxDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
+bool LinuxDisplay::SetDisplayMode(const DisplayMode& displayMode)
 {
-    auto dpy = GetNative();
-    auto rootWnd = RootWindow(dpy, screen_);
+    ::Display* dpy = GetNative();
+    ::Window rootWnd = RootWindow(dpy, screen_);
 
     /* Get all screen sizes from X11 extension Xrandr */
     int numSizes = 0;
-    auto scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
+    XRRScreenSize* scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
 
     for (int i = 0; i < numSizes; ++i)
     {
         /* Check if specified display mode resolution matches this screen configuration */
-        if (displayModeDesc.resolution.width  == static_cast<std::uint32_t>(scrSizes[i].width) &&
-            displayModeDesc.resolution.height == static_cast<std::uint32_t>(scrSizes[i].height))
+        if (displayMode.resolution.width  == static_cast<std::uint32_t>(scrSizes[i].width) &&
+            displayMode.resolution.height == static_cast<std::uint32_t>(scrSizes[i].height))
         {
-            if (auto scrCfg = XRRGetScreenInfo(dpy, rootWnd))
+            if (XRRScreenConfiguration* scrCfg = XRRGetScreenInfo(dpy, rootWnd))
             {
-                auto status = XRRSetScreenConfig(dpy, scrCfg, rootWnd, i, RR_Rotate_0, 0);
+                Status status = XRRSetScreenConfig(dpy, scrCfg, rootWnd, i, RR_Rotate_0, 0);
                 XRRFreeScreenConfigInfo(scrCfg);
                 return (status != 0);
             }
@@ -223,61 +223,61 @@ bool LinuxDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
     return false;
 }
 
-DisplayModeDescriptor LinuxDisplay::GetDisplayMode() const
+DisplayMode LinuxDisplay::GetDisplayMode() const
 {
-    DisplayModeDescriptor modeDesc;
+    DisplayMode displayMode;
 
-    auto dpy = GetNative();
-    if (auto scr = ScreenOfDisplay(dpy, screen_))
+    ::Display* dpy = GetNative();
+    if (::Screen* scr = ScreenOfDisplay(dpy, screen_))
     {
-        auto rootWnd = RootWindow(dpy, screen_);
+        ::Window rootWnd = RootWindow(dpy, screen_);
 
         /* Get screen resolution from X11 screen */
-        modeDesc.resolution.width   = static_cast<std::uint32_t>(scr->width);
-        modeDesc.resolution.height  = static_cast<std::uint32_t>(scr->height);
+        displayMode.resolution.width    = static_cast<std::uint32_t>(scr->width);
+        displayMode.resolution.height   = static_cast<std::uint32_t>(scr->height);
 
         /* Get refresh reate from X11 extension Xrandr */
-        if (auto scrCfg = XRRGetScreenInfo(dpy, rootWnd))
+        if (XRRScreenConfiguration* scrCfg = XRRGetScreenInfo(dpy, rootWnd))
         {
-            modeDesc.refreshRate = static_cast<std::uint32_t>(XRRConfigCurrentRate(scrCfg));
+            displayMode.refreshRate = static_cast<std::uint32_t>(XRRConfigCurrentRate(scrCfg));
             XRRFreeScreenConfigInfo(scrCfg);
         }
     }
 
-    return modeDesc;
+    return displayMode;
 }
 
-std::vector<DisplayModeDescriptor> LinuxDisplay::GetSupportedDisplayModes() const
+std::vector<DisplayMode> LinuxDisplay::GetSupportedDisplayModes() const
 {
-    std::vector<DisplayModeDescriptor> displayModeDescs;
+    std::vector<DisplayMode> displayModes;
 
-    DisplayModeDescriptor modeDesc;
+    DisplayMode displayMode;
 
     /* Get all screen sizes from X11 extension Xrandr */
     int numSizes = 0;
-    auto scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
+    XRRScreenSize* scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
 
     for (int i = 0; i < numSizes; ++i)
     {
         /* Initialize resolution */
-        modeDesc.resolution.width   = static_cast<std::uint32_t>(scrSizes[i].width);
-        modeDesc.resolution.height  = static_cast<std::uint32_t>(scrSizes[i].height);
+        displayMode.resolution.width    = static_cast<std::uint32_t>(scrSizes[i].width);
+        displayMode.resolution.height   = static_cast<std::uint32_t>(scrSizes[i].height);
 
         /* Add one display mode for each rate */
         int numRates = 0;
-        auto rates = XRRRates(GetNative(), screen_, i, &numRates);
+        short* rates = XRRRates(GetNative(), screen_, i, &numRates);
 
         for (int j = 0; j < numRates; ++j)
         {
-            modeDesc.refreshRate = static_cast<std::uint32_t>(rates[j]);
-            displayModeDescs.push_back(modeDesc);
+            displayMode.refreshRate = static_cast<std::uint32_t>(rates[j]);
+            displayModes.push_back(displayMode);
         }
     }
 
     /* Sort final display mode list and remove duplciate entries */
-    FinalizeDisplayModes(displayModeDescs);
+    FinalizeDisplayModes(displayModes);
 
-    return displayModeDescs;
+    return displayModes;
 }
 
 

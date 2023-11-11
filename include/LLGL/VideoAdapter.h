@@ -26,7 +26,7 @@ namespace LLGL
 //! \deprecated Since 0.04b; Write custom structure instead!
 struct LLGL_DEPRECATED("LLGL::VideoOutputDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoOutputDescriptor
 {
-    std::vector<DisplayModeDescriptor> displayModes;
+    std::vector<DisplayMode> displayModes;
 };
 
 //! \deprecated Since 0.04b; Write custom structure instead!

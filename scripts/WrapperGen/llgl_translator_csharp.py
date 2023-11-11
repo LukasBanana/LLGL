@@ -76,7 +76,7 @@ class CsharpTranslator(Translator):
             'ComputeShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'DepthBiasDescriptor': CsharpProperties(getter = True),
             'DepthDescriptor': CsharpProperties(getter = True),
-            'DisplayModeDescriptor': CsharpProperties(getter = True, setter = True),
+            'DisplayMode': CsharpProperties(getter = True, setter = True),
             'FragmentAttribute': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'FragmentShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),
             'FrameProfile': CsharpProperties(setter = True),

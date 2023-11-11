@@ -45,14 +45,14 @@ struct MonitorChangedInfo
     std::size_t numUnregisteredMonitors;
 };
 
-static void Convert(DisplayModeDescriptor& dst, const DEVMODE& src)
+static void Convert(DisplayMode& dst, const DEVMODE& src)
 {
     dst.resolution.width    = static_cast<std::uint32_t>(src.dmPelsWidth);
     dst.resolution.height   = static_cast<std::uint32_t>(src.dmPelsHeight);
     dst.refreshRate         = static_cast<std::uint32_t>(src.dmDisplayFrequency);
 }
 
-static void Convert(DEVMODE& dst, const DisplayModeDescriptor& src)
+static void Convert(DEVMODE& dst, const DisplayMode& src)
 {
     dst.dmPelsWidth         = static_cast<DWORD>(src.resolution.width);
     dst.dmPelsHeight        = static_cast<DWORD>(src.resolution.height);
@@ -279,7 +279,7 @@ bool Win32Display::ResetDisplayMode()
     return (result == DISP_CHANGE_SUCCESSFUL);
 }
 
-bool Win32Display::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
+bool Win32Display::SetDisplayMode(const DisplayMode& displayMode)
 {
     /* Get display device name */
     MONITORINFOEX infoEx;
@@ -290,14 +290,14 @@ bool Win32Display::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
     {
         devMode.dmSize      = sizeof(devMode);
         devMode.dmFields    = (DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY);
-        Convert(devMode, displayModeDesc);
+        Convert(devMode, displayMode);
     }
     auto result = ChangeDisplaySettingsEx(infoEx.szDevice, &devMode, nullptr, CDS_FULLSCREEN, nullptr);
 
     return (result == DISP_CHANGE_SUCCESSFUL);
 }
 
-DisplayModeDescriptor Win32Display::GetDisplayMode() const
+DisplayMode Win32Display::GetDisplayMode() const
 {
     /* Get display device name */
     MONITORINFOEX infoEx;
@@ -309,17 +309,17 @@ DisplayModeDescriptor Win32Display::GetDisplayMode() const
 
     if (EnumDisplaySettings(infoEx.szDevice, ENUM_CURRENT_SETTINGS, &devMode) != FALSE)
     {
-        DisplayModeDescriptor displayModeDesc;
-        Convert(displayModeDesc, devMode);
-        return displayModeDesc;
+        DisplayMode displayMode;
+        Convert(displayMode, devMode);
+        return displayMode;
     }
 
     return {};
 }
 
-std::vector<DisplayModeDescriptor> Win32Display::GetSupportedDisplayModes() const
+std::vector<DisplayMode> Win32Display::GetSupportedDisplayModes() const
 {
-    std::vector<DisplayModeDescriptor> displayModeDescs;
+    std::vector<DisplayMode> displayModes;
 
     /* Get display device name */
     MONITORINFOEX infoEx;
@@ -336,16 +336,16 @@ std::vector<DisplayModeDescriptor> Win32Display::GetSupportedDisplayModes() cons
         /* Only enumerate display settings where the width, height, and frequency fields have been initialized */
         if ((devMode.dmFields & fieldBits) == fieldBits)
         {
-            DisplayModeDescriptor outputDesc;
-            Convert(outputDesc, devMode);
-            displayModeDescs.push_back(outputDesc);
+            DisplayMode displayMode;
+            Convert(displayMode, devMode);
+            displayModes.push_back(displayMode);
         }
     }
 
     /* Sort final display mode list and remove duplciate entries */
-    FinalizeDisplayModes(displayModeDescs);
+    FinalizeDisplayModes(displayModes);
 
-    return displayModeDescs;
+    return displayModes;
 }
 
 

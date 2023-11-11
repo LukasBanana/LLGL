@@ -8,7 +8,8 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 - [Debug layer](#debug-layer)
 - [Video adapter descriptors](#video-adapter-descriptors)
 - [Rendering features](#rendering-features)
-- [`FrameProfile` structure](frameprofile-structure)
+- [`FrameProfile` structure](#frameprofile-structure)
+- [Renamed identifiers](#renamed-identifiers)
 
 
 ## Image descriptors
@@ -66,4 +67,14 @@ The following entries from `RenderingFeatures` have been deprecated:
 ## `FrameProfile` structure
 
 The entire union inside the `LLGL::FrameProfile` structure has been deprecated and replaced by `LLGL::ProfileCommandQueueRecord` and `LLGL::ProfileCommandBufferRecord`.
+
+
+## Renamed identifiers
+
+The following identifiers have also been renamed and their old names have been deprecated as type aliases, i.e. they are still available but will be removed in the next version of LLGL:
+```cpp
+// Descriptors in LLGL are intended for structures that describe an opaque object only, first and foremost GPU objects such as buffers, textures, PSOs etc.
+// The DisplayMode is only a small structure to change the setting of a Display instance but not to create or query an object.
+DisplayModeDescriptor -> DisplayMode
+```
 

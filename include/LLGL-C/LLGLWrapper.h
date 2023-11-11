@@ -1254,12 +1254,12 @@ typedef struct LLGLAttachmentClear
 }
 LLGLAttachmentClear;
 
-typedef struct LLGLDisplayModeDescriptor
+typedef struct LLGLDisplayMode
 {
     LLGLExtent2D resolution;
     uint32_t     refreshRate; /* = 0 */
 }
-LLGLDisplayModeDescriptor;
+LLGLDisplayMode;
 
 typedef struct LLGLFormatAttributes
 {

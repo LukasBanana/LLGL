@@ -1019,9 +1019,9 @@ LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, depthAttachment);
 LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, stencilAttachment);
 LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, samples);
 
-LLGL_STATIC_ASSERT_SIZE(DisplayModeDescriptor);
-LLGL_STATIC_ASSERT_OFFSET(DisplayModeDescriptor, resolution);
-LLGL_STATIC_ASSERT_OFFSET(DisplayModeDescriptor, refreshRate);
+LLGL_STATIC_ASSERT_SIZE(DisplayMode);
+LLGL_STATIC_ASSERT_OFFSET(DisplayMode, resolution);
+LLGL_STATIC_ASSERT_OFFSET(DisplayMode, refreshRate);
 
 LLGL_STATIC_ASSERT_SIZE(DrawIndirectArguments);
 LLGL_STATIC_ASSERT_OFFSET(DrawIndirectArguments, numVertices);

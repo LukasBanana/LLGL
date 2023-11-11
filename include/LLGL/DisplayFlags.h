@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Types.h>
+#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -20,12 +21,11 @@ namespace LLGL
 /* ----- Structures ----- */
 
 /**
-\brief Display mode descriptor structure.
-\remarks Describes the attributes of a physical display.
-\see VideoOutputDescriptor::displayModes
-\see SwapChainDescriptor
+\brief Display mode structure.
+\remarks Contains the properties of a display such as resolution and refresh rate.
+\see Display::SetDisplayMode
 */
-struct DisplayModeDescriptor
+struct DisplayMode
 {
     //! Display resolution (in pixels).
     Extent2D        resolution;
@@ -34,14 +34,17 @@ struct DisplayModeDescriptor
     std::uint32_t   refreshRate = 0;
 };
 
+LLGL_DEPRECATED("LLGL::DisplayModeDescriptor is deprecated since 0.04b; Use LLGL::DisplayMode instead!", "DisplayMode") 
+typedef DisplayMode DisplayModeDescriptor;
+
 
 /* ----- Operators ----- */
 
 //! Compares the two specified display mode descriptors on equality.
-LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
+LLGL_EXPORT bool operator == (const DisplayMode& lhs, const DisplayMode& rhs);
 
 //! Compares the two specified display mode descriptors on inequality.
-LLGL_EXPORT bool operator != (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
+LLGL_EXPORT bool operator != (const DisplayMode& lhs, const DisplayMode& rhs);
 
 
 /* ----- Functions ----- */
@@ -50,12 +53,12 @@ LLGL_EXPORT bool operator != (const DisplayModeDescriptor& lhs, const DisplayMod
 \brief Compares the two display modes in a strict-weak-order (SWO) fashion.
 \ingroup group_compare_swo
 */
-LLGL_EXPORT bool CompareSWO(const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
+LLGL_EXPORT bool CompareSWO(const DisplayMode& lhs, const DisplayMode& rhs);
 
 /**
 \brief Returns the ratio of the specified extent as another extent, i.e. all attributes are divided by their greatest common divisor.
 \remarks This can be used to print out a display mode resolution in a better format (e.g. "16:9" rather than "1920:1080").
-\see DisplayModeDescriptor::resolution
+\see DisplayMode::resolution
 */
 LLGL_EXPORT Extent2D GetExtentRatio(const Extent2D& extent);
 

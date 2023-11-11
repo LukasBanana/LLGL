@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         #if 0
         if (auto display = LLGL::Display::QueryPrimary())
         {
-            LLGL::DisplayModeDescriptor mode;
+            LLGL::DisplayMode mode;
             mode.resolution.width = 1024;
             mode.resolution.height = 768;
             display->SetDisplayMode(mode);

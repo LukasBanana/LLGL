@@ -61,10 +61,10 @@ class LinuxDisplay : public Display
         float GetScale() const override;
 
         bool ResetDisplayMode() override;
-        bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) override;
-        DisplayModeDescriptor GetDisplayMode() const override;
+        bool SetDisplayMode(const DisplayMode& displayMode) override;
+        DisplayMode GetDisplayMode() const override;
 
-        std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const override;
+        std::vector<DisplayMode> GetSupportedDisplayModes() const override;
 
     private:
 

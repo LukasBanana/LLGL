@@ -15,7 +15,7 @@ namespace LLGL
 
 /* ----- Operators ----- */
 
-LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs)
+LLGL_EXPORT bool operator == (const DisplayMode& lhs, const DisplayMode& rhs)
 {
     return
     (
@@ -24,7 +24,7 @@ LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayMod
     );
 }
 
-LLGL_EXPORT bool operator != (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs)
+LLGL_EXPORT bool operator != (const DisplayMode& lhs, const DisplayMode& rhs)
 {
     return !(lhs == rhs);
 }
@@ -32,7 +32,7 @@ LLGL_EXPORT bool operator != (const DisplayModeDescriptor& lhs, const DisplayMod
 
 /* ----- Functions ----- */
 
-LLGL_EXPORT bool CompareSWO(const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs)
+LLGL_EXPORT bool CompareSWO(const DisplayMode& lhs, const DisplayMode& rhs)
 {
     const auto lhsNumPixels = lhs.resolution.width * lhs.resolution.height;
     const auto rhsNumPixels = rhs.resolution.width * rhs.resolution.height;

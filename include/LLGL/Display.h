@@ -128,17 +128,17 @@ class LLGL_EXPORT Display : public Interface
 
         /**
         \brief Sets the new display mode for this display.
-        \param[in] displayModeDesc Specifies the descriptor of the new display mode.
+        \param[in] displayMode Specifies the new display mode.
         \return True on success, otherwise the specified display mode is not supported by this display and the function has no effect.
         \see GetDisplayMode
         */
-        virtual bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) = 0;
+        virtual bool SetDisplayMode(const DisplayMode& displayMode) = 0;
 
         /**
         \brief Returns the current display mode of this display.
         \see SetDisplayMode
         */
-        virtual DisplayModeDescriptor GetDisplayMode() const = 0;
+        virtual DisplayMode GetDisplayMode() const = 0;
 
         /**
         \brief Returns a list of all modes that are supported by this display.
@@ -148,7 +148,7 @@ class LLGL_EXPORT Display : public Interface
         To get only the currently active display mode, use GetDisplayMode.
         \see GetDisplayMode
         */
-        virtual std::vector<DisplayModeDescriptor> GetSupportedDisplayModes() const = 0;
+        virtual std::vector<DisplayMode> GetSupportedDisplayModes() const = 0;
 
     protected:
 
@@ -156,7 +156,7 @@ class LLGL_EXPORT Display : public Interface
         \brief Sorts the specified list of display modes as described in the GetSupportedDisplayModes function, and removes duplicate entries.
         \see GetSupportedDisplayModes
         */
-        static void FinalizeDisplayModes(std::vector<DisplayModeDescriptor>& displayModeDescs);
+        static void FinalizeDisplayModes(std::vector<DisplayMode>& displayMode);
 
 };
 

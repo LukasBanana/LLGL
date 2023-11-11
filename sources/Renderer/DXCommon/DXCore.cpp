@@ -502,7 +502,7 @@ static std::vector<VideoAdapterOutputInfo> GetDXGIAdapterOutputInfos(IDXGIAdapte
 
         for_range(i, numModes)
         {
-            DisplayModeDescriptor displayMode;
+            DisplayMode displayMode;
             {
                 displayMode.resolution.width    = modeDesc[i].Width;
                 displayMode.resolution.height   = modeDesc[i].Height;

@@ -24,8 +24,8 @@ namespace LLGL
 // Video output structure.
 struct VideoAdapterOutputInfo
 {
-    // List of all display mode descriptors for this video output.
-    std::vector<DisplayModeDescriptor> displayModes;
+    // List of all display modes for this video output.
+    std::vector<DisplayMode> displayModes;
 };
 
 // Simple structure with meta data about a video adapter.

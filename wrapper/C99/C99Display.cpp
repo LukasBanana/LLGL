@@ -90,25 +90,25 @@ LLGL_C_EXPORT bool llglResetDisplayMode(LLGLDisplay display)
     return LLGL_PTR(Display, display)->ResetDisplayMode();
 }
 
-LLGL_C_EXPORT bool llglSetDisplayMode(LLGLDisplay display, const LLGLDisplayModeDescriptor* displayModeDesc)
+LLGL_C_EXPORT bool llglSetDisplayMode(LLGLDisplay display, const LLGLDisplayMode* displayMode)
 {
-    return LLGL_PTR(Display, display)->SetDisplayMode(*reinterpret_cast<const DisplayModeDescriptor*>(displayModeDesc));
+    return LLGL_PTR(Display, display)->SetDisplayMode(*reinterpret_cast<const DisplayMode*>(displayMode));
 }
 
-LLGL_C_EXPORT void llglGetDisplayMode(LLGLDisplay display, LLGLDisplayModeDescriptor* outDisplayModeDesc)
+LLGL_C_EXPORT void llglGetDisplayMode(LLGLDisplay display, LLGLDisplayMode* outDisplayMode)
 {
-    LLGL_ASSERT_PTR(outDisplayModeDesc);
-    DisplayModeDescriptor internalDisplayModeDesc = LLGL_PTR(Display, display)->GetDisplayMode();
-    ::memcpy(outDisplayModeDesc, &internalDisplayModeDesc, sizeof(LLGLDisplayModeDescriptor));
+    LLGL_ASSERT_PTR(outDisplayMode);
+    DisplayMode internalDisplay = LLGL_PTR(Display, display)->GetDisplayMode();
+    ::memcpy(outDisplayMode, &internalDisplay, sizeof(LLGLDisplayMode));
 }
 
-LLGL_C_EXPORT size_t llglGetSupportedDisplayModes(LLGLDisplay display, size_t maxNumDisplayModes, LLGLDisplayModeDescriptor* outDisplayModes)
+LLGL_C_EXPORT size_t llglGetSupportedDisplayModes(LLGLDisplay display, size_t maxNumDisplayModes, LLGLDisplayMode* outDisplayModes)
 {
-    std::vector<DisplayModeDescriptor> internalDisplayModes = LLGL_PTR(Display, display)->GetSupportedDisplayModes();
+    std::vector<DisplayMode> internalDisplayModes = LLGL_PTR(Display, display)->GetSupportedDisplayModes();
     if (outDisplayModes != nullptr)
     {
         maxNumDisplayModes = std::min(maxNumDisplayModes, internalDisplayModes.size());
-        ::memcpy(outDisplayModes, internalDisplayModes.data(), sizeof(LLGLDisplayModeDescriptor) * maxNumDisplayModes);
+        ::memcpy(outDisplayModes, internalDisplayModes.data(), sizeof(LLGLDisplayMode) * maxNumDisplayModes);
     }
     return internalDisplayModes.size();
 }

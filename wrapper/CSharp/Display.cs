@@ -124,13 +124,13 @@ namespace LLGL
             }
         }
 
-        public DisplayModeDescriptor DisplayMode
+        public DisplayMode DisplayMode
         {
             get
             {
-                var nativeDisplayMode = new NativeLLGL.DisplayModeDescriptor();
+                var nativeDisplayMode = new NativeLLGL.DisplayMode();
                 NativeLLGL.GetDisplayMode(Native, ref nativeDisplayMode);
-                return new DisplayModeDescriptor(nativeDisplayMode);
+                return new DisplayMode(nativeDisplayMode);
             }
             set
             {
@@ -139,22 +139,22 @@ namespace LLGL
             }
         }
 
-        public List<DisplayModeDescriptor> SupportedDisplayModes
+        public List<DisplayMode> SupportedDisplayModes
         {
             get
             {
                 unsafe
                 {
                     IntPtr numDisplayModes = NativeLLGL.GetSupportedDisplayModes(Native, (IntPtr)0, null);
-                    var nativeDisplayModes = new NativeLLGL.DisplayModeDescriptor[(int)numDisplayModes];
-                    fixed (NativeLLGL.DisplayModeDescriptor* nativeDisplayModesPtr = nativeDisplayModes)
+                    var nativeDisplayModes = new NativeLLGL.DisplayMode[(int)numDisplayModes];
+                    fixed (NativeLLGL.DisplayMode* nativeDisplayModesPtr = nativeDisplayModes)
                     {
                         NativeLLGL.GetSupportedDisplayModes(Native, numDisplayModes, nativeDisplayModesPtr);
                     }
-                    var displayModes = new List<DisplayModeDescriptor>((int)numDisplayModes);
+                    var displayModes = new List<DisplayMode>((int)numDisplayModes);
                     foreach (var mode in nativeDisplayModes)
                     {
-                        displayModes.Add(new DisplayModeDescriptor(mode));
+                        displayModes.Add(new DisplayMode(mode));
                     }
                     return displayModes;
                 }
