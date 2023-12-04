@@ -810,7 +810,7 @@ void D3D11RenderSystem::InitializeGpuTexture(
             /*report:*/         &(GetMutableReport())
         );
     }
-    else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0)
+    else if ((textureDesc.miscFlags & MiscFlags::NoInitialData) == 0 && !IsCompressedFormat(textureDesc.format))
     {
         /* Initialize texture with clear value using hardware accelerated clear function or CPU upload buffer */
         if (IsDepthOrStencilFormat(textureDesc.format))

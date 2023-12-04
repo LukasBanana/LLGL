@@ -828,6 +828,8 @@ LLGL_EXPORT DynamicByteArray GenerateImageBuffer(
     std::size_t imageSize,
     const float fillColor[4])
 {
+    LLGL_ASSERT(!IsCompressedFormat(format));
+
     /* Convert fill color data type */
     VariantColor fillColor0{ UninitializeTag{} };
     VariantBuffer fillBuffer0{ &fillColor0 };

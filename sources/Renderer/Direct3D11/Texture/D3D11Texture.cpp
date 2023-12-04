@@ -262,6 +262,7 @@ HRESULT D3D11Texture::UpdateSubresource(
 
     DynamicByteArray intermediateData;
     const char* srcData = reinterpret_cast<const char*>(imageView.data);
+    LLGL_ASSERT_PTR(srcData);
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
