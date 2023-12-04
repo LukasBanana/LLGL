@@ -15,7 +15,7 @@
 #include <sstream>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../examples/Cpp/ExampleBase/stb/stb_image.h"
+#include <stb/stb_image.h>
 
 
 int main()

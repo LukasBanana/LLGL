@@ -29,6 +29,7 @@ find_project_source_files( FilesTest_Window             "${TEST_PROJECTS_DIR}/Te
 # === Include directories ===
 
 include_directories("${EXAMPLEBASE_PROJECT_DIR}")
+include_directories("${EXTERNAL_INCLUDE_DIR}") # <stb/stb_image.h>
 
 if(GaussLib_INCLUDE_DIR)
     include_directories(${GaussLib_INCLUDE_DIR})

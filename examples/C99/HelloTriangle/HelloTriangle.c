@@ -115,8 +115,6 @@ int main(int argc, char* argv[])
         #endif
         .blend.targets[0].colorMask = LLGLColorMaskAll,
     };
-
-    // Create graphics PSO
     LLGLPipelineState pipeline = llglCreateGraphicsPipelineState(&pipelineDesc);
 
     // Link shader program and check for errors
