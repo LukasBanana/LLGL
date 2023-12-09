@@ -12,3 +12,9 @@ This example illustrates how to interact with LLGL in the C programing language.
 
 <p align="center"><img src="HelloTriangle/HelloTriangle.png" width="400" height="300"/></p>
 
+### [Texturing](Texturing)
+
+Texturing example with loading an image from file (using STB lib), indexed-drawing, and dynamic resources.
+
+<p align="center"><img src="Texturing/Texturing.png" width="400" height="300"/></p>
+
