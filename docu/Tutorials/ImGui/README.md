@@ -1,5 +1,7 @@
 # Dear ImGui - Popular library for UI rendering and event handling
 
+<p align="center"><img src="LLGL_ImGui_Example.png"/></p>
+
 ## Overview
 
 "Dear ImGui", from now on simply "ImGui", is a popular C++ library to render UI elements and handle their user events with minimal dependencies and setup.
@@ -19,11 +21,11 @@ For this tutorial, we will be using Direct3D 11 and therefore need `imgui_impl_d
 ## LLGL Initialization
 
 We start with declaring all header files at the top of our main source file.
-Besides the usual `LLGL/LLGL.h`, we'll also include the platform and renderer specific headers to access their native handles and pass them to ImGui:
-```cpp
-// Include LLGL and its platform and renderer specific headers
+Besides the usual `LLGs platform and renderer specific headers
 #include <LLGL/LLGL.h>
-#include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/PlatforL/LLGL.h`, we'll also include the platform and renderer specific headers to access their native handles and pass them to ImGui:
+```cpp
+// Include LLGL and itm/NativeHandle.h>
 #include <LLGL/Backend/Direct3D11/NativeHandle.h>
 
 // Include ImGui and its platform and renderer specific headers
@@ -199,10 +201,8 @@ int main()
 }
 ```
 
-You only have to link your project against LLGL.dll and also make sure that LLGL_Direct3D11.dll (or LLGLD.dll and LLGL_Direct3D11D.dll respectively for the debug version) is located in the same directory as your executable.
-Then the final result should look something like this:
-
-<p align="center"><img src="LLGL_ImGui_Example.png"/></p>
+You only have to link your project against **LLGL.dll** and also make sure that **LLGL_Direct3D11.dll** (or **LLGLD.dll** and **LLGL_Direct3D11D.dll** respectively for the debug version) is located in the same directory as your executable.
+Then the final result should look as shown above.
 
 That's all folks!
 
