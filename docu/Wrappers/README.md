@@ -8,10 +8,10 @@ The C99 wrapper of LLGL is the primary wrapper and is required for all other lan
 All typenames in the C99 wrapper correspond to the following naming convention:
 - **Enumeration** entries start with upper case `LLGL` followed by their typename and then their entry name, e.g. `LLGL::TextureType::Texture2D` translates to `LLGLTextureTypeTexture2D`.
 - **Structures** start with upper case `LLGL` followed by their typename, e.g. `LLGL::TextureDescriptor` translates to `LLGLTextureDescriptor`.
-- **Interface** instances start with upper case `LLGL` followed by their typename and are declared as structures with opaque pointers, e.g. `LLGL::Buffer*` translates to `LLGLBuffer`.
-- **Function** start with lower case `llgl` followed by an *individual* name that varies from interface to interface, e.g. `LLGL::Texture::GetDesc` translates to `llglGetTextureDesc`.
+- **Interfaces** start with upper case `LLGL` followed by their typename and are declared as structures with opaque pointers, e.g. `LLGL::Buffer*` translates to `LLGLBuffer`.
+- **Functions** start with lower case `llgl` followed by an *individual* name that varies from interface to interface, e.g. `LLGL::Texture::GetDesc` translates to `llglGetTextureDesc`.
 
-As mentioned above, not all function names are a 1:1 mappings between their C++ counterpart.
+As mentioned above, not all function names are 1:1 mappings between their C++ counterpart.
 This applies especially for the `RenderSystem` and `CommandBuffer` interfaces as they encompass the most functions and their C99 versions have a reduced name length,
 i.e. instead of `llglRenderSystemCreateBuffer` the C99 wrapper defines `llglCreateBuffer` and instead of `llglCommandBufferUpdateBuffer` the C99 wrapper defines `llglUpdateBuffer`.
 This is not only a convenience to reduce name lengths but also due to the fact that these functions don't take a parameter of their interface, which is a major difference between the wrapper and the core library,

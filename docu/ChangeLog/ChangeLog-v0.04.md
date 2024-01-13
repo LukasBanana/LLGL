@@ -41,7 +41,7 @@ Also the single string functions `PostError` and `PostWarning` have been depreca
 
 ## Video adapter descriptors
 
-The structures `VideoAdapterDescriptor` and `VideoOutputDescriptor` have been deprecated. They can be substituted with custom structures if neeeded.
+The structures `VideoAdapterDescriptor` and `VideoOutputDescriptor` have been deprecated. They can be substituted with custom structures if needed.
 Instead of public information about video adpaters, the render system flags have been extended to specify a preferred video adpater for multi-GPU systems.
 
 ```cpp
@@ -72,9 +72,8 @@ The entire union inside the `LLGL::FrameProfile` structure has been deprecated a
 ## Renamed identifiers
 
 The following identifiers have also been renamed and their old names have been deprecated as type aliases, i.e. they are still available but will be removed in the next version of LLGL:
-```cpp
-// Descriptors in LLGL are intended for structures that describe an opaque object only, first and foremost GPU objects such as buffers, textures, PSOs etc.
-// The DisplayMode is only a small structure to change the setting of a Display instance but not to create or query an object.
-DisplayModeDescriptor -> DisplayMode
-```
 
+##### DisplayModeDescriptor &rarr; DisplayMode
+Descriptors in LLGL are intended for structures that describe an opaque object only, first and foremost GPU objects such as buffers, textures, PSOs etc.
+`DisplayMode` is only a small structure to change the setting of a `Display` instance but not to create or query an object.
+Therefore, `DisplayModeDescriptor` has been renamed to `DisplayMode`.
