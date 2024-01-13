@@ -457,7 +457,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             auto cmd = reinterpret_cast<const GLCmdUnbindResources*>(pc);
             if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::UBO) != 0)
                 compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::UniformBuffer, cmd->first, cmd->count);
-            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::SSAO) != 0)
+            if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::SSBO) != 0)
                 compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::ShaderStorageBuffer, cmd->first, cmd->count);
             if ((cmd->resetFlags & GLCmdUnbindResources::ResetFlags::TransformFeedback) != 0)
                 compiler.CallMember(&GLStateManager::UnbindBuffersBase, g_stateMngrArg, GLBufferTarget::TransformFeedbackBuffer, cmd->first, cmd->count);
