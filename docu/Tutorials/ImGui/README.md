@@ -199,5 +199,10 @@ int main()
 }
 ```
 
+You only have to link your project against LLGL.dll and also make sure that LLGL_Direct3D11.dll (or LLGLD.dll and LLGL_Direct3D11D.dll respectively for the debug version) is located in the same directory as your executable.
+Then the final result should look something like this:
+
+<p align="center"><img src="LLGL_ImGui_Example.png"/></p>
+
 That's all folks!
 
