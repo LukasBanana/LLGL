@@ -9,6 +9,7 @@
 #define LLGL_GL_CONTEXT_STATE_H
 
 
+#include <LLGL/Export.h>
 #include "../OpenGL.h"
 #include "GLState.h"
 
@@ -98,11 +99,11 @@ struct GLContextState
         GLuint      boundTextures[numTextureTargets]    = {};
     };
 
-    GLuint          activeTexture                       = 0;
+    GLuint          activeTexture                       = 0; // This refers to the zero-based index, not GL_TEXTURE1..GL_TEXTURE31
     TextureLayer    textureLayers[numTextureLayers];
 
     // Images
-    GLImageUnit     imageUnits[numImageUnits]           = {};
+    //GLImageUnit     imageUnits[numImageUnits]           = {};
 
     // Vertex Array Objects (VAO)
     GLuint          boundVertexArray                    = 0;
@@ -113,8 +114,15 @@ struct GLContextState
     GLuint          boundProgramPipeline                = 0;
 
     // Samplers
-    GLuint          boundSamplers[numTextureLayers];
+    GLuint          boundSamplers[numTextureLayers]     = {};
 };
+
+
+// Querys the entire context state from OpenGL.
+LLGL_EXPORT void GLGetContextState(GLContextState& outContextState);
+
+// Sets the entire context state to OpenGL.
+LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState);
 
 
 } // /namespace LLGL

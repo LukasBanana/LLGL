@@ -199,12 +199,35 @@ void GLStateManager::ResetFramebufferHeight(GLint height)
 
 /* ----- Boolean states ----- */
 
-//TODO: do a full cache reset: query *all* context states
-void GLStateManager::Reset()
+GLenum GLStateManager::GetGLCapability(GLState state)
 {
-    /* Query all states from OpenGL */
-    for_range(i, GLContextState::numCaps)
-        contextState_.capabilities[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
+    return g_stateCapsEnum[static_cast<std::size_t>(state)];
+}
+
+void GLStateManager::ClearCache()
+{
+    /* Query entire context state from current GL context */
+    GLGetContextState(contextState_);
+
+    /* Clear all pointers and remaining bits to cached objects */
+    #ifdef LLGL_GL_ENABLE_OPENGL2X
+    ::memset(boundGLTextures_, 0, sizeof(boundGLTextures_));
+    ::memset(boundGL2XSamplers_, 0, sizeof(boundGL2XSamplers_));
+    #endif
+
+    boundRenderTarget_          = nullptr;
+    indexType16Bits_            = false;
+    lastVertexAttribArray_      = 0;
+    frontFaceInternal_          = GL_CCW;
+    flipViewportYPos_           = false;
+    flipFrontFacing_            = false;
+    emulateOriginUpperLeft_     = false;
+    emulateDepthModeZeroToOne_  = false;
+    framebufferHeight_          = 0;
+    boundDepthStencilState_     = nullptr;
+    boundRasterizerState_       = nullptr;
+    boundBlendState_            = nullptr;
+    frontFacingDirtyBit_        = false;
 }
 
 void GLStateManager::Set(GLState state, bool value)
@@ -315,7 +338,7 @@ bool GLStateManager::IsEnabled(GLStateExt state) const
     return contextState_.capabilitiesExt[idx].enabled;
 }
 
-#endif
+#endif // /LLGL_GL_ENABLE_VENDOR_EXT
 
 /* ----- Common states ----- */
 
@@ -564,10 +587,13 @@ void GLStateManager::SetFrontFace(GLenum mode)
 void GLStateManager::SetPatchVertices(GLint patchVertices)
 {
     #ifdef LLGL_GLEXT_TESSELLATION_SHADER
-    if (contextState_.patchVertices != patchVertices)
+    if (HasExtension(GLExt::ARB_tessellation_shader))
     {
-        contextState_.patchVertices = patchVertices;
-        glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
+        if (contextState_.patchVertices != patchVertices)
+        {
+            contextState_.patchVertices = patchVertices;
+            glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
+        }
     }
     #endif
 }
@@ -1145,6 +1171,16 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
         default:                            break;
     }
     LLGL_TRAP("failed to convert texture type to OpenGL texture target");
+}
+
+GLenum GLStateManager::ToGLTextureLayer(GLuint layer)
+{
+    return g_textureLayersEnum[layer];
+}
+
+GLenum GLStateManager::ToGLTextureTarget(const GLTextureTarget target)
+{
+    return g_textureTargetsEnum[static_cast<std::size_t>(target)];
 }
 
 void GLStateManager::ActiveTexture(GLuint layer)

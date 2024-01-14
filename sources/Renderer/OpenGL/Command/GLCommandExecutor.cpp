@@ -564,7 +564,7 @@ void ExecuteNativeGLCommand(const OpenGL::NativeCommand& cmd, GLStateManager& st
     {
         case OpenGL::NativeCommandType::ClearCache:
         {
-            stateMngr.Reset();
+            stateMngr.ClearCache();
         }
         break;
 

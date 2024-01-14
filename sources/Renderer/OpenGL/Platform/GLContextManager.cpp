@@ -115,8 +115,8 @@ std::shared_ptr<GLContext> GLContextManager::FindOrMakeAnyContext()
 
 void GLContextManager::InitRenderStates(GLStateManager& stateMngr)
 {
-    /* Initialize state manager */
-    stateMngr.Reset();
+    /* Initialize state manager by clearing its cache; This will query all current GL states managed by the GL backend */
+    stateMngr.ClearCache();
 
     /* D3D11, Vulkan, and Metal always use a fixed restart index for strip topologies */
     #ifdef LLGL_PRIMITIVE_RESTART_FIXED_INDEX

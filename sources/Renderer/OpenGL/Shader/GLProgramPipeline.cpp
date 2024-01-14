@@ -11,6 +11,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Report.h>
 #include <LLGL/Utils/ForRange.h>
 
@@ -114,6 +115,7 @@ void GLProgramPipeline::UseProgramStages(
     for_range(i, numShaders)
     {
         GLSeparableShader* separableShader = shaders[i];
+        LLGL_ASSERT_PTR(separableShader);
         if (GLbitfield stage = ToGLShaderStageBit(separableShader->GetType()))
         {
             const GLShader::Permutation permutationForShader =

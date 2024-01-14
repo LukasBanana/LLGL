@@ -39,6 +39,9 @@
 #define LLGL_VA_ARGS(...) \
     , ## __VA_ARGS__
 
+#define LLGL_ARRAY_LENGTH(ARRAY) \
+    (sizeof(ARRAY)/sizeof((ARRAY)[0]))
+
 
 #endif
 

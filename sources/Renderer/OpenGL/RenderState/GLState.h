@@ -163,12 +163,12 @@ struct GLPixelStore
     GLint alignment     = 4; // Must be 1, 2, 4, or 8
 };
 
-struct GLImageUnit
+/*struct GLImageUnit
 {
     GLuint  texture = 0;
     GLenum  format  = 0;
     GLenum  access  = 0;
-};
+};*/
 
 
 } // /namespace LLGL

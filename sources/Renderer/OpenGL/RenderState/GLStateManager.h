@@ -87,8 +87,10 @@ class GLStateManager
 
         /* ----- Boolean states ----- */
 
-        // Resets all internal states by querying the values from OpenGL.
-        void Reset();
+        static GLenum GetGLCapability(GLState state);
+
+        // Clears the cache by querying all states from OpenGL.
+        void ClearCache();
 
         void Set(GLState state, bool value);
         void Enable(GLState state);
@@ -218,6 +220,12 @@ class GLStateManager
         /* ----- Texture ----- */
 
         static GLTextureTarget GetTextureTarget(const TextureType type);
+
+        // Returns GL_TEXTURE0..GL_TEXTURE31
+        static GLenum ToGLTextureLayer(GLuint layer);
+
+        // Returns GL_TEXTURE_2D etc.
+        static GLenum ToGLTextureTarget(const GLTextureTarget target);
 
         void ActiveTexture(GLuint layer);
 

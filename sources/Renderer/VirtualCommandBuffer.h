@@ -395,6 +395,8 @@ class VirtualCommandBuffer
         // Packs the entire virtual command buffer into the specified memory chunk.
         void PackRecycle(Chunk* chunk)
         {
+            LLGL_ASSERT_PTR(chunk);
+
             /* Determine offset to move existing memory within recycled chunk */
             std::size_t offset = 0;
             for (Chunk* c = first_; c != nullptr; c = c->next)

@@ -7,6 +7,7 @@
 
 #include "../StaticAssertions.h"
 #include "RenderState/GLState.h"
+#include "RenderState/GLContextState.h"
 #include "Command/GLCommand.h"
 
 
@@ -21,6 +22,9 @@ LLGL_ASSERT_POD_TYPE( GLScissor );
 
 // GLState.h
 LLGL_ASSERT_STDLAYOUT_STRUCT( GLRenderState );
+
+// GLContextState.h
+LLGL_ASSERT_STDLAYOUT_STRUCT( GLContextState );
 
 // GLCommand.h
 LLGL_ASSERT_STDLAYOUT_STRUCT( GLCmdBufferSubData );
