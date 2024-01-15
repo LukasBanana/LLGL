@@ -86,10 +86,19 @@ CommandQueue* DbgRenderSystem::GetCommandQueue()
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
     ValidateCommandBufferDesc(commandBufferDesc);
+    CommandBufferDescriptor instanceCommandBufferDesc;
+    {
+        instanceCommandBufferDesc.flags                 = commandBufferDesc.flags;
+        instanceCommandBufferDesc.numNativeBuffers      = commandBufferDesc.numNativeBuffers;
+        instanceCommandBufferDesc.minStagingPoolSize    = commandBufferDesc.minStagingPoolSize;
+        instanceCommandBufferDesc.renderPass            = (commandBufferDesc.renderPass != nullptr
+                                                        ? &(LLGL_CAST(const DbgRenderPass*, commandBufferDesc.renderPass)->instance)
+                                                        : nullptr);
+    }
     return commandBuffers_.emplace<DbgCommandBuffer>(
         *instance_,
         commandQueue_->instance,
-        *instance_->CreateCommandBuffer(commandBufferDesc),
+        *instance_->CreateCommandBuffer(instanceCommandBufferDesc),
         profile_,
         debugger_,
         commandBufferDesc,
@@ -704,6 +713,11 @@ void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& c
     {
         if ((commandBufferDesc.flags & (CommandBufferFlags::Secondary | CommandBufferFlags::MultiSubmit)) != 0)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create immediate command buffer with Secondary or MultiSubmit flags");
+    }
+    if (commandBufferDesc.renderPass != nullptr)
+    {
+        if ((commandBufferDesc.flags & CommandBufferFlags::Secondary) == 0)
+            LLGL_DBG_WARN(WarningType::ImproperArgument, "render pass is ignored for primary command buffers at creation time");
     }
 
     /* Validate number of native buffers */

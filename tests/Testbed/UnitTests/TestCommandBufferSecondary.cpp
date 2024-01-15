@@ -110,6 +110,7 @@ DEF_TEST( CommandBufferSecondary )
         {
             cmdBufferDesc.flags             = CommandBufferFlags::Secondary;
             cmdBufferDesc.numNativeBuffers  = 1;
+            cmdBufferDesc.renderPass        = swapChain->GetRenderPass(); // Continue rendering into render pass of primary command buffer
         }
         secondaryCmdBuffers[i] = renderer->CreateCommandBuffer(cmdBufferDesc);
 

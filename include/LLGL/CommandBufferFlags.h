@@ -16,6 +16,8 @@ namespace LLGL
 {
 
 
+class RenderPass;
+
 /* ----- Enumerations ----- */
 
 /**
@@ -76,6 +78,7 @@ struct CommandBufferFlags
         \remarks If this is specified, the command buffer must be submitted using the \c Execute function of a primary command buffer.
         \remarks This cannot be used in combination with the \c ImmediateSubmit flag.
         \see CommandBuffer::Execute
+        \see CommandBufferDescriptor::renderPass
         */
         Secondary       = (1 << 0),
 
@@ -263,7 +266,7 @@ struct CommandBufferDescriptor
     the command buffer must be encoded again after it has been submitted to the command queue.
     \see CommandBufferFlags
     */
-    long            flags               = 0;
+    long                flags               = 0;
 
     /**
     \brief Specifies the number of internal native command buffers. By default 2.
@@ -274,7 +277,7 @@ struct CommandBufferDescriptor
     because it waits for a command buffer to be completed before it can be reused.
     \see CommandBuffer::Begin
     */
-    std::uint32_t   numNativeBuffers    = 2;
+    std::uint32_t       numNativeBuffers    = 2;
 
     /**
     \brief Specifies the minimum size (in bytes) for the staging pool (if supported). By default 65536 (or <tt>0xFFFF + 1</tt>).
@@ -283,7 +286,18 @@ struct CommandBufferDescriptor
     For command buffers that will make many and large buffer updates, increase this size to fine-tune performance.
     \see CommandBuffer::UpdateBuffer
     */
-    std::uint64_t   minStagingPoolSize  = (0xFFFF + 1);
+    std::uint64_t       minStagingPoolSize  = (0xFFFF + 1);
+
+    /**
+    \brief Optional render pass object for secondary command buffers. By default null.
+    \remarks Specifies a RenderPass that is used for inheritance information.
+    This allows the command buffer to continue a render pass that was started by a primary command buffer.
+    If this is null, the secondary command buffer must start and end its own render pass section,
+    unless the backend does not natively support render passes.
+    This field is ignored if \c flags does not include the CommandBufferFlags::Secondary flag.
+    \see CommandBufferFlags::Secondary
+    */
+    const RenderPass*   renderPass          = nullptr;
 };
 
 

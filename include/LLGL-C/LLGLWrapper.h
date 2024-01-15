@@ -951,9 +951,10 @@ LLGLClearValue;
 
 typedef struct LLGLCommandBufferDescriptor
 {
-    long     flags;              /* = 0 */
-    uint32_t numNativeBuffers;   /* = 2 */
-    uint64_t minStagingPoolSize; /* = (0xFFFF+1) */
+    long           flags;              /* = 0 */
+    uint32_t       numNativeBuffers;   /* = 2 */
+    uint64_t       minStagingPoolSize; /* = (0xFFFF+1) */
+    LLGLRenderPass renderPass;         /* = LLGL_NULL_OBJECT */
 }
 LLGLCommandBufferDescriptor;
 

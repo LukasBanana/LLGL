@@ -1090,6 +1090,7 @@ namespace LLGL
         public CommandBufferFlags Flags { get; set; }              = 0;
         public int                NumNativeBuffers { get; set; }   = 2;
         public long               MinStagingPoolSize { get; set; } = (0xFFFF+1);
+        public RenderPass         RenderPass { get; set; }         = null;
 
         internal NativeLLGL.CommandBufferDescriptor Native
         {
@@ -1099,6 +1100,10 @@ namespace LLGL
                 native.flags              = (int)Flags;
                 native.numNativeBuffers   = NumNativeBuffers;
                 native.minStagingPoolSize = MinStagingPoolSize;
+                if (RenderPass != null)
+                {
+                    native.renderPass = RenderPass.Native;
+                }
                 return native;
             }
         }
@@ -3439,9 +3444,10 @@ namespace LLGL
 
         public unsafe struct CommandBufferDescriptor
         {
-            public int  flags;              /* = 0 */
-            public int  numNativeBuffers;   /* = 2 */
-            public long minStagingPoolSize; /* = (0xFFFF+1) */
+            public int        flags;              /* = 0 */
+            public int        numNativeBuffers;   /* = 2 */
+            public long       minStagingPoolSize; /* = (0xFFFF+1) */
+            public RenderPass renderPass;         /* = null */
         }
 
         public unsafe struct DispatchIndirectArguments

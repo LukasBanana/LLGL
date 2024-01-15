@@ -68,8 +68,6 @@ VKCommandBuffer::VKCommandBuffer(
                               device.GetVkDevice().Get()                    }
 {
     /* Translate creation flags */
-    VkCommandBufferLevel bufferLevel = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
     {
         immediateSubmit_    = true;
@@ -79,8 +77,13 @@ VKCommandBuffer::VKCommandBuffer(
     {
         if ((desc.flags & CommandBufferFlags::Secondary) != 0)
         {
-            bufferLevel = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-            usageFlags_ |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+            bufferLevel_ = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+            if (desc.renderPass != nullptr)
+            {
+                auto renderPassVK = LLGL_CAST(const VKRenderPass*, desc.renderPass);
+                renderPass_ = renderPassVK->GetVkRenderPass();
+                usageFlags_ |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+            }
         }
         if ((desc.flags & CommandBufferFlags::MultiSubmit) == 0)
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -88,7 +91,7 @@ VKCommandBuffer::VKCommandBuffer(
 
     /* Create native command buffer objects */
     CreateVkCommandPool(queueFamilyIndices.graphicsFamily);
-    CreateVkCommandBuffers(bufferLevel);
+    CreateVkCommandBuffers();
     CreateVkRecordingFences();
 
     /* Acquire first native command buffer */
@@ -111,13 +114,27 @@ void VKCommandBuffer::Begin()
     vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
     vkResetFences(device_, 1, &recordingFence_);
 
+    /* Initialize inheritance if this is a secondary command buffer */
+    VkCommandBufferInheritanceInfo inheritanceInfo;
+    if (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY)
+    {
+        inheritanceInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+        inheritanceInfo.pNext                   = nullptr;
+        inheritanceInfo.renderPass              = renderPass_;
+        inheritanceInfo.subpass                 = 0;
+        inheritanceInfo.framebuffer             = VK_NULL_HANDLE;
+        inheritanceInfo.occlusionQueryEnable    = VK_FALSE;
+        inheritanceInfo.queryFlags              = 0;
+        inheritanceInfo.pipelineStatistics      = 0;
+    }
+
     /* Begin recording of current command buffer */
     VkCommandBufferBeginInfo beginInfo;
     {
         beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.pNext             = nullptr;
         beginInfo.flags             = usageFlags_;
-        beginInfo.pInheritanceInfo  = nullptr;
+        beginInfo.pInheritanceInfo  = (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY ? &inheritanceInfo : nullptr);
     }
     VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
@@ -1103,7 +1120,7 @@ void VKCommandBuffer::CreateVkCommandPool(std::uint32_t queueFamilyIndex)
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 }
 
-void VKCommandBuffer::CreateVkCommandBuffers(VkCommandBufferLevel level)
+void VKCommandBuffer::CreateVkCommandBuffers()
 {
     /* Allocate command buffers */
     VkCommandBufferAllocateInfo allocInfo;
@@ -1111,7 +1128,7 @@ void VKCommandBuffer::CreateVkCommandBuffers(VkCommandBufferLevel level)
         allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.pNext                 = nullptr;
         allocInfo.commandPool           = commandPool_;
-        allocInfo.level                 = level;
+        allocInfo.level                 = bufferLevel_;
         allocInfo.commandBufferCount    = numCommandBuffers_;
     }
     VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferArray_);
