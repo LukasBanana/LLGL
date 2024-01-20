@@ -353,11 +353,44 @@ struct RenderSystemDescriptor
     const void*         rendererConfig      = nullptr;
 
     /**
-    \brief Specifies the size (in bytes) of the structure where the \c rendererConfig member points to (use \c sizeof with the respective structure). By default 0.
-    \remarks If \c rendererConfig is null then this member is ignored.
+    \brief Specifies the size (in bytes) of the structure \c rendererConfig points to (use \c sizeof with the respective structure). By default 0.
+    \remarks If \c rendererConfig is null then this field is ignored.
     \see rendererConfig
     */
     std::size_t         rendererConfigSize  = 0;
+
+    /**
+    \brief Optional raw pointer to a backend specific native handle structure. If this is null (default), the render system will creates its own native handles.
+    These native handles can later be queried via RenderSystem::GetNativeHandle.
+    \remarks This can be used to pass the native device instance or render context for the respective backend if the application has created its own instance.
+    Example usage (for Direct3D12 renderer):
+    \code
+    // Create own D3D12 device object
+    ID3D12Device* myD3D12Device = D3D12CreateDevice(...);
+
+    // Initialize native handle for D3D12
+    LLGL::Direct3D12::RenderSystemNativeHandle nativeHandleD3D12;
+    nativeHandleD3D12.device = myD3D12Device;
+
+    // Load D3D12 render system
+    LLGL::RenderSystemDescriptor rendererDesc;
+    rendererDesc.moduleName         = "Direct3D12";
+    rendererDesc.nativeHandle       = &nativeHandleD3D12;
+    rendererDesc.nativeHandleSize   = sizeof(nativeHandleD3D12);
+    auto renderer = LLGL::RenderSystem::Load(rendererDesc);
+    \endcode
+    \see RenderSystem::GetNativeHandle
+    \note Currently only supported for OpenGL on Windows and Linux.
+    \todo Add support for all other backends.
+    */
+    const void*         nativeHandle        = nullptr;
+
+    /**
+    \brief Specifies the size (in bytes) of the structure \c nativeHandle points to (use \c sizeof with the respective structure). By default 0.
+    \remarks If \c nativeHandle is null then this field is ignored.
+    \see nativeHandle
+    */
+    std::size_t         nativeHandleSize    = 0;
 
     #ifdef LLGL_OS_ANDROID
 

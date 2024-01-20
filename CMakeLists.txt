@@ -80,6 +80,7 @@ set( EXAMPLE_CSHARP_PROJECTS_DIR    "${EXAMPLE_PROJECTS_ROOT_DIR}/CSharp"     )
 set( EXAMPLEBASE_PROJECT_DIR        "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase" )
 set( EXAMPLE_MEDIA_DIR              "${EXAMPLE_PROJECTS_ROOT_DIR}/Media"      )
 set( TEST_PROJECTS_DIR              "${PROJECT_SOURCE_DIR}/tests"             )
+set( BACKEND_INCLUDE_DIR            "${PROJECT_INCLUDE_DIR}/LLGL/Backend"     )
 
 
 # === Macros ===
@@ -122,6 +123,8 @@ function(find_source_files OUTPUT_LIST FILTERS)
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm")
     elseif("${FILTERS}" STREQUAL "RES")
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag")
+    elseif("${FILTERS}" STREQUAL "INC")
+        set(FILTERS "*.h;*.hpp;*.inl")
     endif()
 
     # Collect all input directories for each filter

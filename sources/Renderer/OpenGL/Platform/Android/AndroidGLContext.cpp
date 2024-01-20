@@ -7,8 +7,10 @@
 
 #include "AndroidGLContext.h"
 #include "../../../CheckedCast.h"
+#include "../../../StaticAssertions.h"
 #include "../../../../Core/CoreUtils.h"
 #include <LLGL/RendererConfiguration.h>
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 
 
 namespace LLGL
@@ -19,11 +21,14 @@ namespace LLGL
  * GLContext class
  */
 
+LLGL_ASSERT_STDLAYOUT_STRUCT( OpenGL::RenderSystemNativeHandle );
+
 std::unique_ptr<GLContext> GLContext::Create(
-    const GLPixelFormat&                pixelFormat,
-    const RendererConfigurationOpenGL&  profile,
-    Surface&                            surface,
-    GLContext*                          sharedContext)
+    const GLPixelFormat&                    pixelFormat,
+    const RendererConfigurationOpenGL&      profile,
+    Surface&                                surface,
+    GLContext*                              sharedContext,
+    const OpenGL::RenderSystemNativeHandle* customNativeHandle)
 {
     AndroidGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(AndroidGLContext*, sharedContext) : nullptr);
     return MakeUnique<AndroidGLContext>(pixelFormat, profile, surface, sharedContextEGL);
@@ -53,6 +58,17 @@ AndroidGLContext::~AndroidGLContext()
 int AndroidGLContext::GetSamples() const
 {
     return samples_;
+}
+
+bool AndroidGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleGL->context = context_;
+        return true;
+    }
+    return false;
 }
 
 

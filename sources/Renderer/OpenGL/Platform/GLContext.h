@@ -11,12 +11,20 @@
 
 #include <LLGL/Surface.h>
 #include <LLGL/RendererConfiguration.h>
+#include <LLGL/Container/ArrayView.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
 
 
 namespace LLGL
 {
+
+namespace OpenGL
+{
+
+struct RenderSystemNativeHandle;
+
+} // /namespace OpenGL
 
 
 // GL pixel format structure: samples and pixel bit size.
@@ -42,6 +50,9 @@ class GLContext
 
         // Returns the number of samples for this GL context. Must be in range [1, 64].
         virtual int GetSamples() const = 0;
+
+        // Returns the native handle of the GL context.
+        virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const = 0;
 
     public:
 
@@ -76,7 +87,8 @@ class GLContext
             const GLPixelFormat&                pixelFormat,
             const RendererConfigurationOpenGL&  profile,
             Surface&                            surface,
-            GLContext*                          sharedContext
+            GLContext*                          sharedContext       = nullptr,
+            const ArrayView<char>&              customNativeHandle  = {}
         );
 
         // Sets the current GL context. This only stores a reference to this context (GetCurrent) and its global index (GetGlobalIndex).

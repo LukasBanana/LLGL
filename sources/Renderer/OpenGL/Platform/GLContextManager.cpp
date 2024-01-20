@@ -9,19 +9,29 @@
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
+#include <cstring>
 
 
 namespace LLGL
 {
 
 
-GLContextManager::GLContextManager(const RendererConfigurationOpenGL& profile)
+GLContextManager::GLContextManager(
+    const RendererConfigurationOpenGL&  profile,
+    const void*                         customNativeHandle,
+    std::size_t                         customNativeHandleSize)
 {
     profile_.contextProfile = profile.contextProfile;
     profile_.majorVersion   = profile.majorVersion;
     profile_.minorVersion   = profile.minorVersion;
+    if (customNativeHandle != nullptr && customNativeHandleSize > 0)
+    {
+        customNativeHandle_.resize(customNativeHandleSize, UninitializeTag{});
+        std::memcpy(customNativeHandle_.get(), customNativeHandle, customNativeHandleSize);
+    }
 }
 
 std::shared_ptr<GLContext> GLContextManager::AllocContext(const GLPixelFormat* pixelFormat, Surface* surface)
@@ -74,7 +84,7 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
     {
         formatWithContext.pixelFormat   = pixelFormat;
         formatWithContext.surface       = std::move(placeholderSurface);
-        formatWithContext.context       = GLContext::Create(pixelFormat, profile_, *surface, sharedContext);
+        formatWithContext.context       = GLContext::Create(pixelFormat, profile_, *surface, sharedContext, customNativeHandle_);
     }
     pixelFormats_.emplace_back(std::move(formatWithContext));
 

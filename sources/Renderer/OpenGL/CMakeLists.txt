@@ -42,6 +42,7 @@ find_source_files(FilesRendererGLShader         CXX ${PROJECT_SOURCE_DIR}/Shader
 find_source_files(FilesRendererGLTexture        CXX ${PROJECT_SOURCE_DIR}/Texture)
 find_source_files(FilesRendererGLCoreProfile    CXX ${PROJECT_SOURCE_DIR}/GLCoreProfile)
 find_source_files(FilesRendererGLESProfile      CXX ${PROJECT_SOURCE_DIR}/GLESProfile)
+find_source_files(FilesIncludeGL                INC ${BACKEND_INCLUDE_DIR}/OpenGL)
 
 # Remove selected files if GL2X is disabled
 if(NOT LLGL_GL_ENABLE_OPENGL2X)
@@ -69,17 +70,22 @@ list(
 
 if(WIN32)
     find_source_files(FilesRendererGLPlatform       CXX ${PROJECT_SOURCE_DIR}/Platform/Win32)
+    find_source_files(FilesIncludeGLPlatform        INC ${BACKEND_INCLUDE_DIR}/OpenGL/Win32)
 elseif(APPLE)
     if(LLGL_MOBILE_PLATFORM)
         find_source_files(FilesRendererGLPlatform   OBJC ${PROJECT_SOURCE_DIR}/Platform/IOS)
+        find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/IOS)
     else()
         find_source_files(FilesRendererGLPlatform   OBJC ${PROJECT_SOURCE_DIR}/Platform/MacOS)
+        find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/MacOS)
     endif()
 elseif(UNIX)
     if(LLGL_ANDROID_PLATFORM)
         find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Android)
+        find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Android)
     else()
         find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Linux)
+        find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Linux)
     endif()
 endif()
 
@@ -95,6 +101,8 @@ set(
     ${FilesRendererGLShader}
     ${FilesRendererGLTexture}
     ${FilesRendererGLCoreProfile}
+    ${FilesIncludeGL}
+    ${FilesIncludeGLPlatform}
 )
 
 set(
@@ -109,6 +117,8 @@ set(
     ${FilesRendererGLES3Shader}
     ${FilesRendererGLTexture}
     ${FilesRendererGLESProfile}
+    ${FilesIncludeGL}
+    ${FilesIncludeGLPlatform}
 )
 
 
@@ -124,6 +134,7 @@ source_group("OpenGL\\Shader"           FILES ${FilesRendererGLShader})
 source_group("OpenGL\\Texture"          FILES ${FilesRendererGLTexture})
 source_group("OpenGL\\GLCoreProfile"    FILES ${FilesRendererGLCoreProfile})
 source_group("OpenGL\\GLESProfile"      FILES ${FilesRendererGLESProfile})
+source_group("Include\\Platform"        FILES ${FilesIncludeGL} ${FilesIncludeGLPlatform})
 
 
 # === Include directories ===

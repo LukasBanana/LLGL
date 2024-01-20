@@ -805,6 +805,7 @@ LLGL_STATIC_ASSERT_SIZE(CommandBufferDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, flags);
 LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, numNativeBuffers);
 LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, minStagingPoolSize);
+LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, renderPass);
 
 LLGL_STATIC_ASSERT_SIZE(FormatAttributes);
 LLGL_STATIC_ASSERT_OFFSET(FormatAttributes, bitSize);

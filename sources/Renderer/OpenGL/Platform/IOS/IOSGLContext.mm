@@ -7,9 +7,11 @@
 
 #include "IOSGLContext.h"
 #include "../../../CheckedCast.h"
+#include "../../../StaticAssertions.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Exception.h"
 #include <LLGL/RendererConfiguration.h>
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 
 
 namespace LLGL
@@ -20,11 +22,14 @@ namespace LLGL
  * GLContext class
  */
 
+LLGL_ASSERT_STDLAYOUT_STRUCT( OpenGL::RenderSystemNativeHandle );
+
 std::unique_ptr<GLContext> GLContext::Create(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     Surface&                            /*surface*/,
-    GLContext*                          sharedContext)
+    GLContext*                          sharedContext,
+    const ArrayView<char>&              customNativeHandle)
 {
     IOSGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(IOSGLContext*, sharedContext) : nullptr);
     return MakeUnique<IOSGLContext>(pixelFormat, profile, sharedContextEGL);
@@ -53,6 +58,17 @@ IOSGLContext::~IOSGLContext()
 int IOSGLContext::GetSamples() const
 {
     return pixelFormat_.samples;
+}
+
+bool IOSGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleGL->context = context_;
+        return true;
+    }
+    return false;
 }
 
 

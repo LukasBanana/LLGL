@@ -10,7 +10,6 @@
 
 
 #import <Cocoa/Cocoa.h>
-#import <OpenGL/OpenGL.h>
 
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
@@ -36,6 +35,8 @@ class MacOSGLContext : public GLContext
         ~MacOSGLContext();
 
         int GetSamples() const override;
+
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
 
     public:
 

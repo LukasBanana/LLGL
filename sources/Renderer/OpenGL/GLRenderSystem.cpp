@@ -52,8 +52,8 @@ static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescri
 }
 
 GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    contextMngr_  { GetGLProfileFromDesc(renderSystemDesc)                           },
-    debugContext_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0) }
+    contextMngr_  { GetGLProfileFromDesc(renderSystemDesc), renderSystemDesc.nativeHandle, renderSystemDesc.nativeHandleSize },
+    debugContext_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0)                                         }
 {
 }
 
@@ -543,7 +543,10 @@ void GLRenderSystem::Release(Fence& fence)
 
 bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy
+    if (nativeHandle != nullptr && nativeHandleSize != 0)
+        return contextMngr_.AllocContext()->GetNativeHandle(nativeHandle, nativeHandleSize);
+    else
+        return false;
 }
 
 

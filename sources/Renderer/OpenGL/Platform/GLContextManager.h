@@ -11,11 +11,20 @@
 
 #include "GLContext.h"
 #include <LLGL/RendererConfiguration.h>
+#include <LLGL/Container/DynamicArray.h>
 #include <vector>
+#include <memory>
 
 
 namespace LLGL
 {
+
+namespace OpenGL
+{
+
+struct RenderSystemNativeHandle;
+
+} // /namespace OpenGL
 
 
 class GLStateManager;
@@ -30,7 +39,11 @@ class GLContextManager
         GLContextManager& operator = (const GLContextManager&) = delete;
 
         // Initializes the context manager and creates the primary GL context.
-        GLContextManager(const RendererConfigurationOpenGL& profile);
+        GLContextManager(
+            const RendererConfigurationOpenGL&  profile,
+            const void*                         customNativeHandle      = nullptr,
+            std::size_t                         customNativeHandleSize  = 0
+        );
 
     public:
 
@@ -75,6 +88,7 @@ class GLContextManager
 
         RendererConfigurationOpenGL             profile_;
         std::vector<GLPixelFormatWithContext>   pixelFormats_;
+        DynamicByteArray                        customNativeHandle_;
 
 };
 

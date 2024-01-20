@@ -27,14 +27,17 @@ class LinuxGLContext : public GLContext
     public:
 
         LinuxGLContext(
-            const GLPixelFormat&                pixelFormat,
-            const RendererConfigurationOpenGL&  profile,
-            Surface&                            surface,
-            LinuxGLContext*                     sharedContext
+            const GLPixelFormat&                    pixelFormat,
+            const RendererConfigurationOpenGL&      profile,
+            Surface&                                surface,
+            LinuxGLContext*                         sharedContext,
+            const OpenGL::RenderSystemNativeHandle* customNativeHandle
         );
         ~LinuxGLContext();
 
         int GetSamples() const override;
+
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
 
     public:
 
@@ -50,22 +53,30 @@ class LinuxGLContext : public GLContext
 
     private:
 
-        void CreateContext(
+        void CreateGLXContext(
             const GLPixelFormat&                pixelFormat,
             const RendererConfigurationOpenGL&  profile,
             const NativeHandle&                 nativeHandle,
             LinuxGLContext*                     sharedContext
         );
-        void DeleteContext();
+        
+        void DeleteGLXContext();
 
-        GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
-        GLXContext CreateContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
+        GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
+        GLXContext CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
+
+        void CreateProxyContext(
+            const GLPixelFormat&                    pixelFormat,
+            const NativeHandle&                     nativeWindowHandle,
+            const OpenGL::RenderSystemNativeHandle& nativeContextHandle
+        );
 
     private:
 
         ::Display*      display_    = nullptr;
         ::GLXContext    glc_        = nullptr;
         int             samples_    = 1;
+        bool            isProxyGLC_ = false;
 
 };
 

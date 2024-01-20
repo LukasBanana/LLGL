@@ -19,6 +19,11 @@ namespace Direct3D11
 {
 
 
+/**
+\brief Native handle structure for the Direct3D 11 render system.
+\see RenderSystem::GetNativeHandle
+\see RenderSystemDescriptor::nativeHandle
+*/
 struct RenderSystemNativeHandle
 {
     ID3D11Device* device;

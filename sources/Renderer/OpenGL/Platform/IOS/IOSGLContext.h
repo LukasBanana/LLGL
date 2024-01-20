@@ -34,6 +34,8 @@ class IOSGLContext : public GLContext
 
         int GetSamples() const override;
 
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const override;
+
     public:
 
         // Returns the native EAGL context.

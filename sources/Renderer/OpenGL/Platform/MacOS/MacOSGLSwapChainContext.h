@@ -10,7 +10,6 @@
 
 
 #import <Cocoa/Cocoa.h>
-#import <OpenGL/OpenGL.h>
 
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"

@@ -20,6 +20,11 @@ namespace Vulkan
 {
 
 
+/**
+\brief Native handle structure for the Vulkan render system.
+\see RenderSystem::GetNativeHandle
+\see RenderSystemDescriptor::nativeHandle
+*/
 struct RenderSystemNativeHandle
 {
     VkInstance          instance;

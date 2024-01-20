@@ -3807,6 +3807,8 @@ namespace LLGL
             public RenderingDebugger debugger;           /* = null */
             public void*             rendererConfig;     /* = null */
             public IntPtr            rendererConfigSize; /* = 0 */
+            public void*             nativeHandle;       /* = null */
+            public IntPtr            nativeHandleSize;   /* = 0 */
         }
 
         public unsafe struct RenderingCapabilities

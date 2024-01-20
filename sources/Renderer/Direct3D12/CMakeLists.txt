@@ -19,6 +19,7 @@ find_source_files(FilesRendererD3D12Command     CXX ${PROJECT_SOURCE_DIR}/Comman
 find_source_files(FilesRendererD3D12RenderState CXX ${PROJECT_SOURCE_DIR}/RenderState)
 find_source_files(FilesRendererD3D12Shader      CXX ${PROJECT_SOURCE_DIR}/Shader)
 find_source_files(FilesRendererD3D12Texture     CXX ${PROJECT_SOURCE_DIR}/Texture)
+find_source_files(FilesIncludeD3D12             INC ${BACKEND_INCLUDE_DIR}/Direct3D12)
 
 set(FilesRendererD3D12ShaderBuiltin ${PROJECT_SOURCE_DIR}/Shader/Builtin/D3D12Builtin.h)
 
@@ -31,6 +32,7 @@ set(
     ${FilesRendererD3D12ShaderBuiltin}
     ${FilesRendererD3D12RenderState}
     ${FilesRendererD3D12Texture}
+    ${FilesIncludeD3D12}
 )
 
 
@@ -43,6 +45,7 @@ source_group("Direct3D12\\RenderState"      FILES ${FilesRendererD3D12RenderStat
 source_group("Direct3D12\\Shader"           FILES ${FilesRendererD3D12Shader})
 source_group("Direct3D12\\Shader\\Builtin"  FILES ${FilesRendererD3D12ShaderBuiltin})
 source_group("Direct3D12\\Texture"          FILES ${FilesRendererD3D12Texture})
+source_group("Include\\Platform"            FILES ${FilesIncludeD3D12})
 
 
 # === Projects ===

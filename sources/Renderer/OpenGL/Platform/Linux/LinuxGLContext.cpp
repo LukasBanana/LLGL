@@ -10,7 +10,11 @@
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../GLCore.h"
 #include "../../../CheckedCast.h"
+#include "../../../StaticAssertions.h"
+#include "../../../RenderSystemUtils.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Assertion.h"
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
 
@@ -34,14 +38,20 @@ typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(::Display*, GLXFBConfig, GLX
  * GLContext class
  */
 
+LLGL_ASSERT_STDLAYOUT_STRUCT( OpenGL::RenderSystemNativeHandle );
+
 std::unique_ptr<GLContext> GLContext::Create(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
-    GLContext*                          sharedContext)
+    GLContext*                          sharedContext,
+    const ArrayView<char>&              customNativeHandle)
 {
     LinuxGLContext* sharedContextGLX = (sharedContext != nullptr ? LLGL_CAST(LinuxGLContext*, sharedContext) : nullptr);
-    return MakeUnique<LinuxGLContext>(pixelFormat, profile, surface, sharedContextGLX);
+    return MakeUnique<LinuxGLContext>(
+        pixelFormat, profile, surface, sharedContextGLX,
+        GetRendererNativeHandle<OpenGL::RenderSystemNativeHandle>(customNativeHandle)
+    );
 }
 
 
@@ -50,26 +60,45 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 LinuxGLContext::LinuxGLContext(
-    const GLPixelFormat&                pixelFormat,
-    const RendererConfigurationOpenGL&  profile,
-    Surface&                            surface,
-    LinuxGLContext*                     sharedContext)
+    const GLPixelFormat&                    pixelFormat,
+    const RendererConfigurationOpenGL&      profile,
+    Surface&                                surface,
+    LinuxGLContext*                         sharedContext,
+    const OpenGL::RenderSystemNativeHandle* customNativeHandle)
 :
     samples_ { pixelFormat.samples }
 {
-    NativeHandle nativeHandle = {};
-    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-    CreateContext(pixelFormat, profile, nativeHandle, sharedContext);
+    NativeHandle nativeWindowHandle = {};
+    surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
+    if (customNativeHandle != nullptr)
+    {
+        isProxyGLC_ = true;
+        CreateProxyContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
+    }
+    else
+        CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
 }
 
 LinuxGLContext::~LinuxGLContext()
 {
-    DeleteContext();
+    if (!isProxyGLC_)
+        DeleteGLXContext();
 }
 
 int LinuxGLContext::GetSamples() const
 {
     return samples_;
+}
+
+bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleGL->context = glc_;
+        return true;
+    }
+    return false;
 }
 
 
@@ -86,14 +115,15 @@ bool LinuxGLContext::SetSwapInterval(int interval)
         return false;
 }
 
-void LinuxGLContext::CreateContext(
+void LinuxGLContext::CreateGLXContext(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     const NativeHandle&                 nativeHandle,
     LinuxGLContext*                     sharedContext)
 {
-    if (!nativeHandle.display || !nativeHandle.window || !nativeHandle.visual)
-        throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
+    LLGL_ASSERT_PTR(nativeHandle.display);
+    LLGL_ASSERT_PTR(nativeHandle.window);
+    LLGL_ASSERT_PTR(nativeHandle.visual);
 
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
 
@@ -101,7 +131,7 @@ void LinuxGLContext::CreateContext(
     display_ = nativeHandle.display;
 
     /* Create intermediate GL context OpenGL context with X11 lib */
-    GLXContext intermediateGlc = CreateContextCompatibilityProfile(nativeHandle.visual, nullptr);
+    GLXContext intermediateGlc = CreateGLXContextCompatibilityProfile(nativeHandle.visual, nullptr);
 
     if (glXMakeCurrent(display_, nativeHandle.window, intermediateGlc) != True)
         Log::Errorf("glXMakeCurrent failed on GLX compatibility profile\n");
@@ -109,7 +139,7 @@ void LinuxGLContext::CreateContext(
     if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        glc_ = CreateContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
+        glc_ = CreateGLXContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
     }
 
     if (glc_)
@@ -136,13 +166,13 @@ void LinuxGLContext::CreateContext(
     }
 }
 
-void LinuxGLContext::DeleteContext()
+void LinuxGLContext::DeleteGLXContext()
 {
     glXMakeCurrent(display_, None, nullptr);
     glXDestroyContext(display_, glc_);
 }
 
-GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
+GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
 {
     /* Query supported GL versions */
     if (major == 0 && minor == 0)
@@ -214,10 +244,30 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
     return nullptr;
 }
 
-GLXContext LinuxGLContext::CreateContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared)
+GLXContext LinuxGLContext::CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared)
 {
     /* Create compatibility profile */
     return glXCreateContext(display_, visual, glcShared, GL_TRUE);
+}
+
+void LinuxGLContext::CreateProxyContext(
+    const GLPixelFormat&                    pixelFormat,
+    const NativeHandle&                     nativeWindowHandle,
+    const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
+{
+    LLGL_ASSERT_PTR(nativeWindowHandle.display);
+    LLGL_ASSERT_PTR(nativeContextHandle.context);
+
+    /* Get X11 display, window, and visual information */
+    display_    = nativeWindowHandle.display;
+    glc_        = nativeContextHandle.context;
+
+    if (glXMakeCurrent(display_, nativeWindowHandle.window, glc_) != True)
+        Log::Errorf("glXMakeCurrent failed on custom GLX context\n");
+
+    /* Deduce color and depth-stencil formats */
+    SetDefaultColorFormat();
+    DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
 }
 
 

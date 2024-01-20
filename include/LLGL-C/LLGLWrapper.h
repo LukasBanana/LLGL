@@ -1410,6 +1410,8 @@ typedef struct LLGLRenderSystemDescriptor
     LLGLRenderingDebugger debugger;           /* = LLGL_NULL_OBJECT */
     const void*           rendererConfig;     /* = NULL */
     size_t                rendererConfigSize; /* = 0 */
+    const void*           nativeHandle;       /* = NULL */
+    size_t                nativeHandleSize;   /* = 0 */
 #if defined LLGL_OS_ANDROID
     android_app*          androidApp;
 #endif /* defined LLGL_OS_ANDROID */

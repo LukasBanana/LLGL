@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Container/ArrayView.h>
 #include "../Core/Exception.h"
 
 
@@ -17,7 +18,7 @@ namespace LLGL
 {
 
 
-// Validates and the returns the renderer configuration structure from the render system descriptor.
+// Validates and returns the renderer configuration structure from the render system descriptor.
 template <typename T>
 const T* GetRendererConfiguration(const RenderSystemDescriptor& renderSystemDesc)
 {
@@ -27,6 +28,20 @@ const T* GetRendererConfiguration(const RenderSystemDescriptor& renderSystemDesc
             return reinterpret_cast<const T*>(renderSystemDesc.rendererConfig);
         else
             LLGL_TRAP("invalid renderer configuration structure");
+    }
+    return nullptr;
+}
+
+// Validates and returns the renderer native handle structure from the render system descriptor.
+template <typename T>
+const T* GetRendererNativeHandle(const ArrayView<char>& nativeHandle)
+{
+    if (!nativeHandle.empty())
+    {
+        if (nativeHandle.size() == sizeof(T))
+            return reinterpret_cast<const T*>(nativeHandle.data());
+        else
+            LLGL_TRAP("invalid renderer native handle structure");
     }
     return nullptr;
 }

@@ -34,6 +34,7 @@ struct DisplayMode
     std::uint32_t   refreshRate = 0;
 };
 
+//! \deprecated Since 0.04b; Use LLGL::DisplayMode instead!
 LLGL_DEPRECATED("LLGL::DisplayModeDescriptor is deprecated since 0.04b; Use LLGL::DisplayMode instead!", "DisplayMode") 
 typedef DisplayMode DisplayModeDescriptor;
 

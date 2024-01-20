@@ -9,8 +9,10 @@
 #include "../../../../Platform/MacOS/MacOSWindow.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../CheckedCast.h"
+#include "../../../StaticAssertions.h"
 #include "../../../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
 
 
@@ -18,15 +20,27 @@ namespace LLGL
 {
 
 
+/*
+ * GLContext class
+ */
+
+LLGL_ASSERT_STDLAYOUT_STRUCT( OpenGL::RenderSystemNativeHandle );
+
 std::unique_ptr<GLContext> GLContext::Create(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
-    GLContext*                          sharedContext)
+    GLContext*                          sharedContext,
+    const ArrayView<char>&              customNativeHandle)
 {
     MacOSGLContext* sharedContextGLNS = (sharedContext != nullptr ? LLGL_CAST(MacOSGLContext*, sharedContext) : nullptr);
     return MakeUnique<MacOSGLContext>(pixelFormat, profile, surface, sharedContextGLNS);
 }
+
+
+/*
+ * MacOSGLContext class
+ */
 
 MacOSGLContext::MacOSGLContext(
     const GLPixelFormat&                pixelFormat,
@@ -48,6 +62,17 @@ MacOSGLContext::~MacOSGLContext()
 int MacOSGLContext::GetSamples() const
 {
     return samples_;
+}
+
+bool MacOSGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
+    {
+        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleGL->context = ctx_;
+        return true;
+    }
+    return false;
 }
 
 static NSOpenGLContext* g_currentNSGLContext;

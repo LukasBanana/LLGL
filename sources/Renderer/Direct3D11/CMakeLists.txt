@@ -34,6 +34,7 @@ find_source_files(FilesRendererD3D11Buffer      CXX ${PROJECT_SOURCE_DIR}/Buffer
 find_source_files(FilesRendererD3D11RenderState CXX ${PROJECT_SOURCE_DIR}/RenderState)
 find_source_files(FilesRendererD3D11Shader      CXX ${PROJECT_SOURCE_DIR}/Shader)
 find_source_files(FilesRendererD3D11Texture     CXX ${PROJECT_SOURCE_DIR}/Texture)
+find_source_files(FilesIncludeD3D11             INC ${BACKEND_INCLUDE_DIR}/Direct3D11)
 
 set(FilesRendererD3D11ShaderBuiltin ${PROJECT_SOURCE_DIR}/Shader/Builtin/D3D11Builtin.h)
 
@@ -45,6 +46,7 @@ set(
     ${FilesRendererD3D11ShaderBuiltin}
     ${FilesRendererD3D11RenderState}
     ${FilesRendererD3D11Texture}
+    ${FilesIncludeD3D11}
 )
 
 
@@ -56,6 +58,7 @@ source_group("Direct3D11\\RenderState"      FILES ${FilesRendererD3D11RenderStat
 source_group("Direct3D11\\Shader"           FILES ${FilesRendererD3D11Shader})
 source_group("Direct3D11\\Shader\\Builtin"  FILES ${FilesRendererD3D11ShaderBuiltin})
 source_group("Direct3D11\\Texture"          FILES ${FilesRendererD3D11Texture})
+source_group("Include\\Platform"            FILES ${FilesIncludeD3D11})
 
 
 # === Projects ===

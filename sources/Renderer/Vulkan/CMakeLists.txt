@@ -36,6 +36,7 @@ find_source_files(FilesRendererVKMemory         CXX ${PROJECT_SOURCE_DIR}/Memory
 find_source_files(FilesRendererVKRenderState    CXX ${PROJECT_SOURCE_DIR}/RenderState)
 find_source_files(FilesRendererVKShader         CXX ${PROJECT_SOURCE_DIR}/Shader)
 find_source_files(FilesRendererVKTexture        CXX ${PROJECT_SOURCE_DIR}/Texture)
+find_source_files(FilesIncludeVK                INC ${BACKEND_INCLUDE_DIR}/Vulkan)
 
 set(
     FilesVK
@@ -46,6 +47,7 @@ set(
     ${FilesRendererVKRenderState}
     ${FilesRendererVKShader}
     ${FilesRendererVKTexture}
+    ${FilesIncludeVK}
 )
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
@@ -64,6 +66,7 @@ source_group("Vulkan\\Memory"       FILES ${FilesRendererVKMemory})
 source_group("Vulkan\\RenderState"  FILES ${FilesRendererVKRenderState})
 source_group("Vulkan\\Shader"       FILES ${FilesRendererVKShader})
 source_group("Vulkan\\Texture"      FILES ${FilesRendererVKTexture})
+source_group("Include\\Platform"    FILES ${FilesIncludeVK})
 
 
 # === Include directories ===
