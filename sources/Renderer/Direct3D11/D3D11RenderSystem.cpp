@@ -13,6 +13,7 @@
 #include "../DXCommon/DXCore.h"
 #include "../CheckedCast.h"
 #include "../TextureUtils.h"
+#include "../RenderSystemUtils.h"
 #include "../../Core/Vendor.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
@@ -55,14 +56,23 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
 {
     const bool debugDevice = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0);
 
-    /* Create DXGU factory, query video adapters, and create D3D11 device */
-    CreateFactory();
+    if (auto* customNativeHandle = GetRendererNativeHandle<Direct3D11::RenderSystemNativeHandle>(renderSystemDesc))
+    {
+        /* Query all DXGI interfaces from native handle */
+        HRESULT hr = QueryDXInterfacesFromNativeHandle(*customNativeHandle);
+        DXThrowIfFailed(hr, "failed to query D3D11 device from custom native handle");
+    }
+    else
+    {
+        /* Create DXGU factory, query video adapters, and create D3D11 device */
+        CreateFactory();
 
-    ComPtr<IDXGIAdapter> preferredAdatper;
-    QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
+        ComPtr<IDXGIAdapter> preferredAdatper;
+        QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
 
-    HRESULT hr = CreateDevice(preferredAdatper.Get(), debugDevice);
-    DXThrowIfFailed(hr, "failed to create D3D11 device");
+        HRESULT hr = CreateDevice(preferredAdatper.Get(), debugDevice);
+        DXThrowIfFailed(hr, "failed to create D3D11 device");
+    }
 
     /* Initialize states and renderer information */
     CreateStateManagerAndCommandQueue();
@@ -487,6 +497,8 @@ bool D3D11RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
         auto* nativeHandleD3D = reinterpret_cast<Direct3D11::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleD3D->device = device_.Get();
         nativeHandleD3D->device->AddRef();
+        nativeHandleD3D->deviceContext = context_.Get();
+        nativeHandleD3D->deviceContext->AddRef();
         return true;
     }
     return false;
@@ -578,22 +590,7 @@ HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice)
     if (FAILED(hr))
         return hr;
 
-    /* Try to get an extended D3D11 device */
-    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-    hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
-    if (FAILED(hr))
-    #endif
-    {
-        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
-        hr = device_->QueryInterface(IID_PPV_ARGS(&device2_));
-        if (FAILED(hr))
-        #endif
-        {
-            #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-            device_->QueryInterface(IID_PPV_ARGS(&device1_));
-            #endif
-        }
-    }
+    QueryDXDeviceVersion();
 
     return S_OK;
 }
@@ -621,6 +618,65 @@ HRESULT D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const Ar
     }
 
     return hr;
+}
+
+HRESULT D3D11RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D11::RenderSystemNativeHandle& nativeHandle)
+{
+    LLGL_ASSERT_PTR(nativeHandle.device);
+    LLGL_ASSERT_PTR(nativeHandle.deviceContext);
+
+    /* Adopt custom native handles */
+    device_         = nativeHandle.device;
+    context_        = nativeHandle.deviceContext;
+    featureLevel_   = device_->GetFeatureLevel();
+
+    QueryDXDeviceVersion();
+
+    /* Query factory and video adapter information */
+    ComPtr<IDXGIDevice> dxgiDevice;
+    HRESULT hr = device_->QueryInterface(IID_PPV_ARGS(&dxgiDevice));
+    DXThrowIfFailed(hr, "failed to query interface IDXGIDevice from custom native handle");
+
+    ComPtr<IDXGIAdapter> dxgiAdapter;
+    hr = dxgiDevice->GetAdapter(&dxgiAdapter);
+    DXThrowIfFailed(hr, "failed to get adapter from DXGI device");
+
+    ComPtr<IDXGIFactory> dxgiFactory;
+    hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
+    DXThrowIfFailed(hr, "failed to get parent factory from DXGI adapter");
+
+    hr = dxgiFactory->QueryInterface(IID_PPV_ARGS(&factory_));
+    DXThrowIfFailed(hr, "failed to query IDXGIFactory4 interface from DXGI factory");
+
+    DXGI_ADAPTER_DESC dxgiAdapterDesc;
+    hr = dxgiAdapter->GetDesc(&dxgiAdapterDesc);
+    DXThrowIfFailed(hr, "failed to get descriptor from DXGI adapter");
+
+    DXConvertVideoAdapterInfo(dxgiAdapter.Get(), dxgiAdapterDesc, videoAdatperInfo_);
+
+    return S_OK;
+}
+
+void D3D11RenderSystem::QueryDXDeviceVersion()
+{
+    LLGL_ASSERT_PTR(device_);
+
+    /* Try to get an extended D3D11 device */
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    HRESULT hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
+    if (FAILED(hr))
+    #endif
+    {
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+        hr = device_->QueryInterface(IID_PPV_ARGS(&device2_));
+        if (FAILED(hr))
+        #endif
+        {
+            #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+            device_->QueryInterface(IID_PPV_ARGS(&device1_));
+            #endif
+        }
+    }
 }
 
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()

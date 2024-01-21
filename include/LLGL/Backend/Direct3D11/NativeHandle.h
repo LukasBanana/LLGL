@@ -26,11 +26,20 @@ namespace Direct3D11
 */
 struct RenderSystemNativeHandle
 {
-    ID3D11Device* device;
+    //! COM pointer to the native Direct3D device.
+    ID3D11Device*           device;
+
+    //! COM pointer to the native Direct3D device context.
+    ID3D11DeviceContext*    deviceContext;
 };
 
 struct CommandBufferNativeHandle
 {
+    /**
+    \brief COM pointer to the native Direct3D device context.
+    \remarks This is either the main device context from the RenderSystem or a deferred device context for a specific command buffer.
+    \see RenderSystemNativeHandle::deviceContext
+    */
     ID3D11DeviceContext* deviceContext;
 };
 

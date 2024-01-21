@@ -45,6 +45,13 @@
 namespace LLGL
 {
 
+namespace Direct3D11
+{
+
+struct RenderSystemNativeHandle;
+
+} // /namespace Direct3D11
+
 
 class D3D11RenderSystem final : public RenderSystem
 {
@@ -84,6 +91,8 @@ class D3D11RenderSystem final : public RenderSystem
         void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
         HRESULT CreateDevice(IDXGIAdapter* adapter, bool debugDevice = false);
         HRESULT CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, UINT flags);
+        HRESULT QueryDXInterfacesFromNativeHandle(const Direct3D11::RenderSystemNativeHandle& nativeHandle);
+        void QueryDXDeviceVersion();
         void CreateStateManagerAndCommandQueue();
 
         void QueryRendererInfo();
