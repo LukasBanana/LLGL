@@ -526,6 +526,14 @@ static std::vector<VideoAdapterOutputInfo> GetDXGIAdapterOutputInfos(IDXGIAdapte
     return outputInfos;
 }
 
+void DXConvertVideoAdapterInfo(IDXGIAdapter* adapter, const DXGI_ADAPTER_DESC& inDesc, VideoAdapterInfo& outInfo)
+{
+    outInfo.name        = inDesc.Description;
+    outInfo.vendor      = GetVendorByID(inDesc.VendorId);
+    outInfo.videoMemory = static_cast<uint64_t>(inDesc.DedicatedVideoMemory);
+    outInfo.outputs     = GetDXGIAdapterOutputInfos(adapter);
+}
+
 static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags, VideoAdapterInfo& outInfo, IDXGIAdapter** outPreferredAdatper)
 {
     /* Enumerate over all video adapters */
@@ -540,10 +548,7 @@ static bool GetDXGIAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags
         const bool isPreferredAdapter = MatchPreferredVendor(vendor, preferredAdapterFlags);
         if (preferredAdapterFlags == 0 || isPreferredAdapter)
         {
-            outInfo.name        = desc.Description;
-            outInfo.vendor      = vendor;
-            outInfo.videoMemory = static_cast<uint64_t>(desc.DedicatedVideoMemory);
-            outInfo.outputs     = GetDXGIAdapterOutputInfos(adapter.Get());
+            DXConvertVideoAdapterInfo(adapter.Get(), desc, outInfo);
             if (isPreferredAdapter && outPreferredAdatper != nullptr)
                 *outPreferredAdatper = adapter.Detach();
             return true;

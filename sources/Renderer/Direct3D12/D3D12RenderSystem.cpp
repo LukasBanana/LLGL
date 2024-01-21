@@ -11,11 +11,13 @@
 #include "../DXCommon/DXCore.h"
 #include "../TextureUtils.h"
 #include "../CheckedCast.h"
+#include "../RenderSystemUtils.h"
 #include "../../Core/Vendor.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Backend/Direct3D12/NativeHandle.h>
 #include <limits.h>
 #include <codecvt>
 
@@ -41,14 +43,23 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     if (debugDevice)
         EnableDebugLayer();
 
-    /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
-    CreateFactory(debugDevice);
+    if (auto* customNativeHandle = GetRendererNativeHandle<Direct3D12::RenderSystemNativeHandle>(renderSystemDesc))
+    {
+        /* Query all DXGI interfaces from native handle */
+        HRESULT hr = QueryDXInterfacesFromNativeHandle(*customNativeHandle);
+        DXThrowIfFailed(hr, "failed to query D3D12 device from custom native handle");
+    }
+    else
+    {
+        /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
+        CreateFactory(debugDevice);
 
-    ComPtr<IDXGIAdapter> preferredAdatper;
-    QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
+        ComPtr<IDXGIAdapter> preferredAdatper;
+        QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
 
-    HRESULT hr = CreateDevice(preferredAdatper.Get());
-    DXThrowIfFailed(hr, "failed to create D3D12 device");
+        HRESULT hr = CreateDevice(preferredAdatper.Get());
+        DXThrowIfFailed(hr, "failed to create D3D12 device");
+    }
 
     /* Create command queue interface */
     commandQueue_   = MakeUnique<D3D12CommandQueue>(device_);
@@ -423,6 +434,8 @@ bool D3D12RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D12::RenderSystemNativeHandle))
     {
         auto* nativeHandleD3D = reinterpret_cast<Direct3D12::RenderSystemNativeHandle*>(nativeHandle);
+        nativeHandleD3D->factory = factory_.Get();
+        nativeHandleD3D->factory->AddRef();
         nativeHandleD3D->device = device_.GetNative();
         nativeHandleD3D->device->AddRef();
         return true;
@@ -510,6 +523,27 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter)
     ComPtr<IDXGIAdapter> adapter;
     factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
     return device_.CreateDXDevice(featureLevels, adapter.Get());
+}
+
+HRESULT D3D12RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle)
+{
+    LLGL_ASSERT_PTR(nativeHandle.factory);
+    LLGL_ASSERT_PTR(nativeHandle.device);
+
+    factory_ = nativeHandle.factory;
+    const LUID adapterLUID = nativeHandle.device->GetAdapterLuid();
+
+    ComPtr<IDXGIAdapter> dxgiAdapter;
+    HRESULT hr = factory_->EnumAdapterByLuid(adapterLUID, IID_PPV_ARGS(&dxgiAdapter));
+    DXThrowIfFailed(hr, "failed to get adapter from DXGI factory");
+
+    DXGI_ADAPTER_DESC dxgiAdapterDesc;
+    hr = dxgiAdapter->GetDesc(&dxgiAdapterDesc);
+    DXThrowIfFailed(hr, "failed to get descriptor from DXGI adapter");
+
+    DXConvertVideoAdapterInfo(dxgiAdapter.Get(), dxgiAdapterDesc, videoAdatperInfo_);
+
+    return device_.ShareDXDevice(nativeHandle.device);
 }
 
 static bool FindHighestShaderModel(ID3D12Device* device, D3D_SHADER_MODEL& shaderModel)

@@ -72,6 +72,9 @@ const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
 // Returns the compiler flags for the 'ShaderCompileFlags' enumeration values for the DirectX Effects Compiler (FXC).
 UINT DXGetFxcCompilerFlags(int flags);
 
+// Converts the adapter descriptor to video adapter information.
+void DXConvertVideoAdapterInfo(IDXGIAdapter* adapter, const DXGI_ADAPTER_DESC& inDesc, VideoAdapterInfo& outInfo);
+
 // Returns the video adapter descriptor from the specified DXGI adapter.
 VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdapterFlags = 0, IDXGIAdapter** outPreferredAdatper = nullptr);
 

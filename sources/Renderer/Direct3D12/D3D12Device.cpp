@@ -7,6 +7,7 @@
 
 #include "D3D12Device.h"
 #include "../DXCommon/DXCore.h"
+#include "../../Core/MacroUtils.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -39,6 +40,48 @@ HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureL
     }
 
     return hr;
+}
+
+HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice)
+{
+    if (sharedD3DDevice == nullptr)
+        return E_INVALIDARG;
+
+    /* Query maximum support feature level */
+    const D3D_FEATURE_LEVEL featureLevels[]
+    {
+        D3D_FEATURE_LEVEL_12_1,
+        D3D_FEATURE_LEVEL_12_0,
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_9_3,
+        D3D_FEATURE_LEVEL_9_2,
+        D3D_FEATURE_LEVEL_9_1,
+    };
+    D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevelSupport;
+    {
+        featureLevelSupport.NumFeatureLevels            = LLGL_ARRAY_LENGTH(featureLevels);
+        featureLevelSupport.pFeatureLevelsRequested     = featureLevels;
+        featureLevelSupport.MaxSupportedFeatureLevel    = D3D_FEATURE_LEVEL_9_1;
+    }
+    HRESULT hr = sharedD3DDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featureLevelSupport, sizeof(featureLevelSupport));
+    if (FAILED(hr))
+        return hr;
+
+    featureLevel_ = featureLevelSupport.MaxSupportedFeatureLevel;
+
+    /* Store refernece to shared D3D device */
+    device_ = sharedD3DDevice;
+
+    /* Query info queue if debugging is enabled */
+    #ifdef LLGL_DEBUG
+    if (SUCCEEDED(device_.As(&infoQueue_)))
+        DenyLowSeverityWarnings();
+    #endif
+
+    return S_OK;
 }
 
 ComPtr<ID3D12CommandQueue> D3D12Device::CreateDXCommandQueue(D3D12_COMMAND_LIST_TYPE type)

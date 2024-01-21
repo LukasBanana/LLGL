@@ -360,7 +360,7 @@ struct RenderSystemDescriptor
     std::size_t         rendererConfigSize  = 0;
 
     /**
-    \brief Optional raw pointer to a backend specific native handle structure. If this is null (default), the render system will creates its own native handles.
+    \brief Optional raw pointer to a backend specific native handle structure. If this is null (default), the render system creates its own native handles.
     These native handles can later be queried via RenderSystem::GetNativeHandle.
     \remarks This can be used to pass the native device instance or render context for the respective backend if the application has created its own instance.
     Example usage (for Direct3D12 renderer):

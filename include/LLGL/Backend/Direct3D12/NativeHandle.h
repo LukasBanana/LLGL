@@ -9,6 +9,7 @@
 #define LLGL_DIRECT3D12_NATIVE_HANDLE_H
 
 
+#include <dxgi1_4.h>
 #include <d3d12.h>
 
 
@@ -26,11 +27,21 @@ namespace Direct3D12
 */
 struct RenderSystemNativeHandle
 {
-    ID3D12Device* device;
+    /**
+    \brief COM pointer to the DXGI factory version 4.
+    \remarks Since Direct3D 12, the factory can no longer be backtracked from the device object that was used to create it.
+    For LLGL to retrieve the adapter information, this factory must be of type \c IDXGIFactory4.
+    \see https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_4/nf-dxgi1_4-idxgifactory4-enumadapterbyluid#remarks
+    */
+    IDXGIFactory4*  factory;
+
+    //! COM pointer to the native Direct3D device.
+    ID3D12Device*   device;
 };
 
 struct CommandBufferNativeHandle
 {
+    //! COM pointer to the native Direct3D command list.
     ID3D12GraphicsCommandList* commandList;
 };
 

@@ -29,6 +29,8 @@ class D3D12Device
 
         HRESULT CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, IDXGIAdapter* adapter = nullptr);
 
+        HRESULT ShareDXDevice(ID3D12Device* sharedD3DDevice);
+
         ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue            (D3D12_COMMAND_LIST_TYPE type);
         ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator        (D3D12_COMMAND_LIST_TYPE type);
         ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList             (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* commandAllocator);

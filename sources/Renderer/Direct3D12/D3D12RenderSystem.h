@@ -46,6 +46,12 @@
 namespace LLGL
 {
 
+namespace Direct3D12
+{
+
+struct RenderSystemNativeHandle;
+
+} // /namespace Direct3D12
 
 class D3D12SubresourceContext;
 
@@ -109,7 +115,9 @@ class D3D12RenderSystem final : public RenderSystem
 
         void CreateFactory(bool debugDevice = false);
         void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
+
         HRESULT CreateDevice(IDXGIAdapter* preferredAdapter);
+        HRESULT QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle);
 
         void QueryRendererInfo();
         void QueryRenderingCaps();

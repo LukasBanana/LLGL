@@ -32,7 +32,7 @@ const T* GetRendererConfiguration(const RenderSystemDescriptor& renderSystemDesc
     return nullptr;
 }
 
-// Validates and returns the renderer native handle structure from the render system descriptor.
+// Validates and returns the renderer native handle structure from the specified byte array.
 template <typename T>
 const T* GetRendererNativeHandle(const ArrayView<char>& nativeHandle)
 {
@@ -44,6 +44,19 @@ const T* GetRendererNativeHandle(const ArrayView<char>& nativeHandle)
             LLGL_TRAP("invalid renderer native handle structure");
     }
     return nullptr;
+}
+
+// Validates and returns the renderer native handle structure from the render system descriptor.
+template <typename T>
+const T* GetRendererNativeHandle(const RenderSystemDescriptor& renderSystemDesc)
+{
+    return GetRendererNativeHandle<T>(
+        ArrayView<char>
+        {
+            reinterpret_cast<const char*>(renderSystemDesc.nativeHandle),
+            renderSystemDesc.nativeHandleSize
+        }
+    );
 }
 
 

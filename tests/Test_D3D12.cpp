@@ -11,11 +11,49 @@
 #include <Gauss/Gauss.h>
 
 
+#define TEST_SECONDARY_COMMAND_BUFFER   0
+#define TEST_CUSTOM_D3DDEVICE           0
+
+#ifdef TEST_CUSTOM_D3DDEVICE
+#   include <dxgi.h>
+#   include <d3d12.h>
+#   include <LLGL/Backend/Direct3D12/NativeHandle.h>
+#   define VALIDATE_HRESULT(EXPR)                                                                               \
+        {                                                                                                       \
+            HRESULT hr = (EXPR);                                                                                \
+            if (FAILED(hr))                                                                                     \
+                throw std::runtime_error(#EXPR " failed; HRESULT = " + std::to_string(static_cast<int>(hr)));   \
+        }
+#   define SAFE_RELEASE(OBJ)    \
+        if (OBJ != nullptr)     \
+        {                       \
+            OBJ->Release();     \
+            OBJ = nullptr;      \
+        }
+#   pragma comment(lib, "dxgi")
+#   pragma comment(lib, "d3d12")
+#endif
+
+
 int main()
 {
     try
     {
         LLGL::Log::RegisterCallbackStd();
+
+        #if TEST_CUSTOM_D3DDEVICE
+
+        IDXGIFactory4* d3dFactory = nullptr;
+        VALIDATE_HRESULT( CreateDXGIFactory1(IID_PPV_ARGS(&d3dFactory)) );
+
+        ID3D12Device* d3dDevice = nullptr;
+        VALIDATE_HRESULT( D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&d3dDevice)) );
+
+        LLGL::Direct3D12::RenderSystemNativeHandle d3dNativeHandle;
+        d3dNativeHandle.factory = d3dFactory;
+        d3dNativeHandle.device = d3dDevice;
+
+        #endif
 
         // Setup profiler and debugger
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
@@ -25,7 +63,12 @@ int main()
         // Load render system module
         LLGL::RenderSystemDescriptor rendererDesc = "Direct3D12";
         {
-            rendererDesc.debugger = debugger.get();
+            //rendererDesc.flags              = LLGL::RenderSystemFlags::DebugDevice;
+            rendererDesc.debugger           = debugger.get();
+            #if TEST_CUSTOM_D3DDEVICE
+            rendererDesc.nativeHandle       = &d3dNativeHandle;
+            rendererDesc.nativeHandleSize   = sizeof(d3dNativeHandle);
+            #endif
         }
         auto renderer = LLGL::RenderSystem::Load(rendererDesc);
 
@@ -182,6 +225,21 @@ int main()
 
         #endif
 
+        // Encode our (static) secondary cmdbuf.
+        #if TEST_SECONDARY_COMMAND_BUFFER
+
+        LLGL::CommandBuffer* commandsSecondary = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::Secondary);
+        commandsSecondary->Begin();
+        {
+            commandsSecondary->SetPipelineState(*pipeline);
+            commandsSecondary->SetVertexBuffer(*vertexBuffer);
+            commandsSecondary->SetResourceHeap(*resourceHeap);
+            commandsSecondary->Draw(3, 0);
+        }
+        commandsSecondary->End();
+
+        #endif
+
         // Main loop
         while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
         {
@@ -192,11 +250,18 @@ int main()
                     commands->Clear(LLGL::ClearFlags::Color, { 0.1f, 0.1f, 0.4f, 1.0f });
                     commands->SetViewport(swapChain->GetResolution());
 
+                    #if TEST_SECONDARY_COMMAND_BUFFER
+
+                    commands->Execute(*commandsSecondary);
+
+                    #else
+
                     commands->SetPipelineState(*pipeline);
                     commands->SetVertexBuffer(*vertexBuffer);
                     commands->SetResourceHeap(*resourceHeap);
-
                     commands->Draw(3, 0);
+
+                    #endif
                 }
                 commands->EndRenderPass();
             }
@@ -205,6 +270,12 @@ int main()
 
             swapChain->Present();
         }
+
+        #if TEST_CUSTOM_D3DDEVICE
+
+        SAFE_RELEASE(d3dFactory);
+
+        #endif
     }
     catch (const std::exception& e)
     {
