@@ -14,17 +14,18 @@
 #include <string>
 #include <sstream>
 
-#if _WIN32
-#include <LLGL/Platform/NativeHandle.h>
-#include <LLGL/Backend/OpenGL/NativeHandle.h>
-#pragma comment(lib, "opengl32")
-#endif
-
 
 #define TEST_RENDER_TARGET      0
 #define TEST_QUERY              0
 #define TEST_STORAGE_BUFFER     0
 #define TEST_CUSTOM_GLCONTEXT   0
+
+
+#if _WIN32 && TEST_CUSTOM_GLCONTEXT
+#include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
+#pragma comment(lib, "opengl32")
+#endif
 
 
 int main()
