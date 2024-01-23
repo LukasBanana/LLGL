@@ -30,7 +30,11 @@ class VKPhysicalDevice
 
         /* ----- Common ----- */
 
+        // Picks the physical Vulkan device by enumerating the available devices from the specified Vulkan instance.
         bool PickPhysicalDevice(VkInstance instance);
+
+        // Loads the physical Vulkan device from a custom native handle.
+        void LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice);
 
         void QueryDeviceProperties(
             RendererInfo&               info,
@@ -38,7 +42,7 @@ class VKPhysicalDevice
             VKGraphicsPipelineLimits&   pipelineLimits
         );
 
-        VKDevice CreateLogicalDevice();
+        VKDevice CreateLogicalDevice(VkDevice customLogicalDevice = VK_NULL_HANDLE);
 
         std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 

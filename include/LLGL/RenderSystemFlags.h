@@ -380,7 +380,7 @@ struct RenderSystemDescriptor
     auto renderer = LLGL::RenderSystem::Load(rendererDesc);
     \endcode
     \see RenderSystem::GetNativeHandle
-    \note Currently only supported for OpenGL on Windows and Linux.
+    \note Currently only supported for OpenGL (Windows and Linux), D3D11, D3D12, and Vulkan.
     \todo Add support for all other backends.
     */
     const void*         nativeHandle        = nullptr;

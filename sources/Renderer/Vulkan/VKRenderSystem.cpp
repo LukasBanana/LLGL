@@ -40,10 +40,28 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     /* Extract optional renderer configuartion */
     auto* rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
 
-    /* Create Vulkan instance and device objects */
-    CreateInstance(rendererConfigVK);
-    PickPhysicalDevice();
-    CreateLogicalDevice();
+    if (auto* customNativeHandle = GetRendererNativeHandle<Vulkan::RenderSystemNativeHandle>(renderSystemDesc))
+    {
+        /* Store weak references to native handles */
+        instance_ = VKPtr<VkInstance>{ customNativeHandle->instance };
+        if (debugLayerEnabled_)
+            CreateDebugReportCallback();
+        VKLoadInstanceExtensions(instance_);
+        if (!PickPhysicalDevice(customNativeHandle->physicalDevice))
+            return;
+        CreateLogicalDevice(customNativeHandle->device);
+    }
+    else
+    {
+        /* Create Vulkan instance and device objects */
+        CreateInstance(rendererConfigVK);
+        if (debugLayerEnabled_)
+            CreateDebugReportCallback();
+        VKLoadInstanceExtensions(instance_);
+        if (!PickPhysicalDevice())
+            return;
+        CreateLogicalDevice();
+    }
 
     /* Create default resources */
     VKPipelineLayout::CreateDefault(device_);
@@ -655,12 +673,9 @@ bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Vulkan::RenderSystemNativeHandle))
     {
         auto* nativeHandleVK = reinterpret_cast<Vulkan::RenderSystemNativeHandle*>(nativeHandle);
-        nativeHandleVK->instance            = instance_.Get();
-        nativeHandleVK->physicalDevice      = physicalDevice_.GetVkPhysicalDevice();
-        nativeHandleVK->device              = device_.GetVkDevice();
-        nativeHandleVK->queue               = device_.GetVkQueue();
-        nativeHandleVK->queueGraphicsFamily = device_.GetQueueFamilyIndices().graphicsFamily;
-        nativeHandleVK->queuePresentFamily  = device_.GetQueueFamilyIndices().presentFamily;
+        nativeHandleVK->instance        = instance_.Get();
+        nativeHandleVK->physicalDevice  = physicalDevice_.GetVkPhysicalDevice();
+        nativeHandleVK->device          = device_.GetVkDevice();
         return true;
     }
     return false;
@@ -681,7 +696,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     auto layerProperties = VKQueryInstanceLayerProperties();
     std::vector<const char*> layerNames;
 
-    for (const auto& prop : layerProperties)
+    for (const VkLayerProperties& prop : layerProperties)
     {
         if (IsLayerRequired(prop.layerName, config))
             layerNames.push_back(prop.layerName);
@@ -701,9 +716,9 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
         );
     };
 
-    for (const auto& prop : extensionProperties)
+    for (const VkExtensionProperties& prop : extensionProperties)
     {
-        const auto extSupport = GetVulkanInstanceExtensionSupport(prop.extensionName);
+        const VKExtSupport extSupport = GetVulkanInstanceExtensionSupport(prop.extensionName);
         if (IsVKExtSupportIncluded(extSupport))
             extensionNames.push_back(prop.extensionName);
     }
@@ -761,13 +776,6 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     /* Create Vulkan instance */
     VkResult result = vkCreateInstance(&instanceInfo, nullptr, instance_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan instance");
-
-    /* Create debug report callback */
-    if (debugLayerEnabled_)
-        CreateDebugReportCallback();
-
-    /* Load Vulkan instance extensions */
-    VKLoadInstanceExtensions(instance_);
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
@@ -832,11 +840,19 @@ void VKRenderSystem::CreateDebugReportCallback()
     VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
 }
 
-void VKRenderSystem::PickPhysicalDevice()
+bool VKRenderSystem::PickPhysicalDevice(VkPhysicalDevice customPhysicalDevice)
 {
     /* Pick physical device with Vulkan support */
-    if (!physicalDevice_.PickPhysicalDevice(instance_))
-        throw std::runtime_error("failed to find suitable Vulkan device");
+    if (customPhysicalDevice != VK_NULL_HANDLE)
+    {
+        /* Load weak reference to custom native physical device */
+        physicalDevice_.LoadPhysicalDeviceWeakRef(customPhysicalDevice);
+    }
+    else if (!physicalDevice_.PickPhysicalDevice(instance_))
+    {
+        GetMutableReport().Errorf("failed to find suitable Vulkan device");
+        return false;
+    }
 
     /* Query and store rendering capabilities */
     RendererInfo info;
@@ -850,12 +866,14 @@ void VKRenderSystem::PickPhysicalDevice()
 
     SetRendererInfo(info);
     SetRenderingCaps(caps);
+
+    return true;
 }
 
-void VKRenderSystem::CreateLogicalDevice()
+void VKRenderSystem::CreateLogicalDevice(VkDevice customLogicalDevice)
 {
     /* Create logical device with all supported physical device feature */
-    device_ = physicalDevice_.CreateLogicalDevice();
+    device_ = physicalDevice_.CreateLogicalDevice(customLogicalDevice);
 
     /* Create command queue interface */
     commandQueue_ = MakeUnique<VKCommandQueue>(device_, device_.GetVkQueue());

@@ -637,22 +637,20 @@ HRESULT D3D11RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D11::R
     HRESULT hr = device_->QueryInterface(IID_PPV_ARGS(&dxgiDevice));
     DXThrowIfFailed(hr, "failed to query interface IDXGIDevice from custom native handle");
 
-    ComPtr<IDXGIAdapter> dxgiAdapter;
-    hr = dxgiDevice->GetAdapter(&dxgiAdapter);
+    /* Get DXGI adapter and get video adapter information */
+    ComPtr<IDXGIAdapter> adapter;
+    hr = dxgiDevice->GetAdapter(&adapter);
     DXThrowIfFailed(hr, "failed to get adapter from DXGI device");
 
-    ComPtr<IDXGIFactory> dxgiFactory;
-    hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
-    DXThrowIfFailed(hr, "failed to get parent factory from DXGI adapter");
-
-    hr = dxgiFactory->QueryInterface(IID_PPV_ARGS(&factory_));
-    DXThrowIfFailed(hr, "failed to query IDXGIFactory4 interface from DXGI factory");
-
     DXGI_ADAPTER_DESC dxgiAdapterDesc;
-    hr = dxgiAdapter->GetDesc(&dxgiAdapterDesc);
+    hr = adapter->GetDesc(&dxgiAdapterDesc);
     DXThrowIfFailed(hr, "failed to get descriptor from DXGI adapter");
 
-    DXConvertVideoAdapterInfo(dxgiAdapter.Get(), dxgiAdapterDesc, videoAdatperInfo_);
+    DXConvertVideoAdapterInfo(adapter.Get(), dxgiAdapterDesc, videoAdatperInfo_);
+
+    /* Get DXGI factory */
+    hr = adapter->GetParent(IID_PPV_ARGS(&factory_));
+    DXThrowIfFailed(hr, "failed to get parent factory from DXGI adapter");
 
     return S_OK;
 }

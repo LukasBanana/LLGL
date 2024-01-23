@@ -42,6 +42,8 @@ class VKDevice
             std::uint32_t                   numExtensions
         );
 
+        void LoadLogicalDeviceWeakRef(VkPhysicalDevice physicalDevice, VkDevice device);
+
         // Blocks until the VkDevice becomes idle.
         void WaitIdle();
 

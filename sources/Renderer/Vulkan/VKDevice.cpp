@@ -110,6 +110,21 @@ void VKDevice::CreateLogicalDevice(
     commandPool_ = CreateCommandPool();
 }
 
+void VKDevice::LoadLogicalDeviceWeakRef(VkPhysicalDevice physicalDevice, VkDevice device)
+{
+    /* Initialize queue create description */
+    queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
+
+    /* Store weak reference to logical Vulkan device */
+    device_ = VKPtr<VkDevice>{ device };
+
+    /* Query device graphics queue */
+    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+
+    /* Create default command pool */
+    commandPool_ = CreateCommandPool();
+}
+
 VKPtr<VkCommandPool> VKDevice::CreateCommandPool()
 {
     VKPtr<VkCommandPool> commandPool{ device_, vkDestroyCommandPool };

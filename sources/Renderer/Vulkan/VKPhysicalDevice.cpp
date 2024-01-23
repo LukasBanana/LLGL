@@ -11,6 +11,7 @@
 #include "VKTypes.h"
 #include "RenderState/VKGraphicsPSO.h"
 #include "../../Core/Vendor.h"
+#include "../../Core/Assertion.h"
 #include <LLGL/Constants.h>
 #include <string>
 #include <cstring>
@@ -106,6 +107,14 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
     }
 
     return false;
+}
+
+void VKPhysicalDevice::LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice)
+{
+    LLGL_ASSERT(physicalDevice != VK_NULL_HANDLE);
+    LLGL_ASSERT(physicalDevice_ == VK_NULL_HANDLE, "physical Vulkan device already set");
+    physicalDevice_ = physicalDevice;
+    QueryDeviceInfo();
 }
 
 static std::vector<Format> GetDefaultSupportedVKTextureFormats()
@@ -268,15 +277,25 @@ void VKPhysicalDevice::QueryDeviceProperties(
     */
 }
 
-VKDevice VKPhysicalDevice::CreateLogicalDevice()
+VKDevice VKPhysicalDevice::CreateLogicalDevice(VkDevice customLogicalDevice)
 {
     VKDevice device;
-    device.CreateLogicalDevice(
-        physicalDevice_,
-        &features_,
-        enabledExtensionNames_.data(),
-        static_cast<std::uint32_t>(enabledExtensionNames_.size())
-    );
+    if (customLogicalDevice != VK_NULL_HANDLE)
+    {
+        device.LoadLogicalDeviceWeakRef(
+            physicalDevice_,
+            customLogicalDevice
+        );
+    }
+    else
+    {
+        device.CreateLogicalDevice(
+            physicalDevice_,
+            &features_,
+            enabledExtensionNames_.data(),
+            static_cast<std::uint32_t>(enabledExtensionNames_.size())
+        );
+    }
     return device;
 }
 

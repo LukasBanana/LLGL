@@ -70,6 +70,13 @@ class VKPtr
             };
         }
 
+        // Constructs the hanlder with bypassing the deleter. Only used for custom native handle support, in which case the object is interpreted as a weak reference.
+        explicit VKPtr(T obj) :
+            object_  { obj                },
+            deleter_ { [](T){ /*dummy*/ } }
+        {
+        }
+
         // Moves the native Vulkan object of the specified handler into this handler.
         VKPtr(VKPtr<T>&& rhs) :
             object_  { rhs.object_  },

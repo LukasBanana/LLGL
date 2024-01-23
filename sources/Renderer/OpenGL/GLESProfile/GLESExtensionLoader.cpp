@@ -53,7 +53,7 @@ using LoadGLExtensionProc = std::function<bool(const char* extName, bool abortOn
     else if (!LoadGLProc(NAME, #NAME))                                                  \
     {                                                                                   \
         if (abortOnFailure)                                                             \
-            LLGL_TRAP("failed to load OpenGLES procedure: %s ( %s )", #NAME, extName);  \
+            LLGL_TRAP("failed to load OpenGLES procedure: %s [%s]", #NAME, extName);    \
         return false;                                                                   \
     }
 

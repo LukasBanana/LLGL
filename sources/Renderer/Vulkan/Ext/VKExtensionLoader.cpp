@@ -49,12 +49,12 @@ using LoadVKExtensionDeviceProc     = std::function<bool(VkDevice   device  , co
 #define DECL_LOADVKEXT_PROC(EXTNAME) \
     DECL_LOADVKEXT_PROC_BASE(EXTNAME, VkDevice)
 
-#define LOAD_VKPROC(NAME)                                                               \
-    if (!LoadVKProc(handle, NAME, #NAME))                                               \
-    {                                                                                   \
-        if (abortOnFailure)                                                             \
-            LLGL_TRAP("failed to load Vulkan procedure: %s ( %s )", #NAME, extName);    \
-        return false;                                                                   \
+#define LOAD_VKPROC(NAME)                                                           \
+    if (!LoadVKProc(handle, NAME, #NAME))                                           \
+    {                                                                               \
+        if (abortOnFailure)                                                         \
+            LLGL_TRAP("failed to load Vulkan procedure: %s [%s]", #NAME, extName);  \
+        return false;                                                               \
     }
 
 #ifdef LLGL_OS_WIN32

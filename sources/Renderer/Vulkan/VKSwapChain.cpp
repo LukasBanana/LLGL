@@ -27,11 +27,6 @@ namespace LLGL
 
 const std::uint32_t VKSwapChain::maxNumColorBuffers;
 
-static const std::vector<const char*> g_deviceExtensions
-{
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
 static VKPtr<VkImageView> NullVkImageView(VkDevice device)
 {
     return VKPtr<VkImageView>{ device, vkDestroyImageView };

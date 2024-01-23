@@ -63,8 +63,8 @@ class VKRenderSystem final : public RenderSystem
 
         void CreateInstance(const RendererConfigurationVulkan* config);
         void CreateDebugReportCallback();
-        void PickPhysicalDevice();
-        void CreateLogicalDevice();
+        bool PickPhysicalDevice(VkPhysicalDevice customPhysicalDevice = VK_NULL_HANDLE);
+        void CreateLogicalDevice(VkDevice customLogicalDevice = VK_NULL_HANDLE);
 
         bool IsLayerRequired(const char* name, const RendererConfigurationVulkan* config) const;
 

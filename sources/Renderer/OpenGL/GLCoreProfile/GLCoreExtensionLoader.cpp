@@ -68,16 +68,16 @@ using LoadGLExtensionProc = std::function<bool(const char* extName, bool abortOn
 #define LOAD_GLPROC_SIMPLE(NAME) \
     LoadGLProc(NAME, #NAME)
 
-#define LOAD_GLPROC(NAME)                                                               \
-    if (usePlaceholder)                                                                 \
-    {                                                                                   \
-        NAME = Proxy_##NAME;                                                            \
-    }                                                                                   \
-    else if (!LoadGLProc(NAME, #NAME))                                                  \
-    {                                                                                   \
-        if (abortOnFailure)                                                             \
-            LLGL_TRAP("failed to load OpenGL procedure: %s ( %s )", #NAME, extName);    \
-        return false;                                                                   \
+#define LOAD_GLPROC(NAME)                                                           \
+    if (usePlaceholder)                                                             \
+    {                                                                               \
+        NAME = Proxy_##NAME;                                                        \
+    }                                                                               \
+    else if (!LoadGLProc(NAME, #NAME))                                              \
+    {                                                                               \
+        if (abortOnFailure)                                                         \
+            LLGL_TRAP("failed to load OpenGL procedure: %s [%s]", #NAME, extName);  \
+        return false;                                                               \
     }
 
 /* --- Common GL extensions --- */
