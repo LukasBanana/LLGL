@@ -30,9 +30,9 @@ namespace ModuleMetal
         return "Metal";
     }
 
-    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* /*renderSystemDesc*/)
+    RenderSystem* AllocRenderSystem(const LLGL::RenderSystemDescriptor* renderSystemDesc)
     {
-        return new MTRenderSystem{};
+        return new MTRenderSystem{ *renderSystemDesc };
     }
 } // /namespace ModuleMetal
 

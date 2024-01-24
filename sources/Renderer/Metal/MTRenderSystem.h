@@ -51,12 +51,12 @@ class MTRenderSystem final : public RenderSystem
 
     public:
 
-        MTRenderSystem();
+        MTRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~MTRenderSystem();
 
     private:
 
-        void CreateDeviceResources();
+        void CreateDeviceResources(id<MTLDevice> sharedDevice = nil);
         void QueryRenderingCaps();
 
         const char* QueryMetalVersion() const;

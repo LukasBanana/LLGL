@@ -8,6 +8,7 @@
 #include "MTRenderSystem.h"
 #include "../CheckedCast.h"
 #include "../TextureUtils.h"
+#include "../RenderSystemUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Exception.h"
 #include "../../Core/Vendor.h"
@@ -30,9 +31,12 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-MTRenderSystem::MTRenderSystem()
+MTRenderSystem::MTRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
-    CreateDeviceResources();
+    if (auto* customNativeHandle = GetRendererNativeHandle<Metal::RenderSystemNativeHandle>(renderSystemDesc))
+        CreateDeviceResources(customNativeHandle->device);
+    else
+        CreateDeviceResources();
     QueryRenderingCaps();
 }
 
@@ -339,12 +343,20 @@ bool MTRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
  * ======= Private: =======
  */
 
-void MTRenderSystem::CreateDeviceResources()
+void MTRenderSystem::CreateDeviceResources(id<MTLDevice> sharedDevice)
 {
-    /* Create Metal device */
-    device_ = MTLCreateSystemDefaultDevice();
-    if (device_ == nil)
-        LLGL_TRAP("failed to create Metal device");
+    if (sharedDevice != nil)
+    {
+        /* Take shard Metal device and increment reference counter */
+        device_ = [sharedDevice retain];
+    }
+    else
+    {
+        /* Create Metal device */
+        device_ = MTLCreateSystemDefaultDevice();
+        if (device_ == nil)
+            LLGL_TRAP("failed to create Metal device");
+    }
 
     /* Initialize renderer information */
     RendererInfo info;
