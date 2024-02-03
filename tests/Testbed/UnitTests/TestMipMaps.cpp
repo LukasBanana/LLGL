@@ -50,7 +50,7 @@ DEF_TEST( MipMaps )
 
         for_subrange(mip, 1, texDesc.mipLevels)
         {
-            if (fastTest && mip % 2 == 1)
+            if (opt.fastTest && mip % 2 == 1)
                 continue;
 
             // Read current MIP-map from input texture
@@ -80,7 +80,7 @@ DEF_TEST( MipMaps )
             if (intermediateResult != TestResult::Passed)
             {
                 result = intermediateResult;
-                if (!greedy)
+                if (!opt.greedy)
                     break;
             }
         }
@@ -93,7 +93,7 @@ DEF_TEST( MipMaps )
             TestResult intermResult = ReadMipMaps((TEX), (NAME));   \
             if (intermResult != TestResult::Passed)                 \
             {                                                       \
-                if (greedy)                                         \
+                if (opt.greedy)                                     \
                     result = intermResult;                          \
                 else                                                \
                     return intermResult;                            \

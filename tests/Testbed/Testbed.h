@@ -29,6 +29,9 @@ using namespace LLGL;
 #define DEF_TEST(NAME) \
     TestResult TestbedContext::Test##NAME(unsigned frame)
 
+#define DEF_RITEST(NAME) \
+    TestResult TestbedContext::Test##NAME(const Options& opt)
+
 #define CREATE_BUFFER_COND(COND, OBJ, DESC, NAME, INITIAL)              \
     LLGL_MAYBE_UNUSED Buffer* OBJ = nullptr;                            \
     LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;                    \

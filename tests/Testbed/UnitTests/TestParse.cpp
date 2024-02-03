@@ -9,7 +9,7 @@
 #include <LLGL/Utils/Parse.h>
 
 
-TestResult TestbedContext::TestParseUtil()
+DEF_RITEST( ParseUtil )
 {
     #define TEST_ATTRIB(ATTR)                   \
         if (lhs.ATTR != rhs.ATTR)               \

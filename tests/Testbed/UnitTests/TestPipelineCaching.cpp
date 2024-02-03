@@ -58,7 +58,7 @@ DEF_TEST( PipelineCaching )
 
     auto PrintElapsedTimes = [this, &elapsedTime, numPSOs](const char* caption) -> void
     {
-        if (this->showTiming)
+        if (this->opt.showTiming)
         {
             Log::Printf(caption);
             for_range(i, numPSOs)

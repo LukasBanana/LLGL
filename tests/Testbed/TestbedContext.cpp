@@ -81,6 +81,11 @@ static std::string SanitizePath(std::string path)
     return path;
 }
 
+static std::string GetSanitizedOutputDir(int argc, char* argv[])
+{
+    return SanitizePath(FindOutputDir(argc, argv));
+}
+
 static void ConfigureOpenGL(RendererConfigurationOpenGL& cfg, int version)
 {
     if (version != 0)
@@ -98,16 +103,9 @@ static bool TestFailed(TestResult result)
 static constexpr std::uint32_t g_testbedWinSize[2] = { 800, 600 };
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
-    moduleName    { moduleName                                                                 },
-    outputDir     { SanitizePath(FindOutputDir(argc, argv))                                    },
-    verbose       { HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose")      },
-    pedantic      { HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic")     },
-    greedy        { HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy")       },
-    sanityCheck   { HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check") },
-    showTiming    { HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing")       },
-    fastTest      { HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast")         },
-    resolution    { g_testbedWinSize[0], g_testbedWinSize[1]                                   },
-    selectedTests { FindSelectedTests(argc, argv)                                              }
+    moduleName    { moduleName                               },
+    opt           { TestbedContext::ParseOptions(argc, argv) },
+    selectedTests { FindSelectedTests(argc, argv)            }
 {
     const bool isDebugMode = (HasArgument(argc, argv, "-d") || HasArgument(argc, argv, "--debug"));
 
@@ -136,7 +134,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         // Create swap chain
         SwapChainDescriptor swapChainDesc;
         {
-            swapChainDesc.resolution = resolution;
+            swapChainDesc.resolution = opt.resolution;
         }
         swapChain = renderer->CreateSwapChain(swapChainDesc);
 
@@ -152,7 +150,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         cmdBuffer = renderer->CreateCommandBuffer(CommandBufferFlags::ImmediateSubmit);
 
         // Print renderer information
-        if (verbose)
+        if (opt.verbose)
             LogRendererInfo();
 
         // Query rendering capabilities
@@ -316,22 +314,25 @@ unsigned TestbedContext::RunAllTests()
     return failures;
 }
 
-unsigned TestbedContext::RunRendererIndependentTests()
+unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
 {
     unsigned failures = 0;
 
-    #define RUN_TEST(TEST)                                          \
-        {                                                           \
-            const TestResult result = TestbedContext::Test##TEST(); \
-            PrintTestResult(result, #TEST);                         \
-            if (TestFailed(result))                                 \
-                ++failures;                                         \
+    auto opt = TestbedContext::ParseOptions(argc, argv);
+
+    #define RUN_TEST(TEST)                                              \
+        {                                                               \
+            const TestResult result = TestbedContext::Test##TEST(opt);  \
+            PrintTestResult(result, #TEST);                             \
+            if (TestFailed(result))                                     \
+                ++failures;                                             \
         }
 
     RUN_TEST( ContainerDynamicArray );
     RUN_TEST( ContainerSmallVector );
     RUN_TEST( ContainerUTF8String );
     RUN_TEST( ParseUtil );
+    RUN_TEST( ImageConversions );
 
     #undef RUN_TEST
 
@@ -517,7 +518,7 @@ TestResult TestbedContext::CreateRenderTarget(
     const char*                         name,
     LLGL::RenderTarget**                output)
 {
-    if (verbose)
+    if (opt.verbose)
     {
         Log::Printf("Creating render target: %s\n", name);
         fflush(stdout);
@@ -694,6 +695,20 @@ static std::string FormatFloatArray(const float* data, std::size_t count, std::s
     }
 
     return s;
+}
+
+TestbedContext::Options TestbedContext::ParseOptions(int argc, char* argv[])
+{
+    Options opt;
+    opt.outputDir   = GetSanitizedOutputDir(argc, argv);
+    opt.verbose     = (HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose"));
+    opt.pedantic    = (HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic"));
+    opt.greedy      = (HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy"));
+    opt.sanityCheck = (HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check"));
+    opt.showTiming  = (HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing"));
+    opt.fastTest    = (HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast"));
+    opt.resolution  = { g_testbedWinSize[0], g_testbedWinSize[1] };
+    return opt;
 }
 
 std::string TestbedContext::FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup, bool formatAsFloats)
@@ -1049,7 +1064,7 @@ Shader* TestbedContext::LoadShaderFromFile(
         Log::Printf("Loading %s shader: %s", ToString(type), filename.c_str());
     };
 
-    if (verbose)
+    if (opt.verbose)
         PrintLoadingInfo();
 
     ShaderDescriptor shaderDesc;
@@ -1071,7 +1086,7 @@ Shader* TestbedContext::LoadShaderFromFile(
         {
             if (report->HasErrors())
             {
-                if (!verbose)
+                if (!opt.verbose)
                     PrintLoadingInfo();
                 Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
                 Log::Errorf("%s", report->GetText());
@@ -1081,7 +1096,7 @@ Shader* TestbedContext::LoadShaderFromFile(
         }
     }
 
-    if (verbose)
+    if (opt.verbose)
         Log::Printf(" [ Ok ]\n");
 
     return shader;
@@ -1122,29 +1137,29 @@ static bool SaveImage(const std::vector<ColorRGBAub>& pixels, const Extent2D& ex
     return SaveImage(pixels.data(), 4, extent, filename, verbose);
 }
 
+void PrintLoadImageInfo(const std::string& filename)
+{
+    Log::Printf("Load PNG image: %s", filename.c_str());
+};
+
 static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const std::string& filename, bool verbose = false)
 {
-    auto PrintInfo = [&filename]
-    {
-        Log::Printf("Load PNG image: %s", filename.c_str());
-    };
-
     if (verbose)
-        PrintInfo();
+        PrintLoadImageInfo(filename);
 
-    int w, h, c;
-    if (stbi_uc* img = stbi_load(filename.c_str(), &w, &h, &c, 3))
+    int w = 0, h = 0, c = 0;
+    if (stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, 3))
     {
         extent.width = static_cast<std::uint32_t>(w);
         extent.height = static_cast<std::uint32_t>(h);
         pixels.resize(extent.width * extent.height);
-        ::memcpy(pixels.data(), img, pixels.size() * sizeof(ColorRGBub));
-        stbi_image_free(img);
+        ::memcpy(pixels.data(), imgBuf, pixels.size() * sizeof(ColorRGBub));
+        stbi_image_free(imgBuf);
     }
     else
     {
         if (!verbose)
-            PrintInfo();
+            PrintLoadImageInfo(filename);
         Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
         return false;
     }
@@ -1155,10 +1170,66 @@ static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const s
     return true;
 }
 
+static bool LoadImage(Image& img, const std::string& filename, bool verbose = false)
+{
+    if (verbose)
+        PrintLoadImageInfo(filename);
+
+    int w = 0, h = 0, c = 0;
+    if (stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, 3))
+    {
+        img.Convert(c == 4 ? ImageFormat::RGBA : ImageFormat::RGB, DataType::UInt8);
+        img.Resize(Extent3D{ static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h), 1 });
+        if (img.GetDataSize() == static_cast<std::size_t>(w*h*c))
+        {
+            ::memcpy(img.GetData(), imgBuf, img.GetDataSize());
+            stbi_image_free(imgBuf);
+        }
+        else
+        {
+            stbi_image_free(imgBuf);
+            if (!verbose)
+                PrintLoadImageInfo(filename);
+            Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+            return false;
+        }
+    }
+    else
+    {
+        if (!verbose)
+            PrintLoadImageInfo(filename);
+        Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        return false;
+    }
+
+    if (verbose)
+        Log::Printf(" [ Ok ]\n");
+
+    return true;
+}
+
+Image TestbedContext::LoadImageFromFile(const std::string& filename, bool verbose)
+{
+    Image img;
+    LoadImage(img, filename, verbose);
+    return img;
+}
+
+void TestbedContext::SaveImageToFile(const LLGL::Image& img, const std::string& filename, bool verbose)
+{
+    SaveImage(
+        img.GetData(),
+        static_cast<int>(ImageFormatSize(img.GetFormat())),
+        Extent2D{ img.GetExtent().width, img.GetExtent().height },
+        filename,
+        verbose
+    );
+}
+
 void TestbedContext::SaveColorImage(const std::vector<ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name)
 {
-    const std::string path = outputDir + moduleName + "/";
-    SaveImage(image, extent, path + name + ".Result.png", verbose);
+    const std::string path = opt.outputDir + moduleName + "/";
+    SaveImage(image, extent, path + name + ".Result.png", opt.verbose);
 }
 
 void TestbedContext::SaveDepthImage(const std::vector<float>& image, const Extent2D& extent, const std::string& filename)
@@ -1204,8 +1275,8 @@ void TestbedContext::SaveDepthImage(const std::vector<float>& image, const LLGL:
         colors[i] = ColorRGBub{ color };
     }
 
-    const std::string path = outputDir + moduleName + "/";
-    SaveImage(colors, extent, path + name + ".Result.png", verbose);
+    const std::string path = opt.outputDir + moduleName + "/";
+    SaveImage(colors, extent, path + name + ".Result.png", opt.verbose);
 }
 
 void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name)
@@ -1216,8 +1287,8 @@ void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, co
     for (std::size_t i = 0; i < image.size(); ++i)
         colors[i] = ColorRGBub{ image[i] };
 
-    const std::string path = outputDir + moduleName + "/";
-    SaveImage(colors, extent, path + name + ".Result.png", verbose);
+    const std::string path = opt.outputDir + moduleName + "/";
+    SaveImage(colors, extent, path + name + ".Result.png", opt.verbose);
 }
 
 LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, Format format, const LLGL::Extent2D& extent)
@@ -1332,23 +1403,23 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
     std::vector<ColorRGBAub> pixelsDiff;
     Extent2D extentA, extentB;
 
-    const std::string resultPath    = outputDir + moduleName + "/";
+    const std::string resultPath    = opt.outputDir + moduleName + "/";
     const std::string refPath       = "Reference/";
-    const std::string diffPath      = outputDir + moduleName + "/";
+    const std::string diffPath      = opt.outputDir + moduleName + "/";
 
-    if (!LoadImage(pixelsA, extentA, refPath + name + ".Ref.png", verbose))
+    if (!LoadImage(pixelsA, extentA, refPath + name + ".Ref.png", opt.verbose))
         return DiffErrorLoadRefFailed;
-    if (!LoadImage(pixelsB, extentB, resultPath + name + ".Result.png", verbose))
+    if (!LoadImage(pixelsB, extentB, resultPath + name + ".Result.png", opt.verbose))
         return DiffErrorLoadResultFailed;
 
     if (extentA != extentB)
         return DiffErrorExtentMismatch;
 
     // Generate heat-map image
-    DiffResult result{ (pedantic ? DiffResult{ 0 } : DiffResult{ threshold, tolerance }) };
+    DiffResult result{ (opt.pedantic ? DiffResult{ 0 } : DiffResult{ threshold, tolerance }) };
     pixelsDiff.resize(extentA.width * extentA.height);
 
-    if (verbose)
+    if (opt.verbose)
         result.ResetHistogram(&histogram_);
 
     for_range(i, pixelsDiff.size())
@@ -1375,7 +1446,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
     if (result.Mismatch())
     {
         // Save diff inage and return highest difference value
-        if (!SaveImage(pixelsDiff, extentA, diffPath + name + ".Diff.png", verbose))
+        if (!SaveImage(pixelsDiff, extentA, diffPath + name + ".Diff.png", opt.verbose))
             return DiffErrorSaveDiffFailed;
     }
 
@@ -1384,7 +1455,7 @@ TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, i
 
 void TestbedContext::RecordTestResult(TestResult result, const char* name)
 {
-    const bool highlighted = verbose;
+    const bool highlighted = opt.verbose;
     PrintTestResult(result, name, highlighted);
     if (TestFailed(result))
         ++failures;

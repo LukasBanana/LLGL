@@ -9,12 +9,13 @@
 /* --- Renderer independent (RI) tests --- */
 
 #define DECL_RITEST(NAME) \
-    static TestResult Test##NAME()
+    static TestResult Test##NAME(const Options& opt)
 
 DECL_RITEST( ContainerDynamicArray );
 DECL_RITEST( ContainerSmallVector );
 DECL_RITEST( ContainerUTF8String );
 DECL_RITEST( ParseUtil );
+DECL_RITEST( ImageConversions );
 
 #undef DECL_RITEST
 

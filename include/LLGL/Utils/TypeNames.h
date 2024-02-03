@@ -13,6 +13,8 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 */
 
 #include <LLGL/Export.h>
+#include <LLGL/Format.h>
+#include <LLGL/ImageFlags.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/ResourceFlags.h>
@@ -60,6 +62,12 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage val);
 \remarks Return value examples are \c "R8UNorm", \c "RGBA16Float", \c "D24UNormS8UInt", \c "RGB DXT1".
 */
 LLGL_EXPORT const char* ToString(const Format val);
+
+/**
+\brief Returns a string representation for the specified ImageFormat value, or null if the input type is invalid.
+\remarks Return value examples are \c "RGB", \c "ABGR".
+*/
+LLGL_EXPORT const char* ToString(const ImageFormat val);
 
 /**
 \brief Returns a string representation for the specified TextureType value, or null if the input type is invalid.

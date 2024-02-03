@@ -29,7 +29,7 @@ DEF_TEST( TextureTypes )
             return result;
 
         // Print duration
-        if (showTiming)
+        if (opt.showTiming)
         {
             const std::uint64_t t1 = Timer::Tick();
             Log::Printf("Create texture: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));
@@ -43,7 +43,7 @@ DEF_TEST( TextureTypes )
             TestResult intermResult = CreateDummyTextureAndMeasureTiming((NAME), (TYPE), (EXTENT), (MIPS), (LAYERS), (SAMPLES));    \
             if (intermResult != TestResult::Passed)                                                                                 \
             {                                                                                                                       \
-                if (greedy)                                                                                                         \
+                if (opt.greedy)                                                                                                     \
                     result = intermResult;                                                                                          \
                 else                                                                                                                \
                     return intermResult;                                                                                            \
@@ -51,7 +51,7 @@ DEF_TEST( TextureTypes )
         }
 
     #define CREATE_DUMMY_SLOW(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES) \
-        if (!fastTest)                                                   \
+        if (!opt.fastTest)                                                  \
         {                                                                \
             CREATE_DUMMY(NAME, TYPE, EXTENT, MIPS, LAYERS, SAMPLES);     \
         }

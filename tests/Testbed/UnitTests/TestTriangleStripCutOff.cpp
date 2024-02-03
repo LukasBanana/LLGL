@@ -97,7 +97,7 @@ DEF_TEST( TriangleStripCutOff )
         cmdBuffer->BeginRenderPass(*swapChain);
         {
             // Draw scene
-            cmdBuffer->SetViewport(resolution);
+            cmdBuffer->SetViewport(opt.resolution);
 
             // Draw first capture with undefined index format
             cmdBuffer->Clear(ClearFlags::Color);
@@ -110,7 +110,7 @@ DEF_TEST( TriangleStripCutOff )
                 cmdBuffer->SetIndexBuffer(*indexBuf, Format::R32UInt, indicesUI32Offset);
                 cmdBuffer->DrawIndexed(numUI32Indices, 0);
             }
-            readbackTex[0] = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), resolution);
+            readbackTex[0] = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
 
             // Draw first capture with undefined index format
             cmdBuffer->Clear(ClearFlags::Color);
@@ -123,7 +123,7 @@ DEF_TEST( TriangleStripCutOff )
                 cmdBuffer->SetIndexBuffer(*indexBuf, Format::R32UInt, indicesUI32Offset);
                 cmdBuffer->DrawIndexed(numUI32Indices, 0);
             }
-            readbackTex[1] = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), resolution);
+            readbackTex[1] = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
         }
         cmdBuffer->EndRenderPass();
     }

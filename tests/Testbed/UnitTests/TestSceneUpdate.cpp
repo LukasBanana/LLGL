@@ -50,7 +50,7 @@ DEF_TEST( SceneUpdate )
     }
 
     // Skip every other frame on fast test
-    if (fastTest && (frame % 2 == 0))
+    if (opt.fastTest && (frame % 2 == 0))
         return TestResult::ContinueSkipFrame;
 
     // Update scene constants
@@ -90,7 +90,7 @@ DEF_TEST( SceneUpdate )
         {
             // Draw scene
             cmdBuffer->Clear(ClearFlags::ColorDepth);
-            cmdBuffer->SetViewport(resolution);
+            cmdBuffer->SetViewport(opt.resolution);
             cmdBuffer->SetResource(0, *sceneCbuffer);
 
             // Draw top part
@@ -112,7 +112,7 @@ DEF_TEST( SceneUpdate )
             cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
             // Capture framebuffer
-            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), resolution);
+            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
         }
         cmdBuffer->EndRenderPass();
     }
@@ -130,7 +130,7 @@ DEF_TEST( SceneUpdate )
     if (intermediateResult != TestResult::Passed)
         result = intermediateResult;
 
-    if (intermediateResult == TestResult::Passed || greedy)
+    if (intermediateResult == TestResult::Passed || opt.greedy)
     {
         if (frame + 1 < numFrames)
             return TestResult::Continue;

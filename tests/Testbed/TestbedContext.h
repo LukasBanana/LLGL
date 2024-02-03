@@ -13,6 +13,7 @@
 #include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/Utils/ColorRGB.h>
+#include <LLGL/Utils/Image.h>
 #include <Gauss/Matrix.h>
 #include <Gauss/Vector4.h>
 #include <vector>
@@ -44,7 +45,7 @@ class TestbedContext
 
     public:
 
-        static unsigned RunRendererIndependentTests();
+        static unsigned RunRendererIndependentTests(int argc, char* argv[]);
 
         static void PrintSeparator();
 
@@ -148,6 +149,18 @@ class TestbedContext
 
     protected:
 
+        struct Options
+        {
+            std::string     outputDir;
+            bool            verbose;
+            bool            pedantic;       // Ignore thresholds, always compare strictly against reference values
+            bool            greedy;         // Continue testing on failure
+            bool            sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
+            bool            showTiming;
+            bool            fastTest;       // Skip slow buffer/texture creations to speed up test run
+            LLGL::Extent2D  resolution;
+        };
+
         struct StandardVertex
         {
             float position[3];
@@ -231,14 +244,7 @@ class TestbedContext
     protected:
 
         const std::string               moduleName;
-        const std::string               outputDir;
-        const bool                      verbose;
-        const bool                      pedantic;       // Ignore thresholds, always compare strictly against reference values
-        const bool                      greedy;         // Continue testing on failure
-        const bool                      sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
-        const bool                      showTiming;
-        const bool                      fastTest;       // Skip slow buffer/texture creations to speed up test run
-        const LLGL::Extent2D            resolution;
+        const Options                   opt;
         const std::vector<std::string>  selectedTests;
 
         unsigned                        failures                = 0;
@@ -267,9 +273,14 @@ class TestbedContext
 
     private:
 
+        static Options ParseOptions(int argc, char* argv[]);
+
         static std::string FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup = 1, bool formatAsFloats = false);
 
         static double ToMillisecs(std::uint64_t t0, std::uint64_t t1);
+
+        static LLGL::Image LoadImageFromFile(const std::string& filename, bool verbose = false);
+        static void SaveImageToFile(const LLGL::Image& img, const std::string& filename, bool verbose = false);
 
     private:
 

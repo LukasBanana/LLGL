@@ -186,7 +186,7 @@ DEF_TEST( TextureToBufferCopy )
                     );
                     return TestResult::FailedMismatch;
                 }
-                else if (sanityCheck)
+                else if (opt.sanityCheck)
                 {
                     const std::string dataStr = TestbedContext::FormatByteArray(srcTexImage.data(), srcTexImage.size(), 4, formatAsFloats);
                     Log::Printf(
@@ -207,7 +207,7 @@ DEF_TEST( TextureToBufferCopy )
         renderer->Release(*dstTex);
 
         // Print duration
-        if (showTiming)
+        if (opt.showTiming)
         {
             const std::uint64_t t1 = Timer::Tick();
             Log::Printf("Copy texture to buffer: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));

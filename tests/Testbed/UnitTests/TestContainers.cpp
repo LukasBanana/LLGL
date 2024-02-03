@@ -14,7 +14,7 @@
 #include <codecvt>
 
 
-TestResult TestbedContext::TestContainerDynamicArray()
+DEF_RITEST( ContainerDynamicArray )
 {
     // Test byte array
     const char* cmp8BytesZero   = "\0\0\0\0\0\0\0\0";
@@ -130,7 +130,7 @@ TestResult TestbedContext::TestContainerDynamicArray()
     return TestResult::Passed;
 }
 
-TestResult TestbedContext::TestContainerSmallVector()
+DEF_RITEST( ContainerSmallVector )
 {
     constexpr int cmpInt16[16] = { 1,2,3,4, 42,3476,93,-12, 0xFF,0xCD,0x10,0xDE, 384723,901872,-874673,1234567 };
     constexpr int cmpInt4[4] = { 4,3,2,1 };
@@ -230,7 +230,7 @@ TestResult TestbedContext::TestContainerSmallVector()
     return TestResult::Passed;
 }
 
-TestResult TestbedContext::TestContainerUTF8String()
+DEF_RITEST( ContainerUTF8String )
 {
     // Test UTF8String concatentation
     UTF8String sa1 = "Hello";

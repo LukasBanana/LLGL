@@ -160,7 +160,7 @@ DEF_TEST( TextureCopy )
         renderer->Release(*dstTex);
 
         // Print duration
-        if (showTiming)
+        if (opt.showTiming)
         {
             const std::uint64_t t1 = Timer::Tick();
             Log::Printf("Copy texture: %s ( %f ms )\n", name, TestbedContext::ToMillisecs(t0, t1));

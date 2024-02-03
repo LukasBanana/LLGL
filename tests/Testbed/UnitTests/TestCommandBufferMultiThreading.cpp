@@ -240,13 +240,13 @@ DEF_TEST( CommandBufferMultiThreading )
     avgSubmissionTime += submissionTime;
 
     // Print threading order info
-    if (showTiming)
+    if (opt.showTiming)
     {
         const std::string frameNo = (frame < 10 ? "Frame  " : "Frame ") + std::to_string(frame);
         std::string enterOrder = threadEnterOrder.Flush();
-        Log::Printf("Thread enter order: [%s] %s (Encoding:   %f ms)\n", frameNo.c_str(), enterOrder.c_str(), encodingTime);
+        Log::Printf("Thread enter order: [%s] %s (Encoding:   %.4f ms)\n", frameNo.c_str(), enterOrder.c_str(), encodingTime);
         std::string exitOrder = threadExitOrder.Flush();
-        Log::Printf("Thread exit order:  [%s] %s (Submission: %f ms)\n", frameNo.c_str(), exitOrder.c_str(), submissionTime);
+        Log::Printf("Thread exit order:  [%s] %s (Submission: %.4f ms)\n", frameNo.c_str(), exitOrder.c_str(), submissionTime);
     }
 
     if (frame < numFrames)
@@ -255,8 +255,8 @@ DEF_TEST( CommandBufferMultiThreading )
     avgEncodingTime /= numFrames;
     avgSubmissionTime /= numFrames;
 
-    if (showTiming)
-        Log::Printf("Average timing: Encoding ( %f ms ), Submission ( %f ms )\n", avgEncodingTime, avgSubmissionTime);
+    if (opt.showTiming)
+        Log::Printf("Average timing: Encoding ( %.4f ms ), Submission ( %.4f ms )\n", avgEncodingTime, avgSubmissionTime);
 
     // Read result from render target textures
     std::vector<ColorRGBub> outputImage;
@@ -276,7 +276,7 @@ DEF_TEST( CommandBufferMultiThreading )
 
     for_range(i, numCmdBuffers)
     {
-        if (fastTest && i % 2 == 1)
+        if (opt.fastTest && i % 2 == 1)
             continue;
 
         renderer->ReadTexture(*outputTextures[i], texRegion, dstImageView);
@@ -290,7 +290,7 @@ DEF_TEST( CommandBufferMultiThreading )
         if (intermediateResult != TestResult::Passed)
         {
             result = intermediateResult;
-            if (!greedy)
+            if (!opt.greedy)
                 break;
         }
     }

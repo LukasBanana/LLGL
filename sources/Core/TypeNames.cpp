@@ -238,6 +238,39 @@ LLGL_EXPORT const char* ToString(const Format val)
     return nullptr;
 }
 
+LLGL_EXPORT const char* ToString(const ImageFormat val)
+{
+    using T = ImageFormat;
+
+    switch (val)
+    {
+        /* Color formats */
+        case T::Alpha:          return "Alpha";
+        case T::R:              return "R";
+        case T::RG:             return "RG";
+        case T::RGB:            return "RGB";
+        case T::BGR:            return "BGR";
+        case T::RGBA:           return "RGBA";
+        case T::BGRA:           return "BGRA";
+        case T::ARGB:           return "ARGB";
+        case T::ABGR:           return "ABGR";
+
+        /* Depth-stencil formats */
+        case T::Depth:          return "Depth";
+        case T::DepthStencil:   return "DepthStencil";
+        case T::Stencil:        return "Stencil";
+
+        /* Compressed formats */
+        case T::BC1:            return "BC1";
+        case T::BC2:            return "BC2";
+        case T::BC3:            return "BC3";
+        case T::BC4:            return "BC4";
+        case T::BC5:            return "BC5";
+    }
+
+    return nullptr;
+}
+
 LLGL_EXPORT const char* ToString(const TextureType val)
 {
     using T = TextureType;

@@ -80,8 +80,8 @@ DEF_TEST( BlendStates )
     // Initialize viepwort to fit all blend state scenes into a single window
     Viewport viewport;
     {
-        viewport.width  = static_cast<float>(resolution.width ) / static_cast<float>(numBlendOps);
-        viewport.height = static_cast<float>(resolution.height) / static_cast<float>(numBlendOps);
+        viewport.width  = static_cast<float>(opt.resolution.width ) / static_cast<float>(numBlendOps);
+        viewport.height = static_cast<float>(opt.resolution.height) / static_cast<float>(numBlendOps);
     }
 
     // Render scene
@@ -131,7 +131,7 @@ DEF_TEST( BlendStates )
             }
 
             // Capture framebuffer
-            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), resolution);
+            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
         }
         cmdBuffer->EndRenderPass();
     }

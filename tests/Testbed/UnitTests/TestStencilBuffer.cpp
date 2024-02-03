@@ -25,8 +25,8 @@ DEF_TEST( StencilBuffer )
     TextureDescriptor texDesc;
     {
         texDesc.format          = Format::D24UNormS8UInt;
-        texDesc.extent.width    = resolution.width;
-        texDesc.extent.height   = resolution.height;
+        texDesc.extent.width    = opt.resolution.width;
+        texDesc.extent.height   = opt.resolution.height;
         texDesc.bindFlags       = BindFlags::DepthStencilAttachment;
         texDesc.mipLevels       = 1;
     }
@@ -36,7 +36,7 @@ DEF_TEST( StencilBuffer )
     // Create depth-only render target for scene
     RenderTargetDescriptor renderTargetDesc;
     {
-        renderTargetDesc.resolution             = resolution;
+        renderTargetDesc.resolution             = opt.resolution;
         renderTargetDesc.depthStencilAttachment = readbackTex;
     }
     RenderTarget* renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
@@ -94,7 +94,7 @@ DEF_TEST( StencilBuffer )
             cmdBuffer->Clear(ClearFlags::Stencil);
             cmdBuffer->SetPipelineState(*pso);
             cmdBuffer->SetStencilReference(stencilRef);
-            cmdBuffer->SetViewport(resolution);
+            cmdBuffer->SetViewport(opt.resolution);
             cmdBuffer->SetVertexBuffer(*meshBuffer);
             cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, models[ModelCube].indexBufferOffset);
             cmdBuffer->SetResource(0, *sceneCbuffer);
@@ -107,8 +107,8 @@ DEF_TEST( StencilBuffer )
     // Readback depth buffer and compare with expected result
     const Offset3D readbackTexPosition
     {
-        static_cast<std::int32_t>(resolution.width/2),
-        static_cast<std::int32_t>(resolution.height/2),
+        static_cast<std::int32_t>(opt.resolution.width/2),
+        static_cast<std::int32_t>(opt.resolution.height/2),
         0,
     };
     const TextureRegion readbackTexRegion{ readbackTexPosition, Extent3D{ 1, 1, 1 } };
@@ -139,7 +139,7 @@ DEF_TEST( StencilBuffer )
     }
     renderer->ReadTexture(*readbackTex, TextureRegion{ Offset3D{}, texDesc.extent }, dstImageView);
 
-    SaveStencilImage(readbackStencilBuffer, resolution, "StencilBuffer_Set50");
+    SaveStencilImage(readbackStencilBuffer, opt.resolution, "StencilBuffer_Set50");
 
     const DiffResult diff = DiffImages("StencilBuffer_Set50");
 
