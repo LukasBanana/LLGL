@@ -715,66 +715,67 @@ configure_package_config_file(
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LLGLConfig.cmake" DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/LLGL")
 
 # Summary Information
-message("~~~ Build Summary ~~~")
+message(STATUS "~~~ Build Summary ~~~")
 
-message("Target Platform: ${LLGL_TARGET_PLATFORM}")
-message("Target Architecture: ${SUMMARY_TARGET_ARCH}")
-message("Target Library: ${SUMMARY_LIBRARY_TYPE}")
+message(STATUS "Target Platform: ${LLGL_TARGET_PLATFORM}")
+message(STATUS "Target Architecture: ${SUMMARY_TARGET_ARCH}")
+message(STATUS "Target Library: ${SUMMARY_LIBRARY_TYPE}")
 
 if(LLGL_BUILD_RENDERER_NULL)
-    message("Build Renderer: Null")
+    message(STATUS "Build Renderer: Null")
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
-    message("Build Renderer: OpenGL")
+    message(STATUS "Build Renderer: OpenGL")
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
-    message("Build Renderer: OpenGLES 3")
+    message(STATUS "Build Renderer: OpenGLES 3")
 endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN)
-    message("Build Renderer: Vulkan")
+    message(STATUS "Build Renderer: Vulkan")
 endif()
 
 if(LLGL_BUILD_RENDERER_METAL)
-    message("Build Renderer: Metal")
+    message(STATUS "Build Renderer: Metal")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
     if(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.3")
-        message("Build Renderer: Direct3D 11.3")
+        message(STATUS "Build Renderer: Direct3D 11.3")
     elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.2")
-        message("Build Renderer: Direct3D 11.2")
+        message(STATUS "Build Renderer: Direct3D 11.2")
     elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.1")
-        message("Build Renderer: Direct3D 11.1")
+        message(STATUS "Build Renderer: Direct3D 11.1")
     else()
-        message("Build Renderer: Direct3D 11.0")
+        message(STATUS "Build Renderer: Direct3D 11.0")
     endif()
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
-    message("Build Renderer: Direct3D 12.0")
+    message(STATUS "Build Renderer: Direct3D 12.0")
 endif()
 
 if(LLGL_BUILD_WRAPPER_C99)
-    message("Build Wrapper: C99")
+    message(STATUS "Build Wrapper: C99")
 endif()
 
 if(LLGL_BUILD_WRAPPER_CSHARP)
-    message("Build Wrapper: C#")
+    message(STATUS "Build Wrapper: C#")
 endif()
 
 if(LLGL_BUILD_EXAMPLES)
-    message("Build Examples")
+    message(STATUS "Build Examples")
 endif()
 
 if(LLGL_BUILD_TESTS)
-    message("Build Tests")
+    message(STATUS "Build Tests")
 endif()
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
-    message("Including Submodule: SPIRV-Headers")
+    message(STATUS "Including Submodule: SPIRV-Headers")
 endif()
 
+message(STATUS "~~~~~~~~~~~~~~~~~~~~~")
 
