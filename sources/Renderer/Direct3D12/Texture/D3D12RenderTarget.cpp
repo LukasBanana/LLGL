@@ -306,7 +306,7 @@ void D3D12RenderTarget::CreateDepthStencilAttachment(
     }
     else
     {
-        CD3DX12_CLEAR_VALUE clearValue(depthStencilFormat_, 1.0f, 0);
+        const CD3DX12_CLEAR_VALUE clearValue{ depthStencilFormat_, 1.0f, 0 };
         depthStencil_ = CreateInternalTexture(
             device,
             depthStencilFormat_,
@@ -339,7 +339,7 @@ D3D12Resource* D3D12RenderTarget::CreateInternalTexture(
 
     /* Create render target resource */
     D3D12Resource tex2D;
-    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    const CD3DX12_HEAP_PROPERTIES heapProperties{ D3D12_HEAP_TYPE_DEFAULT };
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,

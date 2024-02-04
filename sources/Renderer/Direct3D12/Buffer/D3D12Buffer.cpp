@@ -399,8 +399,8 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
         internalSize_ += g_soBufferFillSizeLen;
 
     /* Create generic buffer resource */
-    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc));
+    const CD3DX12_HEAP_PROPERTIES heapProperties{ D3D12_HEAP_TYPE_DEFAULT };
+    const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc));
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
@@ -431,8 +431,8 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlag
     }
 
     /* Create CPU access buffer */
-    CD3DX12_HEAP_PROPERTIES heapProperties(heapType);
-    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize());
+    const CD3DX12_HEAP_PROPERTIES heapProperties{ heapType };
+    const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize());
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
@@ -485,8 +485,8 @@ void D3D12Buffer::CreateIntermediateUAVBuffer()
     resource_.Get()->GetDevice(IID_PPV_ARGS(&device));
 
     /* Create intermediate resource with UAV support */
-    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
-    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    const CD3DX12_HEAP_PROPERTIES heapProperties{ D3D12_HEAP_TYPE_DEFAULT };
+    const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     HRESULT hr = device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
