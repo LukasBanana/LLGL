@@ -24,10 +24,12 @@ ComPtr<ID3D12Resource> DXCreateResultResource(
 {
     ComPtr<ID3D12Resource> resource;
 
+    CD3DX12_HEAP_PROPERTIES heapProperties(heapType);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
     HRESULT hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(heapType),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(size),
+        &bufferDesc,
         initialState,
         nullptr,
         IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
@@ -202,7 +204,8 @@ void D3D12QueryHeap::TransitionResource(
     D3D12_RESOURCE_STATES       stateBefore,
     D3D12_RESOURCE_STATES       stateAfter)
 {
-    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resultResource_.Get(), stateBefore, stateAfter));
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resultResource_.Get(), stateBefore, stateAfter);
+    commandList->ResourceBarrier(1, &barrier);
 }
 
 void D3D12QueryHeap::CopyResultsToResource(

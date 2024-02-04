@@ -462,8 +462,9 @@ void D3D12SwapChain::CreateColorBufferRTVs(ID3D12Device* device, const Extent2D&
         for_range(i, numColorBuffers_)
         {
             /* Create render target resource */
+            CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
             HRESULT hr = device->CreateCommittedResource(
-                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &tex2DMSDesc,
                 D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -501,12 +502,14 @@ void D3D12SwapChain::CreateDepthStencil(ID3D12Device* device, const Extent2D& re
         (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
     );
 
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    CD3DX12_CLEAR_VALUE clearValue(depthStencilFormat_, 1.0f, 0);
     HRESULT hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &tex2DDesc,
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &CD3DX12_CLEAR_VALUE(depthStencilFormat_, 1.0f, 0),
+        &clearValue,
         IID_PPV_ARGS(depthStencil_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for swap-chain depth-stencil buffer");

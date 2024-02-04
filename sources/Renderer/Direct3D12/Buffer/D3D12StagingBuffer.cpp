@@ -52,10 +52,12 @@ void D3D12StagingBuffer::Create(
     size = GetAlignedSize<UINT64>(size, alignment);
 
     /* Create GPU upload buffer */
+    CD3DX12_HEAP_PROPERTIES heapProperties(heapType);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
     HRESULT hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(heapType),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(size),
+        &bufferDesc,
         (heapType == D3D12_HEAP_TYPE_READBACK ? D3D12_RESOURCE_STATE_COPY_DEST : D3D12_RESOURCE_STATE_GENERIC_READ),
         nullptr,
         IID_PPV_ARGS(native_.ReleaseAndGetAddressOf())
