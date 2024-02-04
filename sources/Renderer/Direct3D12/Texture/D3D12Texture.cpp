@@ -410,10 +410,12 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
         for_range(arrayLayer, region.subresource.numArrayLayers)
         {
             const UINT srcSubresource = CalcSubresource(region.subresource.baseMipLevel, region.subresource.baseArrayLayer + arrayLayer, plane);
+            CD3DX12_TEXTURE_COPY_LOCATION dest(dstBuffer, dstBufferFootprint);
+            CD3DX12_TEXTURE_COPY_LOCATION src(GetNative(), srcSubresource);
             context.GetCommandList()->CopyTextureRegion(
-                &CD3DX12_TEXTURE_COPY_LOCATION(dstBuffer, dstBufferFootprint),
+                &dest,
                 0, 0, 0,
-                &CD3DX12_TEXTURE_COPY_LOCATION(GetNative(), srcSubresource),
+                &src,
                 &srcBox
             );
             dstBufferFootprint.Offset += outLayerStride;
@@ -774,8 +776,9 @@ void D3D12Texture::CreateNativeTexture(ID3D12Device* device, const TextureDescri
     }
 
     /* Create hardware resource for the texture */
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
     HRESULT hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &descD3D,
         resource_.SetInitialAndUsageStates(D3D12_RESOURCE_STATE_COPY_DEST, GetInitialD3D12ResourceState(desc)),

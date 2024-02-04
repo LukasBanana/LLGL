@@ -395,7 +395,8 @@ class LLGL_EXPORT SmallVector
             if (size_ > 0)
             {
                 --size_;
-                Allocator{}.destroy(end());
+                Allocator alloc;
+                std::allocator_traits<Allocator>::destroy(alloc, end());
             }
         }
 

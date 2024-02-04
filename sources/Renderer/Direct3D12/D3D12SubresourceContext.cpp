@@ -30,10 +30,12 @@ ID3D12Resource* D3D12SubresourceContext::CreateUploadBuffer(UINT64 size, D3D12_R
 {
     /* Create buffer resource in upload heap */
     ComPtr<ID3D12Resource> resource;
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
     HRESULT hr = GetDevice()->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(size),
+        &bufferDesc,
         initialState,
         nullptr,
         IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
@@ -46,10 +48,12 @@ ID3D12Resource* D3D12SubresourceContext::CreateReadbackBuffer(UINT64 size, D3D12
 {
     /* Create buffer resource in readback heap */
     ComPtr<ID3D12Resource> resource;
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_READBACK);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
     HRESULT hr = GetDevice()->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(size),
+        &bufferDesc,
         initialState,
         nullptr,
         IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
@@ -62,8 +66,9 @@ ID3D12Resource* D3D12SubresourceContext::CreateTexture(const D3D12_RESOURCE_DESC
 {
     /* Create texture resource in default heap ready to be initialized with an upload buffer */
     ComPtr<ID3D12Resource> resource;
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
     HRESULT hr = GetDevice()->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &desc,
         initialState,

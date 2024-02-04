@@ -93,11 +93,12 @@ void D3D12BufferConstantsPool::CreateImmutableBuffer(
 {
     /* Create generic buffer resource */
     const UINT64 bufferSize = data.size() * sizeof(UINT64);
-
+    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
     HRESULT hr = device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+        &bufferDesc,
         resource_.SetInitialAndUsageStates(D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE),
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
