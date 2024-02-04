@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -48,7 +48,7 @@ jobs:
         echo "LLGL built with Xcode for iOS on $CURRENT_TIME." > ${{ env.README }}
 
     - name: Upload Binaries
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
         name: LLGL-iOS-${{ matrix.config }}-arm64

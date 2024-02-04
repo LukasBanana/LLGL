@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -48,7 +48,7 @@ jobs:
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
     - name: Upload Binaries
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: matrix.generator == 'Visual Studio 17 2022' && matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
         name: LLGL-Windows-${{ matrix.config }}-${{ matrix.arch == 'x64' && 'x86_64' || 'x86' }}
@@ -64,7 +64,7 @@ jobs:
         ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }}.exe d3d12 -v -f -t -g
 
     - name: Upload Test Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always() && matrix.generator == 'Visual Studio 17 2022' && matrix.arch == 'x64' && matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
         name: LLGL-Win64-Test_Report

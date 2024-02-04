@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -54,7 +54,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/Linux-x86_64 --config ${{ matrix.config }}
 
     - name: Upload Binaries
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release'
       with:
         name: LLGL-Ubuntu-${{ matrix.config }}-x86_64
@@ -73,7 +73,7 @@ jobs:
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
     - name: Upload Test Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() && matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release' }}
       with:
         name: LLGL-Ubuntu-Test_Report
