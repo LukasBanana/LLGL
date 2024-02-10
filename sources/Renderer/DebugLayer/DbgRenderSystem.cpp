@@ -749,9 +749,9 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
                 ValidateVertexAttributesForBuffer(bufferDesc.vertexAttribs[i], bufferDesc.vertexAttribs[i + 1]);
         }
 
-        /* Validate buffer size for specified vertex format */
+        /* Validate buffer size for specified vertex format, unless it's also used for as index buffer */
         formatSize = bufferDesc.vertexAttribs.front().stride;
-        if (formatSize > 0 && bufferDesc.size % formatSize != 0)
+        if (formatSize > 0 && bufferDesc.size % formatSize != 0 && (bufferDesc.bindFlags & BindFlags::IndexBuffer) == 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of %u %s", formatSize, ToByteLabel(formatSize));
     }
 
@@ -767,9 +767,9 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: %s", IntToHex(static_cast<std::uint32_t>(bufferDesc.format)));
         }
 
-        /* Validate buffer size for specified index format */
+        /* Validate buffer size for specified index format, unless it's also used for as vertex buffer  */
         formatSize = GetFormatAttribs(bufferDesc.format).bitSize / 8;
-        if (formatSize > 0 && bufferDesc.size % formatSize != 0)
+        if (formatSize > 0 && bufferDesc.size % formatSize != 0 && (bufferDesc.bindFlags & BindFlags::VertexBuffer) == 0)
         {
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
