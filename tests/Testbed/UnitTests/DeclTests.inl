@@ -8,8 +8,15 @@
 
 /* --- Renderer independent (RI) tests --- */
 
-#define DECL_RITEST(NAME) \
-    static TestResult Test##NAME(const Options& opt)
+#ifndef DECL_RITEST
+#   ifdef GATHER_KNOWN_TESTS
+#       define DECL_RITEST(NAME) \
+            knownTests.push_back(#NAME)
+#   else
+#       define DECL_RITEST(NAME) \
+            static TestResult Test##NAME(const Options& opt)
+#   endif
+#endif
 
 DECL_RITEST( ContainerDynamicArray );
 DECL_RITEST( ContainerSmallVector );
@@ -21,8 +28,15 @@ DECL_RITEST( ImageConversions );
 
 /* --- Main tests --- */
 
-#define DECL_TEST(NAME) \
-    TestResult Test##NAME(unsigned frame)
+#ifndef DECL_TEST
+#   ifdef GATHER_KNOWN_TESTS
+#       define DECL_TEST(NAME) \
+            knownTests.push_back(#NAME)
+#   else
+    #   define DECL_TEST(NAME) \
+            TestResult Test##NAME(unsigned frame)
+#   endif
+#endif
 
 // Command buffer tests
 DECL_TEST( CommandBufferSubmit );
@@ -55,6 +69,7 @@ DECL_TEST( DualSourceBlending );
 DECL_TEST( TriangleStripCutOff );
 DECL_TEST( TextureViews );
 DECL_TEST( Uniforms );
+DECL_TEST( ShadowMapping );
 
 #undef DECL_TEST
 

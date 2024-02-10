@@ -98,7 +98,6 @@ class TestbedContext
         {
             PipelineSolid,
             PipelineTextured,
-            PipelineDualSourceBlend,
 
             PipelineCount,
         };
@@ -115,6 +114,9 @@ class TestbedContext
             PSUnprojected,
             VSDualSourceBlend,
             PSDualSourceBlend,
+            VSShadowMap,
+            VSShadowedScene,
+            PSShadowedScene,
 
             ShaderCount,
         };
@@ -151,14 +153,17 @@ class TestbedContext
 
         struct Options
         {
-            std::string     outputDir;
-            bool            verbose;
-            bool            pedantic;       // Ignore thresholds, always compare strictly against reference values
-            bool            greedy;         // Continue testing on failure
-            bool            sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
-            bool            showTiming;
-            bool            fastTest;       // Skip slow buffer/texture creations to speed up test run
-            LLGL::Extent2D  resolution;
+            std::string                 outputDir;
+            bool                        verbose;
+            bool                        pedantic;       // Ignore thresholds, always compare strictly against reference values
+            bool                        greedy;         // Continue testing on failure
+            bool                        sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
+            bool                        showTiming;
+            bool                        fastTest;       // Skip slow buffer/texture creations to speed up test run
+            LLGL::Extent2D              resolution;
+            std::vector<std::string>    selectedTests;
+
+            bool ContainsTest(const char* name) const;
         };
 
         struct StandardVertex
@@ -245,7 +250,6 @@ class TestbedContext
 
         const std::string               moduleName;
         const Options                   opt;
-        const std::vector<std::string>  selectedTests;
 
         unsigned                        failures                = 0;
 

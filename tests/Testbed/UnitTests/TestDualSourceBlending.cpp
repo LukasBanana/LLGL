@@ -15,9 +15,17 @@ DEF_TEST( DualSourceBlending )
         return TestResult::Skipped;
 
     // Create all blend states
+    PipelineLayout* psoLayout = renderer->CreatePipelineLayout(
+        Parse(
+            HasCombinedSamplers()
+                ?   "texture(colorMapA@1,colorMapB@2):frag,sampler(1,2):frag"
+                :   "texture(colorMapA@1,colorMapB@2):frag,sampler(3,4):frag"
+        )
+    );
+
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout                  = layouts[PipelineDualSourceBlend];
+        psoDesc.pipelineLayout                  = psoLayout;
         psoDesc.renderPass                      = swapChain->GetRenderPass();
         psoDesc.vertexShader                    = shaders[VSDualSourceBlend];
         psoDesc.fragmentShader                  = shaders[PSDualSourceBlend];
@@ -72,6 +80,7 @@ DEF_TEST( DualSourceBlending )
     renderer->Release(*samplerA);
     renderer->Release(*samplerB);
     renderer->Release(*pso);
+    renderer->Release(*psoLayout);
 
     return diff.Evaluate("dual source blending");
 }

@@ -57,6 +57,7 @@ DEF_RITEST( ImageConversions )
                 }                                                                                           \
             }
 
+        // Convert image through chain of format and data type transitions
         CONVERT_IMAGE(ImageFormat::BGR, DataType::Float16, w*h*3*2);
         CONVERT_IMAGE(ImageFormat::ABGR, DataType::Float16, w*h*4*2);
         CONVERT_IMAGE(ImageFormat::ARGB, DataType::Float64, w*h*4*8);

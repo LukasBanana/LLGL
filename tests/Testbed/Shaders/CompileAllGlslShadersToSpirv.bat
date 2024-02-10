@@ -11,6 +11,9 @@ glslangValidator -V -DENABLE_SPIRV=1 -o DualSourceBlending.450core.vert.spv Dual
 glslangValidator -V -DENABLE_SPIRV=1 -o DualSourceBlending.450core.frag.spv DualSourceBlending.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -o DynamicTriangleMesh.450core.vert.spv DynamicTriangleMesh.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o DynamicTriangleMesh.450core.frag.spv DynamicTriangleMesh.450core.frag
+glslangValidator -V -DENABLE_SPIRV=1 -o ShadowMapping.VShadow.450core.vert.spv ShadowMapping.VShadow.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -o ShadowMapping.VScene.450core.vert.spv ShadowMapping.VScene.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -o ShadowMapping.PScene.450core.frag.spv ShadowMapping.PScene.450core.frag
 echo DONE
 
 pause

@@ -104,8 +104,7 @@ static constexpr std::uint32_t g_testbedWinSize[2] = { 800, 600 };
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
     moduleName    { moduleName                               },
-    opt           { TestbedContext::ParseOptions(argc, argv) },
-    selectedTests { FindSelectedTests(argc, argv)            }
+    opt           { TestbedContext::ParseOptions(argc, argv) }
 {
     const bool isDebugMode = (HasArgument(argc, argv, "-d") || HasArgument(argc, argv, "--debug"));
 
@@ -206,42 +205,34 @@ static void PrintTestResult(TestResult result, const char* name, bool highlighte
     ::fflush(stdout);
 }
 
-static void PrintTestSummary(unsigned failures, const std::vector<std::string>& selectedTests, const std::vector<const char*>& foundTests)
+static void PrintUnknownTests(const std::vector<std::string>& selectedTests, const std::vector<const char*>& knownTests)
 {
-    // Check if there were unknown test names
-    if (selectedTests.size() != foundTests.size())
+    // Gather unknown test names
+    std::vector<std::string> unknownTests;
+    for (const std::string& name : selectedTests)
     {
-        // Gather unknown test names
-        std::vector<std::string> unknownTests;
-        for (const std::string& name : selectedTests)
-        {
-            if (std::find_if(foundTests.begin(), foundTests.end(), [&name](const char* s) -> bool { return (name == s); }) == foundTests.end())
-            {
-                unknownTests.push_back(name);
-                if (foundTests.size() + unknownTests.size() == selectedTests.size())
-                {
-                    // Found all unknown test names => early exit
-                    break;
-                }
-            }
-        }
-
-        // Print unknown test names
-        if (!unknownTests.empty())
-        {
-            std::string unknownTestsStr;
-            for (const std::string& name : unknownTests)
-            {
-                if (!unknownTestsStr.empty())
-                    unknownTestsStr += ", ";
-                unknownTestsStr += name;
-            }
-            Log::Printf("//////////////////////////////////////////\n");
-            Log::Printf("  UNKNOWN TESTS: %s\n", unknownTestsStr.c_str());
-            Log::Printf("//////////////////////////////////////////\n");
-        }
+        if (std::find_if(knownTests.begin(), knownTests.end(), [&name](const char* s) -> bool { return (name == s); }) == knownTests.end())
+            unknownTests.push_back(name);
     }
 
+    // Print unknown test names
+    if (!unknownTests.empty())
+    {
+        std::string unknownTestsStr;
+        for (const std::string& name : unknownTests)
+        {
+            if (!unknownTestsStr.empty())
+                unknownTestsStr += ", ";
+            unknownTestsStr += name;
+        }
+        Log::Printf("//////////////////////////////////////////\n");
+        Log::Printf("  UNKNOWN TESTS: %s\n", unknownTestsStr.c_str());
+        Log::Printf("//////////////////////////////////////////\n");
+    }
+}
+
+static void PrintTestSummary(unsigned failures)
+{
     // Print test results
     if (failures == 0)
         Log::Printf(" ==> ALL TESTS PASSED\n");
@@ -260,18 +251,13 @@ unsigned TestbedContext::RunAllTests()
         return failures;
     }
 
-    std::vector<const char*> foundTests;
-
-    #define RUN_TEST(TEST)                                                                          \
-        if (selectedTests.empty() ||                                                                \
-            std::find(selectedTests.begin(), selectedTests.end(), #TEST) != selectedTests.end())    \
-        {                                                                                           \
-            if (!selectedTests.empty())                                                             \
-                foundTests.push_back(#TEST);                                                        \
-            const TestResult result = RunTest(                                                      \
-                std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1)                 \
-            );                                                                                      \
-            RecordTestResult(result, #TEST);                                                        \
+    #define RUN_TEST(TEST)                                                          \
+        if (opt.ContainsTest(#TEST))                                                \
+        {                                                                           \
+            const TestResult result = RunTest(                                      \
+                std::bind(&TestbedContext::Test##TEST, this, std::placeholders::_1) \
+            );                                                                      \
+            RecordTestResult(result, #TEST);                                        \
         }
 
     // Run all command buffer tests
@@ -305,11 +291,12 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( TriangleStripCutOff         );
     RUN_TEST( TextureViews                );
     RUN_TEST( Uniforms                    );
+    RUN_TEST( ShadowMapping               );
 
     #undef RUN_TEST
 
     // Print summary
-    PrintTestSummary(failures, selectedTests, foundTests);
+    PrintTestSummary(failures);
 
     return failures;
 }
@@ -320,12 +307,25 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
 
     auto opt = TestbedContext::ParseOptions(argc, argv);
 
-    #define RUN_TEST(TEST)                                              \
-        {                                                               \
-            const TestResult result = TestbedContext::Test##TEST(opt);  \
-            PrintTestResult(result, #TEST);                             \
-            if (TestFailed(result))                                     \
-                ++failures;                                             \
+    // Check if there were any unknown tests selected
+    if (!opt.selectedTests.empty())
+    {
+        std::vector<const char*> knownTests;
+        #define GATHER_KNOWN_TESTS
+        #include "UnitTests/DeclTests.inl"
+        #undef GATHER_KNOWN_TESTS
+        PrintUnknownTests(opt.selectedTests, knownTests);
+    }
+
+    #define RUN_TEST(TEST)                                                  \
+        {                                                                   \
+            if (opt.ContainsTest(#TEST))                                    \
+            {                                                               \
+                const TestResult result = TestbedContext::Test##TEST(opt);  \
+                PrintTestResult(result, #TEST);                             \
+                if (TestFailed(result))                                     \
+                    ++failures;                                             \
+            }                                                               \
         }
 
     RUN_TEST( ContainerDynamicArray );
@@ -337,7 +337,7 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     #undef RUN_TEST
 
     // Print summary
-    PrintTestSummary(failures, {}, {});
+    PrintTestSummary(failures);
 
     return failures;
 }
@@ -700,14 +700,15 @@ static std::string FormatFloatArray(const float* data, std::size_t count, std::s
 TestbedContext::Options TestbedContext::ParseOptions(int argc, char* argv[])
 {
     Options opt;
-    opt.outputDir   = GetSanitizedOutputDir(argc, argv);
-    opt.verbose     = (HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose"));
-    opt.pedantic    = (HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic"));
-    opt.greedy      = (HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy"));
-    opt.sanityCheck = (HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check"));
-    opt.showTiming  = (HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing"));
-    opt.fastTest    = (HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast"));
-    opt.resolution  = { g_testbedWinSize[0], g_testbedWinSize[1] };
+    opt.outputDir       = GetSanitizedOutputDir(argc, argv);
+    opt.verbose         = (HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose"));
+    opt.pedantic        = (HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic"));
+    opt.greedy          = (HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy"));
+    opt.sanityCheck     = (HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check"));
+    opt.showTiming      = (HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing"));
+    opt.fastTest        = (HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast"));
+    opt.resolution      = { g_testbedWinSize[0], g_testbedWinSize[1] };
+    opt.selectedTests   = FindSelectedTests(argc, argv);
     return opt;
 }
 
@@ -769,45 +770,54 @@ bool TestbedContext::LoadShaders()
 
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Vertex,   "VSMain", "vs_5_0");
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Fragment, "PSMain", "ps_5_0");
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Vertex,   "VSMain", "vs_5_0", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",                      ShaderType::Fragment, "PSMain", "ps_5_0", definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",               ShaderType::Vertex,   "VSMain", "vs_5_0");
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",               ShaderType::Fragment, "PSMain", "ps_5_0");
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",                   ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",                   ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",                ShaderType::Vertex,   "VSMain", "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",                ShaderType::Fragment, "PSMain", "ps_5_0", nullptr, VertFmtEmpty);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0");
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",   ShaderType::Vertex,   "VSMain",  "vs_5_0");
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",   ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",    ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",    ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
+        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Vertex,   "VShadow", "vs_5_0");
+        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Vertex,   "VScene",  "vs_5_0");
+        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Fragment, "PScene",  "ps_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",              ShaderType::Vertex);
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment);
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",              ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",              ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.vert",       ShaderType::Vertex,   nullptr, nullptr);
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.frag",       ShaderType::Fragment, nullptr, nullptr);
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",           ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",          ShaderType::Vertex);
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",          ShaderType::Fragment);
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.vert",   ShaderType::Vertex,   nullptr, nullptr);
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.frag",   ShaderType::Fragment, nullptr, nullptr);
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_420))
         {
-            shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.vert",        ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-            shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.frag",        ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[VSDualSourceBlend] = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.vert", ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[PSDualSourceBlend] = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.frag", ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
         }
+        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.VShadow.330core.vert", ShaderType::Vertex);
+        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.VScene.330core.vert",  ShaderType::Vertex);
+        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.330core.frag",  ShaderType::Fragment);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Vertex,   "VSMain", "1.1");
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Fragment, "PSMain", "1.1");
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Vertex,   "VSMain", "1.1", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",                     ShaderType::Fragment, "PSMain", "1.1", definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",              ShaderType::Vertex,   "VSMain", "1.1");
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",              ShaderType::Fragment, "PSMain", "1.1");
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",                  ShaderType::Vertex,   "VSMain", "1.1", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",                  ShaderType::Fragment, "PSMain", "1.1", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",               ShaderType::Vertex,   "VSMain", "1.2", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",               ShaderType::Fragment, "PSMain", "1.2", nullptr, VertFmtEmpty);
+        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1");
+        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",  ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",  ShaderType::Fragment, "PSMain",  "1.1");
+        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",      ShaderType::Fragment, "PSMain",  "1.1", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",   ShaderType::Vertex,   "VSMain",  "1.2", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",   ShaderType::Fragment, "PSMain",  "1.2", nullptr, VertFmtEmpty);
+      //shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.metal",        ShaderType::Vertex,   "VShadow", "1.1");
+      //shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.metal",        ShaderType::Vertex,   "VScene",  "1.1");
+      //shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.metal",        ShaderType::Fragment, "PScene",  "1.1");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
@@ -821,6 +831,9 @@ bool TestbedContext::LoadShaders()
         shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
         shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.vert.spv",    ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.frag.spv",    ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.VShadow.450core.vert.spv", ShaderType::Vertex);
+        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.VScene.450core.vert.spv",  ShaderType::Vertex);
+        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.450core.frag.spv",  ShaderType::Fragment);
     }
     else
     {
@@ -847,14 +860,6 @@ void TestbedContext::CreatePipelineLayouts()
                     "cbuffer(Scene@1):vert:frag,"
                     "texture(colorMap@2):frag,"
                     "sampler(linearSampler@3):frag,"
-        )
-    );
-
-    layouts[PipelineDualSourceBlend] = renderer->CreatePipelineLayout(
-        Parse(
-            HasCombinedSamplers()
-                ?   "texture(colorMapA@1,colorMapB@2):frag,sampler(1,2):frag"
-                :   "texture(colorMapA@1,colorMapB@2):frag,sampler(3,4):frag"
         )
     );
 }
@@ -1459,6 +1464,16 @@ void TestbedContext::RecordTestResult(TestResult result, const char* name)
     PrintTestResult(result, name, highlighted);
     if (TestFailed(result))
         ++failures;
+}
+
+
+/*
+ * Options structure
+ */
+
+bool TestbedContext::Options::ContainsTest(const char* name) const
+{
+    return (selectedTests.empty() || std::find(selectedTests.begin(), selectedTests.end(), name) != selectedTests.end());
 }
 
 
