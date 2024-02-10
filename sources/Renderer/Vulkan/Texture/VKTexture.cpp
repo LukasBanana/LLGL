@@ -232,19 +232,45 @@ void VKTexture::CreateImageView(
     );
 }
 
+static bool UsageFlagsAllowImageViews(VkImageUsageFlags flags)
+{
+    /* Vulkan only alows image views on images that were created with these usage flags */
+    constexpr VkImageUsageFlags requiredFlags =
+    (
+        VK_IMAGE_USAGE_SAMPLED_BIT                              |
+        VK_IMAGE_USAGE_STORAGE_BIT                              |
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT                     |
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT             |
+        VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT                 |
+        VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT                     |
+        VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR |
+        VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT             |
+        VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR                 |
+        VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR                 |
+        VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR                 |
+        VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR                 |
+        VK_IMAGE_USAGE_SAMPLE_WEIGHT_BIT_QCOM                   |
+        VK_IMAGE_USAGE_SAMPLE_BLOCK_MATCH_BIT_QCOM
+    );
+    return ((flags & requiredFlags) != 0);
+}
+
 void VKTexture::CreateInternalImageView(VkDevice device)
 {
-    VkImageSubresourceRange subresourceRange;
+    if (UsageFlagsAllowImageViews(GetUsageFlags()))
     {
-        subresourceRange.aspectMask     = GetAspectFlags();
-        subresourceRange.baseMipLevel   = 0;
-        subresourceRange.levelCount     = GetNumMipLevels();
-        subresourceRange.baseArrayLayer = 0;
-        subresourceRange.layerCount     = GetNumArrayLayers();
+        VkImageSubresourceRange subresourceRange;
+        {
+            subresourceRange.aspectMask     = GetAspectFlags();
+            subresourceRange.baseMipLevel   = 0;
+            subresourceRange.levelCount     = GetNumMipLevels();
+            subresourceRange.baseArrayLayer = 0;
+            subresourceRange.layerCount     = GetNumArrayLayers();
+        }
+        VkComponentMapping components = {};
+        ConvertVkComponentMapping(components, TextureSwizzleRGBA{}, swizzleFormat_);
+        image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, imageView_, &components);
     }
-    VkComponentMapping components = {};
-    ConvertVkComponentMapping(components, TextureSwizzleRGBA{}, swizzleFormat_);
-    image_.CreateVkImageView(device, VKTypes::Map(GetType()), format_, subresourceRange, imageView_, &components);
 }
 
 VkImageLayout VKTexture::TransitionImageLayout(
@@ -443,6 +469,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
     numMipLevels_       = NumMipLevels(desc);
     numArrayLayers_     = GetVkImageArrayLayers(desc, imageType);
     sampleCountBits_    = GetVkImageSampleCountFlags(desc);
+    usageFlags_         = GetVkImageUsageFlags(desc);
 
     /* Create image object */
     image_.CreateVkImage(
@@ -454,7 +481,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
         numArrayLayers_,
         GetVkImageCreateFlags(desc),
         sampleCountBits_,
-        GetVkImageUsageFlags(desc)
+        usageFlags_
     );
 }
 

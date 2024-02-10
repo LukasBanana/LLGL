@@ -51,7 +51,7 @@ VKDescriptorCache::VKDescriptorCache(
         allocInfo.descriptorSetCount    = 1;
         allocInfo.pSetLayouts           = &setLayout;
     }
-    auto result = vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet_);
+    VkResult result = vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet_);
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 
     /* Pre-allocate VkCopyDescriptorSet array */
@@ -216,7 +216,7 @@ void VKDescriptorCache::EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKL
 static bool AreLayoutBindingsSorted(const ArrayView<VKLayoutBinding>& bindings)
 {
     std::uint32_t dstBindingPrev = 0;
-    for (const auto& binding : bindings)
+    for (const VKLayoutBinding& binding : bindings)
     {
         if (dstBindingPrev > binding.dstBinding)
             return false;
@@ -268,7 +268,7 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
         }
     };
 
-    for (const auto& binding : bindings)
+    for (const VKLayoutBinding& binding : bindings)
     {
         if (descTypePrev == VK_DESCRIPTOR_TYPE_MAX_ENUM)
         {

@@ -63,7 +63,9 @@ class VKTexture final : public Texture
             VKPtr<VkImageView>&             outImageView
         );
 
-        // Creates the standard image view that is stored within this texture object.
+        // Creates the primary image view that is stored within this texture object.
+        // If this texture was not created with a valid image view usage flag,
+        // this function call has no effect and GetVkImageView() returns a null handle.
         void CreateInternalImageView(VkDevice device);
 
         // Transitions this image to the specified new layout and returns the old layout.
@@ -126,6 +128,12 @@ class VKTexture final : public Texture
             return sampleCountBits_;
         }
 
+        // Returns the native Vulkan image usage flags.
+        inline VkImageUsageFlags GetUsageFlags() const
+        {
+            return usageFlags_;
+        }
+
         // Returns the region of the hardware device memory.
         inline VKDeviceMemoryRegion* GetMemoryRegion() const
         {
@@ -146,6 +154,7 @@ class VKTexture final : public Texture
         std::uint32_t           numMipLevels_       = 0;
         std::uint32_t           numArrayLayers_     = 0;
         VkSampleCountFlagBits   sampleCountBits_    = VK_SAMPLE_COUNT_1_BIT;
+        VkImageUsageFlags       usageFlags_         = 0;
         const VKSwizzleFormat   swizzleFormat_      = VKSwizzleFormat::RGBA;
 
 };

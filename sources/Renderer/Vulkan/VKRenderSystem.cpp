@@ -375,7 +375,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
     }
 
-    /* Create image view for texture */
+    /* Create primary image view for texture */
     textureVK->CreateInternalImageView(device_);
 
     return textureVK;
