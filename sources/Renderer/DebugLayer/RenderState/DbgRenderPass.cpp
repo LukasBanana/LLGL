@@ -7,6 +7,7 @@
 
 #include "DbgRenderPass.h"
 #include "../DbgCore.h"
+#include "../DbgSwapChain.h"
 #include "../../RenderPassUtils.h"
 
 
@@ -47,6 +48,28 @@ void DbgRenderPass::SetName(const char* name)
 std::uint32_t DbgRenderPass::NumEnabledColorAttachments() const
 {
     return LLGL::NumEnabledColorAttachments(desc);
+}
+
+bool DbgRenderPass::AnySwapChainAttachmentsLoaded(const DbgSwapChain& swapChain) const
+{
+    const Format colorFormat = swapChain.GetColorFormat();
+    if (IsColorFormat(colorFormat))
+    {
+        if (desc.colorAttachments[0].loadOp == AttachmentLoadOp::Load)
+            return true;
+    }
+    const Format depthStencilFormat = swapChain.GetDepthStencilFormat();
+    if (IsDepthFormat(depthStencilFormat))
+    {
+        if (desc.depthAttachment.loadOp == AttachmentLoadOp::Load)
+            return true;
+    }
+    if (IsStencilFormat(depthStencilFormat))
+    {
+        if (desc.stencilAttachment.loadOp == AttachmentLoadOp::Load)
+            return true;
+    }
+    return false;
 }
 
 

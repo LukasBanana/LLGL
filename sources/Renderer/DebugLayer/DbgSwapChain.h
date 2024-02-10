@@ -21,6 +21,7 @@ namespace LLGL
 
 
 class DbgBuffer;
+class RenderingDebugger;
 
 class DbgSwapChain final : public SwapChain
 {
@@ -50,6 +51,12 @@ class DbgSwapChain final : public SwapChain
 
         DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc, const PresentCallback& presentCallback);
 
+        // Notifies that the framebuffer will be put into a new render pass.
+        void NotifyNextRenderPass(RenderingDebugger* debugger, const RenderPass* renderPass);
+
+        // Notifies that the framebuffer has been used since the last render pass section.
+        void NotifyFramebufferUsed();
+
     public:
 
         SwapChain&                  instance;
@@ -64,6 +71,7 @@ class DbgSwapChain final : public SwapChain
 
         std::unique_ptr<DbgRenderPass>  renderPass_;
         PresentCallback                 presentCallback_;
+        bool                            usedSinceRenderPass_ = true; // Has the framebuffer been read or presented since the last render pass section?
 
 };
 

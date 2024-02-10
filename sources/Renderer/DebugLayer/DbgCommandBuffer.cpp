@@ -326,7 +326,9 @@ void DbgCommandBuffer::CopyTextureFromFramebuffer(
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with number of array layers greater than 1");
         if (dstRegion.extent.depth != 1)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of %u", dstRegion.extent.depth);
-        if (bindings_.swapChain == nullptr)
+        if (bindings_.swapChain != nullptr)
+            bindings_.swapChain->NotifyFramebufferUsed();
+        else
             LLGL_DBG_ERROR(ErrorType::InvalidState, "copy texture from framebuffer is only supported for SwapChain framebuffers");
         if (DbgRenderTarget* renderTargetDbg = bindings_.renderTarget)
             ValidateRenderTargetRange(*renderTargetDbg, srcOffset, Extent2D{ dstRegion.extent.width, dstRegion.extent.height });
@@ -695,11 +697,13 @@ void DbgCommandBuffer::BeginRenderPass(
         states_.insideRenderPass = true;
     }
 
-    renderPass = DbgGetInstance<DbgRenderPass>(renderPass);
+    const RenderPass* renderPassInstance = DbgGetInstance<DbgRenderPass>(renderPass);
 
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         auto& swapChainDbg = LLGL_CAST(DbgSwapChain&, renderTarget);
+
+        swapChainDbg.NotifyNextRenderPass(debugger_, renderPass);
 
         bindings_.swapChain     = &swapChainDbg;
         bindings_.renderTarget  = nullptr;
@@ -712,7 +716,7 @@ void DbgCommandBuffer::BeginRenderPass(
             ValidateSwapBufferIndex(swapChainDbg, actualSwapBufferIndex);
         }
 
-        instance.BeginRenderPass(swapChainDbg.instance, renderPass, numClearValues, clearValues, swapBufferIndex);
+        instance.BeginRenderPass(swapChainDbg.instance, renderPassInstance, numClearValues, clearValues, swapBufferIndex);
     }
     else
     {
@@ -721,7 +725,7 @@ void DbgCommandBuffer::BeginRenderPass(
         bindings_.swapChain     = nullptr;
         bindings_.renderTarget  = &renderTargetDbg;
 
-        instance.BeginRenderPass(renderTargetDbg.instance, renderPass, numClearValues, clearValues, swapBufferIndex);
+        instance.BeginRenderPass(renderTargetDbg.instance, renderPassInstance, numClearValues, clearValues, swapBufferIndex);
     }
 
     profile_.commandBufferRecord.renderPassSections++;

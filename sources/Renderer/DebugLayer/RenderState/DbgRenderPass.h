@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class DbgSwapChain;
+
 class DbgRenderPass final : public RenderPass
 {
 
@@ -31,6 +33,9 @@ class DbgRenderPass final : public RenderPass
         DbgRenderPass(const RenderPass& instance, const RenderPassDescriptor& desc);
 
         std::uint32_t NumEnabledColorAttachments() const;
+
+        // Returns true if any of the swap-chain attachments will be loaded with this render pass.
+        bool AnySwapChainAttachmentsLoaded(const DbgSwapChain& swapChain) const;
 
     public:
 

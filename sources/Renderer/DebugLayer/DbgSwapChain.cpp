@@ -56,6 +56,7 @@ void DbgSwapChain::Present()
     instance.Present();
     if (presentCallback_)
         presentCallback_();
+    NotifyFramebufferUsed();
 }
 
 std::uint32_t DbgSwapChain::GetCurrentSwapIndex() const
@@ -96,6 +97,29 @@ const RenderPass* DbgSwapChain::GetRenderPass() const
 bool DbgSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     return instance.ResizeBuffers(resolution);
+}
+
+void DbgSwapChain::NotifyNextRenderPass(RenderingDebugger* debugger, const RenderPass* renderPass)
+{
+    if (!usedSinceRenderPass_ && debugger != nullptr)
+    {
+        auto* renderPassDbg = LLGL_CAST(const DbgRenderPass*, renderPass);
+        if (!(renderPassDbg != nullptr && renderPassDbg->AnySwapChainAttachmentsLoaded(*this)))
+        {
+            const std::string swapChainLabel = (!label.empty() ? "swap-chain \"" + label + "\"" : "swap-chain");
+            debugger->Warningf(
+                WarningType::PointlessOperation,
+                "%s has not been read or presented since last render pass, but new render pass does not load its previous content",
+                swapChainLabel.c_str()
+            );
+        }
+    }
+    usedSinceRenderPass_ = false;
+}
+
+void DbgSwapChain::NotifyFramebufferUsed()
+{
+    usedSinceRenderPass_ = true;
 }
 
 
