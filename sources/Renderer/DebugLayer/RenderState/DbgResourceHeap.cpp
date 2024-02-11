@@ -24,11 +24,12 @@ static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipeline
 DbgResourceHeap::DbgResourceHeap(ResourceHeap& instance, const ResourceHeapDescriptor& desc) :
     instance    { instance                                          },
     desc        { desc                                              },
+    label       { LLGL_DBG_LABEL(desc)                              },
     numBindings { GetNumPipelineLayoutBindings(desc.pipelineLayout) }
 {
 }
 
-void DbgResourceHeap::SetName(const char* name)
+void DbgResourceHeap::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

@@ -119,6 +119,9 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
     extent_[2]  = static_cast<GLint>(desc.extent.depth);
     samples_    = static_cast<GLint>(desc.samples);
     #endif
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 GLTexture::~GLTexture()
@@ -136,7 +139,7 @@ GLTexture::~GLTexture()
     }
 }
 
-void GLTexture::SetName(const char* name)
+void GLTexture::SetDebugName(const char* name)
 {
     if (IsRenderbuffer())
         GLSetObjectLabel(GL_RENDERBUFFER, GetID(), name);

@@ -153,6 +153,13 @@ struct ResourceHeapDescriptor
     {
     }
 
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*     debugName           = nullptr;
+
     //! Reference to the pipeline layout. This must not be null, when a resource heap is created.
     PipelineLayout* pipelineLayout      = nullptr;
 

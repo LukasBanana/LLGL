@@ -22,9 +22,11 @@ D3D11Sampler::D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc)
     D3D11Sampler::ConvertDesc(nativeDesc, desc);
     HRESULT hr = device->CreateSamplerState(&nativeDesc, native_.ReleaseAndGetAddressOf());
     DXThrowIfCreateFailed(hr, "ID3D11SamplerState");
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11Sampler::SetName(const char* name)
+void D3D11Sampler::SetDebugName(const char* name)
 {
     D3D11SetObjectName(native_.Get(), name);
 }

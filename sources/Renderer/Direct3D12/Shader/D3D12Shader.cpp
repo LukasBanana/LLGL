@@ -12,9 +12,9 @@
 #include "../../DXCommon/DXTypes.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/ReportUtils.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
-#include <stdexcept>
 #include <d3dcompiler.h>
 #include <comdef.h>
 
@@ -199,11 +199,14 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
         Convert(soDeclEntries_[i], attr, vertexAttribNames_);
 
         /* Store buffer stide */
-        auto& bufferStride = soBufferStrides_[attr.slot];
+        UINT bufferStride = soBufferStrides_[attr.slot];
         if (attr.stride == 0)
         {
             /* Error: vertex attribute must not have stride of zero */
-            throw std::runtime_error("buffer stride in stream-output attribute must not be zero: " + std::string(attr.name.c_str()));
+            LLGL_TRAP(
+                "buffer stride in stream-output attribute must not be zero: %s",
+                attr.name.c_str()
+            );
         }
         else if (bufferStride == 0)
         {
@@ -212,9 +215,9 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
         }
         else if (bufferStride != attr.stride)
         {
-            throw std::runtime_error(
-                "mismatch between buffer stride (" + std::to_string(bufferStride) +
-                ") and stream-output attribute (" + std::to_string(attr.stride) + "): " + std::string(attr.name.c_str())
+            LLGL_TRAP(
+                "mismatch between buffer stride (%u) and stream-output attribute (%u): %s",
+                bufferStride, attr.stride, attr.name.c_str()
             );
         }
     }
@@ -223,7 +226,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
     for_range(i, soBufferStrides_.size())
     {
         if (soBufferStrides_[i] == 0)
-            throw std::runtime_error("stream-output slot " + std::to_string(i) + " is not specified in vertex attributes");
+            LLGL_TRAP("stream-output slot %zu is not specified in vertex attributes", i);
     }
 }
 
@@ -263,13 +266,13 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         fileContent     = ReadFileString(shaderDesc.source);
         sourceCode      = fileContent.c_str();
         sourceLength    = fileContent.size();
-        sourceName      = shaderDesc.name ? shaderDesc.name : shaderDesc.source;
+        sourceName      = shaderDesc.debugName != nullptr ? shaderDesc.debugName : shaderDesc.source;
     }
     else
     {
         sourceCode      = shaderDesc.source;
         sourceLength    = shaderDesc.sourceSize;
-        sourceName      = shaderDesc.name;
+        sourceName      = shaderDesc.debugName;
     }
 
     /* Get parameters from shader descriptor */

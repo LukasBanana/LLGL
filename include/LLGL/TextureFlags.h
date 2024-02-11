@@ -266,6 +266,13 @@ struct TextureRegion
 */
 struct TextureDescriptor
 {
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*     debugName       = nullptr;
+
     //! Hardware texture type. By default TextureType::Texture2D.
     TextureType     type            = TextureType::Texture2D;
 

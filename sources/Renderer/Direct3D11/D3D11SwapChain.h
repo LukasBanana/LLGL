@@ -33,7 +33,7 @@ class D3D11SwapChain final : public SwapChain
             const std::shared_ptr<Surface>& surface
         );
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
         void Present() override;
 

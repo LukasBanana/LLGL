@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
                 llglSetResource(2, LLGL_GET_AS(LLGLResource, samplers[0]));
 
                 // Draw cube mesh with index and vertex buffers
-                llglDrawIndexed(indexCount, 0);
+                llglDrawIndexed((uint32_t)indexCount, 0);
             }
             llglEndRenderPass();
         }

@@ -54,9 +54,12 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
         CreateIndexBufferView(desc);
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
         CreateStreamOutputBufferView(desc);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D12Buffer::SetName(const char* name)
+void D3D12Buffer::SetDebugName(const char* name)
 {
     D3D12SetObjectName(resource_.Get(), name);
 }

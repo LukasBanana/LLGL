@@ -13,6 +13,9 @@
 #include <LLGL-C/LLGLWrapper.h>
 
 
+LLGL_C_EXPORT void llglSetDebugName(LLGLRenderSystemChild renderSystemChild, const char* name);
+
+//! \deprecated Since 0.04b; Use llglSetDebugName instead.
 LLGL_C_EXPORT void llglSetName(LLGLRenderSystemChild renderSystemChild, const char* name);
 
 

@@ -123,11 +123,11 @@ namespace LLGL
             var nativeSwapChainDesc = swapChainDesc.Native;
             if (surface != null)
             {
-                return new SwapChain(NativeLLGL.CreateSwapChainExt(ref nativeSwapChainDesc, surface.NativeBase));
+                return new SwapChain(NativeLLGL.CreateSwapChainExt(ref nativeSwapChainDesc, surface.NativeBase), swapChainDesc.DebugName);
             }
             else
             {
-                return new SwapChain(NativeLLGL.CreateSwapChain(ref nativeSwapChainDesc));
+                return new SwapChain(NativeLLGL.CreateSwapChain(ref nativeSwapChainDesc), swapChainDesc.DebugName);
             }
         }
 
@@ -136,7 +136,7 @@ namespace LLGL
         public CommandBuffer CreateCommandBuffer(CommandBufferDescriptor commandBufferDesc)
         {
             var nativeDesc = commandBufferDesc.Native;
-            return new CommandBuffer(NativeLLGL.CreateCommandBuffer(ref nativeDesc));
+            return new CommandBuffer(NativeLLGL.CreateCommandBuffer(ref nativeDesc), commandBufferDesc.DebugName);
         }
 
         #region GPU resources: buffers, textures, sampler states
@@ -150,12 +150,12 @@ namespace LLGL
                 {
                     fixed (void* initialDataPtr = initialData)
                     {
-                        return new Buffer(NativeLLGL.CreateBuffer(ref nativeDesc, initialDataPtr));
+                        return new Buffer(NativeLLGL.CreateBuffer(ref nativeDesc, initialDataPtr), bufferDesc.DebugName);
                     }
                 }
                 else
                 {
-                    return new Buffer(NativeLLGL.CreateBuffer(ref nativeDesc, null));
+                    return new Buffer(NativeLLGL.CreateBuffer(ref nativeDesc, null), bufferDesc.DebugName);
                 }
             }
         }
@@ -163,7 +163,7 @@ namespace LLGL
         public unsafe Buffer CreateBufferUnsafe(BufferDescriptor bufferDesc, void* initialData)
         {
             var nativeDesc = bufferDesc.Native;
-            return new Buffer(NativeLLGL.CreateBuffer(ref nativeDesc, initialData));
+            return new Buffer(NativeLLGL.CreateBuffer(ref nativeDesc, initialData), bufferDesc.DebugName);
         }
 
         public void WriteBuffer(Buffer buffer, long offset, byte[] data)
@@ -234,11 +234,11 @@ namespace LLGL
                 if (imageView != null && imageView.IsValid)
                 {
                     var nativeImageView = imageView.Native;
-                    return new Texture(NativeLLGL.CreateTexture(ref nativeTextureDesc, &nativeImageView));
+                    return new Texture(NativeLLGL.CreateTexture(ref nativeTextureDesc, &nativeImageView), textureDesc.DebugName);
                 }
                 else
                 {
-                    return new Texture(NativeLLGL.CreateTexture(ref nativeTextureDesc, null));
+                    return new Texture(NativeLLGL.CreateTexture(ref nativeTextureDesc, null), textureDesc.DebugName);
                 }
             }
         }
@@ -264,7 +264,7 @@ namespace LLGL
         public Sampler CreateSampler(SamplerDescriptor samplerDesc)
         {
             var nativeSamplerDesc = samplerDesc.Native;
-            return new Sampler(NativeLLGL.CreateSampler(ref nativeSamplerDesc));
+            return new Sampler(NativeLLGL.CreateSampler(ref nativeSamplerDesc), samplerDesc.DebugName);
         }
 
         public ResourceHeap CreateResourceHeap(ResourceHeapDescriptor resourceHeapDesc, ResourceViewDescriptor[] resourceViews = null)
@@ -281,13 +281,13 @@ namespace LLGL
                     }
                     fixed (NativeLLGL.ResourceViewDescriptor* nativeResourceViewsPtr = nativeResourceViews)
                     {
-                        return new ResourceHeap(NativeLLGL.CreateResourceHeapExt(ref nativeResourceHeapDesc, (IntPtr)nativeResourceViews.Length, nativeResourceViewsPtr));
+                        return new ResourceHeap(NativeLLGL.CreateResourceHeapExt(ref nativeResourceHeapDesc, (IntPtr)nativeResourceViews.Length, nativeResourceViewsPtr), resourceHeapDesc.DebugName);
                     }
                 }
             }
             else
             {
-                return new ResourceHeap(NativeLLGL.CreateResourceHeap(ref nativeResourceHeapDesc));
+                return new ResourceHeap(NativeLLGL.CreateResourceHeap(ref nativeResourceHeapDesc), resourceHeapDesc.DebugName);
             }
         }
 
@@ -314,7 +314,7 @@ namespace LLGL
         public PipelineLayout CreatePipelineLayout(PipelineLayoutDescriptor pipelineLayoutDesc)
         {
             var nativePipelineLayoutDesc = pipelineLayoutDesc.Native;
-            return new PipelineLayout(NativeLLGL.CreatePipelineLayout(ref nativePipelineLayoutDesc));
+            return new PipelineLayout(NativeLLGL.CreatePipelineLayout(ref nativePipelineLayoutDesc), pipelineLayoutDesc.DebugName);
         }
 
         public PipelineCache CreatePipelineCache(byte[] initialBlob = null)
@@ -364,12 +364,7 @@ namespace LLGL
         public Shader CreateShader(ShaderDescriptor shaderDesc)
         {
             var nativeShaderDesc = shaderDesc.Native;
-            var shader = new Shader(NativeLLGL.CreateShader(ref nativeShaderDesc));
-            if (shaderDesc.Name != null)
-            {
-                shader.Name = shaderDesc.Name;
-            }
-            return shader;
+            return new Shader(NativeLLGL.CreateShader(ref nativeShaderDesc), shaderDesc.DebugName);
         }
 
         #endregion
@@ -377,13 +372,13 @@ namespace LLGL
         public RenderPass CreateRenderPass(RenderPassDescriptor renderPassDesc)
         {
             var nativeRenderPassDesc = renderPassDesc.Native;
-            return new RenderPass(NativeLLGL.CreateRenderPass(ref nativeRenderPassDesc));
+            return new RenderPass(NativeLLGL.CreateRenderPass(ref nativeRenderPassDesc), renderPassDesc.DebugName);
         }
 
         public RenderTarget CreateRenderTarget(RenderTargetDescriptor renderTargetDesc)
         {
             var nativeRenderTargetDesc = renderTargetDesc.Native;
-            return new RenderTarget(NativeLLGL.CreateRenderTarget(ref nativeRenderTargetDesc));
+            return new RenderTarget(NativeLLGL.CreateRenderTarget(ref nativeRenderTargetDesc), renderTargetDesc.DebugName);
         }
 
         public Fence CreateFence()
@@ -394,7 +389,7 @@ namespace LLGL
         public QueryHeap CreateQueryHeap(QueryHeapDescriptor queryHeapDesc)
         {
             var nativeQueryHeapDesc = queryHeapDesc.Native;
-            return new QueryHeap(NativeLLGL.CreateQueryHeap(ref nativeQueryHeapDesc));
+            return new QueryHeap(NativeLLGL.CreateQueryHeap(ref nativeQueryHeapDesc), queryHeapDesc.DebugName);
         }
     }
 }

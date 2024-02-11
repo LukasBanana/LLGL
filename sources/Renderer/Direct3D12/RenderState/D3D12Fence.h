@@ -69,7 +69,7 @@ class D3D12Fence final : public Fence
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

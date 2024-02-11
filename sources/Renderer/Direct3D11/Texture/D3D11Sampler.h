@@ -31,7 +31,7 @@ class D3D11Sampler final : public Sampler
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

@@ -415,7 +415,7 @@ TestResult TestbedContext::CreateBuffer(
         return TestResult::FailedErrors;
     }
 
-    buf->SetName(name);
+    buf->SetDebugName(name);
 
     // Match buffer descriptor with input
     BufferDescriptor resultDesc = buf->GetDesc();
@@ -453,7 +453,7 @@ TestResult TestbedContext::CreateTexture(
         return TestResult::FailedErrors;
     }
 
-    tex->SetName(name);
+    tex->SetDebugName(name);
 
     // Match texture descriptor with input
     TextureDescriptor resultDesc = tex->GetDesc();
@@ -572,7 +572,7 @@ TestResult TestbedContext::CreateRenderTarget(
         return TestResult::FailedErrors;
     }
 
-    target->SetName(name);
+    target->SetDebugName(name);
 
     // Match render target attributes with input
     const Extent2D resultResolution = target->GetResolution();
@@ -1081,11 +1081,11 @@ void TestbedContext::CreateConstantBuffers()
 {
     BufferDescriptor bufDesc;
     {
+        bufDesc.debugName   = "sceneCbuffer";
         bufDesc.size        = sizeof(SceneConstants);
         bufDesc.bindFlags   = BindFlags::ConstantBuffer;
     }
     sceneCbuffer = renderer->CreateBuffer(bufDesc, &sceneCbuffer);
-    sceneCbuffer->SetName("sceneCbuffer");
 }
 
 Shader* TestbedContext::LoadShaderFromFile(
@@ -1340,6 +1340,7 @@ LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer
     // Create temporary texture to capture framebuffer color
     TextureDescriptor texDesc;
     {
+        texDesc.debugName       = "readbackTex";
         texDesc.format          = format;
         texDesc.extent.width    = extent.width;
         texDesc.extent.height   = extent.height;
@@ -1348,7 +1349,6 @@ LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer
         texDesc.mipLevels       = 1;
     }
     Texture* capture = renderer->CreateTexture(texDesc);
-    capture->SetName("readbackTex");
 
     // Capture framebuffer
     const TextureRegion texRegion{ Offset3D{}, Extent3D{ extent.width, extent.height, 1 } };

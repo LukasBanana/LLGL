@@ -114,7 +114,7 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

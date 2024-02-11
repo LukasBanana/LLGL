@@ -100,6 +100,13 @@ enum class SamplerFilter
 */
 struct LLGL_EXPORT SamplerDescriptor
 {
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*         debugName       = nullptr;
+
     //! Sampler address mode in U direction (also X axis). By default SamplerAddressMode::Repeat.
     SamplerAddressMode  addressModeU    = SamplerAddressMode::Repeat;
 

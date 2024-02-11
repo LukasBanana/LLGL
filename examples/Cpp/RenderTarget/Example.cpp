@@ -247,7 +247,6 @@ private:
     {
         // Load color map texture from file
         colorMap = LoadTexture("Crate.jpg");
-        colorMap->SetName("ColorMap");
 
         // Create common sampler state for all textures
         LLGL::SamplerDescriptor samplerDesc;
@@ -276,13 +275,14 @@ private:
         renderTargetTex = renderer->CreateTexture(
             LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height)
         );
-        renderTargetTex->SetName("RenderTargetTex");
+        renderTargetTex->SetDebugName("RenderTargetTex");
 
         #ifdef ENABLE_DEPTH_TEXTURE
 
         // Create depth texture
         LLGL::TextureDescriptor depthTexDesc;
         {
+            depthTexDesc.debugName      = "RenderTargetDepthTex";
             depthTexDesc.bindFlags      = LLGL::BindFlags::DepthStencilAttachment;
             depthTexDesc.format         = LLGL::Format::D32Float;
             depthTexDesc.extent.width   = renderTargetSize.width;
@@ -293,7 +293,6 @@ private:
             depthTexDesc.miscFlags      = LLGL::MiscFlags::NoInitialData;
         }
         renderTargetDepthTex = renderer->CreateTexture(depthTexDesc);
-        renderTargetDepthTex->SetName("RenderTargetDepthTex");
 
         #endif // /ENABLE_DEPTH_TEXTURE
 
@@ -312,6 +311,7 @@ private:
         // Create render-target with multi-sampling
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
+            renderTargetDesc.debugName  = "RenderTarget";
             renderTargetDesc.resolution = renderTargetSize;
             renderTargetDesc.samples    = samples;
 
@@ -343,7 +343,6 @@ private:
             #endif
         }
         renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
-        renderTarget->SetName("RenderTarget");
 
         // Initialize projection matrix for render-target scene rendering
         renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));

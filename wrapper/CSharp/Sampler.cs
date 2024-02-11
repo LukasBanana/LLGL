@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal Sampler(NativeLLGL.Sampler native)
+        internal Sampler(NativeLLGL.Sampler native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~Sampler()

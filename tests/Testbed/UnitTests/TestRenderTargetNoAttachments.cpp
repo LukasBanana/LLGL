@@ -27,8 +27,10 @@ DEF_TEST( RenderTargetNoAttachments )
 
     // Create target using a render pass with no attachments
     RenderPassDescriptor pass3Desc;
+    {
+        pass3Desc.debugName = "pass3";
+    }
     RenderPass* pass3 = renderer->CreateRenderPass(pass3Desc);
-    pass3->SetName("pass3");
 
     RenderTargetDescriptor target3Desc;
     {
@@ -40,10 +42,10 @@ DEF_TEST( RenderTargetNoAttachments )
     // Create target using a render pass with no attachments
     RenderPassDescriptor pass4Desc;
     {
-        pass4Desc.samples = 8;
+        pass4Desc.debugName = "pass4{8msaa}";
+        pass4Desc.samples   = 8;
     }
     RenderPass* pass4 = renderer->CreateRenderPass(pass4Desc);
-    pass4->SetName("pass4{8msaa}");
 
     RenderTargetDescriptor target4Desc;
     {

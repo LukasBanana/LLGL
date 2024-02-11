@@ -46,7 +46,7 @@ D3D12PipelineState::D3D12PipelineState(
     }
 }
 
-void D3D12PipelineState::SetName(const char* name)
+void D3D12PipelineState::SetDebugName(const char* name)
 {
     D3D12SetObjectName(native_.Get(), name);
 }

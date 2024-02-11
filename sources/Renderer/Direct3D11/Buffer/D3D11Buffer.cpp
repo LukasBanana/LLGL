@@ -29,11 +29,15 @@ D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, con
     Buffer { desc.bindFlags }
 {
     CreateGpuBuffer(device, desc, initialData);
+
     if (NeedsIntermediateCpuAccessBuffer(desc))
         CreateCpuAccessBuffer(device, DXGetCPUAccessFlags(desc.cpuAccessFlags), desc.stride);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11Buffer::SetName(const char* name)
+void D3D11Buffer::SetDebugName(const char* name)
 {
     D3D11SetObjectName(GetNative(), name);
     if (cpuAccessBuffer_)

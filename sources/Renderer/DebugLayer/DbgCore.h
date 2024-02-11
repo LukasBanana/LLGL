@@ -47,6 +47,9 @@ namespace LLGL
 #define LLGL_DBG_ERROR_NOT_SUPPORTED(FEATURE) \
     LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, UTF8String(FEATURE) + " not supported")
 
+#define LLGL_DBG_LABEL(DESC) \
+    ((DESC).debugName != nullptr ? std::string{ (DESC).debugName } : std::string{})
+
 
 // Sets the name of the specified debug layer object.
 template <typename T>
@@ -59,7 +62,7 @@ inline void DbgSetObjectName(T& obj, const char* name)
         obj.label.clear();
 
     /* Forward call to instance */
-    obj.instance.SetName(name);
+    obj.instance.SetDebugName(name);
 }
 
 // Returns the debug wrapper of the specified instance or null if the input is null.

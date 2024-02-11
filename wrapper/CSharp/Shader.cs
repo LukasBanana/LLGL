@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal Shader(NativeLLGL.Shader native)
+        internal Shader(NativeLLGL.Shader native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~Shader()

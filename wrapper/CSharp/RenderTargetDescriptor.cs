@@ -12,6 +12,8 @@ namespace LLGL
 {
     public class RenderTargetDescriptor
     {
+
+        public AnsiString DebugName { get; set; }
         public RenderPass RenderPass { get; set; }
         public Extent2D Resolution { get; set; }
         public int Samples { get; set; } = 1;
@@ -26,6 +28,10 @@ namespace LLGL
                 var native = new NativeLLGL.RenderTargetDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     if (RenderPass != null)
                     {
                         native.renderPass = RenderPass.Native;

@@ -11,23 +11,43 @@ namespace LLGL
 {
     public abstract class RenderSystemChild
     {
-        private string name = "";
+        private string debugName = "";
 
         internal abstract NativeLLGL.RenderSystemChild NativeChild { get; }
 
+        protected internal void InitializeDebugName(string name)
+        {
+            if (name != null)
+            {
+                debugName = name;
+            }
+        }
+
+        public string DebugName
+        {
+            get
+            {
+                return debugName;
+            }
+            set
+            {
+                debugName = value;
+                NativeLLGL.SetDebugName(NativeChild, debugName);
+            }
+        }
+
+        [Obsolete("RenderSystemChild.Name is deprecated since 0.04b; Use RenderSystemChild.DebugName instead!")]
         public string Name
         {
             get
             {
-                return name;
+                return DebugName;
             }
             set
             {
-                name = value;
-                NativeLLGL.SetName(NativeChild, name);
+                DebugName = value;
             }
         }
-
     }
 }
 

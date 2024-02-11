@@ -26,7 +26,7 @@ class NullSwapChain final : public SwapChain
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
         void Present() override;
 

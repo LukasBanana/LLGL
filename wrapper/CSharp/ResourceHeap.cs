@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal ResourceHeap(NativeLLGL.ResourceHeap native)
+        internal ResourceHeap(NativeLLGL.ResourceHeap native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~ResourceHeap()

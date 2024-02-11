@@ -25,9 +25,10 @@ namespace LLGL
             }
         }
 
-        internal CommandBuffer(NativeLLGL.CommandBuffer native)
+        internal CommandBuffer(NativeLLGL.CommandBuffer native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~CommandBuffer()

@@ -21,7 +21,7 @@ GLFence::~GLFence()
     glDeleteSync(sync_);
 }
 
-void GLFence::SetName(const char* name)
+void GLFence::SetDebugName(const char* name)
 {
     #ifdef LLGL_DEBUG
     /* Only store name in fence object in debug mode, otherwise we want to keep fence objects as lightweight as possible */

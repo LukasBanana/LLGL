@@ -31,12 +31,16 @@ D3D12RenderTarget::D3D12RenderTarget(D3D12Device& device, const RenderTargetDesc
 {
     ColorFormatVector colorFormats;
     const UINT numColorFormats = GatherAttachmentFormats(device, desc, colorFormats);
+
     CreateDescriptorHeaps(device.GetNative(), numColorFormats);
     CreateAttachments(device.GetNative(), desc, colorFormats);
     defaultRenderPass_.BuildAttachments(numColorFormats, colorFormats.data(), depthStencilFormat_, sampleDesc_);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D12RenderTarget::SetName(const char* name)
+void D3D12RenderTarget::SetDebugName(const char* name)
 {
     D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
     D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");

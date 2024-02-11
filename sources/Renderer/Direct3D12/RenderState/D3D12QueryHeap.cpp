@@ -87,9 +87,12 @@ D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& d
 
     /* Initialize dirty range with invalidation */
     InvalidateDirtyRange();
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D12QueryHeap::SetName(const char* name)
+void D3D12QueryHeap::SetDebugName(const char* name)
 {
     D3D12SetObjectName(GetNative(), name);
     D3D12SetObjectNameSubscript(GetResultResource(), name, ".Result");

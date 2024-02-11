@@ -1087,6 +1087,7 @@ namespace LLGL
 
     public class CommandBufferDescriptor
     {
+        public AnsiString         DebugName { get; set; }          = null;
         public CommandBufferFlags Flags { get; set; }              = 0;
         public int                NumNativeBuffers { get; set; }   = 2;
         public long               MinStagingPoolSize { get; set; } = (0xFFFF+1);
@@ -1097,12 +1098,19 @@ namespace LLGL
             get
             {
                 var native = new NativeLLGL.CommandBufferDescriptor();
-                native.flags              = (int)Flags;
-                native.numNativeBuffers   = NumNativeBuffers;
-                native.minStagingPoolSize = MinStagingPoolSize;
-                if (RenderPass != null)
+                unsafe
                 {
-                    native.renderPass = RenderPass.Native;
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    native.flags              = (int)Flags;
+                    native.numNativeBuffers   = NumNativeBuffers;
+                    native.minStagingPoolSize = MinStagingPoolSize;
+                    if (RenderPass != null)
+                    {
+                        native.renderPass = RenderPass.Native;
+                    }
                 }
                 return native;
             }
@@ -1130,6 +1138,7 @@ namespace LLGL
 
     public class ComputePipelineDescriptor
     {
+        public AnsiString     DebugName { get; set; }      = null;
         public PipelineLayout PipelineLayout { get; set; } = null;
         public Shader         ComputeShader { get; set; }  = null;
 
@@ -1138,13 +1147,20 @@ namespace LLGL
             get
             {
                 var native = new NativeLLGL.ComputePipelineDescriptor();
-                if (PipelineLayout != null)
+                unsafe
                 {
-                    native.pipelineLayout = PipelineLayout.Native;
-                }
-                if (ComputeShader != null)
-                {
-                    native.computeShader = ComputeShader.Native;
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    if (PipelineLayout != null)
+                    {
+                        native.pipelineLayout = PipelineLayout.Native;
+                    }
+                    if (ComputeShader != null)
+                    {
+                        native.computeShader = ComputeShader.Native;
+                    }
                 }
                 return native;
             }
@@ -1153,21 +1169,8 @@ namespace LLGL
 
     public class ProfileTimeRecord
     {
-        private string annotation;
-        private byte[] annotationAscii;
-        public string Annotation
-        {
-            get
-            {
-                return annotation;
-            }
-            set
-            {
-                annotation = value;
-                annotationAscii = Encoding.ASCII.GetBytes(annotation + "\0");
-            }
-        }
-        public long   ElapsedTime { get; set; } = 0;
+        public AnsiString Annotation { get; set; }  = "";
+        public long       ElapsedTime { get; set; } = 0;
 
         public ProfileTimeRecord() { }
 
@@ -1183,7 +1186,7 @@ namespace LLGL
                 var native = new NativeLLGL.ProfileTimeRecord();
                 unsafe
                 {
-                    fixed (byte* annotationPtr = annotationAscii)
+                    fixed (byte* annotationPtr = Annotation.Ascii)
                     {
                         native.annotation = annotationPtr;
                     }
@@ -1453,6 +1456,7 @@ namespace LLGL
 
     public class ResourceHeapDescriptor
     {
+        public AnsiString     DebugName { get; set; }        = null;
         public PipelineLayout PipelineLayout { get; set; }   = null;
         public int            NumResourceViews { get; set; } = 0;
         public BarrierFlags   BarrierFlags { get; set; }     = 0;
@@ -1462,12 +1466,19 @@ namespace LLGL
             get
             {
                 var native = new NativeLLGL.ResourceHeapDescriptor();
-                if (PipelineLayout != null)
+                unsafe
                 {
-                    native.pipelineLayout = PipelineLayout.Native;
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    if (PipelineLayout != null)
+                    {
+                        native.pipelineLayout = PipelineLayout.Native;
+                    }
+                    native.numResourceViews = NumResourceViews;
+                    native.barrierFlags     = (int)BarrierFlags;
                 }
-                native.numResourceViews = NumResourceViews;
-                native.barrierFlags     = (int)BarrierFlags;
                 return native;
             }
         }
@@ -1481,34 +1492,8 @@ namespace LLGL
             Definition = definition;
         }
 
-        private string name;
-        private byte[] nameAscii;
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
-            }
-        }
-        private string definition;
-        private byte[] definitionAscii;
-        public string Definition
-        {
-            get
-            {
-                return definition;
-            }
-            set
-            {
-                definition = value;
-                definitionAscii = Encoding.ASCII.GetBytes(definition + "\0");
-            }
-        }
+        public AnsiString Name { get; set; }       = null;
+        public AnsiString Definition { get; set; } = null;
 
         internal NativeLLGL.ShaderMacro Native
         {
@@ -1517,11 +1502,11 @@ namespace LLGL
                 var native = new NativeLLGL.ShaderMacro();
                 unsafe
                 {
-                    fixed (byte* namePtr = nameAscii)
+                    fixed (byte* namePtr = Name.Ascii)
                     {
                         native.name = namePtr;
                     }
-                    fixed (byte* definitionPtr = definitionAscii)
+                    fixed (byte* definitionPtr = Definition.Ascii)
                     {
                         native.definition = definitionPtr;
                     }
@@ -1611,20 +1596,7 @@ namespace LLGL
             SystemValue = systemValue;
         }
 
-        private string name;
-        private byte[] nameAscii;
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
-            }
-        }
+        public AnsiString  Name { get; set; }
         public Format      Format { get; set; }      = Format.RGBA32Float;
         public int         Location { get; set; }    = 0;
         public SystemValue SystemValue { get; set; } = SystemValue.Undefined;
@@ -1643,7 +1615,7 @@ namespace LLGL
                 var native = new NativeLLGL.FragmentAttribute();
                 unsafe
                 {
-                    fixed (byte* namePtr = nameAscii)
+                    fixed (byte* namePtr = Name.Ascii)
                     {
                         native.name = namePtr;
                     }
@@ -1680,20 +1652,7 @@ namespace LLGL
             ArraySize  = arraySize;
         }
 
-        private string name;
-        private byte[] nameAscii;
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
-            }
-        }
+        public AnsiString   Name { get; set; }
         public ResourceType Type { get; set; }       = ResourceType.Undefined;
         public BindFlags    BindFlags { get; set; }  = 0;
         public StageFlags   StageFlags { get; set; } = 0;
@@ -1712,7 +1671,7 @@ namespace LLGL
                 var native = new NativeLLGL.BindingDescriptor();
                 unsafe
                 {
-                    fixed (byte* namePtr = nameAscii)
+                    fixed (byte* namePtr = Name.Ascii)
                     {
                         native.name = namePtr;
                     }
@@ -1741,20 +1700,7 @@ namespace LLGL
 
     public class UniformDescriptor
     {
-        private string name;
-        private byte[] nameAscii;
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
-            }
-        }
+        public AnsiString  Name { get; set; }
         public UniformType Type { get; set; }      = UniformType.Undefined;
         public int         ArraySize { get; set; } = 0;
 
@@ -1772,7 +1718,7 @@ namespace LLGL
                 var native = new NativeLLGL.UniformDescriptor();
                 unsafe
                 {
-                    fixed (byte* namePtr = nameAscii)
+                    fixed (byte* namePtr = Name.Ascii)
                     {
                         native.name = namePtr;
                     }
@@ -1927,18 +1873,26 @@ namespace LLGL
 
     public class QueryHeapDescriptor
     {
-        public QueryType Type { get; set; }            = QueryType.SamplesPassed;
-        public int       NumQueries { get; set; }      = 1;
-        public bool      RenderCondition { get; set; } = false;
+        public AnsiString DebugName { get; set; }       = null;
+        public QueryType  Type { get; set; }            = QueryType.SamplesPassed;
+        public int        NumQueries { get; set; }      = 1;
+        public bool       RenderCondition { get; set; } = false;
 
         internal NativeLLGL.QueryHeapDescriptor Native
         {
             get
             {
                 var native = new NativeLLGL.QueryHeapDescriptor();
-                native.type            = Type;
-                native.numQueries      = NumQueries;
-                native.renderCondition = RenderCondition;
+                unsafe
+                {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    native.type            = Type;
+                    native.numQueries      = NumQueries;
+                    native.renderCondition = RenderCondition;
+                }
                 return native;
             }
         }
@@ -2089,6 +2043,7 @@ namespace LLGL
 
     public class SamplerDescriptor
     {
+        public AnsiString         DebugName { get; set; }      = null;
         public SamplerAddressMode AddressModeU { get; set; }   = SamplerAddressMode.Repeat;
         public SamplerAddressMode AddressModeV { get; set; }   = SamplerAddressMode.Repeat;
         public SamplerAddressMode AddressModeW { get; set; }   = SamplerAddressMode.Repeat;
@@ -2118,6 +2073,10 @@ namespace LLGL
                 var native = new NativeLLGL.SamplerDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     native.addressModeU   = AddressModeU;
                     native.addressModeV   = AddressModeV;
                     native.addressModeW   = AddressModeW;
@@ -2142,6 +2101,7 @@ namespace LLGL
             {
                 unsafe
                 {
+                    DebugName      = Marshal.PtrToStringAnsi((IntPtr)value.debugName);
                     AddressModeU   = value.addressModeU;
                     AddressModeV   = value.addressModeV;
                     AddressModeW   = value.addressModeW;
@@ -2199,8 +2159,9 @@ namespace LLGL
     {
         public SwapChainDescriptor() { }
 
-        public SwapChainDescriptor(Extent2D resolution, int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false)
+        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false)
         {
+            DebugName   = debugName;
             Resolution  = resolution;
             ColorBits   = colorBits;
             DepthBits   = depthBits;
@@ -2210,26 +2171,34 @@ namespace LLGL
             Fullscreen  = fullscreen;
         }
 
-        public Extent2D Resolution { get; set; }  = new Extent2D();
-        public int      ColorBits { get; set; }   = 32;
-        public int      DepthBits { get; set; }   = 24;
-        public int      StencilBits { get; set; } = 8;
-        public int      Samples { get; set; }     = 1;
-        public int      SwapBuffers { get; set; } = 2;
-        public bool     Fullscreen { get; set; }  = false;
+        public AnsiString DebugName { get; set; }   = null;
+        public Extent2D   Resolution { get; set; }  = new Extent2D();
+        public int        ColorBits { get; set; }   = 32;
+        public int        DepthBits { get; set; }   = 24;
+        public int        StencilBits { get; set; } = 8;
+        public int        Samples { get; set; }     = 1;
+        public int        SwapBuffers { get; set; } = 2;
+        public bool       Fullscreen { get; set; }  = false;
 
         internal NativeLLGL.SwapChainDescriptor Native
         {
             get
             {
                 var native = new NativeLLGL.SwapChainDescriptor();
-                native.resolution  = Resolution;
-                native.colorBits   = ColorBits;
-                native.depthBits   = DepthBits;
-                native.stencilBits = StencilBits;
-                native.samples     = Samples;
-                native.swapBuffers = SwapBuffers;
-                native.fullscreen  = Fullscreen;
+                unsafe
+                {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    native.resolution  = Resolution;
+                    native.colorBits   = ColorBits;
+                    native.depthBits   = DepthBits;
+                    native.stencilBits = StencilBits;
+                    native.samples     = Samples;
+                    native.swapBuffers = SwapBuffers;
+                    native.fullscreen  = Fullscreen;
+                }
                 return native;
             }
         }
@@ -2237,6 +2206,7 @@ namespace LLGL
 
     public class TextureDescriptor
     {
+        public AnsiString  DebugName { get; set; }   = null;
         public TextureType Type { get; set; }        = TextureType.Texture2D;
         public BindFlags   BindFlags { get; set; }   = (BindFlags.Sampled | BindFlags.ColorAttachment);
         public MiscFlags   MiscFlags { get; set; }   = (MiscFlags.FixedSamples | MiscFlags.GenerateMips);
@@ -2259,31 +2229,42 @@ namespace LLGL
             get
             {
                 var native = new NativeLLGL.TextureDescriptor();
-                native.type        = Type;
-                native.bindFlags   = (int)BindFlags;
-                native.miscFlags   = (int)MiscFlags;
-                native.format      = Format;
-                native.extent      = Extent;
-                native.arrayLayers = ArrayLayers;
-                native.mipLevels   = MipLevels;
-                native.samples     = Samples;
-                if (ClearValue != null)
+                unsafe
                 {
-                    native.clearValue = ClearValue.Native;
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
+                    native.type        = Type;
+                    native.bindFlags   = (int)BindFlags;
+                    native.miscFlags   = (int)MiscFlags;
+                    native.format      = Format;
+                    native.extent      = Extent;
+                    native.arrayLayers = ArrayLayers;
+                    native.mipLevels   = MipLevels;
+                    native.samples     = Samples;
+                    if (ClearValue != null)
+                    {
+                        native.clearValue = ClearValue.Native;
+                    }
                 }
                 return native;
             }
             set
             {
-                Type        = value.type;
-                BindFlags   = (BindFlags)value.bindFlags;
-                MiscFlags   = (MiscFlags)value.miscFlags;
-                Format      = value.format;
-                Extent      = value.extent;
-                ArrayLayers = value.arrayLayers;
-                MipLevels   = value.mipLevels;
-                Samples     = value.samples;
-                ClearValue.Native= value.clearValue;
+                unsafe
+                {
+                    DebugName   = Marshal.PtrToStringAnsi((IntPtr)value.debugName);
+                    Type        = value.type;
+                    BindFlags   = (BindFlags)value.bindFlags;
+                    MiscFlags   = (MiscFlags)value.miscFlags;
+                    Format      = value.format;
+                    Extent      = value.extent;
+                    ArrayLayers = value.arrayLayers;
+                    MipLevels   = value.mipLevels;
+                    Samples     = value.samples;
+                    ClearValue.Native= value.clearValue;
+                }
             }
         }
     }
@@ -2303,20 +2284,7 @@ namespace LLGL
             InstanceDivisor = instanceDivisor;
         }
 
-        private string name;
-        private byte[] nameAscii;
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
-            }
-        }
+        public AnsiString  Name { get; set; }
         public Format      Format { get; set; }          = Format.RGBA32Float;
         public int         Location { get; set; }        = 0;
         public int         SemanticIndex { get; set; }   = 0;
@@ -2340,7 +2308,7 @@ namespace LLGL
                 var native = new NativeLLGL.VertexAttribute();
                 unsafe
                 {
-                    fixed (byte* namePtr = nameAscii)
+                    fixed (byte* namePtr = Name.Ascii)
                     {
                         native.name = namePtr;
                     }
@@ -2375,6 +2343,7 @@ namespace LLGL
 
     public class BufferDescriptor
     {
+        public AnsiString        DebugName { get; set; }      = null;
         public long              Size { get; set; }           = 0;
         public int               Stride { get; set; }         = 0;
         public Format            Format { get; set; }         = Format.Undefined;
@@ -2425,6 +2394,10 @@ namespace LLGL
                 var native = new NativeLLGL.BufferDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     native.size           = Size;
                     native.stride         = Stride;
                     native.format         = Format;
@@ -2446,6 +2419,7 @@ namespace LLGL
             {
                 unsafe
                 {
+                    DebugName      = Marshal.PtrToStringAnsi((IntPtr)value.debugName);
                     Size           = value.size;
                     Stride         = value.stride;
                     Format         = value.format;
@@ -2464,20 +2438,7 @@ namespace LLGL
 
     public class StaticSamplerDescriptor
     {
-        private string name;
-        private byte[] nameAscii;
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
-            }
-        }
+        public AnsiString        Name { get; set; }
         public StageFlags        StageFlags { get; set; } = 0;
         public BindingSlot       Slot { get; set; }       = new BindingSlot();
         public SamplerDescriptor Sampler { get; set; }    = new SamplerDescriptor();
@@ -2496,7 +2457,7 @@ namespace LLGL
                 var native = new NativeLLGL.StaticSamplerDescriptor();
                 unsafe
                 {
-                    fixed (byte* namePtr = nameAscii)
+                    fixed (byte* namePtr = Name.Ascii)
                     {
                         native.name = namePtr;
                     }
@@ -2802,6 +2763,7 @@ namespace LLGL
 
     public class PipelineLayoutDescriptor
     {
+        public AnsiString                DebugName { get; set; }      = null;
         private BindingDescriptor[] heapBindings;
         private NativeLLGL.BindingDescriptor[] heapBindingsNative;
         public BindingDescriptor[] HeapBindings
@@ -2926,6 +2888,10 @@ namespace LLGL
                 var native = new NativeLLGL.PipelineLayoutDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     if (heapBindings != null)
                     {
                         native.numHeapBindings = (IntPtr)heapBindings.Length;
@@ -2966,6 +2932,7 @@ namespace LLGL
 
     public class GraphicsPipelineDescriptor
     {
+        public AnsiString             DebugName { get; set; }            = null;
         public PipelineLayout         PipelineLayout { get; set; }       = null;
         public RenderPass             RenderPass { get; set; }           = null;
         public Shader                 VertexShader { get; set; }         = null;
@@ -2990,6 +2957,10 @@ namespace LLGL
                 var native = new NativeLLGL.GraphicsPipelineDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     if (PipelineLayout != null)
                     {
                         native.pipelineLayout = PipelineLayout.Native;
@@ -3444,6 +3415,7 @@ namespace LLGL
 
         public unsafe struct CommandBufferDescriptor
         {
+            public byte*      debugName;          /* = null */
             public int        flags;              /* = 0 */
             public int        numNativeBuffers;   /* = 2 */
             public long       minStagingPoolSize; /* = (0xFFFF+1) */
@@ -3464,6 +3436,7 @@ namespace LLGL
 
         public unsafe struct ComputePipelineDescriptor
         {
+            public byte*          debugName;      /* = null */
             public PipelineLayout pipelineLayout; /* = null */
             public Shader         computeShader;  /* = null */
         }
@@ -3619,6 +3592,7 @@ namespace LLGL
 
         public unsafe struct ResourceHeapDescriptor
         {
+            public byte*          debugName;        /* = null */
             public PipelineLayout pipelineLayout;   /* = null */
             public int            numResourceViews; /* = 0 */
             public int            barrierFlags;     /* = 0 */
@@ -3778,6 +3752,7 @@ namespace LLGL
 
         public unsafe struct QueryHeapDescriptor
         {
+            public byte*     debugName;       /* = null */
             public QueryType type;            /* = QueryType.SamplesPassed */
             public int       numQueries;      /* = 1 */
             [MarshalAs(UnmanagedType.I1)]
@@ -3833,6 +3808,7 @@ namespace LLGL
 
         public unsafe struct SamplerDescriptor
         {
+            public byte*              debugName;      /* = null */
             public SamplerAddressMode addressModeU;   /* = SamplerAddressMode.Repeat */
             public SamplerAddressMode addressModeV;   /* = SamplerAddressMode.Repeat */
             public SamplerAddressMode addressModeW;   /* = SamplerAddressMode.Repeat */
@@ -3858,6 +3834,7 @@ namespace LLGL
 
         public unsafe struct SwapChainDescriptor
         {
+            public byte*    debugName;   /* = null */
             public Extent2D resolution;
             public int      colorBits;   /* = 32 */
             public int      depthBits;   /* = 24 */
@@ -3870,6 +3847,7 @@ namespace LLGL
 
         public unsafe struct TextureDescriptor
         {
+            public byte*       debugName;   /* = null */
             public TextureType type;        /* = TextureType.Texture2D */
             public int         bindFlags;   /* = (BindFlags.Sampled | BindFlags.ColorAttachment) */
             public int         miscFlags;   /* = (MiscFlags.FixedSamples | MiscFlags.GenerateMips) */
@@ -3906,6 +3884,7 @@ namespace LLGL
 
         public unsafe struct BufferDescriptor
         {
+            public byte*            debugName;        /* = null */
             public long             size;             /* = 0 */
             public int              stride;           /* = 0 */
             public Format           format;           /* = Format.Undefined */
@@ -3957,6 +3936,7 @@ namespace LLGL
 
         public unsafe struct RenderPassDescriptor
         {
+            public byte*                      debugName;         /* = null */
             public AttachmentFormatDescriptor colorAttachments0;
             public AttachmentFormatDescriptor colorAttachments1;
             public AttachmentFormatDescriptor colorAttachments2;
@@ -3972,6 +3952,7 @@ namespace LLGL
 
         public unsafe struct RenderTargetDescriptor
         {
+            public byte*                debugName;              /* = null */
             public RenderPass           renderPass;             /* = null */
             public Extent2D             resolution;
             public int                  samples;                /* = 1 */
@@ -4025,6 +4006,7 @@ namespace LLGL
 
         public unsafe struct PipelineLayoutDescriptor
         {
+            public byte*                    debugName;         /* = null */
             public IntPtr                   numHeapBindings;
             public BindingDescriptor*       heapBindings;
             public IntPtr                   numBindings;
@@ -4037,6 +4019,7 @@ namespace LLGL
 
         public unsafe struct GraphicsPipelineDescriptor
         {
+            public byte*                  debugName;            /* = null */
             public PipelineLayout         pipelineLayout;       /* = null */
             public RenderPass             renderPass;           /* = null */
             public Shader                 vertexShader;         /* = null */
@@ -4067,6 +4050,7 @@ namespace LLGL
 
         public unsafe struct ShaderDescriptor
         {
+            public byte*                    debugName;  /* = null */
             public ShaderType               type;       /* = ShaderType.Undefined */
             public byte*                    source;     /* = null */
             public IntPtr                   sourceSize; /* = 0 */
@@ -4075,7 +4059,8 @@ namespace LLGL
             public byte*                    profile;    /* = null */
             public ShaderMacro*             defines;    /* = null */
             public int                      flags;      /* = 0 */
-            public byte*                    name;       /* = null */
+            [Obsolete("ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead!")]
+            public byte*                    name;
             public VertexShaderAttributes   vertex;
             public FragmentShaderAttributes fragment;
             public ComputeShaderAttributes  compute;
@@ -4625,6 +4610,9 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglGetRenderSystemNativeHandle", CallingConvention=CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]
         public static extern unsafe bool GetRenderSystemNativeHandle(void* nativeHandle, IntPtr nativeHandleSize);
+
+        [DllImport(DllName, EntryPoint="llglSetDebugName", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetDebugName(RenderSystemChild renderSystemChild, [MarshalAs(UnmanagedType.LPStr)] string name);
 
         [DllImport(DllName, EntryPoint="llglSetName", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetName(RenderSystemChild renderSystemChild, [MarshalAs(UnmanagedType.LPStr)] string name);

@@ -15,9 +15,14 @@
 
 using namespace LLGL;
 
+LLGL_C_EXPORT void llglSetDebugName(LLGLRenderSystemChild renderSystemChild, const char* name)
+{
+    LLGL_PTR(RenderSystemChild, renderSystemChild)->SetDebugName(name);
+}
+
 LLGL_C_EXPORT void llglSetName(LLGLRenderSystemChild renderSystemChild, const char* name)
 {
-    LLGL_PTR(RenderSystemChild, renderSystemChild)->SetName(name);
+    llglSetDebugName(renderSystemChild, name);
 }
 
 

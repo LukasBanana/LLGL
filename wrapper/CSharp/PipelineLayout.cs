@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal PipelineLayout(NativeLLGL.PipelineLayout native)
+        internal PipelineLayout(NativeLLGL.PipelineLayout native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~PipelineLayout()

@@ -28,6 +28,9 @@ GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
         if (intermediateShader.GetID(PermutationFlippedYPosition) != 0)
             CreateAndLinkSeparableGLProgram(intermediateShader, PermutationFlippedYPosition);
     }
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 GLSeparableShader::~GLSeparableShader()
@@ -35,7 +38,7 @@ GLSeparableShader::~GLSeparableShader()
     glDeleteProgram(GetID());
 }
 
-void GLSeparableShader::SetName(const char* name)
+void GLSeparableShader::SetDebugName(const char* name)
 {
     GLSetObjectLabel(GL_PROGRAM, GetID(), name);
 }

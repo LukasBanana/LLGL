@@ -14,8 +14,8 @@ namespace LLGL
 {
 
 
-GLBufferWithVAO::GLBufferWithVAO(long bindFlags) :
-    GLBuffer { bindFlags }
+GLBufferWithVAO::GLBufferWithVAO(long bindFlags, const char* debugName) :
+    GLBuffer { bindFlags, debugName }
 {
 }
 

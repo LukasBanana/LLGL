@@ -43,9 +43,12 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
             CreateTexture3D(device, desc);
             break;
     }
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11Texture::SetName(const char* name)
+void D3D11Texture::SetDebugName(const char* name)
 {
     D3D11SetObjectName(GetNative().resource.Get(), name);
     if (srv_)

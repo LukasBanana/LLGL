@@ -41,6 +41,9 @@ D3D12ComputePSO::D3D12ComputePSO(
     }
     else
         CreateNativePSO(device, computeShaderD3D->GetByteCode());
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 void D3D12ComputePSO::Bind(D3D12CommandContext& commandContext)

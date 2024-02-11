@@ -30,7 +30,7 @@ class D3D12ResourceHeap final : public ResourceHeap
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
         std::uint32_t GetNumDescriptorSets() const override;
 

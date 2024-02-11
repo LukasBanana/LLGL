@@ -42,9 +42,11 @@ NullSwapChain::NullSwapChain(const SwapChainDescriptor& desc, const std::shared_
     depthStencilFormat_ { ChooseDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullSwapChain::SetName(const char* name)
+void NullSwapChain::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

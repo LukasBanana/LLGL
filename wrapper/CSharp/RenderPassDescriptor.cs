@@ -12,6 +12,7 @@ namespace LLGL
 {
     public class RenderPassDescriptor
     {
+        public AnsiString DebugName { get; set; }
         public AttachmentFormatDescriptorArray ColorAttachments { get; private set; } = new AttachmentFormatDescriptorArray();
         public AttachmentFormatDescriptor DepthAttachment { get; set; } = new AttachmentFormatDescriptor();
         public AttachmentFormatDescriptor StencilAttachment { get; set; } = new AttachmentFormatDescriptor();
@@ -24,6 +25,10 @@ namespace LLGL
                 var native = new NativeLLGL.RenderPassDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     NativeLLGL.AttachmentFormatDescriptor* nativeColorAttachments = &native.colorAttachments0;
                     for (int i = 0; i < ColorAttachments.Length && ColorAttachments[i] != null; ++i)
                     {

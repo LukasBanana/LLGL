@@ -35,9 +35,11 @@ D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
             BuildInputLayout(device, static_cast<UINT>(desc.vertex.inputAttribs.size()), desc.vertex.inputAttribs.data());
         }
     }
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11Shader::SetName(const char* name)
+void D3D11Shader::SetDebugName(const char* name)
 {
     /* Always use vertex shader from union structure */
     D3D11SetObjectName(static_cast<ID3D11DeviceChild*>(native_.vs.Get()), name);
@@ -163,13 +165,13 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         fileContent     = ReadFileString(shaderDesc.source);
         sourceCode      = fileContent.c_str();
         sourceLength    = fileContent.size();
-        sourceName      = shaderDesc.name ? shaderDesc.name : shaderDesc.source;
+        sourceName      = shaderDesc.debugName != nullptr ? shaderDesc.debugName : shaderDesc.source;
     }
     else
     {
         sourceCode      = shaderDesc.source;
         sourceLength    = shaderDesc.sourceSize;
-        sourceName      = shaderDesc.name;
+        sourceName      = shaderDesc.debugName;
     }
 
     /* Get parameters from shader descriptor */

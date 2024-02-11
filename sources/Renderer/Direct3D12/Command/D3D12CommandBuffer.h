@@ -48,7 +48,7 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc);
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

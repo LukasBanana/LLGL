@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Interface.h>
+#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -26,7 +27,7 @@ class LLGL_EXPORT RenderSystemChild : public Interface
 
         /**
         \brief Sets the name of this class instance for debugging purposes.
-        \param[in] name Pointer to a null terminated string that specifies the new name of this instance.
+        \param[in] name Pointer to a NUL-terminated string that specifies the new name of this instance.
         Specifying a null pointer effectively removes the name from the object.
         The implementation of this function may alter the actual name depending on how many internal objects need to be labeled.
         \remarks This is used for debugging purposes only and the implementation is undefined,
@@ -35,8 +36,27 @@ class LLGL_EXPORT RenderSystemChild : public Interface
         \remarks The default implementation has no effect.
         \see CommandBuffer::PushDebugGroup
         \see CommandBuffer::PopDebugGroup
+        \see BufferDescriptor::debugName
+        \see CommandBufferDescriptor::debugName
+        \see ComputePipelineDescriptor::debugName
+        \see GraphicsPipelineDescriptor::debugName
+        \see PipelineLayoutDescriptor::debugName
+        \see RenderPassDescriptor::debugName
+        \see RenderTargetDescriptor::debugName
+        \see ResourceHeapDescriptor::debugName
+        \see SamplerDescriptor::debugName
+        \see ShaderDescriptor::debugName
+        \see SwapChainDescriptor::debugName
+        \see TextureDescriptor::debugName
         */
-        virtual void SetName(const char* name);
+        virtual void SetDebugName(const char* name);
+
+        //! \deprecated Since 0.04b; Use RenderSystemChild::SetDebugName instead!
+        LLGL_DEPRECATED("RenderSystemChild::SetDebugName is deprecated since 0.04b; Use RenderSystemChild::SetDebugName instead!", "SetDebugName")
+        inline void SetName(const char* name)
+        {
+            SetDebugName(name);
+        }
 
 };
 

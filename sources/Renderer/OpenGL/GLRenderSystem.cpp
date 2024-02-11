@@ -174,7 +174,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
-        auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc.bindFlags);
+        auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc.bindFlags, bufferDesc.debugName);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
             bufferGL->BuildVertexArray(bufferDesc.vertexAttribs.size(), bufferDesc.vertexAttribs.data());
@@ -184,7 +184,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
     else
     {
         /* Create generic buffer */
-        auto* bufferGL = buffers_.emplace<GLBuffer>(bufferDesc.bindFlags);
+        auto* bufferGL = buffers_.emplace<GLBuffer>(bufferDesc.bindFlags, bufferDesc.debugName);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
         }
@@ -356,7 +356,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
     {
         /* Create native GL sampler state */
         LLGL_ASSERT(HasNativeSamplers(), "LLGL was not compiled with LLGL_GL_ENABLE_OPENGL2X but \"GL_ARB_sampler_objects\" is not supported");
-        auto* samplerGL = samplers_.emplace<GLSampler>();
+        auto* samplerGL = samplers_.emplace<GLSampler>(samplerDesc.debugName);
         samplerGL->SamplerParameters(samplerDesc);
         return samplerGL;
     }

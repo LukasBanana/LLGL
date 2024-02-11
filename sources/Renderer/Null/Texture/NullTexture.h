@@ -28,7 +28,7 @@ class NullTexture final : public Texture
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

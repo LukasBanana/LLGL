@@ -51,6 +51,9 @@ D3D12SwapChain::D3D12SwapChain(
 
     /* Create default render pass */
     defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, sampleDesc_);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 D3D12SwapChain::~D3D12SwapChain()
@@ -59,7 +62,7 @@ D3D12SwapChain::~D3D12SwapChain()
     MoveToNextFrame();
 }
 
-void D3D12SwapChain::SetName(const char* name)
+void D3D12SwapChain::SetDebugName(const char* name)
 {
     D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
     D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");

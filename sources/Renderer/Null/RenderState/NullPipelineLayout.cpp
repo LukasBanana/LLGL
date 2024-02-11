@@ -15,9 +15,11 @@ namespace LLGL
 NullPipelineLayout::NullPipelineLayout(const PipelineLayoutDescriptor& desc) :
     desc { desc }
 {
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullPipelineLayout::SetName(const char* name)
+void NullPipelineLayout::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

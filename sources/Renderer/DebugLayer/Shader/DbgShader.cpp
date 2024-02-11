@@ -14,15 +14,16 @@ namespace LLGL
 
 
 DbgShader::DbgShader(Shader& instance, const ShaderDescriptor& desc) :
-    Shader    { desc.type },
-    instance  { instance  },
-    desc      { desc      }
+    Shader    { desc.type            },
+    instance  { instance             },
+    desc      { desc                 },
+    label     { LLGL_DBG_LABEL(desc) }
 {
     if (GetType() == ShaderType::Vertex)
         QueryInstanceAndVertexIDs();
 }
 
-void DbgShader::SetName(const char* name)
+void DbgShader::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }
@@ -49,7 +50,7 @@ const char* DbgShader::GetInstanceID() const
 
 bool DbgShader::IsCompiled() const
 {
-    if (auto report = instance.GetReport())
+    if (const Report* report = instance.GetReport())
         return !report->HasErrors();
     else
         return true;

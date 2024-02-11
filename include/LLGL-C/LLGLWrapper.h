@@ -951,6 +951,7 @@ LLGLClearValue;
 
 typedef struct LLGLCommandBufferDescriptor
 {
+    const char*    debugName;          /* = NULL */
     long           flags;              /* = 0 */
     uint32_t       numNativeBuffers;   /* = 2 */
     uint64_t       minStagingPoolSize; /* = (0xFFFF+1) */
@@ -1029,6 +1030,7 @@ LLGLDepthBiasDescriptor;
 
 typedef struct LLGLComputePipelineDescriptor
 {
+    const char*        debugName;      /* = NULL */
     LLGLPipelineLayout pipelineLayout; /* = LLGL_NULL_OBJECT */
     LLGLShader         computeShader;  /* = LLGL_NULL_OBJECT */
 }
@@ -1176,6 +1178,7 @@ LLGLRenderingLimits;
 
 typedef struct LLGLResourceHeapDescriptor
 {
+    const char*        debugName;        /* = NULL */
     LLGLPipelineLayout pipelineLayout;   /* = LLGL_NULL_OBJECT */
     uint32_t           numResourceViews; /* = 0 */
     long               barrierFlags;     /* = 0 */
@@ -1379,6 +1382,7 @@ LLGLTessellationDescriptor;
 
 typedef struct LLGLQueryHeapDescriptor
 {
+    const char*   debugName;       /* = NULL */
     LLGLQueryType type;            /* = LLGLQueryTypeSamplesPassed */
     uint32_t      numQueries;      /* = 1 */
     bool          renderCondition; /* = false */
@@ -1442,6 +1446,7 @@ LLGLAttachmentDescriptor;
 
 typedef struct LLGLSamplerDescriptor
 {
+    const char*            debugName;      /* = NULL */
     LLGLSamplerAddressMode addressModeU;   /* = LLGLSamplerAddressModeRepeat */
     LLGLSamplerAddressMode addressModeV;   /* = LLGLSamplerAddressModeRepeat */
     LLGLSamplerAddressMode addressModeW;   /* = LLGLSamplerAddressModeRepeat */
@@ -1467,6 +1472,7 @@ LLGLComputeShaderAttributes;
 
 typedef struct LLGLSwapChainDescriptor
 {
+    const char*  debugName;   /* = NULL */
     LLGLExtent2D resolution;
     int          colorBits;   /* = 32 */
     int          depthBits;   /* = 24 */
@@ -1504,6 +1510,7 @@ LLGLTextureRegion;
 
 typedef struct LLGLTextureDescriptor
 {
+    const char*     debugName;   /* = NULL */
     LLGLTextureType type;        /* = LLGLTextureTypeTexture2D */
     long            bindFlags;   /* = (LLGLBindSampled | LLGLBindColorAttachment) */
     long            miscFlags;   /* = (LLGLMiscFixedSamples | LLGLMiscGenerateMips) */
@@ -1543,6 +1550,7 @@ LLGLWindowDescriptor;
 
 typedef struct LLGLBufferDescriptor
 {
+    const char*                debugName;        /* = NULL */
     uint64_t                   size;             /* = 0 */
     uint32_t                   stride;           /* = 0 */
     LLGLFormat                 format;           /* = LLGLFormatUndefined */
@@ -1586,6 +1594,7 @@ LLGLBlendDescriptor;
 
 typedef struct LLGLRenderPassDescriptor
 {
+    const char*                    debugName;           /* = NULL */
     LLGLAttachmentFormatDescriptor colorAttachments[8];
     LLGLAttachmentFormatDescriptor depthAttachment;
     LLGLAttachmentFormatDescriptor stencilAttachment;
@@ -1595,6 +1604,7 @@ LLGLRenderPassDescriptor;
 
 typedef struct LLGLRenderTargetDescriptor
 {
+    const char*              debugName;              /* = NULL */
     LLGLRenderPass           renderPass;             /* = LLGL_NULL_OBJECT */
     LLGLExtent2D             resolution;
     uint32_t                 samples;                /* = 1 */
@@ -1639,6 +1649,7 @@ LLGLTextureViewDescriptor;
 
 typedef struct LLGLPipelineLayoutDescriptor
 {
+    const char*                        debugName;         /* = NULL */
     size_t                             numHeapBindings;   /* = 0 */
     const LLGLBindingDescriptor*       heapBindings;      /* = NULL */
     size_t                             numBindings;       /* = 0 */
@@ -1652,6 +1663,7 @@ LLGLPipelineLayoutDescriptor;
 
 typedef struct LLGLGraphicsPipelineDescriptor
 {
+    const char*                debugName;            /* = NULL */
     LLGLPipelineLayout         pipelineLayout;       /* = LLGL_NULL_OBJECT */
     LLGLRenderPass             renderPass;           /* = LLGL_NULL_OBJECT */
     LLGLShader                 vertexShader;         /* = LLGL_NULL_OBJECT */
@@ -1684,6 +1696,7 @@ LLGLResourceViewDescriptor;
 
 typedef struct LLGLShaderDescriptor
 {
+    const char*                  debugName;  /* = NULL */
     LLGLShaderType               type;       /* = LLGLShaderTypeUndefined */
     const char*                  source;     /* = NULL */
     size_t                       sourceSize; /* = 0 */
@@ -1692,7 +1705,7 @@ typedef struct LLGLShaderDescriptor
     const char*                  profile;    /* = NULL */
     const LLGLShaderMacro*       defines;    /* = NULL */
     long                         flags;      /* = 0 */
-    const char*                  name;       /* = NULL */
+    const char*                  name;       /* ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead! */
     LLGLVertexShaderAttributes   vertex;
     LLGLFragmentShaderAttributes fragment;
     LLGLComputeShaderAttributes  compute;

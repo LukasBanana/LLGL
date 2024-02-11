@@ -63,19 +63,6 @@ public:
         CreatePipelines();
         CreateResourceHeaps();
 
-        // Label objects for debugging
-        swapChain->SetName("BackBuffer");
-
-        vertexBuffer->SetName("Buffer.Vertices");
-        constantBuffer->SetName("Buffer.Constants");
-
-        vsShadowMap->SetName("ShadowMap.VertexShader");
-        vsScene->SetName("Scene.VertexShader");
-        fsScene->SetName("Scene.FragmentShader");
-
-        shadowMap->SetName("ShadowMap.Texture");
-        shadowMapRenderTarget->SetName("ShadowMap.RenderTarget");
-
         #if 0
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
@@ -148,18 +135,21 @@ private:
         // Create texture
         LLGL::TextureDescriptor textureDesc;
         {
+            textureDesc.debugName       = "ShadowMap.Texture";
             textureDesc.type            = LLGL::TextureType::Texture2D;
             textureDesc.bindFlags       = LLGL::BindFlags::DepthStencilAttachment | LLGL::BindFlags::Sampled;
             textureDesc.format          = LLGL::Format::D32Float;
             textureDesc.extent.width    = shadowMapResolution.width;
             textureDesc.extent.height   = shadowMapResolution.height;
             textureDesc.extent.depth    = 1;
+            textureDesc.mipLevels       = 1;
         }
         shadowMap = renderer->CreateTexture(textureDesc);
 
         // Create render target
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
+            renderTargetDesc.debugName              = "ShadowMap.RenderTarget";
             renderTargetDesc.resolution             = shadowMapResolution;
             renderTargetDesc.depthStencilAttachment = shadowMap;
         }
@@ -224,7 +214,7 @@ private:
                 pipelineDesc.depth.writeEnabled                     = true;
                 pipelineDesc.rasterizer.cullMode                    = LLGL::CullMode::Back;
                 pipelineDesc.rasterizer.depthBias.constantFactor    = 4.0f;
-                pipelineDesc.rasterizer.depthBias.slopeFactor       = 4.0f;
+                pipelineDesc.rasterizer.depthBias.slopeFactor       = 1.5f;
                 pipelineDesc.blend.targets[0].colorMask             = 0x0;
                 pipelineDesc.viewports                              = { shadowMapResolution };
             }

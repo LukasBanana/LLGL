@@ -16,9 +16,11 @@ namespace LLGL
 {
 
 
-GLSampler::GLSampler()
+GLSampler::GLSampler(const char* debugName)
 {
     glGenSamplers(1, &id_);
+    if (debugName != nullptr)
+        SetDebugName(debugName);
 }
 
 GLSampler::~GLSampler()
@@ -27,7 +29,7 @@ GLSampler::~GLSampler()
     GLStateManager::Get().NotifySamplerRelease(id_);
 }
 
-void GLSampler::SetName(const char* name)
+void GLSampler::SetDebugName(const char* name)
 {
     GLSetObjectLabel(GL_SAMPLER, GetID(), name);
 }

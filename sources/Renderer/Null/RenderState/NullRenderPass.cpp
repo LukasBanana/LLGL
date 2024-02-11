@@ -15,9 +15,11 @@ namespace LLGL
 NullRenderPass::NullRenderPass(const RenderPassDescriptor& desc) :
     desc { desc }
 {
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullRenderPass::SetName(const char* name)
+void NullRenderPass::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

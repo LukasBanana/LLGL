@@ -78,6 +78,9 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     /* Write initial resource views */
     if (!initialResourceViews.empty())
         CreateResourceViewHandles(device, 0, initialResourceViews);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 std::uint32_t D3D12ResourceHeap::CreateResourceViewHandles(
@@ -206,7 +209,7 @@ ID3D12DescriptorHeap* D3D12ResourceHeap::GetDescriptorHeap(D3D12_DESCRIPTOR_HEAP
     return descriptorHeaps_[static_cast<UINT>(heapType)].Get();
 }
 
-void D3D12ResourceHeap::SetName(const char* name)
+void D3D12ResourceHeap::SetDebugName(const char* name)
 {
     D3D12SetObjectNameSubscript(descriptorHeaps_[0].Get(), name, ".ResourceViews");
     D3D12SetObjectNameSubscript(descriptorHeaps_[1].Get(), name, ".Samplers");

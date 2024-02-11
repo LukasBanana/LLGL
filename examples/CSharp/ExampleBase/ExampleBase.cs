@@ -101,14 +101,14 @@ namespace LLGLExamples
             }
 
             var swapChainDesc = new LLGL.SwapChainDescriptor(resolution: initialResolution, samples: 8);
+            swapChainDesc.DebugName = "MySwapChain";
             SwapChain = Renderer.CreateSwapChain(swapChainDesc);
-            SwapChain.Name = "MySwapChain";
 
             ExampleBase.PrintRendererInfo(Renderer.RendererInfo);
 
             // Create command buffer
             CmdBuffer = Renderer.CreateCommandBuffer(new LLGL.CommandBufferDescriptor() { Flags = LLGL.CommandBufferFlags.ImmediateSubmit });
-            CmdBuffer.Name = "MyCommandBuffer";
+            CmdBuffer.DebugName = "MyCommandBuffer";
 
             // Create resources
             OnInitialize();
@@ -123,7 +123,7 @@ namespace LLGLExamples
             // Main loop
             while (LLGL.Surface.ProcessEvents() && !window.HasQuit)
             {
-                Debugger.TimgRecording = true;
+                //Debugger.TimgRecording = true;
 
                 OnDrawFrame();
                 SwapChain.Present();

@@ -14,12 +14,13 @@ namespace LLGL
 
 
 DbgPipelineLayout::DbgPipelineLayout(PipelineLayout& instance, const PipelineLayoutDescriptor& desc) :
-    instance { instance },
-    desc     { desc     }
+    instance { instance             },
+    desc     { desc                 },
+    label    { LLGL_DBG_LABEL(desc) }
 {
 }
 
-void DbgPipelineLayout::SetName(const char* name)
+void DbgPipelineLayout::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

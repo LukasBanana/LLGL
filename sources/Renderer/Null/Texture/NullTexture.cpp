@@ -29,15 +29,19 @@ NullTexture::NullTexture(const TextureDescriptor& desc, const ImageView* initial
     extent_       { LLGL::GetMipExtent(desc)  }
 {
     AllocImages();
+
     if (initialImage != nullptr)
     {
         Write(TextureRegion{ Offset3D{}, extent_ }, *initialImage);
         if ((desc.miscFlags & MiscFlags::GenerateMips) != 0)
             GenerateMips();
     }
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullTexture::SetName(const char* name)
+void NullTexture::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

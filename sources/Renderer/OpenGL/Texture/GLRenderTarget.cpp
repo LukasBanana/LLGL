@@ -31,10 +31,14 @@ GLRenderTarget::GLRenderTarget(const RenderingLimits& limits, const RenderTarget
     renderPass_  { desc.renderPass                                                                       }
 {
     framebuffer_.GenFramebuffer();
+
     if (HasAnyActiveAttachments(desc))
         CreateFramebufferWithAttachments(desc);
     else
         CreateFramebufferWithNoAttachments();
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 GLRenderTarget::~GLRenderTarget()
@@ -42,7 +46,7 @@ GLRenderTarget::~GLRenderTarget()
     GLStateManager::Get().NotifyGLRenderTargetRelease(this);
 }
 
-void GLRenderTarget::SetName(const char* name)
+void GLRenderTarget::SetDebugName(const char* name)
 {
     GLSetObjectLabel(GL_FRAMEBUFFER, framebuffer_.GetID(), name);
 }

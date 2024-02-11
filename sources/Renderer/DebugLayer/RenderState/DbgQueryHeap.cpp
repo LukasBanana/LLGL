@@ -14,14 +14,15 @@ namespace LLGL
 
 
 DbgQueryHeap::DbgQueryHeap(QueryHeap& instance, const QueryHeapDescriptor& desc) :
-    QueryHeap        { desc.type },
-    instance         { instance  },
-    desc             { desc      }
+    QueryHeap { desc.type            },
+    instance  { instance             },
+    desc      { desc                 },
+    label     { LLGL_DBG_LABEL(desc) }
 {
     states.resize(desc.numQueries, State::Uninitialized);
 }
 
-void DbgQueryHeap::SetName(const char* name)
+void DbgQueryHeap::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

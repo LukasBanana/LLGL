@@ -106,6 +106,13 @@ struct QueryPipelineStatistics
 */
 struct QueryHeapDescriptor
 {
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*     debugName       = nullptr;
+
     //! Specifies the type of queries in the heap. By default QueryType::SamplesPassed.
     QueryType       type            = QueryType::SamplesPassed;
 

@@ -35,9 +35,11 @@ D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLay
     D3D12PipelineLayout {}
 {
     CreateRootSignature(device, desc);
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D12PipelineLayout::SetName(const char* name)
+void D3D12PipelineLayout::SetDebugName(const char* name)
 {
     D3D12SetObjectName(finalizedRootSignature_.Get(), name);
 }

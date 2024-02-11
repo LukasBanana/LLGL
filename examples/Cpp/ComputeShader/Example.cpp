@@ -66,18 +66,10 @@ public:
         CreateGraphicsPipeline();
 
         // Add debugging names
-        commands->SetName("Commands");
-        vertexBuffer->SetName("Vertices");
-        instanceBuffer->SetName("Instances");
-        inputBuffer->SetName("Input");
-        indirectArgBuffer->SetName("IndirectArguments");
-        computeShader->SetName("Compute.Shader");
-        computeLayout->SetName("Compute.Layout");
-        computePipeline->SetName("Compute.Pipeline");
-        computeResourceHeap->SetName("Compute.ResourceHeap");
-        graphicsVertexShader->SetName("Graphics.VertexShader");
-        graphicsFragmentShader->SetName("Graphics.FragmentShader");
-        graphicsPipeline->SetName("Graphics.Pipeline");
+        computeLayout->SetDebugName("Compute.Layout");
+        computeResourceHeap->SetDebugName("Compute.ResourceHeap");
+        graphicsVertexShader->SetDebugName("Graphics.VertexShader");
+        graphicsFragmentShader->SetDebugName("Graphics.FragmentShader");
     }
 
     void CreateBuffers()
@@ -123,6 +115,7 @@ public:
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;
         {
+            vertexBufferDesc.debugName      = "Vertices";
             vertexBufferDesc.size           = sizeof(vertices);
             vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
             vertexBufferDesc.vertexAttribs  = vertexFormat[0].attributes;
@@ -132,6 +125,7 @@ public:
         // Create instance buffer
         LLGL::BufferDescriptor instanceBufferDesc;
         {
+            instanceBufferDesc.debugName        = "Instances";
             instanceBufferDesc.size             = sizeof(SceneObject) * maxNumSceneObjects;
             instanceBufferDesc.bindFlags        = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
             instanceBufferDesc.vertexAttribs    = vertexFormat[1].attributes;
@@ -146,6 +140,7 @@ public:
         // Create scene state buffer
         LLGL::BufferDescriptor inBufferDesc;
         {
+            inBufferDesc.debugName  = "Input";
             inBufferDesc.size       = sizeof(SceneState);
             inBufferDesc.bindFlags  = LLGL::BindFlags::ConstantBuffer;
         }
@@ -154,6 +149,7 @@ public:
         // Create indirect argument buffer
         LLGL::BufferDescriptor argBufferDesc;
         {
+            argBufferDesc.debugName = "IndirectArguments";
             argBufferDesc.size      = sizeof(LLGL::DrawIndirectArguments) * 2;
             argBufferDesc.bindFlags = LLGL::BindFlags::IndirectBuffer | LLGL::BindFlags::Storage;
             argBufferDesc.format    = LLGL::Format::RGBA32UInt;
@@ -183,6 +179,7 @@ public:
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.debugName      = "Compute.Pipeline";
             pipelineDesc.computeShader  = computeShader;
             pipelineDesc.pipelineLayout = computeLayout;
         }
@@ -221,6 +218,7 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.debugName                      = "Graphics.Pipeline";
             pipelineDesc.vertexShader                   = graphicsVertexShader;
             pipelineDesc.fragmentShader                 = graphicsFragmentShader;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;

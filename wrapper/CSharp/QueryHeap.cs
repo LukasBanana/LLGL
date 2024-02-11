@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal QueryHeap(NativeLLGL.QueryHeap native)
+        internal QueryHeap(NativeLLGL.QueryHeap native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~QueryHeap()

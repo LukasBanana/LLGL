@@ -103,6 +103,13 @@ auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
 struct RenderTargetDescriptor
 {
     /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*             debugName   = nullptr;
+
+    /**
     \brief Optional render pass object that will be used with the render target. By default null.
     \remarks If this is null, a default render pass is created for the render target.
     The default render pass determines the attachment formats by the render target attachments and keeps the load and store operations at its default values.

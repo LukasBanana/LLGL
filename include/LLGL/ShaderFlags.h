@@ -13,6 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/FragmentAttribute.h>
+#include <LLGL/Deprecated.h>
 #include <cstddef>
 #include <vector>
 
@@ -286,8 +287,43 @@ struct ComputeShaderAttributes
 struct ShaderDescriptor
 {
     ShaderDescriptor() = default;
+
+    #if 1 //TODO: remove as soon as 'name' field is removed
+    inline ShaderDescriptor(const ShaderDescriptor& other) :
+        debugName  { other.debugName  },
+        type       { other.type       },
+        source     { other.source     },
+        sourceSize { other.sourceSize },
+        sourceType { other.sourceType },
+        entryPoint { other.entryPoint },
+        profile    { other.profile    },
+        defines    { other.defines    },
+        flags      { other.flags      },
+        vertex     { other.vertex     },
+        fragment   { other.fragment   },
+        compute    { other.compute    }
+    {
+    }
+    inline ShaderDescriptor& operator = (const ShaderDescriptor& other)
+    {
+        this->debugName  = other.debugName;
+        this->type       = other.type;
+        this->source     = other.source;
+        this->sourceSize = other.sourceSize;
+        this->sourceType = other.sourceType;
+        this->entryPoint = other.entryPoint;
+        this->profile    = other.profile;
+        this->defines    = other.defines;
+        this->flags      = other.flags;
+        this->vertex     = other.vertex;
+        this->fragment   = other.fragment;
+        this->compute    = other.compute;
+        return *this;
+    }
+    #else
     ShaderDescriptor(const ShaderDescriptor&) = default;
     ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
+    #endif
 
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :
@@ -311,6 +347,14 @@ struct ShaderDescriptor
         flags      { flags      }
     {
     }
+
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \remarks For the HLSL backend, this will also be used as shader name if the shader is provided in source form.
+    \see RenderSystemChild::SetName
+    */
+    const char*                 debugName       = nullptr;
 
     //! Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like. By default ShaderType::Undefined.
     ShaderType                  type            = ShaderType::Undefined;
@@ -383,15 +427,9 @@ struct ShaderDescriptor
     */
     long                        flags           = 0;
 
-    /**
-    \brief Optional pointer to the shader's name string. This is either a null terminated string or null.
-    \remarks HLSL will automatically detect if this is null, and if the shader type is
-    ShaderSourceType::CodeFile the value at \c source will automatically be used.
-    This is currently only supported on HLSL, and other backends will ignore this parameter.
-    \see sourceType
-    \note Only supported with: HLSL.
-    */
-    const char*                 name            = nullptr;
+    //! \deprecated Since 0.04b; Use ShaderDescriptor::debugName instead.
+    LLGL_DEPRECATED("ShaderDescriptor::name is deprecated since 0.04b; Use ShaderDescriptor::debugName instead!", "debugName")
+    const char*                 name;
 
     //! Vertex (or geometry) shader specific attributes.
     VertexShaderAttributes      vertex;

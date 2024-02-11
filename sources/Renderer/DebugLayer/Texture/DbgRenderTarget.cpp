@@ -61,14 +61,15 @@ static RenderPassDescriptor MakeRenderPassDesc(const RenderTargetDescriptor& ren
 }
 
 DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
-    instance { instance },
-    desc     { desc     }
+    instance { instance             },
+    desc     { desc                 },
+    label    { LLGL_DBG_LABEL(desc) }
 {
-    if (const auto* renderPass = instance.GetRenderPass())
+    if (const RenderPass* renderPass = instance.GetRenderPass())
         renderPass_ = MakeUnique<DbgRenderPass>(*renderPass, MakeRenderPassDesc(desc));
 }
 
-void DbgRenderTarget::SetName(const char* name)
+void DbgRenderTarget::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

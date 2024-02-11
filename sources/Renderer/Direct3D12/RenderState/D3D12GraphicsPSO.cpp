@@ -84,6 +84,9 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
     }
     else
         CreateNativePSO(device, *pipelineLayoutD3D, renderPassD3D, desc);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 void D3D12GraphicsPSO::Bind(D3D12CommandContext& commandContext)

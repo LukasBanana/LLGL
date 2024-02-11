@@ -23,6 +23,7 @@ DEF_TEST( DepthBuffer )
     // Create texture for readback with depth-only format (D32Float)
     TextureDescriptor texDesc;
     {
+        texDesc.debugName       = "readbackTex";
         texDesc.format          = Format::D32Float;
         texDesc.extent.width    = opt.resolution.width;
         texDesc.extent.height   = opt.resolution.height;
@@ -30,16 +31,15 @@ DEF_TEST( DepthBuffer )
         texDesc.mipLevels       = 1;
     }
     Texture* readbackTex = renderer->CreateTexture(texDesc);
-    readbackTex->SetName("readbackTex");
 
     // Create depth-only render target for scene
     RenderTargetDescriptor renderTargetDesc;
     {
+        renderTargetDesc.debugName              = "renderTarget";
         renderTargetDesc.resolution             = opt.resolution;
         renderTargetDesc.depthStencilAttachment = readbackTex;
     }
     RenderTarget* renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
-    renderTarget->SetName("renderTarget");
 
     // Create PSO for rendering to the depth buffer
     GraphicsPipelineDescriptor psoDesc;

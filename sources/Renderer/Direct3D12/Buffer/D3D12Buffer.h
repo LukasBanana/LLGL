@@ -29,7 +29,7 @@ class D3D12Buffer : public Buffer
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
         BufferDescriptor GetDesc() const override;
 

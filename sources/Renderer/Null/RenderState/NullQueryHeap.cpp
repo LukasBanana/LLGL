@@ -16,9 +16,11 @@ NullQueryHeap::NullQueryHeap(const QueryHeapDescriptor& desc) :
     QueryHeap { desc.type },
     desc      { desc      }
 {
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullQueryHeap::SetName(const char* name)
+void NullQueryHeap::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

@@ -31,6 +31,13 @@ namespace LLGL
 struct BufferDescriptor
 {
     /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*                 debugName       = nullptr;
+
+    /**
     \brief Buffer size (in bytes). This must not be larger than RenderingLimits::maxBufferSize. By default 0.
     \remarks If \c stride is greater than zero, then \c size \b must be a multiple of \c stride.
     \see RenderingLimits::maxBufferSize

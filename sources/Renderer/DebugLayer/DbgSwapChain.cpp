@@ -37,16 +37,17 @@ static RenderPassDescriptor MakeRenderPassDesc(const SwapChain& swapChain)
 }
 
 DbgSwapChain::DbgSwapChain(SwapChain& instance, const SwapChainDescriptor& desc, const PresentCallback& presentCallback) :
-    instance         { instance        },
-    desc             { desc            },
-    presentCallback_ { presentCallback }
+    instance         { instance             },
+    desc             { desc                 },
+    label            { LLGL_DBG_LABEL(desc) },
+    presentCallback_ { presentCallback      }
 {
     ShareSurfaceAndConfig(instance);
     if (const auto* renderPass = instance.GetRenderPass())
         renderPass_ = MakeUnique<DbgRenderPass>(*renderPass, MakeRenderPassDesc(*this));
 }
 
-void DbgSwapChain::SetName(const char* name)
+void DbgSwapChain::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

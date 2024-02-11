@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal Texture(NativeLLGL.Texture native)
+        internal Texture(NativeLLGL.Texture native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~Texture()

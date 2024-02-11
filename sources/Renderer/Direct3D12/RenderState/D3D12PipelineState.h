@@ -31,7 +31,7 @@ class D3D12PipelineState : public PipelineState
 
     public:
 
-        void SetName(const char* name) override final;
+        void SetDebugName(const char* name) override final;
         const Report* GetReport() const override final;
 
     public:

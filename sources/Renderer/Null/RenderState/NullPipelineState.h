@@ -23,7 +23,7 @@ class NullPipelineState final : public PipelineState
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
         const Report* GetReport() const override;
 
     public:

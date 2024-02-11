@@ -25,13 +25,13 @@ class GLBuffer : public Buffer
 
     public:
 
-        void SetName(const char* name) override final;
+        void SetDebugName(const char* name) override final;
 
         BufferDescriptor GetDesc() const override;
 
     public:
 
-        GLBuffer(long bindFlags);
+        GLBuffer(long bindFlags, const char* debugName = nullptr);
         ~GLBuffer();
 
         void BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage);

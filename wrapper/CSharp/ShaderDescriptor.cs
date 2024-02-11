@@ -31,6 +31,7 @@ namespace LLGL
             {
                 throw new ArgumentException("Cannot set shader source as buffer when provided with string", "sourceType");
             }
+            DebugName   = name;
             Type        = type;
             SourceText  = sourceText;
             SourceType  = sourceType;
@@ -38,7 +39,6 @@ namespace LLGL
             Profile     = profile;
             Defines     = defines;
             Flags       = flags;
-            Name        = name;
             if (vertex != null)
             {
                 Vertex = vertex;
@@ -72,7 +72,7 @@ namespace LLGL
             Profile     = profile;
             Defines     = defines;
             Flags       = flags;
-            Name        = name;
+            DebugName   = name;
             if (vertex != null)
             {
                 Vertex = vertex;
@@ -86,6 +86,8 @@ namespace LLGL
                 Compute = compute;
             }
         }
+
+        public AnsiString DebugName { get; set; }
 
         public ShaderType Type { get; set; } = ShaderType.Undefined;
 
@@ -176,18 +178,16 @@ namespace LLGL
         }
 
         public ShaderCompileFlags Flags { get; set; } = 0;
-        private string name;
-        private byte[] nameAscii;
+        [Obsolete("ShaderDescriptor.Name is deprecated since 0.04b; Use ShaderDescriptor.DebugName instead.")]
         public string Name
         {
             get
             {
-                return name;
+                return DebugName;
             }
             set
             {
-                name = value;
-                nameAscii = Encoding.ASCII.GetBytes(name + "\0");
+                DebugName = value;
             }
         }
         public VertexShaderAttributes Vertex { get; set; } = new VertexShaderAttributes();
@@ -201,6 +201,10 @@ namespace LLGL
                 var native = new NativeLLGL.ShaderDescriptor();
                 unsafe
                 {
+                    fixed (byte* debugNamePtr = DebugName.Ascii)
+                    {
+                        native.debugName = debugNamePtr;
+                    }
                     native.type = Type;
                     if (sourceData != null)
                     {
@@ -230,13 +234,6 @@ namespace LLGL
                         }
                     }
                     native.flags = (int)Flags;
-                    if (name != null)
-                    {
-                        fixed (byte* namePtr = nameAscii)
-                        {
-                            native.name = namePtr;
-                        }
-                    }
                     if (Vertex != null)
                     {
                         native.vertex = Vertex.Native;

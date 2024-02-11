@@ -61,6 +61,13 @@ struct ResizeBuffersFlags
 struct SwapChainDescriptor
 {
     /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*     debugName       = nullptr;
+
+    /**
     \brief Screen resolution (in pixels).
     \remarks If the resolution contains a member with a value of 0, the video mode is invalid.
     \see RenderTarget::GetResolution

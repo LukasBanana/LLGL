@@ -52,9 +52,11 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const Co
     commandQueue_        { LLGL_CAST(D3D12CommandQueue*, renderSystem.GetCommandQueue()) }
 {
     CreateCommandContext(renderSystem, desc);
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D12CommandBuffer::SetName(const char* name)
+void D3D12CommandBuffer::SetDebugName(const char* name)
 {
     D3D12SetObjectName(commandList_, name);
 }

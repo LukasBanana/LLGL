@@ -29,9 +29,10 @@ namespace LLGL
             }
         }
 
-        internal RenderTarget(NativeLLGL.RenderTarget native)
+        internal RenderTarget(NativeLLGL.RenderTarget native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
 
         ~RenderTarget()

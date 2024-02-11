@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-void NullFence::SetName(const char* name)
+void NullFence::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

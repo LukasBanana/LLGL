@@ -34,7 +34,7 @@ class D3D12RenderTarget final : public RenderTarget
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

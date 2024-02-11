@@ -129,19 +129,12 @@ public:
         CreateGraphicsPipeline();
 
         // Label objects
-        constantBuffer->SetName("Buffer.Constants");
-        #ifdef ENABLE_STORAGE_TEXTURES
-        vertexBufferNull->SetName("Buffer.Null");
-        #else
-        vertexBufferArray->SetName("BufferArray.Vertices");
-        #endif
-        indexBuffer->SetName("Buffer.Indices");
-        particleBuffers[AttribBase]->SetName("Particles.Base");
-        particleBuffers[AttribCurrPos]->SetName("Particles.CurrentPosition");
-        particleBuffers[AttribNextPos]->SetName("Particles.NextPosition");
-        particleBuffers[AttribPrevPos]->SetName("Particles.PreviousPosition");
-        particleBuffers[AttribVelocity]->SetName("Particles.Velocity");
-        particleBuffers[AttribNormal]->SetName("Particles.Normal");
+        particleBuffers[AttribBase    ]->SetDebugName("Particles.Base");
+        particleBuffers[AttribCurrPos ]->SetDebugName("Particles.CurrentPosition");
+        particleBuffers[AttribNextPos ]->SetDebugName("Particles.NextPosition");
+        particleBuffers[AttribPrevPos ]->SetDebugName("Particles.PreviousPosition");
+        particleBuffers[AttribVelocity]->SetDebugName("Particles.Velocity");
+        particleBuffers[AttribNormal  ]->SetDebugName("Particles.Normal");
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the camera" << std::endl;
@@ -309,6 +302,7 @@ public:
         // Create dummy vertex buffer
         LLGL::BufferDescriptor vbNullDesc;
         {
+            vbNullDesc.debugName    = "Buffer.Null";
             vbNullDesc.size         = 1;
             vbNullDesc.bindFlags    = LLGL::BindFlags::VertexBuffer;
         }
@@ -324,12 +318,14 @@ public:
             particleBuffers[AttribBase]     // Read "texCoord" from .xy
         };
         vertexBufferArray = renderer->CreateBufferArray(3, buffers);
+        vertexBufferArray->SetDebugName("BufferArray.Vertices");
 
         #endif
 
         // Create index buffer
         LLGL::BufferDescriptor indexBufferDesc;
         {
+            indexBufferDesc.debugName   = "Buffer.Indices";
             indexBufferDesc.size        = sizeof(std::uint32_t) * indices.size();
             indexBufferDesc.bindFlags   = LLGL::BindFlags::IndexBuffer;
             indexBufferDesc.format      = LLGL::Format::R32UInt;

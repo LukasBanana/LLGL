@@ -755,6 +755,13 @@ shader stages, depth-/ stencil-/ rasterizer-/ blend states etc.
 struct GraphicsPipelineDescriptor
 {
     /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*             debugName               = nullptr;
+
+    /**
     \brief Specifies an optional pipeline layout for the graphics pipeline. By default null.
     \remarks This layout determines at which slots buffer resources will be bound.
     If this is null, a default layout will be used that is only compatible with graphics pipelines that have no binding points, i.e. no input/output buffers or textures.
@@ -869,6 +876,13 @@ struct GraphicsPipelineDescriptor
 */
 struct ComputePipelineDescriptor
 {
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*             debugName       = nullptr;
+
     /**
     \brief Pointer to an optional pipeline layout for the graphics pipeline.
     \remarks This layout determines at which slots buffer resources can be bound.

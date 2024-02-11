@@ -140,15 +140,13 @@ private:
         // Create content buffer with CPU read/write access but without binding flags since we don't bind it to any pipeline
         LLGL::BufferDescriptor bufferDesc;
         {
+            bufferDesc.debugName        = "MyContentBuffer";
             bufferDesc.size             = contentBufferSize;
             bufferDesc.bindFlags        = LLGL::BindFlags::CopySrc | LLGL::BindFlags::CopyDst; // Not used in a graphics or compute shader, only with copy commands
             bufferDesc.cpuAccessFlags   = LLGL::CPUAccessFlags::ReadWrite;
             bufferDesc.miscFlags        = LLGL::MiscFlags::NoInitialData;
         }
         contentBuffer = renderer->CreateBuffer(bufferDesc);
-
-        // Assign label to content buffer (for debugging)
-        contentBuffer->SetName("MyContentBuffer");
     }
 
     void CreateSourceTextures()
@@ -184,8 +182,8 @@ private:
             dstTextures[i] = renderer->CreateTexture(texDesc);
 
         // Assign label to textures (for debugging)
-        dstTextures[0]->SetName("MyDestinationTexture[0]");
-        dstTextures[1]->SetName("MyDestinationTexture[1]");
+        dstTextures[0]->SetDebugName("MyDestinationTexture[0]");
+        dstTextures[1]->SetDebugName("MyDestinationTexture[1]");
     }
 
     void CreateResourceHeap()

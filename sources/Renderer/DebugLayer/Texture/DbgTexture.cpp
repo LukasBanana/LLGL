@@ -17,7 +17,8 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
     Texture   { desc.type, desc.bindFlags },
     instance  { instance                  },
     desc      { desc                      },
-    mipLevels { NumMipLevels(desc)        }
+    mipLevels { NumMipLevels(desc)        },
+    label     { LLGL_DBG_LABEL(desc)      }
 {
 }
 
@@ -45,7 +46,7 @@ DbgTexture::~DbgTexture()
     #endif
 }
 
-void DbgTexture::SetName(const char* name)
+void DbgTexture::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

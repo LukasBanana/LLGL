@@ -63,12 +63,12 @@ namespace LLGLExamples
                 {
                     var bufferDesc = new LLGL.BufferDescriptor()
                     {
+                        DebugName = "MyVertexBuffer",
                         Size = sizeof(Vertex) * vertices.Length,
                         BindFlags = LLGL.BindFlags.VertexBuffer,
                         VertexAttribs = VertexAttribs
                     };
                     VertexBuffer = Renderer.CreateBufferUnsafe(bufferDesc, verticesPtr);
-                    VertexBuffer.Name = "MyVertexBuffer";
                 }
             }
         }
@@ -135,14 +135,14 @@ namespace LLGLExamples
 
         private void CreatePipeline()
         {
-            var psoDesc = new LLGL.GraphicsPipelineDescriptor();
-
-            psoDesc.RenderPass = SwapChain.RenderPass;
-            psoDesc.VertexShader = VS;
-            psoDesc.FragmentShader = FS;
-
+            var psoDesc = new LLGL.GraphicsPipelineDescriptor()
+            {
+                DebugName = "MyGraphicsPSO",
+                RenderPass = SwapChain.RenderPass,
+                VertexShader = VS,
+                FragmentShader = FS,
+            };
             PSO = Renderer.CreatePipelineState(psoDesc);
-            PSO.Name = "MyGraphicsPSO";
 
             var psoReport = PSO.Report;
             if (psoReport != null && psoReport.HasErrors)
@@ -171,7 +171,7 @@ namespace LLGLExamples
 
             var swapChainDesc = new LLGL.SwapChainDescriptor(resolution: initialResolution, samples: 8);
             SwapChain = Renderer.CreateSwapChain(swapChainDesc);
-            SwapChain.Name = "MySwapChain";
+            SwapChain.DebugName = "MySwapChain";
 
             PrintRendererInfo(Renderer.RendererInfo);
 
@@ -183,8 +183,13 @@ namespace LLGLExamples
             window.Show();
 
             // Create command buffer
-            CmdBuffer = Renderer.CreateCommandBuffer(new LLGL.CommandBufferDescriptor() { Flags = LLGL.CommandBufferFlags.ImmediateSubmit });
-            CmdBuffer.Name = "MyCommandBuffer";
+            CmdBuffer = Renderer.CreateCommandBuffer(
+                new LLGL.CommandBufferDescriptor()
+                {
+                    DebugName = "MyCommandBuffer",
+                    Flags = LLGL.CommandBufferFlags.ImmediateSubmit
+                }
+            );
 
             // Create resources
             CreateBuffers();
@@ -194,7 +199,7 @@ namespace LLGLExamples
             // Main loop
             while (LLGL.Surface.ProcessEvents() && !window.HasQuit)
             {
-                Debugger.TimgRecording = true;
+                //Debugger.TimgRecording = true;
 
                 RenderFrame();
                 SwapChain.Present();

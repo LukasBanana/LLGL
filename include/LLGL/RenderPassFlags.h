@@ -117,6 +117,13 @@ Two render passes are considered compatible when all color-, depth-, and stencil
 struct RenderPassDescriptor
 {
     /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*                 debugName           = nullptr;
+
+    /**
     \brief Specifies the color attachments used within the render pass.
     \remarks Each attachment with a \c format field set to Format::Undefined is disabled.
     Any other attachment after the first disabled attachment is also considered disabled as attachments must be enabled in consecutive order.

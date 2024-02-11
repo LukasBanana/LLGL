@@ -88,9 +88,12 @@ D3D11QueryHeap::D3D11QueryHeap(ID3D11Device* device, const QueryHeapDescriptor& 
         for (std::uint32_t i = 0; i < numNativeQueries; i += groupSize_)
             nativeQueries_.push_back(DXCreateQuery(device, queryDesc));
     }
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11QueryHeap::SetName(const char* name)
+void D3D11QueryHeap::SetDebugName(const char* name)
 {
     if (nativeQueries_.size() == 1)
     {

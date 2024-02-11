@@ -33,11 +33,15 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     extent_         { desc.extent                        }
 {
     CreateNativeTexture(device, desc);
+
     if (SupportsGenerateMips())
         CreateMipDescHeap(device);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D12Texture::SetName(const char* name)
+void D3D12Texture::SetDebugName(const char* name)
 {
     D3D12SetObjectName(resource_.Get(), name);
 }

@@ -802,6 +802,7 @@ LLGL_STATIC_ASSERT_OFFSET(AttachmentClear, colorAttachment);
 LLGL_STATIC_ASSERT_OFFSET(AttachmentClear, clearValue);
 
 LLGL_STATIC_ASSERT_SIZE(CommandBufferDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, flags);
 LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, numNativeBuffers);
 LLGL_STATIC_ASSERT_OFFSET(CommandBufferDescriptor, minStagingPoolSize);
@@ -839,6 +840,7 @@ LLGL_STATIC_ASSERT_OFFSET(TextureRegion, offset);
 LLGL_STATIC_ASSERT_OFFSET(TextureRegion, extent);
 
 LLGL_STATIC_ASSERT_SIZE(TextureDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, type);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, bindFlags);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, miscFlags);
@@ -864,6 +866,7 @@ LLGL_STATIC_ASSERT_OFFSET(SubresourceFootprint, layerSize);
 LLGL_STATIC_ASSERT_OFFSET(SubresourceFootprint, layerStride);
 
 LLGL_STATIC_ASSERT_SIZE(SwapChainDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, resolution);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, colorBits);
 LLGL_STATIC_ASSERT_OFFSET(SwapChainDescriptor, depthBits);
@@ -940,6 +943,7 @@ LLGL_STATIC_ASSERT_OFFSET(MutableImageView, data);
 LLGL_STATIC_ASSERT_OFFSET(MutableImageView, dataSize);
 
 LLGL_STATIC_ASSERT_SIZE(SamplerDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(SamplerDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(SamplerDescriptor, addressModeU);
 LLGL_STATIC_ASSERT_OFFSET(SamplerDescriptor, addressModeV);
 LLGL_STATIC_ASSERT_OFFSET(SamplerDescriptor, addressModeW);
@@ -962,6 +966,7 @@ LLGL_STATIC_ASSERT_OFFSET(ResourceViewDescriptor, bufferView);
 LLGL_STATIC_ASSERT_OFFSET(ResourceViewDescriptor, initialCount);
 
 LLGL_STATIC_ASSERT_SIZE(ResourceHeapDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, pipelineLayout);
 LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, numResourceViews);
 LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, barrierFlags);
@@ -980,6 +985,7 @@ LLGL_STATIC_ASSERT_OFFSET(AttachmentDescriptor, mipLevel);
 LLGL_STATIC_ASSERT_OFFSET(AttachmentDescriptor, arrayLayer);
 
 LLGL_STATIC_ASSERT_SIZE(RenderTargetDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, renderPass);
 LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, resolution);
 LLGL_STATIC_ASSERT_OFFSET(RenderTargetDescriptor, samples);
@@ -1005,6 +1011,7 @@ LLGL_STATIC_ASSERT_OFFSET(QueryPipelineStatistics, tessEvaluationShaderInvocatio
 LLGL_STATIC_ASSERT_OFFSET(QueryPipelineStatistics, computeShaderInvocations);
 
 LLGL_STATIC_ASSERT_SIZE(QueryHeapDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(QueryHeapDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(QueryHeapDescriptor, type);
 LLGL_STATIC_ASSERT_OFFSET(QueryHeapDescriptor, numQueries);
 LLGL_STATIC_ASSERT_OFFSET(QueryHeapDescriptor, renderCondition);
@@ -1015,6 +1022,7 @@ LLGL_STATIC_ASSERT_OFFSET(AttachmentFormatDescriptor, loadOp);
 LLGL_STATIC_ASSERT_OFFSET(AttachmentFormatDescriptor, storeOp);
 
 LLGL_STATIC_ASSERT_SIZE(RenderPassDescriptor);
+LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, colorAttachments);
 LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, depthAttachment);
 LLGL_STATIC_ASSERT_OFFSET(RenderPassDescriptor, stencilAttachment);

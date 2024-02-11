@@ -23,8 +23,8 @@ void D3D11SetObjectName(ID3D11DeviceChild* obj, const char* name)
     {
         if (name != nullptr)
         {
-            const std::size_t length = std::strlen(name);
-            obj->SetPrivateData(g_WKPDID_D3DDebugObjectName, static_cast<UINT>(length), name);
+            const std::size_t nameLen = std::strlen(name);
+            obj->SetPrivateData(g_WKPDID_D3DDebugObjectName, static_cast<UINT>(nameLen), name);
         }
         else
             obj->SetPrivateData(g_WKPDID_D3DDebugObjectName, 0, nullptr);
@@ -39,8 +39,8 @@ void D3D11SetObjectNameSubscript(ID3D11DeviceChild* obj, const char* name, const
         {
             std::string nameWithSubscript = name;
             nameWithSubscript += subscript;
-            const std::size_t length = nameWithSubscript.size();
-            obj->SetPrivateData(g_WKPDID_D3DDebugObjectName, static_cast<UINT>(length), nameWithSubscript.c_str());
+            const std::size_t nameLen = nameWithSubscript.size();
+            obj->SetPrivateData(g_WKPDID_D3DDebugObjectName, static_cast<UINT>(nameLen), nameWithSubscript.c_str());
         }
         else
             obj->SetPrivateData(g_WKPDID_D3DDebugObjectName, 0, nullptr);
@@ -52,7 +52,7 @@ void D3D11SetObjectNameIndexed(ID3D11DeviceChild* obj, const char* name, std::ui
     if (name != nullptr)
     {
         /* Append subscript to label */
-        std::string subscript = std::to_string(index);
+        const std::string subscript = std::to_string(index);
         D3D11SetObjectNameSubscript(obj, name, subscript.c_str());
     }
     else

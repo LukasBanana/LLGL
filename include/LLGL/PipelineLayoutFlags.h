@@ -174,6 +174,7 @@ struct BindingDescriptor
     layout(binding = 1) uniform sampler2D mySampler;
     \endcode
     Otherwise, the name of the resource must be included in this binding descriptor, e.g. <code>"mySampler"</code>.
+    \todo Change to <code>const char*</code>
     */
     std::string     name;
 
@@ -254,6 +255,7 @@ struct StaticSamplerDescriptor
     layout(binding = 1) uniform sampler2D mySampler;
     \endcode
     Otherwise, the name of the resource must be included in this binding descriptor, e.g. <code>"mySampler"</code>.
+    \todo Change to <code>const char*</code>
     */
     std::string         name;
 
@@ -303,6 +305,7 @@ struct UniformDescriptor
     /**
     \brief Specifies the name of an individual shader uniform. This <b>must not</b> be empty.
     \remarks This describes the name of the constant itself and not its encloding constant buffer.
+    \todo Change to <code>const char*</code>
     */
     std::string     name;
 
@@ -324,6 +327,13 @@ struct UniformDescriptor
 */
 struct PipelineLayoutDescriptor
 {
+    /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*                             debugName       = nullptr;
+
     /**
     \brief List of layout resource heap bindings.
     \remarks These bindings refer to the resource descriptors that are all bound at once with a single ResourceHeap.

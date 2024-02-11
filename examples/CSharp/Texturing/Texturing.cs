@@ -50,12 +50,12 @@ namespace LLGLExamples
                 {
                     var bufferDesc = new LLGL.BufferDescriptor()
                     {
+                        DebugName = "MyVertexBuffer",
                         Size = sizeof(Vertex) * vertices.Length,
                         BindFlags = LLGL.BindFlags.VertexBuffer,
                         VertexAttribs = VertexAttribs
                     };
                     VertexBuffer = Renderer.CreateBufferUnsafe(bufferDesc, verticesPtr);
-                    VertexBuffer.Name = "MyVertexBuffer";
                 }
             }
         }
@@ -155,16 +155,16 @@ namespace LLGLExamples
 
         private void CreatePipeline()
         {
-            var psoDesc = new LLGL.GraphicsPipelineDescriptor();
-
-            psoDesc.PipelineLayout = PSOLayout;
-            psoDesc.RenderPass = SwapChain.RenderPass;
-            psoDesc.VertexShader = VS;
-            psoDesc.FragmentShader = FS;
-            psoDesc.PrimitiveTopology = LLGL.PrimitiveTopology.TriangleStrip;
-
+            var psoDesc = new LLGL.GraphicsPipelineDescriptor()
+            {
+                DebugName = "MyGraphicsPSO",
+                PipelineLayout = PSOLayout,
+                RenderPass = SwapChain.RenderPass,
+                VertexShader = VS,
+                FragmentShader = FS,
+                PrimitiveTopology = LLGL.PrimitiveTopology.TriangleStrip,
+            };
             PSO = Renderer.CreatePipelineState(psoDesc);
-            PSO.Name = "MyGraphicsPSO";
 
             var psoReport = PSO.Report;
             if (psoReport != null && psoReport.HasErrors)

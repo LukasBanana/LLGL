@@ -18,6 +18,7 @@ namespace LLGL
 
 DbgPipelineState::DbgPipelineState(PipelineState& instance, const GraphicsPipelineDescriptor& desc) :
     instance       { instance                                                 },
+    label          { LLGL_DBG_LABEL(desc)                                     },
     pipelineLayout { LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout) },
     isGraphicsPSO  { true                                                     },
     graphicsDesc   { desc                                                     }
@@ -26,6 +27,7 @@ DbgPipelineState::DbgPipelineState(PipelineState& instance, const GraphicsPipeli
 
 DbgPipelineState::DbgPipelineState(PipelineState& instance, const ComputePipelineDescriptor& desc) :
     instance       { instance                                                 },
+    label          { LLGL_DBG_LABEL(desc)                                     },
     pipelineLayout { LLGL_CAST(const DbgPipelineLayout*, desc.pipelineLayout) },
     isGraphicsPSO  { false                                                    },
     computeDesc    { desc                                                     }
@@ -47,7 +49,7 @@ bool DbgPipelineState::HasDynamicStencilRef() const
     return (isGraphicsPSO && graphicsDesc.stencil.referenceDynamic && IsStencilRefEnabled(graphicsDesc.stencil));
 }
 
-void DbgPipelineState::SetName(const char* name)
+void DbgPipelineState::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);
 }

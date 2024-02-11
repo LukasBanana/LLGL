@@ -25,7 +25,7 @@ class D3D12QueryHeap final : public QueryHeap
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

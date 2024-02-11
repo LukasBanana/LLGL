@@ -37,7 +37,7 @@ static GLBufferTarget FindPrimaryBufferTarget(long bindFlags)
     return GLBufferTarget::ArrayBuffer;
 }
 
-GLBuffer::GLBuffer(long bindFlags) :
+GLBuffer::GLBuffer(long bindFlags, const char* debugName) :
     Buffer  { bindFlags                          },
     target_ { FindPrimaryBufferTarget(bindFlags) }
 {
@@ -53,6 +53,9 @@ GLBuffer::GLBuffer(long bindFlags) :
         /* Creates a new GL buffer object (must be bound to a target before it can be used) */
         glGenBuffers(1, &id_);
     }
+
+    if (debugName != nullptr)
+        SetDebugName(debugName);
 }
 
 GLBuffer::~GLBuffer()
@@ -61,7 +64,7 @@ GLBuffer::~GLBuffer()
     GLStateManager::Get().NotifyBufferRelease(*this);
 }
 
-void GLBuffer::SetName(const char* name)
+void GLBuffer::SetDebugName(const char* name)
 {
     GLSetObjectLabel(GL_BUFFER, GetID(), name);
 }

@@ -464,13 +464,13 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     // Create swap-chain
     LLGL::SwapChainDescriptor swapChainDesc;
     {
+        swapChainDesc.debugName     = "SwapChain";
         swapChainDesc.resolution    = ScaleResolutionForDisplay(g_Config.windowSize, LLGL::Display::GetPrimary());
         swapChainDesc.samples       = GetSampleCount();
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
 
     swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
-    swapChain->SetName("SwapChain");
 
     // Create command buffer
     commands = renderer->CreateCommandBuffer();//LLGL::CommandBufferFlags::ImmediateSubmit);

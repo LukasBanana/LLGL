@@ -35,7 +35,7 @@ GLBufferArrayWithVAO::GLBufferArrayWithVAO(std::uint32_t numBuffers, Buffer* con
     }
 }
 
-void GLBufferArrayWithVAO::SetName(const char* name)
+void GLBufferArrayWithVAO::SetDebugName(const char* name)
 {
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (HasNativeVAO())

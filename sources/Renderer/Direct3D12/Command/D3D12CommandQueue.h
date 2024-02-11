@@ -37,7 +37,7 @@ class D3D12CommandQueue final : public CommandQueue
             D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT
         );
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
 
     public:
 

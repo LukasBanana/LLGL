@@ -22,6 +22,8 @@ GLLegacyShader::GLLegacyShader(const ShaderDescriptor& desc) :
     GLShader { /*isSeparable:*/ false, desc }
 {
     BuildShader(desc);
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 GLLegacyShader::~GLLegacyShader()
@@ -29,7 +31,7 @@ GLLegacyShader::~GLLegacyShader()
     glDeleteShader(GetID());
 }
 
-void GLLegacyShader::SetName(const char* name)
+void GLLegacyShader::SetDebugName(const char* name)
 {
     GLSetObjectLabel(GL_SHADER, GetID(), name);
 }

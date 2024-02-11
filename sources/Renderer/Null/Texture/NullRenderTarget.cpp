@@ -20,9 +20,11 @@ NullRenderTarget::NullRenderTarget(const RenderTargetDescriptor& desc) :
     desc { desc }
 {
     BuildAttachmentArray();
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullRenderTarget::SetName(const char* name)
+void NullRenderTarget::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

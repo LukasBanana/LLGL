@@ -26,7 +26,7 @@ class GLSeparableShader final : public GLShader
 
     public:
 
-        void SetName(const char* name) override;
+        void SetDebugName(const char* name) override;
         bool Reflect(ShaderReflection& reflection) const override;
 
     public:

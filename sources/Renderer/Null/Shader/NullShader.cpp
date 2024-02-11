@@ -16,9 +16,11 @@ NullShader::NullShader(const ShaderDescriptor& desc) :
     Shader { desc.type },
     desc   { desc      }
 {
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullShader::SetName(const char* name)
+void NullShader::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

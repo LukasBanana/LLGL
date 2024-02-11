@@ -15,9 +15,11 @@ namespace LLGL
 NullSampler::NullSampler(const SamplerDescriptor& desc) :
     desc { desc }
 {
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void NullSampler::SetName(const char* name)
+void NullSampler::SetDebugName(const char* name)
 {
     if (name != nullptr)
         label_ = name;

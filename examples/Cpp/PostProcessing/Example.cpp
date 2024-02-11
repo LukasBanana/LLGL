@@ -357,7 +357,7 @@ public:
     {
         // Create resource heap for scene rendering
         resourceHeapScene = renderer->CreateResourceHeap(layoutScene, { constantBufferScene });
-        resourceHeapScene->SetName("ResourceHeap.Scene");
+        resourceHeapScene->SetDebugName("ResourceHeap.Scene");
 
         // Create resource heap for blur-X and blur-Y post-processor
         const LLGL::ResourceViewDescriptor resourceViewsBlurPass[] =
@@ -366,7 +366,7 @@ public:
             constantBufferBlur, glossMapBlurX, glossMapSampler, // Resources for blur-Y pass
         };
         resourceHeapBlur = renderer->CreateResourceHeap(layoutBlur, resourceViewsBlurPass);
-        resourceHeapBlur->SetName("ResourceHeap.Blur");
+        resourceHeapBlur->SetDebugName("ResourceHeap.Blur");
 
         // Create resource heap for final post-processor
         const LLGL::ResourceViewDescriptor resourceViewsFinalPass[] =
@@ -374,7 +374,7 @@ public:
             constantBufferScene, colorMap, glossMapBlurY, colorMapSampler, glossMapSampler
         };
         resourceHeapFinal = renderer->CreateResourceHeap(layoutFinal, resourceViewsFinalPass);
-        resourceHeapFinal->SetName("ResourceHeap.Final");
+        resourceHeapFinal->SetDebugName("ResourceHeap.Final");
     }
 
     void UpdateScreenSize()

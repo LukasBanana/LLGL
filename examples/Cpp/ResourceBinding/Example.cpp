@@ -61,23 +61,6 @@ public:
         CreatePipelines(vertexFormat);
         const auto caps = renderer->GetRenderingCaps();
 
-        // Set debugging names
-        vertexShader->SetName("VertexShader");
-        fragmentShader->SetName("FragmentShader");
-        vertexBuffer->SetName("Vertices");
-        sceneBuffer->SetName("Scene");
-        transformBuffer->SetName("Transforms");
-        pipeline->SetName("PSO");
-        pipelineLayout->SetName("PipelineLayout");
-        for (std::size_t i = 0; i < sizeof(colorMaps) / sizeof(colorMaps[0]); ++i)
-        {
-            const std::string colorMapName = "ColorMap[" + std::to_string(i) + "]";
-            colorMaps[i]->SetName(colorMapName.c_str());
-        }
-        linearSampler->SetName("LinearSampler");
-        nearestSampler->SetName("NearestSampler");
-        resourceHeap->SetName("ResourceHeap");
-
         // Show info
         //std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
     }
@@ -118,6 +101,7 @@ private:
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor vertexBufferDesc;
         {
+            vertexBufferDesc.debugName      = "Vertices";
             vertexBufferDesc.size           = sizeof(TexturedVertex) * vertices.size();
             vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
             vertexBufferDesc.vertexAttribs  = vertexFormat.attributes;
@@ -127,6 +111,7 @@ private:
         // Create constant buffer for scene constants
         LLGL::BufferDescriptor cbufferDesc;
         {
+            cbufferDesc.debugName   = "Scene";
             cbufferDesc.size        = sizeof(Scene);
             cbufferDesc.bindFlags   = LLGL::BindFlags::ConstantBuffer;
         }
@@ -135,6 +120,7 @@ private:
         // Create transform buffer
         LLGL::BufferDescriptor transformBufferDesc;
         {
+            transformBufferDesc.debugName   = "Transforms";
             transformBufferDesc.size        = sizeof(Gs::Matrix4f) * models.size();
             transformBufferDesc.stride      = sizeof(Gs::Matrix4f);
             transformBufferDesc.bindFlags   = LLGL::BindFlags::Sampled;
@@ -156,6 +142,7 @@ private:
         // Create linear sampler state
         LLGL::SamplerDescriptor linearSamplerDesc;
         {
+            linearSamplerDesc.debugName         = "LinearSampler";
             linearSamplerDesc.maxAnisotropy     = 8;
             linearSamplerDesc.minFilter         = LLGL::SamplerFilter::Linear;
             linearSamplerDesc.magFilter         = LLGL::SamplerFilter::Linear;
@@ -165,6 +152,7 @@ private:
         // Create linear sampler state
         LLGL::SamplerDescriptor nearestSamplerDesc;
         {
+            nearestSamplerDesc.debugName        = "NearestSampler";
             nearestSamplerDesc.maxAnisotropy    = 8;
             nearestSamplerDesc.minFilter        = LLGL::SamplerFilter::Nearest;
             nearestSamplerDesc.magFilter        = LLGL::SamplerFilter::Nearest;
@@ -202,6 +190,7 @@ private:
         LLGL::SamplerDescriptor colorMapSamplerDesc = LLGL::Parse("lod.bias=1");
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
+            layoutDesc.debugName = "PipelineLayout";
             layoutDesc.heapBindings =
             {
                 LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, (IsMetal() ? 3u : 0u) },
@@ -233,10 +222,12 @@ private:
             sceneBuffer, transformBuffer,
         };
         resourceHeap = renderer->CreateResourceHeap(pipelineLayout, resourceViews);
+        resourceHeap->SetDebugName("ResourceHeap");
 
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.debugName                      = "PSO";
             pipelineDesc.vertexShader                   = vertexShader;
             pipelineDesc.fragmentShader                 = fragmentShader;
             pipelineDesc.pipelineLayout                 = pipelineLayout;

@@ -65,18 +65,11 @@ public:
         const auto caps = renderer->GetRenderingCaps();
 
         // Set debugging names
-        vertexShader->SetName("VertexShader");
-        fragmentShader->SetName("FragmentShader");
-        arrayTexture->SetName("SceneTexture");
-        vertexBuffers[0]->SetName("Vertices");
-        vertexBuffers[1]->SetName("Instances");
-        constantBuffer->SetName("Constants");
-        pipeline[0]->SetName("PSO.Default");
-        pipeline[1]->SetName("PSO.AlphaToCoverage");
-        pipelineLayout->SetName("PipelineLayout");
-        samplers[0]->SetName("LinearSampler");
-        samplers[1]->SetName("ClampedSampler");
-        resourceHeap->SetName("ResourceHeap");
+        arrayTexture->SetDebugName("SceneTexture");
+        pipeline[0]->SetDebugName("PSO.Default");
+        pipeline[1]->SetDebugName("PSO.AlphaToCoverage");
+        pipelineLayout->SetDebugName("PipelineLayout");
+        resourceHeap->SetDebugName("ResourceHeap");
 
         // Show info
         std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
@@ -183,17 +176,20 @@ private:
 
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor desc;
-
-        desc.size           = sizeof(vertexData);
-        desc.bindFlags      = LLGL::BindFlags::VertexBuffer;
-        desc.vertexAttribs  = vertexFormatPerVertex.attributes;
-
+        {
+            desc.debugName      = "Vertices";
+            desc.size           = sizeof(vertexData);
+            desc.bindFlags      = LLGL::BindFlags::VertexBuffer;
+            desc.vertexAttribs  = vertexFormatPerVertex.attributes;
+        }
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
 
         // Create buffer for per-instance data
-        desc.size           = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
-        desc.vertexAttribs  = vertexFormatPerInstance.attributes;
-
+        {
+            desc.debugName      = "Instances";
+            desc.size           = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
+            desc.vertexAttribs  = vertexFormatPerInstance.attributes;
+        }
         vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData.data());
 
         // Create vertex buffer array
@@ -270,15 +266,17 @@ private:
         // Create sampler state object for the grass plane
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.maxAnisotropy = 8;
+            samplerDesc.debugName       = "LinearSampler";
+            samplerDesc.maxAnisotropy   = 8;
         }
         samplers[1] = renderer->CreateSampler(samplerDesc);
 
         // Create sampler state object for the plants
         {
-            samplerDesc.addressModeU = LLGL::SamplerAddressMode::Clamp;
-            samplerDesc.addressModeV = LLGL::SamplerAddressMode::Clamp;
-            samplerDesc.addressModeW = LLGL::SamplerAddressMode::Clamp;
+            samplerDesc.debugName       = "ClampedSampler";
+            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Clamp;
+            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Clamp;
+            samplerDesc.addressModeW    = LLGL::SamplerAddressMode::Clamp;
         }
         samplers[0] = renderer->CreateSampler(samplerDesc);
     }

@@ -25,7 +25,7 @@ class GLBufferWithVAO final : public GLBuffer
 
     public:
 
-        GLBufferWithVAO(long bindFlags);
+        GLBufferWithVAO(long bindFlags, const char* debugName = nullptr);
 
         void BuildVertexArray(std::size_t numVertexAttribs, const VertexAttribute* vertexAttribs);
 

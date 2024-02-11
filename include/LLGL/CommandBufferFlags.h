@@ -261,6 +261,13 @@ struct CommandBufferDescriptor
     }
 
     /**
+    \brief Optional name for debugging purposes. By default null.
+    \remarks The final name of the native hardware resource is implementation defined.
+    \see RenderSystemChild::SetName
+    */
+    const char*         debugName           = nullptr;
+
+    /**
     \brief Specifies the creation flags for the command buffer. By default 0.
     \remarks If no flags are specified (i.e. the default value),
     the command buffer must be encoded again after it has been submitted to the command queue.

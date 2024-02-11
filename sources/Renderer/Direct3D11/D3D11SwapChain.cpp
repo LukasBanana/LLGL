@@ -34,9 +34,12 @@ D3D11SwapChain::D3D11SwapChain(
     /* Create D3D objects */
     CreateSwapChain(factory, desc.resolution, desc.samples, desc.swapBuffers);
     CreateBackBuffer();
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11SwapChain::SetName(const char* name)
+void D3D11SwapChain::SetDebugName(const char* name)
 {
     if (name != nullptr)
     {

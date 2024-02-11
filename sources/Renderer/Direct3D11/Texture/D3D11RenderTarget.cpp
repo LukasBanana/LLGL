@@ -37,6 +37,9 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
 
     if (IsAttachmentEnabled(desc.depthStencilAttachment))
         CreateDepthStencilView(device, desc.depthStencilAttachment);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 D3D11RenderTarget::~D3D11RenderTarget()
@@ -49,7 +52,7 @@ D3D11RenderTarget::~D3D11RenderTarget()
     }
 }
 
-void D3D11RenderTarget::SetName(const char* name)
+void D3D11RenderTarget::SetDebugName(const char* name)
 {
     if (name != nullptr)
     {

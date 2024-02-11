@@ -24,9 +24,10 @@ namespace LLGL
             }
         }
 
-        internal RenderPass(NativeLLGL.RenderPass native)
+        internal RenderPass(NativeLLGL.RenderPass native, string debugName = null)
         {
             Native = native;
+            InitializeDebugName(debugName);
         }
     }
 }

@@ -71,7 +71,7 @@ D3D12Fence::D3D12Fence(ID3D12Device* device, UINT64 initialValue) :
 {
 }
 
-void D3D12Fence::SetName(const char* name)
+void D3D12Fence::SetDebugName(const char* name)
 {
     D3D12SetObjectName(native_.Get(), name);
 }

@@ -383,7 +383,7 @@ private:
             constantBuffer, linearSampler, skyboxArray
         };
         resourceHeapSkybox = renderer->CreateResourceHeap(layoutSky, resourceViewsSky);
-        resourceHeapSkybox->SetName("resourceHeapSkybox");
+        resourceHeapSkybox->SetDebugName("resourceHeapSkybox");
 
         // Create resource heap for meshes
         std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes;
@@ -418,7 +418,7 @@ private:
             };
         }
         resourceHeapMeshes = renderer->CreateResourceHeap(layoutMeshes, resourceViewsMeshes);
-        resourceHeapMeshes->SetName("resourceHeapMeshes");
+        resourceHeapMeshes->SetDebugName("resourceHeapMeshes");
     }
 
 private:

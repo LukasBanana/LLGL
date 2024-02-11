@@ -65,11 +65,14 @@ D3D11BufferWithRV::D3D11BufferWithRV(ID3D11Device* device, const BufferDescripto
 
     if ((desc.bindFlags & BindFlags::Storage) != 0)
         CreateInternalUAV(device, format, 0, numElements);
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
-void D3D11BufferWithRV::SetName(const char* name)
+void D3D11BufferWithRV::SetDebugName(const char* name)
 {
-    D3D11Buffer::SetName(name);
+    D3D11Buffer::SetDebugName(name);
     if (srv_)
         D3D11SetObjectNameSubscript(srv_.Get(), name, ".SRV");
     if (uav_)

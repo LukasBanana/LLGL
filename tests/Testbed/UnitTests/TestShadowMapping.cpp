@@ -122,11 +122,11 @@ DEF_TEST( ShadowMapping )
         // Create scene constant buffer
         BufferDescriptor bufDesc;
         {
+            bufDesc.debugName   = "shadowCbuffer";
             bufDesc.size        = sizeof(ShadowSceneConstants);
             bufDesc.bindFlags   = BindFlags::ConstantBuffer;
         }
         shadowCbuffer = renderer->CreateBuffer(bufDesc, &sceneCbuffer);
-        shadowCbuffer->SetName("shadowCbuffer");
 
         // Create shadow sampler state
         SamplerDescriptor samplerDesc;

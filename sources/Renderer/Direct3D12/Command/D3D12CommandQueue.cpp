@@ -30,7 +30,7 @@ D3D12CommandQueue::D3D12CommandQueue(
     DetermineTimestampFrequency();
 }
 
-void D3D12CommandQueue::SetName(const char* name)
+void D3D12CommandQueue::SetDebugName(const char* name)
 {
     D3D12SetObjectName(native_.Get(), name);
 }

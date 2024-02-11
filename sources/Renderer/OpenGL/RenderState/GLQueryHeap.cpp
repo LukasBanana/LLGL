@@ -81,6 +81,9 @@ GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
     /* Generate all GL query objects */
     ids_.resize(groupSize_ * desc.numQueries);
     glGenQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
+
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 GLQueryHeap::~GLQueryHeap()
@@ -88,7 +91,7 @@ GLQueryHeap::~GLQueryHeap()
     glDeleteQueries(static_cast<GLsizei>(ids_.size()), ids_.data());
 }
 
-void GLQueryHeap::SetName(const char* name)
+void GLQueryHeap::SetDebugName(const char* name)
 {
     if (groupSize_ == 1)
     {
