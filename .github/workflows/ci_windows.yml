@@ -61,7 +61,7 @@ jobs:
     - name: Testbed
       working-directory: tests/Testbed
       run: |
-        ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }}.exe d3d12 -v -f -t -g ${{ matrix.config == 'Debug' && '-d' || '' }}
+        ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }}.exe d3d12 -v -f -t -g ${{ matrix.config == 'Debug' && '-d=gpu' || '' }}
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v4

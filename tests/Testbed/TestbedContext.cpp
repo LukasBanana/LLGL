@@ -22,12 +22,29 @@
 static constexpr const char* g_defaultOutputDir = "Output/";
 
 // Returns true of the specified list of (generic) arguments contains the search string
-static bool HasArgument(int argc, char* argv[], const char* search)
+static bool HasArgument(int argc, char* argv[], const char* search, const char** value = nullptr)
 {
+    const std::size_t searchLen = ::strlen(search);
     for (int i = 0; i < argc; ++i)
     {
-        if (::strcmp(argv[i], search) == 0)
-            return true;
+        if (value != nullptr)
+        {
+            if (::strcmp(argv[i], search) == 0)
+            {
+                *value = "";
+                return true;
+            }
+            if (::strncmp(argv[i], search, searchLen) == 0 && argv[i][searchLen] == '=')
+            {
+                *value = argv[i] + searchLen + 1;
+                return true;
+            }
+        }
+        else
+        {
+            if (::strcmp(argv[i], search) == 0)
+                return true;
+        }
     }
     return false;
 }
@@ -106,7 +123,11 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     moduleName    { moduleName                               },
     opt           { TestbedContext::ParseOptions(argc, argv) }
 {
-    const bool isDebugMode = (HasArgument(argc, argv, "-d") || HasArgument(argc, argv, "--debug"));
+    const char* debugValue              = "";
+    const bool  isDebugMode             = (HasArgument(argc, argv, "-d", &debugValue) || HasArgument(argc, argv, "--debug", &debugValue));
+    const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
+    const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
+    const bool  isGpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "gpu") == 0);
 
     RendererConfigurationOpenGL cfgGL;
 
@@ -116,8 +137,10 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
 
         if (isDebugMode)
         {
-            rendererDesc.flags      = RenderSystemFlags::DebugDevice;
-            rendererDesc.debugger   = &debugger;
+            if (isGpuDebugMode)
+                rendererDesc.flags = RenderSystemFlags::DebugDevice;
+            if (isCpuDebugMode)
+                rendererDesc.debugger = &debugger;
         }
 
         if (::strcmp(moduleName, "OpenGL") == 0)
