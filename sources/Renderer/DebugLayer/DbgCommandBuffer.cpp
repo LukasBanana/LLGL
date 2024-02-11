@@ -692,9 +692,24 @@ void DbgCommandBuffer::BeginRenderPass(
         LLGL_DBG_SOURCE();
         AssertRecording();
 
-        if (states_.insideRenderPass)
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin new render pass while previous render pass is still active");
-        states_.insideRenderPass = true;
+        if (IsInheritedCmdBuffer())
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "cannot begin render passes with secondary command buffer that inherits its state from a primary command buffer"
+            );
+        }
+        else
+        {
+            if (states_.insideRenderPass)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidState,
+                    "cannot begin new render pass while previous render pass is still active"
+                );
+            }
+            states_.insideRenderPass = true;
+        }
     }
 
     const RenderPass* renderPassInstance = DbgGetInstance<DbgRenderPass>(renderPass);
@@ -2259,18 +2274,18 @@ void DbgCommandBuffer::AssertRecording()
 
 void DbgCommandBuffer::AssertInsideRenderPass()
 {
-    if (!states_.insideRenderPass)
+    if (!states_.insideRenderPass && !IsInheritedCmdBuffer())
         LLGL_DBG_ERROR(ErrorType::InvalidState, "operation is only allowed inside a render pass; missing call to <LLGL::CommandBuffer::BeginRenderPass>");
 }
 
 void DbgCommandBuffer::AssertGraphicsPipelineBound()
 {
-    AssertAndGetGraphicsPSO();
+    (void)AssertAndGetGraphicsPSO();
 }
 
 void DbgCommandBuffer::AssertComputePipelineBound()
 {
-    AssertAndGetComputePSO();
+    (void)AssertAndGetComputePSO();
 }
 
 void DbgCommandBuffer::AssertVertexBufferBound()
@@ -2287,7 +2302,7 @@ void DbgCommandBuffer::AssertVertexBufferBound()
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex buffer used for drawing while being mapped to CPU memory space");
         }
     }
-    else
+    else if (!IsInheritedCmdBuffer())
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no vertex buffer is bound");
 }
 
@@ -2300,13 +2315,13 @@ void DbgCommandBuffer::AssertIndexBufferBound()
         if (buffer->IsMappedForCPUAccess())
             LLGL_DBG_ERROR(ErrorType::InvalidState, "index buffer used for drawing while being mapped to CPU memory space");
     }
-    else
+    else if (!IsInheritedCmdBuffer())
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound");
 }
 
 void DbgCommandBuffer::AssertViewportBound()
 {
-    if (bindings_.numViewports == 0)
+    if (bindings_.numViewports == 0 && !IsInheritedCmdBuffer())
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no viewports are bound");
 }
 
@@ -2394,6 +2409,11 @@ void DbgCommandBuffer::StartTimer(const char* annotation)
 void DbgCommandBuffer::EndTimer()
 {
     queryTimerPool_.Stop();
+}
+
+bool DbgCommandBuffer::IsInheritedCmdBuffer() const
+{
+    return ((desc.flags & CommandBufferFlags::Secondary) != 0 && desc.renderPass != nullptr);
 }
 
 

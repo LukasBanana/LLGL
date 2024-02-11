@@ -140,6 +140,9 @@ class DbgCommandBuffer final : public CommandBuffer
         void StartTimer(const char* annotation);
         void EndTimer();
 
+        // Returns true if this command buffer inherits its state from a primary command buffer.
+        bool IsInheritedCmdBuffer() const;
+
     private:
 
         struct SwapChainFramePair
