@@ -30,17 +30,12 @@ class NullPipelineState final : public PipelineState
 
         NullPipelineState(const GraphicsPipelineDescriptor& desc);
         NullPipelineState(const ComputePipelineDescriptor& desc);
-        ~NullPipelineState();
 
     public:
 
-        const bool isGraphicsPSO;
-
-        union
-        {
-            const GraphicsPipelineDescriptor    graphicsDesc;
-            const ComputePipelineDescriptor     computeDesc;
-        };
+        const bool                          isGraphicsPSO;
+        const GraphicsPipelineDescriptor    graphicsDesc;
+        const ComputePipelineDescriptor     computeDesc;
 
     private:
 

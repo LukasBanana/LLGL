@@ -286,6 +286,14 @@ struct ComputeShaderAttributes
 */
 struct ShaderDescriptor
 {
+    #if defined _MSC_VER
+    #pragma warning(push)
+    #pragma warning(disable:4996)
+    #elif defined __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+
     ShaderDescriptor() = default;
 
     #if 1 //TODO: remove as soon as 'name' field is removed
@@ -324,7 +332,6 @@ struct ShaderDescriptor
     ShaderDescriptor(const ShaderDescriptor&) = default;
     ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
     #endif
-
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :
         type   { type   },
@@ -347,6 +354,12 @@ struct ShaderDescriptor
         flags      { flags      }
     {
     }
+
+    #if defined _MSC_VER
+    #pragma warning(pop)
+    #elif defined __clang__
+    #pragma clang diagnostic pop
+    #endif
 
     /**
     \brief Optional name for debugging purposes. By default null.

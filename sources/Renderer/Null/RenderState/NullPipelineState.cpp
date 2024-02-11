@@ -27,11 +27,6 @@ NullPipelineState::NullPipelineState(const ComputePipelineDescriptor& desc) :
         SetDebugName(desc.debugName);
 }
 
-NullPipelineState::~NullPipelineState()
-{
-    // dummy
-}
-
 void NullPipelineState::SetDebugName(const char* name)
 {
     if (name != nullptr)
