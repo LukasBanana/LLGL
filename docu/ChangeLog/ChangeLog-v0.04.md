@@ -77,3 +77,7 @@ The following identifiers have also been renamed and their old names have been d
 Descriptors in LLGL are intended for structures that describe an opaque object only, first and foremost GPU objects such as buffers, textures, PSOs etc.
 `DisplayMode` is only a small structure to change the setting of a `Display` instance but not to create or query an object.
 Therefore, `DisplayModeDescriptor` has been renamed to `DisplayMode`.
+
+##### SetName &rarr; SetDebugName
+To be consistent with the newly added field `debugName` in all `RenderSystemChild` descriptors, `RenderSystemChild::SetName` has been renamed to `RenderSystemChild::SetDebugName`.
+This also separates it from the `name` identifier used for some descriptors such as `BindingDescriptor`, which refers to the shader variable name.
