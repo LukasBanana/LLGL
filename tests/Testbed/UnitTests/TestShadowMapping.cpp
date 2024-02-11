@@ -27,6 +27,7 @@ struct ShadowMapConfig
     Format          format;
     std::uint32_t   width;
     std::uint32_t   height;
+    bool            slow;
 };
 
 struct ViewportConfig
@@ -56,14 +57,14 @@ DEF_TEST( ShadowMapping )
 
     constexpr ShadowMapConfig frameConfigs[] =
     {
-        ShadowMapConfig{ Format::D32Float,           128,  128 },
-        ShadowMapConfig{ Format::D32Float,           256,  256 },
-        ShadowMapConfig{ Format::D32Float,           512,  512 },
-        ShadowMapConfig{ Format::D24UNormS8UInt,     256,  256 },
-        ShadowMapConfig{ Format::D24UNormS8UInt,    1024, 1024 },
-        ShadowMapConfig{ Format::D16UNorm,           256,  256 },
-        ShadowMapConfig{ Format::D16UNorm,           300,  280 },
-        ShadowMapConfig{ Format::D32FloatS8X24UInt,  256,  256 },
+        ShadowMapConfig{ Format::D32Float,           128,  128, false },
+        ShadowMapConfig{ Format::D32Float,           256,  256, true  },
+        ShadowMapConfig{ Format::D32Float,           512,  512, true  },
+        ShadowMapConfig{ Format::D24UNormS8UInt,     256,  256, false },
+        ShadowMapConfig{ Format::D24UNormS8UInt,    1024, 1024, true  },
+        ShadowMapConfig{ Format::D16UNorm,           256,  256, true  },
+        ShadowMapConfig{ Format::D16UNorm,           300,  280, false },
+        ShadowMapConfig{ Format::D32FloatS8X24UInt,  256,  256, false },
     };
 
     if (frame == 0)
@@ -200,14 +201,14 @@ DEF_TEST( ShadowMapping )
         return TestResult::Passed;
     };
 
+    constexpr unsigned numFrames = (sizeof(frameConfigs)/sizeof(frameConfigs[0]));
+    const ShadowMapConfig& cfg = frameConfigs[frame % numFrames];
+
     // Skip every other frame on fast test
-    if (opt.fastTest && (frame % 2 == 0))
-        return TestResult::ContinueSkipFrame;
+    if (opt.fastTest && cfg.slow)
+        return (frame + 1 < numFrames ? TestResult::ContinueSkipFrame : result);
 
     // Create shadow map resources for current frame
-    constexpr unsigned numFrames = (sizeof(frameConfigs)/sizeof(frameConfigs[0]));
-    const ShadowMapConfig cfg = frameConfigs[frame % numFrames];
-
     ShadowMapResources resources;
     result = CreateShadowMapResources(resources, Extent2D{ cfg.width, cfg.height }, cfg.format);
     if (result != TestResult::Passed)
