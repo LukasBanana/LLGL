@@ -153,7 +153,10 @@ DEF_TEST( TextureToBufferCopy )
                 cmdBuffer->End();
 
                 // Read back image data from destination texture and compare it with source texture image
-                srcTexImage.resize(bufSize);
+                const std::uint32_t numMipTexels    = srcRegion.extent.width * srcRegion.extent.height * srcRegion.extent.depth;
+                const std::size_t   subBufSize      = GetMemoryFootprint(format, numMipTexels);
+
+                srcTexImage.resize(subBufSize);
                 MutableImageView srcTexImageView;
                 {
                     srcTexImageView.format      = formatAttribs.format;
@@ -162,7 +165,7 @@ DEF_TEST( TextureToBufferCopy )
                     srcTexImageView.dataSize    = srcTexImage.size();
                 }
 
-                dstTexImage.resize(bufSize);
+                dstTexImage.resize(subBufSize);
                 MutableImageView dstTexImageView;
                 {
                     dstTexImageView.format      = formatAttribs.format;
@@ -174,7 +177,7 @@ DEF_TEST( TextureToBufferCopy )
                 renderer->ReadTexture(*srcTex, srcRegion, srcTexImageView);
                 renderer->ReadTexture(*dstTex, dstRegion, dstTexImageView);
 
-                if (::memcmp(srcTexImage.data(), dstTexImage.data(), bufSize) != 0)
+                if (::memcmp(srcTexImage.data(), dstTexImage.data(), subBufSize) != 0)
                 {
                     const std::string srcDataStr = TestbedContext::FormatByteArray(srcTexImage.data(), srcTexImage.size(), 4, formatAsFloats);
                     const std::string dstDataStr = TestbedContext::FormatByteArray(dstTexImage.data(), dstTexImage.size(), 4, formatAsFloats);
