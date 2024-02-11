@@ -1925,13 +1925,35 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
         }
     }
 
-    if (numColorAttachments != numColorOutputAttribs)
+    if (hasDualSourceBlend)
     {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "mismatch between number of color attachments in render pass (%u) and fragment shader color outputs (%u)",
-            numColorAttachments, numColorOutputAttribs
-        );
+        if (numColorAttachments != 1)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "render pass for dual-source blending must have exaclty 1 color attachment, but %u are specified",
+                numColorOutputAttribs
+            );
+        }
+        if (numColorOutputAttribs != 2)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "fragment shader for dual-source blending must have exaclty 2 outputs, but %u are specified",
+                numColorOutputAttribs
+            );
+        }
+    }
+    else
+    {
+        if (numColorAttachments != numColorOutputAttribs)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "mismatch between number of color attachments in render pass (%u) and fragment shader color outputs (%u)",
+                numColorAttachments, numColorOutputAttribs
+            );
+        }
     }
 }
 
