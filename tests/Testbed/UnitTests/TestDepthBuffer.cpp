@@ -44,12 +44,13 @@ DEF_TEST( DepthBuffer )
     // Create PSO for rendering to the depth buffer
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout      = layouts[PipelineSolid];
-        psoDesc.renderPass          = renderTarget->GetRenderPass();
-        psoDesc.vertexShader        = shaders[VSSolid];
-        psoDesc.depth.testEnabled   = true;
-        psoDesc.depth.writeEnabled  = true;
-        psoDesc.rasterizer.cullMode = CullMode::Back;
+        psoDesc.pipelineLayout              = layouts[PipelineSolid];
+        psoDesc.renderPass                  = renderTarget->GetRenderPass();
+        psoDesc.vertexShader                = shaders[VSSolid];
+        psoDesc.depth.testEnabled           = true;
+        psoDesc.depth.writeEnabled          = true;
+        psoDesc.rasterizer.cullMode         = CullMode::Back;
+        psoDesc.blend.targets[0].colorMask  = 0; // Disable rasterize with colorMask=0 since we don't use a fragment shader
     }
     PipelineState* pso = renderer->CreatePipelineState(psoDesc);
 
