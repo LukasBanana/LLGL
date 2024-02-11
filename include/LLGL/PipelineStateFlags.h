@@ -706,6 +706,9 @@ struct BlendDescriptor
     \brief Render-target blend states for the respective color attachments. A maximum of 8 targets is supported.
     \remarks If \c independentBlendEnabled is set to \c false, only the first entry is used,
     i.e. <code>targets[0]</code> and all remaining entries <code>targets[1..7]</code> are ignored.
+    \remarks If the first target uses a dual-source blending operation
+    (i.e. BlendOp::Src1Color, BlendOp::InvSrc1Color, BlendOp::Src1Alpha, or BlendOp::InvSrc1Alpha), only the first target can be used.
+    Using dual-source blending with more than one render target is undefined behavior.
     \see independentBlendEnabled
     */
     BlendTargetDescriptor   targets[LLGL_MAX_NUM_COLOR_ATTACHMENTS];

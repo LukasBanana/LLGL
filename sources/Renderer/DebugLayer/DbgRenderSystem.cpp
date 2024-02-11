@@ -1657,7 +1657,7 @@ void DbgRenderSystem::ValidateInputAssemblyDescriptor(const GraphicsPipelineDesc
     }
 }
 
-void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader)
+void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, bool hasFragmentShader, bool hasDualSourceBlend)
 {
     /* Validate proper use of logic pixel operations */
     if (blendDesc.logicOp != LogicOp::Disabled)
@@ -1685,6 +1685,31 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, 
         }
     }
 
+    /* If dual-source blending is enabled, only the first target must be used */
+    if (hasDualSourceBlend)
+    {
+        if (blendDesc.independentBlendEnabled)
+        {
+            const BlendTargetDescriptor& blendTarget0Desc = blendDesc.targets[0];
+            for_subrange(i, 1, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+            {
+                if (blendDesc.targets[i].blendEnabled)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "blend target [%u] cannot be enabled in conjunction with dual-source blending,"
+                        "but first target is {srcColor=%s, dstColor=%s, srcAlpha=%s, dstAlpha=%s}",
+                        i,
+                        ToString(blendTarget0Desc.srcColor),
+                        ToString(blendTarget0Desc.dstColor),
+                        ToString(blendTarget0Desc.srcAlpha),
+                        ToString(blendTarget0Desc.dstAlpha)
+                    );
+                }
+            }
+        }
+    }
+
     /* Validate color masks are disabled when there is no fragment shader */
     if (!hasFragmentShader)
     {
@@ -1696,6 +1721,31 @@ void DbgRenderSystem::ValidateBlendDescriptor(const BlendDescriptor& blendDesc, 
         else
             ValidateBlendTargetDescriptor(blendDesc.targets[0], 0);
     }
+}
+
+static bool IsDualSourceBlendingOp(BlendOp op)
+{
+    switch (op)
+    {
+        case BlendOp::Src1Color:
+        case BlendOp::InvSrc1Color:
+        case BlendOp::Src1Alpha:
+        case BlendOp::InvSrc1Alpha:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool IsDualSourceBlendingEnabled(const BlendTargetDescriptor& blendTarget0Desc)
+{
+    return
+    (
+        IsDualSourceBlendingOp(blendTarget0Desc.srcColor) ||
+        IsDualSourceBlendingOp(blendTarget0Desc.dstColor) ||
+        IsDualSourceBlendingOp(blendTarget0Desc.srcAlpha) ||
+        IsDualSourceBlendingOp(blendTarget0Desc.dstAlpha)
+    );
 }
 
 void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& pipelineStateDesc)
@@ -1758,11 +1808,13 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         }
     }
 
+    const bool hasDualSourceBlend = IsDualSourceBlendingEnabled(pipelineStateDesc.blend.targets[0]);
+
     if (DbgShader* fragmentShaderDbg = DbgGetWrapper<DbgShader>(pipelineStateDesc.fragmentShader))
-        ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass);
+        ValidateFragmentShaderOutput(*fragmentShaderDbg, pipelineStateDesc.renderPass, hasDualSourceBlend);
 
     ValidateInputAssemblyDescriptor(pipelineStateDesc);
-    ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader);
+    ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
 }
 
 void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc)
@@ -1783,13 +1835,13 @@ void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescripto
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create compute PSO without compute shader");
 }
 
-void DbgRenderSystem::ValidateFragmentShaderOutput(DbgShader& fragmentShaderDbg, const RenderPass* renderPass)
+void DbgRenderSystem::ValidateFragmentShaderOutput(DbgShader& fragmentShaderDbg, const RenderPass* renderPass, bool hasDualSourceBlend)
 {
     ShaderReflection reflection;
     if (fragmentShaderDbg.instance.Reflect(reflection))
     {
         if (auto renderPassDbg = DbgGetWrapper<DbgRenderPass>(renderPass))
-            ValidateFragmentShaderOutputWithRenderPass(fragmentShaderDbg, reflection.fragment, *renderPassDbg);
+            ValidateFragmentShaderOutputWithRenderPass(fragmentShaderDbg, reflection.fragment, *renderPassDbg, hasDualSourceBlend);
         else
             ValidateFragmentShaderOutputWithoutRenderPass(fragmentShaderDbg, reflection.fragment);
     }
@@ -1806,12 +1858,12 @@ static bool AreFragmentOutputFormatsCompatible(const Format attachmentFormat, co
     return true;
 }
 
-void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, const DbgRenderPass& renderPass)
+void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, const DbgRenderPass& renderPass, bool hasDualSourceBlend)
 {
     const auto numColorAttachments = renderPass.NumEnabledColorAttachments();
     std::uint32_t numColorOutputAttribs = 0u;
 
-    for (const auto& attrib : fragmentAttribs.outputAttribs)
+    for (const FragmentAttribute& attrib : fragmentAttribs.outputAttribs)
     {
         if (attrib.systemValue == SystemValue::Color)
         {
@@ -1820,23 +1872,43 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many color output attributes in fragment shader");
                 break;
             }
+
             const Format attachmentFormat = renderPass.desc.colorAttachments[numColorOutputAttribs].format;
-            if (attachmentFormat == Format::Undefined)
+
+            /* When dual-source blending is enabled, only the first attachment must be specified */
+            if (hasDualSourceBlend && numColorOutputAttribs > 0)
             {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "cannot use render pass with undefined color attachment [%u] in conjunction with fragment shader that writes to that color target",
-                    numColorOutputAttribs
-                );
+                /* Validate this attachment is undefined */
+                if (attachmentFormat != Format::Undefined)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "cannot use render pass with color attachment [%u] in conjunction with dual-source blending",
+                        numColorOutputAttribs
+                    );
+                }
             }
-            else if (!AreFragmentOutputFormatsCompatible(attachmentFormat, attrib.format))
+            else
             {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "render pass attachment [%u] format (LLGL::Format::%s) is incompatible with fragment shader output format (LLGL::Format::%s)",
-                    numColorOutputAttribs, ToString(attachmentFormat), ToString(attrib.format)
-                );
+                /* Validate this attachment is *NOT* undefined */
+                if (attachmentFormat == Format::Undefined)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "cannot use render pass with undefined color attachment [%u] in conjunction with fragment shader that writes to that color target",
+                        numColorOutputAttribs
+                    );
+                }
+                else if (!AreFragmentOutputFormatsCompatible(attachmentFormat, attrib.format))
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "render pass attachment [%u] format (LLGL::Format::%s) is incompatible with fragment shader output format (LLGL::Format::%s)",
+                        numColorOutputAttribs, ToString(attachmentFormat), ToString(attrib.format)
+                    );
+                }
             }
+
             ++numColorOutputAttribs;
         }
         else if (attrib.systemValue == SystemValue::Depth        ||
@@ -1867,7 +1939,7 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& f
 {
     std::uint32_t numColorOutputAttribs = 0u;
 
-    for (const auto& attrib : fragmentAttribs.outputAttribs)
+    for (const FragmentAttribute& attrib : fragmentAttribs.outputAttribs)
     {
         if (attrib.systemValue == SystemValue::Color)
         {
