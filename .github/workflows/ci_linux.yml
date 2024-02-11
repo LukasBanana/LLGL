@@ -79,3 +79,4 @@ jobs:
         name: LLGL-Ubuntu-Test_Report
         path: |
           tests/Testbed/Output/OpenGL/*.png
+          tests/Testbed/Output/OpenGL/Report.txt

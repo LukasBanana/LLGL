@@ -121,14 +121,17 @@ static constexpr std::uint32_t g_testbedWinSize[2] = { 800, 600 };
 
 TestbedContext::TestbedContext(const char* moduleName, int version, int argc, char* argv[]) :
     moduleName    { moduleName                               },
-    opt           { TestbedContext::ParseOptions(argc, argv) }
+    opt           { TestbedContext::ParseOptions(argc, argv) },
+    reportHandle_ { Log::RegisterCallbackReport(report_)     }
 {
+    // Check for debug options
     const char* debugValue              = "";
     const bool  isDebugMode             = (HasArgument(argc, argv, "-d", &debugValue) || HasArgument(argc, argv, "--debug", &debugValue));
     const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
     const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
     const bool  isGpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "gpu") == 0);
 
+    // Configure render system
     RendererConfigurationOpenGL cfgGL;
 
     RenderSystemDescriptor rendererDesc;
@@ -189,6 +192,19 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         CreateSamplerStates();
         LoadDefaultProjectionMatrix();
     }
+}
+
+TestbedContext::~TestbedContext()
+{
+    // Write output report file if specified
+    const std::string reportFilename = opt.outputDir + moduleName + "/Report.txt";
+    std::ofstream reportFile{ reportFilename };
+    if (reportFile.good())
+        reportFile.write(report_.GetText(), ::strlen(report_.GetText()));
+    else
+        Log::Errorf("Failed to write report file: %s\n", reportFilename.c_str());
+
+    Log::UnregisterCallback(reportHandle_);
 }
 
 static const char* TestResultToStr(TestResult result)

@@ -40,6 +40,8 @@ class TestbedContext
 
         TestbedContext(const char* moduleName, int version, int argc, char* argv[]);
 
+        ~TestbedContext();
+
         // Runs all tests and returns the number of failed ones. If all succeeded, the return value is 0.
         unsigned RunAllTests();
 
@@ -328,8 +330,10 @@ class TestbedContext
 
     private:
 
-        bool        loadingShadersFailed_ = false;
-        Histogram   histogram_;
+        bool                    loadingShadersFailed_ = false;
+        Histogram               histogram_;
+        LLGL::Report            report_;
+        LLGL::Log::LogHandle    reportHandle_;
 
 };
 
