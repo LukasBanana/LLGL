@@ -86,6 +86,8 @@ DEF_TEST( ShadowMapping )
             passDesc.depthAttachment.format         = swapChain->GetDepthStencilFormat();
             passDesc.depthAttachment.loadOp         = AttachmentLoadOp::Undefined; // Don't care about previous framebuffer depth, it'll be cleared anyway
             passDesc.depthAttachment.storeOp        = AttachmentStoreOp::Undefined;
+
+            passDesc.stencilAttachment.format       = swapChain->GetDepthStencilFormat(); //TODO: currently required for Metal backend
         }
         loadContentRenderPass = renderer->CreateRenderPass(passDesc);
 
@@ -208,6 +210,13 @@ DEF_TEST( ShadowMapping )
     if (opt.fastTest && cfg.slow)
         return (frame + 1 < numFrames ? TestResult::ContinueSkipFrame : result);
 
+    const std::string colorBufferName = "ShadowMapping_" + std::string(ToString(cfg.format)) + "_" + std::to_string(cfg.width) + "x" + std::to_string(cfg.height);
+
+    const std::uint64_t t0 = Timer::Tick();
+
+    if (opt.verbose || opt.showTiming)
+        Log::Printf("Testing %s", colorBufferName.c_str());
+
     // Create shadow map resources for current frame
     ShadowMapResources resources;
     TestResult resourcesResult = CreateShadowMapResources(resources, Extent2D{ cfg.width, cfg.height }, cfg.format);
@@ -324,7 +333,7 @@ DEF_TEST( ShadowMapping )
             cmdBuffer->BeginRenderPass(*swapChain, loadContentRenderPass);
             {
                 // Draw scene
-                cmdBuffer->Clear(ClearFlags::Depth);
+                cmdBuffer->Clear(ClearFlags::Depth); //NOTE: can be replaced by render pass clear
                 cmdBuffer->SetPipelineState(*psoScene); //TODO: move outside render pass
                 cmdBuffer->SetViewport(viewportConfigs[i].viewport);
                 cmdBuffer->SetResource(0, *shadowCbuffer);
@@ -347,9 +356,15 @@ DEF_TEST( ShadowMapping )
     renderer->Release(*resources.target);
     renderer->Release(*resources.tex);
 
-    // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "ShadowMapping_" + std::string(ToString(cfg.format)) + "_" + std::to_string(cfg.width) + "x" + std::to_string(cfg.height);
+    if (opt.showTiming)
+    {
+        const std::uint64_t t1 = Timer::Tick();
+        Log::Printf(" (%f ms)\n", TestbedContext::ToMillisecs(t0, t1));
+    }
+    else if (opt.verbose)
+        Log::Printf("\n");
 
+    // Match entire color buffer and create delta heat map
     SaveCapture(readbackTex, colorBufferName);
 
     constexpr int threshold = 13; // All tests differ by at least 11 between GL and D3D
