@@ -48,7 +48,7 @@ class MTRenderPass final : public RenderPass
         MTLPixelFormat GetDepthStencilFormat() const;
 
         /*
-        Updates the native render pass descriptor with the specified clear values.
+        Updates the native render pass descriptor with the attachment operators of this render pass and the specified clear values.
         The input render pass descriptor must have the same number of attachments as this render pass.
         Returns the number of read clear values.
         */

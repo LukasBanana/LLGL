@@ -549,7 +549,7 @@ void MTDirectCommandBuffer::Clear(long flags, const ClearValue& clearValue)
     if (context_.GetRenderEncoder() != nil && flags != 0)
     {
         /* Make new render pass descriptor with current clear values */
-        auto renderPassDesc = context_.CopyRenderPassDesc();
+        MTLRenderPassDescriptor* renderPassDesc = context_.CopyRenderPassDesc();
 
         if ((flags & ClearFlags::Color) != 0)
         {
@@ -581,9 +581,9 @@ static void FillMTRenderPassDesc(MTLRenderPassDescriptor* renderPassDesc, const 
     if ((attachment.flags & ClearFlags::Color) != 0)
     {
         /* Clear color buffer */
-        auto colorBuffer = attachment.colorAttachment;
-        renderPassDesc.colorAttachments[colorBuffer].loadAction = MTLLoadActionClear;
-        renderPassDesc.colorAttachments[colorBuffer].clearColor = MTTypes::ToMTLClearColor(attachment.clearValue.color);
+        const std::uint32_t colorBufferIndex = attachment.colorAttachment;
+        renderPassDesc.colorAttachments[colorBufferIndex].loadAction = MTLLoadActionClear;
+        renderPassDesc.colorAttachments[colorBufferIndex].clearColor = MTTypes::ToMTLClearColor(attachment.clearValue.color);
     }
     
     if ((attachment.flags & ClearFlags::Depth) != 0)

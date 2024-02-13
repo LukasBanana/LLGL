@@ -142,6 +142,22 @@ class MTCommandContext
         static constexpr NSUInteger maxNumVertexBuffers         = 32;
         static constexpr NSUInteger maxNumViewportsAndScissors  = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
 
+        enum DirtyBits
+        {
+            // Render encoder
+            DirtyBit_Viewports              = (1 << 0),
+            DirtyBit_Scissors               = (1 << 1),
+            DirtyBit_VertexBuffers          = (1 << 2),
+            DirtyBit_GraphicsPSO            = (1 << 3),
+            DirtyBit_GraphicsResourceHeap   = (1 << 4),
+            DirtyBit_BlendColor             = (1 << 5),
+            DirtyBit_StencilRef             = (1 << 6),
+
+            // Compute encoder
+            DirtyBit_ComputePSO             = (1 << 0),
+            DirtyBit_ComputeResourceHeap    = (1 << 1),
+        };
+
         struct MTRenderEncoderState
         {
             MTLViewport     viewports[maxNumViewportsAndScissors]       = {};
@@ -187,32 +203,8 @@ class MTCommandContext
         MTDescriptorCache               descriptorCache_;
         MTConstantsCache                constantsCache_;
 
-        union
-        {
-            std::uint8_t bits;
-            struct
-            {
-                std::uint8_t viewports              : 1;
-                std::uint8_t scissors               : 1;
-                std::uint8_t vertexBuffers          : 1;
-                std::uint8_t graphicsPSO            : 1;
-                std::uint8_t graphicsResourceHeap   : 1;
-                std::uint8_t blendColor             : 1;
-                std::uint8_t stencilRef             : 1;
-            };
-        }
-        renderDirtyBits_;
-
-        union
-        {
-            std::uint8_t bits;
-            struct
-            {
-                std::uint8_t computePSO             : 1;
-                std::uint8_t computeResourceHeap    : 1;
-            };
-        }
-        computeDirtyBits_;
+        std::uint8_t                    renderDirtyBits_        = 0;
+        std::uint8_t                    computeDirtyBits_       = 0;
 
 };
 

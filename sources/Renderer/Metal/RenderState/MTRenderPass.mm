@@ -210,26 +210,23 @@ std::uint32_t MTRenderPass::UpdateNativeRenderPass(
 
     for_range(i, colorAttachments_.size())
     {
-        const auto& attachment = colorAttachments_[i];
-        if (attachment.loadAction == MTLLoadActionClear)
+        const MTAttachmentFormat& attachment = colorAttachments_[i];
+
+        if (attachment.loadAction != MTLLoadActionDontCare)
         {
+            nativeRenderPass.colorAttachments[i].loadAction = attachment.loadAction;
+            //nativeRenderPass.colorAttachments[i].storeAction = attachment.storeAction;
+
             /* Clear color attachment with input or default value */
-            if (clearValueIndex < numClearValues)
+            if (attachment.loadAction == MTLLoadActionClear)
             {
-                SetMTColorAttachmentClearValue(
-                    nativeRenderPass.colorAttachments[i],
-                    attachment,
-                    clearValues[clearValueIndex]
-                );
-                ++clearValueIndex;
-            }
-            else
-            {
-                SetMTColorAttachmentClearValue(
-                    nativeRenderPass.colorAttachments[i],
-                    attachment,
-                    defaultClearValue
-                );
+                if (clearValueIndex < numClearValues)
+                {
+                    nativeRenderPass.colorAttachments[i].clearColor = MTTypes::ToMTLClearColor(clearValues[clearValueIndex].color);
+                    ++clearValueIndex;
+                }
+                else
+                    nativeRenderPass.colorAttachments[i].clearColor = MTTypes::ToMTLClearColor(defaultClearValue.color);
             }
         }
     }
@@ -237,48 +234,40 @@ std::uint32_t MTRenderPass::UpdateNativeRenderPass(
     /* Update clear value for depth attachment */
     std::uint32_t numDepthStencilAttachments = 0;
 
-    if (depthAttachment_.loadAction == MTLLoadActionClear)
+    if (depthAttachment_.loadAction != MTLLoadActionDontCare)
     {
-        /* Clear depth attachment with input or default value */
-        if (clearValueIndex < numClearValues)
+        nativeRenderPass.depthAttachment.loadAction = depthAttachment_.loadAction;
+        //nativeRenderPass.depthAttachment.storeAction = depthAttachment_.storeAction;
+
+        if (depthAttachment_.loadAction == MTLLoadActionClear)
         {
-            SetMTDepthAttachmentClearValue(
-                nativeRenderPass.depthAttachment,
-                depthAttachment_,
-                clearValues[clearValueIndex]
-            );
-            numDepthStencilAttachments = 1;
-        }
-        else
-        {
-            SetMTDepthAttachmentClearValue(
-                nativeRenderPass.depthAttachment,
-                depthAttachment_,
-                defaultClearValue
-            );
+            /* Clear depth attachment with input or default value */
+            if (clearValueIndex < numClearValues)
+            {
+                nativeRenderPass.depthAttachment.clearDepth = clearValues[clearValueIndex].depth;
+                numDepthStencilAttachments = 1;
+            }
+            else
+                nativeRenderPass.depthAttachment.clearDepth = defaultClearValue.depth;
         }
     }
 
     /* Update clear value for stencil attachment */
-    if (stencilAttachment_.loadAction == MTLLoadActionClear)
+    if (stencilAttachment_.loadAction != MTLLoadActionDontCare)
     {
-        /* Clear stencil attachment with input or default value */
-        if (clearValueIndex < numClearValues)
+        nativeRenderPass.stencilAttachment.loadAction = stencilAttachment_.loadAction;
+        //nativeRenderPass.stencilAttachment.storeAction = stencilAttachment_.storeAction;
+
+        if (stencilAttachment_.loadAction == MTLLoadActionClear)
         {
-            SetMTStencilAttachmentClearValue(
-                nativeRenderPass.stencilAttachment,
-                stencilAttachment_,
-                clearValues[clearValueIndex]
-            );
-            numDepthStencilAttachments = 1;
-        }
-        else
-        {
-            SetMTStencilAttachmentClearValue(
-                nativeRenderPass.stencilAttachment,
-                stencilAttachment_,
-                defaultClearValue
-            );
+            /* Clear stencil attachment with input or default value */
+            if (clearValueIndex < numClearValues)
+            {
+                nativeRenderPass.stencilAttachment.clearStencil = clearValues[clearValueIndex].stencil;
+                numDepthStencilAttachments = 1;
+            }
+            else
+                nativeRenderPass.stencilAttachment.clearStencil = defaultClearValue.stencil;
         }
     }
 

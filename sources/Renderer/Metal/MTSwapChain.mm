@@ -70,7 +70,15 @@ MTSwapChain::MTSwapChain(
 
 void MTSwapChain::Present()
 {
+    /* Present backbuffer */
     [view_ draw];
+
+    /* Release mutable render pass as the view's render pass changes between backbuffers */
+    if (nativeMutableRenderPass_ != nil)
+    {
+        [nativeMutableRenderPass_ release];
+        nativeMutableRenderPass_ = nil;
+    }
 }
 
 std::uint32_t MTSwapChain::GetCurrentSwapIndex() const
