@@ -31,6 +31,7 @@ find_source_files(FilesRendererSPIRV            CXX ${PROJECT_SOURCE_DIR}/../SPI
 # Vulkan renderer files
 find_source_files(FilesRendererVK               CXX ${PROJECT_SOURCE_DIR})
 find_source_files(FilesRendererVKBuffer         CXX ${PROJECT_SOURCE_DIR}/Buffer)
+find_source_files(FilesRendererVKCommand        CXX ${PROJECT_SOURCE_DIR}/Command)
 find_source_files(FilesRendererVKExt            CXX ${PROJECT_SOURCE_DIR}/Ext)
 find_source_files(FilesRendererVKMemory         CXX ${PROJECT_SOURCE_DIR}/Memory)
 find_source_files(FilesRendererVKRenderState    CXX ${PROJECT_SOURCE_DIR}/RenderState)
@@ -42,6 +43,7 @@ set(
     FilesVK
     ${FilesRendererVK}
     ${FilesRendererVKBuffer}
+    ${FilesRendererVKCommand}
     ${FilesRendererVKExt}
     ${FilesRendererVKMemory}
     ${FilesRendererVKRenderState}
@@ -61,6 +63,7 @@ source_group("SPIRV"                FILES ${FilesRendererSPIRV})
 
 source_group("Vulkan"               FILES ${FilesRendererVK})
 source_group("Vulkan\\Buffer"       FILES ${FilesRendererVKBuffer})
+source_group("Vulkan\\Command"      FILES ${FilesRendererVKCommand})
 source_group("Vulkan\\Ext"          FILES ${FilesRendererVKExt})
 source_group("Vulkan\\Memory"       FILES ${FilesRendererVKMemory})
 source_group("Vulkan\\RenderState"  FILES ${FilesRendererVKRenderState})

@@ -10,12 +10,12 @@
 
 
 #include <LLGL/CommandBuffer.h>
-#include "Vulkan.h"
-#include "VKPtr.h"
-#include "VKCore.h"
+#include "../Vulkan.h"
+#include "../VKPtr.h"
+#include "../VKCore.h"
 #include "VKCommandContext.h"
-#include "RenderState/VKStagingDescriptorSetPool.h"
-#include "RenderState/VKDescriptorCache.h"
+#include "../RenderState/VKStagingDescriptorSetPool.h"
+#include "../RenderState/VKDescriptorCache.h"
 #include <vector>
 
 

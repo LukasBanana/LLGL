@@ -9,7 +9,7 @@
 #define LLGL_VK_COMMAND_CONTEXT_H
 
 
-#include "VKPtr.h"
+#include "../VKPtr.h"
 #include <vulkan/vulkan.h>
 #include <memory>
 #include <cstdint>

@@ -7,10 +7,10 @@
 
 #include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
-#include "RenderState/VKFence.h"
-#include "RenderState/VKQueryHeap.h"
-#include "../CheckedCast.h"
-#include "VKCore.h"
+#include "../RenderState/VKFence.h"
+#include "../RenderState/VKQueryHeap.h"
+#include "../VKCore.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL

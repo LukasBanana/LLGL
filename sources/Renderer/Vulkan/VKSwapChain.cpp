@@ -8,7 +8,7 @@
 #include "VKSwapChain.h"
 #include "VKCore.h"
 #include "VKTypes.h"
-#include "VKCommandContext.h"
+#include "Command/VKCommandContext.h"
 #include "Memory/VKDeviceMemoryManager.h"
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"

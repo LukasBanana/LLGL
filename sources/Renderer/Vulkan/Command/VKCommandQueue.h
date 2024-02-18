@@ -10,10 +10,10 @@
 
 
 #include <LLGL/CommandQueue.h>
-#include "Vulkan.h"
-#include "VKPtr.h"
-#include "VKCore.h"
-#include "RenderState/VKFence.h"
+#include "../Vulkan.h"
+#include "../VKPtr.h"
+#include "../VKCore.h"
+#include "../RenderState/VKFence.h"
 
 
 namespace LLGL

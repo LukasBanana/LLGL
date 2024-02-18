@@ -6,10 +6,10 @@
  */
 
 #include "VKCommandContext.h"
-#include "VKTypes.h"
-#include "Buffer/VKBuffer.h"
-#include "Texture/VKTexture.h"
-#include "../../Core/Assertion.h"
+#include "../VKTypes.h"
+#include "../Buffer/VKBuffer.h"
+#include "../Texture/VKTexture.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Utils/ForRange.h>
 

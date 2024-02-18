@@ -7,7 +7,7 @@
 
 #include "VKTexture.h"
 #include "../Memory/VKDeviceMemory.h"
-#include "../VKCommandContext.h"
+#include "../Command/VKCommandContext.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../VKTypes.h"

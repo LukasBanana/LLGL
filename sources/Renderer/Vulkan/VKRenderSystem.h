@@ -15,10 +15,10 @@
 #include "../ContainerTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
 
-#include "VKCommandQueue.h"
-#include "VKCommandBuffer.h"
+#include "Command/VKCommandQueue.h"
+#include "Command/VKCommandBuffer.h"
+#include "Command/VKCommandContext.h"
 #include "VKSwapChain.h"
-#include "VKCommandContext.h"
 
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"

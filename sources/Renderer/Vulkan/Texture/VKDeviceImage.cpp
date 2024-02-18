@@ -8,7 +8,7 @@
 #include "VKDeviceImage.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../Memory/VKDeviceMemoryManager.h"
-#include "../VKCommandContext.h"
+#include "../Command/VKCommandContext.h"
 #include "../VKCore.h"
 #include "../../../Core/Exception.h"
 #include "../../../Core/PrintfUtils.h"
