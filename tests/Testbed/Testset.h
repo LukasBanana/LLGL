@@ -15,7 +15,7 @@
 #include <vector>
 
 
-// Shifts the bits of ths epcified 32-bit integer to flip little-endian to big-endian and wise verse.
+// Shifts the bits of the specified 32-bit integer to flip little-endian to big-endian and wise verse.
 #define FLIP_ENDIAN(INT32)                  \
     (                                       \
         (((INT32) >> 24) & 0x000000FF) |    \

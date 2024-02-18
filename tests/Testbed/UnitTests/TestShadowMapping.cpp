@@ -181,7 +181,7 @@ DEF_TEST( ShadowMapping )
             psoDesc.pipelineLayout                      = layouts[PipelineSolid];
             psoDesc.renderPass                          = resources.target->GetRenderPass();
             psoDesc.vertexShader                        = shaders[VSShadowMap];
-            //psoDesc.viewports                           = { Viewport{ resolution } };
+            psoDesc.viewports                           = { Viewport{ resolution } };
             psoDesc.depth.testEnabled                   = true;
             psoDesc.depth.writeEnabled                  = true;
             psoDesc.rasterizer.cullMode                 = CullMode::Back;
@@ -214,8 +214,8 @@ DEF_TEST( ShadowMapping )
 
     const std::uint64_t t0 = Timer::Tick();
 
-    if (opt.verbose || opt.showTiming)
-        Log::Printf("Testing %s", colorBufferName.c_str());
+    if (opt.verbose && !opt.showTiming)
+        Log::Printf("Testing %s\n", colorBufferName.c_str());
 
     // Create shadow map resources for current frame
     ShadowMapResources resources;
@@ -322,7 +322,6 @@ DEF_TEST( ShadowMapping )
                 // Draw scene
                 cmdBuffer->Clear(ClearFlags::Depth);
                 cmdBuffer->SetPipelineState(*resources.pso); //TODO: move outside render pass
-                cmdBuffer->SetViewport(resources.target->GetResolution()); //TODO: fixed viewport does not work for Vulkan when used for render target
                 cmdBuffer->SetResource(0, *shadowCbuffer);
                 DrawScene(viewportConfigs[i].bgColor, viewportConfigs[i].cubeRotation);
             }
@@ -359,10 +358,8 @@ DEF_TEST( ShadowMapping )
     if (opt.showTiming)
     {
         const std::uint64_t t1 = Timer::Tick();
-        Log::Printf(" (%f ms)\n", TestbedContext::ToMillisecs(t0, t1));
+        Log::Printf("Testing %s (%f ms)\n", colorBufferName.c_str(), TestbedContext::ToMillisecs(t0, t1));
     }
-    else if (opt.verbose)
-        Log::Printf("\n");
 
     // Match entire color buffer and create delta heat map
     SaveCapture(readbackTex, colorBufferName);
