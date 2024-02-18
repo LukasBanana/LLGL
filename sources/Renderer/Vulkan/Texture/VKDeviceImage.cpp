@@ -93,7 +93,7 @@ void VKDeviceImage::CreateVkImage(
         createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE; // only used by graphics queue
         createInfo.queueFamilyIndexCount    = 0;
         createInfo.pQueueFamilyIndices      = nullptr;
-        createInfo.initialLayout            = VK_IMAGE_LAYOUT_UNDEFINED;
+        createInfo.initialLayout            = VK_IMAGE_LAYOUT_UNDEFINED; // must be UNDEFINED or PREINITIALIZED
     }
     VkResult result = vkCreateImage(device, &createInfo, nullptr, image_.ReleaseAndGetAddressOf());
     VKThrowIfCreateFailed(result, "VkImage");

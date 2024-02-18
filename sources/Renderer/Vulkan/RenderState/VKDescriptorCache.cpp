@@ -172,11 +172,13 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
 
 static VkImageLayout GetShaderReadOptimalImageLayout(Format format)
 {
+    #if 0
     if (IsDepthFormat(format))
-        return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+        return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL; // VK_VERSION_1_1
     else if (IsStencilFormat(format))
-        return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+        return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL; // VK_VERSION_1_1
     else
+    #endif
         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 

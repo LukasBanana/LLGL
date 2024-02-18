@@ -271,6 +271,27 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
+// Tries to find an optimal initial VkImageLayout for the specified texture format and binding flags
+static VkImageLayout FindOptimalInitialVkImageLayout(Format format, long bindFlags)
+{
+    if ((bindFlags & BindFlags::CopyDst) != 0)
+        return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    if ((bindFlags & BindFlags::CopySrc) != 0)
+        return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    if ((bindFlags & BindFlags::ColorAttachment) != 0)
+        return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    if ((bindFlags & BindFlags::DepthStencilAttachment) != 0)
+    {
+        if (IsStencilFormat(format))
+            return VK_IMAGE_LAYOUT_STENCIL_ATTACHMENT_OPTIMAL;
+        else
+            return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    }
+    if ((bindFlags & BindFlags::Sampled) != 0)
+        return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    return VK_IMAGE_LAYOUT_UNDEFINED;
+}
+
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Determine size of image for staging buffer */
@@ -367,10 +388,23 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 );
             }
         }
-        device_.FlushCommandBuffer(cmdBuffer);
+        FlushCommandBuffer(cmdBuffer);
 
         /* Release staging buffer */
         stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
+    }
+    else
+    {
+        /* Initialize image layout */
+        const VkImageLayout initialLayout = FindOptimalInitialVkImageLayout(textureDesc.format, textureDesc.bindFlags);
+        if (initialLayout != VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+            VkCommandBuffer cmdBuffer = AllocCommandBuffer();
+            {
+                textureVK->TransitionImageLayout(context_, initialLayout, true);
+            }
+            FlushCommandBuffer(cmdBuffer);
+        }
     }
 
     /* Create primary image view for texture */
@@ -458,7 +492,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 
         textureVK.TransitionImageLayout(context_, oldLayout, subresource, true);
     }
-    device_.FlushCommandBuffer(cmdBuffer);
+    FlushCommandBuffer(cmdBuffer);
 
     /* Release staging buffer */
     stagingBuffer.ReleaseMemoryRegion(*deviceMemoryMngr_);
@@ -500,7 +534,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
         textureVK.TransitionImageLayout(context_, oldLayout, subresource, true);
     }
-    device_.FlushCommandBuffer(cmdBuffer);
+    FlushCommandBuffer(cmdBuffer);
 
     /* Map staging buffer to CPU memory space */
     if (VKDeviceMemoryRegion* region = stagingBuffer.GetMemoryRegion())
@@ -929,6 +963,11 @@ VkCommandBuffer VKRenderSystem::AllocCommandBuffer(bool begin)
     VkCommandBuffer cmdBuffer = device_.AllocCommandBuffer(begin);
     context_.Reset(cmdBuffer);
     return cmdBuffer;
+}
+
+void VKRenderSystem::FlushCommandBuffer(VkCommandBuffer commandBuffer)
+{
+    device_.FlushCommandBuffer(commandBuffer);
 }
 
 

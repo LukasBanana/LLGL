@@ -52,7 +52,9 @@ class VKCommandBuffer final : public CommandBuffer
 
     public:
 
-        /* ----- Internals ----- */
+        // Returns the fence used to submit the command buffer and resets it if this is a multi-submit command buffer,
+        // i.e. it won't need another signal for the next submission.
+        VkFence GetQueueSubmitFenceAndFlush();
 
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
@@ -154,6 +156,7 @@ class VKCommandBuffer final : public CommandBuffer
         VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         VkCommandBufferUsageFlags       usageFlags_                 = 0;
         bool                            immediateSubmit_            = false;
+        bool                            multiSubmit_                = false;
 
         VKSwapChain*                    boundSwapChain_             = nullptr;
         std::uint32_t                   currentColorBuffer_         = 0;

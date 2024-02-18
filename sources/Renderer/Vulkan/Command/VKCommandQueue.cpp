@@ -50,7 +50,7 @@ void VKCommandQueue::Submit(CommandBuffer& commandBuffer)
         VkResult result = VKSubmitCommandBuffer(
             native_,
             commandBufferVK.GetVkCommandBuffer(),
-            commandBufferVK.GetQueueSubmitFence()
+            commandBufferVK.GetQueueSubmitFenceAndFlush()
         );
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }

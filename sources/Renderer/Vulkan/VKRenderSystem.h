@@ -78,6 +78,7 @@ class VKRenderSystem final : public RenderSystem
         );
 
         VkCommandBuffer AllocCommandBuffer(bool begin = true);
+        void FlushCommandBuffer(VkCommandBuffer commandBuffer);
 
     private:
 

@@ -85,7 +85,9 @@ VKCommandBuffer::VKCommandBuffer(
                 usageFlags_ |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
             }
         }
-        if ((desc.flags & CommandBufferFlags::MultiSubmit) == 0)
+        if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
+            multiSubmit_ = true;
+        else
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     }
 
@@ -101,6 +103,14 @@ VKCommandBuffer::VKCommandBuffer(
 VKCommandBuffer::~VKCommandBuffer()
 {
     vkFreeCommandBuffers(device_, commandPool_, numCommandBuffers_, commandBufferArray_);
+}
+
+VkFence VKCommandBuffer::GetQueueSubmitFenceAndFlush()
+{
+    VkFence fence = recordingFence_;
+    if (multiSubmit_)
+        recordingFence_ = VK_NULL_HANDLE;
+    return fence;
 }
 
 /* ----- Encoding ----- */

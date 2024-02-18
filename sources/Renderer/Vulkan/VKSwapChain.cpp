@@ -42,6 +42,11 @@ static VKPtr<VkSemaphore> NullVkSemaphore(VkDevice device)
     return VKPtr<VkSemaphore>{ device, vkDestroySemaphore };
 }
 
+static VKPtr<VkFence> NullVkFence(VkDevice device)
+{
+    return VKPtr<VkFence>{ device, vkDestroyFence };
+}
+
 VKSwapChain::VKSwapChain(
     VkInstance                      instance,
     VkPhysicalDevice                physicalDevice,
@@ -73,11 +78,14 @@ VKSwapChain::VKSwapChain(
                                NullVkSemaphore(device_)        },
     renderFinishedSemaphore_ { NullVkSemaphore(device_),
                                NullVkSemaphore(device_),
-                               NullVkSemaphore(device_)        }
+                               NullVkSemaphore(device_)        },
+    inFlightFences_          { NullVkFence(device_),
+                               NullVkFence(device_),
+                               NullVkFence(device_)            }
 {
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
-    CreatePresentSemaphores();
+    CreatePresentSemaphoresAndFences();
     CreateGpuSurface();
 
     /* Pick image count for swap-chain and depth-stencil format */
@@ -94,13 +102,10 @@ VKSwapChain::VKSwapChain(
 
 void VKSwapChain::Present()
 {
-    /* Get image index for next presentation */
-    const std::uint32_t presentableImageIndex = GetPresentableImageIndex();
-
     /* Initialize semaphores */
-    VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_[currentColorBuffer_] };
+    VkSemaphore waitSemaphores[] = { imageAvailableSemaphore_[currentFrameInFlight_] };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    VkSemaphore signalSemaphores[] = { renderFinishedSemaphore_[currentColorBuffer_] };
+    VkSemaphore signalSemaphores[] = { renderFinishedSemaphore_[currentFrameInFlight_] };
 
     /* Submit signal semaphore to graphics queue */
     VkSubmitInfo submitInfo;
@@ -108,19 +113,17 @@ void VKSwapChain::Present()
         submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext                = nullptr;
         submitInfo.waitSemaphoreCount   = 1;
-        submitInfo.pWaitSemaphores      = waitSemaphorse;
+        submitInfo.pWaitSemaphores      = waitSemaphores;
         submitInfo.pWaitDstStageMask    = waitStages;
         submitInfo.commandBufferCount   = 0;
         submitInfo.pCommandBuffers      = nullptr;
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores    = signalSemaphores;
     }
-    VkResult result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+    VkResult result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, inFlightFences_[currentFrameInFlight_]);
     VKThrowIfFailed(result, "failed to submit semaphore to Vulkan graphics queue");
 
     /* Present result on screen */
-    VkSwapchainKHR swapChains[] = { swapChain_ };
-
     VkPresentInfoKHR presentInfo;
     {
         presentInfo.sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -128,15 +131,15 @@ void VKSwapChain::Present()
         presentInfo.waitSemaphoreCount  = 1;
         presentInfo.pWaitSemaphores     = signalSemaphores;
         presentInfo.swapchainCount      = 1;
-        presentInfo.pSwapchains         = swapChains;
-        presentInfo.pImageIndices       = &presentableImageIndex;
+        presentInfo.pSwapchains         = swapChain_.GetAddressOf();
+        presentInfo.pImageIndices       = &currentColorBuffer_;
         presentInfo.pResults            = nullptr;
     }
     result = vkQueuePresentKHR(presentQueue_, &presentInfo);
     VKThrowIfFailed(result, "failed to present Vulkan graphics queue");
 
     /* Move to next frame */
-    currentColorBuffer_ = (presentableImageIndex + 1) % numColorBuffers_;
+    AcquireNextColorBuffer();
 }
 
 std::uint32_t VKSwapChain::GetCurrentSwapIndex() const
@@ -174,6 +177,7 @@ bool VKSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
     /* Recreate swap-chain with new vsnyc settings */
     if (vsyncInterval_ != vsyncInterval)
     {
+        CreatePresentSemaphoresAndFences();
         CreateSwapChain(GetResolution(), vsyncInterval);
         CreateSwapChainFramebuffers();
         vsyncInterval_ = vsyncInterval;
@@ -290,7 +294,7 @@ bool VKSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
         vkQueueWaitIdle(graphicsQueue_);
 
         /* Recreate presenting semaphores and Vulkan surface */
-        CreatePresentSemaphores();
+        CreatePresentSemaphoresAndFences();
         CreateGpuSurface();
 
         /* Recreate color and depth-stencil buffers */
@@ -313,13 +317,26 @@ void VKSwapChain::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
     VKThrowIfFailed(result, "failed to create Vulkan semaphore");
 }
 
-void VKSwapChain::CreatePresentSemaphores()
+void VKSwapChain::CreateGpuFence(VKPtr<VkFence>& fence)
+{
+    VkFenceCreateInfo createInfo;
+    {
+        createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    }
+    VkResult result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan fence");
+}
+
+void VKSwapChain::CreatePresentSemaphoresAndFences()
 {
     /* Create presentation semaphorse */
-    for_range(i, numColorBuffers_)
+    for_range(i, maxNumFramesInFlight)
     {
         CreateGpuSemaphore(imageAvailableSemaphore_[i]);
         CreateGpuSemaphore(renderFinishedSemaphore_[i]);
+        CreateGpuFence(inFlightFences_[i]);
     }
 }
 
@@ -464,7 +481,7 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     CreateSwapChainImageViews();
 
     /* Get initial color buffer index for new Vulkan swap-chain */
-    currentColorBuffer_ = GetPresentableImageIndex();
+    AcquireNextColorBuffer();
 }
 
 void VKSwapChain::CreateSwapChainImageViews()
@@ -662,18 +679,21 @@ std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
     );
 }
 
-std::uint32_t VKSwapChain::GetPresentableImageIndex() const
+void VKSwapChain::AcquireNextColorBuffer()
 {
-    std::uint32_t presentableImageIndex = 0;
+    currentFrameInFlight_ = (currentFrameInFlight_ + 1) % maxNumFramesInFlight;
+    vkWaitForFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf(), VK_TRUE, UINT64_MAX);
+
     vkAcquireNextImageKHR(
         device_,
         swapChain_,
         UINT64_MAX,
-        imageAvailableSemaphore_[currentColorBuffer_],
+        imageAvailableSemaphore_[currentFrameInFlight_],
         VK_NULL_HANDLE,
-        &presentableImageIndex
+        &currentColorBuffer_
     );
-    return presentableImageIndex;
+
+    vkResetFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf());
 }
 
 

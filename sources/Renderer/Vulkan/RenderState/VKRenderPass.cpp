@@ -90,10 +90,10 @@ static void ConvertDepthStencilVkAttachmentDesc(
 void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescriptor& desc)
 {
     /* Get number of attachments */
-    const auto  numColorAttachments = NumEnabledColorAttachments(desc);
-    auto        numAttachments      = numColorAttachments;
+    const std::uint32_t numColorAttachments = NumEnabledColorAttachments(desc);
+    std::uint32_t       numAttachments      = numColorAttachments;
 
-    constexpr auto maxNumClearValues = static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max());
+    constexpr std::uint32_t maxNumClearValues = static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max());
     LLGL_ASSERT(numAttachments <= maxNumClearValues, "too many attachments for Vulkan render pass");
 
     /* Check for depth-stencil attachment */
@@ -227,7 +227,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         createInfo.dependencyCount  = 1;
         createInfo.pDependencies    = (&subpassDep);
     }
-    auto result = vkCreateRenderPass(device, &createInfo, nullptr, renderPass_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateRenderPass(device, &createInfo, nullptr, renderPass_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan render pass");
 }
 

@@ -106,7 +106,8 @@ class VKSwapChain final : public SwapChain
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
-        void CreatePresentSemaphores();
+        void CreateGpuFence(VKPtr<VkFence>& fence);
+        void CreatePresentSemaphoresAndFences();
         void CreateGpuSurface();
 
         void CreateRenderPass(VKRenderPass& renderPass, bool isSecondary);
@@ -129,11 +130,12 @@ class VKSwapChain final : public SwapChain
         VkFormat PickDepthStencilFormat(int depthBits, int stencilBits) const;
         std::uint32_t PickSwapChainSize(std::uint32_t swapBuffers) const;
 
-        std::uint32_t GetPresentableImageIndex() const;
+        void AcquireNextColorBuffer();
 
     private:
 
-        static constexpr std::uint32_t maxNumColorBuffers = 3;
+        static constexpr std::uint32_t maxNumColorBuffers   = 3;
+        static constexpr std::uint32_t maxNumFramesInFlight = 3;
 
         VkInstance              instance_                                   = VK_NULL_HANDLE;
         VkPhysicalDevice        physicalDevice_                             = VK_NULL_HANDLE;
@@ -154,7 +156,8 @@ class VKSwapChain final : public SwapChain
         VKPtr<VkFramebuffer>    swapChainFramebuffers_[maxNumColorBuffers];
 
         std::uint32_t           numColorBuffers_                            = 2;
-        std::uint32_t           currentColorBuffer_                         = 0;
+        std::uint32_t           currentColorBuffer_                         = 0; // determined by vkAcquireNextImageKHR
+        std::uint32_t           currentFrameInFlight_                       = 0; // current index for maximum frames in flight
         std::uint32_t           vsyncInterval_                              = 0;
 
         VKRenderPass            secondaryRenderPass_;
@@ -165,8 +168,9 @@ class VKSwapChain final : public SwapChain
         VkQueue                 graphicsQueue_                              = VK_NULL_HANDLE;
         VkQueue                 presentQueue_                               = VK_NULL_HANDLE;
 
-        VKPtr<VkSemaphore>      imageAvailableSemaphore_[maxNumColorBuffers];
-        VKPtr<VkSemaphore>      renderFinishedSemaphore_[maxNumColorBuffers];
+        VKPtr<VkSemaphore>      imageAvailableSemaphore_[maxNumFramesInFlight];
+        VKPtr<VkSemaphore>      renderFinishedSemaphore_[maxNumFramesInFlight];
+        VKPtr<VkFence>          inFlightFences_[maxNumFramesInFlight];
 
 };
 
