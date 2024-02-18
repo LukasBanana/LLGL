@@ -18,6 +18,7 @@
 #include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
 #include "VKSwapChain.h"
+#include "VKCommandContext.h"
 
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"
@@ -76,6 +77,8 @@ class VKRenderSystem final : public RenderSystem
             VkDeviceSize                dataSize
         );
 
+        VkCommandBuffer AllocCommandBuffer(bool begin = true);
+
     private:
 
         /* ----- Common objects ----- */
@@ -84,6 +87,7 @@ class VKRenderSystem final : public RenderSystem
 
         VKPhysicalDevice                        physicalDevice_;
         VKDevice                                device_;
+        VKCommandContext                        context_;
 
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 

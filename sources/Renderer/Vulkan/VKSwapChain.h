@@ -24,7 +24,7 @@ namespace LLGL
 {
 
 
-class VKDevice;
+class VKCommandContext;
 class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 
@@ -92,8 +92,7 @@ class VKSwapChain final : public SwapChain
 
         // Copies the specified backbuffer into the destination image.
         void CopyImage(
-            VKDevice&               device,
-            VkCommandBuffer         commandBuffer,
+            VKCommandContext&       context,
             VkImage                 dstImage,
             VkImageLayout           dstImageLayout,
             const TextureRegion&    dstRegion,

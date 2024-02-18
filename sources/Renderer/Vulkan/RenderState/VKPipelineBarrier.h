@@ -63,7 +63,7 @@ class VKPipelineBarrier
         VkPipelineStageFlags                    srcStageMask_   = 0;
         VkPipelineStageFlags                    dstStageMask_   = 0;
         SmallVector<ResourceBinding, 4u>        bindings_;
-        SmallVector<VkMemoryBarrier, 1u>        memoryBarrier_;
+        SmallVector<VkMemoryBarrier, 1u>        memoryBarriers_;
         SmallVector<VkBufferMemoryBarrier, 1u>  bufferBarriers_;
         SmallVector<VkImageMemoryBarrier, 1u>   imageBarriers_;
 

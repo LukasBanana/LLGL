@@ -6,9 +6,9 @@
  */
 
 #include "VKDeviceImage.h"
-#include "../VKDevice.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../Memory/VKDeviceMemoryManager.h"
+#include "../VKCommandContext.h"
 #include "../VKCore.h"
 #include "../../../Core/Exception.h"
 #include "../../../Core/PrintfUtils.h"
@@ -138,8 +138,7 @@ void VKDeviceImage::CreateVkImageView(
 }
 
 VkImageLayout VKDeviceImage::TransitionImageLayout(
-    VKDevice&                   device,
-    VkCommandBuffer             commandBuffer,
+    VKCommandContext&           context,
     VkFormat                    format,
     VkImageLayout               newLayout,
     const TextureSubresource&   subresource)
@@ -147,10 +146,10 @@ VkImageLayout VKDeviceImage::TransitionImageLayout(
     VkImageLayout oldLayout = layout_;
     if (newLayout != oldLayout)
     {
-        device.TransitionImageLayout(commandBuffer, image_, format, oldLayout, newLayout, subresource);
+        context.ImageMemoryBarrier(image_, format, oldLayout, newLayout, subresource);
         layout_ = newLayout;
     }
-    return oldLayout;
+    return (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED ? layout_ : oldLayout);
 }
 
 

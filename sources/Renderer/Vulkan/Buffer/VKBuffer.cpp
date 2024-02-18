@@ -103,7 +103,7 @@ void VKBuffer::TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer)
 
 void* VKBuffer::Map(VKDevice& device, const CPUAccess access, VkDeviceSize offset, VkDeviceSize length)
 {
-    if (auto stagingBuffer = GetStagingVkBuffer())
+    if (VkBuffer stagingBuffer = GetStagingVkBuffer())
     {
         /* Copy GPU local buffer into staging buffer for read accces */
         if (HasReadAccess(access))
@@ -123,7 +123,7 @@ void* VKBuffer::Map(VKDevice& device, const CPUAccess access, VkDeviceSize offse
 
 void VKBuffer::Unmap(VKDevice& device)
 {
-    if (auto stagingBuffer = GetStagingVkBuffer())
+    if (VkBuffer stagingBuffer = GetStagingVkBuffer())
     {
         /* Unmap staging buffer */
         bufferObjStaging_.Unmap(device);

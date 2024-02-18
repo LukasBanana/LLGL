@@ -20,9 +20,9 @@ namespace LLGL
 {
 
 
-class VKDevice;
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
+class VKCommandContext;
 
 // Predefined texture swizzles to emulate certain texture format
 enum class VKSwizzleFormat
@@ -70,17 +70,17 @@ class VKTexture final : public Texture
 
         // Transitions this image to the specified new layout and returns the old layout.
         VkImageLayout TransitionImageLayout(
-            VKDevice&       device,
-            VkCommandBuffer commandBuffer,
-            VkImageLayout   newLayout
+            VKCommandContext&           context,
+            VkImageLayout               newLayout,
+            bool                        flushBarrier = false
         );
 
         // Transitions the subresources of this image to the specified new layout and returns the old layout.
         VkImageLayout TransitionImageLayout(
-            VKDevice&                   device,
-            VkCommandBuffer             commandBuffer,
+            VKCommandContext&           context,
             VkImageLayout               newLayout,
-            const TextureSubresource&   subresource
+            const TextureSubresource&   subresource,
+            bool                        flushBarrier = false
         );
 
         // Returns the image ascpect flags for the VkFormat of this texture.
@@ -90,6 +90,12 @@ class VKTexture final : public Texture
         inline VkImage GetVkImage() const
         {
             return image_.GetVkImage();
+        }
+
+        // Returns the native VkImageLayout state of this image.
+        inline VkImageLayout GetVkImageLayout() const
+        {
+            return image_.GetVkImageLayout();
         }
 
         // Returns the internal Vulkan image view object (created with 'CreateInternalImageView').

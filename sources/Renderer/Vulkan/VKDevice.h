@@ -58,101 +58,12 @@ class VKDevice
 
         /* ----- Buffer/Image operatons ----- */
 
-        void TransitionImageLayout(
-            VkCommandBuffer             commandBuffer,
-            VkImage                     image,
-            VkFormat                    format,
-            VkImageLayout               oldLayout,
-            VkImageLayout               newLayout,
-            const TextureSubresource&   subresource
-        );
-
-        void CopyBuffer(
-            VkCommandBuffer commandBuffer,
-            VkBuffer        srcBuffer,
-            VkBuffer        dstBuffer,
-            VkDeviceSize    size,
-            VkDeviceSize    srcOffset = 0,
-            VkDeviceSize    dstOffset = 0
-        );
-
         void CopyBuffer(
             VkBuffer        srcBuffer,
             VkBuffer        dstBuffer,
             VkDeviceSize    size,
             VkDeviceSize    srcOffset = 0,
             VkDeviceSize    dstOffset = 0
-        );
-
-        void CopyTexture(
-            VkCommandBuffer     commandBuffer,
-            VKTexture&          srcTexture,
-            VKTexture&          dstTexture,
-            const VkImageCopy&  region
-        );
-
-        void CopyImage(
-            VkCommandBuffer     commandBuffer,
-            VkImage             srcImage,
-            VkImageLayout       srcImageLayout,
-            VkImage             dstImage,
-            VkImageLayout       dstImageLayout,
-            const VkImageCopy&  region,
-            VkFormat            format
-        );
-
-        void ResolveImage(
-            VkCommandBuffer         commandBuffer,
-            VkImage                 srcImage,
-            VkImageLayout           srcImageLayout,
-            VkImage                 dstImage,
-            VkImageLayout           dstImageLayout,
-            const VkImageResolve&   region,
-            VkFormat                format
-        );
-
-        // Copies the source buffer into the destination image (numMipLevels must be 1).
-        void CopyBufferToImage(
-            VkCommandBuffer             commandBuffer,
-            VkBuffer                    srcBuffer,
-            VkImage                     dstImage,
-            VkFormat                    format,
-            const VkOffset3D&           offset,
-            const VkExtent3D&           extent,
-            const TextureSubresource&   subresource
-        );
-
-        void CopyBufferToImage(
-            VkCommandBuffer             commandBuffer,
-            VKBuffer&                   srcBuffer,
-            VKTexture&                  dstTexture,
-            const VkBufferImageCopy&    region
-        );
-
-        // Copies the source image into the destination buffer (numMipLevels must be 1).
-        void CopyImageToBuffer(
-            VkCommandBuffer             commandBuffer,
-            VkImage                     srcImage,
-            VkBuffer                    dstBuffer,
-            VkFormat                    format,
-            const VkOffset3D&           offset,
-            const VkExtent3D&           extent,
-            const TextureSubresource&   subresource
-        );
-
-        void CopyImageToBuffer(
-            VkCommandBuffer             commandBuffer,
-            VKTexture&                  srcTexture,
-            VKBuffer&                   dstBuffer,
-            const VkBufferImageCopy&    region
-        );
-
-        void GenerateMips(
-            VkCommandBuffer             commandBuffer,
-            VkImage                     image,
-            VkFormat                    format,
-            const VkExtent3D&           extent,
-            const TextureSubresource&   subresource
         );
 
         void WriteBuffer(VKDeviceBuffer& buffer, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);

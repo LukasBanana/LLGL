@@ -6,8 +6,8 @@
  */
 
 #include "VKTexture.h"
-#include "../VKDevice.h"
 #include "../Memory/VKDeviceMemory.h"
+#include "../VKCommandContext.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../VKTypes.h"
@@ -275,25 +275,27 @@ void VKTexture::CreateInternalImageView(VkDevice device)
 }
 
 VkImageLayout VKTexture::TransitionImageLayout(
-    VKDevice&       device,
-    VkCommandBuffer commandBuffer,
-    VkImageLayout   newLayout)
+    VKCommandContext&           context,
+    VkImageLayout               newLayout,
+    bool                        flushBarrier)
 {
-    return TransitionImageLayout(
-        device,
-        commandBuffer,
-        newLayout,
-        TextureSubresource{ 0, numArrayLayers_, 0, numMipLevels_ }
-    );
+    const TextureSubresource fullSubresource{ 0, numArrayLayers_, 0, numMipLevels_ };
+    VkImageLayout oldLayout = image_.TransitionImageLayout(context, GetVkFormat(), newLayout, fullSubresource);
+    if (flushBarrier)
+        context.FlushBarriers();
+    return oldLayout;
 }
 
 VkImageLayout VKTexture::TransitionImageLayout(
-    VKDevice&                   device,
-    VkCommandBuffer             commandBuffer,
+    VKCommandContext&           context,
     VkImageLayout               newLayout,
-    const TextureSubresource&   subresource)
+    const TextureSubresource&   subresource,
+    bool                        flushBarrier)
 {
-    return image_.TransitionImageLayout(device, commandBuffer, GetVkFormat(), newLayout, subresource);
+    VkImageLayout oldLayout = image_.TransitionImageLayout(context, GetVkFormat(), newLayout, subresource);
+    if (flushBarrier)
+        context.FlushBarriers();
+    return oldLayout;
 }
 
 static VkImageAspectFlags GetAspectFlagsByFormat(VkFormat format)

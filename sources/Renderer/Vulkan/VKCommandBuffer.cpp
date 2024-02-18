@@ -248,7 +248,7 @@ void VKCommandBuffer::CopyBufferFromTexture(
         region.bufferOffset                     = dstOffset;
         region.bufferRowLength                  = rowStride;
         region.bufferImageHeight                = layerStride;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT; //TODO: also needs to handle depth and stencil values
         region.imageSubresource.mipLevel        = srcRegion.subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = srcRegion.subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = srcRegion.subresource.numArrayLayers;
@@ -256,18 +256,20 @@ void VKCommandBuffer::CopyBufferFromTexture(
         region.imageExtent                      = VKTypes::ToVkExtent(srcRegion.extent);
     }
 
-    VkImageLayout oldLayout = srcTextureVK.TransitionImageLayout(device_, commandBuffer_, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    //TODO: context must detect if barriers are incompatible
+    context_.BufferMemoryBarrier(dstBufferVK.GetVkBuffer(), 0, VK_WHOLE_SIZE, VK_ACCESS_TRANSFER_WRITE_BIT, true);
+    VkImageLayout oldLayout = srcTextureVK.TransitionImageLayout(context_, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, true);
 
     if (IsInsideRenderPass())
     {
         PauseRenderPass();
-        device_.CopyImageToBuffer(commandBuffer_, srcTextureVK, dstBufferVK, region);
+        context_.CopyImageToBuffer(srcTextureVK, dstBufferVK, region);
         ResumeRenderPass();
     }
     else
-        device_.CopyImageToBuffer(commandBuffer_, srcTextureVK, dstBufferVK, region);
+        context_.CopyImageToBuffer(srcTextureVK, dstBufferVK, region);
 
-    srcTextureVK.TransitionImageLayout(device_, commandBuffer_, oldLayout);
+    srcTextureVK.TransitionImageLayout(context_, oldLayout, true);
 }
 
 void VKCommandBuffer::FillBuffer(
@@ -330,11 +332,11 @@ void VKCommandBuffer::CopyTexture(
     if (IsInsideRenderPass())
     {
         PauseRenderPass();
-        device_.CopyTexture(commandBuffer_, srcTextureVK, dstTextureVK, region);
+        context_.CopyTexture(srcTextureVK, dstTextureVK, region);
         ResumeRenderPass();
     }
     else
-        device_.CopyTexture(commandBuffer_, srcTextureVK, dstTextureVK, region);
+        context_.CopyTexture(srcTextureVK, dstTextureVK, region);
 }
 
 void VKCommandBuffer::CopyTextureFromBuffer(
@@ -361,18 +363,20 @@ void VKCommandBuffer::CopyTextureFromBuffer(
         region.imageExtent                      = VKTypes::ToVkExtent(dstRegion.extent);
     }
 
-    VkImageLayout oldLayout = dstTextureVK.TransitionImageLayout(device_, commandBuffer_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    //TODO: context must detect if barriers are incompatible
+    context_.BufferMemoryBarrier(srcBufferVK.GetVkBuffer(), 0, VK_WHOLE_SIZE, VK_ACCESS_TRANSFER_READ_BIT, true);
+    VkImageLayout oldLayout = dstTextureVK.TransitionImageLayout(context_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, true);
 
     if (IsInsideRenderPass())
     {
         PauseRenderPass();
-        device_.CopyBufferToImage(commandBuffer_, srcBufferVK, dstTextureVK, region);
+        context_.CopyBufferToImage(srcBufferVK, dstTextureVK, region);
         ResumeRenderPass();
     }
     else
-        device_.CopyBufferToImage(commandBuffer_, srcBufferVK, dstTextureVK, region);
+        context_.CopyBufferToImage(srcBufferVK, dstTextureVK, region);
 
-    dstTextureVK.TransitionImageLayout(device_, commandBuffer_, oldLayout);
+    dstTextureVK.TransitionImageLayout(context_, oldLayout, true);
 }
 
 void VKCommandBuffer::CopyTextureFromFramebuffer(
@@ -397,10 +401,9 @@ void VKCommandBuffer::CopyTextureFromFramebuffer(
     {
         PauseRenderPass();
         boundSwapChain_->CopyImage(
-            device_,
-            commandBuffer_,
+            context_,
             dstTextureVK.GetVkImage(),
-            VK_IMAGE_LAYOUT_UNDEFINED, //TODO: use state management of image layouts
+            dstTextureVK.GetVkImageLayout(),
             dstRegion,
             currentColorBuffer_,
             srcOffset,
@@ -411,10 +414,9 @@ void VKCommandBuffer::CopyTextureFromFramebuffer(
     else
     {
         boundSwapChain_->CopyImage(
-            device_,
-            commandBuffer_,
+            context_,
             dstTextureVK.GetVkImage(),
-            VK_IMAGE_LAYOUT_UNDEFINED, //TODO: use state management of image layouts
+            dstTextureVK.GetVkImageLayout(),
             dstRegion,
             currentColorBuffer_,
             srcOffset,
@@ -426,8 +428,7 @@ void VKCommandBuffer::CopyTextureFromFramebuffer(
 void VKCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
-    device_.GenerateMips(
-        commandBuffer_,
+    context_.GenerateMips(
         textureVK.GetVkImage(),
         textureVK.GetVkFormat(),
         textureVK.GetVkExtent(),
@@ -439,14 +440,13 @@ void VKCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& s
 {
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
 
-    const auto maxNumMipLevels      = textureVK.GetNumMipLevels();
-    const auto maxNumArrayLayers    = textureVK.GetNumArrayLayers();
+    const std::uint32_t maxNumMipLevels     = textureVK.GetNumMipLevels();
+    const std::uint32_t maxNumArrayLayers   = textureVK.GetNumArrayLayers();
 
     if (subresource.baseMipLevel   < maxNumMipLevels   && subresource.numMipLevels   > 0 &&
         subresource.baseArrayLayer < maxNumArrayLayers && subresource.numArrayLayers > 0)
     {
-        device_.GenerateMips(
-            commandBuffer_,
+        context_.GenerateMips(
             textureVK.GetVkImage(),
             textureVK.GetVkFormat(),
             textureVK.GetVkExtent(),
@@ -1291,6 +1291,7 @@ void VKCommandBuffer::AcquireNextBuffer()
     recordingFence_     = recordingFenceArray_[commandBufferIndex_].Get();
     descriptorSetPool_  = &(descriptorSetPoolArray_[commandBufferIndex_]);
     descriptorSetPool_->Reset();
+    context_.Reset(commandBuffer_);
 }
 
 void VKCommandBuffer::ResetBindingStates()

@@ -8,7 +8,7 @@
 #include "VKSwapChain.h"
 #include "VKCore.h"
 #include "VKTypes.h"
-#include "VKDevice.h"
+#include "VKCommandContext.h"
 #include "Memory/VKDeviceMemoryManager.h"
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
@@ -224,8 +224,7 @@ void CopyVkImageRegion(TDst& outRegion, const TextureRegion& dstRegion, const Of
 }
 
 void VKSwapChain::CopyImage(
-    VKDevice&               device,
-    VkCommandBuffer         commandBuffer,
+    VKCommandContext&       context,
     VkImage                 dstImage,
     VkImageLayout           dstImageLayout,
     const TextureRegion&    dstRegion,
@@ -247,12 +246,12 @@ void VKSwapChain::CopyImage(
                 return /*No depth-stencil buffer*/;
 
             VkImage srcImage = depthStencilBuffer_.GetVkImage();
-            device.ResolveImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
+            context.ResolveImage(srcImage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
         }
         else
         {
             VkImage srcImage = colorBuffers_[srcColorBuffer].GetVkImage();
-            device.ResolveImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
+            context.ResolveImage(srcImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
         }
     }
     else
@@ -266,12 +265,12 @@ void VKSwapChain::CopyImage(
                 return /*No depth-stencil buffer*/;
 
             VkImage srcImage = depthStencilBuffer_.GetVkImage();
-            device.CopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, copyRegion, format);
+            context.CopyImage(srcImage, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, copyRegion, format);
         }
         else
         {
             VkImage srcImage = swapChainImages_[srcColorBuffer];
-            device.CopyImage(commandBuffer, srcImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, copyRegion, format);
+            context.CopyImage(srcImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, dstImage, dstImageLayout, copyRegion, format);
         }
     }
 }
@@ -429,7 +428,8 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
         createInfo.imageColorSpace              = swapChainFormat_.colorSpace;
         createInfo.imageExtent                  = swapChainExtent_;
         createInfo.imageArrayLayers             = 1;
-        createInfo.imageUsage                   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;// | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        //TODO: allow more fine grain control; VK_IMAGE_USAGE_TRANSFER_SRC_BIT is required for CopyTextureFromFramebuffer()
+        createInfo.imageUsage                   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
         if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily)
         {
@@ -558,7 +558,7 @@ void VKSwapChain::CreateDepthStencilBuffer(const Extent2D& resolution)
 void VKSwapChain::CreateColorBuffers(const Extent2D& resolution)
 {
     /* Create VkImage objects for each swap-chain buffer */
-    const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
+    const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
     for_range(i, numColorBuffers_)
         colorBuffers_[i].Create(deviceMemoryMngr_, resolution, swapChainFormat_.format, sampleCountBits);
 }

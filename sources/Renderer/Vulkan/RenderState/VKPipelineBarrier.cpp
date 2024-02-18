@@ -29,8 +29,8 @@ void VKPipelineBarrier::Submit(VkCommandBuffer commandBuffer)
         srcStageMask_,
         dstStageMask_,
         0, // VkDependencyFlags
-        static_cast<std::uint32_t>(memoryBarrier_.size()),
-        memoryBarrier_.data(),
+        static_cast<std::uint32_t>(memoryBarriers_.size()),
+        memoryBarriers_.data(),
         static_cast<std::uint32_t>(bufferBarriers_.size()),
         bufferBarriers_.data(),
         static_cast<std::uint32_t>(imageBarriers_.size()),
@@ -100,12 +100,12 @@ bool VKPipelineBarrier::Update()
     /* Reset bitmasks and barriers */
     srcStageMask_ = 0;
     dstStageMask_ = 0;
-    memoryBarrier_.clear();
+    memoryBarriers_.clear();
 
     /* Iterate over all bindings and re-generate all barriers */
-    for (const auto& binding : bindings_)
+    for (const ResourceBinding& binding : bindings_)
     {
-        if (auto resource = binding.resource)
+        if (Resource* resource = binding.resource)
         {
             if (resource->GetResourceType() == ResourceType::Buffer)
             {
@@ -131,7 +131,7 @@ void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkA
     dstStageMask_ |= stageFlags;
 
     /* Check if a memory barrier alread exists */
-    for (const auto& barrier : memoryBarrier_)
+    for (const VkMemoryBarrier& barrier : memoryBarriers_)
     {
         if (barrier.srcAccessMask == srcAccess && barrier.dstAccessMask == dstAccess)
             return;
@@ -145,7 +145,7 @@ void VKPipelineBarrier::InsertMemoryBarrier(VkPipelineStageFlags stageFlags, VkA
         barrier.srcAccessMask   = srcAccess;
         barrier.dstAccessMask   = dstAccess;
     }
-    memoryBarrier_.push_back(barrier);
+    memoryBarriers_.push_back(barrier);
 }
 
 void VKPipelineBarrier::InsertBufferMemoryBarrier(VkPipelineStageFlags stageFlags, VkAccessFlags srcAccess, VkAccessFlags dstAccess, VkBuffer buffer)

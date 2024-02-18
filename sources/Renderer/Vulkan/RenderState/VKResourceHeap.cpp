@@ -396,7 +396,7 @@ bool VKResourceHeap::ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* 
 
 bool VKResourceHeap::EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags)
 {
-    if (auto barrier = barriers_[descriptorSet].get())
+    if (VKPipelineBarrier* barrier = barriers_[descriptorSet].get())
     {
         /* Emplace into existing pipeline barrier */
         return barrier->Emplace(slot, resource, stageFlags);
@@ -404,7 +404,7 @@ bool VKResourceHeap::EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t s
     else
     {
         /* Allocate new pipeline barrier for descriptor set */
-        auto newBarrier = MakeUnique<VKPipelineBarrier>();
+        VKPipelineBarrierPtr newBarrier = MakeUnique<VKPipelineBarrier>();
         newBarrier->Emplace(slot, resource, stageFlags);
         barriers_[descriptorSet] = std::move(newBarrier);
         return true;
@@ -413,7 +413,7 @@ bool VKResourceHeap::EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t s
 
 bool VKResourceHeap::RemoveBarrier(std::uint32_t descriptorSet, std::uint32_t slot)
 {
-    if (auto barrier = barriers_[descriptorSet].get())
+    if (VKPipelineBarrier* barrier = barriers_[descriptorSet].get())
         return barrier->Remove(slot);
     else
         return false;

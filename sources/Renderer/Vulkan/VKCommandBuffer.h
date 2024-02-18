@@ -13,6 +13,7 @@
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "VKCore.h"
+#include "VKCommandContext.h"
 #include "RenderState/VKStagingDescriptorSetPool.h"
 #include "RenderState/VKDescriptorCache.h"
 #include <vector>
@@ -145,6 +146,8 @@ class VKCommandBuffer final : public CommandBuffer
         VkCommandBuffer                 commandBuffer_              = VK_NULL_HANDLE;
         std::uint32_t                   commandBufferIndex_         = 0;
         std::uint32_t                   numCommandBuffers_          = 2;
+
+        VKCommandContext                context_;
 
         RecordState                     recordState_                = RecordState::Undefined;
 

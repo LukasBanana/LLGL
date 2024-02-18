@@ -170,13 +170,23 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
     }
 }
 
+static VkImageLayout GetShaderReadOptimalImageLayout(Format format)
+{
+    if (IsDepthFormat(format))
+        return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+    else if (IsStencilFormat(format))
+        return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+    else
+        return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+}
+
 void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
     auto imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
         imageInfo->imageView     = textureVK.GetVkImageView();
-        imageInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo->imageLayout   = GetShaderReadOptimalImageLayout(textureVK.GetFormat());
     }
     auto writeDesc = setWriter.NextWriteDescriptor();
     {
