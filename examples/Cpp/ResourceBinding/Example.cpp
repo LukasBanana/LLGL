@@ -7,6 +7,9 @@
 
 #include <ExampleBase.h>
 
+// Enable this to declare PSO layout from a parsed string instead of explicitly declaring it
+#define PSO_LAYOUT_FROM_STRING
+
 
 class Example_ResourceBinding : public ExampleBase
 {
@@ -22,8 +25,6 @@ class Example_ResourceBinding : public ExampleBase
     LLGL::Buffer*               transformBuffer     = nullptr;
 
     LLGL::Texture*              colorMaps[3]        = {};
-    LLGL::Sampler*              linearSampler       = nullptr;
-    LLGL::Sampler*              nearestSampler      = nullptr;
 
     LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
@@ -35,8 +36,8 @@ class Example_ResourceBinding : public ExampleBase
 
     Gs::Vector3f                lightVec            = { 0.0f, 0.0f, -1.0f };
 
-    std::uint32_t               lightVecUniform     = 0;
-    std::uint32_t               instanceUniform     = 0;
+    const std::uint32_t         instanceUniform     = 0; // Index for "instance" uniform
+    const std::uint32_t         lightVecUniform     = 1; // Index for "lightVec" uniform
 
     struct Model
     {
@@ -57,7 +58,6 @@ public:
         LoadModels();
         auto vertexFormat = CreateBuffers();
         CreateTextures();
-        CreateSamplers();
         CreatePipelines(vertexFormat);
         const auto caps = renderer->GetRenderingCaps();
 
@@ -137,29 +137,6 @@ private:
         colorMaps[2] = LoadTexture("TilesBlue512.jpg");
     }
 
-    void CreateSamplers()
-    {
-        // Create linear sampler state
-        LLGL::SamplerDescriptor linearSamplerDesc;
-        {
-            linearSamplerDesc.debugName         = "LinearSampler";
-            linearSamplerDesc.maxAnisotropy     = 8;
-            linearSamplerDesc.minFilter         = LLGL::SamplerFilter::Linear;
-            linearSamplerDesc.magFilter         = LLGL::SamplerFilter::Linear;
-        }
-        linearSampler = renderer->CreateSampler(linearSamplerDesc);
-
-        // Create linear sampler state
-        LLGL::SamplerDescriptor nearestSamplerDesc;
-        {
-            nearestSamplerDesc.debugName        = "NearestSampler";
-            nearestSamplerDesc.maxAnisotropy    = 8;
-            nearestSamplerDesc.minFilter        = LLGL::SamplerFilter::Nearest;
-            nearestSamplerDesc.magFilter        = LLGL::SamplerFilter::Nearest;
-        }
-        nearestSampler = renderer->CreateSampler(linearSamplerDesc);
-    }
-
     void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
     {
         // Create shaders
@@ -172,28 +149,38 @@ private:
 
         constexpr auto resBuffer    = LLGL::ResourceType::Buffer;
         constexpr auto resTexture   = LLGL::ResourceType::Texture;
-        //constexpr auto resSampler   = LLGL::ResourceType::Sampler;
 
-        #if 0
-        LLGL::PipelineLayoutDescriptor layoutDescTEST = LLGL::Parse(
-            "heap{"
-            "  cbuffer(Scene@0):vert:frag,"                     // Heap resource binding for a constant buffer
-            "  buffer(transforms@1):vert,"                      // Heap resource binding for a sampled buffer
-            "},"
-            "texture(colorMap@0):frag,"                         // Dynamic resource binding for a texture
-            "sampler(colorMapSampler@0){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
-            "uint(instance),"                                   // Uniform for a uint type
-            "float3(lightVec),"                                 // Uniform for a float3/ vec3 type
-        );
-        #endif
+        const std::uint32_t slotSceneBuffer     = (IsMetal() ? 3u : 0u);
+        const std::uint32_t slotColorMapSampler = (IsOpenGL() ? 3u : 2u);
 
-        LLGL::SamplerDescriptor colorMapSamplerDesc = LLGL::Parse("lod.bias=1");
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
+            #ifdef PSO_LAYOUT_FROM_STRING
+
+            // Declare PSO layout from string
+            layoutDesc = LLGL::Parse(
+                "heap{"
+                "  cbuffer(Scene@%u):vert:frag,"                    // Heap resource binding for a constant buffer
+                "  buffer(transforms@1):vert,"                      // Heap resource binding for a sampled buffer
+                "},"
+                "texture(colorMap@3):frag,"                         // Dynamic resource binding for a texture
+                "sampler(colorMapSampler@%u){ lod.bias=1 }:frag,"   // Static sampler with LOD bias 1
+                "uint(instance),"                                   // Uniform for a uint type
+                "float3(lightVec),"                                 // Uniform for a float3/ vec3 type
+                ,
+                slotSceneBuffer,
+                slotColorMapSampler
+            );
+
+            #else
+
+            // Declare PSO layout explicitly
+            const LLGL::SamplerDescriptor colorMapSamplerDesc = LLGL::Parse("lod.bias=1");
+
             layoutDesc.debugName = "PipelineLayout";
             layoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, (IsMetal() ? 3u : 0u) },
+                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, slotSceneBuffer },
                 LLGL::BindingDescriptor{ "transforms",  resBuffer,  LLGL::BindFlags::Sampled,        vertStage,             1 },
             };
             layoutDesc.bindings =
@@ -202,7 +189,7 @@ private:
             };
             layoutDesc.staticSamplers =
             {
-                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, (IsOpenGL() ? 3u : 2u), colorMapSamplerDesc }
+                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, slotColorMapSampler, colorMapSamplerDesc }
             };
             layoutDesc.uniforms =
             {
@@ -210,9 +197,7 @@ private:
                 LLGL::UniformDescriptor{ "lightVec", LLGL::UniformType::Float3 }, // lightVecUniform = 1
             };
 
-            // Store order information of uniforms
-            instanceUniform = 0;
-            lightVecUniform = 1;
+            #endif // /PSO_LAYOUT_FROM_STRING
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
@@ -237,17 +222,6 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
-    }
-
-    void UpdateAnimation()
-    {
-        #if 0
-        // Update view rotation by user input
-        if (input.KeyPressed(LLGL::Key::RButton) || input.KeyPressed(LLGL::Key::LButton))
-            viewRotation += static_cast<float>(input.GetMouseMotion().x) * 0.005f;
-        else
-            viewRotation += 0.002f;
-        #endif
     }
 
     void DrawModel(const Model& mdl)
@@ -275,9 +249,6 @@ private:
     void OnDrawFrame() override
     {
         scene.vpMatrix = projection;
-
-        // Update scene animation and user input
-        UpdateAnimation();
 
         // Update transform GPU buffer with updated animations
         UpdateTransforms();
