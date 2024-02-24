@@ -41,7 +41,7 @@ void VKDepthStencilBuffer::Create(
     VkSampleCountFlagBits   sampleCountBits)
 {
     /* Determine image aspect */
-    auto aspectFlags = GetVkImageAspectByFormat(format);
+    const VkImageAspectFlags aspectFlags = GetVkImageAspectByFormat(format);
     if (!aspectFlags)
         throw std::invalid_argument("invalid format for Vulkan depth-stencil buffer");
 

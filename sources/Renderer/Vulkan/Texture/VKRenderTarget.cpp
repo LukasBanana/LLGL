@@ -150,7 +150,7 @@ void VKRenderTarget::CreateRenderPass(
     for_range(i, numColorAttachments_)
     {
         /* Write Vulkan descriptor for color attachment */
-        const auto& colorAttachment = desc.colorAttachments[i];
+        const AttachmentDescriptor& colorAttachment = desc.colorAttachments[i];
         VkFormat format = VKTypes::Map(GetAttachmentFormat(colorAttachment));
         long bindFlags = (colorAttachment.texture != nullptr ? colorAttachment.texture->GetBindFlags() : 0);
         InitVkAttachmentDesc(attachmentDescs[i], format, bindFlags, sampleCountBits_, attachmentsLoadOp);
@@ -159,7 +159,7 @@ void VKRenderTarget::CreateRenderPass(
     if (hasDepthStencil)
     {
         /* Write Vulkan descriptor for depth-stencil attachment */
-        const auto& depthStencilAttachment = desc.depthStencilAttachment;
+        const AttachmentDescriptor& depthStencilAttachment = desc.depthStencilAttachment;
         VkFormat format = GetDepthStencilVkFormat(GetAttachmentFormat(depthStencilAttachment));
         long bindFlags = (depthStencilAttachment.texture != nullptr ? depthStencilAttachment.texture->GetBindFlags() : 0);
         InitVkAttachmentDesc(attachmentDescs[numColorAttachments_], format, bindFlags, sampleCountBits_, attachmentsLoadOp);
@@ -171,7 +171,7 @@ void VKRenderTarget::CreateRenderPass(
         /* Take color attachment format descriptors for multi-sampled attachemnts */
         for_range(i, numColorAttachments_)
         {
-            const auto& resolveAttachment = desc.resolveAttachments[i];
+            const AttachmentDescriptor& resolveAttachment = desc.resolveAttachments[i];
             constexpr long bindFlags = 0;
             if (resolveAttachment.texture != nullptr)
             {
@@ -256,7 +256,7 @@ void VKRenderTarget::CreateFramebuffer(
 
     for_range(i, numColorAttachments_)
     {
-        const auto& colorAttachment = desc.colorAttachments[i];
+        const AttachmentDescriptor& colorAttachment = desc.colorAttachments[i];
         if (Texture* texture = colorAttachment.texture)
         {
             /* Use attachment texture for color buffer view */
@@ -274,7 +274,7 @@ void VKRenderTarget::CreateFramebuffer(
     /* Create depth-stencil attachment */
     if (hasDepthStencil)
     {
-        const auto& depthStencilAttachment = desc.depthStencilAttachment;
+        const AttachmentDescriptor& depthStencilAttachment = desc.depthStencilAttachment;
         depthStencilFormat_ = GetAttachmentFormat(depthStencilAttachment);
         if (Texture* texture = depthStencilAttachment.texture)
         {
@@ -296,7 +296,7 @@ void VKRenderTarget::CreateFramebuffer(
     {
         for_range(i, numColorAttachments_)
         {
-            const auto& resolveAttachment = desc.resolveAttachments[i];
+            const AttachmentDescriptor& resolveAttachment = desc.resolveAttachments[i];
             if (Texture* texture = resolveAttachment.texture)
             {
                 /* Use attachment texture for color buffer view */

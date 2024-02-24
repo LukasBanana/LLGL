@@ -190,7 +190,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
     GetVKPipelineCacheID(properties_, info.pipelineCacheID);
 
     /* Map limits to output rendering capabilites */
-    const auto& limits = properties_.limits;
+    const VkPhysicalDeviceLimits& limits = properties_.limits;
 
     /* Query common attributes */
     caps.screenOrigin                               = ScreenOrigin::UpperLeft;
@@ -200,7 +200,7 @@ void VKPhysicalDevice::QueryDeviceProperties(
 
     if (features_.textureCompressionBC != VK_FALSE)
     {
-        const auto compressedTextureFormats = GetCompressedVKTextureFormatsS3TC();
+        const std::vector<Format> compressedTextureFormats = GetCompressedVKTextureFormatsS3TC();
         caps.textureFormats.insert(caps.textureFormats.end(), compressedTextureFormats.begin(), compressedTextureFormats.end());
     }
 
