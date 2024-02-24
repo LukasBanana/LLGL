@@ -149,7 +149,7 @@ private:
         }
         linearSampler = renderer->CreateSampler(linearSamplerDesc);
 
-        // Create linear sampler state
+        // Create nearest sampler state
         LLGL::SamplerDescriptor nearestSamplerDesc;
         {
             nearestSamplerDesc.debugName        = "NearestSampler";
@@ -157,7 +157,7 @@ private:
             nearestSamplerDesc.minFilter        = LLGL::SamplerFilter::Nearest;
             nearestSamplerDesc.magFilter        = LLGL::SamplerFilter::Nearest;
         }
-        nearestSampler = renderer->CreateSampler(linearSamplerDesc);
+        nearestSampler = renderer->CreateSampler(nearestSamplerDesc);
     }
 
     void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
