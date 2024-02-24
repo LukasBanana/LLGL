@@ -19,6 +19,7 @@
 #include "../RenderState/VKPredicateQueryHeap.h"
 #include "../Texture/VKSampler.h"
 #include "../Texture/VKTexture.h"
+#include "../Texture/VKImageUtils.h"
 #include "../Texture/VKRenderTarget.h"
 #include "../Buffer/VKBuffer.h"
 #include "../Buffer/VKBufferArray.h"
@@ -205,13 +206,13 @@ void VKCommandBuffer::UpdateBuffer(
     {
         PauseRenderPass();
         vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
-        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size);
+        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
         ResumeRenderPass();
     }
     else
     {
         vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
-        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size);
+        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
     }
 }
 
@@ -258,7 +259,7 @@ void VKCommandBuffer::CopyBufferFromTexture(
         region.bufferOffset                     = dstOffset;
         region.bufferRowLength                  = rowStride;
         region.bufferImageHeight                = layerStride;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT; //TODO: also needs to handle depth and stencil values
+        region.imageSubresource.aspectMask      = VKImageUtils::GetInclusiveVkImageAspect(srcTextureVK.GetVkFormat());
         region.imageSubresource.mipLevel        = srcRegion.subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = srcRegion.subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = srcRegion.subresource.numArrayLayers;
@@ -326,12 +327,12 @@ void VKCommandBuffer::CopyTexture(
 
     VkImageCopy region;
     {
-        region.srcSubresource.aspectMask        = srcTextureVK.GetAspectFlags();
+        region.srcSubresource.aspectMask        = VKImageUtils::GetInclusiveVkImageAspect(srcTextureVK.GetVkFormat());
         region.srcSubresource.mipLevel          = srcLocation.mipLevel;
         region.srcSubresource.baseArrayLayer    = srcLocation.arrayLayer;
         region.srcSubresource.layerCount        = 1;
         region.srcOffset                        = VKTypes::ToVkOffset(srcLocation.offset);
-        region.dstSubresource.aspectMask        = dstTextureVK.GetAspectFlags();
+        region.dstSubresource.aspectMask        = VKImageUtils::GetInclusiveVkImageAspect(dstTextureVK.GetVkFormat());
         region.dstSubresource.mipLevel          = dstLocation.mipLevel;
         region.dstSubresource.baseArrayLayer    = dstLocation.arrayLayer;
         region.dstSubresource.layerCount        = 1;
@@ -365,7 +366,7 @@ void VKCommandBuffer::CopyTextureFromBuffer(
         region.bufferOffset                     = srcOffset;
         region.bufferRowLength                  = rowStride;
         region.bufferImageHeight                = layerStride;
-        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.aspectMask      = VKImageUtils::GetInclusiveVkImageAspect(dstTextureVK.GetVkFormat());
         region.imageSubresource.mipLevel        = dstRegion.subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = dstRegion.subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = dstRegion.subresource.numArrayLayers;

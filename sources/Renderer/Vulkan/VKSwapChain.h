@@ -11,6 +11,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/SwapChain.h>
+#include <LLGL/RenderPassFlags.h>
 #include "VKCore.h"
 #include "VKPtr.h"
 #include "RenderState/VKRenderPass.h"
@@ -110,10 +111,9 @@ class VKSwapChain final : public SwapChain
         void CreatePresentSemaphoresAndFences();
         void CreateGpuSurface();
 
-        void CreateRenderPass(VKRenderPass& renderPass, bool isSecondary);
-        void CreateSecondaryRenderPass();
+        void CreateRenderPass(VKRenderPass& renderPass, AttachmentLoadOp loadOp, AttachmentStoreOp storeOp);
+        void CreateDefaultAndSecondaryRenderPass();
 
-        void CreateSwapChainRenderPass();
         void CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval);
         void CreateSwapChainImageViews();
         void CreateSwapChainFramebuffers();

@@ -2206,16 +2206,17 @@ namespace LLGL
 
     public class TextureDescriptor
     {
-        public AnsiString  DebugName { get; set; }   = null;
-        public TextureType Type { get; set; }        = TextureType.Texture2D;
-        public BindFlags   BindFlags { get; set; }   = (BindFlags.Sampled | BindFlags.ColorAttachment);
-        public MiscFlags   MiscFlags { get; set; }   = (MiscFlags.FixedSamples | MiscFlags.GenerateMips);
-        public Format      Format { get; set; }      = Format.RGBA8UNorm;
-        public Extent3D    Extent { get; set; }      = new Extent3D() { Width =  1, Height =  1, Depth =  1  };
-        public int         ArrayLayers { get; set; } = 1;
-        public int         MipLevels { get; set; }   = 0;
-        public int         Samples { get; set; }     = 1;
-        public ClearValue  ClearValue { get; set; }  = new ClearValue();
+        public AnsiString     DebugName { get; set; }      = null;
+        public TextureType    Type { get; set; }           = TextureType.Texture2D;
+        public BindFlags      BindFlags { get; set; }      = (BindFlags.Sampled | BindFlags.ColorAttachment);
+        public CPUAccessFlags CPUAccessFlags { get; set; } = (CPUAccessFlags.Read | CPUAccessFlags.Write);
+        public MiscFlags      MiscFlags { get; set; }      = (MiscFlags.FixedSamples | MiscFlags.GenerateMips);
+        public Format         Format { get; set; }         = Format.RGBA8UNorm;
+        public Extent3D       Extent { get; set; }         = new Extent3D() { Width =  1, Height =  1, Depth =  1  };
+        public int            ArrayLayers { get; set; }    = 1;
+        public int            MipLevels { get; set; }      = 0;
+        public int            Samples { get; set; }        = 1;
+        public ClearValue     ClearValue { get; set; }     = new ClearValue();
 
         public TextureDescriptor() { }
 
@@ -2235,14 +2236,15 @@ namespace LLGL
                     {
                         native.debugName = debugNamePtr;
                     }
-                    native.type        = Type;
-                    native.bindFlags   = (int)BindFlags;
-                    native.miscFlags   = (int)MiscFlags;
-                    native.format      = Format;
-                    native.extent      = Extent;
-                    native.arrayLayers = ArrayLayers;
-                    native.mipLevels   = MipLevels;
-                    native.samples     = Samples;
+                    native.type           = Type;
+                    native.bindFlags      = (int)BindFlags;
+                    native.cpuAccessFlags = (int)CPUAccessFlags;
+                    native.miscFlags      = (int)MiscFlags;
+                    native.format         = Format;
+                    native.extent         = Extent;
+                    native.arrayLayers    = ArrayLayers;
+                    native.mipLevels      = MipLevels;
+                    native.samples        = Samples;
                     if (ClearValue != null)
                     {
                         native.clearValue = ClearValue.Native;
@@ -2254,15 +2256,16 @@ namespace LLGL
             {
                 unsafe
                 {
-                    DebugName   = Marshal.PtrToStringAnsi((IntPtr)value.debugName);
-                    Type        = value.type;
-                    BindFlags   = (BindFlags)value.bindFlags;
-                    MiscFlags   = (MiscFlags)value.miscFlags;
-                    Format      = value.format;
-                    Extent      = value.extent;
-                    ArrayLayers = value.arrayLayers;
-                    MipLevels   = value.mipLevels;
-                    Samples     = value.samples;
+                    DebugName      = Marshal.PtrToStringAnsi((IntPtr)value.debugName);
+                    Type           = value.type;
+                    BindFlags      = (BindFlags)value.bindFlags;
+                    CPUAccessFlags = (CPUAccessFlags)value.cpuAccessFlags;
+                    MiscFlags      = (MiscFlags)value.miscFlags;
+                    Format         = value.format;
+                    Extent         = value.extent;
+                    ArrayLayers    = value.arrayLayers;
+                    MipLevels      = value.mipLevels;
+                    Samples        = value.samples;
                     ClearValue.Native= value.clearValue;
                 }
             }
@@ -3847,15 +3850,16 @@ namespace LLGL
 
         public unsafe struct TextureDescriptor
         {
-            public byte*       debugName;   /* = null */
-            public TextureType type;        /* = TextureType.Texture2D */
-            public int         bindFlags;   /* = (BindFlags.Sampled | BindFlags.ColorAttachment) */
-            public int         miscFlags;   /* = (MiscFlags.FixedSamples | MiscFlags.GenerateMips) */
-            public Format      format;      /* = Format.RGBA8UNorm */
-            public Extent3D    extent;      /* = new Extent3D() { Width =  1, Height =  1, Depth =  1  } */
-            public int         arrayLayers; /* = 1 */
-            public int         mipLevels;   /* = 0 */
-            public int         samples;     /* = 1 */
+            public byte*       debugName;      /* = null */
+            public TextureType type;           /* = TextureType.Texture2D */
+            public int         bindFlags;      /* = (BindFlags.Sampled | BindFlags.ColorAttachment) */
+            public int         cpuAccessFlags; /* = (CPUAccessFlags.Read | CPUAccessFlags.Write) */
+            public int         miscFlags;      /* = (MiscFlags.FixedSamples | MiscFlags.GenerateMips) */
+            public Format      format;         /* = Format.RGBA8UNorm */
+            public Extent3D    extent;         /* = new Extent3D() { Width =  1, Height =  1, Depth =  1  } */
+            public int         arrayLayers;    /* = 1 */
+            public int         mipLevels;      /* = 0 */
+            public int         samples;        /* = 1 */
             public ClearValue  clearValue;
         }
 

@@ -6,6 +6,7 @@
  */
 
 #include "VKTexture.h"
+#include "VKImageUtils.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../Command/VKCommandContext.h"
 #include "../../TextureUtils.h"
@@ -187,9 +188,10 @@ void VKTexture::CreateImageView(
     Format                      format,
     VKPtr<VkImageView>&         outImageView)
 {
+    const VkFormat viewVkFormat = VKTypes::Map(format);
     VkImageSubresourceRange subresourceRange;
     {
-        subresourceRange.aspectMask     = GetAspectFlags();
+        subresourceRange.aspectMask     = VKImageUtils::GetExclusiveVkImageAspect(viewVkFormat); //TODO: allow stencil-component to be selected
         subresourceRange.baseMipLevel   = subresource.baseMipLevel;
         subresourceRange.levelCount     = subresource.numMipLevels;
         subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
@@ -200,7 +202,7 @@ void VKTexture::CreateImageView(
     image_.CreateVkImageView(
         device,
         VKTypes::Map(GetType()),
-        VKTypes::Map(format),
+        viewVkFormat,
         subresourceRange,
         outImageView,
         &components
@@ -212,9 +214,10 @@ void VKTexture::CreateImageView(
     const TextureViewDescriptor&    textureViewDesc,
     VKPtr<VkImageView>&             outImageView)
 {
+    const VkFormat viewVkFormat = VKTypes::Map(textureViewDesc.format);
     VkImageSubresourceRange subresourceRange;
     {
-        subresourceRange.aspectMask     = GetAspectFlags();
+        subresourceRange.aspectMask     = VKImageUtils::GetExclusiveVkImageAspect(viewVkFormat); //TODO: allow stencil-component to be selected
         subresourceRange.baseMipLevel   = textureViewDesc.subresource.baseMipLevel,
         subresourceRange.levelCount     = textureViewDesc.subresource.numMipLevels;
         subresourceRange.baseArrayLayer = textureViewDesc.subresource.baseArrayLayer;
@@ -225,7 +228,7 @@ void VKTexture::CreateImageView(
     image_.CreateVkImageView(
         device,
         VKTypes::Map(textureViewDesc.type),
-        VKTypes::Map(textureViewDesc.format),
+        viewVkFormat,
         subresourceRange,
         outImageView,
         &components
@@ -262,7 +265,7 @@ void VKTexture::CreateInternalImageView(VkDevice device)
     {
         VkImageSubresourceRange subresourceRange;
         {
-            subresourceRange.aspectMask     = GetAspectFlags();
+            subresourceRange.aspectMask     = VKImageUtils::GetExclusiveVkImageAspect(format_); //TODO: allow stencil-component to be selected
             subresourceRange.baseMipLevel   = 0;
             subresourceRange.levelCount     = GetNumMipLevels();
             subresourceRange.baseArrayLayer = 0;
@@ -296,30 +299,6 @@ VkImageLayout VKTexture::TransitionImageLayout(
     if (flushBarrier)
         context.FlushBarriers();
     return oldLayout;
-}
-
-static VkImageAspectFlags GetAspectFlagsByFormat(VkFormat format)
-{
-    switch (format)
-    {
-        case VK_FORMAT_D16_UNORM:
-        case VK_FORMAT_X8_D24_UNORM_PACK32:
-        case VK_FORMAT_D32_SFLOAT:
-            return VK_IMAGE_ASPECT_DEPTH_BIT;
-        case VK_FORMAT_S8_UINT:
-            return VK_IMAGE_ASPECT_STENCIL_BIT;
-        case VK_FORMAT_D16_UNORM_S8_UINT:
-        case VK_FORMAT_D24_UNORM_S8_UINT:
-        case VK_FORMAT_D32_SFLOAT_S8_UINT:
-            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-        default:
-            return VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-}
-
-VkImageAspectFlags VKTexture::GetAspectFlags() const
-{
-    return GetAspectFlagsByFormat(format_);
 }
 
 
@@ -433,8 +412,8 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
 {
     VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-    /* Enable TRANSFER_SRC_BIT image usage when MIP-maps are enabled */
-    if (IsMipMappedTexture(desc) || (desc.bindFlags & BindFlags::CopySrc) != 0)
+    /* Enable TRANSFER_SRC_BIT image usage when MIP-maps are enabled, CPU read access or copy source binding is requested */
+    if (IsMipMappedTexture(desc) || (desc.cpuAccessFlags & CPUAccessFlags::Read) || (desc.bindFlags & BindFlags::CopySrc) != 0)
         usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */

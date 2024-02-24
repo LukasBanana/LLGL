@@ -85,6 +85,12 @@ class VKBuffer : public Buffer
             return indexType_;
         }
 
+        // Returns the VkAccessFlags bitmask used for pipeline barriers.
+        inline VkAccessFlags GetAccessFlags() const
+        {
+            return accessFlags_;
+        }
+
     private:
 
         VKDeviceBuffer  bufferObj_;
@@ -94,6 +100,8 @@ class VKBuffer : public Buffer
         VkDeviceSize    mappedWriteRange_[2]    = { 0, 0 };
 
         VkIndexType     indexType_              = VK_INDEX_TYPE_MAX_ENUM;
+
+        VkAccessFlags   accessFlags_            = 0;
 
 };
 

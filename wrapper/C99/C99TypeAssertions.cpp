@@ -843,6 +843,7 @@ LLGL_STATIC_ASSERT_SIZE(TextureDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, type);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, bindFlags);
+LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, cpuAccessFlags);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, miscFlags);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, format);
 LLGL_STATIC_ASSERT_OFFSET(TextureDescriptor, extent);

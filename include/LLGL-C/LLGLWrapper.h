@@ -1510,15 +1510,16 @@ LLGLTextureRegion;
 
 typedef struct LLGLTextureDescriptor
 {
-    const char*     debugName;   /* = NULL */
-    LLGLTextureType type;        /* = LLGLTextureTypeTexture2D */
-    long            bindFlags;   /* = (LLGLBindSampled | LLGLBindColorAttachment) */
-    long            miscFlags;   /* = (LLGLMiscFixedSamples | LLGLMiscGenerateMips) */
-    LLGLFormat      format;      /* = LLGLFormatRGBA8UNorm */
-    LLGLExtent3D    extent;      /* = {1,1,1} */
-    uint32_t        arrayLayers; /* = 1 */
-    uint32_t        mipLevels;   /* = 0 */
-    uint32_t        samples;     /* = 1 */
+    const char*     debugName;      /* = NULL */
+    LLGLTextureType type;           /* = LLGLTextureTypeTexture2D */
+    long            bindFlags;      /* = (LLGLBindSampled | LLGLBindColorAttachment) */
+    long            cpuAccessFlags; /* = (LLGLCPUAccessRead | LLGLCPUAccessWrite) */
+    long            miscFlags;      /* = (LLGLMiscFixedSamples | LLGLMiscGenerateMips) */
+    LLGLFormat      format;         /* = LLGLFormatRGBA8UNorm */
+    LLGLExtent3D    extent;         /* = {1,1,1} */
+    uint32_t        arrayLayers;    /* = 1 */
+    uint32_t        mipLevels;      /* = 0 */
+    uint32_t        samples;        /* = 1 */
     LLGLClearValue  clearValue;
 }
 LLGLTextureDescriptor;

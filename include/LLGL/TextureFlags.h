@@ -284,6 +284,15 @@ struct TextureDescriptor
     long            bindFlags       = (BindFlags::Sampled | BindFlags::ColorAttachment);
 
     /**
+    \brief CPU read/write access flags. By default CPUAccessFlags::ReadWrite.
+    \remarks If this is 0 the texture cannot be mapped between GPU and CPU memory space.
+    \see CPUAccessFlags
+    \see RenderSystem::ReadTexture
+    \see RenderSystem::WriteTexture
+    */
+    long            cpuAccessFlags  = (CPUAccessFlags::Read | CPUAccessFlags::Write);
+
+    /**
     \brief Miscellaneous texture flags. By default MiscFlags::FixedSamples and MiscFlags::GenerateMips.
     \remarks This can be used as a hint for the renderer how frequently the texture will be updated, or whether a multi-sampled texture has fixed sample locations.
     \see MiscFlags

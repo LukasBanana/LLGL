@@ -10,6 +10,7 @@
 #include "VKTypes.h"
 #include "Command/VKCommandContext.h"
 #include "Memory/VKDeviceMemoryManager.h"
+#include "Texture/VKImageUtils.h"
 #include "../TextureUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Exception.h"
@@ -92,11 +93,8 @@ VKSwapChain::VKSwapChain(
     numColorBuffers_    = PickSwapChainSize(desc.swapBuffers);
     depthStencilFormat_ = PickDepthStencilFormat(desc.depthBits, desc.stencilBits);
 
-    /* Create Vulkan swap-chain and render pass */
-    CreateSwapChainRenderPass();
-    CreateSecondaryRenderPass();
-
-    /* Create Vulkan swap-chain, depth-stencil buffer, and multisampling color buffers */
+    /* Create Vulkan render passes, swap-chain, depth-stencil buffer, and multisampling color buffers */
+    CreateDefaultAndSecondaryRenderPass();
     CreateResolutionDependentResources(desc.resolution);
 }
 
@@ -237,7 +235,7 @@ void VKSwapChain::CopyImage(
     VkFormat                format)
 {
     const bool                  isDepthStencil  = VKTypes::IsVkFormatDepthStencil(format);
-    const VkImageAspectFlags    aspectFlags     = (isDepthStencil ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_COLOR_BIT);
+    const VkImageAspectFlags    aspectFlags     = VKImageUtils::GetInclusiveVkImageAspect(format);
 
     if (HasMultiSampling())
     {
@@ -383,16 +381,12 @@ void VKSwapChain::CreateGpuSurface()
     swapChainFormat_        = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
 }
 
-void VKSwapChain::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
+void VKSwapChain::CreateRenderPass(VKRenderPass& renderPass, AttachmentLoadOp loadOp, AttachmentStoreOp storeOp)
 {
     RenderPassDescriptor renderPassDesc;
     {
         /* Pass number of samples to render pass descriptor */
         renderPassDesc.samples = swapChainSamples_;
-
-        /* Determine load and store operations for primary and secondary render passes */
-        const AttachmentLoadOp  loadOp  = (isSecondary ? AttachmentLoadOp::Load : AttachmentLoadOp::Undefined);
-        const AttachmentStoreOp storeOp = AttachmentStoreOp::Store;
 
         /* Specify single color attachment */
         renderPassDesc.colorAttachments[0] = AttachmentFormatDescriptor{ GetColorFormat(), loadOp, storeOp };
@@ -408,14 +402,10 @@ void VKSwapChain::CreateRenderPass(VKRenderPass& renderPass, bool isSecondary)
     renderPass.CreateVkRenderPass(device_, renderPassDesc);
 }
 
-void VKSwapChain::CreateSecondaryRenderPass()
+void VKSwapChain::CreateDefaultAndSecondaryRenderPass()
 {
-    CreateRenderPass(secondaryRenderPass_, true);
-}
-
-void VKSwapChain::CreateSwapChainRenderPass()
-{
-    CreateRenderPass(swapChainRenderPass_, false);
+    CreateRenderPass(swapChainRenderPass_, AttachmentLoadOp::Undefined, AttachmentStoreOp::Store);
+    CreateRenderPass(secondaryRenderPass_, AttachmentLoadOp::Load, AttachmentStoreOp::Store);
 }
 
 void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyncInterval)
@@ -474,6 +464,7 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     result = vkGetSwapchainImagesKHR(device_, swapChain_, &numColorBuffers_, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan swap-chain images");
 
+    numColorBuffers_ = std::min(numColorBuffers_, maxNumColorBuffers);
     result = vkGetSwapchainImagesKHR(device_, swapChain_, &numColorBuffers_, swapChainImages_);
     VKThrowIfFailed(result, "failed to query Vulkan swap-chain images");
 
@@ -568,7 +559,7 @@ void VKSwapChain::CreateSwapChainFramebuffers()
 
 void VKSwapChain::CreateDepthStencilBuffer(const Extent2D& resolution)
 {
-    const auto sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
+    const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
     depthStencilBuffer_.Create(deviceMemoryMngr_, resolution, depthStencilFormat_, sampleCountBits);
 }
 
@@ -660,7 +651,7 @@ static std::vector<VkFormat> GetDepthStencilFormatPreference(int depthBits, int 
 
 VkFormat VKSwapChain::PickDepthStencilFormat(int depthBits, int stencilBits) const
 {
-    const auto formats = GetDepthStencilFormatPreference(depthBits, stencilBits);
+    const std::vector<VkFormat> formats = GetDepthStencilFormatPreference(depthBits, stencilBits);
     return VKFindSupportedImageFormat(
         physicalDevice_,
         formats.data(),

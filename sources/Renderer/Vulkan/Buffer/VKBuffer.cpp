@@ -54,11 +54,34 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
     return flags;
 }
 
+static VkAccessFlags GetBufferVkAccessFlags(long bindFlags)
+{
+    VkAccessFlags accessFlags = 0;
+
+    if ((bindFlags & BindFlags::VertexBuffer) != 0)
+        accessFlags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+    if ((bindFlags & BindFlags::IndexBuffer) != 0)
+        accessFlags |= VK_ACCESS_INDEX_READ_BIT;
+    if ((bindFlags & BindFlags::ConstantBuffer) != 0)
+        accessFlags |= VK_ACCESS_UNIFORM_READ_BIT;
+    if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+        accessFlags |= VK_ACCESS_TRANSFORM_FEEDBACK_WRITE_BIT_EXT;
+    if ((bindFlags & BindFlags::IndirectBuffer) != 0)
+        accessFlags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+    if ((bindFlags & BindFlags::Sampled) != 0)
+        accessFlags |= VK_ACCESS_SHADER_READ_BIT;
+    if ((bindFlags & BindFlags::Storage) != 0)
+        accessFlags |= VK_ACCESS_SHADER_WRITE_BIT;
+
+    return accessFlags;
+}
+
 VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
-    Buffer            { desc.bindFlags },
-    bufferObj_        { device         },
-    bufferObjStaging_ { device         },
-    size_             { desc.size      }
+    Buffer            { desc.bindFlags                         },
+    bufferObj_        { device                                 },
+    bufferObjStaging_ { device                                 },
+    size_             { desc.size                              },
+    accessFlags_      { GetBufferVkAccessFlags(desc.bindFlags) }
 {
     if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
         indexType_ = VKTypes::ToVkIndexType(desc.format);

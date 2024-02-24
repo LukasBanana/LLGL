@@ -9,6 +9,7 @@
 #include "../VKTypes.h"
 #include "../Buffer/VKBuffer.h"
 #include "../Texture/VKTexture.h"
+#include "../Texture/VKImageUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Utils/ForRange.h>
@@ -88,20 +89,6 @@ void VKCommandContext::BufferMemoryBarrier(
         FlushBarriers();
 }
 
-// Returns the image aspect for the specified Vulkan format
-static VkImageAspectFlags GetImageAspectForVkFormat(VkFormat format)
-{
-    const Format fmt = VKTypes::Unmap(format);
-    if (IsDepthOrStencilFormat(fmt))
-    {
-        if (IsStencilFormat(fmt))
-            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-        else
-            return VK_IMAGE_ASPECT_DEPTH_BIT;
-    }
-    return VK_IMAGE_ASPECT_COLOR_BIT;
-}
-
 void VKCommandContext::ImageMemoryBarrier(
     VkImage                     image,
     VkFormat                    format,
@@ -119,7 +106,7 @@ void VKCommandContext::ImageMemoryBarrier(
         barrier.oldLayout                       = oldLayout;
         barrier.newLayout                       = newLayout;
         barrier.image                           = image;
-        barrier.subresourceRange.aspectMask     = GetImageAspectForVkFormat(format);
+        barrier.subresourceRange.aspectMask     = VKImageUtils::GetInclusiveVkImageAspect(format);
         barrier.subresourceRange.baseMipLevel   = subresource.baseMipLevel;
         barrier.subresourceRange.levelCount     = subresource.numMipLevels;
         barrier.subresourceRange.baseArrayLayer = subresource.baseArrayLayer;
@@ -266,7 +253,7 @@ void VKCommandContext::CopyBufferToImage(
         region.bufferOffset                     = 0;
         region.bufferRowLength                  = 0;
         region.bufferImageHeight                = 0;
-        region.imageSubresource.aspectMask      = GetImageAspectForVkFormat(format);
+        region.imageSubresource.aspectMask      = VKImageUtils::GetInclusiveVkImageAspect(format);
         region.imageSubresource.mipLevel        = subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = subresource.numArrayLayers;
@@ -304,7 +291,7 @@ void VKCommandContext::CopyImageToBuffer(
         region.bufferOffset                     = 0;
         region.bufferRowLength                  = 0;
         region.bufferImageHeight                = 0;
-        region.imageSubresource.aspectMask      = GetImageAspectForVkFormat(format);
+        region.imageSubresource.aspectMask      = VKImageUtils::GetInclusiveVkImageAspect(format);
         region.imageSubresource.mipLevel        = subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
         region.imageSubresource.layerCount      = subresource.numArrayLayers;
@@ -347,7 +334,7 @@ void VKCommandContext::GenerateMips(
     /* Initialize image memory barrier */
     VkImageMemoryBarrier barrier;
 
-    const VkImageAspectFlags aspectMask = GetImageAspectForVkFormat(format);
+    const VkImageAspectFlags aspectMask = VKImageUtils::GetInclusiveVkImageAspect(format);
 
     barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.pNext                           = nullptr;

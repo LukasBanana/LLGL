@@ -83,9 +83,6 @@ class VKTexture final : public Texture
             bool                        flushBarrier = false
         );
 
-        // Returns the image ascpect flags for the VkFormat of this texture.
-        VkImageAspectFlags GetAspectFlags() const;
-
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
         {

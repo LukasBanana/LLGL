@@ -29,20 +29,23 @@ VKRenderPass::VKRenderPass(VkDevice device, const RenderPassDescriptor& desc) :
     CreateVkRenderPass(device, desc);
 }
 
-static void ConvertColorVkAttachmentDesc(
-    VkAttachmentDescription&            dst,
-    const AttachmentFormatDescriptor&   src,
-    VkSampleCountFlagBits               sampleCountBits)
+static void InitColorVkAttachmentDesc(
+    VkAttachmentDescription&    dst,
+    Format                      format,
+    AttachmentLoadOp            loadOp,
+    AttachmentStoreOp           storeOp,
+    VkImageLayout               finalLayout,
+    VkSampleCountFlagBits       sampleCountBits)
 {
     dst.flags           = 0;
-    dst.format          = VKTypes::Map(src.format);
+    dst.format          = VKTypes::Map(format);
     dst.samples         = sampleCountBits;
-    dst.loadOp          = VKTypes::Map(src.loadOp);
-    dst.storeOp         = VKTypes::Map(src.storeOp);
+    dst.loadOp          = VKTypes::Map(loadOp);
+    dst.storeOp         = VKTypes::Map(storeOp);
     dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     dst.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    dst.initialLayout   = (src.loadOp == AttachmentLoadOp::Load ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_UNDEFINED);
-    dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    dst.initialLayout   = (loadOp == AttachmentLoadOp::Load ? finalLayout : VK_IMAGE_LAYOUT_UNDEFINED);
+    dst.finalLayout     = finalLayout;
 }
 
 static VkFormat GetDepthStencilFormat(const Format depthFormat, const Format& stencilFormat)
@@ -70,7 +73,7 @@ static VkFormat GetDepthStencilFormat(const Format depthFormat, const Format& st
     return VK_FORMAT_UNDEFINED;
 }
 
-static void ConvertDepthStencilVkAttachmentDesc(
+static void InitDepthStencilVkAttachmentDesc(
     VkAttachmentDescription&            dst,
     const AttachmentFormatDescriptor&   srcDepth,
     const AttachmentFormatDescriptor&   srcStencil,
@@ -105,17 +108,59 @@ void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescripto
     const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(desc.samples);
     VkAttachmentDescription attachmentDescs[LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS];
 
-    for_range(i, numColorAttachments)
-        ConvertColorVkAttachmentDesc(attachmentDescs[i], desc.colorAttachments[i], sampleCountBits);
-
-    if (hasDepthStencil)
-        ConvertDepthStencilVkAttachmentDesc(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment, sampleCountBits);
-
     if (sampleCountBits > VK_SAMPLE_COUNT_1_BIT)
     {
-        /* Take color attachment format descriptors for multi-sampled attachemnts */
+        /* Initialize color attachment Vulkan descriptors */
         for_range(i, numColorAttachments)
-            ConvertColorVkAttachmentDesc(attachmentDescs[numAttachments + i], desc.colorAttachments[i], VK_SAMPLE_COUNT_1_BIT);
+        {
+            InitColorVkAttachmentDesc(
+                attachmentDescs[i],
+                desc.colorAttachments[i].format,
+                desc.colorAttachments[i].loadOp,
+                desc.colorAttachments[i].storeOp,
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                sampleCountBits
+            );
+        }
+
+        /* Initialize resolve attachment Vulkan descriptors */
+        for_range(i, numColorAttachments)
+        {
+            InitColorVkAttachmentDesc(
+                attachmentDescs[numAttachments + i],
+                desc.colorAttachments[i].format,
+                AttachmentLoadOp::Undefined, // Don't load since resolve will be overridden everytime
+                desc.colorAttachments[i].storeOp,
+                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                VK_SAMPLE_COUNT_1_BIT
+            );
+        }
+    }
+    else
+    {
+        /* Initialize color attachment Vulkan descriptors */
+        for_range(i, numColorAttachments)
+        {
+            InitColorVkAttachmentDesc(
+                attachmentDescs[i],
+                desc.colorAttachments[i].format,
+                desc.colorAttachments[i].loadOp,
+                desc.colorAttachments[i].storeOp,
+                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                sampleCountBits
+            );
+        }
+    }
+
+    if (hasDepthStencil)
+    {
+        /* Initialize depth-stencil attachment Vulkan descriptor */
+        InitDepthStencilVkAttachmentDesc(
+            attachmentDescs[numColorAttachments],
+            desc.depthAttachment,
+            desc.stencilAttachment,
+            sampleCountBits
+        );
     }
 
     /* Create render pass with native attachment descriptors */

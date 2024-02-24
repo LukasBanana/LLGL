@@ -332,6 +332,7 @@ struct ShaderDescriptor
     ShaderDescriptor(const ShaderDescriptor&) = default;
     ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
     #endif
+
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :
         type   { type   },
