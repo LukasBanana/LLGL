@@ -90,9 +90,8 @@ class VKRenderSystem final : public RenderSystem
         VKDevice                                device_;
         VKCommandContext                        context_;
 
-        VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
-
         bool                                    debugLayerEnabled_      = false;
+        VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
         std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
 

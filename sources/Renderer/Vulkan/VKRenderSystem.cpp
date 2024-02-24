@@ -722,8 +722,13 @@ bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 
 void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
 {
+    /* Determine supported Vulkan API version */
+    std::uint32_t instanceVersion = 0;
+    vkEnumerateInstanceVersion(&instanceVersion);
+    LLGL_ASSERT(instanceVersion >= VK_API_VERSION_1_0, "vkEnumerateInstanceVersion(instanceVersion = %u)", instanceVersion);
+
     /* Query instance layer properties */
-    auto layerProperties = VKQueryInstanceLayerProperties();
+    const std::vector<VkLayerProperties> layerProperties = VKQueryInstanceLayerProperties();
     std::vector<const char*> layerNames;
 
     for (const VkLayerProperties& prop : layerProperties)
@@ -733,7 +738,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     }
 
     /* Query instance extension properties */
-    auto extensionProperties = VKQueryInstanceExtensionProperties();
+    const std::vector<VkExtensionProperties> extensionProperties = VKQueryInstanceExtensionProperties();
     std::vector<const char*> extensionNames;
 
     auto IsVKExtSupportIncluded = [this](VKExtSupport extSupport)
@@ -754,54 +759,60 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     }
 
     /* Setup Vulkan instance descriptor */
-    VkInstanceCreateInfo instanceInfo;
-    VkApplicationInfo appInfo;
+    VkInstanceCreateInfo instanceInfo = {};
 
-    instanceInfo.sType                          = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instanceInfo.pNext                          = nullptr;
-    instanceInfo.flags                          = 0;
+    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
     /* Specify application descriptor */
-    if (config != nullptr)
+    VkApplicationInfo appInfo = {};
     {
-        /* Initialize application information struct */
+        appInfo.sType       = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.apiVersion  = instanceVersion;
+        if (config != nullptr)
         {
-            appInfo.sType                       = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-            appInfo.pNext                       = nullptr;
-            appInfo.pApplicationName            = config->application.applicationName;
-            appInfo.applicationVersion          = config->application.applicationVersion;
-            appInfo.pEngineName                 = config->application.engineName;
-            appInfo.engineVersion               = config->application.engineVersion;
-            appInfo.apiVersion                  = VK_API_VERSION_1_0;
+            appInfo.pApplicationName    = config->application.applicationName;
+            appInfo.applicationVersion  = config->application.applicationVersion;
+            appInfo.pEngineName         = config->application.engineName;
+            appInfo.engineVersion       = config->application.engineVersion;
         }
-        instanceInfo.pApplicationInfo           = (&appInfo);
     }
-    else
-        instanceInfo.pApplicationInfo           = nullptr;
+    instanceInfo.pApplicationInfo = (&appInfo);
 
     /* Specify layers to enable  */
-    if (layerNames.empty())
-    {
-        instanceInfo.enabledLayerCount          = 0;
-        instanceInfo.ppEnabledLayerNames        = nullptr;
-    }
-    else
+    if (!layerNames.empty())
     {
         instanceInfo.enabledLayerCount          = static_cast<std::uint32_t>(layerNames.size());
         instanceInfo.ppEnabledLayerNames        = layerNames.data();
     }
 
     /* Specify extensions to enable */
-    if (extensionNames.empty())
-    {
-        instanceInfo.enabledExtensionCount      = 0;
-        instanceInfo.ppEnabledExtensionNames    = nullptr;
-    }
-    else
+    if (!extensionNames.empty())
     {
         instanceInfo.enabledExtensionCount      = static_cast<std::uint32_t>(extensionNames.size());
         instanceInfo.ppEnabledExtensionNames    = extensionNames.data();
     }
+
+    #ifdef VK_EXT_validation_features
+
+    const VkValidationFeatureEnableEXT validationFeaturesEnabled[] =
+    {
+        VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
+        VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT,
+        //VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
+        //VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
+    };
+    VkValidationFeaturesEXT validationFeatures = {};
+
+    /* Enable GPU-assisted validation if debug layer is enabled and Vulkan 1.1 or later is supported */
+    if (debugLayerEnabled_ && instanceVersion >= VK_API_VERSION_1_1)
+    {
+        validationFeatures.sType                            = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+        validationFeatures.enabledValidationFeatureCount    = LLGL_ARRAY_LENGTH(validationFeaturesEnabled);
+        validationFeatures.pEnabledValidationFeatures       = validationFeaturesEnabled;
+        instanceInfo.pNext = &validationFeatures;
+    }
+
+    #endif // /VK_EXT_validation_features
 
     /* Create Vulkan instance */
     VkResult result = vkCreateInstance(&instanceInfo, nullptr, instance_.ReleaseAndGetAddressOf());
