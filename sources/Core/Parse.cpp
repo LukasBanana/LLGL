@@ -11,8 +11,10 @@
 #include <LLGL/Report.h>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <cmath>
 #include "Exception.h"
+#include "StringUtils.h"
 
 
 namespace LLGL
@@ -103,6 +105,14 @@ static void ScanTokens(const char* start, const char* end, ParseContext::TokenAr
             NextToken(s);
         }
     }
+}
+
+static void ReserveAndScanTokens(ParseContext::StringType& source, ParseContext::TokenArrayType& outTokens)
+{
+    /* Reserve token array with average token length */
+    constexpr std::size_t averageTokenLength = 8;
+    outTokens.reserve(source.size() / averageTokenLength);
+    ScanTokens(source.begin(), source.end(), outTokens);
 }
 
 
@@ -295,10 +305,14 @@ bool Parser::Fork(const StringView& matchEnd, Parser& outForkedParser)
 ParseContext::ParseContext(const StringView& source) :
     source_ { source.begin(), source.end() }
 {
-    /* Reserve token array with average token length */
-    constexpr std::size_t averageTokenLength = 8;
-    tokens_.reserve(source_.size() / averageTokenLength);
-    ScanTokens(source_.begin(), source_.end(), tokens_);
+    ReserveAndScanTokens(source_, tokens_);
+}
+
+ParseContext::ParseContext(UTF8String&& source) :
+    data_   { std::move(source)          },
+    source_ { data_.begin(), data_.end() }
+{
+    ReserveAndScanTokens(source_, tokens_);
 }
 
 template <typename T>
@@ -1462,6 +1476,26 @@ TextureSwizzleRGBA ParseContext::AsTextureSwizzleRGBA() const
     swizzle.b = ParseTextureSwizzle(tok, tok[2]);
     swizzle.a = ParseTextureSwizzle(tok, tok[3]);
     return swizzle;
+}
+
+
+/*
+ * Global functions
+ */
+
+LLGL_EXPORT ParseContext Parse(const char* format, ...)
+{
+    if (std::strchr(format, '%') != nullptr)
+    {
+        std::string s;
+        LLGL_STRING_PRINTF(s, format);
+        return ParseContext{ UTF8String{ s.c_str() } };
+    }
+    else
+    {
+        /* Forward string to ParseContext unmodified */
+        return ParseContext{ StringView{ format } };
+    }
 }
 
 

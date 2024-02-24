@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Container/StringView.h>
+#include <LLGL/Container/UTF8String.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/SamplerFlags.h>
@@ -59,7 +60,17 @@ class LLGL_EXPORT ParseContext
         ParseContext(ParseContext&&) = default;
         ParseContext& operator = (ParseContext&&) = default;
 
+        /**
+        \brief Constructs the context with a string view.
+        \remarks This will only keep a weak reference to the source string and that string must be kept alive for the lifetime of this context.
+        */
         explicit ParseContext(const StringView& source);
+
+        /**
+        \brief Constructs the context with a UTF-8 string.
+        \remarks This will take the ownership of the source string.
+        */
+        explicit ParseContext(UTF8String&& source);
 
     public:
 
@@ -299,6 +310,7 @@ class LLGL_EXPORT ParseContext
 
     private:
 
+        UTF8String      data_;
         StringType      source_;
         TokenArrayType  tokens_;
 
@@ -306,12 +318,23 @@ class LLGL_EXPORT ParseContext
 
 /**
 \brief Returns a parse context for the input source code.
+\paramp[in] format Specifies the input string. This is treated just like a \c ::printf input string
+and each token preceeded with a \c '%' character will be substituted with the next variadic argument.
+If no \c '%' character is found in the input string, this parameter is simply forwarded to the ParseContext class.
 \remarks This is only a convenience function for the ParseContext constructor.
 \see ParseContext
 */
-inline ParseContext Parse(const StringView& s)
+LLGL_EXPORT ParseContext Parse(const char* format, ...);
+
+/**
+\brief Returns a parse context for the input source code.
+\paramp[in] s Specifies the input string as string view. This parameter is simply forwarded to the ParseContext class.
+\remarks This is only a convenience function for the ParseContext constructor.
+\see ParseContext
+*/
+inline LLGL_EXPORT ParseContext Parse(const StringView& s)
 {
-    return ParseContext{ s };
+    return ParseContext{ UTF8String{ s } };
 }
 
 /** @} */
