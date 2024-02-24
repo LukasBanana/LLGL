@@ -85,7 +85,7 @@ DEF_TEST( ShadowMapping )
             passDesc.colorAttachments[0].storeOp    = AttachmentStoreOp::Store;
             passDesc.depthAttachment.format         = swapChain->GetDepthStencilFormat();
             passDesc.depthAttachment.loadOp         = AttachmentLoadOp::Undefined; // Don't care about previous framebuffer depth, it'll be cleared anyway
-            passDesc.depthAttachment.storeOp        = AttachmentStoreOp::Undefined;
+            passDesc.depthAttachment.storeOp        = AttachmentStoreOp::Store;
 
             passDesc.stencilAttachment.format       = swapChain->GetDepthStencilFormat(); //TODO: currently required for Metal backend
         }
@@ -269,14 +269,18 @@ DEF_TEST( ShadowMapping )
     auto DrawScene = [this, &TransformWorldMatrix, &DrawTriangleMesh, &sceneConstants](const ColorRGBf& bgColor, float cubeRotation)
     {
         // Draw background
+        cmdBuffer->PushDebugGroup("Background Plane");
         sceneConstants.solidColor = { bgColor.r, bgColor.g, bgColor.b, 1.0f };
         TransformWorldMatrix(sceneConstants.wMatrix, 0.0f, 0.0f, 6.0f, 10.0f, 0.0f);
         DrawTriangleMesh(models[ModelRect]);
+        cmdBuffer->PopDebugGroup();
 
         for (int y = 0; y < 2; ++y)
         {
             for (int x = 0; x < 2; ++x)
             {
+                const std::string meshLabel = "Cube(" + std::to_string(x) + "," + std::to_string(y) + ")";
+                cmdBuffer->PushDebugGroup(meshLabel.c_str());
                 TransformWorldMatrix(
                     sceneConstants.wMatrix,
                     Gs::Lerp(-2.0f, +2.0f, static_cast<float>(x)),
@@ -284,13 +288,16 @@ DEF_TEST( ShadowMapping )
                     6.0f, 0.5f, 0.0f
                 );
                 DrawTriangleMesh(models[ModelCube]);
+                cmdBuffer->PopDebugGroup();
             }
         }
 
         // Draw box in the front
+        cmdBuffer->PushDebugGroup("Front Cube");
         sceneConstants.solidColor = { 1.0f, 1.0f, 0.5f, 1.0f };
         TransformWorldMatrix(sceneConstants.wMatrix, 1.0f, 1.0f, 3.0f, 0.5f, cubeRotation);
         DrawTriangleMesh(models[ModelCube]);
+        cmdBuffer->PopDebugGroup();
     };
 
     // Render scene
@@ -315,8 +322,13 @@ DEF_TEST( ShadowMapping )
 
         for (std::size_t i = 0; i < sizeof(viewportConfigs)/sizeof(viewportConfigs[0]); ++i)
         {
+            const std::string viewportLabel = "Viewport[" + std::to_string(i) + "]";
+            cmdBuffer->PushDebugGroup(viewportLabel.c_str());
+
             // Render shadow map
             //cmdBuffer->SetPipelineState(*resources.pso); //TODO: does not bind the correct shader pipeline in GL outside a render pass
+
+            cmdBuffer->PushDebugGroup("ShadowMap");
             cmdBuffer->BeginRenderPass(*resources.target);
             {
                 // Draw scene
@@ -326,10 +338,12 @@ DEF_TEST( ShadowMapping )
                 DrawScene(viewportConfigs[i].bgColor, viewportConfigs[i].cubeRotation);
             }
             cmdBuffer->EndRenderPass();
+            cmdBuffer->PopDebugGroup();
 
             // Render scene and use custom render pass to preserve framebuffer content (AttachmentLoadOp::Load)
+            cmdBuffer->PushDebugGroup("SwapChain");
             //cmdBuffer->SetPipelineState(*psoScene); //TODO: does not bind the correct shader pipeline in GL outside a render pass
-            cmdBuffer->BeginRenderPass(*swapChain, loadContentRenderPass);
+            cmdBuffer->BeginRenderPass(*swapChain, (i > 0 ? loadContentRenderPass : nullptr));
             {
                 // Draw scene
                 cmdBuffer->Clear(ClearFlags::Depth); //NOTE: can be replaced by render pass clear
@@ -341,6 +355,9 @@ DEF_TEST( ShadowMapping )
                 DrawScene(viewportConfigs[i].bgColor, viewportConfigs[i].cubeRotation);
             }
             cmdBuffer->EndRenderPass();
+            cmdBuffer->PopDebugGroup();
+
+            cmdBuffer->PopDebugGroup();
         }
 
         // Capture framebuffer
