@@ -50,7 +50,7 @@ static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDev
 
 VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
-    VKDevice&                       device,
+    VkDevice                        device,
     VkQueue                         commandQueue,
     const QueueFamilyIndices&       queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
@@ -64,9 +64,9 @@ VKCommandBuffer::VKCommandBuffer(
     recordingFenceArray_    { VKPtr<VkFence>{ device, vkDestroyFence },
                               VKPtr<VkFence>{ device, vkDestroyFence },
                               VKPtr<VkFence>{ device, vkDestroyFence }      },
-    descriptorSetPoolArray_ { device.GetVkDevice().Get(),
-                              device.GetVkDevice().Get(),
-                              device.GetVkDevice().Get()                    }
+    descriptorSetPoolArray_ { device,
+                              device,
+                              device                                        }
 {
     /* Translate creation flags */
     if ((desc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
@@ -81,7 +81,7 @@ VKCommandBuffer::VKCommandBuffer(
             bufferLevel_ = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
             if (desc.renderPass != nullptr)
             {
-                auto renderPassVK = LLGL_CAST(const VKRenderPass*, desc.renderPass);
+                auto* renderPassVK = LLGL_CAST(const VKRenderPass*, desc.renderPass);
                 renderPass_ = renderPassVK->GetVkRenderPass();
                 usageFlags_ |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
             }
@@ -199,8 +199,8 @@ void VKCommandBuffer::UpdateBuffer(
 {
     auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
 
-    auto size   = static_cast<VkDeviceSize>(dataSize);
-    auto offset = static_cast<VkDeviceSize>(dstOffset);
+    const VkDeviceSize size     = static_cast<VkDeviceSize>(dataSize);
+    const VkDeviceSize offset   = static_cast<VkDeviceSize>(dstOffset);
 
     if (IsInsideRenderPass())
     {
@@ -570,7 +570,7 @@ void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
     if (boundPipelineLayout_ != nullptr && descriptor < boundPipelineLayout_->GetLayoutDynamicBindings().size())
     {
-        const auto& binding = boundPipelineLayout_->GetLayoutDynamicBindings()[descriptor];
+        const VKLayoutBinding& binding = boundPipelineLayout_->GetLayoutDynamicBindings()[descriptor];
         descriptorCache_->EmplaceDescriptor(resource, binding, descriptorSetWriter_);
     }
 }
@@ -633,7 +633,7 @@ void VKCommandBuffer::BeginRenderPass(
     if (renderPass != nullptr)
     {
         /* Get native VkRenderPass object */
-        auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
+        auto* renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
         renderPass_ = renderPassVK->GetVkRenderPass();
         ConvertRenderPassClearValues(*renderPassVK, numClearValuesVK, clearValuesVK, numClearValues, clearValues);
     }
@@ -703,7 +703,7 @@ void VKCommandBuffer::Clear(long flags, const ClearValue& clearValue)
         numAttachments = std::min(numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
         for_range(i, numAttachments)
         {
-            auto& attachment = attachments[i];
+            VkClearAttachment& attachment = attachments[i];
             {
                 attachment.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
                 attachment.colorAttachment  = i;
@@ -715,7 +715,7 @@ void VKCommandBuffer::Clear(long flags, const ClearValue& clearValue)
     /* Fill clear descriptor for depth-stencil attachment */
     if ((flags & ClearFlags::DepthStencil) != 0 && hasDepthStencilAttachment_)
     {
-        auto& attachment = attachments[numAttachments++];
+        VkClearAttachment& attachment = attachments[numAttachments++];
         {
             attachment.aspectMask                       = GetDepthStencilAspectMask(flags);
             attachment.colorAttachment                  = 0; // ignored
@@ -737,8 +737,8 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 
     for_range(i, std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS))
     {
-        auto& dst = attachmentsVK[numAttachmentsVK];
-        const auto& src = attachments[i];
+        VkClearAttachment& dst = attachmentsVK[numAttachmentsVK];
+        const AttachmentClear& src = attachments[i];
 
         if ((src.flags & ClearFlags::Color) != 0)
         {
@@ -788,7 +788,7 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         /* Scissor rectangle must be updated (if scissor test is disabled) */
         scissorEnabled_ = graphicsPSO.IsScissorEnabled();
-        if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor() && (usageFlags_ & VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT) == 0)
+        if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor())
         {
             /* Set scissor to render target resolution */
             vkCmdSetScissor(commandBuffer_, 0, 1, &framebufferRenderArea_);
@@ -1210,12 +1210,12 @@ void VKCommandBuffer::ConvertRenderPassClearValues(
         if (((clearValuesMask >> i) & 0x1ull) != 0)
         {
             /* Select destination Vulkan clear value */
-            auto& dst = dstClearValues[i];
+            VkClearValue& dst = dstClearValues[i];
 
             if (srcIndex < srcClearValuesCount)
             {
                 /* Set specified clear parameter */
-                const auto& src = srcClearValues[srcIndex++];
+                const ClearValue& src = srcClearValues[srcIndex++];
                 if (i == depthStencilIndex)
                     ToVkClearDepthStencil(dst.depthStencil, src.depth, src.stencil);
                 else

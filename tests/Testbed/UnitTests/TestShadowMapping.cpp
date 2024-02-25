@@ -333,7 +333,7 @@ DEF_TEST( ShadowMapping )
             {
                 // Draw scene
                 cmdBuffer->Clear(ClearFlags::Depth);
-                cmdBuffer->SetPipelineState(*resources.pso); //TODO: move outside render pass
+                cmdBuffer->SetPipelineState(*resources.pso); //TODO: move outside render pass (not working with GL)
                 cmdBuffer->SetResource(0, *shadowCbuffer);
                 DrawScene(viewportConfigs[i].bgColor, viewportConfigs[i].cubeRotation);
             }

@@ -23,7 +23,6 @@ namespace LLGL
 {
 
 
-class VKDevice;
 class VKPhysicalDevice;
 class VKResourceHeap;
 class VKRenderPass;
@@ -42,7 +41,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         VKCommandBuffer(
             const VKPhysicalDevice&         physicalDevice,
-            VKDevice&                       device,
+            VkDevice                        device,
             VkQueue                         commandQueue,
             const QueueFamilyIndices&       queueFamilyIndices,
             const CommandBufferDescriptor&  desc
@@ -136,7 +135,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         static constexpr std::uint32_t maxNumCommandBuffers = 3;
 
-        VKDevice&                       device_;
+        VkDevice                        device_                     = VK_NULL_HANDLE;
 
         VkQueue                         commandQueue_               = VK_NULL_HANDLE;
 
