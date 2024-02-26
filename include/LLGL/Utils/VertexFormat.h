@@ -59,7 +59,7 @@ struct VertexFormat
         std::uint32_t stride = 0;
 
         for (const auto& attr : attributes)
-            stride = (std::max)(stride, attr.offset + attr.GetSize());
+            stride = std::max(stride, attr.offset + attr.GetSize());
 
         SetStride(stride);
     }

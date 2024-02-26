@@ -131,8 +131,8 @@ LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args
 
 struct FormattedTableColumn
 {
-    unsigned                maxWidth        = -1;
-    unsigned                multiLineIndent = 0; // Number of blanks for each multi-line cell
+    std::uint32_t           maxWidth        = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t           multiLineIndent = 0; // Number of blanks for each multi-line cell
     ArrayView<UTF8String>   cells;
 };
 
