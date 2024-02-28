@@ -143,6 +143,8 @@ class DbgCommandBuffer final : public CommandBuffer
         // Returns true if this command buffer inherits its state from a primary command buffer.
         bool IsInheritedCmdBuffer() const;
 
+        void SetAndValidateScissorRects(std::uint32_t numScissors, const Scissor* scissors);
+
     private:
 
         struct SwapChainFramePair
@@ -195,6 +197,8 @@ class DbgCommandBuffer final : public CommandBuffer
             const DbgShader*        vertexShader                            = nullptr;
             bool                    blendFactorSet                          = false;
             bool                    stencilRefSet                           = false;
+            Scissor                 scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
+            std::uint32_t           numScissorRects                         = 0;
 
             struct BindingTable
             {

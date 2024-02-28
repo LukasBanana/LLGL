@@ -425,8 +425,13 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
 
 void DbgCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    LLGL_DBG_SOURCE();
-    AssertRecording();
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE();
+        AssertRecording();
+        SetAndValidateScissorRects(1, &scissor);
+    }
+
     LLGL_DBG_COMMAND( "SetScissor", instance.SetScissor(scissor) );
 }
 
@@ -437,6 +442,7 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
         LLGL_DBG_SOURCE();
         AssertRecording();
         LLGL_DBG_ASSERT_PTR(scissors);
+        SetAndValidateScissorRects(numScissors, scissors);
         if (numScissors == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no scissor rectangles are specified");
     }
@@ -2205,6 +2211,17 @@ void DbgCommandBuffer::ValidateDynamicStates()
             " or PSO must be created with 'LLGL::StencilDescriptor::referenceDynamic' being disabled"
         );
     }
+    if (DbgPipelineState* piplineStateDbg = bindings_.pipelineState)
+    {
+        const GraphicsPipelineDescriptor& graphicsPSODesc = piplineStateDbg->graphicsDesc;
+        if (graphicsPSODesc.rasterizer.scissorTestEnabled && graphicsPSODesc.scissors.empty() && bindings_.numScissorRects == 0)
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperState,
+                "dynamic scissor test enabled but no scissor rectangles set"
+            );
+        }
+    }
 }
 
 void DbgCommandBuffer::ValidateBindingTable()
@@ -2367,9 +2384,9 @@ void DbgCommandBuffer::WarnImproperVertices(const char* topologyName, std::uint3
 void DbgCommandBuffer::ResetStates()
 {
     /* Reset all counters of frame profile, bindings, and other command buffer states */
-    profile_ = {};
-    std::memset(&bindings_, 0, sizeof(bindings_));
-    std::memset(&states_, 0, sizeof(states_));
+    profile_    = {};
+    bindings_   = {};
+    states_     = {};
 }
 
 void DbgCommandBuffer::ResetRecords()
@@ -2414,6 +2431,39 @@ void DbgCommandBuffer::EndTimer()
 bool DbgCommandBuffer::IsInheritedCmdBuffer() const
 {
     return ((desc.flags & CommandBufferFlags::Secondary) != 0 && desc.renderPass != nullptr);
+}
+
+void DbgCommandBuffer::SetAndValidateScissorRects(std::uint32_t numScissors, const Scissor* scissors)
+{
+    /* Set new scissors, reset remaining scissors to zero, and store new number of scissors */
+    if (numScissors > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot set more than LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS (%u) scissor rectangles, but %u was specified",
+            LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS, numScissors
+        );
+        numScissors = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
+    }
+
+    for_range(i, numScissors)
+    {
+        bindings_.scissorRects[i] = scissors[i];
+        if (scissors[i].x < INT16_MIN || scissors[i].y < INT16_MIN ||
+            scissors[i].width > INT16_MAX || scissors[i].height > INT16_MAX)
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "scissor rectangle [%u] potentially out of bounds: { x = %d, y = %d, width = %d, height = %d }",
+                i, scissors[i].x, scissors[i].y, scissors[i].width, scissors[i].height
+            );
+        }
+    }
+
+    for_subrange(i, numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
+        bindings_.scissorRects[i] = {};
+
+    bindings_.numScissorRects = numScissors;
 }
 
 

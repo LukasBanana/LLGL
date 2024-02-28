@@ -47,14 +47,14 @@ std::uint32_t D3D11PipelineLayout::GetNumUniforms() const
 void D3D11PipelineLayout::BindGraphicsStaticSamplers(D3D11StateManager& stateMngr) const
 {
     /* Bind static samplers one-by-one to graphics pipeline */
-    for (const auto& staticSampler : staticSamplers_)
+    for (const D3D11StaticSampler& staticSampler : staticSamplers_)
         stateMngr.SetGraphicsStaticSampler(staticSampler);
 }
 
 void D3D11PipelineLayout::BindComputeStaticSamplers(D3D11StateManager& stateMngr) const
 {
     /* Bind static samplers one-by-one to graphics pipeline */
-    for (const auto& staticSampler : staticSamplers_)
+    for (const D3D11StaticSampler& staticSampler : staticSamplers_)
         stateMngr.SetComputeStaticSampler(staticSampler);
 }
 
@@ -95,7 +95,7 @@ static D3DResourceType ToD3DResourceType(const BindingDescriptor& desc)
 void D3D11PipelineLayout::BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs)
 {
     bindings_.reserve(bindingDescs.size());
-    for (const auto& desc : bindingDescs)
+    for (const BindingDescriptor& desc : bindingDescs)
         bindings_.push_back(D3D11PipelineResourceBinding{ ToD3DResourceType(desc), desc.slot.index, desc.stageFlags });
 }
 
@@ -111,7 +111,7 @@ void D3D11PipelineLayout::BuildStaticSamplers(ID3D11Device* device, const std::v
 {
     D3D11_SAMPLER_DESC nativeDesc;
     staticSamplers_.reserve(staticSamplerDescs.size());
-    for (const auto& desc : staticSamplerDescs)
+    for (const StaticSamplerDescriptor& desc : staticSamplerDescs)
     {
         D3D11Sampler::ConvertDesc(nativeDesc, desc.sampler);
         staticSamplers_.push_back(D3D11StaticSampler{ desc.slot.index, desc.stageFlags, DXCreateSamplerState(device, nativeDesc) });
