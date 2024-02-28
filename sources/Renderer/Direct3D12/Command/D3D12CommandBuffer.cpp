@@ -1076,26 +1076,31 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
     dsvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 }
 
+static constexpr D3D12_RECT g_maxViewportBoundsD3D =
+{
+    D3D12_VIEWPORT_BOUNDS_MIN, D3D12_VIEWPORT_BOUNDS_MIN, D3D12_VIEWPORT_BOUNDS_MAX, D3D12_VIEWPORT_BOUNDS_MAX
+};
+
+static constexpr D3D12_RECT g_maxViewportBoundsD3DArray[] =
+{
+    g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D,
+    g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D,
+    g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D,
+    g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D, g_maxViewportBoundsD3D,
+};
+
+static_assert(
+    sizeof(g_maxViewportBoundsD3DArray)/sizeof(g_maxViewportBoundsD3DArray[0]) == D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE,
+    "g_maxViewportBoundsD3DArray must have D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE elements"
+);
+
 void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
 {
     numScissorRects = std::min(numScissorRects, UINT(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
-
     if (numScissorRects > numBoundScissorRects_)
     {
-        /* Set scissor to render target resolution */
-        D3D12_RECT scissorRects[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-
-        for_range(i, numScissorRects)
-        {
-            scissorRects[i].left    = D3D12_VIEWPORT_BOUNDS_MIN;
-            scissorRects[i].top     = D3D12_VIEWPORT_BOUNDS_MIN;
-            scissorRects[i].right   = D3D12_VIEWPORT_BOUNDS_MAX;
-            scissorRects[i].bottom  = D3D12_VIEWPORT_BOUNDS_MAX;
-        }
-
-        commandList_->RSSetScissorRects(numScissorRects, scissorRects);
-
-        /* Store new number of bound scissor rectangles */
+        /* Set scissor to maximum viewport boundary and store new number of scissor rectangles to avoid unnecessary updates */
+        commandList_->RSSetScissorRects(numScissorRects, g_maxViewportBoundsD3DArray);
         numBoundScissorRects_ = numScissorRects;
     }
 }
