@@ -116,7 +116,7 @@ DEF_TEST( ShadowMapping )
         {
             if (report->HasErrors())
             {
-                Log::Errorf("scene PSO creation failed:\n%s", report->GetText());
+                Log::Errorf("Scene PSO creation failed:\n%s", report->GetText());
                 return TestResult::FailedErrors;
             }
         }
@@ -195,7 +195,7 @@ DEF_TEST( ShadowMapping )
         {
             if (report->HasErrors())
             {
-                Log::Errorf("shadow map PSO creation failed:\n%s", report->GetText());
+                Log::Errorf("Shadow map PSO creation failed:\n%s", report->GetText());
                 return TestResult::FailedErrors;
             }
         }

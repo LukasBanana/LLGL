@@ -331,6 +331,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( TextureViews                );
     RUN_TEST( Uniforms                    );
     RUN_TEST( ShadowMapping               );
+    RUN_TEST( ViewportAndScissor          );
 
     #undef RUN_TEST
 
