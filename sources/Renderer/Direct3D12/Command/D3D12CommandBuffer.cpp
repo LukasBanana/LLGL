@@ -448,7 +448,7 @@ void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport
         commandList_->RSSetViewports(numViewports, viewportsD3D);
     }
 
-    /* If scissor test is disabled, update remaining scissor rectangles to default value */
+    /* If scissor test is disabled, set scissor rectangles to default value alongside viewports */
     if (!scissorEnabled_)
         SetScissorRectsToDefault(numViewports);
 }
@@ -476,6 +476,9 @@ void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* s
     }
 
     commandList_->RSSetScissorRects(numScissors, scissorsD3D);
+
+    /* Invalidate previously bound default scissor rectangles */
+    numDefaultScissorRects_ = 0;
 }
 
 /* ----- Clear ----- */
@@ -1097,11 +1100,11 @@ static_assert(
 void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
 {
     numScissorRects = std::min(numScissorRects, UINT(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
-    if (numScissorRects > numBoundScissorRects_)
+    if (numScissorRects > numDefaultScissorRects_)
     {
         /* Set scissor to maximum viewport boundary and store new number of scissor rectangles to avoid unnecessary updates */
         commandList_->RSSetScissorRects(numScissorRects, g_maxViewportBoundsD3DArray);
-        numBoundScissorRects_ = numScissorRects;
+        numDefaultScissorRects_ = numScissorRects;
     }
 }
 
@@ -1252,7 +1255,7 @@ void D3D12CommandBuffer::ClearDepthStencilView(
 
 void D3D12CommandBuffer::ResetBindingStates()
 {
-    numBoundScissorRects_   = 0;
+    numDefaultScissorRects_ = 0;
     numSOBuffers_           = 0;
     boundRenderTarget_      = nullptr;
     boundSwapChain_         = nullptr;

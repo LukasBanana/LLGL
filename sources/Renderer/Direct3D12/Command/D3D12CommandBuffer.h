@@ -122,7 +122,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         UINT                            dsvDescSize_                                = 0;
 
         bool                            scissorEnabled_                             = false;
-        UINT                            numBoundScissorRects_                       = 0;
+        UINT                            numDefaultScissorRects_                     = 0;
         UINT                            numColorBuffers_                            = 0;
         UINT                            currentColorBuffer_                         = 0;
         UINT                            numSOBuffers_                               = 0;
