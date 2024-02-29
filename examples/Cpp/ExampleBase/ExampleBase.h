@@ -163,7 +163,7 @@ protected:
     friend class ResizeEventHandler;
 
     // Default background color for all tutorials
-    const float                                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f };
+    const float                                 backgroundColor[4]  = { 0.1f, 0.1f, 0.4f, 1.0f };
 
     // Render system
     LLGL::RenderSystemPtr                       renderer;
@@ -329,29 +329,26 @@ protected:
     template <typename Container>
     LLGL::Buffer* CreateVertexBuffer(const Container& vertices, const LLGL::VertexFormat& vertexFormat)
     {
-        return renderer->CreateBuffer(
-            LLGL::VertexBufferDesc(GetArraySize(vertices), vertexFormat),
-            &vertices[0]
-        );
+        LLGL::BufferDescriptor bufferDesc = LLGL::VertexBufferDesc(GetArraySize(vertices), vertexFormat);
+        bufferDesc.debugName = "VertexBuffer";
+        return renderer->CreateBuffer(bufferDesc, &vertices[0]);
     }
 
     template <typename Container>
     LLGL::Buffer* CreateIndexBuffer(const Container& indices, const LLGL::Format format)
     {
-        return renderer->CreateBuffer(
-            LLGL::IndexBufferDesc(GetArraySize(indices), format),
-            &indices[0]
-        );
+        LLGL::BufferDescriptor bufferDesc = LLGL::IndexBufferDesc(GetArraySize(indices), format);
+        bufferDesc.debugName = "IndexBuffer";
+        return renderer->CreateBuffer(bufferDesc, &indices[0]);
     }
 
     template <typename T>
     LLGL::Buffer* CreateConstantBuffer(const T& initialData)
     {
         static_assert(!std::is_pointer<T>::value, "buffer type must not be a pointer");
-        return renderer->CreateBuffer(
-            LLGL::ConstantBufferDesc(sizeof(T)),
-            &initialData
-        );
+        LLGL::BufferDescriptor bufferDesc = LLGL::ConstantBufferDesc(sizeof(T));
+        bufferDesc.debugName = "ConstantBuffer";
+        return renderer->CreateBuffer(bufferDesc, &initialData);
     }
 
 };

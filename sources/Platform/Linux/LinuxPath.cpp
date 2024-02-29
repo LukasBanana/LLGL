@@ -28,7 +28,7 @@ LLGL_EXPORT UTF8String GetWorkingDir()
     return UTF8String{ ::getcwd(path, sizeof(path)) };
 }
 
-LLGL_EXPORT UTF8String GetAbsolutePath(const StringView& filename)
+LLGL_EXPORT UTF8String GetAbsolutePath(const UTF8String& filename)
 {
     return Combine(GetWorkingDir(), filename);
 }

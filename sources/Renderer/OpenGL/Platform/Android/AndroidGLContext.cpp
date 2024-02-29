@@ -24,11 +24,11 @@ namespace LLGL
 LLGL_ASSERT_STDLAYOUT_STRUCT( OpenGL::RenderSystemNativeHandle );
 
 std::unique_ptr<GLContext> GLContext::Create(
-    const GLPixelFormat&                    pixelFormat,
-    const RendererConfigurationOpenGL&      profile,
-    Surface&                                surface,
-    GLContext*                              sharedContext,
-    const OpenGL::RenderSystemNativeHandle* customNativeHandle)
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
+    Surface&                            surface,
+    GLContext*                          sharedContext,
+    const ArrayView<char>&              /*customNativeHandle*/)
 {
     AndroidGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(AndroidGLContext*, sharedContext) : nullptr);
     return MakeUnique<AndroidGLContext>(pixelFormat, profile, surface, sharedContextEGL);

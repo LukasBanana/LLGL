@@ -70,7 +70,18 @@ AndroidModule::AndroidModule(const char* moduleFilename, Report* report)
 
     /* Check if loading has failed */
     if (!handle_ && report != nullptr)
+    {
+        /* Append error message from most recent call to 'dlopen' */
+        std::string appendix;
+        if (const char* err = dlerror())
+        {
+            appendix += "; ";
+            appendix += err;
+        }
+
+        /* Throw error message */
         report->Errorf("failed to load shared library (SO): \"%s\"%s\n", moduleFilename, appendix.c_str());
+    }
 }
 
 AndroidModule::~AndroidModule()

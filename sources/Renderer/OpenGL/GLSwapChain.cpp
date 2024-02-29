@@ -8,8 +8,9 @@
 #include "GLSwapChain.h"
 #include "../TextureUtils.h"
 #include "Platform/GLContextManager.h"
+#include <LLGL/Platform/Platform.h>
 
-#ifdef __linux__
+#ifdef LLGL_OS_LINUX
 #include <LLGL/Platform/NativeHandle.h>
 #endif
 
@@ -32,7 +33,7 @@ GLSwapChain::GLSwapChain(
     pixelFormat.stencilBits = desc.stencilBits;
     pixelFormat.samples     = static_cast<int>(GetClampedSamples(desc.samples));
 
-    #ifdef __linux__
+    #ifdef LLGL_OS_LINUX
 
     /* Set up surface for the swap-chain and pass native context handle */
     NativeHandle windowContext = {};

@@ -15,7 +15,6 @@ namespace LLGL
 {
 
 
-
 /*
  * Surface class
  */
@@ -42,7 +41,7 @@ bool Surface::ProcessEvents()
 
             /* Check if we are exiting */
             if (appState->destroyRequested != 0)
-                PostQuit();
+                return false;
         }
         return true;
     }

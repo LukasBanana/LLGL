@@ -514,13 +514,22 @@ else()
         endif()
     elseif(UNIX)
         if(LLGL_ANDROID_PLATFORM)
-            find_source_files(FilesPlatform         CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Android" "${PlatformPosixDir}")
+            find_source_files(FilesPlatform         CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Android")
             find_source_files(FilesIncludePlatform  CXX     "${PROJECT_INCLUDE_DIR}/LLGL/Platform/Android")
         else()
             find_source_files(FilesPlatform         CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Linux" "${PlatformPosixDir}")
             find_source_files(FilesIncludePlatform  CXX     "${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux")
         endif()
     endif()
+endif()
+
+if(LLGL_ANDROID_PLATFORM)
+    set(ANDROID_APP_GLUE_DIR "$ENV{ANDROID_NDK_ROOT}/sources/android/native_app_glue")
+    set(
+        FilesAndroidNativeAppGlue
+        "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c"
+        "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h"
+    )
 endif()
 
 
@@ -552,12 +561,20 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     source_group("Sources\\Renderer\\DebugLayer\\Texture"       FILES ${FilesRendererDbgTexture})
 endif()
 
+if(LLGL_ANDROID_PLATFORM)
+    source_group("native_app_glue" FILES ${FilesAndroidNativeAppGlue})
+endif()
+
 
 # === Include directories ===
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 
 include("${EXTERNAL_MODULE_DIR}/FindGaussianLib.cmake")
+
+if(LLGL_ANDROID_PLATFORM)
+    include_directories(${ANDROID_APP_GLUE_DIR})
+endif(LLGL_ANDROID_PLATFORM)
 
 
 # === Projects ===
@@ -624,7 +641,8 @@ target_include_directories(LLGL INTERFACE
                            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 if(LLGL_ANDROID_PLATFORM)
-    target_link_libraries(LLGL android log)
+    add_library(android_native_app_glue STATIC ${FilesAndroidNativeAppGlue})
+    target_link_libraries(LLGL android log android_native_app_glue)
 elseif(LLGL_IOS_PLATFORM)
     target_link_libraries(LLGL PUBLIC "-framework Foundation -framework UIKit")
 elseif(APPLE)
@@ -640,6 +658,10 @@ endif()
 set_property(GLOBAL PROPERTY LLGL_GLOBAL_MODULE_LIST LLGL)
 
 set_llgl_module_properties(LLGL)
+
+if(LLGL_ANDROID_PLATFORM)
+    append_global_property(LLGL_GLOBAL_MODULE_LIST None android_native_app_glue)
+endif()
 
 if(LLGL_BUILD_RENDERER_NULL)
     add_subdirectory(sources/Renderer/Null)

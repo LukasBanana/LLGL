@@ -15,14 +15,7 @@ project(LLGL_ExamplesCpp)
 # Example project files
 find_source_files(FilesExampleBase CXX "${EXAMPLEBASE_PROJECT_DIR}")
 
-if(LLGL_ANDROID_PLATFORM)
-    set(ANDROID_APP_GLUE_DIR "$ENV{ANDROID_NDK_ROOT}/sources/android/native_app_glue")
-    set(
-        FilesAndroidNativeAppGlue
-        "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.c"
-        "${ANDROID_APP_GLUE_DIR}/android_native_app_glue.h"
-    )
-elseif(LLGL_IOS_PLATFORM)
+if(LLGL_IOS_PLATFORM)
     find_source_files(FilesExampleBaseIOS OBJC "${EXAMPLEBASE_PROJECT_DIR}/iOS")
 endif()
 
@@ -109,9 +102,7 @@ endif()
 
 source_group("Sources" FILES ${FilesExampleBase})
 
-if(LLGL_ANDROID_PLATFORM)
-    source_group("android_native_app_glue" FILES ${FilesAndroidNativeAppGlue})
-elseif(LLGL_IOS_PLATFORM)
+if(LLGL_IOS_PLATFORM)
     source_group("Sources\\iOS" FILES ${FilesExampleBaseIOS})
 endif()
 
@@ -140,9 +131,7 @@ if(LLGL_BUILD_EXAMPLES)
     
     # Native "app glue" for Android examples
     if(LLGL_ANDROID_PLATFORM)
-        add_library(android_native_app_glue STATIC ${FilesAndroidNativeAppGlue})
         target_link_libraries(ExampleBase android_native_app_glue)
-        include_directories(${ANDROID_APP_GLUE_DIR})
     endif(LLGL_ANDROID_PLATFORM)
     
     set(EXAMPLE_PROJECT_LIBS ExampleBase ${LLGL_MODULE_LIBS})
@@ -160,8 +149,6 @@ if(LLGL_BUILD_EXAMPLES)
     add_llgl_example_project(Example_HelloTriangle      CXX "${FilesExample_HelloTriangle}"     "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_Instancing         CXX "${FilesExample_Instancing}"        "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_Mapping            CXX "${FilesExample_Mapping}"           "${EXAMPLE_PROJECT_LIBS}")
-    add_llgl_example_project(Example_MultiContext       CXX "${FilesExample_MultiContext}"      "${EXAMPLE_PROJECT_LIBS}")
-    add_llgl_example_project(Example_MultiRenderer      CXX "${FilesExample_MultiRenderer}"     "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_MultiThreading     CXX "${FilesExample_MultiThreading}"    "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_PBR                CXX "${FilesExample_PBR}"               "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_PostProcessing     CXX "${FilesExample_PostProcessing}"    "${EXAMPLE_PROJECT_LIBS}")
@@ -174,6 +161,12 @@ if(LLGL_BUILD_EXAMPLES)
     add_llgl_example_project(Example_Tessellation       CXX "${FilesExample_Tessellation}"      "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_Texturing          CXX "${FilesExample_Texturing}"         "${EXAMPLE_PROJECT_LIBS}")
     add_llgl_example_project(Example_VolumeRendering    CXX "${FilesExample_VolumeRendering}"   "${EXAMPLE_PROJECT_LIBS}")
+    
+    # Desktop specific examples
+    if(NOT LLGL_MOBILE_PLATFORM)
+        add_llgl_example_project(Example_MultiContext   CXX "${FilesExample_MultiContext}"      "${EXAMPLE_PROJECT_LIBS}")
+        add_llgl_example_project(Example_MultiRenderer  CXX "${FilesExample_MultiRenderer}"     "${EXAMPLE_PROJECT_LIBS}")
+    endif()
 endif(LLGL_BUILD_EXAMPLES)
 
 

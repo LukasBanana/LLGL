@@ -9,10 +9,17 @@ if [ "$#" -gt 2 ]; then
     exit 1
 fi
 
-# Check if environment variable "ANDROID_NDK_HOME" is set
+# Check if environment variable "ANDROID_NDK_HOME" or "ANDROID_NDK_ROOT" is set
+NDK_ROOT=""
 if [ -z "$ANDROID_NDK_HOME" ]; then
-    echo "error: environemnt variable 'ANDROID_NDK_HOME' not set"
-    exit 1
+    if [ -z "$ANDROID_NDK_ROOT" ]; then
+        echo "error: neither environment variable 'ANDROID_NDK_HOME' nor 'ANDROID_NDK_ROOT' are set"
+        exit 1
+    else
+        NDK_ROOT="$ANDROID_NDK_ROOT"
+    fi
+else
+    NDK_ROOT="$ANDROID_NDK_HOME"
 fi
 
 # Store intermediate variables
@@ -21,7 +28,7 @@ ANDROID_ABI=x86_64
 ANDROID_API_LEVEL=21
 SOURCE_DIR="."
 BUILD_DIR="build_android"
-ANDROID_CMAKE_TOOLCHAIN="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake"
+ANDROID_CMAKE_TOOLCHAIN="${NDK_ROOT}/build/cmake/android.toolchain.cmake"
 
 if [ "$#" -ge 1 ]; then
     BUILD_DIR=$1
@@ -62,7 +69,7 @@ cmake "$RELATIVE_SOURCE_DIR" \
     -DLLGL_BUILD_RENDERER_OPENGLES3=ON \
     -DLLGL_BUILD_TESTS=ON \
     -DLLGL_BUILD_EXAMPLES=ON \
-    -DGaussLib_INCLUDE_DIR="/home/lh/Development/Projects/GaussianLib/repo/include" \
+    -DGaussLib_INCLUDE_DIR="${RELATIVE_SOURCE_DIR}/external/GaussianLib/include" \
     -DLLGL_BUILD_STATIC_LIB=OFF \
     -DLLGL_TARGET_PLATFORM=Android \
     -G "CodeBlocks - Unix Makefiles"

@@ -18,11 +18,16 @@
 #endif
 #include <LLGL/Utils/ForRange.h>
 #include <functional>
+#include <string>
+#include <map>
 
 
 namespace LLGL
 {
 
+
+// OpenGLES extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successully.
+using GLESExtensionMap = std::map<std::string, bool>;
 
 /* --- Internal functions --- */
 
@@ -79,9 +84,9 @@ static bool DECL_LOADGLEXT_PROC(GL_ARB_compute_shader)
 
 /* --- Common extension loading functions --- */
 
-static GLExtensionList QuerySupportedOpenGLExtensions(bool coreProfile)
+static GLESExtensionMap QuerySupportedOpenGLExtensions(bool coreProfile)
 {
-    GLExtensionList extensions;
+    GLESExtensionMap extensions;
 
     /* Get number of extensions */
     GLint numExtensions = 0;
@@ -195,7 +200,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #else
 
-    GLExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
+    GLESExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
 
     auto LoadExtension = [&extensions, abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
     {

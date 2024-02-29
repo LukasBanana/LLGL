@@ -14,24 +14,42 @@
 #define ENABLE_MULTISAMPLING    1
 
 // Enable caching of pipeline state objects (PSO)
-#define ENABLE_CACHED_PSO       1
+//#define ENABLE_CACHED_PSO       1
 
+#ifdef LLGL_OS_ANDROID
+#define EXIT(VAL) return
+void android_main(android_app* androidApp)
+#else
+#define EXIT(VAL) return (VAL)
 int main(int argc, char* argv[])
+#endif
 {
     try
     {
         LLGL::Log::RegisterCallbackStd();
 
         // Let the user choose an available renderer
-        std::string rendererModule = GetSelectedRendererModule(argc, argv);
+        LLGL::RenderSystemDescriptor rendererDesc;
+
+        #ifdef LLGL_OS_ANDROID
+        rendererDesc.moduleName = "OpenGLES3";
+        rendererDesc.androidApp = androidApp;
+        #else
+        const std::string rendererModule = GetSelectedRendererModule(argc, argv);
+        rendererDesc.moduleName = rendererModule;
+        #endif
+
+        //rendererDesc.flags = LLGL::RenderSystemFlags::DebugDevice;
+        LLGL::RenderingDebugger debugger;
+        rendererDesc.debugger = &debugger;
 
         // Load render system module
         LLGL::Report report;
-        LLGL::RenderSystemPtr renderer = LLGL::RenderSystem::Load(rendererModule, &report);
+        LLGL::RenderSystemPtr renderer = LLGL::RenderSystem::Load(rendererDesc, &report);
         if (!renderer)
         {
             LLGL::Log::Errorf("%s", report.GetText());
-            return 1;
+            EXIT(1);
         }
 
         // Create swap-chain
@@ -232,7 +250,7 @@ int main(int argc, char* argv[])
             if (report->HasErrors())
             {
                 LLGL::Log::Errorf("%s\n", report->GetText());
-                return 1;
+                EXIT(1);
             }
         }
 
@@ -240,6 +258,8 @@ int main(int argc, char* argv[])
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer(LLGL::CommandBufferFlags::ImmediateSubmit);
 
         // Enter main loop
+        const float bgColor[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
+
         while (LLGL::Surface::ProcessEvents() && !window.HasQuit())
         {
             // Begin recording commands
@@ -255,7 +275,7 @@ int main(int argc, char* argv[])
                 commands->BeginRenderPass(*swapChain);
                 {
                     // Clear color buffer
-                    commands->Clear(LLGL::ClearFlags::Color);
+                    commands->Clear(LLGL::ClearFlags::Color, bgColor);
 
                     // Set graphics pipeline
                     commands->SetPipelineState(*pipeline);
@@ -278,5 +298,5 @@ int main(int argc, char* argv[])
         system("pause");
         #endif
     }
-    return 0;
+    EXIT(0);
 }

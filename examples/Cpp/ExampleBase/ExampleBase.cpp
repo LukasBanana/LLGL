@@ -332,8 +332,7 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
 
 void ExampleBase::SetAndroidApp(android_app* androidApp)
 {
-    androidApp_     = androidApp;
-    rendererModule_ = "OpenGLES3";
+    androidApp_ = androidApp;
 }
 
 #endif
@@ -404,7 +403,7 @@ void ExampleBase::DrawFrame()
     OnDrawFrame();
 
     #ifndef LLGL_MOBILE_PLATFORM
-    // Present the result on the screen - cannot be explicitly invoked on moble platforms
+    // Present the result on the screen - cannot be explicitly invoked on mobile platforms
     swapChain->Present();
     #endif
 }
