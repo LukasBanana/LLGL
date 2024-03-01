@@ -312,7 +312,7 @@ WindowDescriptor Win32Window::GetDesc() const
 void Win32Window::SetDesc(const WindowDescriptor& desc)
 {
     /* Get current window flags */
-    const LONG oldStyle = GetWindowLong(wnd_, GWL_STYLE);
+    const DWORD oldStyle = static_cast<DWORD>(GetWindowLong(wnd_, GWL_STYLE));
 
     const bool isBorderless = ((oldStyle & WS_CAPTION) == 0);
     const bool isResizable  = ((oldStyle & WS_SIZEBOX) != 0);

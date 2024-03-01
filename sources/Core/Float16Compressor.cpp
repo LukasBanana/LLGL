@@ -36,7 +36,7 @@ class Float16Compressor
             v.ui >>= shift; // logical shift
             v.si ^= ((v.si - maxD) ^ v.si) & -(v.si > maxC);
             v.si ^= ((v.si - minD) ^ v.si) & -(v.si > subC);
-            return (v.ui | sign);
+            return static_cast<std::uint16_t>(v.ui | sign);
         }
 
         static float Decompress(std::uint16_t value)

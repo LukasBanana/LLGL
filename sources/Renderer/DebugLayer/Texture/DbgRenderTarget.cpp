@@ -60,7 +60,7 @@ static RenderPassDescriptor MakeRenderPassDesc(const RenderTargetDescriptor& ren
     return renderPassDesc;
 }
 
-DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
+DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, const RenderTargetDescriptor& desc) :
     instance { instance             },
     desc     { desc                 },
     label    { LLGL_DBG_LABEL(desc) }

@@ -577,6 +577,8 @@ static void ValidateImageConversionParams(
         LLGL_TRAP("cannot convert compressed image formats");
     if (IsDepthOrStencilFormat(srcImageView.format) != IsDepthOrStencilFormat(dstFormat))
         LLGL_TRAP("cannot convert between depth-stencil and non-depth-stencil image formats");
+    if (dstDataType < DataType::Int8 || dstDataType > DataType::Float64)
+        LLGL_TRAP("invalid value for destination data type: 0x%08X", static_cast<unsigned>(dstDataType));
 }
 
 

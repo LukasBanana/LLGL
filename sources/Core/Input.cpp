@@ -138,7 +138,7 @@ class Input::WindowEventListener final : public Window::EventListener
 
     private:
 
-        void OnKeyDown(Window& sender, Key keyCode) override
+        void OnKeyDown(Window& /*sender*/, Key keyCode) override
         {
             const std::uint8_t idx = KEY_IDX(keyCode);
 
@@ -166,7 +166,7 @@ class Input::WindowEventListener final : public Window::EventListener
             data_.keyDownRepeatedTracker.Add(keyCode);
         }
 
-        void OnKeyUp(Window& sender, Key keyCode) override
+        void OnKeyUp(Window& /*sender*/, Key keyCode) override
         {
             const std::uint8_t idx = KEY_IDX(keyCode);
 
@@ -190,7 +190,7 @@ class Input::WindowEventListener final : public Window::EventListener
             data_.keyPressed[idx] = false;
         }
 
-        void OnDoubleClick(Window& sender, Key keyCode) override
+        void OnDoubleClick(Window& /*sender*/, Key keyCode) override
         {
             switch (keyCode)
             {
@@ -208,28 +208,28 @@ class Input::WindowEventListener final : public Window::EventListener
             }
         }
 
-        void OnChar(Window& sender, wchar_t chr) override
+        void OnChar(Window& /*sender*/, wchar_t chr) override
         {
             data_.chars += chr;
         }
 
-        void OnWheelMotion(Window& sender, int motion) override
+        void OnWheelMotion(Window& /*sender*/, int motion) override
         {
             data_.wheelMotion += motion;
         }
 
-        void OnLocalMotion(Window& sender, const Offset2D& position) override
+        void OnLocalMotion(Window& /*sender*/, const Offset2D& position) override
         {
             data_.mousePosition = position;
         }
 
-        void OnGlobalMotion(Window& sender, const Offset2D& motion) override
+        void OnGlobalMotion(Window& /*sender*/, const Offset2D& motion) override
         {
             data_.mouseMotion.x += motion.x;
             data_.mouseMotion.y += motion.y;
         }
 
-        void OnLostFocus(Window& sender) override
+        void OnLostFocus(Window& /*sender*/) override
         {
             /* Reset all 'key-pressed' states */
             ResetKeyStateArray(data_.keyPressed);
@@ -258,12 +258,12 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     private:
 
-        void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches) override
+        void OnTapGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t /*numTouches*/) override
         {
             //TODO
         }
 
-        void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy) override
+        void OnPanGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t /*numTouches*/, float dx, float dy) override
         {
             //TODO: Use separate field
             data_.mouseMotion.x = static_cast<std::int32_t>(dx * 0.1f);
@@ -406,7 +406,7 @@ bool Input::KeyDoubleClick(Key keyCode) const
         case Key::LButton: return pimpl_->doubleClick[0];
         case Key::RButton: return pimpl_->doubleClick[1];
         case Key::MButton: return pimpl_->doubleClick[2];
-        default:           return false;
+        default:           break;
     }
     return false;
 }

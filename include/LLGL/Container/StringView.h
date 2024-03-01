@@ -51,7 +51,7 @@ class LLGL_EXPORT BasicStringView
         \brief Constant value for an invalid position. This is the largest possible value for \c size_type.
         \see substr
         */
-        static constexpr size_type npos = -1;
+        static constexpr size_type npos = size_type(-1);
 
     public:
 

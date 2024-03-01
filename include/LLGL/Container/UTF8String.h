@@ -41,7 +41,7 @@ class LLGL_EXPORT UTF8String
 
     public:
 
-        static constexpr size_type npos = -1;
+        static constexpr size_type npos = size_type(-1);
 
     public:
 

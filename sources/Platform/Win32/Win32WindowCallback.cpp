@@ -42,7 +42,7 @@ static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ms646280(v=vs.85).aspx
-static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bool isSysKey)
+static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bool /*isSysKey*/)
 {
     /* Get window object from window handle */
     if (Win32Window* window = GetWindowFromUserData(wnd))

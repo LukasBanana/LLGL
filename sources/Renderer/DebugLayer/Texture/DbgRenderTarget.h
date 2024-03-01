@@ -34,7 +34,7 @@ class DbgRenderTarget final : public RenderTarget
 
     public:
 
-        DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
+        DbgRenderTarget(RenderTarget& instance, const RenderTargetDescriptor& desc);
 
     public:
 

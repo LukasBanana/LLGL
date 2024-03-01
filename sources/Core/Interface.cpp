@@ -22,7 +22,7 @@ bool Interface::IsInstanceOf(int id) const
     return (id == InterfaceID::Interface);
 }
 
-void RenderSystemChild::SetDebugName(const char* name)
+void RenderSystemChild::SetDebugName(const char* /*name*/)
 {
     // dummy
 }
