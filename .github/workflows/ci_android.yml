@@ -1,0 +1,70 @@
+name: Google Android
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_android:
+    strategy:
+      matrix:
+        lib: [Shared, Static]
+        config: [Release, Debug]
+        abi: [x86_64, armeabi-v7a]
+      fail-fast: false
+    
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_API_LEVEL: 21
+      README: ${{ github.workspace }}/README.txt
+      GAUSSIAN_LIB_DIR: external/GaussianLib/include
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies (Android NDK)
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r25c
+        add-to-path: false
+
+    - name: Configure CMake
+      run: >
+        cmake -S . -B ${{github.workspace}}/Android-${{ matrix.abi }}
+        -DCMAKE_TOOLCHAIN_FILE="${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake" \
+        -DANDROID_ABI=${{ matrix.abi }} \
+        -DANDROID_PLATFORM=${{ env.ANDROID_API_LEVEL }} \
+        -DANDROID_STL=c++_shared \
+        -DANDROID_CPP_FEATURES="rtti exceptions" \
+        -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
+        -DLLGL_BUILD_RENDERER_OPENGLES3=ON
+        -DLLGL_BUILD_RENDERER_NULL=OFF
+        -DLLGL_BUILD_RENDERER_VULKAN=OFF
+        -DLLGL_BUILD_EXAMPLES=ON
+        -DLLGL_BUILD_TESTS=OFF
+        -DGaussLib_INCLUDE_DIR:STRING="${{ env.GAUSSIAN_LIB_DIR }}"
+
+    - name: Build
+      run: |
+        cmake --build ${{github.workspace}}/Android-${{ matrix.abi }} --config ${{ matrix.config }}
+        CURRENT_TIME=$(date)
+        echo "LLGL built for Android on $CURRENT_TIME." > ${{ env.README }}
+
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v4
+      if: matrix.lib == 'Shared' && matrix.config == 'Release'
+      with:
+        name: LLGL-Android-${{ matrix.config }}-${{ matrix.abi }}
+        path: |
+          ${{ env.README }}
+          ${{ github.workspace }}/Android-${{ matrix.abi }}/build/libLLGL*.so
+          ${{ github.workspace }}/Android-${{ matrix.abi }}/build/libExample_*.so
+      
