@@ -164,6 +164,7 @@ class MTCommandContext
             NSUInteger      viewportCount                               = 0;
             MTLScissorRect  scissorRects[maxNumViewportsAndScissors]    = {};
             NSUInteger      scissorRectCount                            = 0;
+            bool            isScissorTestEnabled                        = false;
             id<MTLBuffer>   vertexBuffers[maxNumVertexBuffers]          = {};
             NSUInteger      vertexBufferOffsets[maxNumVertexBuffers]    = {};
             NSRange         vertexBufferRange                           = { 0, 0 };

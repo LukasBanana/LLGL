@@ -10,6 +10,7 @@
 
 
 #include "MTPipelineState.h"
+#include <LLGL/Container/DynamicArray.h>
 #include <cstdint>
 
 
@@ -18,6 +19,7 @@ namespace LLGL
 
 
 class MTRenderPass;
+class ByteBufferIterator;
 struct GraphicsPipelineDescriptor;
 
 class MTGraphicsPSO final : public MTPipelineState
@@ -33,6 +35,14 @@ class MTGraphicsPSO final : public MTPipelineState
 
         // Binds the render pipeline state, depth-stencil states, and sets the remaining parameters with the specified command encoder.
         void Bind(id<MTLRenderCommandEncoder> renderEncoder);
+
+        // Returns the static viewports and scissor rectangles. Returns false if there are none.
+        bool GetStaticState(
+            MTLViewport*    outViewports,
+            NSUInteger&     outViewportCount,
+            MTLScissorRect* outScissorRects,
+            NSUInteger&     outScissorRectCount
+        ) const;
 
         // Returns the native primitive type.
         inline MTLPrimitiveType GetMTLPrimitiveType() const
@@ -59,6 +69,12 @@ class MTGraphicsPSO final : public MTPipelineState
         inline id<MTLComputePipelineState> GetTessPipelineState() const
         {
             return tessPipelineState_;
+        }
+
+        // Returns true if the scissor test is enabled for this PSO.
+        inline bool HasScissorTest() const
+        {
+            return hasScissorTest_;
         }
 
         // Returns true if the blend color must be set independently of the PSO.
@@ -92,6 +108,10 @@ class MTGraphicsPSO final : public MTPipelineState
             const GraphicsPipelineDescriptor&   desc
         );
 
+        void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
+        void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);
+        void BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter);
+
     private:
 
         id<MTLRenderPipelineState>  renderPipelineState_    = nil;
@@ -110,6 +130,8 @@ class MTGraphicsPSO final : public MTPipelineState
         float                       depthSlope_             = 0.0f;
         float                       depthClamp_             = 0.0f;
 
+        bool                        hasScissorTest_         = false;
+
         bool                        blendColorDynamic_      = false;
         bool                        blendColorEnabled_      = false;
         float                       blendColor_[4]          = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -117,6 +139,10 @@ class MTGraphicsPSO final : public MTPipelineState
         bool                        stencilRefDynamic_      = false;
         std::uint32_t               stencilFrontRef_        = 0;
         std::uint32_t               stencilBackRef_         = 0;
+
+        DynamicByteArray            staticStateBuffer_;
+        NSUInteger                  numStaticViewports_     = 0;
+        NSUInteger                  numStaticScissors_      = 0;
 
 };
 

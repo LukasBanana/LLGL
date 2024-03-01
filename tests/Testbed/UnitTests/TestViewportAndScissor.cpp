@@ -34,10 +34,11 @@ DEF_TEST( ViewportAndScissor )
 
     const Gs::Vector4f colors[] =
     {
-        Gs::Vector4f{ 0.6f, 0.2f, 0.2f, 1.0f },
-        Gs::Vector4f{ 0.2f, 0.6f, 0.2f, 1.0f },
-        Gs::Vector4f{ 0.2f, 0.2f, 0.6f, 1.0f },
-        Gs::Vector4f{ 0.7f, 0.8f, 0.2f, 1.0f },
+        Gs::Vector4f{ 0.6f, 0.2f, 0.2f, 1.0f }, // red
+        Gs::Vector4f{ 0.2f, 0.6f, 0.2f, 1.0f }, // green
+        Gs::Vector4f{ 0.6f, 0.2f, 0.7f, 1.0f }, // pink
+        Gs::Vector4f{ 0.2f, 0.2f, 0.6f, 1.0f }, // blue
+        Gs::Vector4f{ 0.7f, 0.8f, 0.2f, 1.0f }, // yellow
     };
 
     // Create graphics PSOs with and without scissor tests
@@ -62,7 +63,7 @@ DEF_TEST( ViewportAndScissor )
     }
     PipelineState* psoStaticScissor = renderer->CreatePipelineState(psoDesc);
 
-    PipelineState* psoList[] = { psoNoScissor, psoDynamicScissor, psoStaticScissor, psoNoScissor };
+    PipelineState* psoList[] = { psoNoScissor, psoStaticScissor, psoNoScissor, psoDynamicScissor, psoNoScissor };
     constexpr auto psoCount = sizeof(psoList)/sizeof(psoList[0]);
 
     for (PipelineState* pso : psoList)
@@ -204,7 +205,7 @@ DEF_TEST( ViewportAndScissor )
 
     const char* frameNames[] =
     {
-        "0_Default", "1_Dynamic", "2_Static", "3_Default"
+        "0_Default", "1_Static", "2_Default", "3_Dynamic", "4_Default"
     };
 
     for_range(i, psoCount)

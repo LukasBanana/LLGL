@@ -14,10 +14,12 @@
 #include "../MTCore.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
+#include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
 #include <TargetConditionals.h>
+#include <string.h>
 
 
 namespace LLGL
@@ -62,6 +64,8 @@ MTGraphicsPSO::MTGraphicsPSO(
     depthSlope_         = desc.rasterizer.depthBias.slopeFactor;
     depthClamp_         = desc.rasterizer.depthBias.clamp;
 
+    hasScissorTest_     = desc.rasterizer.scissorTestEnabled;
+
     blendColorDynamic_  = desc.blend.blendFactorDynamic;
     blendColorEnabled_  = IsStaticBlendFactorEnabled(desc.blend);
     blendColor_[0]      = desc.blend.blendFactor[0];
@@ -72,6 +76,7 @@ MTGraphicsPSO::MTGraphicsPSO(
     /* Create render pipeline and depth-stencil states */
     CreateRenderPipelineState(device, desc, defaultRenderPass);
     CreateDepthStencilState(device, desc);
+    BuildStaticStateBuffer(desc);
 }
 
 void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
@@ -114,6 +119,23 @@ void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
         pipelineLayout->SetStaticVertexSamplers(renderEncoder);
         pipelineLayout->SetStaticFragmentSamplers(renderEncoder);
     }
+}
+
+bool MTGraphicsPSO::GetStaticState(
+    MTLViewport*    outViewports,
+    NSUInteger&     outViewportCount,
+    MTLScissorRect* outScissorRects,
+    NSUInteger&     outScissorRectCount) const
+{
+    if (staticStateBuffer_)
+    {
+        ByteBufferConstIterator byteBufferIter{ staticStateBuffer_.get() };
+        ::memcpy(outViewports, byteBufferIter.Next<MTLViewport>(numStaticViewports_), numStaticViewports_ * sizeof(MTLViewport));
+        outViewportCount = numStaticViewports_;
+        ::memcpy(outScissorRects, byteBufferIter.Next<MTLScissorRect>(numStaticScissors_), numStaticScissors_ * sizeof(MTLScissorRect));
+        outScissorRectCount = numStaticScissors_;
+    }
+    return false;
 }
 
 
@@ -322,6 +344,83 @@ void MTGraphicsPSO::CreateDepthStencilState(
     }
     depthStencilState_ = [device newDepthStencilStateWithDescriptor:depthStencilDesc];
     [depthStencilDesc release];
+}
+
+void MTGraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)
+{
+    /* Allocate packed raw buffer */
+    const std::size_t bufferSize =
+    (
+        desc.viewports.size() * sizeof(MTLViewport) +
+        desc.scissors.size()  * sizeof(MTLScissorRect)
+    );
+    staticStateBuffer_ = DynamicByteArray{ bufferSize, UninitializeTag{} };
+
+    ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
+
+    /* Build static viewports in raw buffer */
+    if (!desc.viewports.empty())
+        BuildStaticViewports(desc.viewports.size(), desc.viewports.data(), byteBufferIter);
+
+    /* Build static scissors in raw buffer */
+    if (!desc.scissors.empty())
+        BuildStaticScissors(desc.scissors.size(), desc.scissors.data(), byteBufferIter);
+}
+
+void MTGraphicsPSO::BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter)
+{
+    /* Store number of viewports and validate limit */
+    numStaticViewports_ = static_cast<NSUInteger>(numViewports);
+
+    if (numStaticViewports_ > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
+    {
+        GetMutableReport().Errorf(
+            "too many viewports in graphics pipeline state (%d specified, but limit is %u)",
+            numStaticViewports_, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS
+        );
+        numStaticViewports_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
+    }
+
+    /* Build <MTLViewport> entries */
+    for_range(i, numViewports)
+    {
+        auto dst = byteBufferIter.Next<MTLViewport>();
+        {
+            dst->originX    = viewports[i].x;
+            dst->originY    = viewports[i].y;
+            dst->width      = viewports[i].width;
+            dst->height     = viewports[i].height;
+            dst->znear      = viewports[i].minDepth;
+            dst->zfar       = viewports[i].maxDepth;
+        }
+    }
+}
+
+void MTGraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scissor* scissors, ByteBufferIterator& byteBufferIter)
+{
+    /* Store number of scissors and validate limit */
+    numStaticScissors_ = static_cast<NSUInteger>(numScissors);
+
+    if (numStaticScissors_ > LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS)
+    {
+        GetMutableReport().Errorf(
+            "too many scissors in graphics pipeline state (%d specified, but limit is %u)",
+            numStaticScissors_, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS
+        );
+        numStaticScissors_ = LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS;
+    }
+
+    /* Build <MTLScissorRect> entries */
+    for_range(i, numScissors)
+    {
+        auto dst = byteBufferIter.Next<MTLScissorRect>();
+        {
+            dst->x      = static_cast<NSUInteger>(scissors[i].x);
+            dst->y      = static_cast<NSUInteger>(scissors[i].y);
+            dst->width  = static_cast<NSUInteger>(scissors[i].width);
+            dst->height = static_cast<NSUInteger>(scissors[i].height);
+        }
+    }
 }
 
 

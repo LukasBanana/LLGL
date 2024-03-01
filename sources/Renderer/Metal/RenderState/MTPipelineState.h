@@ -66,6 +66,12 @@ class MTPipelineState : public PipelineState
         void CreateConstantsCacheForRenderPipeline(MTLRenderPipelineReflection* reflection);
         void CreateConstantsCacheForComputePipeline(MTLComputePipelineReflection* reflection);
 
+        // Returns a mutable reference to the PSO report.
+        inline Report& GetMutableReport()
+        {
+            return report_;
+        }
+
     private:
 
         const bool                              isGraphicsPSO_          = false;

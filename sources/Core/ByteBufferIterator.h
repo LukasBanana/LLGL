@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-// Helper class to iterate over a byte aligned buffer that is casted to structured types.
+// Helper class to iterate over a byte aligned buffer that is cast to structured types.
 class ByteBufferIterator
 {
 
@@ -56,6 +56,52 @@ class ByteBufferIterator
     private:
 
         char* byteBuffer_ = nullptr;
+
+};
+
+// Helper class to iterate over a byte aligned constant buffer that is cast to structured types.
+class ByteBufferConstIterator
+{
+
+    public:
+
+        ByteBufferConstIterator() = default;
+        ByteBufferConstIterator(const ByteBufferConstIterator&) = default;
+        ByteBufferConstIterator& operator = (const ByteBufferConstIterator&) = default;
+
+        // Initializes the byte buffer.
+        inline ByteBufferConstIterator(const char* byteBuffer) :
+            byteBuffer_ { byteBuffer }
+        {
+        }
+
+        // Returns the next <T>-typed entry.
+        template <typename T>
+        const T* Next()
+        {
+            auto ptr = reinterpret_cast<const T*>(byteBuffer_);
+            byteBuffer_ += sizeof(T);
+            return ptr;
+        }
+
+        // Returns the next count <T>-typed entries.
+        template <typename T>
+        const T* Next(std::size_t count)
+        {
+            auto ptr = reinterpret_cast<const T*>(byteBuffer_);
+            byteBuffer_ += (sizeof(T) * count);
+            return ptr;
+        }
+
+        // Resets the byte buffer.
+        inline void Reset(const char* byteBuffer)
+        {
+            byteBuffer_ = byteBuffer;
+        }
+
+    private:
+
+        const char* byteBuffer_ = nullptr;
 
 };
 

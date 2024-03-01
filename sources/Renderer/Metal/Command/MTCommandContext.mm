@@ -208,10 +208,22 @@ void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 {
     if (pipelineState != nullptr && renderEncoderState_.graphicsPSO != pipelineState)
     {
-        renderEncoderState_.graphicsPSO         = pipelineState;
-        renderEncoderState_.blendColorDynamic   = pipelineState->IsBlendColorDynamic();
-        renderEncoderState_.stencilRefDynamic   = pipelineState->IsStencilRefDynamic();
         renderDirtyBits_ |= DirtyBit_GraphicsPSO;
+
+        renderEncoderState_.graphicsPSO             = pipelineState;
+        renderEncoderState_.blendColorDynamic       = pipelineState->IsBlendColorDynamic();
+        renderEncoderState_.stencilRefDynamic       = pipelineState->IsStencilRefDynamic();
+        renderEncoderState_.isScissorTestEnabled    = pipelineState->HasScissorTest();
+
+        const bool hasStaticViewportAndScissor = pipelineState->GetStaticState(
+            renderEncoderState_.viewports,
+            renderEncoderState_.viewportCount,
+            renderEncoderState_.scissorRects,
+            renderEncoderState_.scissorRectCount
+        );
+        if (hasStaticViewportAndScissor)
+            renderDirtyBits_ |= (DirtyBit_Viewports | DirtyBit_Scissors);
+
         descriptorCache_.Reset(pipelineState->GetPipelineLayout());
         constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
     }
@@ -331,7 +343,7 @@ void MTCommandContext::SubmitRenderEncoderState()
         else
             [renderEncoder_ setViewport:renderEncoderState_.viewports[0]];
     }
-    if (renderEncoderState_.scissorRectCount > 0 && (renderDirtyBits_ & DirtyBit_Scissors) != 0)
+    if (renderEncoderState_.isScissorTestEnabled && renderEncoderState_.scissorRectCount > 0 && (renderDirtyBits_ & DirtyBit_Scissors) != 0)
     {
         /* Bind scissor rectangles */
         if (@available(macOS 10.13, iOS 12.0, *))

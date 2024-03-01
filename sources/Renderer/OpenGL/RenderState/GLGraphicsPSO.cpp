@@ -114,7 +114,7 @@ void GLGraphicsPSO::Bind(GLStateManager& stateMngr)
     /* Set static viewports and scissors */
     if (staticStateBuffer_)
     {
-        ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
+        ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
         if (numStaticViewports_ > 0)
             SetStaticViewports(stateMngr, byteBufferIter);
         if (numStaticScissors_ > 0)
@@ -135,9 +135,9 @@ void GLGraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& des
         desc.viewports.size() * (sizeof(GLViewport) + sizeof(GLDepthRange)) +
         desc.scissors.size()  * (sizeof(GLScissor))
     );
-    staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
+    staticStateBuffer_ = DynamicByteArray{ bufferSize, UninitializeTag{} };
 
-    ByteBufferIterator byteBufferIter { staticStateBuffer_.get() };
+    ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
 
     /* Build static viewports in raw buffer */
     if (!desc.viewports.empty())

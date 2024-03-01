@@ -15,7 +15,7 @@
 #include "GLRasterizerState.h"
 #include "GLBlendState.h"
 #include <LLGL/RenderSystemFlags.h>
-#include <memory>
+#include <LLGL/Container/DynamicArray.h>
 
 
 namespace LLGL
@@ -71,7 +71,7 @@ class GLGraphicsPSO final : public GLPipelineState
         GLBlendStateSPtr        blendState_;
 
         // Packed byte buffer for static viewports and scissors
-        std::unique_ptr<char[]> staticStateBuffer_;
+        DynamicByteArray        staticStateBuffer_;
         GLsizei                 numStaticViewports_ = 0;
         GLsizei                 numStaticScissors_  = 0;
 
