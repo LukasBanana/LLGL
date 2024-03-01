@@ -33,11 +33,12 @@ else
 fi
     echo "OPTIONS:"
     echo "  -c, --clear-cache ......... Clear CMake cache and rebuild"
-    echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -d, --debug ............... Configure Debug build (default is Release)"
+    echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -S, --skip-validation ..... Skip check for missing packages (X11, OpenGL etc.)"
+    echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
     echo "  --vulkan .................. Include Vulkan renderer"
 if [ $PLATFORM_MSYS -eq 1 ]; then
@@ -133,7 +134,7 @@ if [ $VERBOSE -eq 1 ]; then
     fi
 fi
 
-# Build into output directory (this syntax requried CMake 3.13+)
+# Build into output directory (this syntax requires CMake 3.13+)
 OPTIONS=(
     -DLLGL_BUILD_RENDERER_OPENGL=ON
     -DLLGL_GL_ENABLE_OPENGL2X=ON

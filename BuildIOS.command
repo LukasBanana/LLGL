@@ -105,7 +105,7 @@ if [ $VERBOSE -eq 1 ]; then
     fi
 fi
 
-# Build into output directory
+# Build into output directory (this syntax requires CMake 3.13+)
 OPTIONS=(
     -DCMAKE_SYSTEM_NAME=iOS
     -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
