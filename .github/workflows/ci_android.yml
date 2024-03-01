@@ -38,11 +38,11 @@ jobs:
     - name: Configure CMake
       run: >
         cmake -S . -B ${{github.workspace}}/Android-${{ matrix.abi }}
-        -DCMAKE_TOOLCHAIN_FILE="${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake" \
-        -DANDROID_ABI=${{ matrix.abi }} \
-        -DANDROID_PLATFORM=${{ env.ANDROID_API_LEVEL }} \
-        -DANDROID_STL=c++_shared \
-        -DANDROID_CPP_FEATURES="rtti exceptions" \
+        -DCMAKE_TOOLCHAIN_FILE="${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake"
+        -DANDROID_ABI=${{ matrix.abi }}
+        -DANDROID_PLATFORM=${{ env.ANDROID_API_LEVEL }}
+        -DANDROID_STL=c++_shared
+        -DANDROID_CPP_FEATURES="rtti exceptions"
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
         -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
         -DLLGL_BUILD_RENDERER_OPENGLES3=ON
