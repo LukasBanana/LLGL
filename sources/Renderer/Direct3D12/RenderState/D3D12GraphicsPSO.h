@@ -10,6 +10,7 @@
 
 
 #include "D3D12PipelineState.h"
+#include <LLGL/Container/DynamicArray.h>
 
 
 namespace LLGL
@@ -84,7 +85,7 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
         bool                        blendFactorEnabled_ = false;
         FLOAT                       blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-        std::unique_ptr<char[]>     staticStateBuffer_;
+        DynamicByteArray            staticStateBuffer_;
         UINT                        numStaticViewports_ = 0;
         UINT                        numStaticScissors_  = 0;
 

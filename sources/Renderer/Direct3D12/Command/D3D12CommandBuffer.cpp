@@ -414,71 +414,24 @@ static constexpr bool IsCompatibleToD3DViewport()
 
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
 {
-    D3D12CommandBuffer::SetViewports(1, &viewport);
+    SetAndConvertViewports(1, &viewport);
 }
 
 void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
     numViewports = std::min(numViewports, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
-
-    /* Check if D3D12_VIEWPORT and Viewport structures can be safely reinterpret-casted */
-    if (IsCompatibleToD3DViewport())
-    {
-        /* Now it's safe to reinterpret cast the viewports into D3D viewports */
-        commandList_->RSSetViewports(numViewports, reinterpret_cast<const D3D12_VIEWPORT*>(viewports));
-    }
-    else
-    {
-        /* Convert viewport into D3D viewport */
-        D3D12_VIEWPORT viewportsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-
-        for_range(i, numViewports)
-        {
-            const Viewport& src = viewports[i];
-            D3D12_VIEWPORT& dst = viewportsD3D[i];
-
-            dst.TopLeftX   = src.x;
-            dst.TopLeftY   = src.y;
-            dst.Width      = src.width;
-            dst.Height     = src.height;
-            dst.MinDepth   = src.minDepth;
-            dst.MaxDepth   = src.maxDepth;
-        }
-
-        commandList_->RSSetViewports(numViewports, viewportsD3D);
-    }
-
-    /* If scissor test is disabled, set scissor rectangles to default value alongside viewports */
-    if (!scissorEnabled_)
-        SetScissorRectsToDefault(numViewports);
+    SetAndConvertViewports(numViewports, viewports);
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 {
-    D3D12CommandBuffer::SetScissors(1, &scissor);
+    SetAndConvertScissorRects(1, &scissor);
 }
 
 void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
     numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
-
-    D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-
-    for_range(i, numScissors)
-    {
-        const Scissor&  src = scissors[i];
-        D3D12_RECT&     dst = scissorsD3D[i];
-
-        dst.left   = src.x;
-        dst.top    = src.y;
-        dst.right  = src.x + src.width;
-        dst.bottom = src.y + src.height;
-    }
-
-    commandList_->RSSetScissorRects(numScissors, scissorsD3D);
-
-    /* Invalidate previously bound default scissor rectangles */
-    numDefaultScissorRects_ = 0;
+    SetAndConvertScissorRects(numScissors, scissors);
 }
 
 /* ----- Clear ----- */
@@ -751,8 +704,16 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         /* Scissor rectangle must be updated (if scissor test is disabled) */
         scissorEnabled_ = graphicsPSO.IsScissorEnabled();
-        if (!scissorEnabled_ && commandList_->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
-            SetScissorRectsToDefault(graphicsPSO.NumDefaultScissorRects());
+        if (scissorEnabled_)
+        {
+            /* Invalidate previously bound default scissor rectangles */
+            numDefaultScissorRects_ = 0;
+        }
+        else
+        {
+            if (commandList_->GetType() == D3D12_COMMAND_LIST_TYPE_DIRECT)
+                SetDefaultScissorRects(graphicsPSO.NumDefaultScissorRects());
+        }
     }
     else
     {
@@ -1079,6 +1040,61 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
     dsvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 }
 
+void D3D12CommandBuffer::SetAndConvertViewports(std::uint32_t numViewports, const Viewport* viewports)
+{
+    /* Check if D3D12_VIEWPORT and Viewport structures can be safely reinterpret-casted */
+    if (IsCompatibleToD3DViewport())
+    {
+        /* Now it's safe to reinterpret cast the viewports into D3D viewports */
+        commandList_->RSSetViewports(numViewports, reinterpret_cast<const D3D12_VIEWPORT*>(viewports));
+    }
+    else
+    {
+        /* Convert viewport into D3D viewport */
+        D3D12_VIEWPORT viewportsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+        for_range(i, numViewports)
+        {
+            const Viewport& src = viewports[i];
+            D3D12_VIEWPORT& dst = viewportsD3D[i];
+
+            dst.TopLeftX   = src.x;
+            dst.TopLeftY   = src.y;
+            dst.Width      = src.width;
+            dst.Height     = src.height;
+            dst.MinDepth   = src.minDepth;
+            dst.MaxDepth   = src.maxDepth;
+        }
+
+        commandList_->RSSetViewports(numViewports, viewportsD3D);
+    }
+
+    /* If scissor test is disabled, set scissor rectangles to default value alongside viewports */
+    if (!scissorEnabled_)
+        SetDefaultScissorRects(numViewports);
+}
+
+void D3D12CommandBuffer::SetAndConvertScissorRects(std::uint32_t numScissors, const Scissor* scissors)
+{
+    D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+    for_range(i, numScissors)
+    {
+        const Scissor&  src = scissors[i];
+        D3D12_RECT&     dst = scissorsD3D[i];
+
+        dst.left   = src.x;
+        dst.top    = src.y;
+        dst.right  = src.x + src.width;
+        dst.bottom = src.y + src.height;
+    }
+
+    commandList_->RSSetScissorRects(numScissors, scissorsD3D);
+
+    /* Invalidate previously bound default scissor rectangles */
+    numDefaultScissorRects_ = 0;
+}
+
 static constexpr D3D12_RECT g_maxViewportBoundsD3D =
 {
     D3D12_VIEWPORT_BOUNDS_MIN, D3D12_VIEWPORT_BOUNDS_MIN, D3D12_VIEWPORT_BOUNDS_MAX, D3D12_VIEWPORT_BOUNDS_MAX
@@ -1097,7 +1113,7 @@ static_assert(
     "g_maxViewportBoundsD3DArray must have D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE elements"
 );
 
-void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
+void D3D12CommandBuffer::SetDefaultScissorRects(UINT numScissorRects)
 {
     numScissorRects = std::min(numScissorRects, UINT(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
     if (numScissorRects > numDefaultScissorRects_)

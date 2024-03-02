@@ -456,7 +456,7 @@ void D3D12GraphicsPSO::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& 
 {
     /* Allocate packed raw buffer */
     const std::size_t bufferSize = GetStaticStateBufferSize(desc.viewports.size(), desc.scissors.size());
-    staticStateBuffer_ = MakeUniqueArray<char>(bufferSize);
+    staticStateBuffer_ = DynamicByteArray{ bufferSize };
 
     ByteBufferIterator byteBufferIter{ staticStateBuffer_.get() };
 
