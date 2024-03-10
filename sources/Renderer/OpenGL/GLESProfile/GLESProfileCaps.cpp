@@ -146,7 +146,6 @@ static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
     features.hasBufferViews                 = (version >= 300); // GLES 3.0
     features.hasConstantBuffers             = (version >= 300); // GLES 3.0
     features.hasStorageBuffers              = (version >= 300); // GLES 3.0
-    features.hasUniforms                    = (version >= 200); // GLES 2.0
     features.hasGeometryShaders             = (version >= 320); // GLES 3.2
     features.hasTessellationShaders         = (version >= 320); // GLES 3.2
     features.hasTessellatorStage            = (version >= 320); // GLES 3.2

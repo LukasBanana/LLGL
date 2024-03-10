@@ -443,6 +443,15 @@ struct RenderSystemDescriptor
 */
 struct RenderingFeatures
 {
+    LLGL_DEPRECATED_IGNORE_PUSH()
+
+    // Declared to ignore initialization warning of deprecated members
+    RenderingFeatures() = default;
+    RenderingFeatures(const RenderingFeatures&) = default;
+    RenderingFeatures& operator = (const RenderingFeatures&) = default;
+
+    LLGL_DEPRECATED_IGNORE_POP()
+
     /**
     \brief Specifies whether render targets (also "framebuffer objects") are supported.
     \todo Deprecate this field: All backends should support render targets.

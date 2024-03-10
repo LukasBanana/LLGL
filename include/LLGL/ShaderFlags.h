@@ -286,13 +286,7 @@ struct ComputeShaderAttributes
 */
 struct ShaderDescriptor
 {
-    #if defined _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable:4996)
-    #elif defined __clang__
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    #endif
+    LLGL_DEPRECATED_IGNORE_PUSH()
 
     ShaderDescriptor() = default;
 
@@ -356,11 +350,7 @@ struct ShaderDescriptor
     {
     }
 
-    #if defined _MSC_VER
-    #pragma warning(pop)
-    #elif defined __clang__
-    #pragma clang diagnostic pop
-    #endif
+    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.
