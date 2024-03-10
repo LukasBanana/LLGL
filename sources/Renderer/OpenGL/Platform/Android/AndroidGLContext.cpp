@@ -9,6 +9,7 @@
 #include "AndroidGLCore.h"
 #include "../../../CheckedCast.h"
 #include "../../../StaticAssertions.h"
+#include "../../../RenderSystemUtils.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Assertion.h"
 #include <LLGL/RendererConfiguration.h>
@@ -30,10 +31,13 @@ std::unique_ptr<GLContext> GLContext::Create(
     const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
     GLContext*                          sharedContext,
-    const ArrayView<char>&              /*customNativeHandle*/)
+    const ArrayView<char>&              customNativeHandle)
 {
     AndroidGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(AndroidGLContext*, sharedContext) : nullptr);
-    return MakeUnique<AndroidGLContext>(pixelFormat, profile, surface, sharedContextEGL);
+    return MakeUnique<AndroidGLContext>(
+        pixelFormat, profile, surface, sharedContextEGL,
+        GetRendererNativeHandle<OpenGL::RenderSystemNativeHandle>(customNativeHandle)
+    );
 }
 
 
@@ -42,19 +46,26 @@ std::unique_ptr<GLContext> GLContext::Create(
  */
 
 AndroidGLContext::AndroidGLContext(
-    const GLPixelFormat&                pixelFormat,
-    const RendererConfigurationOpenGL&  profile,
-    Surface&                            surface,
-    AndroidGLContext*                   sharedContext)
+    const GLPixelFormat&                    pixelFormat,
+    const RendererConfigurationOpenGL&      profile,
+    Surface&                                surface,
+    AndroidGLContext*                       sharedContext,
+    const OpenGL::RenderSystemNativeHandle* customNativeHandle)
 :
     display_ { eglGetDisplay(EGL_DEFAULT_DISPLAY) }
 {
-    CreateContext(pixelFormat, profile, sharedContext);
+    /* Flush previous error code */
+    (void)eglGetError();
+    if (customNativeHandle != nullptr)
+        LoadExternalContext(customNativeHandle->context);
+    else
+        CreateContext(pixelFormat, profile, sharedContext);
 }
 
 AndroidGLContext::~AndroidGLContext()
 {
-    DeleteContext();
+    if (!hasExternalContext_)
+        DeleteContext();
 }
 
 int AndroidGLContext::GetSamples() const
@@ -153,9 +164,6 @@ void AndroidGLContext::CreateContext(
     const RendererConfigurationOpenGL&  profile,
     AndroidGLContext*                   sharedContext)
 {
-    /* Flush previous error code */
-    (void)eglGetError();
-
     /* Initialize EGL display connection (ignore major/minor output parameters) */
     if (!eglInitialize(display_, nullptr, nullptr))
         LLGL_TRAP("eglInitialize failed (%s)", EGLErrorToString());
@@ -208,6 +216,32 @@ void AndroidGLContext::CreateContext(
 void AndroidGLContext::DeleteContext()
 {
     eglDestroyContext(display_, context_);
+}
+
+void AndroidGLContext::LoadExternalContext(EGLContext context)
+{
+    LLGL_ASSERT(context != EGL_NO_CONTEXT);
+
+    /* Query configuration ID from external context */
+    EGLint numConfigs = 0;
+    if (eglGetConfigs(display_, nullptr, 0, &numConfigs) == EGL_FALSE)
+        LLGL_TRAP("eglGetConfigs failed to retrieve number of configurations (%s)", EGLErrorToString());
+
+    std::vector<EGLConfig> configs;
+    configs.resize(numConfigs);
+    if (eglGetConfigs(display_, configs.data(), static_cast<EGLint>(configs.size()), &numConfigs) == EGL_FALSE)
+        LLGL_TRAP("eglGetConfigs failed to retrieve display configurations (%s)", EGLErrorToString());
+
+    EGLint configID = 0;
+    if (eglQueryContext(display_, context, EGL_CONFIG_ID, &configID) == EGL_FALSE)
+        LLGL_TRAP("eglQueryContext failed (%s)", EGLErrorToString());
+
+    LLGL_ASSERT(configID >= 0 && configID < numConfigs);
+    config_ = configs[configID];
+
+    /* Accept external EGL context */
+    hasExternalContext_ = true;
+    context_ = context;
 }
 
 EGLContext AndroidGLContext::CreateEGLContextForESVersion(EGLint major, EGLint minor, EGLContext sharedEGLContext)

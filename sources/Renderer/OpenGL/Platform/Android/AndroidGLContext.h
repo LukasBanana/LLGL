@@ -25,10 +25,11 @@ class AndroidGLContext : public GLContext
     public:
 
         AndroidGLContext(
-            const GLPixelFormat&                pixelFormat,
-            const RendererConfigurationOpenGL&  profile,
-            Surface&                            surface,
-            AndroidGLContext*                   sharedContext
+            const GLPixelFormat&                    pixelFormat,
+            const RendererConfigurationOpenGL&      profile,
+            Surface&                                surface,
+            AndroidGLContext*                       sharedContext,
+            const OpenGL::RenderSystemNativeHandle* customNativeHandle
         );
         ~AndroidGLContext();
 
@@ -69,14 +70,17 @@ class AndroidGLContext : public GLContext
         );
         void DeleteContext();
 
+        void LoadExternalContext(EGLContext context);
+
         EGLContext CreateEGLContextForESVersion(EGLint major, EGLint minor, EGLContext sharedEGLContext = EGL_NO_CONTEXT);
 
     private:
 
-        EGLDisplay  display_    = nullptr;
-        EGLContext  context_    = nullptr;
-        EGLConfig   config_     = nullptr;
-        int         samples_    = 1;
+        EGLDisplay  display_            = nullptr;
+        EGLContext  context_            = nullptr;
+        EGLConfig   config_             = nullptr;
+        int         samples_            = 1;
+        bool        hasExternalContext_ = false;
 
 };
 
