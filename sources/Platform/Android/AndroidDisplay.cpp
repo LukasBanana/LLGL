@@ -6,6 +6,7 @@
  */
 
 #include "AndroidDisplay.h"
+#include "AndroidApp.h"
 #include "../../Core/CoreUtils.h"
 
 
@@ -94,11 +95,33 @@ bool AndroidDisplay::SetDisplayMode(const DisplayMode& displayMode)
     return false;
 }
 
+static Extent2D GetAndroidWindowExtent()
+{
+    if (android_app* app = AndroidApp::Get().GetState())
+    {
+        if (app->window != nullptr)
+        {
+            const std::int32_t width  = ANativeWindow_getWidth(app->window);
+            const std::int32_t height = ANativeWindow_getHeight(app->window);
+            if (width > 0 && height > 0)
+            {
+                return Extent2D
+                {
+                    static_cast<std::uint32_t>(width),
+                    static_cast<std::uint32_t>(height)
+                };
+            }
+        }
+    }
+    return Extent2D{};
+}
+
 DisplayMode AndroidDisplay::GetDisplayMode() const
 {
     DisplayMode displayMode;
     {
-        //TODO
+        displayMode.resolution  = GetAndroidWindowExtent();
+        displayMode.refreshRate = 60; //TODO: assume default frame rate
     }
     return displayMode;
 }

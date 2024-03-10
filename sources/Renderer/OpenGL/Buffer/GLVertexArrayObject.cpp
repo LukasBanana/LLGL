@@ -39,10 +39,10 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute)
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);
 
     /* Get data type and components of vector type */
-    const auto& formatAttribs = GetFormatAttribs(attribute.format);
+    const FormatAttributes& formatAttribs = GetFormatAttribs(attribute.format);
     if ((formatAttribs.flags & FormatFlags::SupportsVertex) == 0)
     {
-        if (auto formatStr = ToString(attribute.format))
+        if (const char* formatStr = ToString(attribute.format))
             LLGL_TRAP("LLGL::Format::%s cannot be used for vertex attributes", formatStr);
         else
             LLGL_TRAP("unknown format cannot be used for vertex attributes");

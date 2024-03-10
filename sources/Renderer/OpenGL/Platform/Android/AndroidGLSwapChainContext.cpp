@@ -7,7 +7,9 @@
 
 #include "AndroidGLSwapChainContext.h"
 #include "AndroidGLContext.h"
+#include "AndroidGLCore.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -46,7 +48,7 @@ AndroidGLSwapChainContext::AndroidGLSwapChainContext(AndroidGLContext& context, 
     /* Create drawable surface */
     surface_ = eglCreateWindowSurface(display_, context.GetEGLConfig(), nativeHandle.window, nullptr);
     if (!surface_)
-        throw std::runtime_error("eglCreateWindowSurface failed");
+        LLGL_TRAP("eglCreateWindowSurface failed (%s)", EGLErrorToString());
 }
 
 AndroidGLSwapChainContext::~AndroidGLSwapChainContext()

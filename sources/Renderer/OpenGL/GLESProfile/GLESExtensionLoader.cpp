@@ -113,8 +113,6 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     if (g_OpenGLExtensionsLoaded)
         return true;
 
-    #ifdef LLGL_OS_IOS
-
     #define ENABLE_GLEXT(NAME) \
         RegisterExtension(GLExt::NAME)
 
@@ -198,7 +196,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #undef ENABLE_GLEXT
 
-    #else
+    #if 0 //TODO
 
     GLESExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
 
@@ -236,7 +234,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #undef LOAD_GLEXT
 
-    #endif // /LLGL_OS_IOS
+    #endif // /TODO
 
     g_OpenGLExtensionsLoaded = true;
 

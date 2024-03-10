@@ -38,9 +38,9 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
 
     private:
 
-        ::EGLDisplay display_ = nullptr;
-        ::EGLContext context_ = nullptr;
-        ::EGLSurface surface_ = nullptr;
+        EGLDisplay display_ = nullptr;
+        EGLContext context_ = nullptr;
+        EGLSurface surface_ = nullptr;
 
 };
 

@@ -39,19 +39,19 @@ class AndroidGLContext : public GLContext
     public:
 
         // Returns the native EGL display.
-        inline ::EGLDisplay GetEGLDisplay() const
+        inline EGLDisplay GetEGLDisplay() const
         {
             return display_;
         }
 
         // Returns the native EGL context.
-        inline ::EGLContext GetEGLContext() const
+        inline EGLContext GetEGLContext() const
         {
             return context_;
         }
 
         // Returns the native EGL configuration.
-        inline ::EGLConfig GetEGLConfig() const
+        inline EGLConfig GetEGLConfig() const
         {
             return config_;
         }
@@ -69,12 +69,14 @@ class AndroidGLContext : public GLContext
         );
         void DeleteContext();
 
+        EGLContext CreateEGLContextForESVersion(EGLint major, EGLint minor, EGLContext sharedEGLContext = EGL_NO_CONTEXT);
+
     private:
 
-        ::EGLDisplay    display_    = nullptr;
-        ::EGLContext    context_    = nullptr;
-        ::EGLConfig     config_     = nullptr;
-        int             samples_    = 1;
+        EGLDisplay  display_    = nullptr;
+        EGLContext  context_    = nullptr;
+        EGLConfig   config_     = nullptr;
+        int         samples_    = 1;
 
 };
 

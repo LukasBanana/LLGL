@@ -21,9 +21,9 @@ namespace LLGL
 
 bool Surface::ProcessEvents()
 {
-    if (android_app* appState = AndroidApp::Get().GetState())
+    if (android_app* app = AndroidApp::Get().GetState())
     {
-        /* Poll all Androdi app events */
+        /* Poll all Android app events */
         int ident = 0, events = 0;
         android_poll_source* source = nullptr;
 
@@ -31,7 +31,7 @@ bool Surface::ProcessEvents()
         {
             /* Process the event */
             if (source != nullptr)
-                source->process(appState, source);
+                source->process(app, source);
 
             /* Process sensor data */
             /*if (ident == LOOPER_ID_USER)
@@ -40,7 +40,7 @@ bool Surface::ProcessEvents()
             }*/
 
             /* Check if we are exiting */
-            if (appState->destroyRequested != 0)
+            if (app->destroyRequested != 0)
                 return false;
         }
         return true;
@@ -58,9 +58,9 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
     return MakeUnique<AndroidCanvas>(desc);
 }
 
-static Extent2D GetAndroidWindowRect()
+static Extent2D GetAndroidContentRect()
 {
-    if (auto app = AndroidApp::Get().GetState())
+    if (android_app* app = AndroidApp::Get().GetState())
     {
         return Extent2D
         {
@@ -77,9 +77,8 @@ static Extent2D GetAndroidWindowRect()
  */
 
 AndroidCanvas::AndroidCanvas(const CanvasDescriptor& desc) :
-    desc_        { desc                                 },
-    window_      { AndroidApp::Get().GetState()->window },
-    contentSize_ { GetAndroidWindowRect()               }
+    desc_   { desc                                 },
+    window_ { AndroidApp::Get().GetState()->window }
 {
 }
 
@@ -100,7 +99,7 @@ bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
 
 Extent2D AndroidCanvas::GetContentSize() const
 {
-    return contentSize_;
+    return GetAndroidContentRect();
 }
 
 void AndroidCanvas::SetTitle(const UTF8String& title)

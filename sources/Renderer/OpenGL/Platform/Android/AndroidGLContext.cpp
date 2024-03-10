@@ -6,9 +6,11 @@
  */
 
 #include "AndroidGLContext.h"
+#include "AndroidGLCore.h"
 #include "../../../CheckedCast.h"
 #include "../../../StaticAssertions.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Assertion.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 
@@ -84,28 +86,37 @@ bool AndroidGLContext::SetSwapInterval(int interval)
 bool AndroidGLContext::SelectConfig(const GLPixelFormat& pixelFormat)
 {
     /* Look for a framebuffer configuration; reduce samples if necessary */
-    for (samples_ = pixelFormat.samples; samples_ > 1; --samples_)
+    for (samples_ = std::max(1, pixelFormat.samples); samples_ > 0; --samples_)
     {
         /* Initialize framebuffer configuration */
-        const EGLint attribs[] =
+        EGLint attribs[] =
         {
+            EGL_SURFACE_TYPE,   EGL_WINDOW_BIT,
             EGL_RED_SIZE,       8,
             EGL_GREEN_SIZE,     8,
             EGL_BLUE_SIZE,      8,
-            //EGL_ALPHA_SIZE,     8,
+            EGL_ALPHA_SIZE,     8,
             EGL_DEPTH_SIZE,     pixelFormat.depthBits,
             EGL_STENCIL_SIZE,   pixelFormat.stencilBits,
-            EGL_SAMPLE_BUFFERS, (samples_ > 1 ? 1 : 0),
-            EGL_SAMPLES,        (samples_ > 1 ? samples_ : 1),
+            EGL_SAMPLE_BUFFERS, 1,
+            EGL_SAMPLES,        samples_,
             EGL_NONE
         };
+
+        if (samples_ <= 1)
+        {
+            /* Cut off EGL_SAMPLE* entries in case EGL context doesn't support them at all */
+            constexpr int sampleBuffersArrayIndex = 14;
+            LLGL_ASSERT(attribs[sampleBuffersArrayIndex] == EGL_SAMPLE_BUFFERS);
+            attribs[sampleBuffersArrayIndex] = EGL_NONE;
+        }
 
         /* Choose configuration */
         EGLint numConfigs = 0;
         EGLBoolean success = eglChooseConfig(display_, attribs, &config_, 1, &numConfigs);
 
         /* Reduce number of sample if configuration failed */
-        if (success == EGL_TRUE && numConfigs >= 1)
+        if (success == EGL_TRUE && numConfigs > 0)
         {
             SetDefaultColorFormat();
             DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
@@ -117,18 +128,47 @@ bool AndroidGLContext::SelectConfig(const GLPixelFormat& pixelFormat)
     return false;
 }
 
+static EGLint GetGLESVersionNo(EGLint major, EGLint minor)
+{
+    return (major*100 + minor*10);
+}
+
+static EGLint GetGLESMajorVersion(EGLint version)
+{
+    return (version/100);
+}
+
+static EGLint GetGLESMinorVersion(EGLint version)
+{
+    return ((version/10)%10);
+}
+
+static bool IsSupportedGLESVersion(EGLint version)
+{
+    return (version == 320 || version == 310 || version == 300 || version == 200);
+}
+
 void AndroidGLContext::CreateContext(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     AndroidGLContext*                   sharedContext)
 {
+    /* Flush previous error code */
+    (void)eglGetError();
+
     /* Initialize EGL display connection (ignore major/minor output parameters) */
     if (!eglInitialize(display_, nullptr, nullptr))
-        throw std::runtime_error("eglInitialize failed");
+        LLGL_TRAP("eglInitialize failed (%s)", EGLErrorToString());
 
     /* Select EGL context configuration for pixel format */
     if (!SelectConfig(pixelFormat))
-        throw std::runtime_error("eglChooseConfig failed");
+    {
+        LLGL_TRAP(
+            "eglChooseConfig [colorBits = %d, depthBits = %d, stencilBits = %d, samples = %d] failed (%s)",
+            pixelFormat.colorBits, pixelFormat.depthBits, pixelFormat.stencilBits, pixelFormat.samples,
+            EGLErrorToString()
+        );
+    }
 
     /* Set up EGL profile attributes */
     EGLint major = 3, minor = 0;
@@ -137,9 +177,42 @@ void AndroidGLContext::CreateContext(
     {
         major = profile.majorVersion;
         minor = profile.minorVersion;
+        if (!IsSupportedGLESVersion(GetGLESVersionNo(major, minor)))
+            LLGL_TRAP("cannot create GLES contex for version %d.%d; supported versions are 3.2, 3.1, 3.0, and 2.0", major, minor);
     }
 
-    const EGLint contextAttribs[] =
+    /* Create EGL context with optional shared EGL context */
+    EGLContext sharedEGLContext = (sharedContext != nullptr ? sharedContext->context_ : EGL_NO_CONTEXT);
+
+    while ((context_ = CreateEGLContextForESVersion(major, minor, sharedEGLContext)) == EGL_NO_CONTEXT)
+    {
+        if (major == 3)
+        {
+            /* Try next lower version: GLES 3.2, 3.1, 3.0 */
+            if (minor > 0 && minor <= 2)
+                --minor;
+            else
+                --major;
+        }
+        else
+        {
+            /* Creating context for GLES 2.0 failed and no lower version is supported by LLGL */
+            break;
+        }
+    }
+
+    if (context_ == EGL_NO_CONTEXT)
+        LLGL_TRAP("eglCreateContext failed (%s)", EGLErrorToString());
+}
+
+void AndroidGLContext::DeleteContext()
+{
+    eglDestroyContext(display_, context_);
+}
+
+EGLContext AndroidGLContext::CreateEGLContextForESVersion(EGLint major, EGLint minor, EGLContext sharedEGLContext)
+{
+    EGLint contextAttribs[] =
     {
         EGL_CONTEXT_MAJOR_VERSION,          major,
         EGL_CONTEXT_MINOR_VERSION,          minor,
@@ -150,16 +223,18 @@ void AndroidGLContext::CreateContext(
         EGL_NONE
     };
 
-    /* Create EGL context with optional shared EGL context */
-    EGLContext sharedEGLContext = (sharedContext != nullptr ? sharedContext->context_ : EGL_NO_CONTEXT);
-    context_ = eglCreateContext(display_, config_, sharedEGLContext, contextAttribs);
-    if (!context_)
-        throw std::runtime_error("eglCreateContext failed");
-}
+    EGLContext context = eglCreateContext(display_, config_, sharedEGLContext, contextAttribs);
 
-void AndroidGLContext::DeleteContext()
-{
-    eglDestroyContext(display_, context_);
+    #ifdef LLGL_DEBUG
+    if (context == EGL_NO_CONTEXT)
+    {
+        /* If context creation failed with debug mode, try same version again but without the debug context */
+        contextAttribs[4] = EGL_NONE;
+        context = eglCreateContext(display_, config_, sharedEGLContext, contextAttribs);
+    }
+    #endif
+
+    return context;
 }
 
 

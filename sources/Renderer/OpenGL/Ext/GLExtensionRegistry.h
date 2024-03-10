@@ -12,8 +12,13 @@
 #include "../../../Core/Exception.h"
 
 
-#define LLGL_ASSERT_GL_EXT(EXT, ...) \
-    if (!LLGL::HasExtension(LLGL::GLExt::EXT)) { LLGL::TrapGLExtensionNotSupported(__FUNCTION__, "GL_" #EXT LLGL_VA_ARGS(__VA_ARGS__)); }
+#define LLGL_ASSERT_GL_EXT(EXT, ...)                                                                \
+    do                                                                                              \
+    {                                                                                               \
+        if (!LLGL::HasExtension(LLGL::GLExt::EXT))                                                  \
+            LLGL::TrapGLExtensionNotSupported(__FUNCTION__, "GL_" #EXT LLGL_VA_ARGS(__VA_ARGS__));  \
+    }                                                                                               \
+    while (false)
 
 
 namespace LLGL
