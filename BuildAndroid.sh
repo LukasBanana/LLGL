@@ -1,5 +1,6 @@
 #!/bin/bash
 
+IFS="" # Include whitespaces when expanding arrays of strings
 SOURCE_DIR=$PWD
 OUTPUT_DIR="build_android"
 SKIP_VALIDATION=0
@@ -11,9 +12,9 @@ PROJECT_ONLY=0
 STATIC_LIB="OFF"
 VERBOSE=0
 GENERATOR="CodeBlocks - Unix Makefiles"
-#ANDROID_ABI=armeabi-v7a
 ANDROID_ABI=x86_64
 ANDROID_API_LEVEL=21
+SUPPORTED_ANDROID_ABIS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
 
 print_help()
 {
@@ -26,7 +27,7 @@ print_help()
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -v, --verbose ............. Print additional information"
-    echo "  --abi=ABI ................. Set Android ABI (default is x86_64)"
+    echo "  --abi=ABI ................. Set Android ABI (default is x86_64; accepts 'all')"
     echo "  --api-level=VERSION ....... Set Android API level (default is 21)"
     echo "  --vulkan .................. Include Vulkan renderer"
     echo "  --no-examples ............. Exclude example projects"
@@ -61,6 +62,8 @@ for ARG in "$@"; do
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
+    else
+        OUTPUT_DIR="$ARG"
     fi
 done
 
@@ -124,9 +127,8 @@ if [ $VERBOSE -eq 1 ]; then
 fi
 
 # Build into output directory (this syntax requires CMake 3.13+)
-OPTIONS=(
+BASE_OPTIONS=(
     -DCMAKE_TOOLCHAIN_FILE="$ANDROID_CMAKE_TOOLCHAIN"
-    -DANDROID_ABI=$ANDROID_ABI
     -DANDROID_PLATFORM=$ANDROID_API_LEVEL
     -DANDROID_STL=c++_shared
     -DANDROID_CPP_FEATURES="rtti exceptions"
@@ -138,12 +140,40 @@ OPTIONS=(
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
-    -B "$OUTPUT_DIR"
 )
 
-if [ $PROJECT_ONLY -eq 0 ]; then
-    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
-    cmake --build "$OUTPUT_DIR"
+build_with_android_abi()
+{
+    CURRENT_ANDROID_ABI=$1
+    CURRENT_OUTPUT_DIR=$2
+
+    OPTIONS=(
+        ${BASE_OPTIONS[@]}
+        -DANDROID_ABI=$CURRENT_ANDROID_ABI
+        -B "$CURRENT_OUTPUT_DIR"
+    )
+
+    if [ ! -d "$CURRENT_OUTPUT_DIR" ]; then
+        mkdir "$CURRENT_OUTPUT_DIR"
+    fi
+
+    if [ $PROJECT_ONLY -eq 0 ]; then
+        cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
+        cmake --build "$CURRENT_OUTPUT_DIR"
+    else
+        cmake ${OPTIONS[@]} -G "$GENERATOR"
+    fi
+}
+
+if [ $ANDROID_ABI = "all" ]; then
+    declare -i ABI_INDEX=1
+    for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
+        if [ $VERBOSE -eq 1 ]; then
+            echo "[${ABI_INDEX}/${#SUPPORTED_ANDROID_ABIS[@]}] Building with Android ABI: $ABI"
+            ABI_INDEX+=1
+        fi
+        build_with_android_abi $ABI "${OUTPUT_DIR}/${ABI}"
+    done
 else
-    cmake ${OPTIONS[@]} -G "$GENERATOR"
+    build_with_android_abi $ANDROID_ABI "$OUTPUT_DIR"
 fi
