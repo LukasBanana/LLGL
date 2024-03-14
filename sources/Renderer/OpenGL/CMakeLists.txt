@@ -98,6 +98,9 @@ elseif(UNIX)
     if(LLGL_ANDROID_PLATFORM)
         find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Android)
         find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Android)
+    elseif(EMSCRIPTEN)
+        find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Emscripten)
+        find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Emscripten)        
     else()
         find_source_files(FilesRendererGLPlatform   CXX ${PROJECT_SOURCE_DIR}/Platform/Linux)
         find_source_files(FilesIncludeGLPlatform    INC ${BACKEND_INCLUDE_DIR}/OpenGL/Linux)
@@ -167,12 +170,14 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
     include("${EXTERNAL_MODULE_DIR}/FindOpenGLES3.cmake")
     if(OPENGLES_FOUND)
         include_directories(${OPENGLES_INCLUDE_DIR})
-        
+
         add_llgl_module(LLGL_OpenGLES3 LLGL_BUILD_RENDERER_OPENGLES3 "${FilesGLES3}")
         
         if(APPLE)
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES -framework GLKit")
             ADD_PROJECT_DEFINE(LLGL_OpenGLES3 GLES_SILENCE_DEPRECATION)
+        elseif(EMSCRIPTEN)
+            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
         else()
             target_link_libraries(LLGL_OpenGLES3 LLGL EGL GLESv3)
         endif()
@@ -187,13 +192,13 @@ if(LLGL_BUILD_RENDERER_OPENGL)
     # OpenGL Renderer
     set(OpenGL_GL_PREFERENCE GLVND)
     find_package(OpenGL REQUIRED)
-    if(OpenGL_FOUND)
+    if(OPENGL_FOUND)
         include_directories(${OPENGL_INCLUDE_DIR})
         
         add_llgl_module(LLGL_OpenGL LLGL_BUILD_RENDERER_OPENGL "${FilesGL}")
         
-        target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
-        
+        target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})      
+
         if(APPLE)
             ADD_PROJECT_DEFINE(LLGL_OpenGL GL_SILENCE_DEPRECATION)
         endif()
