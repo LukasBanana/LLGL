@@ -137,7 +137,7 @@ struct FormattedTableColumn
 };
 
 // Writes the specified table into a formatted string.
-LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns);
+LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns, const char* delimiters = ":;., ");
 
 
 } // /namespace LLGL

@@ -100,7 +100,7 @@ void StringPrintf(std::string& str, const char* format, va_list args1, va_list a
     }
 }
 
-LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns)
+LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColumn>& columns, const char* delimiters)
 {
     UTF8String s;
 
@@ -134,6 +134,8 @@ LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColu
     /* Format each row for all columns */
     for_range(row, maxNumRows)
     {
+        bool startOfRow = true;
+
         do
         {
             hasMultiLineCells = false;
@@ -147,7 +149,7 @@ LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColu
                     const std::size_t indent = (multiRowQueue[col].empty() ? 0 : std::min<std::size_t>(entry.multiLineIndent, columnWidths[col]/2));
                     s.append(indent, ' ');
 
-                    const StringView cell = (!multiRowQueue[col].empty() ? multiRowQueue[col] : entry.cells[row].c_str());
+                    const StringView cell = (!startOfRow ? multiRowQueue[col] : entry.cells[row].c_str());
                     if (!(col < columnWidths.size() && cell.size() + indent > columnWidths[col]))
                     {
                         /* Append cell */
@@ -160,7 +162,7 @@ LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColu
                     {
                         /* Find position where to split current cell */
                         const std::size_t maxCellWidth  = columnWidths[col] - indent;
-                        const std::size_t delimiterPos  = cell.find_last_of(":;., ", maxCellWidth);
+                        const std::size_t delimiterPos  = (delimiters != nullptr ? cell.find_last_of(delimiters, maxCellWidth) : StringView::npos);
                         const std::size_t splitPos      = (delimiterPos == StringView::npos ? maxCellWidth : delimiterPos + 1);
 
                         /* Split cell into head and tail */
@@ -191,6 +193,7 @@ LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColu
             }
 
             s += '\n';
+            startOfRow = false;
         }
         while (hasMultiLineCells);
     }
