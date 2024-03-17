@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Log.h>
+#include <LLGL/Platform/Platform.h>
 #include "CoreUtils.h"
 #include "StringUtils.h"
 #include "../Renderer/ContainerTypes.h"
@@ -14,6 +15,10 @@
 #include <string>
 #include <stdio.h>
 #include <stdarg.h>
+
+#ifdef LLGL_OS_ANDROID
+#   include <android/log.h>
+#endif
 
 
 namespace LLGL
@@ -156,10 +161,11 @@ LLGL_EXPORT LogHandle RegisterCallbackStd()
             g_logState.listenerStd = MakeUnique<LogListener>(
                 [](ReportType type, const char* text, void* /*userData*/)
                 {
-                    if (type == ReportType::Error)
-                        ::fprintf(stderr, "%s", text);
-                    else
-                        ::fprintf(stdout, "%s", text);
+                    #ifdef LLGL_OS_ANDROID
+                    (void)__android_log_print((type == ReportType::Error ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO), "LLGL", "%s", text);
+                    #else
+                    ::fprintf((type == ReportType::Error ? stderr : stdout), "%s", text);
+                    #endif
                 },
                 nullptr
             );
