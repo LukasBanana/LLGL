@@ -107,6 +107,9 @@ static void PrintHelpDocs()
         "  -s, --santiy-check ................. Print some test results even on success\n"
         "  -t, --timing ....................... Print timing results\n"
         "  -v, --verbose ...................... Print more information\n"
+        "  --amd .............................. Prefer AMD device\n"
+        "  --intel ............................ Prefer Intel device\n"
+        "  --nvidia ........................... Prefer NVIDIA device\n"
     );
 }
 

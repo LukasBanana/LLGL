@@ -130,6 +130,9 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
     const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
     const bool  isGpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "gpu") == 0);
+    const bool  preferAMD               = HasArgument(argc, argv, "--amd");
+    const bool  preferIntel             = HasArgument(argc, argv, "--intel");
+    const bool  preferNVIDIA            = HasArgument(argc, argv, "--nvidia");
 
     // Configure render system
     RendererConfigurationOpenGL cfgGL;
@@ -145,6 +148,13 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
             if (isCpuDebugMode)
                 rendererDesc.debugger = &debugger;
         }
+
+        if (preferAMD)
+            rendererDesc.flags |= RenderSystemFlags::PreferAMD;
+        if (preferIntel)
+            rendererDesc.flags |= RenderSystemFlags::PreferIntel;
+        if (preferNVIDIA)
+            rendererDesc.flags |= RenderSystemFlags::PreferNVIDIA;
 
         if (::strcmp(moduleName, "OpenGL") == 0)
         {
