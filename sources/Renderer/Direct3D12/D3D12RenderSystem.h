@@ -119,6 +119,9 @@ class D3D12RenderSystem final : public RenderSystem
         HRESULT CreateDevice(IDXGIAdapter* preferredAdapter);
         HRESULT QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle);
 
+        // Returns the minor version of Direct3D 12.X.
+        int GetMinorVersion() const;
+
         void QueryRendererInfo();
         void QueryRenderingCaps();
 

@@ -254,202 +254,36 @@ ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID)
     return blob;
 }
 
-static std::uint32_t GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+static const Format g_D3DDefaultTextureFormats[] =
 {
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384; // D3D11_REQ_TEXTURE2D_U_OR_V_DIMENSION
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;  // D3D10_REQ_TEXTURE2D_U_OR_V_DIMENSION
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
-    else                                        return 2048;
-}
+    Format::A8UNorm,
+    Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
+    Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
+    Format::R32UInt,            Format::R32SInt,            Format::R32Float,
+    Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
+    Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
+    Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
+    Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
+    Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
+    Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
+    Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
+    Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
+    Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,
+    Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
+    Format::BC1UNorm,           Format::BC1UNorm_sRGB,
+    Format::BC2UNorm,           Format::BC2UNorm_sRGB,
+    Format::BC3UNorm,           Format::BC3UNorm_sRGB,
+};
 
-static std::uint32_t GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+void DXGetDefaultSupportedTextureFormats(Format* outFormats, std::size_t* outNumFormats)
 {
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384; // D3D11_REQ_TEXTURECUBE_DIMENSION
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;  // D3D10_REQ_TEXTURECUBE_DIMENSION
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
-    else                                        return 512;
-}
-
-static std::uint32_t GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
-{
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4;
-    else                                        return 1;
-}
-
-// Returns the HLSL version for the specified Direct3D feature level.
-static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureLevel)
-{
-    std::vector<ShadingLanguage> languages;
-
-    languages.push_back(ShadingLanguage::HLSL);
-    languages.push_back(ShadingLanguage::HLSL_2_0);
-
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_1 ) { languages.push_back(ShadingLanguage::HLSL_2_0a); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) { languages.push_back(ShadingLanguage::HLSL_2_0b); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) { languages.push_back(ShadingLanguage::HLSL_3_0); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) { languages.push_back(ShadingLanguage::HLSL_4_0); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) { languages.push_back(ShadingLanguage::HLSL_4_1); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) { languages.push_back(ShadingLanguage::HLSL_5_0); }
-    if (featureLevel >= D3D_FEATURE_LEVEL_12_0) { languages.push_back(ShadingLanguage::HLSL_5_1); }
-
-    return languages;
-}
-
-static std::vector<Format> GetDefaultSupportedDXTextureFormats()
-{
-    return
-    {
-        Format::A8UNorm,
-        Format::R8UNorm,            Format::R8SNorm,            Format::R8UInt,             Format::R8SInt,
-        Format::R16UNorm,           Format::R16SNorm,           Format::R16UInt,            Format::R16SInt,            Format::R16Float,
-        Format::R32UInt,            Format::R32SInt,            Format::R32Float,
-        Format::RG8UNorm,           Format::RG8SNorm,           Format::RG8UInt,            Format::RG8SInt,
-        Format::RG16UNorm,          Format::RG16SNorm,          Format::RG16UInt,           Format::RG16SInt,           Format::RG16Float,
-        Format::RG32UInt,           Format::RG32SInt,           Format::RG32Float,
-        Format::RGB32UInt,          Format::RGB32SInt,          Format::RGB32Float,
-        Format::RGBA8UNorm,         Format::RGBA8UNorm_sRGB,    Format::RGBA8SNorm,         Format::RGBA8UInt,          Format::RGBA8SInt,
-        Format::RGBA16UNorm,        Format::RGBA16SNorm,        Format::RGBA16UInt,         Format::RGBA16SInt,         Format::RGBA16Float,
-        Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
-        Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
-        Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,
-        Format::D16UNorm,           Format::D32Float,           Format::D24UNormS8UInt,     Format::D32FloatS8X24UInt,
-        Format::BC1UNorm,           Format::BC1UNorm_sRGB,
-        Format::BC2UNorm,           Format::BC2UNorm_sRGB,
-        Format::BC3UNorm,           Format::BC3UNorm_sRGB,
-    };
+    if (outFormats != nullptr)
+        ::memcpy(outFormats, g_D3DDefaultTextureFormats, sizeof(g_D3DDefaultTextureFormats));
+    if (outNumFormats != nullptr)
+        *outNumFormats = LLGL_ARRAY_LENGTH(g_D3DDefaultTextureFormats);
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
-void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLevel)
-{
-    const std::uint32_t maxThreadGroups = 65535u;//D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
-
-    /* Query common attributes */
-    caps.screenOrigin                               = ScreenOrigin::UpperLeft;
-    caps.clippingRange                              = ClippingRange::ZeroToOne;
-    caps.shadingLanguages                           = DXGetHLSLVersions(featureLevel);
-    caps.textureFormats                             = GetDefaultSupportedDXTextureFormats();
-
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0)
-    {
-        caps.textureFormats.insert(
-            caps.textureFormats.end(),
-            { Format::BC4UNorm, Format::BC4SNorm, Format::BC5UNorm, Format::BC5SNorm }
-        );
-    }
-
-    /* Query features */
-    caps.features.hasRenderTargets                  = true;
-    caps.features.has3DTextures                     = true;
-    caps.features.hasCubeTextures                   = true;
-    caps.features.hasArrayTextures                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
-    caps.features.hasCubeArrayTextures              = (featureLevel >= D3D_FEATURE_LEVEL_10_1);
-    caps.features.hasMultiSampleTextures            = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
-    caps.features.hasMultiSampleArrayTextures       = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
-    caps.features.hasTextureViews                   = true;
-    caps.features.hasTextureViewSwizzle             = false; // not supported by D3D11
-    caps.features.hasBufferViews                    = true;
-    caps.features.hasConstantBuffers                = true;
-    caps.features.hasStorageBuffers                 = true;
-    caps.features.hasGeometryShaders                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
-    caps.features.hasTessellationShaders            = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
-    caps.features.hasTessellatorStage               = caps.features.hasTessellationShaders;
-    caps.features.hasComputeShaders                 = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
-    caps.features.hasInstancing                     = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
-    caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
-    caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???
-    caps.features.hasViewportArrays                 = true;
-    caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
-    caps.features.hasLogicOp                        = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
-    caps.features.hasPipelineStatistics             = true;
-    caps.features.hasRenderCondition                = true;
-
-    /* Query limits */
-    caps.limits.lineWidthRange[0]                   = 1.0f;
-    caps.limits.lineWidthRange[1]                   = 1.0f;
-    caps.limits.maxTextureArrayLayers               = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
-    caps.limits.maxColorAttachments                 = GetMaxRenderTargets(featureLevel);
-    caps.limits.maxPatchVertices                    = 32u;
-    caps.limits.max1DTextureSize                    = GetMaxTextureDimension(featureLevel);
-    caps.limits.max2DTextureSize                    = GetMaxTextureDimension(featureLevel);
-    caps.limits.max3DTextureSize                    = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
-    caps.limits.maxCubeTextureSize                  = GetMaxCubeTextureDimension(featureLevel);
-    caps.limits.maxAnisotropy                       = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16u : 2u);
-    caps.limits.maxComputeShaderWorkGroups[0]       = maxThreadGroups;
-    caps.limits.maxComputeShaderWorkGroups[1]       = maxThreadGroups;
-    caps.limits.maxComputeShaderWorkGroups[2]       = (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u);
-    caps.limits.maxComputeShaderWorkGroupSize[0]    = 1024u;
-    caps.limits.maxComputeShaderWorkGroupSize[1]    = 1024u;
-    caps.limits.maxComputeShaderWorkGroupSize[2]    = 1024u;
-    caps.limits.maxStreamOutputs                    = 4u;
-    caps.limits.maxTessFactor                       = 64u;
-    caps.limits.minConstantBufferAlignment          = 256u;
-    caps.limits.minSampledBufferAlignment           = 32u;
-    caps.limits.minStorageBufferAlignment           = 32u;
-}
-
-std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel)
-{
-    std::vector<D3D_FEATURE_LEVEL> featureLevels =
-    {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0,
-        D3D_FEATURE_LEVEL_9_3,
-        D3D_FEATURE_LEVEL_9_2,
-        D3D_FEATURE_LEVEL_9_1,
-    };
-
-    auto it = std::remove_if(
-        featureLevels.begin(), featureLevels.end(),
-        [maxFeatureLevel](D3D_FEATURE_LEVEL entry)
-        {
-            return (entry > maxFeatureLevel);
-        }
-    );
-    featureLevels.erase(it, featureLevels.end());
-
-    return featureLevels;
-}
-
-const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_12_1:    return "12.1";
-        case D3D_FEATURE_LEVEL_12_0:    return "12.0";
-        case D3D_FEATURE_LEVEL_11_1:    return "11.1";
-        case D3D_FEATURE_LEVEL_11_0:    return "11.0";
-        case D3D_FEATURE_LEVEL_10_1:    return "10.1";
-        case D3D_FEATURE_LEVEL_10_0:    return "10.0";
-        case D3D_FEATURE_LEVEL_9_3:     return "9.3";
-        case D3D_FEATURE_LEVEL_9_2:     return "9.2";
-        case D3D_FEATURE_LEVEL_9_1:     return "9.1";
-    }
-    return "";
-}
-
-const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_12_1:    /*pass*/
-        case D3D_FEATURE_LEVEL_12_0:    /*pass*/
-        case D3D_FEATURE_LEVEL_11_1:    /*pass*/
-        case D3D_FEATURE_LEVEL_11_0:    return "5.0";
-        case D3D_FEATURE_LEVEL_10_1:    return "4.1";
-        case D3D_FEATURE_LEVEL_10_0:    return "4.0";
-        case D3D_FEATURE_LEVEL_9_3:     return "3.0";
-        case D3D_FEATURE_LEVEL_9_2:     return "2.0b";
-        case D3D_FEATURE_LEVEL_9_1:     return "2.0a";
-    }
-    return "";
-}
-
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/gg615083(v=vs.85).aspx
 UINT DXGetFxcCompilerFlags(int flags)
 {
@@ -567,7 +401,7 @@ VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdap
 
     if ((preferredAdapterFlags & preferrenceFlags) != 0)
     {
-        if (GetDXGIAdapterInfo(factory, preferrenceFlags, info, outPreferredAdatper))
+        if (GetDXGIAdapterInfo(factory, preferredAdapterFlags, info, outPreferredAdatper))
             return info;
     }
 

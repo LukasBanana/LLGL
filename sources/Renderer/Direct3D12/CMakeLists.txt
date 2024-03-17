@@ -7,7 +7,21 @@
 
 cmake_minimum_required(VERSION 3.7)
 
-project(LLGL_Direct3D11)
+project(LLGL_Direct3D12)
+
+
+# === Options ===
+
+set(LLGL_D3D12_ENABLE_FEATURELEVEL "Direct3D 12.0" CACHE STRING "Enable maximum Direct3D 12 feature level (requires newer Windows SDK versions")
+set_property(CACHE LLGL_D3D12_ENABLE_FEATURELEVEL PROPERTY STRINGS "Direct3D 12.0" "Direct3D 12.1" "Direct3D 12.2")
+
+if(${LLGL_D3D12_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 12.2")
+    ADD_DEFINE(LLGL_D3D12_ENABLE_FEATURELEVEL=2)
+elseif(${LLGL_D3D12_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 12.1")
+    ADD_DEFINE(LLGL_D3D12_ENABLE_FEATURELEVEL=1)
+else()
+    ADD_DEFINE(LLGL_D3D12_ENABLE_FEATURELEVEL=0)
+endif()
 
 
 # === Source files ===

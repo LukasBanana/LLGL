@@ -57,17 +57,8 @@ ComPtr<ID3DBlob> DXCreateBlob(const std::vector<char>& data);
 // Returns a blob that was created from a resource (*.rc files).
 ComPtr<ID3DBlob> DXCreateBlobFromResource(int resourceID);
 
-// Returns the rendering capabilites of the specified Direct3D feature level.
-void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLevel);
-
-// Returns the list of all supported Direct3D feature levels.
-std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel);
-
-// Returns the specified feature level as version string.
-const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel);
-
-// Returns the specified feature level as HLSL shader model version string.
-const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel);
+// Returns the default list of supported D3D texture formats.
+void DXGetDefaultSupportedTextureFormats(Format* outFormats, std::size_t* outNumFormats);
 
 // Returns the compiler flags for the 'ShaderCompileFlags' enumeration values for the DirectX Effects Compiler (FXC).
 UINT DXGetFxcCompilerFlags(int flags);

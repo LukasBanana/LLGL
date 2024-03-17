@@ -50,7 +50,12 @@ HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice)
     /* Query maximum support feature level */
     const D3D_FEATURE_LEVEL featureLevels[]
     {
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 2
+        D3D_FEATURE_LEVEL_12_2,
+        #endif
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
         D3D_FEATURE_LEVEL_12_1,
+        #endif
         D3D_FEATURE_LEVEL_12_0,
         D3D_FEATURE_LEVEL_11_1,
         D3D_FEATURE_LEVEL_11_0,
