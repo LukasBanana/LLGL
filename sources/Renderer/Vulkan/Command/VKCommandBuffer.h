@@ -170,7 +170,7 @@ class VKCommandBuffer final : public CommandBuffer
         std::uint32_t                   queuePresentFamily_         = 0;
 
         bool                            scissorEnabled_             = false;
-        bool                            scissorRectInvalidated_     = true;
+        bool                            hasDynamicScissorRect_      = false;
         VkPipelineBindPoint             pipelineBindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
         const VKPipelineLayout*         boundPipelineLayout_        = nullptr;
         VKPipelineState*                boundPipelineState_         = nullptr;

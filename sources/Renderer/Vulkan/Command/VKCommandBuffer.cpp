@@ -161,6 +161,7 @@ void VKCommandBuffer::Begin()
     framebufferRenderArea_.offset.y         = 0;
     framebufferRenderArea_.extent.width     = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
     framebufferRenderArea_.extent.height    = static_cast<std::uint32_t>(INT32_MAX); // Must avoid int32 overflow
+    hasDynamicScissorRect_                  = false;
 }
 
 void VKCommandBuffer::End()
@@ -623,7 +624,7 @@ void VKCommandBuffer::BeginRenderPass(
         hasDepthStencilAttachment_      = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
     }
 
-    scissorRectInvalidated_ = true;
+    hasDynamicScissorRect_ = false;
 
     /* Uninitialized stack memory for clear values */
     VkClearValue clearValuesVK[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 1];
@@ -788,13 +789,13 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
         /* Scissor rectangle must be updated (if scissor test is disabled) */
         scissorEnabled_ = graphicsPSO.IsScissorEnabled();
-        if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPSO.HasDynamicScissor())
+        if (!scissorEnabled_ && !hasDynamicScissorRect_ && graphicsPSO.HasDynamicScissor())
         {
             /* Set scissor to render target resolution */
             vkCmdSetScissor(commandBuffer_, 0, 1, &framebufferRenderArea_);
 
             /* Avoid scissor update with each graphics pipeline binding (as long as render pass does not change) */
-            scissorRectInvalidated_ = false;
+            hasDynamicScissorRect_ = true;
         }
     }
 
