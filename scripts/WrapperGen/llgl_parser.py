@@ -230,6 +230,9 @@ class Parser:
         self.scanner = Scanner()
 
     def tryParseDeprecated(self):
+        while self.scanner.acceptIfAny(['LLGL_DEPRECATED_IGNORE_PUSH', 'LLGL_DEPRECATED_IGNORE_POP']):
+            self.scanner.acceptOrFail('(')
+            self.scanner.ignoreUntil(')')
         if self.scanner.acceptIf('LLGL_DEPRECATED'):
             self.scanner.acceptOrFail('(')
             msg = self.scanner.accept()

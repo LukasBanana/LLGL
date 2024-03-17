@@ -11,9 +11,9 @@
 #define LLGL_C99_LLGLWRAPPER_H
 
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <LLGL-C/Types.h>
 
 #if defined LLGL_OS_ANDROID
@@ -622,16 +622,24 @@ typedef enum LLGLShadingLanguage
     LLGLShadingLanguageHLSL_5_0       = (0x30000|500),
     LLGLShadingLanguageHLSL_5_1       = (0x30000|510),
     LLGLShadingLanguageHLSL_6_0       = (0x30000|600),
-    LLGLShadingLanguageHLSL_6_1       = (0x30000|601),
-    LLGLShadingLanguageHLSL_6_2       = (0x30000|602),
-    LLGLShadingLanguageHLSL_6_3       = (0x30000|603),
-    LLGLShadingLanguageHLSL_6_4       = (0x30000|604),
+    LLGLShadingLanguageHLSL_6_1       = (0x30000|610),
+    LLGLShadingLanguageHLSL_6_2       = (0x30000|620),
+    LLGLShadingLanguageHLSL_6_3       = (0x30000|630),
+    LLGLShadingLanguageHLSL_6_4       = (0x30000|640),
+    LLGLShadingLanguageHLSL_6_5       = (0x30000|650),
+    LLGLShadingLanguageHLSL_6_6       = (0x30000|660),
+    LLGLShadingLanguageHLSL_6_7       = (0x30000|670),
+    LLGLShadingLanguageHLSL_6_8       = (0x30000|680),
     LLGLShadingLanguageMetal          = (0x40000),
     LLGLShadingLanguageMetal_1_0      = (0x40000|100),
     LLGLShadingLanguageMetal_1_1      = (0x40000|110),
     LLGLShadingLanguageMetal_1_2      = (0x40000|120),
     LLGLShadingLanguageMetal_2_0      = (0x40000|200),
     LLGLShadingLanguageMetal_2_1      = (0x40000|210),
+    LLGLShadingLanguageMetal_2_2      = (0x40000|220),
+    LLGLShadingLanguageMetal_2_3      = (0x40000|230),
+    LLGLShadingLanguageMetal_2_4      = (0x40000|240),
+    LLGLShadingLanguageMetal_3_0      = (0x40000|300),
     LLGLShadingLanguageSPIRV          = (0x50000),
     LLGLShadingLanguageSPIRV_100      = (0x50000|100),
     LLGLShadingLanguageVersionBitmask = 0x0000ffff,

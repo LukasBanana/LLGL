@@ -79,10 +79,14 @@ enum class ShadingLanguage
     HLSL_5_0        = (0x30000 | 500),  //!< HLSL 5.0 (since Direct3D 11).
     HLSL_5_1        = (0x30000 | 510),  //!< HLSL 5.1 (since Direct3D 11.3).
     HLSL_6_0        = (0x30000 | 600),  //!< HLSL 6.0 (since Direct3D 12). Shader model 6.0 adds wave intrinsics and 64-bit integer types to HLSL.
-    HLSL_6_1        = (0x30000 | 601),  //!< HLSL 6.1 (since Direct3D 12). Shader model 6.1 adds \c SV_ViewID and \c SV_Barycentrics semantics to HLSL.
-    HLSL_6_2        = (0x30000 | 602),  //!< HLSL 6.2 (since Direct3D 12). Shader model 6.2 adds 16-bit scalar types to HLSL.
-    HLSL_6_3        = (0x30000 | 603),  //!< HLSL 6.3 (since Direct3D 12). Shader model 6.3 adds ray tracing (DXR) to HLSL.
-    HLSL_6_4        = (0x30000 | 604),  //!< HLSL 6.4 (since Direct3D 12). Shader model 6.4 adds machine learning intrinsics to HLSL.
+    HLSL_6_1        = (0x30000 | 610),  //!< HLSL 6.1 (since Direct3D 12). Shader model 6.1 adds \c SV_ViewID and \c SV_Barycentrics semantics to HLSL.
+    HLSL_6_2        = (0x30000 | 620),  //!< HLSL 6.2 (since Direct3D 12). Shader model 6.2 adds 16-bit scalar types to HLSL.
+    HLSL_6_3        = (0x30000 | 630),  //!< HLSL 6.3 (since Direct3D 12). Shader model 6.3 adds ray tracing (DXR) to HLSL.
+    HLSL_6_4        = (0x30000 | 640),  //!< HLSL 6.4 (since Direct3D 12). Shader model 6.4 adds machine learning intrinsics to HLSL.
+    HLSL_6_5        = (0x30000 | 650),  //!< HLSL 6.5 (since Direct3D 12). Shader model 6.5 adds DXR 1.1 to HLSL.
+    HLSL_6_6        = (0x30000 | 660),  //!< HLSL 6.6 (since Direct3D 12). Shader model 6.6 adds dynamic resources to HLSL.
+    HLSL_6_7        = (0x30000 | 670),  //!< HLSL 6.7 (since Direct3D 12). Shader model 6.7 adds advanced texture operations to HLSL.
+    HLSL_6_8        = (0x30000 | 680),  //!< HLSL 6.8 (since Direct3D 12). Shader model 6.8 adds work graphs to HLSL.
 
     Metal           = (0x40000),        //!< Metal Shading Language.
     Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0).
@@ -90,6 +94,10 @@ enum class ShadingLanguage
     Metal_1_2       = (0x40000 | 120),  //!< Metal 1.2 (since iOS 10.0 and macOS 10.12).
     Metal_2_0       = (0x40000 | 200),  //!< Metal 2.0 (since iOS 11.0 and macOS 10.13).
     Metal_2_1       = (0x40000 | 210),  //!< Metal 2.1 (since iOS 12.0 and macOS 10.14).
+    Metal_2_2       = (0x40000 | 220),  //!< Metal 2.2 (since iOS 13.0 and macOS 10.15).
+    Metal_2_3       = (0x40000 | 230),  //!< Metal 2.3 (since iOS 14.0 and macOS 11.0).
+    Metal_2_4       = (0x40000 | 240),  //!< Metal 2.4 (since iOS 15.0 and macOS 12.0).
+    Metal_3_0       = (0x40000 | 300),  //!< Metal 3.0 (since iOS 16.0 and macOS 13.0).
 
     SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
     SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.

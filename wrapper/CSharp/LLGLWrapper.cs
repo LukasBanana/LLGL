@@ -594,16 +594,24 @@ namespace LLGL
         HLSL_5_0       = (0x30000|500),
         HLSL_5_1       = (0x30000|510),
         HLSL_6_0       = (0x30000|600),
-        HLSL_6_1       = (0x30000|601),
-        HLSL_6_2       = (0x30000|602),
-        HLSL_6_3       = (0x30000|603),
-        HLSL_6_4       = (0x30000|604),
+        HLSL_6_1       = (0x30000|610),
+        HLSL_6_2       = (0x30000|620),
+        HLSL_6_3       = (0x30000|630),
+        HLSL_6_4       = (0x30000|640),
+        HLSL_6_5       = (0x30000|650),
+        HLSL_6_6       = (0x30000|660),
+        HLSL_6_7       = (0x30000|670),
+        HLSL_6_8       = (0x30000|680),
         Metal          = (0x40000),
         Metal_1_0      = (0x40000|100),
         Metal_1_1      = (0x40000|110),
         Metal_1_2      = (0x40000|120),
         Metal_2_0      = (0x40000|200),
         Metal_2_1      = (0x40000|210),
+        Metal_2_2      = (0x40000|220),
+        Metal_2_3      = (0x40000|230),
+        Metal_2_4      = (0x40000|240),
+        Metal_3_0      = (0x40000|300),
         SPIRV          = (0x50000),
         SPIRV_100      = (0x50000|100),
         VersionBitmask = 0x0000ffff,
@@ -3659,18 +3667,18 @@ namespace LLGL
 
         public unsafe struct ImageView
         {
-            public ImageFormat format;      /* = ImageFormat.RGBA */
-            public DataType    dataType;    /* = DataType.UInt8 */
-            public void*       data;        /* = null */
-            public IntPtr      dataSize;    /* = 0 */
+            public ImageFormat format;   /* = ImageFormat.RGBA */
+            public DataType    dataType; /* = DataType.UInt8 */
+            public void*       data;     /* = null */
+            public IntPtr      dataSize; /* = 0 */
         }
 
         public unsafe struct MutableImageView
         {
-            public ImageFormat format;      /* = ImageFormat.RGBA */
-            public DataType    dataType;    /* = DataType.UInt8 */
-            public void*       data;        /* = null */
-            public IntPtr      dataSize;    /* = 0 */
+            public ImageFormat format;   /* = ImageFormat.RGBA */
+            public DataType    dataType; /* = DataType.UInt8 */
+            public void*       data;     /* = null */
+            public IntPtr      dataSize; /* = 0 */
         }
 
         public unsafe struct BindingDescriptor

@@ -101,6 +101,10 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage val)
         case T::HLSL_6_2:   return "HLSL 6.2";
         case T::HLSL_6_3:   return "HLSL 6.3";
         case T::HLSL_6_4:   return "HLSL 6.4";
+        case T::HLSL_6_5:   return "HLSL 6.5";
+        case T::HLSL_6_6:   return "HLSL 6.6";
+        case T::HLSL_6_7:   return "HLSL 6.7";
+        case T::HLSL_6_8:   return "HLSL 6.8";
 
         case T::Metal:      return "Metal";
         case T::Metal_1_0:  return "Metal 1.0";
@@ -108,6 +112,10 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage val)
         case T::Metal_1_2:  return "Metal 1.2";
         case T::Metal_2_0:  return "Metal 2.0";
         case T::Metal_2_1:  return "Metal 2.1";
+        case T::Metal_2_2:  return "Metal 2.2";
+        case T::Metal_2_3:  return "Metal 2.3";
+        case T::Metal_2_4:  return "Metal 2.4";
+        case T::Metal_3_0:  return "Metal 3.0";
 
         case T::SPIRV:      return "SPIR-V";
         case T::SPIRV_100:  return "SPIR-V 1.00";

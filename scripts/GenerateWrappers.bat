@@ -85,11 +85,11 @@ if "%FUNCTIONS%"=="" (
 )
 
 REM Run Python script to parse LLGL headers and write result into output file
-python3 %ARGS% > %OUTPUT%
+python %ARGS% > %OUTPUT%
 
 REM Repeat command if an error occurred
 if %ERRORLEVEL% NEQ 0 (
-    python3 %ARGS%
+    python %ARGS%
 )
 
 exit /B %ERRORLEVEL%
