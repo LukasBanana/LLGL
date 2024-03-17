@@ -14,6 +14,7 @@
 #include "../../../../Core/Assertion.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -236,8 +237,23 @@ void AndroidGLContext::LoadExternalContext(EGLContext context)
     if (eglQueryContext(display_, context, EGL_CONFIG_ID, &configID) == EGL_FALSE)
         LLGL_TRAP("eglQueryContext failed (%s)", EGLErrorToString());
 
-    LLGL_ASSERT(configID >= 0 && configID < numConfigs);
-    config_ = configs[configID];
+    bool foundConfig = false;
+
+    for_range(i, numConfigs)
+    {
+        EGLint currentConfigID = 0;
+        if (eglGetConfigAttrib(display_, configs[i], EGL_CONFIG_ID, &currentConfigID) == EGL_FALSE)
+            LLGL_TRAP("eglGetConfigAttrib failed (%s)", EGLErrorToString());
+        if (currentConfigID == configID)
+        {
+            config_ = configs[i];
+            foundConfig = true;
+            break;
+        }
+    }
+
+    if (!foundConfig)
+        LLGL_TRAP("failed to find EGL context configuration with ID %u", configID);
 
     /* Accept external EGL context */
     hasExternalContext_ = true;
