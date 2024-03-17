@@ -169,12 +169,16 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayoutPermutation(
     const ArrayView<Shader*>&           shaders,
     std::vector<VkPushConstantRange>&   outUniformRanges) const
 {
+    #ifdef LLGL_ENABLE_SPIRV_REFLECT
     if (!uniformDescs_.empty())
     {
         std::vector<VkPushConstantRange> pushConstantRangesPerStage;
         BuildPushConstantRanges(shaders, uniformDescs_, pushConstantRangesPerStage, outUniformRanges);
         return CreateVkPipelineLayout(device, pushConstantRangesPerStage);
     }
+    #else
+    LLGL_ASSERT(uniformDescs_.empty(), "uniform descriptors in Vulkan PSO layout but LLGL was not compiled with LLGL_ENABLE_SPIRV_REFLECT");
+    #endif
     return {};
 }
 
