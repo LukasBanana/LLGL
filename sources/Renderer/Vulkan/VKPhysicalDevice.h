@@ -31,7 +31,7 @@ class VKPhysicalDevice
         /* ----- Common ----- */
 
         // Picks the physical Vulkan device by enumerating the available devices from the specified Vulkan instance.
-        bool PickPhysicalDevice(VkInstance instance);
+        bool PickPhysicalDevice(VkInstance instance, long preferredDeviceFlags = 0);
 
         // Loads the physical Vulkan device from a custom native handle.
         void LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice);

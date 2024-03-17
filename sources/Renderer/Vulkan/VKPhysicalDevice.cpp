@@ -76,34 +76,70 @@ static bool IsPhysicalDeviceSuitable(
     return false;
 }
 
-bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance)
+static bool IsPreferredDeviceVendor(DeviceVendor vendor, long preferredDeviceFlags)
+{
+    switch (vendor)
+    {
+        case DeviceVendor::NVIDIA:  return ((preferredDeviceFlags & RenderSystemFlags::PreferNVIDIA) != 0);
+        case DeviceVendor::AMD:     return ((preferredDeviceFlags & RenderSystemFlags::PreferAMD   ) != 0);
+        case DeviceVendor::Intel:   return ((preferredDeviceFlags & RenderSystemFlags::PreferIntel ) != 0);
+        default:                    return false;
+    }
+}
+
+bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, long preferredDeviceFlags)
 {
     /* Query all physical devices and pick suitable */
     std::vector<VkPhysicalDevice> physicalDevices = VKQueryPhysicalDevices(instance);
 
+    auto TryPickPhysicalDevice = [this](VkPhysicalDevice device) -> bool
+    {
+        if (!IsPhysicalDeviceSuitable(device, supportedExtensions_))
+        {
+            /* Device doesn't support required extensions */
+            return false;
+        }
+
+        /* Store reference to all extension names */
+        for (const VkExtensionProperties& extension : supportedExtensions_)
+            supportedExtensionNames_.insert(extension.extensionName);
+
+        if (!EnableExtensions(g_requiredVulkanExtensions, true))
+        {
+            /* Stop considering this physical device, because some required extensions are not supported */
+            supportedExtensionNames_.clear();
+            return false;
+        }
+
+        /* Store device and store properties */
+        physicalDevice_ = device;
+        QueryDeviceInfo();
+        EnableExtensions(GetOptionalExtensions());
+
+        return true;
+    };
+
+    if (preferredDeviceFlags != 0)
+    {
+        /* Try to find preferred device */
+        for (VkPhysicalDevice device : physicalDevices)
+        {
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(device, &properties);
+            const DeviceVendor vendor = GetVendorByID(properties.vendorID);
+            if (IsPreferredDeviceVendor(vendor, preferredDeviceFlags))
+            {
+                if (TryPickPhysicalDevice(device))
+                    return true;
+            }
+        }
+    }
+
+    /* Pick first available device */
     for (VkPhysicalDevice device : physicalDevices)
     {
-        if (IsPhysicalDeviceSuitable(device, supportedExtensions_))
-        {
-            /* Store reference to all extension names */
-            for (const VkExtensionProperties& extension : supportedExtensions_)
-                supportedExtensionNames_.insert(extension.extensionName);
-
-            if (!EnableExtensions(g_requiredVulkanExtensions, true))
-            {
-                /* Stop considering this physical device, because some required extensions are not supported */
-                supportedExtensionNames_.clear();
-                continue;
-            }
-
-            EnableExtensions(GetOptionalExtensions());
-
-            /* Store device and store properties */
-            physicalDevice_ = device;
-            QueryDeviceInfo();
-
+        if (TryPickPhysicalDevice(device))
             return true;
-        }
     }
 
     return false;

@@ -40,6 +40,9 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     /* Extract optional renderer configuartion */
     auto* rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
 
+    constexpr long preferredDeviceMask = (RenderSystemFlags::PreferNVIDIA | RenderSystemFlags::PreferAMD | RenderSystemFlags::PreferIntel);
+    const long preferredDeviceFlags = (renderSystemDesc.flags & preferredDeviceMask);
+
     if (auto* customNativeHandle = GetRendererNativeHandle<Vulkan::RenderSystemNativeHandle>(renderSystemDesc))
     {
         /* Store weak references to native handles */
@@ -47,7 +50,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         if (debugLayerEnabled_)
             CreateDebugReportCallback();
         VKLoadInstanceExtensions(instance_);
-        if (!PickPhysicalDevice(customNativeHandle->physicalDevice))
+        if (!PickPhysicalDevice(preferredDeviceFlags, customNativeHandle->physicalDevice))
             return;
         CreateLogicalDevice(customNativeHandle->device);
     }
@@ -58,7 +61,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         if (debugLayerEnabled_)
             CreateDebugReportCallback();
         VKLoadInstanceExtensions(instance_);
-        if (!PickPhysicalDevice())
+        if (!PickPhysicalDevice(preferredDeviceFlags))
             return;
         CreateLogicalDevice();
     }
@@ -881,7 +884,7 @@ void VKRenderSystem::CreateDebugReportCallback()
     VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
 }
 
-bool VKRenderSystem::PickPhysicalDevice(VkPhysicalDevice customPhysicalDevice)
+bool VKRenderSystem::PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice)
 {
     /* Pick physical device with Vulkan support */
     if (customPhysicalDevice != VK_NULL_HANDLE)
@@ -889,7 +892,7 @@ bool VKRenderSystem::PickPhysicalDevice(VkPhysicalDevice customPhysicalDevice)
         /* Load weak reference to custom native physical device */
         physicalDevice_.LoadPhysicalDeviceWeakRef(customPhysicalDevice);
     }
-    else if (!physicalDevice_.PickPhysicalDevice(instance_))
+    else if (!physicalDevice_.PickPhysicalDevice(instance_, preferredDeviceFlags))
     {
         GetMutableReport().Errorf("failed to find suitable Vulkan device");
         return false;

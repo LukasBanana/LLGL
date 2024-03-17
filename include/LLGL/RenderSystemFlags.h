@@ -202,6 +202,7 @@ struct RenderSystemFlags
         /**
         \brief Hints the render system to prefer a video adapter from NVIDIA.
         \remarks This can be used on multi-GPU systems to select a specific video adapter when more than one is available.
+        If multiple preferred device vendors are specified, the order of preference is undefined.
         \remarks This is merely a hint to the render system bebacause not all rendering APIs support selecting a specific video adapter (such as OpenGL).
         \note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
         */
