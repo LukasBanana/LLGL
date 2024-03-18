@@ -46,7 +46,7 @@ Report::Report(const Report& rhs) :
 {
 }
 
-Report::Report(Report&& rhs) :
+Report::Report(Report&& rhs) noexcept :
     pimpl_ { rhs.pimpl_ }
 {
     rhs.pimpl_ = nullptr;

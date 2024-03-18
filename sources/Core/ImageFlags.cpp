@@ -99,8 +99,8 @@ struct DepthStencilValue
 template <typename T>
 double ReadNormalizedVariant(const T& src)
 {
-    const double min = static_cast<double>(std::numeric_limits<T>::min());
-    const double max = static_cast<double>(std::numeric_limits<T>::max());
+    constexpr double min = static_cast<double>(std::numeric_limits<T>::min());
+    constexpr double max = static_cast<double>(std::numeric_limits<T>::max());
     return (static_cast<double>(src) - min) / (max - min);
 }
 
@@ -108,8 +108,8 @@ double ReadNormalizedVariant(const T& src)
 template <typename T>
 void WriteNormalizedVariant(T& dst, double value)
 {
-    const double min = static_cast<double>(std::numeric_limits<T>::min());
-    const double max = static_cast<double>(std::numeric_limits<T>::max());
+    constexpr double min = static_cast<double>(std::numeric_limits<T>::min());
+    constexpr double max = static_cast<double>(std::numeric_limits<T>::max());
     dst = static_cast<T>(value * (max - min) + min);
 }
 

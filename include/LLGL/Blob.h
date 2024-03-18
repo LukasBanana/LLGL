@@ -35,7 +35,7 @@ class LLGL_EXPORT Blob : public NonCopyable
         Blob();
 
         //! Move constructor.
-        Blob(Blob&& rhs);
+        Blob(Blob&& rhs) noexcept;
 
         //! Move operator.
         Blob& operator = (Blob&& rhs);

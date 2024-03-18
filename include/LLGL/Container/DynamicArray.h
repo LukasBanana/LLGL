@@ -71,14 +71,14 @@ class LLGL_EXPORT DynamicArray
         DynamicArray(const DynamicArray& other) :
             DynamicArray {}
         {
-            operator = (other);
+            this->operator=(other);
         }
 
         //! Takes the ownership of dynamically allocated elements from the \c other array.
-        DynamicArray(DynamicArray&& other) :
+        DynamicArray(DynamicArray&& other) noexcept :
             DynamicArray {}
         {
-            operator = (std::forward<DynamicArray&&>(other));
+            this->operator=(std::forward<DynamicArray&&>(other));
         }
 
         //! Initializes the array with the specified elements in the half-open range <code>[from, to)</code>.
@@ -279,7 +279,7 @@ class LLGL_EXPORT DynamicArray
             }
         }
 
-        void swap(DynamicArray& other)
+        void swap(DynamicArray& other) noexcept
         {
             std::swap(data_, other.data_);
             std::swap(size_, other.size_);

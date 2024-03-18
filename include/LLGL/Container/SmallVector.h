@@ -720,7 +720,7 @@ class LLGL_EXPORT SmallVector
 
         void realloc(size_type cap = 0)
         {
-            cap = (std::max)(cap, size_);
+            cap = std::max<size_type>(cap, size_);
 
             if (cap > LocalCapacity)
             {

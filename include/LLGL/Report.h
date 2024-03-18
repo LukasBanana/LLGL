@@ -48,7 +48,7 @@ class LLGL_EXPORT Report final
         Report(const Report& rhs);
 
         //! Move constructor.
-        Report(Report&& rhs);
+        Report(Report&& rhs) noexcept;
 
         //! Deletes the internal report.
         ~Report();

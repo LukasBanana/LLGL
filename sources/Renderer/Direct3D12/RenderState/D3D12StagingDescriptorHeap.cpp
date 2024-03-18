@@ -15,13 +15,13 @@ namespace LLGL
 {
 
 
-D3D12StagingDescriptorHeap::D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs) :
+D3D12StagingDescriptorHeap::D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs) noexcept :
     D3D12DescriptorHeap { std::forward<D3D12DescriptorHeap&&>(rhs) },
     offset_             { rhs.offset_                              }
 {
 }
 
-D3D12StagingDescriptorHeap& D3D12StagingDescriptorHeap::operator = (D3D12StagingDescriptorHeap&& rhs)
+D3D12StagingDescriptorHeap& D3D12StagingDescriptorHeap::operator = (D3D12StagingDescriptorHeap&& rhs) noexcept
 {
     if (this != &rhs)
     {

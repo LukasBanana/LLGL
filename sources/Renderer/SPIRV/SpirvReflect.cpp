@@ -31,7 +31,7 @@ SpirvResult SpirvReflect::Reflect(const SpirvModuleView& module)
     names_.Reset(header.idBound);
 
     /* Parse each SPIR-V instruction in the module */
-    for (SpirvInstruction instr : module)
+    for (const SpirvInstruction& instr : module)
     {
         if (instr.opcode == spv::Op::OpFunction)
         {
@@ -90,7 +90,7 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
     /* Parse each SPIR-V instruction in the module */
     bool firstModeParsed = false;
 
-    for (SpirvInstruction instr : module)
+    for (const SpirvInstruction& instr : module)
     {
         if (instr.opcode == spv::Op::OpExecutionMode)
         {
@@ -109,7 +109,7 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
 
 static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
 {
-    for (SpirvInstruction instr : module)
+    for (const SpirvInstruction& instr : module)
     {
         if (instr.opcode == spv::Op::OpVariable)
         {
@@ -132,7 +132,7 @@ static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
 
 static spv::Id FindPointerTypeSubtype(const SpirvModuleView& module, spv::Id pointerTypeId)
 {
-    for (SpirvInstruction instr : module)
+    for (const SpirvInstruction& instr : module)
     {
         if (instr.opcode == spv::Op::OpTypePointer)
         {
@@ -177,7 +177,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
     };
 
     /* Now parse SPIR-V module for block name, its member names, and member offsets */
-    for (SpirvInstruction instr : module)
+    for (const SpirvInstruction& instr : module)
     {
         if (instr.opcode == spv::Op::OpFunction)
         {

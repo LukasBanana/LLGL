@@ -202,7 +202,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
             struct BindingTable
             {
-                ResourceHeap*           resourceHeap;
+                ResourceHeap*           resourceHeap = nullptr;
                 std::vector<Resource*>  resources;
                 std::vector<char>       uniforms;
             }

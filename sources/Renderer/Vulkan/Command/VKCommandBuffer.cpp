@@ -126,8 +126,10 @@ void VKCommandBuffer::Begin()
     vkResetFences(device_, 1, &recordingFence_);
 
     /* Initialize inheritance if this is a secondary command buffer */
+    const bool isSecondaryCmdBuffer = (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+
     VkCommandBufferInheritanceInfo inheritanceInfo;
-    if (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY)
+    if (isSecondaryCmdBuffer)
     {
         inheritanceInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
         inheritanceInfo.pNext                   = nullptr;
@@ -145,7 +147,7 @@ void VKCommandBuffer::Begin()
         beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.pNext             = nullptr;
         beginInfo.flags             = usageFlags_;
-        beginInfo.pInheritanceInfo  = (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY ? &inheritanceInfo : nullptr);
+        beginInfo.pInheritanceInfo  = (isSecondaryCmdBuffer ? &inheritanceInfo : nullptr);
     }
     VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");

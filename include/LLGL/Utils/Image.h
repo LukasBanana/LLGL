@@ -65,7 +65,7 @@ class LLGL_EXPORT Image
         Image(const Image& rhs);
 
         //! Move constructor which takes the ownership of the specified source image.
-        Image(Image&& rhs);
+        Image(Image&& rhs) noexcept;
 
         /* ----- Operators ----- */
 
@@ -262,7 +262,7 @@ class LLGL_EXPORT Image
 
     private:
 
-        void ResetAttributes();
+        void ResetAttributes() noexcept;
 
         std::size_t GetDataPtrOffset(const Offset3D& offset) const;
 

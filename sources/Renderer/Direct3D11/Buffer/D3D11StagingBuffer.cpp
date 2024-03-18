@@ -50,14 +50,14 @@ D3D11StagingBuffer::D3D11StagingBuffer(
     DXThrowIfCreateFailed(hr, "ID3D11Buffer", "for CPU-access buffer");
 }
 
-D3D11StagingBuffer::D3D11StagingBuffer(D3D11StagingBuffer&& rhs) :
+D3D11StagingBuffer::D3D11StagingBuffer(D3D11StagingBuffer&& rhs) noexcept :
     native_ { std::move(rhs.native_) },
     size_   { rhs.size_              },
     offset_ { rhs.offset_            }
 {
 }
 
-D3D11StagingBuffer& D3D11StagingBuffer::operator = (D3D11StagingBuffer&& rhs)
+D3D11StagingBuffer& D3D11StagingBuffer::operator = (D3D11StagingBuffer&& rhs) noexcept
 {
     if (this != &rhs)
     {

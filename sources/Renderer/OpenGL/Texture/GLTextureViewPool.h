@@ -66,10 +66,10 @@ class GLTextureViewPool
         // Structure that stores a GL texture that was generated with 'glTextureView'; managed by <GLTextureViewPool>
         struct GLTextureView
         {
-            GLuint              texID        = 0;
-            GLuint              sourceTexID  = 0;
-            GLuint              refCount     = 0;
-            CompressedTexView   view;
+            GLuint              texID       = 0;
+            GLuint              sourceTexID = 0;
+            GLuint              refCount    = 0;
+            CompressedTexView   view        = {};
         };
 
         // Compares the two texture views in a strict-weak-order (SWO).

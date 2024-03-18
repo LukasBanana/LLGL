@@ -49,7 +49,7 @@ Image::Image(const Image& rhs) :
     ::memcpy(data_.get(), rhs.data_.get(), rhs.GetDataSize());
 }
 
-Image::Image(Image&& rhs) :
+Image::Image(Image&& rhs) noexcept :
     extent_   { rhs.extent_          },
     format_   { rhs.format_          },
     dataType_ { rhs.dataType_        },
@@ -473,7 +473,7 @@ bool Image::IsRegionInside(const Offset3D& offset, const Extent3D& extent) const
  * ======= Private: =======
  */
 
-void Image::ResetAttributes()
+void Image::ResetAttributes() noexcept
 {
     format_     = ImageFormat::RGBA;
     dataType_   = DataType::UInt8;

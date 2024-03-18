@@ -64,7 +64,7 @@ static ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeapOrThrow(
     return D3D12DescriptorHeap::CreateNativeOrThrow(device, heapDesc);
 }
 
-D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12DescriptorHeap&& rhs) :
+D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12DescriptorHeap&& rhs) noexcept :
     native_ { std::move(rhs.native_) },
     type_   { rhs.type_              },
     size_   { rhs.size_              },
@@ -72,7 +72,7 @@ D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12DescriptorHeap&& rhs) :
 {
 }
 
-D3D12DescriptorHeap& D3D12DescriptorHeap::operator = (D3D12DescriptorHeap&& rhs)
+D3D12DescriptorHeap& D3D12DescriptorHeap::operator = (D3D12DescriptorHeap&& rhs) noexcept
 {
     if (this != &rhs)
     {

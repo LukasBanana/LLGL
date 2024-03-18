@@ -145,7 +145,7 @@ Blob::Blob() :
 {
 }
 
-Blob::Blob(Blob&& rhs) :
+Blob::Blob(Blob&& rhs) noexcept :
     pimpl_ { rhs.pimpl_ }
 {
     rhs.pimpl_ = nullptr;

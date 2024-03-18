@@ -32,7 +32,7 @@ struct VideoAdapterOutputInfo
 struct VideoAdapterInfo
 {
     UTF8String                          name;
-    DeviceVendor                        vendor;
+    DeviceVendor                        vendor      = DeviceVendor::Undefined;
     std::uint64_t                       videoMemory = 0;
     std::vector<VideoAdapterOutputInfo> outputs;
 };

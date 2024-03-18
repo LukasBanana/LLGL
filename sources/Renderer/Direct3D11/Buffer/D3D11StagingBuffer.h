@@ -32,8 +32,8 @@ class D3D11StagingBuffer
             UINT            bindFlags       = 0
         );
 
-        D3D11StagingBuffer(D3D11StagingBuffer&& rhs);
-        D3D11StagingBuffer& operator = (D3D11StagingBuffer&& rhs);
+        D3D11StagingBuffer(D3D11StagingBuffer&& rhs) noexcept;
+        D3D11StagingBuffer& operator = (D3D11StagingBuffer&& rhs) noexcept;
 
         D3D11StagingBuffer(const D3D11StagingBuffer&) = delete;
         D3D11StagingBuffer& operator = (const D3D11StagingBuffer&) = delete;

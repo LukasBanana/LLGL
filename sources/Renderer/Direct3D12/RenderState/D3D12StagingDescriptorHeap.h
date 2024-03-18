@@ -26,8 +26,8 @@ class D3D12StagingDescriptorHeap final : private D3D12DescriptorHeap
 
         D3D12StagingDescriptorHeap() = default;
 
-        D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs);
-        D3D12StagingDescriptorHeap& operator = (D3D12StagingDescriptorHeap&& rhs);
+        D3D12StagingDescriptorHeap(D3D12StagingDescriptorHeap&& rhs) noexcept;
+        D3D12StagingDescriptorHeap& operator = (D3D12StagingDescriptorHeap&& rhs) noexcept;
 
         // Initializes the descriptor heap with the specified type and size.
         D3D12StagingDescriptorHeap(

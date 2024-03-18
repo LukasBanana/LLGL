@@ -39,7 +39,7 @@ VKDeviceBuffer::VKDeviceBuffer(
     CreateVkBufferAndMemoryRegion(device, createInfo, deviceMemoryMngr, memoryProperties);
 }
 
-VKDeviceBuffer::VKDeviceBuffer(VKDeviceBuffer&& rhs) :
+VKDeviceBuffer::VKDeviceBuffer(VKDeviceBuffer&& rhs) noexcept :
     buffer_       { std::move(rhs.buffer_) },
     requirements_ { rhs.requirements_      },
     memoryRegion_ { rhs.memoryRegion_      }
@@ -47,7 +47,7 @@ VKDeviceBuffer::VKDeviceBuffer(VKDeviceBuffer&& rhs) :
     rhs.memoryRegion_ = nullptr;
 }
 
-VKDeviceBuffer& VKDeviceBuffer::operator = (VKDeviceBuffer&& rhs)
+VKDeviceBuffer& VKDeviceBuffer::operator = (VKDeviceBuffer&& rhs) noexcept
 {
     buffer_             = std::move(rhs.buffer_);
     requirements_       = rhs.requirements_;

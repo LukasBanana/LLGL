@@ -36,8 +36,8 @@ class D3D12StagingBuffer
             D3D12_HEAP_TYPE heapType    = D3D12_HEAP_TYPE_UPLOAD
         );
 
-        D3D12StagingBuffer(D3D12StagingBuffer&& rhs);
-        D3D12StagingBuffer& operator = (D3D12StagingBuffer&& rhs);
+        D3D12StagingBuffer(D3D12StagingBuffer&& rhs) noexcept;
+        D3D12StagingBuffer& operator = (D3D12StagingBuffer&& rhs) noexcept;
 
         D3D12StagingBuffer(const D3D12StagingBuffer&) = delete;
         D3D12StagingBuffer& operator = (const D3D12StagingBuffer&) = delete;

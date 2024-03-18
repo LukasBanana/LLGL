@@ -42,8 +42,8 @@ class VKDeviceBuffer
         VKDeviceBuffer(const VKDeviceBuffer&) = delete;
         VKDeviceBuffer& operator = (const VKDeviceBuffer&) = delete;
 
-        VKDeviceBuffer(VKDeviceBuffer&& rhs);
-        VKDeviceBuffer& operator = (VKDeviceBuffer&& rhs);
+        VKDeviceBuffer(VKDeviceBuffer&& rhs) noexcept;
+        VKDeviceBuffer& operator = (VKDeviceBuffer&& rhs) noexcept;
 
         /* ----- Native buffer ----- */
 
@@ -89,7 +89,7 @@ class VKDeviceBuffer
     private:
 
         VKPtr<VkBuffer>         buffer_;
-        VkMemoryRequirements    requirements_;
+        VkMemoryRequirements    requirements_   = {};
         VKDeviceMemoryRegion*   memoryRegion_   = nullptr;
 
 };

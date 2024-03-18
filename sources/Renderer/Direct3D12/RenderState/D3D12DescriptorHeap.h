@@ -30,8 +30,8 @@ class D3D12DescriptorHeap
 
         D3D12DescriptorHeap() = default;
 
-        D3D12DescriptorHeap(D3D12DescriptorHeap&& rhs);
-        D3D12DescriptorHeap& operator = (D3D12DescriptorHeap&& rhs);
+        D3D12DescriptorHeap(D3D12DescriptorHeap&& rhs) noexcept;
+        D3D12DescriptorHeap& operator = (D3D12DescriptorHeap&& rhs) noexcept;
 
         D3D12DescriptorHeap(const D3D12DescriptorHeap&) = delete;
         D3D12DescriptorHeap& operator = (const D3D12DescriptorHeap&) = delete;

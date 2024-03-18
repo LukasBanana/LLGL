@@ -25,14 +25,14 @@ D3D12StagingBuffer::D3D12StagingBuffer(
     Create(device, size, alignment, heapType);
 }
 
-D3D12StagingBuffer::D3D12StagingBuffer(D3D12StagingBuffer&& rhs) :
+D3D12StagingBuffer::D3D12StagingBuffer(D3D12StagingBuffer&& rhs) noexcept :
     native_ { std::move(rhs.native_) },
     size_   { rhs.size_              },
     offset_ { rhs.offset_            }
 {
 }
 
-D3D12StagingBuffer& D3D12StagingBuffer::operator = (D3D12StagingBuffer&& rhs)
+D3D12StagingBuffer& D3D12StagingBuffer::operator = (D3D12StagingBuffer&& rhs) noexcept
 {
     if (this != &rhs)
     {
