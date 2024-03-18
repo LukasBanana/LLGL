@@ -11,8 +11,8 @@
 
 #include "../GLContext.h"
 #include "../../OpenGL.h"
-#include <EGL/egl.h>
-
+#include <emscripten.h>
+#include <emscripten/html5.h>
 
 namespace LLGL
 {
@@ -38,29 +38,15 @@ class EmscriptenGLContext : public GLContext
 
     public:
 
-        // Returns the native EGL display.
-        inline ::EGLDisplay GetEGLDisplay() const
-        {
-            return display_;
-        }
-
-        // Returns the native EGL context.
-        inline ::EGLContext GetEGLContext() const
+        // Returns the native WebGL context.
+        inline EMSCRIPTEN_WEBGL_CONTEXT_HANDLE GetWebGLContext() const
         {
             return context_;
         }
 
-        // Returns the native EGL configuration.
-        inline ::EGLConfig GetEGLConfig() const
-        {
-            return config_;
-        }
-
     private:
-
+    
         bool SetSwapInterval(int interval) override;
-
-        bool SelectConfig(const GLPixelFormat& pixelFormat);
 
         void CreateContext(
             const GLPixelFormat&                pixelFormat,
@@ -71,10 +57,7 @@ class EmscriptenGLContext : public GLContext
 
     private:
 
-        ::EGLDisplay    display_    = nullptr;
-        ::EGLContext    context_    = nullptr;
-        ::EGLConfig     config_     = nullptr;
-        int             samples_    = 1;
+        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context_ = 0;
 
 };
 

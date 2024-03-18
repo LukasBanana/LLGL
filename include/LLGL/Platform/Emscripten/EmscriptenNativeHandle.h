@@ -17,8 +17,8 @@ namespace LLGL
 //! Emscripten native handle structure.
 struct NativeHandle
 {
-    //! HTML canvas object.
-    emscripten::val      canvas;
+    //! CSS selector of canvas object.
+    std::string      canvas;
 };
 
 

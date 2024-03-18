@@ -6,10 +6,8 @@
  */
 
 #include "EmscriptenGLSwapChainContext.h"
-#include "EmscriptenGLContext.h"
 #include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
-
 
 namespace LLGL
 {
@@ -35,29 +33,24 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
  */
 
 EmscriptenGLSwapChainContext::EmscriptenGLSwapChainContext(EmscriptenGLContext& context, Surface& surface) :
-    GLSwapChainContext { context                 },
-    display_           { context.GetEGLDisplay() },
-    context_           { context.GetEGLContext() }
+    GLSwapChainContext { context }
 {
     /* Get native surface handle */
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-
-    /* Create drawable surface */
-    //surface_ = eglCreateWindowSurface(display_, context.GetEGLConfig(), nativeHandle.window, nullptr);
-    
-    if (!surface_)
-        throw std::runtime_error("eglCreateWindowSurface failed");
+	
+	if (!context.GetWebGLContext())
+        throw std::runtime_error("GetWebGLContext failed");
 }
 
 EmscriptenGLSwapChainContext::~EmscriptenGLSwapChainContext()
 {
-    eglDestroySurface(display_, surface_);
+    //eglDestroySurface(display_, surface_);
 }
 
 bool EmscriptenGLSwapChainContext::SwapBuffers()
 {
-    eglSwapBuffers(display_, surface_);
+    //empty
     return true;
 }
 
@@ -68,10 +61,21 @@ void EmscriptenGLSwapChainContext::Resize(const Extent2D& resolution)
 
 bool EmscriptenGLSwapChainContext::MakeCurrentEGLContext(EmscriptenGLSwapChainContext* context)
 {
-    if (context)
-        return eglMakeCurrent(context->display_, context->surface_, context->surface_, context->context_);
+    EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context->context_);
+
+    if (res == EMSCRIPTEN_RESULT_SUCCESS)
+    {
+        assert(emscripten_webgl_get_current_context() == context->GetGLContext());
+
+        int width, height, fs = 0;
+        emscripten_get_canvas_element_size("#canvas", &width, &height);
+        //printf("width:%d, height:%d\n", width, height);
+        //SetViewportSize((ndf32)width, (ndf32)height); 
+    }
     else
-        return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        throw std::runtime_error("emscripten_webgl_make_context_current failed");
+
+    return true;
 }
 
 

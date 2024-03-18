@@ -11,8 +11,7 @@
 
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"
-#include <EGL/egl.h>
-
+#include "EmscriptenGLContext.h"
 
 namespace LLGL
 {
@@ -38,9 +37,7 @@ class EmscriptenGLSwapChainContext final : public GLSwapChainContext
 
     private:
 
-        ::EGLDisplay display_ = nullptr;
-        ::EGLContext context_ = nullptr;
-        ::EGLSurface surface_ = nullptr;
+        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context_ = 0;
 
 };
 

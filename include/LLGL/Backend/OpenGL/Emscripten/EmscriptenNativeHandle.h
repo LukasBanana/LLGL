@@ -9,6 +9,9 @@
 #define LLGL_OPENGL_EMSCRIPTEN_NATIVE_HANDLE_H
 
 
+#include <emscripten/html5.h>
+
+
 namespace LLGL
 {
 
@@ -23,7 +26,7 @@ namespace OpenGL
 */
 struct RenderSystemNativeHandle
 {
-    int context;
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context;
 };
 
 
