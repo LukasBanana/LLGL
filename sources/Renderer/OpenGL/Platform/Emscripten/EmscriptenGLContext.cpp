@@ -65,7 +65,7 @@ bool EmscriptenGLContext::GetNativeHandle(void* nativeHandle, std::size_t native
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
         auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
-        nativeHandleGL->context = context_;
+        //nativeHandleGL->context = context_;
         return true;
     }
     return false;

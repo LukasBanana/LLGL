@@ -44,7 +44,8 @@ EmscriptenGLSwapChainContext::EmscriptenGLSwapChainContext(EmscriptenGLContext& 
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     /* Create drawable surface */
-    surface_ = eglCreateWindowSurface(display_, context.GetEGLConfig(), nativeHandle.window, nullptr);
+    //surface_ = eglCreateWindowSurface(display_, context.GetEGLConfig(), nativeHandle.window, nullptr);
+    
     if (!surface_)
         throw std::runtime_error("eglCreateWindowSurface failed");
 }
