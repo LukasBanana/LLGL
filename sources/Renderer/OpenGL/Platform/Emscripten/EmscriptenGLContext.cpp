@@ -93,15 +93,18 @@ void EmscriptenGLContext::CreateContext(const GLPixelFormat& pixelFormat, const 
 	attrs.premultipliedAlpha = true;
 	attrs.preserveDrawingBuffer = false;
 	attrs.explicitSwapControl = 0;
+    attrs.enableExtensionsByDefault = true;
 	//attrs.preferLowPowerToHighPerformance = false;
 	attrs.failIfMajorPerformanceCaveat = false;
 	attrs.enableExtensionsByDefault = true;
 
 
-	context_ = emscripten_webgl_create_context("!canvas", &attrs);
+	context_ = emscripten_webgl_create_context("#mycanvas", &attrs);
 
     if (!context_)
         throw std::runtime_error("emscripten_webgl_create_context failed");
+
+    EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context_);
 }
 
 void EmscriptenGLContext::DeleteContext()

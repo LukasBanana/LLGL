@@ -50,32 +50,36 @@ EmscriptenGLSwapChainContext::~EmscriptenGLSwapChainContext()
 
 bool EmscriptenGLSwapChainContext::SwapBuffers()
 {
-    //empty
+    // do nothing
     return true;
 }
 
 void EmscriptenGLSwapChainContext::Resize(const Extent2D& resolution)
 {
-    // dummy
+    // do nothing (WebGL context does not need to be resized)
 }
 
 bool EmscriptenGLSwapChainContext::MakeCurrentEGLContext(EmscriptenGLSwapChainContext* context)
 {
+    return true;
     EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context->context_);
 
     if (res == EMSCRIPTEN_RESULT_SUCCESS)
     {
-        assert(emscripten_webgl_get_current_context() == context->GetGLContext());
+        //assert(emscripten_webgl_get_current_context() == context->GetGLContext());
 
         int width, height, fs = 0;
-        emscripten_get_canvas_element_size("#canvas", &width, &height);
-        //printf("width:%d, height:%d\n", width, height);
+        emscripten_get_canvas_element_size("#mycanvas", &width, &height);
+        printf("width:%d, height:%d\n", width, height);
         //SetViewportSize((ndf32)width, (ndf32)height); 
+
+        return true;
     }
     else
+    {
         throw std::runtime_error("emscripten_webgl_make_context_current failed");
-
-    return true;
+        return false;
+    }
 }
 
 
