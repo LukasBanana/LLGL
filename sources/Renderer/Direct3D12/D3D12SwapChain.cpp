@@ -47,7 +47,7 @@ D3D12SwapChain::D3D12SwapChain(
 
     /* Create device resources and window dependent resource */
     CreateDescriptorHeaps(renderSystem.GetDevice(), desc.samples);
-    CreateResolutionDependentResources(desc.resolution);
+    CreateResolutionDependentResources(GetResolution());
 
     /* Create default render pass */
     defaultRenderPass_.BuildAttachments(1, &colorFormat_, depthStencilFormat_, sampleDesc_);

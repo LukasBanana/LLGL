@@ -95,7 +95,7 @@ VKSwapChain::VKSwapChain(
 
     /* Create Vulkan render passes, swap-chain, depth-stencil buffer, and multisampling color buffers */
     CreateDefaultAndSecondaryRenderPass();
-    CreateResolutionDependentResources(desc.resolution);
+    CreateResolutionDependentResources(GetResolution());
 }
 
 void VKSwapChain::Present()

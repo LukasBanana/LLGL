@@ -32,7 +32,7 @@ D3D11SwapChain::D3D11SwapChain(
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create D3D objects */
-    CreateSwapChain(factory, desc.resolution, desc.samples, desc.swapBuffers);
+    CreateSwapChain(factory, GetResolution(), desc.samples, desc.swapBuffers);
     CreateBackBuffer();
 
     if (desc.debugName != nullptr)
