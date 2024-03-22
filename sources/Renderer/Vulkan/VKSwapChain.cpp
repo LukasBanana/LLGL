@@ -374,6 +374,18 @@ void VKSwapChain::CreateGpuSurface()
     VkResult result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
 
+    #elif defined LLGL_OS_ANDROID
+
+    VkAndroidSurfaceCreateInfoKHR createInfo;
+    {
+        createInfo.sType    = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+        createInfo.pNext    = nullptr;
+        createInfo.flags    = 0;
+        createInfo.window   = nativeHandle.window;
+    }
+    VkResult result = vkCreateAndroidSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Android surface for Vulkan swap-chain");
+
     #endif
 
     /* Query surface support details and pick surface format */

@@ -90,6 +90,7 @@ static const char* VKResultToStr(const VkResult result)
         #ifdef VK_EXT_pipeline_creation_cache_control
         LLGL_CASE_TO_STR( VK_PIPELINE_COMPILE_REQUIRED_EXT );
         #endif // VK_EXT_pipeline_creation_cache_control
+        default: break;
     }
     return nullptr;
 }

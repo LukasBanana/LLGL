@@ -58,6 +58,8 @@ for ARG in "$@"; do
         VERBOSE=1
     elif [[ "$ARG" == --abi=* ]]; then
         ANDROID_ABI="${ARG:6}"
+    elif [[ "$ARG" == --api-level=* ]]; then
+        ANDROID_API_LEVEL=${ARG:12}
     elif [ "$ARG" = "--vulkan" ]; then
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--no-examples" ]; then
@@ -66,6 +68,16 @@ for ARG in "$@"; do
         OUTPUT_DIR="$ARG"
     fi
 done
+
+# Make sure API level is high enough when Vulkan is enabled
+if [ "$ENABLE_VULKAN" = "ON" ]; then
+    if [ $ANDROID_API_LEVEL -lt 28 ]; then
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Clamping API level to 28 for Vulkan support (--api-level=$ANDROID_API_LEVEL)"
+        fi
+        ANDROID_API_LEVEL=28
+    fi
+fi
 
 # Find Android NDK installation
 NDK_ROOT=""

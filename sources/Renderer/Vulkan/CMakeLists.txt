@@ -84,15 +84,21 @@ endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN)
     # Vulkan Renderer
-    find_package(Vulkan REQUIRED)
-    if(Vulkan_FOUND)
-        include_directories(${Vulkan_INCLUDE_DIR})
-        
+    if(LLGL_ANDROID_PLATFORM)
         add_llgl_module(LLGL_Vulkan LLGL_BUILD_RENDERER_VULKAN "${FilesVK}")
         
-        target_link_libraries(LLGL_Vulkan LLGL ${Vulkan_LIBRARY})
+        target_link_libraries(LLGL_Vulkan LLGL vulkan)
     else()
-        message(FATAL_ERROR "LLGL_BUILD_RENDERER_VULKAN failed: missing Vulkan libraries")
+        find_package(Vulkan REQUIRED)
+        if(Vulkan_FOUND)
+            include_directories(${Vulkan_INCLUDE_DIR})
+            
+            add_llgl_module(LLGL_Vulkan LLGL_BUILD_RENDERER_VULKAN "${FilesVK}")
+            
+            target_link_libraries(LLGL_Vulkan LLGL ${Vulkan_LIBRARY})
+        else()
+            message(FATAL_ERROR "LLGL_BUILD_RENDERER_VULKAN failed: missing Vulkan libraries")
+        endif()
     endif()
 endif()
 

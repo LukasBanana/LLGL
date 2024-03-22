@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ANDROID_API_LEVEL: 21
+      ANDROID_API_LEVEL: 28
       README: ${{ github.workspace }}/README.txt
       GAUSSIAN_LIB_DIR: external/GaussianLib/include
 
@@ -47,7 +47,7 @@ jobs:
         -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
         -DLLGL_BUILD_RENDERER_OPENGLES3=ON
         -DLLGL_BUILD_RENDERER_NULL=OFF
-        -DLLGL_BUILD_RENDERER_VULKAN=OFF
+        -DLLGL_BUILD_RENDERER_VULKAN=ON
         -DLLGL_BUILD_EXAMPLES=ON
         -DLLGL_BUILD_TESTS=OFF
         -DGaussLib_INCLUDE_DIR:STRING="${{ env.GAUSSIAN_LIB_DIR }}"
