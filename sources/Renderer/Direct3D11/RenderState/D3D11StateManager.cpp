@@ -335,7 +335,7 @@ void D3D11StateManager::SetUnorderedAccessViews(
     const UINT*                         initialCounts,
     long                                stageFlags)
 {
-    if (LLGL_PS_STAGE(stageFlags))
+    if (LLGL_GRAPHICS_STAGE(stageFlags))
     {
         /* Set UAVs for pixel shader stage */
         context_->OMSetRenderTargetsAndUnorderedAccessViews(

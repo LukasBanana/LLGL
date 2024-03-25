@@ -29,12 +29,13 @@
 #define LLGL_CASE_TO_STR(VALUE) \
     case VALUE: return #VALUE
 
-#define LLGL_VS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::VertexStage        ) != 0 )
-#define LLGL_HS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::TessControlStage   ) != 0 )
-#define LLGL_DS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::TessEvaluationStage) != 0 )
-#define LLGL_GS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::GeometryStage      ) != 0 )
-#define LLGL_PS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::FragmentStage      ) != 0 )
-#define LLGL_CS_STAGE(FLAGS) ( ((FLAGS) & StageFlags::ComputeStage       ) != 0 )
+#define LLGL_VS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::VertexStage        ) != 0 )
+#define LLGL_HS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::TessControlStage   ) != 0 )
+#define LLGL_DS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::TessEvaluationStage) != 0 )
+#define LLGL_GS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::GeometryStage      ) != 0 )
+#define LLGL_PS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::FragmentStage      ) != 0 )
+#define LLGL_CS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::ComputeStage       ) != 0 )
+#define LLGL_GRAPHICS_STAGE(FLAGS)  ( ((FLAGS) & StageFlags::AllGraphicsStages  ) != 0 )
 
 #define LLGL_VA_ARGS(...) \
     , ## __VA_ARGS__
