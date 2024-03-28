@@ -97,7 +97,7 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 SwapChain* D3D11RenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<D3D11SwapChain>(factory_.Get(), device_, swapChainDesc, surface);
+    return swapChains_.emplace<D3D11SwapChain>(factory_.Get(), device_, *this, swapChainDesc, surface);
 }
 
 void D3D11RenderSystem::Release(SwapChain& swapChain)
@@ -534,6 +534,13 @@ DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device,
     }
 
     return sampleDesc;
+}
+
+void D3D11RenderSystem::ClearStateForAllContexts()
+{
+    context_->ClearState();
+    for (const auto& cmdBuffer : commandBuffers_)
+        cmdBuffer->ClearStateAndResetDeferredCommandList();
 }
 
 

@@ -19,13 +19,15 @@ namespace LLGL
 
 
 D3D11SwapChain::D3D11SwapChain(
-    IDXGIFactory*                   factory,
-    const ComPtr<ID3D11Device>&     device,
-    const SwapChainDescriptor&      desc,
-    const std::shared_ptr<Surface>& surface)
+    IDXGIFactory*                       factory,
+    const ComPtr<ID3D11Device>&         device,
+    D3D11RenderSystem&                  renderSystem,
+    const SwapChainDescriptor&          desc,
+    const std::shared_ptr<Surface>&     surface)
 :
     SwapChain           { desc                                                       },
     device_             { device                                                     },
+    renderSystem_       { renderSystem                                               },
     depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
     /* Setup surface for the swap-chain */
@@ -103,16 +105,6 @@ const RenderPass* D3D11SwapChain::GetRenderPass() const
 bool D3D11SwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
     return SetPresentSyncInterval(vsyncInterval);
-}
-
-void D3D11SwapChain::BindFramebufferView(D3D11CommandBuffer* commandBuffer)
-{
-    /* Bind framebuffer of this swap-chain in command buffer */
-    if (commandBuffer != nullptr)
-        commandBuffer->BindFramebufferView(1, renderTargetView_.GetAddressOf(), depthStencilView_.Get());
-
-    /* Store reference to last used command buffer */
-    bindingCommandBuffer_ = commandBuffer;
 }
 
 static bool IsD3D11BoxCoveringWholeResource(UINT width, UINT height, const D3D11_BOX& box)
@@ -340,18 +332,13 @@ void D3D11SwapChain::CreateBackBuffer()
 void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
 {
     /* Unset render targets for last used command buffer context */
-    if (bindingCommandBuffer_ != nullptr)
-        bindingCommandBuffer_->BindFramebufferView(0, nullptr, nullptr);
+    renderSystem_.ClearStateForAllContexts();
 
     /* Release buffers */
     colorBuffer_.Reset();
     renderTargetView_.Reset();
     depthBuffer_.Reset();
     depthStencilView_.Reset();
-
-    /* Reset command list for deferred device contexts to ensure all outstanding references to the backbuffer are cleared */
-    if (bindingCommandBuffer_ != nullptr)
-        bindingCommandBuffer_->ResetDeferredCommandList();
 
     /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
     HRESULT hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, 0);

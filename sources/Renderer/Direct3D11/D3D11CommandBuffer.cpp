@@ -929,14 +929,15 @@ void D3D11CommandBuffer::BeginRenderPass(
     /* Clear attachments */
     if (renderPass)
     {
-        auto renderPassD3D = LLGL_CAST(const D3D11RenderPass*, renderPass);
+        auto* renderPassD3D = LLGL_CAST(const D3D11RenderPass*, renderPass);
         ClearAttachmentsWithRenderPass(*renderPassD3D, numClearValues, clearValues);
     }
 }
 
 void D3D11CommandBuffer::EndRenderPass()
 {
-    // dummy
+    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    ResolveAndUnbindRenderTarget();
 }
 
 static UINT GetClearFlagsDSV(long flags)
@@ -1391,10 +1392,18 @@ void D3D11CommandBuffer::ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uin
     );
 }
 
-void D3D11CommandBuffer::ResolveBoundRenderTarget()
+void D3D11CommandBuffer::ResolveAndUnbindRenderTarget()
 {
     if (boundRenderTarget_ != nullptr)
+    {
         boundRenderTarget_->ResolveSubresources(context_.Get());
+        boundRenderTarget_ = nullptr;
+    }
+
+    /* Set RTV list and DSV in framebuffer view */
+    BindFramebufferView(0, nullptr, nullptr);
+
+    boundSwapChain_ = nullptr;
 }
 
 void D3D11CommandBuffer::BindFramebufferView(
@@ -1415,20 +1424,21 @@ void D3D11CommandBuffer::BindFramebufferView(
     framebufferView_.depthStencilView       = depthStencilView;
 }
 
-void D3D11CommandBuffer::ResetDeferredCommandList()
+void D3D11CommandBuffer::ClearStateAndResetDeferredCommandList()
 {
-    if (commandList_)
+    if (hasDeferredContext_)
     {
-        context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
-        commandList_.Reset();
+        /* Clear state of deferred device context and discard partially built command list */
+        if (commandList_)
+        {
+            context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
+            commandList_.Reset();
+        }
     }
 }
 
 void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
 {
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveBoundRenderTarget();
-
     /* Set RTV list and DSV in framebuffer view */
     BindFramebufferView(
         static_cast<UINT>(renderTargetD3D.GetRenderTargetViews().size()),
@@ -1437,21 +1447,20 @@ void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
     );
 
     /* Reset references to current render target */
-    boundRenderTarget_  = &renderTargetD3D;
-    boundSwapChain_     = nullptr;
+    boundRenderTarget_ = &renderTargetD3D;
 }
 
 void D3D11CommandBuffer::BindSwapChain(D3D11SwapChain& swapChainD3D)
 {
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveBoundRenderTarget();
-
     /* Set default RTVs to OM-stage */
-    swapChainD3D.BindFramebufferView(this);
+    BindFramebufferView(
+        1,
+        swapChainD3D.GetRenderTargetViews(),
+        swapChainD3D.GetDepthStencilView()
+    );
 
     /* Reset references to current render target */
-    boundRenderTarget_  = nullptr;
-    boundSwapChain_     = &swapChainD3D;
+    boundSwapChain_ = &swapChainD3D;
 }
 
 void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(

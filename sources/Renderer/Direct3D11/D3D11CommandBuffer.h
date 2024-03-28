@@ -58,7 +58,8 @@ class D3D11CommandBuffer final : public CommandBuffer
             ID3D11DepthStencilView*         depthStencilView
         );
 
-        void ResetDeferredCommandList();
+        // Calls ClearState() on a deferred device context and discard a partially built command list.
+        void ClearStateAndResetDeferredCommandList();
 
         // Returns the native command list for deferred contexts or null if there is none.
         inline ID3D11CommandList* GetDeferredCommandList() const
@@ -91,7 +92,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         void ResetResourceSlotsSRV(std::uint32_t firstSlot, std::uint32_t numSlots, long stageFlags);
         void ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uint32_t numSlots, long stageFlags);
 
-        void ResolveBoundRenderTarget();
+        void ResolveAndUnbindRenderTarget();
         void BindRenderTarget(D3D11RenderTarget& renderTargetD3D);
         void BindSwapChain(D3D11SwapChain& swapChainD3D);
 

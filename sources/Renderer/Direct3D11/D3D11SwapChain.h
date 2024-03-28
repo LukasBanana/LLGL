@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-class D3D11CommandBuffer;
+class D3D11RenderSystem;
 
 class D3D11SwapChain final : public SwapChain
 {
@@ -27,10 +27,11 @@ class D3D11SwapChain final : public SwapChain
     public:
 
         D3D11SwapChain(
-            IDXGIFactory*                   factory,
-            const ComPtr<ID3D11Device>&     device,
-            const SwapChainDescriptor&      desc,
-            const std::shared_ptr<Surface>& surface
+            IDXGIFactory*                       factory,
+            const ComPtr<ID3D11Device>&         device,
+            D3D11RenderSystem&                  renderSystem,
+            const SwapChainDescriptor&          desc,
+            const std::shared_ptr<Surface>&     surface
         );
 
         void SetDebugName(const char* name) override;
@@ -50,9 +51,6 @@ class D3D11SwapChain final : public SwapChain
 
     public:
 
-        // Binds the framebuffer view of this swap-chain and stores a references to this command buffer.
-        void BindFramebufferView(D3D11CommandBuffer* commandBuffer);
-
         // Copyies a subresource region from the backbuffer (color or depth-stencil) into the destination resource.
         HRESULT CopySubresourceRegion(
             ID3D11DeviceContext*    context,
@@ -64,6 +62,16 @@ class D3D11SwapChain final : public SwapChain
             const D3D11_BOX&        srcBox,
             DXGI_FORMAT             format
         );
+
+        inline ID3D11RenderTargetView* const * GetRenderTargetViews() const
+        {
+            return renderTargetView_.GetAddressOf();
+        }
+
+        inline ID3D11DepthStencilView* GetDepthStencilView() const
+        {
+            return depthStencilView_.Get();
+        }
 
     private:
 
@@ -78,6 +86,7 @@ class D3D11SwapChain final : public SwapChain
     private:
 
         ComPtr<ID3D11Device>            device_;
+        D3D11RenderSystem&              renderSystem_;
 
         ComPtr<IDXGISwapChain>          swapChain_;
         UINT                            swapChainInterval_      = 0;
@@ -90,8 +99,6 @@ class D3D11SwapChain final : public SwapChain
 
         DXGI_FORMAT                     colorFormat_            = DXGI_FORMAT_UNKNOWN;
         DXGI_FORMAT                     depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
-
-        D3D11CommandBuffer*             bindingCommandBuffer_   = nullptr;
 
 };
 
