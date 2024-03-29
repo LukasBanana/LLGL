@@ -64,20 +64,40 @@ D3D12SwapChain::~D3D12SwapChain()
 
 void D3D12SwapChain::SetDebugName(const char* name)
 {
-    D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
-    D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
-
-    std::string subscript;
-    for_range(i, D3D12SwapChain::maxNumColorBuffers)
+    if (name != nullptr)
     {
-        subscript = (".BackBuffer" + std::to_string(i));
-        D3D12SetObjectNameSubscript(colorBuffers_[i].Get(), name, subscript.c_str());
+        D3D12SetObjectNameSubscript(rtvDescHeap_.Get(), name, ".RTV");
+        D3D12SetObjectNameSubscript(dsvDescHeap_.Get(), name, ".DSV");
 
-        subscript = (".BackBufferMS" + std::to_string(i));
-        D3D12SetObjectNameSubscript(colorBuffersMS_[i].Get(), name, subscript.c_str());
+        std::string subscript;
+        for_range(i, D3D12SwapChain::maxNumColorBuffers)
+        {
+            subscript = (".BackBuffer" + std::to_string(i));
+            D3D12SetObjectNameSubscript(colorBuffers_[i].Get(), name, subscript.c_str());
+
+            subscript = (".BackBufferMS" + std::to_string(i));
+            D3D12SetObjectNameSubscript(colorBuffersMS_[i].Get(), name, subscript.c_str());
+        }
+
+        D3D12SetObjectNameSubscript(depthStencil_.Get(), name, ".DS");
+
+        hasDebugName_ = true;
     }
+    else
+    {
+        D3D12SetObjectName(rtvDescHeap_.Get(), nullptr);
+        D3D12SetObjectName(dsvDescHeap_.Get(), nullptr);
 
-    D3D12SetObjectNameSubscript(depthStencil_.Get(), name, ".DS");
+        for_range(i, D3D12SwapChain::maxNumColorBuffers)
+        {
+            D3D12SetObjectName(colorBuffers_[i].Get(), nullptr);
+            D3D12SetObjectName(colorBuffersMS_[i].Get(), nullptr);
+        }
+
+        D3D12SetObjectName(depthStencil_.Get(), nullptr);
+
+        hasDebugName_ = false;
+    }
 }
 
 void D3D12SwapChain::Present()
@@ -367,6 +387,11 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
     /* Wait until all previous GPU work is complete */
     renderSystem_.SyncGPU();
 
+    /* Store current debug names */
+    std::string debugNames[D3D12SwapChain::numDebugNames];
+    if (hasDebugName_)
+        StoreDebugNames(debugNames);
+
     /* Release previous window size dependent resources, and reset fence values to current value */
     for_range(i, numColorBuffers_)
     {
@@ -432,6 +457,10 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
     /* Create depth-stencil buffer (is used) */
     if (HasDepthBuffer())
         CreateDepthStencil(device, resolution);
+
+    /* Restore debug names with new swap-chain buffers */
+    if (hasDebugName_)
+        RestoreDebugNames(debugNames);
 
     return S_OK;
 }
@@ -533,6 +562,26 @@ void D3D12SwapChain::MoveToNextFrame()
     /* Wait until the fence value of the next frame is signaled, so we know the next frame is ready to start */
     frameFence_.WaitForHigherSignal(frameFenceValues_[currentColorBuffer_]);
     frameFenceValues_[currentColorBuffer_] = currentFenceValue + 1;
+}
+
+void D3D12SwapChain::StoreDebugNames(std::string (&debugNames)[D3D12SwapChain::numDebugNames])
+{
+    for_range(i, D3D12SwapChain::maxNumColorBuffers)
+    {
+        debugNames[i*2    ] = D3D12GetObjectName(colorBuffers_[i].Get());
+        debugNames[i*2 + 1] = D3D12GetObjectName(colorBuffersMS_[i].Get());
+    }
+    debugNames[D3D12SwapChain::maxNumColorBuffers*2] = D3D12GetObjectName(depthStencil_.Get());
+}
+
+void D3D12SwapChain::RestoreDebugNames(const std::string (&debugNames)[D3D12SwapChain::numDebugNames])
+{
+    for_range(i, D3D12SwapChain::maxNumColorBuffers)
+    {
+        D3D12SetObjectName(colorBuffers_[i].Get(), debugNames[i*2].c_str());
+        D3D12SetObjectName(colorBuffersMS_[i].Get(), debugNames[i*2 + 1].c_str());
+    }
+    D3D12SetObjectName(depthStencil_.Get(), debugNames[D3D12SwapChain::maxNumColorBuffers*2].c_str());
 }
 
 

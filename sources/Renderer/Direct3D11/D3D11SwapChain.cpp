@@ -53,6 +53,7 @@ void D3D11SwapChain::SetDebugName(const char* name)
             D3D11SetObjectNameSubscript(depthBuffer_.Get(), name, ".DS");
             D3D11SetObjectNameSubscript(depthStencilView_.Get(), name, ".DSV");
         }
+        hasDebugName_ = true;
     }
     else
     {
@@ -64,6 +65,7 @@ void D3D11SwapChain::SetDebugName(const char* name)
             D3D11SetObjectName(depthBuffer_.Get(), nullptr);
             D3D11SetObjectName(depthStencilView_.Get(), nullptr);
         }
+        hasDebugName_ = false;
     }
 }
 
@@ -331,6 +333,11 @@ void D3D11SwapChain::CreateBackBuffer()
 
 void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
 {
+    /* Store current debug names */
+    std::string debugNames[4];
+    if (hasDebugName_)
+        StoreDebugNames(debugNames);
+
     /* Unset render targets for last used command buffer context */
     renderSystem_.ClearStateForAllContexts();
 
@@ -346,6 +353,32 @@ void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
 
     /* Recreate back buffer and reset default render target */
     CreateBackBuffer();
+
+    /* Restore debug names with new swap-chain buffers */
+    if (hasDebugName_)
+        RestoreDebugNames(debugNames);
+}
+
+void D3D11SwapChain::StoreDebugNames(std::string (&debugNames)[4])
+{
+    debugNames[0] = D3D11GetObjectName(colorBuffer_.Get());
+    debugNames[1] = D3D11GetObjectName(renderTargetView_.Get());
+    if (depthBuffer_)
+    {
+        debugNames[2] = D3D11GetObjectName(depthBuffer_.Get());
+        debugNames[3] = D3D11GetObjectName(depthStencilView_.Get());
+    }
+}
+
+void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[4])
+{
+    D3D11SetObjectName(colorBuffer_.Get(), debugNames[0].c_str());
+    D3D11SetObjectName(renderTargetView_.Get(), debugNames[1].c_str());
+    if (depthBuffer_)
+    {
+        D3D11SetObjectName(depthBuffer_.Get(), debugNames[2].c_str());
+        D3D11SetObjectName(depthStencilView_.Get(), debugNames[3].c_str());
+    }
 }
 
 

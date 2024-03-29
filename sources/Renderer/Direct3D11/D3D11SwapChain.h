@@ -83,6 +83,9 @@ class D3D11SwapChain final : public SwapChain
         void CreateBackBuffer();
         void ResizeBackBuffer(const Extent2D& resolution);
 
+        void StoreDebugNames(std::string (&debugNames)[4]);
+        void RestoreDebugNames(const std::string (&debugNames)[4]);
+
     private:
 
         ComPtr<ID3D11Device>            device_;
@@ -99,6 +102,7 @@ class D3D11SwapChain final : public SwapChain
 
         DXGI_FORMAT                     colorFormat_            = DXGI_FORMAT_UNKNOWN;
         DXGI_FORMAT                     depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
+        bool                            hasDebugName_           = false;
 
 };
 

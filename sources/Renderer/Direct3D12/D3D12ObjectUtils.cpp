@@ -5,31 +5,27 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include <initguid.h> // Comes first to define GUIDs
 #include "D3D12ObjectUtils.h"
 #include <string>
 #include <cstring>
-#include <codecvt>
 
 
 namespace LLGL
 {
 
 
-static void D3D12SetObjectNameUTF8toUTF16(ID3D12Object* obj, const char* name)
-{
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring nameWStr = converter.from_bytes(name);
-    obj->SetName(nameWStr.c_str());
-}
-
 void D3D12SetObjectName(ID3D12Object* obj, const char* name)
 {
     if (obj != nullptr)
     {
         if (name != nullptr)
-            D3D12SetObjectNameUTF8toUTF16(obj, name);
+        {
+            const std::size_t nameLen = std::strlen(name);
+            obj->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(nameLen), name);
+        }
         else
-            obj->SetName(L"");
+            obj->SetPrivateData(WKPDID_D3DDebugObjectName, 0, nullptr);
     }
 }
 
@@ -41,27 +37,38 @@ void D3D12SetObjectNameSubscript(ID3D12Object* obj, const char* name, const char
         {
             std::string nameWithSubscript = name;
             nameWithSubscript += subscript;
-            D3D12SetObjectNameUTF8toUTF16(obj, nameWithSubscript.c_str());
+            const std::size_t nameLen = nameWithSubscript.size();
+            obj->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(nameLen), nameWithSubscript.c_str());
         }
         else
-            obj->SetName(L"");
+            obj->SetPrivateData(WKPDID_D3DDebugObjectName, 0, nullptr);
     }
 }
 
 void D3D12SetObjectNameIndexed(ID3D12Object* obj, const char* name, std::uint32_t index)
 {
+    if (name != nullptr)
+    {
+        /* Append subscript to label */
+        const std::string subscript = std::to_string(index);
+        D3D12SetObjectNameSubscript(obj, name, subscript.c_str());
+    }
+    else
+        D3D12SetObjectName(obj, nullptr);
+}
+
+std::string D3D12GetObjectName(ID3D12Object* obj)
+{
     if (obj != nullptr)
     {
-        if (name != nullptr)
-        {
-            /* Append subscript to label */
-            std::string nameWithSubscript = name;
-            nameWithSubscript += std::to_string(index);
-            D3D12SetObjectNameUTF8toUTF16(obj, nameWithSubscript.c_str());
-        }
-        else
-            obj->SetName(L"");
+        UINT nameLen = 0;
+        obj->GetPrivateData(WKPDID_D3DDebugObjectName, &nameLen, nullptr);
+        std::string name;
+        name.resize(nameLen);
+        obj->GetPrivateData(WKPDID_D3DDebugObjectName, &nameLen, &name[0]);
+        return name;
     }
+    return "";
 }
 
 

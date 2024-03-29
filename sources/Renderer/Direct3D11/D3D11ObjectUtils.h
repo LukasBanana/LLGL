@@ -11,6 +11,7 @@
 
 #include <d3d11.h>
 #include <cstdint>
+#include <string>
 
 
 namespace LLGL
@@ -25,6 +26,9 @@ void D3D11SetObjectNameSubscript(ID3D11DeviceChild* obj, const char* name, const
 
 // Sets the debug name with an index of the specified D3D device child.
 void D3D11SetObjectNameIndexed(ID3D11DeviceChild* obj, const char* name, std::uint32_t index);
+
+// Returns the debug name of the specified D3D device child.
+std::string D3D11GetObjectName(ID3D11DeviceChild* obj);
 
 
 } // /namespace LLGL

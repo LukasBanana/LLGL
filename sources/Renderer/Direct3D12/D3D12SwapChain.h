@@ -89,6 +89,9 @@ class D3D12SwapChain final : public SwapChain
 
     private:
 
+        static constexpr UINT maxNumColorBuffers    = 3;
+        static constexpr UINT numDebugNames         = maxNumColorBuffers*2 + 1;
+
         bool ResizeBuffersPrimary(const Extent2D& resolution) override;
 
         bool SetPresentSyncInterval(UINT syncInterval);
@@ -101,9 +104,10 @@ class D3D12SwapChain final : public SwapChain
 
         void MoveToNextFrame();
 
-    private:
+        void StoreDebugNames(std::string (&debugNames)[D3D12SwapChain::numDebugNames]);
+        void RestoreDebugNames(const std::string (&debugNames)[D3D12SwapChain::numDebugNames]);
 
-        static constexpr UINT maxNumColorBuffers = 3;
+    private:
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
         D3D12CommandQueue*              commandQueue_                           = nullptr;
@@ -129,6 +133,8 @@ class D3D12SwapChain final : public SwapChain
 
         UINT                            numColorBuffers_                        = 0;
         UINT                            currentColorBuffer_                     = 0;
+
+        bool                            hasDebugName_                           = false;
 
 };
 
