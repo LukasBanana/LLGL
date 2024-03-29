@@ -114,7 +114,15 @@ class D3D11RenderSystem final : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        ComPtr<IDXGIFactory>                    factory_;
+        ComPtr<IDXGIFactory> factory_;
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        ComPtr<IDXGIFactory1> factory1_;
+#endif
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+        ComPtr<IDXGIFactory2> factory2_;
+#endif
 
         ComPtr<ID3D11Device>                    device_;
 

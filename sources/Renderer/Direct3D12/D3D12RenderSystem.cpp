@@ -19,7 +19,6 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 #include <limits.h>
-#include <codecvt>
 
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12BufferArray.h"
@@ -27,11 +26,12 @@
 
 #include "Texture/D3D12MipGenerator.h"
 
-#include "RenderState/D3D12GraphicsPSO.h"
 #include "RenderState/D3D12ComputePSO.h"
+#include "RenderState/D3D12GraphicsPSO.h"
 
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 
+#include <dxgi1_5.h>
 
 namespace LLGL
 {
@@ -456,6 +456,21 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
+}
+
+bool D3D12RenderSystem::IsTearingSupported() const
+{
+    ComPtr<IDXGIFactory5> factory5;
+    HRESULT hr = factory_->QueryInterface(IID_PPV_ARGS(&factory5));
+
+    if (SUCCEEDED(hr))
+    {
+        BOOL allowTearing = FALSE;
+        hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+        return SUCCEEDED(hr) && allowTearing;
+    }
+
+    return false;
 }
 
 void D3D12RenderSystem::SyncGPU()

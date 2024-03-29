@@ -551,8 +551,25 @@ void D3D11RenderSystem::ClearStateForAllContexts()
 void D3D11RenderSystem::CreateFactory()
 {
     /* Create DXGI factory */
-    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+
+    HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&factory2_));
+    DXThrowIfCreateFailed(hr, "IDXGIFactory2");
+    factory2_.As(&factory_);
+    factory2_.As(&factory1_);
+
+#elif LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+
+    HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory1_));
+    DXThrowIfCreateFailed(hr, "IDXGIFactory1");
+    factory1_.As(&factory_);
+
+#else
+
+    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
     DXThrowIfCreateFailed(hr, "IDXGIFactory");
+
+#endif
 }
 
 void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
