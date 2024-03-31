@@ -538,7 +538,7 @@ DXGI_SAMPLE_DESC D3D11RenderSystem::FindSuitableSampleDesc(ID3D11Device* device,
 
 void D3D11RenderSystem::ClearStateForAllContexts()
 {
-    context_->ClearState();
+    stateMngr_->ClearState();
     for (const auto& cmdBuffer : commandBuffers_)
         cmdBuffer->ClearStateAndResetDeferredCommandList();
 }

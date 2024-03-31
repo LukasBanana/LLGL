@@ -417,6 +417,17 @@ void D3D11StateManager::ResetStagingBufferPools()
     stagingCbufferPool_.Reset();
 }
 
+void D3D11StateManager::ClearState()
+{
+    /* Clear device context state */
+    context_->ClearState();
+
+    /* Invalidate internal caches */
+    inputAssemblyState_ = {};
+    shaderState_ = {};
+    renderState_ = {};
+}
+
 
 } // /namespace LLGL
 

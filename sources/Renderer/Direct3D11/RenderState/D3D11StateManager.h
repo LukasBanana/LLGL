@@ -104,6 +104,9 @@ class D3D11StateManager
         // Must be called in D3D11CommandBuffer::Begin().
         void ResetStagingBufferPools();
 
+        // Invokes ClearState() on the device context and invalidates all caches.
+        void ClearState();
+
         // Returns the ID3D11DeviceContext that this state manager is associated with.
         inline ID3D11DeviceContext* GetContext() const
         {
