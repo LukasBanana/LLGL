@@ -235,28 +235,27 @@ bool D3D11CommandQueue::QueryResultPipelineStatistics(
             if (IsQueryPipelineStatsD3DCompatible())
             {
                 /* Use output storage directly when structure is compatible with D3D */
-                return (context_->GetData(queryHeapD3D.GetNative(query), &data[query], sizeof(QueryPipelineStatistics), 0) == S_OK);
+                if (context_->GetData(queryHeapD3D.GetNative(query), &data[query], sizeof(QueryPipelineStatistics), 0) != S_OK)
+                    return false;
             }
             else
             {
                 /* Copy temporary query data to output */
                 D3D11_QUERY_DATA_PIPELINE_STATISTICS tempData;
-                if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) == S_OK)
-                {
-                    data->inputAssemblyVertices             = tempData.IAVertices;
-                    data->inputAssemblyPrimitives           = tempData.IAPrimitives;
-                    data->vertexShaderInvocations           = tempData.VSInvocations;
-                    data->geometryShaderInvocations         = tempData.GSInvocations;
-                    data->geometryShaderPrimitives          = tempData.GSPrimitives;
-                    data->clippingInvocations               = tempData.CInvocations;
-                    data->clippingPrimitives                = tempData.CPrimitives;
-                    data->fragmentShaderInvocations         = tempData.PSInvocations;
-                    data->tessControlShaderInvocations      = tempData.HSInvocations;
-                    data->tessEvaluationShaderInvocations   = tempData.DSInvocations;
-                    data->computeShaderInvocations          = tempData.CSInvocations;
-                }
-                else
+                if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) != S_OK)
                     return false;
+
+                data->inputAssemblyVertices             = tempData.IAVertices;
+                data->inputAssemblyPrimitives           = tempData.IAPrimitives;
+                data->vertexShaderInvocations           = tempData.VSInvocations;
+                data->geometryShaderInvocations         = tempData.GSInvocations;
+                data->geometryShaderPrimitives          = tempData.GSPrimitives;
+                data->clippingInvocations               = tempData.CInvocations;
+                data->clippingPrimitives                = tempData.CPrimitives;
+                data->fragmentShaderInvocations         = tempData.PSInvocations;
+                data->tessControlShaderInvocations      = tempData.HSInvocations;
+                data->tessEvaluationShaderInvocations   = tempData.DSInvocations;
+                data->computeShaderInvocations          = tempData.CSInvocations;
             }
         }
         return true;
