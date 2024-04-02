@@ -68,6 +68,12 @@ class D3D12RenderPass final : public RenderPass
             return clearColorAttachments_;
         }
 
+        // Returns a bitwise OR combination of D3D12_DSV_FLAGS entries.
+        inline D3D12_DSV_FLAGS GetAttachmentFlagsDSV() const
+        {
+            return attachmentFlagsDSV_;
+        }
+
         // Returns the array of native color formats.
         inline const DXGI_FORMAT* GetRTVFormats() const
         {
@@ -97,6 +103,7 @@ class D3D12RenderPass final : public RenderPass
 
         UINT                clearFlagsDSV_                                          = 0;
         std::uint8_t        clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
+        D3D12_DSV_FLAGS     attachmentFlagsDSV_                                     = D3D12_DSV_FLAG_NONE;
 
         DXGI_FORMAT         rtvFormats_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]             = {};
         DXGI_FORMAT         dsvFormat_                                              = DXGI_FORMAT_UNKNOWN;

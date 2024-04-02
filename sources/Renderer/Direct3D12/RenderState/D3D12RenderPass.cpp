@@ -69,6 +69,12 @@ void D3D12RenderPass::BuildAttachments(
     else
         SetDSVFormat(DXGI_FORMAT_UNKNOWN);
 
+    /* If we don't care about storing depth/stencil values, append flag to only read those values */
+    if (desc.depthAttachment.storeOp == AttachmentStoreOp::Undefined)
+        attachmentFlagsDSV_ |= D3D12_DSV_FLAG_READ_ONLY_DEPTH;
+    if (desc.stencilAttachment.storeOp == AttachmentStoreOp::Undefined)
+        attachmentFlagsDSV_ |= D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+
     /* Store sample descriptor */
     sampleDesc_ = device.FindSuitableSampleDesc(numColorAttachments_, rtvFormats_, GetClampedSamples(desc.samples));
 }

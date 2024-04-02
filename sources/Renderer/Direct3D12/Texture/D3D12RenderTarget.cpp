@@ -12,6 +12,7 @@
 #include "../D3D12Types.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../RenderState/D3D12DescriptorHeap.h"
+#include "../RenderState/D3D12RenderPass.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
@@ -224,6 +225,11 @@ void D3D12RenderTarget::CreateDescriptorHeaps(ID3D12Device* device, const UINT n
     }
 }
 
+static const D3D12RenderPass* GetD3DRenderPass(const RenderPass* renderPass)
+{
+    return (renderPass != nullptr ? LLGL_CAST(const D3D12RenderPass*, renderPass) : nullptr);
+}
+
 void D3D12RenderTarget::CreateAttachments(
     ID3D12Device*                   device,
     const RenderTargetDescriptor&   desc,
@@ -240,7 +246,11 @@ void D3D12RenderTarget::CreateAttachments(
         }
     }
     if (dsvDescHeap_)
-        CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+    {
+        auto* renderPassD3D = GetD3DRenderPass(desc.renderPass);
+        const D3D12_DSV_FLAGS dsvFlags = (renderPassD3D != nullptr ? renderPassD3D->GetAttachmentFlagsDSV() : D3D12_DSV_FLAG_NONE);
+        CreateDepthStencilAttachment(device, desc.depthStencilAttachment, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart(), dsvFlags);
+    }
 }
 
 void D3D12RenderTarget::CreateColorAttachment(
@@ -291,7 +301,8 @@ void D3D12RenderTarget::CreateColorAttachment(
 void D3D12RenderTarget::CreateDepthStencilAttachment(
     ID3D12Device*                   device,
     const AttachmentDescriptor&     depthStenciAttachment,
-    D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle)
+    D3D12_CPU_DESCRIPTOR_HANDLE     cpuDescHandle,
+    D3D12_DSV_FLAGS                 dsvFlags)
 {
     /* Create depth-stencil attachment */
     if (Texture* texture = depthStenciAttachment.texture)
@@ -305,7 +316,8 @@ void D3D12RenderTarget::CreateDepthStencilAttachment(
             depthStencilFormat_,
             textureD3D.GetType(),
             depthStenciAttachment.mipLevel,
-            depthStenciAttachment.arrayLayer
+            depthStenciAttachment.arrayLayer,
+            dsvFlags
         );
     }
     else
@@ -432,12 +444,13 @@ void D3D12RenderTarget::CreateDepthStencilView(
     DXGI_FORMAT         format,
     const TextureType   type,
     UINT                mipLevel,
-    UINT                arrayLayer)
+    UINT                arrayLayer,
+    D3D12_DSV_FLAGS     dsvFlags)
 {
     /* Initialize D3D12 RTV descriptor */
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
     dsvDesc.Format  = DXTypes::ToDXGIFormatDSV(format);
-    dsvDesc.Flags   = D3D12_DSV_FLAG_NONE;
+    dsvDesc.Flags   = dsvFlags;
 
     switch (type)
     {
