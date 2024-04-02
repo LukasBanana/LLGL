@@ -10,6 +10,7 @@
 #include "D3D11ObjectUtils.h"
 #include "../DXCommon/DXTypes.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/CompilerExtensions.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 
@@ -268,17 +269,17 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
 {
     /* Pick and store color format */
     colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
-    /* Clamp buffer count between 1 and max buffers */
-    swapBuffers = std::max(1u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
-
-    /* Find suitable multi-samples for color format */
-    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, 1); // TODO: resolve multi-sampling
-
+    
     /* Create swap chain for window handle */
     NativeHandle wndHandle = {};
     GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    /* Clamp buffer count between 2 and max buffers */
+    swapBuffers = std::max(2u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
+
+    /* Find suitable multi-samples for color format */
+    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, 1); // TODO: resolve multi-sampling
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     {
@@ -288,7 +289,7 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
             swapChainDesc.SampleDesc    = swapChainSampleDesc_;
             swapChainDesc.BufferUsage   = DXGI_USAGE_RENDER_TARGET_OUTPUT;
             swapChainDesc.BufferCount   = swapBuffers;
-            swapChainDesc.SwapEffect    = DXGI_SWAP_EFFECT_FLIP_DISCARD; // TODO: requires BufferCount >= 2 && SampleDesc.Count == 1
+            swapChainDesc.SwapEffect    = DXGI_SWAP_EFFECT_FLIP_DISCARD; // FLIP effect requires BufferCount >= 2 && SampleDesc.Count == 1
             swapChainDesc.Flags         = (tearingSupported_ ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u);
     }
 
@@ -302,6 +303,11 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
     DXThrowIfFailed(swapChain.As(&swapChain_), "failed to downcast swap chain");
 
 #else
+    /* Clamp buffer count between 1 and max buffers */
+    swapBuffers = std::max(1u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
+
+    /* Find suitable multi-samples for color format */
+    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
 
     const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
 
@@ -422,7 +428,7 @@ void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[4])
     }
 }
 
-void D3D11SwapChain::CheckTearingSupport([[maybe_unused]] IDXGIFactory* factory)
+void D3D11SwapChain::CheckTearingSupport(LLGL_MAYBE_UNUSED IDXGIFactory* factory)
 {
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     ComPtr<IDXGIFactory5> factory5;
