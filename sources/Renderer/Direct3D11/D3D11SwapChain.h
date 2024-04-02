@@ -107,6 +107,7 @@ class D3D11SwapChain final : public SwapChain
 
         bool                            hasDebugName_           = false;
         bool                            tearingSupported_       = false;
+        bool                            windowedMode_           = false;
 
 };
 

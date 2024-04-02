@@ -104,7 +104,7 @@ void D3D12SwapChain::SetDebugName(const char* name)
 void D3D12SwapChain::Present()
 {
     /* Present swap-chain with vsync interval */
-    bool tearingEnabled = tearingSupported_ && syncInterval_ == 0;
+    bool tearingEnabled = tearingSupported_ && windowedMode_ && syncInterval_ == 0;
     UINT presentFlags = tearingEnabled ? DXGI_PRESENT_ALLOW_TEARING : 0u;
 
     HRESULT hr = swapChainDXGI_->Present(syncInterval_, presentFlags);
@@ -454,6 +454,10 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
 
         swapChain.As(&swapChainDXGI_);
     }
+
+    BOOL fullscreenState;
+    DXThrowIfFailed(swapChainDXGI_->GetFullscreenState(&fullscreenState, nullptr), "failed to get fullscreen state");
+    windowedMode_ = !fullscreenState;
 
     /* Create color buffer render target views (RTV) */
     CreateColorBufferRTVs(device, resolution);

@@ -75,7 +75,7 @@ void D3D11SwapChain::SetDebugName(const char* name)
 
 void D3D11SwapChain::Present()
 {
-    bool tearingEnabled = tearingSupported_ && swapChainInterval_ == 0; // TODO: disable if fullscreen exclusive mode is enabled
+    bool tearingEnabled = tearingSupported_ && windowedMode_ && swapChainInterval_ == 0;
     UINT presentFlags = tearingEnabled ? DXGI_PRESENT_ALLOW_TEARING : 0u;
     swapChain_->Present(swapChainInterval_, presentFlags);
 }
@@ -387,6 +387,10 @@ void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
 
     HRESULT hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, desc.Flags);
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
+
+    BOOL fullscreenState;
+    DXThrowIfFailed(swapChain_->GetFullscreenState(&fullscreenState, nullptr), "failed to get fullscreen state");
+    windowedMode_ = !fullscreenState;
 
     /* Recreate back buffer and reset default render target */
     CreateBackBuffer();
