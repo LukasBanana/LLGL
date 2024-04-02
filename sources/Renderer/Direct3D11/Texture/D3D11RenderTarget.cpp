@@ -9,6 +9,7 @@
 #include "../D3D11RenderSystem.h"
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
+#include "../RenderState/D3D11RenderPass.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../../CheckedCast.h"
@@ -22,9 +23,14 @@ namespace LLGL
 {
 
 
+static const D3D11RenderPass* GetD3DRenderPass(const RenderPass* renderPass)
+{
+    return (renderPass != nullptr ? LLGL_CAST(const D3D11RenderPass*, renderPass) : nullptr);
+}
+
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
-    resolution_ { desc.resolution },
-    renderPass_ { desc.renderPass }
+    resolution_ { desc.resolution                   },
+    renderPass_ { GetD3DRenderPass(desc.renderPass) }
 {
     if (desc.samples > 1)
         FindSuitableSampleDesc(device, desc);
@@ -36,7 +42,10 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     }
 
     if (IsAttachmentEnabled(desc.depthStencilAttachment))
-        CreateDepthStencilView(device, desc.depthStencilAttachment);
+    {
+        const UINT dsvFlags = (renderPass_ != nullptr ? renderPass_->GetAttachmentFlagsDSV() : 0);
+        CreateDepthStencilView(device, desc.depthStencilAttachment, dsvFlags);
+    }
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
@@ -137,13 +146,14 @@ void D3D11RenderTarget::CreateSubresourceDSV(
     const DXGI_FORMAT           format,
     UINT                        baseMipLevel,
     UINT                        baseArrayLayer,
-    UINT                        numArrayLayers)
+    UINT                        numArrayLayers,
+    UINT                        dsvFlags)
 {
     /* Create depth-stencil-view (DSV) for subresource */
     D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     {
         dsvDesc.Format  = DXTypes::ToDXGIFormatDSV(format);
-        dsvDesc.Flags   = 0;
+        dsvDesc.Flags   = dsvFlags;
 
         switch (type)
         {
@@ -361,7 +371,8 @@ void D3D11RenderTarget::CreateRenderTargetView(
 
 void D3D11RenderTarget::CreateDepthStencilView(
     ID3D11Device*               device,
-    const AttachmentDescriptor& depthStencilAttachment)
+    const AttachmentDescriptor& depthStencilAttachment,
+    UINT                        dsvFlags)
 {
     if (Texture* texture = depthStencilAttachment.texture)
     {
@@ -376,7 +387,9 @@ void D3D11RenderTarget::CreateDepthStencilView(
             /*type:*/           textureD3D->GetType(),
             /*format:*/         depthStencilFormat_,
             /*baseMipLevel:*/   depthStencilAttachment.mipLevel,
-            /*baseArrayLayer:*/ depthStencilAttachment.arrayLayer
+            /*baseArrayLayer:*/ depthStencilAttachment.arrayLayer,
+            /*numArrayLayers:*/ 1u,
+            /*dsvFlags:*/       dsvFlags
         );
     }
     else

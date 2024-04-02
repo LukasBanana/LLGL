@@ -21,6 +21,7 @@ namespace LLGL
 
 
 class D3D11Texture;
+class D3D11RenderPass;
 class D3D11RenderSystem;
 
 class D3D11RenderTarget final : public RenderTarget
@@ -74,7 +75,8 @@ class D3D11RenderTarget final : public RenderTarget
             const DXGI_FORMAT           format,
             UINT                        baseMipLevel,
             UINT                        baseArrayLayer,
-            UINT                        numArrayLayers = 1
+            UINT                        numArrayLayers  = 1,
+            UINT                        dsvFlags        = 0
         );
 
         // Creates a render-target-view (RTV) of the specified subresource.
@@ -103,7 +105,8 @@ class D3D11RenderTarget final : public RenderTarget
 
         void CreateDepthStencilView(
             ID3D11Device*               device,
-            const AttachmentDescriptor& depthStencilAttachment
+            const AttachmentDescriptor& depthStencilAttachment,
+            UINT                        dsvFlags
         );
 
         void CreateResolveTarget(
@@ -137,7 +140,7 @@ class D3D11RenderTarget final : public RenderTarget
         DXGI_SAMPLE_DESC                        sampleDesc_         = { 1u, 0u };
         std::vector<ResolveTarget>              resolveTargets_;
 
-        const RenderPass*                       renderPass_         = nullptr;
+        const D3D11RenderPass*                  renderPass_         = nullptr;
 
 };
 
