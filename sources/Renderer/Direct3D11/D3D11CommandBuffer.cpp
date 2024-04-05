@@ -149,16 +149,19 @@ void D3D11CommandBuffer::CopyBuffer(
 void D3D11CommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4])
 {
     /* Create intermediate UAV for fill range */
+    D3D11_BUFFER_DESC bufferDesc;
+    buffer->GetDesc(&bufferDesc);
     D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
     {
-        uavDesc.Format              = DXGI_FORMAT_R32_UINT;
+        uavDesc.Format              = (bufferDesc.StructureByteStride > 0 ? DXGI_FORMAT_UNKNOWN : DXGI_FORMAT_R32_UINT); // Must be DXGI_FORMAT_UNKNOWN for structured buffers
         uavDesc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
         uavDesc.Buffer.FirstElement = offset / sizeof(UINT);
         uavDesc.Buffer.NumElements  = size / sizeof(UINT);
         uavDesc.Buffer.Flags        = 0;
     };
     ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
-    device_->CreateUnorderedAccessView(buffer, &uavDesc, &intermediateUAV);
+    HRESULT hr = device_->CreateUnorderedAccessView(buffer, &uavDesc, &intermediateUAV);
+    DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "intermediateUAV");
 
     /* Clear destination buffer with intermediate UAV */
     context_->ClearUnorderedAccessViewUint(intermediateUAV.Get(), valuesVec4);
