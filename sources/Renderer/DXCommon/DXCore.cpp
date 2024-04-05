@@ -138,6 +138,25 @@ void DXThrowIfFailed(const HRESULT hr, const char* info)
         TrapDXErrorCode(hr, info);
 }
 
+void DXThrowIfCastFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
+{
+    if (FAILED(hr))
+    {
+        std::string s;
+        {
+            s = "failed to interpret object as instance of <";
+            s += interfaceName;
+            s += '>';
+            if (contextInfo != nullptr)
+            {
+                s += ' ';
+                s += contextInfo;
+            }
+        }
+        TrapDXErrorCode(hr, s.c_str());
+    }
+}
+
 void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
 {
     if (FAILED(hr))
