@@ -21,34 +21,6 @@ namespace LLGL
 
 class Report;
 
-// Union for easy handling of native D3D11 texture objects.
-union D3D11NativeTexture
-{
-    inline D3D11NativeTexture() :
-        resource { nullptr }
-    {
-    }
-    inline D3D11NativeTexture(const D3D11NativeTexture& rhs) :
-        resource { rhs.resource }
-    {
-    }
-    inline D3D11NativeTexture& operator = (const D3D11NativeTexture& rhs)
-    {
-        resource = rhs.resource;
-        return *this;
-    }
-    inline ~D3D11NativeTexture()
-    {
-        resource.Reset();
-    }
-
-    ComPtr<ID3D11Resource>  resource;
-    ComPtr<ID3D11Texture1D> tex1D;
-    ComPtr<ID3D11Texture2D> tex2D;
-    ComPtr<ID3D11Texture3D> tex3D;
-};
-
-
 class D3D11Texture final : public Texture
 {
 
@@ -78,7 +50,7 @@ class D3D11Texture final : public Texture
         void CreateSubresourceCopyWithCPUAccess(
             ID3D11Device*           device,
             ID3D11DeviceContext*    context,
-            D3D11NativeTexture&     textureOutput,
+            ComPtr<ID3D11Resource>& textureOutput,
             UINT                    cpuAccessFlags,
             const TextureRegion&    region
         );
@@ -86,7 +58,7 @@ class D3D11Texture final : public Texture
         // Creates an uninitialized copy of the specified subresource of the hardware texture with an equivalent unsigned integer format.
         void CreateSubresourceCopyWithUIntFormat(
             ID3D11Device*               device,
-            D3D11NativeTexture&         textureOutput,
+            ComPtr<ID3D11Resource>&     textureOutput,
             ID3D11ShaderResourceView**  srvOutput,
             ID3D11UnorderedAccessView** uavOutput,
             const TextureRegion&        region,
@@ -136,16 +108,10 @@ class D3D11Texture final : public Texture
 
         /* ----- Hardware texture objects ----- */
 
-        // Returns the native D3D texture object.
-        inline const D3D11NativeTexture& GetNative() const
-        {
-            return native_;
-        }
-
         // Returns the native D3D texture object as <ID3D11Resource*>.
-        inline ID3D11Resource* GetNativeResource() const
+        inline ID3D11Resource* GetNative() const
         {
-            return native_.resource.Get();
+            return native_.Get();
         }
 
         // Returns the standard shader resource view (SRV) of the hardware texture object (full view of all layers and MIP levels).
@@ -214,7 +180,7 @@ class D3D11Texture final : public Texture
 
     private:
 
-        D3D11NativeTexture                  native_;
+        ComPtr<ID3D11Resource>              native_;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;

@@ -50,7 +50,7 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
 
 void D3D11Texture::SetDebugName(const char* name)
 {
-    D3D11SetObjectName(GetNative().resource.Get(), name);
+    D3D11SetObjectName(GetNative(), name);
     if (srv_)
         D3D11SetObjectNameSubscript(srv_.Get(), name, ".SRV");
     if (uav_)
@@ -61,18 +61,21 @@ Extent3D D3D11Texture::GetMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 
-    if (native_.resource)
+    if (ID3D11Resource* resource = native_.Get())
     {
         D3D11_RESOURCE_DIMENSION dimension;
-        native_.resource->GetType(&dimension);
+        resource->GetType(&dimension);
 
         switch (dimension)
         {
             case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
             {
+                ComPtr<ID3D11Texture1D> tex1D;
+                DXThrowIfCastFailed(native_.As(&tex1D), "ID3D11Texture1D");
+
                 /* Query MIP-level size for 1D texture */
                 D3D11_TEXTURE1D_DESC desc;
-                native_.tex1D->GetDesc(&desc);
+                tex1D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
                 {
@@ -85,9 +88,12 @@ Extent3D D3D11Texture::GetMipExtent(std::uint32_t mipLevel) const
 
             case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
             {
+                ComPtr<ID3D11Texture2D> tex2D;
+                DXThrowIfCastFailed(native_.As(&tex2D), "ID3D11Texture2D");
+
                 /* Query MIP-level size for 2D texture */
                 D3D11_TEXTURE2D_DESC desc;
-                native_.tex2D->GetDesc(&desc);
+                tex2D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
                 {
@@ -100,9 +106,12 @@ Extent3D D3D11Texture::GetMipExtent(std::uint32_t mipLevel) const
 
             case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
             {
+                ComPtr<ID3D11Texture3D> tex3D;
+                DXThrowIfCastFailed(native_.As(&tex3D), "ID3D11Texture3D");
+
                 /* Query MIP-level size for 3D texture */
                 D3D11_TEXTURE3D_DESC desc;
-                native_.tex3D->GetDesc(&desc);
+                tex3D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
                 {
@@ -120,9 +129,6 @@ Extent3D D3D11Texture::GetMipExtent(std::uint32_t mipLevel) const
 
 TextureDescriptor D3D11Texture::GetDesc() const
 {
-    /* Get D3D hardware texture resource */
-    const auto& hwTex = GetNative();
-
     /* Initialize texture descriptor */
     TextureDescriptor texDesc;
 
@@ -132,15 +138,18 @@ TextureDescriptor D3D11Texture::GetDesc() const
 
     /* Get resource dimension to query the respective D3D descriptor */
     D3D11_RESOURCE_DIMENSION dimension;
-    hwTex.resource->GetType(&dimension);
+    native_->GetType(&dimension);
 
     switch (dimension)
     {
         case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
         {
+            ComPtr<ID3D11Texture1D> tex1D;
+            DXThrowIfCastFailed(native_.As(&tex1D), "ID3D11Texture1D");
+
             /* Query descriptor from 1D texture */
             D3D11_TEXTURE1D_DESC desc;
-            hwTex.tex1D->GetDesc(&desc);
+            tex1D->GetDesc(&desc);
 
             texDesc.format      = GetBaseFormat();
             texDesc.extent      = { desc.Width, 1u, 1u };
@@ -151,9 +160,12 @@ TextureDescriptor D3D11Texture::GetDesc() const
 
         case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
         {
+            ComPtr<ID3D11Texture2D> tex2D;
+            DXThrowIfCastFailed(native_.As(&tex2D), "ID3D11Texture2D");
+
             /* Query descriptor from 2D texture */
             D3D11_TEXTURE2D_DESC desc;
-            hwTex.tex2D->GetDesc(&desc);
+            tex2D->GetDesc(&desc);
 
             texDesc.format      = GetBaseFormat();
             texDesc.extent      = { desc.Width, desc.Height, 1u };
@@ -165,9 +177,12 @@ TextureDescriptor D3D11Texture::GetDesc() const
 
         case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
         {
+            ComPtr<ID3D11Texture3D> tex3D;
+            DXThrowIfCastFailed(native_.As(&tex3D), "ID3D11Texture3D");
+
             /* Query descriptor from 3D texture */
             D3D11_TEXTURE3D_DESC desc;
-            hwTex.tex3D->GetDesc(&desc);
+            tex3D->GetDesc(&desc);
 
             texDesc.format      = GetBaseFormat();
             texDesc.extent      = { desc.Width, desc.Height, desc.Depth };
@@ -281,7 +296,7 @@ HRESULT D3D11Texture::UpdateSubresource(
     {
         UINT dstSubresource = CalcSubresource(mipLevel, baseArrayLayer + arrayLayer);
         context->UpdateSubresource(
-            native_.resource.Get(),
+            native_.Get(),
             dstSubresource,
             &dstBox,
             srcData,
@@ -295,28 +310,31 @@ HRESULT D3D11Texture::UpdateSubresource(
 }
 
 static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
-    ID3D11Device*               device,
-    ID3D11DeviceContext*        context,
-    const D3D11NativeTexture&   inTexture,
-    UINT                        inTextureMipLevels,
-    UINT                        inTextureArraySize,
-    D3D11NativeTexture&         outTexture,
-    D3D11_USAGE                 outTextureUsage,
-    UINT                        cpuAccessFlags,
-    UINT                        srcFirstMipLevel,
-    UINT                        srcFirstArrayLayer,
-    const D3D11_BOX*            srcBox)
+    ID3D11Device*                   device,
+    ID3D11DeviceContext*            context,
+    const ComPtr<ID3D11Resource>&   inTexture,
+    UINT                            inTextureMipLevels,
+    UINT                            inTextureArraySize,
+    ComPtr<ID3D11Resource>&         outTexture,
+    D3D11_USAGE                     outTextureUsage,
+    UINT                            cpuAccessFlags,
+    UINT                            srcFirstMipLevel,
+    UINT                            srcFirstArrayLayer,
+    const D3D11_BOX*                srcBox)
 {
     D3D11_RESOURCE_DIMENSION dimension;
-    inTexture.resource->GetType(&dimension);
+    inTexture->GetType(&dimension);
 
     switch (dimension)
     {
         case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
         {
+            ComPtr<ID3D11Texture1D> tex1D;
+            DXThrowIfCastFailed(inTexture.As(&tex1D), "ID3D11Texture1D");
+
             /* Create temporary 1D texture with a similar descriptor */
             D3D11_TEXTURE1D_DESC desc;
-            inTexture.tex1D->GetDesc(&desc);
+            tex1D->GetDesc(&desc);
             {
                 if (srcBox != nullptr)
                 {
@@ -330,15 +348,18 @@ static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0;
             }
-            outTexture.tex1D = DXCreateTexture1D(device, desc);
+            outTexture = DXCreateTexture1D(device, desc);
         }
         break;
 
         case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
         {
+            ComPtr<ID3D11Texture2D> tex2D;
+            DXThrowIfCastFailed(inTexture.As(&tex2D), "ID3D11Texture2D");
+
             /* Query and modify descriptor for 2D texture */
             D3D11_TEXTURE2D_DESC desc;
-            inTexture.tex2D->GetDesc(&desc);
+            tex2D->GetDesc(&desc);
             {
                 if (srcBox != nullptr)
                 {
@@ -353,15 +374,18 @@ static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0; // Don't adopt D3D11_RESOURCE_MISC_TEXTURECUBE here for CPU access textures
             }
-            outTexture.tex2D = DXCreateTexture2D(device, desc);
+            outTexture = DXCreateTexture2D(device, desc);
         }
         break;
 
         case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
         {
+            ComPtr<ID3D11Texture3D> tex3D;
+            DXThrowIfCastFailed(inTexture.As(&tex3D), "ID3D11Texture3D");
+
             /* Query and modify descriptor for 3D texture */
             D3D11_TEXTURE3D_DESC desc;
-            inTexture.tex3D->GetDesc(&desc);
+            tex3D->GetDesc(&desc);
             {
                 if (srcBox != nullptr)
                 {
@@ -376,7 +400,7 @@ static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
                 desc.CPUAccessFlags = cpuAccessFlags;
                 desc.MiscFlags      = 0;
             }
-            outTexture.tex3D = DXCreateTexture3D(device, desc);
+            outTexture = DXCreateTexture3D(device, desc);
         }
         break;
     }
@@ -386,14 +410,14 @@ static void CreateD3D11TextureSubresourceCopyWithCPUAccess(
     {
         UINT dstSubresource = D3D11CalcSubresource(0, arrayLayer, 1);
         UINT srcSubresource = D3D11CalcSubresource(srcFirstMipLevel, srcFirstArrayLayer + arrayLayer, inTextureMipLevels);
-        context->CopySubresourceRegion(outTexture.resource.Get(), dstSubresource, 0, 0, 0, inTexture.resource.Get(), srcSubresource, srcBox);
+        context->CopySubresourceRegion(outTexture.Get(), dstSubresource, 0, 0, 0, inTexture.Get(), srcSubresource, srcBox);
     }
 }
 
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     ID3D11Device*           device,
     ID3D11DeviceContext*    context,
-    D3D11NativeTexture&     textureOutput,
+    ComPtr<ID3D11Resource>& textureOutput,
     UINT                    cpuAccessFlags,
     const TextureRegion&    region)
 {
@@ -414,11 +438,11 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     if (isDepthStencilOrMultisampled)
     {
         /* Copy texture into intermediate staging texture with same dimension */
-        D3D11NativeTexture intermediateTexture;
+        ComPtr<ID3D11Resource> intermediateTexture;
         CreateD3D11TextureSubresourceCopyWithCPUAccess(
             /*device:*/             device,
             /*context:*/            context,
-            /*inTexture:*/          native_,
+            /*inTexture:*/          native_.Get(),
             /*inTextureMipLevels:*/ numMipLevels_,
             /*inTextureArraySize:*/ region.subresource.numArrayLayers,
             /*outTexture:*/         intermediateTexture,
@@ -433,7 +457,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         CreateD3D11TextureSubresourceCopyWithCPUAccess(
             /*device:*/             device,
             /*context:*/            context,
-            /*inTexture:*/          intermediateTexture,
+            /*inTexture:*/          intermediateTexture.Get(),
             /*inTextureMipLevels:*/ 1,
             /*inTextureArraySize:*/ region.subresource.numArrayLayers,
             /*outTexture:*/         textureOutput,
@@ -449,7 +473,7 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
         CreateD3D11TextureSubresourceCopyWithCPUAccess(
             /*device:*/             device,
             /*context:*/            context,
-            /*inTexture:*/          native_,
+            /*inTexture:*/          native_.Get(),
             /*inTextureMipLevels:*/ numMipLevels_,
             /*inTextureArraySize:*/ region.subresource.numArrayLayers,
             /*outTexture:*/         textureOutput,
@@ -607,7 +631,7 @@ static void CreateD3D11TextureSubresourceUAV(
 
 void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
     ID3D11Device*               device,
-    D3D11NativeTexture&         textureOutput,
+    ComPtr<ID3D11Resource>&     textureOutput,
     ID3D11ShaderResourceView**  srvOutput,
     ID3D11UnorderedAccessView** uavOutput,
     const TextureRegion&        region,
@@ -623,7 +647,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
     D3D11_RESOURCE_DIMENSION    dimension   = D3D11_RESOURCE_DIMENSION_UNKNOWN;
     DXGI_FORMAT                 format      = DXTypes::ToDXGIFormatUInt(GetBaseDXFormat());
 
-    native_.resource->GetType(&dimension);
+    native_->GetType(&dimension);
 
     switch (dimension)
     {
@@ -641,7 +665,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
                 desc.CPUAccessFlags = 0;
                 desc.MiscFlags      = 0;
             }
-            textureOutput.tex1D = DXCreateTexture1D(device, desc);
+            textureOutput = DXCreateTexture1D(device, desc);
         }
         break;
 
@@ -661,7 +685,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
                 desc.CPUAccessFlags = 0;
                 desc.MiscFlags      = 0; // Don't adopt D3D11_RESOURCE_MISC_TEXTURECUBE here for CPU access textures
             }
-            textureOutput.tex2D = DXCreateTexture2D(device, desc);
+            textureOutput = DXCreateTexture2D(device, desc);
         }
         break;
 
@@ -680,7 +704,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
                 desc.CPUAccessFlags = 0;
                 desc.MiscFlags      = 0;
             }
-            textureOutput.tex3D = DXCreateTexture3D(device, desc);
+            textureOutput = DXCreateTexture3D(device, desc);
         }
         break;
     }
@@ -691,7 +715,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
         const UINT numArrayLayers = region.subresource.numArrayLayers;
         CreateD3D11TextureSubresourceSRV(
             device,
-            textureOutput.resource.Get(),
+            textureOutput.Get(),
             srvOutput,
             subresourceType,
             format,
@@ -708,7 +732,7 @@ void D3D11Texture::CreateSubresourceCopyWithUIntFormat(
         const UINT numArrayLayersOrSlices = (subresourceType == TextureType::Texture3D ? region.extent.depth : region.subresource.numArrayLayers);
         CreateD3D11TextureSubresourceUAV(
             device,
-            textureOutput.resource.Get(),
+            textureOutput.Get(),
             uavOutput,
             subresourceType,
             format,
@@ -733,10 +757,10 @@ void D3D11Texture::CreateSubresourceSRV(
     if (device == nullptr)
     {
         ComPtr<ID3D11Device> parentDevice;
-        native_.resource->GetDevice(parentDevice.GetAddressOf());
+        native_->GetDevice(parentDevice.GetAddressOf());
         CreateD3D11TextureSubresourceSRV(
             parentDevice.Get(),
-            native_.resource.Get(),
+            native_.Get(),
             srvOutput,
             type,
             format,
@@ -751,7 +775,7 @@ void D3D11Texture::CreateSubresourceSRV(
     {
         CreateD3D11TextureSubresourceSRV(
             device,
-            native_.resource.Get(),
+            native_.Get(),
             srvOutput,
             type,
             format,
@@ -776,10 +800,10 @@ void D3D11Texture::CreateSubresourceUAV(
     if (device == nullptr)
     {
         ComPtr<ID3D11Device> parentDevice;
-        native_.resource->GetDevice(parentDevice.GetAddressOf());
+        native_->GetDevice(parentDevice.GetAddressOf());
         CreateD3D11TextureSubresourceUAV(
             parentDevice.Get(),
-            native_.resource.Get(),
+            native_.Get(),
             uavOutput,
             type,
             format,
@@ -793,7 +817,7 @@ void D3D11Texture::CreateSubresourceUAV(
     {
         CreateD3D11TextureSubresourceUAV(
             device,
-            native_.resource.Get(),
+            native_.Get(),
             uavOutput,
             type,
             format,
@@ -915,7 +939,7 @@ void D3D11Texture::CreateTexture1D(
         descD3D.CPUAccessFlags  = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags       = DXGetTextureMiscFlags(desc);
     }
-    native_.tex1D = DXCreateTexture1D(device, descD3D, initialData);
+    native_ = DXCreateTexture1D(device, descD3D, initialData);
 
     /* Store parameters and create default resource views */
     SetResourceParams(descD3D.Format, Extent3D{ descD3D.Width, 1u, 1u }, descD3D.MipLevels, descD3D.ArraySize);
@@ -942,7 +966,7 @@ void D3D11Texture::CreateTexture2D(
         descD3D.CPUAccessFlags      = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags           = DXGetTextureMiscFlags(desc);
     }
-    native_.tex2D = DXCreateTexture2D(device, descD3D, initialData);
+    native_ = DXCreateTexture2D(device, descD3D, initialData);
 
     /* Store parameters and create default resource views */
     SetResourceParams(descD3D.Format, Extent3D{ descD3D.Width, descD3D.Height, 1u }, descD3D.MipLevels, descD3D.ArraySize);
@@ -967,7 +991,7 @@ void D3D11Texture::CreateTexture3D(
         descD3D.CPUAccessFlags  = DXGetCPUAccessFlagsForMiscFlags(desc.miscFlags);
         descD3D.MiscFlags       = DXGetTextureMiscFlags(desc);
     }
-    native_.tex3D = DXCreateTexture3D(device, descD3D, initialData);
+    native_ = DXCreateTexture3D(device, descD3D, initialData);
 
     /* Store parameters and create default resource views */
     SetResourceParams(descD3D.Format, Extent3D{ descD3D.Width, descD3D.Height, descD3D.Depth }, descD3D.MipLevels, 1);
@@ -994,7 +1018,7 @@ void D3D11Texture::CreateDefaultSRV(ID3D11Device* device)
     else
     {
         /* Create SRV with D3D default descriptor */
-        HRESULT hr = device->CreateShaderResourceView(native_.resource.Get(), nullptr, srv_.ReleaseAndGetAddressOf());
+        HRESULT hr = device->CreateShaderResourceView(native_.Get(), nullptr, srv_.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for texture");
     }
 }
@@ -1011,7 +1035,7 @@ void D3D11Texture::CreateDefaultUAV(ID3D11Device* device)
     else
     {
         /* Create UAV with D3D default descriptor */
-        HRESULT hr = device->CreateUnorderedAccessView(native_.resource.Get(), nullptr, uav_.ReleaseAndGetAddressOf());
+        HRESULT hr = device->CreateUnorderedAccessView(native_.Get(), nullptr, uav_.ReleaseAndGetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "for texture");
     }
 }

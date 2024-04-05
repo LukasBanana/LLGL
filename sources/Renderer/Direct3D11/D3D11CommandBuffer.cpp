@@ -261,7 +261,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
     const auto& subresource = srcRegion.subresource;
     const auto textureArrayType = ToArrayTextureType(srcTextureD3D.GetType());
 
-    D3D11NativeTexture intermediateTexture;
+    ComPtr<ID3D11Resource> intermediateTexture;
     ComPtr<ID3D11ShaderResourceView> intermediateSRV;
 
     if (useIntermediateTexture)
@@ -292,12 +292,12 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
             context_->CopySubresourceRegion(
-                intermediateTexture.resource.Get(),                                             // pDstResource
+                intermediateTexture.Get(),                                                      // pDstResource
                 D3D11CalcSubresource(0, i, 1),                                                  // DstSubresource
                 0,                                                                              // DstX
                 0,                                                                              // DstY
                 0,                                                                              // DstZ
-                srcTextureD3D.GetNative().resource.Get(),                                       // pSrcResource
+                srcTextureD3D.GetNative(),                                                      // pSrcResource
                 D3D11CalcSubresource(mipLevel, arrayLayer, srcTextureD3D.GetNumMipLevels()),    // SrcSubresource
                 &srcBox                                                                         // pSrcBox
             );
@@ -480,12 +480,12 @@ void D3D11CommandBuffer::CopyTexture(
     const D3D11_BOX srcBox      = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
 
     context_->CopySubresourceRegion(
-        dstTextureD3D.GetNative().resource.Get(),   // pDstResource
+        dstTextureD3D.GetNative(),                  // pDstResource
         dstTextureD3D.CalcSubresource(dstLocation), // DstSubresource
         static_cast<UINT>(dstOffset.x),             // DstX
         static_cast<UINT>(dstOffset.y),             // DstY
         static_cast<UINT>(dstOffset.z),             // DstZ
-        srcTextureD3D.GetNative().resource.Get(),   // pSrcResource
+        srcTextureD3D.GetNative(),                  // pSrcResource
         srcTextureD3D.CalcSubresource(srcLocation), // SrcSubresource
         &srcBox                                     // pSrcBox
     );
@@ -549,7 +549,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     const auto& subresource = dstRegion.subresource;
     const auto textureArrayType = ToArrayTextureType(dstTextureD3D.GetType());
 
-    D3D11NativeTexture intermediateTexture;
+    ComPtr<ID3D11Resource> intermediateTexture;
     ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
 
     if (useIntermediateTexture)
@@ -665,12 +665,12 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
             context_->CopySubresourceRegion(
-                dstTextureD3D.GetNative().resource.Get(),                                       // pDstResource
+                dstTextureD3D.GetNative(),                                                      // pDstResource
                 D3D11CalcSubresource(mipLevel, arrayLayer, dstTextureD3D.GetNumMipLevels()),    // DstSubresource
                 static_cast<UINT>(dstOffset.x),                                                 // DstX
                 static_cast<UINT>(dstOffset.y),                                                 // DstY
                 static_cast<UINT>(dstOffset.z),                                                 // DstZ
-                intermediateTexture.resource.Get(),                                             // pSrcResource
+                intermediateTexture.Get(),                                                      // pSrcResource
                 D3D11CalcSubresource(0, i, 1),                                                  // SrcSubresource
                 &srcBox                                                                         // pSrcBox
             );
@@ -693,7 +693,7 @@ void D3D11CommandBuffer::CopyTextureFromFramebuffer(
 
     auto& dstTextureD3D = LLGL_CAST(D3D11Texture&, dstTexture);
 
-    ID3D11Resource* dstResource     = dstTextureD3D.GetNativeResource();
+    ID3D11Resource* dstResource     = dstTextureD3D.GetNative();
     UINT            dstSubresource  = dstTextureD3D.CalcSubresource(dstRegion.subresource.baseMipLevel, dstRegion.subresource.baseArrayLayer);
     UINT            dstX            = static_cast<UINT>(dstRegion.offset.x);
     UINT            dstY            = static_cast<UINT>(dstRegion.offset.y);
@@ -831,7 +831,7 @@ void D3D11CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     if (!(descriptor < bindingList.size()))
         return /*E_INVALIDARG*/;
 
-    const auto& binding = bindingList[descriptor];
+    const D3D11PipelineResourceBinding& binding = bindingList[descriptor];
     switch (binding.type)
     {
         case D3DResourceType_CBV:

@@ -305,7 +305,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         return /*E_BOUNDS*/;
 
     /* Create a copy of the hardware texture with CPU read access */
-    D3D11NativeTexture texCopy;
+    ComPtr<ID3D11Resource> texCopy;
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), texCopy, D3D11_CPU_ACCESS_READ, textureRegion);
 
     MutableImageView        intermediateDstView = dstImageView;
@@ -316,7 +316,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         const UINT subresource = D3D11CalcSubresource(0, arrayLayer, 1);
 
         D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-        HRESULT hr = context_->Map(texCopy.resource.Get(), subresource, D3D11_MAP_READ, 0, &mappedSubresource);
+        HRESULT hr = context_->Map(texCopy.Get(), subresource, D3D11_MAP_READ, 0, &mappedSubresource);
         DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
         /* Copy host visible resource to CPU accessible resource */
@@ -324,7 +324,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         const std::size_t bytesWritten = RenderSystem::CopyTextureImageData(intermediateDstView, intermediateSrcView, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
 
         /* Unmap resource */
-        context_->Unmap(texCopy.resource.Get(), subresource);
+        context_->Unmap(texCopy.Get(), subresource);
 
         /* Move destination image pointer to next layer */
         intermediateDstView.data = reinterpret_cast<char*>(intermediateDstView.data) + bytesWritten;
@@ -898,7 +898,7 @@ static void InitializeD3DDepthStencilTextureWithDSV(
     ComPtr<ID3D11DepthStencilView> dsv;
     D3D11RenderTarget::CreateSubresourceDSV(
         device,
-        textureD3D.GetNative().resource.Get(),
+        textureD3D.GetNative(),
         dsv.ReleaseAndGetAddressOf(),
         textureD3D.GetType(),
         textureD3D.GetDXFormat(),
@@ -926,7 +926,7 @@ static void InitializeD3DColorTextureWithRTV(
     ComPtr<ID3D11RenderTargetView> rtv;
     D3D11RenderTarget::CreateSubresourceRTV(
         device,
-        textureD3D.GetNative().resource.Get(),
+        textureD3D.GetNative(),
         rtv.ReleaseAndGetAddressOf(),
         textureD3D.GetType(),
         textureD3D.GetBaseDXFormat(),
