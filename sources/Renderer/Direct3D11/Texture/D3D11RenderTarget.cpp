@@ -274,18 +274,20 @@ void D3D11RenderTarget::FindSuitableSampleDesc(ID3D11Device* device, const Rende
     /* Gather all attachment formats */
     SmallVector<DXGI_FORMAT, LLGL_MAX_NUM_ATTACHMENTS> formats;
 
-    auto AppendAttachmentFormat = [&formats](const AttachmentDescriptor& attachment)
+    for (const auto& attachment : desc.colorAttachments)
     {
         if (IsAttachmentEnabled(attachment))
         {
             const Format format = GetAttachmentFormat(attachment);
             formats.push_back(DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(format)));
         }
-    };
+    }
 
-    for (const auto& attachment : desc.colorAttachments)
-        AppendAttachmentFormat(attachment);
-    AppendAttachmentFormat(desc.depthStencilAttachment);
+    if (IsAttachmentEnabled(desc.depthStencilAttachment))
+    {
+        const Format format = GetAttachmentFormat(desc.depthStencilAttachment);
+        formats.push_back(DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(format)));
+    }
 
     /* Find least common denominator of suitable sample descriptor for all attachment formats */
     sampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device, formats.size(), formats.data(), desc.samples);
