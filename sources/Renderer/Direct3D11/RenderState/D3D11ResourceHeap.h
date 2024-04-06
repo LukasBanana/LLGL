@@ -255,7 +255,7 @@ class D3D11ResourceHeap final : public ResourceHeap
     private:
 
         SmallVector<BindingSegmentLocation>             bindingMap_;            // Maps a binding index to a descriptor location.
-        BufferSegmentation                              segmentation_;
+        BufferSegmentation                              segmentation_   = {};
 
         SegmentedBuffer                                 heap_;
         std::uint32_t                                   heapOffsetCS_   = 0;

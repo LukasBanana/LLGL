@@ -64,17 +64,16 @@ void GLBufferArrayWithVAO::BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buf
     /* Bind VAO */
     GLStateManager::Get().BindVertexArray(GetVaoID());
     {
-        while (auto bufferGL = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
+        while (GLBuffer* bufferGL = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
         {
             if ((bufferGL->GetBindFlags() & BindFlags::VertexBuffer) != 0)
             {
                 /* Bind VBO */
-                auto vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, bufferGL);
+                auto* vertexBufferGL = LLGL_CAST(GLBufferWithVAO*, bufferGL);
                 GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, vertexBufferGL->GetID());
 
                 /* Build each vertex attribute */
-                const auto& vertexAttribs = vertexBufferGL->GetVertexAttribs();
-                for (const auto& attrib : vertexAttribs)
+                for (const VertexAttribute& attrib : vertexBufferGL->GetVertexAttribs())
                     vao_.BuildVertexAttribute(attrib);
             }
             else

@@ -32,7 +32,7 @@ void GLBufferArray::BuildArray(std::uint32_t numBuffers, Buffer* const * bufferA
     /* Store the ID of each GLBuffer inside the array */
     idArray_.clear();
     idArray_.reserve(numBuffers);
-    while (auto next = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
+    while (GLBuffer* next = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
         idArray_.push_back(next->GetID());
 }
 

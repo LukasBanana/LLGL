@@ -25,7 +25,7 @@ D3D11BufferArray::D3D11BufferArray(std::uint32_t numBuffers, Buffer* const * buf
 
     offsetStart_ = numBuffers;
 
-    for (std::size_t i = 0; auto next = NextArrayResource<D3D11Buffer>(numBuffers, bufferArray); ++i)
+    for (std::size_t i = 0; D3D11Buffer* next = NextArrayResource<D3D11Buffer>(numBuffers, bufferArray); ++i)
     {
         buffers_[i]                             = next->GetNative();
         stridesAndOffsets_[i]                   = next->GetStride();

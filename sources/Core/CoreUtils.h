@@ -15,13 +15,9 @@
 #include <algorithm>
 #include <type_traits>
 #include <memory>
-#include <vector>
-#include <list>
-#include <set>
 #include <cstdint>
 #include <cstddef>
 #include <functional>
-#include <string.h>
 
 
 namespace LLGL
@@ -42,15 +38,6 @@ template <typename T>
 std::unique_ptr<T[]> MakeUniqueArray(std::size_t size)
 {
     return std::unique_ptr<T[]>(new T[size]);
-}
-
-// Initializes the specified data of basic type of POD structure type with zeros (using ::memset).
-template <class T>
-void MemsetZero(T& data)
-{
-    static_assert(!std::is_pointer<T>::value, "MemsetZero<T>: template parameter 'T' must not be a pointer type");
-    static_assert(std::is_pod<T>::value, "MemsetZero<T>: template parameter 'T' must be a plain-old-data (POD) type");
-    ::memset(&data, 0, sizeof(T));
 }
 
 // Returns true if the specified container contains the entry specified by 'value' (using std::find).
@@ -191,12 +178,12 @@ T* FindInSortedArray(
     return nullptr;
 }
 
-// Returns numerator 'divided' by 'denominator' while always rounding up.
+// Returns 'numerator' divided by 'denominator' while always rounding up.
 template <typename T>
 T DivideRoundUp(T numerator, T denominator)
 {
-    static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: T must be an integral type");
-    return ((numerator + denominator - 1) / denominator);
+    static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: template parameter 'T' must be an integral type");
+    return ((numerator + denominator - T(1)) / denominator);
 }
 
 // Returns the adjusted size with the specified alignment, which is always greater or equal to 'size' (T can be UINT or VkDeviceSize for instance).
@@ -204,7 +191,7 @@ template <typename T>
 T GetAlignedSize(T size, T alignment)
 {
     if (alignment > 1)
-        return DivideRoundUp(size, alignment) * alignment;
+        return DivideRoundUp<T>(size, alignment) * alignment;
     else
         return size;
 }
@@ -219,19 +206,11 @@ T GetAlignedImageSize(const Extent3D& extent, T rowSize, T alignedRowStride)
     return (alignedRowStride * extent.height) * (extent.depth - 1) + (alignedRowStride * (extent.height - 1) + rowSize);
 }
 
-// Returns the division while always rounding up. This equivalent to 'ceil(numerator / denominator)' but for integral numbers.
-template <typename T>
-T DivideCeil(T numerator, T denominator)
-{
-    static_assert(std::is_integral<T>::value, "DivideCeil<T>: template parameter 'T' must be an integral type");
-    return ((numerator + denominator - T(1)) / denominator);
-}
-
 // Clamps value x into the range [minimum, maximum].
 template <typename T>
 T Clamp(T x, T minimum, T maximum)
 {
-    return (std::max)(minimum, (std::min)(x, maximum));
+    return std::max<T>(minimum, std::min<T>(x, maximum));
 }
 
 

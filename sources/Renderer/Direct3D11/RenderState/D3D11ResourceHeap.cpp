@@ -123,7 +123,6 @@ D3D11ResourceHeap::D3D11ResourceHeap(
 
     /* Build buffer segments (stage after stage, so the internal buffer is constructed in the correct order) */
     BindingDescriptorIterator bindingIter{ bindings };
-    MemsetZero(segmentation_);
 
     /* Build resource view segments for GRAPHICS stages in current descriptor set */
     AllocStageSegments(bindingIter, StageFlags::VertexStage);

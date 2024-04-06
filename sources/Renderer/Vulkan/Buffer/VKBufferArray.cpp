@@ -23,7 +23,7 @@ VKBufferArray::VKBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArr
     buffers_.reserve(numBuffers);
     offsets_.reserve(numBuffers);
 
-    while (auto next = NextArrayResource<VKBuffer>(numBuffers, bufferArray))
+    while (VKBuffer* next = NextArrayResource<VKBuffer>(numBuffers, bufferArray))
     {
         buffers_.push_back(next->GetVkBuffer());
         offsets_.push_back(0);//next->GetOffset()

@@ -180,7 +180,7 @@ class MTResourceHeap final : public ResourceHeap
     private:
 
         SmallVector<BindingSegmentLocation> bindingMap_;                    // Maps a binding index to a descriptor location.
-        BufferSegmentation                  segmentation_;
+        BufferSegmentation                  segmentation_           = {};
 
         SegmentedBuffer                     heap_;                          // Buffer with resource binding information and stride (in bytes) per descriptor set
         std::uint32_t                       heapOffsetKernel_       = 0;    // Heap offset for kernel resources.
