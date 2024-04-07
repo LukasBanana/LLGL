@@ -47,7 +47,7 @@ class D3D11BuiltinShaderFactory
         void Clear();
 
         // Returns the specified native builtin shader.
-        const D3D11NativeShader& GetBulitinShader(const D3D11BuiltinShader builtin) const;
+        ID3D11ComputeShader* GetBulitinComputeShader(const D3D11BuiltinShader builtin) const;
 
     private:
 
@@ -62,7 +62,7 @@ class D3D11BuiltinShaderFactory
 
         static const std::size_t g_numBuiltinShaders = static_cast<std::size_t>(D3D11BuiltinShader::Num);
 
-        D3D11NativeShader builtinShaders_[D3D11BuiltinShaderFactory::g_numBuiltinShaders];
+        ComPtr<ID3D11ComputeShader> builtinComputeShaders_[D3D11BuiltinShaderFactory::g_numBuiltinShaders];
 
 };
 

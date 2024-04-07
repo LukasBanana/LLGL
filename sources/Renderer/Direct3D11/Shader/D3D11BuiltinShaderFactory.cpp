@@ -9,7 +9,7 @@
 #include "Builtin/D3D11Builtin.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
-#include <stdexcept>
+#include "../../../Core/Exception.h"
 
 
 namespace LLGL
@@ -40,17 +40,17 @@ void D3D11BuiltinShaderFactory::CreateBuiltinShaders(ID3D11Device* device)
 
 void D3D11BuiltinShaderFactory::Clear()
 {
-    for (auto& native : builtinShaders_)
-        native.vs = nullptr;
+    for (ComPtr<ID3D11ComputeShader>& native : builtinComputeShaders_)
+        native.Reset();
 }
 
-const D3D11NativeShader& D3D11BuiltinShaderFactory::GetBulitinShader(const D3D11BuiltinShader builtin) const
+ID3D11ComputeShader* D3D11BuiltinShaderFactory::GetBulitinComputeShader(const D3D11BuiltinShader builtin) const
 {
-    const auto idx = static_cast<std::size_t>(builtin);
+    const std::size_t idx = static_cast<std::size_t>(builtin);
     if (idx < D3D11BuiltinShaderFactory::g_numBuiltinShaders)
-        return builtinShaders_[idx];
+        return builtinComputeShaders_[idx].Get();
     else
-        return builtinShaders_[0];
+        return nullptr;
 }
 
 static ShaderType GetBuiltinShaderType(const D3D11BuiltinShader builtin)
@@ -69,18 +69,18 @@ static ShaderType GetBuiltinShaderType(const D3D11BuiltinShader builtin)
 }
 
 void D3D11BuiltinShaderFactory::LoadBuiltinShader(
-    ID3D11Device* device,
-    const D3D11BuiltinShader builtin,
-    const BYTE* shaderBytecode,
-    size_t shaderBytecodeSize)
+    ID3D11Device*               device,
+    const D3D11BuiltinShader    builtin,
+    const BYTE*                 shaderBytecode,
+    size_t                      shaderBytecodeSize)
 {
-    if (auto blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
+    if (ComPtr<ID3DBlob> blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
     {
-        const auto idx = static_cast<std::size_t>(builtin);
-        builtinShaders_[idx] = D3D11Shader::CreateNativeShaderFromBlob(device, GetBuiltinShaderType(builtin), blob.Get());
+        const std::size_t idx = static_cast<std::size_t>(builtin);
+        D3D11Shader::CreateNativeShaderFromBlob(device, GetBuiltinShaderType(builtin), blob.Get()).As(&builtinComputeShaders_[idx]);
     }
     else
-        throw std::runtime_error("failed to load builtin D3D11 shader resource");
+        LLGL_TRAP("failed to load builtin D3D11 shader resource");
 }
 
 

@@ -24,35 +24,6 @@ namespace LLGL
 {
 
 
-// Union for easy handling of native D3D11 shader objects.
-union D3D11NativeShader
-{
-    inline D3D11NativeShader() :
-        vs { nullptr }
-    {
-    }
-    inline D3D11NativeShader(const D3D11NativeShader& rhs) :
-        vs { rhs.vs }
-    {
-    }
-    inline D3D11NativeShader& operator = (const D3D11NativeShader& rhs)
-    {
-        vs = rhs.vs;
-        return *this;
-    }
-    inline ~D3D11NativeShader()
-    {
-        vs.Reset();
-    }
-
-    ComPtr<ID3D11VertexShader>      vs;
-    ComPtr<ID3D11HullShader>        hs;
-    ComPtr<ID3D11DomainShader>      ds;
-    ComPtr<ID3D11GeometryShader>    gs;
-    ComPtr<ID3D11PixelShader>       ps;
-    ComPtr<ID3D11ComputeShader>     cs;
-};
-
 struct D3D11ConstantReflection
 {
     std::string name;   // Name of the constant buffer field.
@@ -86,7 +57,7 @@ class D3D11Shader final : public Shader
         HRESULT ReflectAndCacheConstantBuffers(const std::vector<D3D11ConstantBufferReflection>** outConstantBuffers);
 
         // Returns the native D3D shader object.
-        inline const D3D11NativeShader& GetNative() const
+        inline const ComPtr<ID3D11DeviceChild>& GetNative() const
         {
             return native_;
         }
@@ -106,7 +77,7 @@ class D3D11Shader final : public Shader
     public:
 
         // Creates a native D3D11 shader from the specified byte code blob.
-        static D3D11NativeShader CreateNativeShaderFromBlob(
+        static ComPtr<ID3D11DeviceChild> CreateNativeShaderFromBlob(
             ID3D11Device*           device,
             const ShaderType        type,
             ID3DBlob*               blob,
@@ -136,7 +107,7 @@ class D3D11Shader final : public Shader
 
     private:
 
-        D3D11NativeShader                           native_;
+        ComPtr<ID3D11DeviceChild>                   native_;
 
         ComPtr<ID3DBlob>                            byteCode_;
         Report                                      report_;
