@@ -274,18 +274,20 @@ void D3D11RenderTarget::FindSuitableSampleDesc(ID3D11Device* device, const Rende
     /* Gather all attachment formats */
     SmallVector<DXGI_FORMAT, LLGL_MAX_NUM_ATTACHMENTS> formats;
 
-    auto AppendAttachmentFormat = [&formats](const AttachmentDescriptor& attachment)
+    for (const auto& attachment : desc.colorAttachments)
     {
         if (IsAttachmentEnabled(attachment))
         {
             const Format format = GetAttachmentFormat(attachment);
             formats.push_back(DXTypes::ToDXGIFormatRTV(DXTypes::ToDXGIFormat(format)));
         }
-    };
+    }
 
-    for (const auto& attachment : desc.colorAttachments)
-        AppendAttachmentFormat(attachment);
-    AppendAttachmentFormat(desc.depthStencilAttachment);
+    if (IsAttachmentEnabled(desc.depthStencilAttachment))
+    {
+        const Format format = GetAttachmentFormat(desc.depthStencilAttachment);
+        formats.push_back(DXTypes::ToDXGIFormatDSV(DXTypes::ToDXGIFormat(format)));
+    }
 
     /* Find least common denominator of suitable sample descriptor for all attachment formats */
     sampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device, formats.size(), formats.data(), desc.samples);
@@ -331,7 +333,7 @@ void D3D11RenderTarget::CreateRenderTargetView(
         ValidateMipResolution(*texture, colorAttachment.mipLevel);
         auto* textureD3D = LLGL_CAST(D3D11Texture*, texture);
         colorFormat = textureD3D->GetBaseDXFormat();
-        colorTarget = textureD3D->GetNative().resource.Get();
+        colorTarget = textureD3D->GetNative();
 
         /* Create RTV for color attachment */
         D3D11RenderTarget::CreateSubresourceRTV(
@@ -382,7 +384,7 @@ void D3D11RenderTarget::CreateDepthStencilView(
         depthStencilFormat_ = DXTypes::ToDXGIFormatDSV(textureD3D->GetBaseDXFormat());
         D3D11RenderTarget::CreateSubresourceDSV(
             /*device:*/         device,
-            /*resource:*/       textureD3D->GetNative().resource.Get(),
+            /*resource:*/       textureD3D->GetNative(),
             /*dsvOutput:*/      depthStencilView_.ReleaseAndGetAddressOf(),
             /*type:*/           textureD3D->GetType(),
             /*format:*/         depthStencilFormat_,
@@ -417,7 +419,7 @@ void D3D11RenderTarget::CreateResolveTarget(
 
     ResolveTarget resolveTarget;
     {
-        resolveTarget.resolveDstTexture         = textureD3D->GetNative().resource.Get();
+        resolveTarget.resolveDstTexture         = textureD3D->GetNative();
         resolveTarget.resolveDstSubresource     = D3D11CalcSubresource(resolveAttachment.mipLevel, resolveAttachment.arrayLayer, textureD3D->GetNumMipLevels());
         resolveTarget.multiSampledSrcTexture    = multiSampledSrcTexture;
         resolveTarget.format                    = format;

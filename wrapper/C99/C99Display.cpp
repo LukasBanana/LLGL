@@ -10,6 +10,7 @@
 #include "C99Internal.h"
 #include "../sources/Core/CoreUtils.h"
 #include <algorithm>
+#include <string.h>
 
 
 // namespace LLGL {

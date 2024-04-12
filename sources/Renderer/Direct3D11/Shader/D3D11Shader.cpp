@@ -42,7 +42,7 @@ D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc) :
 void D3D11Shader::SetDebugName(const char* name)
 {
     /* Always use vertex shader from union structure */
-    D3D11SetObjectName(static_cast<ID3D11DeviceChild*>(native_.vs.Get()), name);
+    D3D11SetObjectName(static_cast<ID3D11DeviceChild*>(native_.Get()), name);
 }
 
 const Report* D3D11Shader::GetReport() const
@@ -230,7 +230,7 @@ bool D3D11Shader::LoadBinary(ID3D11Device* device, const ShaderDescriptor& shade
     return false;
 }
 
-D3D11NativeShader D3D11Shader::CreateNativeShaderFromBlob(
+ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
     ID3D11Device*           device,
     const ShaderType        type,
     ID3DBlob*               blob,
@@ -241,34 +241,38 @@ D3D11NativeShader D3D11Shader::CreateNativeShaderFromBlob(
     if (blob == nullptr)
         return {};
 
-    D3D11NativeShader native;
-    HRESULT hr = S_OK;
-
     switch (type)
     {
         case ShaderType::Vertex:
         {
-            hr = device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, native.vs.ReleaseAndGetAddressOf());
+            ComPtr<ID3D11VertexShader> vertexShader;
+            HRESULT hr = device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, &vertexShader);
             DXThrowIfCreateFailed(hr, "ID3D11VertexShader");
+            return vertexShader;
         }
         break;
 
         case ShaderType::TessControl:
         {
-            hr = device->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, native.hs.ReleaseAndGetAddressOf());
+            ComPtr<ID3D11HullShader> hullShader;
+            HRESULT hr = device->CreateHullShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, &hullShader);
             DXThrowIfCreateFailed(hr, "ID3D11HullShader");
+            return hullShader;
         }
         break;
 
         case ShaderType::TessEvaluation:
         {
-            hr = device->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, native.ds.ReleaseAndGetAddressOf());
+            ComPtr<ID3D11DomainShader> domainShader;
+            HRESULT hr = device->CreateDomainShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, &domainShader);
             DXThrowIfCreateFailed(hr, "ID3D11DomainShader");
+            return domainShader;
         }
         break;
 
         case ShaderType::Geometry:
         {
+            ComPtr<ID3D11GeometryShader> geometryShader;
             if (streamOutputAttribs != nullptr && numStreamOutputAttribs > 0)
             {
                 /* Initialize output elements for geometry shader with stream-output */
@@ -279,7 +283,7 @@ D3D11NativeShader D3D11Shader::CreateNativeShaderFromBlob(
                     ConvertSODeclEntry(outputElements[i], streamOutputAttribs[i]);
 
                 /* Create geometry shader with stream-output declaration */
-                hr = device->CreateGeometryShaderWithStreamOutput(
+                HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
                     blob->GetBufferPointer(),
                     blob->GetBufferSize(),
                     outputElements.data(),
@@ -288,32 +292,39 @@ D3D11NativeShader D3D11Shader::CreateNativeShaderFromBlob(
                     0,
                     0,//D3D11_SO_NO_RASTERIZED_STREAM,
                     classLinkage,
-                    native.gs.ReleaseAndGetAddressOf()
+                    &geometryShader
                 );
+                DXThrowIfCreateFailed(hr, "ID3D11GeometryShader");
             }
             else
-                hr = device->CreateGeometryShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, native.gs.ReleaseAndGetAddressOf());
-
-            DXThrowIfCreateFailed(hr, "ID3D11GeometryShader");
+            {
+                HRESULT hr = device->CreateGeometryShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, &geometryShader);
+                DXThrowIfCreateFailed(hr, "ID3D11GeometryShader");
+            }
+            return geometryShader;
         }
         break;
 
         case ShaderType::Fragment:
         {
-            hr = device->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, native.ps.ReleaseAndGetAddressOf());
+            ComPtr<ID3D11PixelShader> pixelShader;
+            HRESULT hr = device->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, &pixelShader);
             DXThrowIfCreateFailed(hr, "ID3D11PixelShader");
+            return pixelShader;
         }
         break;
 
         case ShaderType::Compute:
         {
-            hr = device->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, native.cs.ReleaseAndGetAddressOf());
+            ComPtr<ID3D11ComputeShader> computeShader;
+            HRESULT hr = device->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), classLinkage, &computeShader);
             DXThrowIfCreateFailed(hr, "ID3D11ComputeShader");
+            return computeShader;
         }
         break;
     }
 
-    return native;
+    return {};
 }
 
 void D3D11Shader::CreateNativeShader(

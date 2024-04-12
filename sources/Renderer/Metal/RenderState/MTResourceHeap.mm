@@ -107,7 +107,6 @@ MTResourceHeap::MTResourceHeap(
     constexpr long kernelStages     = (StageFlags::ComputeStage | StageFlags::TessControlStage);
 
     BindingDescriptorIterator bindingIter{ bindings };
-    MemsetZero(segmentation_);
 
     /* Build vertex resource segments */
     segmentation_.numVertexBufferSegments       = AllocBufferSegments(bindingIter, vertexStages);

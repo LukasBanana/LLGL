@@ -22,10 +22,10 @@ D3D11ComputePSO::D3D11ComputePSO(const ComputePipelineDescriptor& desc) :
     D3D11PipelineState { /*isGraphicsPSO:*/ false, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
     /* Convert shader state */
-    if (auto computeShaderD3D = LLGL_CAST(const D3D11Shader*, desc.computeShader))
-        cs_ = computeShaderD3D->GetNative().cs;
+    if (auto* computeShaderD3D = LLGL_CAST(const D3D11Shader*, desc.computeShader))
+        computeShaderD3D->GetNative().As(&cs_);
     else
-        throw std::invalid_argument("cannot create D3D compute pipeline without compute shader");
+        ResetReport("cannot create D3D compute PSO without compute shader", true);
 }
 
 void D3D11ComputePSO::Bind(D3D11StateManager& stateMngr)

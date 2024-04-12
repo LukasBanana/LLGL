@@ -33,23 +33,23 @@ class D3D11RenderPass final : public RenderPass
             return clearFlagsDSV_;
         }
 
-        // Returns a bitwise OR combination of D3D11_DSV_FLAG entries.
-        inline UINT GetAttachmentFlagsDSV() const
-        {
-            return attachmentFlagsDSV_;
-        }
-
         // Returns the array of color attachment indices that are meant to be cleared when a render pass begins (value of 0xFF ends the list).
         inline const std::uint8_t* GetClearColorAttachments() const
         {
             return clearColorAttachments_;
         }
 
+        // Returns a bitwise OR combination of D3D11_DSV_FLAG entries.
+        inline UINT GetAttachmentFlagsDSV() const
+        {
+            return attachmentFlagsDSV_;
+        }
+
     private:
 
         UINT            clearFlagsDSV_                                          = 0;
-        UINT            attachmentFlagsDSV_                                     = 0;
         std::uint8_t    clearColorAttachments_[LLGL_MAX_NUM_COLOR_ATTACHMENTS]  = {};
+        UINT            attachmentFlagsDSV_                                     = 0;
 
 };
 

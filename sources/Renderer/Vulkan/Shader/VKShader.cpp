@@ -17,6 +17,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
 #include <algorithm>
+#include <set>
 
 #ifdef LLGL_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SpirvReflect.h"
