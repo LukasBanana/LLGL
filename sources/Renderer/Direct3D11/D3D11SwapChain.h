@@ -8,12 +8,14 @@
 #ifndef LLGL_D3D11_SWAP_CHAIN_H
 #define LLGL_D3D11_SWAP_CHAIN_H
 
-
-#include <LLGL/SwapChain.h>
 #include "../DXCommon/ComPtr.h"
+#include <LLGL/SwapChain.h>
 #include <d3d11.h>
 #include <dxgi.h>
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+#include <dxgi1_2.h>
+#endif
 
 namespace LLGL
 {
@@ -80,6 +82,11 @@ class D3D11SwapChain final : public SwapChain
         bool SetPresentSyncInterval(UINT syncInterval);
 
         void CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers);
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+        void CreateSwapChain1(IDXGIFactory2* factory2, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers);
+#endif
+
         void CreateBackBuffer();
         void ResizeBackBuffer(const Extent2D& resolution);
 

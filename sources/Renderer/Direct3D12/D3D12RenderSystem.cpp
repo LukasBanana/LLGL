@@ -26,8 +26,8 @@
 
 #include "Texture/D3D12MipGenerator.h"
 
-#include "RenderState/D3D12ComputePSO.h"
 #include "RenderState/D3D12GraphicsPSO.h"
+#include "RenderState/D3D12ComputePSO.h"
 
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 

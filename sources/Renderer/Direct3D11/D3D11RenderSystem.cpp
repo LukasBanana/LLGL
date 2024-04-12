@@ -551,25 +551,29 @@ void D3D11RenderSystem::ClearStateForAllContexts()
 void D3D11RenderSystem::CreateFactory()
 {
     /* Create DXGI factory */
+    HRESULT hr = S_OK;
+
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
-
-    HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&factory2_));
-    DXThrowIfCreateFailed(hr, "IDXGIFactory2");
-    factory2_.As(&factory_);
-    factory2_.As(&factory1_);
-
-#elif LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-
-    HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory1_));
-    DXThrowIfCreateFailed(hr, "IDXGIFactory1");
-    factory1_.As(&factory_);
-
-#else
-
-    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
-    DXThrowIfCreateFailed(hr, "IDXGIFactory");
-
+    hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&factory2_));
+    if (SUCCEEDED(hr))
+    {
+        factory2_.As(&factory_);
+        factory2_.As(&factory1_);
+        return;
+    }
 #endif
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory1_));
+    if (SUCCEEDED(hr))
+    {
+        factory1_.As(&factory_);
+        return;
+    }
+#endif
+
+    hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
+    DXThrowIfCreateFailed(hr, "IDXGIFactory");
 }
 
 void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)
@@ -688,9 +692,10 @@ void D3D11RenderSystem::QueryDXDeviceVersion()
 {
     LLGL_ASSERT_PTR(device_);
 
+    HRESULT hr = S_OK;
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-    HRESULT hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
+    hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
     if (FAILED(hr))
     #endif
     {

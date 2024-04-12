@@ -455,7 +455,7 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
         swapChain.As(&swapChainDXGI_);
     }
 
-    BOOL fullscreenState;
+    BOOL fullscreenState = false;
     DXThrowIfFailed(swapChainDXGI_->GetFullscreenState(&fullscreenState, nullptr), "failed to get fullscreen state");
     windowedMode_ = !fullscreenState;
 
