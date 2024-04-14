@@ -71,6 +71,8 @@ class D3D12RenderSystem final : public RenderSystem
 
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& swapChainDescDXGI, HWND wnd);
 
+        bool IsTearingSupported() const;
+
         // Internal fence
         void SignalFenceValue(UINT64& fenceValue);
         void WaitForFenceValue(UINT64 fenceValue);

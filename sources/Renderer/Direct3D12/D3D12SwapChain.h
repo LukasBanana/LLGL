@@ -135,6 +135,8 @@ class D3D12SwapChain final : public SwapChain
         UINT                            currentColorBuffer_                     = 0;
 
         bool                            hasDebugName_                           = false;
+        bool                            tearingSupported_                       = false;
+        bool                            windowedMode_                           = false;
 
 };
 

@@ -35,8 +35,8 @@ D3D12SwapChain::D3D12SwapChain(
 :
     SwapChain           { desc                                                            },
     renderSystem_       { renderSystem                                                    },
-    frameFence_         { renderSystem.GetDXDevice()                                      },
     depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits)      },
+    frameFence_         { renderSystem.GetDXDevice()                                      },
     numColorBuffers_    { Clamp(desc.swapBuffers, 1u, D3D12SwapChain::maxNumColorBuffers) }
 {
     /* Store reference to command queue */
@@ -46,6 +46,7 @@ D3D12SwapChain::D3D12SwapChain(
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create device resources and window dependent resource */
+    tearingSupported_ = renderSystem.IsTearingSupported();
     CreateDescriptorHeaps(renderSystem.GetDevice(), desc.samples);
     CreateResolutionDependentResources(GetResolution());
 
@@ -103,7 +104,10 @@ void D3D12SwapChain::SetDebugName(const char* name)
 void D3D12SwapChain::Present()
 {
     /* Present swap-chain with vsync interval */
-    HRESULT hr = swapChainDXGI_->Present(syncInterval_, 0);
+    bool tearingEnabled = tearingSupported_ && windowedMode_ && syncInterval_ == 0;
+    UINT presentFlags = tearingEnabled ? DXGI_PRESENT_ALLOW_TEARING : 0u;
+
+    HRESULT hr = swapChainDXGI_->Present(syncInterval_, presentFlags);
     DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 
     /* Advance frame counter */
@@ -405,13 +409,16 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
     /* Get framebuffer size */
     if (swapChainDXGI_)
     {
+        DXGI_SWAP_CHAIN_DESC desc;
+        swapChainDXGI_->GetDesc(&desc);
+
         /* Resize swap chain */
         HRESULT hr = swapChainDXGI_->ResizeBuffers(
             numColorBuffers_,
             resolution.width,
             resolution.height,
             colorFormat_,
-            0
+            desc.Flags
         );
 
         if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
@@ -441,12 +448,16 @@ HRESULT D3D12SwapChain::CreateResolutionDependentResources(const Extent2D& resol
             swapChainDesc.Scaling               = DXGI_SCALING_NONE;
             swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
             swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
-            swapChainDesc.Flags                 = 0;
+            swapChainDesc.Flags                 = (tearingSupported_ ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u);
         }
         auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
         swapChain.As(&swapChainDXGI_);
     }
+
+    BOOL fullscreenState = false;
+    DXThrowIfFailed(swapChainDXGI_->GetFullscreenState(&fullscreenState, nullptr), "failed to get fullscreen state");
+    windowedMode_ = !fullscreenState;
 
     /* Create color buffer render target views (RTV) */
     CreateColorBufferRTVs(device, resolution);

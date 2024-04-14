@@ -10,9 +10,13 @@
 #include "D3D11ObjectUtils.h"
 #include "../DXCommon/DXTypes.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/CompilerExtensions.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+#include <dxgi1_5.h>
+#endif
 
 namespace LLGL
 {
@@ -34,6 +38,7 @@ D3D11SwapChain::D3D11SwapChain(
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
 
     /* Create D3D objects */
+    CheckTearingSupport(factory);
     CreateSwapChain(factory, GetResolution(), desc.samples, desc.swapBuffers);
     CreateBackBuffer();
 
@@ -71,7 +76,9 @@ void D3D11SwapChain::SetDebugName(const char* name)
 
 void D3D11SwapChain::Present()
 {
-    swapChain_->Present(swapChainInterval_, 0);
+    bool tearingEnabled = tearingSupported_ && windowedMode_ && swapChainInterval_ == 0;
+    UINT presentFlags = tearingEnabled ? DXGI_PRESENT_ALLOW_TEARING : 0u;
+    swapChain_->Present(swapChainInterval_, presentFlags);
 }
 
 std::uint32_t D3D11SwapChain::GetCurrentSwapIndex() const
@@ -260,18 +267,32 @@ static UINT GetPrimaryDisplayRefreshRate()
 
 void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers)
 {
-    /* Get current settings */
-    const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
+    HRESULT hr = S_OK;
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    ComPtr<IDXGIFactory2> factory2;
+    hr = factory->QueryInterface(IID_PPV_ARGS(&factory2));
+
+    if (SUCCEEDED(hr)) {
+        CreateSwapChain1(factory2.Get(), resolution, samples, swapBuffers);
+        return;
+    }
+#endif
 
     /* Pick and store color format */
     colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
+    
+    /* Create swap chain for window handle */
+    NativeHandle wndHandle = {};
+    GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
+
+    /* Clamp buffer count between 1 and max buffers */
+    swapBuffers = std::max(1u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
 
     /* Find suitable multi-samples for color format */
     swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
 
-    /* Create swap chain for window handle */
-    NativeHandle wndHandle = {};
-    GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
+    const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     {
@@ -286,9 +307,45 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
         swapChainDesc.Windowed                  = TRUE;//(fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                = DXGI_SWAP_EFFECT_DISCARD;
     }
-    HRESULT hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
+
+    hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+void D3D11SwapChain::CreateSwapChain1(IDXGIFactory2* factory2, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers)
+{
+    /* Pick and store color format */
+    colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
+    
+    /* Create swap chain for window handle */
+    NativeHandle wndHandle = {};
+    GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
+
+    /* Clamp buffer count between 2 and max buffers */
+    swapBuffers = std::max(2u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
+
+    /* Find suitable multi-samples for color format */
+    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, 1); // TODO: resolve multi-sampling
+
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+    {
+        swapChainDesc.Width = resolution.width;
+        swapChainDesc.Height = resolution.height;
+        swapChainDesc.Format = colorFormat_;
+        swapChainDesc.SampleDesc = swapChainSampleDesc_;
+        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount = swapBuffers;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // FLIP effect requires BufferCount >= 2 && SampleDesc.Count == 1
+        swapChainDesc.Flags = (tearingSupported_ ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u);
+    }
+
+    ComPtr<IDXGISwapChain1> swapChain;
+    HRESULT hr = factory2->CreateSwapChainForHwnd(device_.Get(), wndHandle.window, &swapChainDesc, nullptr, nullptr, &swapChain);
+    DXThrowIfFailed(hr, "failed to create DXGI swap chain");
+    DXThrowIfFailed(swapChain.As(&swapChain_), "failed to downcast swap chain");
+}
+#endif
 
 void D3D11SwapChain::CreateBackBuffer()
 {
@@ -348,8 +405,15 @@ void D3D11SwapChain::ResizeBackBuffer(const Extent2D& resolution)
     depthStencilView_.Reset();
 
     /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
-    HRESULT hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, 0);
+    DXGI_SWAP_CHAIN_DESC desc;
+    swapChain_->GetDesc(&desc);
+
+    HRESULT hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, desc.Flags);
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
+
+    BOOL fullscreenState;
+    DXThrowIfFailed(swapChain_->GetFullscreenState(&fullscreenState, nullptr), "failed to get fullscreen state");
+    windowedMode_ = !fullscreenState;
 
     /* Recreate back buffer and reset default render target */
     CreateBackBuffer();
@@ -379,6 +443,23 @@ void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[4])
         D3D11SetObjectName(depthBuffer_.Get(), debugNames[2].c_str());
         D3D11SetObjectName(depthStencilView_.Get(), debugNames[3].c_str());
     }
+}
+
+void D3D11SwapChain::CheckTearingSupport(LLGL_MAYBE_UNUSED IDXGIFactory* factory)
+{
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    ComPtr<IDXGIFactory5> factory5;
+    HRESULT hr = factory->QueryInterface(IID_PPV_ARGS(&factory5));
+
+    if (SUCCEEDED(hr))
+    {
+        BOOL allowTearing = FALSE;
+        hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+        tearingSupported_ = SUCCEEDED(hr) && allowTearing;
+    }
+#else
+    tearingSupported_ = false;
+#endif
 }
 
 
