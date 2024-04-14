@@ -267,9 +267,11 @@ static UINT GetPrimaryDisplayRefreshRate()
 
 void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers)
 {
+    HRESULT hr = S_OK;
+
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     ComPtr<IDXGIFactory2> factory2;
-    HRESULT hr = factory->QueryInterface(IID_PPV_ARGS(&factory2));
+    hr = factory->QueryInterface(IID_PPV_ARGS(&factory2));
 
     if (SUCCEEDED(hr)) {
         CreateSwapChain1(factory2.Get(), resolution, samples, swapBuffers);
