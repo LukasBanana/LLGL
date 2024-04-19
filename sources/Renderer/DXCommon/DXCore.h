@@ -78,6 +78,9 @@ Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BY
 // Returns a suitable DXGI format for the specified depth-stencil mode.
 DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits);
 
+// Returns true if the specified DXGI swap-chain is in fullscreen mode.
+bool DXGetFullscreenState(IDXGISwapChain* swapChain);
+
 
 } // /namespace LLGL
 

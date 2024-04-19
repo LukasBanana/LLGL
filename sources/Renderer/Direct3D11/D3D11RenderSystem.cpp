@@ -74,6 +74,11 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
         DXThrowIfFailed(hr, "failed to create D3D11 device");
     }
 
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    /* Query tearing feature support */
+    tearingSupported_ = CheckFactoryFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING);
+    #endif
+
     /* Initialize states and renderer information */
     CreateStateManagerAndCommandQueue();
     QueryRendererInfo();
@@ -553,7 +558,7 @@ void D3D11RenderSystem::CreateFactory()
     /* Create DXGI factory */
     HRESULT hr = S_OK;
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
     hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&factory2_));
     if (SUCCEEDED(hr))
     {
@@ -561,16 +566,16 @@ void D3D11RenderSystem::CreateFactory()
         factory2_.As(&factory1_);
         return;
     }
-#endif
+    #endif
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory1_));
     if (SUCCEEDED(hr))
     {
         factory1_.As(&factory_);
         return;
     }
-#endif
+    #endif
 
     hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
     DXThrowIfCreateFailed(hr, "IDXGIFactory");
@@ -692,10 +697,9 @@ void D3D11RenderSystem::QueryDXDeviceVersion()
 {
     LLGL_ASSERT_PTR(device_);
 
-    HRESULT hr = S_OK;
     /* Try to get an extended D3D11 device */
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-    hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
+    HRESULT hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
     if (FAILED(hr))
     #endif
     {
@@ -1062,6 +1066,25 @@ void D3D11RenderSystem::InitializeGpuTexture(
         }
     }
 }
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+
+bool D3D11RenderSystem::CheckFactoryFeatureSupport(DXGI_FEATURE feature) const
+{
+    ComPtr<IDXGIFactory5> factory5;
+    HRESULT hr = factory_->QueryInterface(IID_PPV_ARGS(&factory5));
+
+    if (SUCCEEDED(hr))
+    {
+        BOOL supported = FALSE;
+        hr = factory5->CheckFeatureSupport(feature, &supported, sizeof(supported));
+        return (SUCCEEDED(hr) && supported != FALSE);
+    }
+
+    return false;
+}
+
+#endif
 
 
 } // /namespace LLGL

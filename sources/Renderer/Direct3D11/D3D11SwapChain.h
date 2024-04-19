@@ -14,8 +14,9 @@
 #include <dxgi.h>
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-#include <dxgi1_2.h>
+#   include <dxgi1_2.h>
 #endif
+
 
 namespace LLGL
 {
@@ -81,19 +82,16 @@ class D3D11SwapChain final : public SwapChain
 
         bool SetPresentSyncInterval(UINT syncInterval);
 
-        void CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers);
+        void CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples);
+        void CreateDXGISwapChain(IDXGIFactory* factory, HWND window, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples);
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+        void CreateDXGISwapChain1(IDXGIFactory2* factory2, HWND window, const Extent2D& resolution, std::uint32_t swapBuffers);
+        #endif
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-        void CreateSwapChain1(IDXGIFactory2* factory2, const Extent2D& resolution, std::uint32_t samples, std::uint32_t swapBuffers);
-#endif
-
-        void CreateBackBuffer();
-        void ResizeBackBuffer(const Extent2D& resolution);
+        void CreateResolutionDependentResources();
 
         void StoreDebugNames(std::string (&debugNames)[4]);
         void RestoreDebugNames(const std::string (&debugNames)[4]);
-        
-        void CheckTearingSupport(IDXGIFactory* factory);
 
     private:
 

@@ -496,6 +496,14 @@ DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)
     return DXGI_FORMAT_D24_UNORM_S8_UINT;
 }
 
+bool DXGetFullscreenState(IDXGISwapChain* swapChain)
+{
+    BOOL fullscreenState = FALSE;
+    HRESULT hr = swapChain->GetFullscreenState(&fullscreenState, nullptr);
+    DXThrowIfFailed(hr, "failed to get fullscreen state");
+    return (fullscreenState != FALSE);
+}
+
 
 } // /namespace LLGL
 

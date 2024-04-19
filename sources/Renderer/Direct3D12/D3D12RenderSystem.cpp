@@ -17,6 +17,7 @@
 #include "../../Core/Assertion.h"
 #include "D3DX12/d3dx12.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 #include <limits.h>
 
@@ -31,7 +32,6 @@
 
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 
-#include <dxgi1_5.h>
 
 namespace LLGL
 {
@@ -60,6 +60,9 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
         HRESULT hr = CreateDevice(preferredAdatper.Get());
         DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
+
+    /* Query and cache DXGI factory feature support */
+    tearingSupported_ = CheckFactoryFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING);
 
     /* Create command queue interface */
     commandQueue_   = MakeUnique<D3D12CommandQueue>(device_);
@@ -448,29 +451,20 @@ bool D3D12RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
  * ======= Internal: =======
  */
 
-ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& swapChainDescDXGI, HWND wnd)
+ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(
+    const DXGI_SWAP_CHAIN_DESC1&    swapChainDescDXGI,
+    const void*                     nativeWindowHandle,
+    std::size_t                     nativeWindowHandleSize)
 {
+    LLGL_ASSERT(nativeWindowHandleSize == sizeof(NativeHandle));
+    auto* nativeWindowHandlePtr = reinterpret_cast<const NativeHandle*>(nativeWindowHandle);
+
     ComPtr<IDXGISwapChain1> swapChain;
 
-    HRESULT hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), wnd, &swapChainDescDXGI, nullptr, nullptr, &swapChain);
+    HRESULT hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), nativeWindowHandlePtr->window, &swapChainDescDXGI, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
-}
-
-bool D3D12RenderSystem::IsTearingSupported() const
-{
-    ComPtr<IDXGIFactory5> factory5;
-    HRESULT hr = factory_->QueryInterface(IID_PPV_ARGS(&factory5));
-
-    if (SUCCEEDED(hr))
-    {
-        BOOL allowTearing = FALSE;
-        hr = factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
-        return SUCCEEDED(hr) && allowTearing;
-    }
-
-    return false;
 }
 
 void D3D12RenderSystem::SyncGPU()
@@ -628,6 +622,7 @@ static const char* DXShaderModelToString(D3D_SHADER_MODEL shaderModel)
 
 static const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
 {
+    #if LLGL_D3D12_ENABLE_FEATURELEVEL > 0
     switch (featureLevel)
     {
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 2
@@ -636,8 +631,10 @@ static const char* DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
         #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
         case D3D_FEATURE_LEVEL_12_1:    return "12.1";
         #endif
-        default:                        return "12.0";
+        default:                        break;
     }
+    #endif
+    return "12.0";
 }
 
 int D3D12RenderSystem::GetMinorVersion() const
@@ -899,6 +896,21 @@ const D3D12RenderPass* D3D12RenderSystem::GetDefaultRenderPass() const
             return LLGL_CAST(const D3D12RenderPass*, renderPass);
     }
     return nullptr;
+}
+
+bool D3D12RenderSystem::CheckFactoryFeatureSupport(DXGI_FEATURE feature) const
+{
+    ComPtr<IDXGIFactory5> factory5;
+    HRESULT hr = factory_->QueryInterface(IID_PPV_ARGS(&factory5));
+
+    if (SUCCEEDED(hr))
+    {
+        BOOL supported = FALSE;
+        hr = factory5->CheckFeatureSupport(feature, &supported, sizeof(supported));
+        return (SUCCEEDED(hr) && supported != FALSE);
+    }
+
+    return false;
 }
 
 

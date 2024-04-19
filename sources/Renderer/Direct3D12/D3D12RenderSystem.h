@@ -40,7 +40,7 @@
 #include "../ContainerTypes.h"
 #include "../DXCommon/ComPtr.h"
 #include <d3d12.h>
-#include <dxgi1_4.h>
+#include <dxgi1_5.h>
 
 
 namespace LLGL
@@ -69,9 +69,11 @@ class D3D12RenderSystem final : public RenderSystem
 
     public:
 
-        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& swapChainDescDXGI, HWND wnd);
-
-        bool IsTearingSupported() const;
+        ComPtr<IDXGISwapChain1> CreateDXSwapChain(
+            const DXGI_SWAP_CHAIN_DESC1&    swapChainDescDXGI,
+            const void*                     nativeWindowHandle,
+            std::size_t                     nativeWindowHandleSize
+        );
 
         // Internal fence
         void SignalFenceValue(UINT64& fenceValue);
@@ -109,6 +111,12 @@ class D3D12RenderSystem final : public RenderSystem
         inline const D3D12SignatureFactory& GetSignatureFactory() const
         {
             return cmdSignatureFactory_;
+        }
+
+        // Returns whether the D3D12 device supports tearing (DXGI_FEATURE_PRESENT_ALLOW_TEARING).
+        inline bool IsTearingSupported() const
+        {
+            return tearingSupported_;
         }
 
     private:
@@ -151,6 +159,8 @@ class D3D12RenderSystem final : public RenderSystem
 
         const D3D12RenderPass* GetDefaultRenderPass() const;
 
+        bool CheckFactoryFeatureSupport(DXGI_FEATURE feature) const;
+
     private:
 
         /* ----- Common objects ----- */
@@ -161,6 +171,7 @@ class D3D12RenderSystem final : public RenderSystem
         D3D12PipelineLayout                     defaultPipelineLayout_;
         D3D12SignatureFactory                   cmdSignatureFactory_;
         D3D12StagingBufferPool                  stagingBufferPool_;
+        bool                                    tearingSupported_       = false;
 
         /* ----- Hardware object containers ----- */
 

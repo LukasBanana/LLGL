@@ -41,6 +41,10 @@
 #include <dxgi.h>
 #include "Direct3D11.h"
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+#include <dxgi1_5.h>
+#endif
+
 
 namespace LLGL
 {
@@ -88,6 +92,12 @@ class D3D11RenderSystem final : public RenderSystem
             return featureLevel_;
         }
 
+        // Returns whether the D3D11 device supports tearing (DXGI_FEATURE_PRESENT_ALLOW_TEARING).
+        inline bool IsTearingSupported() const
+        {
+            return tearingSupported_;
+        }
+
     private:
 
         void CreateFactory();
@@ -110,19 +120,23 @@ class D3D11RenderSystem final : public RenderSystem
             const ImageView*            initialImage
         );
 
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+        bool CheckFactoryFeatureSupport(DXGI_FEATURE feature) const;
+        #endif
+
     private:
 
         /* ----- Common objects ----- */
 
-        ComPtr<IDXGIFactory> factory_;
+        ComPtr<IDXGIFactory>                    factory_;
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-        ComPtr<IDXGIFactory1> factory1_;
-#endif
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        ComPtr<IDXGIFactory1>                   factory1_;
+        #endif
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
-        ComPtr<IDXGIFactory2> factory2_;
-#endif
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+        ComPtr<IDXGIFactory2>                   factory2_;
+        #endif
 
         ComPtr<ID3D11Device>                    device_;
 
@@ -141,6 +155,7 @@ class D3D11RenderSystem final : public RenderSystem
         ComPtr<ID3D11DeviceContext>             context_;
 
         D3D_FEATURE_LEVEL                       featureLevel_           = D3D_FEATURE_LEVEL_9_1;
+        bool                                    tearingSupported_       = false;
 
         std::shared_ptr<D3D11StateManager>      stateMngr_;
 
