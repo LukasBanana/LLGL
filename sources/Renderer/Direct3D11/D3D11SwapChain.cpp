@@ -48,6 +48,7 @@ void D3D11SwapChain::SetDebugName(const char* name)
     {
         /* Set label for each back-buffer object */
         D3D11SetObjectName(colorBuffer_.Get(), name);
+        D3D11SetObjectNameSubscript(colorBufferMS_.Get(), name, ".MS");
         D3D11SetObjectNameSubscript(renderTargetView_.Get(), name, ".RTV");
         if (depthBuffer_)
         {
@@ -60,6 +61,7 @@ void D3D11SwapChain::SetDebugName(const char* name)
     {
         /* Reset all back-buffer labels */
         D3D11SetObjectName(colorBuffer_.Get(), nullptr);
+        D3D11SetObjectName(colorBufferMS_.Get(), nullptr);
         D3D11SetObjectName(renderTargetView_.Get(), nullptr);
         if (depthBuffer_)
         {
@@ -231,6 +233,12 @@ HRESULT D3D11SwapChain::CopySubresourceRegion(
     return S_OK;
 }
 
+void D3D11SwapChain::ResolveSubresources(ID3D11DeviceContext* context)
+{
+    if (colorBufferMS_.Get() != nullptr)
+        context->ResolveSubresource(colorBuffer_.Get(), 0, colorBufferMS_.Get(), 0, colorFormat_);
+}
+
 
 /*
  * ======= Private: =======
@@ -239,7 +247,7 @@ HRESULT D3D11SwapChain::CopySubresourceRegion(
 bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Store current debug names */
-    std::string debugNames[4];
+    std::string debugNames[5];
     if (hasDebugName_)
         StoreDebugNames(debugNames);
 
@@ -248,6 +256,7 @@ bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 
     /* Release buffers */
     colorBuffer_.Reset();
+    colorBufferMS_.Reset();
     renderTargetView_.Reset();
     depthBuffer_.Reset();
     depthStencilView_.Reset();
@@ -302,7 +311,10 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
     NativeHandle wndHandle = {};
     GetSurface().GetNativeHandle(&wndHandle, sizeof(wndHandle));
 
-    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    /* Find suitable multi-samples for color format */
+    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     ComPtr<IDXGIFactory2> factory2;
     hr = factory->QueryInterface(IID_PPV_ARGS(&factory2));
 
@@ -327,9 +339,6 @@ void D3D11SwapChain::CreateDXGISwapChain(IDXGIFactory* factory, HWND window, con
     /* Clamp buffer count between 1 and max buffers */
     swapBuffers = std::max(1u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
 
-    /* Find suitable multi-samples for color format */
-    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
-
     const DXGI_RATIONAL refreshRate{ GetPrimaryDisplayRefreshRate(), 1 };
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
@@ -348,6 +357,8 @@ void D3D11SwapChain::CreateDXGISwapChain(IDXGIFactory* factory, HWND window, con
 
     HRESULT hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
+
+    swapEffectFlip_ = false;
 }
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
@@ -357,25 +368,25 @@ void D3D11SwapChain::CreateDXGISwapChain1(IDXGIFactory2* factory2, HWND window, 
     /* Clamp buffer count between 2 and max buffers */
     swapBuffers = std::max(2u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
 
-    /* Find suitable multi-samples for color format */
-    swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, 1); // TODO: resolve multi-sampling
-
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     {
-        swapChainDesc.Width         = resolution.width;
-        swapChainDesc.Height        = resolution.height;
-        swapChainDesc.Format        = colorFormat_;
-        swapChainDesc.SampleDesc    = swapChainSampleDesc_;
-        swapChainDesc.BufferUsage   = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount   = swapBuffers;
-        swapChainDesc.SwapEffect    = DXGI_SWAP_EFFECT_FLIP_DISCARD; // FLIP effect requires BufferCount >= 2 && SampleDesc.Count == 1
-        swapChainDesc.Flags         = (tearingSupported_ ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u);
+        swapChainDesc.Width                 = resolution.width;
+        swapChainDesc.Height                = resolution.height;
+        swapChainDesc.Format                = colorFormat_;
+        swapChainDesc.SampleDesc.Count      = 1;
+        swapChainDesc.SampleDesc.Quality    = 0;
+        swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount           = swapBuffers;
+        swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD; // FLIP effect requires BufferCount >= 2 && SampleDesc.Count == 1
+        swapChainDesc.Flags                 = (tearingSupported_ ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u);
     }
 
     ComPtr<IDXGISwapChain1> swapChain;
     HRESULT hr = factory2->CreateSwapChainForHwnd(device_.Get(), window, &swapChainDesc, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
     DXThrowIfFailed(swapChain.As(&swapChain_), "failed to downcast swap chain");
+
+    swapEffectFlip_ = true;
 }
 
 #endif
@@ -388,13 +399,40 @@ void D3D11SwapChain::CreateResolutionDependentResources()
     hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(colorBuffer_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to get D3D11 back buffer from swap chain");
 
-    /* Create back buffer RTV */
-    hr = device_->CreateRenderTargetView(colorBuffer_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
-
     /* Retrieve back-buffer dimension */
-    D3D11_TEXTURE2D_DESC colorBufferDesc;
+    D3D11_TEXTURE2D_DESC colorBufferDesc = {};
     colorBuffer_->GetDesc(&colorBufferDesc);
+
+    /* If swap-effect is FLIP and multi-sampling is enabled, we have to create our own multi-sampled back-buffer */
+    if (swapEffectFlip_ && swapChainSampleDesc_.Count > 1)
+    {
+        /* Create multi-sampled texture */
+        D3D11_TEXTURE2D_DESC texDesc;
+        {
+            texDesc.Width           = colorBufferDesc.Width;
+            texDesc.Height          = colorBufferDesc.Height;
+            texDesc.MipLevels       = 1;
+            texDesc.ArraySize       = 1;
+            texDesc.Format          = colorFormat_;
+            texDesc.SampleDesc      = swapChainSampleDesc_;
+            texDesc.Usage           = D3D11_USAGE_DEFAULT;
+            texDesc.BindFlags       = D3D11_BIND_RENDER_TARGET;
+            texDesc.CPUAccessFlags  = 0;
+            texDesc.MiscFlags       = 0;
+        }
+        hr = device_->CreateTexture2D(&texDesc, nullptr, colorBufferMS_.ReleaseAndGetAddressOf());
+        DXThrowIfFailed(hr, "failed to create D3D11 multi-sampled back-buffer for swap-chain");
+
+        /* Create back buffer RTV */
+        hr = device_->CreateRenderTargetView(colorBufferMS_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
+        DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for multi-sampled back buffer");
+    }
+    else
+    {
+        /* Create back buffer RTV */
+        hr = device_->CreateRenderTargetView(colorBuffer_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
+        DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
+    }
 
     if (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)
     {
@@ -421,25 +459,27 @@ void D3D11SwapChain::CreateResolutionDependentResources()
     }
 }
 
-void D3D11SwapChain::StoreDebugNames(std::string (&debugNames)[4])
+void D3D11SwapChain::StoreDebugNames(std::string (&debugNames)[5])
 {
     debugNames[0] = D3D11GetObjectName(colorBuffer_.Get());
-    debugNames[1] = D3D11GetObjectName(renderTargetView_.Get());
+    debugNames[1] = D3D11GetObjectName(colorBufferMS_.Get());
+    debugNames[2] = D3D11GetObjectName(renderTargetView_.Get());
     if (depthBuffer_)
     {
-        debugNames[2] = D3D11GetObjectName(depthBuffer_.Get());
-        debugNames[3] = D3D11GetObjectName(depthStencilView_.Get());
+        debugNames[3] = D3D11GetObjectName(depthBuffer_.Get());
+        debugNames[4] = D3D11GetObjectName(depthStencilView_.Get());
     }
 }
 
-void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[4])
+void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[5])
 {
     D3D11SetObjectName(colorBuffer_.Get(), debugNames[0].c_str());
-    D3D11SetObjectName(renderTargetView_.Get(), debugNames[1].c_str());
+    D3D11SetObjectName(colorBufferMS_.Get(), debugNames[1].c_str());
+    D3D11SetObjectName(renderTargetView_.Get(), debugNames[2].c_str());
     if (depthBuffer_)
     {
-        D3D11SetObjectName(depthBuffer_.Get(), debugNames[2].c_str());
-        D3D11SetObjectName(depthStencilView_.Get(), debugNames[3].c_str());
+        D3D11SetObjectName(depthBuffer_.Get(), debugNames[3].c_str());
+        D3D11SetObjectName(depthStencilView_.Get(), debugNames[4].c_str());
     }
 }
 

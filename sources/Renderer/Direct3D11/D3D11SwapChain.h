@@ -66,6 +66,8 @@ class D3D11SwapChain final : public SwapChain
             DXGI_FORMAT             format
         );
 
+        void ResolveSubresources(ID3D11DeviceContext* context);
+
         inline ID3D11RenderTargetView* const * GetRenderTargetViews() const
         {
             return renderTargetView_.GetAddressOf();
@@ -90,8 +92,8 @@ class D3D11SwapChain final : public SwapChain
 
         void CreateResolutionDependentResources();
 
-        void StoreDebugNames(std::string (&debugNames)[4]);
-        void RestoreDebugNames(const std::string (&debugNames)[4]);
+        void StoreDebugNames(std::string (&debugNames)[5]);
+        void RestoreDebugNames(const std::string (&debugNames)[5]);
 
     private:
 
@@ -103,6 +105,7 @@ class D3D11SwapChain final : public SwapChain
         DXGI_SAMPLE_DESC                swapChainSampleDesc_    = { 1, 0 };
 
         ComPtr<ID3D11Texture2D>         colorBuffer_;
+        ComPtr<ID3D11Texture2D>         colorBufferMS_;
         ComPtr<ID3D11RenderTargetView>  renderTargetView_;
         ComPtr<ID3D11Texture2D>         depthBuffer_;
         ComPtr<ID3D11DepthStencilView>  depthStencilView_;
@@ -111,6 +114,7 @@ class D3D11SwapChain final : public SwapChain
         DXGI_FORMAT                     depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
 
         bool                            hasDebugName_           = false;
+        bool                            swapEffectFlip_         = false; // DXGI swap effect is DXGI_SWAP_EFFECT_FLIP_*
         bool                            tearingSupported_       = false;
         bool                            windowedMode_           = false;
 

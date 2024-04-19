@@ -1397,16 +1397,19 @@ void D3D11CommandBuffer::ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uin
 
 void D3D11CommandBuffer::ResolveAndUnbindRenderTarget()
 {
+    /* Set RTV list and DSV in framebuffer view */
+    BindFramebufferView(0, nullptr, nullptr);
+
     if (boundRenderTarget_ != nullptr)
     {
         boundRenderTarget_->ResolveSubresources(context_.Get());
         boundRenderTarget_ = nullptr;
     }
-
-    /* Set RTV list and DSV in framebuffer view */
-    BindFramebufferView(0, nullptr, nullptr);
-
-    boundSwapChain_ = nullptr;
+    else if (boundSwapChain_ != nullptr)
+    {
+        boundSwapChain_->ResolveSubresources(context_.Get());
+        boundSwapChain_ = nullptr;
+    }
 }
 
 void D3D11CommandBuffer::BindFramebufferView(
