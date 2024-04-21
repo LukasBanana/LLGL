@@ -33,7 +33,7 @@ namespace LLGL
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
 D3D12GraphicsPSO::D3D12GraphicsPSO(
-    D3D12Device&                        device,
+    ID3D12Device*                       device,
     D3D12PipelineLayout&                defaultPipelineLayout,
     const GraphicsPipelineDescriptor&   desc,
     const D3D12RenderPass*              defaultRenderPass,
@@ -374,7 +374,7 @@ static D3D12_INDEX_BUFFER_STRIP_CUT_VALUE GetIndexFormatStripCutValue(Format for
 }
 
 void D3D12GraphicsPSO::CreateNativePSO(
-    D3D12Device&                        device,
+    ID3D12Device*                       device,
     const D3D12PipelineLayout&          pipelineLayout,
     const D3D12RenderPass*              renderPass,
     const GraphicsPipelineDescriptor&   desc,
@@ -433,17 +433,29 @@ void D3D12GraphicsPSO::CreateNativePSO(
     if (isStripTopology && desc.indexFormat == Format::Undefined)
     {
         /* Create primary PSO with 32-bit index cut off value */
-        primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
+        primaryPSO = CreateNativePSOWithDesc(device, stateDesc, desc.debugName);
 
         /* Create secondary PSO with 16-bit index cut off value */
         stateDesc.IBStripCutValue   = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
         stateDesc.CachedPSO         = {};
-        secondaryPSO_ = device.CreateDXGraphicsPipelineState(stateDesc);
+        secondaryPSO_ = CreateNativePSOWithDesc(device, stateDesc, desc.debugName);
     }
     else
-        primaryPSO = device.CreateDXGraphicsPipelineState(stateDesc);
+        primaryPSO = CreateNativePSOWithDesc(device, stateDesc, desc.debugName);
 
     SetNativeAndUpdateCache(std::move(primaryPSO), pipelineCache);
+}
+
+ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, const char* debugName)
+{
+    ComPtr<ID3D12PipelineState> pipelineState;
+    HRESULT hr = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
+    if (FAILED(hr))
+    {
+        GetMutableReport().Errorf("Failed to create D3D12 graphics pipelines state [%s] (HRESULT = %s)", GetOptionalDebugName(debugName), DXErrorToStrOrHex(hr));
+        return nullptr;
+    }
+    return pipelineState;
 }
 
 // Returns the size (in bytes) for the static-state buffer with the specified number of viewports and scissor rectangles

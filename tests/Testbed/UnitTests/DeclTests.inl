@@ -59,6 +59,7 @@ DECL_TEST( RenderTarget1Attachment );
 DECL_TEST( RenderTargetNAttachments );
 DECL_TEST( MipMaps );
 DECL_TEST( PipelineCaching );
+DECL_TEST( ShaderErrors );
 
 // Rendering tests
 DECL_TEST( DepthBuffer );

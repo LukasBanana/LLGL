@@ -31,12 +31,10 @@ class D3D12Device
 
         HRESULT ShareDXDevice(ID3D12Device* sharedD3DDevice);
 
-        ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue            (D3D12_COMMAND_LIST_TYPE type);
-        ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator        (D3D12_COMMAND_LIST_TYPE type);
-        ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList             (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* commandAllocator);
-        ComPtr<ID3D12PipelineState>         CreateDXGraphicsPipelineState   (const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
-        ComPtr<ID3D12PipelineState>         CreateDXComputePipelineState    (const D3D12_COMPUTE_PIPELINE_STATE_DESC& desc);
-        ComPtr<ID3D12QueryHeap>             CreateDXQueryHeap               (const D3D12_QUERY_HEAP_DESC& desc);
+        ComPtr<ID3D12CommandQueue> CreateDXCommandQueue(D3D12_COMMAND_LIST_TYPE type);
+        ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
+        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* commandAllocator);
+        ComPtr<ID3D12QueryHeap> CreateDXQueryHeap(const D3D12_QUERY_HEAP_DESC& desc);
 
         /* ----- Data queries ----- */
 

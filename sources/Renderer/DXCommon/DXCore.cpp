@@ -56,7 +56,7 @@ HINSTANCE DXGetDllHandle()
     #endif
 }
 
-static const char* DXErrorToStr(const HRESULT hr)
+static const char* DXErrorToStr(HRESULT hr)
 {
     switch (hr)
     {
@@ -114,7 +114,7 @@ static const char* DXErrorToStr(const HRESULT hr)
     return nullptr;
 }
 
-static const char* DXErrorToStrOrHex(const HRESULT hr)
+const char* DXErrorToStrOrHex(HRESULT hr)
 {
     if (const char* err = DXErrorToStr(hr))
         return err;
@@ -123,7 +123,7 @@ static const char* DXErrorToStrOrHex(const HRESULT hr)
 }
 
 [[noreturn]]
-static void TrapDXErrorCode(const HRESULT hr, const char* details)
+static void TrapDXErrorCode(HRESULT hr, const char* details)
 {
     const char* errCode = DXErrorToStrOrHex(hr);
     if (details != nullptr && *details != '\0')
@@ -132,13 +132,13 @@ static void TrapDXErrorCode(const HRESULT hr, const char* details)
         LLGL_TRAP("Direct3D operation failed (error code = %s)", errCode);
 }
 
-void DXThrowIfFailed(const HRESULT hr, const char* info)
+void DXThrowIfFailed(HRESULT hr, const char* info)
 {
     if (FAILED(hr))
         TrapDXErrorCode(hr, info);
 }
 
-void DXThrowIfCastFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
+void DXThrowIfCastFailed(HRESULT hr, const char* interfaceName, const char* contextInfo)
 {
     if (FAILED(hr))
     {
@@ -157,7 +157,7 @@ void DXThrowIfCastFailed(const HRESULT hr, const char* interfaceName, const char
     }
 }
 
-void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo)
+void DXThrowIfCreateFailed(HRESULT hr, const char* interfaceName, const char* contextInfo)
 {
     if (FAILED(hr))
     {
@@ -176,7 +176,7 @@ void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const ch
     }
 }
 
-void DXThrowIfInvocationFailed(const HRESULT hr, const char* funcName, const char* contextInfo)
+void DXThrowIfInvocationFailed(HRESULT hr, const char* funcName, const char* contextInfo)
 {
     if (FAILED(hr))
     {

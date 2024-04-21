@@ -124,26 +124,6 @@ ComPtr<ID3D12GraphicsCommandList> D3D12Device::CreateDXCommandList(D3D12_COMMAND
     return commandList;
 }
 
-ComPtr<ID3D12PipelineState> D3D12Device::CreateDXGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc)
-{
-    ComPtr<ID3D12PipelineState> pipelineState;
-
-    HRESULT hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
-    DXThrowIfCreateFailed(hr, "ID3D12PipelineState");
-
-    return pipelineState;
-}
-
-ComPtr<ID3D12PipelineState> D3D12Device::CreateDXComputePipelineState(const D3D12_COMPUTE_PIPELINE_STATE_DESC& desc)
-{
-    ComPtr<ID3D12PipelineState> pipelineState;
-
-    HRESULT hr = device_->CreateComputePipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
-    DXThrowIfCreateFailed(hr, "ID3D12PipelineState");
-
-    return pipelineState;
-}
-
 ComPtr<ID3D12QueryHeap> D3D12Device::CreateDXQueryHeap(const D3D12_QUERY_HEAP_DESC& desc)
 {
     ComPtr<ID3D12QueryHeap> queryHeap;

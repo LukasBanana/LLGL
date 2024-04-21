@@ -32,7 +32,7 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
 
         // Constructs the graphics PSO with the specified descriptor.
         D3D12GraphicsPSO(
-            D3D12Device&                        device,
+            ID3D12Device*                       device,
             D3D12PipelineLayout&                defaultPipelineLayout,
             const GraphicsPipelineDescriptor&   desc,
             const D3D12RenderPass*              defaultRenderPass,
@@ -54,12 +54,14 @@ class D3D12GraphicsPSO final : public D3D12PipelineState
     private:
 
         void CreateNativePSO(
-            D3D12Device&                        device,
+            ID3D12Device*                       device,
             const D3D12PipelineLayout&          pipelineLayout,
             const D3D12RenderPass*              renderPass,
             const GraphicsPipelineDescriptor&   desc,
             D3D12PipelineCache*                 pipelineCache   = nullptr
         );
+
+        ComPtr<ID3D12PipelineState> CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc, const char* debugName);
 
         void BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc);
         void BuildStaticViewports(std::size_t numViewports, const Viewport* viewports, ByteBufferIterator& byteBufferIter);

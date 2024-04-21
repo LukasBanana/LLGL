@@ -1,0 +1,18 @@
+/*
+ * SemanticErrors.CSMain.450core.comp
+ *
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
+ */
+
+#version 450 core
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+void main()
+{
+	uint id = gl_GlobalInvocationID.x;
+    OutBuffer[id] = 0; // <-- Expected error: Undefined identifier "OutBuffer"
+}
+
+

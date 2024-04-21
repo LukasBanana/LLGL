@@ -9,6 +9,7 @@
 #include "D3D11StateManager.h"
 #include "D3D11PipelineLayout.h"
 #include "../D3D11Types.h"
+#include "../D3D11ObjectUtils.h"
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
@@ -17,6 +18,7 @@
 #include "../../../Core/ByteBufferIterator.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <stdexcept>
 
 
@@ -106,11 +108,11 @@ void D3D11GraphicsPSOBase::SetStaticViewportsAndScissors(D3D11StateManager& stat
 
 void D3D11GraphicsPSOBase::GetD3DNativeShaders(const GraphicsPipelineDescriptor& desc)
 {
-    if (Shader* vs = desc.vertexShader        ) { DXCastComPtrNullable(vs_, LLGL_CAST(D3D11Shader*, vs)->GetNative()); }
-    if (Shader* hs = desc.tessControlShader   ) { DXCastComPtrNullable(hs_, LLGL_CAST(D3D11Shader*, hs)->GetNative()); }
-    if (Shader* ds = desc.tessEvaluationShader) { DXCastComPtrNullable(ds_, LLGL_CAST(D3D11Shader*, ds)->GetNative()); }
-    if (Shader* gs = desc.geometryShader      ) { DXCastComPtrNullable(gs_, LLGL_CAST(D3D11Shader*, gs)->GetNative()); }
-    if (Shader* ps = desc.fragmentShader      ) { DXCastComPtrNullable(ps_, LLGL_CAST(D3D11Shader*, ps)->GetNative()); }
+    if (Shader* vs = desc.vertexShader        ) { D3D11CastShader(vs_, LLGL_CAST(D3D11Shader*, vs)->GetNative(), ShaderType::Vertex,         desc.debugName, GetMutableReport()); }
+    if (Shader* hs = desc.tessControlShader   ) { D3D11CastShader(hs_, LLGL_CAST(D3D11Shader*, hs)->GetNative(), ShaderType::TessControl,    desc.debugName, GetMutableReport()); }
+    if (Shader* ds = desc.tessEvaluationShader) { D3D11CastShader(ds_, LLGL_CAST(D3D11Shader*, ds)->GetNative(), ShaderType::TessEvaluation, desc.debugName, GetMutableReport()); }
+    if (Shader* gs = desc.geometryShader      ) { D3D11CastShader(gs_, LLGL_CAST(D3D11Shader*, gs)->GetNative(), ShaderType::Geometry,       desc.debugName, GetMutableReport()); }
+    if (Shader* ps = desc.fragmentShader      ) { D3D11CastShader(ps_, LLGL_CAST(D3D11Shader*, ps)->GetNative(), ShaderType::Fragment,       desc.debugName, GetMutableReport()); }
 }
 
 void D3D11GraphicsPSOBase::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)

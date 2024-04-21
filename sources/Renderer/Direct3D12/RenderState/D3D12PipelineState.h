@@ -84,6 +84,12 @@ class D3D12PipelineState : public PipelineState
             return rootSignature_.Get();
         }
 
+        // Returns the mutable report object.
+        inline Report& GetMutableReport()
+        {
+            return report_;
+        }
+
     private:
 
         const bool                              isGraphicsPSO_  = false;

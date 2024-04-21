@@ -88,6 +88,12 @@ class VKPipelineState : public PipelineState
         */
         void GetShaderCreateInfoAndOptionalPermutation(VKShader& shaderVK, VkPipelineShaderStageCreateInfo& outCreateInfo);
 
+        // Returns the mutable report object.
+        inline Report& GetMutableReport()
+        {
+            return report_;
+        }
+
     private:
 
         void BindDescriptorSets(
@@ -104,6 +110,7 @@ class VKPipelineState : public PipelineState
         const VKPipelineLayout*             pipelineLayout_     = nullptr;
         VkPipelineBindPoint                 bindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
         std::vector<VkPushConstantRange>    uniformRanges_;     // Push constant ranges; One range for each uniform descriptor. See UniformDescriptor.
+        Report                              report_;
 
 };
 

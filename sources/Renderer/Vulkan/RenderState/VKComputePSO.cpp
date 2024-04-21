@@ -12,6 +12,7 @@
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
+#include "../../../Core/StringUtils.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <cstddef>
 
@@ -39,7 +40,7 @@ VKComputePSO::VKComputePSO(
  * ======= Private: =======
  */
 
-void VKComputePSO::CreateVkPipeline(
+bool VKComputePSO::CreateVkPipeline(
     VkDevice                            device,
     const ComputePipelineDescriptor&    desc,
     VkPipelineCache                     pipelineCache)
@@ -47,7 +48,17 @@ void VKComputePSO::CreateVkPipeline(
     /* Get compute shader */
     VKShader* computeShaderVK = LLGL_CAST(VKShader*, desc.computeShader);
     if (computeShaderVK == nullptr)
-        throw std::invalid_argument("cannot create Vulkan compute pipeline without compute shader");
+    {
+        GetMutableReport().Errorf("cannot create Vulkan compute pipeline without compute shader");
+        return false;
+    }
+
+    const Report* computeShaderReport = computeShaderVK->GetReport();
+    if (computeShaderReport != nullptr && computeShaderReport->HasErrors())
+    {
+        GetMutableReport().Errorf("Failed to load compute shader into Vulkan compute pipeline state [%s]", GetOptionalDebugName(desc.debugName));
+        return false;
+    }
 
     /* Get shader stages */
     VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
@@ -66,6 +77,8 @@ void VKComputePSO::CreateVkPipeline(
     }
     VkResult result = vkCreateComputePipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan compute pipeline");
+
+    return true;
 }
 
 

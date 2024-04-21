@@ -32,7 +32,7 @@ class VKComputePSO final : public VKPipelineState
 
     private:
 
-        void CreateVkPipeline(
+        bool CreateVkPipeline(
             VkDevice                            device,
             const ComputePipelineDescriptor&    desc,
             VkPipelineCache                     pipelineCache = VK_NULL_HANDLE

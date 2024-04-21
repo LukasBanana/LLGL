@@ -30,17 +30,20 @@ namespace LLGL
 // Returns the DLL instance handle of this module.
 HINSTANCE DXGetDllHandle();
 
+// Returns a string representation for the specified HRESULT error code.
+const char* DXErrorToStrOrHex(HRESULT hr);
+
 // Traps the runtime if 'hr' is not S_OK.
-void DXThrowIfFailed(const HRESULT hr, const char* info);
+void DXThrowIfFailed(HRESULT hr, const char* info);
 
 // Traps the runtime if 'hr' is not S_OK, with an info about the failed type cast from a COM pointer.
-void DXThrowIfCastFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo = nullptr);
+void DXThrowIfCastFailed(HRESULT hr, const char* interfaceName, const char* contextInfo = nullptr);
 
 // Traps the runtime if 'hr' is not S_OK, with an info about the failed interface creation.
-void DXThrowIfCreateFailed(const HRESULT hr, const char* interfaceName, const char* contextInfo = nullptr);
+void DXThrowIfCreateFailed(HRESULT hr, const char* interfaceName, const char* contextInfo = nullptr);
 
 // Traps the runtime if 'hr' is not S_OK, with an info about the failed function call.
-void DXThrowIfInvocationFailed(const HRESULT hr, const char* funcName, const char* contextInfo = nullptr);
+void DXThrowIfInvocationFailed(HRESULT hr, const char* funcName, const char* contextInfo = nullptr);
 
 // Returns the specified value as a DirectX BOOL type.
 BOOL DXBoolean(bool value);

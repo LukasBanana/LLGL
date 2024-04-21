@@ -328,6 +328,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( RenderTargetNAttachments    );
     RUN_TEST( MipMaps                     );
     RUN_TEST( PipelineCaching             );
+    RUN_TEST( ShaderErrors                );
 
     // Run all rendering tests
     RUN_TEST( DepthBuffer                 );
@@ -887,7 +888,7 @@ bool TestbedContext::LoadShaders()
     }
     else
     {
-        Log::Errorf("No shaders provided for this backend");
+        Log::Errorf("No shaders provided for this backend\n");
         return false;
     }
 

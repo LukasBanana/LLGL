@@ -9,6 +9,10 @@
 #define LLGL_D3D11_OBJECT_UTILS_H
 
 
+#include "../DXCommon/ComPtr.h"
+#include "../../Core/StringUtils.h"
+#include <LLGL/Report.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <d3d11.h>
 #include <cstdint>
 #include <string>
@@ -29,6 +33,16 @@ void D3D11SetObjectNameIndexed(ID3D11DeviceChild* obj, const char* name, std::ui
 
 // Returns the debug name of the specified D3D device child.
 std::string D3D11GetObjectName(ID3D11DeviceChild* obj);
+
+// Casts the source ComPtr to its destination type and has no effect if the source object is null.
+template <typename TDst>
+void D3D11CastShader(ComPtr<TDst>& dst, const ComPtr<ID3D11DeviceChild>& src, ShaderType type, const char* psoDebugName, Report& report)
+{
+    if (src.Get() != nullptr)
+        src.As(&dst);
+    else
+        report.Errorf("Failed to load %s shader into D3D11 graphics pipeline state [%s]", ToString(type), GetOptionalDebugName(psoDebugName));
+}
 
 
 } // /namespace LLGL

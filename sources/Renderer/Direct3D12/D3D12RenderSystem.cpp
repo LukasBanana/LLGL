@@ -390,12 +390,12 @@ void D3D12RenderSystem::Release(PipelineCache& pipelineCache)
 
 PipelineState* D3D12RenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return pipelineStates_.emplace<D3D12GraphicsPSO>(device_, defaultPipelineLayout_, pipelineStateDesc, GetDefaultRenderPass(), pipelineCache);
+    return pipelineStates_.emplace<D3D12GraphicsPSO>(device_.GetNative(), defaultPipelineLayout_, pipelineStateDesc, GetDefaultRenderPass(), pipelineCache);
 }
 
 PipelineState* D3D12RenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    return pipelineStates_.emplace<D3D12ComputePSO>(device_, defaultPipelineLayout_, pipelineStateDesc, pipelineCache);
+    return pipelineStates_.emplace<D3D12ComputePSO>(device_.GetNative(), defaultPipelineLayout_, pipelineStateDesc, pipelineCache);
 }
 
 void D3D12RenderSystem::Release(PipelineState& pipelineState)

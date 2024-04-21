@@ -201,6 +201,11 @@ LLGL_EXPORT UTF8String WriteTableToUTF8String(const ArrayView<FormattedTableColu
     return s;
 }
 
+LLGL_EXPORT const char* GetOptionalDebugName(const char* debugName)
+{
+    return (debugName != nullptr && *debugName != '\0' ? debugName : "unnamed");
+}
+
 
 } // /namespace LLGL
 

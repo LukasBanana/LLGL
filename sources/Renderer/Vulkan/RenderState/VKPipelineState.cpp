@@ -35,7 +35,7 @@ VKPipelineState::VKPipelineState(
 
 const Report* VKPipelineState::GetReport() const
 {
-    return nullptr; //TODO
+    return (*report_.GetText() != '\0' || report_.HasErrors() ? &report_ : nullptr);
 }
 
 void VKPipelineState::BindPipelineAndStaticDescriptorSet(VkCommandBuffer commandBuffer)

@@ -18,8 +18,10 @@
 #include <cstddef>
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Container/SmallVector.h>
 #include "../../../Core/Assertion.h"
+#include "../../../Core/StringUtils.h"
 
 
 namespace LLGL
@@ -39,8 +41,7 @@ VKGraphicsPSO::VKGraphicsPSO(
 {
     /* Get render pass from descriptor or default render pass */
     const RenderPass* renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass);
-    if (renderPass == nullptr)
-        throw std::invalid_argument("cannot create Vulkan graphics pipeline without render pass");
+    LLGL_ASSERT_PTR(renderPass);
 
     /* Create Vulkan graphics pipeline object */
     const VKRenderPass* renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
@@ -292,7 +293,7 @@ static void CreateDynamicState(
     createInfo.pDynamicStates       = (dynamicStatesVK.empty() ? nullptr : dynamicStatesVK.data());
 }
 
-void VKGraphicsPSO::CreateVkPipeline(
+bool VKGraphicsPSO::CreateVkPipeline(
     VkDevice                            device,
     const VKRenderPass&                 renderPass,
     const VKGraphicsPipelineLimits&     limits,
@@ -302,28 +303,44 @@ void VKGraphicsPSO::CreateVkPipeline(
     /* Get shader program object */
     const VKShader* vertexShaderVK = LLGL_CAST(const VKShader*, desc.vertexShader);
     if (vertexShaderVK == nullptr)
-        throw std::invalid_argument("cannot create Vulkan graphics pipeline without vertex shader");
+    {
+        GetMutableReport().Errorf("cannot create Vulkan graphics pipeline without vertex shader");
+        return false;
+    }
 
-    auto FillAndAppendShaderStageCreateInfo = [this](
+    auto FillAndAppendShaderStageCreateInfo = [this, &desc](
         Shader*                                             shader,
-        SmallVector<VkPipelineShaderStageCreateInfo, 5>&    createInfos)
+        SmallVector<VkPipelineShaderStageCreateInfo, 5>&    createInfos,
+        bool&                                               outShaderCreationFailed)
     {
         if (shader != nullptr)
         {
-            std::size_t shaderIndex = createInfos.size();
             VKShader& shaderVK = LLGL_CAST(VKShader&, *shader);
-            createInfos.resize(shaderIndex + 1);
-            this->GetShaderCreateInfoAndOptionalPermutation(shaderVK, createInfos.back());
+            const Report* report = shaderVK.GetReport();
+            if (report != nullptr && report->HasErrors())
+            {
+                GetMutableReport().Errorf("Failed to load %s shader into Vulkan graphics pipeline state [%s]", ToString(shader->GetType()), GetOptionalDebugName(desc.debugName));
+                outShaderCreationFailed = true;
+            }
+            else
+            {
+                const std::size_t shaderIndex = createInfos.size();
+                createInfos.resize(shaderIndex + 1);
+                this->GetShaderCreateInfoAndOptionalPermutation(shaderVK, createInfos.back());
+            }
         }
     };
 
     /* Get shader stages */
     SmallVector<VkPipelineShaderStageCreateInfo, 5> shaderStageCreateInfos;
-    FillAndAppendShaderStageCreateInfo(desc.vertexShader,           shaderStageCreateInfos);
-    FillAndAppendShaderStageCreateInfo(desc.tessControlShader,      shaderStageCreateInfos);
-    FillAndAppendShaderStageCreateInfo(desc.tessEvaluationShader,   shaderStageCreateInfos);
-    FillAndAppendShaderStageCreateInfo(desc.geometryShader,         shaderStageCreateInfos);
-    FillAndAppendShaderStageCreateInfo(desc.fragmentShader,         shaderStageCreateInfos);
+    bool shaderCreationFailed = false;
+    FillAndAppendShaderStageCreateInfo(desc.vertexShader,           shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.tessControlShader,      shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.tessEvaluationShader,   shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.geometryShader,         shaderStageCreateInfos, shaderCreationFailed);
+    FillAndAppendShaderStageCreateInfo(desc.fragmentShader,         shaderStageCreateInfos, shaderCreationFailed);
+    if (shaderCreationFailed)
+        return false;
 
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo;
@@ -392,6 +409,8 @@ void VKGraphicsPSO::CreateVkPipeline(
     }
     VkResult result = vkCreateGraphicsPipelines(device, pipelineCache, 1, &createInfo, nullptr, ReleaseAndGetAddressOfVkPipeline());
     VKThrowIfFailed(result, "failed to create Vulkan graphics pipeline");
+
+    return true;
 }
 
 

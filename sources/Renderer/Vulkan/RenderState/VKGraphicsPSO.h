@@ -55,7 +55,7 @@ class VKGraphicsPSO final : public VKPipelineState
 
     private:
 
-        void CreateVkPipeline(
+        bool CreateVkPipeline(
             VkDevice                            device,
             const VKRenderPass&                 renderPass,
             const VKGraphicsPipelineLimits&     limits,

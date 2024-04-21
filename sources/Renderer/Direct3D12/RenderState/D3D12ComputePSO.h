@@ -28,7 +28,7 @@ class D3D12ComputePSO final : public D3D12PipelineState
     public:
 
         D3D12ComputePSO(
-            D3D12Device&                        device,
+            ID3D12Device*                       device,
             D3D12PipelineLayout&                defaultPipelineLayout,
             const ComputePipelineDescriptor&    desc,
             PipelineCache*                      pipelineCache           = nullptr
@@ -39,10 +39,13 @@ class D3D12ComputePSO final : public D3D12PipelineState
     private:
 
         void CreateNativePSO(
-            D3D12Device&                    device,
+            ID3D12Device*                   device,
             const D3D12_SHADER_BYTECODE&    csBytecode,
+            const char*                     debugName,
             D3D12PipelineCache*             pipelineCache   = nullptr
         );
+
+        ComPtr<ID3D12PipelineState> CreateNativePSOWithDesc(ID3D12Device* device, const D3D12_COMPUTE_PIPELINE_STATE_DESC& desc, const char* debugName);
 
 };
 
