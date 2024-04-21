@@ -106,11 +106,11 @@ void D3D11GraphicsPSOBase::SetStaticViewportsAndScissors(D3D11StateManager& stat
 
 void D3D11GraphicsPSOBase::GetD3DNativeShaders(const GraphicsPipelineDescriptor& desc)
 {
-    if (Shader* vs = desc.vertexShader        ) { LLGL_CAST(D3D11Shader*, vs)->GetNative().As(&vs_); }
-    if (Shader* hs = desc.tessControlShader   ) { LLGL_CAST(D3D11Shader*, hs)->GetNative().As(&hs_); }
-    if (Shader* ds = desc.tessEvaluationShader) { LLGL_CAST(D3D11Shader*, ds)->GetNative().As(&ds_); }
-    if (Shader* gs = desc.geometryShader      ) { LLGL_CAST(D3D11Shader*, gs)->GetNative().As(&gs_); }
-    if (Shader* ps = desc.fragmentShader      ) { LLGL_CAST(D3D11Shader*, ps)->GetNative().As(&ps_); }
+    if (Shader* vs = desc.vertexShader        ) { DXCastComPtrNullable(vs_, LLGL_CAST(D3D11Shader*, vs)->GetNative()); }
+    if (Shader* hs = desc.tessControlShader   ) { DXCastComPtrNullable(hs_, LLGL_CAST(D3D11Shader*, hs)->GetNative()); }
+    if (Shader* ds = desc.tessEvaluationShader) { DXCastComPtrNullable(ds_, LLGL_CAST(D3D11Shader*, ds)->GetNative()); }
+    if (Shader* gs = desc.geometryShader      ) { DXCastComPtrNullable(gs_, LLGL_CAST(D3D11Shader*, gs)->GetNative()); }
+    if (Shader* ps = desc.fragmentShader      ) { DXCastComPtrNullable(ps_, LLGL_CAST(D3D11Shader*, ps)->GetNative()); }
 }
 
 void D3D11GraphicsPSOBase::BuildStaticStateBuffer(const GraphicsPipelineDescriptor& desc)

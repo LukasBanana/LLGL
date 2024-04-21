@@ -23,7 +23,7 @@ D3D11ComputePSO::D3D11ComputePSO(const ComputePipelineDescriptor& desc) :
 {
     /* Convert shader state */
     if (auto* computeShaderD3D = LLGL_CAST(const D3D11Shader*, desc.computeShader))
-        computeShaderD3D->GetNative().As(&cs_);
+        DXCastComPtrNullable(cs_, computeShaderD3D->GetNative());
     else
         ResetReport("cannot create D3D compute PSO without compute shader", true);
 }

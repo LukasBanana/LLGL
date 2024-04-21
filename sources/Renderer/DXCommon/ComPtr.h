@@ -20,6 +20,14 @@ namespace LLGL
 template <typename T>
 using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+// Casts the source ComPtr to its destination type and has no effect if the source object is null.
+template <typename TDst, typename TSrc>
+void DXCastComPtrNullable(ComPtr<TDst>& dst, const ComPtr<TSrc>& src)
+{
+    if (src.Get() != nullptr)
+        src.As(&dst);
+}
+
 
 } // /namespace LLGL
 
