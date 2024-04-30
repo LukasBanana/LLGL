@@ -68,7 +68,7 @@ HRESULT D3D11Shader::ReflectAndCacheConstantBuffers(const std::vector<D3D11Const
     }
     if (cbufferReflectionResult_ == S_OK)
     {
-        /* Return cached constnat buffer reflections */
+        /* Return cached constant buffer reflections */
         if (outConstantBuffers != nullptr)
             *outConstantBuffers = &cbufferReflections_;
         return S_OK;

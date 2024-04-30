@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_D3D12_BUFFER_CONSTNATS_POOL_H
-#define LLGL_D3D12_BUFFER_CONSTNATS_POOL_H
+#ifndef LLGL_D3D12_BUFFER_CONSTANTS_POOL_H
+#define LLGL_D3D12_BUFFER_CONSTANTS_POOL_H
 
 
 #include "../D3D12Resource.h"

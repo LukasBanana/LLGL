@@ -74,7 +74,7 @@ class D3D11ConstantsCache
 
     private:
 
-        // Allocates a new constnat buffer at the specified slot and returns its zero-based index.
+        // Allocates a new constant buffer at the specified slot and returns its zero-based index.
         std::uint8_t AllocateConstantBuffer(UINT slot, UINT size, long stageFlags);
 
         // Sets the constants of the specified cbuffer with the state manager.
