@@ -123,6 +123,7 @@ void GLStatePool::Clear()
     rasterizerStates_.clear();
     blendStates_.clear();
     shaderBindingLayouts_.clear();
+    shaderPipelines_.clear();
 }
 
 /* ----- Depth-stencil states ----- */
