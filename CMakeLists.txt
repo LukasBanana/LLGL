@@ -276,6 +276,9 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds|icns)")
         source_group("Resources" FILES ${RES_FILES})
 
+        # Don't compile these resource types, just keep them in the project solution
+        set_source_files_properties(${RES_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+
         # Filter shader files into "Shaders" folder
         set(SHADER_FILES "${SRC_FILES}")
         list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag)")
