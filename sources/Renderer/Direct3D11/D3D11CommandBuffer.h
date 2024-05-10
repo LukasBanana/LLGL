@@ -24,12 +24,14 @@ namespace LLGL
 
 class D3D11Buffer;
 class D3D11StateManager;
+class D3D11BindingTable;
 class D3D11RenderTarget;
 class D3D11SwapChain;
 class D3D11RenderPass;
 class D3D11PipelineState;
 class D3D11PipelineLayout;
 class D3D11ConstantsCache;
+class D3D11RenderTargetHandles;
 
 class D3D11CommandBuffer final : public CommandBuffer
 {
@@ -52,11 +54,8 @@ class D3D11CommandBuffer final : public CommandBuffer
         /* ----- Internal ----- */
 
         // Calls OMSetRenderTargets and stores the references to these resource views.
-        void BindFramebufferView(
-            UINT                            numRenderTargetViews,
-            ID3D11RenderTargetView* const * renderTargetViews,
-            ID3D11DepthStencilView*         depthStencilView
-        );
+        void SetRenderTargets(const D3D11RenderTargetHandles& renderTargetHandles);
+        void SetRenderTargetsNull();
 
         // Calls ClearState() on a deferred device context and discard a partially built command list.
         void ClearStateAndResetDeferredCommandList();
@@ -85,16 +84,7 @@ class D3D11CommandBuffer final : public CommandBuffer
 
     private:
 
-        void ResetBufferResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags);
-        void ResetTextureResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags);
-        void ResetSamplerResourceSlots(std::uint32_t firstSlot, std::uint32_t numSlots, long bindFlags, long stageFlags);
-
-        void ResetResourceSlotsSRV(std::uint32_t firstSlot, std::uint32_t numSlots, long stageFlags);
-        void ResetResourceSlotsUAV(std::uint32_t firstSlot, std::uint32_t numSlots, long stageFlags);
-
         void ResolveAndUnbindRenderTarget();
-        void BindRenderTarget(D3D11RenderTarget& renderTargetD3D);
-        void BindSwapChain(D3D11SwapChain& swapChainD3D);
 
         void ClearAttachmentsWithRenderPass(
             const D3D11RenderPass&  renderPassD3D,
@@ -148,6 +138,7 @@ class D3D11CommandBuffer final : public CommandBuffer
         #endif
 
         std::shared_ptr<D3D11StateManager>  stateMngr_;
+        D3D11BindingTable*                  bindingTable_           = nullptr;
 
         D3D11FramebufferView                framebufferView_;
         D3D11RenderTarget*                  boundRenderTarget_      = nullptr;

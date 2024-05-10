@@ -22,8 +22,9 @@ namespace LLGL
 
 
 D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) :
-    Texture     { desc.type, desc.bindFlags },
-    baseFormat_ { desc.format               }
+    Texture         { desc.type, desc.bindFlags             },
+    baseFormat_     { desc.format                           },
+    bindingLocator_ { ResourceType::Texture, desc.bindFlags }
 {
     switch (desc.type)
     {

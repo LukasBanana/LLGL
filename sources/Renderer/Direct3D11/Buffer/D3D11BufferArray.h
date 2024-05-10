@@ -19,6 +19,7 @@ namespace LLGL
 
 
 class Buffer;
+struct D3D11BindingLocator;
 
 class D3D11BufferArray final : public BufferArray
 {
@@ -28,22 +29,39 @@ class D3D11BufferArray final : public BufferArray
         D3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the number fo buffers in this array.
-        UINT GetCount() const;
+        inline UINT GetCount() const
+        {
+            return static_cast<UINT>(buffersAndBindingLocators_.size() / 2);
+        }
 
         // Returns a pointer to the native buffer objects.
-        ID3D11Buffer* const * GetBuffers() const;
+        inline ID3D11Buffer* const * GetBuffers() const
+        {
+            return reinterpret_cast<ID3D11Buffer* const *>(buffersAndBindingLocators_.data());
+        }
+
+        // Returns a pointer to the binding locators.
+        inline D3D11BindingLocator* const * GetBindingLocators() const
+        {
+            return reinterpret_cast<D3D11BindingLocator* const *>(buffersAndBindingLocators_.data() + GetCount());
+        }
 
         // Returns a pointer to the buffer strides.
-        const UINT* GetStrides() const;
+        inline const UINT* GetStrides() const
+        {
+            return stridesAndOffsets_.data();
+        }
 
         // Returns a pointer to the buffer offsets.
-        const UINT* GetOffsets() const;
+        inline const UINT* GetOffsets() const
+        {
+            return (stridesAndOffsets_.data() + GetCount());
+        }
 
     private:
 
-        std::vector<ID3D11Buffer*>  buffers_;
-        std::vector<UINT>           stridesAndOffsets_;
-        std::size_t                 offsetStart_        = 0;
+        std::vector<void*>  buffersAndBindingLocators_;
+        std::vector<UINT>   stridesAndOffsets_;
 
 };
 

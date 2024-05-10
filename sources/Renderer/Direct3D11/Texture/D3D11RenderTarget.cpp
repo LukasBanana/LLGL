@@ -35,30 +35,44 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     if (desc.samples > 1)
         FindSuitableSampleDesc(device, desc);
 
+    /* Allocate buffer for native handles */
+    renderTargetHandles_.Allocate(NumActiveColorAttachments(desc), IsAttachmentEnabled(desc.depthStencilAttachment));
+
+    /* Create native render-target (RTV) and depth-stencil views (DSV) */
+    D3D11BindingLocator* bindingLocator = nullptr;
+    D3D11SubresourceRange subresourceRange = {};
+
     for_range(i, LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         if (IsAttachmentEnabled(desc.colorAttachments[i]))
-            CreateRenderTargetView(device, desc.colorAttachments[i], desc.resolveAttachments[i]);
+        {
+            ComPtr<ID3D11RenderTargetView> rtv = CreateRenderTargetView(
+                device,
+                desc.colorAttachments[i],
+                desc.resolveAttachments[i],
+                bindingLocator,
+                subresourceRange
+            );
+            renderTargetHandles_.SetRenderTargetView(i, rtv.Get(), bindingLocator, subresourceRange);
+        }
+        else
+            break;
     }
 
     if (IsAttachmentEnabled(desc.depthStencilAttachment))
     {
         const UINT dsvFlags = (renderPass_ != nullptr ? renderPass_->GetAttachmentFlagsDSV() : 0);
-        CreateDepthStencilView(device, desc.depthStencilAttachment, dsvFlags);
+        ComPtr<ID3D11DepthStencilView> dsv = CreateDepthStencilView(
+            device,
+            desc.depthStencilAttachment,
+            dsvFlags,
+            bindingLocator
+        );
+        renderTargetHandles_.SetDepthStencilView(dsv.Get(), bindingLocator);
     }
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
-}
-
-D3D11RenderTarget::~D3D11RenderTarget()
-{
-    /* Release all render-target-views manually to avoid having a separate container with ComPtr */
-    for (ID3D11RenderTargetView* rtv : renderTargetViews_)
-    {
-        LLGL_ASSERT_PTR(rtv);
-        rtv->Release();
-    }
 }
 
 void D3D11RenderTarget::SetDebugName(const char* name)
@@ -66,15 +80,15 @@ void D3D11RenderTarget::SetDebugName(const char* name)
     if (name != nullptr)
     {
         /* Set label for each RTV */
-        for_range(i, renderTargetViews_.size())
+        for_range(i, renderTargetHandles_.GetNumRenderTargetViews())
         {
             const std::string subscript = ".RTV[" + std::to_string(i) + "]";
-            D3D11SetObjectNameSubscript(renderTargetViews_[i], name, subscript.c_str());
+            D3D11SetObjectNameSubscript(renderTargetHandles_.GetRenderTargetViews()[i], name, subscript.c_str());
         }
 
         /* Set label for DSV */
-        if (depthStencilView_)
-            D3D11SetObjectNameSubscript(depthStencilView_.Get(), name, ".DSV");
+        if (ID3D11DepthStencilView* dsv = renderTargetHandles_.GetDepthStencilView())
+            D3D11SetObjectNameSubscript(dsv, name, ".DSV");
 
         /* Set lable for each internal texture */
         for_range(i, internalTextures_.size())
@@ -86,9 +100,9 @@ void D3D11RenderTarget::SetDebugName(const char* name)
     else
     {
         /* Reset all labels */
-        for (ID3D11RenderTargetView* rtv : GetRenderTargetViews())
-            D3D11SetObjectName(rtv, nullptr);
-        D3D11SetObjectName(depthStencilView_.Get(), nullptr);
+        for (auto it = renderTargetHandles_.GetRenderTargetViews(), itEnd = it + renderTargetHandles_.GetNumRenderTargetViews(); it != itEnd; ++it)
+            D3D11SetObjectName(*it, nullptr);
+        D3D11SetObjectName(renderTargetHandles_.GetDepthStencilView(), nullptr);
         for (const auto& texD3D : internalTextures_)
             D3D11SetObjectName(texD3D.Get(), nullptr);
     }
@@ -106,17 +120,17 @@ std::uint32_t D3D11RenderTarget::GetSamples() const
 
 std::uint32_t D3D11RenderTarget::GetNumColorAttachments() const
 {
-    return static_cast<std::uint32_t>(renderTargetViews_.size());
+    return static_cast<std::uint32_t>(renderTargetHandles_.GetNumRenderTargetViews());
 }
 
 bool D3D11RenderTarget::HasDepthAttachment() const
 {
-    return (depthStencilView_.Get() != nullptr);
+    return renderTargetHandles_.HasDepthStencilView();
 }
 
 bool D3D11RenderTarget::HasStencilAttachment() const
 {
-    return (depthStencilView_.Get() != nullptr && DXTypes::HasStencilComponent(depthStencilFormat_));
+    return (renderTargetHandles_.HasDepthStencilView() && DXTypes::HasStencilComponent(depthStencilFormat_));
 }
 
 const RenderPass* D3D11RenderTarget::GetRenderPass() const
@@ -318,14 +332,17 @@ ID3D11Texture2D* D3D11RenderTarget::CreateInternalTexture(ID3D11Device* device, 
     return internalTextures_.back().Get();
 }
 
-void D3D11RenderTarget::CreateRenderTargetView(
+LLGL_NODISCARD
+ComPtr<ID3D11RenderTargetView> D3D11RenderTarget::CreateRenderTargetView(
     ID3D11Device*               device,
     const AttachmentDescriptor& colorAttachment,
-    const AttachmentDescriptor& resolveAttachment)
+    const AttachmentDescriptor& resolveAttachment,
+    D3D11BindingLocator*&       outBindingLocator,
+    D3D11SubresourceRange&      outSubresourceRange)
 {
-    DXGI_FORMAT             colorFormat = DXGI_FORMAT_UNKNOWN;
-    ID3D11Resource*         colorTarget = nullptr;
-    ID3D11RenderTargetView* colorRTV    = nullptr;
+    ComPtr<ID3D11RenderTargetView> rtv;
+    DXGI_FORMAT colorFormat = DXGI_FORMAT_UNKNOWN;
+    ID3D11Resource* colorTarget = nullptr;
 
     if (Texture* texture = colorAttachment.texture)
     {
@@ -339,12 +356,17 @@ void D3D11RenderTarget::CreateRenderTargetView(
         D3D11RenderTarget::CreateSubresourceRTV(
             /*device:*/         device,
             /*resource:*/       colorTarget,
-            /*rtvOutput:*/      &colorRTV,
+            /*rtvOutput:*/      rtv.GetAddressOf(),
             /*type:*/           textureD3D->GetType(),
             /*format:*/         colorFormat,
             /*baseMipLevel:*/   colorAttachment.mipLevel,
             /*baseArrayLayer:*/ colorAttachment.arrayLayer
         );
+
+        /* Return locator and subresource range for texture */
+        const UINT rtvSubresource = textureD3D->CalcSubresource(colorAttachment.mipLevel, colorAttachment.arrayLayer);
+        outBindingLocator   = textureD3D->GetBindingLocator();
+        outSubresourceRange = { rtvSubresource, rtvSubresource + 1 };
     }
     else
     {
@@ -356,26 +378,34 @@ void D3D11RenderTarget::CreateRenderTargetView(
         D3D11RenderTarget::CreateSubresourceRTV(
             /*device:*/         device,
             /*resource:*/       colorTarget,
-            /*rtvOutput:*/      &colorRTV,
+            /*rtvOutput:*/      rtv.GetAddressOf(),
             /*type:*/           (HasMultiSampling() ? TextureType::Texture2DMS : TextureType::Texture2D),
             /*format:*/         colorFormat,
             /*baseMipLevel:*/   0,
             /*baseArrayLayer:*/ 0
         );
-    }
 
-    renderTargetViews_.push_back(colorRTV);
+        /* Reset locator and subresource range */
+        outBindingLocator   = nullptr;
+        outSubresourceRange = {};
+    }
 
     /* Create resolve target if a resolve texture is specified */
     if (resolveAttachment.texture != nullptr && HasMultiSampling())
         CreateResolveTarget(device, resolveAttachment, colorFormat, colorTarget);
+
+    return rtv;
 }
 
-void D3D11RenderTarget::CreateDepthStencilView(
+LLGL_NODISCARD
+ComPtr<ID3D11DepthStencilView> D3D11RenderTarget::CreateDepthStencilView(
     ID3D11Device*               device,
     const AttachmentDescriptor& depthStencilAttachment,
-    UINT                        dsvFlags)
+    UINT                        dsvFlags,
+    D3D11BindingLocator*&       outBindingLocator)
 {
+    ComPtr<ID3D11DepthStencilView> dsv;
+
     if (Texture* texture = depthStencilAttachment.texture)
     {
         /* Create DSV for target texture */
@@ -385,7 +415,7 @@ void D3D11RenderTarget::CreateDepthStencilView(
         D3D11RenderTarget::CreateSubresourceDSV(
             /*device:*/         device,
             /*resource:*/       textureD3D->GetNative(),
-            /*dsvOutput:*/      depthStencilView_.ReleaseAndGetAddressOf(),
+            /*dsvOutput:*/      dsv.GetAddressOf(),
             /*type:*/           textureD3D->GetType(),
             /*format:*/         depthStencilFormat_,
             /*baseMipLevel:*/   depthStencilAttachment.mipLevel,
@@ -393,6 +423,9 @@ void D3D11RenderTarget::CreateDepthStencilView(
             /*numArrayLayers:*/ 1u,
             /*dsvFlags:*/       dsvFlags
         );
+
+        /* Return locator and subresource range for texture */
+        outBindingLocator = textureD3D->GetBindingLocator();
     }
     else
     {
@@ -401,9 +434,14 @@ void D3D11RenderTarget::CreateDepthStencilView(
         ID3D11Texture2D* depthStencil = CreateInternalTexture(device, depthStencilFormat_, D3D11_BIND_DEPTH_STENCIL);
 
         /* Create DSV for internal depth-stencil buffer */
-        HRESULT hr = device->CreateDepthStencilView(depthStencil, nullptr, depthStencilView_.ReleaseAndGetAddressOf());
+        HRESULT hr = device->CreateDepthStencilView(depthStencil, nullptr, dsv.GetAddressOf());
         DXThrowIfCreateFailed(hr, "ID3D11DepthStencilView", "for render-target depth-stencil");
+
+        /* Reset locator and subresource range */
+        outBindingLocator = nullptr;
     }
+
+    return dsv;
 }
 
 void D3D11RenderTarget::CreateResolveTarget(

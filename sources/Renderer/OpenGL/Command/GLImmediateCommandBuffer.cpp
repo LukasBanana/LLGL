@@ -415,52 +415,6 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
     }
 }
 
-void GLImmediateCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                /*stageFlags*/)
-{
-    if (numSlots > 0)
-    {
-        auto first = static_cast<GLuint>(std::min(firstSlot, GLStateManager::g_maxNumResourceSlots - 1u));
-        auto count = static_cast<GLsizei>(std::min(numSlots, GLStateManager::g_maxNumResourceSlots - first));
-
-        switch (resourceType)
-        {
-            case ResourceType::Undefined:
-            break;
-
-            case ResourceType::Buffer:
-            {
-                if ((bindFlags & BindFlags::ConstantBuffer) != 0)
-                    stateMngr_->UnbindBuffersBase(GLBufferTarget::UniformBuffer, first, count);
-                if ((bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-                    stateMngr_->UnbindBuffersBase(GLBufferTarget::ShaderStorageBuffer, first, count);
-                if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-                    stateMngr_->UnbindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, first, count);
-            }
-            break;
-
-            case ResourceType::Texture:
-            {
-                if ((bindFlags & BindFlags::Sampled) != 0)
-                    stateMngr_->UnbindTextures(first, count);
-                if ((bindFlags & BindFlags::Storage) != 0)
-                    stateMngr_->UnbindImageTextures(first, count);
-            }
-            break;
-
-            case ResourceType::Sampler:
-            {
-                stateMngr_->UnbindSamplers(first, count);
-            }
-            break;
-        }
-    }
-}
-
 /* ----- Render Passes ----- */
 
 void GLImmediateCommandBuffer::BeginRenderPass(

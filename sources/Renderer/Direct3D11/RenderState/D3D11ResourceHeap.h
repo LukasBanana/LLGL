@@ -13,6 +13,7 @@
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
+#include "D3D11BindingLocator.h"
 #include "../../SegmentedBuffer.h"
 #include "../../DXCommon/DXManagedComPtrArray.h"
 #include <vector>
@@ -28,6 +29,7 @@ namespace LLGL
 enum D3DResourceType : std::uint32_t;
 class D3D11Texture;
 class D3D11BufferWithRV;
+class D3D11BindingTable;
 class BindingDescriptorIterator;
 struct ResourceHeapDescriptor;
 struct TextureViewDescriptor;
@@ -54,13 +56,13 @@ class D3D11ResourceHeap final : public ResourceHeap
         // Writes the specified resource views to this resource heap and generates SRVs and UAVs as required.
         std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
 
-        void BindForGraphicsPipeline(ID3D11DeviceContext* context, std::uint32_t descriptorSet);
-        void BindForComputePipeline(ID3D11DeviceContext* context, std::uint32_t descriptorSet);
+        void BindForGraphicsPipeline(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, std::uint32_t descriptorSet);
+        void BindForComputePipeline(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, std::uint32_t descriptorSet);
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
-        void BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, std::uint32_t descriptorSet);
-        void BindForComputePipeline1(ID3D11DeviceContext1* context1, std::uint32_t descriptorSet);
+        void BindForGraphicsPipeline1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, std::uint32_t descriptorSet);
+        void BindForComputePipeline1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, std::uint32_t descriptorSet);
 
         #endif
 
@@ -137,7 +139,7 @@ class D3D11ResourceHeap final : public ResourceHeap
                 }
 
                 std::uint32_t segmentOffset     : 24; // Byte offset to the first segment within a segment set for the respective shader stage.
-                std::uint32_t descriptorIndex   :  8; // Index of the descriptor the binding maps to.
+                std::uint32_t descriptorIndex   :  8; // Index of the descriptor the binding maps to (within each segment).
             }
             stages[D3DShaderStage_Count];
             D3DResourceType type;
@@ -160,13 +162,21 @@ class D3D11ResourceHeap final : public ResourceHeap
             std::size_t index;  // Index to the input bindings list
         };
 
+        // Helper structure for SRV and UAV output.
+        struct D3DSubresourceLocator
+        {
+            std::size_t             index;      // Index into the subresource containers (subresourceSRVs_ and subresourceUAVs_).
+            D3D11BindingLocator*    locator;    // Binding table locator.
+            D3D11SubresourceRange   range;      // Binding table subresource range.
+        };
+
     private:
 
         void AllocStageSegments(BindingDescriptorIterator& bindingIter, long stage);
 
         void AllocConstantBufferSegments(BindingDescriptorIterator& bindingIter, long stage);
         void AllocShaderResourceViewSegments(BindingDescriptorIterator& bindingIter, long stage);
-        void AllocUnorderedAccessViewSegments(BindingDescriptorIterator& bindingIter, long stage);
+        void AllocUnorderedAccessViewSegments(BindingDescriptorIterator& bindingIter, long stage, long affectedStages);
         void AllocSamplerSegments(BindingDescriptorIterator& bindingIter, long stage);
 
         void Alloc1PartSegment(
@@ -201,37 +211,63 @@ class D3D11ResourceHeap final : public ResourceHeap
         void WriteBindingMappings(D3DShaderStage stage, D3DResourceType type, const D3DResourceBinding* first, UINT count);
         void CacheResourceUsage();
 
-        const char* BindVSResources(ID3D11DeviceContext* context, const char* heapPtr);
-        const char* BindHSResources(ID3D11DeviceContext* context, const char* heapPtr);
-        const char* BindDSResources(ID3D11DeviceContext* context, const char* heapPtr);
-        const char* BindGSResources(ID3D11DeviceContext* context, const char* heapPtr);
-        const char* BindPSResources(ID3D11DeviceContext* context, const char* heapPtr);
-        const char* BindCSResources(ID3D11DeviceContext* context, const char* heapPtr);
+        const char* BindVSResources(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindHSResources(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindDSResources(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindGSResources(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindPSResources(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindCSResources(ID3D11DeviceContext* context, D3D11BindingTable& bindingTable, const char* heapPtr);
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
-        const char* BindVSResources1(ID3D11DeviceContext1* context1, const char* heapPtr);
-        const char* BindHSResources1(ID3D11DeviceContext1* context1, const char* heapPtr);
-        const char* BindDSResources1(ID3D11DeviceContext1* context1, const char* heapPtr);
-        const char* BindGSResources1(ID3D11DeviceContext1* context1, const char* heapPtr);
-        const char* BindPSResources1(ID3D11DeviceContext1* context1, const char* heapPtr);
-        const char* BindCSResources1(ID3D11DeviceContext1* context1, const char* heapPtr);
+        const char* BindVSResources1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindHSResources1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindDSResources1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindGSResources1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindPSResources1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, const char* heapPtr);
+        const char* BindCSResources1(ID3D11DeviceContext1* context1, D3D11BindingTable& bindingTable, const char* heapPtr);
 
         #endif
 
-        void WriteResourceViewCBV(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        void WriteResourceViewSRV(ID3D11ShaderResourceView* srv, char* heapPtr, std::uint32_t index, SubresourceIndexContext& subresourceContext);
-        void WriteResourceViewUAV(ID3D11UnorderedAccessView* uav, char* heapPtr, std::uint32_t index, UINT initialCount, SubresourceIndexContext& subresourceContext);
-        void WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewCBV(
+            const ResourceViewDescriptor&   desc,
+            char*                           heapPtr,
+            std::uint32_t                   index
+        );
 
-        ID3D11ShaderResourceView* GetOrCreateSRV(const ResourceViewDescriptor& desc, std::size_t& outIndex);
-        ID3D11UnorderedAccessView* GetOrCreateUAV(const ResourceViewDescriptor& desc, std::size_t& outIndex);
+        void WriteResourceViewSRV(
+            ID3D11ShaderResourceView*       srv,
+            D3D11BindingLocator*            locator,
+            const D3D11SubresourceRange&    range,
+            char*                           heapPtr,
+            std::uint32_t                   index,
+            SubresourceIndexContext&        subresourceContext
+        );
 
-        ID3D11ShaderResourceView* GetOrCreateTextureSRV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc, std::size_t& outIndex);
-        ID3D11UnorderedAccessView* GetOrCreateTextureUAV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc, std::size_t& outIndex);
+        void WriteResourceViewUAV(
+            ID3D11UnorderedAccessView*      uav,
+            D3D11BindingLocator*            locator,
+            const D3D11SubresourceRange&    range,
+            char*                           heapPtr,
+            std::uint32_t                   index,
+            UINT                            initialCount,
+            SubresourceIndexContext&        subresourceContext
+        );
 
-        ID3D11ShaderResourceView* GetOrCreateBufferSRV(D3D11BufferWithRV& bufferD3D, const BufferViewDescriptor& bufferViewDesc, std::size_t& outIndex);
-        ID3D11UnorderedAccessView* GetOrCreateBufferUAV(D3D11BufferWithRV& bufferD3D, const BufferViewDescriptor& bufferViewDesc, std::size_t& outIndex);
+        void WriteResourceViewSampler(
+            const ResourceViewDescriptor&   desc,
+            char*                           heapPtr,
+            std::uint32_t                   index
+        );
+
+        ID3D11ShaderResourceView* GetOrCreateSRV(const ResourceViewDescriptor& desc, D3DSubresourceLocator& outLocator);
+        ID3D11UnorderedAccessView* GetOrCreateUAV(const ResourceViewDescriptor& desc, D3DSubresourceLocator& outLocator);
+
+        ID3D11ShaderResourceView* GetOrCreateTextureSRV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc, D3DSubresourceLocator& outLocator);
+        ID3D11UnorderedAccessView* GetOrCreateTextureUAV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc, D3DSubresourceLocator& outLocator);
+
+        ID3D11ShaderResourceView* GetOrCreateBufferSRV(D3D11BufferWithRV& bufferD3D, const BufferViewDescriptor& bufferViewDesc, D3DSubresourceLocator& outLocator);
+        ID3D11UnorderedAccessView* GetOrCreateBufferUAV(D3D11BufferWithRV& bufferD3D, const BufferViewDescriptor& bufferViewDesc, D3DSubresourceLocator& outLocator);
 
     private:
 

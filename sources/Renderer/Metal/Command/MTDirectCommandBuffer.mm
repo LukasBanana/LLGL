@@ -489,16 +489,6 @@ void MTDirectCommandBuffer::SetResource(std::uint32_t descriptor, Resource& reso
     context_.SetResource(descriptor, resource);
 }
 
-void MTDirectCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    //todo
-}
-
 /* ----- Render Passes ----- */
 
 void MTDirectCommandBuffer::BeginRenderPass(

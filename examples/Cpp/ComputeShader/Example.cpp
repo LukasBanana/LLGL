@@ -68,8 +68,6 @@ public:
         // Add debugging names
         computeLayout->SetDebugName("Compute.Layout");
         computeResourceHeap->SetDebugName("Compute.ResourceHeap");
-        graphicsVertexShader->SetDebugName("Graphics.VertexShader");
-        graphicsFragmentShader->SetDebugName("Graphics.FragmentShader");
     }
 
     void CreateBuffers()
@@ -244,8 +242,6 @@ private:
             commands->SetPipelineState(*computePipeline);
             commands->SetResourceHeap(*computeResourceHeap);
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
-
-            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 3, 1, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
         }
         commands->End();
         commandQueue->Submit(*commands);
@@ -266,8 +262,6 @@ private:
                 // Draw scene with indirect argument buffer
                 commands->SetPipelineState(*graphicsPipeline);
                 commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
-
-                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 1, 1, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
             }
             commands->EndRenderPass();
         }

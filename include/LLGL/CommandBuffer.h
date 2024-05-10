@@ -456,37 +456,15 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetResource(std::uint32_t descriptor, Resource& resource) = 0;
 
-        /**
-        \brief Resets the binding slots for the specified resources.
-
-        \param[in] resourceType Specifies the type of resources to unbind.
-
-        \param[in] firstSlot Specifies the first binding slot beginning with zero.
-        This must be zero for the following resource types: ResourceType::IndexBuffer, ResourceType::StreamOutputBuffer.
-
-        \param[in] numSlots Specifies the number of binding slots to reset. If this is zero, the function has no effect.
-
-        \param[in] bindFlags Specifies which kind of binding slots to reset.
-        This can be a bitwise OR combinations of the BindFlags entries.
-        To reset a vertex buffer slot for instance, it must contain the BindFlags::VertexBuffer flag.
-
-        \param[in] stageFlags Specifies which shader stages are affected.
-        This can be a bitwise OR combination of the StageFlags entries. By default StageFlags::AllStages.
-
-        \remarks This should be called when a resource is currently bound as shader output and will be bound as shader input for the next draw or compute commands.
-        \remarks If direct resource binding is not supported by the render system, this function has no effect.
-
-        \note Only supported with: OpenGL, Direct3D 11, Metal.
-        \see BindFlags
-        \see StageFlags
-        */
+        //! \deprecated
+        LLGL_DEPRECATED("CommandBuffer::ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")
         virtual void ResetResourceSlots(
             const ResourceType  resourceType,
             std::uint32_t       firstSlot,
             std::uint32_t       numSlots,
             long                bindFlags,
             long                stageFlags      = StageFlags::AllStages
-        ) = 0;
+        );
 
         /* ----- Render Passes ----- */
 

@@ -10,10 +10,10 @@
 
 
 #include "ComPtr.h"
+#include "../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 #include <vector>
 #include <algorithm>
-#include <stdexcept>
 #include <string>
 
 
@@ -62,26 +62,18 @@ class DXManagedComPtrArray
         // Replaces the entry at the specified position.
         void Exchange(std::size_t index, const ComPtr<T>& object)
         {
-            if (index < container_.size())
-            {
-                container_[index] = object;
-                if (object == nullptr)
-                    lowerFreeBound_ = std::min(lowerFreeBound_, index);
-            }
-            else
-                throw std::out_of_range("DXManagedComPtrArray<T>::Exchange(" + std::to_string(index) + "): index out of range");
+            LLGL_ASSERT(index < container_.size());
+            container_[index] = object;
+            if (object == nullptr)
+                lowerFreeBound_ = std::min(lowerFreeBound_, index);
         }
 
         // Removes the entry at the specified location.
         void Remove(std::size_t index)
         {
-            if (index < container_.size())
-            {
-                container_[index] = nullptr;
-                lowerFreeBound_ = std::min(lowerFreeBound_, index);
-            }
-            else
-                throw std::out_of_range("DXManagedComPtrArray<T>::Remove(" + std::to_string(index) + "): index out of range");
+            LLGL_ASSERT(index < container_.size());
+            container_[index] = nullptr;
+            lowerFreeBound_ = std::min(lowerFreeBound_, index);
         }
 
     public:

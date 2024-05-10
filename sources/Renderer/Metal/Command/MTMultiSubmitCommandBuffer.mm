@@ -455,16 +455,6 @@ void MTMultiSubmitCommandBuffer::SetResource(std::uint32_t descriptor, Resource&
     }
 }
 
-void MTMultiSubmitCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    //todo
-}
-
 /* ----- Render Passes ----- */
 
 void MTMultiSubmitCommandBuffer::BeginRenderPass(

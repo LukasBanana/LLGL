@@ -666,24 +666,6 @@ void DbgCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
     }
 }
 
-void DbgCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
-        if (numSlots == 0)
-            LLGL_DBG_WARN(WarningType::PointlessOperation, "no slots are specified to reset");
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    LLGL_DBG_COMMAND( "ResetResourceSlots", instance.ResetResourceSlots(resourceType, firstSlot, numSlots, bindFlags, stageFlags) );
-}
-
 /* ----- Render Passes ----- */
 
 void DbgCommandBuffer::BeginRenderPass(

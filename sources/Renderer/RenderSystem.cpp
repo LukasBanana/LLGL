@@ -93,7 +93,7 @@ std::vector<std::string> RenderSystem::FindModules()
         "Vulkan",
         #endif
 
-        #ifdef LLGL_OS_WIN32
+        #if defined(LLGL_OS_WIN32) || defined(LLGL_OS_UWP)
         "Direct3D11",
         "Direct3D12",
         #endif
@@ -504,6 +504,19 @@ std::size_t RenderSystem::CopyTextureImageData(
 
         return unpaddedImageSize;
     }
+}
+
+
+/* ----- Default implementation of deprecated functions ----- */
+
+void CommandBuffer::ResetResourceSlots(
+    const ResourceType  resourceType,
+    std::uint32_t       firstSlot,
+    std::uint32_t       numSlots,
+    long                bindFlags,
+    long                stageFlags)
+{
+    // dummy
 }
 
 

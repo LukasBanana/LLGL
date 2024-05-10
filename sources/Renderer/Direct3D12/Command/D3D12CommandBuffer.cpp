@@ -634,18 +634,6 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     }
 }
 
-void D3D12CommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    //TODO
-    const D3D12_STREAM_OUTPUT_BUFFER_VIEW nullViews[1] = {};
-    commandList_->SOSetTargets(0, 1, nullViews);
-}
-
 /* ----- Render Passes ----- */
 
 void D3D12CommandBuffer::BeginRenderPass(

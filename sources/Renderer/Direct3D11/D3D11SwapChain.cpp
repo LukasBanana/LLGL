@@ -25,11 +25,14 @@ D3D11SwapChain::D3D11SwapChain(
     const SwapChainDescriptor&          desc,
     const std::shared_ptr<Surface>&     surface)
 :
-    SwapChain           { desc                                                       },
-    device_             { device                                                     },
-    renderSystem_       { renderSystem                                               },
-    depthStencilFormat_ { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) },
-    tearingSupported_   { renderSystem.IsTearingSupported()                          }
+    SwapChain            { desc                                                       },
+    device_              { device                                                     },
+    renderSystem_        { renderSystem                                               },
+    depthStencilFormat_  { DXPickDepthStencilFormat(desc.depthBits, desc.stencilBits) },
+    renderTargetHandles_ { 1u, (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)           },
+    tearingSupported_    { renderSystem.IsTearingSupported()                          },
+    colorBufferLocator_  { ResourceType::Texture, BindFlags::ColorAttachment          },
+    depthBufferLocator_  { ResourceType::Texture, BindFlags::DepthStencilAttachment   }
 {
     /* Setup surface for the swap-chain */
     SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
@@ -49,11 +52,11 @@ void D3D11SwapChain::SetDebugName(const char* name)
         /* Set label for each back-buffer object */
         D3D11SetObjectName(colorBuffer_.Get(), name);
         D3D11SetObjectNameSubscript(colorBufferMS_.Get(), name, ".MS");
-        D3D11SetObjectNameSubscript(renderTargetView_.Get(), name, ".RTV");
+        D3D11SetObjectNameSubscript(renderTargetHandles_.GetRenderTargetViews()[0], name, ".RTV");
         if (depthBuffer_)
         {
             D3D11SetObjectNameSubscript(depthBuffer_.Get(), name, ".DS");
-            D3D11SetObjectNameSubscript(depthStencilView_.Get(), name, ".DSV");
+            D3D11SetObjectNameSubscript(renderTargetHandles_.GetDepthStencilView(), name, ".DSV");
         }
         hasDebugName_ = true;
     }
@@ -62,11 +65,11 @@ void D3D11SwapChain::SetDebugName(const char* name)
         /* Reset all back-buffer labels */
         D3D11SetObjectName(colorBuffer_.Get(), nullptr);
         D3D11SetObjectName(colorBufferMS_.Get(), nullptr);
-        D3D11SetObjectName(renderTargetView_.Get(), nullptr);
+        D3D11SetObjectName(renderTargetHandles_.GetRenderTargetViews()[0], nullptr);
         if (depthBuffer_)
         {
             D3D11SetObjectName(depthBuffer_.Get(), nullptr);
-            D3D11SetObjectName(depthStencilView_.Get(), nullptr);
+            D3D11SetObjectName(renderTargetHandles_.GetDepthStencilView(), nullptr);
         }
         hasDebugName_ = false;
     }
@@ -257,9 +260,8 @@ bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
     /* Release buffers */
     colorBuffer_.Reset();
     colorBufferMS_.Reset();
-    renderTargetView_.Reset();
     depthBuffer_.Reset();
-    depthStencilView_.Reset();
+    renderTargetHandles_.Reset();
 
     /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
     DXGI_SWAP_CHAIN_DESC desc;
@@ -404,6 +406,7 @@ void D3D11SwapChain::CreateResolutionDependentResources()
     colorBuffer_->GetDesc(&colorBufferDesc);
 
     /* If swap-effect is FLIP and multi-sampling is enabled, we have to create our own multi-sampled back-buffer */
+    ComPtr<ID3D11RenderTargetView> rtv;
     if (swapEffectFlip_ && swapChainSampleDesc_.Count > 1)
     {
         /* Create multi-sampled texture */
@@ -424,15 +427,16 @@ void D3D11SwapChain::CreateResolutionDependentResources()
         DXThrowIfFailed(hr, "failed to create D3D11 multi-sampled back-buffer for swap-chain");
 
         /* Create back buffer RTV */
-        hr = device_->CreateRenderTargetView(colorBufferMS_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
+        hr = device_->CreateRenderTargetView(colorBufferMS_.Get(), nullptr, rtv.GetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for multi-sampled back buffer");
     }
     else
     {
         /* Create back buffer RTV */
-        hr = device_->CreateRenderTargetView(colorBuffer_.Get(), nullptr, renderTargetView_.ReleaseAndGetAddressOf());
+        hr = device_->CreateRenderTargetView(colorBuffer_.Get(), nullptr, rtv.GetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
     }
+    renderTargetHandles_.SetRenderTargetView(0, rtv.Get(), &colorBufferLocator_);
 
     if (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN)
     {
@@ -454,8 +458,10 @@ void D3D11SwapChain::CreateResolutionDependentResources()
         DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for swap-chain");
 
         /* Create DSV */
-        hr = device_->CreateDepthStencilView(depthBuffer_.Get(), nullptr, depthStencilView_.ReleaseAndGetAddressOf());
+        ComPtr<ID3D11DepthStencilView> dsv;
+        hr = device_->CreateDepthStencilView(depthBuffer_.Get(), nullptr, dsv.GetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
+        renderTargetHandles_.SetDepthStencilView(dsv.Get(), &depthBufferLocator_);
     }
 }
 
@@ -463,11 +469,11 @@ void D3D11SwapChain::StoreDebugNames(std::string (&debugNames)[5])
 {
     debugNames[0] = D3D11GetObjectName(colorBuffer_.Get());
     debugNames[1] = D3D11GetObjectName(colorBufferMS_.Get());
-    debugNames[2] = D3D11GetObjectName(renderTargetView_.Get());
+    debugNames[2] = D3D11GetObjectName(renderTargetHandles_.GetRenderTargetViews()[0]);
     if (depthBuffer_)
     {
         debugNames[3] = D3D11GetObjectName(depthBuffer_.Get());
-        debugNames[4] = D3D11GetObjectName(depthStencilView_.Get());
+        debugNames[4] = D3D11GetObjectName(renderTargetHandles_.GetDepthStencilView());
     }
 }
 
@@ -475,11 +481,11 @@ void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[5])
 {
     D3D11SetObjectName(colorBuffer_.Get(), debugNames[0].c_str());
     D3D11SetObjectName(colorBufferMS_.Get(), debugNames[1].c_str());
-    D3D11SetObjectName(renderTargetView_.Get(), debugNames[2].c_str());
+    D3D11SetObjectName(renderTargetHandles_.GetRenderTargetViews()[0], debugNames[2].c_str());
     if (depthBuffer_)
     {
         D3D11SetObjectName(depthBuffer_.Get(), debugNames[3].c_str());
-        D3D11SetObjectName(depthStencilView_.Get(), debugNames[4].c_str());
+        D3D11SetObjectName(renderTargetHandles_.GetDepthStencilView(), debugNames[4].c_str());
     }
 }
 

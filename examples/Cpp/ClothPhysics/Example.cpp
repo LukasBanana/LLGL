@@ -610,12 +610,6 @@ private:
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
             commands->PopDebugGroup();
-
-            #ifdef ENABLE_STORAGE_TEXTURES
-            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 2, 5, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
-            #else
-            commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 4, 3, LLGL::BindFlags::Storage, LLGL::StageFlags::ComputeStage);
-            #endif
         }
         commands->End();
         commandQueue->Submit(*commands);
@@ -643,12 +637,6 @@ private:
                 commands->SetPipelineState(*graphicsPipeline);
                 commands->SetResourceHeap(*graphicsResourceHeap);
                 commands->DrawIndexed(numClothIndices, 0);
-
-                #ifdef ENABLE_STORAGE_TEXTURES
-                commands->ResetResourceSlots(LLGL::ResourceType::Texture, 1, 3, LLGL::BindFlags::Sampled, LLGL::StageFlags::VertexStage);
-                #else
-                commands->ResetResourceSlots(LLGL::ResourceType::Buffer, 0, 2, LLGL::BindFlags::VertexBuffer, LLGL::StageFlags::VertexStage);
-                #endif
             }
             commands->EndRenderPass();
         }

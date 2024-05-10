@@ -26,7 +26,8 @@ static bool NeedsIntermediateCpuAccessBuffer(const BufferDescriptor& desc)
 }
 
 D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    Buffer { desc.bindFlags }
+    Buffer          { desc.bindFlags                       },
+    bindingLocator_ { ResourceType::Buffer, desc.bindFlags }
 {
     CreateGpuBuffer(device, desc, initialData);
 

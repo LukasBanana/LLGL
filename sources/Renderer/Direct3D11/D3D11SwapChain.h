@@ -9,6 +9,7 @@
 #define LLGL_D3D11_SWAP_CHAIN_H
 
 #include "../DXCommon/ComPtr.h"
+#include "Texture/D3D11RenderTargetHandles.h"
 #include <LLGL/SwapChain.h>
 #include <d3d11.h>
 #include <dxgi.h>
@@ -68,14 +69,10 @@ class D3D11SwapChain final : public SwapChain
 
         void ResolveSubresources(ID3D11DeviceContext* context);
 
-        inline ID3D11RenderTargetView* const * GetRenderTargetViews() const
+        // Returns the handles container for the RTV and DSV objects.
+        inline const D3D11RenderTargetHandles& GetRenderTargetHandles() const
         {
-            return renderTargetView_.GetAddressOf();
-        }
-
-        inline ID3D11DepthStencilView* GetDepthStencilView() const
-        {
-            return depthStencilView_.Get();
+            return renderTargetHandles_;
         }
 
     private:
@@ -103,15 +100,15 @@ class D3D11SwapChain final : public SwapChain
         ComPtr<IDXGISwapChain>          swapChain_;
         UINT                            swapChainInterval_      = 0;
         DXGI_SAMPLE_DESC                swapChainSampleDesc_    = { 1, 0 };
+        DXGI_FORMAT                     colorFormat_            = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                     depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
 
         ComPtr<ID3D11Texture2D>         colorBuffer_;
         ComPtr<ID3D11Texture2D>         colorBufferMS_;
-        ComPtr<ID3D11RenderTargetView>  renderTargetView_;
+        D3D11BindingLocator             colorBufferLocator_;
         ComPtr<ID3D11Texture2D>         depthBuffer_;
-        ComPtr<ID3D11DepthStencilView>  depthStencilView_;
-
-        DXGI_FORMAT                     colorFormat_            = DXGI_FORMAT_UNKNOWN;
-        DXGI_FORMAT                     depthStencilFormat_     = DXGI_FORMAT_UNKNOWN;
+        D3D11BindingLocator             depthBufferLocator_;
+        D3D11RenderTargetHandles        renderTargetHandles_;
 
         bool                            hasDebugName_           = false;
         bool                            swapEffectFlip_         = false; // DXGI swap effect is DXGI_SWAP_EFFECT_FLIP_*

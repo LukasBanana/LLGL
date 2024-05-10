@@ -9,6 +9,7 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 - [Video adapter descriptors](#video-adapter-descriptors)
 - [Rendering features](#rendering-features)
 - [`FrameProfile` structure](#frameprofile-structure)
+- [Binding model](#binding-model)
 - [Renamed identifiers](#renamed-identifiers)
 
 
@@ -67,6 +68,18 @@ The following entries from `RenderingFeatures` have been deprecated:
 ## `FrameProfile` structure
 
 The entire union inside the `LLGL::FrameProfile` structure has been deprecated and replaced by `LLGL::ProfileCommandQueueRecord` and `LLGL::ProfileCommandBufferRecord`.
+
+
+## Binding model
+
+The binding model in LLGL is finally fully abstracted from the rendering API to the point where the actual binding slots are only defined in the `PipelineLayout`.
+This only affects one function that has been deprecated, which is `ResetResourceSlots`. Simply remove the function call, no replacement is needed.
+Said function was only needed for the D3D11 backend which is now managed to automatically unbind resources to avoid overlapping read-only and read-write resource views.
+
+Rationale:
+1. `ResetResourceSlots` used backend specific resource slots instead of the descriptor slots from a `PipelineLayout`. This is opposed to the `SetResource` and `SetResourceHeap` interfaces.
+2. Changing `ResetResourceSlots` to use the same binding model as `SetResource(-Heap)` requires a depedency to the active PSO, which doesn't include stream-outputs and render-targets.
+3. Modern rendering APIs (i.e. Vulkan, D3D12, Metal) either use a resource heap binding model or command encoder that don't save the binding state across multiple frames (or across multiple render-passes). Since LLGL aims to be aligned towards the newer APIs, the older backends should emulate that same functionality and not require to manually unbind resources.
 
 
 ## Renamed identifiers

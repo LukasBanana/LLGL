@@ -8,6 +8,7 @@
 #include "D3D11StateManager.h"
 #include "../Texture/D3D11Sampler.h"
 #include "../../../Core/MacroUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <cstddef>
@@ -29,7 +30,8 @@ D3D11StateManager::D3D11StateManager(ID3D11Device* device, const ComPtr<ID3D11De
         D3D11_USAGE_DYNAMIC,
         D3D11_CPU_ACCESS_WRITE,
         D3D11_BIND_CONSTANT_BUFFER
-    }
+    },
+    bindingTable_ { context }
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     context_->QueryInterface(IID_PPV_ARGS(&context1_));
@@ -66,7 +68,7 @@ void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport*
         /* Convert viewport into D3D viewport */
         D3D11_VIEWPORT viewportsD3D[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
 
-        for (std::uint32_t i = 0; i < numViewports; ++i)
+        for_range(i, numViewports)
         {
             const auto& src = viewportArray[i];
             auto& dst       = viewportsD3D[i];
@@ -89,7 +91,7 @@ void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* sc
 
     D3D11_RECT scissorsD3D[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
 
-    for (std::uint32_t i = 0; i < numScissors; ++i)
+    for_range(i, numScissors)
     {
         const auto& src = scissorArray[i];
         auto& dst       = scissorsD3D[i];
@@ -299,8 +301,11 @@ void D3D11StateManager::SetConstantBuffersRange(
         #ifdef LLGL_DEBUG
         for_range(i, count)
         {
-            if (firstConstants[i] > 0)
-                throw std::runtime_error("constant buffer range is only supported with Direct3D 11.1 or later");
+            LLGL_ASSERT(
+                firstConstants[i] == 0,
+                "constant buffer range is only supported with Direct3D 11.1 or later, but [%u, %u+%u) was specified for slot %u",
+                firstConstants[i], firstConstants[i], numConstants[i], (startSlot + i)
+            );
         }
         #endif
 
@@ -311,48 +316,6 @@ void D3D11StateManager::SetConstantBuffersRange(
         if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
         if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
         if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
-    }
-}
-
-void D3D11StateManager::SetShaderResources(
-    UINT                                startSlot,
-    UINT                                count,
-    ID3D11ShaderResourceView* const*    views,
-    long                                stageFlags)
-{
-    if (LLGL_VS_STAGE(stageFlags)) { context_->VSSetShaderResources(startSlot, count, views); }
-    if (LLGL_HS_STAGE(stageFlags)) { context_->HSSetShaderResources(startSlot, count, views); }
-    if (LLGL_DS_STAGE(stageFlags)) { context_->DSSetShaderResources(startSlot, count, views); }
-    if (LLGL_GS_STAGE(stageFlags)) { context_->GSSetShaderResources(startSlot, count, views); }
-    if (LLGL_PS_STAGE(stageFlags)) { context_->PSSetShaderResources(startSlot, count, views); }
-    if (LLGL_CS_STAGE(stageFlags)) { context_->CSSetShaderResources(startSlot, count, views); }
-}
-
-void D3D11StateManager::SetUnorderedAccessViews(
-    UINT                                startSlot,
-    UINT                                count,
-    ID3D11UnorderedAccessView* const*   views,
-    const UINT*                         initialCounts,
-    long                                stageFlags)
-{
-    if (LLGL_GRAPHICS_STAGE(stageFlags))
-    {
-        /* Set UAVs for pixel shader stage */
-        context_->OMSetRenderTargetsAndUnorderedAccessViews(
-            /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
-            /*ppRenderTargetViews:*/    nullptr,
-            /*pDepthStencilView:*/      nullptr,
-            /*UAVStartSlot:*/           startSlot,
-            /*NumUAVs:*/                count,
-            /*ppUnorderedAccessViews:*/ views,
-            /*pUAVInitialCounts:*/      initialCounts
-        );
-    }
-
-    if (LLGL_CS_STAGE(stageFlags))
-    {
-        /* Set UAVs for compute shader stage */
-        context_->CSSetUnorderedAccessViews(startSlot, count, views, initialCounts);
     }
 }
 
@@ -421,6 +384,9 @@ void D3D11StateManager::ClearState()
 {
     /* Clear device context state */
     context_->ClearState();
+
+    /* Clear binding table state */
+    bindingTable_.ClearState();
 
     /* Invalidate internal caches */
     inputAssemblyState_ = {};

@@ -10,8 +10,9 @@
 
 
 #include <LLGL/Buffer.h>
-#include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
+#include "../RenderState/D3D11BindingLocator.h"
+#include "../../DXCommon/ComPtr.h"
 
 
 namespace LLGL
@@ -67,6 +68,12 @@ class D3D11Buffer : public Buffer
             return usage_;
         }
 
+        // Returnst the binding table locator for this object.
+        inline D3D11BindingLocator* GetBindingLocator()
+        {
+            return &bindingLocator_;
+        }
+
     private:
 
         void CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData);
@@ -114,6 +121,8 @@ class D3D11Buffer : public Buffer
         D3D11_USAGE             usage_                  = D3D11_USAGE_DEFAULT;
 
         UINT                    mappedWriteRange_[2]    = { 0, 0 };
+
+        D3D11BindingLocator     bindingLocator_;
 
 };
 

@@ -312,16 +312,6 @@ void NullCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource
     //todo
 }
 
-void NullCommandBuffer::ResetResourceSlots(
-    const ResourceType  resourceType,
-    std::uint32_t       firstSlot,
-    std::uint32_t       numSlots,
-    long                bindFlags,
-    long                stageFlags)
-{
-    //todo
-}
-
 /* ----- Render Passes ----- */
 
 void NullCommandBuffer::BeginRenderPass(

@@ -17,14 +17,6 @@ virtual void SetResource(
     LLGL::Resource&             resource
 ) override final;
 
-virtual void ResetResourceSlots(
-    const LLGL::ResourceType    resourceType,
-    std::uint32_t               firstSlot,
-    std::uint32_t               numSlots,
-    long                        bindFlags,
-    long                        stageFlags      = LLGL::StageFlags::AllStages
-) override final;
-
 
 
 // ================================================================================

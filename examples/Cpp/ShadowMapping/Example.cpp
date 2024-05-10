@@ -345,9 +345,6 @@ private:
             // Bind common input assembly
             commands->SetVertexBuffer(*vertexBuffer);
 
-            // Unbind shadow texture before rendering into it
-            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 2, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
-
             // Draw scene into shadow-map, then draw scene onto screen
             commands->PushDebugGroup("Shadow Map Pass");
             RenderShadowMap();

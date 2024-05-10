@@ -12,6 +12,7 @@
 #include <LLGL/Texture.h>
 #include <LLGL/ImageFlags.h>
 #include <d3d11.h>
+#include "../RenderState/D3D11BindingLocator.h"
 #include "../../DXCommon/ComPtr.h"
 
 
@@ -152,6 +153,12 @@ class D3D11Texture final : public Texture
             return numArrayLayers_;
         }
 
+        // Returnst the binding table locator for this object.
+        inline D3D11BindingLocator* GetBindingLocator()
+        {
+            return &bindingLocator_;
+        }
+
     private:
 
         void CreateTexture1D(
@@ -189,6 +196,8 @@ class D3D11Texture final : public Texture
         DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;
         UINT                                numMipLevels_       = 0;
         UINT                                numArrayLayers_     = 0;
+
+        D3D11BindingLocator                 bindingLocator_;
 
 };
 

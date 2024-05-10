@@ -172,7 +172,6 @@ class GLStateManager
         void BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers);
         void BindBufferRange(GLBufferTarget target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size);
         void BindBuffersRange(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr* offsets, const GLsizeiptr* sizes);
-        void UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count);
 
         void BindVertexArray(GLuint vertexArray);
 
@@ -249,7 +248,6 @@ class GLStateManager
 
         void BindSampler(GLuint layer, GLuint sampler);
         void BindSamplers(GLuint first, GLsizei count, const GLuint* samplers);
-        void UnbindSamplers(GLuint first, GLsizei count);
 
         void NotifySamplerRelease(GLuint sampler);
 

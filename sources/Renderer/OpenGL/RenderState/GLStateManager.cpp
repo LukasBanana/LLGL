@@ -130,9 +130,6 @@ static const GLenum g_textureLayersEnum[] =
     GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
 };
 
-// Global array of null pointers to unbind resource slots
-static GLuint g_nullResources[GLStateManager::g_maxNumResourceSlots] = {};
-
 
 /*
  * Internal functions
@@ -875,11 +872,6 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
     }
 }
 
-void GLStateManager::UnbindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count)
-{
-    BindBuffersBase(GLBufferTarget::UniformBuffer, first, count, g_nullResources);
-}
-
 // Returns the maximum index value for the specified index data type.
 static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
 {
@@ -1420,11 +1412,6 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
         for_range(i, count)
             BindSampler(first + static_cast<GLuint>(i), samplers[i]);
     }
-}
-
-void GLStateManager::UnbindSamplers(GLuint first, GLsizei count)
-{
-    BindSamplers(first, count, g_nullResources);
 }
 
 void GLStateManager::NotifySamplerRelease(GLuint sampler)

@@ -136,7 +136,7 @@ LLGL_C_EXPORT void llglSetResource(uint32_t descriptor, LLGLResource resource)
 
 LLGL_C_EXPORT void llglResetResourceSlots(LLGLResourceType resourceType, uint32_t firstSlot, uint32_t numSlots, long bindFlags, long stageFlags)
 {
-    g_CurrentCmdBuf->ResetResourceSlots((ResourceType)resourceType, firstSlot, numSlots, bindFlags, stageFlags);
+    // deprecated
 }
 
 LLGL_C_EXPORT void llglBeginRenderPass(LLGLRenderTarget renderTarget)

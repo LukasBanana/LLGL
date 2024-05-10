@@ -198,7 +198,7 @@ private:
 
     void CreatePipelineLayouts()
     {
-        // Create pipeline layout with only a single constnat buffer for depth-range pass and Z-pre pass
+        // Create pipeline layout with only a single constant buffer for depth-range pass and Z-pre pass
         pipelineLayoutCbuffer = renderer->CreatePipelineLayout(LLGL::Parse("heap{ cbuffer(Settings@1):frag:vert }"));
 
         // Create pipeline layout for final scene rendering
@@ -376,8 +376,6 @@ private:
             }
             commands->EndRenderPass();
 
-            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
-
             // Render everything directly into the swap-chain
             commands->BeginRenderPass(*swapChain);
             {
@@ -403,8 +401,6 @@ private:
                 commands->PopDebugGroup();
             }
             commands->EndRenderPass();
-
-            commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
         }
         commands->End();
         commandQueue->Submit(*commands);

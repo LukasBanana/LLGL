@@ -438,10 +438,6 @@ private:
 
         #endif // /ENABLE_CBUFFER_RANGE
 
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
-        #endif
-
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
         {
@@ -492,10 +488,6 @@ private:
 
         // Generate MIP-maps again after texture has been written by the render-target
         commands->GenerateMips(*renderTargetTex);
-
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        commands->ResetResourceSlots(LLGL::ResourceType::Texture, 3, 1, LLGL::BindFlags::Sampled, LLGL::StageFlags::FragmentStage);
-        #endif
 
         // Begin render pass for swap-chain
         commands->BeginRenderPass(*swapChain);

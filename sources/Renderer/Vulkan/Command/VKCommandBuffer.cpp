@@ -578,16 +578,6 @@ void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
     }
 }
 
-void VKCommandBuffer::ResetResourceSlots(
-    const ResourceType  /*resourceType*/,
-    std::uint32_t       /*firstSlot*/,
-    std::uint32_t       /*numSlots*/,
-    long                /*bindFlags*/,
-    long                /*stageFlags*/)
-{
-    // dummy
-}
-
 /* ----- Render Passes ----- */
 
 void VKCommandBuffer::BeginRenderPass(
