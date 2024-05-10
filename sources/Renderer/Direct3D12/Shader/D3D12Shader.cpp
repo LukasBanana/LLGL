@@ -27,9 +27,9 @@ namespace LLGL
 {
 
 
-D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor& desc):
-    Shader{ desc.type },
-    renderSystem_{ renderSystem }
+D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor& desc) :
+    Shader        { desc.type    },
+    renderSystem_ { renderSystem }
 {
     if (BuildShader(desc))
     {
