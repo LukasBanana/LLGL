@@ -452,7 +452,7 @@ ComPtr<ID3D12PipelineState> D3D12GraphicsPSO::CreateNativePSOWithDesc(ID3D12Devi
     HRESULT hr = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        GetMutableReport().Errorf("Failed to create D3D12 graphics pipelines state [%s] (HRESULT = %s)", GetOptionalDebugName(debugName), DXErrorToStrOrHex(hr));
+        GetMutableReport().Errorf("Failed to create D3D12 graphics pipeline state [%s] (HRESULT = %s)\n", GetOptionalDebugName(debugName), DXErrorToStrOrHex(hr));
         return nullptr;
     }
     return pipelineState;

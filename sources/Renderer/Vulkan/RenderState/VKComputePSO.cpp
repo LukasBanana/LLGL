@@ -49,14 +49,14 @@ bool VKComputePSO::CreateVkPipeline(
     VKShader* computeShaderVK = LLGL_CAST(VKShader*, desc.computeShader);
     if (computeShaderVK == nullptr)
     {
-        GetMutableReport().Errorf("cannot create Vulkan compute pipeline without compute shader");
+        GetMutableReport().Errorf("cannot create Vulkan compute pipeline without compute shader\n");
         return false;
     }
 
     const Report* computeShaderReport = computeShaderVK->GetReport();
     if (computeShaderReport != nullptr && computeShaderReport->HasErrors())
     {
-        GetMutableReport().Errorf("Failed to load compute shader into Vulkan compute pipeline state [%s]", GetOptionalDebugName(desc.debugName));
+        GetMutableReport().Errorf("Failed to load compute shader into Vulkan compute pipeline state [%s]\n", GetOptionalDebugName(desc.debugName));
         return false;
     }
 

@@ -304,7 +304,7 @@ bool VKGraphicsPSO::CreateVkPipeline(
     const VKShader* vertexShaderVK = LLGL_CAST(const VKShader*, desc.vertexShader);
     if (vertexShaderVK == nullptr)
     {
-        GetMutableReport().Errorf("cannot create Vulkan graphics pipeline without vertex shader");
+        GetMutableReport().Errorf("cannot create Vulkan graphics pipeline without vertex shader\n");
         return false;
     }
 
@@ -319,7 +319,7 @@ bool VKGraphicsPSO::CreateVkPipeline(
             const Report* report = shaderVK.GetReport();
             if (report != nullptr && report->HasErrors())
             {
-                GetMutableReport().Errorf("Failed to load %s shader into Vulkan graphics pipeline state [%s]", ToString(shader->GetType()), GetOptionalDebugName(desc.debugName));
+                GetMutableReport().Errorf("Failed to load %s shader into Vulkan graphics pipeline state [%s]\n", ToString(shader->GetType()), GetOptionalDebugName(desc.debugName));
                 outShaderCreationFailed = true;
             }
             else

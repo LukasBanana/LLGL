@@ -80,7 +80,7 @@ ComPtr<ID3D12PipelineState> D3D12ComputePSO::CreateNativePSOWithDesc(ID3D12Devic
     HRESULT hr = device->CreateComputePipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     if (FAILED(hr))
     {
-        GetMutableReport().Errorf("Failed to create D3D12 compute pipelines state [%s] (HRESULT = %s)", debugName, DXErrorToStrOrHex(hr));
+        GetMutableReport().Errorf("Failed to create D3D12 compute pipelines state [%s] (HRESULT = %s)\n", debugName, DXErrorToStrOrHex(hr));
         return nullptr;
     }
     return pipelineState;
