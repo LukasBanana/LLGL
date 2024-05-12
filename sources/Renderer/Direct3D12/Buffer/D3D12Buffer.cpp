@@ -476,9 +476,6 @@ void D3D12Buffer::CreateIntermediateUAVDescriptorHeap(ID3D12Resource* resource, 
         uavDesc.Buffer.Flags                = D3D12_BUFFER_UAV_FLAG_NONE;
     }
     device->CreateUnorderedAccessView(resource, nullptr, &uavDesc, uavIntermediateDescHeap_->GetCPUDescriptorHandleForHeapStart());
-
-    /* Store new format */
-    format_ = format;
 }
 
 void D3D12Buffer::CreateIntermediateUAVBuffer()
