@@ -1003,8 +1003,16 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     if (!IsMultiSampleTexture(textureDesc.type))
     {
         GLenum target = GLTypes::Map(textureDesc.type);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
-        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        if (IsIntegralFormat(textureDesc.format))
+        {
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
+        else
+        {
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
+            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
     }
 
     /* Configure texture swizzling if format is not supported */
