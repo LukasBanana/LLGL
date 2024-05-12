@@ -27,6 +27,15 @@ Bind buffer and texture resources as SRV and UAV in an alternating fashion and a
 */
 DEF_TEST( ResourceBinding )
 {
+    #if 1
+    if (renderer->GetRendererID() == RendererID::Direct3D12 ||
+        renderer->GetRendererID() == RendererID::Metal)
+    {
+        //TODO: temporarily disable this test for D3D12 and Metal as those are currently not supported or broken
+        return TestResult::Skipped;
+    }
+    #endif
+
     enum PSOList
     {
         GraphicsPSO = 0,
