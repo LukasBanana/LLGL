@@ -19,7 +19,10 @@ namespace LLGL
 
 
 D3D11BindingTable::D3D11BindingTable(const ComPtr<ID3D11DeviceContext>& context) :
-    context_ { context }
+    context_        { context },
+    omUAVStartSlot_ { ~0u     },
+    omNumUAVs_      { 0       },
+    omUAVDirtyBit_  { 0       }
 {
 }
 
@@ -169,7 +172,7 @@ void D3D11BindingTable::SetUnorderedAccessViews(
             {
                 if (locators[i]->type != D3D11BindingLocator::D3DLocator_ReadOnly)
                 {
-                    EvictAllInputBindings(locators[i], &subresourceRanges[i]);
+                    EvictAllBindings(locators[i], &subresourceRanges[i]);
                     if (LLGL_GRAPHICS_STAGE(stageFlags)) { PutUnorderedAccessViewPS(locators[i], subresourceRanges[i], startSlot + i); }
                     else if (LLGL_CS_STAGE(stageFlags))  { PutUnorderedAccessViewCS(locators[i], subresourceRanges[i], startSlot + i); }
                 }
@@ -182,7 +185,7 @@ void D3D11BindingTable::SetUnorderedAccessViews(
             {
                 if (locators[i]->type != D3D11BindingLocator::D3DLocator_ReadOnly)
                 {
-                    EvictAllInputBindings(locators[i]);
+                    EvictAllBindings(locators[i]);
                     if (LLGL_GRAPHICS_STAGE(stageFlags)) { PutUnorderedAccessViewPS(locators[i], fullRange, startSlot + i); }
                     else if (LLGL_CS_STAGE(stageFlags))  { PutUnorderedAccessViewCS(locators[i], fullRange, startSlot + i); }
                 }
@@ -192,16 +195,15 @@ void D3D11BindingTable::SetUnorderedAccessViews(
 
     if (LLGL_GRAPHICS_STAGE(stageFlags))
     {
-        /* Set UAVs for pixel shader stage */
-        context_->OMSetRenderTargetsAndUnorderedAccessViews(
-            /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
-            /*ppRenderTargetViews:*/    nullptr,
-            /*pDepthStencilView:*/      nullptr,
-            /*UAVStartSlot:*/           startSlot,
-            /*NumUAVs:*/                count,
-            /*ppUnorderedAccessViews:*/ views,
-            /*pUAVInitialCounts:*/      initialCounts
-        );
+        /* Cache UAVs for graphics pipeline and flush before next draw call since UAVs (and RTVs) must be set at once */
+        for_range(i, count)
+        {
+            uavOMRefs_[startSlot + i] = views[i];
+            uavOMInitialCounts_[startSlot + i] = initialCounts[i];
+        }
+        omUAVStartSlot_ = std::min<UINT>(omUAVStartSlot_, startSlot);
+        omNumUAVs_      = std::max<UINT>(omUAVStartSlot_ + omNumUAVs_, startSlot + count) - omUAVStartSlot_;
+        omUAVDirtyBit_  = 1;
     }
     else if (LLGL_CS_STAGE(stageFlags))
     {
@@ -223,7 +225,7 @@ void D3D11BindingTable::SetRenderTargets(
         LLGL_ASSERT_PTR(renderTargetSubresourceRanges);
         for_range(slot, count)
         {
-            EvictAllInputBindings(renderTargetLocators[slot]);
+            EvictAllBindings(renderTargetLocators[slot]);
             PutRenderTargetView(renderTargetLocators[slot], renderTargetSubresourceRanges[slot], slot);
         }
         for_subrange(slot, count, rtvCount_)
@@ -240,15 +242,6 @@ void D3D11BindingTable::SetRenderTargets(
     PutDepthStencilView(depthStencilLocators);
 
     context_->OMSetRenderTargets(count, renderTargetViews, depthStencilView);
-}
-
-void D3D11BindingTable::EvictAllBindings(D3D11BindingLocator* locator)
-{
-    if (locator != nullptr)
-    {
-        EvictAllInputBindings(locator);
-        EvictAllOutputBindings(locator);
-    }
 }
 
 void D3D11BindingTable::ClearState()
@@ -268,9 +261,21 @@ void D3D11BindingTable::ClearState()
     ClearBindingLocators(dsv_);
 
     /* Reset all resource counters */
-    vbCount_    = 0;
-    soCount_    = 0;
-    rtvCount_   = 0;
+    vbCount_        = 0;
+    soCount_        = 0;
+    rtvCount_       = 0;
+    omUAVStartSlot_ = ~0u;
+    omNumUAVs_      = 0;
+    omUAVDirtyBit_  = 0;
+}
+
+void D3D11BindingTable::FlushOutputMergerUAVs()
+{
+    if (omUAVDirtyBit_ != 0)
+    {
+        BindCachedOutputMergerUAVs();
+        omUAVDirtyBit_ = 0;
+    }
 }
 
 
@@ -439,6 +444,12 @@ void D3D11BindingTable::PutDepthStencilView(D3D11BindingLocator* locator)
     InsertOutput(dsv_.locators, D3D11BindingLocator::D3DOutput_DSV, 0, locator);
 }
 
+void D3D11BindingTable::EvictAllBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange* subresourceRange)
+{
+    EvictAllInputBindings(locator, subresourceRange);
+    EvictAllOutputBindings(locator, subresourceRange);
+}
+
 void D3D11BindingTable::EvictAllOutputBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange* subresourceRange)
 {
     if (locator->outBitmask != 0)
@@ -473,13 +484,13 @@ void D3D11BindingTable::EvictSingleOutputBinding(D3D11BindingLocator* locator)
     if ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_UAV_PS)) != 0 && HasLocatorAt(uavPS_, slot, locator))
     {
         EvictSingleUnorderedAccessViewPS(slot);
-        RemoveSubresourceOutput(uavPS_.locators, D3D11BindingLocator::D3DOutput_UAV_PS, slot);
+        RemoveWholeResourceOutput(uavPS_.locators, D3D11BindingLocator::D3DOutput_UAV_PS, slot);
     }
 
     if ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_UAV_CS)) != 0 && HasLocatorAt(uavCS_, slot, locator))
     {
         EvictSingleUnorderedAccessViewCS(slot);
-        RemoveSubresourceOutput(uavCS_.locators, D3D11BindingLocator::D3DOutput_UAV_CS, slot);
+        RemoveWholeResourceOutput(uavCS_.locators, D3D11BindingLocator::D3DOutput_UAV_CS, slot);
     }
 
     if (((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_RTV)) != 0 && HasLocatorAt(rtv_, slot, locator)) ||
@@ -504,14 +515,14 @@ void D3D11BindingTable::EvictSingleSubresourceOutputBinding(D3D11BindingLocator*
     if ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_UAV_PS)) != 0 && HasLocatorAndRangesOverlapAt(uavPS_, slot, locator, subresourceRange))
     {
         EvictSingleUnorderedAccessViewPS(slot);
-        if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_PS))
+        if (RemoveSubresourceOutput(uavPS_.locators, D3D11BindingLocator::D3DOutput_UAV_PS, slot))
             return;
     }
 
     if ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_UAV_CS)) != 0 && HasLocatorAndRangesOverlapAt(uavCS_, slot, locator, subresourceRange))
     {
         EvictSingleUnorderedAccessViewCS(slot);
-        if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_CS))
+        if (RemoveSubresourceOutput(uavCS_.locators, D3D11BindingLocator::D3DOutput_UAV_CS, slot))
             return;
     }
 
@@ -544,7 +555,10 @@ void D3D11BindingTable::EvictMultipleOutputBindings(D3D11BindingLocator* locator
         for_subrange(slot, locator->outRangeBegin, std::min<UINT>(locator->outRangeEnd, uavPS_.size()))
         {
             if (uavPS_.locators[slot] == locator)
+            {
                 EvictSingleUnorderedAccessViewPS(slot);
+                uavPS_.locators[slot] = nullptr;
+            }
         }
         if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_PS))
             return;
@@ -555,7 +569,10 @@ void D3D11BindingTable::EvictMultipleOutputBindings(D3D11BindingLocator* locator
         for_subrange(slot, locator->outRangeBegin, std::min<UINT>(locator->outRangeEnd, uavCS_.size()))
         {
             if (uavCS_.locators[slot] == locator)
+            {
                 EvictSingleUnorderedAccessViewCS(slot);
+                uavCS_.locators[slot] = nullptr;
+            }
         }
         if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_CS))
             return;
@@ -606,7 +623,10 @@ void D3D11BindingTable::EvictMultipleSubresourceOutputBindings(D3D11BindingLocat
         for_subrange(slot, locator->outRangeBegin, std::min<UINT>(locator->outRangeEnd, uavPS_.size()))
         {
             if (uavPS_.locators[slot] == locator && D3D11SubresourceRange::Overlap(uavPS_.subresourceRanges[slot], subresourceRange))
+            {
                 EvictSingleUnorderedAccessViewPS(slot);
+                uavPS_.locators[slot] = nullptr;
+            }
         }
         if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_PS))
             return;
@@ -617,7 +637,10 @@ void D3D11BindingTable::EvictMultipleSubresourceOutputBindings(D3D11BindingLocat
         for_subrange(slot, locator->outRangeBegin, std::min<UINT>(locator->outRangeEnd, uavCS_.size()))
         {
             if (uavCS_.locators[slot] == locator && D3D11SubresourceRange::Overlap(uavCS_.subresourceRanges[slot], subresourceRange))
+            {
                 EvictSingleUnorderedAccessViewCS(slot);
+                uavCS_.locators[slot] = nullptr;
+            }
         }
         if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_CS))
             return;
@@ -1097,15 +1120,12 @@ void D3D11BindingTable::EvictAllStreamOutputTargets()
 
 void D3D11BindingTable::EvictSingleUnorderedAccessViewPS(UINT slot)
 {
-    context_->OMSetRenderTargetsAndUnorderedAccessViews(
-        /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
-        /*ppRenderTargetViews:*/    nullptr,
-        /*pDepthStencilView:*/      nullptr,
-        /*UAVStartSlot:*/           slot,
-        /*NumUAVs:*/                1,
-        /*ppUnorderedAccessViews:*/ GetNullPointerArray<ID3D11UnorderedAccessView>(),
-        /*pUAVInitialCounts:*/      nullptr
-    );
+    if (uavOMRefs_[slot] != nullptr)
+    {
+        /* Remove individual UAV from cache and bind cache immediately */
+        uavOMRefs_[slot] = nullptr;
+        BindCachedOutputMergerUAVs();
+    }
 }
 
 void D3D11BindingTable::EvictSingleUnorderedAccessViewCS(UINT slot)
@@ -1137,6 +1157,22 @@ void D3D11BindingTable::EvictAllInputBindings(D3D11BindingLocator* locator, cons
                 EvictMultipleInputBindings(locator);
         }
     }
+}
+
+void D3D11BindingTable::BindCachedOutputMergerUAVs()
+{
+    /* Leading null UAVs must not override RTV slots, so start UAV range at least after number of RTVs */
+    const UINT uavStartSlot = std::max<UINT>(rtvCount_, omUAVStartSlot_);
+    const UINT uavCount     = omNumUAVs_ - (uavStartSlot - omUAVStartSlot_);
+    context_->OMSetRenderTargetsAndUnorderedAccessViews(
+        /*NumRTVs:*/                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
+        /*ppRenderTargetViews:*/    nullptr,
+        /*pDepthStencilView:*/      nullptr,
+        /*UAVStartSlot:*/           uavStartSlot,
+        /*NumUAVs:*/                uavCount,
+        /*ppUnorderedAccessViews:*/ &(uavOMRefs_[uavStartSlot]),
+        /*pUAVInitialCounts:*/      &(uavOMInitialCounts_[uavStartSlot])
+    );
 }
 
 

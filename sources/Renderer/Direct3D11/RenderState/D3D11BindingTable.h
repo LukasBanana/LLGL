@@ -95,9 +95,10 @@ class D3D11BindingTable
             D3D11BindingLocator*            depthStencilLocators
         );
 
-        void EvictAllBindings(D3D11BindingLocator* locator);
-
         void ClearState();
+
+        // Binds all pending output merger UAVs to the device context if they have previosuly changed.
+        void FlushOutputMergerUAVs();
 
     private:
 
@@ -183,6 +184,8 @@ class D3D11BindingTable
         void PutRenderTargetView(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange, UINT slot);
         void PutDepthStencilView(D3D11BindingLocator* locator);
 
+        void EvictAllBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange* subresourceRange = nullptr);
+
         void EvictAllOutputBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange* subresourceRange = nullptr);
         void EvictSingleOutputBinding(D3D11BindingLocator* locator);
         void EvictSingleSubresourceOutputBinding(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange);
@@ -200,6 +203,8 @@ class D3D11BindingTable
         void EvictAllStreamOutputTargets();
         void EvictSingleUnorderedAccessViewPS(UINT slot);
         void EvictSingleUnorderedAccessViewCS(UINT slot);
+
+        void BindCachedOutputMergerUAVs();
 
         template <typename TContainer>
         void ClearBindingLocators(TContainer& container)
@@ -244,9 +249,16 @@ class D3D11BindingTable
         SubresourceLocatorContainer<D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT>         rtv_;   // D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT (8)
         ResourceLocatorContainer<1>                                                 dsv_;
 
-        UINT                                                                        vbCount_    = 0;
-        UINT                                                                        soCount_    = 0;
-        UINT                                                                        rtvCount_   = 0;
+        ID3D11UnorderedAccessView*                                                  uavOMRefs_[D3D11_1_UAV_SLOT_COUNT]          = {};
+        UINT                                                                        uavOMInitialCounts_[D3D11_1_UAV_SLOT_COUNT] = {};
+
+        UINT                                                                        vbCount_                                    = 0;
+        UINT                                                                        soCount_                                    = 0;
+        UINT                                                                        rtvCount_                                   = 0;
+
+        UINT                                                                        omUAVStartSlot_ : 15;
+        UINT                                                                        omNumUAVs_      : 16; // Number of UAVs for the output-merger stage
+        UINT                                                                        omUAVDirtyBit_  : 1;
 
 };
 

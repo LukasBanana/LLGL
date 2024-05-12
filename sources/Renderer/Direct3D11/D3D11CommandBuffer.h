@@ -111,7 +111,8 @@ class D3D11CommandBuffer final : public CommandBuffer
             D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
         );
 
-        void FlushConstantsCache();
+        void FlushGraphicsResourceBindingCache();
+        void FlushComputeResourceBindingCache();
 
         void ResetBindingStates();
 
