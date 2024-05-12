@@ -220,8 +220,8 @@ void D3D12Buffer::ClearSubresourceUInt(
         resource = uavIntermediateBuffer_.Get();
     }
 
-    /* Create intermediate descritpor heap if not already done or format changed */
-    if (!uavIntermediateDescHeap_ || format_ != format)
+    /* Create intermediate descritpor heap if not already done */
+    if (!uavIntermediateDescHeap_)
         CreateIntermediateUAVDescriptorHeap(resource, format, formatStride);
 
     /* Get GPU and CPU descriptor handles for intermediate descriptor heap */
@@ -447,6 +447,10 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlag
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 CPU access buffer");
 }
 
+/*
+TODO: Needs refactoring:
+    When the format changes, a new UAV entry must be put into the descriptor heap, so the heap must also ne able to grow.
+*/
 void D3D12Buffer::CreateIntermediateUAVDescriptorHeap(ID3D12Resource* resource, DXGI_FORMAT format, UINT formatStride)
 {
     /* Use device the resource was created with */
