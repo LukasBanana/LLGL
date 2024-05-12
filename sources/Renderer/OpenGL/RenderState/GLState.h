@@ -154,6 +154,8 @@ struct GLRenderState
     GLsizeiptr              indexBufferOffset   = 0;
     const GLPipelineLayout* boundPipelineLayout = nullptr;
     const GLPipelineState*  boundPipelineState  = nullptr;
+    GLbitfield              activeBarriers      = 0;
+    GLbitfield              dirtyBarriers       = 0;
 };
 
 struct GLPixelStore

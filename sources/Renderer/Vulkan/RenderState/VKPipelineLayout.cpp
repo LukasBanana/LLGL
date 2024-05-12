@@ -32,7 +32,8 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
                       { device, vkDestroyDescriptorSetLayout },
                       { device, vkDestroyDescriptorSetLayout } },
     descriptorPool_ { device, vkDestroyDescriptorPool          },
-    uniformDescs_   { desc.uniforms                            }
+    uniformDescs_   { desc.uniforms                            },
+    barrierFlags_   { desc.barrierFlags                        }
 {
     /* Create Vulkan descriptor set layouts */
     if (!desc.heapBindings.empty())

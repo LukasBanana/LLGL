@@ -104,23 +104,6 @@ static bool IsGLBufferViewEnabled(const BufferViewDescriptor& bufferViewDesc)
     return (bufferViewDesc.size != LLGL_WHOLE_SIZE);
 }
 
-// Converts the specified barrier flags into GLbitfield for glMemoryBarrier
-static GLbitfield ToMemoryBarrierBitfield(long barrierFlags)
-{
-    GLbitfield barriers = 0;
-
-    #ifdef GL_ARB_shader_image_load_store
-
-    if ((barrierFlags & BarrierFlags::StorageBuffer) != 0)
-        barriers |= GL_SHADER_STORAGE_BARRIER_BIT;
-    if ((barrierFlags & BarrierFlags::StorageTexture) != 0)
-        barriers |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
-
-    #endif // /GL_ARB_shader_image_load_store
-
-    return barriers;
-}
-
 
 /*
  * GLResourceHeap class
@@ -129,8 +112,6 @@ static GLbitfield ToMemoryBarrierBitfield(long barrierFlags)
 GLResourceHeap::GLResourceHeap(
     const ResourceHeapDescriptor&               desc,
     const ArrayView<ResourceViewDescriptor>&    initialResourceViews)
-:
-    barriers_ { ToMemoryBarrierBitfield(desc.barrierFlags) }
 {
     /* Get pipeline layout object */
     auto pipelineLayoutGL = LLGL_CAST(const GLPipelineLayout*, desc.pipelineLayout);
@@ -340,14 +321,6 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet
         return;
 
     auto heapPtr = heap_.SegmentData(descriptorSet);
-
-    #ifdef GL_ARB_shader_image_load_store
-
-    /* Submit memory barriers for UAVs */
-    if (barriers_ != 0)
-        glMemoryBarrier(barriers_);
-
-    #endif // /GL_ARB_shader_image_load_store
 
     /* Bind all constant buffers */
     for_range(i, segmentation_.numUniformBufferSegments)

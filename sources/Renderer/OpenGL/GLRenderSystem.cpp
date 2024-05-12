@@ -234,7 +234,7 @@ void GLRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
 
-    #ifdef GL_ARB_shader_image_load_store
+    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
     if ((bufferGL.GetBindFlags() & BindFlags::Storage) != 0)
     {
         /* Ensure all shader writes to the buffer completed */
@@ -347,7 +347,7 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     LLGL_ASSERT_PTR(dstImageView.data);
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
 
-    #ifdef GL_ARB_shader_image_load_store
+    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
     if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
     {
         /* Ensure all shader writes to the texture completed */

@@ -10,6 +10,7 @@ Version 0.04 introduced deprecated attributes (via `LLGL_DEPRECATED`) to keep co
 - [Rendering features](#rendering-features)
 - [`FrameProfile` structure](#frameprofile-structure)
 - [Binding model](#binding-model)
+- [Resource barriers](#resource-barriers)
 - [Renamed identifiers](#renamed-identifiers)
 
 
@@ -80,6 +81,12 @@ Rationale:
 1. `ResetResourceSlots` used backend specific resource slots instead of the descriptor slots from a `PipelineLayout`. This is opposed to the `SetResource` and `SetResourceHeap` interfaces.
 2. Changing `ResetResourceSlots` to use the same binding model as `SetResource(-Heap)` requires a depedency to the active PSO, which doesn't include stream-outputs and render-targets.
 3. Modern rendering APIs (i.e. Vulkan, D3D12, Metal) either use a resource heap binding model or command encoder that don't save the binding state across multiple frames (or across multiple render-passes). Since LLGL aims to be aligned towards the newer APIs, the older backends should emulate that same functionality and not require to manually unbind resources.
+
+
+## Resource barriers
+
+Alongside a new binding model, the resource barriers are no longer specified per `ResourceHeap` but per `PipelineLayout` to make them accessible to individual bindings as well.
+Therefore, `ResourceHeapDescriptor::barrierFlags` has been deprecated and superseded by `PipelineLayoutDescriptor::barrierFlags`.
 
 
 ## Renamed identifiers

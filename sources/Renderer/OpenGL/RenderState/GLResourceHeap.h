@@ -152,10 +152,9 @@ class GLResourceHeap final : public ResourceHeap
 
     private:
 
-        SmallVector<BindingSegmentLocation> bindingMap_;            // Maps a binding index to a descriptor location.
+        SmallVector<BindingSegmentLocation> bindingMap_;    // Maps a binding index to a descriptor location.
         BufferSegmentation                  segmentation_;
-        SegmentedBuffer                     heap_;                  // Buffer with resource binding information and stride (in bytes) per descriptor set
-        GLbitfield                          barriers_       = 0;    // Bitmask for glMemoryBarrier
+        SegmentedBuffer                     heap_;          // Buffer with resource binding information and stride (in bytes) per descriptor set
 
 };
 

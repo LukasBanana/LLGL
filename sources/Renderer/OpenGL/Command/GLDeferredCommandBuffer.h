@@ -103,6 +103,8 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
         void BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot);
         #endif
 
+        void FlushMemoryBarriers();
+
         /* Allocates only an opcode for empty commands */
         void AllocOpcode(const GLOpcode opcode);
 

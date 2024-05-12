@@ -52,6 +52,23 @@ void GLCommandBuffer::SetPipelineRenderState(const GLPipelineState& pipelineStat
         renderState_.drawMode       = graphicsPSO.GetDrawMode();
         renderState_.primitiveMode  = graphicsPSO.GetPrimitiveMode();
     }
+
+    /* Store barrier flags; These must be invalidated when a new resource or resource-heap is set */
+    renderState_.activeBarriers = pipelineStateGL.GetBarriersBitfield();
+    renderState_.dirtyBarriers  = 0;
+}
+
+void GLCommandBuffer::InvalidateMemoryBarriers(GLbitfield barriers)
+{
+    renderState_.dirtyBarriers |= (renderState_.activeBarriers & barriers);
+}
+
+LLGL_NODISCARD
+GLbitfield GLCommandBuffer::FlushAndGetMemoryBarriers()
+{
+    GLbitfield barriers = renderState_.dirtyBarriers;
+    renderState_.dirtyBarriers = 0;
+    return barriers;
 }
 
 /* ----- Extensions ----- */

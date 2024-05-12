@@ -98,12 +98,18 @@ class LLGL_EXPORT ParseContext
             - \c frag for the fragment shader stage (i.e. StageFlags::FragmentStage).
             - \c comp for the compute shader stage (i.e. StageFlags::ComputeStage).
         - If no stage flag is specified, all shader stages will be used.
-        - There is a secondary syntax for uniform descriptors (see LLGL::UniformType for accepted type names):
+        - The following syntax can be used for uniform descriptors (see LLGL::UniformType for accepted type names):
             \code
             arraySize   := '[' INT ']'
             uniform     := NAME | NAME arraySize
             uniformList := uniform | uniform ',' uniformList
             uniformDesc := TYPE '(' uniformList ')'
+            \endcode
+        - The following syntax can be used for barrier flags (see PipelineLayoutDescriptor::barrierFlags):
+            \code
+            barriers := 'barriers' '{' flags '}'
+            flags    := FLAG | FLAG ',' | FLAG ',' flags
+            FLAG     := 'rw' | 'rwbuffer' | 'rwtexture'
             \endcode
         - Whitespaces are ignored (e.g. blanks <code>' '</code>, tabulators <code>'\\t'</code>, new-line characters <code>'\\n'</code> and <code>'\\r'</code> etc.), see C++ STL function <code>std::isspace</code>.
         \remarks Here is a usage example:

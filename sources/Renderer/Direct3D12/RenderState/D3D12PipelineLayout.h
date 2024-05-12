@@ -118,7 +118,7 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     public:
 
-        D3D12PipelineLayout();
+        D3D12PipelineLayout(long barrierFlags = 0);
         D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
 
         void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
@@ -194,6 +194,12 @@ class D3D12PipelineLayout final : public PipelineLayout
         inline bool NeedsRootConstantPermutation() const
         {
             return !uniforms_.empty();
+        }
+
+        // Returns the barrier flags this pipeline layout was created with. See PipelineLayoutDescriptor::barrierFlags.
+        inline long GetBarrierFlags() const
+        {
+            return barrierFlags_;
         }
 
     private:
@@ -277,6 +283,8 @@ class D3D12PipelineLayout final : public PipelineLayout
         long                                        convolutedStageFlags_   = 0;
 
         std::vector<UniformDescriptor>              uniforms_;
+
+        long                                        barrierFlags_           = 0;
 
 };
 

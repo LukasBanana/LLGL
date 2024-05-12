@@ -828,6 +828,14 @@ typedef enum LLGLFormatFlags
 }
 LLGLFormatFlags;
 
+typedef enum LLGLBarrierFlags
+{
+    LLGLBarrierStorageBuffer  = (1 << 0),
+    LLGLBarrierStorageTexture = (1 << 1),
+    LLGLBarrierStorage        = (LLGLBarrierStorageBuffer | LLGLBarrierStorageTexture),
+}
+LLGLBarrierFlags;
+
 typedef enum LLGLColorMaskFlags
 {
     LLGLColorMaskZero = 0,
@@ -882,14 +890,6 @@ typedef enum LLGLMiscFlags
     LLGLMiscCounter       = (1 << 5),
 }
 LLGLMiscFlags;
-
-typedef enum LLGLBarrierFlags
-{
-    LLGLBarrierStorageBuffer  = (1 << 0),
-    LLGLBarrierStorageTexture = (1 << 1),
-    LLGLBarrierStorage        = (LLGLBarrierStorageBuffer | LLGLBarrierStorageTexture),
-}
-LLGLBarrierFlags;
 
 typedef enum LLGLShaderCompileFlags
 {
@@ -1189,7 +1189,7 @@ typedef struct LLGLResourceHeapDescriptor
     const char*        debugName;        /* = NULL */
     LLGLPipelineLayout pipelineLayout;   /* = LLGL_NULL_OBJECT */
     uint32_t           numResourceViews; /* = 0 */
-    long               barrierFlags;     /* = 0 */
+    long               barrierFlags;     /* ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead! */
 }
 LLGLResourceHeapDescriptor;
 
@@ -1667,6 +1667,7 @@ typedef struct LLGLPipelineLayoutDescriptor
     const LLGLStaticSamplerDescriptor* staticSamplers;    /* = NULL */
     size_t                             numUniforms;       /* = 0 */
     const LLGLUniformDescriptor*       uniforms;          /* = NULL */
+    long                               barrierFlags;      /* = 0 */
 }
 LLGLPipelineLayoutDescriptor;
 

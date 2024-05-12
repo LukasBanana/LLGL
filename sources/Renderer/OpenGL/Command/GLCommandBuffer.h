@@ -13,6 +13,7 @@
 #include "../OpenGL.h"
 #include "../RenderState/GLPipelineState.h"
 #include "../RenderState/GLState.h"
+#include "../../../Core/CompilerExtensions.h"
 
 
 namespace LLGL
@@ -43,6 +44,13 @@ class GLCommandBuffer : public CommandBuffer
 
         // Stores the render states for the specified PSO: Draw mode, primitive mode, binding layout.
         void SetPipelineRenderState(const GLPipelineState& pipelineStateGL);
+
+        // InvalidaTes the specified memory barrier bits.
+        void InvalidateMemoryBarriers(GLbitfield barriers);
+
+        // Flush any invalidated memory barriers().
+        LLGL_NODISCARD
+        GLbitfield FlushAndGetMemoryBarriers();
 
     protected:
 

@@ -77,6 +77,10 @@
 #   define LLGL_SAMPLER_BORDER_COLOR
 #endif
 
+#if defined GL_ARB_shader_image_load_store || defined GL_ES_VERSION_3_1
+#   define LLGL_GLEXT_MEMORY_BARRIERS
+#endif
+
 // At most one of these should be defined to indicate which API
 // we'll be using to implement fixed-index primitive restart.
 #if defined GL_ES_VERSION_2_0 || defined GL_VERSION_4_3

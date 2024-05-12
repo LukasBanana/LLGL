@@ -461,6 +461,14 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             return sizeof(*cmd);
         }
         #endif
+        #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+        case GLOpcodeMemoryBarrier:
+        {
+            auto cmd = reinterpret_cast<const GLCmdMemoryBarrier*>(pc);
+            glMemoryBarrier(cmd->barriers);
+            return sizeof(*cmd);
+        }
+        #endif
         case GLOpcodePushDebugGroup:
         {
             auto cmd = reinterpret_cast<const GLCmdPushDebugGroup*>(pc);

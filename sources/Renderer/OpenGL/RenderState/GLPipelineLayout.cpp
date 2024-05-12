@@ -28,6 +28,26 @@ bool HasAnyNamedEntries(const TContainer& container)
     return false;
 }
 
+// Converts the specified barrier flags into GLbitfield for glMemoryBarrier
+static GLbitfield ToMemoryBarrierBitfield(long barrierFlags)
+{
+    GLbitfield barriers = 0;
+
+    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+
+    if (HasExtension(GLExt::ARB_shader_image_load_store))
+    {
+        if ((barrierFlags & BarrierFlags::StorageBuffer) != 0)
+            barriers |= GL_SHADER_STORAGE_BARRIER_BIT;
+        if ((barrierFlags & BarrierFlags::StorageTexture) != 0)
+            barriers |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+    }
+
+    #endif // /LLGL_GLEXT_MEMORY_BARRIERS
+
+    return barriers;
+}
+
 // Returns true if the specified pipeline layout descriptor contains any names for heap and dynamic resources.
 static bool HasAnyNamedResourceBindings(const PipelineLayoutDescriptor& desc)
 {
@@ -40,9 +60,10 @@ static bool HasAnyNamedResourceBindings(const PipelineLayoutDescriptor& desc)
 }
 
 GLPipelineLayout::GLPipelineLayout(const PipelineLayoutDescriptor& desc) :
-    heapBindings_     { desc.heapBindings                 },
-    uniforms_         { desc.uniforms                     },
-    hasNamedBindings_ { HasAnyNamedResourceBindings(desc) }
+    heapBindings_     { desc.heapBindings                          },
+    uniforms_         { desc.uniforms                              },
+    barriers_         { ToMemoryBarrierBitfield(desc.barrierFlags) },
+    hasNamedBindings_ { HasAnyNamedResourceBindings(desc)          }
 {
     resourceNames_.reserve(desc.bindings.size() + desc.staticSamplers.size());
     BuildDynamicResourceBindings(desc.bindings);

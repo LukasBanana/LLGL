@@ -970,7 +970,6 @@ LLGL_STATIC_ASSERT_SIZE(ResourceHeapDescriptor);
 LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, debugName);
 LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, pipelineLayout);
 LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, numResourceViews);
-LLGL_STATIC_ASSERT_OFFSET(ResourceHeapDescriptor, barrierFlags);
 
 LLGL_STATIC_ASSERT_SIZE(ShaderMacro);
 LLGL_STATIC_ASSERT_OFFSET(ShaderMacro, name);

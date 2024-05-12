@@ -22,6 +22,43 @@ namespace LLGL
 {
 
 
+/* ----- Flags ----- */
+
+/**
+\brief Flags for memory barriers in pipeline layouts.
+\see PipelineLayoutDescriptor::barrierFlags
+*/
+struct BarrierFlags
+{
+    enum
+    {
+        /**
+        \brief Memory barrier for Buffer resources that were created with the BindFlags::Storage bind flags.
+        \remarks Shader access to the buffer will reflect all data written to by previous shaders.
+        \see BindFlags::Storage
+        */
+        StorageBuffer   = (1 << 0),
+
+        /**
+        \brief Memory barrier for Texture resources that were created with the BindFlags::Storage bind flags.
+        \remarks Shader access to the texture will reflect all data written to by previous shaders.
+        \see BindFlags::Storage
+        */
+        StorageTexture  = (1 << 1),
+
+        /**
+        \brief Memory barrier for any storage resource. This is just a bitwise OR combination of \c StorageBuffer and \c StorageTexture.
+        \remarks Renderer backends such as Direct3D 12 and Vulkan have bookkeeping for storage resources
+        and don't have to distinguish between Buffer and Texture resource views for their barriers at time of creating the ResourceHeap.
+        Hence, using BarrierFlags::Storage by default when any resource views in the ResourceHeap have to be synchronized is recommended.
+        Only the OpenGL backend has to know at creation time what type of resources need a global barrier via \c glMemoryBarrier.
+        \see BindFlags::Storage
+        */
+        Storage         = (StorageBuffer | StorageTexture),
+    };
+};
+
+
 /* ----- Enumerations ----- */
 
 /**
@@ -375,6 +412,14 @@ struct PipelineLayoutDescriptor
     \see CommandBuffer::SetUniforms
     */
     std::vector<UniformDescriptor>          uniforms;
+
+    /**
+    \brief Specifies optional resource barrier flags. By default 0.
+    \remarks If the barrier flags are non-zero, they will be applied before any resource are bound to the graphics/compute pipeline.
+    This should be used when a resource is bound to the pipeline that was previously written to.
+    \see BarrierFlags
+    */
+    long                                    barrierFlags    = 0;
 };
 
 

@@ -81,6 +81,12 @@ class GLPipelineState : public PipelineState
             return uniformMap_;
         }
 
+        // Returns the GL bitfield of the memory barriers the pipeline layout of this PSO was created with. See GLPipelineLayout::GetBarriersBitfield().
+        inline GLbitfield GetBarriersBitfield() const
+        {
+            return barriers_;
+        }
+
     protected:
 
         // Returns a mutable reference to the PSO report.
@@ -104,6 +110,7 @@ class GLPipelineState : public PipelineState
         GLShaderPipelineSPtr            shaderPipelines_[GLShader::PermutationCount];
         GLShaderBindingLayoutSPtr       shaderBindingLayout_;
         std::vector<GLUniformLocation>  uniformMap_;
+        GLbitfield                      barriers_                                       = 0;
         Report                          report_;
 
 };

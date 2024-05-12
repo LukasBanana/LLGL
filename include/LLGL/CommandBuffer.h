@@ -456,7 +456,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetResource(std::uint32_t descriptor, Resource& resource) = 0;
 
-        //! \deprecated
+        //! \deprecated Since 0.04b; No need to reset resource slots manually anymore!
         LLGL_DEPRECATED("CommandBuffer::ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")
         virtual void ResetResourceSlots(
             const ResourceType  resourceType,

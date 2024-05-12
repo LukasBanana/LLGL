@@ -14,6 +14,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/Buffer.h>
 #include <LLGL/BufferFlags.h>
+#include <LLGL/Deprecated.h>
 #include <vector>
 
 
@@ -22,43 +23,6 @@ namespace LLGL
 
 
 class PipelineLayout;
-
-
-/* ----- Flags ----- */
-
-/**
-\brief Flags for memory barriers in resource heaps.
-\see ResourceHeapDescriptor::barrierFlags
-*/
-struct BarrierFlags
-{
-    enum
-    {
-        /**
-        \brief Memory barrier for Buffer resources that were created with the BindFlags::Storage bind flags.
-        \remarks Shader access to the buffer will reflect all data written to by previous shaders.
-        \see BindFlags::Storage
-        */
-        StorageBuffer   = (1 << 0),
-
-        /**
-        \brief Memory barrier for Texture resources that were created with the BindFlags::Storage bind flags.
-        \remarks Shader access to the texture will reflect all data written to by previous shaders.
-        \see BindFlags::Storage
-        */
-        StorageTexture  = (1 << 1),
-
-        /**
-        \brief Memory barrier for any storage resource. This is just a bitwise OR combination of \c StorageBuffer and \c StorageTexture.
-        \remarks Renderer backends such as Direct3D 12 and Vulkan have bookkeeping for storage resources
-        and don't have to distinguish between Buffer and Texture resource views for their barriers at time of creating the ResourceHeap.
-        Hence, using BarrierFlags::Storage by default when any resource views in the ResourceHeap have to be synchronized is recommended.
-        Only the OpenGL backend has to know at creation time what type of resources need a global barrier via \c glMemoryBarrier.
-        \see BindFlags::Storage
-        */
-        Storage         = (StorageBuffer | StorageTexture),
-    };
-};
 
 
 /* ----- Structures ----- */
@@ -145,13 +109,25 @@ struct ResourceHeapDescriptor
 {
     ResourceHeapDescriptor() = default;
 
+    LLGL_DEPRECATED_IGNORE_PUSH()
+
     //! Initializes the resource heap descriptor with the specified pipeline layout and optional secondary parameters.
-    inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews = 0, long barrierFlags = 0) :
+    inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews = 0) :
+        pipelineLayout   { pipelineLayout   },
+        numResourceViews { numResourceViews }
+    {
+    }
+
+    //! \deprecated Since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!
+    LLGL_DEPRECATED("ResourceHeapDescriptor::barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!")
+    inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews, long barrierFlags) :
         pipelineLayout   { pipelineLayout   },
         numResourceViews { numResourceViews },
         barrierFlags     { barrierFlags     }
     {
     }
+
+    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.
@@ -173,12 +149,8 @@ struct ResourceHeapDescriptor
     */
     std::uint32_t   numResourceViews    = 0;
 
-    /**
-    \brief Specifies optional resource barrier flags. By default 0.
-    \remarks If the barrier flags are non-zero, they will be applied before any resource are bound to the graphics/compute pipeline.
-    This should be used when a resource is bound to the pipeline that was previously written to.
-    \see BarrierFlags
-    */
+    //! \deprecated Since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!
+    LLGL_DEPRECATED("ResourceHeapDescriptor::barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!")
     long            barrierFlags        = 0;
 };
 

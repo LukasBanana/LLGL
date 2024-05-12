@@ -76,6 +76,7 @@ enum GLOpcode : std::uint8_t
     GLOpcodeBindImageTexture,
     GLOpcodeBindSampler,
     GLOpcodeBindGL2XSampler,
+    GLOpcodeMemoryBarrier,
     GLOpcodePushDebugGroup,
     GLOpcodePopDebugGroup,
 };

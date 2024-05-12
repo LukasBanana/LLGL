@@ -68,6 +68,9 @@ GLPipelineState::GLPipelineState(
             const GLShader::Permutation permutation = static_cast<GLShader::Permutation>(permutationIndex);
             BuildUniformMap(permutation, pipelineLayout_->GetUniforms());
         }
+
+        /* Cache barriers bitfield */
+        barriers_ = pipelineLayout_->GetBarriersBitfield();
     }
 }
 

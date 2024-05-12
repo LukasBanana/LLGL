@@ -63,7 +63,7 @@ D3D12ResourceHeap::D3D12ResourceHeap(
         CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, numDescriptorsPerSet_[1] * numDescriptorSets_);
 
     /* Allocate barrier resources if any UAV barriers are specified */
-    if ((desc.barrierFlags & BarrierFlags::Storage) != 0)
+    if ((pipelineLayoutD3D->GetBarrierFlags() & BarrierFlags::Storage) != 0)
     {
         /* Allocate empty heap for ID3D12Resource object that require a UAV barrier */
         uavResourceSetStride_   = descHeapLayout.SumUAVs();

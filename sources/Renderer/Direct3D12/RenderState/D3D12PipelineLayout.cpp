@@ -23,7 +23,8 @@ namespace LLGL
 {
 
 
-D3D12PipelineLayout::D3D12PipelineLayout()
+D3D12PipelineLayout::D3D12PipelineLayout(long barrierFlags) :
+    barrierFlags_ { barrierFlags }
 {
     rootParameterIndices_.rootParamDescriptorHeaps[0]   = D3D12RootParameterIndices::invalidIndex;
     rootParameterIndices_.rootParamDescriptorHeaps[1]   = D3D12RootParameterIndices::invalidIndex;
@@ -32,7 +33,7 @@ D3D12PipelineLayout::D3D12PipelineLayout()
 }
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc) :
-    D3D12PipelineLayout {}
+    D3D12PipelineLayout { desc.barrierFlags }
 {
     CreateRootSignature(device, desc);
     if (desc.debugName != nullptr)

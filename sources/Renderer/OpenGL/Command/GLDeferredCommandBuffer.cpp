@@ -421,6 +421,9 @@ void GLDeferredCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::u
     auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
     cmd->resourceHeap   = LLGL_CAST(GLResourceHeap*, &resourceHeap);
     cmd->descriptorSet  = descriptorSet;
+    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    #endif
 }
 
 void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
@@ -450,6 +453,10 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
             BindBufferBase(GLBufferTarget::ShaderStorageBuffer, bufferGL, binding.slot);
+            #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+            if ((bufferGL.GetBindFlags() & BindFlags::Storage) != 0)
+                InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT);
+            #endif
         }
         break;
 
@@ -457,6 +464,10 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         {
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
             BindTexture(textureGL, binding.slot);
+            #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+            if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
+                InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            #endif
         }
         break;
 
@@ -464,6 +475,10 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         {
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
             BindImageTexture(textureGL, binding.slot);
+            #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+            if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
+                InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            #endif
         }
         break;
 
@@ -710,8 +725,16 @@ In the following Draw* functions, 'indices' is from type <GLintptr> to have the 
 The indices actually store the index start offset, but must be passed to GL as a void-pointer, due to an obsolete API.
 */
 
+#ifdef LLGL_GLEXT_MEMORY_BARRIERS
+#   define LLGL_FLUSH_MEMORY_BARRIERS() \
+        FlushMemoryBarriers()
+#else
+#   define LLGL_FLUSH_MEMORY_BARRIERS()
+#endif // /LLGL_GLEXT_MEMORY_BARRIERS
+
 void GLDeferredCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawArrays>(GLOpcodeDrawArrays);
     {
         cmd->mode   = GetDrawMode();
@@ -722,6 +745,7 @@ void GLDeferredCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firs
 
 void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawElements>(GLOpcodeDrawElements);
     {
         cmd->mode       = GetDrawMode();
@@ -733,6 +757,7 @@ void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_
 
 void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawElementsBaseVertex>(GLOpcodeDrawElementsBaseVertex);
     {
         cmd->mode       = GetDrawMode();
@@ -745,6 +770,7 @@ void GLDeferredCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_
 
 void GLDeferredCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawArraysInstanced>(GLOpcodeDrawArraysInstanced);
     {
         cmd->mode           = GetDrawMode();
@@ -757,6 +783,7 @@ void GLDeferredCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint
 void GLDeferredCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawArraysInstancedBaseInstance>(GLOpcodeDrawArraysInstancedBaseInstance);
     {
         cmd->mode           = GetDrawMode();
@@ -772,6 +799,7 @@ void GLDeferredCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint
 
 void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawElementsInstanced>(GLOpcodeDrawElementsInstanced);
     {
         cmd->mode           = GetDrawMode();
@@ -784,6 +812,7 @@ void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std
 
 void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawElementsInstancedBaseVertex>(GLOpcodeDrawElementsInstancedBaseVertex);
     {
         cmd->mode           = GetDrawMode();
@@ -798,6 +827,7 @@ void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std
 void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawElementsInstancedBaseVertexBaseInstance>(GLOpcodeDrawElementsInstancedBaseVertexBaseInstance);
     {
         cmd->mode           = GetDrawMode();
@@ -815,6 +845,7 @@ void GLDeferredCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std
 
 void GLDeferredCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawArraysIndirect>(GLOpcodeDrawArraysIndirect);
     {
         cmd->id             = LLGL_CAST(GLBuffer&, buffer).GetID();
@@ -827,6 +858,7 @@ void GLDeferredCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 
 void GLDeferredCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
@@ -856,6 +888,7 @@ void GLDeferredCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset,
 
 void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDrawElementsIndirect>(GLOpcodeDrawElementsIndirect);
     {
         cmd->id             = LLGL_CAST(GLBuffer&, buffer).GetID();
@@ -869,6 +902,7 @@ void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t 
 
 void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
+    LLGL_FLUSH_MEMORY_BARRIERS();
     #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_draw_indirect))
     {
@@ -903,6 +937,7 @@ void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t 
 void GLDeferredCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
     #ifndef __APPLE__
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDispatchCompute>(GLOpcodeDispatchCompute);
     {
         cmd->numgroups[0] = numWorkGroupsX;
@@ -917,6 +952,7 @@ void GLDeferredCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32
 void GLDeferredCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     #ifndef __APPLE__
+    LLGL_FLUSH_MEMORY_BARRIERS();
     auto cmd = AllocCommand<GLCmdDispatchComputeIndirect>(GLOpcodeDispatchComputeIndirect);
     {
         cmd->id         = LLGL_CAST(const GLBuffer&, buffer).GetID();
@@ -1061,6 +1097,17 @@ void GLDeferredCommandBuffer::BindGL2XSampler(const GL2XSampler& samplerGL2X, st
     }
 }
 #endif
+
+void GLDeferredCommandBuffer::FlushMemoryBarriers()
+{
+    if (GLbitfield barriers = FlushAndGetMemoryBarriers())
+    {
+        auto cmd = AllocCommand<GLCmdMemoryBarrier>(GLOpcodeMemoryBarrier);
+        {
+            cmd->barriers = barriers;
+        }
+    }
+}
 
 void GLDeferredCommandBuffer::AllocOpcode(const GLOpcode opcode)
 {

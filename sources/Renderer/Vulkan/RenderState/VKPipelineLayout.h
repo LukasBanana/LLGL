@@ -127,6 +127,12 @@ class VKPipelineLayout final : public PipelineLayout
             return !uniformDescs_.empty();
         }
 
+        // Returns the barrier flags this pipeline layout was created with. See PipelineLayoutDescriptor::barrierFlags.
+        inline long GetBarrierFlags() const
+        {
+            return barrierFlags_;
+        }
+
     public:
 
         // Creates the default VkPipelineLayout object.
@@ -210,12 +216,14 @@ class VKPipelineLayout final : public PipelineLayout
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
         std::unique_ptr<VKDescriptorCache>  descriptorCache_;
-        VkDescriptorSet                     staticDescriptorSet_                = VK_NULL_HANDLE;
+        VkDescriptorSet                     staticDescriptorSet_                    = VK_NULL_HANDLE;
 
         std::vector<VKLayoutBinding>        heapBindings_;
         std::vector<VKLayoutBinding>        bindings_;
         std::vector<VKPtr<VkSampler>>       immutableSamplers_;
         std::vector<UniformDescriptor>      uniformDescs_;
+
+        long                                barrierFlags_                           = 0;
 
 };
 

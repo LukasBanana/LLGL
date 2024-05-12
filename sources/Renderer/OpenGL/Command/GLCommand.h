@@ -430,6 +430,11 @@ struct GLCmdBindGL2XSampler
 };
 #endif
 
+struct GLCmdMemoryBarrier
+{
+    GLbitfield barriers;
+};
+
 struct GLCmdPushDebugGroup
 {
     GLenum      source;

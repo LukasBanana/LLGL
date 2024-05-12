@@ -484,6 +484,8 @@ static void ConvertUniformDesc(UniformDescriptor& dst, const LLGLUniformDescript
 
 static void ConvertPipelineLayoutDesc(PipelineLayoutDescriptor& dst, const LLGLPipelineLayoutDescriptor& src)
 {
+    dst.debugName = src.debugName;
+
     dst.heapBindings.resize(src.numHeapBindings);
     for_range(i, src.numHeapBindings)
         ConvertBindingDesc(dst.heapBindings[i], src.heapBindings[i]);
@@ -499,6 +501,8 @@ static void ConvertPipelineLayoutDesc(PipelineLayoutDescriptor& dst, const LLGLP
     dst.uniforms.resize(src.numUniforms);
     for_range(i, src.numUniforms)
         ConvertUniformDesc(dst.uniforms[i], src.uniforms[i]);
+
+    dst.barrierFlags = src.barrierFlags;
 }
 
 LLGL_C_EXPORT LLGLPipelineLayout llglCreatePipelineLayout(const LLGLPipelineLayoutDescriptor* pipelineLayoutDesc)

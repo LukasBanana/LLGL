@@ -54,7 +54,7 @@ VKResourceHeap::VKResourceHeap(
     CreateDescriptorSets(device, numDescriptorSets, pipelineLayoutVK->GetSetLayoutForHeapBindings());
 
     /* Allocate array for descriptor set barriers */
-    if ((desc.barrierFlags & BarrierFlags::Storage) != 0)
+    if ((pipelineLayoutVK->GetBarrierFlags() & BarrierFlags::Storage) != 0)
         barriers_.resize(numDescriptorSets);
 
     /* Write initial resource views */

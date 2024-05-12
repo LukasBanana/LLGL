@@ -731,12 +731,38 @@ static UniformType StringToUniformType(StringView s)
     return UniformType::Undefined;
 }
 
+static bool ParseLayoutSignatureBarrierFlag(Parser& parser, PipelineLayoutDescriptor& outDesc)
+{
+    if (parser.Match("rw"))
+    {
+        parser.Accept();
+        outDesc.barrierFlags |= BarrierFlags::Storage;
+        return true;
+    }
+    else if (parser.Match("rwbuffer"))
+    {
+        parser.Accept();
+        outDesc.barrierFlags |= BarrierFlags::StorageBuffer;
+        return true;
+    }
+    else if (parser.Match("rwtexture"))
+    {
+        parser.Accept();
+        outDesc.barrierFlags |= BarrierFlags::StorageTexture;
+        return true;
+    }
+    return ReturnWithParseError(parser, "unknown barrier flag: %s", parser.Token());
+}
+
 static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor& outDesc, bool isHeap)
 {
     /* Check if resource type denotes a uniform binding */
     const UniformType uniformType = StringToUniformType(parser.Token());
     if (uniformType != UniformType::Undefined)
     {
+        if (isHeap)
+            return ReturnWithParseError(parser, "uniform bindings must not be declared inside a heap");
+
         parser.Accept();
 
         if (!parser.Accept("("))
@@ -774,6 +800,36 @@ static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor
 
         if (!parser.Accept(")"))
             return ReturnWithParseError(parser, "expected close bracket ')' after uniform descriptor");
+
+        return true;
+    }
+
+    /* Check if resource type denotes a barrier bitmask */
+    if (parser.Match("barriers"))
+    {
+        if (isHeap)
+            return ReturnWithParseError(parser, "barrier flags must not be declared inside a heap");
+
+        parser.Accept();
+
+        if (!parser.Accept("{"))
+            return ReturnWithParseError(parser, "expected open curly bracket '{' after barrier flags");
+
+        while (parser.Feed() && !parser.Match("}"))
+        {
+            /* Parse next barrier flag */
+            if (!ParseLayoutSignatureBarrierFlag(parser, outDesc))
+                return false;
+
+            /* If there's no comma, the flags block must end */
+            if (parser.Match(","))
+                parser.Accept();
+            else
+                break;
+        }
+
+        if (!parser.Accept("}"))
+            return ReturnWithParseError(parser, "expected closing curly bracket '}' after end of barrier flags");
 
         return true;
     }

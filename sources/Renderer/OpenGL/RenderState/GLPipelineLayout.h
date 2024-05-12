@@ -81,6 +81,12 @@ class GLPipelineLayout final : public PipelineLayout
             return uniforms_;
         }
 
+        // Returns the GLbitfield of memory barriers, used for glMemoryBarrier().
+        inline GLbitfield GetBarriersBitfield() const
+        {
+            return barriers_;
+        }
+
         // Returns true if this pipeline layout needs uniform and block binding. See GLShaderBindingLayout.
         inline bool HasNamedBindings() const
         {
@@ -103,6 +109,7 @@ class GLPipelineLayout final : public PipelineLayout
         std::vector<GL2XSamplerPtr>             staticSamplersGL2X_;
         #endif
         std::vector<UniformDescriptor>          uniforms_;
+        const GLbitfield                        barriers_           = 0;
         const bool                              hasNamedBindings_   = false;
 
 };
