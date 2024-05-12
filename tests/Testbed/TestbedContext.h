@@ -75,7 +75,11 @@ class TestbedContext
             LLGL::RenderTarget**                output
         );
 
+        // Returns true if the current renderer requires combined texture samplers (OpenGL only).
         bool HasCombinedSamplers() const;
+
+        // Returns true if the current renderer requires unique bindings slots (Vulkan only).
+        bool HasUniqueBindingSlots() const;
 
     protected:
 
@@ -119,6 +123,9 @@ class TestbedContext
             VSShadowMap,
             VSShadowedScene,
             PSShadowedScene,
+            VSResourceBinding,
+            PSResourceBinding,
+            CSResourceBinding,
 
             ShaderCount,
         };
@@ -156,12 +163,12 @@ class TestbedContext
         struct Options
         {
             std::string                 outputDir;
-            bool                        verbose;
-            bool                        pedantic;       // Ignore thresholds, always compare strictly against reference values
-            bool                        greedy;         // Continue testing on failure
-            bool                        sanityCheck;    // This is 'very verbose' and dumps out all intermediate data on successful tests
-            bool                        showTiming;
-            bool                        fastTest;       // Skip slow buffer/texture creations to speed up test run
+            bool                        verbose     = false;
+            bool                        pedantic    = false; // Ignore thresholds, always compare strictly against reference values
+            bool                        greedy      = false; // Continue testing on failure
+            bool                        sanityCheck = false; // This is 'very verbose' and dumps out all intermediate data on successful tests
+            bool                        showTiming  = false;
+            bool                        fastTest    = false; // Skip slow buffer/texture creations to speed up test run
             LLGL::Extent2D              resolution;
             std::vector<std::string>    selectedTests;
 
