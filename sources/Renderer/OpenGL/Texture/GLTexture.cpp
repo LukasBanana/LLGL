@@ -761,7 +761,7 @@ static void GLGetTextureSubImage(
         static_cast<GLsizei>(extent.width),
         static_cast<GLsizei>(extent.height),
         static_cast<GLsizei>(extent.depth),
-        GLTypes::Map(dstImageView.format),
+        GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
         GLTypes::Map(dstImageView.dataType),
         static_cast<GLsizei>(dstImageView.dataSize),
         dstImageView.data
@@ -804,7 +804,7 @@ static void GLGetTexImage(
         glGetTexImage(
             GLTypes::Map(type),
             mipLevel,
-            GLTypes::Map(format),
+            GLTypes::Map(format, IsIntDataType(dataType)),
             GLTypes::Map(dataType),
             data
         );
@@ -880,7 +880,7 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 stagingTextureID,
                 0,
-                GLTypes::Map(dstImageView.format),
+                GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
                 GLTypes::Map(dstImageView.dataType),
                 static_cast<GLsizei>(dstImageView.dataSize),
                 dstImageView.data
@@ -908,7 +908,7 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 srcTextureID,
                 mipLevel,
-                GLTypes::Map(dstImageView.format),
+                GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
                 GLTypes::Map(dstImageView.dataType),
                 static_cast<GLsizei>(dstImageView.dataSize),
                 dstImageView.data

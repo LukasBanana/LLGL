@@ -233,6 +233,16 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const voi
 void GLRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+
+    #ifdef GL_ARB_shader_image_load_store
+    if ((bufferGL.GetBindFlags() & BindFlags::Storage) != 0)
+    {
+        /* Ensure all shader writes to the buffer completed */
+        if (HasExtension(GLExt::ARB_shader_image_load_store))
+            glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+    }
+    #endif
+
     bufferGL.GetBufferSubData(static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(dataSize), data);
 }
 
@@ -336,6 +346,16 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     /* Bind texture and write texture sub data */
     LLGL_ASSERT_PTR(dstImageView.data);
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
+
+    #ifdef GL_ARB_shader_image_load_store
+    if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
+    {
+        /* Ensure all shader writes to the texture completed */
+        if (HasExtension(GLExt::ARB_shader_image_load_store))
+            glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
+    }
+    #endif
+
     textureGL.GetTextureSubImage(textureRegion, dstImageView, false);
 }
 
