@@ -26,8 +26,12 @@ namespace LLGL
 /*
 Class to manage the binding table of a D3D11 device context.
 Automatically evicts buffer and texture resources from input bindings when used as output and vice-versa.
+
 This does not handle constant buffers nor sampler states since those resources cannot be used for output bindings;
 D3D11_BIND_CONSTANT_BUFFER must not be combined with any other binding flag and sampler states are always read-only.
+
+This class also does not evict RTVs and the DSV, because those will always be unbound at the end of a render pass.
+Moreover, depth textures can potentially be read from a shader while also bound as DSV during a render pass as long as depth-writing is disabled.
 */
 class D3D11BindingTable
 {
@@ -181,8 +185,6 @@ class D3D11BindingTable
         void PutStreamOutputBuffer(D3D11BindingLocator* locator, UINT slot);
         void PutUnorderedAccessViewPS(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange, UINT slot);
         void PutUnorderedAccessViewCS(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange, UINT slot);
-        void PutRenderTargetView(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange, UINT slot);
-        void PutDepthStencilView(D3D11BindingLocator* locator);
 
         void EvictAllBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange* subresourceRange = nullptr);
 
@@ -199,7 +201,6 @@ class D3D11BindingTable
         void EvictMultipleSubresourceInputBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange);
 
         void EvictAllVertexBuffers();
-        void EvictAllRenderTargets();
         void EvictAllStreamOutputTargets();
         void EvictSingleUnorderedAccessViewPS(UINT slot);
         void EvictSingleUnorderedAccessViewCS(UINT slot);
@@ -246,8 +247,6 @@ class D3D11BindingTable
         ResourceLocatorContainer<D3D11_SO_BUFFER_SLOT_COUNT>                        so_;    // D3D11_SO_BUFFER_SLOT_COUNT (4)
         SubresourceLocatorContainer<D3D11_1_UAV_SLOT_COUNT>                         uavPS_; // D3D11_PS_CS_UAV_REGISTER_COUNT (8), D3D11_1_UAV_SLOT_COUNT (64)
         SubresourceLocatorContainer<D3D11_1_UAV_SLOT_COUNT>                         uavCS_; // D3D11_PS_CS_UAV_REGISTER_COUNT (8), D3D11_1_UAV_SLOT_COUNT (64)
-        SubresourceLocatorContainer<D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT>         rtv_;   // D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT (8)
-        ResourceLocatorContainer<1>                                                 dsv_;
 
         ID3D11UnorderedAccessView*                                                  uavOMRefs_[D3D11_1_UAV_SLOT_COUNT]          = {};
         UINT                                                                        uavOMInitialCounts_[D3D11_1_UAV_SLOT_COUNT] = {};

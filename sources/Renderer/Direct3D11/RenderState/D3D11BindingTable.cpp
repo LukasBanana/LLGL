@@ -220,27 +220,22 @@ void D3D11BindingTable::SetRenderTargets(
     const D3D11SubresourceRange*    renderTargetSubresourceRanges,
     D3D11BindingLocator*            depthStencilLocators)
 {
+    /* Evict all bindings for RTVs */
     if (renderTargetLocators != nullptr)
     {
         LLGL_ASSERT_PTR(renderTargetSubresourceRanges);
         for_range(slot, count)
-        {
-            EvictAllBindings(renderTargetLocators[slot]);
-            PutRenderTargetView(renderTargetLocators[slot], renderTargetSubresourceRanges[slot], slot);
-        }
-        for_subrange(slot, count, rtvCount_)
-            RemoveSubresourceOutput(rtv_.locators, D3D11BindingLocator::D3DOutput_RTV, slot);
+            EvictAllBindings(renderTargetLocators[slot], renderTargetSubresourceRanges);
         rtvCount_ = count;
     }
-    else if (rtvCount_ > 0)
-    {
-        for_range(slot, rtvCount_)
-            RemoveSubresourceOutput(rtv_.locators, D3D11BindingLocator::D3DOutput_RTV, slot);
+    else
         rtvCount_ = 0;
-    }
 
-    PutDepthStencilView(depthStencilLocators);
+    /* Evict all bindings for DSV */
+    if (depthStencilLocators != nullptr)
+        EvictAllBindings(depthStencilLocators);
 
+    /* Bind new RTVs and DSV */
     context_->OMSetRenderTargets(count, renderTargetViews, depthStencilView);
 }
 
@@ -257,8 +252,6 @@ void D3D11BindingTable::ClearState()
     ClearBindingLocators(so_);
     ClearBindingLocators(uavPS_);
     ClearBindingLocators(uavCS_);
-    ClearBindingLocators(rtv_);
-    ClearBindingLocators(dsv_);
 
     /* Reset all resource counters */
     vbCount_        = 0;
@@ -433,17 +426,6 @@ void D3D11BindingTable::PutUnorderedAccessViewCS(D3D11BindingLocator* locator, c
     uavCS_.subresourceRanges[slot] = subresourceRange;
 }
 
-void D3D11BindingTable::PutRenderTargetView(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange, UINT slot)
-{
-    InsertOutput(rtv_.locators, D3D11BindingLocator::D3DOutput_RTV, slot, locator);
-    rtv_.subresourceRanges[slot] = subresourceRange;
-}
-
-void D3D11BindingTable::PutDepthStencilView(D3D11BindingLocator* locator)
-{
-    InsertOutput(dsv_.locators, D3D11BindingLocator::D3DOutput_DSV, 0, locator);
-}
-
 void D3D11BindingTable::EvictAllBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange* subresourceRange)
 {
     EvictAllInputBindings(locator, subresourceRange);
@@ -492,13 +474,6 @@ void D3D11BindingTable::EvictSingleOutputBinding(D3D11BindingLocator* locator)
         EvictSingleUnorderedAccessViewCS(slot);
         RemoveWholeResourceOutput(uavCS_.locators, D3D11BindingLocator::D3DOutput_UAV_CS, slot);
     }
-
-    if (((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_RTV)) != 0 && HasLocatorAt(rtv_, slot, locator)) ||
-        ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_DSV)) != 0))
-    {
-        /* RTV and DSV must be set/unset all at once */
-        EvictAllRenderTargets();
-    }
 }
 
 void D3D11BindingTable::EvictSingleSubresourceOutputBinding(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange)
@@ -524,13 +499,6 @@ void D3D11BindingTable::EvictSingleSubresourceOutputBinding(D3D11BindingLocator*
         EvictSingleUnorderedAccessViewCS(slot);
         if (RemoveSubresourceOutput(uavCS_.locators, D3D11BindingLocator::D3DOutput_UAV_CS, slot))
             return;
-    }
-
-    if (((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_RTV)) != 0 && HasLocatorAndRangesOverlapAt(rtv_, slot, locator, subresourceRange)) ||
-        ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_DSV)) != 0))
-    {
-        /* RTV and DSV must be set/unset all at once */
-        EvictAllRenderTargets();
     }
 }
 
@@ -577,29 +545,6 @@ void D3D11BindingTable::EvictMultipleOutputBindings(D3D11BindingLocator* locator
         if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_CS))
             return;
     }
-
-    if ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_DSV)) != 0)
-    {
-        if (dsv_.locators[0] == locator)
-        {
-            /* RTV and DSV must be set/unset all at once */
-            EvictAllRenderTargets();
-            return;
-        }
-    }
-
-    if (((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_RTV)) != 0))
-    {
-        for_subrange(slot, locator->outRangeBegin, std::min<UINT>(locator->outRangeEnd, so_.size()))
-        {
-            if (rtv_.locators[slot] == locator)
-            {
-                /* RTV and DSV must be set/unset all at once */
-                EvictAllRenderTargets();
-                return;
-            }
-        }
-    }
 }
 
 void D3D11BindingTable::EvictMultipleSubresourceOutputBindings(D3D11BindingLocator* locator, const D3D11SubresourceRange& subresourceRange)
@@ -644,29 +589,6 @@ void D3D11BindingTable::EvictMultipleSubresourceOutputBindings(D3D11BindingLocat
         }
         if (locator->RemoveOutput(D3D11BindingLocator::D3DOutput_UAV_CS))
             return;
-    }
-
-    if ((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_DSV)) != 0)
-    {
-        if (dsv_.locators[0] == locator)
-        {
-            /* RTV and DSV must be set/unset all at once */
-            EvictAllRenderTargets();
-            return;
-        }
-    }
-
-    if (((locator->outBitmask & (1u << D3D11BindingLocator::D3DOutput_RTV)) != 0))
-    {
-        for_subrange(slot, locator->outRangeBegin, std::min<UINT>(locator->outRangeEnd, so_.size()))
-        {
-            if (rtv_.locators[slot] == locator && D3D11SubresourceRange::Overlap(rtv_.subresourceRanges[slot], subresourceRange))
-            {
-                /* RTV and DSV must be set/unset all at once */
-                EvictAllRenderTargets();
-                return;
-            }
-        }
     }
 }
 
@@ -974,7 +896,7 @@ void D3D11BindingTable::EvictMultipleSubresourceInputBindings(D3D11BindingLocato
         {
             if (srvHS_.locators[slot] == locator)
             {
-                if (D3D11SubresourceRange::Overlap(srvVS_.subresourceRanges[slot], subresourceRange))
+                if (D3D11SubresourceRange::Overlap(srvHS_.subresourceRanges[slot], subresourceRange))
                 {
                     context_->HSSetShaderResources(slot, 1, nullSRVs);
                     srvHS_.locators[slot] = nullptr;
@@ -997,7 +919,7 @@ void D3D11BindingTable::EvictMultipleSubresourceInputBindings(D3D11BindingLocato
         {
             if (srvDS_.locators[slot] == locator)
             {
-                if (D3D11SubresourceRange::Overlap(srvVS_.subresourceRanges[slot], subresourceRange))
+                if (D3D11SubresourceRange::Overlap(srvDS_.subresourceRanges[slot], subresourceRange))
                 {
                     context_->DSSetShaderResources(slot, 1, nullSRVs);
                     srvDS_.locators[slot] = nullptr;
@@ -1020,7 +942,7 @@ void D3D11BindingTable::EvictMultipleSubresourceInputBindings(D3D11BindingLocato
         {
             if (srvGS_.locators[slot] == locator)
             {
-                if (D3D11SubresourceRange::Overlap(srvVS_.subresourceRanges[slot], subresourceRange))
+                if (D3D11SubresourceRange::Overlap(srvGS_.subresourceRanges[slot], subresourceRange))
                 {
                     context_->GSSetShaderResources(slot, 1, nullSRVs);
                     srvGS_.locators[slot] = nullptr;
@@ -1043,7 +965,7 @@ void D3D11BindingTable::EvictMultipleSubresourceInputBindings(D3D11BindingLocato
         {
             if (srvPS_.locators[slot] == locator)
             {
-                if (D3D11SubresourceRange::Overlap(srvVS_.subresourceRanges[slot], subresourceRange))
+                if (D3D11SubresourceRange::Overlap(srvPS_.subresourceRanges[slot], subresourceRange))
                 {
                     context_->PSSetShaderResources(slot, 1, nullSRVs);
                     srvPS_.locators[slot] = nullptr;
@@ -1066,7 +988,7 @@ void D3D11BindingTable::EvictMultipleSubresourceInputBindings(D3D11BindingLocato
         {
             if (srvCS_.locators[slot] == locator)
             {
-                if (D3D11SubresourceRange::Overlap(srvVS_.subresourceRanges[slot], subresourceRange))
+                if (D3D11SubresourceRange::Overlap(srvCS_.subresourceRanges[slot], subresourceRange))
                 {
                     context_->CSSetShaderResources(slot, 1, nullSRVs);
                     srvCS_.locators[slot] = nullptr;
@@ -1096,17 +1018,6 @@ void D3D11BindingTable::EvictAllVertexBuffers()
     }
     context_->IASetVertexBuffers(0, vbCount_, GetNullPointerArray<ID3D11Buffer>(), nullValues, nullValues);
     vbCount_ = 0;
-}
-
-void D3D11BindingTable::EvictAllRenderTargets()
-{
-    context_->OMSetRenderTargets(0, nullptr, nullptr);
-
-    for_range(slot, rtvCount_)
-        RemoveSubresourceOutput(rtv_.locators, D3D11BindingLocator::D3DOutput_RTV, slot);
-    rtvCount_ = 0;
-
-    RemoveWholeResourceOutput(dsv_.locators, D3D11BindingLocator::D3DOutput_DSV, 0);
 }
 
 void D3D11BindingTable::EvictAllStreamOutputTargets()
