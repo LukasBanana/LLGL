@@ -71,7 +71,7 @@ report_missing_packages()
 
 KERNEL_NAME=$(uname -s)
 
-if [[ $KERNEL_NAME == MSYS_NT* ]]; then
+if [[ $KERNEL_NAME == MSYS_NT* ]] || [[ $KERNEL_NAME == MINGW32_NT* ]] || [[ $KERNEL_NAME == MINGW64_NT* ]]; then
     # Check packages for MSYS2 on Windows
     MISSING=$( list_missing_packages_arch \
         git mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc mingw-w64-x86_64-glew mingw-w64-x86_64-freeglut )

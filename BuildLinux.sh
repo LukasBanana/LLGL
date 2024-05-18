@@ -17,7 +17,7 @@ VERBOSE=0
 GENERATOR="CodeBlocks - Unix Makefiles"
 
 # Check whether we are on a Linux distribution or MSYS on Windows
-[ "$#" -ge 2 ] && [ "$1" = "-msys" ] && PLATFORM_MSYS=1 || PLATFORM_MSYS=0
+[ "$#" -ge 1 ] && [ "$1" = "-msys" ] && PLATFORM_MSYS=1 || PLATFORM_MSYS=0
 
 if [ $PLATFORM_MSYS -eq 1 ]; then
     OUTPUT_DIR="build_msys2"
@@ -136,6 +136,7 @@ fi
 
 # Build into output directory (this syntax requires CMake 3.13+)
 OPTIONS=(
+    -DLLGL_BUILD_WRAPPER_C99=ON
     -DLLGL_BUILD_RENDERER_OPENGL=ON
     -DLLGL_GL_ENABLE_OPENGL2X=ON
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL

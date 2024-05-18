@@ -82,7 +82,7 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bo
     }
 }
 
-static std::atomic_int g_mouseCaptureCounter = 0;
+static std::atomic_int g_mouseCaptureCounter{ 0 };
 
 static void ReleaseMouseCapture()
 {
