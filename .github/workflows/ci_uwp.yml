@@ -1,0 +1,56 @@
+name: MS UWP
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_uwp:
+    strategy:
+      matrix:
+        target: [ UWP-10_0 ]
+        arch: [x64]
+        lib: [Shared, Static]
+        config: [Release, Debug]
+      fail-fast: false
+
+    runs-on: 'windows-latest'
+
+    env:
+      README: ${{ github.workspace }}/README.txt
+      GENERATOR: 'Visual Studio 17 2022'
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: >
+        cmake -G "${{ env.GENERATOR }}" -A "${{ matrix.arch }}" -S . -B ${{ github.workspace }}/${{ matrix.arch }}
+        -DCMAKE_TOOLCHAIN_FILE="cmake/Toolchains/Toolchain.${{ matrix.target }}.cmake"
+        -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
+        -DLLGL_BUILD_RENDERER_DIRECT3D11=ON
+        -DLLGL_BUILD_RENDERER_DIRECT3D12=ON
+        -DLLGL_BUILD_EXAMPLES=ON
+        "-DLLGL_D3D11_ENABLE_FEATURELEVEL=${{ matrix.config == 'Release' && 'Direct3D 11.3' || 'Direct3D 11.0'}}"
+        "-DLLGL_D3D12_ENABLE_FEATURELEVEL=${{ matrix.config == 'Release' && 'Direct3D 12.2' || 'Direct3D 12.0'}}"
+
+    - name: Build
+      run: |
+        cmake --build ${{ github.workspace }}/${{ matrix.arch }} --config ${{ matrix.config }}
+        echo "LLGL built with ${{ env.GENERATOR }} for ${{ matrix.arch }} on $(date)." > ${{ env.README }}
+        echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
+
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v4
+      if: matrix.arch == 'x64' && matrix.lib == 'Shared' && matrix.config == 'Release'
+      with:
+        name: LLGL-${{ matrix.target }}-${{ matrix.config }}-${{ matrix.arch }}
+        path: |
+          ${{ env.README }}
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/LLGL*.dll
+          ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/Example_*.exe
