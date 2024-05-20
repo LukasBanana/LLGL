@@ -23,6 +23,7 @@ namespace LLGL
 {
 
 
+struct NativeHandle;
 class D3D11RenderSystem;
 
 class D3D11SwapChain final : public SwapChain
@@ -82,9 +83,11 @@ class D3D11SwapChain final : public SwapChain
         bool SetPresentSyncInterval(UINT syncInterval);
 
         void CreateSwapChain(IDXGIFactory* factory, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples);
-        void CreateDXGISwapChain(IDXGIFactory* factory, HWND window, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples);
-        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-        void CreateDXGISwapChain1(IDXGIFactory2* factory2, HWND window, const Extent2D& resolution, std::uint32_t swapBuffers);
+        #ifdef LLGL_OS_WIN32
+        void CreateDXGISwapChain(IDXGIFactory* factory, const NativeHandle& wndHandle, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples);
+        #endif
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3 || defined LLGL_OS_UWP
+        void CreateDXGISwapChain1(IDXGIFactory2* factory2, const NativeHandle& wndHandle, const Extent2D& resolution, std::uint32_t swapBuffers);
         #endif
 
         void CreateResolutionDependentResources();

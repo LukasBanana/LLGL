@@ -558,7 +558,7 @@ void D3D11RenderSystem::CreateFactory()
     /* Create DXGI factory */
     HRESULT hr = S_OK;
 
-    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2 || defined LLGL_OS_UWP
     hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&factory2_));
     if (SUCCEEDED(hr))
     {
@@ -566,6 +566,10 @@ void D3D11RenderSystem::CreateFactory()
         factory2_.As(&factory1_);
         return;
     }
+    #endif
+
+    #ifdef LLGL_OS_UWP
+    DXThrowIfCreateFailed(hr, "IDXGIFactory2");
     #endif
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
@@ -577,8 +581,10 @@ void D3D11RenderSystem::CreateFactory()
     }
     #endif
 
+    #ifdef LLGL_OS_WIN32
     hr = CreateDXGIFactory(IID_PPV_ARGS(&factory_));
     DXThrowIfCreateFailed(hr, "IDXGIFactory");
+    #endif
 }
 
 void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper)

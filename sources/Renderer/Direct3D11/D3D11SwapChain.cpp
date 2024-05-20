@@ -316,27 +316,37 @@ void D3D11SwapChain::CreateSwapChain(IDXGIFactory* factory, const Extent2D& reso
     /* Find suitable multi-samples for color format */
     swapChainSampleDesc_ = D3D11RenderSystem::FindSuitableSampleDesc(device_.Get(), colorFormat_, samples);
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+    #ifdef LLGL_OS_UWP
+    /* Create IDXGISwapChain1 with IDXGIFactory2 for CoreWindow */
+    ComPtr<IDXGIFactory2> factory2;
+    hr = factory->QueryInterface(IID_PPV_ARGS(&factory2));
+    DXThrowIfFailed(hr, "failed to query IDXGIFactory2");
+    CreateDXGISwapChain1(factory2.Get(), wndHandle, resolution, swapBuffers);
+    #else // LLGL_OS_UWP
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     ComPtr<IDXGIFactory2> factory2;
     hr = factory->QueryInterface(IID_PPV_ARGS(&factory2));
 
     if (SUCCEEDED(hr))
     {
         /* Create IDXGISwapChain1 with IDXGIFactory2 to support tearing */
-        CreateDXGISwapChain1(factory2.Get(), wndHandle.window, resolution, swapBuffers);
+        CreateDXGISwapChain1(factory2.Get(), wndHandle, resolution, swapBuffers);
     }
     else
     #endif
     {
         /* Create IDXGISwapChain with IDXGIFactory */
-        CreateDXGISwapChain(factory, wndHandle.window, resolution, swapBuffers, samples);
+        CreateDXGISwapChain(factory, wndHandle, resolution, swapBuffers, samples);
     }
+    #endif // /LLGL_OS_UWP
 
     /* Cache windoed mode for tearing support */
     windowedMode_ = !DXGetFullscreenState(swapChain_.Get());
 }
 
-void D3D11SwapChain::CreateDXGISwapChain(IDXGIFactory* factory, HWND window, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples)
+#ifdef LLGL_OS_WIN32
+
+void D3D11SwapChain::CreateDXGISwapChain(IDXGIFactory* factory, const NativeHandle& wndHandle, const Extent2D& resolution, std::uint32_t swapBuffers, std::uint32_t samples)
 {
     /* Clamp buffer count between 1 and max buffers */
     swapBuffers = std::max(1u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
@@ -352,7 +362,7 @@ void D3D11SwapChain::CreateDXGISwapChain(IDXGIFactory* factory, HWND window, con
         swapChainDesc.SampleDesc                = swapChainSampleDesc_;
         swapChainDesc.BufferUsage               = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount               = (swapBuffers >= 3 ? 2 : 1);
-        swapChainDesc.OutputWindow              = window;
+        swapChainDesc.OutputWindow              = wndHandle.window;
         swapChainDesc.Windowed                  = TRUE;//(fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                = DXGI_SWAP_EFFECT_DISCARD;
     }
@@ -363,9 +373,11 @@ void D3D11SwapChain::CreateDXGISwapChain(IDXGIFactory* factory, HWND window, con
     swapEffectFlip_ = false;
 }
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+#endif // /LLGL_OS_WIN32
 
-void D3D11SwapChain::CreateDXGISwapChain1(IDXGIFactory2* factory2, HWND window, const Extent2D& resolution, std::uint32_t swapBuffers)
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3 || defined LLGL_OS_UWP
+
+void D3D11SwapChain::CreateDXGISwapChain1(IDXGIFactory2* factory2, const NativeHandle& wndHandle, const Extent2D& resolution, std::uint32_t swapBuffers)
 {
     /* Clamp buffer count between 2 and max buffers */
     swapBuffers = std::max(2u, std::min<std::uint32_t>(swapBuffers, DXGI_MAX_SWAP_CHAIN_BUFFERS));
@@ -384,7 +396,11 @@ void D3D11SwapChain::CreateDXGISwapChain1(IDXGIFactory2* factory2, HWND window, 
     }
 
     ComPtr<IDXGISwapChain1> swapChain;
-    HRESULT hr = factory2->CreateSwapChainForHwnd(device_.Get(), window, &swapChainDesc, nullptr, nullptr, &swapChain);
+    #ifdef LLGL_OS_UWP
+    HRESULT hr = factory2->CreateSwapChainForCoreWindow(device_.Get(), wndHandle.window, &swapChainDesc, nullptr, &swapChain);
+    #else
+    HRESULT hr = factory2->CreateSwapChainForHwnd(device_.Get(), wndHandle.window, &swapChainDesc, nullptr, nullptr, &swapChain);
+    #endif
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
     DXThrowIfFailed(swapChain.As(&swapChain_), "failed to downcast swap chain");
 

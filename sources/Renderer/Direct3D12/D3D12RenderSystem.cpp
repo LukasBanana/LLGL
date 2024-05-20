@@ -461,7 +461,11 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(
 
     ComPtr<IDXGISwapChain1> swapChain;
 
+    #ifdef LLGL_OS_UWP
+    HRESULT hr = factory_->CreateSwapChainForCoreWindow(commandQueue_->GetNative(), nativeWindowHandlePtr->window, &swapChainDescDXGI, nullptr, &swapChain);
+    #else
     HRESULT hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), nativeWindowHandlePtr->window, &swapChainDescDXGI, nullptr, nullptr, &swapChain);
+    #endif
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
