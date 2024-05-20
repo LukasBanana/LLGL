@@ -20,7 +20,6 @@
 #include "../../Core/Assertion.h"
 #include "../TextureUtils.h"
 #include <algorithm>
-#include <codecvt>
 
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11PipelineState.h"
@@ -1229,7 +1228,7 @@ void D3D11CommandBuffer::PushDebugGroup(const char* name)
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
     {
-        std::wstring nameWStr = ToUTF16String(name);
+        const std::wstring nameWStr = ToWideString(name);
         annotation_->BeginEvent(nameWStr.c_str());
     }
     #endif

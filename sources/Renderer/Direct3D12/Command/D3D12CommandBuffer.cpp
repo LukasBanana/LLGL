@@ -39,7 +39,6 @@
 #include <pix.h>
 
 #include <algorithm>
-#include <codecvt>
 
 
 namespace LLGL

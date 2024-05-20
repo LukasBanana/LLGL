@@ -118,13 +118,9 @@ LLGL_EXPORT std::string ReadFileString(const char* filename);
 // Reads the specified binary file into a buffer.
 LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
 
-// Converts the UTF16 input string to UTF8 string.
-LLGL_EXPORT std::string ToUTF8String(const std::wstring& utf16);
-LLGL_EXPORT std::string ToUTF8String(const wchar_t* utf16);
-
 // Converts the UTF8 input string to UTF16 string.
-LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8);
-LLGL_EXPORT std::wstring ToUTF16String(const char* utf8);
+LLGL_EXPORT std::wstring ToWideString(const std::string& str);
+LLGL_EXPORT std::wstring ToWideString(const char* str);
 
 // Writes a formatted string into an STL string.
 LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2);

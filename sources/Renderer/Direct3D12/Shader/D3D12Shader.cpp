@@ -299,11 +299,11 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         std::vector<LPCWSTR> compilerArgs = DXGetDxcCompilerArgs(flags);
 
         compilerArgs.push_back(L"-E");
-        const std::wstring entryWide = ToUTF16String(entry);
+        const std::wstring entryWide = ToWideString(entry);
         compilerArgs.push_back(entryWide.c_str());
 
         compilerArgs.push_back(L"-T");
-        const std::wstring targetWide = ToUTF16String(target);
+        const std::wstring targetWide = ToWideString(target);
         compilerArgs.push_back(targetWide.c_str());
 
         std::vector<std::wstring> definesWide;
@@ -312,11 +312,11 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
             /* Append macro definitions as compiler arguments "-D<NAME>" or "-D<NAME>=<VALUE>" */
             for (; defines->Name != nullptr; ++defines)
             {
-                std::wstring defineWide = std::wstring(L"-D") + ToUTF16String(defines->Name);
+                std::wstring defineWide = std::wstring(L"-D") + ToWideString(defines->Name);
                 if (defines->Definition != nullptr && defines->Definition[0] != '\0')
                 {
                     defineWide += L'=';
-                    defineWide += ToUTF16String(defines->Definition);
+                    defineWide += ToWideString(defines->Definition);
                 }
                 definesWide.push_back(std::move(defineWide));
             }

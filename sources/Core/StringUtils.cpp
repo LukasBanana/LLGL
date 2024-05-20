@@ -7,10 +7,10 @@
 
 #include "StringUtils.h"
 #include <fstream>
-#include <codecvt>
 #include <locale>
 #include <stdio.h>
 #include <algorithm>
+#include <cstring>
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Utils/ForRange.h>
 #include "../Platform/Path.h"
@@ -64,24 +64,23 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
     return {};
 }
 
-LLGL_EXPORT std::string ToUTF8String(const std::wstring& utf16)
+static std::wstring ToWideStringPrimary(const char* str, std::size_t len)
 {
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(utf16);
+    std::wstring wstr;
+    wstr.reserve(len);
+    while (char chr = *str++)
+        wstr.push_back(static_cast<wchar_t>(chr));
+    return wstr;
 }
 
-LLGL_EXPORT std::string ToUTF8String(const wchar_t* utf16)
+LLGL_EXPORT std::wstring ToWideString(const std::string& str)
 {
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(utf16);
+    return ToWideStringPrimary(str.c_str(), str.size());
 }
 
-LLGL_EXPORT std::wstring ToUTF16String(const std::string& utf8)
+LLGL_EXPORT std::wstring ToWideString(const char* str)
 {
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(utf8);
-}
-
-LLGL_EXPORT std::wstring ToUTF16String(const char* utf8)
-{
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(utf8);
+    return ToWideStringPrimary(str, std::strlen(str));
 }
 
 void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2)
