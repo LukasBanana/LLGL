@@ -652,6 +652,9 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
         if (FAILED(hr))
             return hr;
     }
+    #else
+        if (FAILED(hr))
+            return hr;
     #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
 
     D3D12_SHADER_DESC shaderDesc;
