@@ -74,9 +74,11 @@ MTGraphicsPSO::MTGraphicsPSO(
     blendColor_[3]      = desc.blend.blendFactor[3];
 
     /* Create render pipeline and depth-stencil states */
-    CreateRenderPipelineState(device, desc, defaultRenderPass);
-    CreateDepthStencilState(device, desc);
-    BuildStaticStateBuffer(desc);
+    if (CreateRenderPipelineState(device, desc, defaultRenderPass))
+    {
+        CreateDepthStencilState(device, desc);
+        BuildStaticStateBuffer(desc);
+    }
 }
 
 void MTGraphicsPSO::Bind(id<MTLRenderCommandEncoder> renderEncoder)
@@ -202,7 +204,7 @@ static const MTShader* GetVertexOrPostTessVertexShader(const GraphicsPipelineDes
     return vertexShaderMT;
 }
 
-void MTGraphicsPSO::CreateRenderPipelineState(
+bool MTGraphicsPSO::CreateRenderPipelineState(
     id<MTLDevice>                       device,
     const GraphicsPipelineDescriptor&   desc,
     const MTRenderPass*                 defaultRenderPass)
@@ -214,7 +216,16 @@ void MTGraphicsPSO::CreateRenderPipelineState(
     numPatchControlPoints_ = vertexShaderMT->GetNumPatchControlPoints();
 
     if (id<MTLFunction> vertexFunc = vertexShaderMT->GetNative())
+    {
+        /* Cache patch type of vertex function */
         patchType_ = [vertexFunc patchType];
+    }
+    else
+    {
+        /* Error: Every graphics PSO needs a valid vertex function */
+        GetMutableReport().Errorf("cannot create Metal graphics PSO without valid vertex function");
+        return false;
+    }
 
     /* Get render pass object */
     const MTRenderPass* renderPassMT = nullptr;
@@ -288,6 +299,8 @@ void MTGraphicsPSO::CreateRenderPipelineState(
         else
             throw std::invalid_argument("cannot create Metal tessellation pipeline without tessellation compute shader");
     }
+
+    return true;
 }
 
 id<MTLRenderPipelineState> MTGraphicsPSO::CreateNativeRenderPipelineState(

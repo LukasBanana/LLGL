@@ -91,7 +91,7 @@ class MTGraphicsPSO final : public MTPipelineState
 
     private:
 
-        void CreateRenderPipelineState(
+        bool CreateRenderPipelineState(
             id<MTLDevice>                       device,
             const GraphicsPipelineDescriptor&   desc,
             const MTRenderPass*                 defaultRenderPass

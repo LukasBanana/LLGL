@@ -25,11 +25,17 @@ MTComputePSO::MTComputePSO(id<MTLDevice> device, const ComputePipelineDescriptor
     /* Get native shader functions */
     computeShader_  = LLGL_CAST(const MTShader*, desc.computeShader);
     if (!computeShader_)
-        throw std::invalid_argument("cannot create Metal compute pipeline without compute shader");
+    {
+        GetMutableReport().Errorf("cannot create Metal compute pipeline without compute shader");
+        return;
+    }
 
     id<MTLFunction> kernelFunc = computeShader_->GetNative();
     if (!kernelFunc)
-        throw std::invalid_argument("cannot create Metal compute pipeline without valid compute kernel function");
+    {
+        GetMutableReport().Errorf("cannot create Metal compute pipeline without valid compute kernel function");
+        return;
+    }
 
     /* Create native compute pipeline state */
     NSError* error = nullptr;
