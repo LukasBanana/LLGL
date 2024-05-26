@@ -65,7 +65,10 @@ class D3D12CommandContext
         void Execute(D3D12CommandQueue& commandQueue);
         void ExecuteAndSignal(D3D12CommandQueue& commandQueue);
         void Signal(D3D12CommandQueue& commandQueue);
-        void Reset();
+        void Reset(D3D12CommandQueue& commandQueue);
+
+        // Executes a deferred command list bundle from another command context.
+        void ExecuteBundle(D3D12CommandContext& otherContext);
 
         // Calls Close, Execute, and Reset with the internal command queue and allocator.
         void FinishAndSync(D3D12CommandQueue& commandQueue);
@@ -242,7 +245,7 @@ class D3D12CommandContext
         D3D12_RESOURCE_BARRIER& NextResourceBarrier();
 
         // Switches to the next command allocator and resets it.
-        void NextCommandAllocator();
+        void NextCommandAllocator(D3D12CommandQueue& commandQueue);
 
         void SetPipelineStateCached(ID3D12PipelineState* pipelineState);
 
@@ -266,6 +269,7 @@ class D3D12CommandContext
         UINT                                numAllocators_                              = maxNumAllocators;
 
         UINT64                              allocatorFenceValues_[maxNumAllocators]     = {};
+        bool                                allocatorFenceValueDirty_[maxNumAllocators] = {};
         D3D12NativeFence                    allocatorFence_;
 
         ComPtr<ID3D12GraphicsCommandList>   commandList_;

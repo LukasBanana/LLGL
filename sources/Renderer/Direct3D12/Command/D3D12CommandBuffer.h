@@ -61,7 +61,7 @@ class D3D12CommandBuffer final : public CommandBuffer
         // Returns the native ID3D12GraphicsCommandList object.
         inline ID3D12GraphicsCommandList* GetNative() const
         {
-            return commandList_;
+            return commandContext_.GetCommandList();
         }
 
         // Returns true if this is an immediate command buffer.
@@ -113,7 +113,6 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         D3D12CommandContext             commandContext_;
         D3D12CommandQueue*              commandQueue_                               = nullptr;
-        ID3D12GraphicsCommandList*      commandList_                                = nullptr;
         const D3D12SignatureFactory*    cmdSignatureFactory_                        = nullptr;
 
         bool                            immediateSubmit_                            = false;

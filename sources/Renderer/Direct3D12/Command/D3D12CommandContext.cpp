@@ -102,12 +102,13 @@ void D3D12CommandContext::ExecuteAndSignal(D3D12CommandQueue& commandQueue)
 void D3D12CommandContext::Signal(D3D12CommandQueue& commandQueue)
 {
     commandQueue.SignalFence(allocatorFence_.Get(), allocatorFenceValues_[currentAllocatorIndex_]);
+    allocatorFenceValueDirty_[currentAllocatorIndex_] = false;
 }
 
-void D3D12CommandContext::Reset()
+void D3D12CommandContext::Reset(D3D12CommandQueue& commandQueue)
 {
     /* Switch to next command allocator */
-    NextCommandAllocator();
+    NextCommandAllocator(commandQueue);
 
     /* Reset graphics command list */
     HRESULT hr = commandList_->Reset(GetCommandAllocator(), nullptr);
@@ -117,12 +118,27 @@ void D3D12CommandContext::Reset()
     ClearCache();
 }
 
+void D3D12CommandContext::ExecuteBundle(D3D12CommandContext& otherContext)
+{
+    /*
+    TODO:
+    D3D12 bundles can bind descriptor heaps but they must match the primary command buffer's descriptor heaps.
+    As a workaround, always bind the descriptor heaps that were cached in the secondary command buffer,
+    since those that are shader visible will be the same throughout the command encoding (see D3D12StagingDescriptorHeapPool).
+    Some kind of descriptor heap sharing/pooling should be implemented next.
+    */
+    SetDescriptorHeapsOfOtherContext(otherContext);
+
+    /* Encode command to execute command list of other context as bundle */
+    commandList_->ExecuteBundle(otherContext.GetCommandList());
+}
+
 void D3D12CommandContext::FinishAndSync(D3D12CommandQueue& commandQueue)
 {
     /* Close command list and execute, then reset command allocator for next encoding */
     Close();
     ExecuteAndSignal(commandQueue);
-    Reset();
+    Reset(commandQueue);
 
     /* Sync CPU/GPU */
     commandQueue.WaitIdle();
@@ -532,15 +548,20 @@ D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()
     return resourceBarriers_[numResourceBarriers_++];
 }
 
-void D3D12CommandContext::NextCommandAllocator()
+void D3D12CommandContext::NextCommandAllocator(D3D12CommandQueue& commandQueue)
 {
     /* Get next command allocator */
     const UINT64 currentFenceValue = allocatorFenceValues_[currentAllocatorIndex_];
     currentAllocatorIndex_ = ((currentAllocatorIndex_ + 1) % numAllocators_);
 
+    /* If fence was not signaled since last encoding, we must signal it now and wait for a full queue flush */
+    if (allocatorFenceValueDirty_[currentAllocatorIndex_])
+        Signal(commandQueue);
+
     /* Wait until fence value of next allocator has been signaled */
     allocatorFence_.WaitForHigherSignal(allocatorFenceValues_[currentAllocatorIndex_]);
     allocatorFenceValues_[currentAllocatorIndex_] = currentFenceValue + 1;
+    allocatorFenceValueDirty_[currentAllocatorIndex_] = true;
 
     /* Reclaim memory allocated by command allocator using <ID3D12CommandAllocator::Reset> */
     HRESULT hr = GetCommandAllocator()->Reset();
