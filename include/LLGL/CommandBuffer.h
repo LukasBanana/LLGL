@@ -80,7 +80,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Executes the specified deferred command buffer.
         \param[in] deferredCommandBuffer Specifies the deferred command buffer which is meant to be executed.
         This command buffer must have been created with the CommandBufferFlags::Secondary flag.
-        \remarks This function can only be used by primary command buffers, i.e. command buffers that have not been created with the flag CommandBufferFlags::Secondary.
+        \remarks This function can only be used by primary command buffers, i.e. command buffers that have \e not been created with the flag CommandBufferFlags::Secondary.
+        \remarks Once this command buffer is submitted for execution to one or more primary command buffers,
+        it <b>must not</b> be updated unless all of such primary command buffers are also updated before their next submission to the command queue.
         \see CommandBufferFlags
         \todo Incomplete for: D3D12, Vulkan, Metal.
         */
