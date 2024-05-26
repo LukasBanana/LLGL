@@ -101,7 +101,10 @@ void D3D12CommandContext::ExecuteAndSignal(D3D12CommandQueue& commandQueue)
 
 void D3D12CommandContext::Signal(D3D12CommandQueue& commandQueue)
 {
-    commandQueue.SignalFence(allocatorFence_.Get(), allocatorFenceValues_[currentAllocatorIndex_]);
+    const UINT64 currentFenceValue = allocatorFence_.GetCompletedValue();
+    const UINT64 nextFenceValue = allocatorFenceValues_[currentAllocatorIndex_];
+    if (currentFenceValue < nextFenceValue)
+        commandQueue.SignalFence(allocatorFence_.Get(), nextFenceValue);
     allocatorFenceValueDirty_[currentAllocatorIndex_] = false;
 }
 
