@@ -33,6 +33,7 @@ struct D3D12ConstantReflection
 
 struct D3D12ConstantBufferReflection
 {
+    long                                    stageFlags;
     D3D12_ROOT_CONSTANTS                    rootConstants;
     std::vector<D3D12ConstantReflection>    fields;
 };

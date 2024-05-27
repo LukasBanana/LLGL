@@ -140,16 +140,20 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         return nullptr;
 
     /* Reflect all constant buffers from all shaders */
+    long cbufferStageFlags = 0;
     std::vector<const D3D12ConstantBufferReflection*> cbufferReflections;
 
-    auto FindCbufferField = [&cbufferReflections](const std::string& name) -> std::pair<const D3D12_ROOT_CONSTANTS*, const D3D12ConstantReflection*>
+    auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const std::string& name) -> std::pair<const D3D12_ROOT_CONSTANTS*, const D3D12ConstantReflection*>
     {
         for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
         {
             for (const D3D12ConstantReflection& field : cbuffer->fields)
             {
                 if (field.name == name)
+                {
+                    cbufferStageFlags |= cbuffer->stageFlags;
                     return { &(cbuffer->rootConstants), &field };
+                }
             }
         }
         return { nullptr, nullptr };
@@ -190,7 +194,7 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     for_range(i, uniforms_.size())
     {
         /* Find constant buffer field for specified uniform name */
-        auto field = FindCbufferField(uniforms_[i].name);
+        const auto field = FindCbufferField(uniforms_[i].name);
         const D3D12_ROOT_CONSTANTS*     rootConstants   = field.first;
         const D3D12ConstantReflection*  fieldReflection = field.second;
         LLGL_ASSERT_PTR(rootConstants);
@@ -209,8 +213,9 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         }
     }
 
-    /* Finalize permutated root signature */
-    return rootSignaturePermutation.Finalize(device_, GetD3DRootSignatureFlags(GetConvolutedStageFlags()));
+    /* Finalize permutated root signature and append stage flags of all cbuffers used for uniforms */
+    const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = GetD3DRootSignatureFlags(GetConvolutedStageFlags() | cbufferStageFlags);
+    return rootSignaturePermutation.Finalize(device_, rootSignatureFlags);
 }
 
 D3D12DescriptorHeapSetLayout D3D12PipelineLayout::GetDescriptorHeapSetLayout() const

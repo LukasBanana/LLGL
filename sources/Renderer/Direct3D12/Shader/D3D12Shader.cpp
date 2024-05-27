@@ -751,6 +751,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
             /* Write reflection output */
             D3D12ConstantBufferReflection cbufferInfo;
             {
+                cbufferInfo.stageFlags                      = GetStageFlags(this->GetType());
                 cbufferInfo.rootConstants.ShaderRegister    = inputBindDesc.BindPoint;
                 cbufferInfo.rootConstants.RegisterSpace     = inputBindDesc.Space;
                 cbufferInfo.rootConstants.Num32BitValues    = shaderBufferDesc.Size / 4;
