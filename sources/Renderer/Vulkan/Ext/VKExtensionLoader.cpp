@@ -182,6 +182,7 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
     LOAD_VKEXT( EXT_transform_feedback              );
 
     ENABLE_VKEXT( EXT_conservative_rasterization );
+    ENABLE_VKEXT( EXT_nested_command_buffer      );
 
     #undef LOAD_VKEXT
 

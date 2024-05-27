@@ -29,6 +29,7 @@ enum class VKExt
     EXT_conditional_rendering,
     EXT_transform_feedback,
     EXT_conservative_rasterization,
+    EXT_nested_command_buffer,
 
     /* Enumeration entry counter */
     Count,

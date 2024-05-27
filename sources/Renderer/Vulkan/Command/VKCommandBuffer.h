@@ -61,16 +61,16 @@ class VKCommandBuffer final : public CommandBuffer
             return commandBuffer_;
         }
 
-        // Returns the fence used to submit the command buffer to the queue.
-        inline VkFence GetQueueSubmitFence() const
-        {
-            return recordingFence_;
-        }
-
         // Returns true if this is an immediate command buffer, otherwise it is a deferred command buffer.
         inline bool IsImmediateCmdBuffer() const
         {
             return immediateSubmit_;
+        }
+
+        // Returns true if this is a secondary command buffer (VK_COMMAND_BUFFER_LEVEL_SECONDARY).
+        inline bool IsSecondaryCmdBuffer() const
+        {
+            return (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY);
         }
 
     private:
@@ -135,56 +135,58 @@ class VKCommandBuffer final : public CommandBuffer
 
         static constexpr std::uint32_t maxNumCommandBuffers = 3;
 
-        VkDevice                        device_                     = VK_NULL_HANDLE;
+        VkDevice                        device_                                         = VK_NULL_HANDLE;
 
-        VkQueue                         commandQueue_               = VK_NULL_HANDLE;
+        VkQueue                         commandQueue_                                   = VK_NULL_HANDLE;
 
         VKPtr<VkCommandPool>            commandPool_;
 
         VKPtr<VkFence>                  recordingFenceArray_[maxNumCommandBuffers];
-        VkFence                         recordingFence_             = VK_NULL_HANDLE;
+        VkFence                         recordingFence_                                 = VK_NULL_HANDLE;
+        bool                            recordingFenceDirty_[maxNumCommandBuffers]      = {};
         VkCommandBuffer                 commandBufferArray_[maxNumCommandBuffers];
-        VkCommandBuffer                 commandBuffer_              = VK_NULL_HANDLE;
-        std::uint32_t                   commandBufferIndex_         = 0;
-        std::uint32_t                   numCommandBuffers_          = 2;
+        VkCommandBuffer                 commandBuffer_                                  = VK_NULL_HANDLE;
+        std::uint32_t                   commandBufferIndex_                             = 0;
+        std::uint32_t                   numCommandBuffers_                              = 2;
 
         VKCommandContext                context_;
 
-        RecordState                     recordState_                = RecordState::Undefined;
+        RecordState                     recordState_                                    = RecordState::Undefined;
 
-        VkCommandBufferLevel            bufferLevel_                = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        VkCommandBufferUsageFlags       usageFlags_                 = 0;
-        bool                            immediateSubmit_            = false;
-        bool                            multiSubmit_                = false;
+        VkCommandBufferLevel            bufferLevel_                                    = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        VkCommandBufferUsageFlags       usageFlags_                                     = 0;
+        bool                            immediateSubmit_                                = false;
+        bool                            multiSubmit_                                    = false;
 
-        VKSwapChain*                    boundSwapChain_             = nullptr;
-        std::uint32_t                   currentColorBuffer_         = 0;
+        VKSwapChain*                    boundSwapChain_                                 = nullptr;
+        std::uint32_t                   currentColorBuffer_                             = 0;
 
-        VkRenderPass                    renderPass_                 = VK_NULL_HANDLE; // primary render pass
-        VkRenderPass                    secondaryRenderPass_        = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)
-        VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE; // active framebuffer handle
-        VkRect2D                        framebufferRenderArea_      = { { 0, 0 }, { 0, 0 } };
-        std::uint32_t                   numColorAttachments_        = 0;
-        bool                            hasDepthStencilAttachment_  = false;
+        VkRenderPass                    renderPass_                                     = VK_NULL_HANDLE; // primary render pass
+        VkRenderPass                    secondaryRenderPass_                            = VK_NULL_HANDLE; // to pause/resume render pass (load and store content)
+        VkFramebuffer                   framebuffer_                                    = VK_NULL_HANDLE; // active framebuffer handle
+        VkRect2D                        framebufferRenderArea_                          = { { 0, 0 }, { 0, 0 } };
+        std::uint32_t                   numColorAttachments_                            = 0;
+        bool                            hasDepthStencilAttachment_                      = false;
+        VkSubpassContents               subpassContents_                                = VK_SUBPASS_CONTENTS_INLINE;
 
-        std::uint32_t                   queuePresentFamily_         = 0;
+        std::uint32_t                   queuePresentFamily_                             = 0;
 
-        bool                            scissorEnabled_             = false;
-        bool                            hasDynamicScissorRect_      = false;
-        VkPipelineBindPoint             pipelineBindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-        const VKPipelineLayout*         boundPipelineLayout_        = nullptr;
-        VKPipelineState*                boundPipelineState_         = nullptr;
+        bool                            scissorEnabled_                                 = false;
+        bool                            hasDynamicScissorRect_                          = false;
+        VkPipelineBindPoint             pipelineBindPoint_                              = VK_PIPELINE_BIND_POINT_MAX_ENUM;
+        const VKPipelineLayout*         boundPipelineLayout_                            = nullptr;
+        VKPipelineState*                boundPipelineState_                             = nullptr;
 
-        std::uint32_t                   maxDrawIndirectCount_       = 0;
+        std::uint32_t                   maxDrawIndirectCount_                           = 0;
 
         VKStagingDescriptorSetPool      descriptorSetPoolArray_[maxNumCommandBuffers];
-        VKStagingDescriptorSetPool*     descriptorSetPool_          = nullptr;
-        VKDescriptorCache*              descriptorCache_            = nullptr;
+        VKStagingDescriptorSetPool*     descriptorSetPool_                              = nullptr;
+        VKDescriptorCache*              descriptorCache_                                = nullptr;
         VKDescriptorSetWriter           descriptorSetWriter_;
 
         #if 1//TODO: optimize usage of query pools
         std::vector<VKQueryHeap*>       queryHeapsInFlight_;
-        std::size_t                     numQueryHeapsInFlight_      = 0;
+        std::size_t                     numQueryHeapsInFlight_                          = 0;
         #endif
 
 };

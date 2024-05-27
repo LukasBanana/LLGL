@@ -24,7 +24,7 @@
 #include "../Buffer/VKBuffer.h"
 #include "../Buffer/VKBufferArray.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Exception.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Constants.h>
 #include <LLGL/TypeInfo.h>
@@ -111,6 +111,7 @@ VkFence VKCommandBuffer::GetQueueSubmitFenceAndFlush()
     VkFence fence = recordingFence_;
     if (multiSubmit_)
         recordingFence_ = VK_NULL_HANDLE;
+    recordingFenceDirty_[commandBufferIndex_] = false;
     return fence;
 }
 
@@ -122,14 +123,14 @@ void VKCommandBuffer::Begin()
     AcquireNextBuffer();
 
     /* Wait for fence before recording */
-    vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
+    if (!recordingFenceDirty_[commandBufferIndex_])
+        vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
     vkResetFences(device_, 1, &recordingFence_);
+    recordingFenceDirty_[commandBufferIndex_] = true;
 
     /* Initialize inheritance if this is a secondary command buffer */
-    const bool isSecondaryCmdBuffer = (bufferLevel_ == VK_COMMAND_BUFFER_LEVEL_SECONDARY);
-
     VkCommandBufferInheritanceInfo inheritanceInfo;
-    if (isSecondaryCmdBuffer)
+    if (IsSecondaryCmdBuffer())
     {
         inheritanceInfo.sType                   = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
         inheritanceInfo.pNext                   = nullptr;
@@ -147,7 +148,7 @@ void VKCommandBuffer::Begin()
         beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.pNext             = nullptr;
         beginInfo.flags             = usageFlags_;
-        beginInfo.pInheritanceInfo  = (isSecondaryCmdBuffer ? &inheritanceInfo : nullptr);
+        beginInfo.pInheritanceInfo  = (IsSecondaryCmdBuffer() ? &inheritanceInfo : nullptr);
     }
     VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
@@ -178,7 +179,7 @@ void VKCommandBuffer::End()
     /* Execute command buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
     {
-        VkResult result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFence());
+        VkResult result = VKSubmitCommandBuffer(commandQueue_, commandBuffer_, GetQueueSubmitFenceAndFlush());
         VKThrowIfFailed(result, "failed to submit command buffer to Vulkan graphics queue");
     }
 
@@ -587,6 +588,8 @@ void VKCommandBuffer::BeginRenderPass(
     const ClearValue*   clearValues,
     std::uint32_t       swapBufferIndex)
 {
+    LLGL_ASSERT(!IsSecondaryCmdBuffer());
+
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         /* Get Vulkan swap-chain object */
@@ -631,6 +634,18 @@ void VKCommandBuffer::BeginRenderPass(
         ConvertRenderPassClearValues(*renderPassVK, numClearValuesVK, clearValuesVK, numClearValues, clearValues);
     }
 
+    /* Determine subpass contents */
+    subpassContents_ =
+    (
+        #ifdef VK_EXT_nested_command_buffer
+        HasExtension(VKExt::EXT_nested_command_buffer)
+            ? VK_SUBPASS_CONTENTS_INLINE_AND_SECONDARY_COMMAND_BUFFERS_EXT
+            : VK_SUBPASS_CONTENTS_INLINE
+        #else
+        VK_SUBPASS_CONTENTS_INLINE
+        #endif
+    );
+
     /* Record begin of render pass */
     VkRenderPassBeginInfo beginInfo;
     {
@@ -642,7 +657,7 @@ void VKCommandBuffer::BeginRenderPass(
         beginInfo.clearValueCount   = numClearValuesVK;
         beginInfo.pClearValues      = clearValuesVK;
     }
-    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, subpassContents_);
 
     /* Store new record state */
     recordState_ = RecordState::InsideRenderPass;
@@ -650,6 +665,8 @@ void VKCommandBuffer::BeginRenderPass(
 
 void VKCommandBuffer::EndRenderPass()
 {
+    LLGL_ASSERT(renderPass_ != VK_NULL_HANDLE);
+
     /* Record and of render pass */
     vkCmdEndRenderPass(commandBuffer_);
 
@@ -1247,7 +1264,7 @@ void VKCommandBuffer::ResumeRenderPass()
         beginInfo.clearValueCount   = 0;
         beginInfo.pClearValues      = nullptr;
     }
-    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, subpassContents_);
 }
 
 bool VKCommandBuffer::IsInsideRenderPass() const

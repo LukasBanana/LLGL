@@ -19,12 +19,27 @@ static bool g_VKRegisteredExtensions[static_cast<std::size_t>(VKExt::Count)] = {
 
 static const char* g_VKOptionalExtensions[] =
 {
+    #ifdef VK_KHR_sampler_mirror_clamp_to_edge
     VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME,
+    #endif
+    #ifdef VK_KHR_get_physical_device_properties2
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+    #endif
+    #ifdef VK_EXT_debug_marker
     VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
+    #endif
+    #ifdef VK_EXT_conditional_rendering
     VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
+    #endif
+    #ifdef VK_EXT_conservative_rasterization
     VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME,
-    //VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
+    #endif
+    #ifdef VK_EXT_transform_feedback
+    VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
+    #endif
+    #ifdef VK_EXT_nested_command_buffer
+    VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME,
+    #endif
     nullptr,
 };
 
