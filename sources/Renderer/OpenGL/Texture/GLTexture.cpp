@@ -297,24 +297,6 @@ SubresourceFootprint GLTexture::GetSubresourceFootprint(std::uint32_t mipLevel) 
     return CalcPackedSubresourceFootprint(desc.type, desc.format, desc.extent, mipLevel, desc.arrayLayers);
 }
 
-static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
-{
-    if (IsMipMappedTexture(textureDesc))
-        return GL_LINEAR_MIPMAP_LINEAR;
-    else
-        return GL_LINEAR;
-}
-
-static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
-{
-    switch (format)
-    {
-        case ImageFormat::RGBA: return ImageFormat::BGRA;
-        case ImageFormat::RGB:  return ImageFormat::BGR;
-        default:                return format;
-    }
-}
-
 void GLTexture::BindAndAllocStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Allocate texture or renderbuffer storage */
@@ -994,6 +976,31 @@ void GLTexture::BindTexParameters(const GL2XSampler& sampler)
  * ======= Private: =======
  */
 
+static GLint GetInitialGlTextureMinFilter(const TextureDescriptor& textureDesc)
+{
+    /* Integral texture formats cannot use linear samplers */
+    if (IsIntegralFormat(textureDesc.format))
+        return (IsMipMappedTexture(textureDesc) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+    else
+        return (IsMipMappedTexture(textureDesc) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+}
+
+static GLint GetInitialGlTextureMagFilter(const TextureDescriptor& textureDesc)
+{
+    /* Integral texture formats cannot use linear samplers */
+    return (IsIntegralFormat(textureDesc.format) ? GL_NEAREST : GL_LINEAR);
+}
+
+static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
+{
+    switch (format)
+    {
+        case ImageFormat::RGBA: return ImageFormat::BGRA;
+        case ImageFormat::RGB:  return ImageFormat::BGR;
+        default:                return format;
+    }
+}
+
 void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Bind texture */
@@ -1003,16 +1010,8 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     if (!IsMultiSampleTexture(textureDesc.type))
     {
         GLenum target = GLTypes::Map(textureDesc.type);
-        if (IsIntegralFormat(textureDesc.format))
-        {
-            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        else
-        {
-            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
-            glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetInitialGlTextureMinFilter(textureDesc));
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GetInitialGlTextureMagFilter(textureDesc));
     }
 
     /* Configure texture swizzling if format is not supported */
