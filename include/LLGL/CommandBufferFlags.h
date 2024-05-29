@@ -74,9 +74,17 @@ struct CommandBufferFlags
     enum
     {
         /**
-        \brief Specifies that the encoded command buffer will be submitted as a secondary command buffer.
+        \brief Specifies that the command buffer will be submitted as a secondary command buffer which yields only a limited set of commands.
         \remarks If this is specified, the command buffer must be submitted using the \c Execute function of a primary command buffer.
         \remarks This cannot be used in combination with the \c ImmediateSubmit flag.
+        \remarks A secondary command buffer can only encode a limited set of commands and cannot start its own render pass.
+        If used for graphics commands, those commands will be inlined into the render pass of its primary command buffer when submitted via the \c Execute function.
+        Here is a list of commands that can be encoded with a secondary command buffer (\c Begin/\c End is implied):
+        - Setting vertex- and index buffers (CommandBuffer::SetVertexBuffer, CommandBuffer::SetVertexBufferArray, and CommandBuffer::SetIndexBuffer)
+        - Setting resources (CommandBuffer::SetResourceHeap and CommandBuffer::SetResource)
+        - Setting pipeline states (CommandBuffer::SetPipelineState, CommandBuffer::SetBlendFactor, CommandBuffer::SetStencilReference, and CommandBuffer::SetUniforms)
+        - Draw commands (CommandBuffer::Draw, CommandBuffer::DrawIndexed, CommandBuffer::DrawInstanced, CommandBuffer::DrawIndexedInstanced, CommandBuffer::DrawIndirect, and CommandBuffer::DrawIndexedIndirect)
+        - Compute commands (CommandBuffer::Dispatch, CommandBuffer::DispatchIndirect)
         \see CommandBuffer::Execute
         \see CommandBufferDescriptor::renderPass
         */

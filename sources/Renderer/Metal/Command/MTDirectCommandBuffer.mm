@@ -88,11 +88,11 @@ void MTDirectCommandBuffer::End()
     ResetRenderStates();
 }
 
-void MTDirectCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void MTDirectCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
     if (IsPrimary())
     {
-        auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, deferredCommandBuffer);
+        auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, secondaryCommandBuffer);
         if (commandBufferMT.IsMultiSubmitCmdBuffer() && !commandBufferMT.IsPrimary())
         {
             auto& multiSubmitCommandBufferMT = LLGL_CAST(MTMultiSubmitCommandBuffer&, commandBufferMT);

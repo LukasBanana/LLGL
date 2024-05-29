@@ -68,9 +68,9 @@ void GLImmediateCommandBuffer::End()
     // dummy
 }
 
-void GLImmediateCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void GLImmediateCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
+    auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, secondaryCommandBuffer);
     ExecuteGLCommandBuffer(cmdBufferGL, *stateMngr_);
 }
 

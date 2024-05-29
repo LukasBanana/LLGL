@@ -124,6 +124,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void AssertVertexBufferBound();
         void AssertIndexBufferBound();
         void AssertViewportBound();
+        void AssertPrimaryCommandBuffer();
 
         void AssertInstancingSupported();
         void AssertOffsetInstancingSupported();
@@ -141,7 +142,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void EndTimer();
 
         // Returns true if this command buffer inherits its state from a primary command buffer.
-        bool IsInheritedCmdBuffer() const;
+        bool IsSecondaryCmdBuffer() const;
 
         void SetAndValidateScissorRects(std::uint32_t numScissors, const Scissor* scissors);
 

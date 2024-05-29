@@ -46,9 +46,9 @@ namespace LLGL
             NativeLLGL.End();
         }
 
-        public void Execute(CommandBuffer deferredCommandBuffer)
+        public void Execute(CommandBuffer secondaryCommandBuffer)
         {
-            NativeLLGL.Execute(deferredCommandBuffer.Native);
+            NativeLLGL.Execute(secondaryCommandBuffer.Native);
         }
 
         public void UpdateBuffer(Buffer dstBuffer, long dstOffset, byte[] data)

@@ -81,9 +81,9 @@ void D3D12CommandBuffer::End()
         commandContext_.ExecuteAndSignal(*commandQueue_);
 }
 
-void D3D12CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void D3D12CommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, deferredCommandBuffer);
+    auto& cmdBufferD3D = LLGL_CAST(D3D12CommandBuffer&, secondaryCommandBuffer);
     commandContext_.ExecuteBundle(cmdBufferD3D.commandContext_);
 }
 

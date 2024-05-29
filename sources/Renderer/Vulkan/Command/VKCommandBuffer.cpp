@@ -186,9 +186,9 @@ void VKCommandBuffer::End()
     ResetBindingStates();
 }
 
-void VKCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void VKCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& cmdBufferVK = LLGL_CAST(VKCommandBuffer&, deferredCommandBuffer);
+    auto& cmdBufferVK = LLGL_CAST(VKCommandBuffer&, secondaryCommandBuffer);
     VkCommandBuffer cmdBuffers[] = { cmdBufferVK.GetVkCommandBuffer() };
     vkCmdExecuteCommands(commandBuffer_, 1, cmdBuffers);
 }

@@ -90,12 +90,12 @@ void GLDeferredCommandBuffer::End()
     #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
-void GLDeferredCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void GLDeferredCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
     if (IsPrimary())
     {
         /* Is this a secondary command buffer? */
-        auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, deferredCommandBuffer);
+        auto& cmdBufferGL = LLGL_CAST(const GLCommandBuffer&, secondaryCommandBuffer);
         if (!cmdBufferGL.IsImmediateCmdBuffer())
         {
             auto& deferredCmdBufferGL = LLGL_CAST(const GLDeferredCommandBuffer&, cmdBufferGL);

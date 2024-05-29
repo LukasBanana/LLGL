@@ -92,9 +92,9 @@ void D3D11CommandBuffer::End()
     ResetBindingStates();
 }
 
-void D3D11CommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void D3D11CommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, deferredCommandBuffer);
+    auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, secondaryCommandBuffer);
     if (cmdBufferD3D.IsSecondaryCmdBuffer())
     {
         if (ID3D11CommandList* commandList = cmdBufferD3D.GetDeferredCommandList())

@@ -4190,7 +4190,7 @@ namespace LLGL
         public static extern unsafe void End();
 
         [DllImport(DllName, EntryPoint="llglExecute", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void Execute(CommandBuffer deferredCommandBuffer);
+        public static extern unsafe void Execute(CommandBuffer secondaryCommandBuffer);
 
         [DllImport(DllName, EntryPoint="llglUpdateBuffer", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void UpdateBuffer(Buffer dstBuffer, long dstOffset, void* data, short dataSize);

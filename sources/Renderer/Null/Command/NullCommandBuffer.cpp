@@ -47,11 +47,11 @@ void NullCommandBuffer::End()
         ExecuteVirtualCommands();
 }
 
-void NullCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void NullCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
-    auto& deferredCommandBufferNull = LLGL_CAST(NullCommandBuffer&, deferredCommandBuffer);
-    if ((deferredCommandBufferNull.desc.flags & CommandBufferFlags::Secondary) != 0)
-        deferredCommandBufferNull.ExecuteVirtualCommands();
+    auto& secondaryCommandBufferNull = LLGL_CAST(NullCommandBuffer&, secondaryCommandBuffer);
+    if ((secondaryCommandBufferNull.desc.flags & CommandBufferFlags::Secondary) != 0)
+        secondaryCommandBufferNull.ExecuteVirtualCommands();
 }
 
 /* ----- Blitting ----- */

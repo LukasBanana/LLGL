@@ -67,11 +67,11 @@ void MTMultiSubmitCommandBuffer::End()
     buffer_.Pack();
 }
 
-void MTMultiSubmitCommandBuffer::Execute(CommandBuffer& deferredCommandBuffer)
+void MTMultiSubmitCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
     if (IsPrimary())
     {
-        auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, deferredCommandBuffer);
+        auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, secondaryCommandBuffer);
         if (commandBufferMT.IsMultiSubmitCmdBuffer() && !commandBufferMT.IsPrimary())
         {
             auto cmd = AllocCommand<MTCmdExecute>(MTOpcodeExecute);

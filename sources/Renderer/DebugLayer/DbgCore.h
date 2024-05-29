@@ -13,6 +13,7 @@
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/Container/Strings.h>
 #include "../CheckedCast.h"
+#include "../../Core/Assertion.h"
 #include "../../Core/MacroUtils.h"
 #include "../../Core/PrintfUtils.h"
 #include <type_traits>
@@ -50,6 +51,11 @@ namespace LLGL
 #define LLGL_DBG_LABEL(DESC) \
     ((DESC).debugName != nullptr ? std::string{ (DESC).debugName } : std::string{})
 
+#define LLGL_DBG_CAST(TYPE, OBJ)                                                                \
+    (                                                                                           \
+        [&]() -> void { LLGL_ASSERT(&OBJ != nullptr, #OBJ " reference must not be null"); }(),  \
+        ObjectCast<TYPE>(OBJ)                                                                   \
+    )
 
 // Sets the name of the specified debug layer object.
 template <typename T>

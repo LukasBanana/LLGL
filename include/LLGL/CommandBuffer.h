@@ -77,8 +77,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         virtual void End() = 0;
 
         /**
-        \brief Executes the specified deferred command buffer.
-        \param[in] deferredCommandBuffer Specifies the deferred command buffer which is meant to be executed.
+        \brief Executes the specified secondary command buffer by inlining its commands into this command buffer.
+        \param[in] secondaryCommandBuffer Specifies the secondary command buffer which is meant to be inlined.
         This command buffer must have been created with the CommandBufferFlags::Secondary flag.
         \remarks This function can only be used by primary command buffers, i.e. command buffers that have \e not been created with the flag CommandBufferFlags::Secondary.
         \remarks Once this command buffer is submitted for execution to one or more primary command buffers,
@@ -86,7 +86,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see CommandBufferFlags
         \todo Incomplete for: D3D12, Vulkan, Metal.
         */
-        virtual void Execute(CommandBuffer& deferredCommandBuffer) = 0;
+        virtual void Execute(CommandBuffer& secondaryCommandBuffer) = 0;
 
         /* ----- Blitting ----- */
 
