@@ -37,7 +37,7 @@ DEF_TEST( SceneUpdate )
             psoDesc.depth.writeEnabled  = true;
             psoDesc.rasterizer.cullMode = CullMode::Back;
         }
-        pso = renderer->CreatePipelineState(psoDesc);
+        CreateGraphicsPSO(psoDesc, "psoSceneUpdate", &pso);
 
         if (const Report* report = pso->GetReport())
         {

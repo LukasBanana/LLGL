@@ -70,6 +70,8 @@ DEF_TEST( ResourceBinding )
 
     if (frame == 0)
     {
+        result = TestResult::Passed;
+
         // Create render pass for two color attachments
         RenderPassDescriptor renderPassDesc;
         {

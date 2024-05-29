@@ -35,7 +35,7 @@ DEF_TEST( DualSourceBlending )
         psoDesc.blend.targets[0].srcAlpha       = BlendOp::One;
         psoDesc.blend.targets[0].dstAlpha       = BlendOp::Src1Alpha;
     }
-    PipelineState* pso = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(pso, psoDesc, "psoDualSourceBlend");
 
     Sampler* samplerA = renderer->CreateSampler(Parse("filter=linear"));
     Sampler* samplerB = renderer->CreateSampler(Parse("filter=linear")); // <-- Also linear filtering or CIS tests may fail (due to one-off pixels)

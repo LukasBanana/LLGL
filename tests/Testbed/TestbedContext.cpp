@@ -311,6 +311,7 @@ unsigned TestbedContext::RunAllTests()
 
     // Run all command buffer tests
     RUN_TEST( CommandBufferSubmit         );
+    RUN_TEST( CommandBufferEncode         );
 
     // Run all resource tests
     RUN_TEST( BufferWriteAndRead          );
@@ -690,6 +691,37 @@ TestResult TestbedContext::CreateRenderTarget(
     return TestResult::Passed;
 }
 
+TestResult TestbedContext::CreateGraphicsPSO(
+    const LLGL::GraphicsPipelineDescriptor& desc,
+    const char*                             name,
+    LLGL::PipelineState**                   output)
+{
+    TestResult result = TestResult::Passed;
+
+    // Create graphics PSO
+    PipelineState* pso = renderer->CreatePipelineState(desc);
+
+    // Check for PSO compilation errors
+    if (const Report* report = pso->GetReport())
+    {
+        if (report->HasErrors())
+        {
+            if (name == nullptr)
+                name = (desc.debugName != nullptr ? desc.debugName : "<unnamed>");
+            Log::Errorf("Error while compiling graphics PSO \"%s\":\n%s", name, report->GetText());
+            result = TestResult::FailedErrors;
+        }
+    }
+
+    // Return PSO to output or delete right away if no longer needed
+    if (output != nullptr)
+        *output = pso;
+    else
+        renderer->Release(*pso);
+
+    return result;
+}
+
 bool TestbedContext::HasCombinedSamplers() const
 {
     return (renderer->GetRendererID() == RendererID::OpenGL);
@@ -843,6 +875,8 @@ bool TestbedContext::LoadShaders()
         shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
         shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0");
         shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Compute,  "CSMain",  "cs_5_0");
+        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.hlsl",           ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.hlsl",           ShaderType::Fragment, "PSMain",  "ps_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -865,6 +899,8 @@ bool TestbedContext::LoadShaders()
         shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag",       ShaderType::Fragment);
         shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp",       ShaderType::Compute);
+        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.frag",           ShaderType::Fragment);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
@@ -884,6 +920,8 @@ bool TestbedContext::LoadShaders()
 //      shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
 //      shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.metal",      ShaderType::Fragment, "PSMain",  "1.1");
 //      shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.metal",      ShaderType::Compute,  "CSMain",  "1.1");
+        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.metal",          ShaderType::Fragment, "PSMain",  "1.1");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
@@ -903,6 +941,8 @@ bool TestbedContext::LoadShaders()
         shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag.spv",       ShaderType::Fragment);
         shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp.spv",       ShaderType::Compute);
+        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.450core.vert.spv",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.450core.frag.spv",           ShaderType::Fragment);
     }
     else
     {

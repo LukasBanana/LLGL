@@ -52,7 +52,7 @@ DEF_TEST( CommandBufferSecondary )
         psoDesc.depth.writeEnabled  = true;
         psoDesc.rasterizer.cullMode = CullMode::Back;
     }
-    PipelineState* pso = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(pso, psoDesc, "psoSecondaryCmdBuf");
 
     // Create scene buffers:
     const ModelTransform transforms[numCmdBuffers] =

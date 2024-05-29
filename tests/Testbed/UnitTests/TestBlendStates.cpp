@@ -61,7 +61,7 @@ DEF_TEST( BlendStates )
             target0Desc.dstColor = blendPairs[j].color;
             target0Desc.srcAlpha = blendPairs[i].alpha;
             target0Desc.dstAlpha = blendPairs[j].alpha;
-            pso[i][j] = renderer->CreatePipelineState(psoDesc);
+            CreateGraphicsPSO(psoDesc, "psoBlendStates", &pso[i][j]);
         }
     }
 

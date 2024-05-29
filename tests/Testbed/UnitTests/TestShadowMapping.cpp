@@ -110,7 +110,7 @@ DEF_TEST( ShadowMapping )
             psoDesc.depth.writeEnabled  = true;
             psoDesc.rasterizer.cullMode = CullMode::Back;
         }
-        psoScene = renderer->CreatePipelineState(psoDesc);
+        CreateGraphicsPSO(psoDesc, "psoShadowScene", &psoScene);
 
         if (const Report* report = psoScene->GetReport())
         {
@@ -189,7 +189,7 @@ DEF_TEST( ShadowMapping )
             psoDesc.rasterizer.depthBias.slopeFactor    = 1.5f;
             psoDesc.blend.targets[0].colorMask          = 0x0;
         }
-        resources.pso = renderer->CreatePipelineState(psoDesc);
+        CreateGraphicsPSO(psoDesc, "psoShadowMap", &(resources.pso));
 
         if (const Report* report = resources.pso->GetReport())
         {

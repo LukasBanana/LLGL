@@ -52,7 +52,7 @@ DEF_TEST( DepthBuffer )
         psoDesc.rasterizer.cullMode         = CullMode::Back;
         psoDesc.blend.targets[0].colorMask  = 0; // Disable rasterize with colorMask=0 since we don't use a fragment shader
     }
-    PipelineState* pso = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(pso, psoDesc, "psoDepthBuf");
 
     if (const Report* report = pso->GetReport())
     {

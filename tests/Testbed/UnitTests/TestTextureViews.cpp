@@ -53,7 +53,7 @@ DEF_TEST( TextureViews )
         psoDesc.fragmentShader                  = shaders[PSTextured];
         psoDesc.blend.targets[0].blendEnabled   = true;
     }
-    PipelineState* pso = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(pso, psoDesc, "psoTexViews");
 
     // D3D does not support reinterpretation of texture view formats, i.e. RGBA8 cannot be reinterpreted to RG16, but Vulkan, GL, and Metal support it.
     const bool isTextureFormatReinterpretationSupported = renderer->GetRenderingCaps().features.hasTextureViewFormatSwizzle;

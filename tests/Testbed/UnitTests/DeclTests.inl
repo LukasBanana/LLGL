@@ -40,6 +40,7 @@ DECL_RITEST( ImageConversions );
 
 // Command buffer tests
 DECL_TEST( CommandBufferSubmit );
+DECL_TEST( CommandBufferEncode );
 DECL_TEST( CommandBufferSecondary );
 DECL_TEST( CommandBufferMultiThreading );
 

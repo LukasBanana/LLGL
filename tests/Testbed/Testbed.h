@@ -67,6 +67,15 @@ using namespace LLGL;
             return result;                                          \
     }
 
+#define CREATE_GRAPHICS_PSO(OBJ, DESC, NAME)                        \
+    LLGL_MAYBE_UNUSED PipelineState* OBJ = nullptr;                 \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;                \
+    {                                                               \
+        TestResult result = CreateGraphicsPSO(DESC, NAME, &OBJ);    \
+        if (result != TestResult::Passed)                           \
+            return result;                                          \
+    }
+
 
 #endif
 

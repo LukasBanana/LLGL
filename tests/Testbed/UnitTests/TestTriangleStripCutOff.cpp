@@ -76,7 +76,7 @@ DEF_TEST( TriangleStripCutOff )
     for_range(i, numFormats)
     {
         psoDesc.indexFormat = indexFormats[i];
-        pso[i] = renderer->CreatePipelineState(psoDesc);
+        CreateGraphicsPSO(psoDesc, "psoStripCutOff", &pso[i]);
 
         if (const Report* report = pso[i]->GetReport())
         {

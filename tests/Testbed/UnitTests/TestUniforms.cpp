@@ -61,7 +61,7 @@ DEF_TEST( Uniforms )
             psoDesc.rasterizer.cullMode             = CullMode::Back;
             psoDesc.blend.targets[0].blendEnabled   = true;
         }
-        pso = renderer->CreatePipelineState(psoDesc);
+        CreateGraphicsPSO(psoDesc, "psoUniforms", &pso);
 
         if (const Report* report = pso->GetReport())
         {

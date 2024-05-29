@@ -52,16 +52,16 @@ DEF_TEST( ViewportAndScissor )
         psoDesc.depth.writeEnabled              = true;
         psoDesc.rasterizer.cullMode             = CullMode::Back;
     }
-    PipelineState* psoNoScissor = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(psoNoScissor, psoDesc, "psoNoScissor");
     {
         psoDesc.rasterizer.scissorTestEnabled   = true;
     }
-    PipelineState* psoDynamicScissor = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(psoDynamicScissor, psoDesc, "psoDynamicScissor");
     {
         psoDesc.viewports.push_back(viewport0);
         psoDesc.scissors.push_back(scissor0);
     }
-    PipelineState* psoStaticScissor = renderer->CreatePipelineState(psoDesc);
+    CREATE_GRAPHICS_PSO(psoStaticScissor, psoDesc, "psoStaticScissor");
 
     PipelineState* psoList[] = { psoNoScissor, psoStaticScissor, psoNoScissor, psoDynamicScissor, psoNoScissor };
     constexpr auto psoCount = sizeof(psoList)/sizeof(psoList[0]);

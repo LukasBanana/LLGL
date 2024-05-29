@@ -123,7 +123,7 @@ DEF_TEST( CommandBufferMultiThreading )
             psoDesc.depth.writeEnabled  = true;
             psoDesc.rasterizer.cullMode = CullMode::Back;
         }
-        pso = renderer->CreatePipelineState(psoDesc);
+        CreateGraphicsPSO(psoDesc, "psoMultiThreading", &pso);
     }
 
     // Encode command buffers in parallel
