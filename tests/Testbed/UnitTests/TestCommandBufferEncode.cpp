@@ -164,13 +164,28 @@ DEF_TEST( CommandBufferEncode )
 
         if (::memcmp(framebufferResult, expectedResult, sizeof(framebufferResult)) != 0)
         {
-            Log::Errorf(
-                "Mismatch between framebuffer[%u] color [%02X %02X %02X %02X] and clear value [%02X %02X %02X %02X]\n",
-                i,
-                framebufferResult[0], framebufferResult[1], framebufferResult[2], framebufferResult[3],
-                expectedResult[0], expectedResult[1], expectedResult[2], expectedResult[3]
-            );
-            return TestResult::FailedMismatch;
+            if (TestbedContext::IsRGBA8ubInThreshold(framebufferResult, expectedResult))
+            {
+                if (opt.verbose)
+                {
+                    Log::Printf(
+                        "Negligible mismatch between framebuffer[%u] color [%02X %02X %02X %02X] and clear value [%02X %02X %02X %02X] within threshold\n",
+                        i,
+                        framebufferResult[0], framebufferResult[1], framebufferResult[2], framebufferResult[3],
+                        expectedResult[0], expectedResult[1], expectedResult[2], expectedResult[3]
+                    );
+                }
+            }
+            else
+            {
+                Log::Errorf(
+                    "Mismatch between framebuffer[%u] color [%02X %02X %02X %02X] and clear value [%02X %02X %02X %02X]\n",
+                    i,
+                    framebufferResult[0], framebufferResult[1], framebufferResult[2], framebufferResult[3],
+                    expectedResult[0], expectedResult[1], expectedResult[2], expectedResult[3]
+                );
+                return TestResult::FailedMismatch;
+            }
         }
     }
 

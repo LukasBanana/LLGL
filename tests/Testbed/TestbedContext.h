@@ -303,6 +303,8 @@ class TestbedContext
         static LLGL::Image LoadImageFromFile(const std::string& filename, bool verbose = false);
         static void SaveImageToFile(const LLGL::Image& img, const std::string& filename, bool verbose = false);
 
+        static bool IsRGBA8ubInThreshold(const std::uint8_t lhs[4], const std::uint8_t rhs[4], int threshold = 1);
+
     private:
 
         void LogRendererInfo();

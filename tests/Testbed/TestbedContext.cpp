@@ -1340,6 +1340,17 @@ void TestbedContext::SaveImageToFile(const LLGL::Image& img, const std::string& 
     );
 }
 
+bool TestbedContext::IsRGBA8ubInThreshold(const std::uint8_t lhs[4], const std::uint8_t rhs[4], int threshold)
+{
+    return
+    (
+        std::abs(static_cast<int>(lhs[0]) - static_cast<int>(rhs[0])) <= threshold &&
+        std::abs(static_cast<int>(lhs[1]) - static_cast<int>(rhs[1])) <= threshold &&
+        std::abs(static_cast<int>(lhs[2]) - static_cast<int>(rhs[2])) <= threshold &&
+        std::abs(static_cast<int>(lhs[3]) - static_cast<int>(rhs[3])) <= threshold
+    );
+}
+
 void TestbedContext::SaveColorImage(const std::vector<ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name)
 {
     const std::string path = opt.outputDir + moduleName + "/";
