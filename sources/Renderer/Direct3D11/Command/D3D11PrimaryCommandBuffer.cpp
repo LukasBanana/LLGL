@@ -1,43 +1,45 @@
 /*
- * D3D11CommandBuffer.cpp
+ * D3D11PrimaryCommandBuffer.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "D3D11CommandBuffer.h"
-#include "D3D11SwapChain.h"
-#include "D3D11Types.h"
-#include "D3D11ResourceFlags.h"
-#include "../DXCommon/DXTypes.h"
-#include "../CheckedCast.h"
-#include "../ResourceUtils.h"
+#include "D3D11PrimaryCommandBuffer.h"
+#include "D3D11SecondaryCommandBuffer.h"
+#include "D3D11CommandExecutor.h"
+#include "../D3D11SwapChain.h"
+#include "../D3D11Types.h"
+#include "../D3D11ResourceFlags.h"
+#include "../../DXCommon/DXTypes.h"
+#include "../../CheckedCast.h"
+#include "../../ResourceUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/TypeInfo.h>
-#include "../../Core/CoreUtils.h"
-#include "../../Core/MacroUtils.h"
-#include "../../Core/StringUtils.h"
-#include "../../Core/Assertion.h"
-#include "../TextureUtils.h"
+#include "../../../Core/CoreUtils.h"
+#include "../../../Core/MacroUtils.h"
+#include "../../../Core/StringUtils.h"
+#include "../../../Core/Assertion.h"
+#include "../../TextureUtils.h"
 #include <algorithm>
 
-#include "RenderState/D3D11StateManager.h"
-#include "RenderState/D3D11PipelineState.h"
-#include "RenderState/D3D11PipelineLayout.h"
-#include "RenderState/D3D11ConstantsCache.h"
-#include "RenderState/D3D11QueryHeap.h"
-#include "RenderState/D3D11ResourceType.h"
-#include "RenderState/D3D11ResourceHeap.h"
-#include "RenderState/D3D11RenderPass.h"
+#include "../RenderState/D3D11StateManager.h"
+#include "../RenderState/D3D11PipelineState.h"
+#include "../RenderState/D3D11PipelineLayout.h"
+#include "../RenderState/D3D11ConstantsCache.h"
+#include "../RenderState/D3D11QueryHeap.h"
+#include "../RenderState/D3D11ResourceType.h"
+#include "../RenderState/D3D11ResourceHeap.h"
+#include "../RenderState/D3D11RenderPass.h"
 
-#include "Buffer/D3D11Buffer.h"
-#include "Buffer/D3D11BufferArray.h"
-#include "Buffer/D3D11BufferWithRV.h"
+#include "../Buffer/D3D11Buffer.h"
+#include "../Buffer/D3D11BufferArray.h"
+#include "../Buffer/D3D11BufferWithRV.h"
 
-#include "Texture/D3D11Texture.h"
-#include "Texture/D3D11Sampler.h"
-#include "Texture/D3D11RenderTarget.h"
-#include "Texture/D3D11MipGenerator.h"
+#include "../Texture/D3D11Texture.h"
+#include "../Texture/D3D11Sampler.h"
+#include "../Texture/D3D11RenderTarget.h"
+#include "../Texture/D3D11MipGenerator.h"
 
 #include <LLGL/Backend/Direct3D11/NativeHandle.h>
 
@@ -46,78 +48,58 @@ namespace LLGL
 {
 
 
-// Global array of null pointers to unbind resource slots
-static void* const  g_nullResources[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]   = {};
-static const UINT   g_zeroCounters[D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT]       = {};
-
-
-D3D11CommandBuffer::D3D11CommandBuffer(
+D3D11PrimaryCommandBuffer::D3D11PrimaryCommandBuffer(
     ID3D11Device*                               device,
     const ComPtr<ID3D11DeviceContext>&          context,
     const std::shared_ptr<D3D11StateManager>&   stateMngr,
     const CommandBufferDescriptor&              desc)
 :
-    device_       { device                          },
-    context_      { context                         },
-    stateMngr_    { stateMngr                       },
-    bindingTable_ { &(stateMngr->GetBindingTable()) }
+    D3D11CommandBuffer  { /*isSecondaryCmdBuffer:*/ false                           },
+    device_             { device                                                    },
+    context_            { context, stateMngr                                        },
+    hasDeferredContext_ { ((desc.flags & CommandBufferFlags::ImmediateSubmit) == 0) }
 {
-    /* Store information whether the command buffer has an immediate or deferred context */
-    if ((desc.flags & CommandBufferFlags::ImmediateSubmit) == 0)
-    {
-        hasDeferredContext_     = true;
-        isSecondaryCmdBuffer_   = ((desc.flags & CommandBufferFlags::Secondary) != 0);
-    }
-
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-    context_->QueryInterface(IID_PPV_ARGS(&context1_));
-    context_->QueryInterface(IID_PPV_ARGS(&annotation_));
+    context->QueryInterface(IID_PPV_ARGS(&annotation_));
     #endif
 }
 
 /* ----- Encoding ----- */
 
-void D3D11CommandBuffer::Begin()
+void D3D11PrimaryCommandBuffer::Begin()
 {
-    stateMngr_->ResetStagingBufferPools();
+    GetStateManager().ResetStagingBufferPools();
 }
 
-void D3D11CommandBuffer::End()
+void D3D11PrimaryCommandBuffer::End()
 {
     if (hasDeferredContext_)
     {
         /* Encode commands from deferred context into command list */
-        context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
+        GetNative()->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
     }
-    ResetBindingStates();
+    context_.ResetBindingStates();
 }
 
-void D3D11CommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
+void D3D11PrimaryCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
 {
     auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, secondaryCommandBuffer);
-    if (cmdBufferD3D.IsSecondaryCmdBuffer())
-    {
-        if (ID3D11CommandList* commandList = cmdBufferD3D.GetDeferredCommandList())
-        {
-            /* Execute encoded command list with immediate context and restore previous state */
-            context_->ExecuteCommandList(commandList, TRUE);
-        }
-    }
+    ExecuteD3D11CommandBuffer(cmdBufferD3D, context_);
 }
 
 /* ----- Blitting ----- */
 
-void D3D11CommandBuffer::UpdateBuffer(
+void D3D11PrimaryCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     const void*     data,
     std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
-    dstBufferD3D.WriteSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
+    dstBufferD3D.WriteSubresource(GetNative(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
 }
 
-void D3D11CommandBuffer::CopyBuffer(
+void D3D11PrimaryCommandBuffer::CopyBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     Buffer&         srcBuffer,
@@ -133,7 +115,7 @@ void D3D11CommandBuffer::CopyBuffer(
         static_cast<UINT>(srcOffset + size), 1u, 1u
     };
 
-    context_->CopySubresourceRegion(
+    GetNative()->CopySubresourceRegion(
         dstBufferD3D.GetNative(),       // pDstResource
         0,                              // DstSubresource
         static_cast<UINT>(dstOffset),   // DstX
@@ -146,7 +128,7 @@ void D3D11CommandBuffer::CopyBuffer(
 }
 
 // private
-void D3D11CommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4])
+void D3D11PrimaryCommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4])
 {
     /* Create intermediate UAV for fill range */
     D3D11_BUFFER_DESC bufferDesc;
@@ -164,10 +146,10 @@ void D3D11CommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT off
     DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "intermediateUAV");
 
     /* Clear destination buffer with intermediate UAV */
-    context_->ClearUnorderedAccessViewUint(intermediateUAV.Get(), valuesVec4);
+    GetNative()->ClearUnorderedAccessViewUint(intermediateUAV.Get(), valuesVec4);
 }
 
-// Internal use only (see D3D11CommandBuffer::CopyTextureFromBuffer)
+// Internal use only (see D3D11PrimaryCommandBuffer::CopyTextureFromBuffer)
 struct CopyTextureBufferCbuffer
 {
     std::uint32_t texOffset[3];
@@ -209,7 +191,7 @@ so this function dispatches a builtin compute shader to achieve the desired effe
 Because byte address buffers are incompatible with other buffer types (like constant buffers or structured buffers),
 an intermediate buffer must be copied to the destination buffer afterwards (i.e. CopySubresourceRegion from RWByteAddressBuffer to destination buffer).
 */
-void D3D11CommandBuffer::CopyBufferFromTexture(
+void D3D11PrimaryCommandBuffer::CopyBufferFromTexture(
     Buffer&                 dstBuffer,
     std::uint64_t           dstOffset,
     Texture&                srcTexture,
@@ -291,7 +273,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
         for_range(i, subresource.numArrayLayers)
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
-            context_->CopySubresourceRegion(
+            GetNative()->CopySubresourceRegion(
                 intermediateTexture.Get(),                                                      // pDstResource
                 D3D11CalcSubresource(0, i, 1),                                                  // DstSubresource
                 0,                                                                              // DstX
@@ -325,7 +307,7 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
 
     CreateByteAddressBufferR32Typeless(
         device_,
-        context_.Get(),
+        GetNative(),
         intermediateBuffer.GetAddressOf(),
         nullptr,
         intermediateUAV.GetAddressOf(),
@@ -358,49 +340,49 @@ void D3D11CommandBuffer::CopyBufferFromTexture(
         cbufferData.rowStride           = rowStride;
         cbufferData.layerStride         = layerStride;
     }
-    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
+    GetStateManager().SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
 
     /* Store currently bound resource views */
     ID3D11UnorderedAccessView* prevUAVs[1];
     ID3D11ShaderResourceView* prevSRVs[1];
 
-    context_->CSGetUnorderedAccessViews(0, 1, prevUAVs);
-    context_->CSGetShaderResources(0, 1, prevSRVs);
+    GetNative()->CSGetUnorderedAccessViews(0, 1, prevUAVs);
+    GetNative()->CSGetShaderResources(0, 1, prevSRVs);
 
     /* Bind destination texture and source buffer resourves */
-    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAV.GetAddressOf(), nullptr);
-    context_->CSSetShaderResources(0, 1, intermediateSRV.GetAddressOf());
+    GetNative()->CSSetUnorderedAccessViews(0, 1, intermediateUAV.GetAddressOf(), nullptr);
+    GetNative()->CSSetShaderResources(0, 1, intermediateSRV.GetAddressOf());
 
     /* Dispatch compute kernels with builtin shader */
     switch (textureArrayType)
     {
         case TextureType::Texture1DArray:
-            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture1DCS, srcExtent.width, srcExtent.height, 1u);
+            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture1DCS, srcExtent.width, srcExtent.height, 1u);
             break;
         case TextureType::Texture2DArray:
-            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture2DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
+            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture2DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
             break;
         case TextureType::Texture3D:
-            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture3DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
+            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyBufferFromTexture3DCS, srcExtent.width, srcExtent.height, srcExtent.depth);
             break;
         default:
             break;
     }
 
     /* Restore previous resource views */
-    context_->CSSetUnorderedAccessViews(0, 1, prevUAVs, nullptr);
-    context_->CSSetShaderResources(0, 1, prevSRVs);
+    GetNative()->CSSetUnorderedAccessViews(0, 1, prevUAVs, nullptr);
+    GetNative()->CSSetShaderResources(0, 1, prevSRVs);
 
     /* Copy UAV content into destination buffer, if an intermediate texture was used */
     //if (useIntermediateBuffer)
     {
         /* Copy content from intermediate buffer to destination buffer */
         const D3D11_BOX srcBox{ 0, 0, 0, copySize, 1, 1 };
-        context_->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, dstOffsetU32, 0, 0, intermediateBuffer.Get(), 0, &srcBox);
+        GetNative()->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, dstOffsetU32, 0, 0, intermediateBuffer.Get(), 0, &srcBox);
     }
 }
 
-void D3D11CommandBuffer::FillBuffer(
+void D3D11PrimaryCommandBuffer::FillBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     std::uint32_t   value,
@@ -432,7 +414,7 @@ void D3D11CommandBuffer::FillBuffer(
             DXTypes::MakeUAVClearVector(dstBufferUAV.GetDXFormat(), valuesVec4, value))
         {
             /* Fill destination buffer directly with primary UAV */
-            context_->ClearUnorderedAccessViewUint(uav, valuesVec4);
+            GetNative()->ClearUnorderedAccessViewUint(uav, valuesVec4);
         }
         else
         {
@@ -460,13 +442,13 @@ void D3D11CommandBuffer::FillBuffer(
 
         /* Copy intermediate buffer into destination buffer */
         if (isWholeBufferRange)
-            context_->CopyResource(dstBufferD3D.GetNative(), intermediateBuffer.Get());
+            GetNative()->CopyResource(dstBufferD3D.GetNative(), intermediateBuffer.Get());
         else
-            context_->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, offset, 0, 0, intermediateBuffer.Get(), 0, nullptr);
+            GetNative()->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, offset, 0, 0, intermediateBuffer.Get(), 0, nullptr);
     }
 }
 
-void D3D11CommandBuffer::CopyTexture(
+void D3D11PrimaryCommandBuffer::CopyTexture(
     Texture&                dstTexture,
     const TextureLocation&  dstLocation,
     Texture&                srcTexture,
@@ -479,7 +461,7 @@ void D3D11CommandBuffer::CopyTexture(
     const Offset3D  dstOffset   = CalcTextureOffset(dstTexture.GetType(), dstLocation.offset);
     const D3D11_BOX srcBox      = srcTextureD3D.CalcRegion(srcLocation.offset, extent);
 
-    context_->CopySubresourceRegion(
+    GetNative()->CopySubresourceRegion(
         dstTextureD3D.GetNative(),                  // pDstResource
         dstTextureD3D.CalcSubresource(dstLocation), // DstSubresource
         static_cast<UINT>(dstOffset.x),             // DstX
@@ -497,7 +479,7 @@ so this function dispatches a builtin compute shader to achieve the desired effe
 Because byte address buffers are incompatible with other buffer types (like constant buffers or structured buffers),
 an intermediate buffer must be copied from the source buffer first (i.e. CopySubresourceRegion from source buffer into ByteAddressBuffer).
 */
-void D3D11CommandBuffer::CopyTextureFromBuffer(
+void D3D11PrimaryCommandBuffer::CopyTextureFromBuffer(
     Texture&                dstTexture,
     const TextureRegion&    dstRegion,
     Buffer&                 srcBuffer,
@@ -585,7 +567,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
 
     CreateByteAddressBufferR32Typeless(
         device_,
-        context_.Get(),
+        GetNative(),
         intermediateBuffer.GetAddressOf(),
         intermediateSRV.GetAddressOf(),
         nullptr,
@@ -594,7 +576,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
 
     /* Copy content from source buffer into the intermediate buffer */
     const D3D11_BOX srcBox{ srcOffsetU32, 0, 0, srcOffsetU32 + copySize, 1, 1 };
-    context_->CopySubresourceRegion(intermediateBuffer.Get(), 0, 0, 0, 0, srcBufferD3D.GetNative(), 0, &srcBox);
+    GetNative()->CopySubresourceRegion(intermediateBuffer.Get(), 0, 0, 0, 0, srcBufferD3D.GetNative(), 0, &srcBox);
 
     /* Set shader parameters with intermediate constant buffer */
     CopyTextureBufferCbuffer cbufferData;
@@ -622,38 +604,38 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         cbufferData.rowStride           = rowStride;
         cbufferData.layerStride         = layerStride;
     }
-    stateMngr_->SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
+    GetStateManager().SetConstants(0, &cbufferData, sizeof(cbufferData), StageFlags::ComputeStage);
 
     /* Store currently bound resource views */
     ID3D11UnorderedAccessView* prevUAVs[1];
     ID3D11ShaderResourceView* prevSRVs[1];
 
-    context_->CSGetUnorderedAccessViews(0, 1, prevUAVs);
-    context_->CSGetShaderResources(0, 1, prevSRVs);
+    GetNative()->CSGetUnorderedAccessViews(0, 1, prevUAVs);
+    GetNative()->CSGetShaderResources(0, 1, prevSRVs);
 
     /* Bind destination texture and source buffer resourves */
-    context_->CSSetUnorderedAccessViews(0, 1, intermediateUAV.GetAddressOf(), nullptr);
-    context_->CSSetShaderResources(0, 1, intermediateSRV.GetAddressOf());
+    GetNative()->CSSetUnorderedAccessViews(0, 1, intermediateUAV.GetAddressOf(), nullptr);
+    GetNative()->CSSetShaderResources(0, 1, intermediateSRV.GetAddressOf());
 
     /* Dispatch compute kernels with builtin shader */
     switch (textureArrayType)
     {
         case TextureType::Texture1DArray:
-            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyTexture1DFromBufferCS, dstExtent.width, dstExtent.height, 1u);
+            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyTexture1DFromBufferCS, dstExtent.width, dstExtent.height, 1u);
             break;
         case TextureType::Texture2DArray:
-            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyTexture2DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
+            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyTexture2DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
             break;
         case TextureType::Texture3D:
-            stateMngr_->DispatchBuiltin(D3D11BuiltinShader::CopyTexture3DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
+            GetStateManager().DispatchBuiltin(D3D11BuiltinShader::CopyTexture3DFromBufferCS, dstExtent.width, dstExtent.height, dstExtent.depth);
             break;
         default:
             break;
     }
 
     /* Restore previous resource views */
-    context_->CSSetUnorderedAccessViews(0, 1, prevUAVs, nullptr);
-    context_->CSSetShaderResources(0, 1, prevSRVs);
+    GetNative()->CSSetUnorderedAccessViews(0, 1, prevUAVs, nullptr);
+    GetNative()->CSSetShaderResources(0, 1, prevSRVs);
 
     /* Copy UAV content into destination texture, if an intermediate texture was used */
     if (useIntermediateTexture)
@@ -664,7 +646,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
         for_range(i, subresource.numArrayLayers)
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
-            context_->CopySubresourceRegion(
+            GetNative()->CopySubresourceRegion(
                 dstTextureD3D.GetNative(),                                                      // pDstResource
                 D3D11CalcSubresource(mipLevel, arrayLayer, dstTextureD3D.GetNumMipLevels()),    // DstSubresource
                 static_cast<UINT>(dstOffset.x),                                                 // DstX
@@ -678,7 +660,7 @@ void D3D11CommandBuffer::CopyTextureFromBuffer(
     }
 }
 
-void D3D11CommandBuffer::CopyTextureFromFramebuffer(
+void D3D11PrimaryCommandBuffer::CopyTextureFromFramebuffer(
     Texture&                dstTexture,
     const TextureRegion&    dstRegion,
     const Offset2D&         srcOffset)
@@ -709,25 +691,25 @@ void D3D11CommandBuffer::CopyTextureFromFramebuffer(
         1u,
     };
 
-    if (boundSwapChain_)
-        boundSwapChain_->CopySubresourceRegion(context_.Get(), dstResource, dstSubresource, dstX, dstY, dstZ, srcBox, dstTextureD3D.GetDXFormat());
+    if (D3D11SwapChain* boundSwapChain = context_.GetBoundSwapChain())
+        boundSwapChain->CopySubresourceRegion(GetNative(), dstResource, dstSubresource, dstX, dstY, dstZ, srcBox, dstTextureD3D.GetDXFormat());
     #if 0 //TODO
-    else if (boundRenderTarget_)
-        boundRenderTarget_->CopySubresourceRegion();
+    else if (D3D11RenderTarget* boundRenderTarget = context_.GetBoundRenderTarget())
+        boundRenderTarget->CopySubresourceRegion();
     #endif
 }
 
-void D3D11CommandBuffer::GenerateMips(Texture& texture)
+void D3D11PrimaryCommandBuffer::GenerateMips(Texture& texture)
 {
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    D3D11MipGenerator::Get().GenerateMips(context_.Get(), textureD3D);
+    D3D11MipGenerator::Get().GenerateMips(GetNative(), textureD3D);
 }
 
-void D3D11CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
+void D3D11PrimaryCommandBuffer::GenerateMips(Texture& texture, const TextureSubresource& subresource)
 {
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     D3D11MipGenerator::Get().GenerateMipsRange(
-        context_.Get(),
+        GetNative(),
         textureD3D,
         subresource.baseMipLevel,
         subresource.numMipLevels,
@@ -738,175 +720,68 @@ void D3D11CommandBuffer::GenerateMips(Texture& texture, const TextureSubresource
 
 /* ----- Viewport and Scissor ----- */
 
-void D3D11CommandBuffer::SetViewport(const Viewport& viewport)
+void D3D11PrimaryCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    stateMngr_->SetViewports(1, &viewport);
+    GetStateManager().SetViewports(1, &viewport);
 }
 
-void D3D11CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
+void D3D11PrimaryCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    stateMngr_->SetViewports(numViewports, viewports);
+    GetStateManager().SetViewports(numViewports, viewports);
 }
 
-void D3D11CommandBuffer::SetScissor(const Scissor& scissor)
+void D3D11PrimaryCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    stateMngr_->SetScissors(1, &scissor);
+    GetStateManager().SetScissors(1, &scissor);
 }
 
-void D3D11CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
+void D3D11PrimaryCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    stateMngr_->SetScissors(numScissors, scissors);
+    GetStateManager().SetScissors(numScissors, scissors);
 }
 
 /* ----- Input Assembly ------ */
 
-void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
+void D3D11PrimaryCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    bindingTable_->SetVertexBuffer(
-        0,
-        bufferD3D.GetNative(),
-        bufferD3D.GetStride(),
-        0,
-        bufferD3D.GetBindingLocator()
-    );
+    context_.SetVertexBuffer(bufferD3D);
 }
 
-void D3D11CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
+void D3D11PrimaryCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
-    bindingTable_->SetVertexBuffers(
-        0,
-        bufferArrayD3D.GetCount(),
-        bufferArrayD3D.GetBuffers(),
-        bufferArrayD3D.GetStrides(),
-        bufferArrayD3D.GetOffsets(),
-        bufferArrayD3D.GetBindingLocators()
-    );
+    context_.SetVertexBufferArray(bufferArrayD3D);
 }
 
-void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
+void D3D11PrimaryCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    bindingTable_->SetIndexBuffer(
-        bufferD3D.GetNative(),
-        bufferD3D.GetDXFormat(),
-        0,
-        bufferD3D.GetBindingLocator()
-    );
+    context_.SetIndexBuffer(bufferD3D, bufferD3D.GetDXFormat(), 0);
 }
 
-void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+void D3D11PrimaryCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    bindingTable_->SetIndexBuffer(
-        bufferD3D.GetNative(),
-        DXTypes::ToDXGIFormat(format),
-        static_cast<UINT>(offset),
-        bufferD3D.GetBindingLocator()
-    );
+    context_.SetIndexBuffer(bufferD3D, DXTypes::ToDXGIFormat(format), static_cast<UINT>(offset));
 }
 
 /* ----- Resources ----- */
 
-void D3D11CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
+void D3D11PrimaryCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
-    if (boundPipelineState_ == nullptr)
-        return /*E_POINTER*/;
-
     auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
-
-    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-    if (context1_.Get() != nullptr)
-    {
-        if (boundPipelineState_->IsGraphicsPSO())
-            resourceHeapD3D.BindForGraphicsPipeline1(context1_.Get(), *bindingTable_, descriptorSet);
-        else
-            resourceHeapD3D.BindForComputePipeline1(context1_.Get(), *bindingTable_, descriptorSet);
-    }
-    else
-    #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
-    {
-        if (boundPipelineState_->IsGraphicsPSO())
-            resourceHeapD3D.BindForGraphicsPipeline(context_.Get(), *bindingTable_, descriptorSet);
-        else
-            resourceHeapD3D.BindForComputePipeline(context_.Get(), *bindingTable_, descriptorSet);
-    }
+    (void)context_.SetResourceHeap(resourceHeapD3D, descriptorSet);
 }
 
-void D3D11CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
+void D3D11PrimaryCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    if (boundPipelineLayout_ == nullptr)
-        return /*E_POINTER*/;
-
-    const auto& bindingList = boundPipelineLayout_->GetBindings();
-    if (!(descriptor < bindingList.size()))
-        return /*E_INVALIDARG*/;
-
-    const D3D11PipelineResourceBinding& binding = bindingList[descriptor];
-
-    switch (binding.type)
-    {
-        case D3DResourceType_CBV:
-        {
-            auto& bufferD3D = LLGL_CAST(D3D11Buffer&, resource);
-            ID3D11Buffer* cbv[] = { bufferD3D.GetNative() };
-            stateMngr_->SetConstantBuffers(binding.slot, 1, cbv, binding.stageFlags);
-        }
-        break;
-
-        case D3DResourceType_BufferSRV:
-        {
-            auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, resource);
-            ID3D11ShaderResourceView* srv[] = { bufferD3D.GetSRV() };
-            D3D11BindingLocator* locator[] = { bufferD3D.GetBindingLocator() };
-            bindingTable_->SetShaderResourceViews(binding.slot, 1, srv, locator, nullptr, binding.stageFlags);
-        }
-        break;
-
-        case D3DResourceType_BufferUAV:
-        {
-            auto& bufferD3D = LLGL_CAST(D3D11BufferWithRV&, resource);
-            ID3D11UnorderedAccessView* uav[] = { bufferD3D.GetUAV() };
-            const UINT initialCounts[] = { bufferD3D.GetInitialCount() };
-            D3D11BindingLocator* locator[] = { bufferD3D.GetBindingLocator() };
-            bindingTable_->SetUnorderedAccessViews(binding.slot, 1, uav, initialCounts, locator, nullptr, binding.stageFlags);
-        }
-        break;
-
-        case D3DResourceType_TextureSRV:
-        {
-            auto& textureD3D = LLGL_CAST(D3D11Texture&, resource);
-            ID3D11ShaderResourceView* srv[] = { textureD3D.GetSRV() };
-            D3D11BindingLocator* locator[] = { textureD3D.GetBindingLocator() };
-            bindingTable_->SetShaderResourceViews(binding.slot, 1, srv, locator, nullptr, binding.stageFlags);
-        }
-        break;
-
-        case D3DResourceType_TextureUAV:
-        {
-            auto& textureD3D = LLGL_CAST(D3D11Texture&, resource);
-            ID3D11UnorderedAccessView* uav[] = { textureD3D.GetUAV() };
-            const UINT initialCounts[] = { 0 };
-            D3D11BindingLocator* locator[] = { textureD3D.GetBindingLocator() };
-            bindingTable_->SetUnorderedAccessViews(binding.slot, 1, uav, initialCounts, locator, nullptr, binding.stageFlags);
-        }
-        break;
-
-        case D3DResourceType_Sampler:
-        {
-            /* Set sampler state object to all shader stages */
-            auto& samplerD3D = LLGL_CAST(D3D11Sampler&, resource);
-            ID3D11SamplerState* samplerStates[] = { samplerD3D.GetNative() };
-            stateMngr_->SetSamplers(binding.slot, 1, samplerStates, binding.stageFlags);
-        }
-        break;
-    }
+    (void)context_.SetResource(descriptor, resource);
 }
 
 /* ----- Render Passes ----- */
 
-void D3D11CommandBuffer::BeginRenderPass(
+void D3D11PrimaryCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
     const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
@@ -917,132 +792,69 @@ void D3D11CommandBuffer::BeginRenderPass(
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         auto& swapChainD3D = LLGL_CAST(D3D11SwapChain&, renderTarget);
-        SetRenderTargets(swapChainD3D.GetRenderTargetHandles());
-        boundSwapChain_ = &swapChainD3D;
+        context_.BindSwapChainRenderTargets(swapChainD3D);
     }
     else
     {
         auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
-        SetRenderTargets(renderTargetD3D.GetRenderTargetHandles());
-        boundRenderTarget_ = &renderTargetD3D;
+        context_.BindOffscreenRenderTargets(renderTargetD3D);
     }
 
     /* Clear attachments */
-    if (renderPass)
+    if (renderPass != nullptr)
     {
         auto* renderPassD3D = LLGL_CAST(const D3D11RenderPass*, renderPass);
-        ClearAttachmentsWithRenderPass(*renderPassD3D, numClearValues, clearValues);
+        context_.ClearFramebufferViewsOrdered(
+            numClearValues,
+            clearValues,
+            renderPassD3D->GetClearColorAttachments(),
+            renderPassD3D->GetClearFlagsDSV()
+        );
     }
 }
 
-void D3D11CommandBuffer::EndRenderPass()
+void D3D11PrimaryCommandBuffer::EndRenderPass()
 {
     /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveAndUnbindRenderTarget();
+    context_.ResolveAndUnbindRenderTargets();
 }
 
-static UINT GetClearFlagsDSV(long flags)
+void D3D11PrimaryCommandBuffer::Clear(long flags, const ClearValue& clearValue)
 {
-    UINT clearFlagsDSV = 0;
-
-    if ((flags & ClearFlags::Depth) != 0)
-        clearFlagsDSV |= D3D11_CLEAR_DEPTH;
-    if ((flags & ClearFlags::Stencil) != 0)
-        clearFlagsDSV |= D3D11_CLEAR_STENCIL;
-
-    return clearFlagsDSV;
+    context_.ClearFramebufferViewsSimple(flags, clearValue);
 }
 
-void D3D11CommandBuffer::Clear(long flags, const ClearValue& clearValue)
+void D3D11PrimaryCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    /* Clear color buffers */
-    if ((flags & ClearFlags::Color) != 0)
-    {
-        for_range(i, framebufferView_.numRenderTargetViews)
-            context_->ClearRenderTargetView(framebufferView_.renderTargetViews[i], clearValue.color);
-    }
-
-    /* Clear depth-stencil buffer */
-    if (framebufferView_.depthStencilView != nullptr)
-    {
-        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
-        {
-            context_->ClearDepthStencilView(
-                framebufferView_.depthStencilView,
-                clearFlagsDSV,
-                clearValue.depth,
-                static_cast<UINT8>(clearValue.stencil & 0xFF)
-            );
-        }
-    }
-}
-
-void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
-{
-    for (; numAttachments-- > 0; ++attachments)
-    {
-        if ((attachments->flags & ClearFlags::Color) != 0)
-        {
-            /* Clear color attachment */
-            if (attachments->colorAttachment < framebufferView_.numRenderTargetViews)
-            {
-                context_->ClearRenderTargetView(
-                    framebufferView_.renderTargetViews[attachments->colorAttachment],
-                    attachments->clearValue.color
-                );
-            }
-        }
-        else if (framebufferView_.depthStencilView != nullptr)
-        {
-            /* Clear depth and stencil buffer simultaneously */
-            if (auto clearFlagsDSV = GetClearFlagsDSV(attachments->flags))
-            {
-                context_->ClearDepthStencilView(
-                    framebufferView_.depthStencilView,
-                    clearFlagsDSV,
-                    attachments->clearValue.depth,
-                    static_cast<UINT8>(attachments->clearValue.stencil & 0xff)
-                );
-            }
-        }
-    }
+    context_.ClearFramebufferViewsIndexed(numAttachments, attachments);
 }
 
 /* ----- Pipeline States ----- */
 
-void D3D11CommandBuffer::SetPipelineState(PipelineState& pipelineState)
+void D3D11PrimaryCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 {
-    auto pipelineStateD3D = LLGL_CAST(D3D11PipelineState*, &pipelineState);
-    if (boundPipelineState_ != pipelineStateD3D)
-    {
-        boundPipelineState_ = pipelineStateD3D;
-        boundPipelineState_->Bind(*stateMngr_);
-        boundPipelineLayout_ = boundPipelineState_->GetPipelineLayout();
-        boundConstantsCache_ = boundPipelineState_->GetConstantsCache();
-        if (boundConstantsCache_ != nullptr)
-            boundConstantsCache_->Reset();
-    }
+    auto* pipelineStateD3D = LLGL_CAST(D3D11PipelineState*, &pipelineState);
+    context_.SetPipelineState(pipelineStateD3D);
 }
 
-void D3D11CommandBuffer::SetBlendFactor(const float color[4])
+void D3D11PrimaryCommandBuffer::SetBlendFactor(const float color[4])
 {
-    stateMngr_->SetBlendFactor(color);
+    GetStateManager().SetBlendFactor(color);
 }
 
-void D3D11CommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)
+void D3D11PrimaryCommandBuffer::SetStencilReference(std::uint32_t reference, const StencilFace /*stencilFace*/)
 {
-    stateMngr_->SetStencilRef(reference);
+    GetStateManager().SetStencilRef(reference);
 }
 
-void D3D11CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
+void D3D11PrimaryCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    if (boundConstantsCache_ != nullptr)
-        boundConstantsCache_->SetUniforms(first, data, dataSize);
+    context_.SetUniforms(first, data, dataSize);
 }
 
 /* ----- Queries ----- */
 
-void D3D11CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
+void D3D11PrimaryCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
@@ -1051,17 +863,17 @@ void D3D11CommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
     if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Begin disjoint query first, and insert the beginning timestamp query */
-        context_->Begin(queryHeapD3D.GetNative(query));
-        context_->End(queryHeapD3D.GetNative(query + 1));
+        GetNative()->Begin(queryHeapD3D.GetNative(query));
+        GetNative()->End(queryHeapD3D.GetNative(query + 1));
     }
     else
     {
         /* Begin standard query */
-        context_->Begin(queryHeapD3D.GetNative(query));
+        GetNative()->Begin(queryHeapD3D.GetNative(query));
     }
 }
 
-void D3D11CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
+void D3D11PrimaryCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
 
@@ -1070,33 +882,33 @@ void D3D11CommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     if (queryHeapD3D.GetNativeType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
     {
         /* Insert the ending timestamp query, and end the disjoint query */
-        context_->End(queryHeapD3D.GetNative(query + 2));
-        context_->End(queryHeapD3D.GetNative(query));
+        GetNative()->End(queryHeapD3D.GetNative(query + 2));
+        GetNative()->End(queryHeapD3D.GetNative(query));
     }
     else
     {
         /* End standard query */
-        context_->End(queryHeapD3D.GetNative(query));
+        GetNative()->End(queryHeapD3D.GetNative(query));
     }
 }
 
-void D3D11CommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
+void D3D11PrimaryCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
-    context_->SetPredication(
+    GetNative()->SetPredication(
         queryHeapD3D.GetPredicate(query * queryHeapD3D.GetGroupSize()),
         (mode >= RenderConditionMode::WaitInverted)
     );
 }
 
-void D3D11CommandBuffer::EndRenderCondition()
+void D3D11PrimaryCommandBuffer::EndRenderCondition()
 {
-    context_->SetPredication(nullptr, FALSE);
+    GetNative()->SetPredication(nullptr, FALSE);
 }
 
 /* ----- Stream Output ------ */
 
-void D3D11CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
+void D3D11PrimaryCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
     D3D11BindingLocator* locators[LLGL_MAX_NUM_SO_BUFFERS];
     ID3D11Buffer* soTargets[LLGL_MAX_NUM_SO_BUFFERS];
@@ -1112,118 +924,96 @@ void D3D11CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
         offsets[i]      = 0;
     }
 
-    bindingTable_->SetStreamOutputBuffers(numBuffers, soTargets, offsets, locators);
+    GetBindingTable().SetStreamOutputBuffers(numBuffers, soTargets, offsets, locators);
 }
 
-void D3D11CommandBuffer::EndStreamOutput()
+void D3D11PrimaryCommandBuffer::EndStreamOutput()
 {
-    bindingTable_->SetStreamOutputBuffers(0, nullptr, nullptr, nullptr);
+    GetBindingTable().SetStreamOutputBuffers(0, nullptr, nullptr, nullptr);
 }
 
 /* ----- Drawing ----- */
 
-void D3D11CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
+void D3D11PrimaryCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->Draw(numVertices, firstVertex);
+    context_.Draw(numVertices, firstVertex);
 }
 
-void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
+void D3D11PrimaryCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawIndexed(numIndices, firstIndex, 0);
+    context_.DrawIndexed(numIndices, firstIndex, 0);
 }
 
-void D3D11CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void D3D11PrimaryCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawIndexed(numIndices, firstIndex, vertexOffset);
+    context_.DrawIndexed(numIndices, firstIndex, vertexOffset);
 }
 
-void D3D11CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
+void D3D11PrimaryCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
+    context_.DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
-void D3D11CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
+void D3D11PrimaryCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawInstanced(numVertices, numInstances, firstVertex, firstInstance);
+    context_.DrawInstanced(numVertices, numInstances, firstVertex, firstInstance);
 }
 
-void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
+void D3D11PrimaryCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, 0, 0);
+    context_.DrawIndexedInstanced(numIndices, numInstances, firstIndex, 0, 0);
 }
 
-void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void D3D11PrimaryCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, 0);
+    context_.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, 0);
 }
 
-void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
+void D3D11PrimaryCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    FlushGraphicsResourceBindingCache();
-    context_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
+    context_.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
-void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
+void D3D11PrimaryCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    FlushGraphicsResourceBindingCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    context_->DrawInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+    context_.DrawInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
-void D3D11CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+void D3D11PrimaryCommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    FlushGraphicsResourceBindingCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    while (numCommands-- > 0)
-    {
-        context_->DrawInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
-        offset += stride;
-    }
+    context_.DrawInstancedIndirectN(bufferD3D.GetNative(), static_cast<UINT>(offset), numCommands, stride);
 }
 
-void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
+void D3D11PrimaryCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    FlushGraphicsResourceBindingCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    context_->DrawIndexedInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+    context_.DrawIndexedInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
-void D3D11CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
+void D3D11PrimaryCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
-    FlushGraphicsResourceBindingCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    while (numCommands-- > 0)
-    {
-        context_->DrawIndexedInstancedIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
-        offset += stride;
-    }
+    context_.DrawIndexedInstancedIndirectN(bufferD3D.GetNative(), static_cast<UINT>(offset), numCommands, stride);
 }
 
 /* ----- Compute ----- */
 
-void D3D11CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
+void D3D11PrimaryCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    FlushComputeResourceBindingCache();
-    context_->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    context_.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
 }
 
-void D3D11CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
+void D3D11PrimaryCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
-    FlushComputeResourceBindingCache();
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
-    context_->DispatchIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
+    context_.DispatchIndirect(bufferD3D.GetNative(), static_cast<UINT>(offset));
 }
 
 /* ----- Debugging ----- */
 
-void D3D11CommandBuffer::PushDebugGroup(const char* name)
+void D3D11PrimaryCommandBuffer::PushDebugGroup(const char* name)
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
@@ -1234,7 +1024,7 @@ void D3D11CommandBuffer::PushDebugGroup(const char* name)
     #endif
 }
 
-void D3D11CommandBuffer::PopDebugGroup()
+void D3D11PrimaryCommandBuffer::PopDebugGroup()
 {
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (annotation_)
@@ -1244,17 +1034,17 @@ void D3D11CommandBuffer::PopDebugGroup()
 
 /* ----- Extensions ----- */
 
-void D3D11CommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
+void D3D11PrimaryCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size_t nativeCommandSize)
 {
     // dummy
 }
 
-bool D3D11CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+bool D3D11PrimaryCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D11::CommandBufferNativeHandle))
     {
         auto* nativeHandleD3D = reinterpret_cast<Direct3D11::CommandBufferNativeHandle*>(nativeHandle);
-        nativeHandleD3D->deviceContext = context_.Get();
+        nativeHandleD3D->deviceContext = GetNative();
         nativeHandleD3D->deviceContext->AddRef();
         return true;
     }
@@ -1266,136 +1056,24 @@ bool D3D11CommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeH
  * ======= Private: =======
  */
 
-void D3D11CommandBuffer::ResolveAndUnbindRenderTarget()
-{
-    /* Set RTV list and DSV in framebuffer view */
-    SetRenderTargetsNull();
-
-    if (boundRenderTarget_ != nullptr)
-    {
-        boundRenderTarget_->ResolveSubresources(context_.Get());
-        boundRenderTarget_ = nullptr;
-    }
-    else if (boundSwapChain_ != nullptr)
-    {
-        boundSwapChain_->ResolveSubresources(context_.Get());
-        boundSwapChain_ = nullptr;
-    }
-}
-
-void D3D11CommandBuffer::SetRenderTargets(const D3D11RenderTargetHandles& renderTargetHandles)
-{
-    /* Set output-merger render target views */
-    bindingTable_->SetRenderTargets(
-        renderTargetHandles.GetNumRenderTargetViews(),
-        renderTargetHandles.GetRenderTargetViews(),
-        renderTargetHandles.GetDepthStencilView(),
-        renderTargetHandles.GetRenderTargetLocators(),
-        renderTargetHandles.GetRenderTargetSubresourceRanges(),
-        renderTargetHandles.GetDepthStencilLocator()
-    );
-
-    /* Store new render-target configuration */
-    framebufferView_.numRenderTargetViews   = renderTargetHandles.GetNumRenderTargetViews();
-    framebufferView_.renderTargetViews      = renderTargetHandles.GetRenderTargetViews();
-    framebufferView_.depthStencilView       = renderTargetHandles.GetDepthStencilView();
-}
-
-void D3D11CommandBuffer::SetRenderTargetsNull()
-{
-    bindingTable_->SetRenderTargets(0, nullptr, nullptr, nullptr, nullptr, nullptr);
-    framebufferView_.numRenderTargetViews   = 0;
-    framebufferView_.renderTargetViews      = nullptr;
-    framebufferView_.depthStencilView       = nullptr;
-}
-
-void D3D11CommandBuffer::ClearStateAndResetDeferredCommandList()
+void D3D11PrimaryCommandBuffer::ClearStateAndResetDeferredCommandList()
 {
     if (hasDeferredContext_)
     {
         /* Clear state of deferred device context and discard partially built command list */
         if (commandList_)
         {
-            context_->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
+            GetNative()->FinishCommandList(TRUE, commandList_.ReleaseAndGetAddressOf());
             commandList_.Reset();
         }
     }
-}
-
-void D3D11CommandBuffer::ClearAttachmentsWithRenderPass(
-    const D3D11RenderPass&  renderPassD3D,
-    std::uint32_t           numClearValues,
-    const ClearValue*       clearValues)
-{
-    /* Clear color attachments */
-    std::uint32_t clearValueIndex = ClearColorBuffers(renderPassD3D.GetClearColorAttachments(), numClearValues, clearValues);
-
-    /* Clear depth-stencil attachment */
-    if (framebufferView_.depthStencilView != nullptr)
-    {
-        if (auto clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
-        {
-            /* Get clear values */
-            FLOAT depth     = 1.0f;
-            UINT8 stencil   = 0;
-
-            if (clearValueIndex < numClearValues)
-            {
-                depth   = clearValues[clearValueIndex].depth;
-                stencil = static_cast<UINT8>(clearValues[clearValueIndex].stencil & 0xff);
-            }
-
-            /* Clear depth-stencil view */
-            context_->ClearDepthStencilView(framebufferView_.depthStencilView, clearFlagsDSV, depth, stencil);
-        }
-    }
-}
-
-std::uint32_t D3D11CommandBuffer::ClearColorBuffers(
-    const std::uint8_t* colorBuffers,
-    std::uint32_t       numClearValues,
-    const ClearValue*   clearValues)
-{
-    numClearValues = std::min(numClearValues, framebufferView_.numRenderTargetViews);
-
-    std::uint32_t clearValueIndex = 0;
-
-    /* Use specified clear values */
-    for_range(i, numClearValues)
-    {
-        /* Check if attachment list has ended */
-        if (colorBuffers[i] == 0xFF)
-            return clearValueIndex;
-
-        context_->ClearRenderTargetView(
-            framebufferView_.renderTargetViews[colorBuffers[i]],
-            clearValues[clearValueIndex].color
-        );
-        ++clearValueIndex;
-    }
-
-    /* Use default clear values */
-    const float defaultClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    for_subrange(i, numClearValues, framebufferView_.numRenderTargetViews)
-    {
-        /* Check if attachment list has ended */
-        if (colorBuffers[i] == 0xFF)
-            return clearValueIndex;
-
-        context_->ClearRenderTargetView(
-            framebufferView_.renderTargetViews[colorBuffers[i]],
-            defaultClearColor
-        );
-    }
-
-    return clearValueIndex;
 }
 
 /*
 Creates a buffer copy for the HLSL type ByteAddressBuffer.
 The format must be DXGI_FORMAT_R32_TYPELESS for raw-views.
 */
-void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
+void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
     ID3D11Device*               device,
     ID3D11DeviceContext*        context,
     ID3D11Buffer**              bufferOutput,
@@ -1459,29 +1137,6 @@ void D3D11CommandBuffer::CreateByteAddressBufferR32Typeless(
             device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
         }
     }
-}
-
-void D3D11CommandBuffer::FlushGraphicsResourceBindingCache()
-{
-    if (boundConstantsCache_ != nullptr)
-        boundConstantsCache_->Flush(*stateMngr_);
-    if (bindingTable_ != nullptr)
-        bindingTable_->FlushOutputMergerUAVs();
-}
-
-void D3D11CommandBuffer::FlushComputeResourceBindingCache()
-{
-    if (boundConstantsCache_ != nullptr)
-        boundConstantsCache_->Flush(*stateMngr_);
-}
-
-void D3D11CommandBuffer::ResetBindingStates()
-{
-    boundRenderTarget_      = nullptr;
-    boundSwapChain_         = nullptr;
-    boundPipelineLayout_    = nullptr;
-    boundPipelineState_     = nullptr;
-    boundConstantsCache_    = nullptr;
 }
 
 

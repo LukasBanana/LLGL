@@ -333,6 +333,7 @@ void DbgCommandBuffer::CopyTextureFromFramebuffer(
         LLGL_DBG_SOURCE();
         AssertRecording();
         AssertPrimaryCommandBuffer();
+        AssertInsideRenderPass();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateTextureRegion(dstTextureDbg, dstRegion);
         if (dstRegion.subresource.numArrayLayers > 1)

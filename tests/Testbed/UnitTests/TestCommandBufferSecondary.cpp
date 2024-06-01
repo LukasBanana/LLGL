@@ -149,9 +149,9 @@ DEF_TEST( CommandBufferSecondary )
                 else
                     cmdBuffer->Execute(*secondaryCmdBuffers[i]);
             }
+            cmdBuffer->CopyTextureFromFramebuffer(*readbackTex, texRegion, Offset2D{});
         }
         cmdBuffer->EndRenderPass();
-        cmdBuffer->CopyTextureFromFramebuffer(*readbackTex, texRegion, Offset2D{});
     }
     cmdBuffer->End();
 

@@ -12,8 +12,8 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/Container/ArrayView.h>
 
-#include "D3D11CommandQueue.h"
-#include "D3D11CommandBuffer.h"
+#include "Command/D3D11CommandQueue.h"
+#include "Command/D3D11CommandBuffer.h"
 #include "D3D11SwapChain.h"
 
 #include "Buffer/D3D11Buffer.h"

@@ -31,6 +31,7 @@ endif()
 # Direct3D11 renderer files
 find_source_files(FilesRendererD3D11            CXX ${PROJECT_SOURCE_DIR})
 find_source_files(FilesRendererD3D11Buffer      CXX ${PROJECT_SOURCE_DIR}/Buffer)
+find_source_files(FilesRendererD3D11Command     CXX ${PROJECT_SOURCE_DIR}/Command)
 find_source_files(FilesRendererD3D11RenderState CXX ${PROJECT_SOURCE_DIR}/RenderState)
 find_source_files(FilesRendererD3D11Shader      CXX ${PROJECT_SOURCE_DIR}/Shader)
 find_source_files(FilesRendererD3D11Texture     CXX ${PROJECT_SOURCE_DIR}/Texture)
@@ -42,6 +43,7 @@ set(
     FilesD3D11
     ${FilesRendererD3D11}
     ${FilesRendererD3D11Buffer}
+    ${FilesRendererD3D11Command}
     ${FilesRendererD3D11Shader}
     ${FilesRendererD3D11ShaderBuiltin}
     ${FilesRendererD3D11RenderState}
@@ -54,6 +56,7 @@ set(
 
 source_group("Direct3D11"                   FILES ${FilesRendererD3D11})
 source_group("Direct3D11\\Buffer"           FILES ${FilesRendererD3D11Buffer})
+source_group("Direct3D11\\Command"          FILES ${FilesRendererD3D11Command})
 source_group("Direct3D11\\RenderState"      FILES ${FilesRendererD3D11RenderState})
 source_group("Direct3D11\\Shader"           FILES ${FilesRendererD3D11Shader})
 source_group("Direct3D11\\Shader\\Builtin"  FILES ${FilesRendererD3D11ShaderBuiltin})

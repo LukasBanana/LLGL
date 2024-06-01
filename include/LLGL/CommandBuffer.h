@@ -303,6 +303,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] srcOffset Specifies the source offset at which the framebuffer is to be read from.
         If the source offset plus the destination dimension is larger the framebuffer's resolution, the behavior is undefined.
 
+        \remarks This command must only be used inside a render pass.
+
         \remarks For performance reasons, it is recommended to render a scene into a RenderTarget instead of copying the framebuffer into a texture.
         This command merely simplifies the process of capturing the framebuffer mid-scene without having to interrupt a render pass or creating an intermediate render target.
 

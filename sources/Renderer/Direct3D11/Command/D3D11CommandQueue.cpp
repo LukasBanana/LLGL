@@ -6,10 +6,10 @@
  */
 
 #include "D3D11CommandQueue.h"
-#include "D3D11CommandBuffer.h"
-#include "RenderState/D3D11Fence.h"
-#include "RenderState/D3D11QueryHeap.h"
-#include "../CheckedCast.h"
+#include "D3D11PrimaryCommandBuffer.h"
+#include "../RenderState/D3D11Fence.h"
+#include "../RenderState/D3D11QueryHeap.h"
+#include "../../CheckedCast.h"
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -30,7 +30,8 @@ void D3D11CommandQueue::Submit(CommandBuffer& commandBuffer)
     auto& cmdBufferD3D = LLGL_CAST(D3D11CommandBuffer&, commandBuffer);
     if (!cmdBufferD3D.IsSecondaryCmdBuffer())
     {
-        if (ID3D11CommandList* commandList = cmdBufferD3D.GetDeferredCommandList())
+        auto& primaryCmdBufferD3D = LLGL_CAST(D3D11PrimaryCommandBuffer&, commandBuffer);
+        if (ID3D11CommandList* commandList = primaryCmdBufferD3D.GetDeferredCommandList())
         {
             /* Execute encoded command list with immediate context but don't restore previous state */
             context_->ExecuteCommandList(commandList, FALSE);

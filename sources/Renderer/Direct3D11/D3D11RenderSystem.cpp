@@ -22,6 +22,9 @@
 #include <iomanip>
 #include <limits.h>
 
+#include "Command/D3D11PrimaryCommandBuffer.h"
+#include "Command/D3D11SecondaryCommandBuffer.h"
+
 #include "Buffer/D3D11Buffer.h"
 #include "Buffer/D3D11BufferArray.h"
 #include "Buffer/D3D11BufferWithRV.h"
@@ -124,7 +127,12 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
     if ((commandBufferDesc.flags & (CommandBufferFlags::ImmediateSubmit)) != 0)
     {
         /* Create command buffer with immediate context */
-        return commandBuffers_.emplace<D3D11CommandBuffer>(device_.Get(), context_, stateMngr_, commandBufferDesc);
+        return commandBuffers_.emplace<D3D11PrimaryCommandBuffer>(device_.Get(), context_, stateMngr_, commandBufferDesc);
+    }
+    else if ((commandBufferDesc.flags & (CommandBufferFlags::Secondary)) != 0)
+    {
+        /* Create secondary command buffer with virtual buffer */
+        return commandBuffers_.emplace<D3D11SecondaryCommandBuffer>(commandBufferDesc);
     }
     else
     {
@@ -137,7 +145,7 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         std::shared_ptr<D3D11StateManager> deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext);
 
         /* Create command buffer with deferred context and dedicated state manager */
-        return commandBuffers_.emplace<D3D11CommandBuffer>(device_.Get(), deferredContext, std::move(deferredStateMngr), commandBufferDesc);
+        return commandBuffers_.emplace<D3D11PrimaryCommandBuffer>(device_.Get(), deferredContext, std::move(deferredStateMngr), commandBufferDesc);
     }
 }
 
@@ -545,7 +553,13 @@ void D3D11RenderSystem::ClearStateForAllContexts()
 {
     stateMngr_->ClearState();
     for (const auto& cmdBuffer : commandBuffers_)
-        cmdBuffer->ClearStateAndResetDeferredCommandList();
+    {
+        if (!cmdBuffer->IsSecondaryCmdBuffer())
+        {
+            auto& primaryCmdBufferD3D = LLGL_CAST(D3D11PrimaryCommandBuffer&, *cmdBuffer);
+            primaryCmdBufferD3D.ClearStateAndResetDeferredCommandList();
+        }
+    }
 }
 
 

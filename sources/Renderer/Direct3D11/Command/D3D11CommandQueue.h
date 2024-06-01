@@ -11,8 +11,8 @@
 
 #include <LLGL/CommandQueue.h>
 #include <LLGL/ForwardDecls.h>
-#include "RenderState/D3D11Fence.h"
-#include "../DXCommon/ComPtr.h"
+#include "../RenderState/D3D11Fence.h"
+#include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
 
 

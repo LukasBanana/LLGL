@@ -360,8 +360,12 @@ DEF_TEST( ShadowMapping )
             cmdBuffer->PopDebugGroup();
         }
 
-        // Capture framebuffer
-        readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
+        // Capture framebuffer (must be inside a render pass)
+        cmdBuffer->BeginRenderPass(*swapChain);
+        {
+            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
+        }
+        cmdBuffer->EndRenderPass();
     }
     cmdBuffer->End();
 
