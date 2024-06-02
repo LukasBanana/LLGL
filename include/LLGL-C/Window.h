@@ -51,7 +51,9 @@ LLGL_C_EXPORT void llglGetWindowPosition(LLGLWindow window, LLGLOffset2D* outPos
 LLGL_C_EXPORT void llglSetWindowSize(LLGLWindow window, const LLGLExtent2D* size, bool useClientArea);
 LLGL_C_EXPORT void llglGetWindowSize(LLGLWindow window, LLGLExtent2D* outSize, bool useClientArea);
 LLGL_C_EXPORT void llglSetWindowTitle(LLGLWindow window, const wchar_t* title);
+LLGL_C_EXPORT void llglSetWindowTitleUTF8(LLGLWindow window, const char* title);
 LLGL_C_EXPORT size_t llglGetWindowTitle(LLGLWindow window, size_t outTitleLength, wchar_t* outTitle LLGL_ANNOTATE(NULL));
+LLGL_C_EXPORT size_t llglGetWindowTitleUTF8(LLGLWindow window, size_t outTitleLength, char* outTitle LLGL_ANNOTATE(NULL));
 LLGL_C_EXPORT void llglShowWindow(LLGLWindow window, bool show);
 LLGL_C_EXPORT bool llglIsWindowShown(LLGLWindow window);
 LLGL_C_EXPORT void llglSetWindowDesc(LLGLWindow window, const LLGLWindowDescriptor* windowDesc);

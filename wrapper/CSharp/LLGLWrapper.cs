@@ -4818,8 +4818,14 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglSetWindowTitle", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetWindowTitle(Window window, [MarshalAs(UnmanagedType.LPWStr)] string title);
 
+        [DllImport(DllName, EntryPoint="llglSetWindowTitleUTF8", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetWindowTitleUTF8(Window window, [MarshalAs(UnmanagedType.LPStr)] string title);
+
         [DllImport(DllName, EntryPoint="llglGetWindowTitle", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr GetWindowTitle(Window window, IntPtr outTitleLength, char* outTitle);
+
+        [DllImport(DllName, EntryPoint="llglGetWindowTitleUTF8", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe IntPtr GetWindowTitleUTF8(Window window, IntPtr outTitleLength, byte* outTitle);
 
         [DllImport(DllName, EntryPoint="llglShowWindow", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ShowWindow(Window window, [MarshalAs(UnmanagedType.I1)] bool show);

@@ -215,6 +215,11 @@ LLGL_C_EXPORT void llglSetWindowTitle(LLGLWindow window, const wchar_t* title)
     LLGL_PTR(Window, window)->SetTitle(title);
 }
 
+LLGL_C_EXPORT void llglSetWindowTitleUTF8(LLGLWindow window, const char* title)
+{
+    LLGL_PTR(Window, window)->SetTitle(title);
+}
+
 LLGL_C_EXPORT size_t llglGetWindowTitle(LLGLWindow window, size_t outTitleLength, wchar_t* outTitle)
 {
     UTF8String title = LLGL_PTR(Window, window)->GetTitle();
@@ -225,6 +230,17 @@ LLGL_C_EXPORT size_t llglGetWindowTitle(LLGLWindow window, size_t outTitleLength
         ::memcpy(outTitle, titleUTF16.data(), outTitleLength * sizeof(wchar_t));
     }
     return titleUTF16.size();
+}
+
+LLGL_C_EXPORT size_t llglGetWindowTitleUTF8(LLGLWindow window, size_t outTitleLength, char* outTitle)
+{
+    UTF8String title = LLGL_PTR(Window, window)->GetTitle();
+    if (outTitle != nullptr)
+    {
+        outTitleLength = std::min(outTitleLength, title.size() + 1);
+        ::memcpy(outTitle, title.data(), outTitleLength * sizeof(char));
+    }
+    return title.size() + 1;
 }
 
 LLGL_C_EXPORT void llglShowWindow(LLGLWindow window, bool show)
