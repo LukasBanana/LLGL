@@ -33,6 +33,9 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
         // Returns false.
         bool IsMultiSubmitCmdBuffer() const override;
 
+        // Marks this command buffer as submitted to the command queue, allowing its semaphore to be signaled.
+        void MarkSubmitted();
+
         // Returns the native MTLCommandBuffer object.
         inline id<MTLCommandBuffer> GetNative() const
         {
@@ -69,8 +72,9 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
 
     private:
 
-        id<MTLCommandBuffer>            cmdBuffer_              = nil;
-        dispatch_semaphore_t            cmdBufferSemaphore_     = nil;
+        id<MTLCommandBuffer>            cmdBuffer_          = nil;
+        dispatch_semaphore_t            cmdBufferSemaphore_ = nil;
+        bool                            cmdBufferSubmitted_ = false;
 
         MTCommandQueue&                 cmdQueue_;
         MTCommandContext                context_;

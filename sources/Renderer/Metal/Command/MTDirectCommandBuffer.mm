@@ -57,7 +57,8 @@ MTDirectCommandBuffer::MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueu
 void MTDirectCommandBuffer::Begin()
 {
     /* Wait until next command buffer becomes available */
-    dispatch_semaphore_wait(cmdBufferSemaphore_, DISPATCH_TIME_FOREVER);
+    if (cmdBufferSubmitted_)
+        dispatch_semaphore_wait(cmdBufferSemaphore_, DISPATCH_TIME_FOREVER);
 
     /* Allocate new command buffer from command queue */
     cmdBuffer_ = [cmdQueue_.GetNative() commandBuffer];
@@ -68,6 +69,7 @@ void MTDirectCommandBuffer::Begin()
         addCompletedHandler:^(id<MTLCommandBuffer> cmdBuffer)
         {
             dispatch_semaphore_signal(blockSemaphore);
+            this->cmdBufferSubmitted_ = false;
         }
     ];
 
@@ -83,7 +85,10 @@ void MTDirectCommandBuffer::End()
 
     /* Commit native buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
+    {
         cmdQueue_.SubmitCommandBuffer(GetNative());
+        MarkSubmitted();
+    }
 
     ResetRenderStates();
 }
@@ -1053,6 +1058,11 @@ bool MTDirectCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nati
 bool MTDirectCommandBuffer::IsMultiSubmitCmdBuffer() const
 {
     return false; // always false for MTDirectCommandBuffer
+}
+
+void MTDirectCommandBuffer::MarkSubmitted()
+{
+    cmdBufferSubmitted_ = true;
 }
 
 
