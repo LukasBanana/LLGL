@@ -9,8 +9,10 @@
 #include <fstream>
 #include <LLGL/Platform/Platform.h>
 
-#ifdef LLGL_OS_IOS
+#if defined LLGL_OS_IOS
 #   include "iOS/AppUtils.h"
+#elif defined LLGL_OS_MACOS
+#   include "macOS/AppUtils.h"
 #endif
 
 
@@ -29,12 +31,16 @@ std::string FindResourcePath(const std::string& filename)
     if (FileExists(filename))
         return filename;
 
-    #ifdef LLGL_OS_IOS
+    #if defined LLGL_OS_IOS || defined LLGL_OS_MACOS
 
     // Returns filename for resource from main NSBundle
-    return FindNSResourcePath(filename);
+    const std::size_t subPathStart = filename.find_last_of('/');
+    if (subPathStart != std::string::npos)
+        return FindNSResourcePath(filename.substr(subPathStart + 1));
+    else
+        return FindNSResourcePath(filename);
 
-    #else // LLGL_OS_IOS
+    #else
 
     // Search file in resource dependent paths
     auto extPos = filename.find_last_of('.');
@@ -53,7 +59,7 @@ std::string FindResourcePath(const std::string& filename)
             return mediaRoot + "Textures/" + filename;
     }
 
-    #endif // /LLGL_OS_IOS
+    #endif
 
     return filename;
 }

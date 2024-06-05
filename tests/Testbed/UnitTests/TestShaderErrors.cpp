@@ -150,23 +150,28 @@ DEF_TEST( ShaderErrors )
 
     EvaluatePSO(graphicsPSO, "graphicsPSO");
 
-    // Create compute PSO
-    PipelineLayout* computePSOLayout = renderer->CreatePipelineLayout({});
-
-    ComputePipelineDescriptor computePSODesc;
-    {
-        computePSODesc.pipelineLayout   = computePSOLayout;
-        computePSODesc.computeShader    = LoadShader("SemanticErrors.CSMain", ShaderType::Compute, true);
-    }
-    PipelineState* computePSO = renderer->CreatePipelineState(computePSODesc);
-
-    EvaluatePSO(computePSO, "computePSO");
-
     // Clear resources
     renderer->Release(*graphicsPSO);
     renderer->Release(*graphicsPSOLayout);
-    renderer->Release(*computePSO);
-    renderer->Release(*computePSOLayout);
+
+    if (caps.features.hasComputeShaders)
+    {
+        // Create compute PSO
+        PipelineLayout* computePSOLayout = renderer->CreatePipelineLayout({});
+
+        ComputePipelineDescriptor computePSODesc;
+        {
+            computePSODesc.pipelineLayout   = computePSOLayout;
+            computePSODesc.computeShader    = LoadShader("SemanticErrors.CSMain", ShaderType::Compute, true);
+        }
+        PipelineState* computePSO = renderer->CreatePipelineState(computePSODesc);
+
+        EvaluatePSO(computePSO, "computePSO");
+
+        // Clear resources
+        renderer->Release(*computePSO);
+        renderer->Release(*computePSOLayout);
+    }
 
     return result;
 }

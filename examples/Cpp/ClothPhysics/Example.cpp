@@ -607,13 +607,7 @@ private:
                 commands->Dispatch(clothSegmentsU + 1, clothSegmentsV + 1, 1);
             }
             commands->PopDebugGroup();
-        }
-        commands->End();
-        commandQueue->Submit(*commands);
 
-        // Record and submit graphics commands
-        commands->Begin();
-        {
             // Draw scene
             commands->BeginRenderPass(*swapChain);
             {

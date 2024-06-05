@@ -7,6 +7,7 @@
 
 #include <ExampleBase.h>
 #include <stb/stb_image.h>
+#include <FileUtils.h>
 #include <LLGL/Display.h>
 
 
@@ -219,6 +220,8 @@ private:
                 filename = "Plants_" + std::to_string(i) + ".png";
             else
                 filename = "Grass.jpg";
+
+            filename = FindResourcePath(filename);
 
             // Load all images from file (using STBI library, see https://github.com/nothings/stb)
             int w = 0, h = 0, c = 0;

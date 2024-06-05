@@ -89,10 +89,14 @@ int main(int argc, char* argv[])
         swapChain->SetVsyncInterval(1);
 
         // Set window title and show window
-        auto& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
+        LLGL::Window* window = nullptr;
 
-        window.SetTitle(L"LLGL Example: Hello Triangle");
-        window.Show();
+        if (LLGL::IsInstanceOf<LLGL::Window>(swapChain->GetSurface()))
+        {
+            window = LLGL::CastTo<LLGL::Window>(&swapChain->GetSurface());
+            window->SetTitle(L"LLGL Example: Hello Triangle");
+            window->Show();
+        }
 
         // Vertex data structure
         struct Vertex
@@ -172,6 +176,8 @@ int main(int argc, char* argv[])
         {
             vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.metal", "VS", "1.1" };
             fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" };
+            vertShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
+            fragShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         }
 
         // Specify vertex attributes for vertex shader
@@ -260,7 +266,7 @@ int main(int argc, char* argv[])
         // Enter main loop
         const float bgColor[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
 
-        while (LLGL::Surface::ProcessEvents() && !window.HasQuit())
+        while (LLGL::Surface::ProcessEvents() && (window == nullptr || !window->HasQuit()))
         {
             // Begin recording commands
             commands->Begin();

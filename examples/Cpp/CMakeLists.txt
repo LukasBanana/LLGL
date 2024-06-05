@@ -15,16 +15,21 @@ project(LLGL_ExamplesCpp)
 # Example project files
 find_source_files(FilesExampleBase CXX "${EXAMPLEBASE_PROJECT_DIR}")
 
-if(LLGL_IOS_PLATFORM)
-    find_source_files(FilesExampleBaseIOS OBJC "${EXAMPLEBASE_PROJECT_DIR}/iOS")
-endif()
+if(APPLE)
+    if(LLGL_IOS_PLATFORM)
+        find_source_files(FilesExampleBaseIOS OBJC "${EXAMPLEBASE_PROJECT_DIR}/iOS")
+    else()
+        find_source_files(FilesExampleBaseMacOS OBJC "${EXAMPLEBASE_PROJECT_DIR}/macOS")
+    endif()
+endif(APPLE)
 
 set(FilesExampleBaseAll ${FilesExampleBase})
-if(LLGL_IOS_PLATFORM)
-    set(FilesExampleBaseAll ${FilesExampleBaseAll} ${FilesExampleBaseIOS})
-endif()
-
 if(APPLE)
+    if(LLGL_IOS_PLATFORM)
+        set(FilesExampleBaseAll ${FilesExampleBaseAll} ${FilesExampleBaseIOS})
+    else()
+        set(FilesExampleBaseAll ${FilesExampleBaseAll} ${FilesExampleBaseMacOS})
+    endif()
     set_source_files_properties("${EXAMPLEBASE_PROJECT_DIR}/ExampleBase.cpp" PROPERTIES COMPILE_FLAGS -xobjective-c++)
 endif()
 
@@ -52,8 +57,8 @@ find_project_source_files( FilesExample_VolumeRendering     "${EXAMPLE_CPP_PROJE
 
 find_project_source_files( FilesExample_HelloUWP            "${EXAMPLE_CPP_PROJECTS_DIR}/HelloUWP"         )
 
-# Append extra resources for mobile platforms
-if(LLGL_IOS_PLATFORM)
+# Append extra resources for app bundles (iOS/macOS)
+if(APPLE)
     add_project_resource_files(FilesExample_Fonts
         "FontAtlas_*.png"
         )
@@ -66,6 +71,15 @@ if(LLGL_IOS_PLATFORM)
         )
     add_project_resource_files(FilesExample_ClothPhysics
         "Logo_LLGL.png"
+        )
+    add_project_resource_files(FilesExample_PBR
+        "UVSphere.obj"
+        "WiredBox.obj"
+        "PBR/mp_alpha/alpha-island_*.tga"
+        "PBR/Metal04/Metal04_*.jpg"
+        "PBR/Tiles22/Tiles22_*.jpg"
+        "PBR/Tiles26/Tiles26_*.jpg"
+        "PBR/Wood13/Wood13_*.jpg"
         )
     add_project_resource_files(FilesExample_RenderTarget
         "Crate.jpg"
@@ -97,6 +111,12 @@ if(LLGL_IOS_PLATFORM)
         "Grass.jpg"
         "Plants_*.png"
         )
+    if(NOT LLGL_MOBILE_PLATFORM)
+        add_project_resource_files(FilesExample_MultiRenderer
+            "Logo_Metal.png"
+            "Logo_OpenGL.png"
+            )
+    endif()
 endif()
 
 
@@ -104,9 +124,13 @@ endif()
 
 source_group("Sources" FILES ${FilesExampleBase})
 
-if(LLGL_IOS_PLATFORM)
-    source_group("Sources\\iOS" FILES ${FilesExampleBaseIOS})
-endif()
+if(APPLE)
+    if(LLGL_IOS_PLATFORM)
+        source_group("Sources\\iOS" FILES ${FilesExampleBaseIOS})
+    else()
+        source_group("Sources\\macOS" FILES ${FilesExampleBaseMacOS})
+    endif()
+endif(APPLE)
 
 
 # === Include directories ===

@@ -896,9 +896,12 @@ bool TestbedContext::LoadShaders()
         shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.VShadow.330core.vert", ShaderType::Vertex);
         shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.VScene.330core.vert",  ShaderType::Vertex);
         shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.330core.frag",  ShaderType::Fragment);
-        shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag",       ShaderType::Fragment);
-        shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp",       ShaderType::Compute);
+        if (IsShadingLanguageSupported(ShadingLanguage::GLSL_450))
+        {
+            shaders[VSResourceBinding] = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[PSResourceBinding] = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag",       ShaderType::Fragment);
+            shaders[CSResourceBinding] = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp",       ShaderType::Compute);
+        }
         shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.frag",           ShaderType::Fragment);
     }

@@ -116,14 +116,23 @@ static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int 
     std::cout << "selected renderer: " << rendererModule << std::endl;
 }
 
+static constexpr const char* GetDefaultRendererModule()
+{
+    #if defined LLGL_OS_WIN32
+    return "Direct3D11";
+    #elif defined LLGL_OS_IOS || defined LLGL_OS_MACOS
+    return "Metal";
+    #elif defined LLGL_OS_ANDROID
+    return "OpenGLES3";
+    #else
+    return "OpenGL";
+    #endif
+}
+
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
-    std::string rendererModule;
-    if (const char* specificModule = GetRendererModuleFromCommandArgs(argc, argv))
-        rendererModule = specificModule;
-    else
-        rendererModule = GetRendererModuleFromUserSelection(argc, argv);
-    std::cout << "selected renderer: " << rendererModule << std::endl;
+    std::string rendererModule = GetDefaultRendererModule();
+    GetSelectedRendererModuleOrDefault(rendererModule, argc, argv);
     return rendererModule;
 }
 
@@ -289,19 +298,6 @@ void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const L
  * ExampleBase class
  */
 
-static constexpr const char* GetDefaultRendererModule()
-{
-    #if defined LLGL_OS_WIN32
-    return "Direct3D11";
-    #elif defined LLGL_OS_IOS || defined LLGL_OS_MACOS
-    return "Metal";
-    #elif defined LLGL_OS_ANDROID
-    return "OpenGLES3";
-    #else
-    return "OpenGL";
-    #endif
-}
-
 struct ExampleConfig
 {
     std::string     rendererModule  = GetDefaultRendererModule();
@@ -319,7 +315,7 @@ android_app* ExampleBase::androidApp_;
 
 void ExampleBase::ParseProgramArgs(int argc, char* argv[])
 {
-    GetSelectedRendererModuleOrDefault(g_Config.rendererModule, argc, argv);
+    g_Config.rendererModule = GetSelectedRendererModule(argc, argv);
     ParseWindowSize(g_Config.windowSize, argc, argv);
     ParseSamples(g_Config.samples, argc, argv);
     if (HasArgument("-v0", argc, argv) || HasArgument("--novsync", argc, argv))
@@ -576,7 +572,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         // Forward macro definitions
         deviceShaderDesc.defines = defines;
 
-        #ifdef LLGL_OS_IOS
+        #if defined LLGL_OS_IOS || defined LLGL_OS_MACOS
         // Always load shaders from default library (default.metallib) when compiling for iOS
         deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         #endif

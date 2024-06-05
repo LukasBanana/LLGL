@@ -34,6 +34,17 @@ int main(int argc, char* argv[])
     };
     LLGLSwapChain swapChain = llglCreateSwapChain(&swapChainDesc);
 
+    // Print information about the selected renderer
+    LLGLRendererInfo info = {};
+    llglGetRendererInfo(&info);
+    printf(
+        "Renderer:         %s\n"
+        "Device:           %s\n"
+        "Vendor:           %s\n"
+        "Shading Language: %s\n",
+        info.rendererName, info.deviceName, info.vendorName, info.shadingLanguageName
+    );
+
     // Enable V-sync
     llglSetVsyncInterval(swapChain, 1);
 

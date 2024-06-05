@@ -192,7 +192,7 @@ function(add_project_resource_files OUTPUT_LIST)
     set(ResourceFiles "")
     set(InputFilenames "${ARGN}")
     foreach(InputFile ${InputFilenames})
-        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds)")
+        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga)")
             file(GLOB TextureResourceFiles "${EXAMPLE_MEDIA_DIR}/Textures/${InputFile}")
             list(APPEND ResourceFiles "${TextureResourceFiles}")
         elseif("${InputFile}" MATCHES ".+\\.(obj)")
@@ -278,7 +278,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
 
         # Filter resource files into "Resources" folder
         set(RES_FILES "${SRC_FILES}")
-        list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds|icns)")
+        list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds|tga|icns)")
         source_group("Resources" FILES ${RES_FILES})
 
         # Don't compile these resource types, just keep them in the project solution
