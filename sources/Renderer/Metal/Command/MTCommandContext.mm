@@ -11,12 +11,16 @@
 #include "../RenderState/MTResourceHeap.h"
 #include "../RenderState/MTGraphicsPSO.h"
 #include "../RenderState/MTComputePSO.h"
+#include "../RenderState/MTRenderPass.h"
 #include "../Shader/MTShader.h"
 #include "../MTSwapChain.h"
+#include "../Texture/MTRenderTarget.h"
 #include "../../../Core/Assertion.h"
+#include "../../CheckedCast.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/TypeInfo.h>
 #include <algorithm>
 #include <string.h>
 
@@ -72,15 +76,30 @@ void MTCommandContext::Flush()
     }
 }
 
-void MTCommandContext::BeginRenderPass(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT)
+void MTCommandContext::BeginRenderPass(
+    RenderTarget*       renderTarget,
+    const MTRenderPass* renderPassMT,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    LLGL_ASSERT_PTR(renderPassDesc);
-
-    if (!contextState_.isInsideRenderPass)
+    LLGL_ASSERT_PTR(renderTarget);
+    if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
-        renderPassDesc_ = (MTLRenderPassDescriptor*)[renderPassDesc copy];
-        contextState_.isInsideRenderPass = true;
-        boundSwapChain_ = swapChainMT;
+        /* Get next render pass descriptor from MetalKit view */
+        auto* swapChainMT = LLGL_CAST(MTSwapChain*, renderTarget);
+        if (renderPassMT != nullptr)
+            BeginRenderPassWithDescriptor(swapChainMT->GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), swapChainMT);
+        else
+            BeginRenderPassWithDescriptor(swapChainMT->GetNativeRenderPass(), swapChainMT);
+    }
+    else
+    {
+        /* Get render pass descriptor from render target */
+        auto* renderTargetMT = LLGL_CAST(MTRenderTarget*, renderTarget);
+        if (renderPassMT != nullptr)
+            BeginRenderPassWithDescriptor(renderTargetMT->GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), nullptr);
+        else
+            BeginRenderPassWithDescriptor(renderTargetMT->GetNativeRenderPass(), nullptr);
     }
 }
 
@@ -470,6 +489,18 @@ MTKView* MTCommandContext::GetCurrentDrawableView() const
 /*
  * ======= Private: =======
  */
+
+void MTCommandContext::BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT)
+{
+    LLGL_ASSERT_PTR(renderPassDesc);
+
+    if (!contextState_.isInsideRenderPass)
+    {
+        renderPassDesc_ = (MTLRenderPassDescriptor*)[renderPassDesc copy];
+        contextState_.isInsideRenderPass = true;
+        boundSwapChain_ = swapChainMT;
+    }
+}
 
 void MTCommandContext::BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc)
 {

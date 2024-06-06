@@ -26,11 +26,13 @@ namespace LLGL
 struct Viewport;
 struct Scissor;
 class Resource;
+class RenderTarget;
 class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
 class MTPipelineState;
 class MTSwapChain;
+class MTRenderPass;
 
 struct MTInternalBindingTable
 {
@@ -64,7 +66,12 @@ class MTCommandContext
         // Ends the currently bound command encoder.
         void Flush();
 
-        void BeginRenderPass(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT);
+        void BeginRenderPass(
+            RenderTarget*       renderTarget,
+            const MTRenderPass* renderPassMT,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues
+        );
         void UpdateRenderPass(MTLRenderPassDescriptor* renderPassDesc);
         void EndRenderPass();
 
@@ -212,6 +219,7 @@ class MTCommandContext
 
     private:
 
+        void BeginRenderPassWithDescriptor(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT);
         void BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc);
         void PauseRenderEncoder();
         void ResumeRenderEncoder();

@@ -233,28 +233,8 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         case MTOpcodeBeginRenderPass:
         {
             auto* cmd = reinterpret_cast<const MTCmdBeginRenderPass*>(pc);
-            if (LLGL::IsInstanceOf<SwapChain>(cmd->renderTarget))
-            {
-                auto* swapChainMT = LLGL_CAST(MTSwapChain*, cmd->renderTarget);
-                if (cmd->renderPass != nullptr)
-                {
-                    auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
-                    context.BeginRenderPass(swapChainMT->GetAndUpdateNativeRenderPass(*(cmd->renderPass), cmd->numClearValues, clearValues), swapChainMT);
-                }
-                else
-                    context.BeginRenderPass(swapChainMT->GetNativeRenderPass(), swapChainMT);
-            }
-            else
-            {
-                auto* renderTargetMT = LLGL_CAST(MTRenderTarget*, cmd->renderTarget);
-                if (cmd->renderPass != nullptr)
-                {
-                    auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
-                    context.BeginRenderPass(renderTargetMT->GetAndUpdateNativeRenderPass(*(cmd->renderPass), cmd->numClearValues, clearValues), nullptr);
-                }
-                else
-                    context.BeginRenderPass(renderTargetMT->GetNativeRenderPass(), nullptr);
-            }
+            auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
+            context.BeginRenderPass(cmd->renderTarget, cmd->renderPass, cmd->numClearValues, clearValues);
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
         case MTOpcodeEndRenderPass:

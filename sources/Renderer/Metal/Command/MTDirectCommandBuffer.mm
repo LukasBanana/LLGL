@@ -489,28 +489,11 @@ void MTDirectCommandBuffer::BeginRenderPass(
         /* Put current drawable into queue */
         auto& swapChainMT = LLGL_CAST(MTSwapChain&, renderTarget);
         QueueDrawable(swapChainMT.GetMTKView().currentDrawable);
+    }
 
-        /* Get next render pass descriptor from MetalKit view */
-        if (renderPass != nullptr)
-        {
-            auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
-            context_.BeginRenderPass(swapChainMT.GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), &swapChainMT);
-        }
-        else
-            context_.BeginRenderPass(swapChainMT.GetNativeRenderPass(), &swapChainMT);
-    }
-    else
-    {
-        /* Get render pass descriptor from render target */
-        auto& renderTargetMT = LLGL_CAST(MTRenderTarget&, renderTarget);
-        if (renderPass != nullptr)
-        {
-            auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
-            context_.BeginRenderPass(renderTargetMT.GetAndUpdateNativeRenderPass(*renderPassMT, numClearValues, clearValues), nullptr);
-        }
-        else
-            context_.BeginRenderPass(renderTargetMT.GetNativeRenderPass(), nullptr);
-    }
+    /* Get next render pass descriptor from MetalKit view */
+    auto* renderPassMT = LLGL_CAST(const MTRenderPass*, renderPass);
+    context_.BeginRenderPass(&renderTarget, renderPassMT, numClearValues, clearValues);
 }
 
 void MTDirectCommandBuffer::EndRenderPass()
