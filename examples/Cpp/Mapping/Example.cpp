@@ -127,10 +127,11 @@ private:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.vertexShader       = shaderPipeline.vs;
-            pipelineDesc.fragmentShader     = shaderPipeline.ps;
-            pipelineDesc.pipelineLayout     = pipelineLayout;
-            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.vertexShader                   = shaderPipeline.vs;
+            pipelineDesc.fragmentShader                 = shaderPipeline.ps;
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipeline = renderer->CreatePipelineState(pipelineDesc);
     }

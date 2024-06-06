@@ -664,7 +664,8 @@ void MTCommandContext::SubmitComputeEncoderState()
 
 void MTCommandContext::ResetComputeEncoderState()
 {
-    computeEncoderState_.computeResourceHeap = nullptr;
+    computeEncoderState_.computePSO             = nullptr;
+    computeEncoderState_.computeResourceHeap    = nullptr;
 }
 
 void MTCommandContext::ResetContextState()
