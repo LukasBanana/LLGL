@@ -65,7 +65,7 @@ class MTDirectCommandBuffer final : public MTCommandBuffer
 
         id<MTLCommandBuffer>            cmdBuffer_          = nil;
         dispatch_semaphore_t            cmdBufferSemaphore_ = nil;
-        bool                            cmdBufferSubmitted_ = false;
+        bool                            cmdBufferDirty_     = false;
 
         MTCommandQueue&                 cmdQueue_;
         MTCommandContext                context_;

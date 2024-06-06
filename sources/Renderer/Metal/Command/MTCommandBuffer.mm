@@ -40,7 +40,7 @@ MTCommandBuffer::MTCommandBuffer(id<MTLDevice> device, long flags) :
 
 void MTCommandBuffer::ResetRenderStates()
 {
-    currentStagingPool_ = (currentStagingPool_ + 1) % maxNumStagingPools;
+    currentStagingPool_ = (currentStagingPool_ + 1) % MTCommandBuffer::maxNumCommandBuffersInFlight;
 }
 
 void MTCommandBuffer::ResetStagingPool()

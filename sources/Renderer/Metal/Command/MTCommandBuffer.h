@@ -60,6 +60,8 @@ class MTCommandBuffer : public CommandBuffer
 
     protected:
 
+        static constexpr NSUInteger maxNumCommandBuffersInFlight = 3;
+
         MTCommandBuffer(id<MTLDevice> device, long flags);
 
         void ResetRenderStates();
@@ -74,13 +76,11 @@ class MTCommandBuffer : public CommandBuffer
 
     private:
 
-        static constexpr NSUInteger     maxNumStagingPools      = 3;
-
         id<MTLDevice>                   device_                 = nil;
         long                            flags_                  = 0;
 
         NSUInteger                      currentStagingPool_     = 0;
-        MTStagingBufferPool             stagingBufferPools_[MTCommandBuffer::maxNumStagingPools];
+        MTStagingBufferPool             stagingBufferPools_[MTCommandBuffer::maxNumCommandBuffersInFlight];
         SmallVector<id<MTLDrawable>, 2> queuedDrawables_;
 
 };

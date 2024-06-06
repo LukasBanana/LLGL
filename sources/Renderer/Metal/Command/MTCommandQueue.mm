@@ -46,8 +46,8 @@ void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
         auto& directCommandBufferMT = LLGL_CAST(MTDirectCommandBuffer&, commandBufferMT);
         if (!directCommandBufferMT.IsImmediateCmdBuffer())
         {
-            SubmitCommandBuffer(directCommandBufferMT.GetNative());
             directCommandBufferMT.MarkSubmitted();
+            SubmitCommandBuffer(directCommandBufferMT.GetNative());
         }
     }
 }

@@ -49,17 +49,22 @@ MTDirectCommandBuffer::MTDirectCommandBuffer(id<MTLDevice> device, MTCommandQueu
     cmdQueue_          { cmdQueue           },
     context_           { device             }
 {
-    const NSUInteger maxCmdBuffers = 3;
-    cmdBufferSemaphore_ = dispatch_semaphore_create(maxCmdBuffers);
+    cmdBufferSemaphore_ = dispatch_semaphore_create(MTCommandBuffer::maxNumCommandBuffersInFlight);
 }
 
 /* ----- Encoding ----- */
 
 void MTDirectCommandBuffer::Begin()
 {
-    /* Wait until next command buffer becomes available */
-    if (cmdBufferSubmitted_)
+    /*
+    If the previous encoded command buffer was submitted to the command queue,
+    we have to wait until our in-flight resources (such as staging buffer pool) become available again.
+    */
+    if (!cmdBufferDirty_)
+    {
         dispatch_semaphore_wait(cmdBufferSemaphore_, DISPATCH_TIME_FOREVER);
+        cmdBufferDirty_ = true;
+    }
 
     /* Allocate new command buffer from command queue */
     cmdBuffer_ = [cmdQueue_.GetNative() commandBuffer];
@@ -70,7 +75,6 @@ void MTDirectCommandBuffer::Begin()
         addCompletedHandler:^(id<MTLCommandBuffer> cmdBuffer)
         {
             dispatch_semaphore_signal(blockSemaphore);
-            this->cmdBufferSubmitted_ = false;
         }
     ];
 
@@ -87,8 +91,8 @@ void MTDirectCommandBuffer::End()
     /* Commit native buffer right after encoding for immediate command buffers */
     if (IsImmediateCmdBuffer())
     {
-        cmdQueue_.SubmitCommandBuffer(GetNative());
         MarkSubmitted();
+        cmdQueue_.SubmitCommandBuffer(GetNative());
     }
 
     ResetRenderStates();
@@ -1022,7 +1026,8 @@ bool MTDirectCommandBuffer::IsMultiSubmitCmdBuffer() const
 
 void MTDirectCommandBuffer::MarkSubmitted()
 {
-    cmdBufferSubmitted_ = true;
+    /* Reset dirty bit now that it has been submitted to the command queue */
+    cmdBufferDirty_ = false;
 }
 
 
