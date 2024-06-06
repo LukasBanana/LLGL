@@ -16,7 +16,8 @@ namespace LLGL
 {
 
 
-MTCommandQueue::MTCommandQueue(id<MTLDevice> device)
+MTCommandQueue::MTCommandQueue(id<MTLDevice> device) :
+    context_ { device }
 {
     native_ = [device newCommandQueue];
 }
@@ -36,10 +37,9 @@ void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
     if (commandBufferMT.IsMultiSubmitCmdBuffer())
     {
         auto& multiSubmitCommandBufferMT = LLGL_CAST(MTMultiSubmitCommandBuffer&, commandBufferMT);
-        MTCommandContext context;
-        context.Reset([native_ commandBuffer]);
-        ExecuteMTMultiSubmitCommandBuffer(multiSubmitCommandBufferMT, context);
-        SubmitCommandBuffer(context.GetCommandBuffer());
+        context_.Reset([native_ commandBuffer]);
+        ExecuteMTMultiSubmitCommandBuffer(multiSubmitCommandBufferMT, context_);
+        SubmitCommandBuffer(context_.GetCommandBuffer());
     }
     else
     {

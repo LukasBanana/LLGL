@@ -12,6 +12,7 @@
 #import <MetalKit/MetalKit.h>
 
 #include <LLGL/CommandQueue.h>
+#include "MTCommandContext.h"
 
 
 namespace LLGL
@@ -45,6 +46,7 @@ class MTCommandQueue final : public CommandQueue
 
         id<MTLCommandQueue>     native_                 = nil;
         id<MTLCommandBuffer>    lastSubmittedCmdBuffer_ = nil;
+        MTCommandContext        context_;
 
 };
 

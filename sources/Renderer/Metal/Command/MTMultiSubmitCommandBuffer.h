@@ -25,7 +25,7 @@ class MTMultiSubmitCommandBuffer final : public MTCommandBuffer
 
     public:
 
-        #include "MTCommandBuffer.inl"
+        #include <LLGL/Backend/CommandBuffer.inl>
 
     public:
 
@@ -45,19 +45,13 @@ class MTMultiSubmitCommandBuffer final : public MTCommandBuffer
 
     private:
 
-        void BindRenderEncoderForTessellation(NSUInteger numPatches, NSUInteger numInstances = 1);
-        void BindRenderEncoder();
-        void BindComputeEncoder();
-        void BindBlitEncoder();
-
         void QueueDrawable(MTKView* view);
         void PresentDrawables();
-
-        void DispatchThreads1D(id<MTLComputePipelineState> computePSO, NSUInteger numThreads);
 
         void GenerateMipmapsForTexture(id<MTLTexture> texture);
 
         void SetNativeVertexBuffers(NSUInteger count, const id<MTLBuffer>* buffers, const NSUInteger* offsets);
+        void SetNativeIndexBuffer(id<MTLBuffer> buffer, NSUInteger offset, bool indexType16Bits);
 
         void FlushContext();
 
@@ -77,11 +71,8 @@ class MTMultiSubmitCommandBuffer final : public MTCommandBuffer
         MTVirtualCommandBuffer          buffer_;
         MTOpcode                        lastOpcode_             = MTOpcodeNop;
 
-        MTEncoderState                  encoderState_           = MTEncoderState::None;
         SmallVector<MTKView*, 2>        views_;
         SmallVector<id<MTLTexture>, 2>  intermediateTextures_;
-
-        bool                            isInsideRenderPass_     = false;
 
 };
 

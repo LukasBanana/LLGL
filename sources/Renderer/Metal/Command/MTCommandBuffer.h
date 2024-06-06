@@ -14,7 +14,6 @@
 #include <LLGL/CommandBuffer.h>
 #include <LLGL/Constants.h>
 #include "MTCommandContext.h"
-#include "../Buffer/MTIntermediateBuffer.h"
 #include "../Buffer/MTStagingBufferPool.h"
 
 
@@ -36,13 +35,6 @@ class MTComputePSO;
 
 class MTCommandBuffer : public CommandBuffer
 {
-
-    public:
-
-        /* ----- Input Assembly ------ */
-
-        void SetIndexBuffer(Buffer& buffer) override final;
-        void SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset = 0) override final;
 
     public:
 
@@ -68,25 +60,7 @@ class MTCommandBuffer : public CommandBuffer
 
     protected:
 
-        // Active command encoder state enumeration.
-        enum class MTEncoderState
-        {
-            None,
-            Render,
-            Compute,
-            Blit,
-        };
-
-    protected:
-
         MTCommandBuffer(id<MTLDevice> device, long flags);
-
-        NSUInteger GetMaxLocalThreads(id<MTLComputePipelineState> computePSO) const;
-
-        void SetSwapChain(MTSwapChain* swapChainMT);
-
-        void SetGraphicsPSORenderState(MTGraphicsPSO& graphicsPSO);
-        void SetComputePSORenderState(MTComputePSO& computePSO);
 
         void ResetRenderStates();
         void ResetStagingPool();
@@ -98,58 +72,6 @@ class MTCommandBuffer : public CommandBuffer
             NSUInteger&     outSrcOffset
         );
 
-        // Returns the Metal view of the current drawable from the active framebuffer.
-        MTKView* GetCurrentDrawableView() const;
-
-        // Grows the internal tessellation-factor buffer to fit the specified number of patches and instances, then returns the native Metal buffer.
-        id<MTLBuffer> GetTessFactorBufferAndGrow(NSUInteger numPatchesAndInstances);
-
-    protected:
-
-        inline MTLPrimitiveType GetPrimitiveType() const
-        {
-            return primitiveType_;
-        }
-
-        inline MTLIndexType GetIndexType() const
-        {
-            return indexType_;
-        }
-
-        inline id<MTLBuffer> GetIndexBuffer() const
-        {
-            return indexBuffer_;
-        }
-
-        inline NSUInteger GetIndexBufferOffset(NSUInteger firstIndex) const
-        {
-            return (indexBufferOffset_ + indexTypeSize_ * firstIndex);
-        }
-
-        inline NSUInteger GetNumPatchControlPoints() const
-        {
-            return numPatchControlPoints_;
-        }
-
-        inline const MTLSize& GetThreadsPerThreadgroup() const
-        {
-            return threadsPerThreadgroup_;
-        }
-
-        inline MTPipelineState* GetBoundPipelineState() const
-        {
-            return boundPipelineState_;
-        }
-
-        inline id<MTLComputePipelineState> GetTessPipelineState() const
-        {
-            return tessPipelineState_;
-        }
-
-    private:
-
-        void SetIndexStream(id<MTLBuffer> indexBuffer, NSUInteger offset, bool indexType16Bits);
-
     private:
 
         static constexpr NSUInteger     maxNumStagingPools      = 3;
@@ -160,22 +82,6 @@ class MTCommandBuffer : public CommandBuffer
         NSUInteger                      currentStagingPool_     = 0;
         MTStagingBufferPool             stagingBufferPools_[MTCommandBuffer::maxNumStagingPools];
         SmallVector<id<MTLDrawable>, 2> queuedDrawables_;
-
-        MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
-        id<MTLBuffer>                   indexBuffer_            = nil;
-        NSUInteger                      indexBufferOffset_      = 0;
-        MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
-        NSUInteger                      indexTypeSize_          = 4;
-        NSUInteger                      numPatchControlPoints_  = 0;
-
-        MTLSize                         threadsPerThreadgroup_  = MTLSizeMake(1, 1, 1);
-        MTSwapChain*                    boundSwapChain_         = nullptr;
-        MTPipelineState*                boundPipelineState_     = nullptr;
-
-        // Tessellator stage objects
-        MTIntermediateBuffer            tessFactorBuffer_;
-        NSUInteger                      tessFactorSize_         = 0;
-        id<MTLComputePipelineState>     tessPipelineState_      = nil;
 
 };
 

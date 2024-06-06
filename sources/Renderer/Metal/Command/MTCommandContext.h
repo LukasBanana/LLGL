@@ -9,8 +9,9 @@
 #define LLGL_MT_COMMAND_CONTEXT_H
 
 
-#import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
+#include "../Buffer/MTIntermediateBuffer.h"
 #include "../RenderState/MTDescriptorCache.h"
 #include "../RenderState/MTConstantsCache.h"
 #include <LLGL/Constants.h>
@@ -28,10 +29,21 @@ class Resource;
 class MTResourceHeap;
 class MTGraphicsPSO;
 class MTComputePSO;
+class MTPipelineState;
+class MTSwapChain;
 
 struct MTInternalBindingTable
 {
     NSUInteger tessFactorBufferSlot = 30;
+};
+
+// Active command encoder state enumeration.
+enum class MTEncoderState
+{
+    None,
+    Render,
+    Compute,
+    Blit,
 };
 
 // Metal commadn context: Manages the scheduling between render and compute command encoders.
@@ -39,6 +51,9 @@ class MTCommandContext
 {
 
     public:
+
+        // Initializes internal buffers with the Metal device.
+        MTCommandContext(id<MTLDevice> device);
 
         // Resets all internal states.
         void Reset();
@@ -49,17 +64,31 @@ class MTCommandContext
         // Ends the currently bound command encoder.
         void Flush();
 
+        void BeginRenderPass(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT);
+        void UpdateRenderPass(MTLRenderPassDescriptor* renderPassDesc);
+        void EndRenderPass();
+
         // Binds the respective command encoder with the specified descriptor.
-        id<MTLRenderCommandEncoder> BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool isPrimaryRenderPass = false);
+        id<MTLRenderCommandEncoder> BindRenderEncoder();
         id<MTLComputeCommandEncoder> BindComputeEncoder();
         id<MTLBlitCommandEncoder> BindBlitEncoder();
 
-        // Interrupts the render command encoder (if active).
-        void PauseRenderEncoder();
-        void ResumeRenderEncoder();
+        // Returns the current render command encoder and flushes the queued render states and render pass.
+        id<MTLRenderCommandEncoder> FlushAndGetRenderEncoder();
+        id<MTLComputeCommandEncoder> FlushAndGetComputeEncoder();
 
-        // Retunrs a copy of the current render pass descriptor or null if there is none.
+        // Returns a copy of the current render pass descriptor or null if there is none.
         MTLRenderPassDescriptor* CopyRenderPassDesc();
+
+        // Dispatches the specified amount of local threads in as large threadgroups as possible.
+        void DispatchThreads1D(
+            id<MTLComputeCommandEncoder>    computeEncoder,
+            id<MTLComputePipelineState>     computePSO,
+            NSUInteger                      numThreads
+        );
+
+        // Dispatches the current tessellation compute shader and returns the respective render encoder.
+        id<MTLRenderCommandEncoder> DispatchTessellationAndGetRenderEncoder(NSUInteger numPatches, NSUInteger numInstances = 1);
 
     public:
 
@@ -80,6 +109,15 @@ class MTCommandContext
         // Rebinds the currently bounds resource heap to the specified compute encoder (used for tessellation encoding).
         void RebindResourceHeap(id<MTLComputeCommandEncoder> computeEncoder);
 
+        // State cache.
+        void SetIndexStream(id<MTLBuffer> indexBuffer, NSUInteger offset, bool indexType16Bits);
+
+        // Grows the internal tessellation-factor buffer to fit the specified number of patches and instances, then returns the native Metal buffer.
+        id<MTLBuffer> GetTessFactorBufferAndGrow(NSUInteger numPatchesAndInstances);
+
+        // Returns the Metal view of the current drawable from the active framebuffer.
+        MTKView* GetCurrentDrawableView() const;
+
     public:
 
         // Returns the native command buffer currently used by this context.
@@ -87,12 +125,6 @@ class MTCommandContext
         {
             return cmdBuffer_;
         }
-
-        // Returns the current render command encoder and flushes the queued render states and render pass.
-        id<MTLRenderCommandEncoder> FlushAndGetRenderEncoder();
-
-        // Returns the current compute command encoder and flushes the stored compute states.
-        id<MTLComputeCommandEncoder> FlushAndGetComputeEncoder();
 
         // Returns the current render command encoder.
         inline id<MTLRenderCommandEncoder> GetRenderEncoder() const
@@ -124,6 +156,55 @@ class MTCommandContext
             constantsCache_.SetUniforms(first, data, dataSize);
         }
 
+        // Returns true if this command context is currently inside a render pass.
+        inline bool IsInsideRenderPass() const
+        {
+            return contextState_.isInsideRenderPass;
+        }
+
+        // Returns the current native index type.
+        inline MTLIndexType GetIndexType() const
+        {
+            return contextState_.indexType;
+        }
+
+        // Returns the current native index buffer.
+        inline id<MTLBuffer> GetIndexBuffer() const
+        {
+            return contextState_.indexBuffer;
+        }
+
+        // Returns the byte offset for the specified index.
+        inline NSUInteger GetIndexBufferOffset(NSUInteger firstIndex) const
+        {
+            return (contextState_.indexBufferOffset + contextState_.indexTypeSize * firstIndex);
+        }
+
+        inline MTLPrimitiveType GetPrimitiveType() const
+        {
+            return contextState_.primitiveType;
+        }
+
+        inline NSUInteger GetNumPatchControlPoints() const
+        {
+            return contextState_.numPatchControlPoints;
+        }
+
+        inline NSUInteger GetTessFactorSize() const
+        {
+            return contextState_.tessFactorSize;
+        }
+
+        inline const MTLSize& GetThreadsPerThreadgroup() const
+        {
+            return contextState_.threadsPerThreadgroup;
+        }
+
+        inline MTPipelineState* GetBoundPipelineState() const
+        {
+            return contextState_.boundPipelineState;
+        }
+
     public:
 
         // Table of all internal binding slots.
@@ -131,11 +212,19 @@ class MTCommandContext
 
     private:
 
+        void BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc);
+        void PauseRenderEncoder();
+        void ResumeRenderEncoder();
+
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
 
         void SubmitComputeEncoderState();
         void ResetComputeEncoderState();
+
+        void ResetContextState();
+
+        NSUInteger GetMaxLocalThreads(id<MTLComputePipelineState> computePSO) const;
 
     private:
 
@@ -188,6 +277,27 @@ class MTCommandContext
             std::uint32_t   computeResourceSet  = 0;
         };
 
+        // Context for state that is detached from Metal commands,
+        // e.g. index buffer is provided per draw call in Metal, but LLGL uses a state cache via SetIndexBuffer().
+        struct MTContextState
+        {
+            MTEncoderState              encoderState            = MTEncoderState::None;
+            bool                        isInsideRenderPass      = false;
+
+            id<MTLBuffer>               indexBuffer             = nil;
+            NSUInteger                  indexBufferOffset       = 0;
+            MTLIndexType                indexType               = MTLIndexTypeUInt32;
+            NSUInteger                  indexTypeSize           = 4;
+
+            MTPipelineState*            boundPipelineState      = nullptr;
+            MTLPrimitiveType            primitiveType           = MTLPrimitiveTypeTriangle;
+            MTLSize                     threadsPerThreadgroup   = MTLSizeMake(1, 1, 1);
+
+            NSUInteger                  numPatchControlPoints   = 0;
+            NSUInteger                  tessFactorSize          = 0;
+            id<MTLComputePipelineState> tessPipelineState       = nil;
+        };
+
     private:
 
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
@@ -199,13 +309,18 @@ class MTCommandContext
         MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
         MTRenderEncoderState            renderEncoderState_;
         MTComputeEncoderState           computeEncoderState_;
+        MTContextState                  contextState_;
 
         bool                            isRenderEncoderPaused_  = false;
         MTDescriptorCache               descriptorCache_;
         MTConstantsCache                constantsCache_;
+        MTIntermediateBuffer            tessFactorBuffer_;
+        const NSUInteger                maxThreadgroupSizeX_    = 1;
 
         std::uint8_t                    renderDirtyBits_        = 0;
         std::uint8_t                    computeDirtyBits_       = 0;
+
+        MTSwapChain*                    boundSwapChain_         = nullptr;
 
 };
 

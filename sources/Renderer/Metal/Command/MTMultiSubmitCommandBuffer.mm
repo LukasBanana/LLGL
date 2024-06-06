@@ -51,7 +51,6 @@ void MTMultiSubmitCommandBuffer::Begin()
 {
     buffer_.Clear();
     lastOpcode_ = MTOpcodeNop;
-    encoderState_ = MTEncoderState::None;
     ResetRenderStates();
     ReleaseIntermediateResources();
 }
@@ -99,7 +98,6 @@ void MTMultiSubmitCommandBuffer::UpdateBuffer(
     WriteStagingBuffer(data, static_cast<NSUInteger>(dataSize), srcBuffer, srcOffset);
 
     /* Encode blit command to copy staging buffer region to destination buffer */
-    BindBlitEncoder();
     auto cmd = AllocCommand<MTCmdCopyBuffer>(MTOpcodeCopyBuffer);
     {
         cmd->sourceBuffer       = srcBuffer;
@@ -120,7 +118,6 @@ void MTMultiSubmitCommandBuffer::CopyBuffer(
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
     auto& srcBufferMT = LLGL_CAST(MTBuffer&, srcBuffer);
 
-    BindBlitEncoder();
     auto cmd = AllocCommand<MTCmdCopyBuffer>(MTOpcodeCopyBuffer);
     {
         cmd->sourceBuffer       = srcBufferMT.GetNative();
@@ -156,7 +153,6 @@ void MTMultiSubmitCommandBuffer::CopyBufferFromTexture(
     MTTypes::Convert(srcSize, srcRegion.extent);
 
     /* Encode blit commands to copy texture form buffer */
-    BindBlitEncoder();
     auto cmd = AllocCommand<MTCmdCopyBufferFromTexture>(MTOpcodeCopyBufferFromTexture);
     {
         cmd->sourceTexture              = srcTextureMT.GetNative();
@@ -232,7 +228,6 @@ void MTMultiSubmitCommandBuffer::CopyTexture(
     MTLSize srcSize;
     MTTypes::Convert(srcSize, extent);
 
-    BindBlitEncoder();
     auto cmd = AllocCommand<MTCmdCopyTexture>(MTOpcodeCopyTexture);
     {
         cmd->sourceTexture      = srcTextureMT.GetNative();
@@ -272,7 +267,6 @@ void MTMultiSubmitCommandBuffer::CopyTextureFromBuffer(
     MTTypes::Convert(srcSize, dstRegion.extent);
 
     /* Encode blit commands to copy texture form buffer */
-    BindBlitEncoder();
     auto cmd = AllocCommand<MTCmdCopyTextureFromBuffer>(MTOpcodeCopyTextureFromBuffer);
     {
         cmd->sourceBuffer           = srcBufferMT.GetNative();
@@ -293,10 +287,6 @@ void MTMultiSubmitCommandBuffer::CopyTextureFromFramebuffer(
     const TextureRegion&    dstRegion,
     const Offset2D&         srcOffset)
 {
-    MTKView* drawableView = GetCurrentDrawableView();
-    if (drawableView == nil)
-        return /*No drawable view*/;
-
     if (dstRegion.extent.depth != 1 ||
         dstRegion.offset.x < 0      ||
         dstRegion.offset.y < 0      ||
@@ -321,10 +311,8 @@ void MTMultiSubmitCommandBuffer::CopyTextureFromFramebuffer(
     MTLSize srcSize;
     MTTypes::Convert(srcSize, dstRegion.extent);
 
-    BindBlitEncoder();
     auto cmd = AllocCommand<MTCmdCopyTextureFromFramebuffer>(MTOpcodeCopyTextureFromFramebuffer);
     {
-        cmd->sourceView         = drawableView;
         cmd->sourceOrigin       = srcOrigin;
         cmd->sourceSize         = srcSize;
         cmd->destinationTexture = targetTexture;
@@ -413,36 +401,38 @@ void MTMultiSubmitCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     );
 }
 
+//private
+void MTMultiSubmitCommandBuffer::SetNativeIndexBuffer(id<MTLBuffer> buffer, NSUInteger offset, bool indexType16Bits)
+{
+    auto cmd = AllocCommand<MTCmdSetIndexBuffer>(MTOpcodeSetIndexBuffer);
+    {
+        cmd->buffer             = buffer;
+        cmd->offset             = offset;
+        cmd->indexType16Bits    = indexType16Bits;
+    }
+}
+
+void MTMultiSubmitCommandBuffer::SetIndexBuffer(Buffer& buffer)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    SetNativeIndexBuffer(bufferMT.GetNative(), 0, bufferMT.IsIndexType16Bits());
+}
+
+void MTMultiSubmitCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std::uint64_t offset)
+{
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    SetNativeIndexBuffer(bufferMT.GetNative(), static_cast<NSUInteger>(offset), (format == Format::R16UInt));
+}
+
 /* ----- Resources ----- */
 
 void MTMultiSubmitCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
-    MTPipelineState* boundPipelineState = GetBoundPipelineState();
-    if (boundPipelineState == nullptr)
-        return /*Invalid state*/;
-
     auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
-    if (boundPipelineState->IsGraphicsPSO())
+    auto cmd = AllocCommand<MTCmdSetResourceHeap>(MTOpcodeSetResourceHeap);
     {
-        if (resourceHeapMT.HasGraphicsResources())
-        {
-            auto cmd = AllocCommand<MTCmdSetResourceHeap>(MTOpcodeSetGraphicsResourceHeap);
-            {
-                cmd->resourceHeap   = &resourceHeapMT;
-                cmd->descriptorSet  = descriptorSet;
-            }
-        }
-    }
-    else
-    {
-        if (resourceHeapMT.HasComputeResources())
-        {
-            auto cmd = AllocCommand<MTCmdSetResourceHeap>(MTOpcodeSetComputeResourceHeap);
-            {
-                cmd->resourceHeap   = &resourceHeapMT;
-                cmd->descriptorSet  = descriptorSet;
-            }
-        }
+        cmd->resourceHeap   = &resourceHeapMT;
+        cmd->descriptorSet  = descriptorSet;
     }
 }
 
@@ -464,49 +454,34 @@ void MTMultiSubmitCommandBuffer::BeginRenderPass(
     const ClearValue*   clearValues,
     std::uint32_t       /*swapBufferIndex*/)
 {
-    auto AllocCommandBindRenderTarget = [this, numClearValues, clearValues, &renderTarget, renderPass](MTOpcode opcode) -> void
-    {
-        /* Only allocate payload for clear values if a render pass was specified */
-        auto cmd = this->AllocCommand<MTCmdBindRenderTarget>(opcode, sizeof(ClearValue)*(renderPass != nullptr ? numClearValues : 0));
-        {
-            cmd->renderTarget = &renderTarget;
-            if (renderPass != nullptr)
-            {
-                cmd->renderPass     = LLGL_CAST(const MTRenderPass*, renderPass);
-                cmd->numClearValues = numClearValues;
-                ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
-            }
-            else
-            {
-                cmd->renderPass     = nullptr;
-                cmd->numClearValues = 0;
-            }
-        }
-    };
-
-    isInsideRenderPass_ = true;
-    encoderState_       = MTEncoderState::Render;
-
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
         /* Put current drawable into queue */
         auto& swapChainMT = LLGL_CAST(MTSwapChain&, renderTarget);
-        SetSwapChain(&swapChainMT);
         QueueDrawable(swapChainMT.GetMTKView());
-        AllocCommandBindRenderTarget(MTOpcodeBindSwapChain);
     }
-    else
+
+    /* Only allocate payload for clear values if a render pass was specified */
+    auto cmd = AllocCommand<MTCmdBeginRenderPass>(MTOpcodeBeginRenderPass, sizeof(ClearValue)*(renderPass != nullptr ? numClearValues : 0));
     {
-        /* Get render pass descriptor from render target */
-        SetSwapChain(nullptr);
-        AllocCommandBindRenderTarget(MTOpcodeBindRenderTarget);
+        cmd->renderTarget = &renderTarget;
+        if (renderPass != nullptr)
+        {
+            cmd->renderPass     = LLGL_CAST(const MTRenderPass*, renderPass);
+            cmd->numClearValues = numClearValues;
+            ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
+        }
+        else
+        {
+            cmd->renderPass     = nullptr;
+            cmd->numClearValues = 0;
+        }
     }
 }
 
 void MTMultiSubmitCommandBuffer::EndRenderPass()
 {
-    FlushContext();
-    isInsideRenderPass_ = false;
+    AllocOpcode(MTOpcodeEndRenderPass);
 }
 
 //TODO: support clearing all active attachments at once
@@ -553,7 +528,7 @@ static void FillCmdClearRenderPass(MTCmdClearRenderPass* cmd, const AttachmentCl
 
 void MTMultiSubmitCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    if (!isInsideRenderPass_ || numAttachments == 0)
+    if (numAttachments == 0 || attachments == nullptr)
         return;
 
     auto cmd = AllocCommand<MTCmdClearRenderPass>(MTOpcodeClearRenderPass, (sizeof(std::uint32_t) + sizeof(MTLClearColor))*numAttachments);
@@ -578,14 +553,12 @@ void MTMultiSubmitCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         /* Set graphics pipeline with encoder scheduler */
         auto cmd = AllocCommand<MTCmdSetGraphicsPSO>(MTOpcodeSetGraphicsPSO);
         cmd->graphicsPSO = LLGL_CAST(MTGraphicsPSO*, &pipelineStateMT);
-        SetGraphicsPSORenderState(*(cmd->graphicsPSO));
     }
     else
     {
         /* Set compute pipeline with encoder scheduler */
         auto cmd = AllocCommand<MTCmdSetComputePSO>(MTOpcodeSetComputePSO);
         cmd->computePSO = LLGL_CAST(MTComputePSO*, &pipelineStateMT);
-        SetComputePSORenderState(*(cmd->computePSO));
     }
 }
 
@@ -657,70 +630,24 @@ void MTMultiSubmitCommandBuffer::EndStreamOutput()
 
 void MTMultiSubmitCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
-    const NSUInteger numPatchControlPoints = GetNumPatchControlPoints();
-    if (numPatchControlPoints > 0)
+    auto cmd = AllocCommand<MTCmdDraw>(MTOpcodeDraw);
     {
-        const NSUInteger firstPatch = (static_cast<NSUInteger>(firstVertex) / numPatchControlPoints);
-        const NSUInteger numPatches = (static_cast<NSUInteger>(numVertices) / numPatchControlPoints);
-
-        BindRenderEncoderForTessellation(numPatches);
-        auto cmd = AllocCommand<MTCmdDrawPatches>(MTOpcodeDrawPatches);
-        {
-            cmd->controlPointCount  = numPatchControlPoints;
-            cmd->patchStart         = firstPatch;
-            cmd->patchCount         = numPatches;
-            cmd->instanceCount      = 1;
-            cmd->baseInstance       = 0;
-        }
-    }
-    else
-    {
-        BindRenderEncoder();
-        auto cmd = AllocCommand<MTCmdDrawPrimitives>(MTOpcodeDrawPrimitives);
-        {
-            cmd->primitiveType  = GetPrimitiveType();
-            cmd->vertexStart    = static_cast<NSUInteger>(firstVertex);
-            cmd->vertexCount    = static_cast<NSUInteger>(numVertices);
-            cmd->instanceCount  = 1;
-            cmd->baseInstance   = 0;
-        }
+        cmd->vertexStart    = static_cast<NSUInteger>(firstVertex);
+        cmd->vertexCount    = static_cast<NSUInteger>(numVertices);
+        cmd->instanceCount  = 1;
+        cmd->baseInstance   = 0;
     }
 }
 
 void MTMultiSubmitCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    const NSUInteger numPatchControlPoints = GetNumPatchControlPoints();
-    if (numPatchControlPoints > 0)
+    auto cmd = AllocCommand<MTCmdDrawIndexed>(MTOpcodeDrawIndexed);
     {
-        const NSUInteger firstPatch = (static_cast<NSUInteger>(firstIndex) / numPatchControlPoints);
-        const NSUInteger numPatches = (static_cast<NSUInteger>(numIndices) / numPatchControlPoints);
-
-        BindRenderEncoderForTessellation(numPatches);
-        auto cmd = AllocCommand<MTCmdDrawIndexedPatches>(MTOpcodeDrawIndexedPatches);
-        {
-            cmd->controlPointCount              = numPatchControlPoints;
-            cmd->patchStart                     = firstPatch;
-            cmd->patchCount                     = numPatches;
-            cmd->controlPointIndexBuffer        = GetIndexBuffer();
-            cmd->controlPointIndexBufferOffset  = GetIndexBufferOffset(static_cast<NSUInteger>(firstIndex));
-            cmd->instanceCount                  = 1;
-            cmd->baseInstance                   = 0;
-        }
-    }
-    else
-    {
-        BindRenderEncoder();
-        auto cmd = AllocCommand<MTCmdDrawIndexedPrimitives>(MTOpcodeDrawIndexedPrimitives);
-        {
-            cmd->primitiveType      = GetPrimitiveType();
-            cmd->indexCount         = static_cast<NSUInteger>(numIndices);
-            cmd->indexType          = GetIndexType();
-            cmd->indexBuffer        = GetIndexBuffer();
-            cmd->indexBufferOffset  = GetIndexBufferOffset(static_cast<NSUInteger>(firstIndex));
-            cmd->instanceCount      = 1;
-            cmd->baseVertex         = 0;
-            cmd->baseInstance       = 0;
-        }
+        cmd->indexCount     = static_cast<NSUInteger>(numIndices);
+        cmd->firstIndex     = static_cast<NSUInteger>(firstIndex);
+        cmd->instanceCount  = 1;
+        cmd->baseVertex     = 0;
+        cmd->baseInstance   = 0;
     }
 }
 
@@ -736,33 +663,12 @@ void MTMultiSubmitCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::u
 
 void MTMultiSubmitCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    const NSUInteger numPatchControlPoints = GetNumPatchControlPoints();
-    if (numPatchControlPoints > 0)
+    auto cmd = AllocCommand<MTCmdDraw>(MTOpcodeDraw);
     {
-        const NSUInteger firstPatch = (static_cast<NSUInteger>(firstVertex) / numPatchControlPoints);
-        const NSUInteger numPatches = (static_cast<NSUInteger>(numVertices) / numPatchControlPoints);
-
-        BindRenderEncoderForTessellation(numPatches);
-        auto cmd = AllocCommand<MTCmdDrawPatches>(MTOpcodeDrawPatches);
-        {
-            cmd->controlPointCount  = numPatchControlPoints;
-            cmd->patchStart         = firstPatch;
-            cmd->patchCount         = numPatches;
-            cmd->instanceCount      = static_cast<NSUInteger>(numInstances);
-            cmd->baseInstance       = static_cast<NSUInteger>(firstInstance);
-        }
-    }
-    else
-    {
-        BindRenderEncoder();
-        auto cmd = AllocCommand<MTCmdDrawPrimitives>(MTOpcodeDrawPrimitives);
-        {
-            cmd->primitiveType  = GetPrimitiveType();
-            cmd->vertexStart    = static_cast<NSUInteger>(firstVertex);
-            cmd->vertexCount    = static_cast<NSUInteger>(numVertices);
-            cmd->instanceCount  = static_cast<NSUInteger>(numInstances);
-            cmd->baseInstance   = static_cast<NSUInteger>(firstInstance);
-        }
+        cmd->vertexStart    = static_cast<NSUInteger>(firstVertex);
+        cmd->vertexCount    = static_cast<NSUInteger>(numVertices);
+        cmd->instanceCount  = static_cast<NSUInteger>(numInstances);
+        cmd->baseInstance   = static_cast<NSUInteger>(firstInstance);
     }
 }
 
@@ -778,38 +684,13 @@ void MTMultiSubmitCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, 
 
 void MTMultiSubmitCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    const NSUInteger numPatchControlPoints = GetNumPatchControlPoints();
-    if (numPatchControlPoints > 0)
+    auto cmd = AllocCommand<MTCmdDrawIndexed>(MTOpcodeDrawIndexed);
     {
-        const NSUInteger firstPatch = (static_cast<NSUInteger>(firstIndex) / numPatchControlPoints);
-        const NSUInteger numPatches = (static_cast<NSUInteger>(numIndices) / numPatchControlPoints);
-
-        BindRenderEncoderForTessellation(numPatches);
-        auto cmd = AllocCommand<MTCmdDrawIndexedPatches>(MTOpcodeDrawIndexedPatches);
-        {
-            cmd->controlPointCount              = numPatchControlPoints;
-            cmd->patchStart                     = firstPatch;
-            cmd->patchCount                     = numPatches;
-            cmd->controlPointIndexBuffer        = GetIndexBuffer();
-            cmd->controlPointIndexBufferOffset  = GetIndexBufferOffset(static_cast<NSUInteger>(firstIndex));
-            cmd->instanceCount                  = static_cast<NSUInteger>(numInstances);
-            cmd->baseInstance                   = static_cast<NSUInteger>(firstInstance);
-        }
-    }
-    else
-    {
-        BindRenderEncoder();
-        auto cmd = AllocCommand<MTCmdDrawIndexedPrimitives>(MTOpcodeDrawIndexedPrimitives);
-        {
-            cmd->primitiveType      = GetPrimitiveType();
-            cmd->indexCount         = static_cast<NSUInteger>(numIndices);
-            cmd->indexType          = GetIndexType();
-            cmd->indexBuffer        = GetIndexBuffer();
-            cmd->indexBufferOffset  = GetIndexBufferOffset(static_cast<NSUInteger>(firstIndex));
-            cmd->instanceCount      = static_cast<NSUInteger>(numInstances);
-            cmd->baseVertex         = static_cast<NSUInteger>(vertexOffset);
-            cmd->baseInstance       = static_cast<NSUInteger>(firstInstance);
-        }
+        cmd->indexCount     = static_cast<NSUInteger>(numIndices);
+        cmd->firstIndex     = static_cast<NSUInteger>(firstIndex);
+        cmd->instanceCount  = static_cast<NSUInteger>(numInstances);
+        cmd->baseVertex     = static_cast<NSUInteger>(vertexOffset);
+        cmd->baseInstance   = static_cast<NSUInteger>(firstInstance);
     }
 }
 
@@ -979,23 +860,19 @@ void MTMultiSubmitCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64
 
 void MTMultiSubmitCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
 {
-    BindComputeEncoder();
-    auto cmd = AllocCommand<MTCmdDispatchThreadgroups>(MTOpcodeDispatchThreadgroups);
+    auto cmd = AllocCommand<MTCmdDispatchThreads>(MTOpcodeDispatchThreadgroups);
     {
-        cmd->threadgroups           = MTLSizeMake(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-        cmd->threadsPerThreadgroup  = GetThreadsPerThreadgroup();
+        cmd->threadgroups = MTLSizeMake(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
     }
 }
 
 void MTMultiSubmitCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    BindComputeEncoder();
-    auto cmd = AllocCommand<MTCmdDispatchThreadgroupsIndirect>(MTOpcodeDispatchThreadgroupsIndirect);
+    auto cmd = AllocCommand<MTCmdDispatchThreadsIndirect>(MTOpcodeDispatchThreadgroupsIndirect);
     {
         cmd->indirectBuffer         = bufferMT.GetNative();
         cmd->indirectBufferOffset   = static_cast<NSUInteger>(offset);
-        cmd->threadsPerThreadgroup  = GetThreadsPerThreadgroup();
     }
 }
 
@@ -1123,107 +1000,10 @@ void MTMultiSubmitCommandBuffer::FillBufferByte4Accelerated(MTBuffer& bufferMT, 
 }
 #endif //TODO
 
-void MTMultiSubmitCommandBuffer::BindRenderEncoderForTessellation(NSUInteger numPatches, NSUInteger numInstances)
-{
-    const NSUInteger numPatchesAndInstances = numPatches * numInstances;
-    id<MTLBuffer> tessFactorBuffer = GetTessFactorBufferAndGrow(numPatchesAndInstances);
-
-    /* Dispatch compute command to prepare patches */
-    BindComputeEncoder();
-    {
-        auto cmd = AllocCommand<MTCmdSetTessellationPSO>(MTOpcodeSetTessellationPSO);
-        {
-            cmd->tessPipelineState  = GetTessPipelineState();
-            cmd->tessFactorBuffer   = tessFactorBuffer;
-        }
-        DispatchThreads1D(GetTessPipelineState(), numPatchesAndInstances);
-    }
-
-    /* Bind render encoder and set tessellation factor buffer */
-    BindRenderEncoder();
-    {
-        auto cmd = AllocCommand<MTCmdSetTessellationFactorBuffer>(MTOpcodeSetTessellationFactorBuffer);
-        {
-            cmd->tessFactorBuffer   = tessFactorBuffer;
-            cmd->instanceStride     = numPatches * sizeof(MTLQuadTessellationFactorsHalf);
-        }
-    }
-}
-
-void MTMultiSubmitCommandBuffer::BindRenderEncoder()
-{
-    if (isInsideRenderPass_)
-    {
-        if (encoderState_ != MTEncoderState::Render)
-            AllocOpcode(MTOpcodeResumeRenderEncoder);
-    }
-    encoderState_ = MTEncoderState::Render;
-}
-
-void MTMultiSubmitCommandBuffer::BindComputeEncoder()
-{
-    if (isInsideRenderPass_)
-    {
-        if (encoderState_ == MTEncoderState::Render)
-            AllocOpcode(MTOpcodePauseRenderEncoder);
-    }
-    encoderState_ = MTEncoderState::Compute;
-}
-
-void MTMultiSubmitCommandBuffer::BindBlitEncoder()
-{
-    if (isInsideRenderPass_)
-    {
-        if (encoderState_ == MTEncoderState::Render)
-            AllocOpcode(MTOpcodePauseRenderEncoder);
-    }
-    encoderState_ = MTEncoderState::Blit;
-}
-
-void MTMultiSubmitCommandBuffer::DispatchThreads1D(id<MTLComputePipelineState> computePSO, NSUInteger numThreads)
-{
-    const NSUInteger maxLocalThreads = GetMaxLocalThreads(computePSO);
-
-    if (@available(iOS 11.0, macOS 10.13, *))
-    {
-        /* Dispatch all threads with a single command and let Metal distribute the full and partial threadgroups */
-        auto cmd = AllocCommand<MTCmdDispatchThreads>(MTOpcodeDispatchThreads);
-        {
-            cmd->threads                = MTLSizeMake(numThreads, 1, 1);
-            cmd->threadsPerThreadgroup  = MTLSizeMake(std::min(numThreads, maxLocalThreads), 1, 1);
-        }
-    }
-    else
-    {
-        /* Disaptch threadgroups with as many local threads as possible */
-        const NSUInteger numThreadGroups = numThreads / maxLocalThreads;
-        if (numThreadGroups > 0)
-        {
-            auto cmd = AllocCommand<MTCmdDispatchThreadgroups>(MTOpcodeDispatchThreadgroups);
-            {
-                cmd->threadgroups           = MTLSizeMake(numThreadGroups, 1, 1);
-                cmd->threadsPerThreadgroup  = MTLSizeMake(maxLocalThreads, 1, 1);
-            }
-        }
-
-        /* Dispatch local threads for remaining range */
-        const NSUInteger remainingValues = numThreads % maxLocalThreads;
-        if (remainingValues > 0)
-        {
-            auto cmd = AllocCommand<MTCmdDispatchThreadgroups>(MTOpcodeDispatchThreadgroups);
-            {
-                cmd->threadgroups           = MTLSizeMake(1, 1, 1);
-                cmd->threadsPerThreadgroup  = MTLSizeMake(remainingValues, 1, 1);
-            }
-        }
-    }
-}
-
 void MTMultiSubmitCommandBuffer::GenerateMipmapsForTexture(id<MTLTexture> texture)
 {
     if ([texture mipmapLevelCount] > 1)
     {
-        BindBlitEncoder();
         auto cmd = AllocCommand<MTCmdGenerateMipmaps>(MTOpcodeGenerateMipmaps);
         {
             cmd->texture = texture;

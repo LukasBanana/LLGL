@@ -82,7 +82,6 @@ struct MTCmdCopyTextureFromBuffer
 
 struct MTCmdCopyTextureFromFramebuffer
 {
-    MTKView*        sourceView;
     MTLOrigin       sourceOrigin;
     MTLSize         sourceSize;
     id<MTLTexture>  destinationTexture;
@@ -107,18 +106,6 @@ struct MTCmdSetGraphicsPSO
 struct MTCmdSetComputePSO
 {
     MTComputePSO* computePSO;
-};
-
-struct MTCmdSetTessellationPSO
-{
-    id<MTLComputePipelineState> tessPipelineState;
-    id<MTLBuffer>               tessFactorBuffer;
-};
-
-struct MTCmdSetTessellationFactorBuffer
-{
-    id<MTLBuffer>   tessFactorBuffer;
-    NSUInteger      instanceStride;
 };
 
 struct MTCmdSetViewports
@@ -158,6 +145,13 @@ struct MTCmdSetVertexBuffers
 //  NSUInteger      offsets[count];
 };
 
+struct MTCmdSetIndexBuffer
+{
+    id<MTLBuffer>   buffer;
+    NSUInteger      offset;
+    bool            indexType16Bits;
+};
+
 struct MTCmdSetResourceHeap
 {
     MTResourceHeap* resourceHeap;
@@ -170,7 +164,7 @@ struct MTCmdSetResource
     Resource*       resource;
 };
 
-struct MTCmdBindRenderTarget
+struct MTCmdBeginRenderPass
 {
     RenderTarget*       renderTarget;
     const MTRenderPass* renderPass;
@@ -189,64 +183,32 @@ struct MTCmdClearRenderPass
 //  MTLClearColor   clearColors[numAttachments];    // Not numColorAttachments to simplify allocation
 };
 
-struct MTCmdDrawPatches
+struct MTCmdDraw
 {
-    NSUInteger controlPointCount;
-    NSUInteger patchStart;
-    NSUInteger patchCount;
+    NSUInteger vertexStart;
+    NSUInteger vertexCount;
     NSUInteger instanceCount;
     NSUInteger baseInstance;
 };
 
-struct MTCmdDrawPrimitives
+struct MTCmdDrawIndexed
 {
-    MTLPrimitiveType    primitiveType;
-    NSUInteger          vertexStart;
-    NSUInteger          vertexCount;
-    NSUInteger          instanceCount;
-    NSUInteger          baseInstance;
-};
-
-struct MTCmdDrawIndexedPatches
-{
-    NSUInteger      controlPointCount;
-    NSUInteger      patchStart;
-    NSUInteger      patchCount;
-    id<MTLBuffer>   controlPointIndexBuffer;
-    NSUInteger      controlPointIndexBufferOffset;
-    NSUInteger      instanceCount;
-    NSUInteger      baseInstance;
-};
-
-struct MTCmdDrawIndexedPrimitives
-{
-    MTLPrimitiveType    primitiveType;
-    NSUInteger          indexCount;
-    MTLIndexType        indexType;
-    id<MTLBuffer>       indexBuffer;
-    NSUInteger          indexBufferOffset;
-    NSUInteger          instanceCount;
-    NSUInteger          baseVertex;
-    NSUInteger          baseInstance;
+    NSUInteger indexCount;
+    NSUInteger firstIndex;
+    NSUInteger instanceCount;
+    NSUInteger baseVertex;
+    NSUInteger baseInstance;
 };
 
 struct MTCmdDispatchThreads
 {
-    MTLSize threads;
-    MTLSize threadsPerThreadgroup;
-};
-
-struct MTCmdDispatchThreadgroups
-{
     MTLSize threadgroups;
-    MTLSize threadsPerThreadgroup;
 };
 
-struct MTCmdDispatchThreadgroupsIndirect
+struct MTCmdDispatchThreadsIndirect
 {
     id<MTLBuffer>   indirectBuffer;
     NSUInteger      indirectBufferOffset;
-    MTLSize         threadsPerThreadgroup;
 };
 
 struct MTCmdPushDebugGroup

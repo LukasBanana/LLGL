@@ -11,6 +11,8 @@
 #include "../RenderState/MTResourceHeap.h"
 #include "../RenderState/MTGraphicsPSO.h"
 #include "../RenderState/MTComputePSO.h"
+#include "../Shader/MTShader.h"
+#include "../MTSwapChain.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
@@ -23,14 +25,26 @@ namespace LLGL
 {
 
 
+static constexpr NSUInteger g_tessFactorBufferAlignment = (sizeof(MTLQuadTessellationFactorsHalf) * 256);
+
+MTCommandContext::MTCommandContext(id<MTLDevice> device) :
+    tessFactorBuffer_    { device,
+                           MTLResourceStorageModePrivate,
+                           g_tessFactorBufferAlignment           },
+    maxThreadgroupSizeX_ { device.maxThreadsPerThreadgroup.width }
+{
+}
+
 void MTCommandContext::Reset()
 {
     /* Reset all dirty bits */
-    renderDirtyBits_ = ~0;
-    computeDirtyBits_ = ~0;
-    isRenderEncoderPaused_ = false;
+    renderDirtyBits_        = ~0;
+    computeDirtyBits_       = ~0;
+    isRenderEncoderPaused_  = false;
+    boundSwapChain_         = nullptr;
     ResetRenderEncoderState();
     ResetComputeEncoderState();
+    ResetContextState();
 }
 
 void MTCommandContext::Reset(id<MTLCommandBuffer> cmdBuffer)
@@ -58,31 +72,53 @@ void MTCommandContext::Flush()
     }
 }
 
-id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder(MTLRenderPassDescriptor* renderPassDesc, bool isPrimaryRenderPass)
+void MTCommandContext::BeginRenderPass(MTLRenderPassDescriptor* renderPassDesc, MTSwapChain* swapChainMT)
 {
     LLGL_ASSERT_PTR(renderPassDesc);
 
-    Flush();
-    renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+    if (!contextState_.isInsideRenderPass)
+    {
+        renderPassDesc_ = (MTLRenderPassDescriptor*)[renderPassDesc copy];
+        contextState_.isInsideRenderPass = true;
+        boundSwapChain_ = swapChainMT;
+    }
+}
 
-    /* Store descriptor for primary render pass */
-    if (isPrimaryRenderPass)
-        renderPassDesc_ = renderPassDesc;
+void MTCommandContext::UpdateRenderPass(MTLRenderPassDescriptor* renderPassDesc)
+{
+    LLGL_ASSERT_PTR(renderPassDesc);
+    if (contextState_.isInsideRenderPass)
+        BindRenderEncoderWithDescriptor(renderPassDesc);
+}
 
-    /* A new render command encoder forces all pipeline states to be reset */
-    renderDirtyBits_ = ~0;
+void MTCommandContext::EndRenderPass()
+{
+    if (contextState_.isInsideRenderPass)
+    {
+        Flush();
+        contextState_.isInsideRenderPass = false;
+        [renderPassDesc_ release];
+    }
+}
 
-    /* Invalidate descriptor and constant caches */
-    if (!descriptorCache_.IsEmpty())
-        descriptorCache_.Reset();
-    if (!constantsCache_.IsEmpty())
-        constantsCache_.Reset();
+id<MTLRenderCommandEncoder> MTCommandContext::BindRenderEncoder()
+{
+    /* Resume render encoder if we are inside a render pass */
+    if (contextState_.isInsideRenderPass && contextState_.encoderState != MTEncoderState::Render)
+        ResumeRenderEncoder();
+
+    if (renderEncoder_ == nil)
+        BindRenderEncoderWithDescriptor(renderPassDesc_);
 
     return renderEncoder_;
 }
 
 id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
 {
+    /* Pause render encoder if we are inside a render pass */
+    if (contextState_.isInsideRenderPass && contextState_.encoderState == MTEncoderState::Render)
+        PauseRenderEncoder();
+
     if (computeEncoder_ == nil)
     {
         Flush();
@@ -96,57 +132,141 @@ id<MTLComputeCommandEncoder> MTCommandContext::BindComputeEncoder()
             descriptorCache_.Reset();
         if (!constantsCache_.IsEmpty())
             constantsCache_.Reset();
+
+        /* Store compute encoder mode */
+        contextState_.encoderState = MTEncoderState::Compute;
     }
+
     return computeEncoder_;
 }
 
 id<MTLBlitCommandEncoder> MTCommandContext::BindBlitEncoder()
 {
+    /* Pause render encoder if we are inside a render pass */
+    if (contextState_.isInsideRenderPass && contextState_.encoderState == MTEncoderState::Render)
+        PauseRenderEncoder();
+
     if (blitEncoder_ == nil)
     {
         Flush();
         blitEncoder_ = [cmdBuffer_ blitCommandEncoder];
+
+        /* Store blit encoder mode */
+        contextState_.encoderState = MTEncoderState::Blit;
     }
+
     return blitEncoder_;
 }
 
-void MTCommandContext::PauseRenderEncoder()
+id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
 {
-    if (renderEncoder_ != nil && !isRenderEncoderPaused_)
-        isRenderEncoderPaused_ = true;
+    BindRenderEncoder();
+
+    /* Flush render encoder state */
+    if (renderDirtyBits_ != 0)
+        SubmitRenderEncoderState();
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.FlushGraphicsResources(GetRenderEncoder());
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushGraphicsResources(GetRenderEncoder());
+
+    return GetRenderEncoder();
 }
 
-void MTCommandContext::ResumeRenderEncoder()
+id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
 {
-    if (isRenderEncoderPaused_)
-    {
-        /* Bind new render command encoder with previous render pass */
-        auto renderPassDesc = CopyRenderPassDesc();
-        {
-            for_range(i, 8u)
-            {
-                if (renderPassDesc.colorAttachments[i].texture != nil)
-                {
-                    renderPassDesc.colorAttachments[i].loadAction = MTLLoadActionLoad;
-                    //renderPassDesc.colorAttachments[i].storeAction = MTLStoreActionStore;
-                }
-                else
-                    break;
-            }
-            if (renderPassDesc.depthAttachment.texture != nil)
-                renderPassDesc.depthAttachment.loadAction = MTLLoadActionLoad;
-            if (renderPassDesc.stencilAttachment != nil)
-                renderPassDesc.stencilAttachment.loadAction = MTLLoadActionLoad;
-        }
-        BindRenderEncoder(renderPassDesc);
-        [renderPassDesc release];
-        isRenderEncoderPaused_ = false;
-    }
+    BindComputeEncoder();
+
+    /* Flush compute encoder state */
+    if (computeDirtyBits_ != 0)
+        SubmitComputeEncoderState();
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.FlushComputeResources(GetComputeEncoder());
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.FlushComputeResources(GetComputeEncoder());
+
+    return GetComputeEncoder();
 }
 
 MTLRenderPassDescriptor* MTCommandContext::CopyRenderPassDesc()
 {
     return (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
+}
+
+void MTCommandContext::DispatchThreads1D(
+    id<MTLComputeCommandEncoder>    computeEncoder,
+    id<MTLComputePipelineState>     computePSO,
+    NSUInteger                      numThreads)
+{
+    const NSUInteger maxLocalThreads = GetMaxLocalThreads(computePSO);
+
+    if (@available(iOS 11.0, macOS 10.13, *))
+    {
+        /* Dispatch all threads with a single command and let Metal distribute the full and partial threadgroups */
+        [computeEncoder
+            dispatchThreads:        MTLSizeMake(numThreads, 1, 1)
+            threadsPerThreadgroup:  MTLSizeMake(std::min(numThreads, maxLocalThreads), 1, 1)
+        ];
+    }
+    else
+    {
+        /* Disaptch threadgroups with as many local threads as possible */
+        const NSUInteger numThreadGroups = numThreads / maxLocalThreads;
+        if (numThreadGroups > 0)
+        {
+            [computeEncoder
+                dispatchThreadgroups:   MTLSizeMake(numThreadGroups, 1, 1)
+                threadsPerThreadgroup:  MTLSizeMake(maxLocalThreads, 1, 1)
+            ];
+        }
+
+        /* Dispatch local threads for remaining range */
+        const NSUInteger remainingValues = numThreads % maxLocalThreads;
+        if (remainingValues > 0)
+        {
+            [computeEncoder
+                dispatchThreadgroups:   MTLSizeMake(1, 1, 1)
+                threadsPerThreadgroup:  MTLSizeMake(remainingValues, 1, 1)
+            ];
+        }
+    }
+}
+
+id<MTLRenderCommandEncoder> MTCommandContext::DispatchTessellationAndGetRenderEncoder(NSUInteger numPatches, NSUInteger numInstances)
+{
+    /* Ensure internal tessellation factor buffer is large enough */
+    const NSUInteger numPatchesAndInstances = numPatches * numInstances;
+    id<MTLBuffer> tessFactorBuffer = GetTessFactorBufferAndGrow(numPatchesAndInstances);
+
+    if (contextState_.tessPipelineState != nil)
+    {
+        /* Encode kernel dispatch to generate tessellation factors for each patch */
+        auto computeEncoder = BindComputeEncoder();
+
+        /* Rebind resource heap to bind compute stage resources to the new compute command encoder */
+        RebindResourceHeap(computeEncoder);
+
+        /* Disaptch kernel to generate patch tessellation factors */
+        [computeEncoder setComputePipelineState: contextState_.tessPipelineState];
+        [computeEncoder
+            setBuffer:  tessFactorBuffer
+            offset:     0
+            atIndex:    this->bindingTable.tessFactorBufferSlot
+        ];
+
+        DispatchThreads1D(computeEncoder, contextState_.tessPipelineState, numPatchesAndInstances);
+    }
+
+    /* Get render command encoder and set tessellation factor buffer */
+    id<MTLRenderCommandEncoder> renderEncoder = FlushAndGetRenderEncoder();
+
+    [renderEncoder
+        setTessellationFactorBuffer:    tessFactorBuffer
+        offset:                         0
+        instanceStride:                 numPatches * sizeof(MTLQuadTessellationFactorsHalf)
+    ];
+
+    return renderEncoder;
 }
 
 static void ConvertMTLViewport(MTLViewport& dst, const Viewport& src)
@@ -204,6 +324,17 @@ void MTCommandContext::SetVertexBuffers(const id<MTLBuffer>* buffers, const NSUI
     renderDirtyBits_ |= DirtyBit_VertexBuffers;
 }
 
+static NSUInteger GetTessFactorSizeForPatchType(const MTLPatchType patchType)
+{
+    switch (patchType)
+    {
+        case MTLPatchTypeNone:      return 0;
+        case MTLPatchTypeTriangle:  return sizeof(MTLTriangleTessellationFactorsHalf);
+        case MTLPatchTypeQuad:      return sizeof(MTLQuadTessellationFactorsHalf);
+    }
+    return 0;
+}
+
 void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 {
     if (pipelineState != nullptr && renderEncoderState_.graphicsPSO != pipelineState)
@@ -226,6 +357,13 @@ void MTCommandContext::SetGraphicsPSO(MTGraphicsPSO* pipelineState)
 
         descriptorCache_.Reset(pipelineState->GetPipelineLayout());
         constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
+
+        /* Cache context state */
+        contextState_.boundPipelineState    = pipelineState;
+        contextState_.primitiveType         = pipelineState->GetMTLPrimitiveType();
+        contextState_.numPatchControlPoints = pipelineState->GetNumPatchControlPoints();
+        contextState_.tessPipelineState     = pipelineState->GetTessPipelineState();
+        contextState_.tessFactorSize        = GetTessFactorSizeForPatchType(pipelineState->GetPatchType());
     }
 }
 
@@ -271,6 +409,11 @@ void MTCommandContext::SetComputePSO(MTComputePSO* pipelineState)
         computeDirtyBits_ |= DirtyBit_ComputePSO;
         descriptorCache_.Reset(pipelineState->GetPipelineLayout());
         constantsCache_.Reset(pipelineState->GetConstantsCacheLayout());
+
+        /* Cache context state */
+        contextState_.boundPipelineState = pipelineState;
+        if (const MTShader* computeShader = pipelineState->GetComputeShader())
+            contextState_.threadsPerThreadgroup = computeShader->GetNumThreadsPerGroup();
     }
 }
 
@@ -296,34 +439,84 @@ void MTCommandContext::RebindResourceHeap(id<MTLComputeCommandEncoder> computeEn
         constantsCache_.FlushComputeResourcesForced(computeEncoder);
 }
 
-id<MTLRenderCommandEncoder> MTCommandContext::FlushAndGetRenderEncoder()
+void MTCommandContext::SetIndexStream(id<MTLBuffer> indexBuffer, NSUInteger offset, bool indexType16Bits)
 {
-    if (renderDirtyBits_ != 0)
-        SubmitRenderEncoderState();
-    if (!descriptorCache_.IsEmpty())
-        descriptorCache_.FlushGraphicsResources(GetRenderEncoder());
-    if (!constantsCache_.IsEmpty())
-        constantsCache_.FlushGraphicsResources(GetRenderEncoder());
-    return GetRenderEncoder();
+    contextState_.indexBuffer       = indexBuffer;
+    contextState_.indexBufferOffset = offset;
+    if (indexType16Bits)
+    {
+        contextState_.indexType     = MTLIndexTypeUInt16;
+        contextState_.indexTypeSize = 2;
+    }
+    else
+    {
+        contextState_.indexType     = MTLIndexTypeUInt32;
+        contextState_.indexTypeSize = 4;
+    }
 }
 
-id<MTLComputeCommandEncoder> MTCommandContext::FlushAndGetComputeEncoder()
+id<MTLBuffer> MTCommandContext::GetTessFactorBufferAndGrow(NSUInteger numPatchesAndInstances)
 {
-    /* Always compute encoder here, because there is no section like with Begin/EndRenderPass */
-    BindComputeEncoder();
-    if (computeDirtyBits_ != 0)
-        SubmitComputeEncoderState();
-    if (!descriptorCache_.IsEmpty())
-        descriptorCache_.FlushComputeResources(GetComputeEncoder());
-    if (!constantsCache_.IsEmpty())
-        constantsCache_.FlushComputeResources(GetComputeEncoder());
-    return GetComputeEncoder();
+    tessFactorBuffer_.Grow(contextState_.tessFactorSize * numPatchesAndInstances);
+    return tessFactorBuffer_.GetNative();
+}
+
+MTKView* MTCommandContext::GetCurrentDrawableView() const
+{
+    return (boundSwapChain_ != nullptr ? boundSwapChain_->GetMTKView() : nullptr);
 }
 
 
 /*
  * ======= Private: =======
  */
+
+void MTCommandContext::BindRenderEncoderWithDescriptor(MTLRenderPassDescriptor* renderPassDesc)
+{
+    Flush();
+    renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+
+    /* A new render command encoder forces all pipeline states to be reset */
+    renderDirtyBits_ = ~0;
+
+    /* Invalidate descriptor and constant caches */
+    if (!descriptorCache_.IsEmpty())
+        descriptorCache_.Reset();
+    if (!constantsCache_.IsEmpty())
+        constantsCache_.Reset();
+
+    /* Store render encoder mode */
+    contextState_.encoderState = MTEncoderState::Render;
+}
+
+void MTCommandContext::PauseRenderEncoder()
+{
+    if (renderEncoder_ != nil && !isRenderEncoderPaused_)
+        isRenderEncoderPaused_ = true;
+}
+
+void MTCommandContext::ResumeRenderEncoder()
+{
+    if (isRenderEncoderPaused_)
+    {
+        /* Bind new render command encoder with previous render pass */
+        for_range(i, 8u)
+        {
+            if (renderPassDesc_.colorAttachments[i].texture != nil)
+            {
+                renderPassDesc_.colorAttachments[i].loadAction = MTLLoadActionLoad;
+                //renderPassDesc_.colorAttachments[i].storeAction = MTLStoreActionStore;
+            }
+            else
+                break;
+        }
+        if (renderPassDesc_.depthAttachment.texture != nil)
+            renderPassDesc_.depthAttachment.loadAction = MTLLoadActionLoad;
+        if (renderPassDesc_.stencilAttachment != nil)
+            renderPassDesc_.stencilAttachment.loadAction = MTLLoadActionLoad;
+        isRenderEncoderPaused_ = false;
+    }
+}
 
 void MTCommandContext::SubmitRenderEncoderState()
 {
@@ -441,6 +634,22 @@ void MTCommandContext::SubmitComputeEncoderState()
 void MTCommandContext::ResetComputeEncoderState()
 {
     computeEncoderState_.computeResourceHeap = nullptr;
+}
+
+void MTCommandContext::ResetContextState()
+{
+    contextState_.encoderState          = MTEncoderState::None;
+    contextState_.numPatchControlPoints = 0;
+    contextState_.tessPipelineState     = nil;
+    contextState_.boundPipelineState    = nullptr;
+}
+
+NSUInteger MTCommandContext::GetMaxLocalThreads(id<MTLComputePipelineState> computePSO) const
+{
+    return std::min<NSUInteger>(
+        maxThreadgroupSizeX_,
+        computePSO.maxTotalThreadsPerThreadgroup
+    );
 }
 
 

@@ -16,12 +16,14 @@
 #include "../Texture/MTRenderTarget.h"
 #include "../RenderState/MTGraphicsPSO.h"
 #include "../RenderState/MTComputePSO.h"
+#include "../RenderState/MTResourceHeap.h"
 #include "../MTTypes.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
 
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/Metal/NativeCommand.h>
+#include <LLGL/TypeInfo.h>
 
 
 namespace LLGL
@@ -113,7 +115,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             auto* cmd = reinterpret_cast<const MTCmdCopyTextureFromFramebuffer*>(pc);
 
             /* Get source texture from current drawable */
-            id<MTLTexture> drawableTexture = [[cmd->sourceView currentDrawable] texture];
+            id<MTLTexture> drawableTexture = [[context.GetCurrentDrawableView() currentDrawable] texture];
 
             /* Source and target texture formats must match for 'copyFromTexture', so create texture view on mismatch */
             id<MTLTexture> sourceTexture;
@@ -141,16 +143,6 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 [sourceTexture release];
             return sizeof(*cmd);
         }
-        case MTOpcodePauseRenderEncoder:
-        {
-            context.PauseRenderEncoder();
-            return 0;
-        }
-        case MTOpcodeResumeRenderEncoder:
-        {
-            context.ResumeRenderEncoder();
-            return 0;
-        }
         case MTOpcodeGenerateMipmaps:
         {
             auto* cmd = reinterpret_cast<const MTCmdGenerateMipmaps*>(pc);
@@ -168,26 +160,6 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         {
             auto* cmd = reinterpret_cast<const MTCmdSetComputePSO*>(pc);
             context.SetComputePSO(cmd->computePSO);
-            return sizeof(*cmd);
-        }
-        case MTOpcodeSetTessellationPSO:
-        {
-            auto* cmd = reinterpret_cast<const MTCmdSetTessellationPSO*>(pc);
-            id<MTLComputeCommandEncoder> computeEncoder = context.BindComputeEncoder();
-            context.RebindResourceHeap(computeEncoder);
-            [computeEncoder setComputePipelineState: cmd->tessPipelineState];
-            [computeEncoder setBuffer:cmd->tessFactorBuffer offset:0 atIndex:context.bindingTable.tessFactorBufferSlot];
-            return sizeof(*cmd);
-        }
-        case MTOpcodeSetTessellationFactorBuffer:
-        {
-            auto* cmd = reinterpret_cast<const MTCmdSetTessellationFactorBuffer*>(pc);
-            id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-            [renderEncoder
-                setTessellationFactorBuffer:    cmd->tessFactorBuffer
-                offset:                         0
-                instanceStride:                 cmd->instanceStride
-            ];
             return sizeof(*cmd);
         }
         case MTOpcodeSetViewports:
@@ -228,16 +200,28 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             context.SetVertexBuffers(bufferIds, bufferOffsets, cmd->count);
             return (sizeof(*cmd) + (sizeof(id) + sizeof(NSUInteger))*cmd->count);
         }
-        case MTOpcodeSetGraphicsResourceHeap:
+        case MTOpcodeSetIndexBuffer:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetResourceHeap*>(pc);
-            context.SetGraphicsResourceHeap(cmd->resourceHeap, cmd->descriptorSet);
+            auto* cmd = reinterpret_cast<const MTCmdSetIndexBuffer*>(pc);
+            context.SetIndexStream(cmd->buffer, cmd->offset, cmd->indexType16Bits);
             return sizeof(*cmd);
         }
-        case MTOpcodeSetComputeResourceHeap:
+        case MTOpcodeSetResourceHeap:
         {
             auto* cmd = reinterpret_cast<const MTCmdSetResourceHeap*>(pc);
-            context.SetComputeResourceHeap(cmd->resourceHeap, cmd->descriptorSet);
+            if (MTPipelineState* boundPipelineState = context.GetBoundPipelineState())
+            {
+                if (boundPipelineState->IsGraphicsPSO())
+                {
+                    if (cmd->resourceHeap->HasGraphicsResources())
+                        context.SetGraphicsResourceHeap(cmd->resourceHeap, cmd->descriptorSet);
+                }
+                else
+                {
+                    if (cmd->resourceHeap->HasComputeResources())
+                        context.SetComputeResourceHeap(cmd->resourceHeap, cmd->descriptorSet);
+                }
+            }
             return sizeof(*cmd);
         }
         case MTOpcodeSetResource:
@@ -246,31 +230,37 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             context.SetResource(cmd->descriptor, *(cmd->resource));
             return sizeof(*cmd);
         }
-        case MTOpcodeBindSwapChain:
+        case MTOpcodeBeginRenderPass:
         {
-            auto* cmd = reinterpret_cast<const MTCmdBindRenderTarget*>(pc);
-            auto* swapChainMT = LLGL_CAST(MTSwapChain*, cmd->renderTarget);
-            if (cmd->renderPass != nullptr)
+            auto* cmd = reinterpret_cast<const MTCmdBeginRenderPass*>(pc);
+            if (LLGL::IsInstanceOf<SwapChain>(cmd->renderTarget))
             {
-                auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
-                context.BindRenderEncoder(swapChainMT->GetAndUpdateNativeRenderPass(*(cmd->renderPass), cmd->numClearValues, clearValues), true);
+                auto* swapChainMT = LLGL_CAST(MTSwapChain*, cmd->renderTarget);
+                if (cmd->renderPass != nullptr)
+                {
+                    auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
+                    context.BeginRenderPass(swapChainMT->GetAndUpdateNativeRenderPass(*(cmd->renderPass), cmd->numClearValues, clearValues), swapChainMT);
+                }
+                else
+                    context.BeginRenderPass(swapChainMT->GetNativeRenderPass(), swapChainMT);
             }
             else
-                context.BindRenderEncoder(swapChainMT->GetNativeRenderPass(), true);
+            {
+                auto* renderTargetMT = LLGL_CAST(MTRenderTarget*, cmd->renderTarget);
+                if (cmd->renderPass != nullptr)
+                {
+                    auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
+                    context.BeginRenderPass(renderTargetMT->GetAndUpdateNativeRenderPass(*(cmd->renderPass), cmd->numClearValues, clearValues), nullptr);
+                }
+                else
+                    context.BeginRenderPass(renderTargetMT->GetNativeRenderPass(), nullptr);
+            }
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
         }
-        case MTOpcodeBindRenderTarget:
+        case MTOpcodeEndRenderPass:
         {
-            auto* cmd = reinterpret_cast<const MTCmdBindRenderTarget*>(pc);
-            auto* renderTargetMT = LLGL_CAST(MTRenderTarget*, cmd->renderTarget);
-            if (cmd->renderPass != nullptr)
-            {
-                auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
-                context.BindRenderEncoder(renderTargetMT->GetAndUpdateNativeRenderPass(*(cmd->renderPass), cmd->numClearValues, clearValues), true);
-            }
-            else
-                context.BindRenderEncoder(renderTargetMT->GetNativeRenderPass(), true);
-            return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
+            context.EndRenderPass();
+            return 0;
         }
         case MTOpcodeClearRenderPass:
         {
@@ -306,100 +296,100 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             }
 
             /* Begin with new render pass to clear buffers */
-            context.BindRenderEncoder(renderPassDesc);
+            context.UpdateRenderPass(renderPassDesc);
             [renderPassDesc release];
 
             return (sizeof(*cmd) + (sizeof(std::uint32_t) + sizeof(MTLClearColor))*cmd->numAttachments);
         }
-        case MTOpcodeDrawPatches:
+        case MTOpcodeDraw:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDrawPatches*>(pc);
-            id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-            [renderEncoder
-                drawPatches:            cmd->controlPointCount
-                patchStart:             cmd->patchStart
-                patchCount:             cmd->patchCount
-                patchIndexBuffer:       nil
-                patchIndexBufferOffset: 0
-                instanceCount:          cmd->instanceCount
-                baseInstance:           cmd->baseInstance
-            ];
+            auto* cmd = reinterpret_cast<const MTCmdDraw*>(pc);
+            const NSUInteger numPatchControlPoints = context.GetNumPatchControlPoints();
+            if (numPatchControlPoints > 0)
+            {
+                const NSUInteger patchStart = (static_cast<NSUInteger>(cmd->vertexStart) / numPatchControlPoints);
+                const NSUInteger patchCount = (static_cast<NSUInteger>(cmd->vertexCount) / numPatchControlPoints);
+
+                id<MTLRenderCommandEncoder> renderEncoder = context.DispatchTessellationAndGetRenderEncoder(patchCount, cmd->instanceCount);
+                [renderEncoder
+                    drawPatches:            numPatchControlPoints
+                    patchStart:             patchStart
+                    patchCount:             patchCount
+                    patchIndexBuffer:       nil
+                    patchIndexBufferOffset: 0
+                    instanceCount:          cmd->instanceCount
+                    baseInstance:           cmd->baseInstance
+                ];
+            }
+            else
+            {
+                id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
+                [renderEncoder
+                    drawPrimitives: context.GetPrimitiveType()
+                    vertexStart:    cmd->vertexStart
+                    vertexCount:    cmd->vertexCount
+                    instanceCount:  cmd->instanceCount
+                    baseInstance:   cmd->baseInstance
+                ];
+            }
             return sizeof(*cmd);
         }
-        case MTOpcodeDrawPrimitives:
+        case MTOpcodeDrawIndexed:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDrawPrimitives*>(pc);
-            id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-            [renderEncoder
-                drawPrimitives: cmd->primitiveType
-                vertexStart:    cmd->vertexStart
-                vertexCount:    cmd->vertexCount
-                instanceCount:  cmd->instanceCount
-                baseInstance:   cmd->baseInstance
-            ];
-            return sizeof(*cmd);
-        }
-        case MTOpcodeDrawIndexedPatches:
-        {
-            auto* cmd = reinterpret_cast<const MTCmdDrawIndexedPatches*>(pc);
-            id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-            [renderEncoder
-                drawIndexedPatches:             cmd->controlPointCount
-                patchStart:                     cmd->patchStart
-                patchCount:                     cmd->patchCount
-                patchIndexBuffer:               nil
-                patchIndexBufferOffset:         0
-                controlPointIndexBuffer:        cmd->controlPointIndexBuffer
-                controlPointIndexBufferOffset:  cmd->controlPointIndexBufferOffset
-                instanceCount:                  cmd->instanceCount
-                baseInstance:                   cmd->baseInstance
-            ];
-            return sizeof(*cmd);
-        }
-        case MTOpcodeDrawIndexedPrimitives:
-        {
-            auto* cmd = reinterpret_cast<const MTCmdDrawIndexedPrimitives*>(pc);
-            id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-            [renderEncoder
-                drawIndexedPrimitives:  cmd->primitiveType
-                indexCount:             cmd->indexCount
-                indexType:              cmd->indexType
-                indexBuffer:            cmd->indexBuffer
-                indexBufferOffset:      cmd->indexBufferOffset
-                instanceCount:          cmd->instanceCount
-                baseVertex:             cmd->baseVertex
-                baseInstance:           cmd->baseInstance
-            ];
-            return sizeof(*cmd);
-        }
-        case MTOpcodeDispatchThreads:
-        {
-            auto* cmd = reinterpret_cast<const MTCmdDispatchThreads*>(pc);
-            id<MTLComputeCommandEncoder> computeEncoder = context.FlushAndGetComputeEncoder();
-            [computeEncoder
-                dispatchThreads:        cmd->threads
-                threadsPerThreadgroup:  cmd->threadsPerThreadgroup
-            ];
+            auto* cmd = reinterpret_cast<const MTCmdDrawIndexed*>(pc);
+            const NSUInteger numPatchControlPoints = context.GetNumPatchControlPoints();
+            if (numPatchControlPoints > 0)
+            {
+                const NSUInteger patchStart = (static_cast<NSUInteger>(cmd->firstIndex) / numPatchControlPoints);
+                const NSUInteger patchCount = (static_cast<NSUInteger>(cmd->indexCount) / numPatchControlPoints);
+
+                id<MTLRenderCommandEncoder> renderEncoder = context.DispatchTessellationAndGetRenderEncoder(patchCount, cmd->instanceCount);
+                [renderEncoder
+                    drawIndexedPatches:             numPatchControlPoints
+                    patchStart:                     patchStart
+                    patchCount:                     patchCount
+                    patchIndexBuffer:               nil
+                    patchIndexBufferOffset:         0
+                    controlPointIndexBuffer:        context.GetIndexBuffer()
+                    controlPointIndexBufferOffset:  context.GetIndexBufferOffset(cmd->firstIndex)
+                    instanceCount:                  cmd->instanceCount
+                    baseInstance:                   cmd->baseInstance
+                ];
+            }
+            else
+            {
+                id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
+                [renderEncoder
+                    drawIndexedPrimitives:  context.GetPrimitiveType()
+                    indexCount:             cmd->indexCount
+                    indexType:              context.GetIndexType()
+                    indexBuffer:            context.GetIndexBuffer()
+                    indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
+                    instanceCount:          cmd->instanceCount
+                    baseVertex:             cmd->baseVertex
+                    baseInstance:           cmd->baseInstance
+                ];
+            }
             return sizeof(*cmd);
         }
         case MTOpcodeDispatchThreadgroups:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDispatchThreadgroups*>(pc);
+            auto* cmd = reinterpret_cast<const MTCmdDispatchThreads*>(pc);
             id<MTLComputeCommandEncoder> computeEncoder = context.FlushAndGetComputeEncoder();
             [computeEncoder
                 dispatchThreadgroups:   cmd->threadgroups
-                threadsPerThreadgroup:  cmd->threadsPerThreadgroup
+                threadsPerThreadgroup:  context.GetThreadsPerThreadgroup() // current PSO parameter
             ];
             return sizeof(*cmd);
         }
         case MTOpcodeDispatchThreadgroupsIndirect:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDispatchThreadgroupsIndirect*>(pc);
+            auto* cmd = reinterpret_cast<const MTCmdDispatchThreadsIndirect*>(pc);
             id<MTLComputeCommandEncoder> computeEncoder = context.FlushAndGetComputeEncoder();
             [computeEncoder
                 dispatchThreadgroupsWithIndirectBuffer: cmd->indirectBuffer
                 indirectBufferOffset:                   cmd->indirectBufferOffset
-                threadsPerThreadgroup:                  cmd->threadsPerThreadgroup
+                threadsPerThreadgroup:                  context.GetThreadsPerThreadgroup() // current PSO parameter
             ];
             return sizeof(*cmd);
         }
