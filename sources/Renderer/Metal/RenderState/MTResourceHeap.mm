@@ -580,21 +580,27 @@ void MTResourceHeap::WriteResourceViewSamplerState(const ResourceViewDescriptor&
     MTRESOURCEHEAP_DATA0_MTLSAMPLERSTATE(heapPtr)[binding.descriptorIndex] = samplerMT->GetNative();
 }
 
-static void ValidateTexViewNoSwizzle(MTTexture& /*textureMT*/, const TextureViewDescriptor& desc)
+[[noreturn]]
+static void ErrTextureViewSwizzleNotSupported()
 {
-    if (!IsTextureSwizzleIdentity(desc.swizzle))
-        throw std::runtime_error("cannot create texture-view with swizzling for this version of the Metal API");
+    LLGL_TRAP("cannot create texture-view with swizzling for this version of the Metal API");
 }
 
-static void ValidateTexViewNoTypeAndRange(MTTexture& textureMT, const TextureViewDescriptor& desc)
+static void ValidateTexViewNoSwizzle(const TextureViewDescriptor& desc)
+{
+    if (!IsTextureSwizzleIdentity(desc.swizzle))
+        ErrTextureViewSwizzleNotSupported();
+}
+
+static void ValidateTexViewNoTypeAndRange(const TextureViewDescriptor& desc, MTTexture& textureMT)
 {
     id<MTLTexture> tex = textureMT.GetNative();
     if (MTTypes::ToMTLTextureType(desc.type) != [tex textureType])
-        throw std::runtime_error("cannot create texture-view of different type for this version of the Metal API");
+        LLGL_TRAP("cannot create texture-view of different type for this version of the Metal API");
     if (desc.subresource.baseMipLevel != 0 || desc.subresource.numMipLevels != [tex mipmapLevelCount])
-        throw std::runtime_error("cannot create texture-view of different MIP-level range for this version of the Metal API");
+        LLGL_TRAP("cannot create texture-view of different MIP-level range for this version of the Metal API");
     if (desc.subresource.baseArrayLayer != 0 || desc.subresource.numArrayLayers != [tex arrayLength])
-        throw std::runtime_error("cannot create texture-view of different array-layer range for this version of the Metal API");
+        LLGL_TRAP("cannot create texture-view of different array-layer range for this version of the Metal API");
 }
 
 void MTResourceHeap::ExchangeTextureView(
@@ -624,21 +630,32 @@ id<MTLTexture> MTResourceHeap::GetOrCreateTexture(
         const auto& subresource = textureViewDesc.subresource;
         id<MTLTexture> textureView = nil;
 
-        if (@available(macOS 10.15, iOS 13.0, *))
+        /* Try different methods to create a texture view as some might return NIL even though the host system should support it */
+        if (!IsTextureSwizzleIdentity(textureViewDesc.swizzle))
         {
-            MTLTextureSwizzleChannels swizzle;
-            MTTypes::Convert(swizzle, textureViewDesc.swizzle);
-            textureView = [textureMT.GetNative()
-                newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
-                textureType:                    MTTypes::ToMTLTextureType(textureViewDesc.type)
-                levels:                         NSMakeRange(subresource.baseMipLevel, subresource.numMipLevels)
-                slices:                         NSMakeRange(subresource.baseArrayLayer, subresource.numArrayLayers)
-                swizzle:                        swizzle
-            ];
+            /*
+            This method is available in macOS 10.15 and iOS 13.0,
+            but it is only supported by GPU family MTLGPUFamilyMetal3 or later,
+            which is only available in macOS 13.0 and iOS 16.0 or later.
+            */
+            if (@available(macOS 13.0, iOS 16.0, *))
+            {
+                MTLTextureSwizzleChannels swizzle;
+                MTTypes::Convert(swizzle, textureViewDesc.swizzle);
+                textureView = [textureMT.GetNative()
+                    newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
+                    textureType:                    MTTypes::ToMTLTextureType(textureViewDesc.type)
+                    levels:                         NSMakeRange(subresource.baseMipLevel, subresource.numMipLevels)
+                    slices:                         NSMakeRange(subresource.baseArrayLayer, subresource.numArrayLayers)
+                    swizzle:                        swizzle
+                ];
+            }
+            else
+                ErrTextureViewSwizzleNotSupported();
         }
         else if (@available(macOS 10.11, iOS 9.0, *))
         {
-            ValidateTexViewNoSwizzle(textureMT, textureViewDesc);
+            ValidateTexViewNoSwizzle(textureViewDesc);
             textureView = [textureMT.GetNative()
                 newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
                 textureType:                    MTTypes::ToMTLTextureType(textureViewDesc.type)
@@ -648,14 +665,15 @@ id<MTLTexture> MTResourceHeap::GetOrCreateTexture(
         }
         else
         {
-            ValidateTexViewNoSwizzle(textureMT, textureViewDesc);
-            ValidateTexViewNoTypeAndRange(textureMT, textureViewDesc);
+            ValidateTexViewNoSwizzle(textureViewDesc);
+            ValidateTexViewNoTypeAndRange(textureViewDesc, textureMT);
             textureView = [textureMT.GetNative()
                 newTextureViewWithPixelFormat:  MTTypes::ToMTLPixelFormat(textureViewDesc.format)
             ];
         }
 
         /* Store texture view reference */
+        LLGL_ASSERT(textureView != nil, "unable to create Metal texture view");
         ExchangeTextureView(descriptorSet, binding, textureView);
         return textureView;
     }

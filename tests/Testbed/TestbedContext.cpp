@@ -980,15 +980,27 @@ bool TestbedContext::LoadTextures()
 {
     auto LoadTextureFromFile = [this](const char* name, const std::string& filename) -> Texture*
     {
+        auto PrintLoadingInfo = [&filename]()
+        {
+            Log::Printf("Loading image: %s", filename.c_str());
+        };
+
+        if (opt.verbose)
+            PrintLoadingInfo();
+
         // Load image
         int w = 0, h = 0, c = 0;
         stbi_uc* imgBuf = stbi_load(filename.c_str(), &w, &h, &c, 4);
 
         if (!imgBuf)
         {
-            Log::Errorf("Failed to load image: %s\n", filename.c_str());
+            if (!opt.verbose)
+                PrintLoadingInfo();
+            Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
             return nullptr;
         }
+        else if (opt.verbose)
+            Log::Printf(" [ Ok ]\n");
 
         // Create texture
         ImageView imageView;
