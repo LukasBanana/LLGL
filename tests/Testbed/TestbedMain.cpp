@@ -8,6 +8,12 @@
 #include "TestbedContext.h"
 #include <string>
 #include <regex>
+#include <exception>
+#include <stdio.h>
+
+#ifdef _WIN32
+#   include <Windows.h>
+#endif
 
 
 using namespace LLGL;
@@ -113,7 +119,7 @@ static void PrintHelpDocs()
     );
 }
 
-int main(int argc, char* argv[])
+static int GuardedMain(int argc, char* argv[])
 {
     Log::RegisterCallbackStd();
 
@@ -169,5 +175,43 @@ int main(int argc, char* argv[])
     return static_cast<int>(modulesWithFailedTests);
 }
 
+#ifdef _WIN32
+static LONG TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
+{
+    ::fprintf(
+        stderr,
+        "Exception during test run: Address=%p, Code=0x%08X",
+        e->ExceptionRecord->ExceptionAddress, e->ExceptionRecord->ExceptionCode
+    );
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif
+
+int main(int argc, char* argv[])
+{
+    #ifdef _WIN32
+    AddVectoredExceptionHandler(1, TestbedVectoredExceptionHandler);
+    __try
+    {
+        return GuardedMain(argc, argv);
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ::fflush(stderr);
+        return 1;
+    }
+    #else
+    try
+    {
+        return GuardedMain(argc, argv);
+    }
+    catch (const std::exception& e)
+    {
+        ::fprintf(stderr, "Exception during test run: %s\n", e.what());
+        ::fflush(stderr);
+        return 1;
+    }
+    #endif
+}
 
 
