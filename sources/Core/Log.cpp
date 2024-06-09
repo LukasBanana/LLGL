@@ -95,7 +95,7 @@ static void PostReport(ReportType type, const char* text)
 {
     std::lock_guard<std::mutex> guard{ g_logState.lock };
 
-    if (auto listenerStd = g_logState.listenerStd.get())
+    if (LogListener* listenerStd = g_logState.listenerStd.get())
         listenerStd->Invoke(type, text);
 
     for (const auto& listener : g_logState.listeners)
@@ -139,7 +139,7 @@ LLGL_EXPORT LogHandle RegisterCallbackReport(Report& report)
     return RegisterCallback(
         [](ReportType type, const char* text, void* userData)
         {
-            if (auto report = reinterpret_cast<Report*>(userData))
+            if (auto* report = reinterpret_cast<Report*>(userData))
             {
                 if (type == ReportType::Error)
                     report->Errorf("%s", text);
@@ -172,7 +172,7 @@ LLGL_EXPORT LogHandle RegisterCallbackStd()
         }
         return reinterpret_cast<LogHandle>(g_logState.listenerStd.get());
     }
-    return nullptr;
+    return LogHandle{};
 }
 
 LLGL_EXPORT void UnregisterCallback(LogHandle handle)
