@@ -96,9 +96,6 @@ VKCommandBuffer::VKCommandBuffer(
     CreateVkCommandPool(queueFamilyIndices.graphicsFamily);
     CreateVkCommandBuffers();
     CreateVkRecordingFences();
-
-    /* Acquire first native command buffer */
-    AcquireNextBuffer();
 }
 
 VKCommandBuffer::~VKCommandBuffer()
@@ -111,7 +108,7 @@ VkFence VKCommandBuffer::GetQueueSubmitFenceAndFlush()
     VkFence fence = recordingFence_;
     if (multiSubmit_)
         recordingFence_ = VK_NULL_HANDLE;
-    recordingFenceDirty_[commandBufferIndex_] = false;
+    recordingFenceDirty_[commandBufferIndex_] = true;
     return fence;
 }
 
@@ -121,12 +118,6 @@ void VKCommandBuffer::Begin()
 {
     /* Use next internal VkCommandBuffer object to reduce latency */
     AcquireNextBuffer();
-
-    /* Wait for fence before recording */
-    if (!recordingFenceDirty_[commandBufferIndex_])
-        vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
-    vkResetFences(device_, 1, &recordingFence_);
-    recordingFenceDirty_[commandBufferIndex_] = true;
 
     /* Initialize inheritance if this is a secondary command buffer */
     VkCommandBufferInheritanceInfo inheritanceInfo;
@@ -1307,9 +1298,18 @@ void VKCommandBuffer::FlushDescriptorCache()
 
 void VKCommandBuffer::AcquireNextBuffer()
 {
+    /* Move to next command buffer index */
     commandBufferIndex_ = (commandBufferIndex_ + 1) % numCommandBuffers_;
+
+    /* Wait for fence before using next command buffer */
+    recordingFence_ = recordingFenceArray_[commandBufferIndex_].Get();
+    if (recordingFenceDirty_[commandBufferIndex_])
+        vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
+    vkResetFences(device_, 1, &recordingFence_);
+    recordingFenceDirty_[commandBufferIndex_] = false;
+
+    /* Make next command buffer current and reset pools and context */
     commandBuffer_      = commandBufferArray_[commandBufferIndex_];
-    recordingFence_     = recordingFenceArray_[commandBufferIndex_].Get();
     descriptorSetPool_  = &(descriptorSetPoolArray_[commandBufferIndex_]);
     descriptorSetPool_->Reset();
     context_.Reset(commandBuffer_);

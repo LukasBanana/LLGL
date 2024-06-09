@@ -70,7 +70,7 @@ void VKStagingDescriptorPool::Initialize(
         poolCreateInfo.poolSizeCount    = numPoolSizes;
         poolCreateInfo.pPoolSizes       = poolSizes;
     }
-    auto result = vkCreateDescriptorPool(device_, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateDescriptorPool(device_, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool");
 }
 

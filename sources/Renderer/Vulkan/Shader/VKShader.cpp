@@ -12,6 +12,7 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../../Core/ReportUtils.h"
+#include "../../../Core/Assertion.h"
 #include "../../PipelineStateUtils.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
@@ -545,17 +546,15 @@ void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
     std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
 
-    for (std::size_t i = 0; i < numVertexAttribs; ++i)
+    for_range(i, numVertexAttribs)
     {
         const VertexAttribute& attr = vertexAttribs[i];
 
-        if (attr.instanceDivisor > 1)
-        {
-            throw std::runtime_error(
-                "vertex instance divisor must be 0 or 1 for Vulkan, but " +
-                std::to_string(attr.instanceDivisor) + " was specified: " + std::string(attr.name.c_str())
-            );
-        }
+        LLGL_ASSERT(
+            !(attr.instanceDivisor > 1),
+            "vertex instance divisor must be 0 or 1 for Vulkan, but %u was specified: %s",
+            attr.instanceDivisor, attr.name.c_str()
+        );
 
         /* Append vertex input attribute descriptor */
         VkVertexInputAttributeDescription vertexAttrib;
