@@ -41,6 +41,10 @@ class DbgCommandBuffer final : public CommandBuffer
 
     public:
 
+        void SetDebugName(const char* name) override;
+
+    public:
+
         DbgCommandBuffer(
             RenderSystem&                   renderSystemInstance,
             CommandQueue&                   commandQueueInstance,
@@ -61,10 +65,69 @@ class DbgCommandBuffer final : public CommandBuffer
 
         CommandBuffer&                  instance;
         const CommandBufferDescriptor   desc;
+        std::string                     label;
 
     private:
 
-        void EnableRecording(bool enable);
+        struct BindingTable
+        {
+            ResourceHeap*           resourceHeap = nullptr;
+            std::vector<Resource*>  resources;
+            std::vector<char>       uniforms;
+        };
+
+        struct Bindings
+        {
+            // Framebuffers
+            DbgSwapChain*       swapChain                                           = nullptr;
+            DbgRenderTarget*    renderTarget                                        = nullptr;
+            std::uint32_t       numViewports                                        = 0;
+
+            // Stream inputs/outputs
+            DbgBuffer*          vertexBufferStore[1]                                = {};
+            DbgBuffer* const *  vertexBuffers                                       = nullptr;
+            std::uint32_t       numVertexBuffers                                    = 0;
+            bool                anyShaderAttributes                                 = false;
+            DbgBuffer*          indexBuffer                                         = nullptr;
+            std::uint64_t       indexBufferFormatSize                               = 0;
+            std::uint64_t       indexBufferOffset                                   = 0;
+            DbgBuffer*          streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]              = {};
+            std::uint32_t       numStreamOutputs                                    = 0;
+
+            // PSO
+            DbgPipelineState*   pipelineState                                       = nullptr;
+            const DbgShader*    vertexShader                                        = nullptr;
+            bool                blendFactorSet                                      = false;
+            bool                stencilRefSet                                       = false;
+            Scissor             scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
+            std::uint32_t       numScissorRects                                     = 0;
+            BindingTable        bindingTable;
+        };
+
+        struct States
+        {
+            bool recording          = false;
+            bool finishedRecording  = false;
+            bool insideRenderPass   = false;
+            bool streamOutputBusy   = false;
+        };
+
+        struct SwapChainFramePair
+        {
+            DbgSwapChain* swapChain;
+            std::uint64_t frame;      // Frame index when the swap-chain render-pass was encoded
+        };
+
+        struct Records
+        {
+            std::vector<SwapChainFramePair> swapChainFrames;
+        };
+
+    private:
+
+        void ValidateBeginOfRecording();
+        void ValidateEndOfRecording();
+        void ValidateCommandBufferForExecute(const States& cmdBufferStates, const char* cmdBufferName = nullptr);
 
         void ValidateGenerateMips(DbgTexture& textureDbg, const TextureSubresource* subresource = nullptr);
         void ValidateViewport(const Viewport& viewport);
@@ -148,17 +211,9 @@ class DbgCommandBuffer final : public CommandBuffer
 
     private:
 
-        struct SwapChainFramePair
-        {
-            DbgSwapChain*   swapChain;
-            std::uint64_t   frame;      // Frame index when the swap-chain render-pass was encoded
-        };
-
-    private:
-
         /* ----- Common objects ----- */
 
-        RenderingDebugger*          debugger_                               = nullptr;
+        RenderingDebugger*          debugger_               = nullptr;
         FrameProfile&               commonProfile_;
 
         const RenderingFeatures&    features_;
@@ -167,63 +222,15 @@ class DbgCommandBuffer final : public CommandBuffer
         std::stack<std::string>     debugGroups_;
 
         DbgQueryTimerPool           queryTimerPool_;
-        bool                        perfProfilerEnabled_                    = false;
+        bool                        perfProfilerEnabled_    = false;
 
         /* ----- Render states ----- */
 
         FrameProfile                profile_;
-
-        PrimitiveTopology           topology_                               = PrimitiveTopology::TriangleList;
-
-        struct Bindings
-        {
-            // Framebuffers
-            DbgSwapChain*           swapChain                               = nullptr;
-            DbgRenderTarget*        renderTarget                            = nullptr;
-            std::uint32_t           numViewports                            = 0;
-
-            // Stream inputs/outputs
-            DbgBuffer*              vertexBufferStore[1]                    = {};
-            DbgBuffer* const *      vertexBuffers                           = nullptr;
-            std::uint32_t           numVertexBuffers                        = 0;
-            bool                    anyShaderAttributes                     = false;
-            DbgBuffer*              indexBuffer                             = nullptr;
-            std::uint64_t           indexBufferFormatSize                   = 0;
-            std::uint64_t           indexBufferOffset                       = 0;
-            DbgBuffer*              streamOutputs[LLGL_MAX_NUM_SO_BUFFERS]  = {};
-            std::uint32_t           numStreamOutputs                        = 0;
-
-            // PSO
-            DbgPipelineState*       pipelineState                           = nullptr;
-            const DbgShader*        vertexShader                            = nullptr;
-            bool                    blendFactorSet                          = false;
-            bool                    stencilRefSet                           = false;
-            Scissor                 scissorRects[LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS];
-            std::uint32_t           numScissorRects                         = 0;
-
-            struct BindingTable
-            {
-                ResourceHeap*           resourceHeap = nullptr;
-                std::vector<Resource*>  resources;
-                std::vector<char>       uniforms;
-            }
-            bindingTable;
-        }
-        bindings_;
-
-        struct States
-        {
-            bool                    recording                               = false;
-            bool                    insideRenderPass                        = false;
-            bool                    streamOutputBusy                        = false;
-        }
-        states_;
-
-        struct Records
-        {
-            std::vector<SwapChainFramePair> swapChainFrames;
-        }
-        records_;
+        PrimitiveTopology           topology_               = PrimitiveTopology::TriangleList;
+        Bindings                    bindings_;
+        States                      states_;
+        Records                     records_;
 
 };
 

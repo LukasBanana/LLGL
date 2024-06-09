@@ -77,12 +77,18 @@ DbgCommandBuffer::DbgCommandBuffer(
 :
     instance        { commandBufferInstance                                             },
     desc            { desc                                                              },
+    label           { LLGL_DBG_LABEL(desc)                                              },
     debugger_       { debugger                                                          },
     commonProfile_  { commonProfile                                                     },
     features_       { caps.features                                                     },
     limits_         { caps.limits                                                       },
     queryTimerPool_ { renderSystemInstance, commandQueueInstance, commandBufferInstance }
 {
+}
+
+void DbgCommandBuffer::SetDebugName(const char* name)
+{
+    DbgSetObjectName(*this, name);
 }
 
 /* ----- Encoding ----- */
@@ -100,7 +106,10 @@ void DbgCommandBuffer::Begin()
 
     /* Begin with command recording  */
     if (debugger_)
-        EnableRecording(true);
+    {
+        LLGL_DBG_SOURCE();
+        ValidateBeginOfRecording();
+    }
 
     instance.Begin();
 
@@ -111,7 +120,10 @@ void DbgCommandBuffer::End()
 {
     /* End with command recording */
     if (debugger_)
-        EnableRecording(false);
+    {
+        LLGL_DBG_SOURCE();
+        ValidateEndOfRecording();
+    }
     instance.End();
 
     /* Resolve timer query results for performance profiler */
@@ -147,6 +159,8 @@ void DbgCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
             CommandBufferFlags::Secondary,
             "LLGL::CommandBuffer"
         );
+
+        ValidateCommandBufferForExecute(commandBufferDbg.states_, GetLabelOrDefault(commandBufferDbg.label, "LLGL::CommandBuffer"));
     }
 
     LLGL_DBG_COMMAND( "Execute", instance.Execute(commandBufferDbg.instance) );
@@ -1370,19 +1384,47 @@ void DbgCommandBuffer::ValidateSubmit()
  * ======= Private: =======
  */
 
-void DbgCommandBuffer::EnableRecording(bool enable)
+void DbgCommandBuffer::ValidateBeginOfRecording()
 {
     if (debugger_)
     {
-        if (enable == states_.recording)
+        if (states_.recording)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin nested recording of command buffer");
+        states_.recording = true;
+    }
+}
+
+void DbgCommandBuffer::ValidateEndOfRecording()
+{
+    if (debugger_)
+    {
+        if (!states_.recording)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot end recording of command buffer while no recording is currently active");
+        states_.recording           = false;
+        states_.finishedRecording   = true;
+    }
+}
+
+void DbgCommandBuffer::ValidateCommandBufferForExecute(const States& cmdBufferStates, const char* cmdBufferName)
+{
+    if (!cmdBufferStates.finishedRecording)
+    {
+        if (cmdBufferStates.recording)
         {
-            LLGL_DBG_SOURCE();
-            if (enable)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin nested recording of command buffer");
-            else
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot end recording of command buffer while no recording is currently active");
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "cannot run Execute() on %s that is currently in recording mode; Begin() but no subsequent End() invocation",
+                cmdBufferName
+            );
         }
-        states_.recording = enable;
+        else
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "cannot run Execute() on %s that is not encoded yetl; no Begin()/End() invocations",
+                cmdBufferName
+            );
+        }
     }
 }
 
@@ -2240,7 +2282,7 @@ void DbgCommandBuffer::ValidateDynamicStates()
 
 void DbgCommandBuffer::ValidateBindingTable()
 {
-    auto ValidateBindingTableWithLayout = [this](const DbgPipelineState& pso, const Bindings::BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
+    auto ValidateBindingTableWithLayout = [this](const DbgPipelineState& pso, const BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
     {
         const std::string psoLabel = (!pso.label.empty() ? " \'" + pso.label + '\'' : "");
         LLGL_ASSERT(table.resources.size() == layoutDesc.bindings.size());
@@ -2422,7 +2464,7 @@ void DbgCommandBuffer::ResetRecords()
 
 void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayoutDbg)
 {
-    auto ResetBindingTableWithLayout = [](Bindings::BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
+    auto ResetBindingTableWithLayout = [](BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
     {
         table.resourceHeap = nullptr;
         table.resources.clear();
@@ -2431,7 +2473,7 @@ void DbgCommandBuffer::ResetBindingTable(const DbgPipelineLayout* pipelineLayout
         table.uniforms.resize(layoutDesc.uniforms.size(), 0);
     };
 
-    auto ResetBindingTableZero = [](Bindings::BindingTable& table)
+    auto ResetBindingTableZero = [](BindingTable& table)
     {
         table.resourceHeap = nullptr;
         table.resources.clear();

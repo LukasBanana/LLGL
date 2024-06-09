@@ -79,7 +79,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Executes the specified secondary command buffer by inlining its commands into this command buffer.
         \param[in] secondaryCommandBuffer Specifies the secondary command buffer which is meant to be inlined.
-        This command buffer must have been created with the CommandBufferFlags::Secondary flag.
+        This command buffer must have been created with the CommandBufferFlags::Secondary flag and its must also have finished encoding.
         \remarks This function can only be used by primary command buffers, i.e. command buffers that have \e not been created with the flag CommandBufferFlags::Secondary.
         \remarks Once this command buffer is submitted for execution to one or more primary command buffers,
         it <b>must not</b> be updated unless all of such primary command buffers are also updated before their next submission to the command queue.
