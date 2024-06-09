@@ -183,7 +183,7 @@ namespace LLGL
     LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame = 0, unsigned maxNumStackFrames = 64);
 };
 
-static LONG TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
+static LONG WINAPI TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
 {
     LLGL::UTF8String stackTrace = DebugStackTrace();
     ::fprintf(

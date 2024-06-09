@@ -20,6 +20,7 @@ jobs:
 
     env:
       README: ${{ github.workspace }}/README.txt
+      CONFIG: ${{ matrix.config == 'Debug' && 'Debug' || 'RelWithDebInfo' }}
 
     steps:
     - name: Checkout Repository
@@ -45,7 +46,7 @@ jobs:
 
     - name: Build
       run: |
-        cmake --build ${{ github.workspace }}/${{ matrix.arch }} --config ${{ matrix.config }}
+        cmake --build ${{ github.workspace }}/${{ matrix.arch }} --config ${{ env.CONFIG }}
         echo "LLGL built with ${{ matrix.generator }} for ${{ matrix.arch }} on $(date)." > ${{ env.README }}
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
@@ -63,7 +64,7 @@ jobs:
     - name: Testbed
       working-directory: tests/Testbed
       run: |
-        ${{ github.workspace }}/${{ matrix.arch }}/build/${{ matrix.config }}/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }}.exe d3d12 -v -f -t -g ${{ matrix.config == 'Debug' && '-d=gpu' || '' }}
+        ${{ github.workspace }}/${{ matrix.arch }}/build/${{ env.CONFIG }}/${{ matrix.config == 'Debug' && 'TestbedD' || 'Testbed' }}.exe d3d12 -v -f -t -g ${{ matrix.config == 'Debug' && '-d=gpu' || '' }}
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v4
