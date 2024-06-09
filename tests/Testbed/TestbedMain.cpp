@@ -185,15 +185,18 @@ namespace LLGL
 
 static LONG WINAPI TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
 {
-    LLGL::UTF8String stackTrace = DebugStackTrace();
-    ::fprintf(
-        stderr,
-        "Exception during test run: Address=%p, Code=0x%08X\n"
-        "Callstack:\n"
-        "----------\n"
-        "%s\n",
-        e->ExceptionRecord->ExceptionAddress, e->ExceptionRecord->ExceptionCode, stackTrace.c_str()
-    );
+    if ((e->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE) == 0)
+    {
+        LLGL::UTF8String stackTrace = DebugStackTrace();
+        ::fprintf(
+            stderr,
+            "Exception during test run: Address=%p, Code=0x%08X\n"
+            "Callstack:\n"
+            "----------\n"
+            "%s\n",
+            e->ExceptionRecord->ExceptionAddress, e->ExceptionRecord->ExceptionCode, stackTrace.c_str()
+        );
+    }
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
