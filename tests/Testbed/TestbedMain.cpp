@@ -183,9 +183,32 @@ namespace LLGL
     LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame = 0, unsigned maxNumStackFrames = 64);
 };
 
+// Only report exception with callstack on these critical exceptions.
+// There are other exceptions that are of no interest for this testbed,
+// such as floating-point exceptions (they can be ignored), debugging exceptions etc.
+static bool IsExceptionCodeOfInterest(DWORD exceptionCode)
+{
+    switch (exceptionCode)
+    {
+        case EXCEPTION_ACCESS_VIOLATION:
+        case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+        case EXCEPTION_DATATYPE_MISALIGNMENT:
+        case EXCEPTION_ILLEGAL_INSTRUCTION:
+        case EXCEPTION_IN_PAGE_ERROR:
+        case EXCEPTION_INT_DIVIDE_BY_ZERO:
+        case EXCEPTION_INVALID_DISPOSITION:
+        case EXCEPTION_NONCONTINUABLE_EXCEPTION:
+        case EXCEPTION_PRIV_INSTRUCTION:
+        case EXCEPTION_STACK_OVERFLOW:
+            return true;
+        default:
+            return false;
+    }
+}
+
 static LONG WINAPI TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
 {
-    if ((e->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE) == 0)
+    if (IsExceptionCodeOfInterest(e->ExceptionRecord->ExceptionCode))
     {
         LLGL::UTF8String stackTrace = DebugStackTrace();
         ::fprintf(
