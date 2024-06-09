@@ -28,7 +28,8 @@ class Example_Instancing : public ExampleBase
     LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
     // Two vertex buffer, one for per-vertex data, one for per-instance data
-    LLGL::Buffer*               vertexBuffers[2]    = {};
+    LLGL::Buffer*               perVertexDataBuf    = nullptr;
+    LLGL::Buffer*               perInstanceDataBuf  = nullptr;
     LLGL::BufferArray*          vertexBufferArray   = nullptr;
 
     LLGL::Buffer*               constantBuffer      = nullptr;
@@ -176,24 +177,27 @@ private:
         grassPlane.arrayLayer = static_cast<float>(numPlantImages + 1);
 
         // Create buffer for per-vertex data
-        LLGL::BufferDescriptor desc;
+        LLGL::BufferDescriptor perVertexDataDesc;
         {
-            desc.debugName      = "Vertices";
-            desc.size           = sizeof(vertexData);
-            desc.bindFlags      = LLGL::BindFlags::VertexBuffer;
-            desc.vertexAttribs  = vertexFormatPerVertex.attributes;
+            perVertexDataDesc.debugName     = "Vertices";
+            perVertexDataDesc.size          = sizeof(vertexData);
+            perVertexDataDesc.bindFlags     = LLGL::BindFlags::VertexBuffer;
+            perVertexDataDesc.vertexAttribs = vertexFormatPerVertex.attributes;
         }
-        vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
+        perVertexDataBuf = renderer->CreateBuffer(perVertexDataDesc, vertexData);
 
         // Create buffer for per-instance data
+        LLGL::BufferDescriptor perInstanceDataDesc;
         {
-            desc.debugName      = "Instances";
-            desc.size           = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
-            desc.vertexAttribs  = vertexFormatPerInstance.attributes;
+            perInstanceDataDesc.debugName       = "Instances";
+            perInstanceDataDesc.size            = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
+            perInstanceDataDesc.bindFlags       = LLGL::BindFlags::VertexBuffer;
+            perInstanceDataDesc.vertexAttribs   = vertexFormatPerInstance.attributes;
         }
-        vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData.data());
+        perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc, instanceData.data());
 
         // Create vertex buffer array
+        LLGL::Buffer* vertexBuffers[2] = { perVertexDataBuf, perInstanceDataBuf };
         vertexBufferArray = renderer->CreateBufferArray(2, vertexBuffers);
 
         // Create constant buffer

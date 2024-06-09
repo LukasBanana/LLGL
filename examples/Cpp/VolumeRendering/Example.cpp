@@ -222,15 +222,15 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.vertexShader               = vsScene;
-                pipelineDesc.renderPass                 = depthRangeRenderTarget->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayoutCbuffer;
-                pipelineDesc.depth.testEnabled          = true;
-                pipelineDesc.depth.writeEnabled         = true;
-                pipelineDesc.depth.compareOp            = LLGL::CompareOp::Greater;
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Front;
-                //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
-                pipelineDesc.blend.targets[0].colorMask = 0x0;
+                pipelineDesc.vertexShader                   = vsScene;
+                pipelineDesc.renderPass                     = depthRangeRenderTarget->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayoutCbuffer;
+                pipelineDesc.depth.testEnabled              = true;
+                pipelineDesc.depth.writeEnabled             = true;
+                pipelineDesc.depth.compareOp                = LLGL::CompareOp::Greater;
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Front;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (depthRangeRenderTarget->GetSamples() > 1);
+                pipelineDesc.blend.targets[0].colorMask     = 0x0;
             }
             pipelineRangePass = renderer->CreatePipelineState(pipelineDesc);
         }
@@ -239,15 +239,15 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.vertexShader               = vsScene;
-                pipelineDesc.renderPass                 = swapChain->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayoutCbuffer;
-                pipelineDesc.depth.testEnabled          = true;
-                pipelineDesc.depth.writeEnabled         = true;
-                pipelineDesc.depth.compareOp            = LLGL::CompareOp::Less;
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
-                pipelineDesc.blend.targets[0].colorMask = 0x0;
+                pipelineDesc.vertexShader                   = vsScene;
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayoutCbuffer;
+                pipelineDesc.depth.testEnabled              = true;
+                pipelineDesc.depth.writeEnabled             = true;
+                pipelineDesc.depth.compareOp                = LLGL::CompareOp::Less;
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (swapChain->GetSamples() > 1);
+                pipelineDesc.blend.targets[0].colorMask     = 0x0;
             }
             pipelineZPrePass = renderer->CreatePipelineState(pipelineDesc);
         }
@@ -256,22 +256,22 @@ private:
         {
             LLGL::GraphicsPipelineDescriptor pipelineDesc;
             {
-                pipelineDesc.vertexShader               = vsScene;
-                pipelineDesc.fragmentShader             = fsScene;
-                pipelineDesc.renderPass                 = swapChain->GetRenderPass();
-                pipelineDesc.pipelineLayout             = pipelineLayoutFinalPass;
-                pipelineDesc.depth.testEnabled          = true;
-                pipelineDesc.depth.writeEnabled         = false;
-                pipelineDesc.depth.compareOp            = LLGL::CompareOp::Equal;
-                pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
-                //pipelineDesc.rasterizer.multiSampling   = GetMultiSampleDesc();
+                pipelineDesc.vertexShader                   = vsScene;
+                pipelineDesc.fragmentShader                 = fsScene;
+                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
+                pipelineDesc.pipelineLayout                 = pipelineLayoutFinalPass;
+                pipelineDesc.depth.testEnabled              = true;
+                pipelineDesc.depth.writeEnabled             = false;
+                pipelineDesc.depth.compareOp                = LLGL::CompareOp::Equal;
+                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+                pipelineDesc.rasterizer.multiSampleEnabled  = (swapChain->GetSamples() > 1);
 
                 auto& blendTarget = pipelineDesc.blend.targets[0];
-                blendTarget.blendEnabled                = true;
-                blendTarget.dstAlpha                    = LLGL::BlendOp::One;
-                blendTarget.srcAlpha                    = LLGL::BlendOp::SrcAlpha;
-                blendTarget.dstColor                    = LLGL::BlendOp::One;
-                blendTarget.srcColor                    = LLGL::BlendOp::SrcAlpha;
+                blendTarget.blendEnabled                    = true;
+                blendTarget.dstAlpha                        = LLGL::BlendOp::One;
+                blendTarget.srcAlpha                        = LLGL::BlendOp::SrcAlpha;
+                blendTarget.dstColor                        = LLGL::BlendOp::One;
+                blendTarget.srcColor                        = LLGL::BlendOp::SrcAlpha;
             }
             pipelineFinalPass = renderer->CreatePipelineState(pipelineDesc);
         }

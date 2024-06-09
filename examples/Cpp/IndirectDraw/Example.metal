@@ -17,6 +17,7 @@ struct SceneState
 {
     float   time;
     uint    numSceneObjects;
+    float   aspectRatio;
 };
 
 struct SceneObject
@@ -117,11 +118,13 @@ struct VOut
     float4 color;
 };
 
-vertex VOut VS(VIn inp [[stage_in]])
+vertex VOut VS(
+    VIn                     inp         [[stage_in]],
+    constant SceneState&    sceneState  [[buffer(2)]])
 {
     VOut outp;
     float2x2 rotation = float2x2(inp.rotation0, inp.rotation1);
-    outp.position   = float4(rotation * inp.coord + inp.position, 0, 1);
+    outp.position   = float4((rotation * inp.coord + inp.position) * float2(sceneState, 1.0), 0, 1);
     outp.color      = inp.color;
     return outp;
 }

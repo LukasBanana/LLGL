@@ -1,5 +1,5 @@
 /*
- * Example.cpp (Example_ComputeShader)
+ * Example.cpp (Example_IndirectDraw)
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -11,15 +11,15 @@
 #include <ExampleBase.h>
 
 
-class Example_ComputeShader : public ExampleBase
+class Example_IndirectDraw : public ExampleBase
 {
 
     static const std::uint32_t maxNumSceneObjects = 64;
 
     LLGL::VertexFormat      vertexFormat[2];
 
-    LLGL::Buffer*           vertexBuffer            = nullptr;
-    LLGL::Buffer*           instanceBuffer          = nullptr;
+    LLGL::Buffer*           perVertexDataBuf        = nullptr;
+    LLGL::Buffer*           perInstanceDataBuf      = nullptr;
     LLGL::BufferArray*      vertexBufferArray       = nullptr;
 
     LLGL::Buffer*           inputBuffer             = nullptr;
@@ -28,31 +28,32 @@ class Example_ComputeShader : public ExampleBase
     LLGL::Shader*           computeShader           = nullptr;
     LLGL::PipelineLayout*   computeLayout           = nullptr;
     LLGL::PipelineState*    computePipeline         = nullptr;
-    LLGL::ResourceHeap*     computeResourceHeap     = nullptr;
 
     LLGL::Shader*           graphicsVertexShader    = nullptr;
     LLGL::Shader*           graphicsFragmentShader  = nullptr;
+    LLGL::PipelineLayout*   graphicsLayout          = nullptr;
     LLGL::PipelineState*    graphicsPipeline        = nullptr;
 
     struct SceneState
     {
         float           time            = 0.0f;
         std::uint32_t   numSceneObjects = maxNumSceneObjects;
-        float           _pad0[2];
+        float           aspectRatio     = 1.0f;
+        float           _pad0[1];
     }
     sceneState;
 
     struct SceneObject
     {
-        Gs::Matrix2f    rotation;
-        Gs::Vector2f    position;
-        float           _pad0[2];
+        float rotation[2][2];
+        float position[2];
+        float _pad0[2];
     };
 
 public:
 
-    Example_ComputeShader() :
-        ExampleBase { "LLGL Example: Compute Shader" }
+    Example_IndirectDraw() :
+        ExampleBase { "LLGL Example: Indirect Draw" }
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
@@ -64,10 +65,6 @@ public:
         CreateBuffers();
         CreateComputePipeline();
         CreateGraphicsPipeline();
-
-        // Add debugging names
-        computeLayout->SetDebugName("Compute.Layout");
-        computeResourceHeap->SetDebugName("Compute.ResourceHeap");
     }
 
     void CreateBuffers()
@@ -111,28 +108,28 @@ public:
         };
 
         // Create vertex buffer
-        LLGL::BufferDescriptor vertexBufferDesc;
+        LLGL::BufferDescriptor perVertexDataDesc;
         {
-            vertexBufferDesc.debugName      = "Vertices";
-            vertexBufferDesc.size           = sizeof(vertices);
-            vertexBufferDesc.bindFlags      = LLGL::BindFlags::VertexBuffer;
-            vertexBufferDesc.vertexAttribs  = vertexFormat[0].attributes;
+            perVertexDataDesc.debugName     = "Vertices";
+            perVertexDataDesc.size          = sizeof(vertices);
+            perVertexDataDesc.bindFlags     = LLGL::BindFlags::VertexBuffer;
+            perVertexDataDesc.vertexAttribs = vertexFormat[0].attributes;
         }
-        vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
+        perVertexDataBuf = renderer->CreateBuffer(perVertexDataDesc, vertices);
 
         // Create instance buffer
-        LLGL::BufferDescriptor instanceBufferDesc;
+        LLGL::BufferDescriptor perInstanceDataDesc;
         {
-            instanceBufferDesc.debugName        = "Instances";
-            instanceBufferDesc.size             = sizeof(SceneObject) * maxNumSceneObjects;
-            instanceBufferDesc.bindFlags        = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
-            instanceBufferDesc.vertexAttribs    = vertexFormat[1].attributes;
-            instanceBufferDesc.format           = LLGL::Format::RGBA32Float;
+            perInstanceDataDesc.debugName       = "Instances";
+            perInstanceDataDesc.size            = sizeof(SceneObject) * maxNumSceneObjects;
+            perInstanceDataDesc.bindFlags       = LLGL::BindFlags::VertexBuffer | LLGL::BindFlags::Storage;
+            perInstanceDataDesc.vertexAttribs   = vertexFormat[1].attributes;
+            perInstanceDataDesc.format          = LLGL::Format::RGBA32Float;
         }
-        instanceBuffer = renderer->CreateBuffer(instanceBufferDesc);
+        perInstanceDataBuf = renderer->CreateBuffer(perInstanceDataDesc);
 
         // Create vertex array buffer
-        LLGL::Buffer* buffers[] = { vertexBuffer, instanceBuffer };
+        LLGL::Buffer* buffers[2] = { perVertexDataBuf, perInstanceDataBuf };
         vertexBufferArray = renderer->CreateBufferArray(2, buffers);
 
         // Create scene state buffer
@@ -171,20 +168,28 @@ public:
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
-            LLGL::Parse("heap{cbuffer(2):comp, rwbuffer(3):comp, rwbuffer(4):comp}")
+            LLGL::Parse(
+                "cbuffer(SceneState@2):comp,"
+                "rwbuffer(sceneObjects@3):comp,"
+                "rwbuffer(drawArgs@4):comp,"
+            )
         );
 
         // Create compute pipeline
         LLGL::ComputePipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.debugName      = "Compute.Pipeline";
-            pipelineDesc.computeShader  = computeShader;
+            pipelineDesc.debugName      = "ComputePSO";
             pipelineDesc.pipelineLayout = computeLayout;
+            pipelineDesc.computeShader  = computeShader;
         }
         computePipeline = renderer->CreatePipelineState(pipelineDesc);
 
-        // Create resource heap for compute pipeline
-        computeResourceHeap = renderer->CreateResourceHeap(computeLayout, { inputBuffer, instanceBuffer, indirectArgBuffer });
+        // Report PSO compilation errors
+        if (const LLGL::Report* report = computePipeline->GetReport())
+        {
+            if (report->HasErrors())
+                LLGL::Log::Errorf(report->GetText());
+        }
     }
 
     void CreateGraphicsPipeline()
@@ -213,16 +218,31 @@ public:
         else
             throw std::runtime_error("shaders not available for selected renderer in this example");
 
+        // Create compute pipeline layout
+        graphicsLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(SceneState@2):vert,"
+            )
+        );
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.debugName                      = "Graphics.Pipeline";
+            pipelineDesc.debugName                      = "GraphicsPSO";
+            pipelineDesc.pipelineLayout                 = graphicsLayout;
             pipelineDesc.vertexShader                   = graphicsVertexShader;
             pipelineDesc.fragmentShader                 = graphicsFragmentShader;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         graphicsPipeline = renderer->CreatePipelineState(pipelineDesc);
+
+        // Report PSO compilation errors
+        if (const LLGL::Report* report = graphicsPipeline->GetReport())
+        {
+            if (report->HasErrors())
+                LLGL::Log::Errorf(report->GetText());
+        }
     }
 
 private:
@@ -236,11 +256,14 @@ private:
         {
             // Update timer
             sceneState.time += static_cast<float>(timer.GetDeltaTime());
+            sceneState.aspectRatio = 1.0f / GetAspectRatio();
             commands->UpdateBuffer(*inputBuffer, 0, &sceneState, sizeof(sceneState));
 
             // Run compute shader
             commands->SetPipelineState(*computePipeline);
-            commands->SetResourceHeap(*computeResourceHeap);
+            commands->SetResource(0, *inputBuffer);
+            commands->SetResource(1, *perInstanceDataBuf);
+            commands->SetResource(2, *indirectArgBuffer);
             commands->Dispatch(sceneState.numSceneObjects, 1, 1);
         }
         commands->End();
@@ -261,6 +284,7 @@ private:
 
                 // Draw scene with indirect argument buffer
                 commands->SetPipelineState(*graphicsPipeline);
+                commands->SetResource(0, *inputBuffer);
                 commands->DrawIndirect(*indirectArgBuffer, 0, 2, sizeof(LLGL::DrawIndirectArguments));
             }
             commands->EndRenderPass();
@@ -271,7 +295,7 @@ private:
 
 };
 
-LLGL_IMPLEMENT_EXAMPLE(Example_ComputeShader);
+LLGL_IMPLEMENT_EXAMPLE(Example_IndirectDraw);
 
 
 

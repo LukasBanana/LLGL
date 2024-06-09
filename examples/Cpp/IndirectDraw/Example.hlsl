@@ -12,7 +12,8 @@ cbuffer SceneState : register(b2)
 {
     float   time;
     uint    numSceneObjects;
-};
+    float   aspectRatio;
+}
 
 struct SceneObject
 {
@@ -126,7 +127,7 @@ struct VOut
 VOut VS(in VIn inp)
 {
     VOut outp;
-    outp.position   = float4(mul(inp.rotation, inp.coord) + inp.position, 0, 1);
+    outp.position   = float4((mul(inp.rotation, inp.coord) + inp.position) * float2(aspectRatio, 1.0), 0, 1);
     outp.color      = inp.color;
     return outp;
 }

@@ -13,12 +13,6 @@ call :CompileGlslToSpirv ClothPhysics/Example.CSStretchConstraints.450core.comp
 call :CompileGlslToSpirv ClothPhysics/Example.CSRelaxation.450core.comp
 echo DONE
 
-echo ####### ComputeShader #######
-call :CompileGlslToSpirv ComputeShader/Example.comp
-call :CompileGlslToSpirv ComputeShader/Example.vert
-call :CompileGlslToSpirv ComputeShader/Example.frag
-echo DONE
-
 echo ####### Fonts #######
 call :CompileGlslToSpirv Fonts/Example.450core.vert
 call :CompileGlslToSpirv Fonts/Example.450core.frag
@@ -27,6 +21,12 @@ echo DONE
 echo ####### HelloTriangle #######
 call :CompileGlslToSpirv HelloTriangle/Example.450core.vert
 call :CompileGlslToSpirv HelloTriangle/Example.450core.frag
+echo DONE
+
+echo ####### IndirectDraw #######
+call :CompileGlslToSpirv IndirectDraw/Example.comp
+call :CompileGlslToSpirv IndirectDraw/Example.vert
+call :CompileGlslToSpirv IndirectDraw/Example.frag
 echo DONE
 
 echo ####### Instancing #######

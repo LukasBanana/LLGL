@@ -288,7 +288,7 @@ Gs::Matrix4f MyRenderer::BuildPerspectiveProjection(float aspectRatio, float nea
 {
     int flags = 0;
 
-    if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
+    if (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne)
         flags |= Gs::ProjectionFlags::UnitCube;
 
     return Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView), flags).ToMatrix4();

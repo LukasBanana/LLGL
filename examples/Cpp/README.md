@@ -62,11 +62,11 @@ Shows the following rendering techniques: multiple render contexts (one window e
 <p align="center"><img src="MultiContext/Example.png" width="752" height="300"/></p>
 
 
-### [Compute Shader](ComputeShader)
+### [Indirect Draw](IndirectDraw)
 
-Small example with a compute shader and a storage buffer.
+Small example with a compute shader and a storage buffer for the indirect draw command.
 
-<p align="center"><img src="ComputeShader/Example.png" width="300" height="300"/></p>
+<p align="center"><img src="IndirectDraw/Example.png" width="400" height="300"/></p>
 
 
 ### [Stream-Output](StreamOutput)

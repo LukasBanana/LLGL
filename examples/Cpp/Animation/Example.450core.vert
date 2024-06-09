@@ -20,6 +20,11 @@ layout(location = 0) out vec4 vWorldPos;
 layout(location = 1) out vec4 vNormal;
 layout(location = 2) out vec2 vTexCoord;
 
+out gl_PerVertex
+{
+    vec4 gl_Position;
+};
+
 void main()
 {
     vWorldPos   = wMatrix * vec4(position, 1);

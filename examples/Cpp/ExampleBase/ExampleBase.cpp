@@ -900,13 +900,15 @@ bool ExampleBase::IsScreenOriginLowerLeft() const
 
 Gs::Matrix4f ExampleBase::PerspectiveProjection(float aspectRatio, float near, float far, float fov)
 {
-    int flags = (IsOpenGL() || IsVulkan() ? Gs::ProjectionFlags::UnitCube : 0);
+    const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
+    int flags = (isClipRangeUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
     return Gs::ProjectionMatrix4f::Perspective(aspectRatio, near, far, fov, flags).ToMatrix4();
 }
 
 Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float near, float far)
 {
-    int flags = (IsOpenGL() ? Gs::ProjectionFlags::UnitCube : 0);
+    const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
+    int flags = (isClipRangeUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
     return Gs::ProjectionMatrix4f::Orthogonal(width, height, near, far, flags).ToMatrix4();
 }
 

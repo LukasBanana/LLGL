@@ -6,12 +6,6 @@
 precision mediump float;
 #endif
 
-layout(std140) uniform Scene
-{
-	mat4 wvpMatrix;
-	mat4 wMatrix;
-};
-
 uniform sampler2D colorMap;
 
 in vec3 vNormal;
