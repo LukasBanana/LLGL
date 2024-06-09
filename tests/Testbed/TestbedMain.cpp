@@ -176,20 +176,33 @@ static int GuardedMain(int argc, char* argv[])
 }
 
 #ifdef _WIN32
+
+// Declare function that is not directly exposed in LLGL
+namespace LLGL
+{
+    LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame = 0, unsigned maxNumStackFrames = 64);
+};
+
 static LONG TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
 {
+    LLGL::UTF8String stackTrace = DebugStackTrace();
     ::fprintf(
         stderr,
-        "Exception during test run: Address=%p, Code=0x%08X",
-        e->ExceptionRecord->ExceptionAddress, e->ExceptionRecord->ExceptionCode
+        "Exception during test run: Address=%p, Code=0x%08X\n"
+        "Callstack:\n"
+        "----------\n"
+        "%s\n",
+        e->ExceptionRecord->ExceptionAddress, e->ExceptionRecord->ExceptionCode, stackTrace.c_str()
     );
     return EXCEPTION_CONTINUE_SEARCH;
 }
-#endif
+
+#endif // /_WIN32
 
 int main(int argc, char* argv[])
 {
     #ifdef _WIN32
+
     AddVectoredExceptionHandler(1, TestbedVectoredExceptionHandler);
     __try
     {
@@ -200,7 +213,9 @@ int main(int argc, char* argv[])
         ::fflush(stderr);
         return 1;
     }
+
     #else
+
     try
     {
         return GuardedMain(argc, argv);
@@ -211,6 +226,7 @@ int main(int argc, char* argv[])
         ::fflush(stderr);
         return 1;
     }
+
     #endif
 }
 
