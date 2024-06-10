@@ -14,7 +14,7 @@
 #include <d3d11.h>
 #include <dxgi.h>
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3 || defined LLGL_OS_UWP
 #   include <dxgi1_2.h>
 #endif
 

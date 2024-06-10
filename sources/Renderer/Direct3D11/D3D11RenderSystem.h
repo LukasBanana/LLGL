@@ -42,7 +42,9 @@
 #include "Direct3D11.h"
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
-#include <dxgi1_5.h>
+#   include <dxgi1_5.h>
+#elif defined LLGL_OS_UWP
+#   include <dxgi1_3.h>
 #endif
 
 
@@ -130,11 +132,11 @@ class D3D11RenderSystem final : public RenderSystem
 
         ComPtr<IDXGIFactory>                    factory_;
 
-        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1 || defined LLGL_OS_UWP
         ComPtr<IDXGIFactory1>                   factory1_;
         #endif
 
-        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2 || defined LLGL_OS_UWP
         ComPtr<IDXGIFactory2>                   factory2_;
         #endif
 
