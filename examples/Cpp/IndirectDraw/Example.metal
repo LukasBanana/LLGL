@@ -124,7 +124,7 @@ vertex VOut VS(
 {
     VOut outp;
     float2x2 rotation = float2x2(inp.rotation0, inp.rotation1);
-    outp.position   = float4((rotation * inp.coord + inp.position) * float2(sceneState, 1.0), 0, 1);
+    outp.position   = float4((rotation * inp.coord + inp.position) * float2(sceneState.aspectRatio, 1.0), 0, 1);
     outp.color      = inp.color;
     return outp;
 }
