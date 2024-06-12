@@ -13,8 +13,8 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/TypeInfo.h>
 
-#import <QuartzCore/CAMetalLayer.h>
 
+#ifdef LLGL_OS_IOS
 
 @implementation MTSwapChainViewDelegate
 {
@@ -41,6 +41,8 @@
 }
 
 @end
+
+#endif // /LLGL_OS_IOS
 
 
 namespace LLGL
@@ -151,6 +153,25 @@ MTLRenderPassDescriptor* MTSwapChain::GetAndUpdateNativeRenderPass(
  * ======= Private: =======
  */
 
+#ifndef LLGL_OS_IOS
+
+static NSView* GetContentViewFromNativeHandle(const NativeHandle& nativeHandle)
+{
+    if ([nativeHandle.responder isKindOfClass:[NSWindow class]])
+    {
+        /* Interpret responder as NSWindow */
+        return [(NSWindow*)nativeHandle.responder contentView];
+    }
+    if ([nativeHandle.responder isKindOfClass:[NSView class]])
+    {
+        /* Interpret responder as NSView */
+        return (NSView*)nativeHandle.responder;
+    }
+    LLGL_TRAP("NativeHandle::responder is neither of type NSWindow nor NSView for MTKView");
+}
+
+#endif
+
 MTKView* MTSwapChain::AllocMTKViewAndInitWithSurface(id<MTLDevice> device, Surface& surface)
 {
     MTKView* mtkView = nullptr;
@@ -162,54 +183,33 @@ MTKView* MTSwapChain::AllocMTKViewAndInitWithSurface(id<MTLDevice> device, Surfa
     #ifdef LLGL_OS_IOS
 
     LLGL_ASSERT_PTR(nativeHandle.view);
-    UIView* canvasView = nativeHandle.view;
+    UIView* contentView = nativeHandle.view;
 
     /* Allocate MetalKit view */
-    mtkView = [[MTKView alloc] initWithFrame:canvasView.frame device:device];
+    mtkView = [[MTKView alloc] initWithFrame:contentView.frame device:device];
 
     /* Allocate view delegate to handle re-draw events */
     viewDelegate_ = [[MTSwapChainViewDelegate alloc] initWithCanvas:CastTo<Canvas>(GetSurface())];
     [viewDelegate_ mtkView:mtkView drawableSizeWillChange:mtkView.bounds.size];
     [mtkView setDelegate:viewDelegate_];
 
-    /* Register rotate/resize layout constraints */
-    mtkView.translatesAutoresizingMaskIntoConstraints = NO;
-    NSDictionary* viewsDictionary = @{@"mtkView":mtkView};
-    [canvasView addSubview:mtkView];
-    [canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
-    [canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
-
     #else // LLGL_OS_IOS
 
-    if ([nativeHandle.responder isKindOfClass:[NSWindow class]])
-    {
-        NSWindow* contentWindow = (NSWindow*)nativeHandle.responder;
+    NSView* contentView = GetContentViewFromNativeHandle(nativeHandle);
 
-        /* Allocate MetalKit view */
-        CGRect contentViewRect = [[contentWindow contentView] frame];
-        CGRect relativeViewRect = CGRectMake(0.0f, 0.0f, contentViewRect.size.width, contentViewRect.size.height);
-        mtkView = [[MTKView alloc] initWithFrame:relativeViewRect device:device];
-
-        /* Replace content view of input window with MTKView */
-        [contentWindow setContentView:mtkView];
-        [contentWindow.contentViewController setView:mtkView];
-    }
-    else if ([nativeHandle.responder isKindOfClass:[NSView class]])
-    {
-        NSView* contentView = (NSView*)nativeHandle.responder;
-
-        /* Allocate MetalKit view */
-        CGRect contentViewRect = [contentView frame];
-        CGRect relativeViewRect = CGRectMake(0.0f, 0.0f, contentViewRect.size.width, contentViewRect.size.height);
-        mtkView = [[MTKView alloc] initWithFrame:relativeViewRect device:device];
-
-        /* Add MTKView as subview to the input view */
-        [contentView addSubview:mtkView];
-    }
-    else
-        LLGL_TRAP("NativeHandle::responder is neither of type NSWindow nor NSView for MTKView");
+    /* Allocate MetalKit view */
+    CGRect contentViewRect = [contentView frame];
+    CGRect relativeViewRect = CGRectMake(0.0f, 0.0f, contentViewRect.size.width, contentViewRect.size.height);
+    mtkView = [[MTKView alloc] initWithFrame:relativeViewRect device:device];
 
     #endif // /LLGL_OS_IOS
+
+    /* Add MTKView as subview and register rotate/resize layout constraints */
+    mtkView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSDictionary* viewsDictionary = @{@"mtkView":mtkView};
+    [contentView addSubview:mtkView];
+    [contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
+    [contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[mtkView]|" options:0 metrics:nil views:viewsDictionary]];
 
     return mtkView;
 }
