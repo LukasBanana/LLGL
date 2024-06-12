@@ -113,24 +113,36 @@ const RenderPass* MTSwapChain::GetRenderPass() const
     return (&renderPass_);
 }
 
+static NSInteger GetPrimaryDisplayRefreshRate()
+{
+    constexpr NSInteger defaultRefreshRate = 60;
+    if (const Display* display = Display::GetPrimary())
+        return static_cast<NSInteger>(display->GetDisplayMode().refreshRate);
+    else
+        return defaultRefreshRate;
+}
+
 bool MTSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
 {
-    static const NSInteger defaultRefreshRate = 60;
     if (vsyncInterval > 0)
     {
-        /* Apply v-sync interval to display refresh rate */
-        if (auto display = Display::GetPrimary())
-            view_.preferredFramesPerSecond = static_cast<NSInteger>(display->GetDisplayMode().refreshRate / vsyncInterval);
-        else
-            view_.preferredFramesPerSecond = defaultRefreshRate / static_cast<NSInteger>(vsyncInterval);
-
+        #ifdef LLGL_OS_MACOS
         /* Enable display sync in CAMetalLayer */
         [(CAMetalLayer*)[view_ layer] setDisplaySyncEnabled:YES];
+        #endif
+
+        /* Apply v-sync interval to display refresh rate */
+        view_.preferredFramesPerSecond = GetPrimaryDisplayRefreshRate() / static_cast<NSInteger>(vsyncInterval);
     }
     else
     {
+        #ifdef LLGL_OS_MACOS
         /* Disable display sync in CAMetalLayer */
         [(CAMetalLayer*)[view_ layer] setDisplaySyncEnabled:NO];
+        #else
+        /* Set preferred frame rate to default value */
+        view_.preferredFramesPerSecond = GetPrimaryDisplayRefreshRate();
+        #endif
     }
     return true;
 }
