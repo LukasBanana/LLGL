@@ -68,10 +68,16 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    if ((commandBufferDesc.flags & (CommandBufferFlags::MultiSubmit | CommandBufferFlags::Secondary)) != 0)
-        return commandBuffers_.emplace<MTMultiSubmitCommandBuffer>(device_, commandBufferDesc);
-    else
+    /*
+    Even though MTDirectCommandBuffer can be submitted in a deferred fashion,
+    the pool of native Metal command buffers is undefined and we cannot ensure there are enough available before Metal runs out of them.
+    Therefore, we only create a direct command buffer (i.e. no virtual command encoding) when an immediate context is requested
+    and the command buffer will be submitted immediately after encoding is done.
+    */
+    if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
         return commandBuffers_.emplace<MTDirectCommandBuffer>(device_, *commandQueue_, commandBufferDesc);
+    else
+        return commandBuffers_.emplace<MTMultiSubmitCommandBuffer>(device_, commandBufferDesc);
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
