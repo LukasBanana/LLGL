@@ -123,11 +123,14 @@ bool MTSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
             view_.preferredFramesPerSecond = static_cast<NSInteger>(display->GetDisplayMode().refreshRate / vsyncInterval);
         else
             view_.preferredFramesPerSecond = defaultRefreshRate / static_cast<NSInteger>(vsyncInterval);
+
+        /* Enable display sync in CAMetalLayer */
+        [(CAMetalLayer*)[view_ layer] setDisplaySyncEnabled:YES];
     }
     else
     {
-        /* Set preferred frame rate to default value */
-        view_.preferredFramesPerSecond = defaultRefreshRate;
+        /* Disable display sync in CAMetalLayer */
+        [(CAMetalLayer*)[view_ layer] setDisplaySyncEnabled:NO];
     }
     return true;
 }
