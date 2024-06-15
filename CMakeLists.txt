@@ -360,9 +360,6 @@ if(WIN32)
         # Disable some warnings for MSVC compiler
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250 /wd4251 /wd4290 /wd4103")
     endif(MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DLLGL_DEBUG")
-else()
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLLGL_DEBUG")
 endif(WIN32)
 
 ADD_DEBUG_DEFINE(LLGL_DEBUG)
