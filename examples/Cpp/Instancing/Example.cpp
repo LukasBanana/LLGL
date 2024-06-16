@@ -74,9 +74,11 @@ public:
         resourceHeap->SetDebugName("ResourceHeap");
 
         // Show info
-        std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
-        std::cout << "press R KEY to reload the shader program" << std::endl;
-        std::cout << "press SPACE KEY to switch between pipeline states with and without alpha-to-coverage" << std::endl;
+        LLGL::Log::Printf(
+            "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n"
+            "press R KEY to reload the shader program\n"
+            "press SPACE KEY to switch between pipeline states with and without alpha-to-coverage\n"
+        );
     }
 
 private:
@@ -250,7 +252,7 @@ private:
             stbi_image_free(imageBuffer);
 
             // Show info
-            std::cout << "loaded texture: " << filename << std::endl;
+            LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
         }
 
         // Create array texture object with 'numImages' layers
@@ -375,9 +377,9 @@ private:
         {
             alphaToCoverageEnabled = !alphaToCoverageEnabled;
             if (alphaToCoverageEnabled)
-                std::cout << "Alpha-To-Coverage Enabled" << std::endl;
+                LLGL::Log::Printf("Alpha-To-Coverage Enabled\n");
             else
-                std::cout << "Alpha-To-Coverage Disabled" << std::endl;
+                LLGL::Log::Printf("Alpha-To-Coverage Disabled\n");
         }
 
         commands->Begin();

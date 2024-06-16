@@ -54,9 +54,12 @@ public:
         CreateSamplers();
 
         // Print some information on the standard output
-        std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
-        std::cout << "texture: " << resourceLabels[0] << "\r";
-        std::flush(std::cout);
+        LLGL::Log::Printf(
+            "press TAB KEY to switch between five different texture samplers\n"
+            "texture: %s\r",
+            resourceLabels[0]
+        );
+        ::fflush(stdout);
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -155,8 +158,8 @@ public:
             }
             colorMaps[1] = renderer->CreateTexture(texDesc, &imageView);
         }
-        auto texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
-        std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
+        double texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
+        LLGL::Log::Printf("texture creation time: %f ms\n", texCreationTime * 1000.0);
 
         // Release image data
         stbi_image_free(imageBuffer);
@@ -240,8 +243,14 @@ private:
                 resourceIndex = ((resourceIndex - 1) % 4 + 4) % 4;
             else
                 resourceIndex = (resourceIndex + 1) % 4;
-            std::cout << "texture: " << resourceLabels[resourceIndex] << std::string(30, ' ') << "\r";
-            std::flush(std::cout);
+
+            const std::string spaces(30, ' ');
+            LLGL::Log::Printf(
+                "texture: %s%s\r",
+                resourceLabels[resourceIndex],
+                spaces.c_str()
+            );
+            ::fflush(stdout);
         }
 
         // Update scene constants

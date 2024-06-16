@@ -205,7 +205,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
         if (const LLGL::Report* report = shader->GetReport())
         {
             if (*report->GetText() != '\0')
-                std::cerr << report->GetText() << std::endl;
+                LLGL::Log::Errorf("%s\n", report->GetText());
         }
     }
 
@@ -235,7 +235,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     if (const LLGL::Report* report = pipeline->GetReport())
     {
         if (*report->GetText() != '\0')
-            std::cerr << report->GetText() << std::endl;
+            LLGL::Log::Errorf("%s\n", report->GetText());
     }
 
     // Get command queue
@@ -451,7 +451,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
         #ifdef _WIN32
         system("pause");
         #endif

@@ -7,24 +7,23 @@
 
 #include <LLGL/LLGL.h>
 #include <memory>
-#include <iostream>
 #include <string>
 #include <sstream>
 
 
 static void printWindowSize(LLGL::Window& wnd)
 {
-    std::wcout << L"window: \"" << wnd.GetTitle() << L"\"" << std::endl;
+    LLGL::Log::Printf("window: \"%s\"\n", wnd.GetTitle().c_str());
     auto s = wnd.GetSize(true);
-    std::wcout << "  content size = " << s.width << " x " << s.height << std::endl;
+    LLGL::Log::Printf("  content size = %u x %u\n", s.width, s.height);
     s = wnd.GetSize(false);
-    std::wcout << "  frame size   = " << s.width << " x " << s.height << std::endl;
+    LLGL::Log::Printf("  frame size   = %u x %u\n", s.width, s.height);
 };
 
 static void printWindowPos(LLGL::Window& wnd)
 {
     auto p = wnd.GetPosition();
-    std::wcout << "window pos: x = " << p.x << ", y = " << p.y << std::endl;
+    LLGL::Log::Printf("window pos: x = %d, y = %d\n", p.x, p.y);
 }
 
 class WindowEventHandler : public LLGL::Window::EventListener
@@ -32,7 +31,7 @@ class WindowEventHandler : public LLGL::Window::EventListener
 public:
     void OnResize(LLGL::Window& sender, const LLGL::Extent2D& size) override
     {
-        std::wcout << "OnResize: " << size.width << " x " << size.height << std::endl;
+        LLGL::Log::Printf("OnResize: %u x %u\n", size.width, size.height);
         printWindowSize(sender);
     }
 };
@@ -41,6 +40,8 @@ int main()
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         // Create window
         LLGL::WindowDescriptor windowDesc;
 
@@ -68,14 +69,14 @@ int main()
         }
         catch (const std::exception& e)
         {
-            std::cerr << e.what() << std::endl;
+            LLGL::Log::Errorf("%s\n", e.what());
         }
 
         LLGL::Extent2D desktopSize;
         if (auto display = LLGL::Display::GetPrimary())
             desktopSize = display->GetDisplayMode().resolution;
 
-        std::wcout << "Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height << std::endl;
+        LLGL::Log::Printf("Screen Width = %u, Screen Heihgt = %u\n", desktopSize.width, desktopSize.height);
 
         while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
         {
@@ -151,7 +152,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
     }
 
     return 0;

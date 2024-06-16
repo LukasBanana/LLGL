@@ -10,7 +10,6 @@
 #include <LLGL/Utils/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <memory>
-#include <iostream>
 #include <string>
 #include <sstream>
 
@@ -32,6 +31,8 @@ int main()
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         // Setup profiler and debugger
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
@@ -188,7 +189,7 @@ int main()
         auto vertShader = renderer->CreateShader(vertShaderDesc);
 
         if (auto report = vertShader->GetReport())
-            std::cerr << report->GetText() << std::endl;
+            LLGL::Log::Errorf("%s\n", report->GetText());
 
         // Create fragment shader
         auto fragShaderSource =
@@ -214,12 +215,12 @@ int main()
         #if 0//TODO
         // Reflect shader
         LLGL::ShaderReflection reflection;
-        vertShader.Reflect(reflection);
-        fragShader.Reflect(reflection);
+        vertShader->Reflect(reflection);
+        fragShader->Reflect(reflection);
 
         for (const auto& uniform : reflection.uniforms)
         {
-            std::cout << "uniform: name = \"" << uniform.name << "\", location = " << uniform.location << ", size = " << uniform.size << std::endl;
+            LLGL::Log::Printf("uniform: name = \"%s\", size = %u\n", uniform.name, uniform.arraySize);
         }
         #endif
 
@@ -353,7 +354,7 @@ int main()
 
             auto storeBufferDescs = shaderProgram.QueryStorageBuffers();
             for (const auto& desc : storeBufferDescs)
-                std::cout << "storage buffer: name = \"" << desc.name << '\"' << std::endl;
+                LLGL::Log::Printf("storage buffer: name = \"%s\"\n", desc.name.c_str());
         }
 
         #endif
@@ -435,7 +436,7 @@ int main()
                             auto outputData = renderer->MapBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
                             {
                                 auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
-                                std::cout << "storage buffer output: " << *v << std::endl;
+                                LLGL::Log::Printf("storage buffer output: ( %f | %f | %f | %f )\n", v[0].x, v[0].y, v[0].z, v[0].w);
                             }
                             renderer->UnmapBuffer();
                         }
@@ -458,7 +459,7 @@ int main()
                         if (prevResult != result)
                         {
                             prevResult = result;
-                            std::cout << "query result = " << result << std::endl;
+                            LLGL::Log::Printf("query result = %u", static_cast<unsigned>(result));
                         }
                         hasQueryResult = false;
                     }
@@ -483,7 +484,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
         #ifdef _WIN32
         system("pause");
         #endif

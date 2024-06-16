@@ -66,7 +66,7 @@ public:
         CreateResourceHeaps();
 
         // Show info
-        std::cout << "press SPACE KEY to enable/disable animation of occluder" << std::endl;
+        LLGL::Log::Printf("press SPACE KEY to enable/disable animation of occluder\n");
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -185,12 +185,14 @@ public:
         }
 
         // Print result
-        std::cout << "input assembly: " << stats.inputAssemblyPrimitives;
-        std::cout << ", vertex invocations: " << stats.vertexShaderInvocations;
-        std::cout << ", fragment invocations: " << stats.fragmentShaderInvocations;
-        std::cout << ", timing: " << static_cast<double>(elapsedTime)/1000000.0 << " ms";
-        std::cout << "        \r";
-        std::flush(std::cout);
+        LLGL::Log::Printf(
+            "input assembly: %u, vertex invocations: %u, fragment invocations: %u, timing: %f ms        \r",
+            static_cast<unsigned>(stats.inputAssemblyPrimitives),
+            static_cast<unsigned>(stats.vertexShaderInvocations),
+            static_cast<unsigned>(stats.fragmentShaderInvocations),
+            static_cast<double>(elapsedTime)/1000000.0
+        );
+        ::fflush(stdout);
     }
 
     void SetBoxTransformAndColor(const Gs::Matrix4f& matrix, const LLGL::ColorRGBAf& color)

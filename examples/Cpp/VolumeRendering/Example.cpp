@@ -71,8 +71,10 @@ public:
         CreateResourceHeaps();
 
         // Show some information
-        std::cout << "press LEFT MOUSE BUTTON and move the mouse to ROTATE the model" << std::endl;
-        std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the DENSITY THRESHOLD" << std::endl;
+        LLGL::Log::Printf(
+            "press LEFT MOUSE BUTTON and move the mouse to ROTATE the model\n"
+            "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the DENSITY THRESHOLD\n"
+        );
     }
 
 private:
@@ -317,8 +319,11 @@ private:
         {
             float delta = mouseMotion.x*0.002f;
             settings.threshold = std::max(0.0f, std::min(settings.threshold + delta, 0.5f));
-            std::cout << "density threshold: " << static_cast<int>(settings.threshold*200.0f) << "%    \r";
-            std::flush(std::cout);
+            LLGL::Log::Printf(
+                "density threshold: %d\%    \r",
+                static_cast<int>(settings.threshold*200.0f)
+            );
+            ::fflush(stdout);
         }
 
         // Rotate model around X and Y axes

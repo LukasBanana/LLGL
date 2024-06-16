@@ -923,7 +923,7 @@ LLGL::ValidateRenderingCaps(
     myRenderer->GetRenderingCaps(),
     myRequirements,
     [](const std::string& info, const std::string& attrib) {
-        std::cerr << info << ": " << attrib << std::endl;
+        ::fprintf(stderr, "%s: %s\n", info.c_str(), attrib.c_str());
         return true;
     }
 );

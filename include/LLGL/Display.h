@@ -24,15 +24,15 @@ namespace LLGL
 \remarks Here is an example to print the attributes of all displays:
 \code
 for (Display* const * myDisplayList = LLGL::Display::GetList(); Display* myDisplay = *myDisplayList; ++myDisplayList) {
-    auto myDisplayOffset = myDisplay->GetOffset();
-    auto myDisplayMode   = myDisplay->GetDisplayMode();
-    std::wcout << L"Display: \""  << myDisplay->GetDeviceName() << L"\"" << std::endl;
-    std::cout << "|-Primary = " << std::boolalpha << myDisplay->IsPrimary() << std::endl;
-    std::cout << "|-X       = " << myDisplayOffset.x << std::endl;
-    std::cout << "|-Y       = " << myDisplayOffset.y << std::endl;
-    std::cout << "|-Width   = " << myDisplayMode.resolution.width << std::endl;
-    std::cout << "|-Height  = " << myDisplayMode.resolution.height << std::endl;
-    std::cout << "`-Hz      = " << myDisplayMode.refreshRate << std::endl;
+    LLGL::Offset2D    myDisplayOffset = myDisplay->GetOffset();
+    LLGL::DisplayMode myDisplayMode   = myDisplay->GetDisplayMode();
+    printf("Display: \"%s\"\n", myDisplay->GetDeviceName().c_str());
+    printf("|-Primary = %s\n", myDisplay->IsPrimary() ? "yes" : "no");
+    printf("|-X       = %d\n", myDisplayOffset.x);
+    printf("|-Y       = %d\n", myDisplayOffset.y);
+    printf("|-Width   = %u\n", myDisplayMode.resolution.width);
+    printf("|-Height  = %u\n", myDisplayMode.resolution.height);
+    printf("`-Hz      = %u\n", myDisplayMode.refreshRate);
 }
 \endcode
 */

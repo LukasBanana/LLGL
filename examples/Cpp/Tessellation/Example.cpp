@@ -67,10 +67,12 @@ public:
         CreatePipelines();
 
         // Print some information on the standard output
-        std::cout << "press LEFT MOUSE BUTTON and move mouse on X axis to increase/decrease inner tessellation" << std::endl;
-        std::cout << "press RIGHT MOUSE BUTTON and move mouse on X axis to increase/decrease outer tessellation" << std::endl;
-        std::cout << "press MIDDLE MOUSE BUTTON and move mouse on X axis to increase/decrease twist" << std::endl;
-        std::cout << "press TAB KEY to switch between wireframe modes" << std::endl;
+        LLGL::Log::Printf(
+            "press LEFT MOUSE BUTTON and move mouse on X axis to increase/decrease inner tessellation\n"
+            "press RIGHT MOUSE BUTTON and move mouse on X axis to increase/decrease outer tessellation\n"
+            "press MIDDLE MOUSE BUTTON and move mouse on X axis to increase/decrease twist\n"
+            "press TAB KEY to switch between wireframe modes\n"
+        );
         ShowTessLevel();
     }
 
@@ -198,8 +200,12 @@ public:
 
     void ShowTessLevel()
     {
-        //std::cout << "tessellation level (inner = " << settings.tessLevelInner << ", outer = " << settings.tessLevelOuter << ")      \r";
-        //std::flush(std::cout);
+        /*LLGL::Log::Printf(
+            "tessellation level (inner = %f, outer = %f)      \r",
+            static_cast<double>(settings.tessLevelInner),
+            static_cast<double>(settings.tessLevelOuter)
+        );
+        ::fflush(stdout);*/
     }
 
 private:

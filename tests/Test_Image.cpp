@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/Utils/Image.h>
-#include <iostream>
+#include <stdio.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        fprintf(stderr, "%s\n", e.what());
         #ifdef _WIN32
         system("pause");
         #endif

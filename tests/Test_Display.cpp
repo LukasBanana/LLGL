@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/Display.h>
-#include <iostream>
+#include <LLGL/Log.h>
 #include <thread>
 #include <chrono>
 
@@ -15,22 +15,24 @@ int main(int argc, char* argv[])
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         for (std::size_t i = 0; auto display = LLGL::Display::Get(i); ++i)
         {
             auto displayOffset  = display->GetOffset();
             auto displayMode    = display->GetDisplayMode();
             auto displayName    = display->GetDeviceName();
 
-            std::cout << "Display: \"" << displayName.c_str() << "\"" << std::endl;
-            std::cout << "|-Primary = " << std::boolalpha << display->IsPrimary() << std::endl;
-            std::cout << "|-X       = " << displayOffset.x << std::endl;
-            std::cout << "|-Y       = " << displayOffset.y << std::endl;
-            std::cout << "|-Width   = " << displayMode.resolution.width << std::endl;
-            std::cout << "|-Height  = " << displayMode.resolution.height << std::endl;
-            std::cout << "|-Hz      = " << displayMode.refreshRate << std::endl;
-            std::cout << "|-Scale   = " << display->GetScale() << std::endl;
+            LLGL::Log::Printf("Display: \"%s\"\n", displayName.c_str());
+            LLGL::Log::Printf("|-Primary = %s\n", display->IsPrimary() ? "yes" : "no");
+            LLGL::Log::Printf("|-X       = %d\n", displayOffset.x);
+            LLGL::Log::Printf("|-Y       = %d\n", displayOffset.y);
+            LLGL::Log::Printf("|-Width   = %u\n", displayMode.resolution.width);
+            LLGL::Log::Printf("|-Height  = %u\n", displayMode.resolution.height);
+            LLGL::Log::Printf("|-Hz      = %u\n", displayMode.refreshRate);
+            LLGL::Log::Printf("|-Scale   = %f\n", display->GetScale());
 
-            std::cout << "`-Settings:" << std::endl;
+            LLGL::Log::Printf("`-Settings:\n");
             auto supportedModes = display->GetSupportedDisplayModes();
 
             for (std::size_t i = 0, n = supportedModes.size(); i < n; ++i)
@@ -38,17 +40,12 @@ int main(int argc, char* argv[])
                 const auto& mode = supportedModes[i];
                 auto ratio = GetExtentRatio(mode.resolution);
 
-                if (i + 1 < n)
-                    std::cout << "  |-";
-                else
-                    std::cout << "  `-";
-
-                std::cout << "Mode[" << i << "]:";
-                std::cout << " Width = " << mode.resolution.width;
-                std::cout << ", Height = " << mode.resolution.height;
-                std::cout << ", Hz = " << mode.refreshRate;
-                std::cout << ", Ratio = " << ratio.width << ':' << ratio.height;
-                std::cout << std::endl;
+                LLGL::Log::Printf(i + 1 < n ? "  |-" : "  `-");
+                LLGL::Log::Printf("Mode[%zu]:", i);
+                LLGL::Log::Printf(" Width = %u", mode.resolution.width);
+                LLGL::Log::Printf(", Height = %u", mode.resolution.height);
+                LLGL::Log::Printf(", Hz = %u", mode.refreshRate);
+                LLGL::Log::Printf(", Ratio = %u:%u\n", ratio.width, ratio.height);
             }
         }
 
@@ -64,18 +61,18 @@ int main(int argc, char* argv[])
             display->ResetDisplayMode();
         }
 
-        std::cout << "Wainting";
+        LLGL::Log::Printf("Wainting");
         for (int i = 0; i < 5; ++i)
         {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            std::cout << '.';
+            LLGL::Log::Printf(".");
         }
-        std::cout << std::endl;
+        LLGL::Log::Printf("\n");
         #endif
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
     }
 
     #ifdef _WIN32

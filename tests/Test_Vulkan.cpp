@@ -10,7 +10,6 @@
 #include <LLGL/Utils/VertexFormat.h>
 #include <Gauss/Gauss.h>
 #include <chrono>
-#include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -42,6 +41,8 @@ int main()
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         #if TEST_CUSTOM_VKDEVICE && _WIN32
 
         const char* vulkanInstanceExt[] = { VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
@@ -124,10 +125,10 @@ int main()
         const auto& info = renderer->GetRendererInfo();
         const auto& caps = renderer->GetRenderingCaps();
 
-        std::cout << "Renderer:         " << info.rendererName << std::endl;
-        std::cout << "Device:           " << info.deviceName << std::endl;
-        std::cout << "Vendor:           " << info.vendorName << std::endl;
-        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
+        LLGL::Log::Printf("Renderer:         %s\n", info.rendererName.c_str());
+        LLGL::Log::Printf("Device:           %s\n", info.deviceName.c_str());
+        LLGL::Log::Printf("Vendor:           %s\n", info.vendorName.c_str());
+        LLGL::Log::Printf("Shading Language: %s\n", info.shadingLanguageName.c_str());
 
         // Create swap-chain
         LLGL::SwapChainDescriptor swapChainDesc;
@@ -299,7 +300,7 @@ int main()
         auto pipeline = renderer->CreatePipelineState(pipelineDesc);
 
         if (auto report = pipeline->GetReport())
-            std::cerr << report->GetText() << std::endl;
+            LLGL::Log::Errorf("%s\n", report->GetText());
 
         // Create query
         #if TEST_QUERY
@@ -386,7 +387,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
         #ifdef _WIN32
         system("pause");
         #endif

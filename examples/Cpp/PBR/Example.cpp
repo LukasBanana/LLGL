@@ -81,7 +81,7 @@ public:
         CreateResourceHeaps();
 
         // Print some information on the standard output
-        std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
+        LLGL::Log::Printf("press TAB KEY to switch between five different texture samplers\n");
     }
 
 private:
@@ -221,7 +221,7 @@ private:
     {
         // Print information about current texture
         const std::string path = FindResourcePath(filename);
-        std::cout << "load image: \"" << path << "\"" << std::endl;
+        LLGL::Log::Printf("load image: \"%s\"\n", path.c_str());
 
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int w = 0, h = 0, n = 0;

@@ -9,7 +9,6 @@
 #include <LLGL/Utils/Image.h>
 #include <vector>
 #include <functional>
-#include <iostream>
 
 
 static unsigned int g_seed;
@@ -74,7 +73,7 @@ class PerformanceTest
         void CreateTextures(std::size_t numTextures)
         {
             // Create source image for textures
-            std::cout << "generate random image ..." << std::endl;
+            LLGL::Log::Printf("generate random image ...\n");
 
             LLGL::Image image
             {
@@ -102,11 +101,11 @@ class PerformanceTest
             }
             for (std::size_t i = 0; i < numTextures; ++i)
             {
-                std::cout << "create texture " << (i + 1) << '/' << numTextures << '\r';
+                LLGL::Log::Printf("create texture %zu/%zu\r", (i + 1), numTextures);
                 textures.push_back(renderer->CreateTexture(textureDesc, &imageDesc));
             }
 
-            std::cout << std::endl;
+            LLGL::Log::Printf("\n");
         }
 
         void MeasureTime(const std::string& title, const std::function<void()>& callback)
@@ -127,8 +126,11 @@ class PerformanceTest
             {
                 if (commandQueue->QueryResult(*timerQuery, 0, 1, &result, sizeof(result)))
                 {
-                    std::cout << title << std::endl;
-                    std::cout << "\tduration: " << result << "ns (" << (static_cast<double>(result) / 1000000.0) << "ms)" << "\n\n";
+                    LLGL::Log::Printf("%s\n", title.c_str());
+                    LLGL::Log::Printf(
+                        "\tduration: %llu ns (%f ms)\n\n",
+                        static_cast<unsigned long long>(result), (static_cast<double>(result) / 1000000.0)
+                    );
                     break;
                 }
             }
@@ -184,7 +186,7 @@ class PerformanceTest
 
         void Run()
         {
-            std::cout << std::endl << "run performance tests ..." << std::endl;
+            LLGL::Log::Printf("\nrun performance tests ...\n");
 
             commands->Begin();
             {
@@ -207,6 +209,8 @@ class PerformanceTest
 
 int main(int argc, char* argv[])
 {
+    LLGL::Log::RegisterCallbackStd();
+
     std::string rendererModule = "OpenGL";
 
     TestConfig testConfig;

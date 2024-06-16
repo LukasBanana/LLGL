@@ -9,7 +9,6 @@
 #include <LLGL/Utils/Parse.h>
 #include <Gauss/Gauss.h>
 #include <vector>
-#include <iostream>
 
 // Fill an array list of 4D-vectors for testing purposes
 static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)
@@ -29,6 +28,8 @@ int main()
 {
     try
     {
+        LLGL::Log::RegisterCallbackStd();
+
         // Setup profiler and debugger
         auto debugger = std::make_shared<LLGL::RenderingDebugger>();
 
@@ -116,7 +117,7 @@ int main()
         {
             /* wait until the result is available */
         }
-        std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
+        LLGL::Log::Printf("compute shader duration: %f ms\n", static_cast<double>(result) / 1000000);
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
         renderer->GetCommandQueue()->WaitIdle();
@@ -125,14 +126,17 @@ int main()
         if (auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly))
         {
             // Show result
-            auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
-            std::cout << "compute shader output: average vector = " << vecBuffer[0] << std::endl;
+            auto* vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
+            LLGL::Log::Printf(
+                "compute shader output: average vector = ( %f | %f | %f | %f )\n",
+                vecBuffer[0].x, vecBuffer[0].y, vecBuffer[0].z, vecBuffer[0].w
+            );
         }
         renderer->UnmapBuffer(*storageBuffer);
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        LLGL::Log::Errorf("%s\n", e.what());
     }
 
     #ifdef _WIN32

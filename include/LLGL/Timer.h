@@ -34,7 +34,7 @@ const std::uint64_t startTime = LLGL::Timer::Tick();
 // Some events ...
 const std::uint64_t endTime = LLGL::Timer::Tick();
 const double elapsedSeconds = static_cast<double>(endTime - startTime) / LLGL::Timer::Frequency();
-std::cout << "Elapsed time: " << elapsedSeconds * 1000.0 << "ms" << std::endl;
+printf("Elapsed time: %f ms\n", elapsedSeconds * 1000.0);
 \endcode
 \see Frequency
 */

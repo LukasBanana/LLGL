@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
-#include <iostream>
+#include <stdio.h>
 
 
 #if defined LLGL_ENABLE_JIT_COMPILER && defined LLGL_DEBUG
@@ -25,7 +25,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        ::fprintf(stderr, "%s\n", e.what());
     }
 
     return 0;
@@ -35,7 +35,7 @@ int main()
 
 int main()
 {
-    std::cerr << "LLGL was not compiled with LLGL_ENABLE_JIT_COMPILER" << std::endl;
+    ::fprintf(stderr, "LLGL was not compiled with LLGL_ENABLE_JIT_COMPILER\n");
     return 0;
 }
 

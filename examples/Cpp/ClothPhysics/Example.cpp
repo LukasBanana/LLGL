@@ -137,8 +137,10 @@ public:
         particleBuffers[AttribNormal  ]->SetDebugName("Particles.Normal");
 
         // Show some information
-        std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the camera" << std::endl;
-        std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the cloth stiffness" << std::endl;
+        LLGL::Log::Printf(
+            "press LEFT MOUSE BUTTON and move the mouse to rotate the camera\n"
+            "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the cloth stiffness\n"
+        );
     }
 
     // Generates the grid geometry for the cloth with triangle strip topology
@@ -540,8 +542,8 @@ private:
         {
             float delta = motion.x*0.01f;
             stiffnessFactor = std::max(0.5f, std::min(stiffnessFactor + delta, 1.0f));
-            std::cout << "stiffness: " << static_cast<int>(stiffnessFactor * 100.0f) << "%    \r";
-            std::flush(std::cout);
+            LLGL::Log::Printf("stiffness: %d\%    \r", static_cast<int>(stiffnessFactor * 100.0f));
+            ::fflush(stdout);
         }
 
         // Update timer

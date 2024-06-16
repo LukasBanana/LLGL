@@ -62,7 +62,7 @@ public:
         const auto caps = renderer->GetRenderingCaps();
 
         // Show info
-        //std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
+        //LLGL::Log::Printf("press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene\n");
     }
 
 private:

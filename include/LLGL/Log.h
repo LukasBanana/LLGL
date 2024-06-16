@@ -36,7 +36,7 @@ enum class ReportType
     Default = 0,
 
     /**
-    \brief Error message type. Usualyl forwarded to \c stderr \c std::cerr.
+    \brief Error message type. Usually forwarded to \c stderr or \c std::cerr.
     \see Errorf.
     */
     Error,
