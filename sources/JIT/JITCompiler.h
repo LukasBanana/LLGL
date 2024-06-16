@@ -12,7 +12,7 @@
 #include "JITProgram.h"
 #include "AssemblyTypes.h"
 #include <LLGL/NonCopyable.h>
-#include <iostream>
+#include <LLGL/Container/UTF8String.h>
 #include <vector>
 #include <memory>
 #include <cstdint>
@@ -71,7 +71,7 @@ class LLGL_EXPORT JITCompiler : public NonCopyable
         static std::unique_ptr<JITCompiler> Create();
 
         // Dumps the current assembly code to the output stream.
-        void DumpAssembly(std::ostream& stream, bool textForm = false, std::size_t bytesPerLine = 8) const;
+        UTF8String DumpAssembly(std::size_t bytesPerLine = 8) const;
 
         // Flushes the currently build program, or null if no program was build.
         std::unique_ptr<JITProgram> FlushProgram();

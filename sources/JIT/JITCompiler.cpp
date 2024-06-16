@@ -8,7 +8,10 @@
 #include "JITCompiler.h"
 #include "AssemblyTypes.h"
 #include "../Core/CoreUtils.h"
-#include <iomanip>
+#include "../Core/PrintfUtils.h"
+#include <LLGL/Utils/ForRange.h>
+#include <LLGL/Report.h>
+#include <LLGL/Log.h>
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_WIN32
@@ -52,33 +55,20 @@ std::unique_ptr<JITCompiler> JITCompiler::Create()
     return compiler;
 }
 
-void JITCompiler::DumpAssembly(std::ostream& stream, bool textForm, std::size_t bytesPerLine) const
+UTF8String JITCompiler::DumpAssembly(std::size_t bytesPerLine) const
 {
-    if (textForm)
-    {
-        stream << std::hex << std::setfill('0');
-        std::size_t n = 0;
-        for (auto x : GetAssembly())
-        {
-            /* Write current hex value */
-            stream << "0x" << std::setw(2) << static_cast<int>(x);
+    Report output;
 
-            /* Write separator or new-line */
-            ++n;
-            if (n == bytesPerLine)
-            {
-                stream << std::endl;
-                n = 0;
-            }
-            else
-                stream << ' ';
-        }
-    }
-    else
+    const auto& bytes = GetAssembly();
+    for_range(i, bytes.size())
     {
-        for (auto x : GetAssembly())
-            stream << x;
+        /* Write current hex value and separator */
+        output.Printf("0x%02X", static_cast<int>(bytes[i]));
+        if (i + 1 < for_range_end(i))
+            output.Printf(bytesPerLine > 0 && (i + 1) % bytesPerLine == 0 ? "\n" : " ");
     }
+
+    return UTF8String{ output.GetText() };
 }
 
 std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
@@ -95,7 +85,7 @@ std::unique_ptr<JITProgram> JITCompiler::FlushProgram()
 void JITCompiler::EntryPointVarArgs(const std::initializer_list<JIT::ArgType>& varArgTypes)
 {
     entryVarArgs_.reserve(varArgTypes.size());
-    for (auto type : varArgTypes)
+    for (JIT::ArgType type : varArgTypes)
         entryVarArgs_.push_back(type);
 }
 
@@ -243,19 +233,19 @@ void JITCompiler::PushSSizeT(std::int64_t value)
 void JITCompiler::Write(const void* data, std::size_t size)
 {
     assembly_.reserve(assembly_.size() + size);
-    auto byteAlignedData = reinterpret_cast<const std::int8_t*>(data);
+    auto* byteAlignedData = reinterpret_cast<const std::uint8_t*>(data);
     #if 0
     if (littleEndian_)
     {
         /* Encode for little endian */
-        for (std::size_t i = 0; i < size; ++i)
+        for_range(i, size)
             assembly_.push_back(byteAlignedData[size - i - 1u]);
     }
     else
     #endif
     {
         /* Encode for big endian */
-        for (std::size_t i = 0; i < size; ++i)
+        for_range(i, size)
             assembly_.push_back(byteAlignedData[i]);
     }
 }
@@ -290,21 +280,18 @@ void JITCompiler::WritePtr(const void* data)
 
 void Test1(int x, int8_t b, uint16_t h, uint64_t q, int i5, int i6, int i7, int8_t i8, uint64_t i9)
 {
-    std::cout << __FUNCTION__;
-    std::cout << ": x = " << x;
-    std::cout << ", b = " << (int)b;
-    std::cout << ", h = 0x" << std::hex << h << std::dec;
-    std::cout << ", q = " << q;
-    std::cout << ", i = { " << i5 << ", " << i6 << ", " << i7 << ", " << (int)i8 << ", " << i9 << " }";
-    std::cout << std::endl;
+    Log::Printf(
+        "%s: x = %d, b = %d, h = 0x%04X, q = %" PRIu64 ", i = { %d, %d, %d, %d, %" PRIu64 " }\n",
+        __FUNCTION__, x, (int)b, (int)h, q, i5, i6, i7, (int)i8, i9
+    );
 }
 
 void Test2(float f, double d)
 {
-    std::cout << __FUNCTION__;
-    std::cout << ": f = " << f;
-    std::cout << ", d = " << d;
-    std::cout << std::endl;
+    Log::Printf(
+        "%s: f = %f, d = %f\n",
+        __FUNCTION__, (double)f, d
+    );
 }
 
 void Call_Test1()

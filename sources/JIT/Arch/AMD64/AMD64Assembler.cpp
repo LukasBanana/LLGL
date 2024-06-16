@@ -7,10 +7,8 @@
 
 #include "AMD64Assembler.h"
 #include "AMD64Opcode.h"
+#include "../../../Core/Assertion.h"
 #include <limits.h>
-
-#include <fstream>//!!!
-#include <iomanip>
 
 
 namespace LLGL
@@ -51,8 +49,8 @@ static const Reg g_amd64TempReg     = Reg::RAX;
 
 #endif
 
-static const std::size_t g_amd64IntParamsCount = sizeof(g_amd64IntParams)/sizeof(g_amd64IntParams[0]);
-static const std::size_t g_amd64FltParamsCount = sizeof(g_amd64FltParams)/sizeof(g_amd64FltParams[0]);
+static constexpr std::size_t g_amd64IntParamsCount = sizeof(g_amd64IntParams)/sizeof(g_amd64IntParams[0]);
+static constexpr std::size_t g_amd64FltParamsCount = sizeof(g_amd64FltParams)/sizeof(g_amd64FltParams[0]);
 
 
 /*
@@ -62,8 +60,19 @@ static const std::size_t g_amd64FltParamsCount = sizeof(g_amd64FltParams)/sizeof
 // Size of byte (1), word (2), dword (4), qword (8), ptr (8), stack-ptr (8), float (4), double (8)
 static std::uint8_t GetArgSize(const ArgType t)
 {
-    static const std::uint8_t sizes[] = { 1, 2, 4, 8, 8, 8, 4, 8 };
-    return sizes[static_cast<std::uint8_t>(t)];
+    switch (t)
+    {
+        case ArgType::Byte:     return 1;
+        case ArgType::Word:     return 2;
+        case ArgType::DWord:    return 4;
+        case ArgType::QWord:    return 8;
+        case ArgType::Ptr:      return 8;
+        case ArgType::StackPtr: return 8;
+        case ArgType::Float:    return 4;
+        case ArgType::Double:   return 8;
+    }
+    LLGL_UNREACHABLE();
+    return 0;
 }
 
 
@@ -99,15 +108,6 @@ void AMD64Assembler::End()
     /* Write entry point epilogue and append supplement at the end of program */
     WriteEpilogue();
     ApplySupplements();
-
-    // TEST: write program to file
-    #if 0
-    {
-        std::ofstream f("JITProgram.txt");
-        DumpAssembly(f, true);
-    }
-    exit(0);
-    #endif // /TEST
 }
 
 void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farCall)
@@ -123,7 +123,7 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
 
     for (std::size_t i = 0; i < num; ++i)
     {
-        const auto& arg = args[i];
+        const JIT::Arg& arg = args[i];
 
         /* Determine destination register for argument */
         Reg dstReg = g_amd64TempReg;
@@ -197,8 +197,8 @@ void AMD64Assembler::WriteFuncCall(const void* addr, JITCallConv conv, bool farC
 
     for (std::size_t i = 0; i < num; ++i)
     {
-        auto iRev = num - i - 1u;
-        const auto& arg = args[iRev];
+        std::size_t iRev = num - i - 1u;
+        const JIT::Arg& arg = args[iRev];
 
         /* Check if argument has already been moved into a register */
         bool isFloat = IsFloat(arg.type);
@@ -306,12 +306,12 @@ void AMD64Assembler::WriteStackFrame(
 {
     /* Determine required stack size for variadic arguments */
     std::uint32_t varArgSize = 0;
-    for (auto type : varArgTypes)
+    for (JIT::ArgType type : varArgTypes)
         varArgSize += (IsFloat(type) ? 16 : 8);
 
     /* Determine required stack size for allocations */
     std::uint32_t stackChunksSize = 0;
-    for (auto chunk : stackChunks)
+    for (std::uint32_t chunk : stackChunks)
         stackChunksSize += chunk;
 
     /* Allocate local stack */
@@ -438,7 +438,7 @@ void AMD64Assembler::ApplySupplements()
 {
     auto& code = GetAssembly();
 
-    for (const auto& supp : supplements_)
+    for (const Supplement& supp : supplements_)
     {
         /* Override displacement dummy */
         std::uint32_t disp32 = static_cast<std::uint32_t>(code.size() - supp.rip);
