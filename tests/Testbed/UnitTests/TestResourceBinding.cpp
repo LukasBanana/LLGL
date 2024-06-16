@@ -350,6 +350,7 @@ DEF_TEST( ResourceBinding )
 
         auto DispatchOrder0 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("DispatchOrder0");
             cmdBuf.SetPipelineState(*pso[ComputePSO]);
             cmdBuf.SetResource(0, *buffers[0]); // inBufferA
             cmdBuf.SetResource(1, *buffers[1]); // inBufferB
@@ -360,6 +361,7 @@ DEF_TEST( ResourceBinding )
             cmdBuf.SetResource(6, *textures[2]); // outTextureA
             cmdBuf.SetResource(7, *textures[3]); // outTextureB
             cmdBuf.Dispatch(1, 1, 1);
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,1; out-buffers=2,3; in-textures=0,1; out-textures=2,3
             expectedResults.buffers[2] = (expectedResults.buffers[0] + expectedResults.buffers[1]);
@@ -372,12 +374,14 @@ DEF_TEST( ResourceBinding )
 
         auto DispatchOrder1 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("DispatchOrder1");
             cmdBuf.SetPipelineState(*pso[ComputePSOResourceHeap]);
             cmdBuf.SetResourceHeap(*computeResourceHeaps[1]);
             cmdBuf.SetResource(0, *textures[3]); // inTextureB
             cmdBuf.SetResource(1, *textures[0]); // outTextureA
             cmdBuf.SetResource(2, *textures[1]); // outTextureB
             cmdBuf.Dispatch(1, 1, 1);
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,3; out-buffers=1,2; in-textures=2,3; out-textures=0,1
             expectedResults.buffers[1] = (expectedResults.buffers[0] + expectedResults.buffers[3]);
@@ -390,12 +394,14 @@ DEF_TEST( ResourceBinding )
 
         auto DispatchOrder2 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("DispatchOrder2");
             cmdBuf.SetPipelineState(*pso[ComputePSOResourceHeap]);
             cmdBuf.SetResourceHeap(*computeResourceHeaps[0]);
             cmdBuf.SetResource(0, *textures[1]); // inTextureB
             cmdBuf.SetResource(1, *textures[2]); // outTextureA
             cmdBuf.SetResource(2, *textures[3]); // outTextureB
             cmdBuf.Dispatch(1, 1, 1);
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,1; out-buffers=2,3; in-textures=0,1; out-textures=2,3
             expectedResults.buffers[2] = (expectedResults.buffers[0] + expectedResults.buffers[1]);
@@ -408,6 +414,7 @@ DEF_TEST( ResourceBinding )
 
         auto DispatchOrder3 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("DispatchOrder3");
             cmdBuf.SetPipelineState(*pso[ComputePSO]);
             cmdBuf.SetResource(0, *buffers[0]); // inBufferA
             cmdBuf.SetResource(1, *buffers[3]); // inBufferB
@@ -418,6 +425,7 @@ DEF_TEST( ResourceBinding )
             cmdBuf.SetResource(6, *textures[0]); // outTextureA
             cmdBuf.SetResource(7, *textures[1]); // outTextureB
             cmdBuf.Dispatch(1, 1, 1);
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,3; out-buffers=1,2; in-textures=2,3; out-textures=0,1
             expectedResults.buffers[1] = (expectedResults.buffers[0] + expectedResults.buffers[3]);
@@ -430,6 +438,7 @@ DEF_TEST( ResourceBinding )
 
         auto RenderOrder0 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("RenderOrder0");
             cmdBuf.BeginRenderPass(*renderTargets[1]);
             {
                 cmdBuf.SetViewport(Extent2D{ 1, 1 });
@@ -443,6 +452,7 @@ DEF_TEST( ResourceBinding )
                 cmdBuf.Draw(1, 0);
             }
             cmdBuf.EndRenderPass();
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,1; out-buffers=2,3; in-textures=0,1; out-textures=2,3
             expectedResults.buffers[2] = (expectedResults.buffers[0] + expectedResults.buffers[1]) * 3;
@@ -455,6 +465,7 @@ DEF_TEST( ResourceBinding )
 
         auto RenderOrder1 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("RenderOrder1");
             cmdBuf.BeginRenderPass(*renderTargets[0]);
             {
                 cmdBuf.SetViewport(Extent2D{ 1, 1 });
@@ -464,6 +475,7 @@ DEF_TEST( ResourceBinding )
                 cmdBuf.Draw(1, 0);
             }
             cmdBuf.EndRenderPass();
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,3; out-buffers=1,2; in-textures=2,3; out-textures=0,1
             expectedResults.buffers[1] = (expectedResults.buffers[0] + expectedResults.buffers[3]) * 3;
@@ -476,6 +488,7 @@ DEF_TEST( ResourceBinding )
 
         auto RenderOrder2 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("RenderOrder2");
             cmdBuf.BeginRenderPass(*renderTargets[1]);
             {
                 cmdBuf.SetViewport(Extent2D{ 1, 1 });
@@ -485,6 +498,7 @@ DEF_TEST( ResourceBinding )
                 cmdBuf.Draw(1, 0);
             }
             cmdBuf.EndRenderPass();
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,1; out-buffers=2,3; in-textures=0,1; out-textures=2,3
             expectedResults.buffers[2] = (expectedResults.buffers[0] + expectedResults.buffers[1]) * 3;
@@ -497,6 +511,7 @@ DEF_TEST( ResourceBinding )
 
         auto RenderOrder3 = [&](ExpectedResults& expectedResults) -> void
         {
+            cmdBuf.PushDebugGroup("RenderOrder3");
             cmdBuf.BeginRenderPass(*renderTargets[0]);
             {
                 cmdBuf.SetViewport(Extent2D{ 1, 1 });
@@ -510,6 +525,7 @@ DEF_TEST( ResourceBinding )
                 cmdBuf.Draw(1, 0);
             }
             cmdBuf.EndRenderPass();
+            cmdBuf.PopDebugGroup();
 
             // in-buffers=0,3; out-buffers=1,2; in-textures=2,3; out-textures=0,1
             expectedResults.buffers[1] = (expectedResults.buffers[0] + expectedResults.buffers[3]) * 3;

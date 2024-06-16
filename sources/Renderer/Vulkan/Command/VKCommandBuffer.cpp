@@ -86,9 +86,7 @@ VKCommandBuffer::VKCommandBuffer(
                 usageFlags_ |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
             }
         }
-        if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
-            multiSubmit_ = true;
-        else
+        if ((desc.flags & CommandBufferFlags::MultiSubmit) == 0)
             usageFlags_ |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     }
 
@@ -105,9 +103,12 @@ VKCommandBuffer::~VKCommandBuffer()
 
 VkFence VKCommandBuffer::GetQueueSubmitFenceAndFlush()
 {
+    /*
+    Flush recoring fence since we don't have to signal it more than once,
+    until the same native command buffer is recorded again.
+    */
     VkFence fence = recordingFence_;
-    if (multiSubmit_)
-        recordingFence_ = VK_NULL_HANDLE;
+    recordingFence_ = VK_NULL_HANDLE;
     recordingFenceDirty_[commandBufferIndex_] = true;
     return fence;
 }
@@ -1305,6 +1306,8 @@ void VKCommandBuffer::AcquireNextBuffer()
     recordingFence_ = recordingFenceArray_[commandBufferIndex_].Get();
     if (recordingFenceDirty_[commandBufferIndex_])
         vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
+
+    /* Reset fence state after it has been signaled by the command queue */
     vkResetFences(device_, 1, &recordingFence_);
     recordingFenceDirty_[commandBufferIndex_] = false;
 

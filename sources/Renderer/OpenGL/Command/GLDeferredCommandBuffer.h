@@ -105,10 +105,10 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         void FlushMemoryBarriers();
 
-        /* Allocates only an opcode for empty commands */
+        // Allocates only an opcode for empty commands.
         void AllocOpcode(const GLOpcode opcode);
 
-        /* Allocates a new command and stores the specified opcode */
+        // Allocates a new command and stores the specified opcode.
         template <typename TCommand>
         TCommand* AllocCommand(const GLOpcode opcode, std::size_t payloadSize = 0);
 

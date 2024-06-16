@@ -67,9 +67,9 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
 static std::wstring ToWideStringPrimary(const char* str, std::size_t len)
 {
     std::wstring wstr;
-    wstr.reserve(len);
-    while (char chr = *str++)
-        wstr.push_back(static_cast<wchar_t>(chr));
+    wstr.resize(len);
+    for_range(i, len)
+        wstr[i] = static_cast<wchar_t>(str[i]);
     return wstr;
 }
 

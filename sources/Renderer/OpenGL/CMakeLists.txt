@@ -159,7 +159,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES -framework GLKit")
             ADD_PROJECT_DEFINE(LLGL_OpenGLES3 GLES_SILENCE_DEPRECATION)
         else()
-            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} EGL GLESv3)
+            target_link_libraries(LLGL_OpenGLES3 LLGL EGL GLESv3)
         endif()
         
         ADD_PROJECT_DEFINE(LLGL_OpenGLES3 LLGL_OPENGLES3)

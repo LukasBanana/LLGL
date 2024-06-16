@@ -180,7 +180,7 @@ T* FindInSortedArray(
 
 // Returns 'numerator' divided by 'denominator' while always rounding up.
 template <typename T>
-T DivideRoundUp(T numerator, T denominator)
+constexpr T DivideRoundUp(T numerator, T denominator)
 {
     static_assert(std::is_integral<T>::value, "DivideRoundUp<T>: template parameter 'T' must be an integral type");
     return ((numerator + denominator - T(1)) / denominator);
@@ -188,12 +188,9 @@ T DivideRoundUp(T numerator, T denominator)
 
 // Returns the adjusted size with the specified alignment, which is always greater or equal to 'size' (T can be UINT or VkDeviceSize for instance).
 template <typename T>
-T GetAlignedSize(T size, T alignment)
+constexpr T GetAlignedSize(T size, T alignment)
 {
-    if (alignment > 1)
-        return DivideRoundUp<T>(size, alignment) * alignment;
-    else
-        return size;
+    return (alignment > 1 ? DivideRoundUp<T>(size, alignment) * alignment : size);
 }
 
 /*
