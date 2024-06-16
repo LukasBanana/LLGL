@@ -17,8 +17,6 @@
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Platform/Platform.h>
 #include <Gauss/Gauss.h>
-#include <iostream>
-#include <fstream>
 #include <vector>
 #include <random>
 #include <map>
@@ -293,10 +291,16 @@ protected:
     bool IsScreenOriginLowerLeft() const;
 
     // Returns a perspective projection with the specified parameters for the respective renderer.
-    Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov);
+    Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov) const;
 
     // Returns an orthogonal projection with the speciifed parameters for the respective renderer.
-    Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far);
+    Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far) const;
+
+    // Returns a quoternion for the specified rotation
+    Gs::Quaternionf Rotation(float x, float y) const;
+
+    // Rotates the specified quaternion for a model-to-world transformation matrix.
+    Gs::Matrix4f RotateModel(Gs::Quaternionf& rotation, float dx, float dy) const;
 
     // Returns true if the specified shading language is supported.
     bool Supported(const LLGL::ShadingLanguage shadingLanguage) const;

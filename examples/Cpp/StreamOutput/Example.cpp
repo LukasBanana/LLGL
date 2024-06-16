@@ -6,7 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <iomanip>
+#include <stdio.h>
 
 
 class Example_StreamOutput : public ExampleBase
@@ -131,8 +131,10 @@ private:
     void PrintOutputVector(std::size_t index, const Gs::Vector4f* outputVectors)
     {
         const auto& v = outputVectors[index];
-        std::cout << std::fixed << std::setfill('0') << std::setprecision(2);
-        std::cout << "SV_Position[" << index << "] = " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << "        \r";
+        ::printf(
+            "SV_Position[%d] = %.02f, %.02f, %.02f, %.02f        \r",
+            static_cast<int>(index), v.x, v.y, v.z, v.w
+        );
     }
 
     void OnDrawFrame() override
@@ -192,7 +194,7 @@ private:
         {
             // Print output data
             PrintOutputVector(1, reinterpret_cast<const Gs::Vector4f*>(outputBuffer));
-            std::flush(std::cout);
+            ::fflush(stdout);
 
             // Unmap buffer
             renderer->UnmapBuffer(*streamOutputBuffer);

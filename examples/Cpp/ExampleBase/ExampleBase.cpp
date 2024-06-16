@@ -8,14 +8,23 @@
 #include <ExampleBase.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
-#include <iostream>
 #include "FileUtils.h"
+#include <stdio.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
+
+ /*
+ Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
+ See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
+ */
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+#include <inttypes.h>
 
 
 /*
@@ -44,21 +53,29 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
     while (rendererModule.empty())
     {
         /* Print list of available modules */
-        std::cout << "select renderer:" << std::endl;
+        LLGL::Log::Printf("select renderer:\n");
 
         int i = 0;
         for (const std::string& mod : modules)
-            std::cout << " " << (++i) << ".) " << mod << std::endl;
+            LLGL::Log::Printf(" %d.) %s\n", ++i, mod.c_str());
 
         /* Wait for user input */
-        std::size_t selection = 0;
-        std::cin >> selection;
-        --selection;
+        char selectionBuffer[256] = {};
+        (void)::fgets(selectionBuffer, sizeof(selectionBuffer), stdin);
 
-        if (selection < modules.size())
-            rendererModule = modules[selection];
+        std::string selectionStr = selectionBuffer;
+        selectionStr = selectionStr.substr(0, selectionStr.find_first_not_of("0123456789"));
+        if (!selectionStr.empty())
+        {
+            int selection = std::stoi(selectionStr);
+            const std::size_t selectionIndex = static_cast<std::size_t>(selection - 1);
+            if (selectionIndex < modules.size())
+                rendererModule = modules[selectionIndex];
+            else
+                LLGL::Log::Errorf("invalid input: %d is out of range\n", selection);
+        }
         else
-            std::cerr << "invalid input" << std::endl;
+            LLGL::Log::Errorf("invalid input: %s is not a number\n", selectionBuffer);
     }
 
     return rendererModule;
@@ -113,12 +130,14 @@ static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int 
             }
         }
     }
-    std::cout << "selected renderer: " << rendererModule << std::endl;
+    LLGL::Log::Printf("selected renderer: %s\n", rendererModule.c_str());
 }
 
 static constexpr const char* GetDefaultRendererModule()
 {
-    #if defined LLGL_OS_WIN32
+    #if defined LLGL_OS_UWP
+    return "Direct3D12";
+    #elif defined LLGL_OS_WIN32
     return "Direct3D11";
     #elif defined LLGL_OS_IOS || defined LLGL_OS_MACOS
     return "Metal";
@@ -131,6 +150,8 @@ static constexpr const char* GetDefaultRendererModule()
 
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
+    // Set report callback to standard output
+    LLGL::Log::RegisterCallbackStd();
     std::string rendererModule = GetDefaultRendererModule();
     GetSelectedRendererModuleOrDefault(rendererModule, argc, argv);
     return rendererModule;
@@ -305,6 +326,7 @@ struct ExampleConfig
     std::uint32_t   samples         = 8;
     bool            vsync           = true;
     bool            debugger        = false;
+    long            flags           = 0;
 };
 
 static ExampleConfig g_Config;
@@ -322,6 +344,12 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.vsync = false;
     if (HasArgument("-d", argc, argv) || HasArgument("--debug", argc, argv))
         g_Config.debugger = true;
+    if (HasArgument("-nvidia", argc, argv))
+        g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
+    if (HasArgument("-amd", argc, argv))
+        g_Config.flags |= LLGL::RenderSystemFlags::PreferAMD;
+    if (HasArgument("-intel", argc, argv))
+        g_Config.flags |= LLGL::RenderSystemFlags::PreferIntel;
 }
 
 #if defined LLGL_OS_ANDROID
@@ -350,11 +378,13 @@ void ExampleBase::Run()
 
             if (showTimeRecords)
             {
-                std::cout << "\n";
-                std::cout << "FRAME TIME RECORDS:\n";
-                std::cout << "-------------------\n";
+                LLGL::Log::Printf(
+                    "\n"
+                    "FRAME TIME RECORDS:\n"
+                    "-------------------\n"
+                );
                 for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
-                    std::cout << rec.annotation << ": " << rec.elapsedTime << " ns\n";
+                    LLGL::Log::Printf("%s: " PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
 
                 debuggerObj_->SetTimeRecording(false);
                 showTimeRecords = false;
@@ -425,7 +455,7 @@ static LLGL::Extent2D ScaleResolutionForDisplay(const LLGL::Extent2D& res, const
 
 ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 {
-    // Set report callback to standard output
+    // Set report callback to standard output if not already done
     LLGL::Log::RegisterCallbackStd();
 
     // Set up renderer descriptor
@@ -448,6 +478,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     }
 
     // Create render system
+    rendererDesc.flags |= g_Config.flags;
     renderer = LLGL::RenderSystem::Load(rendererDesc);
 
     // Apply device limits (not for GL, because we won't have a valid GL context until we create our first swap chain)
@@ -468,7 +499,12 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
 
     // Create command buffer
-    commands = renderer->CreateCommandBuffer();//LLGL::CommandBufferFlags::ImmediateSubmit);
+    LLGL::CommandBufferDescriptor cmdBufferDesc;
+    {
+        cmdBufferDesc.debugName = "Commands";
+        //cmdBufferDesc.flags     = LLGL::CommandBufferFlags::ImmediateSubmit;
+    }
+    commands = renderer->CreateCommandBuffer(cmdBufferDesc);
 
     // Get command queue
     commandQueue = renderer->GetCommandQueue();
@@ -477,25 +513,36 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     const auto& info = renderer->GetRendererInfo();
     const auto swapChainRes = swapChain->GetResolution();
 
-    std::cout << "render system:" << std::endl;
-    std::cout << "  renderer:           " << info.rendererName << std::endl;
-    std::cout << "  device:             " << info.deviceName << std::endl;
-    std::cout << "  vendor:             " << info.vendorName << std::endl;
-    std::cout << "  shading language:   " << info.shadingLanguageName << std::endl;
-    std::cout << std::endl;
-    std::cout << "swap-chain:" << std::endl;
-    std::cout << "  resolution:         " << swapChainRes.width << " x " << swapChainRes.height << std::endl;
-    std::cout << "  samples:            " << swapChain->GetSamples() << std::endl;
-    std::cout << "  colorFormat:        " << LLGL::ToString(swapChain->GetColorFormat()) << std::endl;
-    std::cout << "  depthStencilFormat: " << LLGL::ToString(swapChain->GetDepthStencilFormat()) << std::endl;
-    std::cout << std::endl;
+    LLGL::Log::Printf(
+        "render system:\n"
+        "  renderer:           %s\n"
+        "  device:             %s\n"
+        "  vendor:             %s\n"
+        "  shading language:   %s\n"
+        "\n"
+        "swap-chain:\n"
+        "  resolution:         %u x %u\n"
+        "  samples:            %u\n"
+        "  colorFormat:        %s\n"
+        "  depthStencilFormat: %s\n"
+        "\n",
+        info.rendererName.c_str(),
+        info.deviceName.c_str(),
+        info.vendorName.c_str(),
+        info.shadingLanguageName.c_str(),
+        swapChainRes.width,
+        swapChainRes.height,
+        swapChain->GetSamples(),
+        LLGL::ToString(swapChain->GetColorFormat()),
+        LLGL::ToString(swapChain->GetDepthStencilFormat())
+    );
 
     if (!info.extensionNames.empty())
     {
-        std::cout << "extensions:" << std::endl;
-        for (const auto& name : info.extensionNames)
-            std::cout << "  " << name << std::endl;
-        std::cout << std::endl;
+        LLGL::Log::Printf("extensions:\n");
+        for (const std::string& name : info.extensionNames)
+            LLGL::Log::Printf("  %s\n", name.c_str());
+        LLGL::Log::Printf("\n");
     }
 
     #ifdef LLGL_MOBILE_PLATFORM
@@ -567,8 +614,10 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     }
 
     // Create shader
-    auto deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, shaderDesc.filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
+    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, shaderDesc.filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
     {
+        deviceShaderDesc.debugName = shaderDesc.entryPoint.c_str();
+
         // Forward macro definitions
         deviceShaderDesc.defines = defines;
 
@@ -608,10 +657,10 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         if (Supported(LLGL::ShadingLanguage::ESSL))
             deviceShaderDesc.profile = "300 es";
     }
-    auto shader = renderer->CreateShader(deviceShaderDesc);
+    LLGL::Shader* shader = renderer->CreateShader(deviceShaderDesc);
 
     // Print info log (warnings and errors)
-    if (auto report = shader->GetReport())
+    if (const LLGL::Report* report = shader->GetReport())
     {
         if (*report->GetText() != '\0')
         {
@@ -750,15 +799,15 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
     }
 
     // Create texture and upload image data onto hardware texture
-    auto tex = renderSys.CreateTexture(
-        LLGL::Texture2DDesc(format, width, height, bindFlags), &imageView
-    );
+    LLGL::TextureDescriptor texDesc = LLGL::Texture2DDesc(format, width, height, bindFlags);
+    texDesc.debugName = filename.c_str();
+    LLGL::Texture* tex = renderSys.CreateTexture(texDesc, &imageView);
 
     // Release image data
     stbi_image_free(imageBuffer);
 
     // Show info
-    std::cout << "loaded texture: " << filename << std::endl;
+    LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
 
     return tex;
 }
@@ -808,12 +857,12 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
 
     if (!result)
     {
-        std::cerr << "failed to write texture to file: \"" + filename + "\"" << std::endl;
+        LLGL::Log::Errorf("failed to write texture to file: \"%s\"\n", filename.c_str());
         return false;
     }
 
     // Show info
-    std::cout << "saved texture: " << filename << std::endl;
+    LLGL::Log::Printf("saved texture: %s\n", filename.c_str());
 
     return true;
 }
@@ -898,18 +947,37 @@ bool ExampleBase::IsScreenOriginLowerLeft() const
     return (renderer->GetRenderingCaps().screenOrigin == LLGL::ScreenOrigin::LowerLeft);
 }
 
-Gs::Matrix4f ExampleBase::PerspectiveProjection(float aspectRatio, float near, float far, float fov)
+Gs::Matrix4f ExampleBase::PerspectiveProjection(float aspectRatio, float near, float far, float fov) const
 {
     const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
     int flags = (isClipRangeUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
     return Gs::ProjectionMatrix4f::Perspective(aspectRatio, near, far, fov, flags).ToMatrix4();
 }
 
-Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float near, float far)
+Gs::Matrix4f ExampleBase::OrthogonalProjection(float width, float height, float near, float far) const
 {
     const bool isClipRangeUnitCube = (renderer->GetRenderingCaps().clippingRange == LLGL::ClippingRange::MinusOneToOne);
     int flags = (isClipRangeUnitCube ? Gs::ProjectionFlags::UnitCube : 0);
     return Gs::ProjectionMatrix4f::Orthogonal(width, height, near, far, flags).ToMatrix4();
+}
+
+Gs::Quaternionf ExampleBase::Rotation(float x, float y) const
+{
+    Gs::Matrix3f mat;
+    Gs::RotateFree(mat, Gs::Vector3f{ 1, 0, 0 }, y);
+    Gs::RotateFree(mat, Gs::Vector3f{ 0, 1, 0 }, x);
+    Gs::Quaternionf rotation;
+    Gs::MatrixToQuaternion(rotation, mat);
+    return rotation;
+}
+
+Gs::Matrix4f ExampleBase::RotateModel(Gs::Quaternionf& rotation, float dx, float dy) const
+{
+    // Generate absolute matrix
+    rotation *= Rotation(dx, dy);
+    Gs::Matrix4f mat;
+    Gs::QuaternionToMatrix(mat, rotation);
+    return mat;
 }
 
 bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const

@@ -10,8 +10,6 @@
 #include <fstream>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <sstream>
 #include <type_traits>
 #include <algorithm>
 
@@ -215,12 +213,10 @@ void DDSImageReader::LoadFromFile(const std::string& filename)
     else
     {
         // Print error with FourCC as string
-        char fourCC[4] = {};
-        ::memcpy(fourCC, &(header.format.fourCC), sizeof(fourCC));
+        char fourCC[5] = {};
+        ::memcpy(fourCC, &(header.format.fourCC), sizeof(header.format.fourCC));
 
-        std::stringstream err;
-        err << "DDS image has unsupported FourCC value: " << fourCC[0] << fourCC[1] << fourCC[2] << fourCC[3];
-        throw std::runtime_error(err.str());
+        throw std::runtime_error("DDS image has unsupported FourCC value: " + std::string(fourCC));
     }
 
     // Read image buffer

@@ -10,7 +10,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
-#include <iomanip>
+#include <stdio.h>
 
 
 // Enables/disables the use of two secondary command buffers
@@ -61,15 +61,13 @@ class Measure
         {
             if (samples_ > 0)
             {
-                auto averageTime = static_cast<double>(elapsed_);
+                double averageTime = static_cast<double>(elapsed_);
                 averageTime /= static_cast<double>(timer_.GetFrequency());
                 averageTime *= 1000000.0;
                 averageTime /= static_cast<double>(samples_);
 
-                std::cout << title_ << ": ";
-                std::cout << std::fixed << std::setprecision(6) << averageTime << " microseconds";
-                std::cout << "         \r";
-                std::flush(std::cout);
+                printf("%s: %.6f  microseconds         \r", title_.c_str(), averageTime);
+                fflush(stdout);
 
                 samples_ = 0;
                 elapsed_ = 0;
@@ -204,7 +202,7 @@ private:
     static void PrintThreadsafe(std::mutex& mtx, const std::string& text)
     {
         std::lock_guard<std::mutex> guard { mtx };
-        std::cout << text << std::endl;
+        printf("%s\n", text.c_str());
     }
 
     static void EncodeSecondaryCommandBuffer(
@@ -310,15 +308,7 @@ private:
             );
         }
 
-        #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
-
-        // Encode primary command buffer
-        for_range(i, swapChain->GetNumSwapBuffers())
-            EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i, "mainThread");
-
-        #if ENABLE_SECONDARY_COMMAND_BUFFERS
-
-        // Wait for worker threads to finish
+        // Secondary command buffers must have finished encoding before we can use them in a primary command buffer
         for (auto& worker : workerThread)
         {
             if (worker.joinable())
@@ -326,6 +316,10 @@ private:
         }
 
         #endif // /ENABLE_SECONDARY_COMMAND_BUFFERS
+
+        // Encode primary command buffer
+        for_range(i, swapChain->GetNumSwapBuffers())
+            EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i, "mainThread");
     }
 
     void Transform(Bundle::Matrices& matrices, const Gs::Vector3f& pos, const Gs::Vector3f& axis, float angle)
@@ -336,8 +330,38 @@ private:
         matrices.wvpMatrix = projection * matrices.wMatrix;
     }
 
+    void UpdateCommandBuffers()
+    {
+        std::thread workerThread[2];
+
+        for_range(i, 2)
+        {
+            // Start worker thread to encode secondary command buffer
+            workerThread[i] = std::thread(
+                Example_MultiThreading::EncodeSecondaryCommandBuffer,
+                std::ref(bundle[i]),
+                numIndices,
+                std::ref(logMutex),
+                "workerThread[" + std::to_string(i) + "]"
+            );
+        }
+
+        // Wait for worker threads to finish
+        for (auto& worker : workerThread)
+        {
+            if (worker.joinable())
+                worker.join();
+        }
+
+        for_range(i, swapChain->GetNumSwapBuffers())
+            EncodePrimaryCommandBuffer(*primaryCmdBuffer[i], i, "mainThread");
+    }
+
     void UpdateScene()
     {
+        if (input.KeyDown(LLGL::Key::Tab))
+            UpdateCommandBuffers();
+
         // Animate rotation
         static float rotation;
         rotation += 0.01f;

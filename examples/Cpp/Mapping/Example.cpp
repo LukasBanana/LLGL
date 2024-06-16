@@ -6,13 +6,21 @@
  */
 
 #include <ExampleBase.h>
-#include <iomanip>
+#include <stdio.h>
 
 
 // Use source textures instead for additional copy indirections
-//#define ENABLE_INTERMEDIATE_TEXTURES
+#define ENABLE_INTERMEDIATE_TEXTURES 0
 
 
+/*
+ * Texture and buffer mapping example
+ * ----------------------------------
+ * This is a visually unimpressive example that only demonstrates how to copy data between buffers and textures.
+ * You'll see horizontal stripes of red, green, and blue across the window.
+ * By pressing the Tab key, you can modify the content in a seemingly unorganized manner.
+ * By pressing the Backspace key, you can reset the content to its initial state.
+ */
 class Example_Mapping : public ExampleBase
 {
 
@@ -27,7 +35,7 @@ class Example_Mapping : public ExampleBase
     LLGL::Buffer*           vertexBuffer        = nullptr;
 
     LLGL::Buffer*           contentBuffer       = nullptr;  // Content buffer which is copied into the textures
-    #ifdef ENABLE_INTERMEDIATE_TEXTURES
+    #if ENABLE_INTERMEDIATE_TEXTURES
     LLGL::Texture*          srcTextures[2]      = {};       // Source textures for copy operations
     #endif
     LLGL::Texture*          dstTextures[2]      = {};       // Destination textures for display
@@ -53,8 +61,10 @@ public:
         GenerateTextureContent();
 
         // Print some information on the standard output
-        std::cout << "press TAB KEY to iterate copy operations on the texture" << std::endl;
-        std::cout << "press BACKSPACE KEY to reset the texture" << std::endl;
+        ::printf(
+            "press TAB KEY to iterate copy operations on the texture\n"
+            "press BACKSPACE KEY to reset the texture\n"
+        );
     }
 
 private:
@@ -93,13 +103,23 @@ private:
         auto MatchReadbackVerticesPosition = [&readbackVertices, &vertices](int v, int c)
         {
             if (readbackVertices[v].position[c] != vertices[v].position[c])
-                std::cerr << "Readback data mismatch: Expected vertices[" << v << "].position[" << c << "] to be " << vertices[v].position[c] << ", but got " << readbackVertices[v].position[c] << std::endl;
+            {
+                ::fprintf(
+                    stderr, "Readback data mismatch: Expected vertices[%d].position[%d] to be %f, but got %f\n",
+                    v, c, vertices[v].position[c], readbackVertices[v].position[c]
+                );
+            }
         };
 
         auto MatchReadbackVerticesTexCoord = [&readbackVertices, &vertices](int v, int c)
         {
             if (readbackVertices[v].texCoord[c] != vertices[v].texCoord[c])
-                std::cerr << "Readback data mismatch: Expected vertices[" << v << "].texCoord[" << c << "] to be " << vertices[v].texCoord[c] << ", but got " << readbackVertices[v].texCoord[c] << std::endl;
+            {
+                ::fprintf(
+                    stderr, "Readback data mismatch: Expected vertices[%d].texCoord[%d] to be %f, but got %f\n",
+                    v, c, vertices[v].texCoord[c], readbackVertices[v].texCoord[c]
+                );
+            }
         };
 
         for (int i = 0; i < 8; ++i)
@@ -152,7 +172,7 @@ private:
 
     void CreateSourceTextures()
     {
-        #ifdef ENABLE_INTERMEDIATE_TEXTURES
+        #if ENABLE_INTERMEDIATE_TEXTURES
 
         // Create empty destination texture
         for (int i = 0; i < 2; ++i)
@@ -233,7 +253,7 @@ private:
             commands->FillBuffer(*contentBuffer, /*Offset:*/ 128 * 4, /*Value:*/ 0xFF50D040, /*Size:*/ 128 * 4); // Green
             commands->FillBuffer(*contentBuffer, /*Offset:*/ 256 * 4, /*Value:*/ 0xFFD05050, /*Size:*/ 256 * 4); // Blue
 
-            #ifdef ENABLE_INTERMEDIATE_TEXTURES
+            #if ENABLE_INTERMEDIATE_TEXTURES
 
             // Copy buffer to source textures
             /*commands->CopyTextureFromBuffer(
@@ -314,13 +334,11 @@ private:
             auto srcColors = reinterpret_cast<const LLGL::ColorRGBAub*>(src);
             {
                 const LLGL::ColorRGBAub srcColor0 = srcColors[0];
-                std::cout
-                    << std::setw(2) << std::hex << std::setfill('0') << std::uppercase
-                    << "Left-top color in destination texture:"
-                    << " (#" << static_cast<int>(srcColor0.r)
-                    << ", #" << static_cast<int>(srcColor0.g)
-                    << ", #" << static_cast<int>(srcColor0.b) << ")\r";
-                std::flush(std::cout);
+                ::printf(
+                    "Left-top color in destination texture: (#%02X, #%02X, #%02X)\r",
+                    static_cast<int>(srcColor0.r), static_cast<int>(srcColor0.g), static_cast<int>(srcColor0.b)
+                );
+                ::fflush(stdout);
             }
             renderer->UnmapBuffer(*contentBuffer);
         }

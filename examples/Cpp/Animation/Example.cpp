@@ -153,21 +153,19 @@ private:
     void CreatePipelines(const LLGL::VertexFormat& vertexFormat)
     {
         // Create graphics pipeline for scene rendering
+        LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            LLGL::GraphicsPipelineDescriptor pipelineDesc;
-            {
-                pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", { vertexFormat });
-                pipelineDesc.fragmentShader                 = LoadStandardFragmentShader("PS");
-                pipelineDesc.renderPass                     = swapChain->GetRenderPass();
-                pipelineDesc.pipelineLayout                 = pipelineLayout;
-                pipelineDesc.depth.testEnabled              = true;
-                pipelineDesc.depth.writeEnabled             = true;
-                pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-                pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
-            }
-            pipelineScene = renderer->CreatePipelineState(pipelineDesc);
-            ThrowIfFailed(pipelineScene);
+            pipelineDesc.vertexShader                   = LoadStandardVertexShader("VS", { vertexFormat });
+            pipelineDesc.fragmentShader                 = LoadStandardFragmentShader("PS");
+            pipelineDesc.renderPass                     = swapChain->GetRenderPass();
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
+            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
+        pipelineScene = renderer->CreatePipelineState(pipelineDesc);
+        ThrowIfFailed(pipelineScene);
     }
 
     void CreateResourceHeaps()
@@ -327,7 +325,7 @@ private:
             // Render everything directly into the swap-chain
             commands->BeginRenderPass(*swapChain);
             {
-                commands->Clear(LLGL::ClearFlags::All, backgroundColor);
+                commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
                 commands->SetViewport(swapChain->GetResolution());
                 RenderScene();
             }

@@ -13,7 +13,6 @@
 #include <LLGL/TextureFlags.h>
 #include <string>
 #include <vector>
-#include <iostream>
 
 
 // Perlin noise generator class.
