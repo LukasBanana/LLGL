@@ -17,6 +17,12 @@ namespace LLGL
 {
 
 
+static bool HasPipelineLayoutWithBindlessHeap(const PipelineLayout* pipelineLayout)
+{
+    auto pipelineLayoutNull = LLGL_CAST(const NullPipelineLayout*, pipelineLayout);
+    return (pipelineLayoutNull->desc.heapBindings.size() == 1 && pipelineLayoutNull->desc.heapBindings.front().type == ResourceType::Undefined);
+}
+
 static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipelineLayout)
 {
     auto pipelineLayoutNull = LLGL_CAST(const NullPipelineLayout*, pipelineLayout);
@@ -24,6 +30,7 @@ static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipeline
 }
 
 NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :
+    isBindless_    { HasPipelineLayoutWithBindlessHeap(desc.pipelineLayout)   },
     numBindings_   { GetNumPipelineLayoutBindings(desc.pipelineLayout)        },
     resourceViews_ { initialResourceViews.begin(), initialResourceViews.end() }
 {
@@ -63,6 +70,11 @@ void NullResourceHeap::SetDebugName(const char* name)
         label_ = name;
     else
         label_.clear();
+}
+
+bool NullResourceHeap::IsBindless() const
+{
+    return isBindless_;
 }
 
 std::uint32_t NullResourceHeap::GetNumDescriptorSets() const

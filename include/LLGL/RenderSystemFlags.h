@@ -661,6 +661,13 @@ struct RenderingFeatures
     \see CommandBuffer:BeginRenderCondition
     */
     bool hasRenderCondition             = false;
+
+    /**
+    \brief Specifies whether bindless resource heaps are supported.
+    \note Only supported with: Direct3D 12 (SM 6.6).
+    \see ResourceHeap::IsBindless
+    */
+    bool hasBindless                    = false;
 };
 
 /**

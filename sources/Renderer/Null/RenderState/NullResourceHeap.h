@@ -25,9 +25,11 @@ class NullResourceHeap final : public ResourceHeap
 
     public:
 
-        void SetDebugName(const char* name) override;
+        #include <LLGL/Backend/ResourceHeap.inl>
+    
+    public:
 
-        std::uint32_t GetNumDescriptorSets() const override;
+        void SetDebugName(const char* name) override;
 
     public:
 
@@ -38,6 +40,7 @@ class NullResourceHeap final : public ResourceHeap
     private:
 
         std::string                         label_;
+        const bool                          isBindless_     = false;
         const std::uint32_t                 numBindings_    = 1;
         std::vector<ResourceViewDescriptor> resourceViews_;
 

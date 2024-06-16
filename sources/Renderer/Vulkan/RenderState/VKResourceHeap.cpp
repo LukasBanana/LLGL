@@ -62,6 +62,11 @@ VKResourceHeap::VKResourceHeap(
         WriteResourceViews(device, 0, initialResourceViews);
 }
 
+bool VKResourceHeap::IsBindless() const
+{
+    return false; // dummy
+}
+
 std::uint32_t VKResourceHeap::GetNumDescriptorSets() const
 {
     return static_cast<std::uint32_t>(descriptorSets_.size());

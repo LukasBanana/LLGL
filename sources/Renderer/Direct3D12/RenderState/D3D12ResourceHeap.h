@@ -30,9 +30,11 @@ class D3D12ResourceHeap final : public ResourceHeap
 
     public:
 
-        void SetDebugName(const char* name) override;
+        #include <LLGL/Backend/ResourceHeap.inl>
 
-        std::uint32_t GetNumDescriptorSets() const override;
+    public:
+
+        void SetDebugName(const char* name) override;
 
     public:
 
@@ -111,6 +113,7 @@ class D3D12ResourceHeap final : public ResourceHeap
         UINT                                        descriptorSetStrides_[2]    = {};
         UINT                                        numDescriptorsPerSet_[2]    = {};
         UINT                                        numDescriptorSets_          = 0;    // Only used for 'GetNumDescriptorSets'
+        bool                                        isBindless_                 = false;
 
         SmallVector<D3D12DescriptorHeapLocation>    descriptorMap_;
 

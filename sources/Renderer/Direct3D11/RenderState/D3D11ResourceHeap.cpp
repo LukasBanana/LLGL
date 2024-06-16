@@ -154,6 +154,11 @@ D3D11ResourceHeap::D3D11ResourceHeap(
         WriteResourceViews(0, initialResourceViews);
 }
 
+bool D3D11ResourceHeap::IsBindless() const
+{
+    return false; // dummy
+}
+
 std::uint32_t D3D11ResourceHeap::GetNumDescriptorSets() const
 {
     return static_cast<std::uint32_t>(heap_.NumSets());

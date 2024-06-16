@@ -345,6 +345,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ShadowMapping               );
     RUN_TEST( ViewportAndScissor          );
     RUN_TEST( ResourceBinding             );
+    RUN_TEST( Bindless                    );
 
     #undef RUN_TEST
 
@@ -842,13 +843,13 @@ void TestbedContext::LogRendererInfo()
     }
 }
 
+bool TestbedContext::IsShadingLanguageSupported(ShadingLanguage language) const
+{
+    return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
+}
+
 bool TestbedContext::LoadShaders()
 {
-    auto IsShadingLanguageSupported = [this](ShadingLanguage language) -> bool
-    {
-        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
-    };
-
     const ShaderMacro definesEnableTexturing[] =
     {
         ShaderMacro{ "ENABLE_TEXTURING", "1" },

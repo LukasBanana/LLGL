@@ -36,7 +36,7 @@ class VKResourceHeap final : public ResourceHeap
 
     public:
 
-        std::uint32_t GetNumDescriptorSets() const override;
+        #include <LLGL/Backend/ResourceHeap.inl>
 
     public:
 

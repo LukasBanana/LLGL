@@ -309,6 +309,8 @@ class TestbedContext
 
         void LogRendererInfo();
 
+        bool IsShadingLanguageSupported(LLGL::ShadingLanguage language) const;
+
         bool LoadShaders();
         void CreatePipelineLayouts();
         bool LoadTextures();

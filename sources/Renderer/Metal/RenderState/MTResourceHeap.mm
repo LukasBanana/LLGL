@@ -149,6 +149,11 @@ MTResourceHeap::~MTResourceHeap()
     }
 }
 
+bool MTResourceHeap::IsBindless() const
+{
+    return false; // dummy
+}
+
 std::uint32_t MTResourceHeap::GetNumDescriptorSets() const
 {
     return static_cast<std::uint32_t>(heap_.NumSets());

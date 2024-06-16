@@ -29,6 +29,11 @@ DbgResourceHeap::DbgResourceHeap(ResourceHeap& instance, const ResourceHeapDescr
 {
 }
 
+bool DbgResourceHeap::IsBindless() const
+{
+    return instance.IsBindless();
+}
+
 void DbgResourceHeap::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);

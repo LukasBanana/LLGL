@@ -23,9 +23,11 @@ class DbgResourceHeap final : public ResourceHeap
 
     public:
 
-        void SetDebugName(const char* name) override;
+        #include <LLGL/Backend/ResourceHeap.inl>
 
-        std::uint32_t GetNumDescriptorSets() const override;
+    public:
+
+        void SetDebugName(const char* name) override;
 
     public:
 

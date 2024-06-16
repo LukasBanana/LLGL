@@ -310,6 +310,11 @@ static std::size_t BindTexturesWithGL2XSamplersSegment(GLStateManager& stateMngr
 
 #endif // /LLGL_GL_ENABLE_OPENGL2X
 
+bool GLResourceHeap::IsBindless() const
+{
+    return false; // dummy
+}
+
 std::uint32_t GLResourceHeap::GetNumDescriptorSets() const
 {
     return static_cast<std::uint32_t>(heap_.NumSets());

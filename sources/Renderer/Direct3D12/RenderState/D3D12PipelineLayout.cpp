@@ -23,8 +23,15 @@ namespace LLGL
 {
 
 
-D3D12PipelineLayout::D3D12PipelineLayout(long barrierFlags) :
-    barrierFlags_ { barrierFlags }
+static bool HasPipelineLayoutDescBindlessHeap(const PipelineLayoutDescriptor& desc)
+{
+    return (desc.heapBindings.size() == 1 && desc.heapBindings.front().type == ResourceType::Undefined);
+}
+
+D3D12PipelineLayout::D3D12PipelineLayout(long barrierFlags, bool hasBindlessHeap) :
+    barrierFlags_    { barrierFlags    },
+    hasBindlessHeap_ { hasBindlessHeap }
+
 {
     rootParameterIndices_.rootParamDescriptorHeaps[0]   = D3D12RootParameterIndices::invalidIndex;
     rootParameterIndices_.rootParamDescriptorHeaps[1]   = D3D12RootParameterIndices::invalidIndex;
@@ -33,7 +40,7 @@ D3D12PipelineLayout::D3D12PipelineLayout(long barrierFlags) :
 }
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc) :
-    D3D12PipelineLayout { desc.barrierFlags }
+    D3D12PipelineLayout { desc.barrierFlags, HasPipelineLayoutDescBindlessHeap(desc) }
 {
     CreateRootSignature(device, desc);
     if (desc.debugName != nullptr)
@@ -65,7 +72,7 @@ std::uint32_t D3D12PipelineLayout::GetNumUniforms() const
     return static_cast<std::uint32_t>(uniforms_.size());
 }
 
-static D3D12_ROOT_SIGNATURE_FLAGS GetD3DRootSignatureFlags(long convolutedStageFlags)
+static D3D12_ROOT_SIGNATURE_FLAGS GetD3DRootSignatureFlags(long convolutedStageFlags, bool hasBindlessHeap)
 {
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
@@ -84,6 +91,13 @@ static D3D12_ROOT_SIGNATURE_FLAGS GetD3DRootSignatureFlags(long convolutedStageF
         signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
     if ((convolutedStageFlags & StageFlags::FragmentStage) == 0)
         signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+    /* Add bindless flags */
+    if (hasBindlessHeap)
+    {
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED;
+        signatureFlags |= D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
+    }
 
     return signatureFlags;
 }
@@ -122,7 +136,8 @@ void D3D12PipelineLayout::CreateRootSignature(ID3D12Device* device, const Pipeli
     /* Finalize root signature if there is no permutation needed */
     if (!NeedsRootConstantPermutation())
     {
-        finalizedRootSignature_ = rootSignature_->Finalize(device, GetD3DRootSignatureFlags(GetConvolutedStageFlags()), &serializedBlob_);
+        const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = GetD3DRootSignatureFlags(GetConvolutedStageFlags(), HasBindlessHeap());
+        finalizedRootSignature_ = rootSignature_->Finalize(device, rootSignatureFlags, &serializedBlob_);
         rootSignature_.reset();
     }
 }
@@ -214,7 +229,7 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     }
 
     /* Finalize permutated root signature and append stage flags of all cbuffers used for uniforms */
-    const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = GetD3DRootSignatureFlags(GetConvolutedStageFlags() | cbufferStageFlags);
+    const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = GetD3DRootSignatureFlags(GetConvolutedStageFlags() | cbufferStageFlags, HasBindlessHeap());
     return rootSignaturePermutation.Finalize(device_, rootSignatureFlags);
 }
 

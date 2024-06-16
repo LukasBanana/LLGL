@@ -29,12 +29,7 @@ DEF_TEST( ShaderErrors )
         return renderer->CreateShader(shaderDesc);
     };
 
-    auto IsShadingLanguageSupported = [this](ShadingLanguage language) -> bool
-    {
-        return (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), language) != caps.shadingLanguages.end());
-    };
-
-    auto LoadShader = [this, &IsShadingLanguageSupported, &LoadShaderFile, &result](const char* name, ShaderType type, bool expectErrors) -> Shader*
+    auto LoadShader = [this, &LoadShaderFile, &result](const char* name, ShaderType type, bool expectErrors) -> Shader*
     {
         auto ShaderTypeToGlslExt = [](ShaderType type) -> std::string
         {

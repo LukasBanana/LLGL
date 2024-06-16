@@ -118,7 +118,7 @@ class D3D12PipelineLayout final : public PipelineLayout
 
     public:
 
-        D3D12PipelineLayout(long barrierFlags = 0);
+        D3D12PipelineLayout(long barrierFlags = 0, bool hasBindlessHeap = false);
         D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
 
         void CreateRootSignature(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
@@ -200,6 +200,12 @@ class D3D12PipelineLayout final : public PipelineLayout
         inline long GetBarrierFlags() const
         {
             return barrierFlags_;
+        }
+
+        // Returns true if this pipeline layout was created with a bindless heap declaration.
+        inline bool HasBindlessHeap() const
+        {
+            return hasBindlessHeap_;
         }
 
     private:
@@ -284,7 +290,8 @@ class D3D12PipelineLayout final : public PipelineLayout
 
         std::vector<UniformDescriptor>              uniforms_;
 
-        long                                        barrierFlags_           = 0;
+        const long                                  barrierFlags_           = 0;
+        const bool                                  hasBindlessHeap_        = false;
 
 };
 

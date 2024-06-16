@@ -733,7 +733,12 @@ void D3D12RenderSystem::QueryRenderingCaps()
         const D3D_FEATURE_LEVEL featureLevel = GetFeatureLevel();
         //const int minorVersion = GetMinorVersion();
 
-        const std::uint32_t maxThreadGroups = 65535u;
+        constexpr std::uint32_t maxThreadGroups = 65535u;
+
+        /* Get D3D12 device options */
+        D3D12_FEATURE_DATA_D3D12_OPTIONS d3d12Options = {};
+        HRESULT hr = device_.GetNative()->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &d3d12Options, sizeof(d3d12Options));
+        DXThrowIfFailed(hr, "failed to check feature support for D3D12_FEATURE_D3D12_OPTIONS");
 
         /* Query common attributes */
         caps.screenOrigin                               = ScreenOrigin::UpperLeft;
@@ -761,12 +766,13 @@ void D3D12RenderSystem::QueryRenderingCaps()
         caps.features.hasOffsetInstancing               = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
         caps.features.hasIndirectDrawing                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);//???
         caps.features.hasViewportArrays                 = true;
-        caps.features.hasConservativeRasterization      = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
+        caps.features.hasConservativeRasterization      = (featureLevel >= D3D_FEATURE_LEVEL_12_0);
         caps.features.hasStreamOutputs                  = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
         caps.features.hasLogicOp                        = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
         caps.features.hasPipelineCaching                = true;
         caps.features.hasPipelineStatistics             = true;
         caps.features.hasRenderCondition                = true;
+        caps.features.hasBindless                       = (d3d12Options.ResourceBindingTier >= D3D12_RESOURCE_BINDING_TIER_3);
 
         /* Query limits */
         caps.limits.lineWidthRange[0]                   = 1.0f;
