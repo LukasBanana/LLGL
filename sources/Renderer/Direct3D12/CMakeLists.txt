@@ -65,6 +65,11 @@ source_group("Include\\Platform"            FILES ${FilesIncludeD3D12})
 # === Projects ===
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
+    # Adopt define from LLGL_DXCommon lib
+    if(LLGL_D3D12_ENABLE_DXCOMPILER)
+        ADD_DEFINE(LLGL_D3D12_ENABLE_DXCOMPILER)
+    endif()
+
     # Direct3D 12 Renderer
     add_llgl_module(LLGL_Direct3D12 LLGL_BUILD_RENDERER_DIRECT3D12 "${FilesD3D12}")
     target_link_libraries(LLGL_Direct3D12 LLGL LLGL_DXCommon d3d12 dxgi D3DCompiler)

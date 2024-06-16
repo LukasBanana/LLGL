@@ -127,7 +127,7 @@ HRESULT DXCompileShaderToDxil(
     if (FAILED(hr))
         return hr;
 
-    return S_OK;
+    return compileResult;
 }
 
 HRESULT DXReflectDxilShader(
