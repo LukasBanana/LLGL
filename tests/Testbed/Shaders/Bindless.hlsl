@@ -11,8 +11,8 @@ struct Scene
     float4x4    wMatrix;
     float4      solidColor;
     float3      lightVec;
-    uint        materialId;
-}
+    uint        materialId; // 16 bit texture index, 16 bit sampler index
+};
 
 struct VertexIn
 {
@@ -39,12 +39,16 @@ void VSMain(VertexIn inp, out VertexOut outp)
 float4 PSMain(VertexOut inp) : SV_Target
 {
     ConstantBuffer<Scene> scene = ResourceDescriptorHeap[0];
-    Texture2D colorMap = ResourceDescriptorHeap[scene.materialId + 1];
-    SamplerState linearSampler = SamplerDescriptorHeap[scene.materialId];
+
+    uint textureIndex = (scene.materialId >> 16) + 1;
+    Texture2D colorMap = ResourceDescriptorHeap[textureIndex];
+
+    uint samplerIndex = (scene.materialId & 0xFFFF) + 3;
+    SamplerState linearSampler = SamplerDescriptorHeap[samplerIndex];
 
     float3 normal = normalize(inp.normal);
     float NdotL = saturate(dot(scene.lightVec, normal));
     float shading = lerp(0.2, 1.0, NdotL);
     float4 albedo = colorMap.Sample(linearSampler, inp.texCoord);
-    return solidColor * albedo * float4((float3)shading, 1.0);
+    return scene.solidColor * albedo * float4((float3)shading, 1.0);
 }

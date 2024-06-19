@@ -6,8 +6,14 @@
  */
 
 #include "Testbed.h"
+#include "TestbedUtils.h"
 #include <LLGL/Utils/Parse.h>
+#include <Gauss/Translate.h>
+#include <Gauss/Rotate.h>
+#include <Gauss/Scale.h>
 
+
+#define TEST_BINDLESS_USE_PRECOMPILED_DXIL 0
 
 DEF_TEST( Bindless )
 {
@@ -20,7 +26,7 @@ DEF_TEST( Bindless )
         {
             shaderDesc.type                 = type;
             shaderDesc.source               = filename.c_str();
-            shaderDesc.sourceType           = ShaderSourceType::CodeFile;
+            shaderDesc.sourceType           = (StringEndsWith(filename, ".dxil") ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
             shaderDesc.entryPoint           = entry;
             shaderDesc.profile              = profile;
             shaderDesc.vertex.inputAttribs  = vertexFormats[VertFmtStd].attributes;
@@ -36,8 +42,13 @@ DEF_TEST( Bindless )
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
         // Load HLSL shader source
+        #if TEST_BINDLESS_USE_PRECOMPILED_DXIL
+        vertShader = LoadShaderFile(shaderPath + "Bindless.VSMain.vs_6_6.dxil", ShaderType::Vertex,   "VSMain", "vs_6_6");
+        fragShader = LoadShaderFile(shaderPath + "Bindless.PSMain.ps_6_6.dxil", ShaderType::Fragment, "PSMain", "ps_6_6");
+        #else
         vertShader = LoadShaderFile(shaderPath + "Bindless.hlsl", ShaderType::Vertex,   "VSMain", "vs_6_6");
         fragShader = LoadShaderFile(shaderPath + "Bindless.hlsl", ShaderType::Fragment, "PSMain", "ps_6_6");
+        #endif
     }
     else
     {
@@ -74,7 +85,7 @@ DEF_TEST( Bindless )
         if (report->HasErrors())
         {
             Log::Errorf("Bindless PSO compilation failed:\n%s\n", report->GetText());
-            result = TestResult::FailedErrors;
+            return TestResult::FailedErrors;
         }
     }
 
@@ -87,14 +98,78 @@ DEF_TEST( Bindless )
     }
     ResourceHeap* resHeap = renderer->CreateResourceHeap(resHeapDesc);
 
-    if (result != TestResult::FailedErrors)
-    {
-        // Fill resource heap with arbitrary resources
-        //TODO...
+    // Create sampler states
+    Sampler* linearSampler = renderer->CreateSampler(Parse("filter=linear"));
+    Sampler* nearestSampler = renderer->CreateSampler(Parse("filter=nearest"));
 
-        // Render scene
-        //TODO...
+    // Create constant buffer
+    struct SceneConstantsExt
+    {
+        Gs::Matrix4f    vpMatrix;
+        Gs::Matrix4f    wMatrix;
+        Gs::Vector4f    solidColor;
+        Gs::Vector3f    lightVec;
+        std::uint32_t   textureIndex : 16;
+        std::uint32_t   samplerIndex : 16;
     }
+    sceneConstantsExt;
+
+    BufferDescriptor sceneBugDesc;
+    {
+        sceneBugDesc.debugName  = "SceneConstantsExt";
+        sceneBugDesc.size       = sizeof(SceneConstantsExt);
+        sceneBugDesc.bindFlags  = BindFlags::ConstantBuffer;
+    }
+    Buffer* sceneCbufferExt = renderer->CreateBuffer(sceneBugDesc, &sceneCbufferExt);
+
+    // Update scene constants
+    Gs::Matrix4f vMatrix;
+    vMatrix.LoadIdentity();
+    Gs::Translate(vMatrix, Gs::Vector3f{ 0, 0, -5 });
+    vMatrix.MakeInverse();
+
+    sceneConstantsExt.vpMatrix = projection * vMatrix;
+
+    sceneConstantsExt.wMatrix.LoadIdentity();
+    Gs::RotateFree(sceneConstantsExt.wMatrix, Gs::Vector3f{ 0, 1, 0 }, Gs::Deg2Rad(25.0f));
+
+    sceneConstantsExt.solidColor = { 1, 1, 1, 1 };
+    sceneConstantsExt.lightVec   = { 0, 0, -1 };
+
+    // Fill resource heap with arbitrary resources:
+    //  ResourceDescriptorHeap[0] cbuffer<Scene>
+    //  ResourceDescriptorHeap[1] textureA
+    //  ResourceDescriptorHeap[2] textureB
+    //  SamplerDescriptorHeap[0] linearSampler
+    //  SamplerDescriptorHeap[1] nearestSampler
+    renderer->WriteResourceHeap(*resHeap, 0, { sceneCbufferExt, textures[TexturePaintingA_NPOT], textures[TexturePaintingB], linearSampler, nearestSampler });
+
+    const IndexedTriangleMesh& mesh = models[ModelCube];
+
+    // Render scene
+    cmdBuffer->Begin();
+    {
+        // Update scene data
+        sceneConstantsExt.textureIndex = 0;
+        sceneConstantsExt.samplerIndex = 0;
+        cmdBuffer->UpdateBuffer(*sceneCbufferExt, 0, &sceneConstantsExt, sizeof(sceneConstantsExt));
+
+        cmdBuffer->SetVertexBuffer(*meshBuffer);
+        cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
+
+        cmdBuffer->BeginRenderPass(*swapChain);
+        {
+            cmdBuffer->Clear(ClearFlags::ColorDepth);
+            cmdBuffer->SetViewport(swapChain->GetResolution());
+
+            cmdBuffer->SetPipelineState(*pso);
+            cmdBuffer->SetResourceHeap(*resHeap);
+
+            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
+        }
+        cmdBuffer->EndRenderPass();
+    }
+    cmdBuffer->End();
 
     // Release objects
     renderer->Release(*resHeap);
