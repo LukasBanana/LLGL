@@ -54,7 +54,7 @@ void D3D12PipelineLayout::SetDebugName(const char* name)
 
 std::uint32_t D3D12PipelineLayout::GetNumHeapBindings() const
 {
-    return static_cast<std::uint32_t>(descriptorHeapMap_.size());
+    return (hasBindlessHeap_ ? 1 : static_cast<std::uint32_t>(descriptorHeapMap_.size()));
 }
 
 std::uint32_t D3D12PipelineLayout::GetNumBindings() const
@@ -255,13 +255,16 @@ void D3D12PipelineLayout::BuildRootSignature(
     const PipelineLayoutDescriptor& desc)
 {
     /* Build root parameter table for each descriptor range type */
-    descriptorHeapMap_.resize(desc.heapBindings.size());
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorHeapLayout_.numBufferCBV );
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::Sampled,        descriptorHeapLayout_.numBufferSRV );
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::Sampled,        descriptorHeapLayout_.numTextureSRV);
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::Storage,        descriptorHeapLayout_.numBufferUAV );
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage,        descriptorHeapLayout_.numTextureUAV);
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0,                         descriptorHeapLayout_.numSamplers  );
+    if (!hasBindlessHeap_)
+    {
+        descriptorHeapMap_.resize(desc.heapBindings.size());
+        BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorHeapLayout_.numBufferCBV );
+        BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::Sampled,        descriptorHeapLayout_.numBufferSRV );
+        BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::Sampled,        descriptorHeapLayout_.numTextureSRV);
+        BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::Storage,        descriptorHeapLayout_.numBufferUAV );
+        BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage,        descriptorHeapLayout_.numTextureUAV);
+        BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0,                         descriptorHeapLayout_.numSamplers  );
+    }
 
     /* Build root parameter for each descriptor range type */
     descriptorMap_.resize(desc.bindings.size());

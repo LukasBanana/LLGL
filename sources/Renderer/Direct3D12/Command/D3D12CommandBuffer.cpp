@@ -558,20 +558,34 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
         const auto heapType = static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i);
         if (resourceHeapD3D.GetDescriptorHeap(heapType) != nullptr)
         {
-            /* Copies the entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
-                heapType,
-                resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
-                0,
-                resourceHeapD3D.GetNumDescriptorsPerSet(heapType)
-            );
-
-            /* Bind descriptor table to root parameter */
-            const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
-            if (boundPipelineState_->IsGraphicsPSO())
-                GetNative()->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
+            if (resourceHeapD3D.IsBindless())
+            {
+                /* Copy all descriptors from the non-shader-visible heap to the global shader-visible heap */
+                D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
+                    heapType,
+                    resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
+                    0,
+                    resourceHeapD3D.GetNumDescriptorSets()
+                );
+            }
             else
-                GetNative()->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
+            {
+                /* Copy entire set of descriptors from the non-shader-visible heap to the global shader-visible heap */
+                D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext_.CopyDescriptorsForStaging(
+                    heapType,
+                    resourceHeapD3D.GetCPUDescriptorHandleForHeapStart(heapType, descriptorSet),
+                    0,
+                    resourceHeapD3D.GetNumDescriptorsPerSet(heapType)
+                );
+
+                /* Bind descriptor table to root parameter */
+                const UINT rootParamIndex = boundPipelineLayout_->GetRootParameterIndices().rootParamDescriptorHeaps[i];
+                LLGL_ASSERT(rootParamIndex != D3D12RootParameterIndices::invalidIndex);
+                if (boundPipelineState_->IsGraphicsPSO())
+                    GetNative()->SetGraphicsRootDescriptorTable(rootParamIndex, gpuDescHandle);
+                else
+                    GetNative()->SetComputeRootDescriptorTable(rootParamIndex, gpuDescHandle);
+            }
         }
     }
 

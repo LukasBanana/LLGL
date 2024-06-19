@@ -1344,6 +1344,7 @@ namespace LLGL
         public bool HasPipelineCaching { get; set; }           = false;
         public bool HasPipelineStatistics { get; set; }        = false;
         public bool HasRenderCondition { get; set; }           = false;
+        public bool HasBindless { get; set; }                  = false;
 
         public RenderingFeatures() { }
 
@@ -1383,6 +1384,7 @@ namespace LLGL
                 HasPipelineCaching           = value.hasPipelineCaching;
                 HasPipelineStatistics        = value.hasPipelineStatistics;
                 HasRenderCondition           = value.hasRenderCondition;
+                HasBindless                  = value.hasBindless;
             }
         }
     }
@@ -3573,6 +3575,8 @@ namespace LLGL
             public bool hasPipelineStatistics;        /* = false */
             [MarshalAs(UnmanagedType.I1)]
             public bool hasRenderCondition;           /* = false */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool hasBindless;                  /* = false */
         }
 
         public unsafe struct RenderingLimits

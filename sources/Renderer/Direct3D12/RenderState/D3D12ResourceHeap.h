@@ -79,23 +79,35 @@ class D3D12ResourceHeap final : public ResourceHeap
             UINT                            numDescriptors
         );
 
+        std::uint32_t CreateResourceViewHandlesForSlots(
+            ID3D12Device*                               device,
+            std::uint32_t                               firstDescriptor,
+            const ArrayView<ResourceViewDescriptor>&    resourceViews
+        );
+
+        std::uint32_t CreateResourceViewHandlesForBindless(
+            ID3D12Device*                               device,
+            std::uint32_t                               firstDescriptor,
+            const ArrayView<ResourceViewDescriptor>&    resourceViews
+        );
+
         bool CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc);
         bool CreateUnorderedAccessView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc);
         bool CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc);
         bool CreateSampler(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle, const ResourceViewDescriptor& desc);
 
         void ExchangeUAVResource(
-            const D3D12DescriptorHeapLocation&  descriptorLocation,
-            std::uint32_t                       descriptorSet,
-            Resource&                           resource,
-            std::uint32_t                       (&setRange)[2]
+            UINT            descriptorIndex,
+            std::uint32_t   descriptorSet,
+            Resource&       resource,
+            std::uint32_t   (&setRange)[2]
         );
 
         void EmplaceD3DUAVResource(
-            const D3D12DescriptorHeapLocation&  descriptorLocation,
-            std::uint32_t                       descriptorSet,
-            ID3D12Resource*                     resource,
-            std::uint32_t                       (&setRange)[2]
+            UINT            descriptorIndex,
+            std::uint32_t   descriptorSet,
+            ID3D12Resource* resource,
+            std::uint32_t   (&setRange)[2]
         );
 
         void UpdateBarriers(std::uint32_t descriptorSet);

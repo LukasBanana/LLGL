@@ -123,13 +123,13 @@ static ComPtr<ID3DBlob> DXSerializeRootSignature(
 
     if (FAILED(hr))
     {
+        std::string errorStr = "failed to serialize D3D12 root signature";
         if (error)
         {
-            auto errorStr = DXGetBlobString(error.Get());
-            throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
+            errorStr += ": ";
+            errorStr += DXGetBlobString(error.Get());
         }
-        else
-            DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
+        DXThrowIfFailed(hr, errorStr.c_str());
     }
 
     return signature;
@@ -169,7 +169,7 @@ static ComPtr<ID3D12RootSignature> DXCreateRootSignature(
 
         signatureDesc.Flags                 = flags;
     }
-    auto signature = DXSerializeRootSignature(signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1);
+    ComPtr<ID3DBlob> signature = DXSerializeRootSignature(signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1);
 
     /* Create actual root signature */
     ComPtr<ID3D12RootSignature> rootSignature;

@@ -1152,6 +1152,7 @@ typedef struct LLGLRenderingFeatures
     bool hasPipelineCaching;           /* = false */
     bool hasPipelineStatistics;        /* = false */
     bool hasRenderCondition;           /* = false */
+    bool hasBindless;                  /* = false */
 }
 LLGLRenderingFeatures;
 
