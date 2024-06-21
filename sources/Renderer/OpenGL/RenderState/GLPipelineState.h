@@ -18,6 +18,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <memory>
+#include <unordered_map>
 
 
 namespace LLGL
@@ -97,11 +98,30 @@ class GLPipelineState : public PipelineState
 
     private:
 
+        struct GLActiveUniform
+        {
+            GLint   size;
+            GLenum  type;
+        };
+
+        // Maps a name to its active GL uniform.
+        using GLNameToUniformMap = std::unordered_map<std::string, GLActiveUniform>;
+
+    private:
+
         // Builds the index-to-uniform map.
         void BuildUniformMap(GLShader::Permutation permutation, const std::vector<UniformDescriptor>& uniforms);
 
+        // Builds the container that maps a name to the index of its active GL uniform.
+        void BuildNameToActiveUniformMap(GLuint program, GLNameToUniformMap& outNameToUniformMap);
+
         // Builds the specified uniform location.
-        void BuildUniformLocation(GLuint program, GLUniformLocation& outUniform, const UniformDescriptor& inUniform);
+        void BuildUniformLocation(
+            GLuint                      program,
+            GLUniformLocation&          outUniform,
+            const UniformDescriptor&    inUniform,
+            const GLNameToUniformMap&   nameToUniformMap
+        );
 
     private:
 
