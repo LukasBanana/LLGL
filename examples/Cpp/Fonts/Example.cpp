@@ -7,6 +7,7 @@
 
 #include <ExampleBase.h>
 #include <LLGL/Platform/Platform.h>
+#include <chrono>
 
 #define FONT_COURIER_NEW_16         ( 0 )
 #define FONT_LUCIDA_CONSOLE_32      ( 1 )
@@ -63,10 +64,18 @@ class Example_Fonts : public ExampleBase
     // Some numbers to display on screen.
     struct DisplayNumbers
     {
-        int counter = 0;
-        int fps     = 0;
+        int frameCounter    = 0;
+        int averageFPS      = 0;
     }
     displayNumbers;
+
+    struct AverageFPS
+    {
+        int                                     samples         = 0;
+        double                                  sum             = 0.0;
+        std::chrono::system_clock::time_point   lastTimePoint   = std::chrono::system_clock::now();
+    }
+    avgFPS;
 
     // Pre-defined fonts
     struct FontMetaData
@@ -375,9 +384,26 @@ private:
             config.shadow = !config.shadow;
 
         // Update frame counters
-        displayNumbers.counter++;
-        if (displayNumbers.counter % 10 == 0)
-            displayNumbers.fps = static_cast<int>(1.0 / timer.GetDeltaTime());
+        displayNumbers.frameCounter++;
+
+        // Update average FPS every 500 milliseconds
+        const double fps = 1.0 / timer.GetDeltaTime();
+
+        if (!std::isinf(fps))
+        {
+            avgFPS.samples++;
+            avgFPS.sum += fps;
+        }
+
+        auto currentTimePoint = std::chrono::system_clock::now();
+        auto timeSinceLastAvgFPSUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(currentTimePoint - avgFPS.lastTimePoint).count();
+        if (timeSinceLastAvgFPSUpdate > 500 && avgFPS.samples > 0)
+        {
+            displayNumbers.averageFPS   = static_cast<int>(avgFPS.sum / static_cast<double>(avgFPS.samples) + 0.5);
+            avgFPS.samples              = 0;
+            avgFPS.sum                  = 0.0;
+            avgFPS.lastTimePoint        = currentTimePoint;
+        }
 
         // Reset batch counter
         numBatches = 0;
@@ -419,7 +445,7 @@ private:
 
         // Draw frame counter
         DrawFont(
-            "Frame counter: " + std::to_string(displayNumbers.counter),
+            "Frame counter: " + std::to_string(displayNumbers.frameCounter),
             screenWidth - paragraphMargin, paragraphPosY, colorYellow,
             fontFlags | DrawRightAligned
         );
@@ -434,7 +460,7 @@ private:
 
         // Draw number of frames per second (FPS)
         DrawFont(
-            "FPS = " + std::to_string(displayNumbers.fps),
+            "FPS = " + std::to_string(displayNumbers.averageFPS),
             screenWidth - paragraphMargin, paragraphPosY, colorRed,
             fontFlags | DrawRightAligned
         );

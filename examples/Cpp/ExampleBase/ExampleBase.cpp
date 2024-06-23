@@ -26,6 +26,8 @@
 #endif
 #include <inttypes.h>
 
+#define IMMEDIATE_SUBMIT_CMDBUFFER 0
+
 
 /*
  * Global helper functions
@@ -384,7 +386,7 @@ void ExampleBase::Run()
                     "-------------------\n"
                 );
                 for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
-                    LLGL::Log::Printf("%s: " PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
+                    LLGL::Log::Printf("%s: %" PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
 
                 debuggerObj_->SetTimeRecording(false);
                 showTimeRecords = false;
@@ -502,7 +504,9 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::CommandBufferDescriptor cmdBufferDesc;
     {
         cmdBufferDesc.debugName = "Commands";
-        //cmdBufferDesc.flags     = LLGL::CommandBufferFlags::ImmediateSubmit;
+        #if IMMEDIATE_SUBMIT_CMDBUFFER
+        cmdBufferDesc.flags     = LLGL::CommandBufferFlags::ImmediateSubmit;
+        #endif
     }
     commands = renderer->CreateCommandBuffer(cmdBufferDesc);
 
