@@ -8,6 +8,7 @@
 #include "D3D12RootParameter.h"
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include "../../../Core/CoreUtils.h"
 
 
 namespace LLGL
@@ -78,11 +79,25 @@ void D3D12RootParameter::InitAsDescriptorTable(UINT maxNumDescriptorRanges, D3D1
     managedRootParam_->ShaderVisibility                     = visibility;
 }
 
+static bool IsIncludedInDescriptorRange(const D3D12_DESCRIPTOR_RANGE& descRange, D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT baseShaderRegister, UINT registerSpace)
+{
+    return
+    (
+        rangeType          == descRange.RangeType &&
+        registerSpace      == descRange.RegisterSpace &&
+        baseShaderRegister >= descRange.BaseShaderRegister &&
+        baseShaderRegister <  descRange.BaseShaderRegister + descRange.NumDescriptors
+    );
+}
+
 void D3D12RootParameter::AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT baseShaderRegister, UINT numDescriptors, UINT registerSpace)
 {
+    /* Ignore this call if the input is already included in the current range */
+    if (!descRanges_.empty() && IsIncludedInDescriptorRange(descRanges_.back(), rangeType, baseShaderRegister, registerSpace))
+        return;
+
     /* Add new descriptor range to array */
-    descRanges_.resize(descRanges_.size() + 1);
-    auto& descRange = descRanges_.back();
+    D3D12_DESCRIPTOR_RANGE& descRange = AppendElementNoRealloc(descRanges_);
 
     /* Initialize descriptor range */
     descRange.RangeType                         = rangeType;

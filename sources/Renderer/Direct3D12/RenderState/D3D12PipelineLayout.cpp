@@ -323,7 +323,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
     if (D3D12RootParameter* rootParam = rootSignature.FindCompatibleRootParameter(descRangeType))
     {
         /* Append descriptor range to previous root parameter */
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, 1u);//std::max<UINT>(1u, bindingDesc.arraySize));
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max<UINT>(1u, bindingDesc.arraySize));
     }
     else
     {
@@ -331,7 +331,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
         UINT rootParamIndex = 0;
         rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
         rootParam->InitAsDescriptorTable(maxNumDescriptorRanges);
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, 1u);//std::max<UINT>((1u, bindingDesc.arraySize));
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max<UINT>(1u, bindingDesc.arraySize));
 
         /* Store root parameter index */
         UINT8& rootParamIndexStored = rootParameterIndices_.rootParamDescriptorHeaps[GetDescriptorTypeShift(descRangeType)];
@@ -401,7 +401,7 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
     if (D3D12RootParameter* rootParam = rootSignature.FindCompatibleRootParameter(descRangeType, rootParamOffset))
     {
         /* Append descriptor range to previous root parameter */
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot);
     }
     else
     {
@@ -409,7 +409,7 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
         UINT rootParamIndex = 0;
         rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
         rootParam->InitAsDescriptorTable(maxNumDescriptorRanges);
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot);
 
         /* Store root parameter index */
         UINT8& rootParamIndexStored = rootParameterIndices_.rootParamDescriptors[GetDescriptorTypeShift(descRangeType)];

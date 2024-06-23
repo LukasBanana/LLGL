@@ -10,6 +10,7 @@
 
 
 #include "../Renderer/CheckedCast.h"
+#include "Assertion.h"
 #include <LLGL/Export.h>
 #include <LLGL/Types.h>
 #include <algorithm>
@@ -111,6 +112,25 @@ void RemoveFromSharedList(Container& cont, const T* entry)
     }
 }
 
+// Resizes the specified container and throws an exception if the container would have to be re-allocated.
+// Returns the pointer to the first new element.
+template <typename Container>
+typename Container::pointer ResizeNoRealloc(Container& cont, typename Container::size_type count)
+{
+    LLGL_ASSERT(cont.size() + count <= cont.capacity(), "exceeded capacity to append element without re-allocating container");
+    typename Container::size_type offset = cont.size();
+    cont.resize(cont.size() + count);
+    return &(cont[offset]);
+}
+
+// Appends one new element to the specified container and throws an exception if the container would have to be re-allocated.
+template <typename Container>
+typename Container::reference AppendElementNoRealloc(Container& cont)
+{
+    return *ResizeNoRealloc(cont, 1);
+}
+
+
 /*
 \brief Returns the next resource from the specified resource array.
 \param[in,out] numResources Specifies the remaining number of resources in the array.
@@ -198,14 +218,14 @@ Returns the image buffer size (in bytes) with aligned row stride for a given 3D 
 The last row of the last layer will have length 'rowSize', all other rows will have length 'alignedRowStride'.
 */
 template <typename T>
-T GetAlignedImageSize(const Extent3D& extent, T rowSize, T alignedRowStride)
+constexpr T GetAlignedImageSize(const Extent3D& extent, T rowSize, T alignedRowStride)
 {
     return (alignedRowStride * extent.height) * (extent.depth - 1) + (alignedRowStride * (extent.height - 1) + rowSize);
 }
 
 // Clamps value x into the range [minimum, maximum].
 template <typename T>
-T Clamp(T x, T minimum, T maximum)
+const T& Clamp(const T& x, const T& minimum, const T& maximum)
 {
     return std::max<T>(minimum, std::min<T>(x, maximum));
 }
