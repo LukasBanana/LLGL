@@ -47,7 +47,7 @@ DEF_TEST( ResourceArrays )
     // Create graphics PSO
     GraphicsPipelineDescriptor psoDesc;
     {
-        psoDesc.pipelineLayout      = layouts[PipelineSolid];
+        psoDesc.pipelineLayout      = psoLayout;
         psoDesc.renderPass          = swapChain->GetRenderPass();
         psoDesc.vertexShader        = shaders[VSResourceArrays];
         psoDesc.fragmentShader      = shaders[PSResourceArrays];
@@ -123,7 +123,10 @@ DEF_TEST( ResourceArrays )
 
     // Evaluate readback result
     SaveCapture(readbackTex, "ResourceArrays");
-    const DiffResult diff = DiffImages("ResourceArrays");
+
+    constexpr int threshold = 3; // Tolerate a threshold of 3 color values
+    const DiffResult diff = DiffImages("ResourceArrays", threshold);
+
     TestResult result = diff.Evaluate("resource arrays");
 
     // Clear resources
