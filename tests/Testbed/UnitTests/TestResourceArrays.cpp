@@ -35,7 +35,7 @@ DEF_TEST( ResourceArrays )
     // Create PSO layout
     PipelineLayout* psoLayout = renderer->CreatePipelineLayout(
         Parse(
-            "cbuffer(Scene@1):vert,"                // Bind individual resource for scene constant buffer
+            "cbuffer(Scene@1):vert:frag,"           // Bind individual resource for scene constant buffer
             "heap{"
             "  texture(colorMaps@2[2]):frag,"       // Declare a texture array with 2 elements
             "  sampler(texSamplers@%u[2]):frag,"    // Declare a sampler array with 2 elements

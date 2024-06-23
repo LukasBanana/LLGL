@@ -126,13 +126,22 @@ int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& lhs, const GL
 void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelineLayout)
 {
     /* Gather all uniform bindings from heap resource descriptors */
-    for (const BindingDescriptor& binding : pipelineLayout.GetHeapBindings())
+    ArrayView<BindingDescriptor> heapBindings = pipelineLayout.GetHeapBindings();
+    for (std::size_t i = 0; i < heapBindings.size();)
     {
+        const BindingDescriptor& binding = heapBindings[i];
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Sampler || binding.type == ResourceType::Texture)
-                AppendUniformBinding(binding.name, binding.slot.index, std::max<std::uint32_t>(1u, binding.arraySize));
+            {
+                /* Skip over next binding descriptors depending on array size, since this list has already been expanded */
+                const std::uint32_t clampedArraySize = std::max<std::uint32_t>(1u, binding.arraySize);
+                AppendUniformBinding(binding.name, binding.slot.index, clampedArraySize);
+                i += clampedArraySize;
+                continue;
+            }
         }
+        ++i;
     }
 
     /* Gather all uniform bindings from dynamic resource descriptors */
