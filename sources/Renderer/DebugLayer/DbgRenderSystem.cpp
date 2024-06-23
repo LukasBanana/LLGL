@@ -495,6 +495,11 @@ void DbgRenderSystem::Release(Shader& shader)
 
 PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE();
+        ValidatePipelineLayoutDesc(pipelineLayoutDesc);
+    }
     return pipelineLayouts_.emplace<DbgPipelineLayout>(*instance_->CreatePipelineLayout(pipelineLayoutDesc), pipelineLayoutDesc);
 }
 
@@ -1435,6 +1440,50 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "cannot have attachment with undefined format"
+            );
+        }
+    }
+}
+
+static std::string GetBindingSlotLabel(const BindingSlot& slot)
+{
+    std::string label = "slot ";
+    label += std::to_string(slot.index);
+    if (slot.set > 0)
+    {
+        label += " (set ";
+        label += std::to_string(slot.set);
+        label += ')';
+    }
+    return label;
+}
+
+static std::string GetBindingDescLabel(const BindingDescriptor& bindingDesc)
+{
+    std::string label;
+    if (!bindingDesc.name.empty())
+    {
+        label += '\"';
+        label += bindingDesc.name;
+        label += "\" ";
+    }
+    label += "at ";
+    label += GetBindingSlotLabel(bindingDesc.slot);
+    return label;
+}
+
+void DbgRenderSystem::ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor& pipelineLayoutDesc)
+{
+    /* Validate individual binding descriptors */
+    for (const BindingDescriptor& binding : pipelineLayoutDesc.bindings)
+    {
+        if (binding.arraySize > 1)
+        {
+            const std::string bindingLabel = GetBindingDescLabel(binding);
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "invidiual binding %s has array size of %u, but only heap-bindings can have an array size other than 0 or 1",
+                bindingLabel.c_str(), binding.arraySize
             );
         }
     }
