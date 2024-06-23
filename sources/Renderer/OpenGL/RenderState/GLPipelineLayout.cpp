@@ -8,6 +8,7 @@
 #include "GLPipelineLayout.h"
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../../ResourceUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
@@ -60,10 +61,10 @@ static bool HasAnyNamedResourceBindings(const PipelineLayoutDescriptor& desc)
 }
 
 GLPipelineLayout::GLPipelineLayout(const PipelineLayoutDescriptor& desc) :
-    heapBindings_     { desc.heapBindings                          },
-    uniforms_         { desc.uniforms                              },
-    barriers_         { ToMemoryBarrierBitfield(desc.barrierFlags) },
-    hasNamedBindings_ { HasAnyNamedResourceBindings(desc)          }
+    heapBindings_     { GetExpandedHeapDescriptors(desc.heapBindings) },
+    uniforms_         { desc.uniforms                                 },
+    barriers_         { ToMemoryBarrierBitfield(desc.barrierFlags)    },
+    hasNamedBindings_ { HasAnyNamedResourceBindings(desc)             }
 {
     resourceNames_.reserve(desc.bindings.size() + desc.staticSamplers.size());
     BuildDynamicResourceBindings(desc.bindings);
