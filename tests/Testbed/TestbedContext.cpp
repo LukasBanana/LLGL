@@ -345,6 +345,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ShadowMapping               );
     RUN_TEST( ViewportAndScissor          );
     RUN_TEST( ResourceBinding             );
+    RUN_TEST( ResourceArrays              );
 
     #undef RUN_TEST
 
@@ -872,6 +873,8 @@ bool TestbedContext::LoadShaders()
         shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Vertex,   "VShadow", "vs_5_0");
         shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Vertex,   "VScene",  "vs_5_0");
         shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Fragment, "PScene",  "ps_5_0");
+        shaders[VSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.hlsl",        ShaderType::Vertex,   "VSMain",  "vs_5_0");
+        shaders[PSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.hlsl",        ShaderType::Fragment, "PSMain",  "ps_5_0");
         shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
         shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0");
         shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Compute,  "CSMain",  "cs_5_0");
@@ -898,9 +901,11 @@ bool TestbedContext::LoadShaders()
         shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.330core.frag",  ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_450))
         {
-            shaders[VSResourceBinding] = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-            shaders[PSResourceBinding] = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag",       ShaderType::Fragment);
-            shaders[CSResourceBinding] = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp",       ShaderType::Compute);
+            shaders[VSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.vert",    ShaderType::Vertex);
+            shaders[PSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.frag",    ShaderType::Fragment);
+            shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag",   ShaderType::Fragment);
+            shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp",   ShaderType::Compute);
         }
         shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.frag",           ShaderType::Fragment);
@@ -941,6 +946,8 @@ bool TestbedContext::LoadShaders()
         shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.VShadow.450core.vert.spv", ShaderType::Vertex);
         shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.VScene.450core.vert.spv",  ShaderType::Vertex);
         shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.450core.frag.spv",  ShaderType::Fragment);
+        shaders[VSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.vert.spv",        ShaderType::Vertex);
+        shaders[PSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.frag.spv",        ShaderType::Fragment);
         shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag.spv",       ShaderType::Fragment);
         shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp.spv",       ShaderType::Compute);
@@ -1031,6 +1038,7 @@ bool TestbedContext::LoadTextures()
     textures[TextureGradient]       = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
     textures[TexturePaintingA_NPOT] = LoadTextureFromFile("PaintingA_NPOT", texturePath + "VanGogh-starry_night.jpg");
     textures[TexturePaintingB]      = LoadTextureFromFile("PaintingB", texturePath + "JohannesVermeer-girl_with_a_pearl_earring.jpg");
+    textures[TextureDetailMap]      = LoadTextureFromFile("DetailMap", texturePath + "DetailMap.png");
 
     return true;
 }
@@ -1039,8 +1047,10 @@ void TestbedContext::CreateSamplerStates()
 {
     samplers[SamplerNearest]        = renderer->CreateSampler(Parse("filter=nearest"));
     samplers[SamplerNearestClamp]   = renderer->CreateSampler(Parse("filter=nearest,address=clamp"));
+    samplers[SamplerNearestNoMips]  = renderer->CreateSampler(Parse("filter.min=nearest,filter.mip=none"));
     samplers[SamplerLinear]         = renderer->CreateSampler(Parse("filter=linear"));
     samplers[SamplerLinearClamp]    = renderer->CreateSampler(Parse("filter=linear,address=clamp"));
+    samplers[SamplerLinearNoMips]   = renderer->CreateSampler(Parse("filter.min=linear,filter.mip=none"));
 }
 
 void TestbedContext::LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio, float nearPlane, float farPlane, float fov)

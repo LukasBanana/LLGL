@@ -19,8 +19,6 @@ DEF_TEST( SceneUpdate )
 
     if (frame == 0)
     {
-        result = TestResult::Passed;
-
         if (shaders[VSSolid] == nullptr || shaders[PSSolid] == nullptr)
         {
             Log::Errorf("Missing shaders for backend\n");
@@ -37,16 +35,9 @@ DEF_TEST( SceneUpdate )
             psoDesc.depth.writeEnabled  = true;
             psoDesc.rasterizer.cullMode = CullMode::Back;
         }
-        CreateGraphicsPSO(psoDesc, "psoSceneUpdate", &pso);
-
-        if (const Report* report = pso->GetReport())
-        {
-            if (report->HasErrors())
-            {
-                Log::Errorf("PSO creation failed:\n%s", report->GetText());
-                return TestResult::FailedErrors;
-            }
-        }
+        result = CreateGraphicsPSO(psoDesc, "psoSceneUpdate", &pso);
+        if (result != TestResult::Passed)
+            return result;
     }
 
     // Skip every other frame on fast test

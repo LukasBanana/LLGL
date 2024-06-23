@@ -10,6 +10,7 @@
 #include "D3D11StateManager.h"
 #include "../Texture/D3D11Sampler.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../ResourceUtils.h"
 
 
 namespace LLGL
@@ -17,8 +18,8 @@ namespace LLGL
 
 
 D3D11PipelineLayout::D3D11PipelineLayout(ID3D11Device* device, const PipelineLayoutDescriptor& desc) :
-    heapBindings_ { desc.heapBindings },
-    uniforms_     { desc.uniforms     }
+    heapBindings_ { GetExpandedHeapDescriptors(desc.heapBindings) },
+    uniforms_     { desc.uniforms                                 }
 {
     BuildDynamicResourceBindings(desc.bindings);
     BuildStaticSamplers(device, desc.staticSamplers);

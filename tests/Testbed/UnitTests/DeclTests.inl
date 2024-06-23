@@ -74,6 +74,7 @@ DECL_TEST( Uniforms );
 DECL_TEST( ShadowMapping );
 DECL_TEST( ViewportAndScissor );
 DECL_TEST( ResourceBinding );
+DECL_TEST( ResourceArrays );
 
 #undef DECL_TEST
 

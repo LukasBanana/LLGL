@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include <LLGL/Container/DynamicVector.h>
 #include "../Texture/D3D11Sampler.h"
 #include <d3d11.h>
 #include "../../DXCommon/ComPtr.h"
@@ -47,7 +48,7 @@ class D3D11PipelineLayout final : public PipelineLayout
         void BindComputeStaticSamplers(D3D11StateManager& stateMngr) const;
 
         // Returns the copied list of heap binding descriptors.
-        inline const std::vector<BindingDescriptor>& GetHeapBindings() const
+        inline const DynamicVector<BindingDescriptor>& GetHeapBindings() const
         {
             return heapBindings_;
         }
@@ -71,7 +72,7 @@ class D3D11PipelineLayout final : public PipelineLayout
 
     private:
 
-        std::vector<BindingDescriptor>              heapBindings_;
+        DynamicVector<BindingDescriptor>            heapBindings_;
         std::vector<D3D11PipelineResourceBinding>   bindings_;
         std::vector<D3D11StaticSampler>             staticSamplers_;
         std::vector<UniformDescriptor>              uniforms_;

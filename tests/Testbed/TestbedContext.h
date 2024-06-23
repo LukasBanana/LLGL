@@ -129,6 +129,8 @@ class TestbedContext
             VSShadowMap,
             VSShadowedScene,
             PSShadowedScene,
+            VSResourceArrays,
+            PSResourceArrays,
             VSResourceBinding,
             PSResourceBinding,
             CSResourceBinding,
@@ -144,6 +146,7 @@ class TestbedContext
             TextureGradient,
             TexturePaintingA_NPOT,  // NPOT texture 600x479
             TexturePaintingB,       // 512x512
+            TextureDetailMap,       // 256x256
 
             TextureCount,
         };
@@ -152,8 +155,10 @@ class TestbedContext
         {
             SamplerNearest = 0,
             SamplerNearestClamp,
+            SamplerNearestNoMips,
             SamplerLinear,
             SamplerLinearClamp,
+            SamplerLinearNoMips,
 
             SamplerCount,
         };
