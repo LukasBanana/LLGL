@@ -329,8 +329,8 @@ UTF8String& UTF8String::append(const char* first, const char* last)
     const difference_type dist = std::distance(first, last);
     if (dist > 0)
     {
+        data_.reserve(data_.size() + static_cast<size_type>(dist));
         data_.pop_back();
-        data_.reserve(static_cast<size_type>(dist) + 1);
         data_.insert(data_.end(), first, last);
         data_.push_back('\0');
     }
