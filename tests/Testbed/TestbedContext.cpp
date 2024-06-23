@@ -1047,10 +1047,10 @@ void TestbedContext::CreateSamplerStates()
 {
     samplers[SamplerNearest]        = renderer->CreateSampler(Parse("filter=nearest"));
     samplers[SamplerNearestClamp]   = renderer->CreateSampler(Parse("filter=nearest,address=clamp"));
-    samplers[SamplerNearestNoMips]  = renderer->CreateSampler(Parse("filter.min=nearest,filter.mip=none"));
+    samplers[SamplerNearestNoMips]  = renderer->CreateSampler(Parse("filter.mag=nearest,filter.mip=none"));
     samplers[SamplerLinear]         = renderer->CreateSampler(Parse("filter=linear"));
     samplers[SamplerLinearClamp]    = renderer->CreateSampler(Parse("filter=linear,address=clamp"));
-    samplers[SamplerLinearNoMips]   = renderer->CreateSampler(Parse("filter.min=linear,filter.mip=none"));
+    samplers[SamplerLinearNoMips]   = renderer->CreateSampler(Parse("filter.mag=linear,filter.mip=none"));
 }
 
 void TestbedContext::LoadProjectionMatrix(Gs::Matrix4f& outProjection, float aspectRatio, float nearPlane, float farPlane, float fov)
