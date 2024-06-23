@@ -54,6 +54,7 @@ void D3D11BindingTable::SetVertexBuffers(
     {
         for_range(i, count)
         {
+            LLGL_ASSERT_PTR(locators[i]);
             if (locators[i]->type == D3D11BindingLocator::D3DLocator_RWBuffer)
             {
                 EvictAllOutputBindings(locators[i]);
@@ -116,6 +117,7 @@ void D3D11BindingTable::SetShaderResourceViews(
         {
             for_range(i, count)
             {
+                LLGL_ASSERT_PTR(locators[i]);
                 if (locators[i]->type != D3D11BindingLocator::D3DLocator_ReadOnly)
                 {
                     EvictAllOutputBindings(locators[i], &subresourceRanges[i]);
@@ -133,6 +135,7 @@ void D3D11BindingTable::SetShaderResourceViews(
             const D3D11SubresourceRange fullRange{ 0u, ~0u };
             for_range(i, count)
             {
+                LLGL_ASSERT_PTR(locators[i]);
                 if (locators[i]->type != D3D11BindingLocator::D3DLocator_ReadOnly)
                 {
                     EvictAllOutputBindings(locators[i]);
@@ -170,6 +173,7 @@ void D3D11BindingTable::SetUnorderedAccessViews(
         {
             for_range(i, count)
             {
+                LLGL_ASSERT_PTR(locators[i]);
                 if (locators[i]->type != D3D11BindingLocator::D3DLocator_ReadOnly)
                 {
                     EvictAllBindings(locators[i], &subresourceRanges[i]);
@@ -183,6 +187,7 @@ void D3D11BindingTable::SetUnorderedAccessViews(
             const D3D11SubresourceRange fullRange{ 0u, ~0u };
             for_range(i, count)
             {
+                LLGL_ASSERT_PTR(locators[i]);
                 if (locators[i]->type != D3D11BindingLocator::D3DLocator_ReadOnly)
                 {
                     EvictAllBindings(locators[i]);
@@ -225,7 +230,10 @@ void D3D11BindingTable::SetRenderTargets(
     {
         LLGL_ASSERT_PTR(renderTargetSubresourceRanges);
         for_range(slot, count)
-            EvictAllBindings(renderTargetLocators[slot], renderTargetSubresourceRanges);
+        {
+            if (D3D11BindingLocator* locator = renderTargetLocators[slot])
+                EvictAllBindings(locator, renderTargetSubresourceRanges);
+        }
         rtvCount_ = count;
     }
     else
