@@ -17,6 +17,7 @@
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Exception.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Resource.h>
 #include <LLGL/ResourceHeapFlags.h>
@@ -37,16 +38,16 @@ D3D12ResourceHeap::D3D12ResourceHeap(
     /* Get pipeline layout object */
     auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutD3D)
-        throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
+        LLGL_TRAP("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
-    const auto numBindings      = pipelineLayoutD3D->GetNumHeapBindings();
-    const auto numResourceViews = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
+    const std::uint32_t numBindings         = pipelineLayoutD3D->GetNumHeapBindings();
+    const std::uint32_t numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
 
     numDescriptorSets_ = numResourceViews / numBindings;
 
     /* Store meta data which pipelines will be used by this resource heap */
-    auto convolutedStageFlags = pipelineLayoutD3D->GetConvolutedStageFlags();
+    long convolutedStageFlags = pipelineLayoutD3D->GetConvolutedStageFlags();
 
     /* Store descriptor handle strides per descriptor set */
     const auto& descHeapLayout  = pipelineLayoutD3D->GetDescriptorHeapLayout();
@@ -92,8 +93,8 @@ std::uint32_t D3D12ResourceHeap::CreateResourceViewHandles(
     if (resourceViews.empty())
         return 0;
 
-    const auto numBindings      = static_cast<std::uint32_t>(descriptorMap_.size());
-    const auto numDescriptors   = numDescriptorSets_ * numBindings;
+    const std::uint32_t numBindings     = static_cast<std::uint32_t>(descriptorMap_.size());
+    const std::uint32_t numDescriptors  = numDescriptorSets_ * numBindings;
 
     /* Silently quit on out of bounds; debug layer must report these errors */
     if (firstDescriptor >= numDescriptors)
@@ -121,10 +122,10 @@ std::uint32_t D3D12ResourceHeap::CreateResourceViewHandles(
             continue;
 
         /* Get CPU descriptor handle address for current root parameter */
-        const auto  descriptorSet       = firstDescriptor / numBindings;
-        const auto& descriptorLocation  = descriptorMap_[firstDescriptor % numBindings];
-        const auto  handleOffset        = descriptorHandleStrides_[descriptorLocation.heap] * descriptorLocation.index;
-        const auto  setOffset           = descriptorSetStrides_[descriptorLocation.heap] * (firstDescriptor / numBindings);
+        const std::uint32_t                 descriptorSet       = firstDescriptor / numBindings;
+        const D3D12DescriptorHeapLocation&  descriptorLocation  = descriptorMap_[firstDescriptor % numBindings];
+        const UINT                          handleOffset        = descriptorHandleStrides_[descriptorLocation.heap] * descriptorLocation.index;
+        const UINT                          setOffset           = descriptorSetStrides_[descriptorLocation.heap] * (firstDescriptor / numBindings);
 
         cpuDescHandle.ptr = cpuDescHandles[descriptorLocation.heap].ptr + handleOffset + setOffset;
 
@@ -224,11 +225,6 @@ std::uint32_t D3D12ResourceHeap::GetNumDescriptorSets() const
 /*
  * ======= Private: =======
  */
-
-static void ErrNullPointerInResource()
-{
-    throw std::invalid_argument("cannot create resource heap with null pointer in resource view");
-}
 
 void D3D12ResourceHeap::CreateDescriptorHeap(
     ID3D12Device*                   device,

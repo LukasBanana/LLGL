@@ -12,6 +12,7 @@
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
@@ -239,34 +240,36 @@ void D3D12PipelineLayout::BuildRootSignature(
     D3D12RootSignature&             rootSignature,
     const PipelineLayoutDescriptor& desc)
 {
+    const DynamicVector<BindingDescriptor> expandedHeapBindings = GetExpandedHeapDescriptors(desc.heapBindings);
+
     /* Build root parameter table for each descriptor range type */
-    descriptorHeapMap_.resize(desc.heapBindings.size());
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorHeapLayout_.numBufferCBV );
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::Sampled,        descriptorHeapLayout_.numBufferSRV );
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::Sampled,        descriptorHeapLayout_.numTextureSRV);
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::Storage,        descriptorHeapLayout_.numBufferUAV );
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage,        descriptorHeapLayout_.numTextureUAV);
-    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0,                         descriptorHeapLayout_.numSamplers  );
+    descriptorHeapMap_.resize(expandedHeapBindings.size());
+    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     expandedHeapBindings, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorHeapLayout_.numBufferCBV );
+    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     expandedHeapBindings, ResourceType::Buffer,  BindFlags::Sampled,        descriptorHeapLayout_.numBufferSRV );
+    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     expandedHeapBindings, ResourceType::Texture, BindFlags::Sampled,        descriptorHeapLayout_.numTextureSRV);
+    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     expandedHeapBindings, ResourceType::Buffer,  BindFlags::Storage,        descriptorHeapLayout_.numBufferUAV );
+    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     expandedHeapBindings, ResourceType::Texture, BindFlags::Storage,        descriptorHeapLayout_.numTextureUAV);
+    BuildHeapRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, expandedHeapBindings, ResourceType::Sampler, 0,                         descriptorHeapLayout_.numSamplers  );
 
     /* Build root parameter for each descriptor range type */
     descriptorMap_.resize(desc.bindings.size());
-    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorLayout_.numBufferCBV);
-    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Buffer,  BindFlags::Sampled,        descriptorLayout_.numBufferSRV);
-    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc, ResourceType::Texture, BindFlags::Sampled,        descriptorLayout_.numTextureSRV);
-    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Buffer,  BindFlags::Storage,        descriptorLayout_.numBufferUAV);
-    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc, ResourceType::Texture, BindFlags::Storage,        descriptorLayout_.numTextureUAV);
-    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc, ResourceType::Sampler, 0,                         descriptorLayout_.numSamplers);
+    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     desc.bindings, ResourceType::Buffer,  BindFlags::ConstantBuffer, descriptorLayout_.numBufferCBV);
+    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc.bindings, ResourceType::Buffer,  BindFlags::Sampled,        descriptorLayout_.numBufferSRV);
+    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     desc.bindings, ResourceType::Texture, BindFlags::Sampled,        descriptorLayout_.numTextureSRV);
+    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc.bindings, ResourceType::Buffer,  BindFlags::Storage,        descriptorLayout_.numBufferUAV);
+    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     desc.bindings, ResourceType::Texture, BindFlags::Storage,        descriptorLayout_.numTextureUAV);
+    BuildRootParameterTables(rootSignature, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, desc.bindings, ResourceType::Sampler, 0,                         descriptorLayout_.numSamplers);
 
     /* Build root parameter for each standalone descriptor */
     rootParameterMap_.resize(desc.bindings.size());
-    BuildRootParameters(rootSignature, D3D12_ROOT_PARAMETER_TYPE_CBV, desc, ResourceType::Buffer, BindFlags::ConstantBuffer);
+    BuildRootParameters(rootSignature, D3D12_ROOT_PARAMETER_TYPE_CBV, desc.bindings, ResourceType::Buffer, BindFlags::ConstantBuffer);
 
     //TODO: re-enable until LLGL can translate restrictions on root parameters; see CanResourceHaveRootParameter()
-    //BuildRootParameters(rootSignature, D3D12_ROOT_PARAMETER_TYPE_SRV, desc, ResourceType::Buffer, BindFlags::Sampled);
-    //BuildRootParameters(rootSignature, D3D12_ROOT_PARAMETER_TYPE_UAV, desc, ResourceType::Buffer, BindFlags::Storage);
+    //BuildRootParameters(rootSignature, D3D12_ROOT_PARAMETER_TYPE_SRV, desc.bindings, ResourceType::Buffer, BindFlags::Sampled);
+    //BuildRootParameters(rootSignature, D3D12_ROOT_PARAMETER_TYPE_UAV, desc.bindings, ResourceType::Buffer, BindFlags::Storage);
 
     /* Build static samplers */
-    BuildStaticSamplers(rootSignature, desc, numStaticSamplers_);
+    BuildStaticSamplers(rootSignature, desc.staticSamplers, numStaticSamplers_);
 
     /* Cache uniform descriptors */
     uniforms_ = desc.uniforms;
@@ -278,16 +281,16 @@ static bool IsFilteredBinding(const BindingDescriptor& bindingDesc, const Resour
 }
 
 void D3D12PipelineLayout::BuildHeapRootParameterTables(
-    D3D12RootSignature&             rootSignature,
-    D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
-    const PipelineLayoutDescriptor& layoutDesc,
-    const ResourceType              resourceType,
-    long                            bindFlags,
-    UINT&                           outCounter)
+    D3D12RootSignature&                 rootSignature,
+    D3D12_DESCRIPTOR_RANGE_TYPE         descRangeType,
+    const ArrayView<BindingDescriptor>& bindingDescs,
+    const ResourceType                  resourceType,
+    long                                bindFlags,
+    UINT&                               outCounter)
 {
-    for_range(i, layoutDesc.heapBindings.size())
+    for_range(i, bindingDescs.size())
     {
-        const BindingDescriptor& binding = layoutDesc.heapBindings[i];
+        const BindingDescriptor& binding = bindingDescs[i];
         if (IsFilteredBinding(binding, resourceType, bindFlags))
         {
             /* Build root parameter table entry for currently seelcted resource binding */
@@ -295,7 +298,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTables(
                 /*rootSignature:*/          rootSignature,
                 /*descRangeType:*/          descRangeType,
                 /*bindingDesc:*/            binding,
-                /*maxNumDescriptorRanges:*/ static_cast<UINT>(layoutDesc.heapBindings.size()),
+                /*maxNumDescriptorRanges:*/ static_cast<UINT>(bindingDescs.size()),
                 /*outLocation:*/            descriptorHeapMap_[i]
             );
 
@@ -320,7 +323,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
     if (D3D12RootParameter* rootParam = rootSignature.FindCompatibleRootParameter(descRangeType))
     {
         /* Append descriptor range to previous root parameter */
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, 1u);//std::max<UINT>(1u, bindingDesc.arraySize));
     }
     else
     {
@@ -328,7 +331,7 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
         UINT rootParamIndex = 0;
         rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
         rootParam->InitAsDescriptorTable(maxNumDescriptorRanges);
-        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, std::max(1u, bindingDesc.arraySize));
+        rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot, 1u);//std::max<UINT>((1u, bindingDesc.arraySize));
 
         /* Store root parameter index */
         UINT8& rootParamIndexStored = rootParameterIndices_.rootParamDescriptorHeaps[GetDescriptorTypeShift(descRangeType)];
@@ -347,16 +350,16 @@ static bool CanResourceHaveRootParameter(const ResourceType resourceType, long b
 }
 
 void D3D12PipelineLayout::BuildRootParameterTables(
-    D3D12RootSignature&             rootSignature,
-    D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
-    const PipelineLayoutDescriptor& layoutDesc,
-    const ResourceType              resourceType,
-    long                            bindFlags,
-    UINT&                           outCounter)
+    D3D12RootSignature&                 rootSignature,
+    D3D12_DESCRIPTOR_RANGE_TYPE         descRangeType,
+    const ArrayView<BindingDescriptor>& bindingDescs,
+    const ResourceType                  resourceType,
+    long                                bindFlags,
+    UINT&                               outCounter)
 {
-    for_range(i, layoutDesc.bindings.size())
+    for_range(i, bindingDescs.size())
     {
-        const BindingDescriptor& binding = layoutDesc.bindings[i];
+        const BindingDescriptor& binding = bindingDescs[i];
         if (IsFilteredBinding(binding, resourceType, bindFlags))
         {
             /* If resource binding cannot have its own root parameter, it must be put into a descriptor table */
@@ -366,7 +369,7 @@ void D3D12PipelineLayout::BuildRootParameterTables(
                     /*rootSignature:*/  rootSignature,
                     /*rootParamType:*/  descRangeType,
                     /*layoutDesc:*/     binding,
-                    /*resourceType:*/   static_cast<UINT>(layoutDesc.bindings.size()),
+                    /*resourceType:*/   static_cast<UINT>(bindingDescs.size()),
                     /*bindFlags:*/      descriptorMap_[i]
                 );
 
@@ -419,15 +422,15 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
 }
 
 void D3D12PipelineLayout::BuildRootParameters(
-    D3D12RootSignature&             rootSignature,
-    D3D12_ROOT_PARAMETER_TYPE       rootParamType,
-    const PipelineLayoutDescriptor& layoutDesc,
-    const ResourceType              resourceType,
-    long                            bindFlags)
+    D3D12RootSignature&                 rootSignature,
+    D3D12_ROOT_PARAMETER_TYPE           rootParamType,
+    const ArrayView<BindingDescriptor>& bindingDescs,
+    const ResourceType                  resourceType,
+    long                                bindFlags)
 {
-    for_range(i, layoutDesc.bindings.size())
+    for_range(i, bindingDescs.size())
     {
-        const BindingDescriptor& binding = layoutDesc.bindings[i];
+        const BindingDescriptor& binding = bindingDescs[i];
         if (IsFilteredBinding(binding, resourceType, bindFlags))
         {
             /* If resource binding cannot have its own root parameter, it must be put into a descriptor table */
@@ -461,16 +464,16 @@ void D3D12PipelineLayout::BuildRootParameter(
 }
 
 void D3D12PipelineLayout::BuildStaticSamplers(
-    D3D12RootSignature&             rootSignature,
-    const PipelineLayoutDescriptor& layoutDesc,
-    UINT&                           numStaticSamplers)
+    D3D12RootSignature&                         rootSignature,
+    const ArrayView<StaticSamplerDescriptor>&   staticSamplerDescs,
+    UINT&                                       outCounter)
 {
-    for (const StaticSamplerDescriptor& staticSamplerDesc : layoutDesc.staticSamplers)
+    for (const StaticSamplerDescriptor& staticSamplerDesc : staticSamplerDescs)
     {
         D3D12_STATIC_SAMPLER_DESC* nativeStaticSampler = rootSignature.AppendStaticSampler();
         D3D12Sampler::ConvertDesc(*nativeStaticSampler, staticSamplerDesc);
     }
-    numStaticSamplers = static_cast<UINT>(layoutDesc.staticSamplers.size());
+    outCounter = static_cast<UINT>(staticSamplerDescs.size());
 }
 
 
