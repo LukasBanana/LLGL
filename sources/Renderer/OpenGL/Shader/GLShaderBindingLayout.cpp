@@ -11,6 +11,7 @@
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/MacroUtils.h"
 #include <LLGL/Utils/ForRange.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -34,10 +35,13 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     {
         for_range(i, numUniformBindings_)
         {
-            const auto& resource = bindings_[resourceIndex++];
+            const NamedResourceBinding& resource = bindings_[resourceIndex++];
             GLint location = glGetUniformLocation(program, resource.name.c_str());
             if (location != GL_INVALID_INDEX)
-                glProgramUniform1i(program, location, static_cast<GLint>(resource.slot));
+            {
+                for_range(j, resource.size)
+                    glProgramUniform1i(program, location + j, static_cast<GLint>(resource.slot + j));
+            }
         }
     }
     else
@@ -49,10 +53,13 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
         {
             for_range(i, numUniformBindings_)
             {
-                const auto& resource = bindings_[resourceIndex++];
+                const NamedResourceBinding& resource = bindings_[resourceIndex++];
                 GLint location = glGetUniformLocation(program, resource.name.c_str());
                 if (location != GL_INVALID_INDEX)
-                    glUniform1i(location, static_cast<GLint>(resource.slot));
+                {
+                    for_range(j, resource.size)
+                        glUniform1i(location + j, static_cast<GLint>(resource.slot + j));
+                }
             }
         }
         stateMngr->PopBoundShaderProgram();
@@ -61,17 +68,20 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     {
         for_range(i, numUniformBindings_)
         {
-            const auto& resource = bindings_[resourceIndex++];
+            const NamedResourceBinding& resource = bindings_[resourceIndex++];
             GLint location = glGetUniformLocation(program, resource.name.c_str());
             if (location != GL_INVALID_INDEX)
-                glUniform1i(location, static_cast<GLint>(resource.slot));
+            {
+                for_range(j, resource.size)
+                    glUniform1i(location + j, static_cast<GLint>(resource.slot + j));
+            }
         }
     }
 
     /* Set uniform-block bindings */
     for_range(i, numUniformBlockBindings_)
     {
-        const auto& resource = bindings_[resourceIndex++];
+        const NamedResourceBinding& resource = bindings_[resourceIndex++];
         GLuint blockIndex = glGetUniformBlockIndex(program, resource.name.c_str());
         if (blockIndex != GL_INVALID_INDEX)
             glUniformBlockBinding(program, blockIndex, resource.slot);
@@ -81,7 +91,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
     for_range(i, numShaderStorageBindings_)
     {
-        const auto& resource = bindings_[resourceIndex++];
+        const NamedResourceBinding& resource = bindings_[resourceIndex++];
         GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
         if (blockIndex != GL_INVALID_INDEX)
             glShaderStorageBlockBinding(program, blockIndex, resource.slot);
@@ -116,22 +126,22 @@ int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& lhs, const GL
 void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelineLayout)
 {
     /* Gather all uniform bindings from heap resource descriptors */
-    for (const auto& binding : pipelineLayout.GetHeapBindings())
+    for (const BindingDescriptor& binding : pipelineLayout.GetHeapBindings())
     {
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Sampler || binding.type == ResourceType::Texture)
-                AppendUniformBinding(binding.name, binding.slot.index);
+                AppendUniformBinding(binding.name, binding.slot.index, std::max<std::uint32_t>(1u, binding.arraySize));
         }
     }
 
     /* Gather all uniform bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetBindings().size())
     {
-        const auto& name = pipelineLayout.GetBindingNames()[i];
+        const std::string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty())
         {
-            const auto& binding = pipelineLayout.GetBindings()[i];
+            const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
             if (binding.type == GLResourceType_Texture  ||
                 binding.type == GLResourceType_Image    ||
                 binding.type == GLResourceType_Sampler  ||
@@ -145,7 +155,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
     /* Gather all uniform bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetStaticSamplerSlots().size())
     {
-        const auto& name = pipelineLayout.GetStaticSamplerNames()[i];
+        const std::string& name = pipelineLayout.GetStaticSamplerNames()[i];
         if (!name.empty())
             AppendUniformBinding(name, pipelineLayout.GetStaticSamplerSlots()[i]);
     }
@@ -154,7 +164,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
 void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pipelineLayout)
 {
     /* Gather all uniform-block bindings from heap resource descriptors */
-    for (const auto& binding : pipelineLayout.GetHeapBindings())
+    for (const BindingDescriptor& binding : pipelineLayout.GetHeapBindings())
     {
         if (!binding.name.empty())
         {
@@ -166,10 +176,10 @@ void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pi
     /* Gather all uniform-block bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetBindings().size())
     {
-        const auto& name = pipelineLayout.GetBindingNames()[i];
+        const std::string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty())
         {
-            const auto& binding = pipelineLayout.GetBindings()[i];
+            const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
             if (binding.type == GLResourceType_UBO)
                 AppendUniformBlockBinding(name, binding.slot);
         }
@@ -179,7 +189,7 @@ void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pi
 void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& pipelineLayout)
 {
     /* Gather all shader-storage bindings from heap resource descriptors */
-    for (const auto& binding : pipelineLayout.GetHeapBindings())
+    for (const BindingDescriptor& binding : pipelineLayout.GetHeapBindings())
     {
         if (!binding.name.empty())
         {
@@ -191,31 +201,31 @@ void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& p
     /* Gather all shader-storage bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetBindings().size())
     {
-        const auto& name = pipelineLayout.GetBindingNames()[i];
+        const std::string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty())
         {
-            const auto& binding = pipelineLayout.GetBindings()[i];
+            const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
             if (binding.type == GLResourceType_SSBO)
                 AppendShaderStorageBinding(name, binding.slot);
         }
     }
 }
 
-void GLShaderBindingLayout::AppendUniformBinding(const std::string& name, std::uint32_t slot)
+void GLShaderBindingLayout::AppendUniformBinding(const std::string& name, std::uint32_t slot, std::uint32_t size)
 {
-    bindings_.push_back({ name, slot });
+    bindings_.push_back({ name, slot, size });
     ++numUniformBindings_;
 }
 
 void GLShaderBindingLayout::AppendUniformBlockBinding(const std::string& name, std::uint32_t slot)
 {
-    bindings_.push_back({ name, slot });
+    bindings_.push_back({ name, slot, 1u });
     ++numUniformBlockBindings_;
 }
 
 void GLShaderBindingLayout::AppendShaderStorageBinding(const std::string& name, std::uint32_t slot)
 {
-    bindings_.push_back({ name, slot });
+    bindings_.push_back({ name, slot, 1u });
     ++numShaderStorageBindings_;
 }
 

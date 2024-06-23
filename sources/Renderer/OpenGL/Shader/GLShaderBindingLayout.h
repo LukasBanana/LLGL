@@ -55,6 +55,7 @@ class GLShaderBindingLayout
         {
             std::string     name;
             std::uint32_t   slot;
+            std::uint32_t   size; // Number of array elements
         };
 
     private:
@@ -63,7 +64,7 @@ class GLShaderBindingLayout
         void BuildUniformBlockBindings(const GLPipelineLayout& pipelineLayout);
         void BuildShaderStorageBindings(const GLPipelineLayout& pipelineLayout);
 
-        void AppendUniformBinding(const std::string& name, std::uint32_t slot);
+        void AppendUniformBinding(const std::string& name, std::uint32_t slot, std::uint32_t size = 1u);
         void AppendUniformBlockBinding(const std::string& name, std::uint32_t slot);
         void AppendShaderStorageBinding(const std::string& name, std::uint32_t slot);
 
