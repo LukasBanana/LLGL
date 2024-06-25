@@ -11,6 +11,10 @@
 #include <string>
 
 
+/*
+Ensure shaders with syntax and/or semantic errors are reported correctly and don't crash the PSO creation.
+Erroneous PSOs must report their failure in the LLGL::Report object.
+*/
 DEF_TEST( ShaderErrors )
 {
     TestResult result = TestResult::Passed;

@@ -12,6 +12,12 @@
 #include <Gauss/Scale.h>
 
 
+/*
+Renders a scene (segmented cube) with various different rotations.
+The primary command buffer is encoded in several iterations and immediately submitted to the command queue.
+Only the last iteration takes a framebuffer capture to ensure the buffer updates are encoded correctly
+and not erroneously overridden by faulty CPU/GPU synchronization.
+*/
 DEF_TEST( SceneUpdate )
 {
     static TestResult result = TestResult::Passed;
@@ -62,52 +68,70 @@ DEF_TEST( SceneUpdate )
         Gs::Scale(wMatrix, Gs::Vector3f{ 1, scale, 1 });
     };
 
-    constexpr unsigned numFrames = 10;
-    const float rotation = static_cast<float>(frame) * 90.0f / static_cast<float>(numFrames - 1);
-
     // Render scene
+    constexpr unsigned numFrames = 10;
+    constexpr unsigned numSceneIterations = 3;
+
     Texture* readbackTex = nullptr;
 
     const IndexedTriangleMesh& mesh = models[ModelCube];
 
-    cmdBuffer->Begin();
+    const float semiRandomRotations[2] = { -10.0f, -5.0f };
+
+    // Render the scene several times before taking the frame capture for comparison.
+    // This ensures that the buffer updates (sceneCbuffer) are encoded correctly and CPU/GPU synchronization works as intended.
+    for_range(i, numSceneIterations)
     {
-        // Graphics can be set inside and outside a render pass, so test binding this PSO outside the render pass
-        cmdBuffer->SetVertexBuffer(*meshBuffer);
-        cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
-        cmdBuffer->SetPipelineState(*pso);
+        const bool isLastIteration = (i + 1 == for_range_end(i));
 
-        cmdBuffer->BeginRenderPass(*swapChain);
+        // First render the object in a semi-random rotation and use the frame dependent rotation in the last iteration
+        const float rotation =
+        (
+            isLastIteration
+                ? static_cast<float>(frame) * 90.0f / static_cast<float>(numFrames - 1)
+                : semiRandomRotations[i % (sizeof(semiRandomRotations)/sizeof(semiRandomRotations[0]))]
+        );
+
+        cmdBuffer->Begin();
         {
-            // Draw scene
-            cmdBuffer->Clear(ClearFlags::ColorDepth);
-            cmdBuffer->SetViewport(opt.resolution);
-            cmdBuffer->SetResource(0, *sceneCbuffer);
+            // Graphics can be set inside and outside a render pass, so test binding this PSO outside the render pass
+            cmdBuffer->SetVertexBuffer(*meshBuffer);
+            cmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
+            cmdBuffer->SetPipelineState(*pso);
 
-            // Draw top part
-            sceneConstants.solidColor = { 1.0f, 0.7f, 0.6f, 1.0f }; // red
-            TransformWorldMatrix(sceneConstants.wMatrix, 0.5f, 0.5f, rotation);
-            cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
+            cmdBuffer->BeginRenderPass(*swapChain);
+            {
+                // Draw scene
+                cmdBuffer->Clear(ClearFlags::ColorDepth);
+                cmdBuffer->SetViewport(opt.resolution);
+                cmdBuffer->SetResource(0, *sceneCbuffer);
 
-            // Draw middle part
-            sceneConstants.solidColor = { 0.5f, 1.0f, 0.4f, 1.0f }; // green
-            TransformWorldMatrix(sceneConstants.wMatrix, -0.25f, 0.25f, rotation);
-            cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
+                // Draw top part
+                sceneConstants.solidColor = { 1.0f, 0.7f, 0.6f, 1.0f }; // red
+                TransformWorldMatrix(sceneConstants.wMatrix, 0.5f, 0.5f, rotation);
+                cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
+                cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
-            // Draw bottom part
-            sceneConstants.solidColor = { 0.3f, 0.7f, 1.0f, 1.0f }; // blue
-            TransformWorldMatrix(sceneConstants.wMatrix, -0.75f, 0.25f, rotation);
-            cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
-            cmdBuffer->DrawIndexed(mesh.numIndices, 0);
+                // Draw middle part
+                sceneConstants.solidColor = { 0.5f, 1.0f, 0.4f, 1.0f }; // green
+                TransformWorldMatrix(sceneConstants.wMatrix, -0.25f, 0.25f, rotation);
+                cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
+                cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
-            // Capture framebuffer
-            readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
+                // Draw bottom part
+                sceneConstants.solidColor = { 0.3f, 0.7f, 1.0f, 1.0f }; // blue
+                TransformWorldMatrix(sceneConstants.wMatrix, -0.75f, 0.25f, rotation);
+                cmdBuffer->UpdateBuffer(*sceneCbuffer, 0, &sceneConstants, sizeof(sceneConstants));
+                cmdBuffer->DrawIndexed(mesh.numIndices, 0);
+
+                // Capture framebuffer in last iteration
+                if (isLastIteration)
+                    readbackTex = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
+            }
+            cmdBuffer->EndRenderPass();
         }
-        cmdBuffer->EndRenderPass();
+        cmdBuffer->End();
     }
-    cmdBuffer->End();
 
     // Match entire color buffer and create delta heat map
     const std::string colorBufferName = "SceneUpdate_Frame" + std::to_string(frame);

@@ -13,6 +13,10 @@
 #include <Gauss/Scale.h>
 
 
+/*
+Renders a matrix of source/destination blend state combinations to ensure the configurations work the same on all backends.
+Each combination is tested with two simple geometries (rectangles) that overlap to visualize its blending effect.
+*/
 DEF_TEST( BlendStates )
 {
     if (shaders[VSTextured] == nullptr || shaders[PSTextured] == nullptr)

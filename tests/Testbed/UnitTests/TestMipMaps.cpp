@@ -29,6 +29,11 @@ static bool IsPowerOfTwoExtent(const Extent3D& extent)
     return (IsPowerOfTwo(extent.width) && IsPowerOfTwo(extent.height) && IsPowerOfTwo(extent.depth));
 }
 
+/*
+This test doesn't render anything but only evaluates the MIP-map levels of the textures already loaded by the testbed.
+Non-power-of-two (NPOT) textures are accepted to use different minification filters (such as box-filter, which can incur undersampling),
+which requires a larger threshold when comparing with the reference images.
+*/
 DEF_TEST( MipMaps )
 {
     TestResult result = TestResult::Passed;

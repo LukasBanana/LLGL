@@ -9,6 +9,21 @@
 #include <LLGL/Utils/Parse.h>
 
 
+/*
+Renders a fullscreen triangle directly to the swap-chain, i.e. only a single color attachment but the shader has two outputs.
+This requires the dual-source blending feature, which is denoted as "Src1" in the blend states.
+
+The shading-languages have different semantics to describe the respective blending outputs:
+- HLSL uses the same semantic as if two color attachments where active:
+    float4 colorA : SV_Target0;
+    float4 colorB : SV_Target1;
+- GLSL uses the same output location but with two different indices:
+    layout(location = 0, index = 0) out vec4 colorA;
+    layout(location = 0, index = 1) out vec4 colorB;
+- Metal uses a similar semantic as GLSL:
+    float4 colorA [[color(0), index(0)]];
+    float4 colorB [[color(0), index(1)]];
+*/
 DEF_TEST( DualSourceBlending )
 {
     if (shaders[VSDualSourceBlend] == nullptr || shaders[PSDualSourceBlend] == nullptr)
