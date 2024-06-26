@@ -53,7 +53,7 @@ enum GLOpcode : std::uint8_t
     GLOpcodeBindPipelineState,
     GLOpcodeSetBlendColor,
     GLOpcodeSetStencilRef,
-    GLOpcodeSetUniforms,
+    GLOpcodeSetUniform,
     GLOpcodeBeginQuery,
     GLOpcodeEndQuery,
     GLOpcodeBeginConditionalRender,

@@ -18,10 +18,7 @@ namespace LLGL
 
 
 // Sets the data of the specified uniform in the active shader program.
-void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const void* data);
-
-// Sets the data of the specified uniform in the active shader program, where the type is determined by the specified shader program.
-void GLSetUniformsByLocation(GLuint program, GLint location, GLsizei count, const void* data);
+void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* data);
 
 
 } // /namespace LLGL

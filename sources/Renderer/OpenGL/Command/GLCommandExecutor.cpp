@@ -282,10 +282,10 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr->SetStencilRef(cmd->ref, cmd->face);
             return sizeof(*cmd);
         }
-        case GLOpcodeSetUniforms:
+        case GLOpcodeSetUniform:
         {
-            auto cmd = reinterpret_cast<const GLCmdSetUniforms*>(pc);
-            GLSetUniformsByType(cmd->type, cmd->location, cmd->count, (cmd + 1));
+            auto cmd = reinterpret_cast<const GLCmdSetUniform*>(pc);
+            GLSetUniform(cmd->type, cmd->location, cmd->count, (cmd + 1));
             return (sizeof(*cmd) + cmd->size);
         }
         case GLOpcodeBeginQuery:

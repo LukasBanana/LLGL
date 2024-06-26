@@ -522,7 +522,7 @@ void GLImmediateCommandBuffer::SetUniforms(std::uint32_t first, const void* data
             return /*GL_INVALID_INDEX*/;
 
         const auto& uniform = uniformMap[first];
-        GLSetUniformsByType(uniform.type, uniform.location, uniform.count, words);
+        GLSetUniform(uniform.type, uniform.location, uniform.count, words);
 
         words += uniform.wordSize;
     }

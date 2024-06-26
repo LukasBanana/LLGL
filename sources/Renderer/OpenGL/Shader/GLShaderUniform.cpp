@@ -16,7 +16,7 @@ namespace LLGL
 
 
 // Requires GL 2.0
-static void GLSetUniformsInt(UniformType type, GLint location, GLsizei count, const GLint* data)
+static void GLSetUniformInt(UniformType type, GLint location, GLsizei count, const GLint* data)
 {
     switch (type)
     {
@@ -45,7 +45,7 @@ static void GLSetUniformsInt(UniformType type, GLint location, GLsizei count, co
 }
 
 // Requires GL 2.0
-static void GLSetUniformsFloat(UniformType type, GLint location, GLsizei count, const GLfloat* data)
+static void GLSetUniformFloat(UniformType type, GLint location, GLsizei count, const GLfloat* data)
 {
     switch (type)
     {
@@ -76,7 +76,7 @@ static void GLSetUniformsFloat(UniformType type, GLint location, GLsizei count, 
 }
 
 // Requires GL 2.1
-static void GLSetUniformsFloatNxM(UniformType type, GLint location, GLsizei count, const GLfloat* data)
+static void GLSetUniformFloatNxM(UniformType type, GLint location, GLsizei count, const GLfloat* data)
 {
     if (!HasExtension(GLExt::ARB_shader_objects_21))
         return;
@@ -107,7 +107,7 @@ static void GLSetUniformsFloatNxM(UniformType type, GLint location, GLsizei coun
 }
 
 // Requires GL 3.0
-static void GLSetUniformsUInt(UniformType type, GLint location, GLsizei count, const GLuint* data)
+static void GLSetUniformUInt(UniformType type, GLint location, GLsizei count, const GLuint* data)
 {
     if (!HasExtension(GLExt::ARB_shader_objects_30))
         return;
@@ -134,7 +134,7 @@ static void GLSetUniformsUInt(UniformType type, GLint location, GLsizei count, c
 #ifdef LLGL_OPENGL
 
 // Requires GL 4.0
-static void GLSetUniformsDouble(UniformType type, GLint location, GLsizei count, const GLdouble* data)
+static void GLSetUniformDouble(UniformType type, GLint location, GLsizei count, const GLdouble* data)
 {
     if (!HasExtension(GLExt::ARB_shader_objects_40))
         return;
@@ -188,7 +188,7 @@ static void GLSetUniformsDouble(UniformType type, GLint location, GLsizei count,
 #endif // /LLGL_OPENGL
 
 
-void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const void* data)
+void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* data)
 {
     switch (type)
     {
@@ -200,7 +200,7 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Float2:
         case UniformType::Float3:
         case UniformType::Float4:
-            GLSetUniformsFloat(type, location, count, reinterpret_cast<const GLfloat*>(data));
+            GLSetUniformFloat(type, location, count, reinterpret_cast<const GLfloat*>(data));
             break;
 
         case UniformType::Double1:
@@ -208,7 +208,7 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Double3:
         case UniformType::Double4:
             #ifdef LLGL_OPENGL
-            GLSetUniformsDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
+            GLSetUniformDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
             #endif
             break;
 
@@ -216,28 +216,28 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Int2:
         case UniformType::Int3:
         case UniformType::Int4:
-            GLSetUniformsInt(type, location, count, reinterpret_cast<const GLint*>(data));
+            GLSetUniformInt(type, location, count, reinterpret_cast<const GLint*>(data));
             break;
 
         case UniformType::UInt1:
         case UniformType::UInt2:
         case UniformType::UInt3:
         case UniformType::UInt4:
-            GLSetUniformsUInt(type, location, count, reinterpret_cast<const GLuint*>(data));
+            GLSetUniformUInt(type, location, count, reinterpret_cast<const GLuint*>(data));
             break;
 
         case UniformType::Bool1:
         case UniformType::Bool2:
         case UniformType::Bool3:
         case UniformType::Bool4:
-            GLSetUniformsInt(type, location, count, reinterpret_cast<const GLint*>(data));
+            GLSetUniformInt(type, location, count, reinterpret_cast<const GLint*>(data));
             break;
 
         /* ----- Matrices ----- */
         case UniformType::Float2x2:
         case UniformType::Float3x3:
         case UniformType::Float4x4:
-            GLSetUniformsFloat(type, location, count, reinterpret_cast<const GLfloat*>(data));
+            GLSetUniformFloat(type, location, count, reinterpret_cast<const GLfloat*>(data));
             break;
 
         case UniformType::Float2x3:
@@ -246,7 +246,7 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Float3x4:
         case UniformType::Float4x2:
         case UniformType::Float4x3:
-            GLSetUniformsFloatNxM(type, location, count, reinterpret_cast<const GLfloat*>(data));
+            GLSetUniformFloatNxM(type, location, count, reinterpret_cast<const GLfloat*>(data));
             break;
 
         case UniformType::Double2x2:
@@ -259,7 +259,7 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Double4x3:
         case UniformType::Double4x4:
             #ifdef LLGL_OPENGL
-            GLSetUniformsDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
+            GLSetUniformDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
             #endif
             break;
 
@@ -267,21 +267,9 @@ void GLSetUniformsByType(UniformType type, GLint location, GLsizei count, const 
         case UniformType::Sampler:
         case UniformType::Image:
         case UniformType::AtomicCounter:
-            GLSetUniformsInt(type, location, count, reinterpret_cast<const GLint*>(data));
+            GLSetUniformInt(type, location, count, reinterpret_cast<const GLint*>(data));
             break;
     }
-}
-
-void GLSetUniformsByLocation(GLuint program, GLint location, GLsizei count, const void* data)
-{
-    /* Determine type of uniform */
-    GLenum type = 0;
-    GLint size = 0;
-    glGetActiveUniform(program, static_cast<GLuint>(location), 0, nullptr, &size, &type, nullptr);
-
-    /* Submit data to respective uniform type */
-    UniformType uniformType = GLTypes::UnmapUniformType(type);
-    GLSetUniformsByType(uniformType, location, count, data);
 }
 
 

@@ -253,7 +253,7 @@ struct GLCmdSetStencilRef
     GLenum  face;
 };
 
-struct GLCmdSetUniforms
+struct GLCmdSetUniform
 {
     GLuint      program;
     UniformType type;
