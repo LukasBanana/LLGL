@@ -320,7 +320,7 @@ private:
             float delta = mouseMotion.x*0.002f;
             settings.threshold = std::max(0.0f, std::min(settings.threshold + delta, 0.5f));
             LLGL::Log::Printf(
-                "density threshold: %d\%    \r",
+                "density threshold: %d%%    \r",
                 static_cast<int>(settings.threshold*200.0f)
             );
             ::fflush(stdout);

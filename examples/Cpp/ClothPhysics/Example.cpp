@@ -542,7 +542,7 @@ private:
         {
             float delta = motion.x*0.01f;
             stiffnessFactor = std::max(0.5f, std::min(stiffnessFactor + delta, 1.0f));
-            LLGL::Log::Printf("stiffness: %d\%    \r", static_cast<int>(stiffnessFactor * 100.0f));
+            LLGL::Log::Printf("stiffness: %d%%    \r", static_cast<int>(stiffnessFactor * 100.0f));
             ::fflush(stdout);
         }
 
