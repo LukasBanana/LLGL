@@ -14,28 +14,38 @@ namespace LLGL
 {
 
 
-static bool HasAnyStencilOpReplace(const StencilFaceDescriptor& desc)
+static bool HasAnyStencilRefWrite(const StencilFaceDescriptor& desc)
 {
     return
     (
-        desc.stencilFailOp == StencilOp::Replace ||
-        desc.depthFailOp   == StencilOp::Replace ||
-        desc.depthPassOp   == StencilOp::Replace
+        desc.writeMask != 0 &&
+        (
+            desc.stencilFailOp == StencilOp::Replace ||
+            desc.depthFailOp   == StencilOp::Replace ||
+            desc.depthPassOp   == StencilOp::Replace
+        )
     );
 }
 
-static bool HasAnyStencilOpReplace(const StencilDescriptor& desc)
+static bool HasAnyStencilRefRead(const StencilFaceDescriptor& desc)
+{
+    return (desc.readMask != 0 && desc.compareOp != CompareOp::NeverPass && desc.compareOp != CompareOp::AlwaysPass);
+}
+
+static bool HasAnyStencilRefUse(const StencilDescriptor& desc)
 {
     return
     (
-        HasAnyStencilOpReplace(desc.front) ||
-        HasAnyStencilOpReplace(desc.back)
+        HasAnyStencilRefWrite(desc.front) ||
+        HasAnyStencilRefWrite(desc.back)  ||
+        HasAnyStencilRefRead(desc.front)  ||
+        HasAnyStencilRefRead(desc.back)
     );
 }
 
 LLGL_EXPORT bool IsStencilRefEnabled(const StencilDescriptor& desc)
 {
-    return (desc.testEnabled && HasAnyStencilOpReplace(desc));
+    return (desc.testEnabled && HasAnyStencilRefUse(desc));
 }
 
 LLGL_EXPORT bool IsStaticStencilRefEnabled(const StencilDescriptor& desc)

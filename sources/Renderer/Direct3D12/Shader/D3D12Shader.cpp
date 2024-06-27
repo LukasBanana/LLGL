@@ -628,13 +628,10 @@ static HRESULT ReflectShaderInputBindings(
     return S_OK;
 }
 
-HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
+// Reflects D3D12 shader bytecode from either DXBC or DXIL code.
+static HRESULT ReflectD3D12ShaderBytecode(ID3DBlob* byteCode, ComPtr<ID3D12ShaderReflection>& outReflection)
 {
-    HRESULT hr = S_OK;
-
-    /* Get shader reflection */
-    ComPtr<ID3D12ShaderReflection> reflectionObject;
-    hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
+    HRESULT hr = D3DReflect(byteCode->GetBufferPointer(), byteCode->GetBufferSize(), IID_PPV_ARGS(outReflection.ReleaseAndGetAddressOf()));
 
     #ifdef LLGL_D3D12_ENABLE_DXCOMPILER
     if (FAILED(hr))
@@ -648,14 +645,22 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
             return hr;
         }
 
-        hr = DXReflectDxilShader(byteCode_.Get(), reflectionObject.ReleaseAndGetAddressOf());
-        if (FAILED(hr))
-            return hr;
+        hr = DXReflectDxilShader(byteCode, outReflection.ReleaseAndGetAddressOf());
     }
-    #else
-        if (FAILED(hr))
-            return hr;
     #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
+
+    return hr;
+}
+
+HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
+{
+    HRESULT hr = S_OK;
+
+    /* Get shader reflection */
+    ComPtr<ID3D12ShaderReflection> reflectionObject;
+    hr = ReflectD3D12ShaderBytecode(byteCode_.Get(), reflectionObject);
+    if (FAILED(hr))
+        return hr;
 
     D3D12_SHADER_DESC shaderDesc;
     hr = reflectionObject->GetDesc(&shaderDesc);
@@ -701,7 +706,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
 
     /* Get shader reflection */
     ComPtr<ID3D12ShaderReflection> reflectionObject;
-    hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
+    hr = ReflectD3D12ShaderBytecode(byteCode_.Get(), reflectionObject);
     if (FAILED(hr))
         return hr;
 

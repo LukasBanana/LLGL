@@ -43,7 +43,10 @@ D3D12GraphicsPSO::D3D12GraphicsPSO(
 {
     /* Validate pointers and get D3D shader program */
     if (desc.vertexShader == nullptr)
-        throw std::invalid_argument("cannot create D3D graphics pipeline without vertex shader");
+    {
+        ResetReport("cannot create D3D graphics PSO without vertex shader", true);
+        return;
+    }
 
     /* Use either default render pass or from descriptor */
     const D3D12RenderPass* renderPassD3D = nullptr;
@@ -488,10 +491,11 @@ void D3D12GraphicsPSO::BuildStaticViewports(std::size_t numViewports, const View
 
     if (numStaticViewports_ > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
     {
-        throw std::invalid_argument(
-            "too many viewports in graphics pipeline state (" + std::to_string(numStaticViewports_) +
-            " specified, but limit is " + std::to_string(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        GetMutableReport().Errorf(
+            "too many viewports in graphics pipeline state; %u specified, but limit is %d",
+            numStaticViewports_, D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE
         );
+        return;
     }
 
     /* Build <D3D12_VIEWPORT> entries */
@@ -516,10 +520,11 @@ void D3D12GraphicsPSO::BuildStaticScissors(std::size_t numScissors, const Scisso
 
     if (numStaticScissors_ > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE)
     {
-        throw std::invalid_argument(
-            "too many viewports in graphics pipeline state (" + std::to_string(numStaticScissors_) +
-            " specified, but limit is " + std::to_string(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) + ")"
+        GetMutableReport().Errorf(
+            "too many scissors in graphics pipeline state; %u specified, but limit is %d",
+            numStaticScissors_, D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE
         );
+        return;
     }
 
     /* Build <D3D12_RECT> entries */
