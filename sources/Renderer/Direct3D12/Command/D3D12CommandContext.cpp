@@ -368,19 +368,25 @@ void D3D12CommandContext::PrepareStagingDescriptorHeaps(
     stagingDescriptorSetLayout_ = layout;
     stagingDescriptorIndices_   = indices;
 
-    /* Bind shader-visible descriptor heaps */
-    ID3D12DescriptorHeap* const stagingDescriptorHeaps[2] =
+    if (stagingDescriptorSetLayout_.numHeapResourceViews > 0 ||
+        stagingDescriptorSetLayout_.numHeapSamplers      > 0 ||
+        stagingDescriptorSetLayout_.numResourceViews     > 0 ||
+        stagingDescriptorSetLayout_.numSamplers          > 0)
     {
-        stagingDescriptorPools_[currentAllocatorIndex_][0].GetDescriptorHeap(),
-        stagingDescriptorPools_[currentAllocatorIndex_][1].GetDescriptorHeap()
-    };
-    SetDescriptorHeaps(2, stagingDescriptorHeaps);
+        /* Bind shader-visible descriptor heaps */
+        ID3D12DescriptorHeap* const stagingDescriptorHeaps[2] =
+        {
+            stagingDescriptorPools_[currentAllocatorIndex_][0].GetDescriptorHeap(),
+            stagingDescriptorPools_[currentAllocatorIndex_][1].GetDescriptorHeap()
+        };
+        SetDescriptorHeaps(2, stagingDescriptorHeaps);
 
-    /* Reset descriptor cache for dynamic descriptors */
-    descriptorCaches_[currentAllocatorIndex_].Reset(
-        stagingDescriptorSetLayout_.numResourceViews,
-        stagingDescriptorSetLayout_.numSamplers
-    );
+        /* Reset descriptor cache for dynamic descriptors */
+        descriptorCaches_[currentAllocatorIndex_].Reset(
+            stagingDescriptorSetLayout_.numResourceViews,
+            stagingDescriptorSetLayout_.numSamplers
+        );
+    }
 }
 
 void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset)

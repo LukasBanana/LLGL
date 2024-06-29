@@ -703,13 +703,18 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
     /* Keep reference to pipeline layout */
     boundPipelineLayout_ = pipelineStateD3D.GetPipelineLayout();
 
-    /* Prepare staging descriptor heaps for bound pipeline layout */
     if (boundPipelineLayout_ != nullptr)
     {
+        /* Prepare staging descriptor heaps for bound pipeline layout */
         commandContext_.PrepareStagingDescriptorHeaps(
             boundPipelineLayout_->GetDescriptorHeapSetLayout(),
             boundPipelineLayout_->GetRootParameterIndices()
         );
+    }
+    else
+    {
+        /* Reset staging descriptor layout to avoid undefined behavior in next Flush*StagingDescriptorTables() call */
+        commandContext_.PrepareStagingDescriptorHeaps({}, {});
     }
 }
 
