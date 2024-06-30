@@ -225,8 +225,12 @@ void D3D12Buffer::ClearSubresourceUInt(
         CreateIntermediateUAVDescriptorHeap(resource, format, formatStride);
 
     /* Get GPU and CPU descriptor handles for intermediate descriptor heap */
-    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = uavIntermediateDescHeap_->GetGPUDescriptorHandleForHeapStart();
+    D3D12DescriptorHeapSetLayout layout;
+    layout.numHeapResourceViews = 1;
+    commandContext.PrepareStagingDescriptorHeaps(layout, {});
+    //D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = uavIntermediateDescHeap_->GetGPUDescriptorHandleForHeapStart();
     D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle = uavIntermediateDescHeap_->GetCPUDescriptorHandleForHeapStart();
+    D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext.CopyDescriptorsForStaging(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpuDescHandle, 0, 1);
 
     if (useIntermediateBuffer)
     {
@@ -258,7 +262,7 @@ void D3D12Buffer::ClearSubresourceUInt(
     else
     {
         /* Clear destination buffer directly with intermediate UAV */
-        commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+        commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COMMON, true);
         {
             ClearSubresourceWithUAV(
                 commandList,
@@ -401,6 +405,9 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
         internalSize_ += g_soBufferFillSizeLen;
 
+    /* Store buffer primary usage stage */
+    resource_.usageState = GetD3DUsageState(desc.bindFlags);
+
     /* Create generic buffer resource */
     const CD3DX12_HEAP_PROPERTIES heapProperties{ D3D12_HEAP_TYPE_DEFAULT };
     const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize(), GetD3DResourceFlags(desc));
@@ -408,7 +415,7 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        resource_.SetInitialAndUsageStates(D3D12_RESOURCE_STATE_COPY_DEST, GetD3DUsageState(desc.bindFlags)),
+        D3D12_RESOURCE_STATE_COMMON, // Buffers are effectively created in D3D12_RESOURCE_STATE_COMMON state
         nullptr,
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
@@ -440,7 +447,7 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlag
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        cpuAccessBuffer_.usageState,
+        D3D12_RESOURCE_STATE_COMMON, // Buffers are effectively created in D3D12_RESOURCE_STATE_COMMON state
         nullptr,
         IID_PPV_ARGS(cpuAccessBuffer_.native.ReleaseAndGetAddressOf())
     );
@@ -495,13 +502,11 @@ void D3D12Buffer::CreateIntermediateUAVBuffer()
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COMMON, // Buffers are effectively created in D3D12_RESOURCE_STATE_COMMON state
         nullptr,
         IID_PPV_ARGS(uavIntermediateBuffer_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for buffer subresource UAV");
-
-    uavIntermediateBuffer_.SetInitialState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
 void D3D12Buffer::CreateVertexBufferView(const BufferDescriptor& desc)

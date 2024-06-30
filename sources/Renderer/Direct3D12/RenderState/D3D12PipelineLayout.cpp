@@ -280,6 +280,27 @@ static bool IsFilteredBinding(const BindingDescriptor& bindingDesc, const Resour
     return (bindingDesc.type == resourceType && (bindFlags == 0 || (bindingDesc.bindFlags & bindFlags) != 0));
 }
 
+static D3D12_RESOURCE_STATES GetD3D12BindingResourceState(const BindingDescriptor& bindingDesc)
+{
+    if (bindingDesc.stageFlags != 0)
+    {
+        if ((bindingDesc.bindFlags & BindFlags::ConstantBuffer) != 0 && bindingDesc.type == ResourceType::Buffer)
+            return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+        if ((bindingDesc.bindFlags & BindFlags::Storage) != 0)
+            return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        if ((bindingDesc.bindFlags & BindFlags::Sampled) != 0)
+        {
+            if (bindingDesc.stageFlags == StageFlags::FragmentStage)
+                return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+            else if ((bindingDesc.stageFlags & StageFlags::FragmentStage) == 0)
+                return D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+            else
+                return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+        }
+    }
+    return D3D12_RESOURCE_STATE_COMMON;
+}
+
 void D3D12PipelineLayout::BuildHeapRootParameterTables(
     D3D12RootSignature&                 rootSignature,
     D3D12_DESCRIPTOR_RANGE_TYPE         descRangeType,
@@ -338,6 +359,9 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
         LLGL_ASSERT(rootParamIndexStored == D3D12RootParameterIndices::invalidIndex || rootParamIndexStored == rootParamIndex);
         rootParamIndexStored = rootParamIndex;
     }
+
+    /* Store target state the binding must be in when it's bound */
+    outLocation.state = GetD3D12BindingResourceState(bindingDesc);
 
     /* Cache binding flags in the same order root parameters are build */
     descriptorHeapLayout_.GetDescriptorLocation(descRangeType, outLocation);
@@ -417,6 +441,9 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
         rootParamIndexStored = rootParamIndex;
     }
 
+    /* Store target state the binding must be in when it's bound */
+    outLocation.state = GetD3D12BindingResourceState(bindingDesc);
+
     /* Cache binding flags in the same order root parameters are build */
     descriptorLayout_.GetDescriptorLocation(descRangeType, outLocation);
 }
@@ -461,6 +488,7 @@ void D3D12PipelineLayout::BuildRootParameter(
     /* Cache binding flags in the same order root parameters are build */
     outLocation.type    = rootParamType;
     outLocation.index   = rootParamIndex;
+    outLocation.state   = GetD3D12BindingResourceState(bindingDesc);
 }
 
 void D3D12PipelineLayout::BuildStaticSamplers(

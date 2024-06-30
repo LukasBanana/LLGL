@@ -26,7 +26,7 @@ D3D12SubresourceContext::~D3D12SubresourceContext()
     commandContext_.FinishAndSync(commandQueue_);
 }
 
-ID3D12Resource* D3D12SubresourceContext::CreateUploadBuffer(UINT64 size, D3D12_RESOURCE_STATES initialState)
+ID3D12Resource* D3D12SubresourceContext::CreateUploadBuffer(UINT64 size)
 {
     /* Create buffer resource in upload heap */
     ComPtr<ID3D12Resource> resource;
@@ -36,15 +36,15 @@ ID3D12Resource* D3D12SubresourceContext::CreateUploadBuffer(UINT64 size, D3D12_R
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        initialState,
+        D3D12_RESOURCE_STATE_GENERIC_READ, // Initial state of upload heap resourceds must be D3D12_RESOURCE_STATE_GENERIC_READ
         nullptr,
         IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for subresource upload buffer");
-    return TakeAndGetNative(resource);
+    return StoreAndGetNative(std::move(resource));
 }
 
-ID3D12Resource* D3D12SubresourceContext::CreateReadbackBuffer(UINT64 size, D3D12_RESOURCE_STATES initialState)
+ID3D12Resource* D3D12SubresourceContext::CreateReadbackBuffer(UINT64 size)
 {
     /* Create buffer resource in readback heap */
     ComPtr<ID3D12Resource> resource;
@@ -54,12 +54,12 @@ ID3D12Resource* D3D12SubresourceContext::CreateReadbackBuffer(UINT64 size, D3D12
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        initialState,
+        D3D12_RESOURCE_STATE_COPY_DEST, // Initial state of readback heap resources must be D3D12_RESOURCE_STATE_COPY_DEST
         nullptr,
         IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for subresource readback buffer");
-    return TakeAndGetNative(resource);
+    return StoreAndGetNative(std::move(resource));
 }
 
 ID3D12Resource* D3D12SubresourceContext::CreateTexture(const D3D12_RESOURCE_DESC& desc, D3D12_RESOURCE_STATES initialState)
@@ -76,7 +76,7 @@ ID3D12Resource* D3D12SubresourceContext::CreateTexture(const D3D12_RESOURCE_DESC
         IID_PPV_ARGS(resource.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for subresource update texture");
-    return TakeAndGetNative(resource);
+    return StoreAndGetNative(std::move(resource));
 }
 
 ComPtr<ID3D12Resource> D3D12SubresourceContext::TakeResource()
@@ -86,7 +86,7 @@ ComPtr<ID3D12Resource> D3D12SubresourceContext::TakeResource()
     return resource;
 }
 
-ID3D12Resource* D3D12SubresourceContext::TakeAndGetNative(ComPtr<ID3D12Resource>& resource)
+ID3D12Resource* D3D12SubresourceContext::StoreAndGetNative(ComPtr<ID3D12Resource>&& resource)
 {
     intermediateResources_.push_back(std::move(resource));
     return intermediateResources_.back().Get();

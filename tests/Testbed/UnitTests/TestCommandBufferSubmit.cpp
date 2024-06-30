@@ -36,6 +36,7 @@ DEF_TEST( CommandBufferSubmit )
         }
         TextureDescriptor texDesc;
         {
+            texDesc.debugName   = "CommandBufferSubmit.Framebuffer";
             texDesc.bindFlags   = BindFlags::Sampled | BindFlags::CopyDst;
             texDesc.format      = swapChain->GetColorFormat();
         }

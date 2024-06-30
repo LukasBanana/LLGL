@@ -152,7 +152,7 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
             const UINT64 alignedBufferSize = GetAlignedImageSize<UINT64>(srcExtent, rowStride, alignedRowStride);
             ID3D12Resource* alignedBuffer = commandContext_.AllocIntermediateBuffer(alignedBufferSize, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 
-            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+            commandContext_.TransitionBarrier(alignedBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ, true);
 
             /* Copy entire region from source texture into intermediate buffer */
             const D3D12_TEXTURE_COPY_LOCATION dstLocationD3D = srcTextureD3D.CalcCopyLocation(alignedBuffer, 0, srcExtent, alignedRowStride);
@@ -165,7 +165,7 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
                 &srcBox             // pSrcBox
             );
 
-            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST, true);
+            commandContext_.TransitionBarrier(alignedBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST, true);
 
             /* Copy each row individually from intermediate buffer into destination buffer due to unalgined row pitch */
             UINT64 alignedOffset = 0;
@@ -179,7 +179,7 @@ void D3D12CommandBuffer::CopyBufferFromTexture(
                 }
             }
 
-            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+            commandContext_.TransitionBarrier(alignedBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
         }
         else
         {
@@ -286,7 +286,7 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
             const UINT64 alignedBufferSize = GetAlignedImageSize<UINT64>(dstExtent, rowStride, alignedRowStride);
             ID3D12Resource* alignedBuffer = commandContext_.AllocIntermediateBuffer(alignedBufferSize, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 
-            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+            commandContext_.TransitionBarrier(alignedBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ, true);
 
             /* Copy each row individually from intermediate buffer into destination texture due to unalgined row pitch */
             UINT64 alignedOffset = 0;
@@ -300,7 +300,7 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
                 }
             }
 
-            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST, true);
+            commandContext_.TransitionBarrier(alignedBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST, true);
 
             /* Copy entire region from intermediate buffer into destination texture */
             const D3D12_TEXTURE_COPY_LOCATION srcLocationD3D = dstTextureD3D.CalcCopyLocation(alignedBuffer, 0, dstExtent, alignedRowStride);
@@ -313,7 +313,7 @@ void D3D12CommandBuffer::CopyTextureFromBuffer(
                 &srcBox                                 // pSrcBox
             );
 
-            commandContext_.TransitionResource(alignedBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+            commandContext_.TransitionBarrier(alignedBuffer, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
         }
         else
         {
@@ -510,12 +510,18 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, true);
     GetNative()->IASetVertexBuffers(0, 1, &(bufferD3D.GetVertexBufferView()));
 }
 
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D12BufferArray&, bufferArray);
+
+    for (D3D12Resource* resource : bufferArrayD3D.GetResourceRefs())
+        commandContext_.TransitionResource(*resource, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    commandContext_.FlushResourceBarrieres();
+
     GetNative()->IASetVertexBuffers(
         0,
         static_cast<UINT>(bufferArrayD3D.GetVertexBufferViews().size()),
@@ -526,6 +532,7 @@ void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
     commandContext_.SetIndexBuffer(bufferD3D.GetIndexBufferView());
 }
 
@@ -535,6 +542,8 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
     D3D12_INDEX_BUFFER_VIEW indexBufferView = bufferD3D.GetIndexBufferView();
     if (indexBufferView.SizeInBytes > offset)
     {
+        commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
+
         /* Update buffer location and size by offset, and override format */
         indexBufferView.BufferLocation  += offset;
         indexBufferView.SizeInBytes     -= static_cast<UINT>(offset);
@@ -576,7 +585,8 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
     }
 
     /* Insert resource barriers for the specified descriptor set */
-    resourceHeapD3D.InsertResourceBarriers(GetNative(), descriptorSet);
+    resourceHeapD3D.TransitionResources(commandContext_, descriptorSet);
+    resourceHeapD3D.InsertUAVBarriers(GetNative(), descriptorSet);
 }
 
 /*
@@ -605,6 +615,11 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     const D3D12DescriptorLocation& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
     if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
     {
+        /* Transition resource into target state */
+        //TODO: should this be flushed immediately for root parameters?
+        commandContext_.TransitionGenericResource(resource, rootParameterLocation.state);
+
+        /* Set resource as root parameter */
         D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr = GetD3DResourceGPUAddr(resource);
         if (gpuVirtualAddr != 0)
         {
@@ -617,8 +632,9 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     }
     else
     {
-        /* Bind resource with staging descriptor heap */
+        /* Transition resource into target state and bind resource with staging descriptor heap */
         const D3D12DescriptorHeapLocation& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
+        commandContext_.TransitionGenericResource(resource, descriptorLocation.state);
         commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
     }
 }

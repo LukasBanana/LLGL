@@ -88,18 +88,18 @@ HRESULT D3D12MipGenerator::GenerateMips(
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            GenerateMips1D(commandContext, texture.GetResource(), mipDescHeap, texture.GetDXFormat(), subresource);
+            GenerateMips1D(commandContext, texture, mipDescHeap, subresource);
             return S_OK;
 
         case TextureType::Texture2D:
         case TextureType::TextureCube:
         case TextureType::Texture2DArray:
         case TextureType::TextureCubeArray:
-            GenerateMips2D(commandContext, texture.GetResource(), mipDescHeap, texture.GetDXFormat(), subresource);
+            GenerateMips2D(commandContext, texture, mipDescHeap, subresource);
             return S_OK;
 
         case TextureType::Texture3D:
-            GenerateMips3D(commandContext, texture.GetResource(), mipDescHeap, texture.GetDXFormat(), subresource);
+            GenerateMips3D(commandContext, texture, mipDescHeap, subresource);
             return S_OK;
 
         case TextureType::Texture2DMS:
@@ -225,15 +225,16 @@ void D3D12MipGenerator::CreateResourcesFor3DMips(ID3D12Device* device)
 
 void D3D12MipGenerator::GenerateMips1D(
     D3D12CommandContext&        commandContext,
-    D3D12Resource&              resource,
+    D3D12Texture&               texture,
     ID3D12DescriptorHeap*       mipDescHeap,
-    DXGI_FORMAT                 format,
     const TextureSubresource&   subresource)
 {
-    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(format);
+    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(texture.GetDXFormat());
 
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
+    D3D12Resource& resource = texture.GetResource();
 
+    const D3D12_RESOURCE_STATES oldResourceState = texture.GetResource().currentState;
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
@@ -248,7 +249,7 @@ void D3D12MipGenerator::GenerateMips1D(
     commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
     gpuDescHandle.ptr += descHandleSize_;
 
-    D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
+    D3D12_RESOURCE_DESC resourceDesc = texture.GetNative()->GetDesc();
 
     const std::uint32_t mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels - 1;
 
@@ -285,25 +286,26 @@ void D3D12MipGenerator::GenerateMips1D(
         );
 
         /* Insert UAV barrier and move to next four MIP-maps */
-        commandContext.InsertUAVBarrier(resource, true);
+        commandContext.UAVBarrier(texture.GetNative(), true);
 
         mipLevel += numMips;
     }
 
-    commandContext.TransitionResource(resource, resource.usageState, true);
+    commandContext.TransitionResource(resource, oldResourceState, true);
 }
 
 void D3D12MipGenerator::GenerateMips2D(
     D3D12CommandContext&        commandContext,
-    D3D12Resource&              resource,
+    D3D12Texture&               texture,
     ID3D12DescriptorHeap*       mipDescHeap,
-    DXGI_FORMAT                 format,
     const TextureSubresource&   subresource)
 {
-    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(format);
+    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(texture.GetDXFormat());
 
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
+    D3D12Resource& resource = texture.GetResource();
 
+    const D3D12_RESOURCE_STATES oldResourceState = resource.currentState;
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
@@ -318,7 +320,7 @@ void D3D12MipGenerator::GenerateMips2D(
     commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
     gpuDescHandle.ptr += descHandleSize_;
 
-    D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
+    D3D12_RESOURCE_DESC resourceDesc = texture.GetNative()->GetDesc();
 
     const std::uint32_t mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels - 1;
 
@@ -358,25 +360,26 @@ void D3D12MipGenerator::GenerateMips2D(
         );
 
         /* Insert UAV barrier and move to next four MIP-maps */
-        commandContext.InsertUAVBarrier(resource, true);
+        commandContext.UAVBarrier(texture.GetNative(), true);
 
         mipLevel += numMips;
     }
 
-    commandContext.TransitionResource(resource, resource.usageState, true);
+    commandContext.TransitionResource(resource, oldResourceState, true);
 }
 
 void D3D12MipGenerator::GenerateMips3D(
     D3D12CommandContext&        commandContext,
-    D3D12Resource&              resource,
+    D3D12Texture&               texture,
     ID3D12DescriptorHeap*       mipDescHeap,
-    DXGI_FORMAT                 format,
     const TextureSubresource&   subresource)
 {
-    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(format);
+    const bool isFormatSRGB = DXTypes::IsDXGIFormatSRGB(texture.GetDXFormat());
 
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
+    D3D12Resource& resource = texture.GetResource();
 
+    const D3D12_RESOURCE_STATES oldResourceState = texture.GetResource().currentState;
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
@@ -391,7 +394,7 @@ void D3D12MipGenerator::GenerateMips3D(
     commandList->SetComputeRootDescriptorTable(1, gpuDescHandle);
     gpuDescHandle.ptr += descHandleSize_;
 
-    D3D12_RESOURCE_DESC resourceDesc = resource.native->GetDesc();
+    D3D12_RESOURCE_DESC resourceDesc = texture.GetNative()->GetDesc();
 
     const std::uint32_t mipLevelEnd = subresource.baseMipLevel + subresource.numMipLevels - 1;
 
@@ -433,12 +436,12 @@ void D3D12MipGenerator::GenerateMips3D(
         );
 
         /* Insert UAV barrier and move to next four MIP-maps */
-        commandContext.InsertUAVBarrier(resource, true);
+        commandContext.UAVBarrier(texture.GetNative(), true);
 
         mipLevel += numMips;
     }
 
-    commandContext.TransitionResource(resource, resource.usageState, true);
+    commandContext.TransitionResource(resource, oldResourceState, true);
 }
 
 

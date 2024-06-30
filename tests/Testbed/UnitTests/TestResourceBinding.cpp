@@ -592,17 +592,14 @@ DEF_TEST( ResourceBinding )
         cmdBuf.End();
     };
 
-    // Skip every other frame on fast test
-    if (opt.fastTest && (frame % 2 == 0))
-        return TestResult::ContinueSkipFrame;
-
     // Encode dispatch and render commands to calculate values in buffer/texture
     ExpectedResults expectedResults = {};
     EncodeCommandBuffer(*cmdBuffer, expectedResults);
 
-    // Evaluate readback result
-    constexpr unsigned numFrames = 10;
+    // Run this test many times in full test mode to ensure resource transitioning works, but only use a few iterations in fast mode
+    const unsigned numFrames = (opt.fastTest ? 10 : 1000);
 
+    // Evaluate readback result
     TestResult intermediateResult = TestResult::Passed;
 
     for_range(i, 4)

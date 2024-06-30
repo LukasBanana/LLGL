@@ -43,7 +43,7 @@ Before any command can be encoded, the command buffer must be set into encode mo
 
 \remarks In a multi-threaded environment, all blit commands (e.g. CommandBuffer::UpdateBuffer, CommandBuffer::CopyBuffer etc.) <b>must not</b> be called simultaneously
 with the same source and/or destination resources even if their ranges do not collide.
-Depending on the backend, those resources might be transitioned into difference states during those commands.
+Depending on the backend, those resources might be transitioned into different states during those commands.
 The same applies to CommandBuffer::BeginRenderPass where the specified RenderTarget might be transitioned into rendering state.
 Binding resources (CommandBuffer::SetResource, CommandBuffer::SetResourceHeap) as well as vertex (CommandBuffer::SetVertexBuffer) and
 index streams (CommandBuffer::SetIndexBuffer) can be performed in a multi-threaded fashion with either the same or separate resources.

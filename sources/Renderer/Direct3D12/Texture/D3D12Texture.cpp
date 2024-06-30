@@ -320,7 +320,7 @@ void D3D12Texture::UpdateSubresourceRegion(
     const D3D12_BOX srcBox      = CalcRegion(Offset3D{}, srcExtent);
 
     /* Transition texture resource for shader access */
-    context.GetCommandContext().TransitionResource(intermediateTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+    context.GetCommandContext().TransitionBarrier(intermediateTexture, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
     context.GetCommandContext().TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
         for_range(arrayLayer, subresource.numArrayLayers)
@@ -409,6 +409,7 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
 
     const D3D12_BOX srcBox = CalcRegion(offset, extent);
 
+    const D3D12_RESOURCE_STATES oldResourceState = resource_.currentState;
     context.GetCommandContext().TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
     {
         for_range(arrayLayer, region.subresource.numArrayLayers)
@@ -427,7 +428,7 @@ void D3D12Texture::CreateSubresourceCopyAsReadbackBuffer(
             dstBufferFootprint.Offset += outLayerStride;
         }
     }
-    context.GetCommandContext().TransitionResource(resource_, resource_.usageState, true);
+    context.GetCommandContext().TransitionResource(resource_, oldResourceState, true);
 }
 
 void D3D12Texture::CreateShaderResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)

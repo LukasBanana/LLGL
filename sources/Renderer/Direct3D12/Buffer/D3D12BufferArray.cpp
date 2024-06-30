@@ -21,8 +21,12 @@ D3D12BufferArray::D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * buf
 {
     /* Store the strides and offests of each D3D12VertexBuffer inside the arrays */
     vertexBufferViews_.reserve(numBuffers);
+    resourceRefs_.reserve(numBuffers);
     while (D3D12Buffer* next = NextArrayResource<D3D12Buffer>(numBuffers, bufferArray))
+    {
         vertexBufferViews_.push_back(next->GetVertexBufferView());
+        resourceRefs_.push_back(&(next->GetResource()));
+    }
 }
 
 

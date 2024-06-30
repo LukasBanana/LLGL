@@ -23,7 +23,9 @@ namespace LLGL
 {
 
 
+struct D3D12Resource;
 struct ResourceHeapDescriptor;
+class D3D12CommandContext;
 
 class D3D12ResourceHeap final : public ResourceHeap
 {
@@ -49,8 +51,11 @@ class D3D12ResourceHeap final : public ResourceHeap
             const ArrayView<ResourceViewDescriptor>&    resourceViews
         );
 
+        // Inserts the resource barriers for the specified descritpor set into the command context.
+        void TransitionResources(D3D12CommandContext& context, std::uint32_t descriptorSet);
+
         // Inserts the resource barriers for the specified descritpor set into the command list.
-        void InsertResourceBarriers(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet);
+        void InsertUAVBarriers(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet);
 
         // Returns the CPU descriptor handle for heap start of the specified descriptor set.
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForHeapStart(D3D12_DESCRIPTOR_HEAP_TYPE heapType, std::uint32_t descriptorSet) const;
@@ -98,7 +103,7 @@ class D3D12ResourceHeap final : public ResourceHeap
 
         void UpdateBarriers(std::uint32_t descriptorSet);
 
-        inline bool HasBarriers() const
+        inline bool HasUAVBarriers() const
         {
             return (barrierStride_ > 0);
         }
@@ -110,9 +115,10 @@ class D3D12ResourceHeap final : public ResourceHeap
         UINT                                        descriptorHandleStrides_[2] = {};
         UINT                                        descriptorSetStrides_[2]    = {};
         UINT                                        numDescriptorsPerSet_[2]    = {};
-        UINT                                        numDescriptorSets_          = 0;    // Only used for 'GetNumDescriptorSets'
+        UINT                                        numDescriptorSets_          = 0;
 
         SmallVector<D3D12DescriptorHeapLocation>    descriptorMap_;
+        std::vector<D3D12Resource*>                 resources_;
 
         std::vector<ID3D12Resource*>                uavResourceHeap_;                   // Heap of UAV resources that require a barrier
         UINT                                        uavResourceSetStride_       = 0;    // Number of (potential) UAV resources per descriptor set

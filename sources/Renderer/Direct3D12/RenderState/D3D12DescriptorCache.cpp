@@ -42,7 +42,7 @@ void D3D12DescriptorCache::Create(
 
 void D3D12DescriptorCache::Reset(UINT numResources, UINT numSamplers)
 {
-    /* Store new strides and resize descriptor heaps if necessary */
+    /* Store new sizes and resize descriptor heaps if necessary */
     currentStrides_[g_dhIndexCbvSrvUav] = numResources;
     if (descriptorHeaps_[g_dhIndexCbvSrvUav].GetSize() < numResources)
     {

@@ -10,8 +10,8 @@
 
 
 #include <LLGL/BufferArray.h>
+#include <LLGL/Container/SmallVector.h>
 #include <d3d12.h>
-#include <vector>
 
 
 namespace LLGL
@@ -19,6 +19,7 @@ namespace LLGL
 
 
 class Buffer;
+struct D3D12Resource;
 
 class D3D12BufferArray final : public BufferArray
 {
@@ -28,14 +29,21 @@ class D3D12BufferArray final : public BufferArray
         D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of vertex buffer views.
-        inline const std::vector<D3D12_VERTEX_BUFFER_VIEW>& GetVertexBufferViews() const
+        inline ArrayView<D3D12_VERTEX_BUFFER_VIEW> GetVertexBufferViews() const
         {
             return vertexBufferViews_;
         }
 
+        // Returns the array of vertex buffer resource references.
+        inline ArrayView<D3D12Resource*> GetResourceRefs() const
+        {
+            return resourceRefs_;
+        }
+
     private:
 
-        std::vector<D3D12_VERTEX_BUFFER_VIEW> vertexBufferViews_;
+        SmallVector<D3D12_VERTEX_BUFFER_VIEW, 4>    vertexBufferViews_;
+        SmallVector<D3D12Resource*, 4>              resourceRefs_;
 
 };
 
