@@ -305,7 +305,7 @@ static D3D12_RESOURCE_STATES GetD3D12BindingResourceState(const BindingDescripto
             else if ((bindingDesc.stageFlags & StageFlags::FragmentStage) == 0)
                 return D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
             else
-                return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+                return (D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
         }
     }
     return D3D12_RESOURCE_STATE_COMMON;
