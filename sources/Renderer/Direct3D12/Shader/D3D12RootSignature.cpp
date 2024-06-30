@@ -7,6 +7,7 @@
 
 #include "D3D12RootSignature.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/Utils/ForRange.h>
 #include <stdint.h>
 
@@ -70,13 +71,14 @@ D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(
 
 D3D12RootParameter* D3D12RootSignature::FindCompatibleRootParameter(
     const D3D12_ROOT_CONSTANTS& rootConstants,
+    D3D12_SHADER_VISIBILITY     visibility,
     std::size_t                 first,
     UINT*                       outRootParameterIndex)
 {
     /* Find compatible root parameter (search from back to front) */
     for_subrange_reverse(i, first, rootParams_.size())
     {
-        if (rootParams_[i].IsCompatible(rootConstants))
+        if (rootParams_[i].IsCompatible(rootConstants, visibility))
         {
             if (outRootParameterIndex != nullptr)
                 *outRootParameterIndex = static_cast<UINT>(i);
@@ -125,8 +127,8 @@ static ComPtr<ID3DBlob> DXSerializeRootSignature(
     {
         if (error)
         {
-            auto errorStr = DXGetBlobString(error.Get());
-            throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
+            std::string errorStr = DXGetBlobString(error.Get());
+            LLGL_TRAP("failed to serialize D3D12 root signature: %s", errorStr.c_str());
         }
         else
             DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
@@ -169,7 +171,7 @@ static ComPtr<ID3D12RootSignature> DXCreateRootSignature(
 
         signatureDesc.Flags                 = flags;
     }
-    auto signature = DXSerializeRootSignature(signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1);
+    ComPtr<ID3DBlob> signature = DXSerializeRootSignature(signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1);
 
     /* Create actual root signature */
     ComPtr<ID3D12RootSignature> rootSignature;

@@ -704,6 +704,9 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
 {
     HRESULT hr = S_OK;
 
+    if (!byteCode_)
+        return E_FAIL;
+
     /* Get shader reflection */
     ComPtr<ID3D12ShaderReflection> reflectionObject;
     hr = ReflectD3D12ShaderBytecode(byteCode_.Get(), reflectionObject);
@@ -750,7 +753,8 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
                 if (FAILED(hr))
                     return hr;
 
-                fieldsInfo.push_back(D3D12ConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
+                if ((fieldDesc.uFlags & D3D_SVF_USED) != 0)
+                    fieldsInfo.push_back(D3D12ConstantReflection{ fieldDesc.Name, fieldDesc.StartOffset, fieldDesc.Size });
             }
 
             /* Write reflection output */

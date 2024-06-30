@@ -144,7 +144,14 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     long cbufferStageFlags = 0;
     std::vector<const D3D12ConstantBufferReflection*> cbufferReflections;
 
-    auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const std::string& name) -> std::pair<const D3D12_ROOT_CONSTANTS*, const D3D12ConstantReflection*>
+    struct D3D12CbufferField
+    {
+        const D3D12_ROOT_CONSTANTS*     constants;
+        const D3D12ConstantReflection*  reflection;
+        D3D12_SHADER_VISIBILITY         visibility;
+    };
+
+    auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const std::string& name) -> D3D12CbufferField
     {
         for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
         {
@@ -153,11 +160,16 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
                 if (field.name == name)
                 {
                     cbufferStageFlags |= cbuffer->stageFlags;
-                    return { &(cbuffer->rootConstants), &field };
+                    return D3D12CbufferField
+                    {
+                        &(cbuffer->rootConstants),
+                        &field,
+                        D3D12RootParameter::FindSuitableVisibility(cbuffer->stageFlags)
+                    };
                 }
             }
         }
-        return { nullptr, nullptr };
+        return {};
     };
 
     for (D3D12Shader* shader : shaders)
@@ -181,13 +193,13 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
 
     const std::size_t rootParamOffset = rootSignaturePermutation.GetNumRootParameters();
 
-    auto FindOrAppendRootParameter = [&rootSignaturePermutation, rootParamOffset](const D3D12_ROOT_CONSTANTS& rootConstants) -> UINT
+    auto FindOrAppendRootParameter = [&rootSignaturePermutation, rootParamOffset](const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility) -> UINT
     {
         UINT rootParamIndex = -1;
-        if (rootSignaturePermutation.FindCompatibleRootParameter(rootConstants, rootParamOffset, &rootParamIndex) == nullptr)
+        if (rootSignaturePermutation.FindCompatibleRootParameter(rootConstants, visibility, rootParamOffset, &rootParamIndex) == nullptr)
         {
             D3D12RootParameter* rootParam = rootSignaturePermutation.AppendRootParameter(&rootParamIndex);
-            rootParam->InitAsConstants(rootConstants);
+            rootParam->InitAsConstants(rootConstants, visibility);
         }
         return rootParamIndex;
     };
@@ -195,22 +207,20 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
     for_range(i, uniforms_.size())
     {
         /* Find constant buffer field for specified uniform name */
-        const auto field = FindCbufferField(uniforms_[i].name);
-        const D3D12_ROOT_CONSTANTS*     rootConstants   = field.first;
-        const D3D12ConstantReflection*  fieldReflection = field.second;
-        LLGL_ASSERT_PTR(rootConstants);
-        LLGL_ASSERT_PTR(fieldReflection);
+        const D3D12CbufferField field = FindCbufferField(uniforms_[i].name);
+        LLGL_ASSERT_PTR(field.constants);
+        LLGL_ASSERT_PTR(field.reflection);
 
         /* Find or append root parameter for root constants */
-        UINT                rootParamIndex  = FindOrAppendRootParameter(*rootConstants);
+        UINT                rootParamIndex  = FindOrAppendRootParameter(*field.constants, field.visibility);
         D3D12RootParameter& rootParam       = rootSignaturePermutation[rootParamIndex];
 
         /* Build root constant map for current uniform descriptor */
         D3D12RootConstantLocation& location = outRootConstantMap[i];
         {
             location.index          = rootParamIndex;
-            location.num32BitValues = std::max(1u, GetAlignedSize(fieldReflection->size, 4u) / 4u);
-            location.wordOffset     = fieldReflection->offset / 4;
+            location.num32BitValues = std::max(1u, GetAlignedSize(field.reflection->size, 4u) / 4u);
+            location.wordOffset     = field.reflection->offset / 4;
         }
     }
 
@@ -420,11 +430,15 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
     UINT                            maxNumDescriptorRanges,
     D3D12DescriptorHeapLocation&    outLocation)
 {
+    /* Determine shader visibility for new binding */
+    const D3D12_SHADER_VISIBILITY visibility = D3D12RootParameter::FindSuitableVisibility(bindingDesc.stageFlags);
+
     /* Find compatible root parameter after root parameter for heap resources */
     const UINT rootParamOffset = GetRootParameterIndexAfterHeapResources(rootParameterIndices_);
     if (D3D12RootParameter* rootParam = rootSignature.FindCompatibleRootParameter(descRangeType, rootParamOffset))
     {
         /* Append descriptor range to previous root parameter */
+        rootParam->IncludeShaderVisibility(visibility);
         rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot);
     }
     else
@@ -432,7 +446,7 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
         /* Create new root parameter and append descriptor range */
         UINT rootParamIndex = 0;
         rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
-        rootParam->InitAsDescriptorTable(maxNumDescriptorRanges);
+        rootParam->InitAsDescriptorTable(maxNumDescriptorRanges, visibility);
         rootParam->AppendDescriptorTableRange(descRangeType, bindingDesc.slot);
 
         /* Store root parameter index */
@@ -480,10 +494,13 @@ void D3D12PipelineLayout::BuildRootParameter(
     const BindingDescriptor&        bindingDesc,
     D3D12DescriptorLocation&        outLocation)
 {
+    /* Determine shader visibility for new binding */
+    const D3D12_SHADER_VISIBILITY visibility = D3D12RootParameter::FindSuitableVisibility(bindingDesc.stageFlags);
+
     /* Create new root parameter and append descriptor range */
     UINT rootParamIndex = 0;
     D3D12RootParameter* rootParam = rootSignature.AppendRootParameter(&rootParamIndex);
-    rootParam->InitAsDescriptor(rootParamType, bindingDesc.slot);//, D3D12RootParameter::FindSuitableVisibility(binding.stageFlags));
+    rootParam->InitAsDescriptor(rootParamType, bindingDesc.slot, visibility);
 
     /* Cache binding flags in the same order root parameters are build */
     outLocation.type    = rootParamType;

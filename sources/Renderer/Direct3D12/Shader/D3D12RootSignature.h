@@ -43,6 +43,7 @@ class D3D12RootSignature
 
         D3D12RootParameter* FindCompatibleRootParameter(
             const D3D12_ROOT_CONSTANTS& rootConstants,
+            D3D12_SHADER_VISIBILITY     visibility,
             std::size_t                 first                   = 0,
             UINT*                       outRootParameterIndex   = nullptr
         );

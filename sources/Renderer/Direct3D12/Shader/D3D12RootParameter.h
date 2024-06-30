@@ -45,13 +45,15 @@ class D3D12RootParameter
         void AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT baseShaderRegister, UINT numDescriptors = 1, UINT registerSpace = 0);
         void AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, const BindingSlot& slot, UINT numDescriptors = 1);
 
+        void IncludeShaderVisibility(D3D12_SHADER_VISIBILITY visibility);
+
         void Clear();
 
         // Returns true if the specified descriptor range type is compatible with this root paramter.
         bool IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D3D12_DESCRIPTOR_RANGE_TYPE rangeType) const;
 
         // Returns true if the specified root constants are compatible with this root paramter.
-        bool IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants) const;
+        bool IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility) const;
 
     public:
 

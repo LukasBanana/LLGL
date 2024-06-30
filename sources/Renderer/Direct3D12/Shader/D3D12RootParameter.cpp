@@ -115,6 +115,12 @@ void D3D12RootParameter::AppendDescriptorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE 
     AppendDescriptorTableRange(rangeType, slot.index, numDescriptors, slot.set);
 }
 
+void D3D12RootParameter::IncludeShaderVisibility(D3D12_SHADER_VISIBILITY visibility)
+{
+    if (managedRootParam_->ShaderVisibility != visibility)
+        managedRootParam_->ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+}
+
 void D3D12RootParameter::Clear()
 {
     *managedRootParam_ = {};
@@ -143,14 +149,16 @@ bool D3D12RootParameter::IsCompatible(D3D12_ROOT_PARAMETER_TYPE rootParamType, D
     return AreRangeTypesCompatible(descRanges_.back().RangeType, rangeType);
 }
 
-bool D3D12RootParameter::IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants) const
+bool D3D12RootParameter::IsCompatible(const D3D12_ROOT_CONSTANTS& rootConstants, D3D12_SHADER_VISIBILITY visibility) const
 {
     return
     (
         managedRootParam_                           != nullptr                                      &&
         managedRootParam_->ParameterType            == D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS    &&
         managedRootParam_->Constants.ShaderRegister == rootConstants.ShaderRegister                 &&
-        managedRootParam_->Constants.RegisterSpace  == rootConstants.RegisterSpace
+        managedRootParam_->Constants.RegisterSpace  == rootConstants.RegisterSpace                  &&
+      //managedRootParam_->Constants.Num32BitValues == rootConstants.Num32BitValues                 &&
+        managedRootParam_->ShaderVisibility         == visibility
     );
 }
 
