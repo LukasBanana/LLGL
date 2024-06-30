@@ -447,7 +447,7 @@ void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlag
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        D3D12_RESOURCE_STATE_COMMON, // Buffers are effectively created in D3D12_RESOURCE_STATE_COMMON state
+        cpuAccessBuffer_.currentState,
         nullptr,
         IID_PPV_ARGS(cpuAccessBuffer_.native.ReleaseAndGetAddressOf())
     );
