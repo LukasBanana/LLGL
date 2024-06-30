@@ -510,7 +510,9 @@ void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
 void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+#if 0 //TODO: this does not work in multi-threaded environment
     commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, true);
+#endif
     GetNative()->IASetVertexBuffers(0, 1, &(bufferD3D.GetVertexBufferView()));
 }
 
@@ -518,9 +520,11 @@ void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayD3D = LLGL_CAST(D3D12BufferArray&, bufferArray);
 
+#if 0 //TODO: this does not work in multi-threaded environment
     for (D3D12Resource* resource : bufferArrayD3D.GetResourceRefs())
         commandContext_.TransitionResource(*resource, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandContext_.FlushResourceBarrieres();
+#endif
 
     GetNative()->IASetVertexBuffers(
         0,
@@ -532,7 +536,9 @@ void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+#if 0 //TODO: this does not work in multi-threaded environment
     commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
+#endif
     commandContext_.SetIndexBuffer(bufferD3D.GetIndexBufferView());
 }
 
@@ -542,7 +548,9 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format, std
     D3D12_INDEX_BUFFER_VIEW indexBufferView = bufferD3D.GetIndexBufferView();
     if (indexBufferView.SizeInBytes > offset)
     {
+#if 0 //TODO: this does not work in multi-threaded environment
         commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDEX_BUFFER, true);
+#endif
 
         /* Update buffer location and size by offset, and override format */
         indexBufferView.BufferLocation  += offset;
@@ -585,7 +593,9 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
     }
 
     /* Insert resource barriers for the specified descriptor set */
+#if 0 //TODO: this does not work in multi-threaded environment
     resourceHeapD3D.TransitionResources(commandContext_, descriptorSet);
+#endif
     resourceHeapD3D.InsertUAVBarriers(GetNative(), descriptorSet);
 }
 
@@ -615,9 +625,11 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     const D3D12DescriptorLocation& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
     if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
     {
+#if 0 //TODO: this does not work in multi-threaded environment
         /* Transition resource into target state */
         //TODO: should this be flushed immediately for root parameters?
         commandContext_.TransitionGenericResource(resource, rootParameterLocation.state);
+#endif
 
         /* Set resource as root parameter */
         D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddr = GetD3DResourceGPUAddr(resource);
@@ -634,7 +646,9 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     {
         /* Transition resource into target state and bind resource with staging descriptor heap */
         const D3D12DescriptorHeapLocation& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
+#if 0 //TODO: this does not work in multi-threaded environment
         commandContext_.TransitionGenericResource(resource, descriptorLocation.state);
+#endif
         commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
     }
 }
@@ -829,6 +843,7 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
 
     numSOBuffers_ = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
 
+#if 0 //TODO: this does not work in multi-threaded environment
     /* Store native buffer views and transition resources */
     for_range(i, numSOBuffers_)
     {
@@ -838,6 +853,7 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
         commandContext_.TransitionResource(bufferD3D->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
     }
     commandContext_.FlushResourceBarrieres();
+#endif
 
     /* Reset counter values in buffers by copying from a static zero-initialized buffer to the stream-output targets */
     const D3D12BufferConstantsView srcBufferView = D3D12BufferConstantsPool::Get().FetchConstants(D3D12BufferConstants::ZeroUInt64);
@@ -853,10 +869,12 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
         );
     }
 
+#if 0 //TODO: this does not work in multi-threaded environment
     /* Transition resources to stream-output */
     for_range(i, numSOBuffers_)
         commandContext_.TransitionResource(boundSOBuffers_[i]->GetResource(), D3D12_RESOURCE_STATE_STREAM_OUT);
     commandContext_.FlushResourceBarrieres();
+#endif
 
     /* Set active stream-output targets */
     GetNative()->SOSetTargets(0, numSOBuffers_, soBufferViews);
@@ -868,10 +886,12 @@ void D3D12CommandBuffer::EndStreamOutput()
     const D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferViewsNull[LLGL_MAX_NUM_SO_BUFFERS] = {};
     GetNative()->SOSetTargets(0, LLGL_MAX_NUM_SO_BUFFERS, soBufferViewsNull);
 
+#if 0 //TODO: this does not work in multi-threaded environment
     /* Transition resources back to their common usage */
     for_range(i, numSOBuffers_)
         commandContext_.TransitionResource(boundSOBuffers_[i]->GetResource(), boundSOBuffers_[i]->GetResource().usageState);
     commandContext_.FlushResourceBarrieres();
+#endif
 }
 
 /* ----- Drawing ----- */
