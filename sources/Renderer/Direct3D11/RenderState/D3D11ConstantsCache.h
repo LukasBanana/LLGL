@@ -60,7 +60,7 @@ class D3D11ConstantsCache
         };
 
         // Represents a single D3D constant register of four 32-bit words.
-        struct ConstantRegister
+        struct alignas(16) ConstantRegister
         {
             std::uint32_t words[4];
         };

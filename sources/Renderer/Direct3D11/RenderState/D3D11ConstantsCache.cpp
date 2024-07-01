@@ -111,7 +111,7 @@ HRESULT D3D11ConstantsCache::SetUniforms(std::uint32_t first, const void* data, 
         /* Get current uniform location with its cbuffer */
         const D3D11ConstantsCache::ConstantLocation& location = constantsMap_[first];
         D3D11ConstantsCache::ConstantBuffer& cbuffer = constantBuffers_[location.index];
-        const auto chunkSize = std::min(dataSize, static_cast<decltype(dataSize)>(location.size));
+        const std::uint16_t chunkSize = std::min<std::uint16_t>(dataSize, static_cast<std::uint16_t>(location.size));
 
         /* Copy input data into cbuffer data and move to next uniform */
         ::memcpy(reinterpret_cast<char*>(cbuffer.constants.data()) + location.offset, dataByteAligned, chunkSize);

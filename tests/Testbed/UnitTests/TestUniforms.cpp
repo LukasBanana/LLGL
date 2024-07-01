@@ -52,6 +52,7 @@ DEF_TEST( Uniforms )
 
         GraphicsPipelineDescriptor psoDesc;
         {
+            psoDesc.debugName                       = "Test.Uniforms.PSO";
             psoDesc.pipelineLayout                  = psoLayout;
             psoDesc.renderPass                      = swapChain->GetRenderPass();
             psoDesc.vertexShader                    = shaders[VSDynamic];
@@ -61,7 +62,7 @@ DEF_TEST( Uniforms )
             psoDesc.rasterizer.cullMode             = CullMode::Back;
             psoDesc.blend.targets[0].blendEnabled   = true;
         }
-        CreateGraphicsPSO(psoDesc, "psoUniforms", &pso);
+        CreateGraphicsPSO(psoDesc, nullptr, &pso);
 
         if (const Report* report = pso->GetReport())
         {

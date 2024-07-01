@@ -18,6 +18,11 @@ namespace LLGL
 {
 
 
+/*
+Note:
+  Maximum size for D3D11 cbuffer is 'D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 4 * sizeof(float)'
+  The chunk size doesn't have to exhaust this size limit, but 4096 happens to be the same value as D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT.
+*/
 static constexpr UINT g_cbufferChunkSize = 4096u;
 
 D3D11StateManager::D3D11StateManager(ID3D11Device* device, const ComPtr<ID3D11DeviceContext>& context) :
@@ -70,8 +75,8 @@ void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport*
 
         for_range(i, numViewports)
         {
-            const auto& src = viewportArray[i];
-            auto& dst       = viewportsD3D[i];
+            const Viewport& src = viewportArray[i];
+            D3D11_VIEWPORT& dst = viewportsD3D[i];
 
             dst.TopLeftX    = src.x;
             dst.TopLeftY    = src.y;
@@ -93,8 +98,8 @@ void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* sc
 
     for_range(i, numScissors)
     {
-        const auto& src = scissorArray[i];
-        auto& dst       = scissorsD3D[i];
+        const Scissor&  src = scissorArray[i];
+        D3D11_RECT&     dst = scissorsD3D[i];
 
         dst.left        = src.x;
         dst.top         = src.y;
@@ -355,14 +360,19 @@ void D3D11StateManager::SetComputeStaticSampler(const D3D11StaticSampler& static
 
 void D3D11StateManager::SetConstants(UINT slot, const void* data, UINT dataSize, long stageFlags)
 {
-    /* Write data to intermediate constant buffer */
-    constexpr UINT cbufferUpdateAlignment = 16*16;
-    auto bufferRange = stagingCbufferPool_.Write(data, dataSize, cbufferUpdateAlignment);
+    /*
+    Write data to intermediate constant buffer and use alignment of 16 vector registers (256 bytes)
+    as this is required by ID3D11DeviceContext::*SetConstantBuffers1() functions. From D3D debug layer:
+    "All constant buffer offsets and counts must be multiples of 16 and the counts must be at most 4096."
+    */
+    constexpr UINT cbufferVectorAlignment = 16;
+    constexpr UINT cbufferUpdateAlignment = cbufferVectorAlignment*16;
+    D3D11BufferRange bufferRange = stagingCbufferPool_.Write(data, dataSize, cbufferUpdateAlignment);
 
     /* Bind intermediate buffer to buffer range */
     ID3D11Buffer* buffers[]        = { bufferRange.native };
-    const UINT    firstConstants[] = { bufferRange.offset / 16 };
-    const UINT    numConstants[]   = { bufferRange.size / 16 };
+    const UINT    firstConstants[] = { bufferRange.offset / cbufferVectorAlignment };
+    const UINT    numConstants[]   = { bufferRange.size   / cbufferVectorAlignment };
 
     SetConstantBuffersRange(slot, 1, buffers, firstConstants, numConstants, stageFlags);
 }

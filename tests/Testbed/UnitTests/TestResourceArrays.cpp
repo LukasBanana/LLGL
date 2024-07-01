@@ -18,13 +18,9 @@ Such resource arrays must be bound with a ResourceHeap as LLGL does not allow su
 */
 DEF_TEST( ResourceArrays )
 {
-    #if 1
+    //TODO: temporarily disable this test for Metal as it's currently not supported
     if (renderer->GetRendererID() == RendererID::Metal)
-    {
-        //TODO: temporarily disable this test for Metal as it's currently not supported
         return TestResult::Skipped;
-    }
-    #endif
 
     if (shaders[VSResourceArrays] == nullptr || shaders[PSResourceArrays] == nullptr)
     {

@@ -1820,6 +1820,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         ShaderType  expectedType;
     };
 
+    SmallVector<DbgShader*, 5> shadersDbg;
+
     for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
                                  ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
                                  ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
@@ -1829,6 +1831,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         if (Shader* shader = pair.shader)
         {
             auto* shaderDbg = LLGL_CAST(DbgShader*, shader);
+
             const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
             if (isSeparableShaders && !hasSeparableShaders)
             {
@@ -1854,6 +1857,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
                     ToString(shader->GetType()), ToString(pair.expectedType)
                 );
             }
+
+            shadersDbg.push_back(shaderDbg);
         }
     }
 
@@ -1864,6 +1869,9 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     ValidateInputAssemblyDescriptor(pipelineStateDesc);
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
+
+    if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))
+        ValidatePipelineStateUniforms(*pipelineLayoutDbg, shadersDbg);
 }
 
 void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc)
@@ -2030,6 +2038,97 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& f
             "cannot use fragment shader with %u color outputs for PSO without render pass",
             numColorOutputAttribs
         );
+    }
+}
+
+static ShaderType StageFlagsToShaderType(long stageFlags)
+{
+    switch (stageFlags)
+    {
+        case StageFlags::VertexStage:           return ShaderType::Vertex;
+        case StageFlags::TessControlStage:      return ShaderType::TessControl;
+        case StageFlags::TessEvaluationStage:   return ShaderType::TessEvaluation;
+        case StageFlags::GeometryStage:         return ShaderType::Geometry;
+        case StageFlags::FragmentStage:         return ShaderType::Fragment;
+        case StageFlags::ComputeStage:          return ShaderType::Compute;
+        default:                                return ShaderType::Undefined;
+    }
+}
+
+void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pipelineLayout, const ArrayView<DbgShader*>& shaders)
+{
+    /*
+    Warn if any uniform is in a cbuffer that has different binding slots across multiple shader stages,
+    e.g. implicitly assigned "$Globals" buffer in HLSL with different shader registers across vertex and pixel shader stage.
+    */
+    if (pipelineLayout.desc.uniforms.empty())
+        return;
+
+    std::vector<ShaderReflection> reflections;
+
+    auto FindResourceInPreviousReflectionsByName = [&reflections](const std::string& name) -> const ShaderResourceReflection*
+    {
+        for (const ShaderReflection& otherReflection : reflections)
+        {
+            for (const ShaderResourceReflection& otherResource : otherReflection.resources)
+            {
+                if (otherResource.binding.name == name)
+                {
+                    /* Found matching resource name */
+                    return &otherResource;
+                }
+            }
+        }
+        return nullptr;
+    };
+
+    for (DbgShader* shader : shaders)
+    {
+        /* Reflect shader code */
+        ShaderReflection reflection;
+        shader->instance.Reflect(reflection);
+
+        /* Check mismatch between shader resources */
+        if (!reflections.empty())
+        {
+            for (const ShaderResourceReflection& resource : reflection.resources)
+            {
+                /* Try to find resource name in other reflections */
+                if (const ShaderResourceReflection* otherResource = FindResourceInPreviousReflectionsByName(resource.binding.name))
+                {
+                    if (otherResource->binding.type != resource.binding.type)
+                    {
+                        LLGL_DBG_ERROR(
+                            ErrorType::InvalidArgument,
+                            "type mismatch for resource binding \"%s\" in %s shader (%s) and %s shader (%s)",
+                            resource.binding.name.c_str(),
+                            ToString(StageFlagsToShaderType(resource.binding.stageFlags)),
+                            ToString(resource.binding.type),
+                            ToString(StageFlagsToShaderType(otherResource->binding.stageFlags)),
+                            ToString(otherResource->binding.type)
+                        );
+                    }
+                    else if (otherResource->binding.slot != resource.binding.slot)
+                    {
+                        const std::string lhsSlotLabel = GetBindingSlotLabel(resource.binding.slot);
+                        const std::string rhsSlotLabel = GetBindingSlotLabel(otherResource->binding.slot);
+                        LLGL_DBG_ERROR(
+                            ErrorType::InvalidArgument,
+                            "slot mismatch for resource binding \"%s\" in %s shader (%s) and %s shader (%s)",
+                            resource.binding.name.c_str(),
+                            ToString(StageFlagsToShaderType(resource.binding.stageFlags)),
+                            lhsSlotLabel.c_str(),
+                            ToString(StageFlagsToShaderType(otherResource->binding.stageFlags)),
+                            rhsSlotLabel.c_str()
+                        );
+                    }
+                    break;
+                }
+            }
+        }
+
+        /* Append new reflection to list for comparison with other shaders */
+        reflections.push_back(std::move(reflection));
     }
 }
 

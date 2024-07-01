@@ -17,7 +17,7 @@ namespace LLGL
 static bool IsSegmentedStagingRequired(ID3D11DeviceContext* context)
 {
     #if 0//TODO: Not sure if this is needed at the moment
-    //return (context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED);
+    return (context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED);
     #else
     return false;
     #endif
