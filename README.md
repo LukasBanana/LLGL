@@ -2,8 +2,7 @@
 
 <p align="center">
     <a href="https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt"><img alt="License" src="https://img.shields.io/badge/license-BSD--3%20clause-blue.svg" /></a>
-    <a href="https://app.codacy.com/gh/LukasBanana/LLGL/dashboard"><img src="https://api.codacy.com/project/badge/Grade/53e975cd13834e78bbb6120287a5f4d8"/></a>
-    <a href="https://gitter.im/LLGL-Project/community"><img alt="Join the chat at https://gitter.im/LLGL-Project/community" src="https://badges.gitter.im/LLGL-Project/LLGL.svg" /></a>
+    <a href="https://discord.com/channels/1257440130021457941"><img alt="Discord" src="https://img.shields.io/discord/1257440130021457941?logo=discord&logoColor=white"></a?>
 </p>
 
 <p align="center"><img src="docu/LLGL_Logo.png"/></p>
