@@ -139,6 +139,7 @@ class D3D11StateManager
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         ComPtr<ID3D11DeviceContext1>    context1_;
+        const bool                      needsCommandListEmulation_  = false;
         #endif
 
         D3D11StagingBufferPool          stagingCbufferPool_;
