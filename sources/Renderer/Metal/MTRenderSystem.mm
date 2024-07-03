@@ -49,7 +49,7 @@ MTRenderSystem::~MTRenderSystem()
 
 SwapChain* MTRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<MTSwapChain>(device_, swapChainDesc, surface);
+    return swapChains_.emplace<MTSwapChain>(device_, swapChainDesc, surface, GetRendererInfo());
 }
 
 void MTRenderSystem::Release(SwapChain& swapChain)

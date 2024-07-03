@@ -54,7 +54,8 @@ VKSwapChain::VKSwapChain(
     VkDevice                        device,
     VKDeviceMemoryManager&          deviceMemoryMngr,
     const SwapChainDescriptor&      desc,
-    const std::shared_ptr<Surface>& surface)
+    const std::shared_ptr<Surface>& surface,
+    const RendererInfo&             rendererInfo)
 :
     SwapChain                { desc                            },
     instance_                { instance                        },
@@ -84,7 +85,7 @@ VKSwapChain::VKSwapChain(
                                NullVkFence(device_),
                                NullVkFence(device_)            }
 {
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
 
     CreatePresentSemaphoresAndFences();
     CreateGpuSurface();

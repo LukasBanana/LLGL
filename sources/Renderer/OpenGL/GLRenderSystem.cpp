@@ -77,6 +77,13 @@ SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainD
     if (isFirstSwapChain)
         CreateGLContextDependentDevices(swapChainGL->GetStateManager());
 
+    /*
+    If no surface was specified, set a default title to the automatically created one now
+    as we need a valid GL context to query the renderer information for the default title.
+    */
+    if (!surface)
+        swapChainGL->BuildAndSetDefaultSurfaceTitle(GetRendererInfo());
+
     return swapChainGL;
 }
 

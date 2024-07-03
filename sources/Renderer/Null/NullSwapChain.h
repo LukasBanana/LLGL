@@ -22,7 +22,11 @@ class NullSwapChain final : public SwapChain
 
     public:
 
-        NullSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface);
+        NullSwapChain(
+            const SwapChainDescriptor&      desc,
+            const std::shared_ptr<Surface>& surface,
+            const RendererInfo&             rendererInfo
+        );
 
     public:
 

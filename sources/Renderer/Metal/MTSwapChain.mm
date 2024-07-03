@@ -52,13 +52,14 @@ namespace LLGL
 MTSwapChain::MTSwapChain(
     id<MTLDevice>                   device,
     const SwapChainDescriptor&      desc,
-    const std::shared_ptr<Surface>& surface)
+    const std::shared_ptr<Surface>& surface,
+    const RendererInfo&             rendererInfo)
 :
     SwapChain   { desc         },
     renderPass_ { device, desc }
 {
     /* Initialize surface for MetalKit view */
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
 
     /* Allocate and initialize MetalKit view */
     view_ = AllocMTKViewAndInitWithSurface(device, GetSurface());

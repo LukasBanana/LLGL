@@ -40,7 +40,8 @@ class VKSwapChain final : public SwapChain
             VkDevice                        device,
             VKDeviceMemoryManager&          deviceMemoryMngr,
             const SwapChainDescriptor&      desc,
-            const std::shared_ptr<Surface>& surface
+            const std::shared_ptr<Surface>& surface,
+            const RendererInfo&             rendererInfo
         );
 
         void Present() override;

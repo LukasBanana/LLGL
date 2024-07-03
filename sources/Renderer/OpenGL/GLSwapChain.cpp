@@ -8,10 +8,17 @@
 #include "GLSwapChain.h"
 #include "../TextureUtils.h"
 #include "Platform/GLContextManager.h"
+#include <LLGL/TypeInfo.h>
 #include <LLGL/Platform/Platform.h>
 
+#ifdef LLGL_MOBILE_PLATFORM
+#   include <LLGL/Canvas.h>
+#else
+#   include <LLGL/Window.h>
+#endif
+
 #ifdef LLGL_OS_LINUX
-#include <LLGL/Platform/NativeHandle.h>
+#   include <LLGL/Platform/NativeHandle.h>
 #endif
 
 
@@ -38,12 +45,12 @@ GLSwapChain::GLSwapChain(
     /* Set up surface for the swap-chain and pass native context handle */
     NativeHandle windowContext = {};
     ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, &windowContext, sizeof(windowContext));
+    SetOrCreateSurface(surface, UTF8String{}, desc.resolution, desc.fullscreen, &windowContext, sizeof(windowContext));
 
     #else
 
     /* Setup surface for the swap-chain */
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, UTF8String{}, desc.resolution, desc.fullscreen);
 
     #endif
 
@@ -113,6 +120,21 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
     }
     else
         return GLSwapChainContext::MakeCurrent(nullptr);
+}
+
+void GLSwapChain::BuildAndSetDefaultSurfaceTitle(const RendererInfo& info)
+{
+    #ifdef LLGL_MOBILE_PLATFORM
+
+    /* Set Canvas title for mobile platforms */
+    CastTo<Canvas>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
+
+    #else // LLGL_MOBILE_PLATFORM
+
+    /* Set Window title for desktop platforms */
+    CastTo<Window>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
+
+    #endif // /LLGL_MOBILE_PLATFORM
 }
 
 

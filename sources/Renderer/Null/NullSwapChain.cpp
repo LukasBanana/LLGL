@@ -35,13 +35,17 @@ static Format ChooseDepthStencilFormat(int depthBits, int stencilBits)
     }
 }
 
-NullSwapChain::NullSwapChain(const SwapChainDescriptor& desc, const std::shared_ptr<Surface>& surface) :
+NullSwapChain::NullSwapChain(
+    const SwapChainDescriptor&      desc,
+    const std::shared_ptr<Surface>& surface,
+    const RendererInfo&             rendererInfo)
+:
     SwapChain           { desc                                                       },
     samples_            { desc.samples                                               },
     colorFormat_        { ChooseColorFormat(desc.colorBits)                          },
     depthStencilFormat_ { ChooseDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
-    SetOrCreateSurface(surface, desc.resolution, desc.fullscreen, nullptr);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
 }

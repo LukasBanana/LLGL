@@ -89,7 +89,7 @@ VKRenderSystem::~VKRenderSystem()
 
 SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface);
+    return swapChains_.emplace<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface, GetRendererInfo());
 }
 
 void VKRenderSystem::Release(SwapChain& swapChain)

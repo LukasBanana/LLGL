@@ -146,6 +146,7 @@ Surface& SwapChain::GetSurface() const
 
 void SwapChain::SetOrCreateSurface(
     const std::shared_ptr<Surface>& surface,
+    const UTF8String&               title,
     const Extent2D&                 size,
     bool                            fullscreen,
     const void*                     windowContext,
@@ -163,6 +164,7 @@ void SwapChain::SetOrCreateSurface(
         /* Create new canvas for this swap-chain */
         CanvasDescriptor canvasDesc;
         {
+            canvasDesc.title = title;
             canvasDesc.flags = (fullscreen ? CanvasFlags::Borderless : 0);
         }
         pimpl_->surface = Canvas::Create(canvasDesc);
@@ -172,8 +174,9 @@ void SwapChain::SetOrCreateSurface(
         /* Create new window for this swap-chain */
         WindowDescriptor windowDesc;
         {
+            windowDesc.title                = title;
             windowDesc.size                 = size;
-            windowDesc.flags                = (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered) | WindowFlags::DisableSizeScaling;
+            windowDesc.flags                = WindowFlags::Visible | WindowFlags::DisableSizeScaling | (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered);
             windowDesc.windowContext        = windowContext;
             windowDesc.windowContextSize    = windowContextSize;
         }
@@ -222,6 +225,29 @@ bool SwapChain::ResetDisplayFullscreenMode()
         }
     }
     return false;
+}
+
+UTF8String SwapChain::BuildDefaultSurfaceTitle(const RendererInfo& info)
+{
+    UTF8String title = "LLGL";
+
+    /* Append surface typename */
+    #ifdef LLGL_MOBILE_PLATFORM
+    title += " Canvas ";
+    #else
+    title += " Window ";
+    #endif
+
+    /* Append swap-chain number */
+    static int swapChainCounter;
+    title += UTF8String{ std::to_string(++swapChainCounter) };
+
+    /* Append renderer name */
+    title += " ( ";
+    title += UTF8String{ info.rendererName };
+    title += " )";
+
+    return title;
 }
 
 

@@ -108,7 +108,7 @@ static RenderingCapabilities GetNullRenderingCaps()
     return caps;
 }
 
-static RendererInfo GetNullRenderInfo()
+static RendererInfo GetNullRendererInfo()
 {
     RendererInfo info;
     info.rendererName           = "Null";
@@ -122,7 +122,7 @@ NullRenderSystem::NullRenderSystem(const RenderSystemDescriptor& renderSystemDes
     desc_         { renderSystemDesc               },
     commandQueue_ { MakeUnique<NullCommandQueue>() }
 {
-    SetRendererInfo(GetNullRenderInfo());
+    SetRendererInfo(GetNullRendererInfo());
     SetRenderingCaps(GetNullRenderingCaps());
 }
 
@@ -130,7 +130,7 @@ NullRenderSystem::NullRenderSystem(const RenderSystemDescriptor& renderSystemDes
 
 SwapChain* NullRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<NullSwapChain>(swapChainDesc, surface);
+    return swapChains_.emplace<NullSwapChain>(swapChainDesc, surface, GetNullRendererInfo());
 }
 
 void NullRenderSystem::Release(SwapChain& swapChain)

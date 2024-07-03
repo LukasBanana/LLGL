@@ -36,7 +36,8 @@ class MTSwapChain final : public SwapChain
         MTSwapChain(
             id<MTLDevice>                   device,
             const SwapChainDescriptor&      desc,
-            const std::shared_ptr<Surface>& surface
+            const std::shared_ptr<Surface>& surface,
+            const RendererInfo&             rendererInfo
         );
 
         void Present() override;

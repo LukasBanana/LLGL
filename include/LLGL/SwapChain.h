@@ -191,16 +191,19 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \brief Sets the swap-chain surface or creates one if 'surface' is null, and switches to fullscreen mode if enabled.
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
         If this is null, a new surface is created for this swap-chain.
+        \param[in] title Specifies the surface title. This is only used if \c surface is null.
         \param[in] size Specifies the surface content size. This is only used if \c surface is null.
         Otherwise, the size is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
         \param[in] fullscreen Specifies whether to put the surface into fullscreen mode.
         \param[in] windowContext Optional pointer to a NativeHandle structure. This is only used for desktop platforms.
+        \param[in] windowContextSize Size (in bytes) of the native handle \c windowContext points to. This must be equal to \c sizeof(LLGL::NativeHandle).
         \see WindowDescriptor::windowContext
         \see Surface::GetContentSize
         \see SwitchFullscreenMode
         */
         void SetOrCreateSurface(
             const std::shared_ptr<Surface>& surface,
+            const UTF8String&               title,
             const Extent2D&                 size,
             bool                            fullscreen,
             const void*                     windowContext       = nullptr,
@@ -224,6 +227,17 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \see SetDisplayFullscreenMode
         */
         bool ResetDisplayFullscreenMode();
+
+    protected:
+
+        /**
+        \brief Builds a default title for the swap-chain surface when no custom surface is specified.
+        \remarks This has the format \c "LLGL SURFACE NUMBER ( RENDERER )":
+        - \c SURFACE is either "Window" on desktop platforms or "Canvas" on mobile platforms.
+        - \c NUMBER denotes the number of the swap-chain starting at 1.
+        - \c RENDERER denotes the renderer name (see RendererInfo::rendererName).
+        */
+        static UTF8String BuildDefaultSurfaceTitle(const RendererInfo& info);
 
     private:
 
