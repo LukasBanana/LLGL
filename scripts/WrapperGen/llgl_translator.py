@@ -79,9 +79,20 @@ class Translator:
     @staticmethod
     def convertNameToHeaderGuard(name):
         return re.sub(r'([A-Z]+)', r'_\1', name).upper()
+    
+    @staticmethod
+    def convertIdentToCamelCase(ident):
+        # Find first lower case character and make all previous characters also lower case,
+        # if there were more than one upper case prior, to handle cases like 'CPUAccess' to 'cpuAccess'.
+        firstLowerCaseMatch = re.search('[a-z]', ident)
+        if firstLowerCaseMatch:
+            firstLowerCasePos = firstLowerCaseMatch.start()
+            if firstLowerCasePos > 1:
+                return ident[0:firstLowerCasePos - 1].lower() + ident[firstLowerCasePos - 1:]
+        return ident[0].lower() + ident[1:]
 
     @staticmethod
-    def convertCamelCaseToPascalCase(ident):
+    def convertIdentToPascalCase(ident):
         def makeAbbreviationUpperCase(abbr):
             nonlocal ident
             if len(ident) >= len(abbr):
@@ -93,5 +104,5 @@ class Translator:
         makeAbbreviationUpperCase('CPU')
 
         # Just change first character to upper case
-        return ident[0].upper() + ident[1:] if len(ident) > 0 else ident;
+        return ident[0].upper() + ident[1:] if len(ident) > 0 else ident
 

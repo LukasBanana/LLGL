@@ -8,3 +8,5 @@ Capture.*
 *.cache
 *.spvasm
 Makefile
+*.dll
+*.dll.a

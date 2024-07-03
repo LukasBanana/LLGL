@@ -10,6 +10,7 @@ import sys
 import llgl_parser as parser
 import llgl_translator_c99 as translator_c99
 import llgl_translator_csharp as translator_csharp
+import llgl_translator_golang as translator_golang
 
 def iterate(func, cont):
     return list(map(func, cont))
@@ -22,6 +23,7 @@ def printHelp():
     print("flags:")
     print("  -c99 ......... Translate header to C99")
     print("  -csharp ...... Translate header to C#")
+    print("  -golang ...... Translate header to Go")
     print("  -name=NAME ... Override name for consolidated headers")
     print("  -fn .......... Also parse exported C function declarations")
     print("  -tok ......... Scan tokens only")
@@ -101,6 +103,9 @@ if len(files) > 0:
             iterate(trans.translateModule, modules)
         elif '-csharp' in args:
             trans = translator_csharp.CsharpTranslator()
+            iterate(trans.translateModule, modules)
+        elif '-golang' in args:
+            trans = translator_golang.GolangTranslator()
             iterate(trans.translateModule, modules)
         else:
             iterate(printModule, modules)

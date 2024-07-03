@@ -66,9 +66,10 @@ set INPUT_FN=^
     %CINCLUDE%\TypeNames.h ^
     %CINCLUDE%\Window.h
 
-REM Generate wrapper for C99, C#
+REM Generate wrapper for C99, C#, Go
 call :Generate .\LLGLWrapper.h -c99
 call :Generate .\LLGLWrapper.cs -csharp -fn
+call :Generate .\LLGLWrapper.go -golang
 
 exit /B 0
 

@@ -150,7 +150,7 @@ class C99Translator(Translator):
             self.statement()
 
             for flag in doc.flags:
-                self.statement('typedef enum LLGL{}'.format(flag.name))
+                self.statement(f'typedef enum LLGL{flag.name}')
                 basename = flag.name[:-len('Flags')]
                 self.openScope()
 
@@ -230,7 +230,7 @@ class C99Translator(Translator):
             self.statement()
 
             for struct in commonStructs:
-                self.statement('typedef struct LLGL{}'.format(struct.name))
+                self.statement(f'typedef struct LLGL{struct.name}')
                 self.openScope()
 
                 # Write struct field declarations

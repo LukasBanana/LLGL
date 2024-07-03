@@ -12,7 +12,7 @@
 
 LLGL aims to be a thin abstraction layer for a wide variety of modern and legacy rendering APIs as well as a multitude of platforms targeting both desktop and mobile.
 LLGL provides close coupling with the underlying APIs for a rich feature set while also simplifying architectural hurdles.
-The library is written mostly in C++11 with the addition of a C99 and C# 6.0 wrapper.
+The library is written mostly in C++11 with the addition of a C99, C# 6.0, and Go wrapper.
 
 
 ## Documentation
@@ -25,6 +25,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 - [Examples and Tutorials for C++](examples/Cpp)
 - [Examples for C99](examples/C99)
 - [Examples for C#](examples/CSharp)
+- [Examples for Go](examples/Go)
 
 
 ## Platform Support

@@ -210,7 +210,7 @@ class CsharpTranslator(Translator):
             return None
 
         def identToPropertyIdent(ident):
-            return Translator.convertCamelCaseToPascalCase(ident)
+            return Translator.convertIdentToPascalCase(ident)
 
         def classNameToFlagsName(className):
             return f'{className[:-len("Descriptor")] if className.endswith("Descriptor") else className}Flags'
