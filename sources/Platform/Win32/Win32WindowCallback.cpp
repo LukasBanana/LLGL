@@ -75,6 +75,9 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bo
                     PostKeyEvent(*window, Key::LControl, isDown);
             }
             break;
+
+            default:
+            break;
         }
 
         /* Post base key event */

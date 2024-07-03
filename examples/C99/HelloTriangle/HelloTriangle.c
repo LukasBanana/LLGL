@@ -76,8 +76,8 @@ int main(int argc, char* argv[])
     // Vertex format with 2D floating-point vector for position and 4D byte vector for color
     LLGLVertexAttribute vertexAttributes[2] =
     {
-        { .name = "position", .format = LLGLFormatRG32Float,  .location = 0, .offset = 0,                       .stride = sizeof(Vertex) },
-        { .name = "color",    .format = LLGLFormatRGBA8UNorm, .location = 1, .offset = offsetof(Vertex, color), .stride = sizeof(Vertex) },
+        { .name = "position", .format = LLGLFormatRG32Float,  .location = 0, .offset = offsetof(Vertex, position), .stride = sizeof(Vertex) },
+        { .name = "color",    .format = LLGLFormatRGBA8UNorm, .location = 1, .offset = offsetof(Vertex, color   ), .stride = sizeof(Vertex) },
     };
 
     // Create vertex buffer

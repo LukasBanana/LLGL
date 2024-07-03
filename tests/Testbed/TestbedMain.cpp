@@ -175,7 +175,7 @@ static int GuardedMain(int argc, char* argv[])
     return static_cast<int>(modulesWithFailedTests);
 }
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 // Declare function that is not directly exposed in LLGL
 namespace LLGL
@@ -217,17 +217,17 @@ static LONG WINAPI TestbedVectoredExceptionHandler(EXCEPTION_POINTERS* e)
             "Callstack:\n"
             "----------\n"
             "%s\n",
-            e->ExceptionRecord->ExceptionAddress, e->ExceptionRecord->ExceptionCode, stackTrace.c_str()
+            e->ExceptionRecord->ExceptionAddress, static_cast<unsigned>(e->ExceptionRecord->ExceptionCode), stackTrace.c_str()
         );
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-#endif // /_WIN32
+#endif // /_MSC_VER
 
 int main(int argc, char* argv[])
 {
-    #ifdef _WIN32
+    #ifdef _MSC_VER
 
     AddVectoredExceptionHandler(1, TestbedVectoredExceptionHandler);
     __try

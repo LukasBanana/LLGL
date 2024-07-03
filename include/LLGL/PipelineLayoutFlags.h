@@ -143,6 +143,12 @@ struct BindingSlot
     /**
     \brief Specifies the zero-based binding index. By default 0.
     \remarks For Vulkan, each binding must have a unique slot within the same pipeline layout unless they are in different descriptor sets.
+    \remarks It is recommended to \e not use the binding slot 0 for buffer bindings because it might overlap with implicitly assigned slots depending on the backend.
+    - For Metal, shader resources and vertex buffers share the same binding table and LLGL binds vertex buffers starting from slot 0.
+      If more than one vertex buffer is bound, all subsequent slots will also be occupied by those vertex buffers and pipeline resources must be bound after them.
+    - For D3D11 and D3D12, the special constant buffer "$Globals" is implicitly assigned a binding slot.
+      If no other resource is explicitly assigned binding slot 0, this constant buffer will be implicitly assinged slot 0.
+      While other resources can occupy binding slot 0, this should match across all shader stages or the behavior is undefined.
     \see set
     */
     std::uint32_t index = 0;
