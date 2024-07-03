@@ -210,6 +210,9 @@ class LLGL_EXPORT SwapChain : public RenderTarget
             std::size_t                     windowContextSize   = 0
         );
 
+        //! Shows the swap-chain surface if it's not the same as the input surface.
+        void ShowSurface();
+
         /**
         \brief Shares the surface and resolution with another swap-chain.
         \note This is only used by the renderer debug layer.

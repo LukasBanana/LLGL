@@ -46,8 +46,13 @@ NullSwapChain::NullSwapChain(
     depthStencilFormat_ { ChooseDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
     SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
+
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+
+    /* Show default surface */
+    if (!surface)
+        ShowSurface();
 }
 
 void NullSwapChain::SetDebugName(const char* name)

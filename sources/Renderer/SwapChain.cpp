@@ -176,7 +176,7 @@ void SwapChain::SetOrCreateSurface(
         {
             windowDesc.title                = title;
             windowDesc.size                 = size;
-            windowDesc.flags                = WindowFlags::Visible | WindowFlags::DisableSizeScaling | (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered);
+            windowDesc.flags                = WindowFlags::DisableSizeScaling | (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered);
             windowDesc.windowContext        = windowContext;
             windowDesc.windowContextSize    = windowContextSize;
         }
@@ -191,6 +191,13 @@ void SwapChain::SetOrCreateSurface(
     /* Switch to fullscreen mode before storing new video mode */
     if (fullscreen)
         SetDisplayFullscreenMode(pimpl_->resolution);
+}
+
+void SwapChain::ShowSurface()
+{
+    #ifndef LLGL_MOBILE_PLATFORM
+    static_cast<Window&>(GetSurface()).Show();
+    #endif
 }
 
 void SwapChain::ShareSurfaceAndConfig(SwapChain& other)

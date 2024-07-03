@@ -55,6 +55,10 @@ D3D12SwapChain::D3D12SwapChain(
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+
+    /* Show default surface */
+    if (!surface)
+        ShowSurface();
 }
 
 D3D12SwapChain::~D3D12SwapChain()

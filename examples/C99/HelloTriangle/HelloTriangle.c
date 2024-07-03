@@ -53,7 +53,6 @@ int main(int argc, char* argv[])
     LLGLWindow window = LLGL_GET_AS(LLGLWindow, surface);
 
     llglSetWindowTitle(window, L"LLGL C99 Example: Hello Triangle");
-    llglShowWindow(window, true);
 
     // Vertex data structure
     typedef struct Vertex

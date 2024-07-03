@@ -69,6 +69,10 @@ MTSwapChain::MTSwapChain(
     view_.colorPixelFormat          = renderPass_.GetColorAttachments()[0].pixelFormat;
     view_.depthStencilPixelFormat   = renderPass_.GetDepthStencilFormat();
     view_.sampleCount               = renderPass_.GetSampleCount();
+
+    /* Show default surface */
+    if (!surface)
+        ShowSurface();
 }
 
 void MTSwapChain::Present()

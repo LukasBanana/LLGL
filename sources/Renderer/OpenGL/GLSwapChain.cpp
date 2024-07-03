@@ -67,6 +67,10 @@ GLSwapChain::GLSwapChain(
 
     /* Get state manager and reset current framebuffer height */
     GetStateManager().ResetFramebufferHeight(framebufferHeight_);
+
+    /* Show default surface */
+    if (!surface)
+        ShowSurface();
 }
 
 void GLSwapChain::Present()

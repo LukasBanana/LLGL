@@ -43,6 +43,10 @@ D3D11SwapChain::D3D11SwapChain(
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+
+    /* Show default surface */
+    if (!surface)
+        ShowSurface();
 }
 
 void D3D11SwapChain::SetDebugName(const char* name)
