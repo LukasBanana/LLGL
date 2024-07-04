@@ -106,6 +106,9 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
     stateMngr.DetermineExtensionsAndLimits();
     InitRenderStates(stateMngr);
 
+    /* Cache new context as the current one */
+    GLContext::SetCurrent(context.get());
+
     /* Invoke callback to register new GLContext */
     if (newContextCallback_)
         newContextCallback_(*context, pixelFormat);

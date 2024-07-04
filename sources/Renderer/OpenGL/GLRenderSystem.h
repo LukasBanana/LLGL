@@ -74,7 +74,6 @@ class GLRenderSystem final : public RenderSystem
 
         // Creates a GL context once or creates a new one if there is no compatible one with the specified pixel format.
         void CreateGLContextOnce();
-        void CreateGLContextWithPixelFormatOnce(const GLPixelFormat& pixelFormat);
 
         // Updates the renderer capabilities information and enables the debug layer for the new GLContext if enabled.
         void RegisterNewGLContext(GLContext& context, const GLPixelFormat& pixelFormat);

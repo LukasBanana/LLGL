@@ -97,7 +97,7 @@ class GLContext
         // Returns a pointer to the current GL context.
         static GLContext* GetCurrent();
 
-        // Returns the global index of the current GL context ().
+        // Returns the global index of the current GL context. 0 denotes an invalid index.
         static unsigned GetCurrentGlobalIndex();
 
         // Sets the swap interval for the current GL context.

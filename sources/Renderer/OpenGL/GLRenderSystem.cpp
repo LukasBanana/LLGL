@@ -177,7 +177,7 @@ GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, con
         auto* bufferGL = buffers_.emplace<GLBufferWithVAO>(bufferDesc.bindFlags, bufferDesc.debugName);
         {
             GLBufferStorage(*bufferGL, bufferDesc, initialData);
-            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs.size(), bufferDesc.vertexAttribs.data());
+            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
         }
         return bufferGL;
     }
@@ -430,23 +430,10 @@ void GLRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
-static GLPixelFormat GetGLPixelFormatForRenderTargetDesc(const RenderTargetDescriptor& renderTargetDesc)
-{
-    GLPixelFormat pixelFormat;
-    {
-        pixelFormat.colorBits = 32;
-        const Format depthStencilFormat = GetAttachmentFormat(renderTargetDesc.depthStencilAttachment);
-        GetFormatBits(depthStencilFormat, nullptr, &(pixelFormat.depthBits), &(pixelFormat.stencilBits));
-        pixelFormat.samples = static_cast<int>(std::max<std::uint32_t>(1, renderTargetDesc.samples));
-    }
-    return pixelFormat;
-}
-
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
     /* Make sure we have a GLContext with compatible resolution */
-    const GLPixelFormat pixelFormat = GetGLPixelFormatForRenderTargetDesc(renderTargetDesc);
-    CreateGLContextWithPixelFormatOnce(pixelFormat);
+    CreateGLContextOnce();
     LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasRenderTargets);
     return renderTargets_.emplace<GLRenderTarget>(GetRenderingCaps().limits, renderTargetDesc);
 }
@@ -598,12 +585,7 @@ void GLRenderSystem::CreateGLContextOnce()
     (void)contextMngr_.AllocContext();
 }
 
-void GLRenderSystem::CreateGLContextWithPixelFormatOnce(const GLPixelFormat& pixelFormat)
-{
-    (void)contextMngr_.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ true);
-}
-
-void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelFormat& /*pixelFormat*/)
+void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelFormat& pixelFormat)
 {
     /* Enable debug callback function */
     if (debugContext_)
@@ -667,45 +649,6 @@ static std::string GLGetString(GLenum name)
 {
     const GLubyte* bytes = glGetString(name);
     return (bytes != nullptr ? std::string(reinterpret_cast<const char*>(bytes)) : "");
-}
-
-static void AppendCacheIDBytes(std::vector<char>& cacheID, const void* bytes, std::size_t count)
-{
-    const std::size_t offset = cacheID.size();
-    cacheID.resize(offset + count);
-    ::memcpy(&cacheID[offset], bytes, count);
-}
-
-template <typename T>
-static void AppendCacheIDValue(std::vector<char>& cacheID, const T& val)
-{
-    AppendCacheIDBytes(cacheID, &val, sizeof(val));
-}
-
-static void GLQueryPipelineCacheID(std::vector<char>& cacheID)
-{
-    #ifdef GL_ARB_get_program_binary
-    if (HasExtension(GLExt::ARB_get_program_binary))
-    {
-        GLint numBinaryFormats = 0;
-        glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &numBinaryFormats);
-        if (numBinaryFormats > 0)
-        {
-            /* Append number of binary formats */
-            AppendCacheIDValue(cacheID, numBinaryFormats);
-
-            /* Append binary format values themselves */
-            std::vector<GLint> formats;
-            formats.resize(numBinaryFormats);
-            glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, formats.data());
-            AppendCacheIDBytes(cacheID, formats.data(), sizeof(GLint) * formats.size());
-
-            /* Append GL version string */
-            if (const GLubyte* versionStr = glGetString(GL_VERSION))
-                AppendCacheIDBytes(cacheID, versionStr, ::strlen(reinterpret_cast<const char*>(versionStr)));
-        }
-    }
-    #endif // /GL_ARB_get_program_binary
 }
 
 static void GLQueryRendererInfo(RendererInfo& info)

@@ -18,6 +18,23 @@ namespace LLGL
 
 
 struct VertexAttribute;
+class GLStateManager;
+
+struct GLVertexAttribute
+{
+    GLuint      buffer;
+    GLuint      index;
+    GLint       size;
+    GLenum      type;
+    GLboolean   normalized;
+    GLsizei     stride;
+    GLsizeiptr  offsetPtrSized;
+    GLuint      divisor; // for use with glVertexAttribDivisor()
+    bool        isInteger; // meta data for use with glVertexAttribIPointer()
+};
+
+// Converts the specified vertex attribute into a GL specific attributes.
+void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, GLuint srcBuffer);
 
 // Wrapper class for an OpenGL Vertex-Array-Object (VAO), for GL 3.0+.
 class GLVertexArrayObject
@@ -25,11 +42,11 @@ class GLVertexArrayObject
 
     public:
 
-        GLVertexArrayObject();
-        ~GLVertexArrayObject();
+        // Release VAO from GL context.
+        void Release();
 
         // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexLayout(const ArrayView<VertexAttribute>& attributes);
+        void BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes);
 
         // Returns the ID of the hardware vertex-array-object (VAO)
         inline GLuint GetID() const
@@ -39,7 +56,7 @@ class GLVertexArrayObject
 
     private:
 
-        void BuildVertexAttribute(const VertexAttribute& attribute);
+        void BuildVertexAttribute(const GLVertexAttribute& attribute);
 
     private:
 

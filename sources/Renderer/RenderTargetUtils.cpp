@@ -32,46 +32,6 @@ LLGL_EXPORT Format GetAttachmentFormat(const AttachmentDescriptor& attachmentDes
     return Format::Undefined;
 }
 
-static void SetFormatBits(
-    std::uint32_t   inColorBits,
-    std::uint32_t   inDepthBits,
-    std::uint32_t   inStencilBits,
-    int*            outColorBits,
-    int*            outDepthBits,
-    int*            outStencilBits)
-{
-    if (outColorBits != nullptr)
-        *outColorBits = static_cast<int>(inColorBits);
-    if (outDepthBits != nullptr)
-        *outDepthBits = static_cast<int>(inDepthBits);
-    if (outStencilBits != nullptr)
-        *outStencilBits = static_cast<int>(inStencilBits);
-}
-
-LLGL_EXPORT std::uint32_t GetFormatBits(Format format, int* outColorBits, int* outDepthBits, int* outStencilBits)
-{
-    const FormatAttributes& attribs = GetFormatAttribs(format);
-    switch (format)
-    {
-        case Format::D16UNorm:
-            SetFormatBits(0u, 16, 0u, outColorBits, outDepthBits, outStencilBits);
-            break;
-        case Format::D24UNormS8UInt:
-            SetFormatBits(0u, 24u, 8u, outColorBits, outDepthBits, outStencilBits);
-            break;
-        case Format::D32Float:
-            SetFormatBits(0u, 32u, 0u, outColorBits, outDepthBits, outStencilBits);
-            break;
-        case Format::D32FloatS8X24UInt:
-            SetFormatBits(0u, 32u, 8u, outColorBits, outDepthBits, outStencilBits);
-            break;
-        default:
-            SetFormatBits(attribs.bitSize, 0u, 0u, outColorBits, outDepthBits, outStencilBits);
-            break;
-    }
-    return attribs.bitSize;
-}
-
 LLGL_EXPORT std::uint32_t NumActiveColorAttachments(const RenderTargetDescriptor& renderTargetDesc)
 {
     std::uint32_t n = 0;

@@ -195,17 +195,9 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBindVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindVertexArray*>(pc);
-            stateMngr->BindVertexArray(cmd->vao);
+            cmd->vertexArray->Bind(*stateMngr);
             return sizeof(*cmd);
         }
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        case GLOpcodeBindGL2XVertexArray:
-        {
-            auto cmd = reinterpret_cast<const GLCmdBindGL2XVertexArray*>(pc);
-            cmd->vertexArrayGL2X->Bind(*stateMngr);
-            return sizeof(*cmd);
-        }
-        #endif
         case GLOpcodeBindElementArrayBufferToVAO:
         {
             auto cmd = reinterpret_cast<const GLCmdBindElementArrayBufferToVAO*>(pc);

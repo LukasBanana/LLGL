@@ -31,14 +31,6 @@ LLGL_EXPORT bool IsAttachmentEnabled(const AttachmentDescriptor& attachmentDesc)
 LLGL_EXPORT Format GetAttachmentFormat(const AttachmentDescriptor& attachmentDesc);
 
 /*
-Returns the bitcount for color, depth, and stencil the format of the specified render-target attachment provides.
-Return value is the total number of bits and individual components can be returned via their output parameters.
-This total number of bits might be larger than the sum of the individual bits, since some formats have unused components (such as Format::D32FloatS8X24UInt).
-These are standard integers instead of \c std::uint32_t to be used with the SwapChainDescriptor and other internal structures.
-*/
-LLGL_EXPORT std::uint32_t GetFormatBits(Format format, int* outColorBits = nullptr, int* outDepthBits = nullptr, int* outStencilBits = nullptr);
-
-/*
 Returns the number of active color attachments in the specified render target descriptor.
 The first inactive attachment breaks the count.
 */

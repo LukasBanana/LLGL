@@ -10,10 +10,7 @@
 
 
 #include "GLBufferArray.h"
-#include "GLVertexArrayObject.h"
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-#   include "GL2XVertexArray.h"
-#endif
+#include "GLSharedContextVertexArray.h"
 
 
 namespace LLGL
@@ -31,34 +28,15 @@ class GLBufferArrayWithVAO final : public GLBufferArray
 
         GLBufferArrayWithVAO(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
-        // Returns the ID of the vertex-array-object (VAO)
-        inline GLuint GetVaoID() const
+        // Returns the vertex array which can be shared across multiple GL contexts.
+        inline GLSharedContextVertexArray* GetVertexArray()
         {
-            return vao_.GetID();
+            return &vertexArray_;
         }
-
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        // Returns the GL 2.x compatible vertex-array emulator.
-        inline const GL2XVertexArray& GetVertexArrayGL2X() const
-        {
-            return vertexArrayGL2X_;
-        }
-        #endif
 
     private:
 
-        void BuildVertexArrayWithVAO(std::uint32_t numBuffers, Buffer* const * bufferArray);
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void BuildVertexArrayWithEmulator(std::uint32_t numBuffers, Buffer* const * bufferArray);
-        #endif
-
-    private:
-
-        GLVertexArrayObject vao_;
-
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        GL2XVertexArray     vertexArrayGL2X_;
-        #endif
+        GLSharedContextVertexArray vertexArray_;
 
 };
 

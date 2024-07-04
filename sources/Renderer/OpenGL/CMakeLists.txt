@@ -47,11 +47,6 @@ find_source_files(FilesIncludeGL                INC ${BACKEND_INCLUDE_DIR}/OpenG
 # Remove selected files if GL2X is disabled
 if(NOT LLGL_GL_ENABLE_OPENGL2X)
     list(
-        REMOVE_ITEM FilesRendererGLBuffer
-        "${PROJECT_SOURCE_DIR}/Buffer/GL2XVertexArray.cpp"
-        "${PROJECT_SOURCE_DIR}/Buffer/GL2XVertexArray.h"
-    )
-    list(
         REMOVE_ITEM FilesRendererGLTexture
         "${PROJECT_SOURCE_DIR}/Texture/GL2XSampler.cpp"
         "${PROJECT_SOURCE_DIR}/Texture/GL2XSampler.h"

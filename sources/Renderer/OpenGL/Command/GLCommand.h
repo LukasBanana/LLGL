@@ -32,8 +32,8 @@ class GLSwapChain;
 class GLRenderTarget;
 class GLRenderPass;
 class GLDeferredCommandBuffer;
+class GLSharedContextVertexArray;
 #ifdef LLGL_GL_ENABLE_OPENGL2X
-class GL2XVertexArray;
 class GL2XSampler;
 #endif
 
@@ -181,15 +181,8 @@ struct GLCmdClearBuffers
 
 struct GLCmdBindVertexArray
 {
-    GLuint vao;
+    GLSharedContextVertexArray* vertexArray;
 };
-
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-struct GLCmdBindGL2XVertexArray
-{
-    const GL2XVertexArray* vertexArrayGL2X;
-};
-#endif
 
 struct GLCmdBindElementArrayBufferToVAO
 {
