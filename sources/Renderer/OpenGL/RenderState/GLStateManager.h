@@ -344,9 +344,6 @@ class GLStateManager
 
         /* ----- Render pass ----- */
 
-        // Blits the currently bound render target
-        void ResolveMultisampledRenderTarget();
-
         std::uint32_t ClearColorBuffers(
             const std::uint8_t*             colorBuffers,
             std::uint32_t                   numClearValues,

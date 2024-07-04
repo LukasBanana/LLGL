@@ -8,6 +8,7 @@
 #include "GLDeferredCommandBuffer.h"
 #include "GLCommand.h"
 #include <LLGL/Constants.h>
+#include <LLGL/TypeInfo.h>
 
 #include "../../TextureUtils.h"
 #include "../GLSwapChain.h"
@@ -502,11 +503,30 @@ void GLDeferredCommandBuffer::BeginRenderPass(
             ::memcpy(cmd + 1, clearValues, sizeof(ClearValue)*numClearValues);
         }
     }
+
+    /*
+    Cache render target if it needs to be resolved at the following EndRenderPass() call.
+    This is one of the few states the deferred GL command buffer caches
+    as it must be guaranteed that this render pass is followed by a call to EndRenderPass() operating on the same render-target.
+    */
+    if (!LLGL::IsInstanceOf<SwapChain>(renderTarget))
+    {
+        auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
+        if (renderTargetGL.CanResolveMultisampledFBO())
+            renderTargetToResolve_ = &renderTargetGL;
+    }
 }
 
 void GLDeferredCommandBuffer::EndRenderPass()
 {
-    // dummy
+    if (renderTargetToResolve_ != nullptr)
+    {
+        auto cmd = AllocCommand<GLCmdResolveRenderTarget>(GLOpcodeResolveRenderTarget);
+        {
+            cmd->renderTarget = renderTargetToResolve_;
+        }
+        renderTargetToResolve_ = nullptr;
+    }
 }
 
 void GLDeferredCommandBuffer::Clear(long flags, const ClearValue& clearValue)

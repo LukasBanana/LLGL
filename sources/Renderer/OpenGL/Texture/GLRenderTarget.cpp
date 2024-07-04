@@ -85,9 +85,14 @@ const RenderPass* GLRenderTarget::GetRenderPass() const
     return renderPass_;
 }
 
+bool GLRenderTarget::CanResolveMultisampledFBO() const
+{
+    return (framebufferResolve_.Valid() && !drawBuffersResolve_.empty());
+}
+
 void GLRenderTarget::ResolveMultisampled(GLStateManager& stateMngr)
 {
-    if (framebufferResolve_.Valid() && !drawBuffersResolve_.empty())
+    if (CanResolveMultisampledFBO())
     {
         stateMngr.BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebufferResolve_.GetID());
         stateMngr.BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, framebuffer_.GetID());

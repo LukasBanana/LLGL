@@ -431,7 +431,9 @@ void GLImmediateCommandBuffer::BeginRenderPass(
 
 void GLImmediateCommandBuffer::EndRenderPass()
 {
-    // dummy
+    /* Resolve previously bound render target */
+    if (GLRenderTarget* renderTarget = stateMngr_->GetBoundRenderTarget())
+        renderTarget->ResolveMultisampled(*stateMngr_);
 }
 
 void GLImmediateCommandBuffer::Clear(long flags, const ClearValue& clearValue)

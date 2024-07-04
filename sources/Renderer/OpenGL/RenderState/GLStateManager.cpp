@@ -1524,9 +1524,6 @@ GLuint GLStateManager::GetBoundProgramPipeline() const
 
 void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager** nextStateManager)
 {
-    /* Resolve previously bound render target */
-    ResolveMultisampledRenderTarget();
-
     /* Bind render target/context */
     if (LLGL::IsInstanceOf<SwapChain>(renderTarget))
     {
@@ -1823,12 +1820,6 @@ void GLStateManager::RestoreWriteMasks(GLIntermediateBufferWriteMasks& intermedi
 }
 
 /* ----- Render pass ----- */
-
-void GLStateManager::ResolveMultisampledRenderTarget()
-{
-    if (auto* renderTarget = GetBoundRenderTarget())
-        renderTarget->ResolveMultisampled(*this);
-}
 
 void GLStateManager::ClearAttachmentsWithRenderPass(
     const GLRenderPass& renderPassGL,

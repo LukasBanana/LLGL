@@ -116,6 +116,7 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
         long                        flags_                  = 0;
         GLVirtualCommandBuffer      buffer_;
+        GLRenderTarget*             renderTargetToResolve_  = nullptr;
 
         #ifdef LLGL_ENABLE_JIT_COMPILER
         std::unique_ptr<JITProgram> executable_;

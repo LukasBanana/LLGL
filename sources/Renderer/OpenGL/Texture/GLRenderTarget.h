@@ -41,6 +41,9 @@ class GLRenderTarget final : public RenderTarget
         GLRenderTarget(const RenderingLimits& limits, const RenderTargetDescriptor& desc);
         ~GLRenderTarget();
 
+        // Returns true if this render-target can resolve its multi-sampled FBO into a single sampled FBO.
+        bool CanResolveMultisampledFBO() const;
+
         // Blits the multi-sample framebuffer onto the default framebuffer.
         void ResolveMultisampled(GLStateManager& stateMngr);
 

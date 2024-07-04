@@ -193,6 +193,12 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.CallMember(&GLStateManager::ClearBuffers, g_stateMngrArg, cmd->numAttachments, (cmd + 1));
             return sizeof(*cmd);
         }
+        case GLOpcodeResolveRenderTarget:
+        {
+            auto cmd = reinterpret_cast<const GLCmdResolveRenderTarget*>(pc);
+            compiler.CallMember(&GLRenderTarget::ResolveMultisampled, pc->renderTarget, g_stateMngrArg);
+            return sizeof(*cmd);
+        }
         case GLOpcodeBindVertexArray:
         {
             auto cmd = reinterpret_cast<const GLCmdBindVertexArray*>(pc);

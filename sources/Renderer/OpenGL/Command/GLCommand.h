@@ -179,6 +179,11 @@ struct GLCmdClearBuffers
 //  AttachmentClear attachments[numAttachments];
 };
 
+struct GLCmdResolveRenderTarget
+{
+    GLRenderTarget* renderTarget;
+};
+
 struct GLCmdBindVertexArray
 {
     GLSharedContextVertexArray* vertexArray;
