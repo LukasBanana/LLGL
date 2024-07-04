@@ -127,10 +127,6 @@ class DbgRenderSystem final : public RenderSystem
         RenderingDebugger*                      debugger_   = nullptr;
         FrameProfile                            profile_;
 
-        const RenderingCapabilities&            caps_;
-        const RenderingFeatures&                features_;
-        const RenderingLimits&                  limits_;
-
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgSwapChain>         swapChains_;
