@@ -105,16 +105,26 @@ static GLESExtensionMap QuerySupportedOpenGLExtensions(bool coreProfile)
 #endif // /LLGL_OS_IOS
 
 // Global member to store if the extension have already been loaded
-static bool g_OpenGLExtensionsLoaded = false;
+static bool                     g_OpenGLESExtensionsLoaded = false;
+static GLESExtensionMap         g_OpenGLESExtensionsMap;
+static std::set<const char*>    g_supportedOpenGLESExtensions;
+static std::set<const char*>    g_loadedOpenGLESExtensions;
+
+static void EnableGLESExtension(GLExt ext, const char* name)
+{
+    RegisterExtension(ext);
+    g_supportedOpenGLESExtensions.insert(name); //TODO: find better way to determine supported GLES extensions
+    g_loadedOpenGLESExtensions.insert(name);
+}
 
 bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 {
     /* Only load GL extensions once */
-    if (g_OpenGLExtensionsLoaded)
+    if (g_OpenGLESExtensionsLoaded)
         return true;
 
     #define ENABLE_GLEXT(NAME) \
-        RegisterExtension(GLExt::NAME)
+        EnableGLESExtension(GLExt::NAME, "GL_" #NAME)
 
     const int version = GLGetVersion();
 
@@ -198,13 +208,14 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #if 0 //TODO
 
-    GLESExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
+    /* Query supported OpenGL extension names */
+    g_OpenGLESExtensionsMap = QuerySupportedOpenGLExtensions(isCoreProfile);
 
-    auto LoadExtension = [&extensions, abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
+    auto LoadExtension = [abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
     {
         /* Try to load OpenGL extension */
-        auto it = extensions.find(extName);
-        if (it != extensions.end())
+        auto it = g_OpenGLESExtensionsMap.find(extName);
+        if (it != g_OpenGLESExtensionsMap.end())
         {
             if (extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ false))
             {
@@ -236,14 +247,32 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #endif // /TODO
 
-    g_OpenGLExtensionsLoaded = true;
+    /* Cache supported and loaded extensions */
+    g_OpenGLESExtensionsLoaded = true;
+
+    for (const auto& it : g_OpenGLESExtensionsMap)
+    {
+        g_supportedOpenGLESExtensions.insert(it.first.c_str());
+        if (it.second)
+            g_loadedOpenGLESExtensions.insert(it.first.c_str());
+    }
 
     return true;
 }
 
 bool AreOpenGLExtensionsLoaded()
 {
-    return g_OpenGLExtensionsLoaded;
+    return g_OpenGLESExtensionsLoaded;
+}
+
+const std::set<const char*>& GetSupportedOpenGLExtensions()
+{
+    return g_supportedOpenGLESExtensions;
+}
+
+const std::set<const char*>& GetLoadedOpenGLExtensions()
+{
+    return g_loadedOpenGLESExtensions;
 }
 
 

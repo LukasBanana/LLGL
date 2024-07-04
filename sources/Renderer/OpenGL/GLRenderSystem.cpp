@@ -664,6 +664,46 @@ static void GLQueryRendererInfo(RendererInfo& info)
     GLQueryPipelineCacheID(info.pipelineCacheID);
 }
 
+static void AppendCacheIDBytes(std::vector<char>& cacheID, const void* bytes, std::size_t count)
+{
+    const std::size_t offset = cacheID.size();
+    cacheID.resize(offset + count);
+    ::memcpy(&cacheID[offset], bytes, count);
+}
+
+template <typename T>
+static void AppendCacheIDValue(std::vector<char>& cacheID, const T& val)
+{
+    AppendCacheIDBytes(cacheID, &val, sizeof(val));
+}
+
+// Must not be static to be available in GL module
+void GLQueryPipelineCacheID(std::vector<char>& cacheID)
+{
+    #ifdef GL_ARB_get_program_binary
+    if (HasExtension(GLExt::ARB_get_program_binary))
+    {
+        GLint numBinaryFormats = 0;
+        glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &numBinaryFormats);
+        if (numBinaryFormats > 0)
+        {
+            /* Append number of binary formats */
+            AppendCacheIDValue(cacheID, numBinaryFormats);
+
+            /* Append binary format values themselves */
+            std::vector<GLint> formats;
+            formats.resize(numBinaryFormats);
+            glGetIntegerv(GL_PROGRAM_BINARY_FORMATS, formats.data());
+            AppendCacheIDBytes(cacheID, formats.data(), sizeof(GLint) * formats.size());
+
+            /* Append GL version string */
+            if (const GLubyte* versionStr = glGetString(GL_VERSION))
+                AppendCacheIDBytes(cacheID, versionStr, ::strlen(reinterpret_cast<const char*>(versionStr)));
+        }
+    }
+    #endif // /GL_ARB_get_program_binary
+}
+
 bool GLRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
 {
     if (outInfo != nullptr || outCaps != nullptr)
