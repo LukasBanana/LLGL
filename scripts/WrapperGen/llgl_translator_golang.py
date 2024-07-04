@@ -44,8 +44,8 @@ class GolangTranslator(Translator):
         # Write C-include boilerplate code
         self.statement('package llgl')
         self.statement()
-        self.statement('// #cgo LDFLAGS: libLLGL.dll.a') #TEST
-        self.statement('// #cgo CFLAGS: -I ../include') #TEST
+        self.statement('// #cgo LDFLAGS: libLLGL.dll.a') #TODO: this is for experimentation only
+        self.statement('// #cgo CFLAGS: -I ../../include') #TODO: this is for experimentation only
         self.statement('// #include <LLGL-C/LLGL.h>')
         self.statement('import "C"')
         self.statement()
@@ -190,12 +190,12 @@ class GolangTranslator(Translator):
 
             def translateFieldInitializer(fieldType, init):
                 if fieldType.isDynamicArray():
-                    return 'NULL'
+                    return 'nil'
                 if init:
                     if init == 'nullptr':
-                        return 'LLGL_NULL_OBJECT' if fieldType.isInterface() else 'NULL'
+                        return '""' if fieldType.isStringOfAnyKind() else 'nil'
                     else:
-                        return re.sub(r'(\w+::)', r'LLGL\1', init).replace('::', '').replace('|', ' | ').replace('Flags', '')
+                        return re.sub(r'(\w+::)', r'\1', init).replace('::', '').replace('|', ' | ').replace('Flags', '').replace('.0f', '.0')
                 return None
 
             self.statement('/* ----- Structures ----- */')

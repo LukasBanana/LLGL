@@ -10,7 +10,7 @@
 package llgl
 
 // #cgo LDFLAGS: libLLGL.dll.a
-// #cgo CFLAGS: -I ../include
+// #cgo CFLAGS: -I ../../include
 // #include <LLGL-C/LLGL.h>
 import "C"
 
@@ -896,17 +896,17 @@ type CanvasDescriptor struct {
 }
 
 type ClearValue struct {
-    Color   [4]float32 /* = {0.0f,0.0f,0.0f,0.0f} */
-    Depth   float32    /* = 1.0f */
+    Color   [4]float32 /* = {0.0,0.0,0.0,0.0} */
+    Depth   float32    /* = 1.0 */
     Stencil uint32     /* = 0 */
 }
 
 type CommandBufferDescriptor struct {
-    DebugName          string      /* = NULL */
+    DebugName          string      /* = "" */
     Flags              uint        /* = 0 */
     NumNativeBuffers   uint32      /* = 2 */
     MinStagingPoolSize uint64      /* = (0xFFFF+1) */
-    RenderPass         *RenderPass /* = LLGL_NULL_OBJECT */
+    RenderPass         *RenderPass /* = nil */
 }
 
 type DrawIndirectArguments struct {
@@ -941,12 +941,12 @@ type BindingSlot struct {
 }
 
 type Viewport struct {
-    X        float32 /* = 0.0f */
-    Y        float32 /* = 0.0f */
-    Width    float32 /* = 0.0f */
-    Height   float32 /* = 0.0f */
-    MinDepth float32 /* = 0.0f */
-    MaxDepth float32 /* = 1.0f */
+    X        float32 /* = 0.0 */
+    Y        float32 /* = 0.0 */
+    Width    float32 /* = 0.0 */
+    Height   float32 /* = 0.0 */
+    MinDepth float32 /* = 0.0 */
+    MaxDepth float32 /* = 1.0 */
 }
 
 type Scissor struct {
@@ -957,15 +957,15 @@ type Scissor struct {
 }
 
 type DepthBiasDescriptor struct {
-    ConstantFactor float32 /* = 0.0f */
-    SlopeFactor    float32 /* = 0.0f */
-    Clamp          float32 /* = 0.0f */
+    ConstantFactor float32 /* = 0.0 */
+    SlopeFactor    float32 /* = 0.0 */
+    Clamp          float32 /* = 0.0 */
 }
 
 type ComputePipelineDescriptor struct {
-    DebugName      string          /* = NULL */
-    PipelineLayout *PipelineLayout /* = LLGL_NULL_OBJECT */
-    ComputeShader  *Shader         /* = LLGL_NULL_OBJECT */
+    DebugName      string          /* = "" */
+    PipelineLayout *PipelineLayout /* = nil */
+    ComputeShader  *Shader         /* = nil */
 }
 
 type QueryPipelineStatistics struct {
@@ -1029,8 +1029,8 @@ type RendererInfo struct {
     DeviceName          string
     VendorName          string
     ShadingLanguageName string
-    ExtensionNames      string /* = NULL */
-    PipelineCacheID     []byte /* = NULL */
+    ExtensionNames      string /* = nil */
+    PipelineCacheID     []byte /* = nil */
 }
 
 type RenderingFeatures struct {
@@ -1066,7 +1066,7 @@ type RenderingFeatures struct {
 }
 
 type RenderingLimits struct {
-    LineWidthRange                [2]float32 /* = {1.0f,1.0f} */
+    LineWidthRange                [2]float32 /* = {1.0,1.0} */
     MaxTextureArrayLayers         uint32     /* = 0 */
     MaxColorAttachments           uint32     /* = 0 */
     MaxPatchVertices              uint32     /* = 0 */
@@ -1093,15 +1093,15 @@ type RenderingLimits struct {
 }
 
 type ResourceHeapDescriptor struct {
-    DebugName        string          /* = NULL */
-    PipelineLayout   *PipelineLayout /* = LLGL_NULL_OBJECT */
+    DebugName        string          /* = "" */
+    PipelineLayout   *PipelineLayout /* = nil */
     NumResourceViews uint32          /* = 0 */
     BarrierFlags     uint            /* ResourceHeapDescriptor.barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor.barrierFlags instead! */
 }
 
 type ShaderMacro struct {
-    Name       string /* = NULL */
-    Definition string /* = NULL */
+    Name       string /* = "" */
+    Definition string /* = "" */
 }
 
 type TextureSubresource struct {
@@ -1143,7 +1143,7 @@ type Offset3D struct {
 }
 
 type BufferViewDescriptor struct {
-    Format Format /* = LLGLFormatUndefined */
+    Format Format /* = FormatUndefined */
     Offset uint64 /* = 0 */
     Size   uint64 /* = LLGL_WHOLE_SIZE */
 }
@@ -1171,28 +1171,28 @@ type FormatAttributes struct {
 
 type FragmentAttribute struct {
     Name        string
-    Format      Format      /* = LLGLFormatRGBA32Float */
+    Format      Format      /* = FormatRGBA32Float */
     Location    uint32      /* = 0 */
-    SystemValue SystemValue /* = LLGLSystemValueUndefined */
+    SystemValue SystemValue /* = SystemValueUndefined */
 }
 
 type ImageView struct {
-    Format   ImageFormat    /* = LLGLImageFormatRGBA */
-    DataType DataType       /* = LLGLDataTypeUInt8 */
-    Data     unsafe.Pointer /* = NULL */
+    Format   ImageFormat    /* = ImageFormatRGBA */
+    DataType DataType       /* = DataTypeUInt8 */
+    Data     unsafe.Pointer /* = nil */
     DataSize uintptr        /* = 0 */
 }
 
 type MutableImageView struct {
-    Format   ImageFormat    /* = LLGLImageFormatRGBA */
-    DataType DataType       /* = LLGLDataTypeUInt8 */
-    Data     unsafe.Pointer /* = NULL */
+    Format   ImageFormat    /* = ImageFormatRGBA */
+    DataType DataType       /* = DataTypeUInt8 */
+    Data     unsafe.Pointer /* = nil */
     DataSize uintptr        /* = 0 */
 }
 
 type BindingDescriptor struct {
     Name       string
-    Type       ResourceType /* = LLGLResourceTypeUndefined */
+    Type       ResourceType /* = ResourceTypeUndefined */
     BindFlags  uint         /* = 0 */
     StageFlags uint         /* = 0 */
     Slot       BindingSlot
@@ -1201,29 +1201,29 @@ type BindingDescriptor struct {
 
 type UniformDescriptor struct {
     Name      string
-    Type      UniformType /* = LLGLUniformTypeUndefined */
+    Type      UniformType /* = UniformTypeUndefined */
     ArraySize uint32      /* = 0 */
 }
 
 type DepthDescriptor struct {
     TestEnabled  bool      /* = false */
     WriteEnabled bool      /* = false */
-    CompareOp    CompareOp /* = LLGLCompareOpLess */
+    CompareOp    CompareOp /* = CompareOpLess */
 }
 
 type StencilFaceDescriptor struct {
-    StencilFailOp StencilOp /* = LLGLStencilOpKeep */
-    DepthFailOp   StencilOp /* = LLGLStencilOpKeep */
-    DepthPassOp   StencilOp /* = LLGLStencilOpKeep */
-    CompareOp     CompareOp /* = LLGLCompareOpLess */
+    StencilFailOp StencilOp /* = StencilOpKeep */
+    DepthFailOp   StencilOp /* = StencilOpKeep */
+    DepthPassOp   StencilOp /* = StencilOpKeep */
+    CompareOp     CompareOp /* = CompareOpLess */
     ReadMask      uint32    /* = ~0u */
     WriteMask     uint32    /* = ~0u */
     Reference     uint32    /* = 0u */
 }
 
 type RasterizerDescriptor struct {
-    PolygonMode               PolygonMode         /* = LLGLPolygonModeFill */
-    CullMode                  CullMode            /* = LLGLCullModeDisabled */
+    PolygonMode               PolygonMode         /* = PolygonModeFill */
+    CullMode                  CullMode            /* = CullModeDisabled */
     DepthBias                 DepthBiasDescriptor
     FrontCCW                  bool                /* = false */
     DiscardEnabled            bool                /* = false */
@@ -1232,29 +1232,29 @@ type RasterizerDescriptor struct {
     MultiSampleEnabled        bool                /* = false */
     AntiAliasedLineEnabled    bool                /* = false */
     ConservativeRasterization bool                /* = false */
-    LineWidth                 float32             /* = 1.0f */
+    LineWidth                 float32             /* = 1.0 */
 }
 
 type BlendTargetDescriptor struct {
     BlendEnabled    bool            /* = false */
-    SrcColor        BlendOp         /* = LLGLBlendOpSrcAlpha */
-    DstColor        BlendOp         /* = LLGLBlendOpInvSrcAlpha */
-    ColorArithmetic BlendArithmetic /* = LLGLBlendArithmeticAdd */
-    SrcAlpha        BlendOp         /* = LLGLBlendOpSrcAlpha */
-    DstAlpha        BlendOp         /* = LLGLBlendOpInvSrcAlpha */
-    AlphaArithmetic BlendArithmetic /* = LLGLBlendArithmeticAdd */
-    ColorMask       uint8           /* = LLGLColorMaskAll */
+    SrcColor        BlendOp         /* = BlendOpSrcAlpha */
+    DstColor        BlendOp         /* = BlendOpInvSrcAlpha */
+    ColorArithmetic BlendArithmetic /* = BlendArithmeticAdd */
+    SrcAlpha        BlendOp         /* = BlendOpSrcAlpha */
+    DstAlpha        BlendOp         /* = BlendOpInvSrcAlpha */
+    AlphaArithmetic BlendArithmetic /* = BlendArithmeticAdd */
+    ColorMask       uint8           /* = ColorMaskAll */
 }
 
 type TessellationDescriptor struct {
-    Partition        TessellationPartition /* = LLGLTessellationPartitionUndefined */
+    Partition        TessellationPartition /* = TessellationPartitionUndefined */
     MaxTessFactor    uint32                /* = 64 */
     OutputWindingCCW bool                  /* = false */
 }
 
 type QueryHeapDescriptor struct {
-    DebugName       string    /* = NULL */
-    Type            QueryType /* = LLGLQueryTypeSamplesPassed */
+    DebugName       string    /* = "" */
+    Type            QueryType /* = QueryTypeSamplesPassed */
     NumQueries      uint32    /* = 1 */
     RenderCondition bool      /* = false */
 }
@@ -1262,58 +1262,58 @@ type QueryHeapDescriptor struct {
 type FrameProfile struct {
     CommandQueueRecord  ProfileCommandQueueRecord
     CommandBufferRecord ProfileCommandBufferRecord
-    TimeRecords         []ProfileTimeRecord        /* = NULL */
+    TimeRecords         []ProfileTimeRecord        /* = nil */
 }
 
 type AttachmentFormatDescriptor struct {
-    Format  Format            /* = LLGLFormatUndefined */
-    LoadOp  AttachmentLoadOp  /* = LLGLAttachmentLoadOpUndefined */
-    StoreOp AttachmentStoreOp /* = LLGLAttachmentStoreOpUndefined */
+    Format  Format            /* = FormatUndefined */
+    LoadOp  AttachmentLoadOp  /* = AttachmentLoadOpUndefined */
+    StoreOp AttachmentStoreOp /* = AttachmentStoreOpUndefined */
 }
 
 type RenderSystemDescriptor struct {
     ModuleName         string
     Flags              uint               /* = 0 */
-    Profiler           unsafe.Pointer     /* = NULL */
-    Debugger           *RenderingDebugger /* = LLGL_NULL_OBJECT */
-    RendererConfig     unsafe.Pointer     /* = NULL */
+    Profiler           unsafe.Pointer     /* = nil */
+    Debugger           *RenderingDebugger /* = nil */
+    RendererConfig     unsafe.Pointer     /* = nil */
     RendererConfigSize uintptr            /* = 0 */
-    NativeHandle       unsafe.Pointer     /* = NULL */
+    NativeHandle       unsafe.Pointer     /* = nil */
     NativeHandleSize   uintptr            /* = 0 */
 }
 
 type RenderingCapabilities struct {
-    ScreenOrigin     ScreenOrigin      /* = LLGLScreenOriginUpperLeft */
-    ClippingRange    ClippingRange     /* = LLGLClippingRangeZeroToOne */
-    ShadingLanguages []ShadingLanguage /* = NULL */
-    TextureFormats   []Format          /* = NULL */
+    ScreenOrigin     ScreenOrigin      /* = ScreenOriginUpperLeft */
+    ClippingRange    ClippingRange     /* = ClippingRangeZeroToOne */
+    ShadingLanguages []ShadingLanguage /* = nil */
+    TextureFormats   []Format          /* = nil */
     Features         RenderingFeatures
     Limits           RenderingLimits
 }
 
 type AttachmentDescriptor struct {
-    Format     Format   /* = LLGLFormatUndefined */
-    Texture    *Texture /* = LLGL_NULL_OBJECT */
+    Format     Format   /* = FormatUndefined */
+    Texture    *Texture /* = nil */
     MipLevel   uint32   /* = 0 */
     ArrayLayer uint32   /* = 0 */
 }
 
 type SamplerDescriptor struct {
-    DebugName      string             /* = NULL */
-    AddressModeU   SamplerAddressMode /* = LLGLSamplerAddressModeRepeat */
-    AddressModeV   SamplerAddressMode /* = LLGLSamplerAddressModeRepeat */
-    AddressModeW   SamplerAddressMode /* = LLGLSamplerAddressModeRepeat */
-    MinFilter      SamplerFilter      /* = LLGLSamplerFilterLinear */
-    MagFilter      SamplerFilter      /* = LLGLSamplerFilterLinear */
-    MipMapFilter   SamplerFilter      /* = LLGLSamplerFilterLinear */
+    DebugName      string             /* = "" */
+    AddressModeU   SamplerAddressMode /* = SamplerAddressModeRepeat */
+    AddressModeV   SamplerAddressMode /* = SamplerAddressModeRepeat */
+    AddressModeW   SamplerAddressMode /* = SamplerAddressModeRepeat */
+    MinFilter      SamplerFilter      /* = SamplerFilterLinear */
+    MagFilter      SamplerFilter      /* = SamplerFilterLinear */
+    MipMapFilter   SamplerFilter      /* = SamplerFilterLinear */
     MipMapEnabled  bool               /* = true */
-    MipMapLODBias  float32            /* = 0.0f */
-    MinLOD         float32            /* = 0.0f */
-    MaxLOD         float32            /* = 1000.0f */
+    MipMapLODBias  float32            /* = 0.0 */
+    MinLOD         float32            /* = 0.0 */
+    MaxLOD         float32            /* = 1000.0 */
     MaxAnisotropy  uint32             /* = 1 */
     CompareEnabled bool               /* = false */
-    CompareOp      CompareOp          /* = LLGLCompareOpLess */
-    BorderColor    [4]float32         /* = {0.0f,0.0f,0.0f,0.0f} */
+    CompareOp      CompareOp          /* = CompareOpLess */
+    BorderColor    [4]float32         /* = {0.0,0.0,0.0,0.0} */
 }
 
 type ComputeShaderAttributes struct {
@@ -1321,7 +1321,7 @@ type ComputeShaderAttributes struct {
 }
 
 type SwapChainDescriptor struct {
-    DebugName   string   /* = NULL */
+    DebugName   string   /* = "" */
     Resolution  Extent2D
     ColorBits   int      /* = 32 */
     DepthBits   int      /* = 24 */
@@ -1332,10 +1332,10 @@ type SwapChainDescriptor struct {
 }
 
 type TextureSwizzleRGBA struct {
-    R TextureSwizzle /* = LLGLTextureSwizzleRed */
-    G TextureSwizzle /* = LLGLTextureSwizzleGreen */
-    B TextureSwizzle /* = LLGLTextureSwizzleBlue */
-    A TextureSwizzle /* = LLGLTextureSwizzleAlpha */
+    R TextureSwizzle /* = TextureSwizzleRed */
+    G TextureSwizzle /* = TextureSwizzleGreen */
+    B TextureSwizzle /* = TextureSwizzleBlue */
+    A TextureSwizzle /* = TextureSwizzleAlpha */
 }
 
 type TextureLocation struct {
@@ -1351,12 +1351,12 @@ type TextureRegion struct {
 }
 
 type TextureDescriptor struct {
-    DebugName      string      /* = NULL */
-    Type           TextureType /* = LLGLTextureTypeTexture2D */
-    BindFlags      uint        /* = (LLGLBindSampled | LLGLBindColorAttachment) */
-    CPUAccessFlags uint        /* = (LLGLCPUAccessRead | LLGLCPUAccessWrite) */
-    MiscFlags      uint        /* = (LLGLMiscFixedSamples | LLGLMiscGenerateMips) */
-    Format         Format      /* = LLGLFormatRGBA8UNorm */
+    DebugName      string      /* = "" */
+    Type           TextureType /* = TextureTypeTexture2D */
+    BindFlags      uint        /* = (BindSampled | BindColorAttachment) */
+    CPUAccessFlags uint        /* = (CPUAccessRead | CPUAccessWrite) */
+    MiscFlags      uint        /* = (MiscFixedSamples | MiscGenerateMips) */
+    Format         Format      /* = FormatRGBA8UNorm */
     Extent         Extent3D    /* = {1,1,1} */
     ArrayLayers    uint32      /* = 1 */
     MipLevels      uint32      /* = 0 */
@@ -1366,10 +1366,10 @@ type TextureDescriptor struct {
 
 type VertexAttribute struct {
     Name            string
-    Format          Format      /* = LLGLFormatRGBA32Float */
+    Format          Format      /* = FormatRGBA32Float */
     Location        uint32      /* = 0 */
     SemanticIndex   uint32      /* = 0 */
-    SystemValue     SystemValue /* = LLGLSystemValueUndefined */
+    SystemValue     SystemValue /* = SystemValueUndefined */
     Slot            uint32      /* = 0 */
     Offset          uint32      /* = 0 */
     Stride          uint32      /* = 0 */
@@ -1381,19 +1381,19 @@ type WindowDescriptor struct {
     Position          Offset2D
     Size              Extent2D
     Flags             uint           /* = 0 */
-    WindowContext     unsafe.Pointer /* = NULL */
+    WindowContext     unsafe.Pointer /* = nil */
     WindowContextSize uintptr        /* = 0 */
 }
 
 type BufferDescriptor struct {
-    DebugName      string            /* = NULL */
+    DebugName      string            /* = "" */
     Size           uint64            /* = 0 */
     Stride         uint32            /* = 0 */
-    Format         Format            /* = LLGLFormatUndefined */
+    Format         Format            /* = FormatUndefined */
     BindFlags      uint              /* = 0 */
     CPUAccessFlags uint              /* = 0 */
     MiscFlags      uint              /* = 0 */
-    VertexAttribs  []VertexAttribute /* = NULL */
+    VertexAttribs  []VertexAttribute /* = nil */
 }
 
 type StaticSamplerDescriptor struct {
@@ -1414,14 +1414,14 @@ type BlendDescriptor struct {
     AlphaToCoverageEnabled  bool                     /* = false */
     IndependentBlendEnabled bool                     /* = false */
     SampleMask              uint32                   /* = ~0u */
-    LogicOp                 LogicOp                  /* = LLGLLogicOpDisabled */
-    BlendFactor             [4]float32               /* = {0.0f,0.0f,0.0f,0.0f} */
+    LogicOp                 LogicOp                  /* = LogicOpDisabled */
+    BlendFactor             [4]float32               /* = {0.0,0.0,0.0,0.0} */
     BlendFactorDynamic      bool                     /* = false */
     Targets                 [8]BlendTargetDescriptor
 }
 
 type RenderPassDescriptor struct {
-    DebugName         string                        /* = NULL */
+    DebugName         string                        /* = "" */
     ColorAttachments  [8]AttachmentFormatDescriptor
     DepthAttachment   AttachmentFormatDescriptor
     StencilAttachment AttachmentFormatDescriptor
@@ -1429,8 +1429,8 @@ type RenderPassDescriptor struct {
 }
 
 type RenderTargetDescriptor struct {
-    DebugName              string                  /* = NULL */
-    RenderPass             *RenderPass             /* = LLGL_NULL_OBJECT */
+    DebugName              string                  /* = "" */
+    RenderPass             *RenderPass             /* = nil */
     Resolution             Extent2D
     Samples                uint32                  /* = 1 */
     ColorAttachments       [8]AttachmentDescriptor
@@ -1439,49 +1439,49 @@ type RenderTargetDescriptor struct {
 }
 
 type VertexShaderAttributes struct {
-    InputAttribs  []VertexAttribute /* = NULL */
-    OutputAttribs []VertexAttribute /* = NULL */
+    InputAttribs  []VertexAttribute /* = nil */
+    OutputAttribs []VertexAttribute /* = nil */
 }
 
 type FragmentShaderAttributes struct {
-    OutputAttribs []FragmentAttribute /* = NULL */
+    OutputAttribs []FragmentAttribute /* = nil */
 }
 
 type ShaderResourceReflection struct {
     Binding            BindingDescriptor
     ConstantBufferSize uint32            /* = 0 */
-    StorageBufferType  StorageBufferType /* = LLGLStorageBufferTypeUndefined */
+    StorageBufferType  StorageBufferType /* = StorageBufferTypeUndefined */
 }
 
 type TextureViewDescriptor struct {
-    Type        TextureType        /* = LLGLTextureTypeTexture2D */
-    Format      Format             /* = LLGLFormatRGBA8UNorm */
+    Type        TextureType        /* = TextureTypeTexture2D */
+    Format      Format             /* = FormatRGBA8UNorm */
     Subresource TextureSubresource
     Swizzle     TextureSwizzleRGBA
 }
 
 type PipelineLayoutDescriptor struct {
-    DebugName      string                    /* = NULL */
-    HeapBindings   []BindingDescriptor       /* = NULL */
-    Bindings       []BindingDescriptor       /* = NULL */
-    StaticSamplers []StaticSamplerDescriptor /* = NULL */
-    Uniforms       []UniformDescriptor       /* = NULL */
+    DebugName      string                    /* = "" */
+    HeapBindings   []BindingDescriptor       /* = nil */
+    Bindings       []BindingDescriptor       /* = nil */
+    StaticSamplers []StaticSamplerDescriptor /* = nil */
+    Uniforms       []UniformDescriptor       /* = nil */
     BarrierFlags   uint                      /* = 0 */
 }
 
 type GraphicsPipelineDescriptor struct {
-    DebugName            string                 /* = NULL */
-    PipelineLayout       *PipelineLayout        /* = LLGL_NULL_OBJECT */
-    RenderPass           *RenderPass            /* = LLGL_NULL_OBJECT */
-    VertexShader         *Shader                /* = LLGL_NULL_OBJECT */
-    TessControlShader    *Shader                /* = LLGL_NULL_OBJECT */
-    TessEvaluationShader *Shader                /* = LLGL_NULL_OBJECT */
-    GeometryShader       *Shader                /* = LLGL_NULL_OBJECT */
-    FragmentShader       *Shader                /* = LLGL_NULL_OBJECT */
-    IndexFormat          Format                 /* = LLGLFormatUndefined */
-    PrimitiveTopology    PrimitiveTopology      /* = LLGLPrimitiveTopologyTriangleList */
-    Viewports            []Viewport             /* = NULL */
-    Scissors             []Scissor              /* = NULL */
+    DebugName            string                 /* = "" */
+    PipelineLayout       *PipelineLayout        /* = nil */
+    RenderPass           *RenderPass            /* = nil */
+    VertexShader         *Shader                /* = nil */
+    TessControlShader    *Shader                /* = nil */
+    TessEvaluationShader *Shader                /* = nil */
+    GeometryShader       *Shader                /* = nil */
+    FragmentShader       *Shader                /* = nil */
+    IndexFormat          Format                 /* = FormatUndefined */
+    PrimitiveTopology    PrimitiveTopology      /* = PrimitiveTopologyTriangleList */
+    Viewports            []Viewport             /* = nil */
+    Scissors             []Scissor              /* = nil */
     Depth                DepthDescriptor
     Stencil              StencilDescriptor
     Rasterizer           RasterizerDescriptor
@@ -1490,21 +1490,21 @@ type GraphicsPipelineDescriptor struct {
 }
 
 type ResourceViewDescriptor struct {
-    Resource     *Resource             /* = LLGL_NULL_OBJECT */
+    Resource     *Resource             /* = nil */
     TextureView  TextureViewDescriptor
     BufferView   BufferViewDescriptor
     InitialCount uint32                /* = 0 */
 }
 
 type ShaderDescriptor struct {
-    DebugName  string                   /* = NULL */
-    Type       ShaderType               /* = LLGLShaderTypeUndefined */
-    Source     string                   /* = NULL */
+    DebugName  string                   /* = "" */
+    Type       ShaderType               /* = ShaderTypeUndefined */
+    Source     string                   /* = "" */
     SourceSize uintptr                  /* = 0 */
-    SourceType ShaderSourceType         /* = LLGLShaderSourceTypeCodeFile */
-    EntryPoint string                   /* = NULL */
-    Profile    string                   /* = NULL */
-    Defines    *ShaderMacro             /* = NULL */
+    SourceType ShaderSourceType         /* = ShaderSourceTypeCodeFile */
+    EntryPoint string                   /* = "" */
+    Profile    string                   /* = "" */
+    Defines    *ShaderMacro             /* = nil */
     Flags      uint                     /* = 0 */
     Name       string                   /* ShaderDescriptor.name is deprecated since 0.04b; Use ShaderDescriptor.debugName instead! */
     Vertex     VertexShaderAttributes
@@ -1513,8 +1513,8 @@ type ShaderDescriptor struct {
 }
 
 type ShaderReflection struct {
-    Resources []ShaderResourceReflection /* = NULL */
-    Uniforms  []UniformDescriptor        /* = NULL */
+    Resources []ShaderResourceReflection /* = nil */
+    Uniforms  []UniformDescriptor        /* = nil */
     Vertex    VertexShaderAttributes
     Fragment  FragmentShaderAttributes
     Compute   ComputeShaderAttributes

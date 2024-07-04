@@ -1,12 +1,24 @@
+# macOS Finder file .DS_Store
 .DS_Store
+
+# Intermediate build system files
+Makefile
 CMakeFiles
-tests/Output
 build*/
 *.aps
-Screenshot.*
-Capture.*
 *.cache
 *.spvasm
-Makefile
+
+# Runtime output files for testing
+Screenshot.*
+Capture.*
+
+# Output files from individual tests (Testbed is handled separately)
+tests/Output
+
+# Binary files for Go wrapper (libLLGL.dll, libLLGL.dll.a)
 *.dll
 *.dll.a
+
+# RenderDoc .cap capture files
+*.cap

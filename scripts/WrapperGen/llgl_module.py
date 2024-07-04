@@ -214,6 +214,9 @@ class LLGLType:
     def isPointerOrString(self):
         return self.isPointer or self.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]
 
+    def isStringOfAnyKind(self):
+        return self.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING] or (self.isPointer and self.baseType in [StdType.CHAR, StdType.WCHAR])
+
     def getFixedBitsize(self):
         if self.baseType in [StdType.INT8, StdType.UINT8]:
             return 8

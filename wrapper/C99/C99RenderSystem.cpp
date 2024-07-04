@@ -234,6 +234,7 @@ static void ConvertBufferDesc(BufferDescriptor& dst, SmallVector<VertexAttribute
     for_range(i, src.numVertexAttribs)
         ConvertVertexAttrib(dstVertexAttribs[i], src.vertexAttribs[i]);
 
+    dst.debugName       = src.debugName;
     dst.size            = src.size;
     dst.stride          = src.stride;
     dst.format          = (Format)src.format;
