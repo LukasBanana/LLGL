@@ -22,6 +22,7 @@
 #include "../CheckedCast.h"
 #include "../BufferUtils.h"
 #include "../TextureUtils.h"
+#include "../RenderTargetUtils.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
 #include "../../Platform/Debug.h"
@@ -45,15 +46,24 @@ namespace LLGL
 
 static RendererConfigurationOpenGL GetGLProfileFromDesc(const RenderSystemDescriptor& renderSystemDesc)
 {
-    if (auto rendererConfigGL = GetRendererConfiguration<RendererConfigurationOpenGL>(renderSystemDesc))
+    if (auto* rendererConfigGL = GetRendererConfiguration<RendererConfigurationOpenGL>(renderSystemDesc))
         return *rendererConfigGL;
     else
         return RendererConfigurationOpenGL{};
 }
 
 GLRenderSystem::GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    contextMngr_  { GetGLProfileFromDesc(renderSystemDesc), renderSystemDesc.nativeHandle, renderSystemDesc.nativeHandleSize },
-    debugContext_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0)                                         }
+    contextMngr_
+    {
+        GetGLProfileFromDesc(renderSystemDesc),
+        std::bind(&GLRenderSystem::RegisterNewGLContext, this, std::placeholders::_1, std::placeholders::_2),
+        renderSystemDesc.nativeHandle,
+        renderSystemDesc.nativeHandleSize
+    },
+    debugContext_
+    {
+        ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0)
+    }
 {
 }
 
@@ -70,21 +80,7 @@ GLRenderSystem::~GLRenderSystem()
 
 SwapChain* GLRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    const bool isFirstSwapChain = swapChains_.empty();
-    auto* swapChainGL = swapChains_.emplace<GLSwapChain>(swapChainDesc, surface, contextMngr_);
-
-    /* Create devices that require an active GL context */
-    if (isFirstSwapChain)
-        CreateGLContextDependentDevices(swapChainGL->GetStateManager());
-
-    /*
-    If no surface was specified, set a default title to the automatically created one now
-    as we need a valid GL context to query the renderer information for the default title.
-    */
-    if (!surface)
-        swapChainGL->BuildAndSetDefaultSurfaceTitle(GetRendererInfo());
-
-    return swapChainGL;
+    return swapChains_.emplace<GLSwapChain>(*this, swapChainDesc, surface, contextMngr_);
 }
 
 void GLRenderSystem::Release(SwapChain& swapChain)
@@ -96,24 +92,19 @@ void GLRenderSystem::Release(SwapChain& swapChain)
 
 CommandQueue* GLRenderSystem::GetCommandQueue()
 {
-    return commandQueue_.get();
+    return &commandQueue_;
 }
 
 /* ----- Command buffers ----- */
 
 CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    /* Get state manager from swap-chain with shared GL context */
-    if (std::shared_ptr<GLContext> currentGLContext = contextMngr_.AllocContext())
-    {
-        /* Create deferred or immediate command buffer */
-        if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
-            return commandBuffers_.emplace<GLImmediateCommandBuffer>(currentGLContext->GetStateManager());
-        else
-            return commandBuffers_.emplace<GLDeferredCommandBuffer>(commandBufferDesc.flags);
-    }
+    /* Create deferred or immediate command buffer */
+    CreateGLContextOnce();
+    if ((commandBufferDesc.flags & CommandBufferFlags::ImmediateSubmit) != 0)
+        return commandBuffers_.emplace<GLImmediateCommandBuffer>();
     else
-        LLGL_TRAP("cannot create OpenGL command buffer without active render context");
+        return commandBuffers_.emplace<GLDeferredCommandBuffer>(commandBufferDesc.flags);
 }
 
 void GLRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -163,6 +154,7 @@ static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& bufferDe
 
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
+    CreateGLContextOnce();
     RenderSystem::AssertCreateBuffer(bufferDesc, static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
 
     auto bufferGL = CreateGLBuffer(bufferDesc, initialData);
@@ -212,6 +204,7 @@ static bool IsBufferArrayWithVertexBufferBinding(std::uint32_t numBuffers, Buffe
 
 BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
+    CreateGLContextOnce();
     RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
 
     /* Create vertex buffer array and build VAO if there is at least one buffer with VertexBuffer binding */
@@ -325,6 +318,7 @@ void GLRenderSystem::ValidateGLTextureType(const TextureType type)
 
 Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
+    CreateGLContextOnce();
     ValidateGLTextureType(textureDesc.type);
 
     /* Create <GLTexture> object; will result in a GL renderbuffer or texture instance */
@@ -370,6 +364,7 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
 Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
+    CreateGLContextOnce();
     #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasNativeSamplers())
     {
@@ -434,8 +429,23 @@ void GLRenderSystem::Release(RenderPass& renderPass)
 
 /* ----- Render Targets ----- */
 
+static GLPixelFormat GetGLPixelFormatForRenderTargetDesc(const RenderTargetDescriptor& renderTargetDesc)
+{
+    GLPixelFormat pixelFormat;
+    {
+        pixelFormat.colorBits = 32;
+        const Format depthStencilFormat = GetAttachmentFormat(renderTargetDesc.depthStencilAttachment);
+        GetFormatBits(depthStencilFormat, nullptr, &(pixelFormat.depthBits), &(pixelFormat.stencilBits));
+        pixelFormat.samples = static_cast<int>(std::max<std::uint32_t>(1, renderTargetDesc.samples));
+    }
+    return pixelFormat;
+}
+
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc)
 {
+    /* Make sure we have a GLContext with compatible resolution */
+    const GLPixelFormat pixelFormat = GetGLPixelFormatForRenderTargetDesc(renderTargetDesc);
+    CreateGLContextWithPixelFormatOnce(pixelFormat);
     LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(hasRenderTargets);
     return renderTargets_.emplace<GLRenderTarget>(GetRenderingCaps().limits, renderTargetDesc);
 }
@@ -449,6 +459,7 @@ void GLRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
+    CreateGLContextOnce();
     RenderSystem::AssertCreateShader(shaderDesc);
 
     /* Validate rendering capabilities for required shader type */
@@ -581,14 +592,21 @@ bool GLRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
  * ======= Private: =======
  */
 
-void GLRenderSystem::CreateGLContextDependentDevices(GLStateManager& stateManager)
+void GLRenderSystem::CreateGLContextOnce()
+{
+    (void)contextMngr_.AllocContext();
+}
+
+void GLRenderSystem::CreateGLContextWithPixelFormatOnce(const GLPixelFormat& pixelFormat)
+{
+    (void)contextMngr_.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ true);
+}
+
+void GLRenderSystem::RegisterNewGLContext(GLContext& context, const GLPixelFormat& pixelFormat)
 {
     /* Enable debug callback function */
     if (debugContext_)
         EnableDebugCallback();
-
-    /* Create command queue instance */
-    commandQueue_ = MakeUnique<GLCommandQueue>(stateManager);
 
     /* Query renderer information and limits */
     QueryRendererInfo();

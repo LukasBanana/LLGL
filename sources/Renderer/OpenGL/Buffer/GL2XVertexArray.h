@@ -10,6 +10,7 @@
 
 
 #include <LLGL/VertexAttribute.h>
+#include <LLGL/Container/ArrayView.h>
 #include "../OpenGL.h"
 #include <vector>
 
@@ -26,11 +27,8 @@ class GL2XVertexArray
 
     public:
 
-        // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute);
-
-        // Finalizes building vertex attributes.
-        void Finalize();
+        // Stores the vertex attributes for later use via glVertexAttrib*Pointer() functions.
+        void BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
 
         // Binds this vertex array.
         void Bind(GLStateManager& stateMngr) const;
@@ -47,6 +45,11 @@ class GL2XVertexArray
             GLsizei         stride;
             const GLvoid*   pointer;
         };
+
+    private:
+
+        void BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute);
+        void Finalize();
 
     private:
 

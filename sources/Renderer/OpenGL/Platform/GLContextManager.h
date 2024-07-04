@@ -14,6 +14,7 @@
 #include <LLGL/Container/DynamicArray.h>
 #include <vector>
 #include <memory>
+#include <functional>
 
 
 namespace LLGL
@@ -35,12 +36,18 @@ class GLContextManager
 
     public:
 
+        // Callback interface when a new GLContext is created.
+        using NewGLContextCallback = std::function<void(GLContext& context, const GLPixelFormat& pixelFormat)>;
+
+    public:
+
         GLContextManager(const GLContextManager&) = delete;
         GLContextManager& operator = (const GLContextManager&) = delete;
 
         // Initializes the context manager and creates the primary GL context.
         GLContextManager(
             const RendererConfigurationOpenGL&  profile,
+            const NewGLContextCallback&         newContextCallback      = nullptr,
             const void*                         customNativeHandle      = nullptr,
             std::size_t                         customNativeHandleSize  = 0
         );
@@ -48,7 +55,11 @@ class GLContextManager
     public:
 
         // Returns a GL context with the specified pixel format or any context if 'pixelFormat' is null.
-        std::shared_ptr<GLContext> AllocContext(const GLPixelFormat* pixelFormat = nullptr, Surface* surface = nullptr);
+        std::shared_ptr<GLContext> AllocContext(
+            const GLPixelFormat*    pixelFormat             = nullptr,
+            bool                    acceptCompatibleFormat  = false,
+            Surface*                surface                 = nullptr
+        );
 
     public:
 
@@ -76,7 +87,7 @@ class GLContextManager
         std::shared_ptr<GLContext> MakeContextWithPixelFormat(const GLPixelFormat& pixelFormat, Surface* surface = nullptr);
 
         // Returns a GL context with the specified pixel format or creates a new one if no suitable context could be found.
-        std::shared_ptr<GLContext> FindOrMakeContextWithPixelFormat(const GLPixelFormat& pixelFormat, Surface* surface = nullptr);
+        std::shared_ptr<GLContext> FindOrMakeContextWithPixelFormat(const GLPixelFormat& pixelFormat, bool acceptCompatibleFormat, Surface* surface = nullptr);
 
         // Returns any GL context or creates a new one if none has been created yet.
         std::shared_ptr<GLContext> FindOrMakeAnyContext();
@@ -89,6 +100,7 @@ class GLContextManager
         RendererConfigurationOpenGL             profile_;
         std::vector<GLPixelFormatWithContext>   pixelFormats_;
         DynamicByteArray                        customNativeHandle_;
+        NewGLContextCallback                    newContextCallback_;
 
 };
 

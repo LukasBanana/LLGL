@@ -31,7 +31,7 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
     public:
 
-        GLImmediateCommandBuffer(GLStateManager& stateManager);
+        GLImmediateCommandBuffer();
 
     public:
 

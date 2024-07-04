@@ -25,6 +25,7 @@ namespace LLGL
 
 struct NativeHandle;
 class GLRenderTarget;
+class GLRenderSystem;
 class GLContextManager;
 
 class GLSwapChain final : public SwapChain
@@ -35,6 +36,7 @@ class GLSwapChain final : public SwapChain
         /* ----- Common ----- */
 
         GLSwapChain(
+            GLRenderSystem&                 renderSystem,
             const SwapChainDescriptor&      desc,
             const std::shared_ptr<Surface>& surface,
             GLContextManager&               contextMngr
@@ -60,9 +62,6 @@ class GLSwapChain final : public SwapChain
         // Makes the swap-chain's GL context current and updates the renger-target height in the linked GL state manager.
         static bool MakeCurrent(GLSwapChain* swapChain);
 
-        // Make this function public for GLSwapChain as the default title has to be set outside its constructor due to GL context management.
-        void BuildAndSetDefaultSurfaceTitle(const RendererInfo& info);
-
         // Returns the state manager of the swap chain's GL context.
         inline GLStateManager& GetStateManager()
         {
@@ -78,6 +77,8 @@ class GLSwapChain final : public SwapChain
         #ifdef __linux__
         void ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeHandle& windowContext);
         #endif
+
+        void BuildAndSetDefaultSurfaceTitle(const RendererInfo& info);
 
     private:
 

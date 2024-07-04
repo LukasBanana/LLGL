@@ -34,6 +34,17 @@ GLVertexArrayObject::~GLVertexArrayObject()
     }
 }
 
+void GLVertexArrayObject::BuildVertexLayout(const ArrayView<VertexAttribute>& attributes)
+{
+    for (const VertexAttribute& attrib : attributes)
+        BuildVertexAttribute(attrib);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute)
 {
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);

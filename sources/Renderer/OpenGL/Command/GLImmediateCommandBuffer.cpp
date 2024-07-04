@@ -51,8 +51,8 @@ namespace LLGL
 {
 
 
-GLImmediateCommandBuffer::GLImmediateCommandBuffer(GLStateManager& stateManager) :
-    stateMngr_ { &stateManager }
+GLImmediateCommandBuffer::GLImmediateCommandBuffer() :
+    stateMngr_ { &(GLStateManager::Get()) }
 {
 }
 
@@ -60,6 +60,7 @@ GLImmediateCommandBuffer::GLImmediateCommandBuffer(GLStateManager& stateManager)
 
 void GLImmediateCommandBuffer::Begin()
 {
+    stateMngr_ = &(GLStateManager::Get());
     ResetRenderState();
 }
 

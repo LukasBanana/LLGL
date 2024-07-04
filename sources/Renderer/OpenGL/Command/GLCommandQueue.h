@@ -26,14 +26,6 @@ class GLCommandQueue final : public CommandQueue
 
         #include <LLGL/Backend/CommandQueue.inl>
 
-    public:
-
-        GLCommandQueue(GLStateManager& stateManager);
-
-    private:
-
-        GLStateManager& stateMngr_;
-
 };
 
 

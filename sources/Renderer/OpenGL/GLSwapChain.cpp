@@ -6,6 +6,7 @@
  */
 
 #include "GLSwapChain.h"
+#include "GLRenderSystem.h"
 #include "../TextureUtils.h"
 #include "Platform/GLContextManager.h"
 #include <LLGL/TypeInfo.h>
@@ -27,6 +28,7 @@ namespace LLGL
 
 
 GLSwapChain::GLSwapChain(
+    GLRenderSystem&                 renderSystem,
     const SwapChainDescriptor&      desc,
     const std::shared_ptr<Surface>& surface,
     GLContextManager&               contextMngr)
@@ -61,7 +63,7 @@ GLSwapChain::GLSwapChain(
     framebufferHeight_ = static_cast<GLint>(GetResolution().height);
 
     /* Create platform dependent OpenGL context */
-    context_ = contextMngr.AllocContext(&pixelFormat, &GetSurface());
+    context_ = contextMngr.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
     swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface());
     GLSwapChainContext::MakeCurrent(swapChainContext_.get());
 
@@ -70,7 +72,11 @@ GLSwapChain::GLSwapChain(
 
     /* Show default surface */
     if (!surface)
+    {
+        /* Build default surface title after surface creation so we have a valid GLContext with renderer information */
+        BuildAndSetDefaultSurfaceTitle(renderSystem.GetRendererInfo());
         ShowSurface();
+    }
 }
 
 void GLSwapChain::Present()
@@ -126,21 +132,6 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
         return GLSwapChainContext::MakeCurrent(nullptr);
 }
 
-void GLSwapChain::BuildAndSetDefaultSurfaceTitle(const RendererInfo& info)
-{
-    #ifdef LLGL_MOBILE_PLATFORM
-
-    /* Set Canvas title for mobile platforms */
-    CastTo<Canvas>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
-
-    #else // LLGL_MOBILE_PLATFORM
-
-    /* Set Window title for desktop platforms */
-    CastTo<Window>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
-
-    #endif // /LLGL_MOBILE_PLATFORM
-}
-
 
 /*
  * ======= Private: =======
@@ -163,6 +154,21 @@ bool GLSwapChain::SetSwapInterval(int swapInterval)
 {
     GLSwapChainContext::MakeCurrent(swapChainContext_.get());
     return GLContext::SetCurrentSwapInterval(swapInterval);
+}
+
+void GLSwapChain::BuildAndSetDefaultSurfaceTitle(const RendererInfo& info)
+{
+    #ifdef LLGL_MOBILE_PLATFORM
+
+    /* Set Canvas title for mobile platforms */
+    CastTo<Canvas>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
+
+    #else // LLGL_MOBILE_PLATFORM
+
+    /* Set Window title for desktop platforms */
+    CastTo<Window>(GetSurface()).SetTitle(SwapChain::BuildDefaultSurfaceTitle(info));
+
+    #endif // /LLGL_MOBILE_PLATFORM
 }
 
 

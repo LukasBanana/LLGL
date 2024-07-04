@@ -10,6 +10,7 @@
 
 
 #include "../OpenGL.h"
+#include <LLGL/Container/ArrayView.h>
 
 
 namespace LLGL
@@ -28,13 +29,17 @@ class GLVertexArrayObject
         ~GLVertexArrayObject();
 
         // Builds the specified attribute using a 'glVertexAttrib*Pointer' function.
-        void BuildVertexAttribute(const VertexAttribute& attribute);
+        void BuildVertexLayout(const ArrayView<VertexAttribute>& attributes);
 
         // Returns the ID of the hardware vertex-array-object (VAO)
         inline GLuint GetID() const
         {
             return id_;
         }
+
+    private:
+
+        void BuildVertexAttribute(const VertexAttribute& attribute);
 
     private:
 

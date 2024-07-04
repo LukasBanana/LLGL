@@ -51,6 +51,9 @@ namespace LLGL
 {
 
 
+class GLContext;
+struct GLPixelFormat;
+
 class GLRenderSystem final : public RenderSystem
 {
 
@@ -65,7 +68,12 @@ class GLRenderSystem final : public RenderSystem
 
     private:
 
-        void CreateGLContextDependentDevices(GLStateManager& stateManager);
+        // Creates a GL context once or creates a new one if there is no compatible one with the specified pixel format.
+        void CreateGLContextOnce();
+        void CreateGLContextWithPixelFormatOnce(const GLPixelFormat& pixelFormat);
+
+        // Updates the renderer capabilities information and enables the debug layer for the new GLContext if enabled.
+        void RegisterNewGLContext(GLContext& context, const GLPixelFormat& pixelFormat);
 
         void EnableDebugCallback(bool enable = true);
 
@@ -81,10 +89,10 @@ class GLRenderSystem final : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         GLContextManager                        contextMngr_;
+        GLCommandQueue                          commandQueue_;
         bool                                    debugContext_   = false;
 
         HWObjectContainer<GLSwapChain>          swapChains_;
-        HWObjectInstance<GLCommandQueue>        commandQueue_;
         HWObjectContainer<GLCommandBuffer>      commandBuffers_;
         HWObjectContainer<GLBuffer>             buffers_;
         HWObjectContainer<GLBufferArray>        bufferArrays_;

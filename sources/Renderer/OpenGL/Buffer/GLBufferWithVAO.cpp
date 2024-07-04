@@ -48,15 +48,11 @@ void GLBufferWithVAO::BuildVertexArray(std::size_t numVertexAttribs, const Verte
 
 void GLBufferWithVAO::BuildVertexArrayWithVAO()
 {
-    /* Bind VAO */
+    /* Bind VAO and build vertex layout */
     GLStateManager::Get().BindVertexArray(GetVaoID());
     {
-        /* Bind VBO */
         GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, GetID());
-
-        /* Build each vertex attribute */
-        for (const auto& attrib : vertexAttribs_)
-            vao_.BuildVertexAttribute(attrib);
+        vao_.BuildVertexLayout(vertexAttribs_);
     }
     GLStateManager::Get().BindVertexArray(0);
 }
@@ -65,10 +61,7 @@ void GLBufferWithVAO::BuildVertexArrayWithVAO()
 
 void GLBufferWithVAO::BuildVertexArrayWithEmulator()
 {
-    /* Build each vertex attribute */
-    for (const auto& attrib : vertexAttribs_)
-        vertexArrayGL2X_.BuildVertexAttribute(GetID(), attrib);
-    vertexArrayGL2X_.Finalize();
+    vertexArrayGL2X_.BuildVertexLayout(GetID(), vertexAttribs_);
 }
 
 #endif // /LLGL_GL_ENABLE_OPENGL2X

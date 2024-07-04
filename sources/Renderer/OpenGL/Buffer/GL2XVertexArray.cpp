@@ -17,6 +17,37 @@ namespace LLGL
 {
 
 
+void GL2XVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayView<VertexAttribute>& attributes)
+{
+    attribs_.clear();
+    attribs_.reserve(attributes.size());
+
+    for (const VertexAttribute& attrib : attributes)
+        BuildVertexAttribute(bufferID, attrib);
+
+    Finalize();
+}
+
+void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
+{
+    /* Enable required vertex arrays */
+    for (const GL2XVertexAttrib& attr : attribs_)
+    {
+        stateMngr.BindBuffer(GLBufferTarget::ArrayBuffer, attr.buffer);
+        glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.stride, attr.pointer);
+        glEnableVertexAttribArray(attr.index);
+    }
+
+    //TODO: add case for disabling attrib arrays inbetween, e.g. when only index 0 and 2 is used (rare case probably)
+    /* Disable remaining vertex arrays */
+    stateMngr.DisableVertexAttribArrays(attribIndexEnd_);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribute& attribute)
 {
     /* Check if instance divisor is used */
@@ -24,23 +55,23 @@ void GL2XVertexArray::BuildVertexAttribute(GLuint bufferID, const VertexAttribut
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("per-instance vertex attributes");
 
     /* Check if integral vertex attribute is used */
-    auto isNormalizedFormat = IsNormalizedFormat(attribute.format);
-    auto isFloatFormat      = IsFloatFormat(attribute.format);
+    bool isNormalizedFormat = IsNormalizedFormat(attribute.format);
+    bool isFloatFormat      = IsFloatFormat(attribute.format);
 
     if (!isNormalizedFormat && !isFloatFormat)
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("integral vertex attributes");
 
     /* Get data type and components of vector type */
-    const auto& formatAttribs = GetFormatAttribs(attribute.format);
+    const FormatAttributes& formatAttribs = GetFormatAttribs(attribute.format);
     if ((formatAttribs.flags & FormatFlags::SupportsVertex) == 0)
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("specified vertex attribute");
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
-    auto dataType       = GLTypes::Map(formatAttribs.dataType);
-    auto components     = static_cast<GLint>(formatAttribs.components);
-    auto attribIndex    = static_cast<GLuint>(attribute.location);
-    auto stride         = static_cast<GLsizei>(attribute.stride);
-    auto offsetPtrSized = static_cast<GLsizeiptr>(attribute.offset);
+    GLenum      dataType        = GLTypes::Map(formatAttribs.dataType);
+    GLint       components      = static_cast<GLint>(formatAttribs.components);
+    GLuint      attribIndex     = static_cast<GLuint>(attribute.location);
+    GLsizei     stride          = static_cast<GLsizei>(attribute.stride);
+    GLsizeiptr  offsetPtrSized  = static_cast<GLsizeiptr>(attribute.offset);
 
     attribs_.push_back(
         {
@@ -87,21 +118,6 @@ void GL2XVertexArray::Finalize()
             return (lhs.index < rhs.index);
         }
     );
-}
-
-void GL2XVertexArray::Bind(GLStateManager& stateMngr) const
-{
-    /* Enable required vertex arrays */
-    for (const auto& attr : attribs_)
-    {
-        stateMngr.BindBuffer(GLBufferTarget::ArrayBuffer, attr.buffer);
-        glVertexAttribPointer(attr.index, attr.size, attr.type, attr.normalized, attr.stride, attr.pointer);
-        glEnableVertexAttribArray(attr.index);
-    }
-
-    //TODO: add case for disabling attrib arrays inbetween, e.g. when only index 0 and 2 is used (rare case probably)
-    /* Disable remaining vertex arrays */
-    stateMngr.DisableVertexAttribArrays(attribIndexEnd_);
 }
 
 

@@ -172,8 +172,8 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
     /* Get the surface's Win32 device context */
     hDC_ = GetWin32DeviceContext(surface);
 
-    /* If a shared context has passed, use its pre-selected pixel format */
-    if (hasMultiSampling && sharedContext)
+    /* If a shared context is specified, use its pre-selected pixel format */
+    if (hasMultiSampling && sharedContext != nullptr && sharedContext->GetSamples() >= GetSamples())
         CopyPixelFormat(*sharedContext);
 
     /* First setup device context and choose pixel format */
