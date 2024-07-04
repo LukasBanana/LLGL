@@ -56,8 +56,12 @@ class MTRenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         void CreateDeviceResources(id<MTLDevice> sharedDevice = nil);
-        void QueryRenderingCaps();
+        void QueryRendererInfo(RendererInfo& outInfo);
 
         const char* QueryMetalVersion() const;
 

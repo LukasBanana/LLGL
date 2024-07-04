@@ -975,7 +975,10 @@ static void IncludeImpliedExtensions(GLExtensionMap& extensions)
 #endif // /__APPLE__
 
 // Global member to store if the extension have already been loaded
-static bool g_OpenGLExtensionsLoaded = false;
+static bool                     g_OpenGLExtensionsLoaded = false;
+static GLExtensionMap           g_OpenGLExtensionsMap;
+static std::set<const char*>    g_supportedOpenGLExtensions;
+static std::set<const char*>    g_loadedOpenGLExtensions;
 
 bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 {
@@ -983,7 +986,8 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     if (g_OpenGLExtensionsLoaded)
         return true;
 
-    GLExtensionMap extensions = QuerySupportedOpenGLExtensions(isCoreProfile);
+    /* Query supported OpenGL extension names */
+    g_OpenGLExtensionsMap = QuerySupportedOpenGLExtensions(isCoreProfile);
 
     #ifdef __APPLE__
 
@@ -1056,11 +1060,11 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #else // __APPLE__
 
-    auto LoadExtension = [&extensions, abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
+    auto LoadExtension = [abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
     {
         /* Try to load OpenGL extension */
-        auto it = extensions.find(extName);
-        if (it != extensions.end())
+        auto it = g_OpenGLExtensionsMap.find(extName);
+        if (it != g_OpenGLExtensionsMap.end())
         {
             if (extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ false))
             {
@@ -1084,7 +1088,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     auto EnableExtension = [&](const std::string& extName, GLExt extensionID) -> void
     {
         /* Try to enable OpenGL extension */
-        if (extensions.find(extName) != extensions.end())
+        if (g_OpenGLExtensionsMap.find(extName) != g_OpenGLExtensionsMap.end())
             RegisterExtension(extensionID);
     };
 
@@ -1096,9 +1100,9 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Add standard extensions */
     if (isCoreProfile)
-        IncludeDefaultCoreProfileExtensions(extensions);
+        IncludeDefaultCoreProfileExtensions(g_OpenGLExtensionsMap);
 
-    IncludeImpliedExtensions(extensions);
+    IncludeImpliedExtensions(g_OpenGLExtensionsMap);
 
     #if defined(GL_VERSION_3_1) && !defined(GL_GLEXT_PROTOTYPES)
     LOAD_GLEXT( ARB_compatibility );
@@ -1201,7 +1205,15 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #endif // /__APPLE__
 
+    /* Cache supported and loaded extensions */
     g_OpenGLExtensionsLoaded = true;
+
+    for (const auto& it : g_OpenGLExtensionsMap)
+    {
+        g_supportedOpenGLExtensions.insert(it.first.c_str());
+        if (it.second)
+            g_loadedOpenGLExtensions.insert(it.first.c_str());
+    }
 
     return true;
 }
@@ -1209,6 +1221,16 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 bool AreOpenGLExtensionsLoaded()
 {
     return g_OpenGLExtensionsLoaded;
+}
+
+const std::set<const char*>& GetSupportedOpenGLExtensions()
+{
+    return g_supportedOpenGLExtensions;
+}
+
+const std::set<const char*>& GetLoadedOpenGLExtensions()
+{
+    return g_loadedOpenGLExtensions;
 }
 
 

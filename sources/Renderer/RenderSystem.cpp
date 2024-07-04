@@ -46,9 +46,11 @@ namespace LLGL
 
 struct RenderSystem::Pimpl
 {
-    int                     rendererID = 0;
+    int                     rendererID  = 0;
     std::string             name;
+    bool                    hasInfo     = false;
     RendererInfo            info;
+    bool                    hasCaps     = false;
     RenderingCapabilities   caps;
     Report                  report;
 };
@@ -322,13 +324,23 @@ const char* RenderSystem::GetName() const
     return pimpl_->name.c_str();
 }
 
-const RendererInfo& RenderSystem::GetRendererInfo() const
+const RendererInfo& RenderSystem::GetRendererInfo()
 {
+    if (!pimpl_->hasInfo)
+    {
+        if (QueryRendererDetails(&(pimpl_->info), nullptr))
+            pimpl_->hasInfo = true;
+    }
     return pimpl_->info;
 }
 
-const RenderingCapabilities& RenderSystem::GetRenderingCaps() const
+const RenderingCapabilities& RenderSystem::GetRenderingCaps()
 {
+    if (!pimpl_->hasCaps)
+    {
+        if (QueryRendererDetails(nullptr, &(pimpl_->caps)))
+            pimpl_->hasCaps = true;
+    }
     return pimpl_->caps;
 }
 
@@ -356,12 +368,14 @@ void RenderSystem::Errorf(const char* format, ...)
 
 void RenderSystem::SetRendererInfo(const RendererInfo& info)
 {
-    pimpl_->info = info;
+    pimpl_->hasInfo = true;
+    pimpl_->info    = info;
 }
 
 void RenderSystem::SetRenderingCaps(const RenderingCapabilities& caps)
 {
-    pimpl_->caps = caps;
+    pimpl_->hasCaps = true;
+    pimpl_->caps    = caps;
 }
 
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::uint64_t maxSize)

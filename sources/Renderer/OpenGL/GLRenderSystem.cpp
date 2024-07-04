@@ -27,6 +27,7 @@
 #include "../../Core/Assertion.h"
 #include "../../Platform/Debug.h"
 #include "GLRenderingCaps.h"
+#include "Ext/GLExtensionLoader.h"
 #include "Command/GLImmediateCommandBuffer.h"
 #include "Command/GLDeferredCommandBuffer.h"
 #include "RenderState/GLGraphicsPSO.h"
@@ -602,15 +603,11 @@ void GLRenderSystem::CreateGLContextWithPixelFormatOnce(const GLPixelFormat& pix
     (void)contextMngr_.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ true);
 }
 
-void GLRenderSystem::RegisterNewGLContext(GLContext& context, const GLPixelFormat& pixelFormat)
+void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelFormat& /*pixelFormat*/)
 {
     /* Enable debug callback function */
     if (debugContext_)
         EnableDebugCallback();
-
-    /* Query renderer information and limits */
-    QueryRendererInfo();
-    QueryRenderingCaps();
 }
 
 #ifdef GL_KHR_debug
@@ -685,7 +682,7 @@ static void AppendCacheIDValue(std::vector<char>& cacheID, const T& val)
     AppendCacheIDBytes(cacheID, &val, sizeof(val));
 }
 
-void GLQueryPipelineCacheID(std::vector<char>& cacheID)
+static void GLQueryPipelineCacheID(std::vector<char>& cacheID)
 {
     #ifdef GL_ARB_get_program_binary
     if (HasExtension(GLExt::ARB_get_program_binary))
@@ -711,24 +708,31 @@ void GLQueryPipelineCacheID(std::vector<char>& cacheID)
     #endif // /GL_ARB_get_program_binary
 }
 
-void GLRenderSystem::QueryRendererInfo()
+static void GLQueryRendererInfo(RendererInfo& info)
 {
-    RendererInfo info;
-
     info.rendererName           = GLProfile::GetAPIName() + std::string(" ") + GLGetString(GL_VERSION);
     info.deviceName             = GLGetString(GL_RENDERER);
     info.vendorName             = GLGetString(GL_VENDOR);
     info.shadingLanguageName    = GLProfile::GetShadingLanguageName() + std::string(" ") + GLGetString(GL_SHADING_LANGUAGE_VERSION);
-    GLQueryPipelineCacheID(info.pipelineCacheID);
 
-    SetRendererInfo(info);
+    const std::set<const char*>& extensionNames = GetLoadedOpenGLExtensions();
+    info.extensionNames = std::vector<std::string>(extensionNames.begin(), extensionNames.end());
+
+    GLQueryPipelineCacheID(info.pipelineCacheID);
 }
 
-void GLRenderSystem::QueryRenderingCaps()
+bool GLRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
 {
-    RenderingCapabilities caps;
-    GLQueryRenderingCaps(caps);
-    SetRenderingCaps(caps);
+    if (outInfo != nullptr || outCaps != nullptr)
+    {
+        /* Make sure we have a GL context before querying information from it */
+        CreateGLContextOnce();
+        if (outInfo != nullptr)
+            GLQueryRendererInfo(*outInfo);
+        if (outCaps != nullptr)
+            GLQueryRenderingCaps(*outCaps);
+    }
+    return true;
 }
 
 

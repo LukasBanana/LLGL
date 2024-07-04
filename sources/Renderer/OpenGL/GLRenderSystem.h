@@ -68,6 +68,10 @@ class GLRenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         // Creates a GL context once or creates a new one if there is no compatible one with the specified pixel format.
         void CreateGLContextOnce();
         void CreateGLContextWithPixelFormatOnce(const GLPixelFormat& pixelFormat);
@@ -76,9 +80,6 @@ class GLRenderSystem final : public RenderSystem
         void RegisterNewGLContext(GLContext& context, const GLPixelFormat& pixelFormat);
 
         void EnableDebugCallback(bool enable = true);
-
-        void QueryRendererInfo();
-        void QueryRenderingCaps();
 
         GLBuffer* CreateGLBuffer(const BufferDescriptor& desc, const void* initialData);
 

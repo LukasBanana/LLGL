@@ -121,6 +121,10 @@ class D3D12RenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         void EnableDebugLayer();
 
         void CreateFactory(bool debugDevice = false);
@@ -132,8 +136,8 @@ class D3D12RenderSystem final : public RenderSystem
         // Returns the minor version of Direct3D 12.X.
         int GetMinorVersion() const;
 
-        void QueryRendererInfo();
-        void QueryRenderingCaps();
+        void QueryRendererInfo(RendererInfo& outInfo);
+        void QueryRenderingCaps(RenderingCapabilities& outCaps);
 
         // Close, execute, and reset command list.
         void ExecuteCommandListAndSync();

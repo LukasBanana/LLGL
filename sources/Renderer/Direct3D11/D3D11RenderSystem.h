@@ -102,6 +102,10 @@ class D3D11RenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         void CreateFactory();
         void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
         HRESULT CreateDevice(IDXGIAdapter* adapter, bool debugDevice = false);
@@ -110,8 +114,8 @@ class D3D11RenderSystem final : public RenderSystem
         void QueryDXDeviceVersion();
         void CreateStateManagerAndCommandQueue();
 
-        void QueryRendererInfo();
-        void QueryRenderingCaps();
+        void QueryRendererInfo(RendererInfo& outInfo);
+        void QueryRenderingCaps(RenderingCapabilities& outCaps);
 
         // Returns the minor version of Direct3D 11.X.
         int GetMinorVersion() const;

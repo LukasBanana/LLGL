@@ -34,14 +34,13 @@ All the actual render system objects are stored in the members named "instance",
 */
 
 DbgRenderSystem::DbgRenderSystem(RenderSystemPtr&& instance, RenderingDebugger* debugger) :
-    instance_ { std::forward<RenderSystemPtr&&>(instance) },
-    debugger_ { debugger                                  },
-    caps_     { GetRenderingCaps()                        },
-    features_ { caps_.features                            },
-    limits_   { caps_.limits                              }
+    instance_     { std::forward<RenderSystemPtr&&>(instance)                                         },
+    debugger_     { debugger                                                                          },
+    caps_         { GetRenderingCaps()                                                                },
+    features_     { caps_.features                                                                    },
+    limits_       { caps_.limits                                                                      },
+    commandQueue_ { MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profile_, debugger_) }
 {
-    /* Initialize rendering capabilities from wrapped instance */
-    UpdateRenderingCaps();
 }
 
 void DbgRenderSystem::FlushProfile()
@@ -55,18 +54,12 @@ void DbgRenderSystem::FlushProfile()
 
 SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    /* Create primary swap-chain */
-    auto* swapChainInstance = instance_->CreateSwapChain(swapChainDesc, surface);
-
-    /* Instantiate command queue if not done and update rendering capabilities from wrapped instance */
-    if (!commandQueue_)
-    {
-        UpdateRenderingCaps();
-        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profile_, debugger_);
-    }
-
-    /* Flush frame profile on SwapChain::Present() calls */
-    return swapChains_.emplace<DbgSwapChain>(*swapChainInstance, swapChainDesc, std::bind(&DbgRenderSystem::FlushProfile, this));
+    /* Create swap-chain and flush frame profile on SwapChain::Present() calls  */
+    return swapChains_.emplace<DbgSwapChain>(
+        *instance_->CreateSwapChain(swapChainDesc, surface),
+        swapChainDesc,
+        std::bind(&DbgRenderSystem::FlushProfile, this)
+    );
 }
 
 void DbgRenderSystem::Release(SwapChain& swapChain)
@@ -601,6 +594,15 @@ bool DbgRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
 /*
  * ======= Private: =======
  */
+
+bool DbgRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
+{
+    if (outInfo != nullptr)
+        *outInfo = instance_->GetRendererInfo();
+    if (outCaps != nullptr)
+        *outCaps = instance_->GetRenderingCaps();
+    return true;
+}
 
 void DbgRenderSystem::ValidateBindFlags(long flags)
 {
@@ -2168,13 +2170,6 @@ void DbgRenderSystem::ReleaseDbg(HWObjectContainer<T>& cont, TBase& entry)
     auto& entryDbg = LLGL_CAST(T&, entry);
     instance_->Release(entryDbg.instance);
     cont.erase(&entry);
-}
-
-void DbgRenderSystem::UpdateRenderingCaps()
-{
-    /* Store meta data about render system */
-    SetRendererInfo(instance_->GetRendererInfo());
-    SetRenderingCaps(instance_->GetRenderingCaps());
 }
 
 

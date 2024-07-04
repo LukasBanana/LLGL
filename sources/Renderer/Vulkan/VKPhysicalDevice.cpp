@@ -213,10 +213,7 @@ static void GetVKPipelineCacheID(const VkPhysicalDeviceProperties& properties, s
     }
 }
 
-void VKPhysicalDevice::QueryDeviceProperties(
-    RendererInfo&               info,
-    RenderingCapabilities&      caps,
-    VKGraphicsPipelineLimits&   pipelineLimits)
+void VKPhysicalDevice::QueryRendererInfo(RendererInfo& info)
 {
     /* Map properties to output renderer info */
     info.rendererName           = ("Vulkan " + VKApiVersionToString(properties_.apiVersion));
@@ -224,7 +221,10 @@ void VKPhysicalDevice::QueryDeviceProperties(
     info.vendorName             = GetVendorName(GetVendorByID(properties_.vendorID));
     info.shadingLanguageName    = "SPIR-V";
     GetVKPipelineCacheID(properties_, info.pipelineCacheID);
+}
 
+void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
+{
     /* Map limits to output rendering capabilites */
     const VkPhysicalDeviceLimits& limits = properties_.limits;
 
@@ -300,6 +300,12 @@ void VKPhysicalDevice::QueryDeviceProperties(
     caps.limits.maxDepthBufferSamples               = VKTypes::GetMaxVkSampleCounts(limits.framebufferDepthSampleCounts);
     caps.limits.maxStencilBufferSamples             = VKTypes::GetMaxVkSampleCounts(limits.framebufferStencilSampleCounts);
     caps.limits.maxNoAttachmentSamples              = VKTypes::GetMaxVkSampleCounts(limits.framebufferNoAttachmentsSampleCounts);
+}
+
+void VKPhysicalDevice::QueryPipelineLimits(VKGraphicsPipelineLimits& pipelineLimits)
+{
+    /* Map limits to output rendering capabilites */
+    const VkPhysicalDeviceLimits& limits = properties_.limits;
 
     /* Store graphics pipeline spcific limitations */
     pipelineLimits.lineWidthRange[0]    = limits.lineWidthRange[0];

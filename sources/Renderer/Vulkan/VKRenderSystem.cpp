@@ -657,7 +657,7 @@ PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescrip
         device_,
         (!swapChains_.empty() ? (*swapChains_.begin())->GetRenderPass() : nullptr),
         pipelineStateDesc,
-        gfxPipelineLimits_,
+        graphicsPipelineLimits_,
         pipelineCache
     );
 }
@@ -898,18 +898,8 @@ bool VKRenderSystem::PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDev
         return false;
     }
 
-    /* Query and store rendering capabilities */
-    RendererInfo info;
-    RenderingCapabilities caps;
-
-    physicalDevice_.QueryDeviceProperties(info, caps, gfxPipelineLimits_);
-
-    /* Store Vulkan extension names */
-    const auto& extensions = physicalDevice_.GetExtensionNames();
-    info.extensionNames = std::vector<std::string>(extensions.begin(), extensions.end());
-
-    SetRendererInfo(info);
-    SetRenderingCaps(caps);
+    /* Store graphics pipeline limits for this physical device */
+    physicalDevice_.QueryPipelineLimits(graphicsPipelineLimits_);
 
     return true;
 }
@@ -982,6 +972,23 @@ VkCommandBuffer VKRenderSystem::AllocCommandBuffer(bool begin)
 void VKRenderSystem::FlushCommandBuffer(VkCommandBuffer commandBuffer)
 {
     device_.FlushCommandBuffer(commandBuffer);
+}
+
+bool VKRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
+{
+    if (outInfo != nullptr)
+    {
+        /* Query rendering information from selected physical device and store Vulkan extension names */
+        physicalDevice_.QueryRendererInfo(*outInfo);
+        const std::vector<const char*>& extensions = physicalDevice_.GetExtensionNames();
+        outInfo->extensionNames = std::vector<std::string>(extensions.begin(), extensions.end());
+    }
+    if (outCaps != nullptr)
+    {
+        /* Query rendering capabilities from selected physical device */
+        physicalDevice_.QueryRenderingCaps(*outCaps);
+    }
+    return true;
 }
 
 

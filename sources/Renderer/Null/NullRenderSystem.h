@@ -47,6 +47,10 @@ class NullRenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         /* ----- Common objects ----- */
 
         const RenderSystemDescriptor            desc_;

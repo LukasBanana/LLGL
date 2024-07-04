@@ -50,6 +50,10 @@ class DbgRenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         void ValidateBindFlags(long flags);
         void ValidateCPUAccessFlags(long flags, long validFlags, const char* contextDesc = nullptr);
         void ValidateMiscFlags(long flags, long validFlags, const char* contextDesc = nullptr);
@@ -113,8 +117,6 @@ class DbgRenderSystem final : public RenderSystem
         void ReleaseDbg(HWObjectContainer<T>& cont, TBase& entry);
 
         std::vector<ResourceViewDescriptor> GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews);
-
-        void UpdateRenderingCaps();
 
     private:
 

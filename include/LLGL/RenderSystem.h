@@ -192,17 +192,17 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Returns basic renderer information.
-        \remarks The validity of these information is only guaranteed if this function is called
-        after a valid swap-chain has been created. Otherwise the behavior is undefined!
+        \remarks This is not a constant member function because the first call will invoke the query,
+        while subsequent calls with return the cached information.
         */
-        const RendererInfo& GetRendererInfo() const;
+        const RendererInfo& GetRendererInfo();
 
         /**
         \brief Returns the rendering capabilities.
-        \remarks The validity of these information is only guaranteed if this function is called
-        after a valid swap-chain has been created. Otherwise the behavior is undefined!
+        \remarks This is not a constant member function because the first call will invoke the query,
+        while subsequent calls with return the cached information.
         */
-        const RenderingCapabilities& GetRenderingCaps() const;
+        const RenderingCapabilities& GetRenderingCaps();
 
         /**
         \brief Returns a pointer to the report or null if there is none.
@@ -641,11 +641,24 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         void Errorf(const char* format, ...);
 
-        //! Sets the renderer information.
+        //! \deprecated Since 0.04b; Implement QueryRendererDetails() instead!
+        LLGL_DEPRECATED("RenderSystem::SetRendererInfo is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
         void SetRendererInfo(const RendererInfo& info);
 
-        //! Sets the rendering capabilities.
+        //! \deprecated Since 0.04b; Implement QueryRendererDetails() instead!
+        LLGL_DEPRECATED("RenderSystem::SetRendererInfo is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
         void SetRenderingCaps(const RenderingCapabilities& caps);
+
+    protected:
+
+        /**
+        \brief Queries the renderer information and capacilities.
+        \param[out] outInfo Specifies the output parameter for the renderer info. This may be null.
+        \param[out] outCaps Specifies the output parameter for the renderer capabilities. This may be null.
+        \remarks This function may be called separately for both the information and capabilities query.
+        \return True on success. Otherwise, the backend is not reasy yet to provide the requested details.
+        */
+        virtual bool QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps) = 0;
 
     protected:
 

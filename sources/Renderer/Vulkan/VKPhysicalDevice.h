@@ -36,11 +36,9 @@ class VKPhysicalDevice
         // Loads the physical Vulkan device from a custom native handle.
         void LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice);
 
-        void QueryDeviceProperties(
-            RendererInfo&               info,
-            RenderingCapabilities&      caps,
-            VKGraphicsPipelineLimits&   pipelineLimits
-        );
+        void QueryRendererInfo(RendererInfo& outInfo);
+        void QueryRenderingCaps(RenderingCapabilities& outCaps);
+        void QueryPipelineLimits(VKGraphicsPipelineLimits& outPipelineLimits);
 
         VKDevice CreateLogicalDevice(VkDevice customLogicalDevice = VK_NULL_HANDLE);
 

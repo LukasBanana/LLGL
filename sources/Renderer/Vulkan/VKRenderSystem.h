@@ -62,6 +62,10 @@ class VKRenderSystem final : public RenderSystem
 
     private:
 
+        #include <LLGL/Backend/RenderSystem.Internal.inl>
+
+    private:
+
         void CreateInstance(const RendererConfigurationVulkan* config);
         void CreateDebugReportCallback();
         bool PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice = VK_NULL_HANDLE);
@@ -95,7 +99,7 @@ class VKRenderSystem final : public RenderSystem
 
         std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
 
-        VKGraphicsPipelineLimits                gfxPipelineLimits_;
+        VKGraphicsPipelineLimits                graphicsPipelineLimits_;
 
         /* ----- Hardware object containers ----- */
 

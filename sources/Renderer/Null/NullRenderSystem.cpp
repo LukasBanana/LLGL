@@ -98,39 +98,33 @@ static void InitNullRendererLimits(RenderingLimits& limits)
     limits.maxNoAttachmentSamples           = 1;
 }
 
-static RenderingCapabilities GetNullRenderingCaps()
+static void GetNullRenderingCaps(RenderingCapabilities& caps)
 {
-    RenderingCapabilities caps;
     InitNullRendererShadingLanguages(caps.shadingLanguages);
     InitNullRendererTextureFormats(caps.textureFormats);
     InitNullRendererFeatures(caps.features);
     InitNullRendererLimits(caps.limits);
-    return caps;
 }
 
-static RendererInfo GetNullRendererInfo()
+static void GetNullRendererInfo(RendererInfo& info)
 {
-    RendererInfo info;
     info.rendererName           = "Null";
     info.deviceName             = "CPU";
     info.vendorName             = "LLGL";
     info.shadingLanguageName    = "Dummy";
-    return info;
 }
 
 NullRenderSystem::NullRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     desc_         { renderSystemDesc               },
     commandQueue_ { MakeUnique<NullCommandQueue>() }
 {
-    SetRendererInfo(GetNullRendererInfo());
-    SetRenderingCaps(GetNullRenderingCaps());
 }
 
 /* ----- Swap-chain ----- */
 
 SwapChain* NullRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<NullSwapChain>(swapChainDesc, surface, GetNullRendererInfo());
+    return swapChains_.emplace<NullSwapChain>(swapChainDesc, surface, GetRendererInfo());
 }
 
 void NullRenderSystem::Release(SwapChain& swapChain)
@@ -371,6 +365,20 @@ void NullRenderSystem::Release(Fence& fence)
 bool NullRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     return (nativeHandle == nullptr || nativeHandleSize == 0); // dummy
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool NullRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps)
+{
+    if (outInfo != nullptr)
+        GetNullRendererInfo(*outInfo);
+    if (outCaps != nullptr)
+        GetNullRenderingCaps(*outCaps);
+    return true;
 }
 
 
