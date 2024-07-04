@@ -12,6 +12,7 @@ build*/
 # Runtime output files for testing
 Screenshot.*
 Capture.*
+*.Results.png
 
 # Output files from individual tests (Testbed is handled separately)
 tests/Output

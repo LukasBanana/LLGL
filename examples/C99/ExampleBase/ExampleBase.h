@@ -26,6 +26,17 @@
  * Structures
  */
 
+typedef struct ExampleConfig
+{
+    const char* rendererModule;
+    uint32_t    windowSize[2];
+    uint32_t    samples;
+    bool        vsync;
+    bool        debugger;
+    bool        noDepthStencil;
+}
+ExampleConfig;
+
 typedef struct TexturedVertex
 {
     float position[3];
@@ -91,6 +102,9 @@ extern float                g_projection[4][4];
  * Global functions
  */
 
+// Configures the example setup. If used, it must be called before example_init(). If this is NULL, the defualt configuration will be used.
+void example_config(const ExampleConfig* config);
+
 // Initializes the example with the specified title and returns a non-zero error code if initialization failed.
 int example_init(const wchar_t* title);
 
@@ -102,6 +116,9 @@ bool example_poll_events();
 
 // Builds a perspective projection matrix.
 void perspective_projection(float outProjection[4][4], float aspectRatio, float nearPlane, float farPlane, float fieldOfView);
+
+// Builds an orthogonal projection matrix.
+void orthogonal_projection(float outProjection[4][4], float width, float height, float nearPlane, float farPlane);
 
 // Returns the pointers the vertex and index data of a textured cube.
 void get_textured_cube(const TexturedVertex** outVertices, size_t* outVertexCount, const uint32_t** outIndices, size_t* outIndexCount);

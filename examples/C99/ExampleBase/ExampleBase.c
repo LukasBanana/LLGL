@@ -100,15 +100,6 @@ static void mouse_motion_event(LLGLWindow sender, const LLGLOffset2D* motion)
  * Global functions
  */
 
-struct ExampleConfig
-{
-    const char* rendererModule;
-    uint32_t    windowSize[2];
-    uint32_t    samples;
-    bool        vsync;
-    bool        debugger;
-};
-
 static struct ExampleConfig g_Config =
 {
     .rendererModule = "OpenGL",
@@ -116,6 +107,7 @@ static struct ExampleConfig g_Config =
     .samples        = 8,
     .vsync          = true,
     .debugger       = false,
+    .noDepthStencil = false
 };
 
 static void update_viewport()
@@ -138,6 +130,33 @@ static float aspect_ratio()
     return (float)swapChainResolution.width / (float)swapChainResolution.height;
 }
 
+void example_config(const ExampleConfig* config)
+{
+    if (config != NULL)
+    {
+        if (config->rendererModule != NULL)
+            g_Config.rendererModule = config->rendererModule;
+        if (config->windowSize[0] != 0)
+            g_Config.windowSize[0] = config->windowSize[0];
+        if (config->windowSize[1] != 0)
+            g_Config.windowSize[1] = config->windowSize[1];
+        g_Config.samples        = config->samples;
+        g_Config.vsync          = config->vsync;
+        g_Config.debugger       = config->debugger;
+        g_Config.noDepthStencil = config->noDepthStencil;
+    }
+    else
+    {
+        g_Config.rendererModule = "OpenGL";
+        g_Config.windowSize[0]  = 800;
+        g_Config.windowSize[1]  = 600;
+        g_Config.samples        = 8;
+        g_Config.vsync          = true;
+        g_Config.debugger       = false;
+        g_Config.noDepthStencil = false;
+    }
+}
+
 int example_init(const wchar_t* title)
 {
     // Register standard output as log callback
@@ -155,10 +174,10 @@ int example_init(const wchar_t* title)
     LLGLSwapChainDescriptor swapChainDesc =
     {
         .resolution     = { g_Config.windowSize[0], g_Config.windowSize[1] },
-        .colorBits      = 32,   // 32 bits for color information
-        .depthBits      = 24,   // 24 bits for depth comparison
-        .stencilBits    = 8,    // 8 bits for stencil patterns
-        .samples        = g_Config.samples, // check if LLGL adapts sample count that is too high
+        .colorBits      = 32,                                   // 32 bits for color information
+        .depthBits      = (g_Config.noDepthStencil ? 0 : 24),   // 24 bits for depth comparison
+        .stencilBits    = (g_Config.noDepthStencil ? 0 : 8),    // 8 bits for stencil patterns
+        .samples        = g_Config.samples,                     // check if LLGL adapts sample count that is too high
     };
     g_swapChain = llglCreateSwapChain(&swapChainDesc);
 
@@ -249,10 +268,38 @@ bool example_poll_events()
 void perspective_projection(float outProjection[4][4], float aspectRatio, float nearPlane, float farPlane, float fieldOfView)
 {
     const int rendererID = llglGetRendererID();
-    if (rendererID == LLGL_RENDERERID_OPENGL || rendererID == LLGL_RENDERERID_VULKAN)
-        build_perspective_projection(outProjection, aspectRatio, nearPlane, farPlane, fieldOfView, /*isUnitCube:*/ true);
-    else
-        build_perspective_projection(outProjection, aspectRatio, nearPlane, farPlane, fieldOfView, /*isUnitCube:*/ false);
+    const bool isUnitCube = (rendererID == LLGL_RENDERERID_OPENGL || rendererID == LLGL_RENDERERID_VULKAN);
+    build_perspective_projection(outProjection, aspectRatio, nearPlane, farPlane, fieldOfView, isUnitCube);
+}
+
+static void build_orthogonal_projection(float m[4][4], float width, float height, float nearPlane, float farPlane, bool isUnitCube)
+{
+    m[0][0] = 2.0f / width;
+    m[0][1] = 0.0f;
+    m[0][2] = 0.0f;
+    m[0][3] = 0.0f;
+
+    m[1][0] = 0.0f;
+    m[1][1] = 2.0f / height;
+    m[1][2] = 0.0f;
+    m[1][3] = 0.0f;
+
+    m[2][0] = 0.0f;
+    m[2][1] = 0.0f;
+    m[2][2] = (isUnitCube ? 2.0f/(farPlane - nearPlane) : 1.0f/(farPlane - nearPlane));
+    m[3][2] = 0.0f;
+
+    m[3][0] = 0.0f;
+    m[3][1] = 0.0f;
+    m[2][3] = (isUnitCube ? -(farPlane + nearPlane)/(farPlane - nearPlane) : -nearPlane/(farPlane - nearPlane));
+    m[3][3] = 1.0f;
+}
+
+void orthogonal_projection(float outProjection[4][4], float width, float height, float nearPlane, float farPlane)
+{
+    const int rendererID = llglGetRendererID();
+    const bool isUnitCube = (rendererID == LLGL_RENDERERID_OPENGL || rendererID == LLGL_RENDERERID_VULKAN);
+    build_orthogonal_projection(outProjection, width, height, nearPlane, farPlane, isUnitCube);
 }
 
 void get_textured_cube(const TexturedVertex** outVertices, size_t* outVertexCount, const uint32_t** outIndices, size_t* outIndexCount)
