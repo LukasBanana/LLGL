@@ -25,6 +25,7 @@
 #include "../Shader/GLShaderUniform.h"
 
 #include "../Texture/GLTexture.h"
+#include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
 #include "../Texture/GLFramebufferCapture.h"
 #ifdef LLGL_GL_ENABLE_OPENGL2X
@@ -196,7 +197,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
         case GLOpcodeResolveRenderTarget:
         {
             auto cmd = reinterpret_cast<const GLCmdResolveRenderTarget*>(pc);
-            compiler.CallMember(&GLRenderTarget::ResolveMultisampled, pc->renderTarget, g_stateMngrArg);
+            compiler.CallMember(&GLRenderTarget::ResolveMultisampled, cmd->renderTarget, g_stateMngrArg);
             return sizeof(*cmd);
         }
         case GLOpcodeBindVertexArray:
