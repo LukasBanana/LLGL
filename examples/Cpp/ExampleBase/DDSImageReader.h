@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_DDS_IMAGE_READER_H
-#define LLGL_DDS_IMAGE_READER_H
+#ifndef LLGLEXAMPLES_DDS_IMAGE_READER_H
+#define LLGLEXAMPLES_DDS_IMAGE_READER_H
 
 
 #include <LLGL/ImageFlags.h>
@@ -15,14 +15,14 @@
 #include <vector>
 
 
-// Perlin noise generator class.
+// Image reader class to load DXT compressed textures from file.
 class DDSImageReader
 {
 
     public:
 
-        // Loads the specified DDS texture from file.
-        void LoadFromFile(const std::string& filename);
+        // Loads the specified DDS image from file.
+        bool LoadFromFile(const std::string& filename);
 
         // Returns the image view for the sepcified MIP-map that can be passed to RenderSystem::CreateTexture or RenderSystem::WriteTexture.
         LLGL::ImageView GetImageView(std::uint32_t mipLevel = 0) const;

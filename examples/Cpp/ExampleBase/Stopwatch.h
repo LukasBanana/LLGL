@@ -5,13 +5,14 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_STOPWATCH_H
-#define LLGL_STOPWATCH_H
+#ifndef LLGLEXAMPLES_STOPWATCH_H
+#define LLGLEXAMPLES_STOPWATCH_H
 
 
 #include <cstdint>
 
 
+// Simple class to store changes in time (in seconds) from Start() to Stop() calls.
 class Stopwatch
 {
 

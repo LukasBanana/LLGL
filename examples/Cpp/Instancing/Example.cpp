@@ -6,8 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <stb/stb_image.h>
-#include <FileUtils.h>
+#include <ImageReader.h>
 #include <LLGL/Display.h>
 
 
@@ -212,14 +211,14 @@ private:
     {
         std::string filename;
 
-        std::vector<unsigned char> arrayImageBuffer;
+        std::vector<char> arrayImageBuffer;
 
         // Load all array images
-        int width = 0, height = 0;
+        std::uint32_t width = 0, height = 0;
 
-        auto numImages = (numPlantImages + 1);
+        std::uint32_t numImages = 0;
 
-        for (std::uint32_t i = 0; i < numImages; ++i)
+        for (std::uint32_t i = 0; i <= numPlantImages; ++i)
         {
             // Setup filename for "Plants_N.png" where N is from 0 to 9
             if (i < numPlantImages)
@@ -227,32 +226,28 @@ private:
             else
                 filename = "Grass.jpg";
 
-            filename = FindResourcePath(filename);
-
-            // Load all images from file (using STBI library, see https://github.com/nothings/stb)
-            int w = 0, h = 0, c = 0;
-            unsigned char* imageBuffer = stbi_load(filename.c_str(), &w, &h, &c, 4);
-            if (!imageBuffer)
-                throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
+            // Load image asset
+            ImageReader reader;
+            if (!reader.LoadFromFile(filename))
+                continue;
 
             // Copy image buffer into array image buffer
-            if ( ( width != 0 && height != 0 ) && ( width != w || height != h ) )
-                throw std::runtime_error("image size mismatch");
+            const LLGL::Extent3D imageExtent = reader.GetTextureDesc().extent;
+            if ( ( width != 0 && height != 0 ) && ( width != imageExtent.width || height != imageExtent.height ) )
+            {
+                LLGL::Log::Errorf("image size mismatch for image \"%s\"\n", filename.c_str());
+                continue;
+            }
 
-            width = w;
-            height = h;
+            width   = imageExtent.width;
+            height  = imageExtent.height;
 
-            auto imageBufferSize = w*h*4;
-            auto imageBufferOffset = arrayImageBuffer.size();
-            arrayImageBuffer.resize(imageBufferOffset + imageBufferSize);
-
-            ::memcpy(arrayImageBuffer.data() + imageBufferOffset, imageBuffer, imageBufferSize);
-
-            // Release temporary image data
-            stbi_image_free(imageBuffer);
+            reader.AppendImageDataTo(arrayImageBuffer);
 
             // Show info
             LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
+
+            ++numImages;
         }
 
         // Create array texture object with 'numImages' layers

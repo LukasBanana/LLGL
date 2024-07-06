@@ -8,6 +8,7 @@
 #include <ExampleBase.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
+#include "ImageReader.h"
 #include "FileUtils.h"
 #include <stdio.h>
 
@@ -25,6 +26,10 @@
 #define __STDC_FORMAT_MACROS
 #endif
 #include <inttypes.h>
+
+#ifdef LLGL_OS_ANDROID
+#   include "Android/AppUtils.h"
+#endif
 
 #define IMMEDIATE_SUBMIT_CMDBUFFER 0
 
@@ -483,6 +488,18 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     rendererDesc.flags |= g_Config.flags;
     renderer = LLGL::RenderSystem::Load(rendererDesc);
 
+    // Fallback to null device if selected renderer cannot be loaded
+    if (!renderer)
+    {
+        LLGL::Log::Errorf("Failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
+        renderer = LLGL::RenderSystem::Load("Null");
+        if (!renderer)
+        {
+            LLGL::Log::Errorf("Failed to load \"Null\" module. Exiting.\n");
+            exit(1);
+        }
+    }
+
     // Apply device limits (not for GL, because we won't have a valid GL context until we create our first swap chain)
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
         samples_ = g_Config.samples;
@@ -514,8 +531,8 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     commandQueue = renderer->GetCommandQueue();
 
     // Print renderer information
-    const auto& info = renderer->GetRendererInfo();
-    const auto swapChainRes = swapChain->GetResolution();
+    const LLGL::RendererInfo& info = renderer->GetRendererInfo();
+    const LLGL::Extent2D swapChainRes = swapChain->GetResolution();
 
     LLGL::Log::Printf(
         "render system:\n"
@@ -775,40 +792,17 @@ void ExampleBase::ThrowIfFailed(LLGL::PipelineState* pso)
 
 LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)
 {
-    // Get format informationm
-    const auto formatAttribs = LLGL::GetFormatAttribs(format);
-
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
-    int width = 0, height = 0, components = 0;
-
-    const std::string path = FindResourcePath(filename);
-    stbi_uc* imageBuffer = stbi_load(path.c_str(), &width, &height, &components, static_cast<int>(formatAttribs.components));
-    if (!imageBuffer)
-        throw std::runtime_error("failed to load texture from file: \"" + path + "\"");
-
-    // Initialize source image descriptor to upload image data onto hardware texture
-    LLGL::ImageView imageView;
+    ImageReader reader;
+    if (!reader.LoadFromFile(filename))
     {
-        // Set image color format
-        imageView.format    = formatAttribs.format;
-
-        // Set image data type (unsigned char = 8-bit unsigned integer)
-        imageView.dataType  = LLGL::DataType::UInt8;
-
-        // Set image buffer source for texture initial data
-        imageView.data      = imageBuffer;
-
-        // Set image buffer size
-        imageView.dataSize  = static_cast<std::size_t>(width*height*4);
+        // Create dummy texture on load failure
+        return renderSys.CreateTexture(LLGL::Texture2DDesc(format, 1, 1));
     }
 
     // Create texture and upload image data onto hardware texture
-    LLGL::TextureDescriptor texDesc = LLGL::Texture2DDesc(format, width, height, bindFlags);
-    texDesc.debugName = filename.c_str();
-    LLGL::Texture* tex = renderSys.CreateTexture(texDesc, &imageView);
-
-    // Release image data
-    stbi_image_free(imageBuffer);
+    LLGL::ImageView imageView = reader.GetImageView();
+    LLGL::Texture* tex = renderSys.CreateTexture(reader.GetTextureDesc(), &imageView);
 
     // Show info
     LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
@@ -818,17 +812,8 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
-    #if 0//TESTING
-
-    mipLevel = 1;
-    LLGL::Extent3D texSize{ 150, 256, 1 };
-
-    #else
-
     // Get texture dimension
-    auto texSize = texture.GetMipExtent(mipLevel);
-
-    #endif
+    const LLGL::Extent3D texSize = texture.GetMipExtent(mipLevel);
 
     // Read texture image data
     std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width * texSize.height);

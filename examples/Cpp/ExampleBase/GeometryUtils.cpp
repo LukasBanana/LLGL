@@ -7,14 +7,14 @@
 
 #include "GeometryUtils.h"
 #include "FileUtils.h"
-#include <fstream>
 #include <stdexcept>
+#include <algorithm>
 #include <limits>
 
 
 /*
- * Global helper functions
- */
+* Global helper functions
+*/
 
 std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
 {
@@ -26,10 +26,9 @@ std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
 TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename)
 {
     // Read obj file
-    const std::string path = FindResourcePath(filename);
-    std::ifstream file(path);
-    if (!file.good())
-        throw std::runtime_error("failed to load model from file: \"" + path + "\"");
+    std::vector<char> fileContent = ReadAsset(filename);
+    if (fileContent.empty())
+        throw std::runtime_error("failed to load model from file: \"" + filename + "\"");
 
     // Initialize triangle mesh
     TriangleMesh mesh;
@@ -38,9 +37,13 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
     std::vector<Gs::Vector3f> coords, normals;
     std::vector<Gs::Vector2f> texCoords;
 
-    std::string line;
+    // Convert file content into a stream (this code used to read the file via std::ifstream)
+    std::stringstream stream;
+    std::copy(fileContent.begin(), fileContent.end(), std::ostream_iterator<char>{ stream });
+
     // Read each line
-    while (std::getline(file, line))
+    std::string line;
+    while (std::getline(stream, line))
     {
         std::stringstream s;
         s << line;

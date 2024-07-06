@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_PERLIN_NOISE_H
-#define LLGL_PERLIN_NOISE_H
+#ifndef LLGLEXAMPLES_PERLIN_NOISE_H
+#define LLGLEXAMPLES_PERLIN_NOISE_H
 
 
 #include <cstddef>

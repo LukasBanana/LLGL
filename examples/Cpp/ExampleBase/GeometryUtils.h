@@ -5,8 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_GEOMETRY_UTILS_H
-#define LLGL_GEOMETRY_UTILS_H
+#ifndef LLGLEXAMPLES_GEOMETRY_UTILS_H
+#define LLGLEXAMPLES_GEOMETRY_UTILS_H
 
 
 #include <LLGL/LLGL.h>

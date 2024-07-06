@@ -8,8 +8,8 @@
 #include <ExampleBase.h>
 #include <FileUtils.h>
 #include <LLGL/Utils/TypeNames.h>
+#include <ImageReader.h>
 #include <DDSImageReader.h>
-#include <stb/stb_image.h>
 
 
 class Example_Texturing : public ExampleBase
@@ -114,29 +114,11 @@ public:
     void LoadUncompressedTexture(const std::string& filename)
     {
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
-        int texWidth = 0, texHeight = 0, texComponents = 0;
-
-        const std::string path = FindResourcePath(filename);
-
-        unsigned char* imageBuffer = stbi_load(path.c_str(), &texWidth, &texHeight, &texComponents, 0);
-        if (!imageBuffer)
-            throw std::runtime_error("failed to load image from file: " + path);
+        ImageReader reader;
+        reader.LoadFromFile(filename);
 
         // Initialize source image descriptor to upload image data onto hardware texture
-        LLGL::ImageView imageView;
-        {
-            // Set image color format
-            imageView.format    = (texComponents == 4 ? LLGL::ImageFormat::RGBA : LLGL::ImageFormat::RGB);
-
-            // Set image data type (unsigned char = 8-bit unsigned integer)
-            imageView.dataType  = LLGL::DataType::UInt8;
-
-            // Set image buffer source for texture initial data
-            imageView.data      = imageBuffer;
-
-            // Set image buffer size
-            imageView.dataSize  = static_cast<std::size_t>(texWidth*texHeight*texComponents);
-        }
+        LLGL::ImageView imageView = reader.GetImageView();
 
         // Upload image data onto hardware texture and stop the time
         timer.Start();
@@ -151,7 +133,7 @@ public:
                 texDesc.format      = LLGL::Format::BGRA8UNorm;//RGBA8UNorm; //BGRA8UNorm
 
                 // Texture size
-                texDesc.extent      = { static_cast<std::uint32_t>(texWidth), static_cast<std::uint32_t>(texHeight), 1u };
+                texDesc.extent      = reader.GetTextureDesc().extent;
 
                 // Generate all MIP-map levels for this texture
                 texDesc.miscFlags   = LLGL::MiscFlags::GenerateMips;
@@ -160,9 +142,6 @@ public:
         }
         double texCreationTime = static_cast<double>(timer.Stop()) / static_cast<double>(timer.GetFrequency());
         LLGL::Log::Printf("texture creation time: %f ms\n", texCreationTime * 1000.0);
-
-        // Release image data
-        stbi_image_free(imageBuffer);
     }
 
     void LoadCompressedTexture(const std::string& filename)

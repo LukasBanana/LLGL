@@ -6,8 +6,7 @@
  */
 
 #include <ExampleBase.h>
-#include <FileUtils.h>
-#include <stb/stb_image.h>
+#include <ImageReader.h>
 
 
 class Example_PBR : public ExampleBase
@@ -217,39 +216,39 @@ private:
         pipelineMeshes = renderer->CreatePipelineState(pipelineDescMeshes);
     }
 
-    void LoadImage(const std::string& filename, int& texWidth, int& texHeight, std::vector<std::uint8_t>& imageData)
+    bool LoadImageSlice(const std::string& filename, std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
     {
         // Print information about current texture
-        const std::string path = FindResourcePath(filename);
-        LLGL::Log::Printf("load image: \"%s\"\n", path.c_str());
+        LLGL::Log::Printf("load image: \"%s\"\n", filename.c_str());
 
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
-        int w = 0, h = 0, n = 0;
-        unsigned char* buf = stbi_load(path.c_str(), &w, &h, &n, 4);
-        if (!buf)
-            throw std::runtime_error("failed to load image: \"" + filename + "\"");
+        ImageReader imageReader;
+        imageReader.LoadFromFile(filename);
 
         // Check if image size is compatible
+        const LLGL::Extent3D& imageExtent = imageReader.GetTextureDesc().extent;
         if (texWidth == 0)
         {
-            texWidth    = w;
-            texHeight   = h;
+            texWidth    = imageExtent.width;
+            texHeight   = imageExtent.height;
         }
-        else if (w != texWidth || h != texHeight)
-            throw std::runtime_error("size mismatch for texture array while loading image: \"" + filename + "\"");
+        else if (imageExtent.width != texWidth || imageExtent.height != texHeight)
+        {
+            LLGL::Log::Errorf("size mismatch for texture array while loading image: \"%s\"", filename.c_str());
+            return false;
+        }
 
         // Copy into array
-        auto offset = imageData.size();
-        auto bufSize = static_cast<std::size_t>(w*h*4);
+        auto offset  = imageData.size();
+        auto bufSize = imageReader.GetImageView().dataSize;
 
         imageData.resize(offset + bufSize);
-        ::memcpy(&(imageData[offset]), buf, bufSize);
+        ::memcpy(&(imageData[offset]), imageReader.GetImageView().data, bufSize);
 
-        // Release image data
-        stbi_image_free(buf);
+        return true;
     }
 
-    void FillImage(int& texWidth, int& texHeight, std::vector<std::uint8_t>& imageData)
+    void FillImageSlice(std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
     {
         // Initialize texture size with default value if necessary
         if (texWidth == 0)
@@ -269,15 +268,22 @@ private:
     LLGL::Texture* LoadTextureArray(const LLGL::TextureType texType, const std::initializer_list<std::string>& texFilenames)
     {
         // Load image data
-        int texWidth = 0, texHeight = 0;
+        std::uint32_t texWidth = 0, texHeight = 0;
         std::vector<std::uint8_t> imageData;
+        std::uint32_t numImageSlices = 0;
 
-        for (auto filename : texFilenames)
+        for (const std::string& filename : texFilenames)
         {
             if (filename.empty())
-                FillImage(texWidth, texHeight, imageData);
+            {
+                FillImageSlice(texWidth, texHeight, imageData);
+                ++numImageSlices;
+            }
             else
-                LoadImage("PBR/" + filename, texWidth, texHeight, imageData);
+            {
+                if (LoadImageSlice("PBR/" + filename, texWidth, texHeight, imageData))
+                    ++numImageSlices;
+            }
         }
 
         // Define initial texture data
@@ -297,7 +303,7 @@ private:
             texDesc.extent.width    = static_cast<std::uint32_t>(texWidth);
             texDesc.extent.height   = static_cast<std::uint32_t>(texHeight);
             texDesc.extent.depth    = 1;
-            texDesc.arrayLayers     = static_cast<std::uint32_t>(texFilenames.size());
+            texDesc.arrayLayers     = numImageSlices;
         }
         auto tex = renderer->CreateTexture(texDesc, &srcImageView);
 
