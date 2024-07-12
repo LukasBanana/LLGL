@@ -12,7 +12,7 @@
 #include <stb/stb_image.h>
 
 
-bool ImageReader::LoadFromFile(const std::string& filename)
+bool ImageReader::LoadFromFile(const std::string& filename, LLGL::Format format)
 {
     // Read image asset
     std::string assetPath;
@@ -20,9 +20,15 @@ bool ImageReader::LoadFromFile(const std::string& filename)
     if (content.empty())
         return false;
 
+    // Get target image format
+    const LLGL::FormatAttributes& formatAttribs = LLGL::GetFormatAttribs(format);
+
     // Load all images from file (using STBI library, see https://github.com/nothings/stb)
     int w = 0, h = 0, c = 0;
-    stbi_uc* imageData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(content.data()), static_cast<int>(content.size()), &w, &h, &c, 4);
+    stbi_uc* imageData = stbi_load_from_memory(
+        reinterpret_cast<const stbi_uc*>(content.data()),
+        static_cast<int>(content.size()), &w, &h, &c, static_cast<int>(formatAttribs.components)
+    );
     if (!imageData)
     {
         LLGL::Log::Errorf("failed to load image from file: \"%s\"", assetPath.c_str());
@@ -41,7 +47,7 @@ bool ImageReader::LoadFromFile(const std::string& filename)
     name_ = filename;
     texDesc_.debugName      = name_.c_str();
     texDesc_.type           = LLGL::TextureType::Texture2D;
-    texDesc_.format         = LLGL::Format::RGBA8UNorm;
+    texDesc_.format         = format;
     texDesc_.extent.width   = static_cast<std::uint32_t>(w);
     texDesc_.extent.height  = static_cast<std::uint32_t>(h);
     texDesc_.extent.depth   = 1;
@@ -51,9 +57,10 @@ bool ImageReader::LoadFromFile(const std::string& filename)
 
 LLGL::ImageView ImageReader::GetImageView() const
 {
+    const LLGL::FormatAttributes& formatAttribs = LLGL::GetFormatAttribs(texDesc_.format);
     LLGL::ImageView imageView;
     {
-        imageView.format    = LLGL::ImageFormat::RGBA;
+        imageView.format    = formatAttribs.format;
         imageView.dataType  = LLGL::DataType::UInt8;
         imageView.data      = data_.data();
         imageView.dataSize  = data_.size();

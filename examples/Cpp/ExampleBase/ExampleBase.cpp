@@ -794,7 +794,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 {
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     ImageReader reader;
-    if (!reader.LoadFromFile(filename))
+    if (!reader.LoadFromFile(filename, format))
     {
         // Create dummy texture on load failure
         return renderSys.CreateTexture(LLGL::Texture2DDesc(format, 1, 1));

@@ -22,7 +22,7 @@ class ImageReader
     public:
 
         // Loads the specified image from file.
-        bool LoadFromFile(const std::string& filename);
+        bool LoadFromFile(const std::string& filename, LLGL::Format format = LLGL::Format::RGBA8UNorm);
 
         // Returns the image view for the first MIP-map that can be passed to RenderSystem::CreateTexture or RenderSystem::WriteTexture.
         LLGL::ImageView GetImageView() const;
