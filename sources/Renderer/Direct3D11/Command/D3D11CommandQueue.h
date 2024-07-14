@@ -12,6 +12,7 @@
 #include <LLGL/CommandQueue.h>
 #include <LLGL/ForwardDecls.h>
 #include "../RenderState/D3D11Fence.h"
+#include "../RenderState/D3D11StateManager.h"
 #include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
 
@@ -31,7 +32,11 @@ class D3D11CommandQueue final : public CommandQueue
 
     public:
 
-        D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context);
+        D3D11CommandQueue(
+            ID3D11Device*                               device,
+            ComPtr<ID3D11DeviceContext>&                context,
+            const std::shared_ptr<D3D11StateManager>&   stateMngr
+        );
 
     private:
 
@@ -64,8 +69,9 @@ class D3D11CommandQueue final : public CommandQueue
 
     private:
 
-        ComPtr<ID3D11DeviceContext> context_;
-        D3D11Fence                  intermediateFence_;
+        ComPtr<ID3D11DeviceContext>         context_;
+        std::shared_ptr<D3D11StateManager>  stateMngr_;
+        D3D11Fence                          intermediateFence_;
 
 };
 

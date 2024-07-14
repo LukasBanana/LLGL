@@ -20,9 +20,10 @@ static UINT DXGetAllowedCPUAccessFlags(D3D11_USAGE usage)
 {
     if (usage == D3D11_USAGE_DYNAMIC)
         return D3D11_CPU_ACCESS_WRITE;
-    if (usage == D3D11_USAGE_STAGING)
+    else if (usage == D3D11_USAGE_STAGING)
         return D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
-    return 0;
+    else
+        return 0;
 }
 
 D3D11StagingBuffer::D3D11StagingBuffer(
@@ -85,8 +86,10 @@ void D3D11StagingBuffer::Write(
 {
     if (usage_ == D3D11_USAGE_DYNAMIC)
     {
-        /* D3D11_USAGE_DYNAMIC only supports map-write with discard */
-        /* Update partial subresource by mapping buffer from GPU into CPU memory space */
+        /*
+        D3D11_USAGE_DYNAMIC only supports map-write with discard;
+        Update partial subresource by mapping buffer from GPU into CPU memory space.
+        */
         D3D11_MAPPED_SUBRESOURCE subresource;
         if (SUCCEEDED(context->Map(GetNative(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subresource)))
         {

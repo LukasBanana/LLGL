@@ -17,9 +17,14 @@ namespace LLGL
 {
 
 
-D3D11CommandQueue::D3D11CommandQueue(ID3D11Device* device, ComPtr<ID3D11DeviceContext>& context) :
-    context_           { context },
-    intermediateFence_ { device  }
+D3D11CommandQueue::D3D11CommandQueue(
+    ID3D11Device*                               device,
+    ComPtr<ID3D11DeviceContext>&                context,
+    const std::shared_ptr<D3D11StateManager>&   stateMngr)
+:
+    context_           { context   },
+    stateMngr_         { stateMngr },
+    intermediateFence_ { device    }
 {
 }
 
@@ -35,6 +40,9 @@ void D3D11CommandQueue::Submit(CommandBuffer& commandBuffer)
         {
             /* Execute encoded command list with immediate context but don't restore previous state */
             context_->ExecuteCommandList(commandList, FALSE);
+
+            /* Clear cache after implicit invocation of ID3D11DeviceContext::ClearState() via ExecuteCommandList() */
+            stateMngr_->ClearCache();
         }
     }
 }

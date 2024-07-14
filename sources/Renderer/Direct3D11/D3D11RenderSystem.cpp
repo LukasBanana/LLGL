@@ -729,7 +729,7 @@ void D3D11RenderSystem::QueryDXDeviceVersion()
 void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
 {
     stateMngr_ = std::make_shared<D3D11StateManager>(device_.Get(), context_);
-    commandQueue_ = MakeUnique<D3D11CommandQueue>(device_.Get(), context_);
+    commandQueue_ = MakeUnique<D3D11CommandQueue>(device_.Get(), context_, stateMngr_);
 }
 
 static const char* DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)

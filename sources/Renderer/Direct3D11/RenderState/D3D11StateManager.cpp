@@ -509,14 +509,18 @@ void D3D11StateManager::ClearState()
 {
     /* Clear device context state */
     context_->ClearState();
+    ClearCache();
+}
 
+void D3D11StateManager::ClearCache()
+{
     /* Clear binding table state */
     bindingTable_.ClearState();
 
     /* Invalidate internal caches */
     inputAssemblyState_ = {};
-    shaderState_ = {};
-    renderState_ = {};
+    shaderState_        = {};
+    renderState_        = {};
 }
 
 

@@ -93,6 +93,10 @@ class D3D11StateManager
         // Invokes ClearState() on the device context and invalidates all caches.
         void ClearState();
 
+        // Invalidates all internal caches. This should only be called after ID3D11DeviceContext::ClearCache()
+        // is explicitly or implicitly called, e.g. via ExecuteCommandList().
+        void ClearCache();
+
         // Returns the ID3D11DeviceContext that this state manager is associated with.
         inline ID3D11DeviceContext* GetContext() const
         {
