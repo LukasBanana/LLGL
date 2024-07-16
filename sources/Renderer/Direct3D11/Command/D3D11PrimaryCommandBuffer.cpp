@@ -380,6 +380,8 @@ void D3D11PrimaryCommandBuffer::CopyBufferFromTexture(
         const D3D11_BOX srcBox{ 0, 0, 0, copySize, 1, 1 };
         GetNative()->CopySubresourceRegion(dstBufferD3D.GetNative(), 0, dstOffsetU32, 0, 0, intermediateBuffer.Get(), 0, &srcBox);
     }
+
+    GetStateManager().ResetCbufferPool();
 }
 
 void D3D11PrimaryCommandBuffer::FillBuffer(
@@ -658,6 +660,8 @@ void D3D11PrimaryCommandBuffer::CopyTextureFromBuffer(
             );
         }
     }
+
+    GetStateManager().ResetCbufferPool();
 }
 
 void D3D11PrimaryCommandBuffer::CopyTextureFromFramebuffer(
