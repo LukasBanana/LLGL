@@ -51,6 +51,17 @@ class D3D11StagingBufferPool
         // Allocates a new chunk with the specified minimal size.
         void AllocChunk(UINT minChunkSize);
 
+        /*
+        Returns true if a unique buffer is allocated for each write operation.
+        This is the case for dynamic (D3D11_USAGE_DYNAMIC) constant buffers (D3D11_BIND_CONSTANT_BUFFER)
+        as a high performance demands Map(D3D11_MAP_WRITE_DISCARD), which discards its previous content.
+        Such a staging buffer pool should be reset after each draw call if it was used.
+        */
+        inline bool NeedsUniqueBuffer() const
+        {
+            return (usage_ == D3D11_USAGE_DYNAMIC && (bindFlags_ & D3D11_BIND_CONSTANT_BUFFER) != 0);
+        }
+
     private:
 
         ID3D11Device*                   device_             = nullptr;
@@ -62,7 +73,8 @@ class D3D11StagingBufferPool
         D3D11_USAGE                     usage_              = D3D11_USAGE_STAGING;
         UINT                            cpuAccessFlags_     = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
         UINT                            bindFlags_          = 0;
-        bool                            incrementOffsets_   = false;
+
+        const bool                      incrementOffsets_   = false;
 
 };
 

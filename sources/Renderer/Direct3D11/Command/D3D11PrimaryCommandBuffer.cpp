@@ -68,7 +68,7 @@ D3D11PrimaryCommandBuffer::D3D11PrimaryCommandBuffer(
 
 void D3D11PrimaryCommandBuffer::Begin()
 {
-    GetStateManager().ResetStagingBufferPools();
+    GetStateManager().ResetCbufferPool();
 }
 
 void D3D11PrimaryCommandBuffer::End()

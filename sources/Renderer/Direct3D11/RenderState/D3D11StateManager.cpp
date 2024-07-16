@@ -500,7 +500,7 @@ void D3D11StateManager::DispatchBuiltin(const D3D11BuiltinShader builtinShader, 
     context_->CSSetShader(shaderState_.cs, nullptr, 0);
 }
 
-void D3D11StateManager::ResetStagingBufferPools()
+void D3D11StateManager::ResetCbufferPool()
 {
     stagingCbufferPool_.Reset();
 }

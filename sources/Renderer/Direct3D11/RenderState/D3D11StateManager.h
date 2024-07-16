@@ -87,8 +87,9 @@ class D3D11StateManager
         // Executes the specified builtin compute shader.
         void DispatchBuiltin(const D3D11BuiltinShader builtinShader, UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
 
-        // Must be called in D3D11CommandBuffer::Begin().
-        void ResetStagingBufferPools();
+        // Resets the constant buffer pool. This should be called at the beginning of each command buffer encoding (D3D11PrimaryCommandBuffer::Begin)
+        // as well as after every constants cache has been flushed (D3D11ConstantsCache::Flush).
+        void ResetCbufferPool();
 
         // Invokes ClearState() on the device context and invalidates all caches.
         void ClearState();

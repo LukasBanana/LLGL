@@ -74,8 +74,9 @@ D3D11ConstantsCache::D3D11ConstantsCache(
         auto field = FindCbufferField(uniforms[i].name);
         const auto* cbufferReflection = field.first;
         const auto* fieldReflection = field.second;
-        LLGL_ASSERT_PTR(cbufferReflection); //TODO: replace these assertions with error codes
-        LLGL_ASSERT_PTR(fieldReflection);
+
+        if (cbufferReflection == nullptr || fieldReflection == nullptr)
+            continue;
 
         /* Allocate cache for constant buffer and assgin index to cbuffer-slot map */
         std::uint8_t& cbufferIndex = cbufferSlotMap[cbufferReflection->slot];
@@ -139,25 +140,31 @@ void D3D11ConstantsCache::Reset()
 
 void D3D11ConstantsCache::Flush(D3D11StateManager& stateMngr)
 {
-    /* Check for special range to indicate that all cbuffers have to be bound again */
-    if (invalidatedBuffersRange_[0] == 0x00 &&
-        invalidatedBuffersRange_[1] == 0xFF)
+    if (invalidatedBuffersRange_[0] < invalidatedBuffersRange_[1])
     {
-        for_range(i, static_cast<std::uint8_t>(constantBuffers_.size()))
-            FlushConstantBuffer(i, stateMngr);
-    }
-    else if (invalidatedBuffersRange_[0] < invalidatedBuffersRange_[1])
-    {
-        for_subrange(i, invalidatedBuffersRange_[0], invalidatedBuffersRange_[1])
+        /* Check for special range to indicate that all cbuffers have to be bound again */
+        if (invalidatedBuffersRange_[0] == 0x00 &&
+            invalidatedBuffersRange_[1] == 0xFF)
         {
-            if (invalidatedBuffers_[i])
+            for_range(i, static_cast<std::uint8_t>(constantBuffers_.size()))
                 FlushConstantBuffer(i, stateMngr);
         }
-    }
+        else
+        {
+            for_subrange(i, invalidatedBuffersRange_[0], invalidatedBuffersRange_[1])
+            {
+                if (invalidatedBuffers_[i])
+                    FlushConstantBuffer(i, stateMngr);
+            }
+        }
 
-    /* Clear cached range */
-    invalidatedBuffersRange_[0] = 0xFF;
-    invalidatedBuffersRange_[1] = 0x00;
+        /* Reset constant buffer pool; We only need unique staging buffers for each cbuffer in this cache before the next draw call */
+        stateMngr.ResetCbufferPool();
+
+        /* Clear cached range */
+        invalidatedBuffersRange_[0] = 0xFF;
+        invalidatedBuffersRange_[1] = 0x00;
+    }
 }
 
 

@@ -7,21 +7,13 @@
 
 #include "D3D11StagingBufferPool.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/Utils/ForRange.h>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
-
-// Returns true if the specified D3D context requires separate segments for staging buffers
-static bool IsSegmentedStagingRequired(ID3D11DeviceContext* context)
-{
-    #if 0//TODO: Not sure if this is needed at the moment
-    return (context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED);
-    #else
-    return false;
-    #endif
-}
 
 D3D11StagingBufferPool::D3D11StagingBufferPool(
     ID3D11Device*           device,
@@ -31,20 +23,24 @@ D3D11StagingBufferPool::D3D11StagingBufferPool(
     UINT                    cpuAccessFlags,
     UINT                    bindFlags)
 :
-    device_           { device                              },
-    context_          { context                             },
-    chunkSize_        { chunkSize                           },
-    usage_            { usage                               },
-    cpuAccessFlags_   { cpuAccessFlags                      },
-    bindFlags_        { bindFlags                           },
-    incrementOffsets_ { IsSegmentedStagingRequired(context) }
+    device_           { device               },
+    context_          { context              },
+    chunkSize_        { chunkSize            },
+    usage_            { usage                },
+    cpuAccessFlags_   { cpuAccessFlags       },
+    bindFlags_        { bindFlags            },
+    incrementOffsets_ { !NeedsUniqueBuffer() }
 {
 }
 
 void D3D11StagingBufferPool::Reset()
 {
-    for (D3D11StagingBuffer& chunk : chunks_)
-        chunk.Reset();
+    if (incrementOffsets_)
+    {
+        /* Reset offsets of all previously used chunks but skip tail of list */
+        for_range(i, std::min<std::size_t>(chunkIdx_ + 1, chunks_.size()))
+            chunks_[i].Reset();
+    }
     chunkIdx_ = 0;
 }
 
@@ -52,11 +48,17 @@ D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize, 
 {
     const UINT alignedSize = GetAlignedSize(dataSize, alignment);
 
+    const bool needsUniqueBuffer = NeedsUniqueBuffer();
+
     /* Check if a new chunk must be allocated */
-    if (chunkIdx_ == chunks_.size())
+    if (needsUniqueBuffer || chunkIdx_ == chunks_.size())
+    {
+        /* Allocate a new chunk */
         AllocChunk(alignedSize);
+    }
     else if (!chunks_[chunkIdx_].Capacity(alignedSize))
     {
+        /* Try to recycle next chunk or allocate new one */
         ++chunkIdx_;
         if (chunkIdx_ == chunks_.size())
             AllocChunk(alignedSize);

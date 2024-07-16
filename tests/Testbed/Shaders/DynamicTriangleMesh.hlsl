@@ -10,12 +10,14 @@ cbuffer Scene : register(b1)
     float4x4 vpMatrix;
 }
 
+// If this is register b0, it might overlap with "$Globals" cbuffer in the pixel shader (depending on shader optimization)
 cbuffer Model : register(b2)
 {
     float4x4 wMatrix;
     float4   solidColor;
-    float3   lightVec;
 }
+
+float3 lightVec; // Implicitly in $Globals cbuffer
 
 struct VertexIn
 {
