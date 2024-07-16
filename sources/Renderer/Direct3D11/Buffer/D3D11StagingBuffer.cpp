@@ -53,6 +53,7 @@ D3D11StagingBuffer::D3D11StagingBuffer(
 
 D3D11StagingBuffer::D3D11StagingBuffer(D3D11StagingBuffer&& rhs) noexcept :
     native_ { std::move(rhs.native_) },
+    usage_  { rhs.usage_             },
     size_   { rhs.size_              },
     offset_ { rhs.offset_            }
 {
@@ -63,6 +64,7 @@ D3D11StagingBuffer& D3D11StagingBuffer::operator = (D3D11StagingBuffer&& rhs) no
     if (this != &rhs)
     {
         native_ = std::move(rhs.native_);
+        usage_  = rhs.usage_;
         size_   = rhs.size_;
         offset_ = rhs.offset_;
     }

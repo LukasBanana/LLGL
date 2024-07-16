@@ -48,10 +48,8 @@ D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize, 
 {
     const UINT alignedSize = GetAlignedSize(dataSize, alignment);
 
-    const bool needsUniqueBuffer = NeedsUniqueBuffer();
-
     /* Check if a new chunk must be allocated */
-    if (needsUniqueBuffer || chunkIdx_ == chunks_.size())
+    if (chunkIdx_ == chunks_.size())
     {
         /* Allocate a new chunk */
         AllocChunk(alignedSize);
@@ -73,6 +71,11 @@ D3D11BufferRange D3D11StagingBufferPool::Write(const void* data, UINT dataSize, 
         else
             chunk.Write(context_, data, dataSize);
     }
+
+    /* If a unique buffer is required with ever allocation, increment chunk index for next call */
+    if (NeedsUniqueBuffer())
+        ++chunkIdx_;
+
     return range;
 }
 
