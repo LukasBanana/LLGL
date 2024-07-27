@@ -253,13 +253,7 @@ private:
         // Create common sampler state for all textures
         LLGL::SamplerDescriptor samplerDesc;
         {
-            #if !defined LLGL_OS_IOS && !defined LLGL_OS_ANDROID
-            // Clamp to border is not supported on mobile platforms
-            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
-            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
-            #endif
-            samplerDesc.maxAnisotropy   = 8;
-            samplerDesc.borderColor[3]  = 1.0f;
+            samplerDesc.maxAnisotropy = 8;
         }
         samplerState = renderer->CreateSampler(samplerDesc);
     }

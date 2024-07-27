@@ -38,7 +38,7 @@ bool ImageReader::LoadFromFile(const std::string& filename, LLGL::Format format)
     data_ = std::vector<char>
     {
         reinterpret_cast<const char*>(imageData),
-        reinterpret_cast<const char*>(imageData + w*h*4)
+        reinterpret_cast<const char*>(imageData + w*h*formatAttribs.components)
     };
 
     stbi_image_free(imageData);
