@@ -155,11 +155,6 @@ bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
     return false;
 }
 
-void LinuxWindow::ResetPixelFormat()
-{
-    // dummy
-}
-
 Extent2D LinuxWindow::GetContentSize() const
 {
     /* Return the size of the client area */

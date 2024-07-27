@@ -18,9 +18,11 @@
 LLGL_C_EXPORT bool llglGetSurfaceNativeHandle(LLGLSurface surface, void* nativeHandle, size_t nativeHandleSize);
 LLGL_C_EXPORT void llglGetSurfaceContentSize(LLGLSurface surface, LLGLExtent2D* outSize);
 LLGL_C_EXPORT bool llglAdaptSurfaceForVideoMode(LLGLSurface surface, LLGLExtent2D* outResolution, bool* outFullscreen);
-LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface);
 LLGL_C_EXPORT bool llglProcessSurfaceEvents();
 LLGL_C_EXPORT LLGLDisplay llglFindSurfaceResidentDisplay(LLGLSurface surface);
+
+//! \deprecated Since 0.04b; No need to reset pixel format anymore.
+LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface);
 
 
 #endif

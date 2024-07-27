@@ -13,6 +13,7 @@
 #include <LLGL/Types.h>
 #include <LLGL/SwapChainFlags.h>
 #include <LLGL/Display.h>
+#include <LLGL/Deprecated.h>
 
 
 namespace LLGL
@@ -77,19 +78,15 @@ class LLGL_EXPORT Surface : public Interface
         virtual bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) = 0;
 
         /**
-        \brief Resets the internal pixel format of the surface.
-        \remarks This function is mainly used by the OpenGL renderer on Win32 when a multi-sampled framebuffer is created.
-        \note This may invalidate the native handle previously returned by \c GetNativeHandle.
-        \see GetNativeHandle
-        */
-        virtual void ResetPixelFormat() = 0;
-
-        /**
         \brief Returns the Display interface where this surface is resident in.
         \remarks A surface is considered resident in a display if more than the half of its client area is visible in that display.
         \return Pointer to the Display in which this surface is resident or null if this surface is not resident in any display.
         */
         virtual Display* FindResidentDisplay() const = 0;
+
+        //! \deprecated Since 0.04b; No need to reset pixel format anymore!
+        LLGL_DEPRECATED("Surface::ResetPixelFormat is deprecated since 0.04b; No need to reset pixel format anymore!")
+        virtual void ResetPixelFormat();
 
     public:
 

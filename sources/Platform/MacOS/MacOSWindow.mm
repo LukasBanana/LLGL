@@ -179,11 +179,6 @@ bool MacOSWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
     return false;
 }
 
-void MacOSWindow::ResetPixelFormat()
-{
-    // dummy
-}
-
 Extent2D MacOSWindow::GetContentSize() const
 {
     NSSize size = [[wnd_ contentView] frame].size;

@@ -32,8 +32,6 @@ class AndroidCanvas : public Canvas
         void SetTitle(const UTF8String& title) override;
         UTF8String GetTitle() const override;
 
-        void ResetPixelFormat() override;
-
     private:
 
         CanvasDescriptor    desc_;

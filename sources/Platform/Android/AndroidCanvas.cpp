@@ -112,11 +112,6 @@ UTF8String AndroidCanvas::GetTitle() const
     return {}; //todo...
 }
 
-void AndroidCanvas::ResetPixelFormat()
-{
-    // dummy
-}
-
 
 } // /namespace LLGL
 

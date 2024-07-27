@@ -195,16 +195,6 @@ UTF8String IOSCanvas::GetTitle() const
 }
 
 
-/*
- * ======= Private: =======
- */
-
-void IOSCanvas::ResetPixelFormat()
-{
-    // dummy
-}
-
-
 } // /namespace LLGL
 
 

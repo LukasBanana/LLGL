@@ -5,6 +5,8 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include <Windows.h>
+
 #include "Win32GLContext.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionLoader.h"
@@ -22,6 +24,55 @@
 
 namespace LLGL
 {
+
+
+/*
+ * WGLProxyWindowClass struct
+ */
+
+struct WGLProxyWindowClass
+{
+    static const TCHAR* GetName()
+    {
+        return TEXT("LLGL.WGLProxyWindowClass");
+    }
+
+    WGLProxyWindowClass()
+    {
+        /* Setup window class information */
+        WNDCLASS wc = {};
+
+        wc.style            = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wc.hInstance        = GetModuleHandle(nullptr);
+        wc.lpfnWndProc      = DefWindowProc;
+        wc.hIcon            = nullptr;
+        wc.hCursor          = nullptr;
+        wc.hbrBackground    = nullptr;
+        wc.cbClsExtra       = 0;
+        wc.cbWndExtra       = 0;
+        wc.lpszMenuName     = nullptr;
+        wc.lpszClassName    = GetName();
+
+        /* Register window class */
+        if (!RegisterClass(&wc))
+            LLGL_TRAP("failed to register window class");
+    }
+
+    ~WGLProxyWindowClass()
+    {
+        UnregisterClass(GetName(), GetModuleHandle(nullptr));
+    }
+};
+
+static std::unique_ptr<WGLProxyWindowClass> g_wglProxyWindowClass;
+
+static const TCHAR* GetProxyWindowClassName()
+{
+    /* Register Win32 window class if not already done */
+    if (!g_wglProxyWindowClass)
+        g_wglProxyWindowClass = MakeUnique<WGLProxyWindowClass>();
+    return WGLProxyWindowClass::GetName();
+}
 
 
 /*
@@ -76,26 +127,31 @@ Win32GLContext::Win32GLContext(
     Win32GLContext*                         sharedContext,
     const OpenGL::RenderSystemNativeHandle* customNativeHandle)
 :
-    profile_    { profile     },
-    formatDesc_ { pixelFormat }
+    profile_     { profile                       },
+    formatDesc_  { pixelFormat                   },
+    isProxyGLRC_ { customNativeHandle != nullptr }
 {
-    /* Create WGL context */
-    if (customNativeHandle != nullptr)
+    if (isProxyGLRC_)
     {
-        isProxyGLRC_ = true;
+        /* Create a proxy context which only caches the provided WGL context and its pixel format */
         CreateProxyContext(surface, *customNativeHandle);
     }
     else if (sharedContext)
     {
+        /* Create WGL context with a shared GL context */
         Win32GLContext* sharedContextWGL = LLGL_CAST(Win32GLContext*, sharedContext);
         CreateWGLContext(surface, sharedContextWGL);
     }
     else
+    {
+        /* Create default WGL context */
         CreateWGLContext(surface);
+    }
 }
 
 Win32GLContext::~Win32GLContext()
 {
+    /* Only delete this WGL context if we own it. A proxy context does not own the WGL context as it was provided externally. */
     if (!isProxyGLRC_)
         DeleteWGLContext(hGLRC_);
 }
@@ -131,11 +187,6 @@ bool Win32GLContext::SetSwapInterval(int interval)
     return (wglSwapIntervalEXT(interval) == TRUE);
 }
 
-static void ErrMultisampledGLContextNotSupported()
-{
-    Log::Errorf("multi-sampled OpenGL context is not supported");
-}
-
 static HDC GetWin32DeviceContext(Surface& surface)
 {
     /* Get device context from native window */
@@ -160,14 +211,47 @@ void Win32GLContext::CreateProxyContext(Surface& surface, const OpenGL::RenderSy
         LLGL_TRAP("failed to make initial GL context current");
 }
 
-/*
-TODO:
-- When anti-aliasing and extended-profile-selection is enabled,
-  maximal 2 contexts should be created (and not 3).
-*/
+static HWND CreateProxyWindow()
+{
+    return CreateWindow(
+        GetProxyWindowClassName(),
+        TEXT("LLGL.Win32GLContext.ProxyWindow"),
+        WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        nullptr,
+        nullptr,
+        GetModuleHandle(nullptr),
+        nullptr
+    );
+}
+
 void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedContext)
 {
     const bool hasMultiSampling = (formatDesc_.samples > 1);
+
+    if (hasMultiSampling)
+    {
+        /*
+        A multi-sampling render context is created in these steps:
+        1. Create a proxy Win32 window to get a valid device context (HDC).
+        2. Create a default WGL context to get a valid OpenGL render context (HGLRC).
+        3. Load the OpenGL extension procedure to select a multi-sample pixel format (wglChoosePixelFormatARB).
+        4. Cache available multi-sample pixel formats.
+        5. Delete proxy window.
+        */
+        HWND proxyWnd = CreateProxyWindow();
+        LLGL_ASSERT(proxyWnd != nullptr);
+        HDC proxyDC = GetDC(proxyWnd);
+        SelectPixelFormat(proxyDC);
+        HGLRC proxyGLRC = CreateStandardWGLContext(proxyDC);
+        if (!SelectMultisampledPixelFormat(proxyDC))
+            ErrorMultisampleContextFailed();
+        DeleteWGLContext(proxyGLRC);
+        ::DestroyWindow(proxyWnd);
+    }
 
     /* Get the surface's Win32 device context */
     hDC_ = GetWin32DeviceContext(surface);
@@ -180,35 +264,7 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
     SelectPixelFormat(hDC_);
 
     /* Create standard render context first */
-    HGLRC stdRenderContext = CreateStandardWGLContext(hDC_);
-
-    /* Check for multi-sample anti-aliasing */
-    if (hasMultiSampling)
-    {
-        /* Setup anti-aliasing after creating a standard render context. */
-        if (SelectMultisampledPixelFormat(hDC_))
-        {
-            /* Delete old standard render context */
-            DeleteWGLContext(stdRenderContext);
-
-            /*
-            Update pixel format for the device context after a new pixel format has been selected.
-            see https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat#remarks
-            */
-            hDC_ = UpdateSurfacePixelFormat(surface);
-
-            /* Create a new render context -> now with anti-aliasing pixel format */
-            stdRenderContext = CreateStandardWGLContext(hDC_);
-        }
-        else
-        {
-            /* Print warning and disable anti-aliasing */
-            ErrMultisampledGLContextNotSupported();
-            formatDesc_.samples = 1;
-        }
-    }
-
-    hGLRC_ = stdRenderContext;
+    hGLRC_ = CreateStandardWGLContext(hDC_);
 
     /* Check for extended render context */
     if (profile_.contextProfile != OpenGLContextProfile::CompatibilityProfile)
@@ -222,8 +278,8 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
             if (HGLRC extRenderContext = CreateExplicitWGLContext(hDC_, sharedContext))
             {
                 /* Use the extended profile and delete the old standard render context */
+                DeleteWGLContext(hGLRC_);
                 hGLRC_ = extRenderContext;
-                DeleteWGLContext(stdRenderContext);
             }
             else
             {
@@ -383,7 +439,7 @@ static void GetWGLPixelFormatDesc(const GLPixelFormat& inDesc, PIXELFORMATDESCRI
     outDesc.dwDamageMask    = 0;
 }
 
-void Win32GLContext::SelectPixelFormat(HDC hDC)
+bool Win32GLContext::SelectPixelFormat(HDC hDC)
 {
     /* Setup pixel format attributes */
     PIXELFORMATDESCRIPTOR formatDesc;
@@ -396,7 +452,7 @@ void Win32GLContext::SelectPixelFormat(HDC hDC)
 
     for (UINT pixelFormatMSIndex = 0;;)
     {
-        if (isMultisampleFormatRequested && pixelFormatMSIndex < Win32GLContext::maxPixelFormatsMS)
+        if (isMultisampleFormatRequested && pixelFormatMSIndex < pixelFormatsMSCount_)
         {
             /* Choose multi-sample pixel format */
             pixelFormat_ = pixelFormatsMS_[pixelFormatMSIndex++];
@@ -408,7 +464,10 @@ void Win32GLContext::SelectPixelFormat(HDC hDC)
             pixelFormat_ = ::ChoosePixelFormat(hDC, &formatDesc);
 
             if (isMultisampleFormatRequested)
-                ErrMultisampledGLContextNotSupported();
+            {
+                ErrorMultisampleContextFailed();
+                return false;
+            }
 
             wasStandardFormatUsed = true;
 
@@ -440,7 +499,12 @@ void Win32GLContext::SelectPixelFormat(HDC hDC)
         if (!wasFormatSelected)
         {
             if (wasStandardFormatUsed)
-                LLGL_TRAP("failed to set pixel format");
+                LLGL_TRAP("failed to set default pixel format");
+            if (pixelFormatMSIndex == pixelFormatsMSCount_)
+            {
+                ErrorMultisampleContextFailed();
+                return false;
+            }
         }
         else
         {
@@ -448,22 +512,25 @@ void Win32GLContext::SelectPixelFormat(HDC hDC)
             break;
         }
     }
+
+    return true;
 }
 
 bool Win32GLContext::SelectMultisampledPixelFormat(HDC hDC)
 {
     /*
-    Load GL extension "wglChoosePixelFormatARB" to choose anti-aliasing pixel formats
+    Load GL extension "wglChoosePixelFormatARB" to choose multi-sample pixel formats
     A valid (standard) GL context must be created at this time, before an extension can be loaded!
     */
     if (wglChoosePixelFormatARB == nullptr)
-        LoadPixelFormatProcs();
-    if (wglChoosePixelFormatARB == nullptr)
-        return false;
+    {
+        if (!LoadPixelFormatProcs() || wglChoosePixelFormatARB == nullptr)
+            return false;
+    }
 
     const float attribsFlt[] = { 0.0f, 0.0f };
 
-    /* Setup pixel format for anti-aliasing */
+    /* Reduce sample count successively if we fail to select a pixel format with the current sample count */
     for (; formatDesc_.samples > 0; formatDesc_.samples--)
     {
         const int attribsInt[] =
@@ -481,7 +548,7 @@ bool Win32GLContext::SelectMultisampledPixelFormat(HDC hDC)
             0, 0
         };
 
-        /* Choose new pixel format with anti-aliasing */
+        /* Choose new pixel format with current number of samples */
         const BOOL result = wglChoosePixelFormatARB(
             hDC,
             attribsInt,
@@ -510,13 +577,11 @@ void Win32GLContext::CopyPixelFormat(Win32GLContext& sourceContext)
     ::memcpy(pixelFormatsMS_, sourceContext.pixelFormatsMS_, sizeof(pixelFormatsMS_));
 }
 
-HDC Win32GLContext::UpdateSurfacePixelFormat(Surface& surface)
+void Win32GLContext::ErrorMultisampleContextFailed()
 {
-    /* Recreate window with current descriptor, then update device context and pixel format */
-    surface.ResetPixelFormat();
-    HDC hDC = GetWin32DeviceContext(surface);
-    SelectPixelFormat(hDC);
-    return GetWin32DeviceContext(surface);
+    /* Print error and disable multi-sampled context */
+    Log::Errorf("multi-sampled OpenGL context is not supported");
+    formatDesc_.samples = 1;
 }
 
 

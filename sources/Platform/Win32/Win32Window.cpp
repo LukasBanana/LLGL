@@ -21,6 +21,11 @@ namespace LLGL
  * Surface class
  */
 
+void Surface::ResetPixelFormat()
+{
+    // dummy
+}
+
 bool Surface::ProcessEvents()
 {
     /* Peek all queued messages */
@@ -68,7 +73,7 @@ static RECT GetClientArea(LONG width, LONG height, DWORD style)
 // Determines the Win32 window style for the specified descriptor.
 static DWORD GetWindowStyle(const WindowDescriptor& desc)
 {
-    DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+    DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS); // Both required for OpenGL
 
     const bool hasWindowContext =
     (
@@ -166,14 +171,6 @@ bool Win32Window::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
         return true;
     }
     return false;
-}
-
-void Win32Window::ResetPixelFormat()
-{
-    /* Destroy previous window handle and create a new one with current descriptor settings */
-    auto desc = GetDesc();
-    DestroyWindow(wnd_);
-    wnd_ = CreateWindowHandle(desc);
 }
 
 Extent2D Win32Window::GetContentSize() const

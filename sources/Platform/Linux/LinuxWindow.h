@@ -28,8 +28,6 @@ class LinuxWindow : public Window
 
         bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 
-        void ResetPixelFormat() override;
-
         Extent2D GetContentSize() const override;
 
         void SetPosition(const Offset2D& position) override;

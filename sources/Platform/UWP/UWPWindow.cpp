@@ -64,11 +64,6 @@ bool UWPWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize
     return false;
 }
 
-void UWPWindow::ResetPixelFormat()
-{
-    //todo
-}
-
 Extent2D UWPWindow::GetContentSize() const
 {
     return Extent2D

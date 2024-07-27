@@ -42,7 +42,7 @@ class Win32GLContext final : public GLContext
     public:
 
         // Select the pixel format for the specified surface to make it compatible with this GL context.
-        void SelectPixelFormat(HDC hDC);
+        bool SelectPixelFormat(HDC hDC);
 
         // Returns the OpenGL render context handle.
         inline HGLRC GetGLRCHandle() const
@@ -72,11 +72,11 @@ class Win32GLContext final : public GLContext
         bool SelectMultisampledPixelFormat(HDC hDC);
         void CopyPixelFormat(Win32GLContext& sourceContext);
 
-        HDC UpdateSurfacePixelFormat(Surface& surface);
+        void ErrorMultisampleContextFailed();
 
     private:
 
-        static const UINT           maxPixelFormatsMS                   = 8;
+        static constexpr UINT       maxPixelFormatsMS                   = 8;
 
         RendererConfigurationOpenGL profile_;
         GLPixelFormat               formatDesc_;
@@ -88,7 +88,7 @@ class Win32GLContext final : public GLContext
         HDC                         hDC_                                = nullptr;
         HGLRC                       hGLRC_                              = nullptr;
 
-        bool                        isProxyGLRC_                        = false; // true if a custom native handle was provided
+        const bool                  isProxyGLRC_                        = false; // true if a custom native handle was provided
 
 };
 

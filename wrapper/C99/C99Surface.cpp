@@ -34,7 +34,7 @@ LLGL_C_EXPORT bool llglAdaptSurfaceForVideoMode(LLGLSurface surface, LLGLExtent2
 
 LLGL_C_EXPORT void llglResetSurfacePixelFormat(LLGLSurface surface)
 {
-    LLGL_PTR(Surface, surface)->ResetPixelFormat();
+    // dummy
 }
 
 LLGL_C_EXPORT bool llglProcessSurfaceEvents()

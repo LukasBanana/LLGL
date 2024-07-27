@@ -41,11 +41,6 @@ bool MacOSSubviewWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeH
     return false;
 }
 
-void MacOSSubviewWindow::ResetPixelFormat()
-{
-    // dummy
-}
-
 Extent2D MacOSSubviewWindow::GetContentSize() const
 {
     NSSize size = [view_ frame].size;
