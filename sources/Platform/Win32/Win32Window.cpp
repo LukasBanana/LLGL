@@ -21,11 +21,6 @@ namespace LLGL
  * Surface class
  */
 
-void Surface::ResetPixelFormat()
-{
-    // dummy
-}
-
 bool Surface::ProcessEvents()
 {
     /* Peek all queued messages */

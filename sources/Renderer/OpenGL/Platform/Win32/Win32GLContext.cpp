@@ -232,7 +232,8 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
 {
     const bool hasMultiSampling = (formatDesc_.samples > 1);
 
-    if (hasMultiSampling)
+    /* Is multi-sampling requested but no suitable pixel format is cached yet? */
+    if (hasMultiSampling && pixelFormatsMSCount_ == 0)
     {
         /*
         A multi-sampling render context is created in these steps:
