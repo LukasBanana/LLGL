@@ -2,7 +2,7 @@
 
 #version 450 core
 
-uniform Settings
+layout(std140, binding = 1) uniform Settings
 {
     mat4    cMatrix;
     mat4    vpMatrix;
@@ -18,20 +18,21 @@ uniform Settings
 
 // SKYBOX SHADER
 
-in VSkyOut
+layout(location = 0) in VSkyOut
 {
     vec4 viewRay;
 }
 inp;
 
-out vec4 outColor;
+layout(location = 0) out vec4 outColor;
 
-uniform samplerCubeArray skyBox;
+layout(binding = 2) uniform sampler smpl;
+layout(binding = 3) uniform textureCubeArray skyBox;
 
 void main()
 {
     vec3 texCoord = normalize(cMatrix * inp.viewRay).xyz;
-    outColor = texture(skyBox, vec4(texCoord, float(skyboxLayer)));
+    outColor = texture(samplerCubeArray(skyBox, smpl), vec4(texCoord, float(skyboxLayer)));
 }
 
 

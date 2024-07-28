@@ -194,13 +194,13 @@ int main(int argc, char* argv[])
             pipelineDesc.fragmentShader                 = fragShader;
             pipelineDesc.renderPass                     = swapChain1->GetRenderPass();
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc[0].samples > 1);
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChain1->GetSamples() > 1);
         }
         pipeline[0] = renderer->CreatePipelineState(pipelineDesc);
 
         {
             pipelineDesc.renderPass                     = swapChain2->GetRenderPass();
-            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChainDesc[1].samples > 1);
+            pipelineDesc.rasterizer.multiSampleEnabled  = (swapChain2->GetSamples() > 1);
 
             // Only enable logic operations if it's supported, otherwise an exception is thrown
             if (logicOpSupported)

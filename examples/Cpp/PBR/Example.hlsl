@@ -186,17 +186,8 @@ float4 PMesh(VMeshOut inp) : SV_Target
     float3 viewPos = mul(cMatrix, float4(0, 0, 0, 1)).xyz;
     float3 viewVec = normalize(viewPos - inp.worldPos.xyz);
 
-    // Sample incoming light from environment map
-    //float3 reflection = -normalize(reflect(viewVec, normal));
-    //float3 lighting = SampleEnvironment(roughness, reflection);
-
     // Compute microfacet BRDF
     float3 color = BRDF(albedo.rgb, normal, viewVec, lightDir.xyz, roughness, metallic);
-
-    #if 0
-    //color += lighting * 0.2;
-    color = lighting;
-    #endif
 
     return float4(color, albedo.a);
 }

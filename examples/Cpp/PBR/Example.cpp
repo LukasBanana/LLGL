@@ -125,6 +125,14 @@ private:
             shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.vert" }, { vertexFormat });
             shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.frag" });
         }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Sky.450core.vert.spv" });
+            shaderPipelineSky.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Sky.450core.frag.spv" });
+
+            shaderPipelineMeshes.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.Mesh.450core.vert.spv" }, { vertexFormat });
+            shaderPipelineMeshes.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.Mesh.450core.frag.spv" });
+        }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             shaderPipelineSky.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.metal", "VSky", "1.1" });
@@ -211,6 +219,7 @@ private:
             pipelineDescMeshes.pipelineLayout                   = layoutMeshes;
             pipelineDescMeshes.depth.testEnabled                = true;
             pipelineDescMeshes.depth.writeEnabled               = true;
+            pipelineDescMeshes.rasterizer.cullMode              = LLGL::CullMode::Back;
             pipelineDescMeshes.rasterizer.multiSampleEnabled    = (GetSampleCount() > 1);
         }
         pipelineMeshes = renderer->CreatePipelineState(pipelineDescMeshes);

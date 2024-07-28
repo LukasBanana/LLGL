@@ -55,6 +55,13 @@ call :CompileGlslToSpirv MultiThreading/Example.450core.vert
 call :CompileGlslToSpirv MultiThreading/Example.450core.frag
 echo DONE
 
+echo ####### PBR #######
+call :CompileGlslToSpirv PBR/Example.Mesh.450core.vert
+call :CompileGlslToSpirv PBR/Example.Mesh.450core.frag
+call :CompileGlslToSpirv PBR/Example.Sky.450core.vert
+call :CompileGlslToSpirv PBR/Example.Sky.450core.frag
+echo DONE
+
 echo ####### PostProcessing #######
 call :CompileGlslToSpirv PostProcessing/Scene.450core.vert
 call :CompileGlslToSpirv PostProcessing/Scene.450core.frag

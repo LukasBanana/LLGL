@@ -4,7 +4,7 @@
 
 #define M_PI 3.141592654
 
-uniform Settings
+layout(std140, binding = 1) uniform Settings
 {
     mat4    cMatrix;
     mat4    vpMatrix;
@@ -18,13 +18,14 @@ uniform Settings
     uvec2   _pad1;
 };
 
-uniform samplerCubeArray skyBox;
-uniform sampler2DArray colorMaps;
-uniform sampler2DArray normalMaps;
-uniform sampler2DArray roughnessMaps;
-uniform sampler2DArray metallicMaps;
+layout(binding = 2) uniform sampler smpl;
+layout(binding = 3) uniform textureCubeArray skyBox;
+layout(binding = 4) uniform texture2DArray colorMaps;
+layout(binding = 5) uniform texture2DArray normalMaps;
+layout(binding = 6) uniform texture2DArray roughnessMaps;
+layout(binding = 7) uniform texture2DArray metallicMaps;
 
-in VMeshOut
+layout(location = 0) in VMeshOut
 {
     vec3 tangent;
     vec3 bitangent;
@@ -34,7 +35,7 @@ in VMeshOut
 }
 inp;
 
-out vec4 outColor;
+layout(location = 0) out vec4 outColor;
 
 // Schlick's approximation of the fresnel term
 vec3 SchlickFresnel(vec3 f0, float cosT)
@@ -59,7 +60,7 @@ float NormalDistribution(float a, float NdotH)
 vec3 SampleEnvironment(float roughness, vec3 reflection)
 {
     float lod = roughness * mipCount;
-    return texture(skyBox, vec4(reflection, float(skyboxLayer)), lod).rgb;
+    return texture(samplerCubeArray(skyBox, smpl), vec4(reflection, float(skyboxLayer)), lod).rgb;
 }
 
 vec3 BRDF(vec3 albedo, vec3 normal, vec3 viewVec, vec3 lightVec, float roughness, float metallic)
@@ -98,10 +99,10 @@ void main()
     vec3 texCoord = vec3(inp.texCoord, float(materialLayer));
 
     // Sample textures
-    vec4 albedo = texture(colorMaps, texCoord);
-    vec3 normal = texture(normalMaps, texCoord).rgb;
-    float roughness = texture(roughnessMaps, texCoord).r;
-    float metallic = texture(metallicMaps, texCoord).r;
+    vec4 albedo = texture(sampler2DArray(colorMaps, smpl), texCoord);
+    vec3 normal = texture(sampler2DArray(normalMaps, smpl), texCoord).rgb;
+    float roughness = texture(sampler2DArray(roughnessMaps, smpl), texCoord).r;
+    float metallic = texture(sampler2DArray(metallicMaps, smpl), texCoord).r;
 
     // Compute final normal
     mat3 tangentSpace = mat3(
@@ -115,6 +116,10 @@ void main()
     // Get view and light directions
     vec3 viewPos = (cMatrix * vec4(0, 0, 0, 1)).xyz;
     vec3 viewVec = normalize(viewPos - inp.worldPos.xyz);
+
+    // Sample incoming light from environment map
+    vec3 reflection = -normalize(reflect(viewVec, normal));
+    vec3 lighting = SampleEnvironment(roughness, reflection);
 
     // Compute microfacet BRDF
     vec3 color = BRDF(albedo.rgb, normal, viewVec, lightDir.xyz, roughness, metallic);
