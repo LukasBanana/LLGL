@@ -226,6 +226,7 @@ void VKPhysicalDevice::QueryRendererInfo(RendererInfo& info)
 void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
 {
     /* Map limits to output rendering capabilites */
+    const VkPhysicalDeviceFeatures& features = features_.features;
     const VkPhysicalDeviceLimits& limits = properties_.limits;
 
     /* Query common attributes */
@@ -234,7 +235,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
     caps.textureFormats                             = GetDefaultSupportedVKTextureFormats();
 
-    if (features_.textureCompressionBC != VK_FALSE)
+    if (features.textureCompressionBC != VK_FALSE)
     {
         const std::vector<Format> compressedTextureFormats = GetCompressedVKTextureFormatsS3TC();
         caps.textureFormats.insert(caps.textureFormats.end(), compressedTextureFormats.begin(), compressedTextureFormats.end());
@@ -245,7 +246,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.has3DTextures                     = true;
     caps.features.hasCubeTextures                   = true;
     caps.features.hasArrayTextures                  = true;
-    caps.features.hasCubeArrayTextures              = (features_.imageCubeArray != VK_FALSE);
+    caps.features.hasCubeArrayTextures              = (features.imageCubeArray != VK_FALSE);
     caps.features.hasMultiSampleTextures            = true;
     caps.features.hasMultiSampleArrayTextures       = true;
     caps.features.hasTextureViews                   = true;
@@ -254,18 +255,18 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasBufferViews                    = true;
     caps.features.hasConstantBuffers                = true;
     caps.features.hasStorageBuffers                 = true;
-    caps.features.hasGeometryShaders                = (features_.geometryShader != VK_FALSE);
-    caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
+    caps.features.hasGeometryShaders                = (features.geometryShader != VK_FALSE);
+    caps.features.hasTessellationShaders            = (features.tessellationShader != VK_FALSE);
     caps.features.hasTessellatorStage               = caps.features.hasTessellationShaders;
     caps.features.hasComputeShaders                 = true;
     caps.features.hasInstancing                     = true;
     caps.features.hasOffsetInstancing               = true;
-    caps.features.hasIndirectDrawing                = (features_.drawIndirectFirstInstance != VK_FALSE);
-    caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
+    caps.features.hasIndirectDrawing                = (features.drawIndirectFirstInstance != VK_FALSE);
+    caps.features.hasViewportArrays                 = (features.multiViewport != VK_FALSE);
     caps.features.hasConservativeRasterization      = SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME);
     caps.features.hasStreamOutputs                  = SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME);
-    caps.features.hasLogicOp                        = (features_.logicOp != VK_FALSE);
-    caps.features.hasPipelineStatistics             = (features_.pipelineStatisticsQuery != VK_FALSE);
+    caps.features.hasLogicOp                        = (features.logicOp != VK_FALSE);
+    caps.features.hasPipelineStatistics             = (features.pipelineStatisticsQuery != VK_FALSE);
     caps.features.hasRenderCondition                = SupportsExtension(VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME);
     caps.features.hasPipelineCaching                = true;
 
@@ -386,33 +387,10 @@ bool VKPhysicalDevice::EnableExtensions(const char** extensions, bool required)
 
 void VKPhysicalDevice::QueryDeviceInfo()
 {
-    if (HasExtension(VKExt::KHR_get_physical_device_properties2))
-    {
-        /* Query physical device features and properties with extensions */
-        QueryDeviceFeaturesWithExtensions();
-        QueryDevicePropertiesWithExtensions();
-        QueryDeviceMemoryPropertiesWithExtensions();
-    }
-    else
-    {
-        /* Query physical device features and memory properties */
-        vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
-        vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
-    }
-}
-
-void VKPhysicalDevice::QueryDeviceFeaturesWithExtensions()
-{
-    /*VkPhysicalDeviceFeatures2 featuresExt;
-    {
-        featuresExt.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        //TODO...
-    }
-    vkGetPhysicalDeviceFeatures2(physicalDevice_, &featuresExt);
-    features_ = featuresExt.features;*/
-
-    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
+    /* Query physical device features and properties with extensions */
+    QueryDeviceFeatures();
+    QueryDeviceProperties();
+    QueryDeviceMemoryProperties();
 }
 
 struct VKBaseStructureInfo
@@ -421,8 +399,32 @@ struct VKBaseStructureInfo
     void*           pNext;
 };
 
-void VKPhysicalDevice::QueryDevicePropertiesWithExtensions()
+void VKPhysicalDevice::QueryDeviceFeatures()
 {
+    #if VK_KHR_get_physical_device_properties2
+
+    VKBaseStructureInfo* currentDesc = nullptr;
+
+    #ifdef VK_EXT_nested_command_buffer
+    featuresNestedCmdBuffers_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT;
+    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&featuresNestedCmdBuffers_);
+    #endif
+
+    features_.pNext = currentDesc;
+
+    vkGetPhysicalDeviceFeatures2(physicalDevice_, &features_);
+
+    #else
+
+    vkGetPhysicalDeviceFeatures(physicalDevice_, &(features_.features));
+
+    #endif
+}
+
+void VKPhysicalDevice::QueryDeviceProperties()
+{
+    #if VK_KHR_get_physical_device_properties2
+
     VKBaseStructureInfo* currentDesc = nullptr;
 
     auto ChainDescritpor = [&currentDesc](void* descPtr, VkStructureType type)
@@ -452,9 +454,15 @@ void VKPhysicalDevice::QueryDevicePropertiesWithExtensions()
 
     /* Store primary device properties */
     properties_ = propertiesExt.properties;
+
+    #else
+
+    vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
+
+    #endif
 }
 
-void VKPhysicalDevice::QueryDeviceMemoryPropertiesWithExtensions()
+void VKPhysicalDevice::QueryDeviceMemoryProperties()
 {
     vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
 }

@@ -36,10 +36,10 @@ class VKDevice
         VKDevice& operator = (VKDevice&& device);
 
         void CreateLogicalDevice(
-            VkPhysicalDevice                physicalDevice,
-            const VkPhysicalDeviceFeatures* features,
-            const char* const*              extensions,
-            std::uint32_t                   numExtensions
+            VkPhysicalDevice                    physicalDevice,
+            const VkPhysicalDeviceFeatures2*    features,
+            const char* const*                  extensions,
+            std::uint32_t                       numExtensions
         );
 
         void LoadLogicalDeviceWeakRef(VkPhysicalDevice physicalDevice, VkDevice device);

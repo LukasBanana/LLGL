@@ -648,7 +648,6 @@ void VKRenderSystem::Release(PipelineCache& pipelineCache)
     pipelineCaches_.erase(&pipelineCache);
 }
 
-
 /* ----- Pipeline States ----- */
 
 PipelineState* VKRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)

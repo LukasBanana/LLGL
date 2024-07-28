@@ -42,7 +42,7 @@ constexpr std::uint32_t VKCommandBuffer::maxNumCommandBuffers;
 // Returns the maximum for a indirect multi draw command
 static std::uint32_t GetMaxDrawIndirectCount(const VKPhysicalDevice& physicalDevice)
 {
-    if (physicalDevice.GetFeatures().multiDrawIndirect != VK_FALSE)
+    if (physicalDevice.GetFeatures().features.multiDrawIndirect != VK_FALSE)
         return physicalDevice.GetProperties().limits.maxDrawIndirectCount;
     else
         return 1u;

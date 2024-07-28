@@ -55,10 +55,10 @@ void VKDevice::WaitIdle()
 // Device-only layers are deprecated -> set 'enabledLayerCount' and 'ppEnabledLayerNames' members to zero during device creation.
 // see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#extended-functionality-device-layer-deprecation
 void VKDevice::CreateLogicalDevice(
-    VkPhysicalDevice                physicalDevice,
-    const VkPhysicalDeviceFeatures* features,
-    const char* const*              extensions,
-    std::uint32_t                   numExtensions)
+    VkPhysicalDevice                    physicalDevice,
+    const VkPhysicalDeviceFeatures2*    features,
+    const char* const*                  extensions,
+    std::uint32_t                       numExtensions)
 {
     /* Initialize queue create description */
     queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
@@ -90,7 +90,6 @@ void VKDevice::CreateLogicalDevice(
     VkDeviceCreateInfo createInfo;
     {
         createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
         createInfo.flags                    = 0;
         createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos        = queueCreateInfos.data();
@@ -98,7 +97,18 @@ void VKDevice::CreateLogicalDevice(
         createInfo.ppEnabledLayerNames      = nullptr;  // deprecated and ignored
         createInfo.enabledExtensionCount    = numExtensions;
         createInfo.ppEnabledExtensionNames  = extensions;
-        createInfo.pEnabledFeatures         = features;
+
+        /* If must pass the feature flags either through the chain of pNext (Vulkan 1.1+), or only through pEnabledFeatures (Vulkan 1.0) */
+        if (features->pNext != nullptr)
+        {
+            createInfo.pNext                = features;
+            createInfo.pEnabledFeatures     = nullptr;
+        }
+        else
+        {
+            createInfo.pNext                = nullptr;
+            createInfo.pEnabledFeatures     = &(features->features);
+        }
     }
     VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan logical device");

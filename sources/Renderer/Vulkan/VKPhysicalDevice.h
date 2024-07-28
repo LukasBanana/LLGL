@@ -62,7 +62,7 @@ class VKPhysicalDevice
         }
 
         // Returns the Vulkan specific features of the physical device.
-        inline const VkPhysicalDeviceFeatures& GetFeatures() const
+        inline const VkPhysicalDeviceFeatures2& GetFeatures() const
         {
             return features_;
         }
@@ -101,9 +101,9 @@ class VKPhysicalDevice
         bool EnableExtensions(const char** extensions, bool required = false);
 
         void QueryDeviceInfo();
-        void QueryDeviceFeaturesWithExtensions();
-        void QueryDevicePropertiesWithExtensions();
-        void QueryDeviceMemoryPropertiesWithExtensions();
+        void QueryDeviceFeatures();
+        void QueryDeviceProperties();
+        void QueryDeviceMemoryProperties();
 
     private:
 
@@ -114,7 +114,10 @@ class VKPhysicalDevice
         std::vector<const char*>                                enabledExtensionNames_;
 
         // Common device properties and features
-        VkPhysicalDeviceFeatures                                features_                   = {};
+        VkPhysicalDeviceFeatures2                               features_                   = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+        #ifdef VK_EXT_nested_command_buffer
+        VkPhysicalDeviceNestedCommandBufferFeaturesEXT          featuresNestedCmdBuffers_   = {};
+        #endif
         VkPhysicalDeviceProperties                              properties_                 = {};
         VkPhysicalDeviceMemoryProperties                        memoryProperties_           = {};
 
