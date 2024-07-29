@@ -4,6 +4,11 @@
 
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+precision mediump sampler2D;
+#endif
+
 in vec4 xsv_NORMAL0;
 in vec2 xsv_TEXCOORD0;
 

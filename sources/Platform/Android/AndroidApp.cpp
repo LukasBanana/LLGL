@@ -6,6 +6,7 @@
  */
 
 #include "AndroidApp.h"
+#include "AndroidCanvas.h"
 #include "../../Core/Assertion.h"
 #include <thread>
 
@@ -102,6 +103,11 @@ void AndroidApp::Initialize(android_app* state)
     {
         /* Process events until native window is initialized (APP_CMD_INIT_WINDOW) */
         WaitUntilNativeWindowIsInitialized(state);
+    }
+    if (state_->onInputEvent == nullptr)
+    {
+        /* Set default event handler */
+        state_->onInputEvent = AndroidCanvas::OnAndroidAppInputEvent;
     }
 }
 

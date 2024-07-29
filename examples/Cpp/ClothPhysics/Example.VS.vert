@@ -4,6 +4,10 @@
 
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 in vec4 position;
 in vec4 normal;
 in vec2 texCoord;

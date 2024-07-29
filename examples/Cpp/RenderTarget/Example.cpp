@@ -165,7 +165,7 @@ private:
             shaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, { vertexFormat });
             shaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, {}, psDefines);
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             // Patch clipping origin in vertex shader in case the GL server does not support GL_ARB_clip_control
             shaderPipeline.vs = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "Example.vert" }, { vertexFormat });

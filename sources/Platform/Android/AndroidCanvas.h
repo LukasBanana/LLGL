@@ -11,6 +11,9 @@
 
 #include <LLGL/Canvas.h>
 #include <android/native_activity.h>
+#include <android/input.h>
+#include <android_native_app_glue.h>
+#include <cstdint>
 
 
 namespace LLGL
@@ -31,6 +34,10 @@ class AndroidCanvas : public Canvas
 
         void SetTitle(const UTF8String& title) override;
         UTF8String GetTitle() const override;
+
+    public:
+
+        static std::int32_t OnAndroidAppInputEvent(android_app* app, AInputEvent* event);
 
     private:
 

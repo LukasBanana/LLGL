@@ -163,15 +163,11 @@ if(LLGL_BUILD_EXAMPLES)
     
     # Native "app glue" for Android examples
     if(LLGL_ANDROID_PLATFORM)
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
         target_link_libraries(ExampleBase android_native_app_glue)
     endif(LLGL_ANDROID_PLATFORM)
     
     set(EXAMPLE_PROJECT_LIBS ExampleBase ${LLGL_MODULE_LIBS})
-    
-    if(LLGL_ANDROID_PLATFORM)
-        # Android specific examples
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
-    endif()
 
     # Common examples
     if(LLGL_UWP_PLATFORM)

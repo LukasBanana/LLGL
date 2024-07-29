@@ -1,0 +1,7 @@
+Models/UVSphere.obj
+Models/WiredBox.obj
+Textures/PBR/mp_alpha/alpha-island_*.tga
+Textures/PBR/Metal04/Metal04_*.jpg
+Textures/PBR/Tiles22/Tiles22_*.jpg
+Textures/PBR/Tiles26/Tiles26_*.jpg
+Textures/PBR/Wood13/Wood13_*.jpg

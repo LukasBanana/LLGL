@@ -4,6 +4,7 @@
 
 #ifdef GL_ES
 precision mediump float;
+precision mediump sampler2D;
 #endif
 
 layout(std140) uniform BlurSettings

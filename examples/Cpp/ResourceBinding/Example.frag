@@ -2,6 +2,11 @@
 
 #version 430 core
 
+#ifdef GL_ES
+precision mediump float;
+precision mediump sampler2D;
+#endif
+
 uniform vec3 lightVec;
 
 layout(location = 0) in vec4 vWorldPos;

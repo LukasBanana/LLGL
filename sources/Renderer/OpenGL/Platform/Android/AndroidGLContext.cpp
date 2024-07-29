@@ -212,6 +212,9 @@ void AndroidGLContext::CreateContext(
 
     if (context_ == EGL_NO_CONTEXT)
         LLGL_TRAP("eglCreateContext failed (%s)", EGLErrorToString());
+
+    /* Make new context current to enable further initialization with GLES functions */
+    eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, context_);
 }
 
 void AndroidGLContext::DeleteContext()

@@ -1,6 +1,11 @@
 // GLSL fragment shader
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+precision mediump sampler2DArray;
+#endif
+
 layout(std140) uniform Settings
 {
     mat4 vpMatrix;

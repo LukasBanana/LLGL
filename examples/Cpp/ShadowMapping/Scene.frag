@@ -2,6 +2,11 @@
 
 #version 140
 
+#ifdef GL_ES
+precision mediump float;
+precision mediump sampler2DShadow;
+#endif
+
 // Specifies whether to enable Percentage-Closer-Filtering (PCF)
 //#define ENABLE_PCF
 

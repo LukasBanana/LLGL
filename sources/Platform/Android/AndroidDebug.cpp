@@ -6,7 +6,7 @@
  */
 
 #include "../Debug.h"
-#include <stdio.h>
+#include <android/log.h>
 
 
 namespace LLGL
@@ -15,7 +15,7 @@ namespace LLGL
 
 LLGL_EXPORT void DebugPuts(const char* text)
 {
-    ::fprintf(stderr, "%s\n", text);
+    (void)__android_log_print(ANDROID_LOG_ERROR, "LLGL", "%s\n", text);
 }
 
 LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame, unsigned maxNumStackFrames)

@@ -1,0 +1,2 @@
+Textures/Crate-DXT1-MipMapped.dds
+Textures/Crate.jpg

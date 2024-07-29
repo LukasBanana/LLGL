@@ -363,7 +363,12 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
 
 void ExampleBase::SetAndroidApp(android_app* androidApp)
 {
+    // Store pointer to android app so we can pass it into RenderSystemDescriptor when we load the render system
     androidApp_ = androidApp;
+
+    // Store pointer to asset manager so we can load assets from the APK bundle
+    if (androidApp->activity != nullptr)
+        AndroidSetAssetManager(androidApp->activity->assetManager);
 }
 
 #endif
@@ -373,9 +378,13 @@ void ExampleBase::Run()
     bool showTimeRecords = false;
     bool fullscreen = false;
     const LLGL::Extent2D initialResolution = swapChain->GetResolution();
-    LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
 
+    #ifdef LLGL_MOBILE_PLATFORM
+    while (LLGL::Surface::ProcessEvents())
+    #else
+    LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
     while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
+    #endif
     {
         // Update profiler (if debugging is enabled)
         if (debuggerObj_)
@@ -435,7 +444,7 @@ void ExampleBase::DrawFrame()
     // Draw frame in respective example project
     OnDrawFrame();
 
-    #ifndef LLGL_MOBILE_PLATFORM
+    #ifndef LLGL_OS_IOS
     // Present the result on the screen - cannot be explicitly invoked on mobile platforms
     swapChain->Present();
     #endif

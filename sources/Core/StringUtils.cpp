@@ -14,11 +14,72 @@
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Utils/ForRange.h>
 #include "../Platform/Path.h"
+#include "../Core/Assertion.h"
+
+#include <LLGL/Platform/Platform.h>
+
+#ifdef LLGL_OS_ANDROID
+
+#include "../Platform/Android/AndroidApp.h"
+
+#ifndef __USE_BSD
+#define __USE_BSD /* Defines funopen() */
+#endif
+
+#include <stdio.h>
+#include <android/asset_manager.h>
+
+#endif
 
 
 namespace LLGL
 {
 
+
+#ifdef LLGL_OS_ANDROID
+
+static std::vector<char> ReadFileBufferPrimary(const char* filename)
+{
+    std::vector<char> content;
+
+    if (filename != nullptr && *filename != '\0')
+    {
+        ANativeActivity* activity = AndroidApp::Get().GetState()->activity;
+        LLGL_ASSERT(activity != nullptr, "ANativeActivity not set");
+
+        AAssetManager* assetMngr = activity->assetManager;
+        LLGL_ASSERT(assetMngr != nullptr, "AAssetManager not set");
+
+        if (AAsset* asset = AAssetManager_open(assetMngr, filename, AASSET_MODE_STREAMING))
+        {
+            /* Get asset size by setting position at end of stream */
+            const off_t assetSize = AAsset_seek(asset, 0, SEEK_END);
+            AAsset_seek(asset, 0, SEEK_SET);
+            if (assetSize > 0)
+            {
+                /* Read entire asset content */
+                content.resize(assetSize);
+                AAsset_read(asset, content.data(), static_cast<size_t>(assetSize));
+            }
+            AAsset_close(asset);
+        }
+    }
+
+    return content;
+}
+
+LLGL_EXPORT std::string ReadFileString(const char* filename)
+{
+    const std::vector<char> content = ReadFileBufferPrimary(filename);
+    return std::string(content.begin(), content.end());
+}
+
+LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
+{
+    return ReadFileBufferPrimary(filename);
+}
+
+#else // LLGL_OS_ANDROID
 
 // Returns the specified filename either unchanged or as absolute path for mobile platforms.
 static UTF8String GetPlatformAppropriateFilename(const char* filename)
@@ -63,6 +124,8 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
     }
     return {};
 }
+
+#endif // /LLGL_OS_ANDROID
 
 static std::wstring ToWideStringPrimary(const char* str, std::size_t len)
 {
