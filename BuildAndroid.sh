@@ -10,11 +10,13 @@ ENABLE_EXAMPLES="ON"
 BUILD_TYPE="Release"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
+ANDROID_CXX_LIB="c++_shared" # c++_shared/c++_static
 VERBOSE=0
 GENERATOR="CodeBlocks - Unix Makefiles"
 ANDROID_ABI=x86_64
 ANDROID_API_LEVEL=21
 SUPPORTED_ANDROID_ABIS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+BUILD_APPS=0
 
 print_help()
 {
@@ -29,6 +31,7 @@ print_help()
     echo "  -v, --verbose ............. Print additional information"
     echo "  --abi=ABI ................. Set Android ABI (default is x86_64; accepts 'all')"
     echo "  --api-level=VERSION ....... Set Android API level (default is 21)"
+    echo "  --apps .................... Generate Android Studio projects to build example apps (implies '--abi=all -s')"
     echo "  --vulkan .................. Include Vulkan renderer"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
@@ -54,6 +57,7 @@ for ARG in "$@"; do
         GENERATOR="${ARG:15}"
     elif [ "$ARG" = "-s" ] || [ "$ARG" = "--static-lib" ]; then
         STATIC_LIB="ON"
+        ANDROID_CXX_LIB="c++_static"
     elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
         VERBOSE=1
     elif [[ "$ARG" == --abi=* ]]; then
@@ -64,6 +68,11 @@ for ARG in "$@"; do
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
+    elif [ "$ARG" = "--apps" ]; then
+        BUILD_APPS=1
+        ANDROID_ABI="all"
+        STATIC_LIB="ON"
+        ANDROID_CXX_LIB="c++_static"
     else
         OUTPUT_DIR="$ARG"
     fi
@@ -142,7 +151,7 @@ fi
 BASE_OPTIONS=(
     -DCMAKE_TOOLCHAIN_FILE="$ANDROID_CMAKE_TOOLCHAIN"
     -DANDROID_PLATFORM=$ANDROID_API_LEVEL
-    -DANDROID_STL=c++_shared
+    -DANDROID_STL=$ANDROID_CXX_LIB
     -DANDROID_CPP_FEATURES="rtti exceptions"
     -DLLGL_BUILD_RENDERER_OPENGLES3=ON
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
@@ -158,6 +167,10 @@ build_with_android_abi()
 {
     CURRENT_ANDROID_ABI=$1
     CURRENT_OUTPUT_DIR=$2
+
+    if [ $VERBOSE -eq 1 ]; then
+        echo "Build: ABI=$CURRENT_ANDROID_ABI, Output=$CURRENT_OUTPUT_DIR"
+    fi
 
     OPTIONS=(
         ${BASE_OPTIONS[@]}
@@ -188,4 +201,104 @@ if [ $ANDROID_ABI = "all" ]; then
     done
 else
     build_with_android_abi $ANDROID_ABI "$OUTPUT_DIR"
+fi
+
+# Build project solutions for example apps
+generate_app_project()
+{
+    CURRENT_PROJECT=$1
+
+    echo "Generate app project: $CURRENT_PROJECT"
+
+    # Get source folder
+    ASSET_SOURCE_DIR="$SOURCE_DIR/examples/Media"
+    PROJECT_SOURCE_DIR="$SOURCE_DIR/examples/Cpp"
+    if [[ "$CURRENT_PROJECT" == *D ]]; then
+        PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:0:-1}"
+    else
+        PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/$CURRENT_PROJECT"
+    fi
+
+    # Get destination folder
+    APP_ROOT="${OUTPUT_DIR}/apps/Example_$CURRENT_PROJECT"
+
+    BIN_ROOT=${OUTPUT_DIR}/${ABI}/build
+
+    # Create folder structure
+    mkdir -p "$APP_ROOT"
+    cp -r "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/app" "$APP_ROOT"
+    cp "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/build.gradle" "$APP_ROOT/build.gradle"
+    cp "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/settings.gradle" "$APP_ROOT/settings.gradle"
+
+    mkdir -p "$APP_ROOT/gradle/wrapper"
+    cp -r "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
+
+    # Copy binary files into JNI lib folders for respective ABI
+    for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
+        LIB_FILENAME="libExample_${CURRENT_PROJECT}.so"
+        SRC_LIB_PATH="$OUTPUT_DIR/$ABI/build"
+        DST_LIB_PATH="$APP_ROOT/app/src/main/jniLibs/$ABI"
+        mkdir -p "$DST_LIB_PATH"
+        cp "$SRC_LIB_PATH/$LIB_FILENAME" "$DST_LIB_PATH/$LIB_FILENAME"
+    done
+
+    # Replace meta data
+    sed -i "s/LLGL_PROJECT_NAME/Example_${CURRENT_PROJECT}/" "$APP_ROOT/app/src/main/AndroidManifest.xml"
+    sed -i "s/LLGL_APP_NAME/${CURRENT_PROJECT}/" "$APP_ROOT/app/src/main/res/values/strings.xml"
+    sed -i "s/LLGL_APP_ID/${CURRENT_PROJECT}/" "$APP_ROOT/app/build.gradle"
+
+    # Find all required assets in Android.assets.txt file of respective project directory and copy them into app folder
+    ASSET_DIR="$APP_ROOT/app/src/main/assets"
+    mkdir -p "$ASSET_DIR"
+
+    ASSET_LIST_FILE="$PROJECT_SOURCE_DIR/Android.assets.txt"
+    if [ -f "$ASSET_LIST_FILE" ]; then
+        # Read Android.asset.txt file line-by-line into array and make sure '\r' character is not present (on Win32 platform)
+        readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSET_LIST_FILE")
+        ASSET_FILES=()
+        for FILTER in ${ASSET_FILTERS[@]}; do
+            for FILE in $ASSET_SOURCE_DIR/$FILTER; do
+                ASSET_FILES+=( "$FILE" )
+            done
+        done
+
+        # Copy all asset file into destination folder
+        for FILE in ${ASSET_FILES[@]}; do
+            if [ $VERBOSE -eq 1 ]; then
+                echo "Copy asset: $(basename $FILE)"
+            fi
+            cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
+        done
+    fi
+
+    # Find all shaders and copy them into app folder
+    for FILE in $PROJECT_SOURCE_DIR/*.vert $PROJECT_SOURCE_DIR/*.frag $PROJECT_SOURCE_DIR/*.spv; do
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Copy shader: $(basename $FILE)"
+        fi
+        cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
+    done
+}
+
+if [ $BUILD_APPS -eq 1 ]; then
+
+    PROJECT_DEBUG_BUILD=0
+
+    BIN_FILE_BASE="${OUTPUT_DIR}/${SUPPORTED_ANDROID_ABIS[0]}/build/libExample_"
+    BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
+
+    EXAMPLE_BIN_FILES_D=(${BIN_FILE_BASE}*D.so)
+    if [ -z "$EXAMPLE_BIN_FILES_D" ]; then
+        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.so)
+    else
+        EXAMPLE_BIN_FILES=(${EXAMPLE_BIN_FILES_D[@]})
+        PROJECT_DEBUG_BUILD=1
+    fi
+
+    for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do
+        BIN_FILE_LEN=${#BIN_FILE}
+        PROJECT_NAME=${BIN_FILE:BIN_FILE_BASE_LEN:BIN_FILE_LEN-BIN_FILE_BASE_LEN-3}
+        generate_app_project $PROJECT_NAME
+    done
+
 fi
