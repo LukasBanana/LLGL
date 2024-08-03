@@ -17,6 +17,18 @@ namespace LLGL
 
 
 /**
+\brief Motion event action enumeration.
+\see Canvas::EventListener::OnPanGesture
+\see Canvas::PostPanGesture
+*/
+enum class EventAction
+{
+    Began,      //!< Action when a gesture began.
+    Changed,    //!< Action when a gesture changed/moved.
+    Ended,      //!< Action when a gesture ended.
+};
+
+/**
 \brief Canvas creation flags.
 \see CanvasDescriptor::flags
 */

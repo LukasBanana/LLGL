@@ -37,6 +37,7 @@ class AndroidCanvas : public Canvas
 
     public:
 
+        static void OnAndroidAppCommand(android_app* app, int32_t cmd);
         static std::int32_t OnAndroidAppInputEvent(android_app* app, AInputEvent* event);
 
     private:

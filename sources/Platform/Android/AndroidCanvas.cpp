@@ -17,6 +17,20 @@ namespace LLGL
 {
 
 
+static Extent2D GetAndroidContentSize()
+{
+    if (android_app* app = AndroidApp::Get().GetState())
+    {
+        return Extent2D
+        {
+            static_cast<std::uint32_t>(app->contentRect.right - app->contentRect.left),
+            static_cast<std::uint32_t>(app->contentRect.bottom - app->contentRect.top)
+        };
+    }
+    return Extent2D{};
+}
+
+
 /*
  * AndroidInputEventHandler
  */
@@ -34,6 +48,7 @@ class AndroidInputEventHandler
         void RegisterCanvas(Canvas* canvas);
         void UnregisterCanvas(Canvas* canvas);
 
+        void BroadcastCommand(android_app* app, int32_t cmd);
         std::int32_t BroadcastInputEvent(android_app* app, AInputEvent* event);
 
     private:
@@ -70,6 +85,31 @@ void AndroidInputEventHandler::UnregisterCanvas(Canvas* canvas)
 #define FOREACH_CANVAS_CALL(FUNC) \
     do for (Canvas* canvas : canvases_) { canvas->FUNC; } while (false)
 
+void AndroidInputEventHandler::BroadcastCommand(android_app* app, int32_t cmd)
+{
+    switch (cmd)
+    {
+        case APP_CMD_TERM_WINDOW:
+        {
+            FOREACH_CANVAS_CALL(PostQuit());
+        }
+        break;
+
+        case APP_CMD_WINDOW_REDRAW_NEEDED:
+        {
+            FOREACH_CANVAS_CALL(PostDraw());
+        }
+        break;
+
+        case APP_CMD_WINDOW_RESIZED:
+        {
+            const Extent2D contentSize = GetAndroidContentSize();
+            FOREACH_CANVAS_CALL(PostResize(contentSize));
+        }
+        break;
+    }
+}
+
 std::int32_t AndroidInputEventHandler::BroadcastInputEvent(android_app* app, AInputEvent* event)
 {
     std::lock_guard<std::mutex> guard{ lock_ };
@@ -84,32 +124,42 @@ std::int32_t AndroidInputEventHandler::BroadcastInputEvent(android_app* app, AIn
 
         case AINPUT_EVENT_TYPE_MOTION:
         {
-            float posX = AMotionEvent_getX(event, 0);
-            float posY = AMotionEvent_getY(event, 0);
-            float dx = 0.0f;
-            float dy = 0.0f;
-
-            switch (AMotionEvent_getAction(event))
-            {
-                case AMOTION_EVENT_ACTION_DOWN:
-                    /* Initialize previous position with current position when first touch down is detected */
-                    prevMotionPos_[0] = posX;
-                    prevMotionPos_[1] = posY;
-                    break;
-
-                case AMOTION_EVENT_ACTION_MOVE:
-                    /* Determine motion delta by difference between current and previous position */
-                    dx = posX - prevMotionPos_[0];
-                    dy = posY - prevMotionPos_[1];
-                    prevMotionPos_[0] = posX;
-                    prevMotionPos_[1] = posY;
-                    break;
-            }
+            const float posX = AMotionEvent_getX(event, 0);
+            const float posY = AMotionEvent_getY(event, 0);
 
             const LLGL::Offset2D position{ static_cast<std::int32_t>(posX), static_cast<std::int32_t>(posY) };
             const std::uint32_t numTouches = static_cast<std::uint32_t>(AMotionEvent_getPointerCount(event));
 
-            FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, dx, dy));
+            switch (AMotionEvent_getAction(event))
+            {
+                case AMOTION_EVENT_ACTION_DOWN:
+                {
+                    /* Initialize previous position with current position when first touch down is detected */
+                    prevMotionPos_[0] = posX;
+                    prevMotionPos_[1] = posY;
+                    FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, 0.0f, 0.0f, EventAction::Began));
+                }
+                break;
+
+                case AMOTION_EVENT_ACTION_MOVE:
+                {
+                    /* Determine motion delta by difference between current and previous position */
+                    const float posXPrec = AMotionEvent_getXPrecision(event);
+                    const float posYPrec = AMotionEvent_getYPrecision(event);
+                    const float dx = (posX - prevMotionPos_[0]) / posXPrec;
+                    const float dy = (posY - prevMotionPos_[1]) / posYPrec;
+                    prevMotionPos_[0] = posX;
+                    prevMotionPos_[1] = posY;
+                    FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, dx, dy, EventAction::Changed));
+                }
+                break;
+
+                case AMOTION_EVENT_ACTION_UP:
+                {
+                    FOREACH_CANVAS_CALL(PostPanGesture(position, numTouches, 0.0f, 0.0f, EventAction::Ended));
+                }
+                break;
+            }
         }
         return 1;
     }
@@ -163,19 +213,6 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
     return MakeUnique<AndroidCanvas>(desc);
 }
 
-static Extent2D GetAndroidContentRect()
-{
-    if (android_app* app = AndroidApp::Get().GetState())
-    {
-        return Extent2D
-        {
-            static_cast<std::uint32_t>(app->contentRect.right - app->contentRect.left),
-            static_cast<std::uint32_t>(app->contentRect.bottom - app->contentRect.top)
-        };
-    }
-    return Extent2D{};
-}
-
 
 /*
  * AndroidCanvas class
@@ -206,7 +243,7 @@ bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
 
 Extent2D AndroidCanvas::GetContentSize() const
 {
-    return GetAndroidContentRect();
+    return GetAndroidContentSize();
 }
 
 void AndroidCanvas::SetTitle(const UTF8String& title)
@@ -217,6 +254,11 @@ void AndroidCanvas::SetTitle(const UTF8String& title)
 UTF8String AndroidCanvas::GetTitle() const
 {
     return {}; //todo...
+}
+
+void AndroidCanvas::OnAndroidAppCommand(android_app* app, int32_t cmd)
+{
+    AndroidInputEventHandler::Get().BroadcastCommand(app, cmd);
 }
 
 std::int32_t AndroidCanvas::OnAndroidAppInputEvent(android_app* app, AInputEvent* event)

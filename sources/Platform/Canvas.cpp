@@ -54,10 +54,20 @@ void Canvas::EventListener::OnTapGesture(Canvas& sender, const Offset2D& positio
     // dummy
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
+//deprecated
 void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy)
 {
     // dummy
 }
+
+void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
+{
+    OnPanGesture(sender, position, numTouches, dx, dy); // forward call to deprecated function until it's removed
+}
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 
 /* ----- Window class ----- */
@@ -141,9 +151,15 @@ void Canvas::PostTapGesture(const Offset2D& position, std::uint32_t numTouches)
     FOREACH_LISTENER_CALL( OnTapGesture(*this, position, numTouches) );
 }
 
+//deprecated
 void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy)
 {
-    FOREACH_LISTENER_CALL( OnPanGesture(*this, position, numTouches, dx, dy) );
+    PostPanGesture(position, numTouches, dx, dy, EventAction::Changed); // forward call to new version until this version is removed
+}
+
+void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
+{
+    FOREACH_LISTENER_CALL( OnPanGesture(*this, position, numTouches, dx, dy, action) );
 }
 
 #undef FOREACH_LISTENER_CALL

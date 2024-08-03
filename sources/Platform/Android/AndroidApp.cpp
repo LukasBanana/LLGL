@@ -84,9 +84,18 @@ static void WaitUntilNativeWindowIsInitialized(android_app* app)
         }
     }
 
-    /* Restore client data */
-    app->userData = init.clientUserData;
-    app->onAppCmd = init.clientOnAppCmd;
+    if (init.clientOnAppCmd != nullptr)
+    {
+        /* Restore client data if it was previously specified */
+        app->userData = init.clientUserData;
+        app->onAppCmd = init.clientOnAppCmd;
+    }
+    else
+    {
+        /* ... Otherwise, use LLGL specific callback to handle window resize/rotation */
+        app->userData = nullptr;
+        app->onAppCmd = AndroidCanvas::OnAndroidAppCommand;
+    }
 }
 
 AndroidApp& AndroidApp::Get()

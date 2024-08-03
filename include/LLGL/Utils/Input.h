@@ -84,10 +84,10 @@ class LLGL_EXPORT Input : public Interface
         bool KeyDoubleClick(Key keyCode) const;
 
         //! Returns the local mouse position.
-        const Offset2D& GetMousePosition() const;
+        Offset2D GetMousePosition() const;
 
         //! Returns the global mouse motion.
-        const Offset2D& GetMouseMotion() const;
+        Offset2D GetMouseMotion() const;
 
         //! Returns the mouse wheel motion.
         int GetWheelMotion() const;

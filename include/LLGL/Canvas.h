@@ -13,6 +13,7 @@
 #include <LLGL/Surface.h>
 #include <LLGL/Types.h>
 #include <LLGL/Key.h>
+#include <LLGL/Deprecated.h>
 #include <memory>
 
 
@@ -64,8 +65,12 @@ class LLGL_EXPORT Canvas : public Surface
                 //! Sent when a tap gesture has been recognized only including the location within the canvas.
                 virtual void OnTapGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches);
 
-                //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
+                //! \deprecated Since 0.04b; Use the second version of OnPanGesture() with the EventAction parameter instead!
+                LLGL_DEPRECATED("This version of OnPanGesture() is deprecated since 0.04b; Use the second version with the EventAction parameter instead!")
                 virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
+
+                //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
+                virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
 
         };
 
@@ -151,11 +156,15 @@ class LLGL_EXPORT Canvas : public Surface
         */
         void PostTapGesture(const Offset2D& position, std::uint32_t numTouches);
 
+        //! \deprecated Since 0.04b; Use the second version of PostPanGesture() with the EventAction parameter instead!
+        LLGL_DEPRECATED("This version of PostPanGesture() is deprecated since 0.04b; Use the second version with the EventAction parameter instead!")
+        void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
+
         /**
         \brief Posts a pan gesture event to all event listeners.
         \see EventListener::OnPanGesture
         */
-        void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy);
+        void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
 
     protected:
 

@@ -14,6 +14,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <math.h>
 
 
 namespace LLGL
@@ -80,6 +81,12 @@ struct EventListenerSurfacePair
     Surface*            surface;
 };
 
+// Returns the input value with zeroing out the integral part.
+static float ZeroIntegralPart(float val)
+{
+    return (val < 0.0f ? val + ::floorf(-val) : val - ::floorf(val));
+}
+
 struct Input::Pimpl
 {
     KeyStateArray   keyPressed;
@@ -93,7 +100,7 @@ struct Input::Pimpl
     KeyTracker      keyUpTracker;
 
     Offset2D        mousePosition;
-    Offset2D        mouseMotion;
+    float           motionVector[2]         = { 0.0f, 0.0f };
 
     int             wheelMotion             = 0;
     unsigned        anyKeyCount             = 0;
@@ -109,7 +116,8 @@ struct Input::Pimpl
     {
         /* Reset all input states to make room for next recordings */
         wheelMotion = 0;
-        mouseMotion = { 0, 0 };
+        motionVector[0] = ZeroIntegralPart(motionVector[0]);
+        motionVector[1] = ZeroIntegralPart(motionVector[1]);
 
         keyDownTracker.Reset(keyDown);
         keyDownRepeatedTracker.Reset(keyDownRepeated);
@@ -118,6 +126,64 @@ struct Input::Pimpl
         ResetDoubleClickArray(doubleClick);
 
         chars.clear();
+    }
+
+    void OnKeyDown(Key keyCode)
+    {
+        const std::uint8_t idx = KEY_IDX(keyCode);
+
+        if (!keyPressed[idx])
+        {
+            /* Increase 'any'-key counter and store key state */
+            if (anyKeyCount++ == 0)
+            {
+                /* Store key state for 'any'-key */
+                keyDown[KEY_IDX(Key::Any)] = true;
+                keyDownTracker.Add(Key::Any);
+                keyPressed[KEY_IDX(Key::Any)] = true;
+            }
+
+            /* Store key hit state */
+            keyDown[idx] = true;
+            keyDownTracker.Add(keyCode);
+        }
+
+        /* Store key pressed state */
+        keyPressed[idx] = true;
+
+        /* Store repeated key hit state */
+        keyDownRepeated[idx] = true;
+        keyDownRepeatedTracker.Add(keyCode);
+    }
+
+    void OnKeyUp(Key keyCode)
+    {
+        const std::uint8_t idx = KEY_IDX(keyCode);
+
+        /* Store key released state */
+        keyUp[idx] = true;
+        keyUpTracker.Add(keyCode);
+
+        /* Store key released state for 'any'-key */
+        keyUp[KEY_IDX(Key::Any)] = true;
+        keyUpTracker.Add(Key::Any);
+
+        /* Increase 'any'-key counter and store key state */
+        if (anyKeyCount > 0)
+        {
+            anyKeyCount--;
+            if (anyKeyCount == 0)
+                keyPressed[KEY_IDX(Key::Any)] = false;
+        }
+
+        /* Reset key pressed state */
+        keyPressed[idx] = false;
+    }
+
+    void OnMotion(float dx, float dy)
+    {
+        motionVector[0] += dx;
+        motionVector[1] += dy;
     }
 };
 
@@ -140,54 +206,12 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnKeyDown(Window& /*sender*/, Key keyCode) override
         {
-            const std::uint8_t idx = KEY_IDX(keyCode);
-
-            if (!data_.keyPressed[idx])
-            {
-                /* Increase 'any'-key counter and store key state */
-                if (data_.anyKeyCount++ == 0)
-                {
-                    /* Store key state for 'any'-key */
-                    data_.keyDown[KEY_IDX(Key::Any)] = true;
-                    data_.keyDownTracker.Add(Key::Any);
-                    data_.keyPressed[KEY_IDX(Key::Any)] = true;
-                }
-
-                /* Store key hit state */
-                data_.keyDown[idx] = true;
-                data_.keyDownTracker.Add(keyCode);
-            }
-
-            /* Store key pressed state */
-            data_.keyPressed[idx] = true;
-
-            /* Store repeated key hit state */
-            data_.keyDownRepeated[idx] = true;
-            data_.keyDownRepeatedTracker.Add(keyCode);
+            data_.OnKeyDown(keyCode);
         }
 
         void OnKeyUp(Window& /*sender*/, Key keyCode) override
         {
-            const std::uint8_t idx = KEY_IDX(keyCode);
-
-            /* Store key released state */
-            data_.keyUp[idx] = true;
-            data_.keyUpTracker.Add(keyCode);
-
-            /* Store key released state for 'any'-key */
-            data_.keyUp[KEY_IDX(Key::Any)] = true;
-            data_.keyUpTracker.Add(Key::Any);
-
-            /* Increase 'any'-key counter and store key state */
-            if (data_.anyKeyCount > 0)
-            {
-                data_.anyKeyCount--;
-                if (data_.anyKeyCount == 0)
-                    data_.keyPressed[KEY_IDX(Key::Any)] = false;
-            }
-
-            /* Reset key pressed state */
-            data_.keyPressed[idx] = false;
+            data_.OnKeyUp(keyCode);
         }
 
         void OnDoubleClick(Window& /*sender*/, Key keyCode) override
@@ -225,8 +249,7 @@ class Input::WindowEventListener final : public Window::EventListener
 
         void OnGlobalMotion(Window& /*sender*/, const Offset2D& motion) override
         {
-            data_.mouseMotion.x += motion.x;
-            data_.mouseMotion.y += motion.y;
+            data_.OnMotion(static_cast<float>(motion.x), static_cast<float>(motion.y));
         }
 
         void OnLostFocus(Window& /*sender*/) override
@@ -263,11 +286,23 @@ class Input::CanvasEventListener final : public Canvas::EventListener
             //TODO
         }
 
-        void OnPanGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t /*numTouches*/, float dx, float dy) override
+        void OnPanGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t /*numTouches*/, float dx, float dy, EventAction action) override
         {
             //TODO: Use separate field
-            data_.mouseMotion.x = static_cast<std::int32_t>(dx * 0.1f);
-            data_.mouseMotion.y = static_cast<std::int32_t>(dy * 0.1f);
+            switch (action)
+            {
+                case EventAction::Began:
+                    data_.OnKeyDown(Key::LButton);
+                    break;
+
+                case EventAction::Changed:
+                    data_.OnMotion(dx, dy);
+                    break;
+
+                case EventAction::Ended:
+                    data_.OnKeyUp(Key::LButton);
+                    break;
+            }
         }
 
     private:
@@ -411,14 +446,18 @@ bool Input::KeyDoubleClick(Key keyCode) const
     return false;
 }
 
-const Offset2D& Input::GetMousePosition() const
+Offset2D Input::GetMousePosition() const
 {
     return pimpl_->mousePosition;
 }
 
-const Offset2D& Input::GetMouseMotion() const
+Offset2D Input::GetMouseMotion() const
 {
-    return pimpl_->mouseMotion;
+    return Offset2D
+    {
+        static_cast<std::int32_t>(pimpl_->motionVector[0]),
+        static_cast<std::int32_t>(pimpl_->motionVector[1])
+    };
 }
 
 int Input::GetWheelMotion() const
