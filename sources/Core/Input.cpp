@@ -286,13 +286,14 @@ class Input::CanvasEventListener final : public Canvas::EventListener
             //TODO
         }
 
-        void OnPanGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t /*numTouches*/, float dx, float dy, EventAction action) override
+        void OnPanGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t numTouches, float dx, float dy, EventAction action) override
         {
-            //TODO: Use separate field
+            const bool interpretAsLButton = (numTouches == 1);
+            const Key keyCode = (interpretAsLButton ? Key::LButton : Key::RButton);
             switch (action)
             {
                 case EventAction::Began:
-                    data_.OnKeyDown(Key::LButton);
+                    data_.OnKeyDown(keyCode);
                     break;
 
                 case EventAction::Changed:
@@ -300,7 +301,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
                     break;
 
                 case EventAction::Ended:
-                    data_.OnKeyUp(Key::LButton);
+                    data_.OnKeyUp(keyCode);
                     break;
             }
         }

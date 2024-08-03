@@ -109,8 +109,8 @@ bool AndroidGLContext::SelectConfig(const GLPixelFormat& pixelFormat)
             EGL_GREEN_SIZE,     8,
             EGL_BLUE_SIZE,      8,
             EGL_ALPHA_SIZE,     8,
-            EGL_DEPTH_SIZE,     pixelFormat.depthBits,
-            EGL_STENCIL_SIZE,   pixelFormat.stencilBits,
+            EGL_DEPTH_SIZE,     24,//pixelFormat.depthBits, //TODO: currently doesn't work when default context is created and these bits are zero
+            EGL_STENCIL_SIZE,   8,//pixelFormat.stencilBits,
             EGL_SAMPLE_BUFFERS, 1,
             EGL_SAMPLES,        samples_,
             EGL_NONE

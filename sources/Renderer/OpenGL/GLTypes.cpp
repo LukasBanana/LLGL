@@ -18,17 +18,11 @@ namespace GLTypes
 
 /* ----- Internal functions ----- */
 
-[[noreturn]]
-static void MapFailed(const char* typeName)
-{
-    LLGL_TRAP("failed to map <LLGL::%s> to OpenGL parameter", typeName);
-}
+#define LLGL_TRAP_GL_MAP(TYPE, VALUE) \
+    LLGL_TRAP("failed to map LLGL::%s(%d) to OpenGL parameter", #TYPE, static_cast<int>(VALUE))
 
-[[noreturn]]
-static void UnmapFailed(const char* typeName)
-{
-    LLGL_TRAP("failed to unmap <LLGL::%s> from OpenGL parameter", typeName);
-}
+#define LLGL_TRAP_GL_UNMAP(TYPE, VALUE) \
+    LLGL_TRAP("failed to unmap LLGL::%s from OpenGL parameter (0x%04X)", #TYPE, static_cast<int>(VALUE))
 
 
 /* ----- MapOrZero functions ----- */
@@ -186,7 +180,7 @@ GLenum Map(const CPUAccess cpuAccess)
         case CPUAccess::ReadWrite:      return GL_READ_WRITE;
     }
     #endif
-    MapFailed("CPUAccess");
+    LLGL_TRAP_GL_MAP(CPUAccess, cpuAccess);
 }
 
 GLenum Map(const DataType dataType)
@@ -208,7 +202,7 @@ GLenum Map(const DataType dataType)
         case DataType::Float64:     break;
         #endif
     }
-    MapFailed("DataType");
+    LLGL_TRAP_GL_MAP(DataType, dataType);
 }
 
 GLenum Map(const TextureType textureType)
@@ -236,7 +230,7 @@ GLenum Map(const TextureType textureType)
         default:                            break;
     }
     #endif
-    MapFailed("TextureType");
+    LLGL_TRAP_GL_MAP(TextureType, textureType);
 }
 
 GLenum Map(const TextureSwizzle textureSwizzle)
@@ -250,14 +244,14 @@ GLenum Map(const TextureSwizzle textureSwizzle)
         case TextureSwizzle::Blue:  return GL_BLUE;
         case TextureSwizzle::Alpha: return GL_ALPHA;
     }
-    MapFailed("TextureSwizzle");
+    LLGL_TRAP_GL_MAP(TextureSwizzle, textureSwizzle);
 }
 
 GLenum Map(const Format textureFormat)
 {
     if (auto result = MapOrZero(textureFormat))
         return result;
-    MapFailed("Format");
+    LLGL_TRAP_GL_MAP(Format, textureFormat);
 }
 
 static GLenum MapImageFormat(const ImageFormat imageFormat)
@@ -287,7 +281,7 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         #endif
         default:                            break;
     }
-    MapFailed("ImageFormat");
+    LLGL_TRAP_GL_MAP(ImageFormat, imageFormat);
 }
 
 static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
@@ -317,7 +311,7 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
         #endif
         default:                            break;
     }
-    MapFailed("ImageFormat");
+    LLGL_TRAP_GL_MAP(ImageFormat, imageFormat);
 }
 
 GLenum Map(const ImageFormat imageFormat)
@@ -346,7 +340,7 @@ GLenum Map(const CompareOp compareOp)
         case CompareOp::GreaterEqual:   return GL_GEQUAL;
         case CompareOp::AlwaysPass:     return GL_ALWAYS;
     }
-    MapFailed("CompareOp");
+    LLGL_TRAP_GL_MAP(CompareOp, compareOp);
 }
 
 GLenum Map(const StencilOp stencilOp)
@@ -362,7 +356,7 @@ GLenum Map(const StencilOp stencilOp)
         case StencilOp::IncWrap:    return GL_INCR_WRAP;
         case StencilOp::DecWrap:    return GL_DECR_WRAP;
     }
-    MapFailed("StencilOp");
+    LLGL_TRAP_GL_MAP(StencilOp, stencilOp);
 }
 
 GLenum Map(const BlendOp blendOp)
@@ -391,7 +385,7 @@ GLenum Map(const BlendOp blendOp)
         default:                        break;
         #endif
     }
-    MapFailed("BlendOp");
+    LLGL_TRAP_GL_MAP(BlendOp, blendOp);
 }
 
 GLenum Map(const BlendArithmetic blendArithmetic)
@@ -404,7 +398,7 @@ GLenum Map(const BlendArithmetic blendArithmetic)
         case BlendArithmetic::Min:          return GL_MIN;
         case BlendArithmetic::Max:          return GL_MAX;
     }
-    MapFailed("BlendArithmetic");
+    LLGL_TRAP_GL_MAP(BlendArithmetic, blendArithmetic);
 }
 
 GLenum Map(const PolygonMode polygonMode)
@@ -417,7 +411,7 @@ GLenum Map(const PolygonMode polygonMode)
         case PolygonMode::Points:       return GL_POINT;
     }
     #endif
-    MapFailed("PolygonMode");
+    LLGL_TRAP_GL_MAP(PolygonMode, polygonMode);
 }
 
 GLenum Map(const CullMode cullMode)
@@ -428,24 +422,25 @@ GLenum Map(const CullMode cullMode)
         case CullMode::Front:       return GL_FRONT;
         case CullMode::Back:        return GL_BACK;
     }
-    MapFailed("CullMode");
+    LLGL_TRAP_GL_MAP(CullMode, cullMode);
 }
 
 GLenum Map(const SamplerAddressMode addressMode)
 {
     switch (addressMode)
     {
-        case SamplerAddressMode::Repeat:       return GL_REPEAT;
-        case SamplerAddressMode::Mirror:       return GL_MIRRORED_REPEAT;
-        case SamplerAddressMode::Clamp:        return GL_CLAMP_TO_EDGE;
-        #ifdef LLGL_OPENGL
-        case SamplerAddressMode::Border:       return GL_CLAMP_TO_BORDER;
-        case SamplerAddressMode::MirrorOnce:   return GL_MIRROR_CLAMP_TO_EDGE;
-        #else
-        default:                        break;
+        case SamplerAddressMode::Repeat:        return GL_REPEAT;
+        case SamplerAddressMode::Mirror:        return GL_MIRRORED_REPEAT;
+        case SamplerAddressMode::Clamp:         return GL_CLAMP_TO_EDGE;
+        #ifdef GL_CLAMP_TO_BORDER
+        case SamplerAddressMode::Border:        return GL_CLAMP_TO_BORDER;
         #endif
+        #ifdef GL_MIRROR_CLAMP_TO_EDGE
+        case SamplerAddressMode::MirrorOnce:    return GL_MIRROR_CLAMP_TO_EDGE;
+        #endif
+        default:                                break;
     }
-    MapFailed("SamplerAddressMode");
+    LLGL_TRAP_GL_MAP(SamplerAddressMode, addressMode);
 }
 
 GLenum Map(const SamplerFilter textureFilter)
@@ -455,7 +450,7 @@ GLenum Map(const SamplerFilter textureFilter)
         case SamplerFilter::Nearest:    return GL_NEAREST;
         case SamplerFilter::Linear:     return GL_LINEAR;
     }
-    MapFailed("SamplerFilter");
+    LLGL_TRAP_GL_MAP(SamplerFilter, textureFilter);
 }
 
 GLenum Map(const SamplerFilter textureMinFilter, const SamplerFilter textureMipMapFilter)
@@ -478,7 +473,10 @@ GLenum Map(const SamplerFilter textureMinFilter, const SamplerFilter textureMipM
             }
             break;
     }
-    MapFailed("Min/MipMap SamplerFilter");
+    LLGL_TRAP(
+        "failed to map LLGL::SamplerFilter for Min(%d)/MipMap(%d) to OpenGL parameter",
+        static_cast<int>(textureMinFilter), static_cast<int>(textureMipMapFilter)
+    );
 }
 
 GLenum Map(const ShaderType shaderType)
@@ -499,7 +497,7 @@ GLenum Map(const ShaderType shaderType)
         #endif
         default:                            break;
     }
-    MapFailed("ShaderType");
+    LLGL_TRAP_GL_MAP(ShaderType, shaderType);
 }
 
 GLenum Map(const RenderConditionMode renderConditionMode)
@@ -521,7 +519,7 @@ GLenum Map(const RenderConditionMode renderConditionMode)
         #endif
     }
     #endif
-    MapFailed("RenderConditionMode");
+    LLGL_TRAP_GL_MAP(RenderConditionMode, renderConditionMode);
 }
 
 GLenum Map(const LogicOp logicOp)
@@ -548,7 +546,7 @@ GLenum Map(const LogicOp logicOp)
         case LogicOp::Equiv:        return GL_EQUIV;
     }
     #endif
-    MapFailed("LogicOp");
+    LLGL_TRAP_GL_MAP(LogicOp, logicOp);
 }
 
 GLenum Map(const StencilFace stencilFace)
@@ -559,7 +557,7 @@ GLenum Map(const StencilFace stencilFace)
         case StencilFace::Front:        return GL_FRONT;
         case StencilFace::Back:         return GL_BACK;
     }
-    MapFailed("StencilFace");
+    LLGL_TRAP_GL_MAP(StencilFace, stencilFace);
 }
 
 GLenum ToDrawMode(const PrimitiveTopology primitiveTopology)
@@ -586,7 +584,7 @@ GLenum ToDrawMode(const PrimitiveTopology primitiveTopology)
             #endif
             break;
     }
-    MapFailed("PrimitiveTopology");
+    LLGL_TRAP_GL_MAP(PrimitiveTopology, primitiveTopology);
 }
 
 GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
@@ -610,7 +608,7 @@ GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
                 return 0;
             break;
     }
-    MapFailed("PrimitiveTopology");
+    LLGL_TRAP_GL_MAP(PrimitiveTopology, primitiveTopology);
 }
 
 
@@ -977,7 +975,7 @@ DataType UnmapDataType(const GLenum type)
         case GL_DOUBLE:         return DataType::Float64;
         #endif
     }
-    UnmapFailed("DataType");
+    LLGL_TRAP_GL_UNMAP(DataType, type);
 }
 
 bool IsIntegerTypedFormat(GLenum internalFormat)

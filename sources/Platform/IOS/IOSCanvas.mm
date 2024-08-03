@@ -92,13 +92,13 @@ static LLGL::Offset2D MapUIGestureLocation(UIGestureRecognizer* recognizer, UIVi
     switch ([recognizer state])
     {
         case UIGestureRecognizerStateBegan:
-            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, EventAction::Began);
+            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Began);
             break;
         case UIGestureRecognizerStateChanged:
-            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, EventAction::Changed);
+            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Changed);
             break;
         case UIGestureRecognizerStateEnded:
-            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, EventAction::End);
+            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Ended);
             break;
         default:
             // don't forward states that are unrecognized by LLGL

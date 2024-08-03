@@ -9,8 +9,6 @@
 #include "AndroidGLCore.h"
 #include "../../../../Core/Exception.h"
 
-#include <LLGL/Log.h>
-
 
 namespace LLGL
 {
