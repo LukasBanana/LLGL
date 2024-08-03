@@ -777,7 +777,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
-    message(STATUS "Build Renderer: OpenGLES 3")
+    message(STATUS "Build Renderer: ${LLGL_GL_ENABLE_OPENGLES}")
 endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN)

@@ -25,11 +25,9 @@ GLContextManager::GLContextManager(
     const void*                         customNativeHandle,
     std::size_t                         customNativeHandleSize)
 :
+    profile_            { profile            },
     newContextCallback_ { newContextCallback }
 {
-    profile_.contextProfile = profile.contextProfile;
-    profile_.majorVersion   = profile.majorVersion;
-    profile_.minorVersion   = profile.minorVersion;
     if (customNativeHandle != nullptr && customNativeHandleSize > 0)
     {
         customNativeHandle_.resize(customNativeHandleSize, UninitializeTag{});

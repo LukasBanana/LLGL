@@ -10,6 +10,7 @@
 
 
 #include "../GLSwapChainContext.h"
+#include "AndroidSharedEGLSurface.h"
 #include "../../OpenGL.h"
 #include <EGL/egl.h>
 
@@ -27,7 +28,6 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
     public:
 
         AndroidGLSwapChainContext(AndroidGLContext& context, Surface& surface);
-        ~AndroidGLSwapChainContext();
 
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
@@ -38,9 +38,9 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
 
     private:
 
-        EGLDisplay display_ = nullptr;
-        EGLContext context_ = nullptr;
-        EGLSurface surface_ = nullptr;
+        EGLDisplay                  display_ = nullptr;
+        EGLContext                  context_ = nullptr;
+        AndroidSharedEGLSurfacePtr  surface_;
 
 };
 

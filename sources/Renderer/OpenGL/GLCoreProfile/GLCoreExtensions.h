@@ -17,7 +17,6 @@ namespace LLGL
 {
 
 
-
 #define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
     extern PFNTYPE NAME
 

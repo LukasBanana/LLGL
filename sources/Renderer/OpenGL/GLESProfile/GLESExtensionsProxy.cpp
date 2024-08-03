@@ -16,12 +16,16 @@ namespace LLGL
 {
 
 
-#define LLGL_DEF_GLES_PROXY_PROCS
+#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS)     \
+    GL_APICALL RTYPE GL_APIENTRY Proxy_##NAME ARGS  \
+    {                                               \
+        ErrUnsupportedGLProc(#NAME);                \
+    }
 
 // Include inline header for proxy function definitions
 #include "GLESExtensionsDecl.inl"
 
-#undef LLGL_DEF_GLES_PROXY_PROCS
+#undef DECL_GLPROC
 
 
 } // /namespace LLGL

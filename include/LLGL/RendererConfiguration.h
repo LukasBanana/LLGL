@@ -10,6 +10,8 @@
 
 
 #include <LLGL/Container/ArrayView.h>
+#include <LLGL/Deprecated.h>
+#include <LLGL/Platform/Platform.h>
 #include <cstdint>
 
 
@@ -36,6 +38,16 @@ enum class OpenGLContextProfile
     \note Only supported on: Android and iOS.
     */
     ESProfile,
+
+    /**
+    \brief Default GL profile.
+    \remarks This is equivalent to CoreProfile for OpenGL and ESProfile for OpenGLES.
+    */
+    #if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS)
+    DefaultProfile = ESProfile,
+    #else
+    DefaultProfile = CoreProfile,
+    #endif
 };
 
 
@@ -100,13 +112,16 @@ struct RendererConfigurationVulkan
 };
 
 /**
-\brief OpenGL profile descriptor structure.
+\brief OpenGL/OpenGLES profile descriptor structure.
 \note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
 */
 struct RendererConfigurationOpenGL
 {
-    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CoreProfile.
-    OpenGLContextProfile    contextProfile              = OpenGLContextProfile::CoreProfile;
+    /**
+    \brief Specifies the requested OpenGL context profile. By default OpenGLContextProfile::DefaultProfile.
+    \remarks The default value is either equivalent to OpenGLContextProfile::CoreProfile for OpenGL or OpenGLContextProfile::ESProfile for OpenGLES.
+    */
+    OpenGLContextProfile    contextProfile              = OpenGLContextProfile::DefaultProfile;
 
     /**
     \brief Specifies the requested OpenGL context major version. By default 0.
@@ -130,18 +145,9 @@ struct RendererConfigurationOpenGL
     bool                    suppressFailedExtensions    = false;
 };
 
-/**
-\brief OpenGL ES 3 profile descriptor structure.
-\todo Replace with RendererConfigurationOpenGL and make use of OpenGLContextProfile::ESProfile.
-*/
-struct RendererConfigurationOpenGLES3
-{
-    //! Specifies the requested OpenGL ES context major version. Must be 3. By default 3.
-    int majorVersion = 3;
-
-    //! Specifies the requested OpenGL ES context minor version. Must be 0, 1, or 2. By default 0.
-    int minorVersion = 0;
-};
+//! \deprecated Since 0.04b; Use RendererConfigurationOpenGL instead!
+LLGL_DEPRECATED("LLGL::RendererConfigurationOpenGLES3 is deprecated since 0.04b; Use LLGL::RendererConfigurationOpenGL instead!", "RendererConfigurationOpenGL")
+typedef RendererConfigurationOpenGL RendererConfigurationOpenGLES3;
 
 
 } // /namespace LLGL

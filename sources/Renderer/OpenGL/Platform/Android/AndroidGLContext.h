@@ -10,6 +10,7 @@
 
 
 #include "../GLContext.h"
+#include "AndroidSharedEGLSurface.h"
 #include "../../OpenGL.h"
 #include <EGL/egl.h>
 
@@ -57,6 +58,15 @@ class AndroidGLContext : public GLContext
             return config_;
         }
 
+        /*
+        Returns the shared EGLSurface object. This is primarily associated with AndroidGLSwapChainContext,
+        but we need a surface for the initial EGLContext when it's made current.
+        */
+        inline const AndroidSharedEGLSurfacePtr& GetSharedEGLSurface() const
+        {
+            return surface_;
+        }
+
     private:
 
         bool SetSwapInterval(int interval) override;
@@ -76,11 +86,12 @@ class AndroidGLContext : public GLContext
 
     private:
 
-        EGLDisplay  display_            = nullptr;
-        EGLContext  context_            = nullptr;
-        EGLConfig   config_             = nullptr;
-        int         samples_            = 1;
-        bool        hasExternalContext_ = false;
+        EGLDisplay                  display_            = nullptr;
+        EGLContext                  context_            = nullptr;
+        EGLConfig                   config_             = nullptr;
+        AndroidSharedEGLSurfacePtr  surface_;
+        int                         samples_            = 1;
+        bool                        hasExternalContext_ = false;
 
 };
 

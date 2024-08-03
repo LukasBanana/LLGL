@@ -12,6 +12,7 @@
 #include "../../../RenderSystemUtils.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Assertion.h"
+#include "../../../../Platform/Android/AndroidApp.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Utils/ForRange.h>
@@ -213,12 +214,27 @@ void AndroidGLContext::CreateContext(
     if (context_ == EGL_NO_CONTEXT)
         LLGL_TRAP("eglCreateContext failed (%s)", EGLErrorToString());
 
+    if (sharedContext != nullptr)
+    {
+        /* Share EGLSurface with shared context */
+        surface_ = sharedContext->GetSharedEGLSurface();
+    }
+    else
+    {
+        /* Create initial surface; This will be shared with subsequently created swap-chains (i.e. AndroidGLSwapChainContext) */
+        android_app* appState = AndroidApp::Get().GetState();
+        LLGL_ASSERT_PTR(appState);
+        surface_ = std::make_shared<AndroidSharedEGLSurface>(display_, config_, appState->window);
+    }
+
     /* Make new context current to enable further initialization with GLES functions */
-    eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, context_);
+    EGLSurface nativeSurface = surface_->GetEGLSurface();
+    eglMakeCurrent(display_, nativeSurface, nativeSurface, context_);
 }
 
 void AndroidGLContext::DeleteContext()
 {
+    surface_.reset();
     eglDestroyContext(display_, context_);
 }
 

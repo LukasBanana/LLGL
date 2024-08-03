@@ -6,18 +6,20 @@
  */
 
 #include "GLESExtensions.h"
+#include "GLESExtensionsProxy.h"
 
 
 namespace LLGL
 {
 
 
-#define LLGL_DEF_GLES_EXT_PROCS
+#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
+    PFNTYPE NAME = Proxy_##NAME
 
 // Include inline header for object definitions
 #include "GLESExtensionsDecl.inl"
 
-#undef LLGL_DEF_GLES_EXT_PROCS
+#undef DECL_GLPROC
 
 
 } // /namespace LLGL

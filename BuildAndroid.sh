@@ -16,6 +16,7 @@ GENERATOR="CodeBlocks - Unix Makefiles"
 ANDROID_ABI=x86_64
 ANDROID_API_LEVEL=21
 SUPPORTED_ANDROID_ABIS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+GLES_VER="OpenGLES 3.0"
 BUILD_APPS=0
 
 print_help()
@@ -32,6 +33,7 @@ print_help()
     echo "  --abi=ABI ................. Set Android ABI (default is x86_64; accepts 'all')"
     echo "  --api-level=VERSION ....... Set Android API level (default is 21)"
     echo "  --apps .................... Generate Android Studio projects to build example apps (implies '--abi=all -s')"
+    echo "  --gles=VER ................ Enables the maximum OpenGLES version: 300 (default), 310, or 320"
     echo "  --vulkan .................. Include Vulkan renderer"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
@@ -64,6 +66,14 @@ for ARG in "$@"; do
         ANDROID_ABI="${ARG:6}"
     elif [[ "$ARG" == --api-level=* ]]; then
         ANDROID_API_LEVEL=${ARG:12}
+    elif [[ "$ARG" == --gles=* ]]; then
+        GLES_VER_NO=${ARG:7}
+        case $GLES_VER_NO in
+            320) GLES_VER="OpenGLES 3.2" ;;
+            310) GLES_VER="OpenGLES 3.1" ;;
+            300) GLES_VER="OpenGLES 3.0" ;;
+            *) echo "Unknown GLES version: $GLES_VER_NO; Must be 320, 310, or 300"; exit 1 ;;
+        esac
     elif [ "$ARG" = "--vulkan" ]; then
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--no-examples" ]; then
@@ -154,6 +164,7 @@ BASE_OPTIONS=(
     -DANDROID_STL=$ANDROID_CXX_LIB
     -DANDROID_CPP_FEATURES="rtti exceptions"
     -DLLGL_BUILD_RENDERER_OPENGLES3=ON
+    -DLLGL_GL_ENABLE_OPENGLES=$GLES_VER
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
@@ -272,11 +283,19 @@ generate_app_project()
     fi
 
     # Find all shaders and copy them into app folder
-    for FILE in $PROJECT_SOURCE_DIR/*.vert $PROJECT_SOURCE_DIR/*.frag $PROJECT_SOURCE_DIR/*.spv; do
-        if [ $VERBOSE -eq 1 ]; then
-            echo "Copy shader: $(basename $FILE)"
+    for FILE in $PROJECT_SOURCE_DIR/*.vert \
+                $PROJECT_SOURCE_DIR/*.geom \
+                $PROJECT_SOURCE_DIR/*.tesc \
+                $PROJECT_SOURCE_DIR/*.tese \
+                $PROJECT_SOURCE_DIR/*.frag \
+                $PROJECT_SOURCE_DIR/*.comp \
+                $PROJECT_SOURCE_DIR/*.spv; do
+        if [ -f "$FILE" ]; then
+            if [ $VERBOSE -eq 1 ]; then
+                echo "Copy shader: $(basename $FILE)"
+            fi
+            cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
         fi
-        cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
     done
 }
 

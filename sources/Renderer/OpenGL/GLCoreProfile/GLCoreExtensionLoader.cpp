@@ -892,7 +892,7 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
     /* Filter standard GL extensions */
     if (isCoreProfile)
     {
-        #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
+        #if GL_VERSION_3_0 && !GL_GLEXT_PROTOTYPES
 
         #ifndef __APPLE__
         if (glGetStringi || LoadGLProc(glGetStringi, "glGetStringi"))
@@ -905,7 +905,7 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
             for_range(i, numExtensions)
             {
                 /* Get current extension string */
-                if (auto extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i)))
+                if (const char* extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i)))
                     extensions[extString] = false;
             }
         }
@@ -915,16 +915,16 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
     else
     {
         /* Get complete extension string */
-        if (auto extString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)))
+        if (const char* extString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)))
             ExtractExtensionsFromString(extensions, extString);
     }
 
-    #if defined(_WIN32) && defined(WGL_ARB_extensions_string)
+    #if defined(_WIN32) && WGL_ARB_extensions_string
 
     /* Filter Win32 related extensions */
     if (wglGetExtensionsStringARB != nullptr || LoadGLProc(wglGetExtensionsStringARB, "wglGetExtensionsStringARB"))
     {
-        if (auto extString = wglGetExtensionsStringARB(::wglGetCurrentDC()))
+        if (const char* extString = wglGetExtensionsStringARB(::wglGetCurrentDC()))
             ExtractExtensionsFromString(extensions, extString);
     }
 

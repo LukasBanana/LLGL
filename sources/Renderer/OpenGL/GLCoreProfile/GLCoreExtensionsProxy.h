@@ -5,6 +5,10 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#ifndef LLGL_GL_EXTENSIONS_PROXY_H
+#define LLGL_GL_EXTENSIONS_PROXY_H
+
+
 #include "../OpenGL.h"
 
 
@@ -22,6 +26,9 @@ namespace LLGL
 
 
 } // /namespace LLGL
+
+
+#endif
 
 
 

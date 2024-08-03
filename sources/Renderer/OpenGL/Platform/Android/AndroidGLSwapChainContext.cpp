@@ -42,23 +42,26 @@ AndroidGLSwapChainContext::AndroidGLSwapChainContext(AndroidGLContext& context, 
     context_           { context.GetEGLContext() }
 {
     /* Get native surface handle */
-    NativeHandle nativeHandle;
+    NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
-    /* Create drawable surface */
-    surface_ = eglCreateWindowSurface(display_, context.GetEGLConfig(), nativeHandle.window, nullptr);
-    if (!surface_)
-        LLGL_TRAP("eglCreateWindowSurface failed (%s)", EGLErrorToString());
-}
-
-AndroidGLSwapChainContext::~AndroidGLSwapChainContext()
-{
-    eglDestroySurface(display_, surface_);
+    /* Get or create drawable surface */
+    if (context.GetSharedEGLSurface() && nativeHandle.window == context.GetSharedEGLSurface()->GetNativeWindow())
+    {
+        /* Share surface with main context */
+        surface_ = context.GetSharedEGLSurface();
+    }
+    else
+    {
+        //TODO: can this case ever happen on Android?
+        /* Create custom surface if different native window is specified */
+        surface_ = std::make_shared<AndroidSharedEGLSurface>(display_, context.GetEGLConfig(), nativeHandle.window);
+    }
 }
 
 bool AndroidGLSwapChainContext::SwapBuffers()
 {
-    eglSwapBuffers(display_, surface_);
+    eglSwapBuffers(display_, surface_->GetEGLSurface());
     return true;
 }
 
@@ -70,7 +73,10 @@ void AndroidGLSwapChainContext::Resize(const Extent2D& resolution)
 bool AndroidGLSwapChainContext::MakeCurrentEGLContext(AndroidGLSwapChainContext* context)
 {
     if (context)
-        return eglMakeCurrent(context->display_, context->surface_, context->surface_, context->context_);
+    {
+        EGLSurface nativeSurface = context->surface_->GetEGLSurface();
+        return eglMakeCurrent(context->display_, nativeSurface, nativeSurface, context->context_);
+    }
     else
         return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

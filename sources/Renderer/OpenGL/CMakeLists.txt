@@ -12,6 +12,11 @@ project(LLGL_OpenGL)
 
 # === Options ===
 
+if(LLGL_BUILD_RENDERER_OPENGLES3)
+    set(LLGL_GL_ENABLE_OPENGLES "OpenGLES 3.0" CACHE STRING "Enable maximum OpenGLES version to include (requires <GLES3/gl3.h>, <GLES3/gl31.h>, or <GLES3/gl32.h> header files")
+    set_property(CACHE LLGL_GL_ENABLE_OPENGLES PROPERTY STRINGS "OpenGLES 3.0" "OpenGLES 3.1" "OpenGLES 3.2")
+endif()
+
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_DSA_EXT "Enable OpenGL direct state access (DSA) extension if available" ON)
 option(LLGL_GL_ENABLE_OPENGL2X "Enable support for OpenGL 2.x compatibility profile" OFF)
@@ -27,6 +32,19 @@ endif()
 
 if(LLGL_GL_ENABLE_OPENGL2X)
     ADD_DEFINE(LLGL_GL_ENABLE_OPENGL2X)
+endif()
+
+if(LLGL_BUILD_RENDERER_OPENGLES3)
+    if(${LLGL_GL_ENABLE_OPENGLES} STREQUAL "OpenGLES 3.2")
+        ADD_DEFINE(LLGL_GL_ENABLE_OPENGLES=320)
+    elseif(${LLGL_GL_ENABLE_OPENGLES} STREQUAL "OpenGLES 3.1")
+        ADD_DEFINE(LLGL_GL_ENABLE_OPENGLES=310)
+    elseif(${LLGL_GL_ENABLE_OPENGLES} STREQUAL "OpenGLES 3.0")
+        ADD_DEFINE(LLGL_GL_ENABLE_OPENGLES=300)
+    else()
+        message(SEND_ERROR "Unknown OpenGLES version: ${LLGL_GL_ENABLE_OPENGLES}")
+        message("Accepted values for LLGL_GL_ENABLE_OPENGLES are: 'OpenGLES 3.0', 'OpenGLES 3.1', or 'OpenGLES 3.2'")
+    endif()
 endif()
 
 

@@ -11,9 +11,7 @@
 #include "GLESExtensionsProxy.h"
 #include "OpenGLES.h"
 #include "../GLCore.h"
-#if defined(LLGL_OS_IOS)
-//#   import <OpenGLES/EAGL.h>
-#else
+#if defined(LLGL_OS_ANDROID)
 #   include <EGL/egl.h>
 #endif
 #include <LLGL/Utils/ForRange.h>
@@ -31,51 +29,164 @@ using GLESExtensionMap = std::map<std::string, bool>;
 
 /* --- Internal functions --- */
 
-#ifndef LLGL_OS_IOS
+#ifdef LLGL_OS_ANDROID
 
 template <typename T>
 bool LoadGLProc(T& procAddr, const char* procName)
 {
     /* Load OpenGLES procedure address with EGL */
-    procAddr = eglGetProcAddress(procName);
+    procAddr = reinterpret_cast<T>(eglGetProcAddress(procName));
     return (procAddr != nullptr);
 }
 
 
-using LoadGLExtensionProc = std::function<bool(const char* extName, bool abortOnFailure, bool usePlaceholder)>;
+using LoadGLExtensionProc = std::function<bool(const char* versionStr, bool abortOnFailure)>;
 
 #define DECL_LOADGLEXT_PROC(EXTNAME) \
-    Load_ ## EXTNAME(const char* extName, bool abortOnFailure, bool usePlaceholder)
+    Load_GL_ ## EXTNAME(const char* versionStr, bool abortOnFailure)
 
 #define LOAD_GLPROC_SIMPLE(NAME) \
     LoadGLProc(NAME, #NAME)
 
 #define LOAD_GLPROC(NAME)                                                               \
-    if (usePlaceholder)                                                                 \
-    {                                                                                   \
-        NAME = Proxy_##NAME;                                                            \
-    }                                                                                   \
-    else if (!LoadGLProc(NAME, #NAME))                                                  \
+    if (!LoadGLProc(NAME, #NAME))                                                       \
     {                                                                                   \
         if (abortOnFailure)                                                             \
-            LLGL_TRAP("failed to load OpenGLES procedure: %s [%s]", #NAME, extName);    \
+            LLGL_TRAP("failed to load OpenGLES procedure: %s [%s]", #NAME, versionStr); \
         return false;                                                                   \
     }
 
 /* --- Common GLES extensions --- */
 
-/*static bool DECL_LOADGLEXT_PROC(GL_OES_tessellation_shader)
+#if GL_ES_VERSION_3_1
+
+static bool DECL_LOADGLEXT_PROC(GLES_3_1)
 {
-    LOAD_GLPROC( glPatchParameteriOES );
+    LOAD_GLPROC( glDispatchCompute );
+    LOAD_GLPROC( glDispatchComputeIndirect );
+    LOAD_GLPROC( glDrawArraysIndirect );
+    LOAD_GLPROC( glDrawElementsIndirect );
+    LOAD_GLPROC( glFramebufferParameteri );
+    LOAD_GLPROC( glGetFramebufferParameteriv );
+    LOAD_GLPROC( glGetProgramInterfaceiv );
+    LOAD_GLPROC( glGetProgramResourceIndex );
+    LOAD_GLPROC( glGetProgramResourceName );
+    LOAD_GLPROC( glGetProgramResourceiv );
+    LOAD_GLPROC( glGetProgramResourceLocation );
+    LOAD_GLPROC( glUseProgramStages );
+    LOAD_GLPROC( glActiveShaderProgram );
+    LOAD_GLPROC( glCreateShaderProgramv );
+    LOAD_GLPROC( glBindProgramPipeline );
+    LOAD_GLPROC( glDeleteProgramPipelines );
+    LOAD_GLPROC( glGenProgramPipelines );
+    LOAD_GLPROC( glIsProgramPipeline );
+    LOAD_GLPROC( glGetProgramPipelineiv );
+    LOAD_GLPROC( glProgramUniform1i );
+    LOAD_GLPROC( glProgramUniform2i );
+    LOAD_GLPROC( glProgramUniform3i );
+    LOAD_GLPROC( glProgramUniform4i );
+    LOAD_GLPROC( glProgramUniform1ui );
+    LOAD_GLPROC( glProgramUniform2ui );
+    LOAD_GLPROC( glProgramUniform3ui );
+    LOAD_GLPROC( glProgramUniform4ui );
+    LOAD_GLPROC( glProgramUniform1f );
+    LOAD_GLPROC( glProgramUniform2f );
+    LOAD_GLPROC( glProgramUniform3f );
+    LOAD_GLPROC( glProgramUniform4f );
+    LOAD_GLPROC( glProgramUniform1iv );
+    LOAD_GLPROC( glProgramUniform2iv );
+    LOAD_GLPROC( glProgramUniform3iv );
+    LOAD_GLPROC( glProgramUniform4iv );
+    LOAD_GLPROC( glProgramUniform1uiv );
+    LOAD_GLPROC( glProgramUniform2uiv );
+    LOAD_GLPROC( glProgramUniform3uiv );
+    LOAD_GLPROC( glProgramUniform4uiv );
+    LOAD_GLPROC( glProgramUniform1fv );
+    LOAD_GLPROC( glProgramUniform2fv );
+    LOAD_GLPROC( glProgramUniform3fv );
+    LOAD_GLPROC( glProgramUniform4fv );
+    LOAD_GLPROC( glProgramUniformMatrix2fv );
+    LOAD_GLPROC( glProgramUniformMatrix3fv );
+    LOAD_GLPROC( glProgramUniformMatrix4fv );
+    LOAD_GLPROC( glProgramUniformMatrix2x3fv );
+    LOAD_GLPROC( glProgramUniformMatrix3x2fv );
+    LOAD_GLPROC( glProgramUniformMatrix2x4fv );
+    LOAD_GLPROC( glProgramUniformMatrix4x2fv );
+    LOAD_GLPROC( glProgramUniformMatrix3x4fv );
+    LOAD_GLPROC( glProgramUniformMatrix4x3fv );
+    LOAD_GLPROC( glValidateProgramPipeline );
+    LOAD_GLPROC( glGetProgramPipelineInfoLog );
+    LOAD_GLPROC( glBindImageTexture );
+    LOAD_GLPROC( glGetBooleani_v );
+    LOAD_GLPROC( glMemoryBarrier );
+    LOAD_GLPROC( glMemoryBarrierByRegion );
+    LOAD_GLPROC( glTexStorage2DMultisample );
+    LOAD_GLPROC( glGetMultisamplefv );
+    LOAD_GLPROC( glSampleMaski );
+    LOAD_GLPROC( glGetTexLevelParameteriv );
+    LOAD_GLPROC( glGetTexLevelParameterfv );
+    LOAD_GLPROC( glBindVertexBuffer );
+    LOAD_GLPROC( glVertexAttribFormat );
+    LOAD_GLPROC( glVertexAttribIFormat );
+    LOAD_GLPROC( glVertexAttribBinding );
+    LOAD_GLPROC( glVertexBindingDivisor );
     return true;
 }
 
-static bool DECL_LOADGLEXT_PROC(GL_ARB_compute_shader)
+#endif
+
+#if GL_ES_VERSION_3_2
+
+static bool DECL_LOADGLEXT_PROC(GLES_3_2)
 {
-    LOAD_GLPROC( glDispatchCompute         );
-    LOAD_GLPROC( glDispatchComputeIndirect );
+    LOAD_GLPROC( glBlendBarrier );
+    LOAD_GLPROC( glCopyImageSubData );
+    LOAD_GLPROC( glDebugMessageControl );
+    LOAD_GLPROC( glDebugMessageInsert );
+    LOAD_GLPROC( glDebugMessageCallback );
+    LOAD_GLPROC( glGetDebugMessageLog );
+    LOAD_GLPROC( glPushDebugGroup );
+    LOAD_GLPROC( glPopDebugGroup );
+    LOAD_GLPROC( glObjectLabel );
+    LOAD_GLPROC( glGetObjectLabel );
+    LOAD_GLPROC( glObjectPtrLabel );
+    LOAD_GLPROC( glGetObjectPtrLabel );
+    LOAD_GLPROC( glGetPointerv );
+    LOAD_GLPROC( glEnablei );
+    LOAD_GLPROC( glDisablei );
+    LOAD_GLPROC( glBlendEquationi );
+    LOAD_GLPROC( glBlendEquationSeparatei );
+    LOAD_GLPROC( glBlendFunci );
+    LOAD_GLPROC( glBlendFuncSeparatei );
+    LOAD_GLPROC( glColorMaski );
+    LOAD_GLPROC( glIsEnabledi );
+    LOAD_GLPROC( glDrawElementsBaseVertex );
+    LOAD_GLPROC( glDrawRangeElementsBaseVertex );
+    LOAD_GLPROC( glDrawElementsInstancedBaseVertex );
+    LOAD_GLPROC( glFramebufferTexture );
+    LOAD_GLPROC( glPrimitiveBoundingBox );
+    LOAD_GLPROC( glGetGraphicsResetStatus );
+    LOAD_GLPROC( glReadnPixels );
+    LOAD_GLPROC( glGetnUniformfv );
+    LOAD_GLPROC( glGetnUniformiv );
+    LOAD_GLPROC( glGetnUniformuiv );
+    LOAD_GLPROC( glMinSampleShading );
+    LOAD_GLPROC( glPatchParameteri );
+    LOAD_GLPROC( glTexParameterIiv );
+    LOAD_GLPROC( glTexParameterIuiv );
+    LOAD_GLPROC( glGetTexParameterIiv );
+    LOAD_GLPROC( glGetTexParameterIuiv );
+    LOAD_GLPROC( glSamplerParameterIiv );
+    LOAD_GLPROC( glSamplerParameterIuiv );
+    LOAD_GLPROC( glGetSamplerParameterIiv );
+    LOAD_GLPROC( glGetSamplerParameterIuiv );
+    LOAD_GLPROC( glTexBuffer );
+    LOAD_GLPROC( glTexBufferRange );
+    LOAD_GLPROC( glTexStorage3DMultisample );
     return true;
-}*/
+}
+
+#endif
 
 #undef DECL_LOADGLEXT_PROC
 #undef LOAD_GLPROC_SIMPLE
@@ -95,14 +206,14 @@ static GLESExtensionMap QuerySupportedOpenGLExtensions(bool coreProfile)
     for_range(i, numExtensions)
     {
         /* Get current extension string */
-        if (auto extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i)))
+        if (const char* extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i)))
             extensions[extString] = false;
     }
 
     return extensions;
 }
 
-#endif // /LLGL_OS_IOS
+#endif // /LLGL_OS_ANDROID
 
 // Global member to store if the extension have already been loaded
 static bool                     g_OpenGLESExtensionsLoaded = false;
@@ -206,46 +317,37 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #undef ENABLE_GLEXT
 
-    #if 0 //TODO
-
     /* Query supported OpenGL extension names */
     g_OpenGLESExtensionsMap = QuerySupportedOpenGLExtensions(isCoreProfile);
 
-    auto LoadExtension = [abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc, GLExt extensionID) -> void
+    auto LoadExtension = [abortOnFailure](const char* extName, const LoadGLExtensionProc& extLoadingProc) -> void
     {
         /* Try to load OpenGL extension */
         auto it = g_OpenGLESExtensionsMap.find(extName);
         if (it != g_OpenGLESExtensionsMap.end())
         {
-            if (extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ false))
+            if (extLoadingProc(extName, abortOnFailure))
             {
                 /* Enable extension in registry */
-                RegisterExtension(extensionID);
+                //RegisterExtension(extensionID);
                 it->second = true;
             }
-            else
-            {
-                /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
-                extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ true);
-            }
-        }
-        else
-        {
-            /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
-            extLoadingProc(extName, abortOnFailure, /*usePlaceholder:*/ true);
         }
     };
 
     #define LOAD_GLEXT(NAME) \
-        LoadExtension("GL_" #NAME, Load_GL_##NAME, GLExt::NAME)
+        Load_GL_##NAME(#NAME, abortOnFailure)
 
     /* Load hardware buffer extensions */
-    //LOAD_GLEXT( OES_tessellation_shader );
-    //LOAD_GLEXT( ARB_compute_shader      );
+    #if GL_ES_VERSION_3_1
+    LOAD_GLEXT( GLES_3_1 );
+    #endif
+
+    #if GL_ES_VERSION_3_2
+    LOAD_GLEXT( GLES_3_2 );
+    #endif
 
     #undef LOAD_GLEXT
-
-    #endif // /TODO
 
     /* Cache supported and loaded extensions */
     g_OpenGLESExtensionsLoaded = true;

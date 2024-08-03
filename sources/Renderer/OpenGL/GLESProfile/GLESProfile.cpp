@@ -6,6 +6,7 @@
  */
 
 #include "../GLProfile.h"
+#include "../Ext/GLExtensions.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <cstring>
 

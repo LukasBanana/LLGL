@@ -357,7 +357,6 @@ struct RenderSystemDescriptor
     \see rendererConfigSize
     \see RendererConfigurationVulkan
     \see RendererConfigurationOpenGL
-    \see RendererConfigurationOpenGLES3
     */
     const void*         rendererConfig      = nullptr;
 
@@ -851,7 +850,7 @@ struct RenderingCapabilities
     /**
     \brief Screen coordinate system origin.
     \remarks This determines the native coordinate space of viewports, scissors, and framebuffers.
-    If the native screen origin is lower-left, LLGL emulates it to always maintain the upper-left as the screen origin.
+    If the native screen origin is in the bottom-left corner, LLGL emulates it to always maintain the upper-left corner as its screen origin.
     */
     ScreenOrigin                    screenOrigin        = ScreenOrigin::UpperLeft;
 
