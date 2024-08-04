@@ -719,7 +719,33 @@ void MTDirectCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t 
 
 void MTDirectCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    MTDirectCommandBuffer::DrawInstanced(numVertices, firstVertex, numInstances, /*firstInstance:*/ 0);
+    const NSUInteger numPatchControlPoints = context_.GetNumPatchControlPoints();
+    if (numPatchControlPoints > 0)
+    {
+        const NSUInteger firstPatch = (static_cast<NSUInteger>(firstVertex) / numPatchControlPoints);
+        const NSUInteger numPatches = (static_cast<NSUInteger>(numVertices) / numPatchControlPoints);
+
+        auto renderEncoder = context_.DispatchTessellationAndGetRenderEncoder(numPatches, numInstances);
+        [renderEncoder
+            drawPatches:            numPatchControlPoints
+            patchStart:             firstPatch
+            patchCount:             numPatches
+            patchIndexBuffer:       nil
+            patchIndexBufferOffset: 0
+            instanceCount:          static_cast<NSUInteger>(numInstances)
+            baseInstance:           0
+        ];
+    }
+    else
+    {
+        auto renderEncoder = context_.FlushAndGetRenderEncoder();
+        [renderEncoder
+            drawPrimitives: context_.GetPrimitiveType()
+            vertexStart:    static_cast<NSUInteger>(firstVertex)
+            vertexCount:    static_cast<NSUInteger>(numVertices)
+            instanceCount:  static_cast<NSUInteger>(numInstances)
+        ];
+    }
 }
 
 void MTDirectCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)

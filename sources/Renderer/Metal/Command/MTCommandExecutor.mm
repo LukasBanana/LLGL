@@ -304,13 +304,36 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             else
             {
                 id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-                [renderEncoder
-                    drawPrimitives: context.GetPrimitiveType()
-                    vertexStart:    cmd->vertexStart
-                    vertexCount:    cmd->vertexCount
-                    instanceCount:  cmd->instanceCount
-                    baseInstance:   cmd->baseInstance
-                ];
+                if (cmd->instanceCount != 1)
+                {
+                    if (cmd->baseInstance != 0)
+                    {
+                        [renderEncoder
+                            drawPrimitives: context.GetPrimitiveType()
+                            vertexStart:    cmd->vertexStart
+                            vertexCount:    cmd->vertexCount
+                            instanceCount:  cmd->instanceCount
+                            baseInstance:   cmd->baseInstance
+                        ];
+                    }
+                    else
+                    {
+                        [renderEncoder
+                            drawPrimitives: context.GetPrimitiveType()
+                            vertexStart:    cmd->vertexStart
+                            vertexCount:    cmd->vertexCount
+                            instanceCount:  cmd->instanceCount
+                        ];
+                    }
+                }
+                else
+                {
+                    [renderEncoder
+                        drawPrimitives: context.GetPrimitiveType()
+                        vertexStart:    cmd->vertexStart
+                        vertexCount:    cmd->vertexCount
+                    ];
+                }
             }
             return sizeof(*cmd);
         }
@@ -339,16 +362,43 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             else
             {
                 id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-                [renderEncoder
-                    drawIndexedPrimitives:  context.GetPrimitiveType()
-                    indexCount:             cmd->indexCount
-                    indexType:              context.GetIndexType()
-                    indexBuffer:            context.GetIndexBuffer()
-                    indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
-                    instanceCount:          cmd->instanceCount
-                    baseVertex:             cmd->baseVertex
-                    baseInstance:           cmd->baseInstance
-                ];
+                if (cmd->instanceCount != 1)
+                {
+                    if (cmd->baseVertex != 0 || cmd->baseInstance != 0)
+                    {
+                        [renderEncoder
+                            drawIndexedPrimitives:  context.GetPrimitiveType()
+                            indexCount:             cmd->indexCount
+                            indexType:              context.GetIndexType()
+                            indexBuffer:            context.GetIndexBuffer()
+                            indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
+                            instanceCount:          cmd->instanceCount
+                            baseVertex:             cmd->baseVertex
+                            baseInstance:           cmd->baseInstance
+                        ];
+                    }
+                    else
+                    {
+                        [renderEncoder
+                            drawIndexedPrimitives:  context.GetPrimitiveType()
+                            indexCount:             cmd->indexCount
+                            indexType:              context.GetIndexType()
+                            indexBuffer:            context.GetIndexBuffer()
+                            indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
+                            instanceCount:          cmd->instanceCount
+                        ];
+                    }
+                }
+                else
+                {
+                    [renderEncoder
+                        drawIndexedPrimitives:  context.GetPrimitiveType()
+                        indexCount:             cmd->indexCount
+                        indexType:              context.GetIndexType()
+                        indexBuffer:            context.GetIndexBuffer()
+                        indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
+                    ];
+                }
             }
             return sizeof(*cmd);
         }

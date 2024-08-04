@@ -87,22 +87,34 @@ static LLGL::Offset2D MapUIGestureLocation(UIGestureRecognizer* recognizer, UIVi
 {
     UIView* view = canvas_->GetUIWindow();
     const std::uint32_t numTouches = static_cast<std::uint32_t>([recognizer numberOfTouches]);
-    CGPoint velocity = [recognizer translationInView:view];
     const LLGL::Offset2D position = MapUIGestureLocation(recognizer, view);
     switch ([recognizer state])
     {
         case UIGestureRecognizerStateBegan:
-            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Began);
-            break;
+        {
+            canvas_->PostPanGesture(position, numTouches, 0.0f, 0.0f, LLGL::EventAction::Began);
+        }
+        break;
+
         case UIGestureRecognizerStateChanged:
+        {
+            CGPoint velocity = [recognizer translationInView:view];
             canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Changed);
-            break;
+        }
+        break;
+
+        case UIGestureRecognizerStateCancelled:
         case UIGestureRecognizerStateEnded:
-            canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Ended);
-            break;
+        {
+            canvas_->PostPanGesture(position, numTouches, 0.0f, 0.0f, LLGL::EventAction::Ended);
+        }
+        break;
+
         default:
+        {
             // don't forward states that are unrecognized by LLGL
-            break;
+        }
+        break;
     }
 }
 
