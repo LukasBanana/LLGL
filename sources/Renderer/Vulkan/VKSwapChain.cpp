@@ -26,7 +26,8 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-const std::uint32_t VKSwapChain::maxNumColorBuffers;
+constexpr std::uint32_t VKSwapChain::maxNumColorBuffers;
+constexpr std::uint32_t VKSwapChain::maxNumFramesInFlight;
 
 static VKPtr<VkImageView> NullVkImageView(VkDevice device)
 {

@@ -30,8 +30,8 @@ At least version 12 on *macOS 10.15 Catalina* is required to test the Metal back
 The build script for Android compiles LLGL for one or more ABIs, since Android is available on many different devices.
 It can generate the folder structure of all example projects for [Android Studio](https://developer.android.com/studio).
 The recommended process to build LLGL examples for Android can be split into two steps:
-1. Run `./BuildAndroid.sh --apps` (additional arguents are optional), which compiles LLGL for the default ABIs (arm64-v8a, armeabi-v7a, x86, x86_64).
-2. Open the respective example directory (*<LLGL-ROOT>/build_android/apps/<EXAMPLE>*) in Android Studio to build and run the app in either a simulator or on your Android device.
+1. Run `./BuildAndroid.sh --apps` (additional arguments are optional), which compiles LLGL for the default ABIs (arm64-v8a, armeabi-v7a, x86, x86_64).
+2. Open the respective example directory (*&lt;LLGL-ROOT&gt;/build_android/apps/&lt;EXAMPLE&gt;*) in Android Studio to build and run the app in either a simulator or on your Android device.
 On Windows, MSYS2 can be used to run *BuildAndroid.sh*.
 
 <p align="center">

@@ -163,13 +163,23 @@ private:
         // Initialize shadow-map sampler
         LLGL::SamplerDescriptor shadowSamplerDesc;
         {
-            shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Border;
-            shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Border;
-            shadowSamplerDesc.addressModeW      = LLGL::SamplerAddressMode::Border;
-            shadowSamplerDesc.borderColor[0]    = 1.0f;
-            shadowSamplerDesc.borderColor[1]    = 1.0f;
-            shadowSamplerDesc.borderColor[2]    = 1.0f;
-            shadowSamplerDesc.borderColor[3]    = 1.0f;
+            // Clamp-to-border sampler address mode requires GLES 3.2, so use standard clamp mode in case hardware only supports GLES 3.0
+            if (renderer->GetRendererID() == LLGL::RendererID::OpenGLES3)
+            {
+                shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Clamp;
+                shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Clamp;
+                shadowSamplerDesc.addressModeW      = LLGL::SamplerAddressMode::Clamp;
+            }
+            else
+            {
+                shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Border;
+                shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Border;
+                shadowSamplerDesc.addressModeW      = LLGL::SamplerAddressMode::Border;
+                shadowSamplerDesc.borderColor[0]    = 1.0f;
+                shadowSamplerDesc.borderColor[1]    = 1.0f;
+                shadowSamplerDesc.borderColor[2]    = 1.0f;
+                shadowSamplerDesc.borderColor[3]    = 1.0f;
+            }
             shadowSamplerDesc.compareEnabled    = true;
             shadowSamplerDesc.mipMapEnabled     = false;
         }

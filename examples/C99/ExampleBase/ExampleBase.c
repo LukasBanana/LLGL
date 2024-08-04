@@ -262,7 +262,7 @@ bool example_poll_events()
     reset_event_status();
 
     // Process surface and events and check if window was closed
-    return llglProcessSurfaceEvents(g_surface) && !llglHasWindowQuit(LLGL_GET_AS(LLGLWindow, g_surface)) && !g_EventStauts.keyDown[LLGLKeyEscape];
+    return llglProcessSurfaceEvents() && !llglHasWindowQuit(LLGL_GET_AS(LLGLWindow, g_surface)) && !g_EventStauts.keyDown[LLGLKeyEscape];
 }
 
 void perspective_projection(float outProjection[4][4], float aspectRatio, float nearPlane, float farPlane, float fieldOfView)

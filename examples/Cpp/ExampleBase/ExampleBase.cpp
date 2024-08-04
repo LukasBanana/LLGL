@@ -478,8 +478,15 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::RenderSystemDescriptor rendererDesc = g_Config.rendererModule;
 
     #if defined LLGL_OS_ANDROID
+    LLGL::RendererConfigurationOpenGL cfgGL;
     if (android_app* app = ExampleBase::androidApp_)
-        rendererDesc.androidApp = app;
+    {
+        rendererDesc.androidApp         = app;
+        cfgGL.majorVersion = 3;
+        cfgGL.minorVersion = 1;
+        rendererDesc.rendererConfig     = &cfgGL;
+        rendererDesc.rendererConfigSize = sizeof(cfgGL);
+    }
     else
         throw std::invalid_argument("'android_app' state was not specified");
     #endif
@@ -630,6 +637,8 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     const LLGL::ShaderMacro*                    defines,
     bool                                        patchClippingOrigin)
 {
+    LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename.c_str());
+
     std::vector<LLGL::Shader*>          shaders;
     std::vector<LLGL::VertexAttribute>  vertexInputAttribs;
 
@@ -684,7 +693,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         }
 
         // Override version number for ESSL
-        if (Supported(LLGL::ShadingLanguage::ESSL))
+        if (Supported(LLGL::ShadingLanguage::ESSL) && (deviceShaderDesc.profile == nullptr || *deviceShaderDesc.profile == '\0'))
             deviceShaderDesc.profile = "300 es";
     }
     LLGL::Shader* shader = renderer->CreateShader(deviceShaderDesc);
@@ -801,6 +810,8 @@ void ExampleBase::ThrowIfFailed(LLGL::PipelineState* pso)
 
 LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)
 {
+    LLGL::Log::Printf("load texture: %s\n", filename.c_str());
+
     // Load image data from file (using STBI library, see https://github.com/nothings/stb)
     ImageReader reader;
     if (!reader.LoadFromFile(filename, format))
@@ -813,14 +824,13 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
     LLGL::ImageView imageView = reader.GetImageView();
     LLGL::Texture* tex = renderSys.CreateTexture(reader.GetTextureDesc(), &imageView);
 
-    // Show info
-    LLGL::Log::Printf("loaded texture: %s\n", filename.c_str());
-
     return tex;
 }
 
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
+    LLGL::Log::Printf("save texture: %s\n", filename.c_str());
+
     // Get texture dimension
     const LLGL::Extent3D texSize = texture.GetMipExtent(mipLevel);
 
@@ -858,9 +868,6 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
         LLGL::Log::Errorf("failed to write texture to file: \"%s\"\n", filename.c_str());
         return false;
     }
-
-    // Show info
-    LLGL::Log::Printf("saved texture: %s\n", filename.c_str());
 
     return true;
 }
