@@ -30,6 +30,10 @@ static constexpr D3D12_DESCRIPTOR_HEAP_TYPE g_descriptorHeapTypes[] =
     D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
 };
 
+constexpr UINT D3D12CommandContext::maxNumAllocators;
+constexpr UINT D3D12CommandContext::maxNumResourceBarrieres;
+constexpr UINT D3D12CommandContext::maxNumDescriptorHeaps;
+
 D3D12CommandContext::D3D12CommandContext()
 {
     ClearCache();

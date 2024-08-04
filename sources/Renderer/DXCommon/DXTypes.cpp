@@ -349,7 +349,9 @@ SystemValue Unmap(const D3D_NAME name)
         case D3D_NAME_RENDER_TARGET_ARRAY_INDEX:    return SystemValue::RenderTargetIndex;
         case D3D_NAME_COVERAGE:                     return SystemValue::SampleMask;
         case D3D_NAME_SAMPLE_INDEX:                 return SystemValue::SampleID;
-        case D3D_NAME_STENCIL_REF:                  return SystemValue::Stencil;
+        #ifdef _MSC_VER
+        case D3D_NAME_STENCIL_REF:                  return SystemValue::Stencil; // Missing in d3dcommon.h for MSYS2
+        #endif
         case D3D_NAME_VERTEX_ID:                    return SystemValue::VertexID;
         case D3D_NAME_VIEWPORT_ARRAY_INDEX:         return SystemValue::ViewportIndex;
         default:                                    return SystemValue::Undefined;

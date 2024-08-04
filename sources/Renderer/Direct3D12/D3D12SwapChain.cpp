@@ -28,6 +28,9 @@ namespace LLGL
 {
 
 
+constexpr UINT D3D12SwapChain::maxNumColorBuffers;
+constexpr UINT D3D12SwapChain::numDebugNames;
+
 D3D12SwapChain::D3D12SwapChain(
     D3D12RenderSystem&              renderSystem,
     const SwapChainDescriptor&      desc,

@@ -7,7 +7,7 @@ CLEAR_CACHE=0
 ENABLE_NULL="OFF"
 ENABLE_VULKAN="OFF"
 ENABLE_D3D11="OFF"
-ENABLE_D3D12="OFF" # Not supported in MSYS yet
+ENABLE_D3D12="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 BUILD_TYPE="Release"
@@ -43,6 +43,7 @@ fi
     echo "  --vulkan .................. Include Vulkan renderer"
 if [ $PLATFORM_MSYS -eq 1 ]; then
     echo "  --d3d11 ................... Include D3D11 renderer (MSYS only) "
+    echo "  --d3d12 ................... Include D3D12 renderer (MSYS only) "
 fi
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
@@ -82,6 +83,12 @@ for ARG in "$@"; do
             ENABLE_D3D11="ON"
         else
             echo "Warning: D3D11 backend is only supported for MSYS"
+        fi
+    elif [ "$ARG" = "--d3d12" ]; then
+        if [ $PLATFORM_MSYS -eq 1 ]; then
+            ENABLE_D3D12="ON"
+        else
+            echo "Warning: D3D12 backend is only supported for MSYS"
         fi
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"

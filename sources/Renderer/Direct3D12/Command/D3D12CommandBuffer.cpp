@@ -36,7 +36,11 @@
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 
 #include "../D3DX12/d3dx12.h"
+
+// Only include PIX if we build with MSVC as MSYS2 does not provide this header
+#ifdef _MSC_VER
 #include <pix.h>
+#endif
 
 #include <algorithm>
 
@@ -1005,12 +1009,16 @@ void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 
 void D3D12CommandBuffer::PushDebugGroup(const char* name)
 {
+    #ifdef _MSC_VER
     PIXBeginEvent(GetNative(), 0, name);
+    #endif
 }
 
 void D3D12CommandBuffer::PopDebugGroup()
 {
+    #ifdef _MSC_VER
     PIXEndEvent(GetNative());
+    #endif
 }
 
 /* ----- Extensions ----- */

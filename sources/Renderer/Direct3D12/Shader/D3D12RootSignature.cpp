@@ -10,6 +10,7 @@
 #include "../../../Core/Exception.h"
 #include <LLGL/Utils/ForRange.h>
 #include <stdint.h>
+#include <float.h>
 
 
 namespace LLGL
