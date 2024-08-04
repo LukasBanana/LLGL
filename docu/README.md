@@ -3,7 +3,9 @@
 
 ## CMake
 
-The primary build tool for LLGL is [CMake](https://cmake.org/) and while LLGL is compatible with older versions down to version 3.7, it is recommended to use a more up to date version, i.e. 3.18 and later.
+The primary build tool for LLGL is [CMake](https://cmake.org/) and while LLGL is compatible with older versions down to version 3.7,
+it is recommended to use a more up to date version, i.e. 3.18 and later. You can either use the CMake GUI, run the cmake command manually,
+or run the *Build* script for the respective platform (run them with `-h`/`--help` for more details). 
 
 
 ## Windows
@@ -21,6 +23,20 @@ LLGL for macOS is compatible with [Xcode](https://developer.apple.com/xcode/) 9 
 
 It is recommended to use a higher version of [Xcode](https://developer.apple.com/xcode/) for LLGL on iOS.
 At least version 12 on *macOS 10.15 Catalina* is required to test the Metal backend on the iOS simulator.
+
+
+## Android
+
+The build script for Android compiles LLGL for one or more ABIs, since Android is available on many different devices.
+It can generate the folder structure of all example projects for [Android Studio](https://developer.android.com/studio).
+The recommended process to build LLGL examples for Android can be split into two steps:
+1. Run `./BuildAndroid.sh --apps` (additional arguents are optional), which compiles LLGL for the default ABIs (arm64-v8a, armeabi-v7a, x86, x86_64).
+2. Open the respective example directory (*<LLGL-ROOT>/build_android/apps/<EXAMPLE>*) in Android Studio to build and run the app in either a simulator or on your Android device.
+On Windows, MSYS2 can be used to run *BuildAndroid.sh*.
+
+<p align="center">
+    <img src="Showcase/Showcase_Build_AndroidStudio.png" alt="Screenshot missing: AndroidStudio Build Showcase" style="max-width:600px;width:70%;height:auto;">
+</p>
 
 
 ## GNU/Linux
