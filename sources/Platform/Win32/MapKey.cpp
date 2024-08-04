@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-static const Key g_win32KeyCodeDummy    = Key::Any;
+static constexpr Key g_win32KeyCodeDummy = Key::Any;
 
 static const Key g_win32KeyCodeMap[256] =
 {

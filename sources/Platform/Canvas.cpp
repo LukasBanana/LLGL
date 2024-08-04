@@ -69,6 +69,16 @@ void Canvas::EventListener::OnPanGesture(Canvas& sender, const Offset2D& positio
 
 LLGL_DEPRECATED_IGNORE_POP()
 
+void Canvas::EventListener::OnKeyDown(Canvas& sender, Key keyCode)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnKeyUp(Canvas& sender, Key keyCode)
+{
+    // dummy
+}
+
 
 /* ----- Window class ----- */
 
@@ -160,6 +170,16 @@ void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, 
 void Canvas::PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action)
 {
     FOREACH_LISTENER_CALL( OnPanGesture(*this, position, numTouches, dx, dy, action) );
+}
+
+void Canvas::PostKeyDown(Key keyCode)
+{
+    FOREACH_LISTENER_CALL( OnKeyDown(*this, keyCode) );
+}
+
+void Canvas::PostKeyUp(Key keyCode)
+{
+    FOREACH_LISTENER_CALL( OnKeyUp(*this, keyCode) );
 }
 
 #undef FOREACH_LISTENER_CALL

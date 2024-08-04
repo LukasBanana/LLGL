@@ -306,6 +306,16 @@ class Input::CanvasEventListener final : public Canvas::EventListener
             }
         }
 
+        void OnKeyDown(Canvas& /*sender*/, Key keyCode) override
+        {
+            data_.OnKeyDown(keyCode);
+        }
+
+        void OnKeyUp(Canvas& /*sender*/, Key keyCode) override
+        {
+            data_.OnKeyUp(keyCode);
+        }
+
     private:
 
         Input::Pimpl& data_;

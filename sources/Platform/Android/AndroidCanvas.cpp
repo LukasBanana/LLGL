@@ -7,6 +7,7 @@
 
 #include "AndroidCanvas.h"
 #include "AndroidApp.h"
+#include "AndroidKeyCodes.h"
 #include "../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <mutex>
@@ -116,11 +117,27 @@ std::int32_t AndroidInputEventHandler::BroadcastInputEvent(android_app* app, AIn
 
     switch (AInputEvent_getType(event))
     {
-        /*case AINPUT_EVENT_TYPE_KEY:
+        case AINPUT_EVENT_TYPE_KEY:
         {
-            //TODO
+            const std::int32_t keyCode = AKeyEvent_getKeyCode(event);
+            const Key key = MapAndroidKeyCode(keyCode);
+
+            switch (AKeyEvent_getAction(event))
+            {
+                case AKEY_EVENT_ACTION_DOWN:
+                {
+                    FOREACH_CANVAS_CALL(PostKeyDown(key));
+                }
+                break;
+
+                case AKEY_EVENT_ACTION_UP:
+                {
+                    FOREACH_CANVAS_CALL(PostKeyUp(key));
+                }
+                break;
+            }
         }
-        return 1;*/
+        return 1;
 
         case AINPUT_EVENT_TYPE_MOTION:
         {

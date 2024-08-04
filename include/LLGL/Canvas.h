@@ -50,6 +50,7 @@ class LLGL_EXPORT Canvas : public Surface
                 \param[out] veto Specifies whether to cancel the quit event.
                 If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
                 If no event listener sets this parameter to true, \c sender is set into 'Quit' state.
+                \todo Deprecate \c veto parameter; Mobile apps cannot veto to quit the app.
                 */
                 virtual void OnQuit(Canvas& sender, bool& veto);
 
@@ -71,6 +72,12 @@ class LLGL_EXPORT Canvas : public Surface
 
                 //! Sent when a pan gesture has been recognized. Includes X and Y deltas for movement.
                 virtual void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
+
+                //! Sent when a key (from device button) has been pushed.
+                virtual void OnKeyDown(Canvas& sender, Key keyCode);
+
+                //! Sent when a key (from device button) has been released.
+                virtual void OnKeyUp(Canvas& sender, Key keyCode);
 
         };
 
@@ -165,6 +172,18 @@ class LLGL_EXPORT Canvas : public Surface
         \see EventListener::OnPanGesture
         */
         void PostPanGesture(const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action);
+
+        /**
+        \brief Posts a keycode event from a device button that has been pushed down.
+        \see EventListener::OnKeyDown
+        */
+        void PostKeyDown(Key keyCode);
+
+        /**
+        \brief Posts a keycode event from a device button that has been released.
+        \see EventListener::OnKeyUp
+        */
+        void PostKeyUp(Key keyCode);
 
     protected:
 

@@ -10,8 +10,8 @@
 
 
 #include <LLGL/Canvas.h>
-#include <android/native_activity.h>
 #include <android/input.h>
+#include <android/native_activity.h>
 #include <android_native_app_glue.h>
 #include <cstdint>
 
