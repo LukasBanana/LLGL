@@ -29,7 +29,7 @@ using GLESExtensionMap = std::map<std::string, bool>;
 
 /* --- Internal functions --- */
 
-#ifdef LLGL_OS_ANDROID
+#ifndef __APPLE__
 
 template <typename T>
 bool LoadGLProc(T& procAddr, const char* procName)
@@ -133,7 +133,7 @@ static bool DECL_LOADGLEXT_PROC(GLES_3_1)
     return true;
 }
 
-#endif
+#endif // /GL_ES_VERSION_3_1
 
 #if GL_ES_VERSION_3_2
 
@@ -186,7 +186,7 @@ static bool DECL_LOADGLEXT_PROC(GLES_3_2)
     return true;
 }
 
-#endif
+#endif // /GL_ES_VERSION_3_2
 
 #undef DECL_LOADGLEXT_PROC
 #undef LOAD_GLPROC_SIMPLE
@@ -213,7 +213,7 @@ static GLESExtensionMap QuerySupportedOpenGLExtensions(bool coreProfile)
     return extensions;
 }
 
-#endif // /LLGL_OS_ANDROID
+#endif // /__APPLE__
 
 // Global member to store if the extension have already been loaded
 static bool                     g_OpenGLESExtensionsLoaded = false;
@@ -317,6 +317,8 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     #undef ENABLE_GLEXT
 
+    #ifndef __APPLE__
+
     /* Query supported OpenGL extension names */
     g_OpenGLESExtensionsMap = QuerySupportedOpenGLExtensions(isCoreProfile);
 
@@ -348,6 +350,8 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     #endif
 
     #undef LOAD_GLEXT
+
+    #endif // /__APPLE__
 
     /* Cache supported and loaded extensions */
     g_OpenGLESExtensionsLoaded = true;

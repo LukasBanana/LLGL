@@ -336,9 +336,12 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
         GLGetValue(GL_CURRENT_PROGRAM, outContextState.boundProgram);
     #endif
 
-    #ifdef GL_ARB_separate_shader_objects
+    #if GL_ARB_separate_shader_objects
     if (HasExtension(GLExt::ARB_separate_shader_objects))
         GLGetValue(GL_PROGRAM_PIPELINE_BINDING, outContextState.boundProgramPipeline);
+    #elif GL_EXT_separate_shader_objects
+    if (HasExtension(GLExt::ARB_separate_shader_objects))
+        GLGetValue(GL_PROGRAM_PIPELINE_BINDING_EXT, outContextState.boundProgramPipeline);
     #endif
 };
 
