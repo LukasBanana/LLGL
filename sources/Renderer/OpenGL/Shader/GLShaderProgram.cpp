@@ -536,7 +536,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
     #endif
 }
 
-#ifdef GL_ARB_program_interface_query
+#ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
 
 static bool GLGetProgramResourceProperties(
     GLuint          program,
@@ -620,7 +620,7 @@ static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& re
     }
 }
 
-#endif // /GL_ARB_program_interface_query
+#endif // /LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
 
 static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
 {
@@ -653,7 +653,7 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
             glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
             resource.constantBufferSize = static_cast<std::uint32_t>(blockSize);
 
-            #ifdef GL_ARB_program_interface_query
+            #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
             /* Query resource view properties */
             GLQueryBufferProperties(program, resource, GL_UNIFORM_BLOCK, i);
             #else
@@ -701,8 +701,14 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
             glGetProgramResourceName(program, GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
             resource.binding.name = std::string(blockName.data());
 
+            #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
             /* Query resource view properties */
             GLQueryBufferProperties(program, resource, GL_SHADER_STORAGE_BLOCK, i);
+            #else
+            /* Set binding slot to invalid index */
+            resource.binding.stageFlags = StageFlags::AllStages;
+            resource.binding.slot       = LLGL_INVALID_SLOT;
+            #endif
         }
         reflection.resources.push_back(resource);
     }
@@ -753,7 +759,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
 
                 resource.binding.slot = static_cast<std::uint32_t>(uniformValue);
 
-                #ifdef GL_ARB_program_interface_query
+                #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
                 /* Query resource properties */
                 const GLenum props[] =
                 {
@@ -774,7 +780,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
                     resource.binding.arraySize  = static_cast<std::uint32_t>(params[6]);
                 }
                 else
-                #endif // /GL_ARB_program_interface_query
+                #endif // /LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
                 {
                     /* Set binding slot to invalid index */
                     resource.binding.stageFlags = StageFlags::AllStages;

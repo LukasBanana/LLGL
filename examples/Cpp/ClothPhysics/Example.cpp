@@ -361,11 +361,17 @@ public:
             computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSStretchConstraints", "cs_5_0" }, {}, {}, g_shaderMacros);
             computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.hlsl", "CSRelaxation",         "cs_5_0" }, {}, {}, g_shaderMacros);
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSForces.comp"             });
             computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSStretchConstraints.comp" });
             computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSRelaxation.comp"         });
+        }
+        else if (Supported(LLGL::ShadingLanguage::ESSL))
+        {
+            computeShaders[0] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSForces.comp",             "", "310 es" });
+            computeShaders[1] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSStretchConstraints.comp", "", "310 es" });
+            computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.CSRelaxation.comp",         "", "310 es" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
@@ -450,7 +456,7 @@ public:
             graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.hlsl", "VS", "vs_5_0" }, usedVertexFormats, {}, g_shaderMacros);
             graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.hlsl", "PS", "ps_5_0" }, {}, g_shaderMacros);
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             graphicsShaderPipeline.vs = LoadShader({ LLGL::ShaderType::Vertex,   "Example.VS.vert" }, usedVertexFormats, {}, g_shaderMacros);
             graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.PS.frag" }, {}, g_shaderMacros);

@@ -61,8 +61,12 @@
 #   define LLGL_GLEXT_TESSELLATION_SHADER
 #endif
 
-#if GL_ARB_shader_storage_buffer_object
+#if GL_ARB_shader_storage_buffer_object || GL_ES_VERSION_3_1
 #   define LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
+#endif
+
+#if GL_ARB_program_interface_query || GL_ES_VERSION_3_1
+#   define LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
 #endif
 
 #if defined LLGL_OPENGL || GL_ES_VERSION_3_1

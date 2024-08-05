@@ -87,8 +87,8 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
             glUniformBlockBinding(program, blockIndex, resource.slot);
     }
 
-    /* Set shader-storage bindings */
-    #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
+    /* Set shader-storage bindings (not supported in GLES) */
+    #if defined LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && defined LLGL_OPENGL
     for_range(i, numShaderStorageBindings_)
     {
         const NamedResourceBinding& resource = bindings_[resourceIndex++];
