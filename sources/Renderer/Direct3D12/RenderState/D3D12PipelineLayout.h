@@ -13,6 +13,7 @@
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Container/ArrayView.h>
+#include "../Shader/D3D12RootSignature.h"
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <memory>

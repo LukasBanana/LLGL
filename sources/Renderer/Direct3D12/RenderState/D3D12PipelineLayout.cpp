@@ -6,7 +6,6 @@
  */
 
 #include "D3D12PipelineLayout.h"
-#include "../Shader/D3D12RootSignature.h"
 #include "../Shader/D3D12Shader.h"
 #include "../Texture/D3D12Sampler.h"
 #include "../D3DX12/d3dx12.h"
