@@ -29,6 +29,7 @@
 
 #ifdef LLGL_OS_ANDROID
 #   include "Android/AppUtils.h"
+#   include <android/native_activity.h>
 #endif
 
 #define IMMEDIATE_SUBMIT_CMDBUFFER 0
@@ -386,6 +387,11 @@ void ExampleBase::Run()
     while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
     #endif
     {
+        #ifdef LLGL_OS_ANDROID
+        if (input.KeyDown(LLGL::Key::BrowserBack))
+            ANativeActivity_finish(ExampleBase::androidApp_->activity);
+        #endif
+
         // Update profiler (if debugging is enabled)
         if (debuggerObj_)
         {
