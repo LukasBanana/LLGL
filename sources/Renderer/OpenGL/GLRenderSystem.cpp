@@ -592,7 +592,7 @@ void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelF
         EnableDebugCallback();
 }
 
-#if GL_KHR_debug
+#if LLGL_GLEXT_DEBUG
 
 #ifdef LLGL_OPENGL
 void APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
@@ -607,7 +607,7 @@ void GL_APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum s
     );
 }
 
-#endif // /GL_KHR_debug
+#endif // /LLGL_GLEXT_DEBUG
 
 struct GLDebugMessageMetaData
 {
@@ -616,7 +616,7 @@ struct GLDebugMessageMetaData
 
 void GLRenderSystem::EnableDebugCallback(bool enable)
 {
-    #if GL_KHR_debug
+    #if LLGL_GLEXT_DEBUG
 
     if (HasExtension(GLExt::KHR_debug))
     {
@@ -645,7 +645,7 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
         }
     }
 
-    #endif // /GL_KHR_debug
+    #endif // /LLGL_GLEXT_DEBUG
 }
 
 static std::string GLGetString(GLenum name)

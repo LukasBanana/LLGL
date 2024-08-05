@@ -15,9 +15,8 @@
 #   include <OpenGLES/ES3/gl.h>
 #   include <OpenGLES/ES3/glext.h>
 #elif defined(LLGL_OS_ANDROID)
-    // Include all GLES 3.0 functions with static linkage as well as GLES2 extensions
+    // Include all GLES 3.0 functions with static linkage
 #   include <GLES3/gl3.h>
-#   include <GLES2/gl2ext.h>
 
     // Include all GLES 3.1+ functions as extensions with dynamic linkage
 #   ifdef GL_GLES_PROTOTYPES

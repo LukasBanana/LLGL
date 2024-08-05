@@ -459,7 +459,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             return sizeof(*cmd);
         }
         #endif
-        #if GL_KHR_debug
+        #if LLGL_GLEXT_DEBUG
         case GLOpcodePushDebugGroup:
         {
             auto cmd = reinterpret_cast<const GLCmdPushDebugGroup*>(pc);
@@ -471,7 +471,7 @@ static std::size_t AssembleGLCommand(const GLOpcode opcode, const void* pc, JITC
             compiler.Call(glPopDebugGroup);
             return 0;
         }
-        #endif // /GL_KHR_debug
+        #endif // /LLGL_GLEXT_DEBUG
         default:
             return 0;
     }

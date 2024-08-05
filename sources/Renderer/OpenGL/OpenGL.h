@@ -37,7 +37,7 @@
 #endif
 
 #if GL_KHR_debug || GL_ES_VERSION_3_2
-#   define LLGL_GLEXT_DEBUG
+#   define LLGL_GLEXT_DEBUG 1
 #endif
 
 //TODO: which extension?

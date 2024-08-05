@@ -967,7 +967,7 @@ void GLDeferredCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t off
 
 void GLDeferredCommandBuffer::PushDebugGroup(const char* name)
 {
-    #if GL_KHR_debug
+    #if LLGL_GLEXT_DEBUG
     if (HasExtension(GLExt::KHR_debug))
     {
         /* Push debug group name into command stream with default ID no. */
@@ -984,15 +984,15 @@ void GLDeferredCommandBuffer::PushDebugGroup(const char* name)
             ::memcpy(cmd + 1, name, croppedLength + 1);
         }
     }
-    #endif // /GL_KHR_debug
+    #endif // /LLGL_GLEXT_DEBUG
 }
 
 void GLDeferredCommandBuffer::PopDebugGroup()
 {
-    #if GL_KHR_debug
+    #if LLGL_GLEXT_DEBUG
     if (HasExtension(GLExt::KHR_debug))
         AllocOpcode(GLOpcodePopDebugGroup);
-    #endif // /GL_KHR_debug
+    #endif // /LLGL_GLEXT_DEBUG
 }
 
 /* ----- Extensions ----- */

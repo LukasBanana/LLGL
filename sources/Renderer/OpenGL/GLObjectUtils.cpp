@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-#if GL_KHR_debug
+#if LLGL_GLEXT_DEBUG
 
 // Returns the length of the specified label with a maximum length determined by GL_MAX_LABEL_LENGTH
 static GLsizei GetCroppedLength(const char* label)
@@ -28,11 +28,11 @@ static GLsizei GetCroppedLength(const char* label)
     return static_cast<GLsizei>(croppedLength);
 }
 
-#endif // /GL_KHR_debug
+#endif // /LLGL_GLEXT_DEBUG
 
 void GLSetObjectLabel(GLenum identifier, GLuint name, const char* label)
 {
-    #if GL_KHR_debug
+    #if LLGL_GLEXT_DEBUG
     if (HasExtension(GLExt::KHR_debug))
     {
         if (label != nullptr)
@@ -40,7 +40,7 @@ void GLSetObjectLabel(GLenum identifier, GLuint name, const char* label)
         else
             glObjectLabel(identifier, name, 0, nullptr);
     }
-    #endif // /GL_KHR_debug
+    #endif // /LLGL_GLEXT_DEBUG
 }
 
 void GLSetObjectLabelSubscript(GLenum identifier, GLuint name, const char* label, const char* subscript)
@@ -74,7 +74,7 @@ void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, 
 
 void GLSetObjectPtrLabel(void* ptr, const char* label)
 {
-    #if GL_KHR_debug
+    #if LLGL_GLEXT_DEBUG
     if (HasExtension(GLExt::KHR_debug))
     {
         if (label != nullptr)
@@ -82,7 +82,7 @@ void GLSetObjectPtrLabel(void* ptr, const char* label)
         else
             glObjectPtrLabel(ptr, 0, nullptr);
     }
-    #endif // /GL_KHR_debug
+    #endif // /LLGL_GLEXT_DEBUG
 }
 
 
