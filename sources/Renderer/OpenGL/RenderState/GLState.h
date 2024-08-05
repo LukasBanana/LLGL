@@ -26,6 +26,8 @@ enum class GLState
 {
     Blend = 0,                  // GL_BLEND
     CullFace,                   // GL_CULL_FACE
+    DebugOutput,                // GL_DEBUG_OUTPUT
+    DebugOutputSynchronous,     // GL_DEBUG_OUTPUT_SYNCHRONOUS
     DepthTest,                  // GL_DEPTH_TEST
     Dither,                     // GL_DITHER
     PolygonOffsetFill,          // GL_POLYGON_OFFSET_FILL
@@ -40,8 +42,6 @@ enum class GLState
 
     ColorLogicOp,               // GL_COLOR_LOGIC_OP
     DepthClamp,                 // GL_DEPTH_CLAMP
-    DebugOutput,                // GL_DEBUG_OUTPUT
-    DebugOutputSynchronous,     // GL_DEBUG_OUTPUT_SYNCHRONOUS
     FramebufferSRGB,            // GL_FRAMEBUFFER_SRGB
     LineSmooth,                 // GL_LINE_SMOOTH
     Multisample,                // GL_MULTISAMPLE

@@ -829,7 +829,7 @@ void GLImmediateCommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t of
 
 void GLImmediateCommandBuffer::PushDebugGroup(const char* name)
 {
-    #ifdef GL_KHR_debug
+    #if GL_KHR_debug
     if (HasExtension(GLExt::KHR_debug))
     {
         /* Push debug group name into command stream with default ID no. */
@@ -845,7 +845,7 @@ void GLImmediateCommandBuffer::PushDebugGroup(const char* name)
 
 void GLImmediateCommandBuffer::PopDebugGroup()
 {
-    #ifdef GL_KHR_debug
+    #if GL_KHR_debug
     if (HasExtension(GLExt::KHR_debug))
         glPopDebugGroup();
     #endif // /GL_KHR_debug

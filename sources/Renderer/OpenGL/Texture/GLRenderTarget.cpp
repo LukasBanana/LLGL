@@ -235,7 +235,7 @@ void GLRenderTarget::BuildResolveAttachment(const AttachmentDescriptor& attachme
 
 void GLRenderTarget::BuildDepthStencilAttachment(const AttachmentDescriptor& attachmentDesc)
 {
-    if (auto* texture = attachmentDesc.texture)
+    if (const Texture* texture = attachmentDesc.texture)
         BuildAttachmentWithTexture(AllocDepthStencilAttachmentBinding(texture->GetFormat()), attachmentDesc);
     else
         BuildAttachmentWithRenderbuffer(AllocDepthStencilAttachmentBinding(attachmentDesc.format), attachmentDesc.format);

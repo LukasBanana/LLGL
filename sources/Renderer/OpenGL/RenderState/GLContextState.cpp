@@ -18,6 +18,13 @@ namespace LLGL
 {
 
 
+constexpr GLuint GLContextState::numTextureLayers;
+constexpr GLuint GLContextState::numImageUnits;
+constexpr GLuint GLContextState::numCaps;
+constexpr GLuint GLContextState::numBufferTargets;
+constexpr GLuint GLContextState::numFboTargets;
+constexpr GLuint GLContextState::numTextureTargets;
+
 static void GLGetValue(GLenum pname, GLint& params)
 {
     glGetIntegerv(pname, &params);

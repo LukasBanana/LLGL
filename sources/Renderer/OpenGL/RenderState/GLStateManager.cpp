@@ -45,6 +45,13 @@ static const GLenum g_stateCapsEnum[] =
 {
     GL_BLEND,
     GL_CULL_FACE,
+    #if GL_KHR_debug
+    GL_DEBUG_OUTPUT,
+    GL_DEBUG_OUTPUT_SYNCHRONOUS,
+    #else
+    0,
+    0,
+    #endif
     GL_DEPTH_TEST,
     GL_DITHER,
     GL_POLYGON_OFFSET_FILL,
@@ -57,8 +64,6 @@ static const GLenum g_stateCapsEnum[] =
     #ifdef LLGL_OPENGL
     GL_COLOR_LOGIC_OP,
     GL_DEPTH_CLAMP,
-    GL_DEBUG_OUTPUT,
-    GL_DEBUG_OUTPUT_SYNCHRONOUS,
     GL_FRAMEBUFFER_SRGB,
     GL_LINE_SMOOTH,
     GL_MULTISAMPLE,
@@ -1713,7 +1718,7 @@ void GLStateManager::DetermineLimits()
     #endif
 
     /* Get extension specific limits */
-    #ifdef GL_KHR_debug
+    #if GL_KHR_debug
     if (HasExtension(GLExt::KHR_debug))
     {
         glGetIntegerv(GL_MAX_DEBUG_MESSAGE_LENGTH, &limits_.maxDebugNameLength);

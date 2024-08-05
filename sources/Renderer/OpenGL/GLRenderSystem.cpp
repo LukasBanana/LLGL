@@ -592,10 +592,13 @@ void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelF
         EnableDebugCallback();
 }
 
-#ifdef GL_KHR_debug
+#if GL_KHR_debug
 
-void APIENTRY GLDebugCallback(
-    GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
+#ifdef LLGL_OPENGL
+void APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
+#else
+void GL_APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
+#endif
 {
     /* Forward callback to log */
     DebugPrintf(
@@ -613,7 +616,7 @@ struct GLDebugMessageMetaData
 
 void GLRenderSystem::EnableDebugCallback(bool enable)
 {
-    #ifdef GL_KHR_debug
+    #if GL_KHR_debug
 
     if (HasExtension(GLExt::KHR_debug))
     {

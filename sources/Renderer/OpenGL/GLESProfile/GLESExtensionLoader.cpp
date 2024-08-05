@@ -241,7 +241,6 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     ENABLE_GLEXT(ARB_clear_buffer_object);
     ENABLE_GLEXT(ARB_clear_texture);
-    ENABLE_GLEXT(ARB_clip_control);
     ENABLE_GLEXT(ARB_buffer_storage);
     ENABLE_GLEXT(ARB_copy_buffer);
     ENABLE_GLEXT(ARB_draw_buffers);
