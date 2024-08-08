@@ -37,8 +37,11 @@ class AndroidCanvas : public Canvas
 
     public:
 
-        static void OnAndroidAppCommand(android_app* app, int32_t cmd);
-        static std::int32_t OnAndroidAppInputEvent(android_app* app, AInputEvent* event);
+        /*
+        Updates the pointer to ANativeWindow from the specified app state.
+        If the input is null, the window will be reset to null.
+        */
+        void UpdateNativeWindow(android_app* app);
 
     private:
 

@@ -15,17 +15,35 @@ namespace LLGL
 
 
 AndroidSharedEGLSurface::AndroidSharedEGLSurface(EGLDisplay display, EGLConfig config, ANativeWindow* window) :
-    display_ { display                                                  },
-    surface_ { eglCreateWindowSurface(display, config, window, nullptr) },
-    window_  { window                                                   }
+    display_ { display },
+    config_  { config  }
 {
-    if (!surface_)
-        LLGL_TRAP("eglCreateWindowSurface failed (%s)", EGLErrorToString());
+    InitEGLSurface(window);
 }
 
 AndroidSharedEGLSurface::~AndroidSharedEGLSurface()
 {
-    eglDestroySurface(display_, surface_);
+    DestroyEGLSurface();
+}
+
+void AndroidSharedEGLSurface::InitEGLSurface(ANativeWindow* window)
+{
+    if (surface_ == nullptr)
+    {
+        window_ = window;
+        surface_ = eglCreateWindowSurface(display_, config_, window_, nullptr);
+        if (!surface_)
+            LLGL_TRAP("eglCreateWindowSurface failed (%s)", EGLErrorToString());
+    }
+}
+
+void AndroidSharedEGLSurface::DestroyEGLSurface()
+{
+    if (surface_ != nullptr)
+    {
+        eglDestroySurface(display_, surface_);
+        surface_ = nullptr;
+    }
 }
 
 

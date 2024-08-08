@@ -34,13 +34,18 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
 
     public:
 
+        void InitEGLSurface(Surface& surface);
+        void DestroyEGLSurface();
+
         static bool MakeCurrentEGLContext(AndroidGLSwapChainContext* context);
 
     private:
 
-        EGLDisplay                  display_ = nullptr;
-        EGLContext                  context_ = nullptr;
-        AndroidSharedEGLSurfacePtr  surface_;
+        class CanvasEventListener;
+
+        EGLDisplay                  display_        = nullptr;
+        EGLContext                  context_        = nullptr;
+        AndroidSharedEGLSurfacePtr  sharedSurface_;
 
 };
 

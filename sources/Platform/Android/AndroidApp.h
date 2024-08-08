@@ -9,6 +9,7 @@
 #define LLGL_ANDROID_APP_H
 
 
+#include <LLGL/Types.h>
 #include <android_native_app_glue.h>
 
 
@@ -27,6 +28,9 @@ class AndroidApp
 
         static AndroidApp& Get();
         
+        // Returns the size of the content rect of the specified Android app state.
+        static Extent2D GetContentRectSize(android_app* appState);
+
         // Initializes the Android app state. This should be called once when the device is created.
         void Initialize(android_app* state);
 

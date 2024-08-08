@@ -34,6 +34,9 @@ class AndroidSharedEGLSurface
 
     public:
 
+        void InitEGLSurface(ANativeWindow* window);
+        void DestroyEGLSurface();
+
         // Returns the native EGLSurface object.
         inline EGLSurface GetEGLSurface() const
         {
@@ -49,6 +52,7 @@ class AndroidSharedEGLSurface
     private:
 
         EGLDisplay      display_    = nullptr;
+        EGLConfig       config_     = nullptr;
         EGLSurface      surface_    = nullptr;
         ANativeWindow*  window_     = nullptr;
 

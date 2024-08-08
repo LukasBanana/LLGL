@@ -17,7 +17,6 @@ namespace LLGL
 struct Canvas::Pimpl
 {
     std::vector<std::shared_ptr<EventListener>> eventListeners;
-    bool                                        quit            = false;
     void*                                       userData        = nullptr;
 };
 
@@ -35,6 +34,16 @@ Canvas::~Canvas()
 /* ----- Canvas EventListener class ----- */
 
 void Canvas::EventListener::OnQuit(Canvas& sender, bool& veto)
+{
+    // deprecated
+}
+
+void Canvas::EventListener::OnInit(Canvas& sender)
+{
+    // dummy
+}
+
+void Canvas::EventListener::OnDestroy(Canvas& sender)
 {
     // dummy
 }
@@ -97,7 +106,7 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 
 bool Canvas::HasQuit() const
 {
-    return pimpl_->quit;
+    return false; // deprecated
 }
 
 bool Canvas::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
@@ -133,17 +142,17 @@ void Canvas::RemoveEventListener(const EventListener* eventListener)
 
 void Canvas::PostQuit()
 {
-    if (!HasQuit())
-    {
-        bool canQuit = true;
-        for (const auto& lst : pimpl_->eventListeners)
-        {
-            bool veto = false;
-            lst->OnQuit(*this, veto);
-            canQuit = (canQuit && !veto);
-        }
-        pimpl_->quit = canQuit;
-    }
+    // deprecated
+}
+
+void Canvas::PostInit()
+{
+    FOREACH_LISTENER_CALL( OnInit(*this) );
+}
+
+void Canvas::PostDestroy()
+{
+    FOREACH_LISTENER_CALL( OnDestroy(*this) );
 }
 
 void Canvas::PostDraw()
