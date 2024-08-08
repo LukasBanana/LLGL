@@ -50,6 +50,11 @@ MacOSGLSwapChainContext::MacOSGLSwapChainContext(MacOSGLContext& context, Surfac
         LLGL_TRAP("NativeHandle::responder is neither of type NSWindow nor NSView for GLKView");
 }
 
+bool MacOSGLSwapChainContext::HasDrawable() const
+{
+    return (view_ != nullptr);
+}
+
 bool MacOSGLSwapChainContext::SwapBuffers()
 {
     [ctx_ flushBuffer];

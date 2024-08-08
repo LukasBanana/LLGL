@@ -79,6 +79,11 @@ void D3D11SwapChain::SetDebugName(const char* name)
     }
 }
 
+bool D3D11SwapChain::IsPresentable() const
+{
+    return true; // dummy
+}
+
 void D3D11SwapChain::Present()
 {
     const bool tearingEnabled   = (tearingSupported_ && windowedMode_ && swapChainInterval_ == 0);

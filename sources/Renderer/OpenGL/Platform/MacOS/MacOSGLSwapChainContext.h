@@ -29,8 +29,8 @@ class MacOSGLSwapChainContext final : public GLSwapChainContext
 
         MacOSGLSwapChainContext(MacOSGLContext& context, Surface& surface);
 
+        bool HasDrawable() const override;
         bool SwapBuffers() override;
-
         void Resize(const Extent2D& resolution) override;
         
     public:

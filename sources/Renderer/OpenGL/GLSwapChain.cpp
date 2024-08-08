@@ -11,6 +11,7 @@
 #include "Platform/GLContextManager.h"
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Platform/Platform.h>
+#include <LLGL/Display.h>
 
 #ifdef LLGL_MOBILE_PLATFORM
 #   include <LLGL/Canvas.h>
@@ -26,6 +27,19 @@
 namespace LLGL
 {
 
+
+static GLint GetFramebufferHeight(const Extent2D& resolution)
+{
+    #ifndef LLGL_OPENGL
+    /* For GLES, the framebuffer height is determined by the display height */
+    if (LLGL::Display* display = LLGL::Display::GetPrimary())
+    {
+        const Extent2D displayResolution = display->GetDisplayMode().resolution;
+        return static_cast<GLint>(displayResolution.height);
+    }
+    #endif
+    return static_cast<GLint>(resolution.height);
+}
 
 GLSwapChain::GLSwapChain(
     GLRenderSystem&                 renderSystem,
@@ -60,7 +74,7 @@ GLSwapChain::GLSwapChain(
     Cache resolution height after surface has been created,
     since high-resolution displays might provide a multiple of the input size.
     */
-    framebufferHeight_ = static_cast<GLint>(GetResolution().height);
+    framebufferHeight_ = GetFramebufferHeight(GetResolution());
 
     /* Create platform dependent OpenGL context */
     context_ = contextMngr.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
@@ -77,6 +91,11 @@ GLSwapChain::GLSwapChain(
         BuildAndSetDefaultSurfaceTitle(renderSystem.GetRendererInfo());
         ShowSurface();
     }
+}
+
+bool GLSwapChain::IsPresentable() const
+{
+    return swapChainContext_->HasDrawable();
 }
 
 void GLSwapChain::Present()
@@ -143,7 +162,7 @@ bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
     swapChainContext_->Resize(resolution);
 
     /* Update context height */
-    const GLint height = static_cast<GLint>(resolution.height);
+    const GLint height = GetFramebufferHeight(resolution);
     GetStateManager().ResetFramebufferHeight(height);
     framebufferHeight_ = height;
 

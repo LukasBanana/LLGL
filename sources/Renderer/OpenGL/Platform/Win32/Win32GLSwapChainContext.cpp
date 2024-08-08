@@ -8,6 +8,7 @@
 #include "Win32GLSwapChainContext.h"
 #include "Win32GLContext.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -43,11 +44,16 @@ Win32GLSwapChainContext::Win32GLSwapChainContext(Win32GLContext& context, Surfac
     if (surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
         hDC_ = ::GetDC(nativeHandle.window);
     else
-        throw std::runtime_error("failed to get Win32 device context (HDC) from swap-chain surface");
+        LLGL_TRAP("failed to get Win32 device context (HDC) from swap-chain surface");
 
     /* Select pixel format for device context if the GL context was originally created with a different surface */
     if (context.GetDCHandle() != hDC_)
         context.SelectPixelFormat(hDC_);
+}
+
+bool Win32GLSwapChainContext::HasDrawable() const
+{
+    return (hDC_ != nullptr);
 }
 
 bool Win32GLSwapChainContext::SwapBuffers()

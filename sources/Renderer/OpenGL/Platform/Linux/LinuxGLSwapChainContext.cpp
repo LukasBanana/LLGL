@@ -8,6 +8,7 @@
 #include "LinuxGLSwapChainContext.h"
 #include "LinuxGLContext.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -46,7 +47,12 @@ LinuxGLSwapChainContext::LinuxGLSwapChainContext(LinuxGLContext& context, Surfac
         wnd_ = nativeHandle.window;
     }
     else
-        throw std::runtime_error("failed to get X11 Display and Window from swap-chain surface");
+        LLGL_TRAP("failed to get X11 Display and Window from swap-chain surface");
+}
+
+bool LinuxGLSwapChainContext::HasDrawable() const
+{
+    return (wnd_ != 0);
 }
 
 bool LinuxGLSwapChainContext::SwapBuffers()

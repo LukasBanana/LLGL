@@ -743,6 +743,14 @@ void DbgCommandBuffer::BeginRenderPass(
     {
         auto& swapChainDbg = LLGL_DBG_CAST(DbgSwapChain&, renderTarget);
 
+        if (!swapChainDbg.IsPresentable())
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "cannot begin new render pass with swap chain that is not presentable"
+            );
+        }
+
         swapChainDbg.NotifyNextRenderPass(debugger_, renderPass);
 
         bindings_.swapChain     = &swapChainDbg;

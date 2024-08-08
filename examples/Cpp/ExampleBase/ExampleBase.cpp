@@ -11,6 +11,7 @@
 #include "ImageReader.h"
 #include "FileUtils.h"
 #include <stdio.h>
+#include <thread>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -380,13 +381,25 @@ void ExampleBase::Run()
     bool fullscreen = false;
     const LLGL::Extent2D initialResolution = swapChain->GetResolution();
 
-    #ifdef LLGL_MOBILE_PLATFORM
-    while (LLGL::Surface::ProcessEvents())
-    #else
+    #ifndef LLGL_MOBILE_PLATFORM
     LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
-    while (LLGL::Surface::ProcessEvents() && !window.HasQuit() && !input.KeyDown(LLGL::Key::Escape))
     #endif
+
+    while (LLGL::Surface::ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
     {
+        #ifndef LLGL_MOBILE_PLATFORM
+        // On desktop platforms, we also want to quit the app if the close button has been pressed
+        if (window.HasQuit())
+            break;
+        #endif
+
+        // On mobile platforms, if app has paused, the swap-chain might not be presentable until the app is resumed again
+        if (!swapChain->IsPresentable())
+        {
+            std::this_thread::yield();
+            continue;
+        }
+
         #ifdef LLGL_OS_ANDROID
         if (input.KeyDown(LLGL::Key::BrowserBack))
             ANativeActivity_finish(ExampleBase::androidApp_->activity);
@@ -484,17 +497,20 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::RenderSystemDescriptor rendererDesc = g_Config.rendererModule;
 
     #if defined LLGL_OS_ANDROID
-    LLGL::RendererConfigurationOpenGL cfgGL;
-    if (android_app* app = ExampleBase::androidApp_)
+    if (rendererDesc.moduleName == "OpenGLES3")
     {
-        rendererDesc.androidApp         = app;
-        cfgGL.majorVersion = 3;
-        cfgGL.minorVersion = 1;
-        rendererDesc.rendererConfig     = &cfgGL;
-        rendererDesc.rendererConfigSize = sizeof(cfgGL);
+        LLGL::RendererConfigurationOpenGL cfgGL;
+        if (android_app* app = ExampleBase::androidApp_)
+        {
+            rendererDesc.androidApp         = app;
+            cfgGL.majorVersion = 3;
+            cfgGL.minorVersion = 1;
+            rendererDesc.rendererConfig     = &cfgGL;
+            rendererDesc.rendererConfigSize = sizeof(cfgGL);
+        }
+        else
+            throw std::invalid_argument("'android_app' state was not specified");
     }
-    else
-        throw std::invalid_argument("'android_app' state was not specified");
     #endif
 
     if (g_Config.debugger)

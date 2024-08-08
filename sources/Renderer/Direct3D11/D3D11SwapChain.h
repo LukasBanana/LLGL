@@ -31,6 +31,10 @@ class D3D11SwapChain final : public SwapChain
 
     public:
 
+        #include <LLGL/Backend/SwapChain.inl>
+
+    public:
+
         D3D11SwapChain(
             IDXGIFactory*                       factory,
             const ComPtr<ID3D11Device>&         device,
@@ -40,19 +44,6 @@ class D3D11SwapChain final : public SwapChain
         );
 
         void SetDebugName(const char* name) override;
-
-        void Present() override;
-
-        std::uint32_t GetCurrentSwapIndex() const override;
-        std::uint32_t GetNumSwapBuffers() const override;
-        std::uint32_t GetSamples() const override;
-
-        Format GetColorFormat() const override;
-        Format GetDepthStencilFormat() const override;
-
-        const RenderPass* GetRenderPass() const override;
-
-        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
 
     public:
 

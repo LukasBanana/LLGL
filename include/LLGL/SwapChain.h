@@ -77,6 +77,28 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         /* ----- Back Buffer ----- */
 
         /**
+        \brief Returns true if this swap-chain is ready for rendering and presenting. Otherwise, the native surface or back buffer are not available.
+        \remarks This is mostly used for mobile platforms where the surface can be temporarily destroyed when the app is paused and later re-initialized when the app resumes.
+        If this is false, no rendering to this swap-chain must be performed nor can the back buffer be presented.
+        \remarks A safe way to handle the event of a lost native surface is to skip the entire rendering when this returns false as shown below:
+        \code
+        while (LLGL::Surface::ProcessEvents()) {
+            // Skip frame if swap-chain is currently not presentable
+            if (!swapChain->IsPresentable()) {
+                std::this_thread::yield();
+                continue;
+            }
+
+            // Render frame ...
+
+            // Present swap-chain back buffer
+            swapChain->Present();
+        }
+        \endcode
+        */
+        virtual bool IsPresentable() const = 0;
+
+        /**
         \brief Swaps the current back buffer with the front buffer to present it on the screen.
         \see GetCurrentSwapIndex
         */

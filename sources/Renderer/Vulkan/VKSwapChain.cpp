@@ -104,6 +104,12 @@ VKSwapChain::VKSwapChain(
         ShowSurface();
 }
 
+bool VKSwapChain::IsPresentable() const
+{
+    /* Use implicit boolean conversion here, since this type can either be a pointer or an integer type depending on the platform */
+    return !!surface_.Get();
+}
+
 void VKSwapChain::Present()
 {
     /* Initialize semaphores */

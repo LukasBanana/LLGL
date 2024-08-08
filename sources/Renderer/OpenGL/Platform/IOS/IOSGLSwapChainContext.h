@@ -35,8 +35,8 @@ class IOSGLSwapChainContext final : public GLSwapChainContext
 
         IOSGLSwapChainContext(IOSGLContext& context, Surface& surface);
 
+        bool HasDrawable() const override;
         bool SwapBuffers() override;
-
         void Resize(const Extent2D& resolution) override;
 
     public:

@@ -4774,6 +4774,10 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglResetSurfacePixelFormat", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ResetSurfacePixelFormat(Surface surface);
 
+        [DllImport(DllName, EntryPoint="llglIsPresentable", CallingConvention=CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern unsafe bool IsPresentable(SwapChain swapChain);
+
         [DllImport(DllName, EntryPoint="llglPresent", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void Present(SwapChain swapChain);
 

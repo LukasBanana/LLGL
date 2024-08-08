@@ -33,6 +33,14 @@ namespace LLGL
             }
         }
 
+        public bool IsPresentable
+        {
+            get
+            {
+                return NativeLLGL.IsPresentable(NativeSub);
+            }
+        }
+
         public void Present()
         {
             NativeLLGL.Present(NativeSub);

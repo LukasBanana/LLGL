@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 
+LLGL_C_EXPORT bool llglIsPresentable(LLGLSwapChain swapChain);
 LLGL_C_EXPORT void llglPresent(LLGLSwapChain swapChain);
 LLGL_C_EXPORT uint32_t llglGetCurrentSwapIndex(LLGLSwapChain swapChain);
 LLGL_C_EXPORT uint32_t llglGetNumSwapBuffers(LLGLSwapChain swapChain);

@@ -15,6 +15,11 @@
 
 using namespace LLGL;
 
+LLGL_C_EXPORT bool llglIsPresentable(LLGLSwapChain swapChain)
+{
+    return LLGL_PTR(SwapChain, swapChain)->IsPresentable();
+}
+
 LLGL_C_EXPORT void llglPresent(LLGLSwapChain swapChain)
 {
     LLGL_PTR(SwapChain, swapChain)->Present();

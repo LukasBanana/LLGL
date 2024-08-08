@@ -22,28 +22,19 @@ class NullSwapChain final : public SwapChain
 
     public:
 
-        NullSwapChain(
-            const SwapChainDescriptor&      desc,
-            const std::shared_ptr<Surface>& surface,
-            const RendererInfo&             rendererInfo
-        );
+        #include <LLGL/Backend/SwapChain.inl>
 
     public:
 
         void SetDebugName(const char* name) override;
 
-        void Present() override;
+    public:
 
-        std::uint32_t GetCurrentSwapIndex() const override;
-        std::uint32_t GetNumSwapBuffers() const override;
-        std::uint32_t GetSamples() const override;
-
-        Format GetColorFormat() const override;
-        Format GetDepthStencilFormat() const override;
-
-        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
-
-        const RenderPass* GetRenderPass() const override;
+        NullSwapChain(
+            const SwapChainDescriptor&      desc,
+            const std::shared_ptr<Surface>& surface,
+            const RendererInfo&             rendererInfo
+        );
 
     private:
 

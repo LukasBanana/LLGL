@@ -34,12 +34,6 @@ bool Surface::ProcessEvents()
             if (source != nullptr)
                 source->process(app, source);
 
-            /* Process sensor data */
-            /*if (ident == LOOPER_ID_USER)
-            {
-                //TODO
-            }*/
-
             /* Check if we are exiting */
             if (app->destroyRequested != 0)
                 return false;

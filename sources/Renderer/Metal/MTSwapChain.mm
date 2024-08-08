@@ -75,6 +75,11 @@ MTSwapChain::MTSwapChain(
         ShowSurface();
 }
 
+bool MTSwapChain::IsPresentable() const
+{
+    return true; //TODO
+}
+
 void MTSwapChain::Present()
 {
     /* Present backbuffer */

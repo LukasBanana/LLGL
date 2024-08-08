@@ -29,6 +29,7 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
 
         AndroidGLSwapChainContext(AndroidGLContext& context, Surface& surface);
 
+        bool HasDrawable() const override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 

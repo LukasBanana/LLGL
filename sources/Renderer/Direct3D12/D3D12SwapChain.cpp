@@ -108,6 +108,11 @@ void D3D12SwapChain::SetDebugName(const char* name)
     }
 }
 
+bool D3D12SwapChain::IsPresentable() const
+{
+    return true; // dummy
+}
+
 void D3D12SwapChain::Present()
 {
     /* Present swap-chain with vsync interval */

@@ -136,6 +136,11 @@ IOSGLSwapChainContext::IOSGLSwapChainContext(IOSGLContext& context, Surface& sur
     //[canvasView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[glkView]|" options:0 metrics:nil views:viewsDictionary]];
 }
 
+bool IOSGLSwapChainContext::HasDrawable() const
+{
+    return (view_ != nullptr);
+}
+
 bool IOSGLSwapChainContext::SwapBuffers()
 {
     return true; // dummy

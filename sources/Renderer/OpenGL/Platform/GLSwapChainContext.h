@@ -31,6 +31,9 @@ class GLSwapChainContext
 
         virtual ~GLSwapChainContext() = default;
 
+        // Returns true if this swap-chain context has a drawable (e.g. EGLSurface) to render into.
+        virtual bool HasDrawable() const = 0;
+
         // Swaps the back buffer with the front buffer (Win32: ::SwapBuffers, X11: glXSwapBuffers).
         virtual bool SwapBuffers() = 0;
 

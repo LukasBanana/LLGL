@@ -52,6 +52,11 @@ void DbgSwapChain::SetDebugName(const char* name)
     DbgSetObjectName(*this, name);
 }
 
+bool DbgSwapChain::IsPresentable() const
+{
+    return instance.IsPresentable();
+}
+
 void DbgSwapChain::Present()
 {
     instance.Present();

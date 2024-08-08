@@ -63,6 +63,11 @@ void NullSwapChain::SetDebugName(const char* name)
         label_.clear();
 }
 
+bool NullSwapChain::IsPresentable() const
+{
+    return true; // dummy
+}
+
 void NullSwapChain::Present()
 {
     // dummy

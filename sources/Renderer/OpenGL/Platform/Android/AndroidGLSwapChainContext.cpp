@@ -103,6 +103,11 @@ AndroidGLSwapChainContext::AndroidGLSwapChainContext(AndroidGLContext& context, 
     CastTo<Canvas>(surface).AddEventListener(std::make_shared<CanvasEventListener>(this));
 }
 
+bool AndroidGLSwapChainContext::HasDrawable() const
+{
+    return (sharedSurface_->GetEGLSurface() != nullptr);
+}
+
 bool AndroidGLSwapChainContext::SwapBuffers()
 {
     eglSwapBuffers(display_, sharedSurface_->GetEGLSurface());

@@ -27,6 +27,7 @@ class Win32GLSwapChainContext final : public GLSwapChainContext
 
         Win32GLSwapChainContext(Win32GLContext& context, Surface& surface);
 
+        bool HasDrawable() const override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 
@@ -36,8 +37,8 @@ class Win32GLSwapChainContext final : public GLSwapChainContext
 
     private:
 
-        HGLRC   hGLRC_;
-        HDC     hDC_;
+        HGLRC   hGLRC_  = nullptr;
+        HDC     hDC_    = nullptr;
 
 };
 

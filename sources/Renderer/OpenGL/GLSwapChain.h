@@ -33,7 +33,9 @@ class GLSwapChain final : public SwapChain
 
     public:
 
-        /* ----- Common ----- */
+        #include <LLGL/Backend/SwapChain.inl>
+
+    public:
 
         GLSwapChain(
             GLRenderSystem&                 renderSystem,
@@ -41,23 +43,6 @@ class GLSwapChain final : public SwapChain
             const std::shared_ptr<Surface>& surface,
             GLContextManager&               contextMngr
         );
-
-        void Present() override;
-
-        std::uint32_t GetCurrentSwapIndex() const override;
-        std::uint32_t GetNumSwapBuffers() const override;
-        std::uint32_t GetSamples() const override;
-
-        Format GetColorFormat() const override;
-        Format GetDepthStencilFormat() const override;
-
-        const RenderPass* GetRenderPass() const override;
-
-        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
-
-    public:
-
-        /* ----- GLSwapChain specific functions ----- */
 
         // Makes the swap-chain's GL context current and updates the renger-target height in the linked GL state manager.
         static bool MakeCurrent(GLSwapChain* swapChain);

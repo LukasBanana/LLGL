@@ -32,20 +32,11 @@ class DbgSwapChain final : public SwapChain
 
     public:
 
+        #include <LLGL/Backend/SwapChain.inl>
+
+    public:
+
         void SetDebugName(const char* name) override;
-
-        void Present() override;
-
-        std::uint32_t GetCurrentSwapIndex() const override;
-        std::uint32_t GetNumSwapBuffers() const override;
-        std::uint32_t GetSamples() const override;
-
-        Format GetColorFormat() const override;
-        Format GetDepthStencilFormat() const override;
-
-        bool SetVsyncInterval(std::uint32_t vsyncInterval) override;
-
-        const RenderPass* GetRenderPass() const override;
 
     public:
 
