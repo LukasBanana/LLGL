@@ -37,6 +37,13 @@ const (
 
 /* ----- Enumerations ----- */
 
+type EventAction int
+const (
+    EventActionBegan EventAction = iota
+    EventActionChanged
+    EventActionEnded
+)
+
 type RenderConditionMode int
 const (
     RenderConditionModeWait RenderConditionMode = iota

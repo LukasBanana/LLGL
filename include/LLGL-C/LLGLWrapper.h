@@ -40,6 +40,14 @@
 
 /* ----- Enumerations ----- */
 
+typedef enum LLGLEventAction
+{
+    LLGLEventActionBegan,
+    LLGLEventActionChanged,
+    LLGLEventActionEnded,
+}
+LLGLEventAction;
+
 typedef enum LLGLRenderConditionMode
 {
     LLGLRenderConditionModeWait,

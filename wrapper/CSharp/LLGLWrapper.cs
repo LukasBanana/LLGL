@@ -34,6 +34,13 @@ namespace LLGL
 
     /* ----- Enumerations ----- */
 
+    public enum EventAction
+    {
+        Began,
+        Changed,
+        Ended,
+    }
+
     public enum RenderConditionMode
     {
         Wait,
@@ -3622,6 +3629,14 @@ namespace LLGL
         {
             public IntPtr onProcessEvents;
             public IntPtr onQuit;
+            public IntPtr onInit;
+            public IntPtr onDestroy;
+            public IntPtr onDraw;
+            public IntPtr onResize;
+            public IntPtr onTapGesture;
+            public IntPtr onPanGesture;
+            public IntPtr onKeyDown;
+            public IntPtr onKeyUp;
         }
 
         public unsafe struct WindowEventListener
@@ -4102,6 +4117,30 @@ namespace LLGL
         public unsafe delegate void OnCanvasQuitDelegate(Canvas sender, bool* veto);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasInitDelegate(Canvas sender);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasDestroyDelegate(Canvas sender);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasDrawDelegate(Canvas sender);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasResizeDelegate(Canvas sender, ref Extent2D clientAreaSize);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasTapGestureDelegate(Canvas sender, ref Offset2D position, int numTouches);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasPanGestureDelegate(Canvas sender, ref Offset2D position, int numTouches, float dx, float dy, EventAction action);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasKeyDownDelegate(Canvas sender, Key keyCode);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void OnCanvasKeyUpDelegate(Canvas sender, Key keyCode);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void ReportCallbackDelegate(ReportType type, [MarshalAs(UnmanagedType.LPStr)] string text, void* userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -4182,6 +4221,30 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglPostCanvasQuit", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void PostCanvasQuit(Canvas canvas);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasInit", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasInit(Canvas sender);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasDestroy", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasDestroy(Canvas sender);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasDraw", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasDraw(Canvas sender);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasResize", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasResize(Canvas sender, ref Extent2D clientAreaSize);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasTapGesture", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasTapGesture(Canvas sender, ref Offset2D position, int numTouches);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasPanGesture", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasPanGesture(Canvas sender, ref Offset2D position, int numTouches, float dx, float dy, EventAction action);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasKeyDown", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasKeyDown(Canvas sender, Key keyCode);
+
+        [DllImport(DllName, EntryPoint="llglPostCanvasKeyUp", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void PostCanvasKeyUp(Canvas sender, Key keyCode);
 
         [DllImport(DllName, EntryPoint="llglBegin", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void Begin(CommandBuffer commandBuffer);
@@ -4701,15 +4764,15 @@ namespace LLGL
         [return: MarshalAs(UnmanagedType.I1)]
         public static extern unsafe bool AdaptSurfaceForVideoMode(Surface surface, ref Extent2D outResolution, bool* outFullscreen);
 
-        [DllImport(DllName, EntryPoint="llglResetSurfacePixelFormat", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void ResetSurfacePixelFormat(Surface surface);
-
         [DllImport(DllName, EntryPoint="llglProcessSurfaceEvents", CallingConvention=CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]
         public static extern unsafe bool ProcessSurfaceEvents();
 
         [DllImport(DllName, EntryPoint="llglFindSurfaceResidentDisplay", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe Display FindSurfaceResidentDisplay(Surface surface);
+
+        [DllImport(DllName, EntryPoint="llglResetSurfacePixelFormat", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void ResetSurfacePixelFormat(Surface surface);
 
         [DllImport(DllName, EntryPoint="llglPresent", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void Present(SwapChain swapChain);
