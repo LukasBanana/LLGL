@@ -2,6 +2,10 @@
 
 #version 140
 
+#if GL_ES
+precision mediump float;
+#endif
+
 layout(std140) uniform Settings
 {
     mat4 wMatrix;

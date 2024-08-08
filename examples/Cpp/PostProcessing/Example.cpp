@@ -81,6 +81,13 @@ class Example_PostProcessing : public ExampleBase
     }
     blurSettings;
 
+    struct Animation
+    {
+        Gs::Matrix4f    rotation;
+        float           innerModelRotation = 0.0f;
+    }
+    animation;
+
 public:
 
     Example_PostProcessing() :
@@ -428,17 +435,15 @@ private:
     void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
     {
         // Rotate model around X and Y axes
-        static Gs::Matrix4f rotation;
-
         Gs::Matrix4f deltaRotation;
         Gs::RotateFree(deltaRotation, { 1, 0, 0 }, deltaPitch);
         Gs::RotateFree(deltaRotation, { 0, 1, 0 }, deltaYaw);
-        rotation = deltaRotation * rotation;
+        animation.rotation = deltaRotation * animation.rotation;
 
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
         Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 });
-        sceneSettings.wMatrix *= rotation;
+        sceneSettings.wMatrix *= animation.rotation;
 
         // Set colors and matrix
         sceneSettings.diffuse       = { 0.6f, 0.6f, 0.6f, 1.0f };
@@ -484,8 +489,7 @@ private:
         #endif
 
         // Update rotation of inner model
-        static float innerModelRotation;
-        innerModelRotation += 0.01f;
+        animation.innerModelRotation += 0.01f;
 
         // Update rotation of outer model
         Gs::Vector2f mouseMotion
@@ -563,7 +567,7 @@ private:
                 commands->Draw(numSceneVertices, 0);
 
                 // Draw inner scene model
-                SetSceneSettingsInnerModel(innerModelRotation);
+                SetSceneSettingsInnerModel(animation.innerModelRotation);
                 commands->Draw(numSceneVertices, 0);
             }
             commands->EndRenderPass();

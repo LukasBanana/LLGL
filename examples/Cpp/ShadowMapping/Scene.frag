@@ -2,13 +2,13 @@
 
 #version 140
 
-#ifdef GL_ES
+#if GL_ES
 precision mediump float;
 precision mediump sampler2DShadow;
 #endif
 
 // Specifies whether to enable Percentage-Closer-Filtering (PCF)
-//#define ENABLE_PCF
+#define ENABLE_PCF 0
 
 #define PFC_OFFSET 0.005
 
@@ -36,7 +36,7 @@ void main()
     shadowPos.xyz = shadowPos.xyz * vec3(0.5, -0.5, 0.5) + 0.5;
     
     // Sample shadow map
-    #ifdef ENABLE_PCF
+    #if ENABLE_PCF
     vec3[4] offsets = vec3[4](
         vec3(-PFC_OFFSET, -PFC_OFFSET, 0),
         vec3(-PFC_OFFSET, +PFC_OFFSET, 0),
