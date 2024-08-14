@@ -14,11 +14,6 @@
 #if defined(LLGL_OS_IOS)
 #   include <OpenGLES/ES3/gl.h>
 #   include <OpenGLES/ES3/glext.h>
-#elif defined(LLGL_OS_EMSCRIPTEN)
-#   define GL_GLEXT_PROTOTYPES
-#   define EGL_EGLEXT_PROTOTYPES
-#   include <GLES3/gl3.h>
-#   include <GLES3/gl32.h>
 #elif defined(LLGL_OS_ANDROID)
     // Include all GLES 3.0 functions with static linkage
 #   include <GLES3/gl3.h>

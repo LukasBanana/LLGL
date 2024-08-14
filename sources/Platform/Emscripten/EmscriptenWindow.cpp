@@ -23,9 +23,7 @@ namespace LLGL
 
 bool Surface::ProcessEvents()
 {
- 
-
-    return true;
+    return true; // dummy - handled by web browser
 }
 
 

@@ -410,7 +410,9 @@ option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
 
 if(NOT LLGL_UWP_PLATFORM)
-    if(LLGL_MOBILE_PLATFORM OR EMSCRIPTEN)
+    if(EMSCRIPTEN)
+        option(LLGL_BUILD_RENDERER_WEBGL "Include WebGL renderer project" ON)
+    elseif(LLGL_MOBILE_PLATFORM)
         option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
     else()
         option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
@@ -485,9 +487,13 @@ else()
     set(SUMMARY_TARGET_ARCH "x86")
 endif()
 
-if(EMSCRIPTEN)   
+if(EMSCRIPTEN)
     add_compile_options("SHELL:-s USE_PTHREADS")
-    add_link_options("SHELL:-s USE_PTHREADS")    
+    add_link_options("SHELL:-s USE_PTHREADS")
+
+    # LLGL needs at least WebGL 2.0
+    add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
+    add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
 endif()
 
 
@@ -690,7 +696,7 @@ elseif(APPLE)
         target_link_libraries(LLGL "-framework CoreVideo")
     endif()
 elseif(EMSCRIPTEN)
-    ### 
+    target_link_libraries(LLGL embind)
 elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
 #elseif(LLGL_UWP_PLATFORM)
@@ -709,7 +715,7 @@ if(LLGL_BUILD_RENDERER_NULL)
     add_subdirectory(sources/Renderer/Null)
 endif()
 
-if(LLGL_BUILD_RENDERER_OPENGL OR LLGL_BUILD_RENDERER_OPENGLES3)
+if(LLGL_BUILD_RENDERER_OPENGL OR LLGL_BUILD_RENDERER_OPENGLES3 OR LLGL_BUILD_RENDERER_WEBGL)
     add_subdirectory(sources/Renderer/OpenGL)
 endif()
 
@@ -797,6 +803,10 @@ endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3)
     message(STATUS "Build Renderer: ${LLGL_GL_ENABLE_OPENGLES}")
+endif()
+
+if(LLGL_BUILD_RENDERER_WEBGL)
+    message(STATUS "Build Renderer: WebGL")
 endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN)

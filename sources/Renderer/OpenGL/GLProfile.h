@@ -11,8 +11,12 @@
 
 #if defined LLGL_OPENGL
 #   include "GLCoreProfile/GLCoreProfileTypes.h"
-#elif defined LLGL_OPENGLES3
+#elif defined LLGL_OPEGNLES3
 #   include "GLESProfile/GLESProfileTypes.h"
+#elif defined LLGL_WEBGL
+#   include "WebGLProfile/WebGLProfileTypes.h"
+#else
+#   error Unknwon OpenGL backend
 #endif
 
 
@@ -24,7 +28,7 @@ namespace GLProfile
 {
 
 
-// Returns the renderer ID number, e.g. RendererID::OpenGL or RendererID::OpenGLES3.
+// Returns the renderer ID number, e.g. RendererID::OpenGL or RendererID::OpenGLES.
 int GetRendererID();
 
 // Returns the renderer module name, e.g. "OpenGL" or "OpenGLES3".
@@ -62,6 +66,9 @@ void* MapBuffer(GLenum target, GLenum access);
 
 // Wrapper for glMapBufferRange; uses glMapBuffer for GL.
 void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+
+// Wrapper for glUnmapBuffer. Not supported in WebGL.
+void UnmapBuffer(GLenum target);
 
 // Wrapper for glDrawBuffer; uses glDrawBuffers for GLES.
 void DrawBuffer(GLenum buf);

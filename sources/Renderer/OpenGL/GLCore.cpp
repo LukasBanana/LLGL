@@ -177,10 +177,12 @@ int GLGetVersion()
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name)
 {
-    #ifdef LLGL_OPENGLES3
+    #if defined(LLGL_OPENGL)
+    LLGL_TRAP("illegal use of unsupported OpenGL procedure: %s", name);
+    #elif defined(LLGL_OS_EMSCRIPTEN)
     LLGL_TRAP("illegal use of unsupported OpenGLES procedure: %s", name);
     #else
-    LLGL_TRAP("illegal use of unsupported OpenGL procedure: %s", name);
+    LLGL_TRAP("illegal use of unsupported WebGL procedure: %s", name);
     #endif
 }
 

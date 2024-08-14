@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Key.h>
-#include <emscripten.h>
 
 
 namespace LLGL

@@ -112,7 +112,7 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
         }
     }
 
-    #ifdef LLGL_OPENGLES3
+    #ifndef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
     /* Store additional parameters for GLES */
     extent_[0]  = static_cast<GLint>(desc.extent.width);
     extent_[1]  = static_cast<GLint>(desc.extent.height);

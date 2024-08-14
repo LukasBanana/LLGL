@@ -28,6 +28,7 @@ class EmscriptenGLSwapChainContext final : public GLSwapChainContext
         EmscriptenGLSwapChainContext(EmscriptenGLContext& context, Surface& surface);
         ~EmscriptenGLSwapChainContext();
 
+        bool HasDrawable() const override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 

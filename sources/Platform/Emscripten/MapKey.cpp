@@ -1,5 +1,5 @@
 /*
- * MapKey.cpp (Linux)
+ * MapKey.cpp (Emscripten)
  * 
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -7,6 +7,7 @@
 
 #include "MapKey.h"
 #include <map>
+#include <emscripten.h>
 #include <emscripten/key_codes.h>
 
 

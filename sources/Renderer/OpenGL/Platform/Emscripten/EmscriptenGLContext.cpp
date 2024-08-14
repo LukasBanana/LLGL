@@ -9,6 +9,7 @@
 #include "../../../CheckedCast.h"
 #include "../../../StaticAssertions.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Exception.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 
@@ -84,25 +85,23 @@ void EmscriptenGLContext::CreateContext(const GLPixelFormat& pixelFormat, const 
 {
 	EmscriptenWebGLContextAttributes attrs;
 	emscripten_webgl_init_context_attributes(&attrs);
-	attrs.majorVersion = 2;
-	attrs.minorVersion = 0;
-	attrs.alpha = false;
-	attrs.depth = false;
-	attrs.stencil = false;
-	attrs.antialias = false;
-	attrs.premultipliedAlpha = true;
-	attrs.preserveDrawingBuffer = false;
-	attrs.explicitSwapControl = 0;
-    attrs.enableExtensionsByDefault = true;
-	//attrs.preferLowPowerToHighPerformance = false;
-	attrs.failIfMajorPerformanceCaveat = false;
-	attrs.enableExtensionsByDefault = true;
+	attrs.majorVersion                      = 2;
+	attrs.minorVersion                      = 0;
+	attrs.alpha                             = (pixelFormat.colorBits > 24);
+	attrs.depth                             = (pixelFormat.depthBits > 0);
+	attrs.stencil                           = (pixelFormat.stencilBits > 0);
+	attrs.antialias                         = (pixelFormat.samples > 1);
+	attrs.premultipliedAlpha                = true;
+	attrs.preserveDrawingBuffer             = false;
+	attrs.explicitSwapControl               = 0;
+	attrs.failIfMajorPerformanceCaveat      = false;
+	attrs.enableExtensionsByDefault         = true;
+	attrs.powerPreference                   = EM_WEBGL_POWER_PREFERENCE_DEFAULT;
 
-
-	context_ = emscripten_webgl_create_context("#mycanvas", &attrs);
+	context_ = emscripten_webgl_create_context("#canvas", &attrs);
 
     if (!context_)
-        throw std::runtime_error("emscripten_webgl_create_context failed");
+        LLGL_TRAP("emscripten_webgl_create_context failed");
 
     EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context_);
 }

@@ -1,5 +1,5 @@
 /*
- * LinuxDisplay.h
+ * EmscriptenDisplay.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -73,7 +73,7 @@ bool Display::SetCursorPosition(const Offset2D& position)
 Offset2D Display::GetCursorPosition()
 {
     Offset2D rootPosition = { 0, 0 };
-    Offset2D childPosition = { 0, 0 };
+    //Offset2D childPosition = { 0, 0 };
     return rootPosition;
 }
 
@@ -83,7 +83,7 @@ Offset2D Display::GetCursorPosition()
  */
 
 EmscriptenDisplay::EmscriptenDisplay(int screenIndex) :
-    screen_           { screenIndex      }
+    screen_ { screenIndex }
 {
 }
 

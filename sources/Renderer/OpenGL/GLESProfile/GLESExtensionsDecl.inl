@@ -8,7 +8,7 @@
 // THIS FILE MUST NOT HAVE A HEADER GUARD
 
 
-#ifndef __APPLE__
+#if !GL_GLEXT_PROTOTYPES
 
 #ifndef DECL_GLPROC
 #error Missing definition of macro DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS)

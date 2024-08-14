@@ -152,6 +152,8 @@ static constexpr const char* GetDefaultRendererModule()
     return "Metal";
     #elif defined LLGL_OS_ANDROID
     return "OpenGLES3";
+    #elif defined LLGL_OS_EMSCRIPTEN
+    return "WebGL";
     #else
     return "OpenGL";
     #endif
@@ -941,7 +943,7 @@ bool ExampleBase::IsOpenGL() const
     return
     (
         renderer->GetRendererID() == LLGL::RendererID::OpenGL ||
-        renderer->GetRendererID() == LLGL::RendererID::OpenGLES3
+        renderer->GetRendererID() == LLGL::RendererID::OpenGLES
     );
 }
 

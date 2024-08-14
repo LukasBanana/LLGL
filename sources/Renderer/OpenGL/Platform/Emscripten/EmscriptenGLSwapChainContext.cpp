@@ -7,7 +7,9 @@
 
 #include "EmscriptenGLSwapChainContext.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
+
 
 namespace LLGL
 {
@@ -33,19 +35,25 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
  */
 
 EmscriptenGLSwapChainContext::EmscriptenGLSwapChainContext(EmscriptenGLContext& context, Surface& surface) :
-    GLSwapChainContext { context }
+    GLSwapChainContext { context                   },
+    context_           { context.GetWebGLContext() }
 {
     /* Get native surface handle */
-    NativeHandle nativeHandle;
-    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+    //NativeHandle nativeHandle;
+    //surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 	
-	if (!context.GetWebGLContext())
-        throw std::runtime_error("GetWebGLContext failed");
+	if (!context_)
+        LLGL_TRAP("GetWebGLContext failed");
 }
 
 EmscriptenGLSwapChainContext::~EmscriptenGLSwapChainContext()
 {
     //eglDestroySurface(display_, surface_);
+}
+
+bool EmscriptenGLSwapChainContext::HasDrawable() const
+{
+    return true; // dummy
 }
 
 bool EmscriptenGLSwapChainContext::SwapBuffers()

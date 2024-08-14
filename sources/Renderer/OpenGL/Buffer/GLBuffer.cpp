@@ -307,7 +307,7 @@ void GLBuffer::UnmapBuffer()
     #endif // /GL_ARB_direct_state_access
     {
         GLStateManager::Get().BindGLBuffer(*this);
-        glUnmapBuffer(GetGLTarget());
+        GLProfile::UnmapBuffer(GetGLTarget());
     }
 }
 

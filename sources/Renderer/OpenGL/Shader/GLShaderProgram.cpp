@@ -916,10 +916,10 @@ void GLShaderProgram::BuildProgramBinary(
     if (orderedShaders.fragmentShader == nullptr)
     {
         const GLchar* nullFragmentShaderSource =
-            #ifdef LLGL_OPENGLES3
-            "#version 300 es\n"
-            #else
+            #ifdef LLGL_OPENGL
             "#version 330 core\n"
+            #else
+            "#version 300 es\n"
             #endif
             "void main() {}\n"
         ;

@@ -18,6 +18,11 @@ LLGL_EXPORT void DebugPuts(const char* text)
     ::fprintf(stderr, "%s\n", text);
 }
 
+LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame, unsigned maxNumStackFrames)
+{
+    return {}; //TODO
+}
+
 
 } // /namespace LLGL
 

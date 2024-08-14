@@ -62,6 +62,7 @@ find_source_files(FilesRendererGLShader         CXX ${PROJECT_SOURCE_DIR}/Shader
 find_source_files(FilesRendererGLTexture        CXX ${PROJECT_SOURCE_DIR}/Texture)
 find_source_files(FilesRendererGLCoreProfile    CXX ${PROJECT_SOURCE_DIR}/GLCoreProfile)
 find_source_files(FilesRendererGLESProfile      CXX ${PROJECT_SOURCE_DIR}/GLESProfile)
+find_source_files(FilesRendererWebGLProfile     CXX ${PROJECT_SOURCE_DIR}/WebGLProfile)
 find_source_files(FilesIncludeGL                INC ${BACKEND_INCLUDE_DIR}/OpenGL)
 
 # Remove selected files if GL2X is disabled
@@ -107,38 +108,6 @@ elseif(UNIX)
     endif()
 endif()
 
-set(
-    FilesGL
-    ${FilesRendererGL}
-    ${FilesRendererGLBuffer}
-    ${FilesRendererGLCommand}
-    ${FilesRendererGLExt}
-    ${FilesRendererGLPlatform}
-    ${FilesRendererGLPlatformBase}
-    ${FilesRendererGLRenderState}
-    ${FilesRendererGLShader}
-    ${FilesRendererGLTexture}
-    ${FilesRendererGLCoreProfile}
-    ${FilesIncludeGL}
-    ${FilesIncludeGLPlatform}
-)
-
-set(
-    FilesGLES3
-    ${FilesRendererGL}
-    ${FilesRendererGLBuffer}
-    ${FilesRendererGLCommand}
-    ${FilesRendererGLExt}
-    ${FilesRendererGLPlatform}
-    ${FilesRendererGLPlatformBase}
-    ${FilesRendererGLRenderState}
-    ${FilesRendererGLES3Shader}
-    ${FilesRendererGLTexture}
-    ${FilesRendererGLESProfile}
-    ${FilesIncludeGL}
-    ${FilesIncludeGLPlatform}
-)
-
 
 # === Source group folders ===
 
@@ -152,6 +121,7 @@ source_group("OpenGL\\Shader"           FILES ${FilesRendererGLShader})
 source_group("OpenGL\\Texture"          FILES ${FilesRendererGLTexture})
 source_group("OpenGL\\GLCoreProfile"    FILES ${FilesRendererGLCoreProfile})
 source_group("OpenGL\\GLESProfile"      FILES ${FilesRendererGLESProfile})
+source_group("OpenGL\\WebGLProfile"     FILES ${FilesRendererWebGLProfile})
 source_group("Include\\Platform"        FILES ${FilesIncludeGL} ${FilesIncludeGLPlatform})
 
 
@@ -165,8 +135,53 @@ endif()
 
 # === Projects ===
 
+if(LLGL_BUILD_RENDERER_WEBGL)
+    # WebGL Renderer
+    set(
+        FilesWebGL
+        ${FilesRendererGL}
+        ${FilesRendererGLBuffer}
+        ${FilesRendererGLCommand}
+        ${FilesRendererGLExt}
+        ${FilesRendererGLPlatform}
+        ${FilesRendererGLPlatformBase}
+        ${FilesRendererGLRenderState}
+        ${FilesRendererGLES3Shader}
+        ${FilesRendererGLTexture}
+        ${FilesRendererWebGLProfile}
+        ${FilesIncludeGL}
+        ${FilesIncludeGLPlatform}
+    )
+    
+    include("${EXTERNAL_MODULE_DIR}/FindOpenGLES3.cmake")
+    if(OPENGLES_FOUND)
+        include_directories(${OPENGLES_INCLUDE_DIR})
+        add_llgl_module(LLGL_WebGL LLGL_BUILD_RENDERER_WEBGL "${FilesWebGL}")
+        target_link_libraries(LLGL_WebGL LLGL ${OPENGLES_LIBRARIES})
+        ADD_PROJECT_DEFINE(LLGL_WebGL LLGL_WEBGL)
+    else()
+        message(FATAL_ERROR "LLGL_BUILD_RENDERER_WEBGL failed: missing OpenGLES libraries")
+    endif()
+endif()
+
 if(LLGL_BUILD_RENDERER_OPENGLES3)
     # OpenGLES Renderer
+    set(
+        FilesGLES3
+        ${FilesRendererGL}
+        ${FilesRendererGLBuffer}
+        ${FilesRendererGLCommand}
+        ${FilesRendererGLExt}
+        ${FilesRendererGLPlatform}
+        ${FilesRendererGLPlatformBase}
+        ${FilesRendererGLRenderState}
+        ${FilesRendererGLES3Shader}
+        ${FilesRendererGLTexture}
+        ${FilesRendererGLESProfile}
+        ${FilesIncludeGL}
+        ${FilesIncludeGLPlatform}
+    )
+
     include("${EXTERNAL_MODULE_DIR}/FindOpenGLES3.cmake")
     if(OPENGLES_FOUND)
         include_directories(${OPENGLES_INCLUDE_DIR})
@@ -176,8 +191,6 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         if(APPLE)
             target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES} "-framework Foundation -framework UIKit -framework QuartzCore -framework OpenGLES -framework GLKit")
             ADD_PROJECT_DEFINE(LLGL_OpenGLES3 GLES_SILENCE_DEPRECATION)
-        elseif(EMSCRIPTEN)
-            target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
         else()
             target_link_libraries(LLGL_OpenGLES3 LLGL EGL GLESv3)
         endif()
@@ -190,6 +203,22 @@ endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
     # OpenGL Renderer
+    set(
+        FilesGL
+        ${FilesRendererGL}
+        ${FilesRendererGLBuffer}
+        ${FilesRendererGLCommand}
+        ${FilesRendererGLExt}
+        ${FilesRendererGLPlatform}
+        ${FilesRendererGLPlatformBase}
+        ${FilesRendererGLRenderState}
+        ${FilesRendererGLShader}
+        ${FilesRendererGLTexture}
+        ${FilesRendererGLCoreProfile}
+        ${FilesIncludeGL}
+        ${FilesIncludeGLPlatform}
+    )
+
     set(OpenGL_GL_PREFERENCE GLVND)
     find_package(OpenGL REQUIRED)
     if(OPENGL_FOUND)

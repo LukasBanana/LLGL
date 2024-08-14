@@ -1,5 +1,5 @@
 /*
- * GLESProfile.cpp
+ * WebGLProfile.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -20,22 +20,22 @@ namespace GLProfile
 
 int GetRendererID()
 {
-    return RendererID::OpenGLES3;
+    return RendererID::WebGL;
 }
 
 const char* GetModuleName()
 {
-    return "OpenGLES3";
+    return "WebGL";
 }
 
 const char* GetRendererName()
 {
-    return "OpenGL ES 3";
+    return "WebGL";
 }
 
 const char* GetAPIName()
 {
-    return "OpenGL ES";
+    return "WebGL";
 }
 
 const char* GetShadingLanguageName()
@@ -50,11 +50,7 @@ GLint GetMaxViewports()
 
 void GetTexParameterInternalFormat(GLenum target, GLint* params)
 {
-    #ifdef GL_ES_VERSION_3_1
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, params);
-    #else
     //TODO...
-    #endif
 }
 
 void GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufsize, GLint* params)
@@ -74,41 +70,22 @@ void ClearDepth(GLclamp_t depth)
 
 void GetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void* data)
 {
-    if (void* srcData = glMapBufferRange(target, offset, size, GL_MAP_READ_BIT))
-    {
-        ::memcpy(data, srcData, static_cast<std::size_t>(size));
-        glUnmapBuffer(target);
-    }
-}
-
-static GLbitfield ToGLESMapBufferRangeAccess(GLenum access)
-{
-    switch (access)
-    {
-        case GL_READ_ONLY:  return GL_MAP_READ_BIT;
-        case GL_WRITE_ONLY: return GL_MAP_WRITE_BIT;
-        case GL_READ_WRITE: return GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
-        default:            return 0;
-    }
+    // dummy
 }
 
 void* MapBuffer(GLenum target, GLenum access)
 {
-    /* Translate GL access type to GLES bitfield, determine buffer length, and map entire buffer range */
-    GLbitfield flags = ToGLESMapBufferRangeAccess(access);
-    GLint length = 0;
-    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &length);
-    return glMapBufferRange(target, 0, length, flags);
+    return nullptr; // dummy
 }
 
 void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
-    return glMapBufferRange(target, offset, length, access);
+    return nullptr; // dummy
 }
 
 void UnmapBuffer(GLenum target)
 {
-    glUnmapBuffer(target);
+    // dummy
 }
 
 void DrawBuffer(GLenum buf)

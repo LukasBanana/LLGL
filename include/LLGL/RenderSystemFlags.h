@@ -240,15 +240,24 @@ struct RendererID
 
     static constexpr int Null       = 0x00000001; //!< ID number for a Null renderer. This renderer does not render anything but provides the same interface for debugging purposes.
     static constexpr int OpenGL     = 0x00000002; //!< ID number for an OpenGL renderer.
-    static constexpr int OpenGLES1  = 0x00000003; //!< ID number for an OpenGL ES 1 renderer.
-    static constexpr int OpenGLES2  = 0x00000004; //!< ID number for an OpenGL ES 2 renderer.
-    static constexpr int OpenGLES3  = 0x00000005; //!< ID number for an OpenGL ES 3 renderer.
+    static constexpr int OpenGLES   = 0x00000003; //!< ID number for an OpenGL ES renderer.
+    static constexpr int WebGL      = 0x00000004; //!< ID number for a WebGL renderer.
+    static constexpr int WebGPU     = 0x00000005; //!< ID number for a WebGPU renderer.
     static constexpr int Direct3D9  = 0x00000006; //!< ID number for a Direct3D 9 renderer.
     static constexpr int Direct3D10 = 0x00000007; //!< ID number for a Direct3D 10 renderer.
     static constexpr int Direct3D11 = 0x00000008; //!< ID number for a Direct3D 11 renderer.
     static constexpr int Direct3D12 = 0x00000009; //!< ID number for a Direct3D 12 renderer.
     static constexpr int Vulkan     = 0x0000000A; //!< ID number for a Vulkan renderer.
     static constexpr int Metal      = 0x0000000B; //!< ID number for a Metal renderer.
+
+    LLGL_DEPRECATED("LLGL::RendererID::OpenGLES1 is deprecated since 0.04b; Use LLGL::RendererID::OpenGLES instead!", "OpenGLES")
+    static constexpr int OpenGLES1  = RendererID::OpenGLES;
+
+    LLGL_DEPRECATED("LLGL::RendererID::OpenGLES2 is deprecated since 0.04b; Use LLGL::RendererID::OpenGLES instead!", "OpenGLES")
+    static constexpr int OpenGLES2  = RendererID::OpenGLES;
+
+    LLGL_DEPRECATED("LLGL::RendererID::OpenGLES3 is deprecated since 0.04b; Use LLGL::RendererID::OpenGLES instead!", "OpenGLES")
+    static constexpr int OpenGLES3  = RendererID::OpenGLES;
 
     static constexpr int Reserved   = 0x000000FF; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
 };
