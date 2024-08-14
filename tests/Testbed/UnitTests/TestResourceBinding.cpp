@@ -21,6 +21,13 @@ static bool VectorsEqual(const Gs::Vector4i& lhs, const Gs::Vector4i& rhs)
     );
 }
 
+#define SAFE_RELEASE(OBJ)           \
+    if (OBJ != nullptr)             \
+    {                               \
+        renderer->Release(*OBJ);    \
+        OBJ = nullptr;              \
+    }
+
 /*
 This test is primarily aiming at the D3D11 backend to ensure the automatic unbinding of R/W resources is working correctly (see D3D11BindingTable, D3DBindingLocator).
 Bind buffer and texture resources as SRV and UAV in an alternating fashion and across both graphics and compute stages.
@@ -52,21 +59,119 @@ DEF_TEST( ResourceBinding )
     };
 
     static TestResult result = TestResult::Passed;
-    static RenderPass* renderPass;
-    static PipelineLayout* psoLayout[NumPSOs];
-    static PipelineState* pso[NumPSOs];
-    static Buffer* buffers[4];
-    static Buffer* intermediateBuffer;
-    static Texture* textures[4];
-    static RenderTarget* renderTargets[2];
-    static ResourceHeap* graphicsResourceHeaps[2];
-    static ResourceHeap* computeResourceHeaps[2];
+    static RenderPass* renderPass = nullptr;
+    static PipelineLayout* psoLayout[NumPSOs] = {};
+    static PipelineState* pso[NumPSOs] = {};
+    static Buffer* buffers[4] = {};
+    static Buffer* intermediateBuffer = nullptr;
+    static Texture* textures[4] = {};
+    static RenderTarget* renderTargets[2] = {};
+    static ResourceHeap* graphicsResourceHeaps[2] = {};
+    static ResourceHeap* computeResourceHeaps[2] = {};
 
     if (shaders[VSResourceBinding] == nullptr || shaders[PSResourceBinding] == nullptr || shaders[CSResourceBinding] == nullptr)
     {
         Log::Errorf("Missing shaders for backend\n");
         return TestResult::FailedErrors;
     }
+
+    auto CreateBuffersAndTextures = [this]() -> void
+    {
+        SAFE_RELEASE(intermediateBuffer);
+
+        // Create in/out resources
+        BufferDescriptor bufDesc;
+        {
+            bufDesc.size        = sizeof(std::int32_t)*4;
+            bufDesc.format      = Format::RGBA32SInt;
+            bufDesc.bindFlags   = BindFlags::Sampled | BindFlags::Storage | BindFlags::CopySrc | BindFlags::CopyDst;
+        }
+
+        TextureDescriptor texDesc;
+        {
+            texDesc.type        = TextureType::Texture1D;
+            texDesc.format      = Format::RGBA32SInt;
+            texDesc.extent      = { 1, 1, 1 };
+            texDesc.bindFlags   = BindFlags::ColorAttachment | BindFlags::Storage | BindFlags::Sampled | BindFlags::CopySrc | BindFlags::CopyDst;
+            texDesc.miscFlags   = MiscFlags::NoInitialData;
+        }
+
+        for_range(i, 4)
+        {
+            SAFE_RELEASE(buffers[i]);
+            const std::string bufName = "RWBuffer<int4>[" + std::to_string(i) + "]";
+            bufDesc.debugName = bufName.c_str();
+            buffers[i] = renderer->CreateBuffer(bufDesc);
+
+            SAFE_RELEASE(textures[i]);
+            const std::string texName = "RWTexture1D<int4>[" + std::to_string(i) + "]";
+            texDesc.debugName = texName.c_str();
+            textures[i] = renderer->CreateTexture(texDesc);
+        }
+
+        bufDesc.debugName = "RWBuffer<int4>.intermediate";
+        intermediateBuffer = renderer->CreateBuffer(bufDesc);
+
+        #if 0 //TODO
+        // Create extra texture with multiple MIP maps
+        TextureDescriptor texDescMips;
+        {
+            texDescMips.debugName   = "RWTexture1D<int4>.mips[3]";
+            texDescMips.type        = TextureType::Texture1D;
+            texDescMips.format      = Format::RGBA32SInt;
+            texDescMips.extent      = { 4, 1, 1 };
+            texDescMips.bindFlags   = BindFlags::ColorAttachment | BindFlags::Storage | BindFlags::Sampled | BindFlags::CopySrc | BindFlags::CopyDst;
+            texDescMips.miscFlags   = MiscFlags::NoInitialData;
+        }
+        textures[4] = renderer->CreateTexture(texDescMips);
+        #endif
+
+        #if 0 //TODO
+        // Define subresource views to read and write to texture resource simultaneously, but at different MIP levels
+        ResourceViewDescriptor texture4ResView0;
+        texture4ResView0.resource                                = textures[4];
+        texture4ResView0.textureView.type                        = TextureType::Texture1D;
+        texture4ResView0.textureView.format                      = textures[4]->GetFormat();
+        texture4ResView0.textureView.subresource.baseMipLevel    = 0;
+
+        ResourceViewDescriptor texture4ResView2;
+        texture4ResView2.resource                                = textures[4];
+        texture4ResView2.textureView.type                        = TextureType::Texture1D;
+        texture4ResView2.textureView.format                      = textures[4]->GetFormat();
+        texture4ResView2.textureView.subresource.baseMipLevel    = 2;
+        #endif
+
+        // Create resource heaps
+        SAFE_RELEASE(graphicsResourceHeaps[0]);
+        SAFE_RELEASE(graphicsResourceHeaps[1]);
+
+        graphicsResourceHeaps[0] = renderer->CreateResourceHeap(psoLayout[GraphicsPSOResourceHeap], { buffers[0], buffers[1], buffers[2], buffers[3], textures[0] });
+        graphicsResourceHeaps[1] = renderer->CreateResourceHeap(psoLayout[GraphicsPSOResourceHeap], { buffers[0], buffers[3], buffers[1], buffers[2], textures[2] });
+
+        SAFE_RELEASE(computeResourceHeaps[0]);
+        SAFE_RELEASE(computeResourceHeaps[1]);
+
+        computeResourceHeaps[0] = renderer->CreateResourceHeap(psoLayout[ComputePSOResourceHeap], { buffers[0], buffers[1], buffers[2], buffers[3], textures[0] });
+        computeResourceHeaps[1] = renderer->CreateResourceHeap(psoLayout[ComputePSOResourceHeap], { buffers[0], buffers[3], buffers[1], buffers[2], textures[2] });
+    };
+
+    auto CreateRenderTargets = [this]() -> void
+    {
+        // Create render targets for graphics PSO output
+        for_range(i, 2)
+        {
+            const Extent3D texExtent = textures[i*2+0]->GetMipExtent(0);
+            RenderTargetDescriptor renderTargetDesc;
+            {
+                renderTargetDesc.renderPass             = renderPass;
+                renderTargetDesc.resolution.width       = texExtent.width;
+                renderTargetDesc.resolution.height      = texExtent.height;
+                renderTargetDesc.colorAttachments[0]    = textures[i*2+0];
+                renderTargetDesc.colorAttachments[1]    = textures[i*2+1];
+            }
+            renderTargets[i] = renderer->CreateRenderTarget(renderTargetDesc);
+        }
+    };
 
     if (frame == 0)
     {
@@ -198,86 +303,8 @@ DEF_TEST( ResourceBinding )
             }
         }
 
-        // Create in/out resources
-        BufferDescriptor bufDesc;
-        {
-            bufDesc.size        = sizeof(std::int32_t)*4;
-            bufDesc.format      = Format::RGBA32SInt;
-            bufDesc.bindFlags   = BindFlags::Sampled | BindFlags::Storage | BindFlags::CopySrc | BindFlags::CopyDst;
-        }
-
-        TextureDescriptor texDesc;
-        {
-            texDesc.type        = TextureType::Texture1D;
-            texDesc.format      = Format::RGBA32SInt;
-            texDesc.extent      = { 1, 1, 1 };
-            texDesc.bindFlags   = BindFlags::ColorAttachment | BindFlags::Storage | BindFlags::Sampled | BindFlags::CopySrc | BindFlags::CopyDst;
-            texDesc.miscFlags   = MiscFlags::NoInitialData;
-        }
-
-        for_range(i, 4)
-        {
-            const std::string bufName = "RWBuffer<int4>[" + std::to_string(i) + "]";
-            bufDesc.debugName = bufName.c_str();
-            buffers[i] = renderer->CreateBuffer(bufDesc);
-
-            const std::string texName = "RWTexture1D<int4>[" + std::to_string(i) + "]";
-            texDesc.debugName = texName.c_str();
-            textures[i] = renderer->CreateTexture(texDesc);
-        }
-
-        bufDesc.debugName = "RWBuffer<int4>.intermediate";
-        intermediateBuffer = renderer->CreateBuffer(bufDesc);
-
-        #if 0 //TODO
-        // Create extra texture with multiple MIP maps
-        TextureDescriptor texDescMips;
-        {
-            texDescMips.debugName   = "RWTexture1D<int4>.mips[3]";
-            texDescMips.type        = TextureType::Texture1D;
-            texDescMips.format      = Format::RGBA32SInt;
-            texDescMips.extent      = { 4, 1, 1 };
-            texDescMips.bindFlags   = BindFlags::ColorAttachment | BindFlags::Storage | BindFlags::Sampled | BindFlags::CopySrc | BindFlags::CopyDst;
-            texDescMips.miscFlags   = MiscFlags::NoInitialData;
-        }
-        textures[4] = renderer->CreateTexture(texDescMips);
-        #endif
-
-        // Create render targets for graphics PSO output
-        for_range(i, 2)
-        {
-            RenderTargetDescriptor renderTargetDesc;
-            {
-                renderTargetDesc.renderPass             = renderPass;
-                renderTargetDesc.resolution.width       = texDesc.extent.width;
-                renderTargetDesc.resolution.height      = texDesc.extent.height;
-                renderTargetDesc.colorAttachments[0]    = textures[i*2+0];
-                renderTargetDesc.colorAttachments[1]    = textures[i*2+1];
-            }
-            renderTargets[i] = renderer->CreateRenderTarget(renderTargetDesc);
-        }
-
-        #if 0 //TODO
-        // Define subresource views to read and write to texture resource simultaneously, but at different MIP levels
-        ResourceViewDescriptor texture4ResView0;
-        texture4ResView0.resource                                = textures[4];
-        texture4ResView0.textureView.type                        = TextureType::Texture1D;
-        texture4ResView0.textureView.format                      = textures[4]->GetFormat();
-        texture4ResView0.textureView.subresource.baseMipLevel    = 0;
-
-        ResourceViewDescriptor texture4ResView2;
-        texture4ResView2.resource                                = textures[4];
-        texture4ResView2.textureView.type                        = TextureType::Texture1D;
-        texture4ResView2.textureView.format                      = textures[4]->GetFormat();
-        texture4ResView2.textureView.subresource.baseMipLevel    = 2;
-        #endif
-
-        // Create resource heaps
-        graphicsResourceHeaps[0] = renderer->CreateResourceHeap(psoLayout[GraphicsPSOResourceHeap], { buffers[0], buffers[1], buffers[2], buffers[3], textures[0] });
-        graphicsResourceHeaps[1] = renderer->CreateResourceHeap(psoLayout[GraphicsPSOResourceHeap], { buffers[0], buffers[3], buffers[1], buffers[2], textures[2] });
-
-        computeResourceHeaps[0] = renderer->CreateResourceHeap(psoLayout[ComputePSOResourceHeap], { buffers[0], buffers[1], buffers[2], buffers[3], textures[0] });
-        computeResourceHeaps[1] = renderer->CreateResourceHeap(psoLayout[ComputePSOResourceHeap], { buffers[0], buffers[3], buffers[1], buffers[2], textures[2] });
+        CreateBuffersAndTextures();
+        CreateRenderTargets();
     }
 
     auto PrintIntermediateResultsVerbose = [this, frame](const char* dispatchName, const ExpectedResults& expectedResults) -> void
@@ -535,6 +562,19 @@ DEF_TEST( ResourceBinding )
 
             PrintIntermediateResultsVerbose("RenderOrder3", expectedResults);
         };
+
+        auto RecreateResources = [&]() -> void
+        {
+            if (this->opt.verbose)
+                Log::Printf("Recreate resources\n");
+
+            CreateBuffersAndTextures();
+            CreateRenderTargets();
+        };
+
+        // Re-create resources intermittently
+        if (frame % 10 == 10 - 1)
+            RecreateResources();
 
         cmdBuf.Begin();
         {

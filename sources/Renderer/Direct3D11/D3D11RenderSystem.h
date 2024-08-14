@@ -130,6 +130,8 @@ class D3D11RenderSystem final : public RenderSystem
         bool CheckFactoryFeatureSupport(DXGI_FEATURE feature) const;
         #endif
 
+        void NotifyBindingTablesOnRelease(D3D11BindingLocator* locator);
+
     private:
 
         /* ----- Common objects ----- */
@@ -164,6 +166,7 @@ class D3D11RenderSystem final : public RenderSystem
         bool                                    tearingSupported_       = false;
 
         std::shared_ptr<D3D11StateManager>      stateMngr_;
+        std::vector<D3D11StateManager*>         deferredStateMngrRefs_;
 
         /* ----- Hardware object containers ----- */
 

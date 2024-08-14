@@ -44,6 +44,30 @@ class D3D11PrimaryCommandBuffer final : public D3D11CommandBuffer
             return commandList_.Get();
         }
 
+        // Returns the native D3D11 device context.
+        inline ID3D11DeviceContext* GetNative() const
+        {
+            return context_.GetNative();
+        }
+
+        // Returns a pointer to the state manager for this command buffer.
+        inline D3D11StateManager* GetStateManagerPtr() const
+        {
+            return context_.GetStateManagerPtr();
+        }
+
+        // Returns the state manager for this command buffer.
+        inline D3D11StateManager& GetStateManager() const
+        {
+            return context_.GetStateManager();
+        }
+
+        // Returns the binding table.
+        inline D3D11BindingTable& GetBindingTable() const
+        {
+            return context_.GetBindingTable();
+        }
+
     private:
 
         void ClearWithIntermediateUAV(ID3D11Buffer* buffer, UINT offset, UINT size, const UINT (&valuesVec4)[4]);
@@ -58,24 +82,6 @@ class D3D11PrimaryCommandBuffer final : public D3D11CommandBuffer
             UINT                        size,
             D3D11_USAGE                 usage           = D3D11_USAGE_DEFAULT
         );
-
-        // Returns the native D3D11 device context.
-        inline ID3D11DeviceContext* GetNative() const
-        {
-            return context_.GetNative();
-        }
-
-        // Returns the state manager for this command context.
-        inline D3D11StateManager& GetStateManager() const
-        {
-            return context_.GetStateManager();
-        }
-
-        // Returns the binding table.
-        inline D3D11BindingTable& GetBindingTable() const
-        {
-            return context_.GetBindingTable();
-        }
 
     private:
 

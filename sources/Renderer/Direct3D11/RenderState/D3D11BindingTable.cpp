@@ -249,6 +249,7 @@ void D3D11BindingTable::SetRenderTargets(
 
 void D3D11BindingTable::ClearState()
 {
+    /* Clear binding locators from all tables */
     ClearBindingLocators(vb_);
     ClearBindingLocators(ib_);
     ClearBindingLocators(srvVS_);
@@ -279,16 +280,23 @@ void D3D11BindingTable::FlushOutputMergerUAVs()
     }
 }
 
+void D3D11BindingTable::NotifyResourceRelease(D3D11BindingLocator* locator)
+{
+    /* When a resource is about to be released, evict all of its bindings from this binding table */
+    EvictAllBindings(locator);
+}
+
 
 /*
  * ======= Private: =======
  */
 
+static void* const g_nullArray[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = {};
+
 template <typename T>
 static T* const* GetNullPointerArray()
 {
-    static void* const nullArray[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT] = {};
-    return reinterpret_cast<T* const*>(nullArray);
+    return reinterpret_cast<T* const*>(g_nullArray);
 }
 
 void D3D11BindingTable::InsertInput(D3D11BindingLocator** container, D3D11BindingLocator::D3DInputs input, UINT slot, D3D11BindingLocator* locator)

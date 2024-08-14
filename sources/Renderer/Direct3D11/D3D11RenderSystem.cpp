@@ -126,6 +126,9 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
         /* Create state manager dedicated to deferred context */
         std::shared_ptr<D3D11StateManager> deferredStateMngr = std::make_shared<D3D11StateManager>(device_.Get(), deferredContext);
 
+        /* Store references to unique state manager - we need to notify all binding tables on resource release */
+        deferredStateMngrRefs_.push_back(deferredStateMngr.get());
+
         /* Create command buffer with deferred context and dedicated state manager */
         return commandBuffers_.emplace<D3D11PrimaryCommandBuffer>(device_.Get(), deferredContext, std::move(deferredStateMngr), commandBufferDesc);
     }
@@ -133,6 +136,22 @@ CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescrip
 
 void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
 {
+    auto& commandBufferD3D = LLGL_CAST(D3D11CommandBuffer&, commandBuffer);
+    if (!commandBufferD3D.IsSecondaryCmdBuffer())
+    {
+        /* If this is command buffer has a unique state manager, remove it from the list of deferred state managers */
+        auto& primaryCmdBufferD3D = LLGL_CAST(D3D11PrimaryCommandBuffer&, commandBufferD3D);
+        if (primaryCmdBufferD3D.GetStateManagerPtr() != stateMngr_.get())
+        {
+            RemoveFromListIf(
+                deferredStateMngrRefs_,
+                [stateMngr = primaryCmdBufferD3D.GetStateManagerPtr()](D3D11StateManager* entry) -> bool
+                {
+                    return (entry == stateMngr);
+                }
+            );
+        }
+    }
     commandBuffers_.erase(&commandBuffer);
 }
 
@@ -155,6 +174,8 @@ BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buff
 
 void D3D11RenderSystem::Release(Buffer& buffer)
 {
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    NotifyBindingTablesOnRelease(bufferD3D.GetBindingLocator());
     buffers_.erase(&buffer);
 }
 
@@ -212,6 +233,8 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
 void D3D11RenderSystem::Release(Texture& texture)
 {
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    NotifyBindingTablesOnRelease(textureD3D.GetBindingLocator());
     textures_.erase(&texture);
 }
 
@@ -377,6 +400,11 @@ RenderTarget* D3D11RenderSystem::CreateRenderTarget(const RenderTargetDescriptor
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 {
+    auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
+    const D3D11RenderTargetHandles& rtHandles = renderTargetD3D.GetRenderTargetHandles();
+    NotifyBindingTablesOnRelease(rtHandles.GetDepthStencilLocator());
+    for_range(i, rtHandles.GetNumRenderTargetViews())
+        NotifyBindingTablesOnRelease(rtHandles.GetRenderTargetLocators()[i]);
     renderTargets_.erase(&renderTarget);
 }
 
@@ -1096,6 +1124,19 @@ bool D3D11RenderSystem::CheckFactoryFeatureSupport(DXGI_FEATURE feature) const
 }
 
 #endif
+
+void D3D11RenderSystem::NotifyBindingTablesOnRelease(D3D11BindingLocator* locator)
+{
+    if (locator != nullptr)
+    {
+        /* Notify state manager that is shared across the primary D3D device context */
+        stateMngr_->GetBindingTable().NotifyResourceRelease(locator);
+
+        /* Notify state managers for all deferred device contexts */
+        for (D3D11StateManager* deferredStateMngr : deferredStateMngrRefs_)
+            deferredStateMngr->GetBindingTable().NotifyResourceRelease(locator);
+    }
+}
 
 
 } // /namespace LLGL

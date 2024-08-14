@@ -91,6 +91,12 @@ class D3D11CommandContext
             return context_.Get();
         }
 
+        // Returns a pointer to the state manager for this command context.
+        inline D3D11StateManager* GetStateManagerPtr() const
+        {
+            return stateMngr_.get();
+        }
+
         // Returns the state manager for this command context.
         inline D3D11StateManager& GetStateManager() const
         {
