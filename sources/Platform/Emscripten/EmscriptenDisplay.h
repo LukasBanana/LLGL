@@ -10,12 +10,7 @@
 
 
 #include <LLGL/Display.h>
-#include <memory>
 
-#include <emscripten.h>
-#include <emscripten/html5.h>
-#include <emscripten/val.h>
-#include <emscripten/bind.h>
 
 namespace LLGL
 {
@@ -43,9 +38,7 @@ class EmscriptenDisplay : public Display
 
     private:
 
-    private:
-
-        int                                     screen_             = 0;
+        int screen_ = 0;
 
 };
 

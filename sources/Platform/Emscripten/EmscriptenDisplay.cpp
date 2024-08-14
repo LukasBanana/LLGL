@@ -24,44 +24,26 @@ std::size_t Display::Count()
 
 Display* const * Display::GetList()
 {
-    /*
-    if (UpdateDisplayList() || g_displayRefList.empty())
-    {
-        /* Update reference list and append null terminator to array */
-        /*g_displayRefList.clear();
-        g_displayRefList.reserve(g_displayList.size() + 1);
-        for (const auto& display : g_displayList)
-            g_displayRefList.push_back(display.get());
-        g_displayRefList.push_back(nullptr);
-    }
-    return g_displayRefList.data();
-    */
-
     return nullptr;
 }
 
 Display* Display::Get(std::size_t index)
 {
-    //UpdateDisplayList();
-    //return (index < g_displayList.size() ? g_displayList[index].get() : nullptr);
     return nullptr;
 }
 
 Display* Display::GetPrimary()
 {
-    //UpdateDisplayList();
     return nullptr;
 }
 
 bool Display::ShowCursor(bool show)
 {
-    //TODO
     return false;
 }
 
 bool Display::IsCursorShown()
 {
-    //TODO
     return true;
 }
 
@@ -94,16 +76,12 @@ bool EmscriptenDisplay::IsPrimary() const
 
 UTF8String EmscriptenDisplay::GetDeviceName() const
 {
-    return UTF8String{"device name"};
+    return UTF8String{ "device name" };
 }
 
 Offset2D EmscriptenDisplay::GetOffset() const
 {
-    /* Get display offset from position of root window */
-    return Offset2D
-    {
-        0, 0
-    };
+    return Offset2D{};
 }
 
 float EmscriptenDisplay::GetScale() const
@@ -113,34 +91,11 @@ float EmscriptenDisplay::GetScale() const
 
 bool EmscriptenDisplay::ResetDisplayMode()
 {
-    //TODO
     return false;
 }
 
 bool EmscriptenDisplay::SetDisplayMode(const DisplayMode& displayMode)
 {
-    /* Get all screen sizes from X11 extension Xrandr */
-    int numSizes = 0;
-
-    /*
-    XRRScreenSize* scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
-
-    for (int i = 0; i < numSizes; ++i)
-    {
-        // Check if specified display mode resolution matches this screen configuration
-        if (displayMode.resolution.width  == static_cast<std::uint32_t>(scrSizes[i].width) &&
-            displayMode.resolution.height == static_cast<std::uint32_t>(scrSizes[i].height))
-        {
-            if (XRRScreenConfiguration* scrCfg = XRRGetScreenInfo(dpy, rootWnd))
-            {
-                Status status = XRRSetScreenConfig(dpy, scrCfg, rootWnd, i, RR_Rotate_0, 0);
-                XRRFreeScreenConfigInfo(scrCfg);
-                return (status != 0);
-            }
-        }
-    }
-    */
-
     return false;
 }
 
@@ -159,12 +114,6 @@ std::vector<DisplayMode> EmscriptenDisplay::GetSupportedDisplayModes() const
 
     return displayModes;
 }
-
-
-/*
- * ======= Private: =======
- */
-
 
 
 } // /namespace LLGL
