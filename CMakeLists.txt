@@ -7,7 +7,7 @@
 
 # Originally authored on 09/07/2015
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.12)
 
 project(LLGL)
 
@@ -105,13 +105,7 @@ macro(ADD_PROJECT_DEFINE TARGET_NAME IDENT)
 endmacro()
 
 macro(ADD_DEBUG_DEFINE IDENT)
-    if(MSVC)
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D${IDENT}")
-        set(CMAKE_OBJCXX_FLAGS_DEBUG "${CMAKE_OBJCXX_FLAGS_DEBUG} /D${IDENT}")
-    else(MSVC)
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D${IDENT}")
-        set(CMAKE_OBJCXX_FLAGS_DEBUG "${CMAKE_OBJCXX_FLAGS_DEBUG} -D${IDENT}")
-    endif(MSVC)
+    add_compile_definitions("$<$<CONFIG:Debug>:${IDENT}>")
 endmacro()
 
 
