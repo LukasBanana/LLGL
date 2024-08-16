@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-//! Base class for all interfaces whoes instances are owned by the RenderSystem.
+//! Base class for all interfaces whose instances are owned by the RenderSystem.
 class LLGL_EXPORT RenderSystemChild : public Interface
 {
 

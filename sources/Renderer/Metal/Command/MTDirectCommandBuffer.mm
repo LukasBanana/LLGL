@@ -536,7 +536,7 @@ void MTDirectCommandBuffer::Clear(long flags, const ClearValue& clearValue)
     [renderPassDesc release];
 }
 
-// Fills the MTLRenderPassDescriptor object according to the secified attachment clear command
+// Fills the MTLRenderPassDescriptor object according to the specified attachment clear command
 static void FillMTRenderPassDesc(MTLRenderPassDescriptor* renderPassDesc, const AttachmentClear& attachment)
 {
     if ((attachment.flags & ClearFlags::Color) != 0)

@@ -42,7 +42,7 @@ The first inactive color attachment (not resolve attachment) breaks the count.
 */
 LLGL_EXPORT std::uint32_t NumActiveResolveAttachments(const RenderTargetDescriptor& renderTargetDesc);
 
-// Returns true if the specified render-target descriptor has any active attachaemnts
+// Returns true if the specified render-target descriptor has any active attachments
 LLGL_EXPORT bool HasAnyActiveAttachments(const RenderTargetDescriptor& desc);
 
 // Returns the number of samples for the specified render-target descriptor and rendering limitations.

@@ -145,7 +145,7 @@ class LLGL_EXPORT RenderingDebugger
                     return source_;
                 }
 
-                //! Returns the debug group name where this message occured.
+                //! Returns the debug group name where this message occurred.
                 inline const UTF8String& GetGroupName() const
                 {
                     return groupName_;
@@ -183,7 +183,7 @@ class LLGL_EXPORT RenderingDebugger
 
         /**
         \brief Callback function when an error was posted.
-        \remarks Use the 'message' parameter to block further occurences of this error if you like.
+        \remarks Use the 'message' parameter to block further occurrences of this error if you like.
         The following example shows a custom implementation that is equivalent to the default implementation:
         \code
         class MyDebugger : public LLGL::RenderingDebugger {

@@ -142,9 +142,9 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Loads a new render system from the specified module.
-        \param[in] renderSystemDesc Specifies the render system descriptor structure. The 'moduleName' member of this strucutre must not be empty.
+        \param[in] renderSystemDesc Specifies the render system descriptor structure. The 'moduleName' member of this structure must not be empty.
         \param[out] report Optional pointer to a report on potential failure of loading the specified module.
-        \remarks If loading the specified moduel failed, the return value is null and the reason for failure is reported in \c report if it's a valid pointer.
+        \remarks If loading the specified module failed, the return value is null and the reason for failure is reported in \c report if it's a valid pointer.
         \remarks The descriptor structure can be initialized by only the module name like shown in the following example:
         \code
         // Load the "OpenGL" render system module
@@ -336,7 +336,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         /**
         \brief Unmaps the specified buffer.
         \remarks This must be called on a buffer that was previously mapped into CPU memory space.
-        The following example illustrates how to map and unmap a buffer from GPU into CPU memory sapce:
+        The following example illustrates how to map and unmap a buffer from GPU into CPU memory space:
         \code
         if (void* data = myRenderer->MapBuffer(*myBuffer, LLGL::CPUAccess::Write))
         {
@@ -425,9 +425,9 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Creates a new resource heap.
         \param[in] resourceHeapDesc Specifies the descriptor for the resource heap.
         If the \c numResourceViews field is zero, the \c initialResourceViews parameter will determine the number of resources,
-        it must \e not be empty and it \b must be a multiple of the number of bindings in the piepline layout.
+        it must \e not be empty and it \b must be a multiple of the number of bindings in the pipeline layout.
         \param[in] initialResourceViews Specifies an optional array of initial resource views.
-        If this is non-null, the array pointed to must have enough elements to initialze the entire resource heap.
+        If this is non-null, the array pointed to must have enough elements to initialize the entire resource heap.
         Uninitialized resource views must be written with a call to WriteResourceHeap before the resource heap can be used in a command buffer.
         \remarks Resource heaps are used in combination with a pipeline layout.
         The pipeline layout determines to which binding points the resources are bound.
@@ -529,7 +529,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Releases the specified PipelineCache object. After this call, the specified object must no longer be used.
-        \remarks Backends that do not support pipeline caching might be using only a single pipeline cache object with a refernece counter,
+        \remarks Backends that do not support pipeline caching might be using only a single pipeline cache object with a reference counter,
         in which case releaseing such object will only decrement its internal counter and only delete the object until this counter reaches zero.
         */
         virtual void Release(PipelineCache& pipelineCache)  = 0;
@@ -652,11 +652,11 @@ class LLGL_EXPORT RenderSystem : public Interface
     protected:
 
         /**
-        \brief Queries the renderer information and capacilities.
+        \brief Queries the renderer information and capabilities.
         \param[out] outInfo Specifies the output parameter for the renderer info. This may be null.
         \param[out] outCaps Specifies the output parameter for the renderer capabilities. This may be null.
         \remarks This function may be called separately for both the information and capabilities query.
-        \return True on success. Otherwise, the backend is not reasy yet to provide the requested details.
+        \return True on success. Otherwise, the backend is not ready yet to provide the requested details.
         */
         virtual bool QueryRendererDetails(RendererInfo* outInfo, RenderingCapabilities* outCaps) = 0;
 

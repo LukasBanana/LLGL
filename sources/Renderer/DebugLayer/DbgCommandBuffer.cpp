@@ -1429,7 +1429,7 @@ void DbgCommandBuffer::ValidateCommandBufferForExecute(const States& cmdBufferSt
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
-                "cannot run Execute() on %s that is not encoded yetl; no Begin()/End() invocations",
+                "cannot run Execute() on %s that is not encoded yet; no Begin()/End() invocations",
                 cmdBufferName
             );
         }

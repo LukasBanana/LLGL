@@ -229,7 +229,7 @@ void MTCommandContext::DispatchThreads1D(
     }
     else
     {
-        /* Disaptch threadgroups with as many local threads as possible */
+        /* Dispatch threadgroups with as many local threads as possible */
         const NSUInteger numThreadGroups = numThreads / maxLocalThreads;
         if (numThreadGroups > 0)
         {
@@ -265,7 +265,7 @@ id<MTLRenderCommandEncoder> MTCommandContext::DispatchTessellationAndGetRenderEn
         /* Rebind resource heap to bind compute stage resources to the new compute command encoder */
         RebindResourceHeap(computeEncoder);
 
-        /* Disaptch kernel to generate patch tessellation factors */
+        /* Dispatch kernel to generate patch tessellation factors */
         [computeEncoder setComputePipelineState: contextState_.tessPipelineState];
         [computeEncoder
             setBuffer:  tessFactorBuffer

@@ -49,7 +49,7 @@ source_group("Metal\\Buffer"            FILES ${FilesRendererMTBuffer})
 source_group("Metal\\Command"           FILES ${FilesRendererMTCommand})
 source_group("Metal\\RenderState"       FILES ${FilesRendererMTRenderState})
 source_group("Metal\\Shader"            FILES ${FilesRendererMTShader})
-source_group("Metal\\Shader\\Bulitin"   FILES ${FilesRendererMTShaderBuiltin})
+source_group("Metal\\Shader\\Builtin"   FILES ${FilesRendererMTShaderBuiltin})
 source_group("Metal\\Texture"           FILES ${FilesRendererMTTexture})
 source_group("Include\\Platform"        FILES ${FilesIncludeMT})
 

@@ -34,7 +34,7 @@ namespace LLGL
 */
 
 /**
-\brief Returns a string representation for the spcified ShaderType value, or null if the input type is invalid.
+\brief Returns a string representation for the specified ShaderType value, or null if the input type is invalid.
 \remarks Return value examples are \c "vertex", \c "tessellation control".
 */
 LLGL_EXPORT const char* ToString(const ShaderType val);

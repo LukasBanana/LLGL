@@ -306,7 +306,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
                 if (cmd->baseInstance != 0)
                 {
-                    /* Suppored since iOS 9.0 */
+                    /* Supported since iOS 9.0 */
                     [renderEncoder
                         drawPrimitives: context.GetPrimitiveType()
                         vertexStart:    cmd->vertexStart
@@ -317,7 +317,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 }
                 else if (cmd->instanceCount != 1)
                 {
-                    /* Suppored since iOS 8.0 */
+                    /* Supported since iOS 8.0 */
                     [renderEncoder
                         drawPrimitives: context.GetPrimitiveType()
                         vertexStart:    cmd->vertexStart
@@ -327,7 +327,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 }
                 else
                 {
-                    /* Suppored since iOS 8.0 */
+                    /* Supported since iOS 8.0 */
                     [renderEncoder
                         drawPrimitives: context.GetPrimitiveType()
                         vertexStart:    cmd->vertexStart
@@ -364,7 +364,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
                 if (cmd->baseVertex != 0 || cmd->baseInstance != 0)
                 {
-                    /* Suppored since iOS 9.0 */
+                    /* Supported since iOS 9.0 */
                     [renderEncoder
                         drawIndexedPrimitives:  context.GetPrimitiveType()
                         indexCount:             cmd->indexCount
@@ -378,7 +378,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 }
                 else if (cmd->instanceCount != 1)
                 {
-                    /* Suppored since iOS 8.0 */
+                    /* Supported since iOS 8.0 */
                     [renderEncoder
                         drawIndexedPrimitives:  context.GetPrimitiveType()
                         indexCount:             cmd->indexCount
@@ -390,7 +390,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
                 }
                 else
                 {
-                    /* Suppored since iOS 8.0 */
+                    /* Supported since iOS 8.0 */
                     [renderEncoder
                         drawIndexedPrimitives:  context.GetPrimitiveType()
                         indexCount:             cmd->indexCount

@@ -114,7 +114,7 @@ struct LLGL_EXPORT Offset3D
 LLGL_EXPORT Extent2D operator + (const Extent2D& lhs, const Extent2D& rhs);
 
 /**
-\brief Returns the subtractionn of left hand side extent 'lhs' and the right hand side extent 'rhs'.
+\brief Returns the subtraction of left hand side extent 'lhs' and the right hand side extent 'rhs'.
 \remarks If the operation results in a numerical underflow, the respective components will be clamped to its minimum, i.e. 0.
 */
 LLGL_EXPORT Extent2D operator - (const Extent2D& lhs, const Extent2D& rhs);
@@ -126,7 +126,7 @@ LLGL_EXPORT Extent2D operator - (const Extent2D& lhs, const Extent2D& rhs);
 LLGL_EXPORT Extent3D operator + (const Extent3D& lhs, const Extent3D& rhs);
 
 /**
-\brief Returns the subtractionn of left hand side extent 'lhs' and the right hand side extent 'rhs'.
+\brief Returns the subtraction of left hand side extent 'lhs' and the right hand side extent 'rhs'.
 \remarks If the operation results in a numerical underflow, the respective components will be clamped to its minimum, i.e. 0.
 */
 LLGL_EXPORT Extent3D operator - (const Extent3D& lhs, const Extent3D& rhs);
@@ -141,7 +141,7 @@ LLGL_EXPORT Extent3D operator - (const Extent3D& lhs, const Extent3D& rhs);
 LLGL_EXPORT Offset2D operator + (const Offset2D& lhs, const Offset2D& rhs);
 
 /**
-\brief Returns the subtractionn of left hand side offset 'lhs' and the right hand side offset 'rhs'.
+\brief Returns the subtraction of left hand side offset 'lhs' and the right hand side offset 'rhs'.
 \remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range <code>[INT32_MIN, INT32_MAX]</code>.
 */
 LLGL_EXPORT Offset2D operator - (const Offset2D& lhs, const Offset2D& rhs);
@@ -153,7 +153,7 @@ LLGL_EXPORT Offset2D operator - (const Offset2D& lhs, const Offset2D& rhs);
 LLGL_EXPORT Offset3D operator + (const Offset3D& lhs, const Offset3D& rhs);
 
 /**
-\brief Returns the subtractionn of left hand side offset 'lhs' and the right hand side offset 'rhs'.
+\brief Returns the subtraction of left hand side offset 'lhs' and the right hand side offset 'rhs'.
 \remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range <code>[INT32_MIN, INT32_MAX]</code>.
 */
 LLGL_EXPORT Offset3D operator - (const Offset3D& lhs, const Offset3D& rhs);

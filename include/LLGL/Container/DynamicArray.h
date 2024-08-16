@@ -26,7 +26,7 @@ namespace LLGL
 
 /**
 \brief Generic container class for dynamic arrays that usually do not change in size.
-\remarks Because this container does not support \c push_back, \c pop_back, or \c insert functionallity,
+\remarks Because this container does not support \c push_back, \c pop_back, or \c insert functionality,
 it only supports trivially constructible and trivially copyable types.
 \tparam T Specifies the array element type.
 \tparam Allocator Specifies the memory allocator. This has to be compatible with std::allocator. By default std::allocator<T>.
@@ -90,7 +90,7 @@ class LLGL_EXPORT DynamicArray
                 *it = *from;
         }
 
-        //! Initializes the array with the specified number of elements and uninitial default value.
+        //! Initializes the array with the specified number of elements and initial default value.
         explicit DynamicArray(size_type count, UninitializeTag) :
             data_ { Allocator{}.allocate(count) },
             size_ { count                       }
@@ -228,7 +228,7 @@ class LLGL_EXPORT DynamicArray
         }
 
         /**
-        \brief Release the ownershuip of the internally allocated memory.
+        \brief Release the ownership of the internally allocated memory.
         \remarks This must later be deallocated with Allocator::deallocate().
         */
         pointer release()

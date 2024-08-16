@@ -647,7 +647,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     loadingDone_ = true;
 }
 
-void ExampleBase::OnResize(const LLGL::Extent2D& resoluion)
+void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
 {
     // dummy
 }

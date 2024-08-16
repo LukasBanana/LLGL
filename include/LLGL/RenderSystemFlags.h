@@ -37,7 +37,7 @@ class RenderingDebugger;
 /* ----- Enumerations ----- */
 
 /**
-\brief Shading language version enumation.
+\brief Shading language version enumeration.
 \remarks These enumeration entries can be casted to an integer using the bitmask ShadingLanguage::VersionBitmask to get the respective version number:
 \code
 // 'versionNo' will have the value 330
@@ -229,7 +229,7 @@ struct RenderSystemFlags
 
 /**
 \brief Renderer identification number enumeration.
-\remarks There are several IDs for reserved future renderes, which are currently not supported (and maybe never supported).
+\remarks There are several IDs for reserved future renderers, which are currently not supported (and maybe never supported).
 You can use an ID greater than 'RendererID::Reserved' (which has a value of 0x000000ff) for your own renderer.
 Or use one of the pre-defined IDs if you want to implement your own OpenGL/ Direct3D or whatever renderer.
 \see RendererInfo::rendererID

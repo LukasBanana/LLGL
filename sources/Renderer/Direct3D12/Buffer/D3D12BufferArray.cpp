@@ -19,7 +19,7 @@ namespace LLGL
 D3D12BufferArray::D3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
     BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
-    /* Store the strides and offests of each D3D12VertexBuffer inside the arrays */
+    /* Store the strides and offsets of each D3D12VertexBuffer inside the arrays */
     vertexBufferViews_.reserve(numBuffers);
     resourceRefs_.reserve(numBuffers);
     while (D3D12Buffer* next = NextArrayResource<D3D12Buffer>(numBuffers, bufferArray))

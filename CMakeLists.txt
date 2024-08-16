@@ -63,7 +63,7 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# XCODE_SCHEME_WORKING_DIRECTORY (used per target) requries CMake 3.17.5
+# XCODE_SCHEME_WORKING_DIRECTORY (used per target) requires CMake 3.17.5
 if(APPLE AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
     # Once Xcode schemes are generated for example, we also have to enable them globally or the main projects will disappear
     set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
@@ -117,7 +117,7 @@ endmacro()
 # Example:
 #   find_source_files(OutputFiles "*.h;*.cpp" ${MyProjectDir}/Base ${MyProjectDir}/Extensions)
 function(find_source_files OUTPUT_LIST FILTERS)
-    # Substitue predefined filters
+    # Substitute predefined filters
     if("${FILTERS}" STREQUAL "C")
         set(FILTERS "*.c;*.h;*.inl")
     elseif("${FILTERS}" STREQUAL "CXX")
@@ -253,7 +253,7 @@ function(set_project_working_dir PROJECT_NAME WORKING_DIR)
         endif()
     elseif(APPLE)
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
-            # XCODE_SCHEME_WORKING_DIRECTORY requries CMake 3.17.5
+            # XCODE_SCHEME_WORKING_DIRECTORY requires CMake 3.17.5
             set_target_properties(
                 ${PROJECT_NAME} PROPERTIES
                 XCODE_GENERATE_SCHEME           TRUE
@@ -321,7 +321,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
             RESOURCE                            "${BundleResourceFiles}"
         )
     elseif(LLGL_ANDROID_PLATFORM)
-        # Android project configuratons
+        # Android project configurations
         add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
         target_link_libraries(${PROJECT_NAME} ${LIB_FILES} android_native_app_glue log)
     else()

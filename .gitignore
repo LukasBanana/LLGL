@@ -23,3 +23,6 @@ tests/Output
 
 # RenderDoc .cap capture files
 *.cap
+
+# VS Code folder
+.vscode

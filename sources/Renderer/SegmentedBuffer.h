@@ -136,7 +136,7 @@ class SegmentedBuffer
             return SegmentedBufferAllocator<TSegmentHeader>{ buffer_, payloadSize };
         }
 
-        // Finalizes the segemnts and duplicates them for the specified number of sets.
+        // Finalizes the segments and duplicates them for the specified number of sets.
         inline void FinalizeSegments(std::size_t numSegmentSets)
         {
             LLGL_ASSERT(stride_ == 0);

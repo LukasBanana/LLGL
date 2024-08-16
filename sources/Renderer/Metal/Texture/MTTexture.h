@@ -50,7 +50,7 @@ class MTTexture final : public Texture
             MTIntermediateBuffer*   intermediateBuffer  = nullptr
         );
 
-        // Creats a new MTLTexture object as subresource view from this texture.
+        // Creates a new MTLTexture object as subresource view from this texture.
         id<MTLTexture> CreateSubresourceView(const TextureSubresource& subresource);
 
         // Returns the number of bytes per row for this texture with the specified row extent.

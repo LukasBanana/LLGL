@@ -160,7 +160,7 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         bool ResizeBuffers(const Extent2D& resolution, long flags = 0);
 
         /**
-        \brief Sets the new vertical sychronization (V-sync) interval for this swap chain.
+        \brief Sets the new vertical synchronization (V-sync) interval for this swap chain.
         \param[in] vsyncInterval Specifies the new V-sync interface.
         \return True on success, otherwise the V-sync value is invalid for this swap chain.
         \remarks This is typically 0 to disable V-sync or 1 to enable V-sync, but higher values are possible, too.

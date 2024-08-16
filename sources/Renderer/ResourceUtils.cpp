@@ -63,7 +63,7 @@ static std::uint32_t GetNumExpandedHeapDescriptors(const ArrayView<BindingDescri
 
 LLGL_EXPORT DynamicVector<BindingDescriptor> GetExpandedHeapDescriptors(const ArrayView<BindingDescriptor>& bindingDescs)
 {
-    /* Deternmine final number of binding descriptors */
+    /* Determine final number of binding descriptors */
     const std::size_t numDescriptors = GetNumExpandedHeapDescriptors(bindingDescs);
 
     DynamicVector<BindingDescriptor> expandedBindingDescs;

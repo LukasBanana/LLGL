@@ -68,7 +68,7 @@ class D3D11Buffer : public Buffer
             return usage_;
         }
 
-        // Returnst the binding table locator for this object.
+        // Returns the binding table locator for this object.
         inline D3D11BindingLocator* GetBindingLocator()
         {
             return &bindingLocator_;

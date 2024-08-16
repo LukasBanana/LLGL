@@ -289,7 +289,7 @@ private:
                 // Set buffers
                 commands->SetVertexBuffer(*vertexBuffer);
 
-                // Start with qeometry query
+                // Start with geometry query
                 commands->BeginQuery(*geometryQuery);
                 {
                     commands->SetViewport(swapChain->GetResolution());

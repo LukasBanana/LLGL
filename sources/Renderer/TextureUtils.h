@@ -77,7 +77,7 @@ inline SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     return CalcSubresourceCPUMappingLayout(format, textureRegion.extent, textureRegion.subresource.numArrayLayers, imageFormat, imageDataType);
 }
 
-// Calcualtes the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().
+// Calculates the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().
 LLGL_EXPORT SubresourceFootprint CalcPackedSubresourceFootprint(
     const TextureType   type,
     const Format        format,

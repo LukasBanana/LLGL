@@ -192,7 +192,7 @@ protected:
     virtual void OnDrawFrame() = 0;
 
     // Callback when the window has been resized. Can also be detected by using a custom window event listener.
-    virtual void OnResize(const LLGL::Extent2D& resoluion);
+    virtual void OnResize(const LLGL::Extent2D& resolution);
 
 private:
 
@@ -272,16 +272,16 @@ protected:
     // Returns the aspect ratio of the swap-chain resolution (X:Y).
     float GetAspectRatio() const;
 
-    // Returns ture if OpenGL is used as rendering API.
+    // Returns true if OpenGL is used as rendering API.
     bool IsOpenGL() const;
 
-    // Returns ture if Vulkan is used as rendering API.
+    // Returns true if Vulkan is used as rendering API.
     bool IsVulkan() const;
 
-    // Returns ture if Direct3D is used as rendering API.
+    // Returns true if Direct3D is used as rendering API.
     bool IsDirect3D() const;
 
-    // Returns ture if Metal is used as rendering API.
+    // Returns true if Metal is used as rendering API.
     bool IsMetal() const;
 
     // Used by the window resize handler
@@ -293,7 +293,7 @@ protected:
     // Returns a perspective projection with the specified parameters for the respective renderer.
     Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov) const;
 
-    // Returns an orthogonal projection with the speciifed parameters for the respective renderer.
+    // Returns an orthogonal projection with the specified parameters for the respective renderer.
     Gs::Matrix4f OrthogonalProjection(float width, float height, float near, float far) const;
 
     // Returns a quoternion for the specified rotation

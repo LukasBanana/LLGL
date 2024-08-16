@@ -210,7 +210,7 @@ private:
         // Build glyph set with font meta data
         BuildGlyphSet(' ', '~', font.atlasWidth, font.atlasHeight, font.numGlyphsX, font.numGlyphsY);
 
-        // Store font height to render approriately for the loaded font
+        // Store font height to render appropriately for the loaded font
         fontHeight = font.atlasHeight / font.numGlyphsY;
     }
 
@@ -308,7 +308,7 @@ private:
         if (currentBatchSize + 6 >= maxGlyphsPerBatch*6)
             FlushGlyphBatch();
 
-        // Glyph vertex to batch vertex index permuation
+        // Glyph vertex to batch vertex index permutation
         constexpr int vertexPerm[6] = { 0, 1, 2, 0, 2, 3 };
 
         // Copy vertices from glyph into batch

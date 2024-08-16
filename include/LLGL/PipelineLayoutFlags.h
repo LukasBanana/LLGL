@@ -147,7 +147,7 @@ struct BindingSlot
     - For Metal, shader resources and vertex buffers share the same binding table and LLGL binds vertex buffers starting from slot 0.
       If more than one vertex buffer is bound, all subsequent slots will also be occupied by those vertex buffers and pipeline resources must be bound after them.
     - For D3D11 and D3D12, the special constant buffer "$Globals" is implicitly assigned a binding slot.
-      If no other resource is explicitly assigned binding slot 0, this constant buffer will be implicitly assinged slot 0.
+      If no other resource is explicitly assigned binding slot 0, this constant buffer will be implicitly assigned slot 0.
       While other resources can occupy binding slot 0, this should match across all shader stages or the behavior is undefined.
     \see set
     */
@@ -255,7 +255,7 @@ struct BindingDescriptor
 /**
 \brief Static sampler state pipeline layout descriptor.
 \remarks Static samplers are part of a pipeline layout rather than a pipeline state.
-This is the equivalent of a static sampler in a root siganture in Direct3D 12.
+This is the equivalent of a static sampler in a root signature in Direct3D 12.
 \see PipelineLayoutDescriptor::staticSamplers
 */
 struct StaticSamplerDescriptor
@@ -347,7 +347,7 @@ struct UniformDescriptor
 
     /**
     \brief Specifies the name of an individual shader uniform. This <b>must not</b> be empty.
-    \remarks This describes the name of the constant itself and not its encloding constant buffer.
+    \remarks This describes the name of the constant itself and not its enclosing constant buffer.
     \todo Change to <code>const char*</code>
     */
     std::string     name;
@@ -364,7 +364,7 @@ struct UniformDescriptor
 };
 
 /**
-\brief Pipeline layout descritpor structure.
+\brief Pipeline layout descriptor structure.
 \remarks Contains all layout bindings that will be used by graphics and compute pipelines.
 \see RenderSystem::CreatePipelineLayout
 */
@@ -407,7 +407,7 @@ struct PipelineLayoutDescriptor
     \remarks In Vulkan they are called "push constants", in OpenGL they are called "uniforms", and in Direct3D they are called "shader constants".
     \remarks Uniforms are not described by their binding slot, but solely by their name and type.
     They represent a small range within one or more constant buffers or push constant ranges and therefore don't have individual binding slots.
-    Their offests within these buffers are determined by LLGL when a PipelineState object (PSO) is created with a PipelineLayout that contains uniform descriptors.
+    Their offsets within these buffers are determined by LLGL when a PipelineState object (PSO) is created with a PipelineLayout that contains uniform descriptors.
     This process is highly dependent on the backend, the shaders used within the PSO, and other factors.
     It is advised to keep the number of uniforms small as there is only a very limited amount of space for uniforms:
     - Vulkan only guarantees a minimum of 128 bytes for the push constant ranges which is shared across all shader stages within a single PSO.

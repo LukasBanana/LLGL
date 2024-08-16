@@ -16,7 +16,7 @@ import "unsafe"
 type Surface interface {
 	GetNativeHandle(nativeHandle *any, nativeHandleSize uint) bool
 	GetContentSize() Extent2D
-	AdaptForVideoMode(resolution *Extent2D, fuulscren* bool) bool
+	AdaptForVideoMode(resolution *Extent2D, fullscreen* bool) bool
 	ResetPixelFormat()
 	FindResidentDisplay() Display
 }

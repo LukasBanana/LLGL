@@ -76,7 +76,7 @@ int main()
         if (auto display = LLGL::Display::GetPrimary())
             desktopSize = display->GetDisplayMode().resolution;
 
-        LLGL::Log::Printf("Screen Width = %u, Screen Heihgt = %u\n", desktopSize.width, desktopSize.height);
+        LLGL::Log::Printf("Screen Width = %u, Screen Height = %u\n", desktopSize.width, desktopSize.height);
 
         while (LLGL::Surface::ProcessEvents() && !window->HasQuit() && !input.KeyPressed(LLGL::Key::Escape))
         {

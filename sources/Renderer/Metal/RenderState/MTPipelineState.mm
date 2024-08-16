@@ -30,7 +30,7 @@ const Report* MTPipelineState::GetReport() const
 
 
 /*
- * ======= Protectd: =======
+ * ======= Protected: =======
  */
 
 void MTPipelineState::ResetReport(std::string&& text, bool hasErrors)
