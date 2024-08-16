@@ -189,7 +189,9 @@ float3 BRDF(
 
     float3 color = (diffuse + specular) * NdotL;
 
-    //color += SampleEnvironment(envMap, envMapLayer, smpl, roughness, reflection) * 0.2;
+    // Sample incoming light from environment map
+    float3 reflection = -normalize(reflect(viewDir, normal));
+    color += SampleEnvironment(envMap, envMapLayer, smpl, roughness, reflection) * 0.2;
 
     return color;
 }

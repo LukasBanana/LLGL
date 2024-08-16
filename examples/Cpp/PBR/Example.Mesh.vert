@@ -1,6 +1,6 @@
 // PBR GLSL Mesh Vertex Shader
 
-#version 450 core
+#version 410 core
 
 uniform Settings
 {

@@ -1,6 +1,6 @@
 // PBR GLSL Skybox Vertex Shader
 
-#version 450 core
+#version 410 core
 
 uniform Settings
 {

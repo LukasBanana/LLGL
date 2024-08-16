@@ -523,13 +523,15 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     }
 
     // Create render system
+    LLGL::Report report;
     rendererDesc.flags |= g_Config.flags;
-    renderer = LLGL::RenderSystem::Load(rendererDesc);
+    renderer = LLGL::RenderSystem::Load(rendererDesc, &report);
 
     // Fallback to null device if selected renderer cannot be loaded
     if (!renderer)
     {
         LLGL::Log::Errorf("Failed to load \"%s\" module. Falling back to \"Null\" device.\n", rendererDesc.moduleName.c_str());
+        LLGL::Log::Errorf("Reason for failure: %s", report.HasErrors() ? report.GetText() : "Unknown\n");
         renderer = LLGL::RenderSystem::Load("Null");
         if (!renderer)
         {

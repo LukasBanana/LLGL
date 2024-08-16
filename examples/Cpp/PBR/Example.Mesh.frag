@@ -1,6 +1,6 @@
 // PBR GLSL Mesh Fragment Shader
 
-#version 450 core
+#version 410 core
 
 #define M_PI 3.141592654
 
