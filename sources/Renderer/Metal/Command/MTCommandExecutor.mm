@@ -304,30 +304,26 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             else
             {
                 id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-                const bool hasBaseInstance = (cmd->baseInstance != 0);
-                if (cmd->instanceCount != 1 || hasBaseInstance)
+                if (cmd->baseInstance != 0)
                 {
-                    if (hasBaseInstance)
-                    {
-                        /* Suppored since iOS 9.0 */
-                        [renderEncoder
-                            drawPrimitives: context.GetPrimitiveType()
-                            vertexStart:    cmd->vertexStart
-                            vertexCount:    cmd->vertexCount
-                            instanceCount:  cmd->instanceCount
-                            baseInstance:   cmd->baseInstance
-                        ];
-                    }
-                    else
-                    {
-                        /* Suppored since iOS 8.0 */
-                        [renderEncoder
-                            drawPrimitives: context.GetPrimitiveType()
-                            vertexStart:    cmd->vertexStart
-                            vertexCount:    cmd->vertexCount
-                            instanceCount:  cmd->instanceCount
-                        ];
-                    }
+                    /* Suppored since iOS 9.0 */
+                    [renderEncoder
+                        drawPrimitives: context.GetPrimitiveType()
+                        vertexStart:    cmd->vertexStart
+                        vertexCount:    cmd->vertexCount
+                        instanceCount:  cmd->instanceCount
+                        baseInstance:   cmd->baseInstance
+                    ];
+                }
+                else if (cmd->instanceCount != 1)
+                {
+                    /* Suppored since iOS 8.0 */
+                    [renderEncoder
+                        drawPrimitives: context.GetPrimitiveType()
+                        vertexStart:    cmd->vertexStart
+                        vertexCount:    cmd->vertexCount
+                        instanceCount:  cmd->instanceCount
+                    ];
                 }
                 else
                 {
@@ -366,35 +362,31 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
             else
             {
                 id<MTLRenderCommandEncoder> renderEncoder = context.FlushAndGetRenderEncoder();
-                const bool hasBaseVertexOrInstance = (cmd->baseVertex != 0 || cmd->baseInstance != 0);
-                if (cmd->instanceCount != 1 || hasBaseVertexOrInstance)
+                if (cmd->baseVertex != 0 || cmd->baseInstance != 0)
                 {
-                    if (hasBaseVertexOrInstance)
-                    {
-                        /* Suppored since iOS 9.0 */
-                        [renderEncoder
-                            drawIndexedPrimitives:  context.GetPrimitiveType()
-                            indexCount:             cmd->indexCount
-                            indexType:              context.GetIndexType()
-                            indexBuffer:            context.GetIndexBuffer()
-                            indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
-                            instanceCount:          cmd->instanceCount
-                            baseVertex:             cmd->baseVertex
-                            baseInstance:           cmd->baseInstance
-                        ];
-                    }
-                    else
-                    {
-                        /* Suppored since iOS 8.0 */
-                        [renderEncoder
-                            drawIndexedPrimitives:  context.GetPrimitiveType()
-                            indexCount:             cmd->indexCount
-                            indexType:              context.GetIndexType()
-                            indexBuffer:            context.GetIndexBuffer()
-                            indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
-                            instanceCount:          cmd->instanceCount
-                        ];
-                    }
+                    /* Suppored since iOS 9.0 */
+                    [renderEncoder
+                        drawIndexedPrimitives:  context.GetPrimitiveType()
+                        indexCount:             cmd->indexCount
+                        indexType:              context.GetIndexType()
+                        indexBuffer:            context.GetIndexBuffer()
+                        indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
+                        instanceCount:          cmd->instanceCount
+                        baseVertex:             cmd->baseVertex
+                        baseInstance:           cmd->baseInstance
+                    ];
+                }
+                else if (cmd->instanceCount != 1)
+                {
+                    /* Suppored since iOS 8.0 */
+                    [renderEncoder
+                        drawIndexedPrimitives:  context.GetPrimitiveType()
+                        indexCount:             cmd->indexCount
+                        indexType:              context.GetIndexType()
+                        indexBuffer:            context.GetIndexBuffer()
+                        indexBufferOffset:      context.GetIndexBufferOffset(cmd->firstIndex)
+                        instanceCount:          cmd->instanceCount
+                    ];
                 }
                 else
                 {
