@@ -220,7 +220,7 @@ void D3D12Buffer::ClearSubresourceUInt(
         resource = uavIntermediateBuffer_.Get();
     }
 
-    /* Create intermediate descritpor heap if not already done */
+    /* Create intermediate descriptor heap if not already done */
     if (!uavIntermediateDescHeap_)
         CreateIntermediateUAVDescriptorHeap(resource, format, formatStride);
 
@@ -234,7 +234,7 @@ void D3D12Buffer::ClearSubresourceUInt(
 
     if (useIntermediateBuffer)
     {
-        /* Clear interemdiate buffer with UAV */
+        /* Clear intermediate buffer with UAV */
         ClearSubresourceWithUAV(
             commandList,
             uavIntermediateBuffer_.Get(),
@@ -557,7 +557,7 @@ void D3D12Buffer::ClearSubresourceWithUAV(
     else
     {
         /*
-        Fill range of buffer (use D3D12_RECT) and devide by 'formatStride'
+        Fill range of buffer (use D3D12_RECT) and divide by 'formatStride'
         to select structured elements (i.e. D3D12_BUFFER_UAV::NumElements).
         */
         const D3D12_RECT rect =

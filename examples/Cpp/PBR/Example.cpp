@@ -324,7 +324,7 @@ private:
         numSkyboxes = 1;
         numMaterials = 4;
 
-        // Load skybox texutres
+        // Load skybox textures
         skyboxArray = LoadTextureArray(
             LLGL::TextureType::TextureCubeArray,
             {

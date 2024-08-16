@@ -136,10 +136,10 @@ class Parser
 
     public:
 
-        // Restes the internal token iterator.
+        // Resets the internal token iterator.
         void Reset();
 
-        // Returns the current token with an optinal offset.
+        // Returns the current token with an optional offset.
         StringView Token(int offset = 0) const;
 
         // Returns true if the current token (with optional offset) matches the specified string.

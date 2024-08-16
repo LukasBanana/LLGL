@@ -163,7 +163,7 @@ public:
             {
                 const auto idx = v * (clothSegmentsU + 1) + u;
 
-                // Set mass for left and righ top particles to infinity to create suspension points
+                // Set mass for left and right top particles to infinity to create suspension points
                 bool isSuspensionPoint = (v == 0 && (u == 0 || u == clothSegmentsU));
 
                 // Initialize base attributes

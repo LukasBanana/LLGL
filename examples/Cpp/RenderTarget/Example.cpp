@@ -118,7 +118,7 @@ private:
         vertexFormat.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
         vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
-        // Initialize vertices (scale texture-coordiantes a little bit, to show the texture border)
+        // Initialize vertices (scale texture-coordinates a little bit, to show the texture border)
         auto vertices = GenerateTexturedCubeVertices();
 
         constexpr float borderSize = 0.02f;

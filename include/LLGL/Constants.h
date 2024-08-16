@@ -30,7 +30,7 @@
 
 /**
 \brief Indicates to use the maximum number of threads the host system supports.
-\remarks This value does not itself specifiy the maximum number, but tells the associated functions to use the maximum number.
+\remarks This value does not itself specify the maximum number, but tells the associated functions to use the maximum number.
 \see ConvertImageBuffer
 \see RenderSystem::CreateTexture
 \see RenderSystem::WriteTexture

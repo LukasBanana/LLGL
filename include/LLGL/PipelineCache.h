@@ -31,7 +31,7 @@ class LLGL_EXPORT PipelineCache : public RenderSystemChild
 
         /**
         \brief Returns the cached blob representing a pipeline state.
-        \remarks This blob can be safed to file and reused to speedup PSO creation on next application launch or reused during the same application run.
+        \remarks This blob can be saved to file and reused to speedup PSO creation on next application launch or reused during the same application run.
         If the backend does not support pipeline caching, the return value is an empty blob.
         */
         virtual Blob GetBlob() const = 0;

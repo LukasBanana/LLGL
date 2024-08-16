@@ -93,7 +93,7 @@ class LLGL_EXPORT Surface : public Interface
         /**
         \brief Processes all windowing system events, i.e. input-, movement-, resize-, and other events for all surfaces associated with the host process.
         \remarks This should be called once every frame to update all surfaces and their inputs.
-        \return True as long as events can be recevied. Otherwise, the connection to the window server might have been closed or an error occurred.
+        \return True as long as events can be received. Otherwise, the connection to the window server might have been closed or an error occurred.
         The return value is mostly used to allow having this function inside a conditional expression to be called before any other event based conditions are invoked,
         like in the following example:
         \code

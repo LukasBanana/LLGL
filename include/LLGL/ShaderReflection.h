@@ -137,7 +137,7 @@ struct ShaderReflection
     std::vector<UniformDescriptor>          uniforms;
 
     /**
-    \brief Reflection data that is specificly for the vertex shader.
+    \brief Reflection data that is specifically for the vertex shader.
     \remarks The shader reflection only considers the following members of the VertexAttribute structure,
     for both \c inputAttribs and \c outputAttribs in VertexShaderAttributes:
     - \c name
@@ -148,10 +148,10 @@ struct ShaderReflection
     */
     VertexShaderAttributes                  vertex;
 
-    //! Reflection data that is specificly for the fragment shader.
+    //! Reflection data that is specifically for the fragment shader.
     FragmentShaderAttributes                fragment;
 
-    //! Reflection data that is specificly for the compute shader.
+    //! Reflection data that is specifically for the compute shader.
     ComputeShaderAttributes                 compute;
 };
 

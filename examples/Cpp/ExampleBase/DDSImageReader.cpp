@@ -146,7 +146,7 @@ bool DDSImageReader::LoadFromFile(const std::string& filename)
         return false;
     }
 
-    // Rerad DDS header
+    // Read DDS header
     DDSHeader header = reader.Read<DDSHeader>();
 
     DDSHeaderDX10 headerDX10;

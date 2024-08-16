@@ -218,7 +218,7 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
     return 0;
 }
 
-// Returns the number of bytes per pixel for the specified imagea format and data type
+// Returns the number of bytes per pixel for the specified image format and data type
 static std::uint32_t GetBytesPerPixel(const ImageFormat imageFormat, const DataType dataType)
 {
     if (imageFormat == ImageFormat::DepthStencil)

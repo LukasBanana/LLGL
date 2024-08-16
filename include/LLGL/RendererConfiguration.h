@@ -140,7 +140,7 @@ struct RendererConfigurationOpenGL
     /**
     \brief Specifies whether to suppress failures when loading OpenGL extensions. By default false.
     \remarks If this is false, failed GL extensions will abort the current application and
-    the repesctive extension and procedure name is printed to standard error output.
+    the respective extension and procedure name is printed to standard error output.
     */
     bool                    suppressFailedExtensions    = false;
 };

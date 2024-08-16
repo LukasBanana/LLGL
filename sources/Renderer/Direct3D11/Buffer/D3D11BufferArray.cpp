@@ -19,7 +19,7 @@ namespace LLGL
 D3D11BufferArray::D3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
     BufferArray { GetCombinedBindFlags(numBuffers, bufferArray) }
 {
-    /* Store the pointer of each ID3D11Buffer, strides, and offests inside the arrays */
+    /* Store the pointer of each ID3D11Buffer, strides, and offsets inside the arrays */
     buffersAndBindingLocators_.resize(numBuffers * 2);
     stridesAndOffsets_.resize(numBuffers * 2);
 

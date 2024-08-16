@@ -203,7 +203,7 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const ImageView&
         intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, /*cfg.threadCount*/0);
         if (intermediateData)
         {
-            /* User converted tempoary buffer as image source */
+            /* User converted temporary buffer as image source */
             imageData = intermediateData.get();
         }
     }

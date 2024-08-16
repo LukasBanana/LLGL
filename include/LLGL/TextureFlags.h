@@ -169,7 +169,7 @@ struct TextureSubresource
 
 /**
 \brief Texture location structure: MIP-map level and offset.
-\remarks This is used to specifiy the source and destination location of a texture copy operation.
+\remarks This is used to specify the source and destination location of a texture copy operation.
 \see CommandBuffer::CopyTexture
 \see TextureRegion
 */

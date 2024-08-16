@@ -83,7 +83,7 @@ struct AttachmentDescriptor
 
 /**
 \brief Render target descriptor structure.
-\remarks Here is a small example of a render target descriptor with a color attachmnet
+\remarks Here is a small example of a render target descriptor with a color attachment
 and an anonymous depth attachment (i.e. without a texture reference, which is only allowed for depth/stencil attachments):
 \code
 LLGL::RenderTargetDescriptor myRenderTargetDesc;

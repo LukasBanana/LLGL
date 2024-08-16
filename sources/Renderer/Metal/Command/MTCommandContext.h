@@ -48,7 +48,7 @@ enum class MTEncoderState
     Blit,
 };
 
-// Metal commadn context: Manages the scheduling between render and compute command encoders.
+// Metal command context: Manages the scheduling between render and compute command encoders.
 class MTCommandContext
 {
 

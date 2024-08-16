@@ -172,7 +172,7 @@ public:
             #endif
             pipelineDesc.pipelineLayout                 = pipelineLayout;
 
-            // Set input-assembler state (draw pachtes with 4 control points with 32-bit indices)
+            // Set input-assembler state (draw patches with 4 control points with 32-bit indices)
             pipelineDesc.indexFormat                    = LLGL::Format::R32UInt;
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::Patches4;
 

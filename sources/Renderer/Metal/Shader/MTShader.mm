@@ -300,7 +300,7 @@ bool MTShader::LoadShaderFunction(const char* entryPoint, NSError* error)
 {
     bool result = false;
 
-    /* Load shader function from libary */
+    /* Load shader function from library */
     if (library_)
     {
         NSString* entryPointStr = ToNSString(entryPoint);

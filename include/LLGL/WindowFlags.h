@@ -65,7 +65,7 @@ struct WindowFlags
         Centered                = (1 << 3),
 
         /**
-        \brief Specifies whether the window allows that files can be draged-and-droped onto the window.
+        \brief Specifies whether the window allows that files can be dragged-and-dropped onto the window.
         \note Only supported on: MS/Windows.
         */
         AcceptDropFiles         = (1 << 4),

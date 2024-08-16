@@ -43,7 +43,7 @@ class Example_Instancing : public ExampleBase
     struct Settings
     {
         Gs::Matrix4f    vpMatrix;                           // View-projection matrix
-        Gs::Vector4f    viewPos;                            // Camera view position (in world spce)
+        Gs::Vector4f    viewPos;                            // Camera view position (in world space)
         float           fogColor[3] = { 0.3f, 0.3f, 0.3f };
         float           fogDensity  = 0.04f;
         float           animVec[2]  = { 0.0f, 0.0f };       // Animation vector to make the plants wave in the wind
@@ -364,7 +364,7 @@ private:
 
     void OnDrawFrame() override
     {
-        // Update scene animationa and user input
+        // Update scene animation and user input
         UpdateAnimation();
 
         static bool alphaToCoverageEnabled = true;

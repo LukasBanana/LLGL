@@ -123,7 +123,7 @@ namespace LLGLExamples
             // Main loop
             while (LLGL.Surface.ProcessEvents() && !window.HasQuit)
             {
-                //Debugger.TimgRecording = true;
+                //Debugger.TimeRecording = true;
 
                 OnDrawFrame();
                 SwapChain.Present();

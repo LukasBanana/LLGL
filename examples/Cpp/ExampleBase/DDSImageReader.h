@@ -24,7 +24,7 @@ class DDSImageReader
         // Loads the specified DDS image from file.
         bool LoadFromFile(const std::string& filename);
 
-        // Returns the image view for the sepcified MIP-map that can be passed to RenderSystem::CreateTexture or RenderSystem::WriteTexture.
+        // Returns the image view for the specified MIP-map that can be passed to RenderSystem::CreateTexture or RenderSystem::WriteTexture.
         LLGL::ImageView GetImageView(std::uint32_t mipLevel = 0) const;
 
         // Returns the texture descriptor.

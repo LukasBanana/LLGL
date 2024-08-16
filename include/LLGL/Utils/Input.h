@@ -71,7 +71,7 @@ class LLGL_EXPORT Input : public Interface
         //! Returns true if the specified key was pressed down in the previous event processing.
         bool KeyDown(Key keyCode) const;
 
-        //! Returns true if the specified key was pressed down in the previous event processing (this event will be repeated, depending on the paltform settings).
+        //! Returns true if the specified key was pressed down in the previous event processing (this event will be repeated, depending on the platform settings).
         bool KeyDownRepeated(Key keyCode) const;
 
         //! Returns true if the specified key was released in the previous event processing.

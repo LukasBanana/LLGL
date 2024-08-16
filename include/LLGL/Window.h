@@ -25,7 +25,7 @@ namespace LLGL
 \remarks This is the main interface for the windowing system in LLGL.
 To implement a custom window (and use GLFW for instance) you have to
 derive from this class and implement all pure virtual functions.
-The couterpart is the Canvas interface for mobile platforms.
+The counterpart is the Canvas interface for mobile platforms.
 \see Canvas
 */
 class LLGL_EXPORT Window : public Surface

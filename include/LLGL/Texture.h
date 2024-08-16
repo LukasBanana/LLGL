@@ -82,7 +82,7 @@ class LLGL_EXPORT Texture : public Resource
         /**
         \brief Returns the texture extent for the specified MIP-level. This also includes the number of array layers.
         \param[in] mipLevel Specifies the MIP-map level to query from. The first and largest MIP-map is level zero.
-        If this level is greater than or equal to the maxmimum number of MIP-maps for this texture, the return value is undefined (i.e. depends on the render system).
+        If this level is greater than or equal to the maximum number of MIP-maps for this texture, the return value is undefined (i.e. depends on the render system).
         \remarks For a 1D array texture, the number of array layers is stored in the height extent.
         \remarks For a 2D and cube array texture, the number of array layers is stored in the depth extent.
         \remarks For cube textures and cube array textures (i.e. texture type TextureType::TextureCube and TextureType::TextureCubeArray), the depth extent will be a multiple of 6.

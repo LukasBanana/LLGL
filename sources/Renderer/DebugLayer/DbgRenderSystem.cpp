@@ -29,7 +29,7 @@ namespace LLGL
 This is the debug layer render system.
 It is a wrapper for the actual render system to validate the parameters, specified by the client programmer.
 All the "Create..." and "Write..." functions wrap the function call of the actual render system
-into a single braces block to highlight this function call, wher the input parameters are just passed on.
+into a single braces block to highlight this function call, where the input parameters are just passed on.
 All the actual render system objects are stored in the members named "instance", since they are the actual object instances.
 */
 
@@ -1489,7 +1489,7 @@ void DbgRenderSystem::ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor&
             const std::string bindingLabel = GetBindingDescLabel(binding);
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "invidiual binding %s has array size of %u, but only heap-bindings can have an array size other than 0 or 1",
+                "individual binding %s has array size of %u, but only heap-bindings can have an array size other than 0 or 1",
                 bindingLabel.c_str(), binding.arraySize
             );
         }
@@ -1996,7 +1996,7 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "render pass for dual-source blending must have exaclty 1 color attachment, but %u are specified",
+                "render pass for dual-source blending must have exactly 1 color attachment, but %u are specified",
                 numColorOutputAttribs
             );
         }
@@ -2004,7 +2004,7 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
-                "fragment shader for dual-source blending must have exaclty 2 outputs, but %u are specified",
+                "fragment shader for dual-source blending must have exactly 2 outputs, but %u are specified",
                 numColorOutputAttribs
             );
         }

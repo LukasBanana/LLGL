@@ -331,7 +331,7 @@ struct FormatFlags
         /**
         \brief Specifies whether the format supports to automatically generate MIP-maps.
         \remarks This implies that the flags \c SupportsMips and \c SupportsRenderTarget are also enabled.
-        \see MiscFlgas::GenerateMips
+        \see MiscFlags::GenerateMips
         \see CommandBuffer::GenerateMips
         */
         SupportsGenerateMips    = (1 << 10),

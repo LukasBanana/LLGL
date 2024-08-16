@@ -24,7 +24,7 @@ namespace LLGL
             NativeLLGL.FreeRenderingDebugger(Native);
         }
 
-        public bool TimgRecording
+        public bool TimeRecording
         {
             get
             {

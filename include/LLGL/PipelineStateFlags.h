@@ -36,7 +36,7 @@ enum class PrimitiveTopology
     //! Point list, where each vertex represents a single point primitive.
     PointList,
 
-    //! Line list, where each pair of two vertices represetns a single line primitive.
+    //! Line list, where each pair of two vertices represents a single line primitive.
     LineList,
 
     //! Line strip, where each vertex generates a new line primitive while the previous vertex is used as line start.
@@ -117,7 +117,7 @@ enum class CompareOp
 {
     NeverPass,      //!< Comparison never passes.
     Less,           //!< Comparison passes if the source data is less than the destination data.
-    Equal,          //!< Comparison passes if the source data is euqal to the right-hand-side.
+    Equal,          //!< Comparison passes if the source data is equal to the right-hand-side.
     LessEqual,      //!< Comparison passes if the source data is less than or equal to the right-hand-side.
     Greater,        //!< Comparison passes if the source data is greater than the right-hand-side.
     NotEqual,       //!< Comparison passes if the source data is not equal to the right-hand-side.

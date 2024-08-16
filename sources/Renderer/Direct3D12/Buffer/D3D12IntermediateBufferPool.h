@@ -23,7 +23,7 @@ class D3D12CommandContext;
 
 /*
 Pool to allocate buffers for intermediate copy operations.
-These buffers mayb be reused immediately, i.e. their content won't persist until the next Reset() call; for this use D3D12StagingBufferPool.
+These buffers may be reused immediately, i.e. their content won't persist until the next Reset() call; for this use D3D12StagingBufferPool.
 */
 class D3D12IntermediateBufferPool
 {

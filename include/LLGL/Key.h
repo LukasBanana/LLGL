@@ -96,7 +96,7 @@ enum class Key
     Z,                  //!< Letter Z.
 
     LWin,               //!< Left Windows key.
-    RWin,               //!< Rigth Windows key.
+    RWin,               //!< Right Windows key.
     Apps,               //!< Application key.
     Sleep,              //!< Sleep key.
 

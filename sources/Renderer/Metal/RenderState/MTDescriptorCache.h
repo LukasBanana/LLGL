@@ -35,7 +35,7 @@ class MTDescriptorCache
 
     public:
 
-        // Initialiyes the cache by clearing all dirty bits.
+        // Initialises the cache by clearing all dirty bits.
         MTDescriptorCache();
 
         // Resets the binding layouts and dirty bits.

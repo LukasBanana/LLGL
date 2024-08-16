@@ -32,7 +32,7 @@ namespace LLGL
 /*
 
 The internal buffer of MTResourceHeap is tightly packed which stores all segments of binding points consecutively.
-Here is an illustration of the buffer layout for one Texture resouce (at binding point 4) and two Sampler resources (at binding points 5 and 6) on a 64-bit build:
+Here is an illustration of the buffer layout for one Texture resource (at binding point 4) and two Sampler resources (at binding points 5 and 6) on a 64-bit build:
 
 Offset      Attribute                               Value   Description                                         Segment
 ----------------------------------------------------------------------------------------------------------------------------------------

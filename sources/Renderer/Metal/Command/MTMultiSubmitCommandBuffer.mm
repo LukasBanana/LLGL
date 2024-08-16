@@ -496,7 +496,7 @@ void MTMultiSubmitCommandBuffer::Clear(long flags, const ClearValue& clearValue)
     MTMultiSubmitCommandBuffer::ClearAttachments(1, &attachmentClear);
 }
 
-// Fills the virutal command MTCmdClearRenderPass with the secified attachment clear values
+// Fills the virtual command MTCmdClearRenderPass with the specified attachment clear values
 static void FillCmdClearRenderPass(MTCmdClearRenderPass* cmd, const AttachmentClear& attachment)
 {
     cmd->flags |= attachment.flags;
