@@ -7,7 +7,7 @@
 
 # Originally authored on 09/07/2015
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project(LLGL)
 
@@ -63,6 +63,7 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# XCODE_SCHEME_WORKING_DIRECTORY (used per target) requries CMake 3.17.5
 if(APPLE AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
     # Once Xcode schemes are generated for example, we also have to enable them globally or the main projects will disappear
     set(CMAKE_XCODE_GENERATE_SCHEME TRUE)
@@ -105,6 +106,7 @@ macro(ADD_PROJECT_DEFINE TARGET_NAME IDENT)
 endmacro()
 
 macro(ADD_DEBUG_DEFINE IDENT)
+    # Requires CMake 3.12
     add_compile_definitions("$<$<CONFIG:Debug>:${IDENT}>")
 endmacro()
 
@@ -242,12 +244,21 @@ endfunction()
 # Sets the working directory for startup for the specified project.
 function(set_project_working_dir PROJECT_NAME WORKING_DIR)
     if(WIN32)
+        # VS_DEBUGGER_WORKING_DIRECTORY requires CMake 3.8.2
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.8.2")
-            set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIR}")
+            set_target_properties(
+                ${PROJECT_NAME} PROPERTIES
+                VS_DEBUGGER_WORKING_DIRECTORY "${WORKING_DIR}"
+            )
         endif()
     elseif(APPLE)
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.5")
-            set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_GENERATE_SCHEME TRUE XCODE_SCHEME_WORKING_DIRECTORY "${WORKING_DIR}")
+            # XCODE_SCHEME_WORKING_DIRECTORY requries CMake 3.17.5
+            set_target_properties(
+                ${PROJECT_NAME} PROPERTIES
+                XCODE_GENERATE_SCHEME           TRUE
+                XCODE_SCHEME_WORKING_DIRECTORY  "${WORKING_DIR}"
+            )
         endif()
     endif()
 endfunction()
@@ -785,25 +796,11 @@ if(LLGL_BUILD_RENDERER_METAL)
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
-    if(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.3")
-        message(STATUS "Build Renderer: Direct3D 11.3")
-    elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.2")
-        message(STATUS "Build Renderer: Direct3D 11.2")
-    elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.1")
-        message(STATUS "Build Renderer: Direct3D 11.1")
-    else()
-        message(STATUS "Build Renderer: Direct3D 11.0")
-    endif()
+    message(STATUS "Build Renderer: ${LLGL_D3D11_ENABLE_FEATURELEVEL}")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
-    if(${LLGL_D3D12_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 12.2")
-        message(STATUS "Build Renderer: Direct3D 12.2")
-    elseif(${LLGL_D3D12_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 12.1")
-        message(STATUS "Build Renderer: Direct3D 12.1")
-    else()
-        message(STATUS "Build Renderer: Direct3D 12.0")
-    endif()
+    message(STATUS "Build Renderer: ${LLGL_D3D12_ENABLE_FEATURELEVEL}")
 endif()
 
 if(LLGL_BUILD_WRAPPER_C99)

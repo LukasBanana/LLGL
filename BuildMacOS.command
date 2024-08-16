@@ -11,6 +11,7 @@ BUILD_TYPE="Release"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
 VERBOSE=0
+GENERATOR=""
 
 # When this .command script is launched from Finder, we have to change to the source directory explicitly
 cd $SOURCE_DIR
@@ -22,6 +23,7 @@ print_help()
     echo "OPTIONS:"
     echo "  -c, --clear-cache ......... Clear CMake cache and rebuild"
     echo "  -d, --debug ............... Configure Debug build (default is Release)"
+    echo "  -g, --generator=G ......... Select CMake generator (or cmake's default)"
     echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -p, --project-only ........ Build project solution only (no compilation)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
@@ -43,6 +45,10 @@ for ARG in "$@"; do
         CLEAR_CACHE=1
     elif [ "$ARG" = "-d" ] || [ "$ARG" = "--debug" ]; then
         BUILD_TYPE="Debug"
+    elif [[ "$ARG" == -g=* ]]; then
+        GENERATOR="${ARG:3}"
+    elif [[ "$ARG" == --generator=* ]]; then
+        GENERATOR="${ARG:12}"
     elif [ "$ARG" = "-p" ] || [ "$ARG" = "--project-only" ]; then
         PROJECT_ONLY=1
     elif [ "$ARG" = "-s" ] || [ "$ARG" = "--static-lib" ]; then
@@ -113,8 +119,15 @@ OPTIONS=(
 )
 
 if [ $PROJECT_ONLY -eq 0 ]; then
-    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]}
+    if [ "$GENERATOR" = "" ]; then
+        cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} # CMake default generator
+    else
+        cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} -G "$GENERATOR"
+    fi
     cmake --build "$OUTPUT_DIR"
 else
-    cmake ${OPTIONS[@]} -G Xcode
+    if [ "$GENERATOR" = "" ]; then
+        GENERATOR="Xcode" # Default to Xcode for project solution
+    fi
+    cmake ${OPTIONS[@]} -G "$GENERATOR"
 fi

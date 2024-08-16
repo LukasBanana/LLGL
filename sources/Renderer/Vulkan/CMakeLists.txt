@@ -5,9 +5,9 @@
 # Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
 #
 
-# Originally authored on 09/07/2015
-
-cmake_minimum_required(VERSION 3.7)
+if (NOT DEFINED CMAKE_MINIMUM_REQUIRED_VERSION)
+    cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+endif()
 
 project(LLGL_Vulkan)
 
@@ -26,7 +26,7 @@ endif()
 # === Source files ===
 
 # SPIR-V renderer files
-find_source_files(FilesRendererSPIRV            CXX ${PROJECT_SOURCE_DIR}/../SPIRV)
+find_source_files(FilesRendererSPIRV            CXX ${PROJECT_SOURCE_DIR}/../SPIRV) # TODO: maybe make this a static lib like DXCommon?
 
 # Vulkan renderer files
 find_source_files(FilesRendererVK               CXX ${PROJECT_SOURCE_DIR})

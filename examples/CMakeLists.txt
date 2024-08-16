@@ -5,7 +5,9 @@
 # Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
 #
 
-cmake_minimum_required(VERSION 3.7)
+if (NOT DEFINED CMAKE_MINIMUM_REQUIRED_VERSION)
+    cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+endif()
 
 project(LLGL_Examples)
 
