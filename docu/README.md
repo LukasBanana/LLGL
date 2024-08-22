@@ -63,3 +63,18 @@ $ pacman -S mingw-w64-x86_64-freeglut
 The build script `BuildMsys2.sh` can be used to automate the build process.
 Use `$ ./BuildMsys2.sh -h` in a command prompt for more details.
 
+
+## WebAssembly (Wasm)
+
+LLGL can be build for the web using [Emscripten](https://emscripten.org/), [WebAssembly](https://webassembly.org/), and [WebGL 2](https://www.khronos.org/webgl/).
+This is in an **experimental** state and requires [Google Chrome](https://www.google.com/chrome/) to be launched with the following arguments to enable web assembly:
+```
+chrome --js-flags=--experimental-wasm-threads --enable-features=WebAssembly,SharedArrayBuffer
+```
+When building on Windows, it is recommended to use the [Windows Subsystem for Linux (WSL)](https://ubuntu.com/desktop/wsl) to run the *BuildWasm.sh* script.
+The generated example projects can be tested by running a local web server from the output folder, for instance with [Node.js](https://nodejs.org/) or Python `http.server` module:
+```
+$ python -m http.server
+```
+Then run your browser of choice at URL http://localhost:8000/.
+
