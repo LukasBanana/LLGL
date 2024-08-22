@@ -1,0 +1,5 @@
+License:
+    CC0-1.0 license
+
+Weblink:
+    https://github.com/carlosbaraza/web-assembly-logo/blob/master/dist/icon/web-assembly-icon-black.svg

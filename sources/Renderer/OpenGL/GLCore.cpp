@@ -179,7 +179,7 @@ void ErrUnsupportedGLProc(const char* name)
 {
     #if defined(LLGL_OPENGL)
     LLGL_TRAP("illegal use of unsupported OpenGL procedure: %s", name);
-    #elif defined(LLGL_OS_EMSCRIPTEN)
+    #elif defined(LLGL_OS_WASM)
     LLGL_TRAP("illegal use of unsupported OpenGLES procedure: %s", name);
     #else
     LLGL_TRAP("illegal use of unsupported WebGL procedure: %s", name);

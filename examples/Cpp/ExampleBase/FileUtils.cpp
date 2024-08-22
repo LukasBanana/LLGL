@@ -75,6 +75,11 @@ static std::string FindAssetFilename(const std::string& name)
     // Handle filename resolution with AAssetManager on Android
     return name;
 
+    #elif defined LLGL_OS_WASM
+
+    // Read asset files for examples from asset folder
+    return "assets/" + name;
+
     #else
 
     // Return input name if it's a valid filename

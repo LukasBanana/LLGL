@@ -152,7 +152,7 @@ static constexpr const char* GetDefaultRendererModule()
     return "Metal";
     #elif defined LLGL_OS_ANDROID
     return "OpenGLES3";
-    #elif defined LLGL_OS_EMSCRIPTEN
+    #elif defined LLGL_OS_WASM
     return "WebGL";
     #else
     return "OpenGL";

@@ -30,7 +30,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 ## Platform Support
 
-| Platform | CI | D3D12 | D3D11 | Vulkan | GL/GLES3 | Metal |
+| Platform | CI | D3D12 | D3D11 | Vulkan | GL/GLES/WebGL | Metal |
 |----------|:--:|:-----:|:-----:|:------:|:--------:|:-----:|
 | <img src="docu/Icons/windows.svg" height="20" /> Windows | <p>[![MSVC16+ CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_windows.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_windows.yml)</p> <p>[![MSVC14 CI](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl)</p> | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A |
 | <img src="docu/Icons/windows.svg" height="20" /> UWP | [![UWP CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_uwp.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_uwp.yml) | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A | N/A |
@@ -38,6 +38,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | <img src="docu/Icons/macos.svg" height="20" /> macOS | [![macOS CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
 | <img src="docu/Icons/ios.svg" height="20" /> iOS | [![iOS CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
 | <img src="docu/Icons/android.svg" height="20" /> Android | [![Android CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_android.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_android.yml) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
+| <img src="docu/Icons/wasm.svg" height="20" /> Wasm | | N/A | N/A | N/A | :heavy_check_mark: | N/A |
 
 
 ## Build Notes

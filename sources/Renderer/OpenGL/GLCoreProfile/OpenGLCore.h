@@ -17,8 +17,6 @@
 #   include <GL/GL.h>
 #   include <GL/glext.h>
 #   include <GL/wglext.h>
-#elif defined LLGL_OS_EMSCRIPTEN
-#   include <GL/GL.h>
 #elif defined LLGL_OS_LINUX
 #   include <GL/gl.h>
 #   include <GL/glext.h>

@@ -11,7 +11,7 @@
 #include "GLESExtensionsProxy.h"
 #include "OpenGLES.h"
 #include "../GLCore.h"
-#if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_EMSCRIPTEN)
+#if defined(LLGL_OS_ANDROID)
 #   include <EGL/egl.h>
 #endif
 #include <LLGL/Utils/ForRange.h>

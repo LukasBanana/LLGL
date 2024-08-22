@@ -9,7 +9,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "WebGL.h"
 #include "../GLCore.h"
-#if defined(LLGL_OS_EMSCRIPTEN)
+#if defined(LLGL_OS_WASM)
 #   include <EGL/egl.h>
 #endif
 #include <set>
