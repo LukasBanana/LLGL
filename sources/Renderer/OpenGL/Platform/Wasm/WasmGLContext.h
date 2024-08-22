@@ -1,12 +1,12 @@
 /*
- * EmscriptenGLContext.h
+ * WasmGLContext.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_EMSCRIPTEN_CONTEXT_H
-#define LLGL_EMSCRIPTEN_CONTEXT_H
+#ifndef LLGL_WASM_CONTEXT_H
+#define LLGL_WASM_CONTEXT_H
 
 
 #include "../GLContext.h"
@@ -19,18 +19,18 @@ namespace LLGL
 
 
 // Implementation of the <GLContext> interface for Android and wrapper for a native EGL context.
-class EmscriptenGLContext : public GLContext
+class WasmGLContext : public GLContext
 {
 
     public:
 
-        EmscriptenGLContext(
+        WasmGLContext(
             const GLPixelFormat&                pixelFormat,
             const RendererConfigurationOpenGL&  profile,
             Surface&                            surface,
-            EmscriptenGLContext*                sharedContext
+            WasmGLContext*                      sharedContext
         );
-        ~EmscriptenGLContext();
+        ~WasmGLContext();
 
         int GetSamples() const override;
 
@@ -51,7 +51,7 @@ class EmscriptenGLContext : public GLContext
         void CreateContext(
             const GLPixelFormat&                pixelFormat,
             const RendererConfigurationOpenGL&  profile,
-            EmscriptenGLContext*                sharedContext
+            WasmGLContext*                      sharedContext
         );
         void DeleteContext();
 

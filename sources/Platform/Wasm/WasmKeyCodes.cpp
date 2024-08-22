@@ -1,11 +1,11 @@
 /*
- * MapKey.cpp (Emscripten)
+ * WasmKeyCodes.cpp
  * 
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "MapKey.h"
+#include "WasmKeyCodes.h"
 #include <map>
 #include <emscripten.h>
 #include <emscripten/key_codes.h>
@@ -187,7 +187,7 @@ static std::map<int, Key> g_emscriptenWindowKeyCodeMap = GenerateEmscriptenKeyCo
 #undef KEYPAIR
 
 
-Key MapKey(const char* keyEvent)
+Key MapEmscriptenKeyCode(const char* keyEvent)
 {
     int keyCode = emscripten_compute_dom_pk_code(keyEvent);
     auto it = g_emscriptenWindowKeyCodeMap.find(keyCode);

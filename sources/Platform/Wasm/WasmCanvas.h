@@ -1,12 +1,12 @@
 /*
- * EmscriptenCanvas.h
+ * WasmCanvas.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_EMSCRIPTEN_CANVAS_H
-#define LLGL_EMSCRIPTEN_CANVAS_H
+#ifndef LLGL_WASM_CANVAS_H
+#define LLGL_WASM_CANVAS_H
 
 
 #include <LLGL/Canvas.h>
@@ -21,12 +21,12 @@ namespace LLGL
 {
 
 
-class EmscriptenCanvas : public Canvas
+class WasmCanvas : public Canvas
 {
 
     public:
 
-        EmscriptenCanvas(const CanvasDescriptor& desc);
+        WasmCanvas(const CanvasDescriptor& desc);
 
         bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
 

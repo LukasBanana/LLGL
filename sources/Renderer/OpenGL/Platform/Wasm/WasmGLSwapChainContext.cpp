@@ -1,11 +1,11 @@
 /*
- * EmscriptenGLSwapChainContext.cpp
+ * WasmGLSwapChainContext.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "EmscriptenGLSwapChainContext.h"
+#include "WasmGLSwapChainContext.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -21,20 +21,20 @@ namespace LLGL
 
 std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
-    return MakeUnique<EmscriptenGLSwapChainContext>(static_cast<EmscriptenGLContext&>(context), surface);
+    return MakeUnique<WasmGLSwapChainContext>(static_cast<WasmGLContext&>(context), surface);
 }
 
 bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
 {
-    return EmscriptenGLSwapChainContext::MakeCurrentEGLContext(static_cast<EmscriptenGLSwapChainContext*>(context));
+    return WasmGLSwapChainContext::MakeCurrentEGLContext(static_cast<WasmGLSwapChainContext*>(context));
 }
 
 
 /*
- * EmscriptenGLSwapChainContext class
+ * WasmGLSwapChainContext class
  */
 
-EmscriptenGLSwapChainContext::EmscriptenGLSwapChainContext(EmscriptenGLContext& context, Surface& surface) :
+WasmGLSwapChainContext::WasmGLSwapChainContext(WasmGLContext& context, Surface& surface) :
     GLSwapChainContext { context                   },
     context_           { context.GetWebGLContext() }
 {
@@ -46,28 +46,28 @@ EmscriptenGLSwapChainContext::EmscriptenGLSwapChainContext(EmscriptenGLContext& 
         LLGL_TRAP("GetWebGLContext failed");
 }
 
-EmscriptenGLSwapChainContext::~EmscriptenGLSwapChainContext()
+WasmGLSwapChainContext::~WasmGLSwapChainContext()
 {
     //eglDestroySurface(display_, surface_);
 }
 
-bool EmscriptenGLSwapChainContext::HasDrawable() const
+bool WasmGLSwapChainContext::HasDrawable() const
 {
     return true; // dummy
 }
 
-bool EmscriptenGLSwapChainContext::SwapBuffers()
+bool WasmGLSwapChainContext::SwapBuffers()
 {
     // do nothing
     return true;
 }
 
-void EmscriptenGLSwapChainContext::Resize(const Extent2D& resolution)
+void WasmGLSwapChainContext::Resize(const Extent2D& resolution)
 {
     // do nothing (WebGL context does not need to be resized)
 }
 
-bool EmscriptenGLSwapChainContext::MakeCurrentEGLContext(EmscriptenGLSwapChainContext* context)
+bool WasmGLSwapChainContext::MakeCurrentEGLContext(WasmGLSwapChainContext* context)
 {
     return true;
     EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context->context_);

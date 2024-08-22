@@ -1,11 +1,11 @@
 /*
- * LinuxModule.cpp
+ * WasmModule.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "EmscriptenModule.h"
+#include "WasmModule.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Exception.h"
 #include <dlfcn.h>
@@ -67,11 +67,11 @@ bool Module::IsAvailable(const char* moduleFilename)
 
 std::unique_ptr<Module> Module::Load(const char* moduleFilename, Report* report)
 {
-    std::unique_ptr<EmscriptenModule> module = MakeUnique<EmscriptenModule>(moduleFilename, report);
+    std::unique_ptr<WasmModule> module = MakeUnique<WasmModule>(moduleFilename, report);
     return (module->IsValid() ? std::move(module) : nullptr);
 }
 
-EmscriptenModule::EmscriptenModule(const char* moduleFilename, Report* report)
+WasmModule::WasmModule(const char* moduleFilename, Report* report)
 {
     /* Open Linux shared library */
     handle_ = dlopen(moduleFilename, RTLD_LAZY);
@@ -92,13 +92,13 @@ EmscriptenModule::EmscriptenModule(const char* moduleFilename, Report* report)
     }
 }
 
-EmscriptenModule::~EmscriptenModule()
+WasmModule::~WasmModule()
 {
     if (handle_ != nullptr)
         dlclose(handle_);
 }
 
-void* EmscriptenModule::LoadProcedure(const char* procedureName)
+void* WasmModule::LoadProcedure(const char* procedureName)
 {
     /* Get procedure address from library module and return it as raw-pointer */
     return dlsym(handle_, procedureName);

@@ -1,11 +1,11 @@
 /*
- * EmscriptenGLContext.cpp
+ * WasmGLContext.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "EmscriptenGLContext.h"
+#include "WasmGLContext.h"
 #include "../../../CheckedCast.h"
 #include "../../../StaticAssertions.h"
 #include "../../../../Core/CoreUtils.h"
@@ -31,36 +31,36 @@ std::unique_ptr<GLContext> GLContext::Create(
     GLContext*                          sharedContext,
     const ArrayView<char>&              /*customNativeHandle*/)
 {
-    EmscriptenGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(EmscriptenGLContext*, sharedContext) : nullptr);
-    return MakeUnique<EmscriptenGLContext>(pixelFormat, profile, surface, sharedContextEGL);
+    WasmGLContext* sharedContextEGL = (sharedContext != nullptr ? LLGL_CAST(WasmGLContext*, sharedContext) : nullptr);
+    return MakeUnique<WasmGLContext>(pixelFormat, profile, surface, sharedContextEGL);
 }
 
 
 /*
- * EmscriptenGLContext class
+ * WasmGLContext class
  */
 
-EmscriptenGLContext::EmscriptenGLContext(
+WasmGLContext::WasmGLContext(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     Surface&                            surface,
-    EmscriptenGLContext*                sharedContext)
+    WasmGLContext*                      sharedContext)
 {
     CreateContext(pixelFormat, profile, sharedContext);
 }
 
-EmscriptenGLContext::~EmscriptenGLContext()
+WasmGLContext::~WasmGLContext()
 {
     DeleteContext();
 }
 
-int EmscriptenGLContext::GetSamples() const
+int WasmGLContext::GetSamples() const
 {
     int samples_ = 4;
     return samples_;
 }
 
-bool EmscriptenGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
+bool WasmGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
@@ -76,12 +76,12 @@ bool EmscriptenGLContext::GetNativeHandle(void* nativeHandle, std::size_t native
  * ======= Private: =======
  */
 
-bool EmscriptenGLContext::SetSwapInterval(int interval)
+bool WasmGLContext::SetSwapInterval(int interval)
 {
     return true;
 }
 
-void EmscriptenGLContext::CreateContext(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile, EmscriptenGLContext* sharedContext)
+void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile, WasmGLContext* sharedContext)
 {
 	EmscriptenWebGLContextAttributes attrs;
 	emscripten_webgl_init_context_attributes(&attrs);
@@ -106,7 +106,7 @@ void EmscriptenGLContext::CreateContext(const GLPixelFormat& pixelFormat, const 
     EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context_);
 }
 
-void EmscriptenGLContext::DeleteContext()
+void WasmGLContext::DeleteContext()
 {
     //destroy context_
 }

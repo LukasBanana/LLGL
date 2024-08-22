@@ -11,7 +11,7 @@
 
 #include <LLGL/Platform/Platform.h>
 
-#if defined(LLGL_OS_EMSCRIPTEN)
+#if defined(LLGL_OS_WASM)
 #   define GL_GLEXT_PROTOTYPES 1
 #   define EGL_EGLEXT_PROTOTYPES 1
 #   include <GLES3/gl3.h>

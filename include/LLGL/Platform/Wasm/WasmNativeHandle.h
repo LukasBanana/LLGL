@@ -1,14 +1,16 @@
 /*
- * LinuxNativeHandle.h
+ * WasmNativeHandle.h
  * 
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_EMSCRIPTEN_NATIVE_HANDLE_H
-#define LLGL_EMSCRIPTEN_NATIVE_HANDLE_H
+#ifndef LLGL_WASM_NATIVE_HANDLE_H
+#define LLGL_WASM_NATIVE_HANDLE_H
+
 
 #include <emscripten/val.h>
+
 
 namespace LLGL
 {
@@ -18,7 +20,7 @@ namespace LLGL
 struct NativeHandle
 {
     //! CSS selector of canvas object.
-    std::string      canvas;
+    std::string canvas;
 };
 
 

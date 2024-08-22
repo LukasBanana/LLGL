@@ -1,12 +1,12 @@
 /*
- * LinuxDisplay.h
+ * WasmDisplay.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_EMSCRIPTEN_DISPLAY_H
-#define LLGL_EMSCRIPTEN_DISPLAY_H
+#ifndef LLGL_WASM_DISPLAY_H
+#define LLGL_WASM_DISPLAY_H
 
 
 #include <LLGL/Display.h>
@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class EmscriptenDisplay : public Display
+class WasmDisplay : public Display
 {
 
     public:
 
-        EmscriptenDisplay(int screenIndex);
+        WasmDisplay() = default;
 
         bool IsPrimary() const override;
 
@@ -35,10 +35,6 @@ class EmscriptenDisplay : public Display
         DisplayMode GetDisplayMode() const override;
 
         std::vector<DisplayMode> GetSupportedDisplayModes() const override;
-
-    private:
-
-        int screen_ = 0;
 
 };
 

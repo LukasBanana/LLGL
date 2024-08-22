@@ -1,12 +1,12 @@
 /*
- * EmscriptenCanvas.cpp
+ * WasmCanvas.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "EmscriptenCanvas.h"
-#include "MapKey.h"
+#include "WasmCanvas.h"
+#include "WasmKeyCodes.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Display.h>
 #include "../../Core/CoreUtils.h"
@@ -47,20 +47,20 @@ static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 
 std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 {
-    return MakeUnique<EmscriptenCanvas>(desc);
+    return MakeUnique<WasmCanvas>(desc);
 }
 
 
 /*
- * EmscriptenCanvas class
+ * WasmCanvas class
  */
 
-EmscriptenCanvas::EmscriptenCanvas(const CanvasDescriptor& desc)
+WasmCanvas::WasmCanvas(const CanvasDescriptor& desc)
 {
     CreateEmscriptenCanvas(desc);
 }
 
-bool EmscriptenCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+bool WasmCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
@@ -71,7 +71,7 @@ bool EmscriptenCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHan
     return false;
 }
 
-Extent2D EmscriptenCanvas::GetContentSize() const
+Extent2D WasmCanvas::GetContentSize() const
 {
     int width = 0, height = 0;
     emscripten_get_canvas_element_size("#canvas", &width, &height);
@@ -82,13 +82,14 @@ Extent2D EmscriptenCanvas::GetContentSize() const
     };
 }
 
-void EmscriptenCanvas::SetTitle(const UTF8String& title)
+void WasmCanvas::SetTitle(const UTF8String& title)
 {
+    //todo
 }
 
-UTF8String EmscriptenCanvas::GetTitle() const
+UTF8String WasmCanvas::GetTitle() const
 {
-    char* title = nullptr;
+    char* title = nullptr; //todo
     return title;
 }
 
@@ -152,16 +153,16 @@ static int interpret_charcode_for_keyevent(int eventType, const EmscriptenKeyboa
     return e->keyCode;
 }
 
-const char* EmscriptenCanvas::OnBeforeUnloadCallback(int eventType, const void* reserved, void* userData)
+const char* WasmCanvas::OnBeforeUnloadCallback(int eventType, const void* reserved, void* userData)
 {
-	EmscriptenCanvas* canvas = reinterpret_cast<EmscriptenCanvas*>(userData);
+	WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
     canvas->PostDestroy();
 	return nullptr;
 }
 
-int EmscriptenCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent* event, void *userData)
+int WasmCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent* event, void *userData)
 {
-    EmscriptenCanvas* canvas = reinterpret_cast<EmscriptenCanvas*>(userData);
+    WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
     const Extent2D clientAreaSize
     {
         static_cast<std::uint32_t>(event->documentBodyClientWidth),
@@ -171,9 +172,9 @@ int EmscriptenCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEv
 	return 0;
 }
 
-EM_BOOL EmscriptenCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
+EM_BOOL WasmCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
 {
-    EmscriptenCanvas* canvas = reinterpret_cast<EmscriptenCanvas*>(userData);
+    WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
 
     int dom_pk_code = emscripten_compute_dom_pk_code(e->code);
 
@@ -188,7 +189,7 @@ EM_BOOL EmscriptenCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardE
 
     printf("%s, key: \"%s\", code: \"%s\" = %s (%d)\n", emscripten_event_type_to_string(eventType), e->key, e->code, emscripten_dom_pk_code_to_string(dom_pk_code), dom_pk_code);
  
-    auto key = MapKey(e->code);
+    auto key = MapEmscriptenKeyCode(e->code);
 
     if (eventType == 2)
         canvas->PostKeyDown(key);
@@ -198,7 +199,7 @@ EM_BOOL EmscriptenCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardE
 	return true;
 }
 
-EM_BOOL EmscriptenCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent *e, void *userData)
+EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent *e, void *userData)
 {
     /*
     printf("%s, screen: (%ld,%ld), client: (%ld,%ld),%s%s%s%s button: %hu, buttons: %hu, movement: (%ld,%ld), canvas: (%ld,%ld), target: (%ld, %ld)\n",
@@ -229,7 +230,7 @@ EM_BOOL EmscriptenCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEv
     return EMSCRIPTEN_RESULT_SUCCESS;
 }
 
-EM_BOOL EmscriptenCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent *e, void *userData)
+EM_BOOL WasmCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent *e, void *userData)
 {
     /*
     printf("%s, screen: (%ld,%ld), client: (%ld,%ld),%s%s%s%s button: %hu, buttons: %hu, canvas: (%ld,%ld), target: (%ld, %ld), delta:(%g,%g,%g), deltaMode:%lu\n",
@@ -247,7 +248,7 @@ EM_BOOL EmscriptenCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEv
     return EMSCRIPTEN_RESULT_SUCCESS;
 }
 
-void EmscriptenCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
+void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
 {
     /* Find canvas handle*/
     emscripten::val config = emscripten::val::module_property("config");
@@ -275,21 +276,21 @@ void EmscriptenCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
 
     /* Set callbacks */
     EMSCRIPTEN_RESULT ret;
-    ret = emscripten_set_beforeunload_callback(this, EmscriptenCanvas::OnBeforeUnloadCallback);
-    ret = emscripten_set_resize_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnCanvasResizeCallback);
+    ret = emscripten_set_beforeunload_callback(this, WasmCanvas::OnBeforeUnloadCallback);
+    ret = emscripten_set_resize_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnCanvasResizeCallback);
 
-	ret = emscripten_set_keydown_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnKeyCallback);
-	ret = emscripten_set_keyup_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnKeyCallback);
+	ret = emscripten_set_keydown_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnKeyCallback);
+	ret = emscripten_set_keyup_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnKeyCallback);
 
-    ret = emscripten_set_click_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnMouseCallback);
-    ret = emscripten_set_mousedown_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnMouseCallback);
-    ret = emscripten_set_mouseup_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnMouseCallback);
-    ret = emscripten_set_dblclick_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnMouseCallback);
-    ret = emscripten_set_mousemove_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnMouseCallback);
-    ret = emscripten_set_wheel_callback(canvas_selector.c_str(), this, true, EmscriptenCanvas::OnWheelCallback);
+    ret = emscripten_set_click_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mousedown_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mouseup_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_dblclick_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_mousemove_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnMouseCallback);
+    ret = emscripten_set_wheel_callback(canvas_selector.c_str(), this, true, WasmCanvas::OnWheelCallback);
 }
 
-void EmscriptenCanvas::ProcessKeyEvent(/*event, bool down*/)
+void WasmCanvas::ProcessKeyEvent(/*event, bool down*/)
 {
     /*auto key = MapKey(event);
     if (down)
@@ -298,7 +299,7 @@ void EmscriptenCanvas::ProcessKeyEvent(/*event, bool down*/)
         PostKeyUp(key);*/
 }
 
-void EmscriptenCanvas::ProcessMouseKeyEvent(/*event, bool down*/)
+void WasmCanvas::ProcessMouseKeyEvent(/*event, bool down*/)
 {
     /*switch (event.button)
     {
@@ -320,7 +321,7 @@ void EmscriptenCanvas::ProcessMouseKeyEvent(/*event, bool down*/)
     }*/
 }
 
-/*void EmscriptenCanvas::ProcessExposeEvent()
+/*void WasmCanvas::ProcessExposeEvent()
 {
     const Extent2D size
     {
@@ -330,14 +331,14 @@ void EmscriptenCanvas::ProcessMouseKeyEvent(/*event, bool down*/)
     PostResize(size);
 }*/
 
-void EmscriptenCanvas::ProcessClientMessage(/*XClientMessageEvent& event*/)
+void WasmCanvas::ProcessClientMessage(/*XClientMessageEvent& event*/)
 {
     /*Atom atom = static_cast<Atom>(event.data.l[0]);
     if (atom == closeWndAtom_)
         PostQuit();*/
 }
 
-void EmscriptenCanvas::ProcessMotionEvent(/*XMotionEvent& event*/)
+void WasmCanvas::ProcessMotionEvent(/*XMotionEvent& event*/)
 {
     /*const Offset2D mousePos { event.x, event.y };
     PostLocalMotion(mousePos);
@@ -345,7 +346,7 @@ void EmscriptenCanvas::ProcessMotionEvent(/*XMotionEvent& event*/)
     prevMousePos_ = mousePos;*/
 }
 
-void EmscriptenCanvas::PostMouseKeyEvent(Key key, bool down)
+void WasmCanvas::PostMouseKeyEvent(Key key, bool down)
 {
     if (down)
         PostKeyDown(key);
