@@ -34,7 +34,11 @@ GLenum MapOrZero(const Format format)
         case Format::Undefined:         return 0;
 
         /* --- Alpha channel color formats --- */
+        #ifdef LLGL_WEBGL
+        case Format::A8UNorm:           return GL_ALPHA;
+        #else
         case Format::A8UNorm:           return GL_R8; // texture swizzle
+        #endif
 
         /* --- Red channel color formats --- */
         case Format::R8UNorm:           return GL_R8;
@@ -119,11 +123,13 @@ GLenum MapOrZero(const Format format)
         case Format::RGBA64Float:       return 0;
 
         /* --- BGRA color formats --- */
+        #ifndef LLGL_WEBGL // WebGL does not support texture swizzling
         case Format::BGRA8UNorm:        return GL_RGBA8;        // texture swizzle
         case Format::BGRA8UNorm_sRGB:   return GL_SRGB8_ALPHA8; // texture swizzle
         case Format::BGRA8SNorm:        return GL_RGBA8_SNORM;  // texture swizzle
         case Format::BGRA8UInt:         return GL_RGBA8UI;      // texture swizzle
         case Format::BGRA8SInt:         return GL_RGBA8I;       // texture swizzle
+        #endif
 
         #ifdef LLGL_OPENGL
         /* --- Packed formats --- */
@@ -249,7 +255,7 @@ GLenum Map(const TextureSwizzle textureSwizzle)
 
 GLenum Map(const Format textureFormat)
 {
-    if (auto result = MapOrZero(textureFormat))
+    if (GLenum result = MapOrZero(textureFormat))
         return result;
     LLGL_TRAP_GL_MAP(Format, textureFormat);
 }
@@ -258,7 +264,11 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        #ifdef LLGL_WEBGL
+        case ImageFormat::Alpha:            return GL_ALPHA;
+        #else
         case ImageFormat::Alpha:            return GL_RED; // texture swizzle
+        #endif
         case ImageFormat::R:                return GL_RED;
         case ImageFormat::RG:               return GL_RG;
         case ImageFormat::RGB:              return GL_RGB;
@@ -288,7 +298,11 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        #ifdef LLGL_WEBGL
+        case ImageFormat::Alpha:            break; // WebGL does not support texture swizzling, only GL_ALPHA but it's not an integer format
+        #else
         case ImageFormat::Alpha:            return GL_RED_INTEGER; // texture swizzle
+        #endif
         case ImageFormat::R:                return GL_RED_INTEGER;
         case ImageFormat::RG:               return GL_RG_INTEGER;
         case ImageFormat::RGB:              return GL_RGB_INTEGER;
