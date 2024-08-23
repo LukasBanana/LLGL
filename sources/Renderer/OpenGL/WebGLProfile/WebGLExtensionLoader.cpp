@@ -20,25 +20,25 @@ namespace LLGL
 
 
 // Global member to store if the extension have already been loaded
-static bool                     g_OpenGLESExtensionsLoaded = false;
-static std::set<const char*>    g_supportedOpenGLESExtensions;
-static std::set<const char*>    g_loadedOpenGLESExtensions;
+static bool                     g_WebGLExtensionsLoaded = false;
+static std::set<const char*>    g_supportedWebGLExtensions;
+static std::set<const char*>    g_loadedWebGLExtensions;
 
-static void EnableGLESExtension(GLExt ext, const char* name)
+static void EnableWebGLExtension(GLExt ext, const char* name)
 {
     RegisterExtension(ext);
-    g_supportedOpenGLESExtensions.insert(name); //TODO: find better way to determine supported GLES extensions
-    g_loadedOpenGLESExtensions.insert(name);
+    g_supportedWebGLExtensions.insert(name); //TODO: find better way to determine supported GLES extensions
+    g_loadedWebGLExtensions.insert(name);
 }
 
 bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 {
     /* Only load GL extensions once */
-    if (g_OpenGLESExtensionsLoaded)
+    if (g_WebGLExtensionsLoaded)
         return true;
 
     #define ENABLE_GLEXT(NAME) \
-        EnableGLESExtension(GLExt::NAME, "GL_" #NAME)
+        EnableWebGLExtension(GLExt::NAME, "GL_" #NAME)
 
     const int version = GLGetVersion();
 
@@ -124,17 +124,17 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
 bool AreOpenGLExtensionsLoaded()
 {
-    return g_OpenGLESExtensionsLoaded;
+    return g_WebGLExtensionsLoaded;
 }
 
 const std::set<const char*>& GetSupportedOpenGLExtensions()
 {
-    return g_supportedOpenGLESExtensions;
+    return g_supportedWebGLExtensions;
 }
 
 const std::set<const char*>& GetLoadedOpenGLExtensions()
 {
-    return g_loadedOpenGLESExtensions;
+    return g_loadedWebGLExtensions;
 }
 
 

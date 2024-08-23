@@ -7,7 +7,7 @@
 
 #include "WasmGLSwapChainContext.h"
 #include "../../../../Core/CoreUtils.h"
-#include "../../../../Core/Exception.h"
+#include "../../../../Core/Assertion.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -69,25 +69,15 @@ void WasmGLSwapChainContext::Resize(const Extent2D& resolution)
 
 bool WasmGLSwapChainContext::MakeCurrentEGLContext(WasmGLSwapChainContext* context)
 {
-    return true;
     EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context->context_);
+    LLGL_ASSERT(res == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_make_context_current() failed");
 
-    if (res == EMSCRIPTEN_RESULT_SUCCESS)
-    {
-        //assert(emscripten_webgl_get_current_context() == context->GetGLContext());
+    //LLGL_ASSERT(emscripten_webgl_get_current_context() == context->GetGLContext());
 
-        int width, height, fs = 0;
-        emscripten_get_canvas_element_size("#mycanvas", &width, &height);
-        printf("width:%d, height:%d\n", width, height);
-        //SetViewportSize((ndf32)width, (ndf32)height); 
+    //int width = 0, height = 0, fs = 0;
+    //emscripten_webgl_get_drawing_buffer_size(context->context_, &width, &height);
 
-        return true;
-    }
-    else
-    {
-        throw std::runtime_error("emscripten_webgl_make_context_current failed");
-        return false;
-    }
+    return true;
 }
 
 

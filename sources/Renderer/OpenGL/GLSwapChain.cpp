@@ -30,7 +30,7 @@ namespace LLGL
 
 static GLint GetFramebufferHeight(const Extent2D& resolution)
 {
-    #ifndef LLGL_OPENGL
+    #if !defined(LLGL_OPENGL) && !defined(LLGL_OS_WASM)
     /* For GLES, the framebuffer height is determined by the display height */
     if (LLGL::Display* display = LLGL::Display::GetPrimary())
     {

@@ -102,6 +102,7 @@ if [ -z "$EMSDK" ]; then
 fi
 
 EMSCRIPTEN_CMAKE_TOOLCHAIN="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+EMSCRIPTEN_FILE_PACKAGER="$EMSDK/upstream/emscripten/tools/file_packager"
 
 if [ ! -f "$EMSCRIPTEN_CMAKE_TOOLCHAIN" ]; then
     echo "Error: Could not find file $EMSCRIPTEN_CMAKE_TOOLCHAIN"
@@ -198,6 +199,9 @@ generate_html5_page()
             cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
         fi
     done
+
+    # Package assets into .data.js file with Emscripten packager tool
+    (cd "$HTML5_ROOT" && "$EMSCRIPTEN_FILE_PACKAGER" "$BASE_FILENAME.data" --preload assets "--js-output=$BASE_FILENAME.data.js" >/dev/null 2>&1)
 }
 
 if [ $PROJECT_ONLY -eq 0 ] && [ $ENABLE_EXAMPLES == "ON" ]; then

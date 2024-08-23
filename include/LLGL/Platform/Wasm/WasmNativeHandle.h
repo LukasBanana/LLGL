@@ -20,7 +20,7 @@ namespace LLGL
 struct NativeHandle
 {
     //! CSS selector of canvas object.
-    std::string canvas;
+    emscripten::val canvas;
 };
 
 

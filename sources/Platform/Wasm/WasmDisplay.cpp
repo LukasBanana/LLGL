@@ -7,6 +7,7 @@
 
 #include "WasmDisplay.h"
 #include "../../Core/CoreUtils.h"
+#include <emscripten.h>
 
 
 namespace LLGL
@@ -24,20 +25,22 @@ std::size_t Display::Count()
 
 Display* const * Display::GetList()
 {
-    return nullptr;
+    static Display* const displayList[] = { Display::GetPrimary(), nullptr };
+    return displayList;
 }
 
 Display* Display::Get(std::size_t index)
 {
-    return nullptr;
+    return (index == 0 ? Display::GetPrimary() : nullptr);
 }
 
 Display* Display::GetPrimary()
 {
-    return nullptr;
+    static WasmDisplay primary;
+    return &primary;
 }
 
-bool Display::ShowCursor(bool show)
+bool Display::ShowCursor(bool /*show*/)
 {
     return false;
 }
@@ -47,9 +50,9 @@ bool Display::IsCursorShown()
     return true;
 }
 
-bool Display::SetCursorPosition(const Offset2D& position)
+bool Display::SetCursorPosition(const Offset2D& /*position*/)
 {    
-    return true;
+    return false; // dummy
 }
 
 Offset2D Display::GetCursorPosition()
@@ -86,26 +89,30 @@ float WasmDisplay::GetScale() const
 
 bool WasmDisplay::ResetDisplayMode()
 {
-    return false;
+    return false; // dummy
 }
 
-bool WasmDisplay::SetDisplayMode(const DisplayMode& displayMode)
+bool WasmDisplay::SetDisplayMode(const DisplayMode& /*displayMode*/)
 {
-    return false;
+    return false; // dummy
 }
 
 DisplayMode WasmDisplay::GetDisplayMode() const
 {
     DisplayMode displayMode;
-
+    {
+        int width = 0, height = 0;
+        emscripten_get_screen_size(&width, &height);
+        displayMode.resolution.width    = static_cast<std::uint32_t>(width);
+        displayMode.resolution.height   = static_cast<std::uint32_t>(height);
+        displayMode.refreshRate         = 60; // default to 60 Hz
+    }
     return displayMode;
 }
 
 std::vector<DisplayMode> WasmDisplay::GetSupportedDisplayModes() const
 {
-    std::vector<DisplayMode> displayModes;
-    DisplayMode displayMode; // todo
-    return displayModes;
+    return { GetDisplayMode() };
 }
 
 

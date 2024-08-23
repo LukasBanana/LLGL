@@ -492,6 +492,7 @@ endif()
 if(EMSCRIPTEN)
     add_compile_options("SHELL:-s USE_PTHREADS")
     add_link_options("SHELL:-s USE_PTHREADS")
+    add_link_options("SHELL:-s FORCE_FILESYSTEM") # for examples
 
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")

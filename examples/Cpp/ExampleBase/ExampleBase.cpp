@@ -28,9 +28,13 @@
 #endif
 #include <inttypes.h>
 
-#ifdef LLGL_OS_ANDROID
+#if defined LLGL_OS_ANDROID
 #   include "Android/AppUtils.h"
 #   include <android/native_activity.h>
+#elif defined LLGL_OS_WASM
+#   include <emscripten.h>
+#   include <emscripten/html5.h>
+#   include <LLGL/Backend/OpenGL/NativeCommand.h>
 #endif
 
 #define IMMEDIATE_SUBMIT_CMDBUFFER 0
@@ -377,15 +381,26 @@ void ExampleBase::SetAndroidApp(android_app* androidApp)
 
 #endif
 
+void ExampleBase::MainLoopWrapper(void* args)
+{
+    ExampleBase* exampleBase = reinterpret_cast<ExampleBase*>(args);
+    exampleBase->MainLoop();
+}
+
 void ExampleBase::Run()
 {
-    bool showTimeRecords = false;
-    bool fullscreen = false;
-    const LLGL::Extent2D initialResolution = swapChain->GetResolution();
+    initialResolution_ = swapChain->GetResolution();
 
     #ifndef LLGL_MOBILE_PLATFORM
     LLGL::Window& window = LLGL::CastTo<LLGL::Window>(swapChain->GetSurface());
     #endif
+
+    #ifdef LLGL_OS_WASM
+
+    // Receives a function to call and some user data to provide it.
+    emscripten_set_main_loop_arg(ExampleBase::MainLoopWrapper, this, 0, 1);
+
+    #else
 
     while (LLGL::Surface::ProcessEvents() && !input.KeyDown(LLGL::Key::Escape))
     {
@@ -407,57 +422,10 @@ void ExampleBase::Run()
             ANativeActivity_finish(ExampleBase::androidApp_->activity);
         #endif
 
-        // Update profiler (if debugging is enabled)
-        if (debuggerObj_)
-        {
-            LLGL::FrameProfile frameProfile;
-            debuggerObj_->FlushProfile(&frameProfile);
-
-            if (showTimeRecords)
-            {
-                LLGL::Log::Printf(
-                    "\n"
-                    "FRAME TIME RECORDS:\n"
-                    "-------------------\n"
-                );
-                for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
-                    LLGL::Log::Printf("%s: %" PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
-
-                debuggerObj_->SetTimeRecording(false);
-                showTimeRecords = false;
-            }
-            else if (input.KeyDown(LLGL::Key::F1))
-            {
-                debuggerObj_->SetTimeRecording(true);
-                showTimeRecords = true;
-            }
-        }
-
-        // Check to switch to fullscreen
-        if (input.KeyDown(LLGL::Key::F5))
-        {
-            if (LLGL::Display* display = swapChain->GetSurface().FindResidentDisplay())
-            {
-                fullscreen = !fullscreen;
-                if (fullscreen)
-                    swapChain->ResizeBuffers(display->GetDisplayMode().resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
-                else
-                    swapChain->ResizeBuffers(initialResolution, LLGL::ResizeBuffersFlags::WindowedMode);
-            }
-        }
-
-        // Draw current frame
-        #ifdef LLGL_OS_MACOS
-        @autoreleasepool
-        {
-            DrawFrame();
-        }
-        #else
-        DrawFrame();
-        #endif
-
-        input.Reset();
+        MainLoop();
     }
+
+    #endif // /LLGL_OS_WASM
 }
 
 void ExampleBase::DrawFrame()
@@ -654,6 +622,74 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
     // dummy
 }
 
+void ExampleBase::MainLoop()
+{
+    #ifdef LLGL_OS_WASM
+
+    // Clear GL state when rendering with WebGL
+    commands->Begin();
+    {
+        LLGL::OpenGL::NativeCommand cmd;
+        cmd.type = LLGL::OpenGL::NativeCommandType::ClearCache;
+        commands->DoNativeCommand(&cmd, sizeof(cmd));
+    }
+    commands->End();
+    commandQueue->Submit(*commands);
+
+    #endif
+
+    // Update profiler (if debugging is enabled)
+    if (debuggerObj_)
+    {
+        LLGL::FrameProfile frameProfile;
+        debuggerObj_->FlushProfile(&frameProfile);
+
+        if (showTimeRecords_)
+        {
+            LLGL::Log::Printf(
+                "\n"
+                "FRAME TIME RECORDS:\n"
+                "-------------------\n"
+            );
+            for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
+                LLGL::Log::Printf("%s: %" PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
+
+            debuggerObj_->SetTimeRecording(false);
+            showTimeRecords_ = false;
+        }
+        else if (input.KeyDown(LLGL::Key::F1))
+        {
+            debuggerObj_->SetTimeRecording(true);
+            showTimeRecords_ = true;
+        }
+    }
+
+    // Check to switch to fullscreen
+    if (input.KeyDown(LLGL::Key::F5))
+    {
+        if (LLGL::Display* display = swapChain->GetSurface().FindResidentDisplay())
+        {
+            fullscreen_ = !fullscreen_;
+            if (fullscreen_)
+                swapChain->ResizeBuffers(display->GetDisplayMode().resolution, LLGL::ResizeBuffersFlags::FullscreenMode);
+            else
+                swapChain->ResizeBuffers(initialResolution_, LLGL::ResizeBuffersFlags::WindowedMode);
+        }
+    }
+
+    // Draw current frame
+    #ifdef LLGL_OS_MACOS
+    @autoreleasepool
+    {
+        DrawFrame();
+    }
+    #else
+    DrawFrame();
+    #endif
+
+    input.Reset();
+}
+
 //private
 LLGL::Shader* ExampleBase::LoadShaderInternal(
     const ShaderDescWrapper&                    shaderDesc,
@@ -664,6 +700,12 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     bool                                        patchClippingOrigin)
 {
     LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename.c_str());
+
+    #ifdef LLGL_OS_WASM
+    const std::string filename = "assets/" + shaderDesc.filename;
+    #else
+    const std::string filename = shaderDesc.filename;
+    #endif
 
     std::vector<LLGL::Shader*>          shaders;
     std::vector<LLGL::VertexAttribute>  vertexInputAttribs;
@@ -679,7 +721,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     }
 
     // Create shader
-    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, shaderDesc.filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
+    LLGL::ShaderDescriptor deviceShaderDesc = LLGL::ShaderDescFromFile(shaderDesc.type, filename.c_str(), shaderDesc.entryPoint.c_str(), shaderDesc.profile.c_str());
     {
         deviceShaderDesc.debugName = shaderDesc.entryPoint.c_str();
 

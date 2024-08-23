@@ -156,6 +156,10 @@ private:
 
     std::uint32_t                               samples_            = 1;
 
+    LLGL::Extent2D                              initialResolution_;
+    bool                                        showTimeRecords_    = false;
+    bool                                        fullscreen_         = false;
+
 protected:
 
     friend class ResizeEventHandler;
@@ -195,6 +199,11 @@ protected:
     virtual void OnResize(const LLGL::Extent2D& resolution);
 
 private:
+
+    static void MainLoopWrapper(void* args);
+
+    // Internal main loop. This is called manually on most platforms. With WebAssembly, it's passed to the browser glue code.
+    void MainLoop();
 
     // Internal function to load a shader.
     LLGL::Shader* LoadShaderInternal(

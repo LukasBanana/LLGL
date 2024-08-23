@@ -76,28 +76,45 @@ bool WasmGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
  * ======= Private: =======
  */
 
-bool WasmGLContext::SetSwapInterval(int interval)
+bool WasmGLContext::SetSwapInterval(int /*interval*/)
 {
-    return true;
+    return false; // dummy
+}
+
+static void GetWebGLVersionFromConfig(EmscriptenWebGLContextAttributes& attrs, const RendererConfigurationOpenGL& cfg)
+{
+    if (cfg.majorVersion == 0 && cfg.minorVersion == 0)
+    {
+        /* WebGL 2.0 is requested by default */
+        attrs.majorVersion = 2;
+        attrs.minorVersion = 0;
+    }
+    else
+    {
+        /* Request custom WebGL version (can only be 1.0 or 2.0) */
+        attrs.majorVersion = cfg.majorVersion;
+        attrs.minorVersion = cfg.minorVersion;
+    }
 }
 
 void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile, WasmGLContext* sharedContext)
 {
-	EmscriptenWebGLContextAttributes attrs;
+	EmscriptenWebGLContextAttributes attrs = {};
 	emscripten_webgl_init_context_attributes(&attrs);
-	attrs.majorVersion                      = 2;
-	attrs.minorVersion                      = 0;
-	attrs.alpha                             = (pixelFormat.colorBits > 24);
-	attrs.depth                             = (pixelFormat.depthBits > 0);
-	attrs.stencil                           = (pixelFormat.stencilBits > 0);
-	attrs.antialias                         = (pixelFormat.samples > 1);
-	attrs.premultipliedAlpha                = true;
-	attrs.preserveDrawingBuffer             = false;
-	attrs.explicitSwapControl               = 0;
-	attrs.failIfMajorPerformanceCaveat      = false;
-	attrs.enableExtensionsByDefault         = true;
-	attrs.powerPreference                   = EM_WEBGL_POWER_PREFERENCE_DEFAULT;
 
+    GetWebGLVersionFromConfig(attrs, profile);
+	attrs.alpha                         = true;//(pixelFormat.colorBits > 24);
+	attrs.depth                         = true;//(pixelFormat.depthBits > 0);
+	attrs.stencil                       = true;//(pixelFormat.stencilBits > 0);
+	attrs.antialias                     = true;//(pixelFormat.samples > 1);
+	attrs.premultipliedAlpha            = true;
+	attrs.preserveDrawingBuffer         = false;
+	attrs.explicitSwapControl           = 0;
+	attrs.failIfMajorPerformanceCaveat  = false;
+	attrs.enableExtensionsByDefault     = true;
+	attrs.powerPreference               = EM_WEBGL_POWER_PREFERENCE_DEFAULT;
+
+    //TODO: determine canvas ID
 	context_ = emscripten_webgl_create_context("#canvas", &attrs);
 
     if (!context_)

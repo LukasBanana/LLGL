@@ -38,19 +38,11 @@ class WasmCanvas : public Canvas
     private:
 
         void CreateEmscriptenCanvas(const CanvasDescriptor& desc);
-
-        void ProcessKeyEvent(/*event, bool down*/);
-        void ProcessMouseKeyEvent(/*event, bool down*/);
-        //void ProcessExposeEvent();
-        void ProcessClientMessage(/*event*/);
-        void ProcessMotionEvent(/*event*/);
-
-        void PostMouseKeyEvent(Key key, bool down);
         
     private:
 
         static const char* OnBeforeUnloadCallback(int eventType, const void* reserved, void* userData);
-        static int OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent *keyEvent, void *userData);
+        static EM_BOOL OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent *keyEvent, void *userData);
 
         static EM_BOOL OnKeyCallback(int eventType, const EmscriptenKeyboardEvent *e, void *userData);
 
