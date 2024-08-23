@@ -22,6 +22,7 @@ endif()
 set(LLGL_UWP_PLATFORM OFF)
 set(LLGL_IOS_PLATFORM OFF)
 set(LLGL_ANDROID_PLATFORM OFF)
+set(LLGL_WASM_PLATFORM OFF)
 
 if(NOT DEFINED LLGL_TARGET_PLATFORM)
     if("${CMAKE_SYSTEM_NAME}" STREQUAL "Android")
@@ -33,6 +34,9 @@ if(NOT DEFINED LLGL_TARGET_PLATFORM)
     elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
         set(LLGL_TARGET_PLATFORM "${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION}")
         set(LLGL_UWP_PLATFORM ON)
+    elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+        set(LLGL_TARGET_PLATFORM "WebAssembly")
+        set(LLGL_WASM_PLATFORM ON)
     elseif(WIN32)
         if(LLGL_BUILD_64BIT)
             set(LLGL_TARGET_PLATFORM "Win64")
@@ -91,7 +95,7 @@ set( BACKEND_INCLUDE_DIR            "${PROJECT_INCLUDE_DIR}/LLGL/Backend"     )
 
 # === Macros ===
 
-if(LLGL_IOS_PLATFORM OR LLGL_ANDROID_PLATFORM)
+if(LLGL_IOS_PLATFORM OR LLGL_ANDROID_PLATFORM OR LLGL_WASM_PLATFORM)
     set(LLGL_MOBILE_PLATFORM ON)
 else()
     set(LLGL_MOBILE_PLATFORM OFF)
@@ -380,6 +384,7 @@ endif()
 
 set(SUMMARY_LIBRARY_TYPE "Unknown")
 set(SUMMARY_TARGET_ARCH "Unknown")
+set(SUMMARY_FLAGS "")
 
 
 # === Options ===
@@ -408,7 +413,10 @@ option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
 
 if(NOT LLGL_UWP_PLATFORM)
-    if(LLGL_MOBILE_PLATFORM)
+    if(EMSCRIPTEN)
+        option(LLGL_BUILD_RENDERER_WEBGL "Include WebGL renderer project" ON)
+        option(LLGL_ENABLE_EMSCRIPTEN_PTHREADS "Build for Wasm platform with pthreads (USE_PTHREADS). This limits browser availability!" OFF)
+    elseif(LLGL_MOBILE_PLATFORM)
         option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
     else()
         option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
@@ -483,6 +491,22 @@ else()
     set(SUMMARY_TARGET_ARCH "x86")
 endif()
 
+if(EMSCRIPTEN)
+    # When USE_PTHREADS is enabled, HTML5 pages cannot be opened in Chrome unless launched with '--enable-features=SharedArrayBuffer'
+    if(LLGL_ENABLE_EMSCRIPTEN_PTHREADS)
+        add_compile_options("SHELL:-s USE_PTHREADS")
+        add_link_options("SHELL:-s USE_PTHREADS")
+        set(SUMMARY_FLAGS ${SUMMARY_FLAGS} "pthreads")
+    endif()
+
+    # TODO: Emscripten file system pulls in a large amount of code. Consider limiting file system support to examples and tests.
+    add_link_options("SHELL:-s FORCE_FILESYSTEM") # for examples
+
+    # LLGL needs at least WebGL 2.0
+    add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
+    add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
+endif()
+
 
 # === Global files ===
 
@@ -522,7 +546,10 @@ if(LLGL_ENABLE_DEBUG_LAYER)
     find_source_files(FilesRendererDbgTexture       CXX     "${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Texture")
 endif()
 
-if(WIN32)
+if(EMSCRIPTEN)
+    find_source_files(FilesPlatform                 CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/Wasm")
+    find_source_files(FilesIncludePlatform          CXX     "${PROJECT_INCLUDE_DIR}/LLGL/Platform/Wasm")
+elseif(WIN32)
     if(LLGL_UWP_PLATFORM)
         find_source_files(FilesPlatform             CXX     "${PROJECT_SOURCE_DIR}/sources/Platform/UWP")
         find_source_files(FilesIncludePlatform      CXX     "${PROJECT_INCLUDE_DIR}/LLGL/Platform/UWP")
@@ -679,6 +706,8 @@ elseif(APPLE)
     if(LLGL_MACOS_ENABLE_COREVIDEO)
         target_link_libraries(LLGL "-framework CoreVideo")
     endif()
+elseif(EMSCRIPTEN)
+    target_link_libraries(LLGL embind)
 elseif(UNIX)
     target_link_libraries(LLGL X11 pthread Xrandr)
 #elseif(LLGL_UWP_PLATFORM)
@@ -697,7 +726,7 @@ if(LLGL_BUILD_RENDERER_NULL)
     add_subdirectory(sources/Renderer/Null)
 endif()
 
-if(LLGL_BUILD_RENDERER_OPENGL OR LLGL_BUILD_RENDERER_OPENGLES3)
+if(LLGL_BUILD_RENDERER_OPENGL OR LLGL_BUILD_RENDERER_OPENGLES3 OR LLGL_BUILD_RENDERER_WEBGL)
     add_subdirectory(sources/Renderer/OpenGL)
 endif()
 
@@ -787,6 +816,10 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
     message(STATUS "Build Renderer: ${LLGL_GL_ENABLE_OPENGLES}")
 endif()
 
+if(LLGL_BUILD_RENDERER_WEBGL)
+    message(STATUS "Build Renderer: WebGL")
+endif()
+
 if(LLGL_BUILD_RENDERER_VULKAN)
     message(STATUS "Build Renderer: Vulkan")
 endif()
@@ -821,6 +854,10 @@ endif()
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
     message(STATUS "Including Submodule: SPIRV-Headers")
+endif()
+
+if(NOT "${SUMMARY_FLAGS}" STREQUAL "")
+    message(STATUS "Options: ${SUMMARY_FLAGS}")
 endif()
 
 message(STATUS "~~~~~~~~~~~~~~~~~~~~~")

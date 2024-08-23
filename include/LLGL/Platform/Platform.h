@@ -30,6 +30,8 @@ see https://sourceforge.net/p/predef/wiki/OperatingSystems/
 #   endif
 #elif defined __ANDROID__ || defined ANDROID
 #   define LLGL_OS_ANDROID
+#elif defined EMSCRIPTEN
+#   define LLGL_OS_WASM
 #elif defined __linux__
 #   define LLGL_OS_LINUX
 #endif

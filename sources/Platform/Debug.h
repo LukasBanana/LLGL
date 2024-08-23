@@ -22,6 +22,8 @@
 #      include "MacOS/MacOSDebug.h"
 #   elif defined(LLGL_OS_LINUX)
 #      include "Linux/LinuxDebug.h"
+#   elif defined(LLGL_OS_WASM)
+#      include "Wasm/WasmDebug.h"
 #   elif defined(LLGL_OS_IOS)
 #      include "IOS/IOSDebug.h"
 #   elif defined(LLGL_OS_ANDROID)

@@ -34,7 +34,11 @@ GLenum MapOrZero(const Format format)
         case Format::Undefined:         return 0;
 
         /* --- Alpha channel color formats --- */
+        #ifdef LLGL_WEBGL
+        case Format::A8UNorm:           return GL_ALPHA;
+        #else
         case Format::A8UNorm:           return GL_R8; // texture swizzle
+        #endif
 
         /* --- Red channel color formats --- */
         case Format::R8UNorm:           return GL_R8;
@@ -119,11 +123,13 @@ GLenum MapOrZero(const Format format)
         case Format::RGBA64Float:       return 0;
 
         /* --- BGRA color formats --- */
+        #ifndef LLGL_WEBGL // WebGL does not support texture swizzling
         case Format::BGRA8UNorm:        return GL_RGBA8;        // texture swizzle
         case Format::BGRA8UNorm_sRGB:   return GL_SRGB8_ALPHA8; // texture swizzle
         case Format::BGRA8SNorm:        return GL_RGBA8_SNORM;  // texture swizzle
         case Format::BGRA8UInt:         return GL_RGBA8UI;      // texture swizzle
         case Format::BGRA8SInt:         return GL_RGBA8I;       // texture swizzle
+        #endif
 
         #ifdef LLGL_OPENGL
         /* --- Packed formats --- */
@@ -249,7 +255,7 @@ GLenum Map(const TextureSwizzle textureSwizzle)
 
 GLenum Map(const Format textureFormat)
 {
-    if (auto result = MapOrZero(textureFormat))
+    if (GLenum result = MapOrZero(textureFormat))
         return result;
     LLGL_TRAP_GL_MAP(Format, textureFormat);
 }
@@ -258,7 +264,11 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        #ifdef LLGL_WEBGL
+        case ImageFormat::Alpha:            return GL_ALPHA;
+        #else
         case ImageFormat::Alpha:            return GL_RED; // texture swizzle
+        #endif
         case ImageFormat::R:                return GL_RED;
         case ImageFormat::RG:               return GL_RG;
         case ImageFormat::RGB:              return GL_RGB;
@@ -288,7 +298,11 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
+        #ifdef LLGL_WEBGL
+        case ImageFormat::Alpha:            break; // WebGL does not support texture swizzling, only GL_ALPHA but it's not an integer format
+        #else
         case ImageFormat::Alpha:            return GL_RED_INTEGER; // texture swizzle
+        #endif
         case ImageFormat::R:                return GL_RED_INTEGER;
         case ImageFormat::RG:               return GL_RG_INTEGER;
         case ImageFormat::RGB:              return GL_RGB_INTEGER;
@@ -616,59 +630,7 @@ GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
 
 UniformType UnmapUniformType(const GLenum uniformType)
 {
-    #ifdef LLGL_OPENGLES3
-
-    switch (uniformType)
-    {
-        /* ----- Scalars/Vectors ----- */
-        case GL_FLOAT:              return UniformType::Float1;
-        case GL_FLOAT_VEC2:         return UniformType::Float2;
-        case GL_FLOAT_VEC3:         return UniformType::Float3;
-        case GL_FLOAT_VEC4:         return UniformType::Float4;
-        case GL_INT:                return UniformType::Int1;
-        case GL_INT_VEC2:           return UniformType::Int2;
-        case GL_INT_VEC3:           return UniformType::Int3;
-        case GL_INT_VEC4:           return UniformType::Int4;
-        case GL_UNSIGNED_INT:       return UniformType::UInt1;
-        case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
-        case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
-        case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
-        case GL_BOOL:               return UniformType::Bool1;
-        case GL_BOOL_VEC2:          return UniformType::Bool2;
-        case GL_BOOL_VEC3:          return UniformType::Bool3;
-        case GL_BOOL_VEC4:          return UniformType::Bool4;
-
-        /* ----- Matrices ----- */
-        case GL_FLOAT_MAT2:         return UniformType::Float2x2;
-        case GL_FLOAT_MAT3:         return UniformType::Float3x3;
-        case GL_FLOAT_MAT4:         return UniformType::Float4x4;
-        case GL_FLOAT_MAT2x3:       return UniformType::Float2x3;
-        case GL_FLOAT_MAT2x4:       return UniformType::Float2x4;
-        case GL_FLOAT_MAT3x2:       return UniformType::Float3x2;
-        case GL_FLOAT_MAT3x4:       return UniformType::Float3x4;
-        case GL_FLOAT_MAT4x2:       return UniformType::Float4x2;
-        case GL_FLOAT_MAT4x3:       return UniformType::Float4x3;
-
-        /* ----- Samplers ----- */
-        case GL_SAMPLER_2D:
-        case GL_SAMPLER_3D:
-        case GL_SAMPLER_CUBE:
-        case GL_SAMPLER_2D_SHADOW:
-        case GL_SAMPLER_2D_ARRAY:
-        case GL_SAMPLER_2D_ARRAY_SHADOW:
-        case GL_SAMPLER_CUBE_SHADOW:
-        case GL_INT_SAMPLER_2D:
-        case GL_INT_SAMPLER_3D:
-        case GL_INT_SAMPLER_CUBE:
-        case GL_INT_SAMPLER_2D_ARRAY:
-        case GL_UNSIGNED_INT_SAMPLER_2D:
-        case GL_UNSIGNED_INT_SAMPLER_3D:
-        case GL_UNSIGNED_INT_SAMPLER_CUBE:
-        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-            return UniformType::Sampler;
-    }
-
-    #else
+    #ifdef LLGL_OPENGL
 
     switch (uniformType)
     {
@@ -793,7 +755,59 @@ UniformType UnmapUniformType(const GLenum uniformType)
         #endif // /__APPLE__
     }
 
-    #endif // /LLGL_OPENGLES3
+    #else // LLGL_OPENGL
+
+    switch (uniformType)
+    {
+        /* ----- Scalars/Vectors ----- */
+        case GL_FLOAT:              return UniformType::Float1;
+        case GL_FLOAT_VEC2:         return UniformType::Float2;
+        case GL_FLOAT_VEC3:         return UniformType::Float3;
+        case GL_FLOAT_VEC4:         return UniformType::Float4;
+        case GL_INT:                return UniformType::Int1;
+        case GL_INT_VEC2:           return UniformType::Int2;
+        case GL_INT_VEC3:           return UniformType::Int3;
+        case GL_INT_VEC4:           return UniformType::Int4;
+        case GL_UNSIGNED_INT:       return UniformType::UInt1;
+        case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
+        case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
+        case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
+        case GL_BOOL:               return UniformType::Bool1;
+        case GL_BOOL_VEC2:          return UniformType::Bool2;
+        case GL_BOOL_VEC3:          return UniformType::Bool3;
+        case GL_BOOL_VEC4:          return UniformType::Bool4;
+
+        /* ----- Matrices ----- */
+        case GL_FLOAT_MAT2:         return UniformType::Float2x2;
+        case GL_FLOAT_MAT3:         return UniformType::Float3x3;
+        case GL_FLOAT_MAT4:         return UniformType::Float4x4;
+        case GL_FLOAT_MAT2x3:       return UniformType::Float2x3;
+        case GL_FLOAT_MAT2x4:       return UniformType::Float2x4;
+        case GL_FLOAT_MAT3x2:       return UniformType::Float3x2;
+        case GL_FLOAT_MAT3x4:       return UniformType::Float3x4;
+        case GL_FLOAT_MAT4x2:       return UniformType::Float4x2;
+        case GL_FLOAT_MAT4x3:       return UniformType::Float4x3;
+
+        /* ----- Samplers ----- */
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+            return UniformType::Sampler;
+    }
+
+    #endif // /LLGL_OPENGL
 
     return UniformType::Undefined;
 }

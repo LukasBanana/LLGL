@@ -39,6 +39,10 @@ LLGL_DECLARE_STATIC_MODULE_INTERFACE(OpenGL);
 LLGL_DECLARE_STATIC_MODULE_INTERFACE(OpenGLES3);
 #endif
 
+#ifdef LLGL_BUILD_RENDERER_WEBGL
+LLGL_DECLARE_STATIC_MODULE_INTERFACE(WebGL);
+#endif
+
 #ifdef LLGL_BUILD_RENDERER_VULKAN
 LLGL_DECLARE_STATIC_MODULE_INTERFACE(Vulkan);
 #endif
@@ -73,6 +77,9 @@ std::vector<std::string> GetStaticModules()
         #ifdef LLGL_BUILD_RENDERER_OPENGLES3
         ModuleOpenGLES3::GetModuleName(),
         #endif
+        #ifdef LLGL_BUILD_RENDERER_WEBGL
+        ModuleWebGL::GetModuleName(),
+        #endif
         #ifdef LLGL_BUILD_RENDERER_VULKAN
         ModuleVulkan::GetModuleName(),
         #endif
@@ -104,6 +111,10 @@ const char* GetRendererName(const std::string& moduleName)
 
     #ifdef LLGL_BUILD_RENDERER_OPENGLES3
     LLGL_GET_RENDERER_NAME(ModuleOpenGLES3);
+    #endif
+
+    #ifdef LLGL_BUILD_RENDERER_WEBGL
+    LLGL_GET_RENDERER_NAME(ModuleWebGL);
     #endif
 
     #ifdef LLGL_BUILD_RENDERER_VULKAN
@@ -145,6 +156,10 @@ int GetRendererID(const std::string& moduleName)
     LLGL_GET_RENDERER_ID(ModuleOpenGLES3);
     #endif
 
+    #ifdef LLGL_BUILD_RENDERER_WEBGL
+    LLGL_GET_RENDERER_ID(ModuleWebGL);
+    #endif
+
     #ifdef LLGL_BUILD_RENDERER_VULKAN
     LLGL_GET_RENDERER_ID(ModuleVulkan);
     #endif
@@ -182,6 +197,10 @@ RenderSystem* AllocRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 
     #ifdef LLGL_BUILD_RENDERER_OPENGLES3
     LLGL_ALLOC_RENDER_SYSTEM(ModuleOpenGLES3);
+    #endif
+
+    #ifdef LLGL_BUILD_RENDERER_WEBGL
+    LLGL_ALLOC_RENDER_SYSTEM(ModuleWebGL);
     #endif
 
     #ifdef LLGL_BUILD_RENDERER_VULKAN

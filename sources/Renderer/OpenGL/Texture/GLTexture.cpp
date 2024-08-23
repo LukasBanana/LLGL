@@ -66,6 +66,9 @@ static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 // Maps the specified format to a swizzle format, or identity swizzle if texture swizzling is not necessary
 static GLSwizzleFormat MapToGLSwizzleFormat(const Format format)
 {
+    #ifdef LLGL_WEBGL
+    return GLSwizzleFormat::RGBA; // WebGL does not support texture swizzling
+    #else
     const auto& formatDesc = GetFormatAttribs(format);
     if (formatDesc.format == ImageFormat::Alpha)
         return GLSwizzleFormat::Alpha;
@@ -73,6 +76,7 @@ static GLSwizzleFormat MapToGLSwizzleFormat(const Format format)
         return GLSwizzleFormat::BGRA;
     else
         return GLSwizzleFormat::RGBA;
+    #endif
 }
 
 GLTexture::GLTexture(const TextureDescriptor& desc) :
@@ -112,7 +116,7 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
         }
     }
 
-    #ifdef LLGL_OPENGLES3
+    #ifndef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
     /* Store additional parameters for GLES */
     extent_[0]  = static_cast<GLint>(desc.extent.width);
     extent_[1]  = static_cast<GLint>(desc.extent.height);

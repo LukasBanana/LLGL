@@ -35,7 +35,8 @@ enum class OpenGLContextProfile
 
     /**
     \brief OpenGL ES profile.
-    \note Only supported on: Android and iOS.
+    \remarks This profile is used for both OpenGL ES and WebGL since WebGL shaders also refer to the ES profile.
+    \note Only supported on: Android, iOS, and WebAssembly.
     */
     ESProfile,
 
@@ -43,7 +44,7 @@ enum class OpenGLContextProfile
     \brief Default GL profile.
     \remarks This is equivalent to CoreProfile for OpenGL and ESProfile for OpenGLES.
     */
-    #if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS)
+    #if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS) || defined(LLGL_OS_WASM)
     DefaultProfile = ESProfile,
     #else
     DefaultProfile = CoreProfile,

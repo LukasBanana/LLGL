@@ -21,6 +21,8 @@
 #   include <LLGL/Backend/OpenGL/IOS/IOSNativeHandle.h>
 #elif defined(LLGL_OS_ANDROID)
 #   include <LLGL/Backend/OpenGL/Android/AndroidNativeHandle.h>
+#elif defined(LLGL_OS_WASM)
+#   include <LLGL/Backend/OpenGL/Wasm/WasmNativeHandle.h>
 #endif
 
 

@@ -106,6 +106,11 @@ void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfie
     return glMapBufferRange(target, offset, length, access);
 }
 
+void UnmapBuffer(GLenum target)
+{
+    glUnmapBuffer(target);
+}
+
 void DrawBuffer(GLenum buf)
 {
     glDrawBuffers(1, &buf);

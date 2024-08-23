@@ -98,6 +98,11 @@ void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr /*length*/, GLbi
     return reinterpret_cast<void*>(ptr + offset);
 }
 
+void UnmapBuffer(GLenum target)
+{
+    glUnmapBuffer(target);
+}
+
 void DrawBuffer(GLenum buf)
 {
     glDrawBuffer(buf);
