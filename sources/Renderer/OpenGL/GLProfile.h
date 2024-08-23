@@ -11,7 +11,7 @@
 
 #if defined LLGL_OPENGL
 #   include "GLCoreProfile/GLCoreProfileTypes.h"
-#elif defined LLGL_OPEGNLES3
+#elif defined LLGL_OPENGLES3
 #   include "GLESProfile/GLESProfileTypes.h"
 #elif defined LLGL_WEBGL
 #   include "WebGLProfile/WebGLProfileTypes.h"
