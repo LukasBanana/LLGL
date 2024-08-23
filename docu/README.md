@@ -78,3 +78,7 @@ $ python -m http.server
 ```
 Then run your browser of choice at URL http://localhost:8000/.
 
+<p align="center">
+    <img src="Showcase/Showcase_Build_Wasm.png" alt="Screenshot missing: HTML5 Example Showcase" style="max-width:600px;width:70%;height:auto;">
+</p>
+
