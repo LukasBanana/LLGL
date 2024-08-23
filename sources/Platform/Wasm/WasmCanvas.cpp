@@ -10,7 +10,8 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Display.h>
 #include "../../Core/CoreUtils.h"
-#include <exception>
+
+#include <LLGL/Log.h>
 
 
 namespace LLGL
@@ -83,33 +84,7 @@ UTF8String WasmCanvas::GetTitle() const
  * ======= Private: =======
  */
 
-/*
-EM_JS(emscripten::EM_VAL, get_canvas, (), {
-    let canvas = document.getElementById("mycanvas");
-    return Emval.toHandle(canvas);
-});
-canvas_ = emscripten::val::take_ownership(get_canvas());
-*/
-
-static const char* emscripten_event_type_to_string(int eventType)
-{
-    const char *events[] = { "(invalid)", "(none)", "keypress", "keydown", "keyup", "click", "mousedown", "mouseup", "dblclick", "mousemove", "wheel", "resize",
-    "scroll", "blur", "focus", "focusin", "focusout", "deviceorientation", "devicemotion", "orientationchange", "fullscreenchange", "pointerlockchange",
-    "visibilitychange", "touchstart", "touchend", "touchmove", "touchcancel", "gamepadconnected", "gamepaddisconnected", "beforeunload",
-    "batterychargingchange", "batterylevelchange", "webglcontextlost", "webglcontextrestored", "(invalid)" };
-
-    ++eventType;
-
-    if (eventType < 0)
-        eventType = 0;
-
-    if (eventType >= sizeof(events)/sizeof(events[0]))
-        eventType = sizeof(events)/sizeof(events[0])-1;
-
-    return events[eventType];
-}
-
-static const char* EmscriptenResultToString(EMSCRIPTEN_RESULT result)
+/*static const char* EmscriptenResultToString(EMSCRIPTEN_RESULT result)
 {
     switch (result)
     {
@@ -124,9 +99,9 @@ static const char* EmscriptenResultToString(EMSCRIPTEN_RESULT result)
         case EMSCRIPTEN_RESULT_NO_DATA:             return "EMSCRIPTEN_RESULT_NO_DATA";
     }
     return "Unknown EMSCRIPTEN_RESULT!";
-}
+}*/
 
-static int interpret_charcode_for_keyevent(int eventType, const EmscriptenKeyboardEvent* event)
+/*static int EmscriptenKeyeventToCharcode(int eventType, const EmscriptenKeyboardEvent* event)
 {
     // Only KeyPress events carry a charCode. For KeyDown and KeyUp events, these don't seem to be present yet, until later when the KeyDown
     // is transformed to KeyPress. Sometimes it can be useful to already at KeyDown time to know what the charCode of the resulting
@@ -136,13 +111,13 @@ static int interpret_charcode_for_keyevent(int eventType, const EmscriptenKeyboa
     if (strlen(event->key) == 1) return (int)event->key[0];
     if (event->which) return event->which;
     return event->keyCode;
-}
+}*/
 
-const char* WasmCanvas::OnBeforeUnloadCallback(int eventType, const void* reserved, void* userData)
+const char* WasmCanvas::OnBeforeUnloadCallback(int eventType, const void* /*reserved*/, void* userData)
 {
 	WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
     canvas->PostDestroy();
-	return nullptr;
+	return nullptr; // no string to be displayed to the user
 }
 
 EM_BOOL WasmCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent* event, void* userData)
@@ -169,20 +144,7 @@ EM_BOOL WasmCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardEvent* 
 {
     WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
 
-    int dom_pk_code = emscripten_compute_dom_pk_code(event->code);
-
-    /*
-    printf("%s, key: \"%s\", code: \"%s\" = %s (%d), location: %lu,%s%s%s%s repeat: %d, locale: \"%s\", char: \"%s\", charCode: %lu (interpreted: %d), keyCode: %s(%lu), which: %lu\n",
-        emscripten_event_type_to_string(eventType), event->key, event->code, emscripten_dom_pk_code_to_string(dom_pk_code), dom_pk_code, event->location,
-        event->ctrlKey ? " CTRL" : "", event->shiftKey ? " SHIFT" : "", event->altKey ? " ALT" : "", event->metaKey ? " META" : "", 
-        event->repeat, event->locale, event->charValue, event->charCode, interpret_charcode_for_keyevent(eventType, e), emscripten_dom_vk_to_string(event->keyCode), event->keyCode, event->which);
-
-    if (eventType == EMSCRIPTEN_EVENT_KEYUP) printf("\n"); // Visual cue
-    */
-
-    printf("%s, key: \"%s\", code: \"%s\" = %s (%d)\n", emscripten_event_type_to_string(eventType), event->key, event->code, emscripten_dom_pk_code_to_string(dom_pk_code), dom_pk_code);
- 
-    auto key = MapEmscriptenKeyCode(event->code);
+    Key key = MapEmscriptenKeyCode(event->code);
 
     if (eventType == 2)
         canvas->PostKeyDown(key);
@@ -268,19 +230,7 @@ EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* e
 
 EM_BOOL WasmCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent* event, void* userData)
 {
-    /*
-    printf("%s, screen: (%ld,%ld), client: (%ld,%ld),%s%s%s%s button: %hu, buttons: %hu, canvas: (%ld,%ld), target: (%ld, %ld), delta:(%g,%g,%g), deltaMode:%lu\n",
-        emscripten_event_type_to_string(eventType), event->mouse.screenX, event->mouse.screenY, event->mouse.clientX, event->mouse.clientY,
-        event->mouse.ctrlKey ? " CTRL" : "", event->mouse.shiftKey ? " SHIFT" : "", event->mouse.altKey ? " ALT" : "", event->mouse.metaKey ? " META" : "", 
-        event->mouse.button, event->mouse.buttons, event->mouse.canvasX, event->mouse.canvasY, event->mouse.targetX, event->mouse.targetY,
-        (float)event->deltaX, (float)event->deltaY, (float)event->deltaZ, event->deltaMode);
-    */
-
-    /*
-    if (event->deltaY > 0.f || event->deltaY < 0.f)
-        gotWheel = 1;
-    */
-
+    //TODO
     return EM_TRUE;
 }
 
@@ -323,6 +273,11 @@ void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
     ret = emscripten_set_mouseenter_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
     ret = emscripten_set_mouseleave_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
     ret = emscripten_set_wheel_callback     (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnWheelCallback);
+
+    /* Resize canvas to initial CSS size */
+    double w = 0, h = 0;
+    emscripten_get_element_css_size(canvasSelector.c_str(), &w, &h);
+    emscripten_set_canvas_element_size(canvasSelector.c_str(), static_cast<int>(w), static_cast<int>(h));
 }
 
 

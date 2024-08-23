@@ -164,7 +164,9 @@ generate_html5_page()
     cp "$SOURCE_DIR/examples/Cpp/ExampleBase/Wasm/index.html" "$HTML5_ROOT/index.html"
     cp "$BIN_ROOT/$BASE_FILENAME.js" "$HTML5_ROOT/$BASE_FILENAME.js"
     cp "$BIN_ROOT/$BASE_FILENAME.wasm" "$HTML5_ROOT/$BASE_FILENAME.wasm"
-    cp "$BIN_ROOT/$BASE_FILENAME.worker.js" "$HTML5_ROOT/$BASE_FILENAME.worker.js"
+    if [ $ENABLE_PTHREADS = "ON" ]; then
+        cp "$BIN_ROOT/$BASE_FILENAME.worker.js" "$HTML5_ROOT/$BASE_FILENAME.worker.js"
+    fi
 
     # Replace meta data
     sed -i "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/" "$HTML5_ROOT/index.html"
@@ -214,11 +216,10 @@ if [ $PROJECT_ONLY -eq 0 ] && [ $ENABLE_EXAMPLES == "ON" ]; then
     BIN_FILE_BASE="${OUTPUT_DIR}/build/Example_"
     BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
 
-    EXAMPLE_BIN_FILES_D=(${BIN_FILE_BASE}*D.wasm)
-    if [ -z "$EXAMPLE_BIN_FILES_D" ]; then
-        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.wasm)
+    if [ $BUILD_TYPE = "Debug" ]; then
+        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*D.wasm)
     else
-        EXAMPLE_BIN_FILES=(${EXAMPLE_BIN_FILES_D[@]})
+        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.wasm)
     fi
 
     for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do
