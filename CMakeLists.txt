@@ -384,6 +384,7 @@ endif()
 
 set(SUMMARY_LIBRARY_TYPE "Unknown")
 set(SUMMARY_TARGET_ARCH "Unknown")
+set(SUMMARY_FLAGS "")
 
 
 # === Options ===
@@ -414,6 +415,7 @@ option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
 if(NOT LLGL_UWP_PLATFORM)
     if(EMSCRIPTEN)
         option(LLGL_BUILD_RENDERER_WEBGL "Include WebGL renderer project" ON)
+        option(LLGL_ENABLE_EMSCRIPTEN_PTHREADS "Build for Wasm platform with pthreads (USE_PTHREADS). This limits browser availability!" OFF)
     elseif(LLGL_MOBILE_PLATFORM)
         option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
     else()
@@ -490,8 +492,14 @@ else()
 endif()
 
 if(EMSCRIPTEN)
-    add_compile_options("SHELL:-s USE_PTHREADS")
-    add_link_options("SHELL:-s USE_PTHREADS")
+    # When USE_PTHREADS is enabled, HTML5 pages cannot be opened in Chrome unless launched with '--enable-features=SharedArrayBuffer'
+    if(LLGL_ENABLE_EMSCRIPTEN_PTHREADS)
+        add_compile_options("SHELL:-s USE_PTHREADS")
+        add_link_options("SHELL:-s USE_PTHREADS")
+        set(SUMMARY_FLAGS ${SUMMARY_FLAGS} "pthreads")
+    endif()
+
+    # TODO: Emscripten file system pulls in a large amount of code. Consider limiting file system support to examples and tests.
     add_link_options("SHELL:-s FORCE_FILESYSTEM") # for examples
 
     # LLGL needs at least WebGL 2.0
@@ -846,6 +854,10 @@ endif()
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
     message(STATUS "Including Submodule: SPIRV-Headers")
+endif()
+
+if(NOT "${SUMMARY_FLAGS}" STREQUAL "")
+    message(STATUS "Options: ${SUMMARY_FLAGS}")
 endif()
 
 message(STATUS "~~~~~~~~~~~~~~~~~~~~~")

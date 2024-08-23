@@ -5,6 +5,7 @@ OUTPUT_DIR="build_wasm"
 CLEAR_CACHE=0
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
+ENABLE_PTHREADS="OFF"
 BUILD_TYPE="Release"
 PROJECT_ONLY=0
 VERBOSE=0
@@ -22,6 +23,7 @@ print_help()
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
+    echo "  --pthreads ................ Enable pthreads (limits browser availability)"
     echo "NOTES:"
     echo "  Default output directory is '$OUTPUT_DIR'"
 }
@@ -53,7 +55,9 @@ for ARG in "$@"; do
         ENABLE_EXAMPLES="OFF"
     elif [ "$ARG" = "--no-tests" ]; then
         ENABLE_TESTS="OFF"
-    elif [ ! "$ARG" = "-msys" ]; then
+    elif [ "$ARG" = "--pthreads" ]; then
+        ENABLE_PTHREADS="ON"
+    else
         OUTPUT_DIR="$ARG"
     fi
 done
@@ -121,6 +125,7 @@ OPTIONS=(
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DLLGL_BUILD_STATIC_LIB=ON
+    -DLLGL_ENABLE_EMSCRIPTEN_PTHREADS=$ENABLE_PTHREADS
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
     -B "$OUTPUT_DIR"
