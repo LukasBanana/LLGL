@@ -42,16 +42,19 @@ class WasmCanvas : public Canvas
     private:
 
         static const char* OnBeforeUnloadCallback(int eventType, const void* reserved, void* userData);
-        static EM_BOOL OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent* event, void *userData);
+        static EM_BOOL OnCanvasResizeCallback(int eventType, const EmscriptenUiEvent* event, void* userData);
 
-        static EM_BOOL OnKeyCallback(int eventType, const EmscriptenKeyboardEvent* event, void *userData);
+        static EM_BOOL OnKeyCallback(int eventType, const EmscriptenKeyboardEvent* event, void* userData);
 
-        static EM_BOOL OnMouseCallback(int eventType, const EmscriptenMouseEvent* event, void *userData);
-        static EM_BOOL OnWheelCallback(int eventType, const EmscriptenWheelEvent* event, void *userData);
+        static EM_BOOL OnMouseCallback(int eventType, const EmscriptenMouseEvent* event, void* userData);
+        static EM_BOOL OnWheelCallback(int eventType, const EmscriptenWheelEvent* event, void* userData);
+
+        static EM_BOOL OnTouchCallback(int eventType, const EmscriptenTouchEvent* event, void* userData);
 
     private:
     
         emscripten::val canvas_;
+        long            prevTouchPoint_[2] = { 0, 0 };
 
 };
 

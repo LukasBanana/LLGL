@@ -234,6 +234,55 @@ EM_BOOL WasmCanvas::OnWheelCallback(int eventType, const EmscriptenWheelEvent* e
     return EM_TRUE;
 }
 
+static EventAction EmscriptenTouchEventToAction(int eventType)
+{
+    switch (eventType)
+    {
+        case EMSCRIPTEN_EVENT_TOUCHSTART:   return EventAction::Began;
+        case EMSCRIPTEN_EVENT_TOUCHMOVE:    return EventAction::Changed;
+        case EMSCRIPTEN_EVENT_TOUCHEND:     return EventAction::Ended;
+        default:                            return EventAction::Ended; // fallback
+    }
+}
+
+EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* event, void* userData)
+{
+    WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
+
+    const Offset2D position
+    {
+        static_cast<std::int32_t>(event->touches[0].clientX),
+        static_cast<std::int32_t>(event->touches[0].clientY)
+    };
+
+    switch (eventType)
+    {
+        case EMSCRIPTEN_EVENT_TOUCHSTART:
+        {
+            canvas->prevTouchPoint_[0] = event->touches[0].clientX;
+            canvas->prevTouchPoint_[1] = event->touches[0].clientY;
+            canvas->PostPanGesture(position, static_cast<std::uint32_t>(event->numTouches), 0.0f, 0.0f, EventAction::Began);
+        }
+        return EM_TRUE;
+
+        case EMSCRIPTEN_EVENT_TOUCHEND:
+        case EMSCRIPTEN_EVENT_TOUCHMOVE:
+        {
+            const float motionX = static_cast<float>(event->touches[0].clientX - canvas->prevTouchPoint_[0]);
+            const float motionY = static_cast<float>(event->touches[0].clientY - canvas->prevTouchPoint_[1]);
+            canvas->prevTouchPoint_[0] = event->touches[0].clientX;
+            canvas->prevTouchPoint_[1] = event->touches[0].clientY;
+            canvas->PostPanGesture(position, static_cast<std::uint32_t>(event->numTouches), motionX, motionY, EmscriptenTouchEventToAction(eventType));
+        }
+        return EM_TRUE;
+
+        default:
+        break;
+    }
+
+    return EM_FALSE;
+}
+
 void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
 {
     /* Find canvas handle*/
@@ -273,6 +322,10 @@ void WasmCanvas::CreateEmscriptenCanvas(const CanvasDescriptor& desc)
     ret = emscripten_set_mouseenter_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
     ret = emscripten_set_mouseleave_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnMouseCallback);
     ret = emscripten_set_wheel_callback     (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnWheelCallback);
+    ret = emscripten_set_touchstart_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+    ret = emscripten_set_touchend_callback  (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+    ret = emscripten_set_touchmove_callback (/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
+    ret = emscripten_set_touchcancel_callback(/*canvasSelector.c_str()*/EMSCRIPTEN_EVENT_TARGET_WINDOW, this, EM_TRUE, WasmCanvas::OnTouchCallback);
 
     /* Resize canvas to initial CSS size */
     double w = 0, h = 0;
