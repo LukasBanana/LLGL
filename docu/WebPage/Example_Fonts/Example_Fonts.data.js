@@ -1,15 +1,17 @@
 
-  var Module = typeof Module !== 'undefined' ? Module : {};
+  var Module = typeof Module != 'undefined' ? Module : {};
 
-  if (!Module.expectedDataFileDownloads) {
-    Module.expectedDataFileDownloads = 0;
+  if (!Module['expectedDataFileDownloads']) {
+    Module['expectedDataFileDownloads'] = 0;
   }
 
-  Module.expectedDataFileDownloads++;
-  (function() {
+  Module['expectedDataFileDownloads']++;
+  (() => {
     // Do not attempt to redownload the virtual filesystem data when in a pthread or a Wasm Worker context.
-    if (Module['ENVIRONMENT_IS_PTHREAD'] || Module['$ww']) return;
-    var loadPackage = function(metadata) {
+    var isPthread = typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD;
+    var isWasmWorker = typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER;
+    if (isPthread || isWasmWorker) return;
+    function loadPackage(metadata) {
 
       var PACKAGE_PATH = '';
       if (typeof window === 'object') {
@@ -29,7 +31,7 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
 
       function fetchRemotePackage(packageName, packageSize, callback, errback) {
         if (typeof process === 'object' && typeof process.versions === 'object' && typeof process.versions.node === 'string') {
-          require('fs').readFile(packageName, function(err, contents) {
+          require('fs').readFile(packageName, (err, contents) => {
             if (err) {
               errback(err);
             } else {
@@ -41,40 +43,40 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
         var xhr = new XMLHttpRequest();
         xhr.open('GET', packageName, true);
         xhr.responseType = 'arraybuffer';
-        xhr.onprogress = function(event) {
+        xhr.onprogress = (event) => {
           var url = packageName;
           var size = packageSize;
           if (event.total) size = event.total;
           if (event.loaded) {
             if (!xhr.addedTotal) {
               xhr.addedTotal = true;
-              if (!Module.dataFileDownloads) Module.dataFileDownloads = {};
-              Module.dataFileDownloads[url] = {
+              if (!Module['dataFileDownloads']) Module['dataFileDownloads'] = {};
+              Module['dataFileDownloads'][url] = {
                 loaded: event.loaded,
                 total: size
               };
             } else {
-              Module.dataFileDownloads[url].loaded = event.loaded;
+              Module['dataFileDownloads'][url].loaded = event.loaded;
             }
             var total = 0;
             var loaded = 0;
             var num = 0;
-            for (var download in Module.dataFileDownloads) {
-            var data = Module.dataFileDownloads[download];
+            for (var download in Module['dataFileDownloads']) {
+            var data = Module['dataFileDownloads'][download];
               total += data.total;
               loaded += data.loaded;
               num++;
             }
-            total = Math.ceil(total * Module.expectedDataFileDownloads/num);
-            if (Module['setStatus']) Module['setStatus'](`Downloading data... (${loaded}/${total})`);
-          } else if (!Module.dataFileDownloads) {
-            if (Module['setStatus']) Module['setStatus']('Downloading data...');
+            total = Math.ceil(total * Module['expectedDataFileDownloads']/num);
+            Module['setStatus']?.(`Downloading data... (${loaded}/${total})`);
+          } else if (!Module['dataFileDownloads']) {
+            Module['setStatus']?.('Downloading data...');
           }
         };
-        xhr.onerror = function(event) {
+        xhr.onerror = (event) => {
           throw new Error("NetworkError for: " + packageName);
         }
-        xhr.onload = function(event) {
+        xhr.onload = (event) => {
           if (xhr.status == 200 || xhr.status == 304 || xhr.status == 206 || (xhr.status == 0 && xhr.response)) { // file URLs can return 0
             var packageData = xhr.response;
             callback(packageData);
@@ -92,7 +94,7 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
       var fetchedCallback = null;
       var fetched = Module['getPreloadedPackage'] ? Module['getPreloadedPackage'](REMOTE_PACKAGE_NAME, REMOTE_PACKAGE_SIZE) : null;
 
-      if (!fetched) fetchRemotePackage(REMOTE_PACKAGE_NAME, REMOTE_PACKAGE_SIZE, function(data) {
+      if (!fetched) fetchRemotePackage(REMOTE_PACKAGE_NAME, REMOTE_PACKAGE_SIZE, (data) => {
         if (fetchedCallback) {
           fetchedCallback(data);
           fetchedCallback = null;
@@ -101,7 +103,7 @@ var REMOTE_PACKAGE_SIZE = metadata['remote_package_size'];
         }
       }, handleError);
 
-    function runWithFS() {
+    function runWithFS(Module) {
 
       function assert(check, msg) {
         if (!check) throw msg + new Error().stack;
@@ -155,9 +157,9 @@ Module['FS_createPath']("/", "assets", true, true);
       };
       Module['addRunDependency']('datafile_Example_Fonts.data');
 
-      if (!Module.preloadResults) Module.preloadResults = {};
+      if (!Module['preloadResults']) Module['preloadResults'] = {};
 
-      Module.preloadResults[PACKAGE_NAME] = {fromCache: false};
+      Module['preloadResults'][PACKAGE_NAME] = {fromCache: false};
       if (fetched) {
         processPackageData(fetched);
         fetched = null;
@@ -167,13 +169,13 @@ Module['FS_createPath']("/", "assets", true, true);
 
     }
     if (Module['calledRun']) {
-      runWithFS();
+      runWithFS(Module);
     } else {
       if (!Module['preRun']) Module['preRun'] = [];
       Module["preRun"].push(runWithFS); // FS is not initialized yet, wait for it
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 413}, {"filename": "/assets/Example.450core.vert", "start": 413, "end": 1183}, {"filename": "/assets/Example.frag", "start": 1183, "end": 1480}, {"filename": "/assets/Example.vert", "start": 1480, "end": 2127}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 2127, "end": 6847}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 6847, "end": 19135}], "remote_package_size": 19135});
+    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 397}, {"filename": "/assets/Example.450core.vert", "start": 397, "end": 1132}, {"filename": "/assets/Example.frag", "start": 1132, "end": 1410}, {"filename": "/assets/Example.vert", "start": 1410, "end": 2023}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 2023, "end": 6743}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 6743, "end": 19031}, {"filename": "/assets/IcoSphere.obj", "start": 19031, "end": 36197}, {"filename": "/assets/Logo_LLGL.png", "start": 36197, "end": 51867}, {"filename": "/assets/PenroseStairs-Bottom.obj", "start": 51867, "end": 61179}, {"filename": "/assets/PenroseStairs-Top.obj", "start": 61179, "end": 70253}, {"filename": "/assets/TilesGray512.jpg", "start": 70253, "end": 284611}], "remote_package_size": 284611});
 
   })();
