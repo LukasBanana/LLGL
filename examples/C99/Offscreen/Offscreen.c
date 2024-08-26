@@ -12,11 +12,11 @@ This image should look identical to the "Offscreen.png" image.
 */
 
 #include <LLGL-C/LLGL.h>
+#include <ExampleBase.h>
 #include <stdio.h> // printf()
 #include <stdlib.h> // malloc()/free()
 #include <math.h> // sinf()/cosf()
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../../../external/stb/stb_image_write.h" // stbi_write_png()
 
 #define FRAME_WIDTH             512
@@ -55,13 +55,13 @@ float LerpColorWheel(float t, int component)
     );
 }
 
-int main(int argc, char* argv[])
+int ExampleInit()
 {
     // Load render system module
-    const char* rendererModule = "OpenGL";
-    if (llglLoadRenderSystem(rendererModule) == 0)
+    LLGLReport report = {};
+    if (llglLoadRenderSystemExt(&(g_config.rendererDesc), report) == 0)
     {
-        fprintf(stderr, "Failed to load render system: %s\n", rendererModule);
+        LOG_ERROR("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
         return 1;
     }
 
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     Vertex* vertices = (Vertex*)malloc(vertexBufferSize);
     if (vertices == NULL)
     {
-        fprintf(stderr, "Failed to allocate %zu bytes for vertex buffer\n", vertexBufferSize);
+        LOG_ERROR("Failed to allocate %zu bytes for vertex buffer\n", vertexBufferSize);
         return 1;
     }
 
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
         LLGLReport shaderReport = llglGetShaderReport(shaders[i]);
         if (llglHasReportErrors(shaderReport))
         {
-            fprintf(stderr, "%s\n", llglGetReportText(shaderReport));
+            LOG_ERROR("%s\n", llglGetReportText(shaderReport));
             return 1;
         }
     }
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
     LLGLReport pipelineReport = llglGetPipelineStateReport(pipeline);
     if (llglHasReportErrors(pipelineReport))
     {
-        fprintf(stderr, "%s\n", llglGetReportText(pipelineReport));
+        LOG_ERROR("%s\n", llglGetReportText(pipelineReport));
         return 1;
     }
 
@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
     const char* outputFilename = "Offscreen.Results.png";
     if (stbi_write_png(outputFilename, FRAME_WIDTH, FRAME_HEIGHT, 4, imageData, (int)imageRowStride) == 0)
     {
-        fprintf(stderr, "Failed to save image to disk: %s\n", outputFilename);
+        LOG_ERROR("Failed to save image to disk: %s\n", outputFilename);
         return 1;
     }
 
@@ -328,3 +328,5 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+IMPLEMENT_EXAMPLE_MAIN(ExampleInit, NULL);

@@ -16,9 +16,9 @@
 #include <stdint.h>
 #include <LLGL-C/Types.h>
 
-#if defined LLGL_OS_ANDROID
+#if __ANDROID__
 #   include <android_native_app_glue.h>
-#endif /* defined LLGL_OS_ANDROID */
+#endif /* __ANDROID__ */
 
 
 /* ----- Constants ----- */
@@ -26,15 +26,18 @@
 #define LLGL_RENDERERID_UNDEFINED   ( 0x00000000 )
 #define LLGL_RENDERERID_NULL        ( 0x00000001 )
 #define LLGL_RENDERERID_OPENGL      ( 0x00000002 )
-#define LLGL_RENDERERID_OPENGLES1   ( 0x00000003 )
-#define LLGL_RENDERERID_OPENGLES2   ( 0x00000004 )
-#define LLGL_RENDERERID_OPENGLES3   ( 0x00000005 )
+#define LLGL_RENDERERID_OPENGLES    ( 0x00000003 )
+#define LLGL_RENDERERID_WEBGL       ( 0x00000004 )
+#define LLGL_RENDERERID_WEBGPU      ( 0x00000005 )
 #define LLGL_RENDERERID_DIRECT3D9   ( 0x00000006 )
 #define LLGL_RENDERERID_DIRECT3D10  ( 0x00000007 )
 #define LLGL_RENDERERID_DIRECT3D11  ( 0x00000008 )
 #define LLGL_RENDERERID_DIRECT3D12  ( 0x00000009 )
 #define LLGL_RENDERERID_VULKAN      ( 0x0000000A )
 #define LLGL_RENDERERID_METAL       ( 0x0000000B )
+#define LLGL_RENDERERID_OPENGLES1   ( LLGL_RENDERERID_OPENGLES )
+#define LLGL_RENDERERID_OPENGLES2   ( LLGL_RENDERERID_OPENGLES )
+#define LLGL_RENDERERID_OPENGLES3   ( LLGL_RENDERERID_OPENGLES )
 #define LLGL_RENDERERID_RESERVED    ( 0x000000FF )
 
 
@@ -1432,9 +1435,9 @@ typedef struct LLGLRenderSystemDescriptor
     size_t                rendererConfigSize; /* = 0 */
     const void*           nativeHandle;       /* = NULL */
     size_t                nativeHandleSize;   /* = 0 */
-#if defined LLGL_OS_ANDROID
-    android_app*          androidApp;
-#endif /* defined LLGL_OS_ANDROID */
+#if __ANDROID__
+    struct android_app*   androidApp;
+#endif /* __ANDROID__ */
 }
 LLGLRenderSystemDescriptor;
 

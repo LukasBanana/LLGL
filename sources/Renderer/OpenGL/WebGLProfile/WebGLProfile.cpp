@@ -75,17 +75,17 @@ void GetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void* dat
 
 void* MapBuffer(GLenum target, GLenum access)
 {
-    return nullptr; // dummy
+    return nullptr; //TODO: allocate intermdiate CPU buffer
 }
 
 void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
-    return nullptr; // dummy
+    return nullptr; //TODO: allocate intermdiate CPU buffer
 }
 
 void UnmapBuffer(GLenum target)
 {
-    // dummy
+    //TODO: release intermediate CPU buffer
 }
 
 void DrawBuffer(GLenum buf)

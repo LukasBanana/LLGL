@@ -18,7 +18,7 @@ project(LLGL_ExamplesC99)
 find_source_files(FilesExampleBaseC99 C "${EXAMPLE_C99_PROJECTS_DIR}/ExampleBase")
 
 find_project_source_files( FilesExampleC99_HelloTriangle    "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle" )
-find_project_source_files( FilesExampleC99_Offscreen        "${EXAMPLE_C99_PROJECTS_DIR}/Offscreen" )
+find_project_source_files( FilesExampleC99_Offscreen        "${EXAMPLE_C99_PROJECTS_DIR}/Offscreen"     )
 find_project_source_files( FilesExampleC99_Texturing        "${EXAMPLE_C99_PROJECTS_DIR}/Texturing"     )
 
 

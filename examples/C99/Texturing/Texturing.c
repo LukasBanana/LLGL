@@ -7,8 +7,6 @@
 
 #include <LLGL-C/LLGL.h>
 #include <ExampleBase.h>
-#include <stdio.h> // for fprintf()
-#include <string.h> // for memcpy()
 #include <stb/stb_image.h> // for loading images
 
 
@@ -19,19 +17,37 @@ typedef struct SceneConstants
 }
 SceneConstants;
 
-int main(int argc, char* argv[])
+struct ExampleData
+{
+    LLGLBuffer          vertexBuffer;
+    LLGLBuffer          indexBuffer;
+    LLGLBuffer          sceneBuffer;
+    LLGLPipelineState   pipeline;
+    LLGLTexture         colorTexture;
+    LLGLSampler         samplers[3];
+    float               rotation;
+    size_t              indexCount;
+}
+g_example =
+{
+    .rotation   = -20.0f,
+    .indexCount = 0,
+};
+
+void TexturingLoop(double dt);
+
+int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char* argv[])
 {
     // Initialize example
-    if (example_init(L"Texturing") != 0)
+    if (example_init("Texturing") != 0)
         return 1;
 
     // Create textured cube mesh
     const TexturedVertex* vertices = NULL;
     size_t vertexCount = 0;
     const uint32_t* indices = NULL;
-    size_t indexCount = 0;
 
-    get_textured_cube(&vertices, &vertexCount, &indices, &indexCount);
+    get_textured_cube(&vertices, &vertexCount, &indices, &g_example.indexCount);
 
     // Vertex format with 3D position, normal, and texture-coordinates
     const LLGLVertexAttribute vertexAttributes[3] =
@@ -49,15 +65,15 @@ int main(int argc, char* argv[])
         .numVertexAttribs   = ARRAY_SIZE(vertexAttributes),
         .vertexAttribs      = vertexAttributes,                     // Vertex format layout
     };
-    LLGLBuffer vertexBuffer = llglCreateBuffer(&vertexBufferDesc, vertices);
+    g_example.vertexBuffer = llglCreateBuffer(&vertexBufferDesc, vertices);
 
     // Create index buffer
     const LLGLBufferDescriptor indexBufferDesc =
     {
-        .size       = sizeof(uint32_t)*indexCount,  // Size (in bytes) of the index buffer
-        .bindFlags  = LLGLBindIndexBuffer,          // Enables the buffer to be bound to an index buffer slot
+        .size       = sizeof(uint32_t)*g_example.indexCount,    // Size (in bytes) of the index buffer
+        .bindFlags  = LLGLBindIndexBuffer,                      // Enables the buffer to be bound to an index buffer slot
     };
-    LLGLBuffer indexBuffer = llglCreateBuffer(&indexBufferDesc, indices);
+    g_example.indexBuffer = llglCreateBuffer(&indexBufferDesc, indices);
 
     // Create constant buffer
     const LLGLBufferDescriptor sceneBufferDesc =
@@ -65,7 +81,7 @@ int main(int argc, char* argv[])
         .size       = sizeof(SceneConstants),   // Size (in bytes) of the constant buffer
         .bindFlags  = LLGLBindConstantBuffer,   // Enables the buffer to be bound as a constant buffer, which is optimized for fast updates per draw call
     };
-    LLGLBuffer sceneBuffer = llglCreateBuffer(&sceneBufferDesc, NULL);
+    g_example.sceneBuffer = llglCreateBuffer(&sceneBufferDesc, NULL);
 
     // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
     const char* imageFilename = "../../Media/Textures/Crate.jpg";
@@ -74,7 +90,7 @@ int main(int argc, char* argv[])
     unsigned char* imageBuffer = stbi_load(imageFilename, &imageSize[0], &imageSize[1], &texComponents, 0);
     if (!imageBuffer)
     {
-        fprintf(stderr, "Failed to load image: %s\n", imageFilename);
+        LOG_ERROR("Failed to load image: %s\n", imageFilename);
         return 1;
     }
 
@@ -93,22 +109,20 @@ int main(int argc, char* argv[])
         .extent     = { (uint32_t)imageSize[0], (uint32_t)imageSize[1], 1u },
         .miscFlags  = LLGLMiscGenerateMips,
     };
-    LLGLTexture colorTexture = llglCreateTexture(&texDesc, &imageView);
+    g_example.colorTexture = llglCreateTexture(&texDesc, &imageView);
 
     // Create samplers
-    LLGLSampler samplers[3];
-
     LLGLSamplerDescriptor anisotropySamplerDesc = g_defaultSamplerDesc;
     {
         anisotropySamplerDesc.maxAnisotropy = 8;
     }
-    samplers[0] = llglCreateSampler(&anisotropySamplerDesc);
+    g_example.samplers[0] = llglCreateSampler(&anisotropySamplerDesc);
 
     LLGLSamplerDescriptor lodSamplerDesc = g_defaultSamplerDesc;
     {
         lodSamplerDesc.mipMapLODBias = 3;
     }
-    samplers[1] = llglCreateSampler(&lodSamplerDesc);
+    g_example.samplers[1] = llglCreateSampler(&lodSamplerDesc);
 
     LLGLSamplerDescriptor nearestSamplerDesc = g_defaultSamplerDesc;
     {
@@ -117,7 +131,7 @@ int main(int argc, char* argv[])
         nearestSamplerDesc.minLOD       = 4;
         nearestSamplerDesc.maxLOD       = 4;
     }
-    samplers[2] = llglCreateSampler(&nearestSamplerDesc);
+    g_example.samplers[2] = llglCreateSampler(&nearestSamplerDesc);
 
     // Create shaders
     const LLGLShaderDescriptor vertShaderDesc =
@@ -147,7 +161,7 @@ int main(int argc, char* argv[])
         LLGLReport shaderReport = llglGetShaderReport(shaders[i]);
         if (llglHasReportErrors(shaderReport))
         {
-            fprintf(stderr, "%s\n", llglGetReportText(shaderReport));
+            LOG_ERROR("%s\n", llglGetReportText(shaderReport));
             return 1;
         }
     }
@@ -180,71 +194,66 @@ int main(int argc, char* argv[])
         .rasterizer                 = { .multiSampleEnabled = true },
         .blend.targets[0].colorMask = LLGLColorMaskAll,
     };
-    LLGLPipelineState pipeline = llglCreateGraphicsPipelineState(&pipelineDesc);
+    g_example.pipeline = llglCreateGraphicsPipelineState(&pipelineDesc);
 
     // Link shader program and check for errors
-    LLGLReport pipelineReport = llglGetPipelineStateReport(pipeline);
+    LLGLReport pipelineReport = llglGetPipelineStateReport(g_example.pipeline);
     if (llglHasReportErrors(pipelineReport))
     {
-        fprintf(stderr, "%s\n", llglGetReportText(pipelineReport));
+        LOG_ERROR("%s\n", llglGetReportText(pipelineReport));
         return 1;
     }
 
-    // Scene state
-    float rotation = -20.0f;
-
-    // Enter main loop
-    while (example_poll_events())
-    {
-        // Update scene by mouse events
-        if (key_pressed(LLGLKeyLButton))
-            rotation += mouse_movement_x() * 0.5f;
-
-        // Begin recording commands
-        llglBegin(g_commandBuffer);
-        {
-            // Update scene constant buffer
-            SceneConstants scene;
-            {
-                matrix_load_identity(scene.wMatrix);
-                matrix_translate(scene.wMatrix, 0.0f, 0.0f, 5.0f);
-                matrix_rotate(scene.wMatrix, 0.0f, 1.0f, 0.0f, DEG2RAD(rotation));
-
-                matrix_mul(scene.wvpMatrix, g_projection, scene.wMatrix);
-            }
-            llglUpdateBuffer(sceneBuffer, 0, &scene, sizeof(scene));
-
-            // Set vertex and index buffers
-            llglSetVertexBuffer(vertexBuffer);
-            llglSetIndexBuffer(indexBuffer);
-
-            // Set the swap-chain as the initial render target
-            llglBeginRenderPass(LLGL_GET_AS(LLGLRenderTarget, g_swapChain));
-            {
-                // Clear color and depth buffers
-                llglClear(LLGLClearColorDepth, &g_defaultClear);
-                llglSetViewport(&g_viewport);
-
-                // Set graphics pipeline
-                llglSetPipelineState(pipeline);
-
-                llglSetResource(0, LLGL_GET_AS(LLGLResource, sceneBuffer));
-                llglSetResource(1, LLGL_GET_AS(LLGLResource, colorTexture));
-                llglSetResource(2, LLGL_GET_AS(LLGLResource, samplers[0]));
-
-                // Draw cube mesh with index and vertex buffers
-                llglDrawIndexed((uint32_t)indexCount, 0);
-            }
-            llglEndRenderPass();
-        }
-        llglEnd();
-
-        // Present the result on the screen
-        llglPresent(g_swapChain);
-    }
-
-    // Clean up
-    example_release();
-
     return 0;
 }
+
+void TexturingLoop(double dt)
+{
+    // Update scene by mouse events
+    if (key_pressed(LLGLKeyLButton))
+        g_example.rotation += mouse_movement_x() * 0.5f;
+
+    // Begin recording commands
+    llglBegin(g_commandBuffer);
+    {
+        // Update scene constant buffer
+        SceneConstants scene;
+        {
+            matrix_load_identity(scene.wMatrix);
+            matrix_translate(scene.wMatrix, 0.0f, 0.0f, 5.0f);
+            matrix_rotate(scene.wMatrix, 0.0f, 1.0f, 0.0f, DEG2RAD(g_example.rotation));
+
+            matrix_mul(scene.wvpMatrix, g_projection, scene.wMatrix);
+        }
+        llglUpdateBuffer(g_example.sceneBuffer, 0, &scene, sizeof(scene));
+
+        // Set vertex and index buffers
+        llglSetVertexBuffer(g_example.vertexBuffer);
+        llglSetIndexBuffer(g_example.indexBuffer);
+
+        // Set the swap-chain as the initial render target
+        llglBeginRenderPass(LLGL_GET_AS(LLGLRenderTarget, g_swapChain));
+        {
+            // Clear color and depth buffers
+            llglClear(LLGLClearColorDepth, &g_defaultClear);
+            llglSetViewport(&g_viewport);
+
+            // Set graphics pipeline
+            llglSetPipelineState(g_example.pipeline);
+
+            llglSetResource(0, LLGL_GET_AS(LLGLResource, g_example.sceneBuffer));
+            llglSetResource(1, LLGL_GET_AS(LLGLResource, g_example.colorTexture));
+            llglSetResource(2, LLGL_GET_AS(LLGLResource, g_example.samplers[0]));
+
+            // Draw cube mesh with index and vertex buffers
+            llglDrawIndexed((uint32_t)g_example.indexCount, 0);
+        }
+        llglEndRenderPass();
+    }
+    llglEnd();
+
+    // Present the result on the screen
+    llglPresent(g_swapChain);
+}
+
+IMPLEMENT_EXAMPLE_MAIN(TexturingInit, TexturingLoop);

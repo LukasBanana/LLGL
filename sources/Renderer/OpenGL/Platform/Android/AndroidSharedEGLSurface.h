@@ -37,13 +37,19 @@ class AndroidSharedEGLSurface
         void InitEGLSurface(ANativeWindow* window);
         void DestroyEGLSurface();
 
+        // Returns true if this EGL surface is a Pbuffer. This is the case if this surface was created without a native window.
+        inline bool IsPbuffer() const
+        {
+            return (window_ == nullptr);
+        }
+
         // Returns the native EGLSurface object.
         inline EGLSurface GetEGLSurface() const
         {
             return surface_;
         }
 
-        // Returns the native ANativeWindow object.
+        // Returns the native ANativeWindow object. May be null.
         inline ANativeWindow* GetNativeWindow() const
         {
             return window_;

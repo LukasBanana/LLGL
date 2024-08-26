@@ -56,7 +56,7 @@ class LLGLMeta:
     UTF8STRING = 'UTF8String'
     STRING = 'string'
     externals = [
-        ConditionalType('android_app', 'defined LLGL_OS_ANDROID', '<android_native_app_glue.h>')
+        ConditionalType('android_app', '__ANDROID__', '<android_native_app_glue.h>')
     ]
     builtins = {
         'void': StdType.VOID,

@@ -11,6 +11,12 @@
 
 #include <LLGL-C/LLGL.h>
 #include <stdbool.h>
+#include <stdio.h> // fprintf()
+
+#if __ANDROID__
+#   include <android_native_app_glue.h>
+#   include <android/log.h>
+#endif
 
 
 /*
@@ -22,18 +28,56 @@
 #define ARRAY_SIZE(A)   (sizeof(A)/sizeof((A)[0]))
 
 
+#if __ANDROID__
+
+#define LOG_ERROR(...) \
+    (void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__)
+
+#define IMPLEMENT_EXAMPLE_MAIN(INIT, LOOP)          \
+    void android_main(struct android_app* state)    \
+    {                                               \
+        ExampleArgs args = { state };               \
+        (void)example_main(INIT, LOOP, &args);      \
+    }
+
+#else
+
+#define LOG_ERROR(...) \
+    fprintf(stderr, __VA_ARGS__)
+
+#define IMPLEMENT_EXAMPLE_MAIN(INIT, LOOP)      \
+    int main(int argc, char* argv[])            \
+    {                                           \
+        ExampleArgs args = { argc, argv };      \
+        return example_main(INIT, LOOP, &args); \
+    }
+
+#endif
+
+
 /*
  * Structures
  */
 
+typedef struct ExampleArgs
+{
+#if __ANDROID__
+    struct android_app* androidApp;
+#else
+    int                 argc;
+    char**              argv;
+#endif
+}
+ExampleArgs;
+
 typedef struct ExampleConfig
 {
-    const char* rendererModule;
-    uint32_t    windowSize[2];
-    uint32_t    samples;
-    bool        vsync;
-    bool        debugger;
-    bool        noDepthStencil;
+    LLGLRenderSystemDescriptor  rendererDesc;
+    uint32_t                    resolution[2];
+    uint32_t                    samples;
+    bool                        vsync;
+    bool                        debugger;
+    bool                        noDepthStencil;
 }
 ExampleConfig;
 
@@ -97,22 +141,19 @@ extern LLGLViewport         g_viewport;
 // Primary camera projection
 extern float                g_projection[4][4];
 
+// Render system configuraiton.
+extern ExampleConfig        g_config;
+
 
 /*
  * Global functions
  */
 
-// Configures the example setup. If used, it must be called before example_init(). If this is NULL, the defualt configuration will be used.
-void example_config(const ExampleConfig* config);
-
 // Initializes the example with the specified title and returns a non-zero error code if initialization failed.
-int example_init(const wchar_t* title);
+int example_init(const char* title);
 
-// Releases all example resources.
-void example_release();
-
-// Processes all surface events, polls the event list (See mouse_movement_x() etc.) and returns false if the window was closed.
-bool example_poll_events();
+// Runs the main loop.
+int example_main(int (*pfnInit)(), void (*pfnLoop)(double dt), const ExampleArgs* args);
 
 // Builds a perspective projection matrix.
 void perspective_projection(float outProjection[4][4], float aspectRatio, float nearPlane, float farPlane, float fieldOfView);
