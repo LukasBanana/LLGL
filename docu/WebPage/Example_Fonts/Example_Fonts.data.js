@@ -176,6 +176,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 397}, {"filename": "/assets/Example.450core.vert", "start": 397, "end": 1132}, {"filename": "/assets/Example.frag", "start": 1132, "end": 1410}, {"filename": "/assets/Example.vert", "start": 1410, "end": 2023}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 2023, "end": 6743}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 6743, "end": 19031}, {"filename": "/assets/IcoSphere.obj", "start": 19031, "end": 36197}, {"filename": "/assets/Logo_LLGL.png", "start": 36197, "end": 51867}, {"filename": "/assets/PenroseStairs-Bottom.obj", "start": 51867, "end": 61179}, {"filename": "/assets/PenroseStairs-Top.obj", "start": 61179, "end": 70253}, {"filename": "/assets/TilesGray512.jpg", "start": 70253, "end": 284611}], "remote_package_size": 284611});
+    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 397}, {"filename": "/assets/Example.450core.vert", "start": 397, "end": 1132}, {"filename": "/assets/Example.frag", "start": 1132, "end": 1410}, {"filename": "/assets/Example.vert", "start": 1410, "end": 2023}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 2023, "end": 6743}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 6743, "end": 19031}], "remote_package_size": 19031});
 
   })();

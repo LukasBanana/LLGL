@@ -66,17 +66,15 @@ Use `$ ./BuildMsys2.sh -h` in a command prompt for more details.
 
 ## WebAssembly (Wasm)
 
-LLGL can be build for the web using [Emscripten](https://emscripten.org/), [WebAssembly](https://webassembly.org/), and [WebGL 2](https://www.khronos.org/webgl/).
-This is in an **experimental** state and requires [Google Chrome](https://www.google.com/chrome/) to be launched with the following arguments to enable web assembly:
-```
-chrome --js-flags=--experimental-wasm-threads --enable-features=WebAssembly,SharedArrayBuffer
-```
-When building on Windows, it is recommended to use the [Windows Subsystem for Linux (WSL)](https://ubuntu.com/desktop/wsl) to run the *BuildWasm.sh* script.
+*- This is in an experimental state -*
+
+LLGL can be built for the web using [Emscripten](https://emscripten.org/), [WebAssembly](https://webassembly.org/), and [WebGL 2](https://www.khronos.org/webgl/).
+When building on Windows, it is recommended to use the [Windows Subsystem for Linux (WSL)](https://ubuntu.com/desktop/wsl) to run the *BuildWasm.sh* bash script.
 The generated example projects can be tested by running a local web server from the output folder, for instance with [Node.js](https://nodejs.org/) or Python `http.server` module:
 ```
 $ python -m http.server
 ```
-Then run your browser of choice at URL http://localhost:8000/.
+Then launch your web browser of choice and open the URL http://localhost:8000/.
 
 <p align="center">
     <img src="Showcase/Showcase_Build_Wasm.png" alt="Screenshot missing: HTML5 Example Showcase" style="max-width:600px;width:70%;height:auto;">

@@ -5,21 +5,21 @@
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
     <title>LLGL - Fonts</title>
     <style>
-        h1 {
-            font-family: Arial, Helvetica, sans-serif;
-        }
         canvas { 
             display: block;
-            padding: 0;
-            margin: auto;
-            width: 70%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <!-- Create canvas that C++ code will draw into -->
     <div style="text-align: center;">
-        <h1>WebGL Example with LLGL</h1>
         <canvas id="canvas" oncontextmenu="event.preventDefault()" width="800" height="600"></canvas>
     </div>
 
