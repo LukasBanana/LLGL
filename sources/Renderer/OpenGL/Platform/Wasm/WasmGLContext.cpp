@@ -107,7 +107,7 @@ void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const Render
 	attrs.depth                         = true;//(pixelFormat.depthBits > 0);
 	attrs.stencil                       = true;//(pixelFormat.stencilBits > 0);
 	attrs.antialias                     = true;//(pixelFormat.samples > 1);
-	attrs.premultipliedAlpha            = true;
+	attrs.premultipliedAlpha            = false;
 	attrs.preserveDrawingBuffer         = false;
 	attrs.explicitSwapControl           = 0;
 	attrs.failIfMajorPerformanceCaveat  = false;
