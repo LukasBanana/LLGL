@@ -11,8 +11,6 @@
 #include <LLGL/Display.h>
 #include "../../Core/CoreUtils.h"
 
-#include <LLGL/Log.h>
-
 
 namespace LLGL
 {

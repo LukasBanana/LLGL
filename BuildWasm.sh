@@ -77,16 +77,26 @@ if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir "$OUTPUT_DIR"
 fi
 
+# Wrapper for 'realpath' when it's not available (like on macOS)
+get_realpath()
+{
+    if command -v realpath &> /dev/null; then
+        echo $(realpath "$1")
+    else
+        echo "$1"
+    fi
+}
+
 # Checkout external depenencies
 GAUSSIAN_LIB_DIR="GaussianLib/include"
 
 if [ -f "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR/Gauss/Gauss.h" ]; then
-    GAUSSIAN_LIB_DIR=$(realpath "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR")
+    GAUSSIAN_LIB_DIR=$(get_realpath "$SOURCE_DIR/external/$GAUSSIAN_LIB_DIR")
 else
     if [ ! -d "$OUTPUT_DIR/$GAUSSIAN_LIB_DIR" ]; then
         (cd "$OUTPUT_DIR" && git clone https://github.com/LukasBanana/GaussianLib.git)
     fi
-    GAUSSIAN_LIB_DIR=$(realpath "$OUTPUT_DIR/$GAUSSIAN_LIB_DIR")
+    GAUSSIAN_LIB_DIR=$(get_realpath "$OUTPUT_DIR/$GAUSSIAN_LIB_DIR")
 fi
 
 # Print additional information if in verbose mode
@@ -161,7 +171,6 @@ generate_html5_page()
     # Create folder structure
     mkdir -p "$HTML5_ROOT"
     BASE_FILENAME="Example_$CURRENT_PROJECT"
-    cp "$SOURCE_DIR/examples/Cpp/ExampleBase/Wasm/index.html" "$HTML5_ROOT/index.html"
     cp "$BIN_ROOT/$BASE_FILENAME.js" "$HTML5_ROOT/$BASE_FILENAME.js"
     cp "$BIN_ROOT/$BASE_FILENAME.wasm" "$HTML5_ROOT/$BASE_FILENAME.wasm"
     if [ $ENABLE_PTHREADS = "ON" ]; then
@@ -169,8 +178,9 @@ generate_html5_page()
     fi
 
     # Replace meta data
-    sed -i "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/" "$HTML5_ROOT/index.html"
-    sed -i "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/" "$HTML5_ROOT/index.html"
+    sed -e "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/g" \
+        -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
+        "$SOURCE_DIR/examples/Cpp/ExampleBase/Wasm/index.html" > "$HTML5_ROOT/index.html"
     
     # Find all required assets in Android.assets.txt file of respective project directory and copy them into app folder
     ASSET_DIR="$HTML5_ROOT/assets"
@@ -178,12 +188,11 @@ generate_html5_page()
 
     ASSET_LIST_FILE="$PROJECT_SOURCE_DIR/Android.assets.txt"
     if [ -f "$ASSET_LIST_FILE" ]; then
-        # Read Android.asset.txt file line-by-line into array and make sure '\r' character is not present (on Win32 platform)
-        readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSET_LIST_FILE")
+        # Read asset filenames to copy to package output
         ASSET_FILES=()
-        for FILTER in ${ASSET_FILTERS[@]}; do
+        for FILTER in $(cat $ASSET_LIST_FILE); do
             for FILE in $ASSET_SOURCE_DIR/$FILTER; do
-                ASSET_FILES+=( "$FILE" )
+                ASSET_FILES+=( $(echo "$FILE" | tr -d '\r') ) # Remove '\r' characters when reading .txt file from WSL
             done
         done
 
