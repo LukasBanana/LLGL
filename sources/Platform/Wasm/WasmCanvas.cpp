@@ -122,15 +122,16 @@ EM_BOOL WasmCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEven
 {
     if (eventType == EMSCRIPTEN_EVENT_RESIZE)
     {
-        /* Resize this canvas as the event comes from the window and we must update the canvas resolution */
-        emscripten_set_canvas_element_size("#canvas", event->windowInnerWidth, event->windowInnerHeight);
+        /* Get canvas size from DOM */
+        int w = 0, h = 0;
+        emscripten_get_canvas_element_size("#canvas", &w, &h);
 
         /* Send resize event to event listeners */
         WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
         const Extent2D clientAreaSize
         {
-            static_cast<std::uint32_t>(event->windowInnerWidth),
-            static_cast<std::uint32_t>(event->windowInnerHeight)
+            static_cast<std::uint32_t>(w),
+            static_cast<std::uint32_t>(h)
         };
         canvas->PostResize(clientAreaSize);
         return EM_TRUE;
