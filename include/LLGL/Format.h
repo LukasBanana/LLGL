@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Export.h>
+#include <LLGL/Deprecated.h>
 #include <cstdint>
 #include <cstddef>
 
@@ -534,10 +535,21 @@ LLGL_EXPORT bool IsNormalizedFormat(const Format format);
 /**
 \brief Returns true if the specified hardware format is an integral format (like Format::RGBA8UInt, Format::RGBA8UNorm, Format::R8SInt etc.).
 \remarks This also includes all normalized formats.
+\deprecated Since 0.04b; Use a combination of IsIntegerFormat(), IsFloatFormat(), and IsNormalizedFormat() instead!
 \see IsNormalizedFormat
 \see Format
 */
+LLGL_DEPRECATED("IsIntegralFormat() is deprecated since 0.04b; Use a combination of IsIntegerFormat(), IsFloatFormat(), and IsNormalizedFormat() instead!")
 LLGL_EXPORT bool IsIntegralFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is an integer format (like Format::RGBA8UInt, Format::R8SInt etc.).
+\remarks This does not include normalized formats such as Format::RGBA8UNorm.
+While these types use an integer type as input, they are normalized to a fractional number in the closed range [0, 1].
+\see IsNormalizedFormat
+\see Format
+*/
+LLGL_EXPORT bool IsIntegerFormat(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a floating-point format (like Format::RGBA32Float, Format::R32Float etc.).

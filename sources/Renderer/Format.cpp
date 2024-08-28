@@ -38,10 +38,10 @@ static constexpr long Vertex        = FormatFlags::SupportsVertex;
 static constexpr long Dim1D_2D      = Dim1D | Dim2D;
 static constexpr long Dim2D_3D      = Dim2D | Dim3D;
 static constexpr long Dim1D_2D_3D   = Dim1D | Dim2D | Dim3D;
-static constexpr long UInt          = Integer | Unsigned;
 static constexpr long SInt          = Integer;
-static constexpr long UNorm         = UInt | Norm;
-static constexpr long SNorm         = SInt | Norm;
+static constexpr long UInt          = Integer | Unsigned;
+static constexpr long SNorm         = Norm;
+static constexpr long UNorm         = Unsigned | Norm;
 static constexpr long SFloat        = 0;
 static constexpr long UFloat        = Unsigned;
 
@@ -284,35 +284,25 @@ LLGL_EXPORT bool IsNormalizedFormat(const Format format)
     return ((GetFormatAttribs(format).flags & FormatFlags::IsNormalized) != 0);
 }
 
+//deprecated
 LLGL_EXPORT bool IsIntegralFormat(const Format format)
 {
-    if (format >= Format::R8UNorm && format <= Format::BGRA8SInt)
-        return !IsFloatFormat(format);
-    else
-        return false;
+    const auto& formatAttribs = GetFormatAttribs(format);
+    return
+    (
+        (formatAttribs.flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) != 0 &&
+        (formatAttribs.flags & (FormatFlags::HasDepthStencil | FormatFlags::IsCompressed)) == 0
+    );
 }
 
-//TODO: needs update
+LLGL_EXPORT bool IsIntegerFormat(const Format format)
+{
+    return ((GetFormatAttribs(format).flags & FormatFlags::IsInteger) != 0);
+}
+
 LLGL_EXPORT bool IsFloatFormat(const Format format)
 {
-    switch (format)
-    {
-        case Format::R16Float:
-        case Format::R64Float:
-        case Format::R32Float:
-        case Format::RG16Float:
-        case Format::RG32Float:
-        case Format::RG64Float:
-        case Format::RGB16Float:
-        case Format::RGB32Float:
-        case Format::RGB64Float:
-        case Format::RGBA16Float:
-        case Format::RGBA32Float:
-        case Format::RGBA64Float:
-            return true;
-        default:
-            return false;
-    }
+    return ((GetFormatAttribs(format).flags & FormatFlags::IsInteger) == 0);
 }
 
 LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)

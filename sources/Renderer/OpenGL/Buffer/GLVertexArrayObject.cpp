@@ -40,7 +40,7 @@ void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, G
     dst.stride          = static_cast<GLsizei>(src.stride);
     dst.offsetPtrSized  = static_cast<GLsizeiptr>(src.offset);
     dst.divisor         = static_cast<GLuint>(src.instanceDivisor);
-    dst.isInteger       = (formatAttribs.flags & FormatFlags::IsNormalized) == 0 && !IsFloatFormat(src.format);
+    dst.isInteger       = IsIntegerFormat(src.format);
 }
 
 void GLVertexArrayObject::Release()

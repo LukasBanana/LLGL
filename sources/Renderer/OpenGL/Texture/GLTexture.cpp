@@ -983,7 +983,7 @@ void GLTexture::BindTexParameters(const GL2XSampler& sampler)
 static GLint GetInitialGlTextureMinFilter(const TextureDescriptor& textureDesc)
 {
     /* Integral texture formats cannot use linear samplers */
-    if (IsIntegralFormat(textureDesc.format))
+    if (IsIntegerFormat(textureDesc.format))
         return (IsMipMappedTexture(textureDesc) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
     else
         return (IsMipMappedTexture(textureDesc) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
@@ -992,7 +992,7 @@ static GLint GetInitialGlTextureMinFilter(const TextureDescriptor& textureDesc)
 static GLint GetInitialGlTextureMagFilter(const TextureDescriptor& textureDesc)
 {
     /* Integral texture formats cannot use linear samplers */
-    return (IsIntegralFormat(textureDesc.format) ? GL_NEAREST : GL_LINEAR);
+    return (IsIntegerFormat(textureDesc.format) ? GL_NEAREST : GL_LINEAR);
 }
 
 static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
