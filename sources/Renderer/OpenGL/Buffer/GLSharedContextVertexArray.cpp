@@ -205,7 +205,7 @@ void GLSharedContextVertexArray::FinalizeForGL2X()
     for (const GLVertexAttribute& attr : attribs_)
     {
         LLGL_ASSERT(
-            !(attr.index > locationsTaken.size() || locationsTaken[attr.index]),
+            attr.index < locationsTaken.size() && !locationsTaken[attr.index],
             "vertex attribute locations must fill the entire half-open range [0, N) for OpenGL 2.X"
         );
         locationsTaken[attr.index] = true;
