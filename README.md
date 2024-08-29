@@ -66,7 +66,7 @@ and requires [CMake 3.10](https://cmake.org/) or later and the [Code::Blocks](ht
 
 *This platform support is currently in an experimental state.*
 
-## Installing LuaBridge (vcpkg)
+## Installing (vcpkg)
 
 Alternatively, you can build and install LLGL using [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
 
