@@ -22,15 +22,12 @@ class IOSCanvas : public Canvas
 
     public:
 
+        #include <LLGL/Backend/Canvas.inl>
+
+    public:
+
         IOSCanvas(const CanvasDescriptor& desc);
         ~IOSCanvas();
-
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
-
-        Extent2D GetContentSize() const override;
-
-        void SetTitle(const UTF8String& title) override;
-        UTF8String GetTitle() const override;
 
     public:
 

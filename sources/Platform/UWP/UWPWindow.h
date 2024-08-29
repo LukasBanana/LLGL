@@ -24,28 +24,12 @@ class UWPWindow final : public Window
 
     public:
 
+        #include <LLGL/Backend/Window.inl>
+
+    public:
+
         UWPWindow(const WindowDescriptor& desc);
         ~UWPWindow();
-
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
-
-        Extent2D GetContentSize() const override;
-
-        void SetPosition(const Offset2D& position) override;
-        Offset2D GetPosition() const override;
-
-        void SetSize(const Extent2D& size, bool useClientArea = true) override;
-        Extent2D GetSize(bool useClientArea = true) const override;
-
-        void SetTitle(const UTF8String& title) override;
-        UTF8String GetTitle() const override;
-
-        void Show(bool show = true) override;
-        bool IsShown() const override;
-
-        WindowDescriptor GetDesc() const override;
-
-        void SetDesc(const WindowDescriptor& desc) override;
 
     private:
 

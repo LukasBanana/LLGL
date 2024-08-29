@@ -25,17 +25,12 @@ class AndroidCanvas : public Canvas
 
     public:
 
-        AndroidCanvas(const CanvasDescriptor& desc);
-        ~AndroidCanvas();
-
-        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override;
-
-        Extent2D GetContentSize() const override;
-
-        void SetTitle(const UTF8String& title) override;
-        UTF8String GetTitle() const override;
+        #include <LLGL/Backend/Canvas.inl>
 
     public:
+
+        AndroidCanvas(const CanvasDescriptor& desc);
+        ~AndroidCanvas();
 
         /*
         Updates the pointer to ANativeWindow from the specified app state.
