@@ -57,12 +57,33 @@ static std::vector<Format> GetDefaultSupportedMTTextureFormats()
         Format::RGBA32UInt,         Format::RGBA32SInt,         Format::RGBA32Float,
         Format::BGRA8UNorm,         Format::BGRA8UNorm_sRGB,
         Format::RGB10A2UNorm,       Format::RGB10A2UInt,        Format::RG11B10Float,       Format::RGB9E5Float,
+
         Format::D16UNorm,           Format::D24UNormS8UInt,     Format::D32Float,           Format::D32FloatS8X24UInt,
+
+        #ifndef LLGL_OS_IOS
         Format::BC1UNorm,           Format::BC1UNorm_sRGB,
         Format::BC2UNorm,           Format::BC2UNorm_sRGB,
         Format::BC3UNorm,           Format::BC3UNorm_sRGB,
         Format::BC4UNorm,           Format::BC4SNorm,
         Format::BC5UNorm,           Format::BC5SNorm,
+        #endif
+
+        Format::ASTC4x4,            Format::ASTC4x4_sRGB,
+        Format::ASTC5x4,            Format::ASTC5x4_sRGB,
+        Format::ASTC5x5,            Format::ASTC5x5_sRGB,
+        Format::ASTC6x5,            Format::ASTC6x5_sRGB,
+        Format::ASTC6x6,            Format::ASTC6x6_sRGB,
+        Format::ASTC8x5,            Format::ASTC8x5_sRGB,
+        Format::ASTC8x6,            Format::ASTC8x6_sRGB,
+        Format::ASTC8x8,            Format::ASTC8x8_sRGB,
+        Format::ASTC10x5,           Format::ASTC10x5_sRGB,
+        Format::ASTC10x6,           Format::ASTC10x6_sRGB,
+        Format::ASTC10x8,           Format::ASTC10x8_sRGB,
+        Format::ASTC10x10,          Format::ASTC10x10_sRGB,
+        Format::ASTC12x10,          Format::ASTC12x10_sRGB,
+        Format::ASTC12x12,          Format::ASTC12x12_sRGB,
+
+        Format::ETC2UNorm,          Format::ETC2UNorm_sRGB,
     };
 }
 

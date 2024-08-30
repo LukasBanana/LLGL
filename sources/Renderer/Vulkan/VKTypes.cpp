@@ -154,6 +154,41 @@ VkFormat Map(const Format format)
         case Format::BC4SNorm:          return VK_FORMAT_BC4_SNORM_BLOCK;
         case Format::BC5UNorm:          return VK_FORMAT_BC5_UNORM_BLOCK;
         case Format::BC5SNorm:          return VK_FORMAT_BC5_SNORM_BLOCK;
+
+        /* --- Advanced scalable texture compression (ASTC) formats --- */
+        case Format::ASTC4x4:           return VK_FORMAT_ASTC_4x4_UNORM_BLOCK;
+        case Format::ASTC4x4_sRGB:      return VK_FORMAT_ASTC_4x4_SRGB_BLOCK;
+        case Format::ASTC5x4:           return VK_FORMAT_ASTC_5x4_UNORM_BLOCK;
+        case Format::ASTC5x4_sRGB:      return VK_FORMAT_ASTC_5x4_SRGB_BLOCK;
+        case Format::ASTC5x5:           return VK_FORMAT_ASTC_5x5_UNORM_BLOCK;
+        case Format::ASTC5x5_sRGB:      return VK_FORMAT_ASTC_5x5_SRGB_BLOCK;
+        case Format::ASTC6x5:           return VK_FORMAT_ASTC_6x5_UNORM_BLOCK;
+        case Format::ASTC6x5_sRGB:      return VK_FORMAT_ASTC_6x5_SRGB_BLOCK;
+        case Format::ASTC6x6:           return VK_FORMAT_ASTC_6x6_UNORM_BLOCK;
+        case Format::ASTC6x6_sRGB:      return VK_FORMAT_ASTC_6x6_SRGB_BLOCK;
+        case Format::ASTC8x5:           return VK_FORMAT_ASTC_8x5_UNORM_BLOCK;
+        case Format::ASTC8x5_sRGB:      return VK_FORMAT_ASTC_8x5_SRGB_BLOCK;
+        case Format::ASTC8x6:           return VK_FORMAT_ASTC_8x6_UNORM_BLOCK;
+        case Format::ASTC8x6_sRGB:      return VK_FORMAT_ASTC_8x6_SRGB_BLOCK;
+        case Format::ASTC8x8:           return VK_FORMAT_ASTC_8x8_UNORM_BLOCK;
+        case Format::ASTC8x8_sRGB:      return VK_FORMAT_ASTC_8x8_SRGB_BLOCK;
+        case Format::ASTC10x5:          return VK_FORMAT_ASTC_10x5_UNORM_BLOCK;
+        case Format::ASTC10x5_sRGB:     return VK_FORMAT_ASTC_10x5_SRGB_BLOCK;
+        case Format::ASTC10x6:          return VK_FORMAT_ASTC_10x6_UNORM_BLOCK;
+        case Format::ASTC10x6_sRGB:     return VK_FORMAT_ASTC_10x6_SRGB_BLOCK;
+        case Format::ASTC10x8:          return VK_FORMAT_ASTC_10x8_UNORM_BLOCK;
+        case Format::ASTC10x8_sRGB:     return VK_FORMAT_ASTC_10x8_SRGB_BLOCK;
+        case Format::ASTC10x10:         return VK_FORMAT_ASTC_10x10_UNORM_BLOCK;
+        case Format::ASTC10x10_sRGB:    return VK_FORMAT_ASTC_10x10_SRGB_BLOCK;
+        case Format::ASTC12x10:         return VK_FORMAT_ASTC_12x10_UNORM_BLOCK;
+        case Format::ASTC12x10_sRGB:    return VK_FORMAT_ASTC_12x10_SRGB_BLOCK;
+        case Format::ASTC12x12:         return VK_FORMAT_ASTC_12x12_UNORM_BLOCK;
+        case Format::ASTC12x12_sRGB:    return VK_FORMAT_ASTC_12x12_SRGB_BLOCK;
+
+        /* --- Ericsson texture compression (ETC) formats --- */
+        case Format::ETC1UNorm:         break; // unsupported
+        case Format::ETC2UNorm:         return VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK;
+        case Format::ETC2UNorm_sRGB:    return VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK;
     }
     MapFailed("Format", "VkFormat");
 }
@@ -543,6 +578,40 @@ Format Unmap(const VkFormat format)
         case VK_FORMAT_BC4_SNORM_BLOCK:             return Format::BC4SNorm;
         case VK_FORMAT_BC5_UNORM_BLOCK:             return Format::BC5UNorm;
         case VK_FORMAT_BC5_SNORM_BLOCK:             return Format::BC5SNorm;
+
+        /* --- Advanced scalable texture compression (ASTC) formats --- */
+        case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:        return Format::ASTC4x4;
+        case VK_FORMAT_ASTC_4x4_SRGB_BLOCK:         return Format::ASTC4x4_sRGB;
+        case VK_FORMAT_ASTC_5x4_UNORM_BLOCK:        return Format::ASTC5x4;
+        case VK_FORMAT_ASTC_5x4_SRGB_BLOCK:         return Format::ASTC5x4_sRGB;
+        case VK_FORMAT_ASTC_5x5_UNORM_BLOCK:        return Format::ASTC5x5;
+        case VK_FORMAT_ASTC_5x5_SRGB_BLOCK:         return Format::ASTC5x5_sRGB;
+        case VK_FORMAT_ASTC_6x5_UNORM_BLOCK:        return Format::ASTC6x5;
+        case VK_FORMAT_ASTC_6x5_SRGB_BLOCK:         return Format::ASTC6x5_sRGB;
+        case VK_FORMAT_ASTC_6x6_UNORM_BLOCK:        return Format::ASTC6x6;
+        case VK_FORMAT_ASTC_6x6_SRGB_BLOCK:         return Format::ASTC6x6_sRGB;
+        case VK_FORMAT_ASTC_8x5_UNORM_BLOCK:        return Format::ASTC8x5;
+        case VK_FORMAT_ASTC_8x5_SRGB_BLOCK:         return Format::ASTC8x5_sRGB;
+        case VK_FORMAT_ASTC_8x6_UNORM_BLOCK:        return Format::ASTC8x6;
+        case VK_FORMAT_ASTC_8x6_SRGB_BLOCK:         return Format::ASTC8x6_sRGB;
+        case VK_FORMAT_ASTC_8x8_UNORM_BLOCK:        return Format::ASTC8x8;
+        case VK_FORMAT_ASTC_8x8_SRGB_BLOCK:         return Format::ASTC8x8_sRGB;
+        case VK_FORMAT_ASTC_10x5_UNORM_BLOCK:       return Format::ASTC10x5;
+        case VK_FORMAT_ASTC_10x5_SRGB_BLOCK:        return Format::ASTC10x5_sRGB;
+        case VK_FORMAT_ASTC_10x6_UNORM_BLOCK:       return Format::ASTC10x6;
+        case VK_FORMAT_ASTC_10x6_SRGB_BLOCK:        return Format::ASTC10x6_sRGB;
+        case VK_FORMAT_ASTC_10x8_UNORM_BLOCK:       return Format::ASTC10x8;
+        case VK_FORMAT_ASTC_10x8_SRGB_BLOCK:        return Format::ASTC10x8_sRGB;
+        case VK_FORMAT_ASTC_10x10_UNORM_BLOCK:      return Format::ASTC10x10;
+        case VK_FORMAT_ASTC_10x10_SRGB_BLOCK:       return Format::ASTC10x10_sRGB;
+        case VK_FORMAT_ASTC_12x10_UNORM_BLOCK:      return Format::ASTC12x10;
+        case VK_FORMAT_ASTC_12x10_SRGB_BLOCK:       return Format::ASTC12x10_sRGB;
+        case VK_FORMAT_ASTC_12x12_UNORM_BLOCK:      return Format::ASTC12x12;
+        case VK_FORMAT_ASTC_12x12_SRGB_BLOCK:       return Format::ASTC12x12_sRGB;
+
+        /* --- Ericsson texture compression (ETC) formats --- */
+        case VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:     return Format::ETC2UNorm;
+        case VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK:      return Format::ETC2UNorm_sRGB;
 
         default:                                    return Format::Undefined;
     }

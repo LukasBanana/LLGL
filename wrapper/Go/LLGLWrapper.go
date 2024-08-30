@@ -23,15 +23,18 @@ const (
     RendererIDUndefined   = 0x00000000
     RendererIDNull        = 0x00000001
     RendererIDOpenGL      = 0x00000002
-    RendererIDOpenGLES1   = 0x00000003
-    RendererIDOpenGLES2   = 0x00000004
-    RendererIDOpenGLES3   = 0x00000005
+    RendererIDOpenGLES    = 0x00000003
+    RendererIDWebGL       = 0x00000004
+    RendererIDWebGPU      = 0x00000005
     RendererIDDirect3D9   = 0x00000006
     RendererIDDirect3D10  = 0x00000007
     RendererIDDirect3D11  = 0x00000008
     RendererIDDirect3D12  = 0x00000009
     RendererIDVulkan      = 0x0000000A
     RendererIDMetal       = 0x0000000B
+    RendererIDOpenGLES1   = OpenGLES
+    RendererIDOpenGLES2   = OpenGLES
+    RendererIDOpenGLES3   = OpenGLES
     RendererIDReserved    = 0x000000FF
 )
 
@@ -144,6 +147,37 @@ const (
     FormatBC4SNorm
     FormatBC5UNorm
     FormatBC5SNorm
+    FormatASTC4x4
+    FormatASTC4x4_sRGB
+    FormatASTC5x4
+    FormatASTC5x4_sRGB
+    FormatASTC5x5
+    FormatASTC5x5_sRGB
+    FormatASTC6x5
+    FormatASTC6x5_sRGB
+    FormatASTC6x6
+    FormatASTC6x6_sRGB
+    FormatASTC8x5
+    FormatASTC8x5_sRGB
+    FormatASTC8x6
+    FormatASTC8x6_sRGB
+    FormatASTC8x8
+    FormatASTC8x8_sRGB
+    FormatASTC10x5
+    FormatASTC10x5_sRGB
+    FormatASTC10x6
+    FormatASTC10x6_sRGB
+    FormatASTC10x8
+    FormatASTC10x8_sRGB
+    FormatASTC10x10
+    FormatASTC10x10_sRGB
+    FormatASTC12x10
+    FormatASTC12x10_sRGB
+    FormatASTC12x12
+    FormatASTC12x12_sRGB
+    FormatETC1UNorm
+    FormatETC2UNorm
+    FormatETC2UNorm_sRGB
 )
 
 type ImageFormat int
@@ -160,6 +194,7 @@ const (
     ImageFormatDepth
     ImageFormatDepthStencil
     ImageFormatStencil
+    ImageFormatCompressed
     ImageFormatBC1
     ImageFormatBC2
     ImageFormatBC3

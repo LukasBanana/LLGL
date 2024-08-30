@@ -184,11 +184,40 @@ static std::vector<Format> GetCompressedVKTextureFormatsS3TC()
 {
     return
     {
-        Format::BC1UNorm, Format::BC1UNorm_sRGB,
-        Format::BC2UNorm, Format::BC2UNorm_sRGB,
-        Format::BC3UNorm, Format::BC3UNorm_sRGB,
-        Format::BC4UNorm, Format::BC4SNorm,
-        Format::BC5UNorm, Format::BC5SNorm,
+        Format::BC1UNorm,   Format::BC1UNorm_sRGB,
+        Format::BC2UNorm,   Format::BC2UNorm_sRGB,
+        Format::BC3UNorm,   Format::BC3UNorm_sRGB,
+        Format::BC4UNorm,   Format::BC4SNorm,
+        Format::BC5UNorm,   Format::BC5SNorm,
+    };
+}
+
+static std::vector<Format> GetCompressedVKTextureFormatsASTC()
+{
+    return
+    {
+        Format::ASTC4x4,    Format::ASTC4x4_sRGB,
+        Format::ASTC5x4,    Format::ASTC5x4_sRGB,
+        Format::ASTC5x5,    Format::ASTC5x5_sRGB,
+        Format::ASTC6x5,    Format::ASTC6x5_sRGB,
+        Format::ASTC6x6,    Format::ASTC6x6_sRGB,
+        Format::ASTC8x5,    Format::ASTC8x5_sRGB,
+        Format::ASTC8x6,    Format::ASTC8x6_sRGB,
+        Format::ASTC8x8,    Format::ASTC8x8_sRGB,
+        Format::ASTC10x5,   Format::ASTC10x5_sRGB,
+        Format::ASTC10x6,   Format::ASTC10x6_sRGB,
+        Format::ASTC10x8,   Format::ASTC10x8_sRGB,
+        Format::ASTC10x10,  Format::ASTC10x10_sRGB,
+        Format::ASTC12x10,  Format::ASTC12x10_sRGB,
+        Format::ASTC12x12,  Format::ASTC12x12_sRGB,
+    };
+}
+
+static std::vector<Format> GetCompressedVKTextureFormatsETC2()
+{
+    return
+    {
+        Format::ETC2UNorm, Format::ETC2UNorm_sRGB,
     };
 }
 
@@ -237,8 +266,20 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
 
     if (features.textureCompressionBC != VK_FALSE)
     {
-        const std::vector<Format> compressedTextureFormats = GetCompressedVKTextureFormatsS3TC();
-        caps.textureFormats.insert(caps.textureFormats.end(), compressedTextureFormats.begin(), compressedTextureFormats.end());
+        const std::vector<Format> compressedFormatsS3TC = GetCompressedVKTextureFormatsS3TC();
+        caps.textureFormats.insert(caps.textureFormats.end(), compressedFormatsS3TC.begin(), compressedFormatsS3TC.end());
+    }
+
+    if (features.textureCompressionASTC_LDR != VK_FALSE)
+    {
+        const std::vector<Format> compressedFormatsASTC = GetCompressedVKTextureFormatsASTC();
+        caps.textureFormats.insert(caps.textureFormats.end(), compressedFormatsASTC.begin(), compressedFormatsASTC.end());
+    }
+
+    if (features.textureCompressionETC2 != VK_FALSE)
+    {
+        const std::vector<Format> compressedFormatsETC2 = GetCompressedVKTextureFormatsETC2();
+        caps.textureFormats.insert(caps.textureFormats.end(), compressedFormatsETC2.begin(), compressedFormatsETC2.end());
     }
 
     /* Query features */

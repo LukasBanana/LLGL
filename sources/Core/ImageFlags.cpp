@@ -732,7 +732,26 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     return dstImage;
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
+    const ImageView&    srcImageView,
+    const Extent2D&     extent,
+    unsigned            threadCount)
+{
+    switch (srcImageView.format)
+    {
+        case ImageFormat::BC1:
+            return DecompressImageBufferToRGBA8UNorm(Format::BC1UNorm, srcImageView, extent, threadCount);
+        default:
+            return nullptr;
+    }
+}
+
+LLGL_DEPRECATED_IGNORE_POP()
+
+LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
+    Format              compressedFormat,
     const ImageView&    srcImageView,
     const Extent2D&     extent,
     unsigned            threadCount)
@@ -741,10 +760,14 @@ LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
         threadCount = std::thread::hardware_concurrency();
 
     /* Check for BC compression */
-    if (srcImageView.format == ImageFormat::BC1)
-        return DecompressBC1ToRGBA8UNorm(extent, reinterpret_cast<const char*>(srcImageView.data), srcImageView.dataSize, threadCount);
-
-    return nullptr;
+    switch (compressedFormat)
+    {
+        case Format::BC1UNorm:
+        case Format::BC1UNorm_sRGB:
+            return DecompressBC1ToRGBA8UNorm(extent, reinterpret_cast<const char*>(srcImageView.data), srcImageView.dataSize, threadCount);
+        default:
+            return nullptr;
+    }
 }
 
 // Returns the 1D flattened buffer position for a 3D image coordinate ('bpp' denotes the bytes per pixel)

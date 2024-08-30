@@ -61,6 +61,13 @@ class GolangTranslator(Translator):
             self.statement()
             self.openScope('const (')
 
+            def translateConstInit(struct, init):
+                structBaseIdent = struct.name + '::'
+                if init.startswith(structBaseIdent):
+                    return init[len(structBaseIdent):]
+                else:
+                    return init
+
             for struct in constStructs:
                 # Write struct field declarations
                 declList = Translator.DeclarationList()
@@ -68,7 +75,7 @@ class GolangTranslator(Translator):
                     declList.append(Translator.Declaration('', f'{struct.name}{field.name}', field.init))
 
                 for decl in declList.decls:
-                    self.statement(f'{decl.name}{declList.spaces(1, decl.name)} = {decl.init}')
+                    self.statement(f'{decl.name}{declList.spaces(1, decl.name)} = {translateConstInit(struct, decl.init)}')
 
             self.closeScope(')')
             self.statement()

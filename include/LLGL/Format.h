@@ -225,6 +225,41 @@ enum class Format
     BC4SNorm,           //!< Compressed color format: S3TC BC4 compressed red channel with normalized signed integer component 64-bit per 4x4 block.
     BC5UNorm,           //!< Compressed color format: S3TC BC5 compressed red and green channels with normalized unsigned integer components in 64-bit per 4x4 block.
     BC5SNorm,           //!< Compressed color format: S3TC BC5 compressed red and green channels with normalized signed integer components in 128-bit per 4x4 block.
+
+    /* --- Advanced scalable texture compression (ASTC) formats --- */
+    ASTC4x4,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 4x4 block (8.00 bit rate). \note Only supported with: OpenGLES.
+    ASTC4x4_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 4x4 block (8.00 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC5x4,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 5x4 block (6.40 bit rate). \note Only supported with: OpenGLES.
+    ASTC5x4_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 5x4 block (6.40 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC5x5,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 5x5 block (5.12 bit rate). \note Only supported with: OpenGLES.
+    ASTC5x5_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 5x5 block (5.12 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC6x5,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 6x5 block (4.27 bit rate). \note Only supported with: OpenGLES.
+    ASTC6x5_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 6x5 block (4.27 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC6x6,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 6x6 block (3.56 bit rate). \note Only supported with: OpenGLES.
+    ASTC6x6_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 6x6 block (3.56 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC8x5,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 8x5 block (3.20 bit rate). \note Only supported with: OpenGLES.
+    ASTC8x5_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 8x5 block (3.20 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC8x6,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 8x6 block (2.67 bit rate). \note Only supported with: OpenGLES.
+    ASTC8x6_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 8x6 block (2.67 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC8x8,            //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 8x8 block (2.00 bit rate). \note Only supported with: OpenGLES.
+    ASTC8x8_sRGB,       //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 8x8 block (2.00 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC10x5,           //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x5 block (2.56 bit rate). \note Only supported with: OpenGLES.
+    ASTC10x5_sRGB,      //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x5 block (2.56 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC10x6,           //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x6 block (2.13 bit rate). \note Only supported with: OpenGLES.
+    ASTC10x6_sRGB,      //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x6 block (2.13 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC10x8,           //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x8 block (1.60 bit rate). \note Only supported with: OpenGLES.
+    ASTC10x8_sRGB,      //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x8 block (1.60 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC10x10,          //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x10 block (1.28 bit rate). \note Only supported with: OpenGLES.
+    ASTC10x10_sRGB,     //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 10x10 block (1.28 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC12x10,          //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 12x10 block (1.07 bit rate). \note Only supported with: OpenGLES.
+    ASTC12x10_sRGB,     //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 12x10 block (1.07 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+    ASTC12x12,          //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 12x12 block (0.89 bit rate). \note Only supported with: OpenGLES.
+    ASTC12x12_sRGB,     //!< Compressed color format: ASTC compressed RGBA format in 128-bit per 12x12 block (0.89 bit rate) in non-linear sRGB color space. \note Only supported with: OpenGLES.
+
+    /* --- Ericsson texture compression (ETC) formats --- */
+    ETC1UNorm,          //!< Compressed color format: ETC1 compressed RGB with normalized unsigned integer components in 64-bit per 4x4 block. \note Only supported with: OpenGLES.
+    ETC2UNorm,          //!< Compressed color format: ETC2 compressed RGB with normalized unsigned integer components in 64-bit per 4x4 block. \note Only supported with: OpenGLES.
+    ETC2UNorm_sRGB,     //!< Compressed color format: ETC2 compressed RGB with normalized unsigned integer components in 64-bit per 4x4 block in non-linear sRGB color space. \note Only supported with: OpenGLES.
 };
 
 /**
@@ -253,11 +288,15 @@ enum class ImageFormat
     Stencil,        //!< Stencil component.
 
     /* Compressed formats */
-    BC1,            //!< Block compression BC1.
-    BC2,            //!< Block compression BC2.
-    BC3,            //!< Block compression BC3.
-    BC4,            //!< Block compression BC4.
-    BC5,            //!< Block compression BC5.
+    Compressed,     //!< Compressed image format. The actual compression format must be specified with \c Format.
+
+    // DEPRECATED
+    BC1,            //!< Block compression BC1. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
+    BC2,            //!< Block compression BC2. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
+    BC3,            //!< Block compression BC3. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
+    BC4,            //!< Block compression BC4. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
+    BC5,            //!< Block compression BC5. \deprecated Since 0.04b; Use ImageFormat::Compressed instead!
+    // /DEPRECATED
 };
 
 /**

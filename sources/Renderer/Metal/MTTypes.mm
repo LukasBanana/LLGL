@@ -156,8 +156,8 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::D24UNormS8UInt:    return MTLPixelFormatDepth32Float_Stencil8; // MTLPixelFormatDepth24Unorm_Stencil8 not supported?
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
+        /* --- Block compression (BC) formats --- */
         #ifndef LLGL_OS_IOS
-        /* --- Compressed color formats --- */
         case Format::BC1UNorm:          return MTLPixelFormatBC1_RGBA;
         case Format::BC1UNorm_sRGB:     return MTLPixelFormatBC1_RGBA_sRGB;
         case Format::BC2UNorm:          return MTLPixelFormatBC2_RGBA;
@@ -169,6 +169,41 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::BC5UNorm:          return MTLPixelFormatBC5_RGUnorm;
         case Format::BC5SNorm:          return MTLPixelFormatBC5_RGSnorm;
         #endif
+
+        /* --- Advanced scalable texture compression (ASTC) formats --- */
+        case Format::ASTC4x4:           return MTLPixelFormatASTC_4x4_LDR;
+        case Format::ASTC4x4_sRGB:      return MTLPixelFormatASTC_4x4_sRGB;
+        case Format::ASTC5x4:           return MTLPixelFormatASTC_5x4_LDR;
+        case Format::ASTC5x4_sRGB:      return MTLPixelFormatASTC_5x4_sRGB;
+        case Format::ASTC5x5:           return MTLPixelFormatASTC_5x5_LDR;
+        case Format::ASTC5x5_sRGB:      return MTLPixelFormatASTC_5x5_sRGB;
+        case Format::ASTC6x5:           return MTLPixelFormatASTC_6x5_LDR;
+        case Format::ASTC6x5_sRGB:      return MTLPixelFormatASTC_6x5_sRGB;
+        case Format::ASTC6x6:           return MTLPixelFormatASTC_6x6_LDR;
+        case Format::ASTC6x6_sRGB:      return MTLPixelFormatASTC_6x6_sRGB;
+        case Format::ASTC8x5:           return MTLPixelFormatASTC_8x5_LDR;
+        case Format::ASTC8x5_sRGB:      return MTLPixelFormatASTC_8x5_sRGB;
+        case Format::ASTC8x6:           return MTLPixelFormatASTC_8x6_LDR;
+        case Format::ASTC8x6_sRGB:      return MTLPixelFormatASTC_8x6_sRGB;
+        case Format::ASTC8x8:           return MTLPixelFormatASTC_8x8_LDR;
+        case Format::ASTC8x8_sRGB:      return MTLPixelFormatASTC_8x8_sRGB;
+        case Format::ASTC10x5:          return MTLPixelFormatASTC_10x5_LDR;
+        case Format::ASTC10x5_sRGB:     return MTLPixelFormatASTC_10x5_sRGB;
+        case Format::ASTC10x6:          return MTLPixelFormatASTC_10x6_LDR;
+        case Format::ASTC10x6_sRGB:     return MTLPixelFormatASTC_10x6_sRGB;
+        case Format::ASTC10x8:          return MTLPixelFormatASTC_10x8_LDR;
+        case Format::ASTC10x8_sRGB:     return MTLPixelFormatASTC_10x8_sRGB;
+        case Format::ASTC10x10:         return MTLPixelFormatASTC_10x10_LDR;
+        case Format::ASTC10x10_sRGB:    return MTLPixelFormatASTC_10x10_sRGB;
+        case Format::ASTC12x10:         return MTLPixelFormatASTC_12x10_LDR;
+        case Format::ASTC12x10_sRGB:    return MTLPixelFormatASTC_12x10_sRGB;
+        case Format::ASTC12x12:         return MTLPixelFormatASTC_12x12_LDR;
+        case Format::ASTC12x12_sRGB:    return MTLPixelFormatASTC_12x12_sRGB;
+
+        /* --- Ericsson texture compression (ETC) formats --- */
+        case Format::ETC1UNorm:         break;
+        case Format::ETC2UNorm:         return MTLPixelFormatETC2_RGB8;
+        case Format::ETC2UNorm_sRGB:    return MTLPixelFormatETC2_RGB8_sRGB;
 
         default:                        break;
     }
@@ -582,8 +617,8 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         #endif // /LLGL_OS_IOS
         case MTLPixelFormatDepth32Float_Stencil8:   return Format::D32FloatS8X24UInt;
 
-        #ifndef LLGL_OS_IOS
         /* --- Compressed color formats --- */
+        #ifndef LLGL_OS_IOS
         case MTLPixelFormatBC1_RGBA:                return Format::BC1UNorm;
         case MTLPixelFormatBC1_RGBA_sRGB:           return Format::BC1UNorm_sRGB;
         case MTLPixelFormatBC2_RGBA:                return Format::BC2UNorm;
@@ -595,6 +630,40 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         case MTLPixelFormatBC5_RGUnorm:             return Format::BC5UNorm;
         case MTLPixelFormatBC5_RGSnorm:             return Format::BC5SNorm;
         #endif // /LLGL_OS_IOS
+
+        /* --- Advanced scalable texture compression (ASTC) formats --- */
+        case MTLPixelFormatASTC_4x4_LDR:            return Format::ASTC4x4;
+        case MTLPixelFormatASTC_4x4_sRGB:           return Format::ASTC4x4_sRGB;
+        case MTLPixelFormatASTC_5x4_LDR:            return Format::ASTC5x4;
+        case MTLPixelFormatASTC_5x4_sRGB:           return Format::ASTC5x4_sRGB;
+        case MTLPixelFormatASTC_5x5_LDR:            return Format::ASTC5x5;
+        case MTLPixelFormatASTC_5x5_sRGB:           return Format::ASTC5x5_sRGB;
+        case MTLPixelFormatASTC_6x5_LDR:            return Format::ASTC6x5;
+        case MTLPixelFormatASTC_6x5_sRGB:           return Format::ASTC6x5_sRGB;
+        case MTLPixelFormatASTC_6x6_LDR:            return Format::ASTC6x6;
+        case MTLPixelFormatASTC_6x6_sRGB:           return Format::ASTC6x6_sRGB;
+        case MTLPixelFormatASTC_8x5_LDR:            return Format::ASTC8x5;
+        case MTLPixelFormatASTC_8x5_sRGB:           return Format::ASTC8x5_sRGB;
+        case MTLPixelFormatASTC_8x6_LDR:            return Format::ASTC8x6;
+        case MTLPixelFormatASTC_8x6_sRGB:           return Format::ASTC8x6_sRGB;
+        case MTLPixelFormatASTC_8x8_LDR:            return Format::ASTC8x8;
+        case MTLPixelFormatASTC_8x8_sRGB:           return Format::ASTC8x8_sRGB;
+        case MTLPixelFormatASTC_10x5_LDR:           return Format::ASTC10x5;
+        case MTLPixelFormatASTC_10x5_sRGB:          return Format::ASTC10x5_sRGB;
+        case MTLPixelFormatASTC_10x6_LDR:           return Format::ASTC10x6;
+        case MTLPixelFormatASTC_10x6_sRGB:          return Format::ASTC10x6_sRGB;
+        case MTLPixelFormatASTC_10x8_LDR:           return Format::ASTC10x8;
+        case MTLPixelFormatASTC_10x8_sRGB:          return Format::ASTC10x8_sRGB;
+        case MTLPixelFormatASTC_10x10_LDR:          return Format::ASTC10x10;
+        case MTLPixelFormatASTC_10x10_sRGB:         return Format::ASTC10x10_sRGB;
+        case MTLPixelFormatASTC_12x10_LDR:          return Format::ASTC12x10;
+        case MTLPixelFormatASTC_12x10_sRGB:         return Format::ASTC12x10_sRGB;
+        case MTLPixelFormatASTC_12x12_LDR:          return Format::ASTC12x12;
+        case MTLPixelFormatASTC_12x12_sRGB:         return Format::ASTC12x12_sRGB;
+
+        /* --- Ericsson texture compression (ETC) formats --- */
+        case MTLPixelFormatETC2_RGB8:               return Format::ETC2UNorm;
+        case MTLPixelFormatETC2_RGB8_sRGB:          return Format::ETC2UNorm_sRGB;
 
         default:                                    break;
     }

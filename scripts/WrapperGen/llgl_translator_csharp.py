@@ -283,6 +283,13 @@ class CsharpTranslator(Translator):
             self.statement('/* ----- Constants ----- */')
             self.statement()
 
+            def translateConstInit(struct, init):
+                structBaseIdent = struct.name + '::'
+                if init.startswith(structBaseIdent):
+                    return init[len(structBaseIdent):]
+                else:
+                    return init
+
             for struct in constStructs:
                 self.statement('public enum {} : int'.format(struct.name))
                 self.openScope()
@@ -293,7 +300,7 @@ class CsharpTranslator(Translator):
                     declList.append(Translator.Declaration('', field.name, field.init))
 
                 for decl in declList.decls:
-                    self.statement(decl.name + declList.spaces(1, decl.name) + ' = ' + decl.init + ',')
+                    self.statement(f'{decl.name}{declList.spaces(1, decl.name)} = {translateConstInit(struct, decl.init)},')
 
                 self.closeScope()
                 self.statement()

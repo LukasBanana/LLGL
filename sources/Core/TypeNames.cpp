@@ -241,6 +241,41 @@ LLGL_EXPORT const char* ToString(const Format val)
         case T::BC4SNorm:           return "BC4SNorm";
         case T::BC5UNorm:           return "BC5UNorm";
         case T::BC5SNorm:           return "BC5SNorm";
+
+        /* --- Advanced scalable texture compression (ASTC) formats --- */
+        case T::ASTC4x4:            return "ASTC4x4";
+        case T::ASTC4x4_sRGB:       return "ASTC4x4_sRGB";
+        case T::ASTC5x4:            return "ASTC5x4";
+        case T::ASTC5x4_sRGB:       return "ASTC5x4_sRGB";
+        case T::ASTC5x5:            return "ASTC5x5";
+        case T::ASTC5x5_sRGB:       return "ASTC5x5_sRGB";
+        case T::ASTC6x5:            return "ASTC6x5";
+        case T::ASTC6x5_sRGB:       return "ASTC6x5_sRGB";
+        case T::ASTC6x6:            return "ASTC6x6";
+        case T::ASTC6x6_sRGB:       return "ASTC6x6_sRGB";
+        case T::ASTC8x5:            return "ASTC8x5";
+        case T::ASTC8x5_sRGB:       return "ASTC8x5_sRGB";
+        case T::ASTC8x6:            return "ASTC8x6";
+        case T::ASTC8x6_sRGB:       return "ASTC8x6_sRGB";
+        case T::ASTC8x8:            return "ASTC8x8";
+        case T::ASTC8x8_sRGB:       return "ASTC8x8_sRGB";
+        case T::ASTC10x5:           return "ASTC10x5";
+        case T::ASTC10x5_sRGB:      return "ASTC10x5_sRGB";
+        case T::ASTC10x6:           return "ASTC10x6";
+        case T::ASTC10x6_sRGB:      return "ASTC10x6_sRGB";
+        case T::ASTC10x8:           return "ASTC10x8";
+        case T::ASTC10x8_sRGB:      return "ASTC10x8_sRGB";
+        case T::ASTC10x10:          return "ASTC10x10";
+        case T::ASTC10x10_sRGB:     return "ASTC10x10_sRGB";
+        case T::ASTC12x10:          return "ASTC12x10";
+        case T::ASTC12x10_sRGB:     return "ASTC12x10_sRGB";
+        case T::ASTC12x12:          return "ASTC12x12";
+        case T::ASTC12x12_sRGB:     return "ASTC12x12_sRGB";
+
+        /* --- Ericsson texture compression (ETC) formats --- */
+        case T::ETC1UNorm:          return "ETC1UNorm";
+        case T::ETC2UNorm:          return "ETC2UNorm";
+        case T::ETC2UNorm_sRGB:     return "ETC2UNorm_sRGB";
     }
 
     return nullptr;
@@ -269,11 +304,13 @@ LLGL_EXPORT const char* ToString(const ImageFormat val)
         case T::Stencil:        return "Stencil";
 
         /* Compressed formats */
-        case T::BC1:            return "BC1";
-        case T::BC2:            return "BC2";
-        case T::BC3:            return "BC3";
-        case T::BC4:            return "BC4";
-        case T::BC5:            return "BC5";
+        case T::Compressed:     return "Compressed";
+
+        case T::BC1:            return "BC1 (DEPRECATED)";
+        case T::BC2:            return "BC2 (DEPRECATED)";
+        case T::BC3:            return "BC3 (DEPRECATED)";
+        case T::BC4:            return "BC4 (DEPRECATED)";
+        case T::BC5:            return "BC5 (DEPRECATED)";
     }
 
     return nullptr;

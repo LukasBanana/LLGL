@@ -233,6 +233,14 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     unsigned            threadCount = 0
 );
 
+//! \deprecated Since 0.04b; Use second version with explicit compression format instead!
+LLGL_DEPRECATED("This version of DecompressImageBufferToRGBA8UNorm() is deprecated since 0.04b; Use second version with explicit compression format instead!")
+LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
+    const ImageView&    srcImageView,
+    const Extent2D&     extent,
+    unsigned            threadCount = 0
+);
+
 /**
 \brief Decompresses the specified image buffer to RGBA format with 8-bit unsigned normalized integers.
 \param[in] srcImageView Specifies the source image image.
@@ -243,6 +251,7 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 \return Byte buffer with the decompressed image data or null if the compression format is not supported for decompression.
 */
 LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
+    Format              compressedFormat,
     const ImageView&    srcImageView,
     const Extent2D&     extent,
     unsigned            threadCount = 0

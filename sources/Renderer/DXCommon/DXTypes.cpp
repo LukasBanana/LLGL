@@ -167,6 +167,41 @@ DXGI_FORMAT ToDXGIFormat(const Format format)
         case Format::BC4SNorm:          return DXGI_FORMAT_BC4_SNORM;
         case Format::BC5UNorm:          return DXGI_FORMAT_BC5_UNORM;
         case Format::BC5SNorm:          return DXGI_FORMAT_BC5_SNORM;
+
+        /* --- Advanced scalable texture compression (ASTC) formats --- */
+        case Format::ASTC4x4:           break;
+        case Format::ASTC4x4_sRGB:      break;
+        case Format::ASTC5x4:           break;
+        case Format::ASTC5x4_sRGB:      break;
+        case Format::ASTC5x5:           break;
+        case Format::ASTC5x5_sRGB:      break;
+        case Format::ASTC6x5:           break;
+        case Format::ASTC6x5_sRGB:      break;
+        case Format::ASTC6x6:           break;
+        case Format::ASTC6x6_sRGB:      break;
+        case Format::ASTC8x5:           break;
+        case Format::ASTC8x5_sRGB:      break;
+        case Format::ASTC8x6:           break;
+        case Format::ASTC8x6_sRGB:      break;
+        case Format::ASTC8x8:           break;
+        case Format::ASTC8x8_sRGB:      break;
+        case Format::ASTC10x5:          break;
+        case Format::ASTC10x5_sRGB:     break;
+        case Format::ASTC10x6:          break;
+        case Format::ASTC10x6_sRGB:     break;
+        case Format::ASTC10x8:          break;
+        case Format::ASTC10x8_sRGB:     break;
+        case Format::ASTC10x10:         break;
+        case Format::ASTC10x10_sRGB:    break;
+        case Format::ASTC12x10:         break;
+        case Format::ASTC12x10_sRGB:    break;
+        case Format::ASTC12x12:         break;
+        case Format::ASTC12x12_sRGB:    break;
+
+        /* --- Ericsson texture compression (ETC) formats --- */
+        case Format::ETC1UNorm:         break;
+        case Format::ETC2UNorm:         break;
+        case Format::ETC2UNorm_sRGB:    break;
     }
     MapFailed("Format", "DXGI_FORMAT");
 }
