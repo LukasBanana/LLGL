@@ -87,6 +87,9 @@ if(APPLE)
         "PBR/Tiles26/Tiles26_*.jpg"
         "PBR/Wood13/Wood13_*.jpg"
         )
+    add_project_resource_files(FilesExample_Queries
+        "Pyramid.obj"
+        )
     add_project_resource_files(FilesExample_RenderTarget
         "Crate.jpg"
         )

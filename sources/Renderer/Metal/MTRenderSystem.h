@@ -25,6 +25,7 @@
 
 #include "RenderState/MTPipelineLayout.h"
 #include "RenderState/MTPipelineState.h"
+#include "RenderState/MTQueryHeap.h"
 #include "RenderState/MTResourceHeap.h"
 #include "RenderState/MTRenderPass.h"
 #include "RenderState/MTFence.h"
@@ -92,7 +93,7 @@ class MTRenderSystem final : public RenderSystem
         HWObjectInstance<ProxyPipelineCache>    pipelineCacheProxy_;
         HWObjectContainer<MTPipelineState>  	pipelineStates_;
         HWObjectContainer<MTResourceHeap>       resourceHeaps_;
-        //HWObjectContainer<MTQueryHeap>          queryHeaps_;
+        HWObjectContainer<MTQueryHeap>          queryHeaps_;
         HWObjectContainer<MTFence>              fences_;
 
 };

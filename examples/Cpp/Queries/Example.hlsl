@@ -3,7 +3,7 @@
 
 // VERTEX SHADER
 
-cbuffer Settings : register(b0)
+cbuffer Settings : register(b1)
 {
 	float4x4 wvpMatrix;
     float4x4 wMatrix;

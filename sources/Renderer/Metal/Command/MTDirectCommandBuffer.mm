@@ -15,6 +15,7 @@
 #include "../Buffer/MTBufferArray.h"
 #include "../RenderState/MTGraphicsPSO.h"
 #include "../RenderState/MTComputePSO.h"
+#include "../RenderState/MTQueryHeap.h"
 #include "../RenderState/MTResourceHeap.h"
 #include "../RenderState/MTBuiltinPSOFactory.h"
 #include "../RenderState/MTDescriptorCache.h"
@@ -616,12 +617,21 @@ void MTDirectCommandBuffer::SetUniforms(std::uint32_t first, const void* data, s
 
 void MTDirectCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    //todo
+    auto& queryHeapMT = LLGL_CAST(MTQueryHeap&, queryHeap);
+    const MTLVisibilityResultMode mode = queryHeapMT.GetVisibilityResultMode();
+    if (mode != MTLVisibilityResultModeDisabled && query < queryHeapMT.GetNumQueries())
+    {
+        const NSUInteger offset = queryHeapMT.GetStride() * query;
+        context_.SetVisibilityBuffer(queryHeapMT.GetNative(), queryHeapMT.GetVisibilityResultMode(), offset);
+    }
 }
 
 void MTDirectCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
 {
-    //todo
+    auto& queryHeapMT = LLGL_CAST(MTQueryHeap&, queryHeap);
+    const MTLVisibilityResultMode mode = queryHeapMT.GetVisibilityResultMode();
+    if (mode != MTLVisibilityResultModeDisabled && query < queryHeapMT.GetNumQueries())
+        context_.SetVisibilityBuffer(nil, MTLVisibilityResultModeDisabled, 0);
 }
 
 void MTDirectCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)

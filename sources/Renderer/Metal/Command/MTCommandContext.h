@@ -108,6 +108,7 @@ class MTCommandContext
         void SetGraphicsResourceHeap(MTResourceHeap* resourceHeap, std::uint32_t descriptorSet);
         void SetBlendColor(const float blendColor[4]);
         void SetStencilRef(std::uint32_t ref, const StencilFace face);
+        void SetVisibilityBuffer(id<MTLBuffer> buffer, MTLVisibilityResultMode mode, NSUInteger offset);
 
         // Converts, binds, and stores the respective state in the internal compute encoder state.
         void SetComputePSO(MTComputePSO* pipelineState);
@@ -249,6 +250,7 @@ class MTCommandContext
             DirtyBit_GraphicsResourceHeap   = (1 << 4),
             DirtyBit_BlendColor             = (1 << 5),
             DirtyBit_StencilRef             = (1 << 6),
+            DirtyBit_VisibilityResultMode   = (1 << 7),
 
             // Compute encoder
             DirtyBit_ComputePSO             = (1 << 0),
@@ -257,25 +259,28 @@ class MTCommandContext
 
         struct MTRenderEncoderState
         {
-            MTLViewport     viewports[maxNumViewportsAndScissors]       = {};
-            NSUInteger      viewportCount                               = 0;
-            MTLScissorRect  scissorRects[maxNumViewportsAndScissors]    = {};
-            NSUInteger      scissorRectCount                            = 0;
-            bool            isScissorTestEnabled                        = false;
-            id<MTLBuffer>   vertexBuffers[maxNumVertexBuffers]          = {};
-            NSUInteger      vertexBufferOffsets[maxNumVertexBuffers]    = {};
-            NSRange         vertexBufferRange                           = { 0, 0 };
+            MTLViewport             viewports[maxNumViewportsAndScissors]       = {};
+            NSUInteger              viewportCount                               = 0;
+            MTLScissorRect          scissorRects[maxNumViewportsAndScissors]    = {};
+            NSUInteger              scissorRectCount                            = 0;
+            bool                    isScissorTestEnabled                        = false;
+            id<MTLBuffer>           vertexBuffers[maxNumVertexBuffers]          = {};
+            NSUInteger              vertexBufferOffsets[maxNumVertexBuffers]    = {};
+            NSRange                 vertexBufferRange                           = { 0, 0 };
 
-            MTGraphicsPSO*  graphicsPSO                                 = nullptr;
-            MTResourceHeap* graphicsResourceHeap                        = nullptr;
-            std::uint32_t   graphicsResourceSet                         = 0;
+            MTGraphicsPSO*          graphicsPSO                                 = nullptr;
+            MTResourceHeap*         graphicsResourceHeap                        = nullptr;
+            std::uint32_t           graphicsResourceSet                         = 0;
 
-            float           blendColor[4]                               = { 0.0f, 0.0f, 0.0f, 0.0f };
-            bool            blendColorDynamic                           = false;
+            float                   blendColor[4]                               = { 0.0f, 0.0f, 0.0f, 0.0f };
+            bool                    blendColorDynamic                           = false;
 
-            std::uint32_t   stencilFrontRef                             = 0;
-            std::uint32_t   stencilBackRef                              = 0;
-            bool            stencilRefDynamic                           = false;
+            std::uint32_t           stencilFrontRef                             = 0;
+            std::uint32_t           stencilBackRef                              = 0;
+            bool                    stencilRefDynamic                           = false;
+
+            MTLVisibilityResultMode visResultMode                               = MTLVisibilityResultModeDisabled;
+            NSUInteger              visResultOffset                             = 0;
         };
 
         struct MTComputeEncoderState
@@ -304,6 +309,8 @@ class MTCommandContext
             NSUInteger                  numPatchControlPoints   = 0;
             NSUInteger                  tessFactorSize          = 0;
             id<MTLComputePipelineState> tessPipelineState       = nil;
+
+            id<MTLBuffer>               visBuffer               = nil;
         };
 
     private:
@@ -325,8 +332,8 @@ class MTCommandContext
         MTIntermediateBuffer            tessFactorBuffer_;
         const NSUInteger                maxThreadgroupSizeX_    = 1;
 
-        std::uint8_t                    renderDirtyBits_        = 0;
-        std::uint8_t                    computeDirtyBits_       = 0;
+        std::uint32_t                   renderDirtyBits_        = 0;
+        std::uint32_t                   computeDirtyBits_       = 0;
 
         MTSwapChain*                    boundSwapChain_         = nullptr;
 

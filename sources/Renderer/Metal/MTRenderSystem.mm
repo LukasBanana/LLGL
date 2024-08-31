@@ -308,13 +308,12 @@ void MTRenderSystem::Release(PipelineState& pipelineState)
 
 QueryHeap* MTRenderSystem::CreateQueryHeap(const QueryHeapDescriptor& queryHeapDesc)
 {
-    return nullptr;//todo
+    return queryHeaps_.emplace<MTQueryHeap>(device_, queryHeapDesc);
 }
 
 void MTRenderSystem::Release(QueryHeap& queryHeap)
 {
-    //todo
-    //queryHeaps_.erase(&queryHeap);
+    queryHeaps_.erase(&queryHeap);
 }
 
 /* ----- Fences ----- */

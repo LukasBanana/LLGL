@@ -171,6 +171,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         #endif
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
+        #ifdef LLGL_OS_IOS //TODO: available in macOS 11
         case Format::ASTC4x4:           return MTLPixelFormatASTC_4x4_LDR;
         case Format::ASTC4x4_sRGB:      return MTLPixelFormatASTC_4x4_sRGB;
         case Format::ASTC5x4:           return MTLPixelFormatASTC_5x4_LDR;
@@ -204,6 +205,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::ETC1UNorm:         break;
         case Format::ETC2UNorm:         return MTLPixelFormatETC2_RGB8;
         case Format::ETC2UNorm_sRGB:    return MTLPixelFormatETC2_RGB8_sRGB;
+        #endif
 
         default:                        break;
     }
@@ -632,6 +634,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         #endif // /LLGL_OS_IOS
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
+        #ifdef LLGL_OS_IOS //TODO: available in macOS 11
         case MTLPixelFormatASTC_4x4_LDR:            return Format::ASTC4x4;
         case MTLPixelFormatASTC_4x4_sRGB:           return Format::ASTC4x4_sRGB;
         case MTLPixelFormatASTC_5x4_LDR:            return Format::ASTC5x4;
@@ -664,6 +667,7 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
         /* --- Ericsson texture compression (ETC) formats --- */
         case MTLPixelFormatETC2_RGB8:               return Format::ETC2UNorm;
         case MTLPixelFormatETC2_RGB8_sRGB:          return Format::ETC2UNorm_sRGB;
+        #endif
 
         default:                                    break;
     }
