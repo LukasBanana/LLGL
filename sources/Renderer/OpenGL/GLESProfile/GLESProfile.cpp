@@ -7,6 +7,7 @@
 
 #include "../GLProfile.h"
 #include "../Ext/GLExtensions.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <cstring>
 
@@ -53,13 +54,13 @@ void GetTexParameterInternalFormat(GLenum target, GLint* params)
     #ifdef GL_ES_VERSION_3_1
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, params);
     #else
-    //TODO...
+    LLGL_TRAP_NOT_IMPLEMENTED(); //TODO
     #endif
 }
 
 void GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufsize, GLint* params)
 {
-    //TODO
+    LLGL_TRAP_NOT_IMPLEMENTED(); //TODO
 }
 
 void DepthRange(GLclamp_t nearVal, GLclamp_t farVal)
@@ -74,6 +75,7 @@ void ClearDepth(GLclamp_t depth)
 
 void GetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, void* data)
 {
+    LLGL_ASSERT_PTR(data);
     if (void* srcData = glMapBufferRange(target, offset, size, GL_MAP_READ_BIT))
     {
         ::memcpy(data, srcData, static_cast<std::size_t>(size));

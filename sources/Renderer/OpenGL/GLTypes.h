@@ -83,6 +83,10 @@ bool IsDepthFormat(GLenum internalFormat);
 // Returns true if the specified GL internal format is a depth-and-stencil format.
 bool IsDepthStencilFormat(GLenum internalFormat);
 
+// Returns the binding parameter name for the specified buffer target,
+// e.g. GL_UNIFOMR_BUFFER to GL_UNIFORM_BUFFER_BINDING, used for glGetIntegerv().
+GLenum BufferTargetToBindingPname(GLenum target);
+
 
 } // /namespace GLTypes
 

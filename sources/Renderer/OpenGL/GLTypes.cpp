@@ -6,6 +6,7 @@
  */
 
 #include "GLTypes.h"
+#include "GLProfile.h"
 #include "../../Core/Exception.h"
 
 
@@ -1189,6 +1190,40 @@ bool IsDepthStencilFormat(GLenum internalFormat)
             return true;
         default:
             return false;
+    }
+}
+
+GLenum BufferTargetToBindingPname(GLenum target)
+{
+    switch (target)
+    {
+        case GL_ARRAY_BUFFER:               return GL_ARRAY_BUFFER_BINDING;
+        case GL_COPY_READ_BUFFER:           return GL_COPY_READ_BUFFER_BINDING;
+        case GL_COPY_WRITE_BUFFER:          return GL_COPY_WRITE_BUFFER_BINDING;
+        case GL_ELEMENT_ARRAY_BUFFER:       return GL_ELEMENT_ARRAY_BUFFER_BINDING;
+        case GL_PIXEL_PACK_BUFFER:          return GL_PIXEL_PACK_BUFFER_BINDING;
+        case GL_PIXEL_UNPACK_BUFFER:        return GL_PIXEL_UNPACK_BUFFER_BINDING;
+        case GL_TRANSFORM_FEEDBACK_BUFFER:  return GL_TRANSFORM_FEEDBACK_BUFFER_BINDING;
+        case GL_UNIFORM_BUFFER:             return GL_UNIFORM_BUFFER_BINDING;
+
+        #if GL_VERSION_4_0 || GL_ES_VERSION_3_1
+        case GL_DRAW_INDIRECT_BUFFER:       return GL_DRAW_INDIRECT_BUFFER_BINDING;
+        #endif
+
+        #if GL_VERSION_4_2 || GL_ES_VERSION_3_1
+        case GL_ATOMIC_COUNTER_BUFFER:      return GL_ATOMIC_COUNTER_BUFFER_BINDING;
+        #endif
+
+        #if GL_VERSION_4_3 || GL_ES_VERSION_3_1
+        case GL_DISPATCH_INDIRECT_BUFFER:   return GL_DISPATCH_INDIRECT_BUFFER_BINDING;
+        case GL_SHADER_STORAGE_BUFFER:      return GL_SHADER_STORAGE_BUFFER_BINDING;
+        #endif
+
+        #if GL_VERSION_4_4 || GL_ES_VERSION_3_2
+        case GL_TEXTURE_BUFFER:             return GL_TEXTURE_BUFFER_BINDING;
+        #endif
+
+        default:                            return 0;
     }
 }
 
