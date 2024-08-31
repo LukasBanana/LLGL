@@ -182,15 +182,15 @@ generate_html5_page()
         -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
         "$SOURCE_DIR/examples/Cpp/ExampleBase/Wasm/index.html" > "$HTML5_ROOT/index.html"
     
-    # Find all required assets in Android.assets.txt file of respective project directory and copy them into app folder
+    # Find all required assets in *.assets.txt file of respective project directory and copy them into app folder
     ASSET_DIR="$HTML5_ROOT/assets"
     mkdir -p "$ASSET_DIR"
 
-    ASSET_LIST_FILE="$PROJECT_SOURCE_DIR/Android.assets.txt"
-    if [ -f "$ASSET_LIST_FILE" ]; then
+    ASSETS_LIST_FILE=$(find "$PROJECT_SOURCE_DIR" -type f -name *.assets.txt)
+    if [ -f "$ASSETS_LIST_FILE" ]; then
         # Read asset filenames to copy to package output
         ASSET_FILES=()
-        for FILTER in $(cat $ASSET_LIST_FILE); do
+        for FILTER in $(cat $ASSETS_LIST_FILE); do
             for FILE in $ASSET_SOURCE_DIR/$FILTER; do
                 ASSET_FILES+=( $(echo "$FILE" | tr -d '\r') ) # Remove '\r' characters when reading .txt file from WSL
             done

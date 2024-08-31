@@ -255,18 +255,18 @@ generate_app_project()
     done
 
     # Replace meta data
-    sed -i "s/LLGL_PROJECT_NAME/Example_${CURRENT_PROJECT}/" "$APP_ROOT/app/src/main/AndroidManifest.xml"
-    sed -i "s/LLGL_APP_NAME/${CURRENT_PROJECT}/" "$APP_ROOT/app/src/main/res/values/strings.xml"
-    sed -i "s/LLGL_APP_ID/${CURRENT_PROJECT}/" "$APP_ROOT/app/build.gradle"
+    sed -i "s/LLGL_PROJECT_NAME/Example_${CURRENT_PROJECT}/g" "$APP_ROOT/app/src/main/AndroidManifest.xml"
+    sed -i "s/LLGL_APP_NAME/${CURRENT_PROJECT}/g" "$APP_ROOT/app/src/main/res/values/strings.xml"
+    sed -i "s/LLGL_APP_ID/${CURRENT_PROJECT}/g" "$APP_ROOT/app/build.gradle"
 
     # Find all required assets in Android.assets.txt file of respective project directory and copy them into app folder
     ASSET_DIR="$APP_ROOT/app/src/main/assets"
     mkdir -p "$ASSET_DIR"
 
-    ASSET_LIST_FILE="$PROJECT_SOURCE_DIR/Android.assets.txt"
-    if [ -f "$ASSET_LIST_FILE" ]; then
-        # Read Android.asset.txt file line-by-line into array and make sure '\r' character is not present (on Win32 platform)
-        readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSET_LIST_FILE")
+    ASSETS_LIST_FILE=$(find "$PROJECT_SOURCE_DIR" -type f -name *.assets.txt)
+    if [ -f "$ASSETS_LIST_FILE" ]; then
+        # Read *.assets.txt file line-by-line into array and make sure '\r' character is not present (on Win32 platform)
+        readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSETS_LIST_FILE")
         ASSET_FILES=()
         for FILTER in ${ASSET_FILTERS[@]}; do
             for FILE in $ASSET_SOURCE_DIR/$FILTER; do
@@ -274,7 +274,7 @@ generate_app_project()
             done
         done
 
-        # Copy all asset file into destination folder
+        # Copy all asset files into destination folder
         for FILE in ${ASSET_FILES[@]}; do
             if [ $VERBOSE -eq 1 ]; then
                 echo "Copy asset: $(basename $FILE)"
