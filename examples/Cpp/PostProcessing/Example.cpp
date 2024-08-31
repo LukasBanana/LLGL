@@ -337,6 +337,7 @@ public:
             pipelineDescScene.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
         pipelineScene = renderer->CreatePipelineState(pipelineDescScene);
+        ReportPSOErrors(pipelineScene);
 
         // Create graphics pipeline for blur post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescPP;
@@ -347,6 +348,7 @@ public:
             pipelineDescPP.pipelineLayout   = layoutBlur;
         }
         pipelineBlur = renderer->CreatePipelineState(pipelineDescPP);
+        ReportPSOErrors(pipelineBlur);
 
         // Create graphics pipeline for final post-processor
         LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
@@ -358,6 +360,7 @@ public:
             pipelineDescFinal.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
         pipelineFinal = renderer->CreatePipelineState(pipelineDescFinal);
+        ReportPSOErrors(pipelineFinal);
     }
 
     void CreateResourceHeaps()

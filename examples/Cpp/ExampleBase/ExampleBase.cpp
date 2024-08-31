@@ -994,8 +994,9 @@ bool ExampleBase::IsOpenGL() const
 {
     return
     (
-        renderer->GetRendererID() == LLGL::RendererID::OpenGL ||
-        renderer->GetRendererID() == LLGL::RendererID::OpenGLES
+        renderer->GetRendererID() == LLGL::RendererID::OpenGL   ||
+        renderer->GetRendererID() == LLGL::RendererID::OpenGLES ||
+        renderer->GetRendererID() == LLGL::RendererID::WebGL
     );
 }
 

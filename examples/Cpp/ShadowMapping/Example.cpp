@@ -164,7 +164,8 @@ private:
         LLGL::SamplerDescriptor shadowSamplerDesc;
         {
             // Clamp-to-border sampler address mode requires GLES 3.2, so use standard clamp mode in case hardware only supports GLES 3.0
-            if (renderer->GetRendererID() == LLGL::RendererID::OpenGLES)
+            if (renderer->GetRendererID() == LLGL::RendererID::OpenGLES ||
+                renderer->GetRendererID() == LLGL::RendererID::WebGL)
             {
                 shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Clamp;
                 shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Clamp;
