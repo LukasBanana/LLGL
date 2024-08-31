@@ -148,6 +148,27 @@ else
     cmake ${OPTIONS[@]} -G "$GENERATOR"
 fi
 
+# Copys the input file to the output and removes '\r' EOL characters from text files.
+# Web page will run on Linux server and Git must not convert EOL for this output file.
+# Otherwise, data offsets in the *.data.js script won't match with the *.data file after Git uploaded it.
+copy_file_preserve_linux_eol()
+{
+    INPUT=$1
+    OUTPUT=$2
+    FILE_EXT=${INPUT##*.}
+    if [[ "${FILE_EXT,,}" =~ ^(txt|vert|frag|obj)$ ]]; then
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Copy asset (convert EOL): $(basename $INPUT)"
+        fi
+        tr -d "\r" < "$INPUT" > "$OUTPUT"
+    else
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Copy asset: $(basename $INPUT)"
+        fi
+        cp "$INPUT" "$OUTPUT"
+    fi
+}
+
 # Generate HTML pages
 generate_html5_page()
 {
@@ -198,10 +219,7 @@ generate_html5_page()
 
         # Copy all asset file into destination folder
         for FILE in ${ASSET_FILES[@]}; do
-            if [ $VERBOSE -eq 1 ]; then
-                echo "Copy asset: $(basename $FILE)"
-            fi
-            cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
+            copy_file_preserve_linux_eol "$FILE" "$ASSET_DIR/$(basename $FILE)"
         done
     fi
 
@@ -209,10 +227,7 @@ generate_html5_page()
     for FILE in $PROJECT_SOURCE_DIR/*.vert \
                 $PROJECT_SOURCE_DIR/*.frag; do
         if [ -f "$FILE" ]; then
-            if [ $VERBOSE -eq 1 ]; then
-                echo "Copy shader: $(basename $FILE)"
-            fi
-            cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
+            copy_file_preserve_linux_eol "$FILE" "$ASSET_DIR/$(basename $FILE)"
         fi
     done
 
