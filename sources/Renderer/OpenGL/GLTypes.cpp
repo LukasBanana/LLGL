@@ -1198,8 +1198,6 @@ GLenum BufferTargetToBindingPname(GLenum target)
     switch (target)
     {
         case GL_ARRAY_BUFFER:               return GL_ARRAY_BUFFER_BINDING;
-        case GL_COPY_READ_BUFFER:           return GL_COPY_READ_BUFFER_BINDING;
-        case GL_COPY_WRITE_BUFFER:          return GL_COPY_WRITE_BUFFER_BINDING;
         case GL_ELEMENT_ARRAY_BUFFER:       return GL_ELEMENT_ARRAY_BUFFER_BINDING;
         case GL_PIXEL_PACK_BUFFER:          return GL_PIXEL_PACK_BUFFER_BINDING;
         case GL_PIXEL_UNPACK_BUFFER:        return GL_PIXEL_UNPACK_BUFFER_BINDING;
@@ -1208,6 +1206,11 @@ GLenum BufferTargetToBindingPname(GLenum target)
 
         #if GL_VERSION_4_0 || GL_ES_VERSION_3_1
         case GL_DRAW_INDIRECT_BUFFER:       return GL_DRAW_INDIRECT_BUFFER_BINDING;
+        #endif
+
+        #if GL_VERSION_4_2 || GL_ES_VERSION_3_0
+        case GL_COPY_READ_BUFFER:           return GL_COPY_READ_BUFFER_BINDING;
+        case GL_COPY_WRITE_BUFFER:          return GL_COPY_WRITE_BUFFER_BINDING;
         #endif
 
         #if GL_VERSION_4_2 || GL_ES_VERSION_3_1
