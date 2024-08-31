@@ -212,6 +212,13 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
     /* Determine tessellation limits */
     limits.maxTessFactor                    = GLGetUInt(GL_MAX_TESS_GEN_LEVEL);
     #endif
+
+    /* Determine maximum number of samples for render-target attachments */
+    const GLuint maxSamples = GLGetUInt(GL_MAX_SAMPLES);
+    limits.maxColorBufferSamples    = maxSamples;
+    limits.maxDepthBufferSamples    = maxSamples;
+    limits.maxStencilBufferSamples  = maxSamples;
+    limits.maxNoAttachmentSamples   = maxSamples;
 }
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits, GLint version)

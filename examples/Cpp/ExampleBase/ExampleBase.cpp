@@ -510,22 +510,18 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         }
     }
 
-    // Apply device limits (not for GL, because we won't have a valid GL context until we create our first swap chain)
-    if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
-        samples_ = g_Config.samples;
-    else
-        samples_ = std::min(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
-
     // Create swap-chain
     LLGL::SwapChainDescriptor swapChainDesc;
     {
         swapChainDesc.debugName     = "SwapChain";
         swapChainDesc.resolution    = ScaleResolutionForDisplay(g_Config.windowSize, LLGL::Display::GetPrimary());
-        swapChainDesc.samples       = GetSampleCount();
+        swapChainDesc.samples       = std::min<std::uint32_t>(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
 
     swapChain->SetVsyncInterval(g_Config.vsync ? 1 : 0);
+
+    samples_ = swapChain->GetSamples();
 
     // Create command buffer
     LLGL::CommandBufferDescriptor cmdBufferDesc;

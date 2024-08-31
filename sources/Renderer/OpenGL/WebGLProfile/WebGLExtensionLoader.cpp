@@ -96,26 +96,10 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT(EXT_texture_array);
     ENABLE_GLEXT(EXT_transform_feedback);
 
-    if (version >= 300)
-    {
-        ENABLE_GLEXT(ARB_ES3_compatibility);
-        ENABLE_GLEXT(ARB_get_program_binary);
-        ENABLE_GLEXT(ARB_shader_objects_30);
-    }
-
-    if (version >= 310)
-    {
-        ENABLE_GLEXT(ARB_shader_storage_buffer_object);
-        ENABLE_GLEXT(ARB_program_interface_query);
-        ENABLE_GLEXT(ARB_compute_shader);
-        ENABLE_GLEXT(ARB_framebuffer_no_attachments);
-    }
-
-    if (version >= 320)
-    {
-        ENABLE_GLEXT(ARB_tessellation_shader);
-        ENABLE_GLEXT(ARB_copy_image);
-    }
+    // GLES 3.0
+    ENABLE_GLEXT(ARB_ES3_compatibility);
+    ENABLE_GLEXT(ARB_get_program_binary);
+    ENABLE_GLEXT(ARB_shader_objects_30);
 
     #undef ENABLE_GLEXT
 
