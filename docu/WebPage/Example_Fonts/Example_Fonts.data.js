@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 413}, {"filename": "/assets/Example.450core.vert", "start": 413, "end": 1183}, {"filename": "/assets/Example.frag", "start": 1183, "end": 1480}, {"filename": "/assets/Example.vert", "start": 1480, "end": 2127}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 2127, "end": 6847}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 6847, "end": 19135}], "remote_package_size": 19135});
+    loadPackage({"files": [{"filename": "/assets/Example.450core.frag", "start": 0, "end": 397}, {"filename": "/assets/Example.450core.vert", "start": 397, "end": 1132}, {"filename": "/assets/Example.frag", "start": 1132, "end": 1410}, {"filename": "/assets/Example.vert", "start": 1410, "end": 2023}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 2023, "end": 6743}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 6743, "end": 19031}], "remote_package_size": 19031});
 
   })();
