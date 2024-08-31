@@ -222,6 +222,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipelines[1] = renderer->CreatePipelineState(pipelineDesc);
+        ReportPSOErrors(pipelines[0]);
 
         // Create graphics pipeline for render target
         {
@@ -235,16 +236,7 @@ private:
             #endif
         }
         pipelines[0] = renderer->CreatePipelineState(pipelineDesc);
-
-        // Check for PSO errors
-        for (LLGL::PipelineState* pso : pipelines)
-        {
-            if (const LLGL::Report* report = pso->GetReport())
-            {
-                if (report->HasErrors())
-                    LLGL::Log::Errorf("%s", report->GetText());
-            }
-        }
+        ReportPSOErrors(pipelines[1]);
     }
 
     void CreateColorMap()

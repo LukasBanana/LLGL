@@ -440,7 +440,7 @@ public:
                 pipelineDesc.computeShader  = computeShaders[i];
             }
             computePipelines[i] = renderer->CreatePipelineState(pipelineDesc);
-            ThrowIfFailed(computePipelines[i]);
+            ReportPSOErrors(computePipelines[i]);
         }
     }
 
@@ -508,7 +508,7 @@ public:
             #endif
         }
         graphicsPipeline = renderer->CreatePipelineState(pipelineDesc);
-        ThrowIfFailed(graphicsPipeline);
+        ReportPSOErrors(graphicsPipeline);
 
         // Create resource heaps for graphics pipeline
         const LLGL::ResourceViewDescriptor resourceViewsGraphics[] =

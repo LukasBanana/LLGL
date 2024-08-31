@@ -263,7 +263,7 @@ protected:
     ShaderPipeline LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats);
 
     // Throws an exception if the specified PSO creation failed.
-    void ThrowIfFailed(LLGL::PipelineState* pso);
+    bool ReportPSOErrors(const LLGL::PipelineState* pso);
 
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
     LLGL::Texture* LoadTexture(

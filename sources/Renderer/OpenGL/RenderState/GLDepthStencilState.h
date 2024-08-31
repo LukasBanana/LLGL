@@ -79,7 +79,9 @@ class GLDepthStencilState
 
         // Stencil states
         bool                stencilTestEnabled_         = false;    // glEnable(GL_STENCIL_TEST)
+        #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
         bool                independentStencilFaces_    = false;
+        #endif
         bool                referenceDynamic_           = false;
         GLStencilFaceState  stencilFront_;
         GLStencilFaceState  stencilBack_;

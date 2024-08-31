@@ -33,7 +33,9 @@ GLDepthStencilState::GLDepthStencilState(const DepthDescriptor& depthDesc, const
     GLStencilFaceState::Convert(stencilFront_, stencilDesc.front, stencilDesc.referenceDynamic);
     GLStencilFaceState::Convert(stencilBack_, stencilDesc.back, stencilDesc.referenceDynamic);
 
+    #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
     independentStencilFaces_ = (GLStencilFaceState::CompareSWO(stencilFront_, stencilBack_) != 0);
+    #endif
 }
 
 void GLDepthStencilState::Bind(GLStateManager& stateMngr)
@@ -53,13 +55,17 @@ void GLDepthStencilState::Bind(GLStateManager& stateMngr)
     if (stencilTestEnabled_)
     {
         stateMngr.Enable(GLState::StencilTest);
+        #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
         if (independentStencilFaces_)
         {
             BindStencilFaceState(stencilFront_, GL_FRONT);
             BindStencilFaceState(stencilBack_, GL_BACK);
         }
         else
+        #endif // /LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
+        {
             BindStencilState(stencilFront_);
+        }
     }
     else
         stateMngr.Disable(GLState::StencilTest);
@@ -67,6 +73,7 @@ void GLDepthStencilState::Bind(GLStateManager& stateMngr)
 
 void GLDepthStencilState::BindStencilRefOnly(GLint ref, GLenum face)
 {
+    #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
     if (independentStencilFaces_)
     {
         switch (face)
@@ -84,6 +91,7 @@ void GLDepthStencilState::BindStencilRefOnly(GLint ref, GLenum face)
         }
     }
     else
+    #endif // /LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
     {
         switch (face)
         {
@@ -104,13 +112,17 @@ void GLDepthStencilState::BindStencilWriteMaskOnly()
 {
     if (stencilTestEnabled_)
     {
+        #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
         if (independentStencilFaces_)
         {
             glStencilMaskSeparate(GL_FRONT, stencilFront_.writeMask);
             glStencilMaskSeparate(GL_BACK, stencilBack_.writeMask);
         }
         else
+        #endif // /LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
+        {
             glStencilMask(stencilFront_.writeMask);
+        }
     }
 }
 
@@ -126,7 +138,9 @@ int GLDepthStencilState::CompareSWO(const GLDepthStencilState& lhs, const GLDept
     LLGL_COMPARE_BOOL_MEMBER_SWO( stencilTestEnabled_ );
     if (lhs.stencilTestEnabled_)
     {
+        #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
         LLGL_COMPARE_BOOL_MEMBER_SWO( independentStencilFaces_ );
+        #endif // /LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
 
         {
             int order = GLStencilFaceState::CompareSWO(lhs.stencilFront_, rhs.stencilFront_);
@@ -134,12 +148,14 @@ int GLDepthStencilState::CompareSWO(const GLDepthStencilState& lhs, const GLDept
                 return order;
         }
 
+        #if LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
         if (!lhs.independentStencilFaces_)
         {
             int order = GLStencilFaceState::CompareSWO(lhs.stencilBack_, rhs.stencilBack_);
             if (order != 0)
                 return order;
         }
+        #endif // /LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES
     }
 
     return 0;

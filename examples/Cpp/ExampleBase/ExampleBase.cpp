@@ -865,15 +865,25 @@ ShaderPipeline ExampleBase::LoadStandardShaderPipeline(const std::vector<LLGL::V
     return shaderPipeline;
 }
 
-void ExampleBase::ThrowIfFailed(LLGL::PipelineState* pso)
+bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
 {
-    if (pso == nullptr)
-        throw std::invalid_argument("null pointer returned for PSO");
-    if (auto report = pso->GetReport())
+    if (pso != nullptr)
     {
-        if (report->HasErrors())
-            throw std::runtime_error(report->GetText());
+        if (const LLGL::Report* report = pso->GetReport())
+        {
+            if (report->HasErrors())
+            {
+                LLGL::Log::Errorf("%s", report->GetText());
+                return true;
+            }
+        }
     }
+    else
+    {
+        LLGL::Log::Errorf("null pointer passed to ReportPSOErrors()");
+        return true;
+    }
+    return false;
 }
 
 LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)

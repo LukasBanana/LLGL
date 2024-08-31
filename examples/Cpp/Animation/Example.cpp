@@ -165,7 +165,7 @@ private:
             pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
         pipelineScene = renderer->CreatePipelineState(pipelineDesc);
-        ThrowIfFailed(pipelineScene);
+        ReportPSOErrors(pipelineScene);
     }
 
     void CreateResourceHeaps()

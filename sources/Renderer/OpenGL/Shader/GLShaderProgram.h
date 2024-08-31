@@ -77,7 +77,7 @@ class GLShaderProgram final : public GLShaderPipeline
 
         const GLShaderBindingLayout*    bindingLayout_          = nullptr;
 
-        #ifdef __APPLE__
+        #if LLGL_USE_NULL_FRAGMENT_SHADER
         bool                            hasNullFragmentShader_  = false;
         #endif
 

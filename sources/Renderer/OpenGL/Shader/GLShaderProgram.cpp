@@ -28,7 +28,7 @@ namespace LLGL
 {
 
 
-#ifdef __APPLE__
+#if LLGL_USE_NULL_FRAGMENT_SHADER
 
 // Helper class to manage shared GL objects only necessary workaround issues with Mac implementation of OpenGL.
 class SharedGLShader
@@ -59,7 +59,7 @@ GLuint SharedGLShader::GetOrCreate(GLenum type, const char* source)
 
         /* Check for errors */
         if (!GLLegacyShader::GetCompileStatus(id_))
-            throw std::runtime_error(GLLegacyShader::GetGLShaderLog(id_));
+            LLGL_TRAP("compilation of shared GL shader failed:\n%s", GLLegacyShader::GetGLShaderLog(id_).c_str());
     }
     ++refCount_;
     return id_;
@@ -80,7 +80,7 @@ void SharedGLShader::Release()
 
 static SharedGLShader g_nullFragmentShader;
 
-#endif // /__APPLE__
+#endif // /LLGL_USE_NULL_FRAGMENT_SHADER
 
 GLShaderProgram::GLShaderProgram(
     std::size_t             numShaders,
@@ -110,7 +110,7 @@ GLShaderProgram::~GLShaderProgram()
 {
     glDeleteProgram(GetID());
     GLStateManager::Get().NotifyShaderProgramRelease(this);
-    #ifdef __APPLE__
+    #if LLGL_USE_NULL_FRAGMENT_SHADER
     if (hasNullFragmentShader_)
         g_nullFragmentShader.Release();
     #endif
@@ -220,11 +220,11 @@ static void BuildTransformFeedbackVaryingsNV(GLuint program, std::size_t numVary
     for_range(i, numVaryings)
     {
         /* Get varying location by its name */
-        auto location = glGetVaryingLocationNV(program, varyings[i]);
+        GLint location = glGetVaryingLocationNV(program, varyings[i]);
         if (location >= 0)
             varyingLocations.push_back(location);
         else
-            throw std::invalid_argument("stream-output attribute \"" + std::string(varyings[i]) + "\" does not specify an active varying in GLSL shader program");
+            LLGL_TRAP("stream-output attribute \"%s\" does not specify an active varying in GL shader program (ID=%u)", varyings[i], program);
     }
 
     glTransformFeedbackVaryingsNV(
@@ -908,7 +908,7 @@ void GLShaderProgram::BuildProgramBinary(
     /* Attach all specified shaders to this shader program */
     AttachGLLegacyShaders(GetID(), numShaders, shaders, orderedShaders);
 
-    #ifdef __APPLE__
+    #if LLGL_USE_NULL_FRAGMENT_SHADER
     /*
     Mac implementation of OpenGL violates GL spec and always requires a fragment shader,
     so we create a dummy if not specified by client.
@@ -927,7 +927,7 @@ void GLShaderProgram::BuildProgramBinary(
         glAttachShader(GetID(), nullFragmentShader);
         hasNullFragmentShader_ = true;
     }
-    #endif
+    #endif // /LLGL_USE_NULL_FRAGMENT_SHADER
 
     /* Build input layout for vertex shader */
     if (const GLShader* vs = orderedShaders.vertexShader)

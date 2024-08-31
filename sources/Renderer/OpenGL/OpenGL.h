@@ -97,6 +97,21 @@
 #   define LLGL_PRIMITIVE_RESTART
 #endif
 
+// GL on macOS, GLES on iOS, and WebGL always require a fragment shader in a shader program.
+#if defined __APPLE__ || LLGL_WEBGL
+#   define LLGL_USE_NULL_FRAGMENT_SHADER 1
+#else
+#   define LLGL_USE_NULL_FRAGMENT_SHADER 0
+#endif
+
+// WebGL does not support independent stencil face values, even though glStencilFuncSeparate() is provided.
+// Since D3D does not support independent stencil faces, WebGL cannot emulate it in ANGLE or other web rendering abstraction layers.
+#if LLGL_WEBGL
+#   define LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES 0
+#else
+#   define LLGL_SUPPORTS_INDEPENDENT_STENCIL_FACES 1
+#endif
+
 
 #endif
 

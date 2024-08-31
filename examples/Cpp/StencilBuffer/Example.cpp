@@ -103,7 +103,7 @@ private:
 
             vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Example.hlsl", "VStencil", "vs_5_0" }, { vertexFormat });
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             vsScene = LoadShader({ LLGL::ShaderType::Vertex,   "Scene.vert" }, { vertexFormat });
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Scene.frag" });
@@ -150,6 +150,7 @@ private:
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineScene = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineScene);
         }
 
         // Create graphics pipeline for stencil-write rendering
@@ -172,6 +173,7 @@ private:
                 pipelineDesc.blend.targets[0].colorMask     = 0x0;                              // Write no color bits
             }
             pipelineStencilWrite = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineStencilWrite);
         }
 
         // Create graphics pipeline for stencil-read rendering
@@ -193,6 +195,7 @@ private:
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineStencilRead = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineStencilRead);
         }
     }
 
