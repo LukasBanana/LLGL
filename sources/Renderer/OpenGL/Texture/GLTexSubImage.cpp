@@ -19,17 +19,6 @@ namespace LLGL
 {
 
 
-static void QueryGLInternalFormat(GLenum target, GLenum& internalFormat)
-{
-    if (internalFormat == 0)
-    {
-        GLint format = 0;
-        GLProfile::GetTexParameterInternalFormat(target, &format);
-        LLGL_ASSERT(format != 0);
-        internalFormat = static_cast<GLenum>(format);
-    }
-}
-
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1DBase(
@@ -40,7 +29,7 @@ static void GLTexSubImage1DBase(
     const ImageView&    imageView,
     GLenum              internalFormat)
 {
-    QueryGLInternalFormat(target, internalFormat);
+    LLGL_ASSERT(internalFormat != 0);
     if (IsCompressedFormat(imageView.format))
     {
         glCompressedTexSubImage1D(
@@ -79,7 +68,7 @@ static void GLTexSubImage2DBase(
     const ImageView&    imageView,
     GLenum              internalFormat)
 {
-    QueryGLInternalFormat(target, internalFormat);
+    LLGL_ASSERT(internalFormat != 0);
     if (IsCompressedFormat(imageView.format))
     {
         glCompressedTexSubImage2D(
@@ -122,7 +111,7 @@ static void GLTexSubImage3DBase(
     const ImageView&    imageView,
     GLenum              internalFormat)
 {
-    QueryGLInternalFormat(target, internalFormat);
+    LLGL_ASSERT(internalFormat != 0);
     if (IsCompressedFormat(imageView.format))
     {
         glCompressedTexSubImage3D(

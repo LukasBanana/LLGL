@@ -1011,6 +1011,34 @@ static ImageFormat MapSwizzleImageFormat(const ImageFormat format)
     }
 }
 
+// Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
+static void BindGLTextureNonPersistent(const GLTexture& textureGL)
+{
+    GLStateManager::Get().BindTexture(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
+}
+
+#if LLGL_OPENGL || GL_ES_VERSION_3_1
+
+static GLenum GLGetTextureInternalFormat(const GLTexture& tex)
+{
+    /* Bind texture and query attributes */
+    GLint format = 0;
+    BindGLTextureNonPersistent(tex);
+    glGetTexLevelParameteriv(tex.GetGLTexLevelTarget(), 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
+    return static_cast<GLenum>(format);
+}
+
+#endif
+
+static GLenum GLGetRenderbufferInternalFormat(const GLTexture& tex)
+{
+    /* Bind renderbuffer and query qttributes */
+    GLint format = 0;
+    GLStateManager::Get().BindRenderbuffer(tex.GetID());
+    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
+    return static_cast<GLenum>(format);
+}
+
 void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
     /* Bind texture */
@@ -1030,8 +1058,12 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     //GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
     GLTexImage(textureDesc, initialImage);
 
-    /* Store internal GL format */
-    //internalFormat_ = GetTextureInternalFormat();
+    /* Store internal GL format. Only desktop OpenGL can query the actual internal format. For GLES 3.0 and WebGL 2.0 we have to rely on the input format. */
+    #if LLGL_OPENGL || GL_ES_VERSION_3_1
+    internalFormat_ = GLGetTextureInternalFormat(*this);
+    #else
+    internalFormat_ = GLTypes::Map(textureDesc.format);
+    #endif
 
     /* Initialize texture parameters for the first time (sampler states not supported for multisample textures) */
     if (!IsMultiSampleTexture(textureDesc.type))
@@ -1063,31 +1095,7 @@ void GLTexture::AllocRenderbufferStorage(const TextureDescriptor& textureDesc)
     );
 
     /* Store internal GL format */
-    internalFormat_ = GetRenderbufferInternalFormat();
-}
-
-// Binds the specified GL texture temporarily. Only used to gather texture information, not to bind texture for the graphics or compute pipeline.
-static void BindGLTextureNonPersistent(const GLTexture& textureGL)
-{
-    GLStateManager::Get().BindTexture(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
-}
-
-GLenum GLTexture::GetTextureInternalFormat() const
-{
-    /* Bind texture and query attributes */
-    GLint format = 0;
-    BindGLTextureNonPersistent(*this);
-    GLProfile::GetTexParameterInternalFormat(GetGLTexLevelTarget(), &format);
-    return static_cast<GLenum>(format);
-}
-
-GLenum GLTexture::GetRenderbufferInternalFormat() const
-{
-    /* Bind renderbuffer and query qttributes */
-    GLint format = 0;
-    GLStateManager::Get().BindRenderbuffer(GetID());
-    glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_INTERNAL_FORMAT, &format);
-    return static_cast<GLenum>(format);
+    internalFormat_ = GLGetRenderbufferInternalFormat(*this);
 }
 
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const

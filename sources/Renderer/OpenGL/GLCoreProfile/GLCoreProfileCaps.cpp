@@ -139,7 +139,7 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 {
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
-    #if defined GL_ARB_internalformat_query && defined GL_ARB_internalformat_query2
+    #if GL_ARB_internalformat_query && GL_ARB_internalformat_query2
 
     if (HasExtension(GLExt::ARB_internalformat_query) && HasExtension(GLExt::ARB_internalformat_query2))
     {
@@ -160,7 +160,7 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 
     #endif
 
-    #ifdef GL_EXT_texture_compression_s3tc
+    #if GL_EXT_texture_compression_s3tc
 
     const std::uint32_t numCompressedTexFormats = GLGetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
 

@@ -105,19 +105,19 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 {
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
-    RemoveAllFromListIf(
+    /*RemoveAllFromListIf(
         textureFormats,
         [](Format format) -> bool
         {
             if (auto internalformat = GLTypes::MapOrZero(format))
             {
                 GLint supported = 0;
-                GLProfile::GetInternalformativ(GL_TEXTURE_2D, internalformat, GL_INTERNALFORMAT_SUPPORTED, 1, &supported);
+                glGetInternalformativ(GL_TEXTURE_2D, internalformat, GL_INTERNALFORMAT_SUPPORTED, 1, &supported);
                 return (supported == GL_FALSE);
             }
             return true;
         }
-    );
+    );*/
 
     const auto numCompressedTexFormats = GLGetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
 

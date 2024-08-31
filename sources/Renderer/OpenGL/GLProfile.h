@@ -46,12 +46,6 @@ const char* GetShadingLanguageName();
 // Returns the maximum number of viewports (GL_MAX_VIEWPORT for GL, 1 for GLES).
 GLint GetMaxViewports();
 
-// Returns the internal format of the first texture level for the specified bound texture target.
-void GetTexParameterInternalFormat(GLenum target, GLint* params);
-
-// Wrapper for glGetInternalformativ with special case for GLES.
-void GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufsize, GLint* params);
-
 // Wrapper for glDepthRange/glDepthRangef.
 void DepthRange(GLclamp_t nearVal, GLclamp_t farVal);
 

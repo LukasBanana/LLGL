@@ -23,7 +23,7 @@ bool GLTexSubImage(
     const TextureType       type,
     const TextureRegion&    region,
     const ImageView&        imageView,
-    GLenum                  internalFormat  = 0
+    GLenum                  internalFormat
 );
 
 

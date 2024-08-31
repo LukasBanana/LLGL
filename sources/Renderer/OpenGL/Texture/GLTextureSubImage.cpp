@@ -8,6 +8,7 @@
 #include "GLTextureSubImage.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
+#include "../../../Core/Assertion.h"
 #include <array>
 #include <algorithm>
 
@@ -18,16 +19,6 @@ namespace LLGL
 
 #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
 
-static void QueryGLInternalFormat(GLuint texID, GLenum& internalFormat)
-{
-    if (internalFormat == 0)
-    {
-        GLint format = 0;
-        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
-        internalFormat = static_cast<GLenum>(format);
-    }
-}
-
 static void GLTextureSubImage1DBase(
     GLuint              texID,
     std::uint32_t       mipLevel,
@@ -36,7 +27,7 @@ static void GLTextureSubImage1DBase(
     const ImageView&    imageView,
     GLenum              internalFormat)
 {
-    QueryGLInternalFormat(texID, internalFormat);
+    LLGL_ASSERT(internalFormat != 0);
     if (IsCompressedFormat(imageView.format))
     {
         glCompressedTextureSubImage1D(
@@ -73,7 +64,7 @@ static void GLTextureSubImage2DBase(
     const ImageView&    imageView,
     GLenum              internalFormat)
 {
-    QueryGLInternalFormat(texID, internalFormat);
+    LLGL_ASSERT(internalFormat != 0);
     if (IsCompressedFormat(imageView.format))
     {
         glCompressedTextureSubImage2D(
@@ -116,7 +107,7 @@ static void GLTextureSubImage3DBase(
     const ImageView&    imageView,
     GLenum              internalFormat)
 {
-    QueryGLInternalFormat(texID, internalFormat);
+    LLGL_ASSERT(internalFormat != 0);
     if (IsCompressedFormat(imageView.format))
     {
         glCompressedTextureSubImage3D(

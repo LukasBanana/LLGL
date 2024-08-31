@@ -51,16 +51,6 @@ GLint GetMaxViewports()
     return 1;
 }
 
-void GetTexParameterInternalFormat(GLenum target, GLint* params)
-{
-    LLGL_TRAP_NOT_IMPLEMENTED(); //TODO
-}
-
-void GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufsize, GLint* params)
-{
-    LLGL_TRAP_NOT_IMPLEMENTED(); //TODO
-}
-
 void DepthRange(GLclamp_t nearVal, GLclamp_t farVal)
 {
     glDepthRangef(nearVal, farVal);
