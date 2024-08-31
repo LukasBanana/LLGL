@@ -204,7 +204,6 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
     
     # Bundle source files and write to output variable
     bundle_project_files(OutputProjectFiles "${ProjectFiles}")
-    set(${OUTPUT_LIST} ${OutputProjectFiles} PARENT_SCOPE)
 
     # Also bundle potential assets for certain platforms
     if(APPLE)
@@ -216,10 +215,13 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
             if(NOT "${AssetsListContents}" STREQUAL "")
                 string(REGEX REPLACE ";" "\\\\;" AssetsListContents "${AssetsListContents}")
                 string(REGEX REPLACE "\n" ";" AssetsListContents "${AssetsListContents}")
-                add_project_resource_files(${OUTPUT_LIST} ${AssetsListContents})
+                add_project_resource_files(OutputProjectFiles ${AssetsListContents})
             endif()
         endif()
     endif()
+
+    # Write final project file list to output parameter
+    set(${OUTPUT_LIST} ${OutputProjectFiles} PARENT_SCOPE)
 endfunction()
 
 function(set_llgl_module_properties MODULE_NAME)
