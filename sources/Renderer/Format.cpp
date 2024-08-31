@@ -19,7 +19,6 @@ namespace Internal
 
 // Shortcuts for the format flags
 static constexpr long Depth         = FormatFlags::HasDepth;
-static constexpr long Stencil       = FormatFlags::HasStencil;
 static constexpr long sRGB          = FormatFlags::IsColorSpace_sRGB;
 static constexpr long Compr         = FormatFlags::IsCompressed;
 static constexpr long Norm          = FormatFlags::IsNormalized;
@@ -44,6 +43,8 @@ static constexpr long SNorm         = Norm;
 static constexpr long UNorm         = Unsigned | Norm;
 static constexpr long SFloat        = 0;
 static constexpr long UFloat        = Unsigned;
+
+static constexpr long Stencil       = FormatFlags::HasStencil | UInt;
 
 // Declaration of all hardware format descriptors
 static const FormatAttributes g_formatAttribs[] =

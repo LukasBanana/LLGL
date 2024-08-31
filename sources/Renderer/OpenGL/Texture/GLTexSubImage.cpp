@@ -10,6 +10,7 @@
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../../../Core/Assertion.h"
 #include <array>
 #include <algorithm>
 
@@ -24,6 +25,7 @@ static void QueryGLInternalFormat(GLenum target, GLenum& internalFormat)
     {
         GLint format = 0;
         GLProfile::GetTexParameterInternalFormat(target, &format);
+        LLGL_ASSERT(format != 0);
         internalFormat = static_cast<GLenum>(format);
     }
 }

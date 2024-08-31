@@ -39,9 +39,9 @@ static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPix
 }
 
 // Returns true if the specified hardware format requires an integer type, e.g. GL_RGBA_INTEGER
-static bool IsIntegerTypedFormat(const Format format)
+static bool IsStrictFloatFormat(const Format format)
 {
-    return ((GetFormatAttribs(format).flags & (FormatFlags::IsInteger | FormatFlags::IsNormalized)) == FormatFlags::IsInteger);
+    return (IsFloatFormat(format) && !IsNormalizedFormat(format));
 }
 
 // Returns true if the 'clearValue' member is enabled if no initial image data is specified, i.e. MiscFlags::NoInitialData is NOT specified
@@ -53,7 +53,7 @@ static bool IsClearValueEnabled(const TextureDescriptor& desc)
 // Returns true if a GL texture with the specified descriptor can be default initialized with an RGBA float format, i.e. GL_RGBA and GL_FLOAT.
 static bool CanInitializeTexWithRGBAf(const TextureDescriptor& desc)
 {
-    return (IsClearValueEnabled(desc) && !IsCompressedFormat(desc.format) && !IsIntegerTypedFormat(desc.format));
+    return (IsClearValueEnabled(desc) && !IsCompressedFormat(desc.format) && IsStrictFloatFormat(desc.format));
 }
 
 [[noreturn]]
@@ -112,8 +112,8 @@ static void GLTexImage1DBase(
     const void*     data,
     std::size_t     dataSize)
 {
-    auto internalFormat = GLTypes::Map(textureFormat);
-    auto sx             = static_cast<GLsizei>(width);
+    GLenum  internalFormat  = GLTypes::Map(textureFormat);
+    GLsizei sx              = static_cast<GLsizei>(width);
 
     #ifdef GL_ARB_texture_storage
     if (HasExtension(GLExt::ARB_texture_storage))
@@ -165,9 +165,9 @@ static void GLTexImage2DBase(
     const void*     data,
     std::size_t     dataSize)
 {
-    auto internalFormat = GLTypes::Map(textureFormat);
-    auto sx             = static_cast<GLsizei>(width);
-    auto sy             = static_cast<GLsizei>(height);
+    GLenum  internalFormat  = GLTypes::Map(textureFormat);
+    GLsizei sx              = static_cast<GLsizei>(width);
+    GLsizei sy              = static_cast<GLsizei>(height);
 
     #ifdef GL_ARB_texture_storage
     if (HasExtension(GLExt::ARB_texture_storage))
@@ -235,10 +235,10 @@ static void GLTexImage3DBase(
     const void*     data,
     std::size_t     dataSize)
 {
-    auto internalFormat = GLTypes::Map(textureFormat);
-    auto sx             = static_cast<GLsizei>(width);
-    auto sy             = static_cast<GLsizei>(height);
-    auto sz             = static_cast<GLsizei>(depth);
+    GLenum  internalFormat  = GLTypes::Map(textureFormat);
+    GLsizei sx              = static_cast<GLsizei>(width);
+    GLsizei sy              = static_cast<GLsizei>(height);
+    GLsizei sz              = static_cast<GLsizei>(depth);
 
     #ifdef GL_ARB_texture_storage
     if (HasExtension(GLExt::ARB_texture_storage))
@@ -301,11 +301,11 @@ static void GLTexImage2DMultisampleBase(
     std::uint32_t   height,
     bool            fixedSamples)
 {
-    auto internalFormat         = GLTypes::Map(textureFormat);
-    auto sampleCount            = static_cast<GLsizei>(samples);
-    auto sx                     = static_cast<GLsizei>(width);
-    auto sy                     = static_cast<GLsizei>(height);
-    auto fixedSampleLocations   = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
+    GLenum      internalFormat          = GLTypes::Map(textureFormat);
+    GLsizei     sampleCount             = static_cast<GLsizei>(samples);
+    GLsizei     sx                      = static_cast<GLsizei>(width);
+    GLsizei     sy                      = static_cast<GLsizei>(height);
+    GLboolean   fixedSampleLocations    = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
 
     #ifdef GL_ARB_texture_storage_multisample
     if (HasExtension(GLExt::ARB_texture_storage_multisample))
@@ -330,12 +330,12 @@ static void GLTexImage3DMultisampleBase(
     std::uint32_t   depth,
     bool            fixedSamples)
 {
-    auto internalFormat         = GLTypes::Map(textureFormat);
-    auto sampleCount            = static_cast<GLsizei>(samples);
-    auto sx                     = static_cast<GLsizei>(width);
-    auto sy                     = static_cast<GLsizei>(height);
-    auto sz                     = static_cast<GLsizei>(depth);
-    auto fixedSampleLocations   = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
+    GLenum      internalFormat          = GLTypes::Map(textureFormat);
+    GLsizei     sampleCount             = static_cast<GLsizei>(samples);
+    GLsizei     sx                      = static_cast<GLsizei>(width);
+    GLsizei     sy                      = static_cast<GLsizei>(height);
+    GLsizei     sz                      = static_cast<GLsizei>(depth);
+    GLboolean   fixedSampleLocations    = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
 
     #ifdef GL_ARB_texture_storage_multisample
     if (HasExtension(GLExt::ARB_texture_storage_multisample))
@@ -493,7 +493,7 @@ static void GLTexImage1D(const TextureDescriptor& desc, const ImageView* imageVi
             NumMipLevels(desc),
             desc.format,
             desc.extent.width,
-            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->format, IsIntegerFormat(desc.format)),
             GLTypes::Map(imageView->dataType),
             imageView->data,
             imageView->dataSize
@@ -524,7 +524,7 @@ static void GLTexImage1D(const TextureDescriptor& desc, const ImageView* imageVi
             NumMipLevels(desc),
             desc.format,
             desc.extent.width,
-            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -543,7 +543,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.format,
             desc.extent.width,
             desc.extent.height,
-            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->format, IsIntegerFormat(desc.format)),
             GLTypes::Map(imageView->dataType),
             imageView->data,
             imageView->dataSize
@@ -631,7 +631,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.format,
             desc.extent.width,
             desc.extent.height,
-            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -649,7 +649,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.extent.width,
             desc.extent.height,
             desc.extent.depth,
-            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->format, IsIntegerFormat(desc.format)),
             GLTypes::Map(imageView->dataType),
             imageView->data,
             imageView->dataSize
@@ -684,7 +684,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.extent.width,
             desc.extent.height,
             desc.extent.depth,
-            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -693,7 +693,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const ImageView* imageVi
 
 static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* imageView)
 {
-    const auto numMipLevels = NumMipLevels(desc);
+    const std::uint32_t numMipLevels = NumMipLevels(desc);
 
     if (imageView != nullptr)
     {
@@ -704,7 +704,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
         if (IsCompressedFormat(desc.format))
             imageFaceStride = imageView->dataSize;
 
-        GLenum dataFormatGL       = GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format));
+        GLenum dataFormatGL       = GLTypes::Map(imageView->format, IsIntegerFormat(desc.format));
         GLenum dataTypeGL         = GLTypes::Map(imageView->dataType);
 
         for_range(arrayLayer, desc.arrayLayers)
@@ -725,7 +725,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     }
     else if (IsStencilFormat(desc.format))
     {
-        auto internalFormat = FindSuitableDepthFormat(desc);
+        Format internalFormat = FindSuitableDepthFormat(desc);
 
         std::vector<GLDepthStencilPair> image;
         const void* initialData = nullptr;
@@ -754,7 +754,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     }
     else if (IsDepthFormat(desc.format))
     {
-        auto internalFormat = FindSuitableDepthFormat(desc);
+        Format internalFormat = FindSuitableDepthFormat(desc);
 
         std::vector<float> image;
         const void* initialData = nullptr;
@@ -810,7 +810,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
                 desc.extent.width,
                 desc.extent.height,
                 arrayLayer,
-                (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+                (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
                 GL_UNSIGNED_BYTE,
                 nullptr
             );
@@ -830,7 +830,7 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const ImageView* im
             desc.format,
             desc.extent.width,
             desc.arrayLayers,
-            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->format, IsIntegerFormat(desc.format)),
             GLTypes::Map(imageView->dataType),
             imageView->data,
             imageView->dataSize
@@ -863,7 +863,7 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const ImageView* im
             desc.format,
             desc.extent.width,
             desc.arrayLayers,
-            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -883,7 +883,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->format, IsIntegerFormat(desc.format)),
             GLTypes::Map(imageView->dataType),
             imageView->data,
             imageView->dataSize
@@ -977,7 +977,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -997,7 +997,7 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* 
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            GLTypes::Map(imageView->format, IsIntegerTypedFormat(desc.format)),
+            GLTypes::Map(imageView->format, IsIntegerFormat(desc.format)),
             GLTypes::Map(imageView->dataType),
             imageView->data,
             imageView->dataSize
@@ -1032,7 +1032,7 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* 
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            (IsIntegerTypedFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
             GL_UNSIGNED_BYTE,
             nullptr
         );

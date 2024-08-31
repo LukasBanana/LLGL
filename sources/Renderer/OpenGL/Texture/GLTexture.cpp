@@ -310,6 +310,8 @@ void GLTexture::BindAndAllocStorage(const TextureDescriptor& textureDesc, const 
         AllocTextureStorage(textureDesc, initialImage);
 }
 
+#if !LLGL_WEBGL
+
 static TextureSwizzle GetTextureSwizzlePermutationBGRAComponent(const TextureSwizzle swizzleComponent)
 {
     switch (swizzleComponent)
@@ -392,13 +394,17 @@ static void InitializeGLTextureSwizzleWithFormat(
     }
 }
 
+#endif // !LLGL_WEBGL
+
 void GLTexture::TexParameterSwizzle(
     const TextureType           type,
     const Format                format,
     const TextureSwizzleRGBA&   swizzle,
     bool                        ignoreIdentitySwizzle)
 {
+    #if !LLGL_WEBGL
     InitializeGLTextureSwizzleWithFormat(type, MapToGLSwizzleFormat(format), swizzle, ignoreIdentitySwizzle);
+    #endif
 }
 
 #ifdef GL_ARB_copy_image
@@ -1010,17 +1016,6 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     /* Bind texture */
     GLStateManager::Get().BindGLTexture(*this);
 
-    /* Initialize texture parameters for the first time (sampler states not supported for multisample textures) */
-    if (!IsMultiSampleTexture(textureDesc.type))
-    {
-        GLenum target = GLTypes::Map(textureDesc.type);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetInitialGlTextureMinFilter(textureDesc));
-        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GetInitialGlTextureMagFilter(textureDesc));
-    }
-
-    /* Configure texture swizzling if format is not supported */
-    InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
-
     /* Convert initial image data for texture swizzle formats */
     ImageView intermediateImageView;
 
@@ -1036,7 +1031,20 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     GLTexImage(textureDesc, initialImage);
 
     /* Store internal GL format */
-    internalFormat_ = GetTextureInternalFormat();
+    //internalFormat_ = GetTextureInternalFormat();
+
+    /* Initialize texture parameters for the first time (sampler states not supported for multisample textures) */
+    if (!IsMultiSampleTexture(textureDesc.type))
+    {
+        GLenum target = GLTypes::Map(textureDesc.type);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetInitialGlTextureMinFilter(textureDesc));
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GetInitialGlTextureMagFilter(textureDesc));
+    }
+
+    /* Configure texture swizzling if format is not supported */
+    #if !LLGL_WEBGL
+    InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
+    #endif
 
     /* Generate MIP-maps if enabled */
     if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))
