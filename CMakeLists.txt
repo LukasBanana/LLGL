@@ -150,6 +150,29 @@ function(find_source_files OUTPUT_LIST FILTERS)
     set(${OUTPUT_LIST} ${${OUTPUT_LIST}} ${FilteredProjectFiles} PARENT_SCOPE)
 endfunction()
 
+# Adds a (variadic) list of resource files to the output project files.
+# The resource files must be located in the example media folder,
+# i.e. either in "examples/Media/Textures/" or "examples/Media/Models/".
+# Example:
+#   add_project_resource_files(MyProjectFiles "Models/ModelAssets-*.obj" "Textures/TextureAsset-1.jpg")
+function(add_project_resource_files OUTPUT_LIST)
+    # Iterate over all input filenames and expand their paths depending on their file extensions
+    set(ResourceFiles "")
+    set(InputFilenames "${ARGN}")
+    foreach(InputFile ${InputFilenames})
+        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga)")
+            file(GLOB TextureResourceFiles "${EXAMPLE_MEDIA_DIR}/${InputFile}")
+            list(APPEND ResourceFiles "${TextureResourceFiles}")
+        elseif("${InputFile}" MATCHES ".+\\.(obj)")
+            file(GLOB ModelResourceFiles "${EXAMPLE_MEDIA_DIR}/${InputFile}")
+            list(APPEND ResourceFiles "${ModelResourceFiles}")
+        endif()
+    endforeach()
+    
+    # Write expanded resource filenames to output variable
+    set(${OUTPUT_LIST} ${${OUTPUT_LIST}} ${ResourceFiles} PARENT_SCOPE)
+endfunction()
+
 # Bundles input source files together with platform specific resource files, e.g. macOS and iOS bundles.
 function(bundle_project_files OUTPUT_LIST SRC_FILES)
     if(APPLE)
@@ -182,29 +205,21 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
     # Bundle source files and write to output variable
     bundle_project_files(OutputProjectFiles "${ProjectFiles}")
     set(${OUTPUT_LIST} ${OutputProjectFiles} PARENT_SCOPE)
-endfunction()
 
-# Adds a (variadic) list of resource files to the output project files.
-# The resource files must be located in the example media folder,
-# i.e. either in "examples/Media/Textures/" or "examples/Media/Models/".
-# Example:
-#   add_project_resource_files(MyProjectFiles ModelAssets-*.obj TextureAsset-1.jpg")
-function(add_project_resource_files OUTPUT_LIST)
-    # Iterate over all input filenames and expand their paths depending on their file extensions
-    set(ResourceFiles "")
-    set(InputFilenames "${ARGN}")
-    foreach(InputFile ${InputFilenames})
-        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga)")
-            file(GLOB TextureResourceFiles "${EXAMPLE_MEDIA_DIR}/Textures/${InputFile}")
-            list(APPEND ResourceFiles "${TextureResourceFiles}")
-        elseif("${InputFile}" MATCHES ".+\\.(obj)")
-            file(GLOB ModelResourceFiles "${EXAMPLE_MEDIA_DIR}/Models/${InputFile}")
-            list(APPEND ResourceFiles "${ModelResourceFiles}")
+    # Also bundle potential assets for certain platforms
+    if(APPLE)
+        # Try to find an *.assets.txt file for current project
+        file(GLOB AssetsListFilename "${SRC_FILES}/*.assets.txt")
+        if(NOT "${AssetsListFilename}" STREQUAL "")
+            # Read *.assets.txt file and convert its content into a ';'-separated list to append project assets to bundle
+            file(READ "${AssetsListFilename}" AssetsListContents)
+            if(NOT "${AssetsListContents}" STREQUAL "")
+                string(REGEX REPLACE ";" "\\\\;" AssetsListContents "${AssetsListContents}")
+                string(REGEX REPLACE "\n" ";" AssetsListContents "${AssetsListContents}")
+                add_project_resource_files(${OUTPUT_LIST} ${AssetsListContents})
+            endif()
         endif()
-    endforeach()
-    
-    # Write expanded resource filenames to output variable
-    set(${OUTPUT_LIST} ${${OUTPUT_LIST}} ${ResourceFiles} PARENT_SCOPE)
+    endif()
 endfunction()
 
 function(set_llgl_module_properties MODULE_NAME)
@@ -505,6 +520,8 @@ if(EMSCRIPTEN)
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
     add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
+
+    add_link_options("SHELL:-s ASSERTIONS")
 endif()
 
 
