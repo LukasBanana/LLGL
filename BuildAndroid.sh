@@ -91,7 +91,7 @@ done
 # Make sure API level is high enough when Vulkan is enabled
 if [ "$ENABLE_VULKAN" = "ON" ]; then
     if [ $ANDROID_API_LEVEL -lt 28 ]; then
-        if [ $VERBOSE -eq 1 ]; then
+        if [ $VERBOSE -ne 0 ]; then
             echo "Clamping API level to 28 for Vulkan support (--api-level=$ANDROID_API_LEVEL)"
         fi
         ANDROID_API_LEVEL=28
@@ -146,7 +146,7 @@ else
 fi
 
 # Print additional information if in verbose mode
-if [ $VERBOSE -eq 1 ]; then
+if [ $VERBOSE -ne 0 ]; then
     echo "GAUSSIAN_LIB_DIR=$GAUSSIAN_LIB_DIR"
     if [ $PROJECT_ONLY -eq 0 ]; then
         echo "BUILD_TYPE=$BUILD_TYPE"
@@ -175,12 +175,16 @@ BASE_OPTIONS=(
     -S "$SOURCE_DIR"
 )
 
+if [ $VERBOSE -ne 0 ]; then
+    BASE_OPTIONS+=(-DCMAKE_VERBOSE_MAKEFILE=ON)
+fi
+
 build_with_android_abi()
 {
     CURRENT_ANDROID_ABI=$1
     CURRENT_OUTPUT_DIR=$2
 
-    if [ $VERBOSE -eq 1 ]; then
+    if [ $VERBOSE -ne 0 ]; then
         echo "Build: ABI=$CURRENT_ANDROID_ABI, Output=$CURRENT_OUTPUT_DIR"
     fi
 
@@ -205,7 +209,7 @@ build_with_android_abi()
 if [ $ANDROID_ABI = "all" ]; then
     declare -i ABI_INDEX=1
     for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
-        if [ $VERBOSE -eq 1 ]; then
+        if [ $VERBOSE -ne 0 ]; then
             echo "[${ABI_INDEX}/${#SUPPORTED_ANDROID_ABIS[@]}] Building with Android ABI: $ABI"
             ABI_INDEX+=1
         fi
@@ -223,12 +227,22 @@ generate_app_project()
     echo "Generate app project: $CURRENT_PROJECT"
 
     # Get source folder
-    ASSET_SOURCE_DIR="$SOURCE_DIR/examples/Media"
-    PROJECT_SOURCE_DIR="$SOURCE_DIR/examples/Cpp"
-    if [[ "$CURRENT_PROJECT" == *D ]]; then
-        PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:0:-1}"
+    ASSETS_SOURCE_DIR="$SOURCE_DIR/examples/Shared/Assets"
+
+    if [[ "${CURRENT_PROJECT:0:4}" == "C99_" ]]; then
+        PROJECT_SOURCE_DIR="$SOURCE_DIR/examples/C99"
+        if [[ "$CURRENT_PROJECT" == *D ]]; then
+            PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:4:-1}"
+        else
+            PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:4}"
+        fi
     else
-        PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/$CURRENT_PROJECT"
+        PROJECT_SOURCE_DIR="$SOURCE_DIR/examples/Cpp"
+        if [[ "$CURRENT_PROJECT" == *D ]]; then
+            PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:0:-1}"
+        else
+            PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/$CURRENT_PROJECT"
+        fi
     fi
 
     # Get destination folder
@@ -238,12 +252,12 @@ generate_app_project()
 
     # Create folder structure
     mkdir -p "$APP_ROOT"
-    cp -r "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/app" "$APP_ROOT"
-    cp "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/build.gradle" "$APP_ROOT/build.gradle"
-    cp "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/settings.gradle" "$APP_ROOT/settings.gradle"
+    cp -r "$SOURCE_DIR/examples/Shared/Platform/Android/app" "$APP_ROOT"
+    cp "$SOURCE_DIR/examples/Shared/Platform/Android/build.gradle" "$APP_ROOT/build.gradle"
+    cp "$SOURCE_DIR/examples/Shared/Platform/Android/settings.gradle" "$APP_ROOT/settings.gradle"
 
     mkdir -p "$APP_ROOT/gradle/wrapper"
-    cp -r "$SOURCE_DIR/examples/Cpp/ExampleBase/Android/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
+    cp -r "$SOURCE_DIR/examples/Shared/Platform/Android/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
 
     # Copy binary files into JNI lib folders for respective ABI
     for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do
@@ -269,14 +283,14 @@ generate_app_project()
         readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSETS_LIST_FILE")
         ASSET_FILES=()
         for FILTER in ${ASSET_FILTERS[@]}; do
-            for FILE in $ASSET_SOURCE_DIR/$FILTER; do
+            for FILE in $ASSETS_SOURCE_DIR/$FILTER; do
                 ASSET_FILES+=( "$FILE" )
             done
         done
 
         # Copy all asset files into destination folder
         for FILE in ${ASSET_FILES[@]}; do
-            if [ $VERBOSE -eq 1 ]; then
+            if [ $VERBOSE -ne 0 ]; then
                 echo "Copy asset: $(basename $FILE)"
             fi
             cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
@@ -292,7 +306,7 @@ generate_app_project()
                 $PROJECT_SOURCE_DIR/*.comp \
                 $PROJECT_SOURCE_DIR/*.spv; do
         if [ -f "$FILE" ]; then
-            if [ $VERBOSE -eq 1 ]; then
+            if [ $VERBOSE -ne 0 ]; then
                 echo "Copy shader: $(basename $FILE)"
             fi
             cp "$FILE" "$ASSET_DIR/$(basename $FILE)"
@@ -300,7 +314,7 @@ generate_app_project()
     done
 }
 
-if [ $BUILD_APPS -eq 1 ]; then
+if [ $BUILD_APPS -ne 0 ]; then
 
     PROJECT_DEBUG_BUILD=0
 

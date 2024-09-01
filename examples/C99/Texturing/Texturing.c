@@ -84,7 +84,7 @@ int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char
     g_example.sceneBuffer = llglCreateBuffer(&sceneBufferDesc, NULL);
 
     // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
-    const char* imageFilename = "../../Media/Textures/Crate.jpg";
+    const char* imageFilename = "../../Shared/Assets/Textures/Crate.jpg";
 
     int imageSize[2] = { 0, 0 }, texComponents = 0;
     unsigned char* imageBuffer = stbi_load(imageFilename, &imageSize[0], &imageSize[1], &texComponents, 0);

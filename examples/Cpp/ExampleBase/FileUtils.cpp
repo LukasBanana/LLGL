@@ -90,17 +90,17 @@ static std::string FindAssetFilename(const std::string& name)
     auto extPos = name.find_last_of('.');
     const std::string ext = (extPos != std::string::npos ? name.substr(extPos + 1) : "");
 
-    const std::string mediaRoot = "../../Media/";
+    const std::string assetsRoot = "../../Shared/Assets/";
 
     if (ext == "obj")
     {
-        if (FileExists(mediaRoot + "Models/" + name))
-            return mediaRoot + "Models/" + name;
+        if (FileExists(assetsRoot + "Models/" + name))
+            return assetsRoot + "Models/" + name;
     }
     else if (ext == "png" || ext == "jpg" || ext == "tga" || ext == "dds")
     {
-        if (FileExists(mediaRoot + "Textures/" + name))
-            return mediaRoot + "Textures/" + name;
+        if (FileExists(assetsRoot + "Textures/" + name))
+            return assetsRoot + "Textures/" + name;
     }
 
     #endif

@@ -15,16 +15,16 @@ project(LLGL_ExamplesCpp)
 # === Source files ===
 
 # Example project files
-find_source_files(FilesExampleBase CXX "${EXAMPLEBASE_PROJECT_DIR}")
+find_source_files(FilesExampleBase CXX "${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase")
 
 if(APPLE)
     if(LLGL_IOS_PLATFORM)
-        find_source_files(FilesExampleBaseIOS OBJC "${EXAMPLEBASE_PROJECT_DIR}/iOS")
+        find_source_files(FilesExampleBaseIOS OBJC "${SHARED_PLATFORM_DIR}/iOS")
     else()
-        find_source_files(FilesExampleBaseMacOS OBJC "${EXAMPLEBASE_PROJECT_DIR}/macOS")
+        find_source_files(FilesExampleBaseMacOS OBJC "${SHARED_PLATFORM_DIR}/macOS")
     endif()
 elseif(LLGL_ANDROID_PLATFORM)
-    find_source_files(FilesExampleBaseAndroid CXX "${EXAMPLEBASE_PROJECT_DIR}/Android")
+    find_source_files(FilesExampleBaseAndroid CXX "${SHARED_PLATFORM_DIR}/Android")
 endif()
 
 set(FilesExampleBaseAll ${FilesExampleBase})
@@ -34,7 +34,7 @@ if(APPLE)
     else()
         list(APPEND FilesExampleBaseAll ${FilesExampleBaseMacOS})
     endif()
-    set_source_files_properties("${EXAMPLEBASE_PROJECT_DIR}/ExampleBase.cpp" PROPERTIES COMPILE_FLAGS -xobjective-c++)
+    set_source_files_properties("${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase/ExampleBase.cpp" PROPERTIES COMPILE_FLAGS -xobjective-c++)
 elseif(LLGL_ANDROID_PLATFORM)
     list(APPEND FilesExampleBaseAll ${FilesExampleBaseAndroid})
 endif()
@@ -82,7 +82,8 @@ endif()
 # === Include directories ===
 
 include_directories("${EXTERNAL_INCLUDE_DIR}") # <stb/stb_image.h>
-include_directories("${EXAMPLEBASE_PROJECT_DIR}")
+include_directories("${EXAMPLE_CPP_PROJECTS_DIR}/ExampleBase")
+include_directories("${SHARED_PLATFORM_DIR}")
 
 if(GaussLib_INCLUDE_DIR)
     include_directories(${GaussLib_INCLUDE_DIR})
@@ -104,7 +105,7 @@ if(LLGL_BUILD_EXAMPLES)
     # Native "app glue" for Android examples
     if(LLGL_ANDROID_PLATFORM)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
-        target_link_libraries(ExampleBase android_native_app_glue)
+        target_link_libraries(ExampleBase android_native_app_glue log)
     endif(LLGL_ANDROID_PLATFORM)
     
     set(EXAMPLE_PROJECT_LIBS ExampleBase ${LLGL_MODULE_LIBS})

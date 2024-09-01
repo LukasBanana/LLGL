@@ -177,7 +177,7 @@ generate_html5_page()
     echo "Generate HTML5 page: $CURRENT_PROJECT"
 
     # Get source folder
-    ASSET_SOURCE_DIR="$SOURCE_DIR/examples/Media"
+    ASSETS_SOURCE_DIR="$SOURCE_DIR/examples/Shared/Assets"
     PROJECT_SOURCE_DIR="$SOURCE_DIR/examples/Cpp"
     if [[ "$CURRENT_PROJECT" == *D ]]; then
         PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:0:-1}"
@@ -212,7 +212,7 @@ generate_html5_page()
         # Read asset filenames to copy to package output
         ASSET_FILES=()
         for FILTER in $(cat $ASSETS_LIST_FILE); do
-            for FILE in $ASSET_SOURCE_DIR/$FILTER; do
+            for FILE in $ASSETS_SOURCE_DIR/$FILTER; do
                 ASSET_FILES+=( $(echo "$FILE" | tr -d '\r') ) # Remove '\r' characters when reading .txt file from WSL
             done
         done

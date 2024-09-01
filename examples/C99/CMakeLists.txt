@@ -17,6 +17,15 @@ project(LLGL_ExamplesC99)
 # Example project files
 find_source_files(FilesExampleBaseC99 C "${EXAMPLE_C99_PROJECTS_DIR}/ExampleBase")
 
+if(LLGL_ANDROID_PLATFORM)
+    find_source_files(FilesExampleBaseAndroid C "${SHARED_PLATFORM_DIR}/Android")
+endif()
+
+set(FilesExampleBaseAllC99 ${FilesExampleBaseC99})
+if(LLGL_ANDROID_PLATFORM)
+    list(APPEND FilesExampleBaseAllC99 ${FilesExampleBaseC99Android})
+endif()
+
 find_project_source_files( FilesExampleC99_HelloTriangle    "${EXAMPLE_C99_PROJECTS_DIR}/HelloTriangle" )
 find_project_source_files( FilesExampleC99_Offscreen        "${EXAMPLE_C99_PROJECTS_DIR}/Offscreen"     )
 find_project_source_files( FilesExampleC99_Texturing        "${EXAMPLE_C99_PROJECTS_DIR}/Texturing"     )
@@ -26,17 +35,16 @@ find_project_source_files( FilesExampleC99_Texturing        "${EXAMPLE_C99_PROJE
 
 source_group("Sources" FILES ${FilesExampleBaseC99})
 
+if(LLGL_ANDROID_PLATFORM)
+    source_group("Sources\\Android" FILES ${FilesExampleBaseC99Android})
+endif()
+
 
 # === Include directories ===
 
 include_directories("${EXTERNAL_INCLUDE_DIR}") # <stb/stb_image.h>
 include_directories("${EXAMPLE_C99_PROJECTS_DIR}/ExampleBase")
-
-if(GaussLib_INCLUDE_DIR)
-    include_directories(${GaussLib_INCLUDE_DIR})
-elseif(LLGL_BUILD_EXAMPLES)
-    message(FATAL_ERROR "LLGL_BUILD_EXAMPLES failed: missing 'GaussLib_INCLUDE_DIR' path")
-endif()
+include_directories("${SHARED_PLATFORM_DIR}")
 
 
 # === Projects ===
@@ -44,7 +52,7 @@ endif()
 # Example Projects
 if(LLGL_BUILD_EXAMPLES AND LLGL_BUILD_WRAPPER_C99)
     # Base project (static lib) for all examples
-    add_library(ExampleBase_C99 STATIC ${FilesExampleBaseC99})
+    add_library(ExampleBase_C99 STATIC ${FilesExampleBaseAllC99})
     set_target_properties(ExampleBase_C99 PROPERTIES LINKER_LANGUAGE C DEBUG_POSTFIX "D")
     if(WIN32)
         target_link_libraries(ExampleBase_C99 "${LLGL_MODULE_LIBS}")
@@ -52,10 +60,19 @@ if(LLGL_BUILD_EXAMPLES AND LLGL_BUILD_WRAPPER_C99)
         target_link_libraries(ExampleBase_C99 "${LLGL_MODULE_LIBS}" m)
     endif()
     set_target_properties(ExampleBase_C99 PROPERTIES FOLDER "Examples (C99)")
+
+    # Native "app glue" for Android examples
+    if(LLGL_ANDROID_PLATFORM)
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
+        target_link_libraries(ExampleBase_C99 android_native_app_glue log)
+    endif(LLGL_ANDROID_PLATFORM)
+
     set(EXAMPLE_C99_PROJECT_LIBS ExampleBase_C99 ${LLGL_MODULE_LIBS})
-    
+
     # C99 wrapper examples
-    add_llgl_example_project(Example_C99_HelloTriangle  C "${FilesExampleC99_HelloTriangle}"    "${EXAMPLE_C99_PROJECT_LIBS}")
+    if (NOT LLGL_ANDROID_PLATFORM)
+        add_llgl_example_project(Example_C99_HelloTriangle  C "${FilesExampleC99_HelloTriangle}"    "${EXAMPLE_C99_PROJECT_LIBS}")
+    endif()
     add_llgl_example_project(Example_C99_Offscreen      C "${FilesExampleC99_Offscreen}"        "${EXAMPLE_C99_PROJECT_LIBS}")
     add_llgl_example_project(Example_C99_Texturing      C "${FilesExampleC99_Texturing}"        "${EXAMPLE_C99_PROJECT_LIBS}")
 endif()
