@@ -61,7 +61,7 @@ int ExampleInit()
     LLGLReport report = {};
     if (llglLoadRenderSystemExt(&(g_config.rendererDesc), report) == 0)
     {
-        LOG_ERROR("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
+        llglLogErrorf("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
         return 1;
     }
 
@@ -92,7 +92,7 @@ int ExampleInit()
     Vertex* vertices = (Vertex*)malloc(vertexBufferSize);
     if (vertices == NULL)
     {
-        LOG_ERROR("Failed to allocate %zu bytes for vertex buffer\n", vertexBufferSize);
+        llglLogErrorf("Failed to allocate %zu bytes for vertex buffer\n", vertexBufferSize);
         return 1;
     }
 
@@ -186,7 +186,7 @@ int ExampleInit()
         LLGLReport shaderReport = llglGetShaderReport(shaders[i]);
         if (llglHasReportErrors(shaderReport))
         {
-            LOG_ERROR("%s\n", llglGetReportText(shaderReport));
+            llglLogErrorf("%s\n", llglGetReportText(shaderReport));
             return 1;
         }
     }
@@ -238,7 +238,7 @@ int ExampleInit()
     LLGLReport pipelineReport = llglGetPipelineStateReport(pipeline);
     if (llglHasReportErrors(pipelineReport))
     {
-        LOG_ERROR("%s\n", llglGetReportText(pipelineReport));
+        llglLogErrorf("%s\n", llglGetReportText(pipelineReport));
         return 1;
     }
 
@@ -316,7 +316,7 @@ int ExampleInit()
     const char* outputFilename = "Offscreen.Results.png";
     if (stbi_write_png(outputFilename, FRAME_WIDTH, FRAME_HEIGHT, 4, imageData, (int)imageRowStride) == 0)
     {
-        LOG_ERROR("Failed to save image to disk: %s\n", outputFilename);
+        llglLogErrorf("Failed to save image to disk: %s\n", outputFilename);
         return 1;
     }
 

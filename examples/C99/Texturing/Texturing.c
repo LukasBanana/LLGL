@@ -27,11 +27,13 @@ struct ExampleData
     LLGLSampler         samplers[3];
     float               rotation;
     size_t              indexCount;
+    int                 showcaseIndex;
 }
 g_example =
 {
-    .rotation   = -20.0f,
-    .indexCount = 0,
+    .rotation       = -20.0f,
+    .indexCount     = 0,
+    .showcaseIndex  = 0,
 };
 
 void TexturingLoop(double dt);
@@ -83,21 +85,31 @@ int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char
     };
     g_example.sceneBuffer = llglCreateBuffer(&sceneBufferDesc, NULL);
 
-    // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
-    const char* imageFilename = "../../Shared/Assets/Textures/Crate.jpg";
+    // Load image asset
+    const char* imageFilename = "Textures/Crate.jpg";
 
-    int imageSize[2] = { 0, 0 }, texComponents = 0;
-    unsigned char* imageBuffer = stbi_load(imageFilename, &imageSize[0], &imageSize[1], &texComponents, 0);
-    if (!imageBuffer)
-    {
-        LOG_ERROR("Failed to load image: %s\n", imageFilename);
+    AssetContainer imageAsset = read_asset(imageFilename);
+    if (imageAsset.data == NULL)
         return 1;
-    }
+
+    // Read image data from asset using STBI library (see http://nothings.org/stb_image.h)
+    const LLGLFormatAttributes* formatAttribs = llglGetFormatAttribs(LLGLFormatRGBA8UNorm);
+    int imageSize[2] = { 0, 0 }, texComponents = 0;
+    unsigned char* imageBuffer = stbi_load_from_memory(
+        (const stbi_uc*)imageAsset.data,    // Asset content
+        (int)imageAsset.size,               // Asset content size
+        &imageSize[0],                      // Image width
+        &imageSize[1],                      // Image height
+        &texComponents,                     // Number of pixel components
+        formatAttribs->components           // Required components - make it dependent on the hardware texture format
+    );
+    if (!imageBuffer)
+        return 1;
 
     // Create texture
     const LLGLImageView imageView =
     {
-        .format     = (texComponents == 4 ? LLGLImageFormatRGBA : LLGLImageFormatRGB), // Image color format (RGBA or RGB)
+        .format     = (formatAttribs->components == 4 ? LLGLImageFormatRGBA : LLGLImageFormatRGB), // Image color format (RGBA or RGB)
         .dataType   = LLGLDataTypeUInt8, // Data tpye (unsigned char => 8-bit unsigned integer)
         .data       = imageBuffer, // Image source buffer
         .dataSize   = (size_t)(imageSize[0]*imageSize[1]*texComponents), // Image buffer size
@@ -110,6 +122,10 @@ int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char
         .miscFlags  = LLGLMiscGenerateMips,
     };
     g_example.colorTexture = llglCreateTexture(&texDesc, &imageView);
+
+    // Release image buffer and asset
+    stbi_image_free(imageBuffer);
+    free_asset(imageAsset);
 
     // Create samplers
     LLGLSamplerDescriptor anisotropySamplerDesc = g_defaultSamplerDesc;
@@ -137,16 +153,22 @@ int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char
     const LLGLShaderDescriptor vertShaderDesc =
     {
         .type                   = LLGLShaderTypeVertex,
-        .source                 = "../../Cpp/Texturing/Example.vert",
+        .source                 = "Texturing.vert",
         .sourceType             = LLGLShaderSourceTypeCodeFile,
         .vertex.numInputAttribs = ARRAY_SIZE(vertexAttributes),
         .vertex.inputAttribs    = vertexAttributes,
+#if LLGLEXAMPLE_MOBILE
+        .profile                = "300 es",
+#endif
     };
     const LLGLShaderDescriptor fragShaderDesc =
     {
         .type                   = LLGLShaderTypeFragment,
-        .source                 = "../../Cpp/Texturing/Example.frag",
-        .sourceType             = LLGLShaderSourceTypeCodeFile
+        .source                 = "Texturing.frag",
+        .sourceType             = LLGLShaderSourceTypeCodeFile,
+#if LLGLEXAMPLE_MOBILE
+        .profile                = "300 es",
+#endif
     };
 
     // Specify vertex attributes for vertex shader
@@ -161,7 +183,7 @@ int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char
         LLGLReport shaderReport = llglGetShaderReport(shaders[i]);
         if (llglHasReportErrors(shaderReport))
         {
-            LOG_ERROR("%s\n", llglGetReportText(shaderReport));
+            llglLogErrorf("%s\n", llglGetReportText(shaderReport));
             return 1;
         }
     }
@@ -200,7 +222,7 @@ int TexturingInit(const LLGLRenderSystemDescriptor* rendererDesc, int argc, char
     LLGLReport pipelineReport = llglGetPipelineStateReport(g_example.pipeline);
     if (llglHasReportErrors(pipelineReport))
     {
-        LOG_ERROR("%s\n", llglGetReportText(pipelineReport));
+        llglLogErrorf("%s\n", llglGetReportText(pipelineReport));
         return 1;
     }
 
@@ -212,6 +234,8 @@ void TexturingLoop(double dt)
     // Update scene by mouse events
     if (key_pressed(LLGLKeyLButton))
         g_example.rotation += mouse_movement_x() * 0.5f;
+    if (key_pushed(LLGLKeyTab))
+        g_example.showcaseIndex = (g_example.showcaseIndex + 1) % 3;
 
     // Begin recording commands
     llglBegin(g_commandBuffer);
@@ -243,7 +267,7 @@ void TexturingLoop(double dt)
 
             llglSetResource(0, LLGL_GET_AS(LLGLResource, g_example.sceneBuffer));
             llglSetResource(1, LLGL_GET_AS(LLGLResource, g_example.colorTexture));
-            llglSetResource(2, LLGL_GET_AS(LLGLResource, g_example.samplers[0]));
+            llglSetResource(2, LLGL_GET_AS(LLGLResource, g_example.samplers[g_example.showcaseIndex]));
 
             // Draw cube mesh with index and vertex buffers
             llglDrawIndexed((uint32_t)g_example.indexCount, 0);

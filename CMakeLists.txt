@@ -351,7 +351,14 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
     endif()
 
     # Configure linker settings
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG} DEBUG_POSTFIX "D")
+    if(LLGL_ANDROID_PLATFORM)
+        # When linking the libExample*.so library for Android, we link with C++ semantics.
+        # Otherwise, the libc++_shared.so library will be unintentionally included,
+        # since the static dependencies like libLLGL.so must be build with C++, regardingless of the example project's language
+        set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+    else()
+        set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG} DEBUG_POSTFIX "D")
+    endif()
     
     # Configure working directory and project solution folder
     if(${PROJECT_NAME} MATCHES "Example_C99_+")

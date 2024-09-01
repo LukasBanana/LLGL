@@ -232,6 +232,7 @@ private:
                 pipelineDesc.viewports                              = { shadowMapResolution };
             }
             pipelineShadowMap = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineShadowMap);
         }
 
         // Create graphics pipeline for scene rendering
@@ -248,6 +249,7 @@ private:
                 pipelineDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
             }
             pipelineScene = renderer->CreatePipelineState(pipelineDesc);
+            ReportPSOErrors(pipelineScene);
         }
     }
 

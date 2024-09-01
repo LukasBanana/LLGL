@@ -10,6 +10,7 @@
 
 
 #include <LLGL-C/LLGLWrapper.h>
+#include <LLGL-C/FlagsAndDescriptors.h>
 #include <LLGL-C/Window.h>
 #include <LLGL-C/Canvas.h>
 #include <LLGL-C/Display.h>

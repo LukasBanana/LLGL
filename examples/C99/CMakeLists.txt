@@ -18,7 +18,7 @@ project(LLGL_ExamplesC99)
 find_source_files(FilesExampleBaseC99 C "${EXAMPLE_C99_PROJECTS_DIR}/ExampleBase")
 
 if(LLGL_ANDROID_PLATFORM)
-    find_source_files(FilesExampleBaseAndroid C "${SHARED_PLATFORM_DIR}/Android")
+    find_source_files(FilesExampleBaseC99Android C "${SHARED_PLATFORM_DIR}/Android")
 endif()
 
 set(FilesExampleBaseAllC99 ${FilesExampleBaseC99})

@@ -14,6 +14,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
+#if defined(ANDROID) || defined(__ANDROID__)
+#   include "Android/AppUtils.h"
+#endif
+
 
 /*
  * Global constants
@@ -42,6 +46,7 @@ const LLGLSamplerDescriptor g_defaultSamplerDesc =
     .compareOp      = LLGLCompareOpLess,
     .borderColor    = { 0.0f, 0.0f, 0.0f, 0.0f },
 };
+
 
 /*
  * Global variables
@@ -73,6 +78,7 @@ static struct ExampleEvents
 {
     float   mouseMotion[2];
     bool    keyDown[256];
+    bool    keyPushed[256];
 }
 g_events =
 {
@@ -83,10 +89,13 @@ static void reset_event_status()
 {
     g_events.mouseMotion[0] = 0.0f;
     g_events.mouseMotion[1] = 0.0f;
+    memset(g_events.keyPushed, 0, sizeof(g_events.keyPushed));
 }
 
 static void key_down_event(LLGLWindow sender, LLGLKey keyCode)
 {
+    if (!g_events.keyDown[keyCode])
+        g_events.keyPushed[keyCode] = true;
     g_events.keyDown[keyCode] = true;
 }
 
@@ -128,10 +137,15 @@ static float aspect_ratio()
 
 static void example_config(const ExampleArgs* args)
 {
-#if __ANDROID__
-    g_config.rendererDesc.moduleName    = "OpenGLES3";
-    g_config.rendererDesc.androidApp    = args->androidApp;
+#if defined(ANDROID) || defined(__ANDROID__)
+    struct android_app* androidApp = args->androidApp;
 
+    g_config.rendererDesc.moduleName    = "OpenGLES3";
+    g_config.rendererDesc.androidApp    = androidApp;
+
+    // Store pointer to asset manager so we can load assets from the APK bundle
+    if (androidApp->activity != NULL)
+        AndroidSetAssetManager(androidApp->activity->assetManager);
 #else
     g_config.rendererDesc.moduleName    = "OpenGL";
     g_config.resolution[0]              = 800;
@@ -143,6 +157,36 @@ static void example_config(const ExampleArgs* args)
 #endif
 }
 
+void log_renderer_info()
+{
+    LLGLRendererInfo info;
+    llglGetRendererInfo(&info);
+
+    LLGLExtent2D swapChainRes;
+    LLGLRenderTarget swapChainRT = LLGL_GET_AS(LLGLRenderTarget, g_swapChain);
+    llglGetRenderTargetResolution(swapChainRT, &swapChainRes);
+
+    llglLogPrintf(
+        "render system:\n"
+        "  renderer:           %s\n"
+        "  device:             %s\n"
+        "  vendor:             %s\n"
+        "  shading language:   %s\n"
+        "\n"
+        "swap-chain:\n"
+        "  resolution:         %u x %u\n"
+        "  samples:            %u\n"
+        "\n",
+        info.rendererName,
+        info.deviceName,
+        info.vendorName,
+        info.shadingLanguageName,
+        swapChainRes.width,
+        swapChainRes.height,
+        llglGetRenderTargetSamples(swapChainRT)
+    );
+}
+
 int example_init(const char* title)
 {
     // Register standard output as log callback
@@ -152,9 +196,9 @@ int example_init(const char* title)
     LLGLReport report = llglAllocReport();
     if (llglLoadRenderSystemExt(&(g_config.rendererDesc), report) == 0)
     {
-        LOG_ERROR("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
+        llglLogErrorf("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
         if (llglHasReportErrors(report))
-            LOG_ERROR("%s", llglGetReportText(report));
+            llglLogErrorf("%s", llglGetReportText(report));
         llglFreeReport(report);
         return 1;
     }
@@ -170,19 +214,26 @@ int example_init(const char* title)
         .samples        = g_config.samples,                     // check if LLGL adapts sample count that is too high
     };
     g_swapChain = llglCreateSwapChain(&swapChainDesc);
+    g_surface = llglGetSurface(g_swapChain);
 
     // Enable V-sync
     llglSetVsyncInterval(g_swapChain, 1);
 
-    // Set window title and show window
-    g_surface = llglGetSurface(g_swapChain);
-    LLGLWindow window = LLGL_GET_AS(LLGLWindow, g_surface);
-
+    // Set surface title to example name
     char fullTitle[1024] = { L'\0' };
     snprintf(fullTitle, sizeof(fullTitle), "LLGL C99 Example: %s", title);
+
+#if LLGLEXAMPLE_MOBILE
+    // Set canvas title
+    LLGLCanvas canvas = LLGL_GET_AS(LLGLCanvas, g_surface);
+    llglSetCanvasTitleUTF8(canvas, fullTitle);
+#else
+    // Set window title and show window
+    LLGLWindow window = LLGL_GET_AS(LLGLWindow, g_surface);
     llglSetWindowTitleUTF8(window, fullTitle);
 
     // Register event listener to respond to move and keyboard events
+    memset(&g_events, 0, sizeof(g_events));
     const LLGLWindowEventListener windowCallbacks =
     {
         .onKeyDown      = key_down_event,
@@ -193,6 +244,7 @@ int example_init(const char* title)
 
     // Show window after its setup is done
     llglShowWindow(window, true);
+#endif
 
     // Create command buffer to submit subsequent graphics commands to the GPU
     LLGLCommandBufferDescriptor cmdBufferDesc =
@@ -212,7 +264,19 @@ int example_init(const char* title)
     const float aspectRatio = aspect_ratio();
     perspective_projection(g_projection, aspectRatio, /*nearPlane:*/ 0.1f, /*farPlane;*/ 100.0f, /*fieldOfView:*/ DEG2RAD(45.0f));
 
+    // Print information about the render system and swap-chain
+    log_renderer_info();
+
     return 0;
+}
+
+static bool is_example_running()
+{
+#if LLGLEXAMPLE_MOBILE
+    return true;
+#else
+    return !llglHasWindowQuit(LLGL_GET_AS(LLGLWindow, g_surface)) && !g_events.keyDown[LLGLKeyEscape];
+#endif
 }
 
 static bool example_poll_events()
@@ -221,7 +285,7 @@ static bool example_poll_events()
     reset_event_status();
 
     // Process surface and events and check if window was closed
-    return llglProcessSurfaceEvents() && !llglHasWindowQuit(LLGL_GET_AS(LLGLWindow, g_surface)) && !g_events.keyDown[LLGLKeyEscape];
+    return llglProcessSurfaceEvents() && is_example_running();
 }
 
 static void example_release()
@@ -445,6 +509,11 @@ void matrix_rotate(float outMatrix[4][4], float x, float y, float z, float angle
 bool key_pressed(LLGLKey keyCode)
 {
     return g_events.keyDown[keyCode];
+}
+
+bool key_pushed(LLGLKey keyCode)
+{
+    return g_events.keyPushed[keyCode];
 }
 
 float mouse_movement_x()

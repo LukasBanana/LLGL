@@ -43,7 +43,9 @@ LLGLCanvasEventListener;
 LLGL_C_EXPORT LLGLCanvas llglCreateCanvas(const LLGLCanvasDescriptor* canvasDesc);
 LLGL_C_EXPORT void llglReleaseCanvas(LLGLCanvas canvas);
 LLGL_C_EXPORT void llglSetCanvasTitle(LLGLCanvas canvas, const wchar_t* title);
+LLGL_C_EXPORT void llglSetCanvasTitleUTF8(LLGLCanvas canvas, const char* title);
 LLGL_C_EXPORT size_t llglGetCanvasTitle(LLGLCanvas canvas, size_t outTitleLength, wchar_t* outTitle LLGL_ANNOTATE(NULL));
+LLGL_C_EXPORT size_t llglGetCanvasTitleUTF8(LLGLCanvas canvas, size_t outTitleLength, char* outTitle LLGL_ANNOTATE(NULL));
 //LLGL_DEPRECATED("llglHasCanvasQuit is deprecated since 0.04b; Use custom state instead!")
 LLGL_C_EXPORT bool llglHasCanvasQuit(LLGLCanvas canvas);
 LLGL_C_EXPORT void llglSetCanvasUserData(LLGLCanvas canvas, void* userData);

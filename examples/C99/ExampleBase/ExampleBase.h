@@ -12,10 +12,11 @@
 #include <LLGL-C/LLGL.h>
 #include <stdbool.h>
 #include <stdio.h> // fprintf()
+#include "FileUtils.h"
 
-#if __ANDROID__
+#if defined(ANDROID) || defined(__ANDROID__)
 #   include <android_native_app_glue.h>
-#   include <android/log.h>
+#   define LLGLEXAMPLE_MOBILE 1
 #endif
 
 
@@ -28,10 +29,7 @@
 #define ARRAY_SIZE(A)   (sizeof(A)/sizeof((A)[0]))
 
 
-#if __ANDROID__
-
-#define LOG_ERROR(...) \
-    (void)__android_log_print(ANDROID_LOG_ERROR, "threaded_app", __VA_ARGS__)
+#if defined(ANDROID) || defined(__ANDROID__)
 
 #define IMPLEMENT_EXAMPLE_MAIN(INIT, LOOP)          \
     void android_main(struct android_app* state)    \
@@ -41,9 +39,6 @@
     }
 
 #else
-
-#define LOG_ERROR(...) \
-    fprintf(stderr, __VA_ARGS__)
 
 #define IMPLEMENT_EXAMPLE_MAIN(INIT, LOOP)      \
     int main(int argc, char* argv[])            \
@@ -178,6 +173,9 @@ void matrix_rotate(float outMatrix[4][4], float x, float y, float z, float angle
 
 // Returns true if the specified key is currently pressed down.
 bool key_pressed(LLGLKey keyCode);
+
+// Returns true if the speciifed key was pushed down. Only true during one frame until the key is released again.
+bool key_pushed(LLGLKey keyCode);
 
 // Returns the mouse movement on the X-axis.
 float mouse_movement_x();

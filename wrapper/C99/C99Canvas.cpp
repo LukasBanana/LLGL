@@ -117,6 +117,11 @@ LLGL_C_EXPORT void llglSetCanvasTitle(LLGLCanvas canvas, const wchar_t* title)
     LLGL_PTR(Canvas, canvas)->SetTitle(title);
 }
 
+LLGL_C_EXPORT void llglSetCanvasTitleUTF8(LLGLCanvas canvas, const char* title)
+{
+    LLGL_PTR(Canvas, canvas)->SetTitle(title);
+}
+
 LLGL_C_EXPORT size_t llglGetCanvasTitle(LLGLCanvas canvas, size_t outTitleLength, wchar_t* outTitle)
 {
     UTF8String title = LLGL_PTR(Canvas, canvas)->GetTitle();
@@ -127,6 +132,17 @@ LLGL_C_EXPORT size_t llglGetCanvasTitle(LLGLCanvas canvas, size_t outTitleLength
         memcpy(outTitle, titleUTF16.data(), outTitleLength * sizeof(wchar_t));
     }
     return titleUTF16.size();
+}
+
+LLGL_C_EXPORT size_t llglGetCanvasTitleUTF8(LLGLCanvas canvas, size_t outTitleLength, char* outTitle)
+{
+    UTF8String title = LLGL_PTR(Canvas, canvas)->GetTitle();
+    if (outTitle != nullptr)
+    {
+        outTitleLength = std::min(outTitleLength, title.size() + 1);
+        ::memcpy(outTitle, title.data(), outTitleLength * sizeof(char));
+    }
+    return title.size() + 1;
 }
 
 LLGL_C_EXPORT bool llglHasCanvasQuit(LLGLCanvas canvas)
