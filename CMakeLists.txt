@@ -320,10 +320,10 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         # Set app icon for macOS and iOS
         set(BundleResourceFiles "${RES_FILES};${SHADER_FILES}")
         if(LLGL_IOS_PLATFORM)
-            set(BundleInfoPlistFile "${EXTERNAL_MODULE_DIR}/IOSBundleInfo.plist.in")
+            set(BundleInfoPlistFile "${SHARED_PLATFORM_DIR}/iOS/IOSBundleInfo.plist.in")
             set(BundleIconFile "AppIcon.png")
         else()
-            set(BundleInfoPlistFile "${EXTERNAL_MODULE_DIR}/MacOSXBundleInfo.plist.in")
+            set(BundleInfoPlistFile "${SHARED_PLATFORM_DIR}/macOS/MacOSXBundleInfo.plist.in")
             set(BundleIconFile "AppIcon.icns")
         endif()
 
