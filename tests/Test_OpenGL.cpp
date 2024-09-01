@@ -160,7 +160,7 @@ int main()
             #if TEST_STORAGE_BUFFER
             "#version 430\n"
             #else
-            "#version 130\n"
+            "#version 330\n"
             #endif
             "uniform mat4 projection;\n"
             #if TEST_STORAGE_BUFFER
@@ -194,7 +194,7 @@ int main()
         // Create fragment shader
         auto fragShaderSource =
         (
-            "#version 130\n"
+            "#version 330\n"
             "out vec4 fragColor;\n"
             "uniform sampler2D tex;\n"
             "uniform vec4 color;\n"
