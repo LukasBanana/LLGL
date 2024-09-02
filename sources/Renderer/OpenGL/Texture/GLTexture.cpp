@@ -8,7 +8,6 @@
 #include "GLTexture.h"
 #include "GLTextureViewPool.h"
 #include "GLRenderbuffer.h"
-#include "GLReadTextureFBO.h"
 #include "GLMipGenerator.h"
 #ifdef LLGL_GL_ENABLE_OPENGL2X
 #   include "GL2XSampler.h"
@@ -451,30 +450,48 @@ static void GLCopyImageSubData(
 
 #endif // /GL_ARB_copy_image
 
+static GLenum GetGLAttachmentForInternalFormat(GLenum internalFormat)
+{
+    if (GLTypes::IsDepthFormat(internalFormat))
+        return GL_DEPTH_ATTACHMENT;
+    if (GLTypes::IsDepthStencilFormat(internalFormat))
+        return GL_DEPTH_STENCIL_ATTACHMENT;
+    return GL_COLOR_ATTACHMENT0;
+}
+
+static void ReadFramebufferAttachTexture(const GLTexture& texture, GLint mipLevel, GLint arrayLayer = 0)
+{
+    const GLenum attachment = GetGLAttachmentForInternalFormat(texture.GetGLInternalFormat());
+    GLFramebuffer::AttachTexture(texture, attachment, static_cast<GLint>(mipLevel), arrayLayer, GL_READ_FRAMEBUFFER);
+}
+
 // Copies image data from a source texture to a destination texture.
 static void GLCopyTexSubImagePrimary(
-    const TextureType       type,
-    const GLTextureTarget   target,
+    const TextureType       textureType,
     GLuint                  dstTextureID,
     GLint                   dstLevel,
     const Offset3D&         dstOffset,
     GLTexture&              srcTexture,
     GLint                   srcLevel,
-    Offset3D                srcOffset,
+    const Offset3D&         srcOffset,
     const Extent3D&         extent)
 {
-    const GLenum targetGL = GLTypes::Map(type);
+    const GLTextureTarget target = GLStateManager::GetTextureTarget(textureType);
+    const GLenum targetGL = GLTypes::Map(textureType);
 
     /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in copy texture operator */
-    GLReadTextureFBO readFBO;
+    GLFramebuffer readFBO;
+    readFBO.GenFramebuffer();
+
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, readFBO.GetID());
     GLStateManager::Get().BindTexture(target, dstTextureID);
 
-    switch (type)
+    switch (textureType)
     {
         case TextureType::Texture1D:
         {
             #ifdef LLGL_OPENGL
-            readFBO.Attach(srcTexture, srcLevel, srcOffset);
+            ReadFramebufferAttachTexture(srcTexture, srcLevel);
             glCopyTexSubImage1D(
                 targetGL,
                 dstLevel,
@@ -491,7 +508,7 @@ static void GLCopyTexSubImagePrimary(
         {
             for_range(y, extent.height)
             {
-                readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.y + y);
                 glCopyTexSubImage2D(
                     targetGL,
                     dstLevel,
@@ -502,7 +519,6 @@ static void GLCopyTexSubImagePrimary(
                     static_cast<GLsizei>(extent.width),
                     1 // height
                 );
-                srcOffset.y++;
             }
         }
         break;
@@ -510,7 +526,7 @@ static void GLCopyTexSubImagePrimary(
         case TextureType::Texture2D:
         case TextureType::Texture2DMS:
         {
-            readFBO.Attach(srcTexture, srcLevel, srcOffset);
+            ReadFramebufferAttachTexture(srcTexture, srcLevel);
             glCopyTexSubImage2D(
                 targetGL,
                 dstLevel,
@@ -528,7 +544,7 @@ static void GLCopyTexSubImagePrimary(
         {
             for_range(z, extent.depth)
             {
-                readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.z + z);
                 glCopyTexSubImage2D(
                     GLTypes::ToTextureCubeMap(dstOffset.z + z),
                     dstLevel,
@@ -539,7 +555,6 @@ static void GLCopyTexSubImagePrimary(
                     static_cast<GLsizei>(extent.width),
                     static_cast<GLsizei>(extent.height)
                 );
-                srcOffset.z++;
             }
         }
         break;
@@ -551,7 +566,7 @@ static void GLCopyTexSubImagePrimary(
         {
             for_range(z, extent.depth)
             {
-                readFBO.Attach(srcTexture, srcLevel, srcOffset);
+                ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.z + z);
                 glCopyTexSubImage3D(
                     targetGL,
                     dstLevel,
@@ -563,7 +578,128 @@ static void GLCopyTexSubImagePrimary(
                     static_cast<GLsizei>(extent.width),
                     static_cast<GLsizei>(extent.height)
                 );
-                srcOffset.z++;
+            }
+        }
+        break;
+    }
+}
+
+static void GLReadPixelsFromTexture(
+    const MutableImageView& dstImageView,
+    GLTexture&              srcTexture,
+    GLint                   srcLevel,
+    const Offset3D&         srcOffset,
+    const Extent3D&         extent)
+{
+    const TextureType       textureType = srcTexture.GetType();
+    const GLTextureTarget   target      = GLStateManager::GetTextureTarget(textureType);
+
+    const GLenum targetGL   = GLTypes::Map(textureType);
+    const GLenum formatGL   = GLTypes::Map(dstImageView.format);
+    const GLenum dataTypeGL = GLTypes::Map(dstImageView.dataType);
+
+    char* dstImageData = reinterpret_cast<char*>(dstImageView.data);
+
+    /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in read pixel operator */
+    GLFramebuffer readFBO;
+    readFBO.GenFramebuffer();
+
+    GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::ReadFramebuffer, readFBO.GetID());
+
+    switch (textureType)
+    {
+        case TextureType::Texture1D:
+        {
+            #ifdef LLGL_OPENGL
+            ReadFramebufferAttachTexture(srcTexture, srcLevel);
+            glReadPixels(
+                srcOffset.x,
+                0,
+                static_cast<GLsizei>(extent.width),
+                1,
+                formatGL,
+                dataTypeGL,
+                dstImageData
+            );
+            #endif
+        }
+        break;
+
+        case TextureType::Texture1DArray:
+        {
+            const std::size_t imageLayerStride = dstImageView.dataSize / extent.height; //TODO: calcualte required size independently of input 'dataSize'
+            for_range(y, extent.height)
+            {
+                ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.y + y);
+                glReadPixels(
+                    srcOffset.x,
+                    0,
+                    static_cast<GLsizei>(extent.width),
+                    1,
+                    formatGL,
+                    dataTypeGL,
+                    dstImageData
+                );
+                dstImageData += imageLayerStride;
+            }
+        }
+        break;
+
+        case TextureType::Texture2D:
+        case TextureType::Texture2DMS:
+        {
+            ReadFramebufferAttachTexture(srcTexture, srcLevel);
+            glReadPixels(
+                srcOffset.x,
+                srcOffset.y,
+                static_cast<GLsizei>(extent.width),
+                static_cast<GLsizei>(extent.height),
+                formatGL,
+                dataTypeGL,
+                dstImageData
+            );
+        }
+        break;
+
+        case TextureType::TextureCube:
+        {
+            const std::size_t imageLayerStride = dstImageView.dataSize / extent.depth; //TODO: calcualte required size independently of input 'dataSize'
+            for_range(z, extent.depth)
+            {
+                ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.z + z);
+                glReadPixels(
+                    srcOffset.x,
+                    srcOffset.y,
+                    static_cast<GLsizei>(extent.width),
+                    static_cast<GLsizei>(extent.height),
+                    formatGL,
+                    dataTypeGL,
+                    dstImageData
+                );
+                dstImageData += imageLayerStride;
+            }
+        }
+        break;
+
+        case TextureType::Texture3D:
+        case TextureType::Texture2DArray:
+        case TextureType::Texture2DMSArray:
+        case TextureType::TextureCubeArray:
+        {
+            const std::size_t imageLayerStride = dstImageView.dataSize / extent.depth; //TODO: calcualte required size independently of input 'dataSize'
+            for_range(z, extent.depth)
+            {
+                ReadFramebufferAttachTexture(srcTexture, srcLevel, srcOffset.z + z);
+                glReadPixels(
+                    srcOffset.x,
+                    srcOffset.y,
+                    static_cast<GLsizei>(extent.width),
+                    static_cast<GLsizei>(extent.height),
+                    formatGL,
+                    dataTypeGL,
+                    dstImageData
+                );
+                dstImageData += imageLayerStride;
             }
         }
         break;
@@ -588,7 +724,6 @@ static void GLCopyTexSubImage(
     {
         GLCopyTexSubImagePrimary(
             type,
-            target,
             dstTexture.GetID(),
             dstLevel,
             dstOffset,
@@ -762,46 +897,94 @@ static void GLGetTextureSubImage(
 
 #endif // /GL_ARB_get_texture_sub_image
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL
 
 // Forwards the call to glGetTexImage() and converts the output data if necessary
 static void GLGetTexImage(
-    TextureType type,
-    GLint       mipLevel,
-    ImageFormat format,
-    DataType    dataType,
-    void*       data,
-    std::size_t numTexels)
+    GLTextureTarget         target,
+    GLuint                  textureID,
+    GLenum                  internalFormat,
+    GLint                   mipLevel,
+    const MutableImageView& dstImageView,
+    std::size_t             numTexels)
 {
-    if (format == ImageFormat::Stencil && GLGetVersion() < 440)
+    const GLenum targetGL = GLStateManager::ToGLTextureTarget(target);
+
+    GLStateManager::Get().BindTexture(target, textureID);
+
+    if (dstImageView.format == ImageFormat::Stencil && GLGetVersion() < 440)
     {
         /* GL_STENCIL_INDEX can only be passed into glGetTexImage in GL 4.4+, so read GL_DEPTH_STENCIL and separate stencil manually */
-        std::unique_ptr<GLDepthStencilPair[]> dsImageData = MakeUniqueArray<GLDepthStencilPair>(numTexels);
+        std::unique_ptr<GLDepthStencilPair[]> intermediateDSData = MakeUniqueArray<GLDepthStencilPair>(numTexels);
 
-        glGetTexImage(
-            GLTypes::Map(type),
-            mipLevel,
-            GL_DEPTH_STENCIL,
-            GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
-            dsImageData.get()
-        );
+        if (target == GLTextureTarget::TextureCubeMap)
+        {
+            /* Only glGetTextureImage() accepts the generic GL_TEXTURE_CUBE_MAP target, so query each cube face individually when using glTexImage() */
+            const std::size_t cubeFacePixelStride = (sizeof(GLDepthStencilPair) * numTexels) / 6; //TODO: calculate required stride independently of input 'numTexels'
+            char* dstImageData = reinterpret_cast<char*>(intermediateDSData.get());
+            for_range(cubeFaceIndex, 6)
+            {
+                GLenum cubeFaceTargetGL = GLTypes::ToTextureCubeMap(cubeFaceIndex);
+                glGetTexImage(
+                    cubeFaceTargetGL,
+                    mipLevel,
+                    GL_DEPTH_STENCIL,
+                    GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                    dstImageData
+                );
+                dstImageData += cubeFacePixelStride;
+            }
+        }
+        else
+        {
+            glGetTexImage(
+                targetGL,
+                mipLevel,
+                GL_DEPTH_STENCIL,
+                GL_FLOAT_32_UNSIGNED_INT_24_8_REV,
+                intermediateDSData.get()
+            );
+        }
 
         /* Copy stencil values into output buffer */
-        std::uint8_t* dst = reinterpret_cast<std::uint8_t*>(data);
+        std::uint8_t* dst = reinterpret_cast<std::uint8_t*>(dstImageView.data);
         for_range(i, numTexels)
-            dst[i] = dsImageData[i].stencil;
+            dst[i] = intermediateDSData[i].stencil;
     }
     else
     {
-        glGetTexImage(
-            GLTypes::Map(type),
-            mipLevel,
-            GLTypes::Map(format, IsIntDataType(dataType)),
-            GLTypes::Map(dataType),
-            data
-        );
+        if (target == GLTextureTarget::TextureCubeMap)
+        {
+            /* Only glGetTextureImage() accepts the generic GL_TEXTURE_CUBE_MAP target, so query each cube face individually when using glTexImage() */
+            const std::size_t cubeFacePixelStride = dstImageView.dataSize / 6; //TODO: calculate required stride independently of input 'dataSize'
+            char* dstImageData = reinterpret_cast<char*>(dstImageView.data);
+            for_range(cubeFaceIndex, 6)
+            {
+                GLenum cubeFaceTargetGL = GLTypes::ToTextureCubeMap(cubeFaceIndex);
+                glGetTexImage(
+                    cubeFaceTargetGL,
+                    mipLevel,
+                    GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+                    GLTypes::Map(dstImageView.dataType),
+                    dstImageData
+                );
+                dstImageData += cubeFacePixelStride;
+            }
+        }
+        else
+        {
+            glGetTexImage(
+                targetGL,
+                mipLevel,
+                GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.dataType),
+                dstImageView.data
+            );
+        }
     }
 }
+
+#endif // /LLGL_OPENGL
 
 static void GLGetTextureImage(
     GLTexture&                  textureGL,
@@ -814,6 +997,8 @@ static void GLGetTextureImage(
     /* Translate source region into actual texture dimensions */
     const Offset3D offset = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
     const Extent3D extent = CalcTextureExtent(type, region.extent, region.subresource.numArrayLayers);
+
+    #if LLGL_OPENGL // Use glGetTexImage() for desktop GL
 
     /* Check if source region must be copied into a staging texture */
     const GLint         mipLevel    = static_cast<GLint>(region.subresource.baseMipLevel);
@@ -853,7 +1038,6 @@ static void GLGetTextureImage(
         {
             GLCopyTexSubImagePrimary(
                 stagingTextureType,
-                stagingTextureTarget,
                 stagingTextureID,
                 0,
                 Offset3D{ 0, 0, 0 },
@@ -882,8 +1066,7 @@ static void GLGetTextureImage(
         #endif // /GL_ARB_direct_state_access
         {
             /* Bind texture and read image data from texture */
-            GLStateManager::Get().BindTexture(stagingTextureTarget, stagingTextureID);
-            GLGetTexImage(stagingTextureType, 0, dstImageView.format, dstImageView.dataType, dstImageView.data, numTexels);
+            GLGetTexImage(stagingTextureTarget, stagingTextureID, textureGL.GetGLInternalFormat(), 0, dstImageView, numTexels);
         }
 
         /* Delete temporary staging texture */
@@ -911,20 +1094,22 @@ static void GLGetTextureImage(
         {
             /* Bind texture and read image data from texture */
             const GLTextureTarget srcTextureTarget = GLStateManager::GetTextureTarget(type);
-            GLStateManager::Get().BindTexture(srcTextureTarget, srcTextureID);
-            GLGetTexImage(type, mipLevel, dstImageView.format, dstImageView.dataType, dstImageView.data, numTexels);
+            GLGetTexImage(GLStateManager::GetTextureTarget(type), srcTextureID, textureGL.GetGLInternalFormat(), mipLevel, dstImageView, numTexels);
         }
     }
-}
 
-#endif // /LLGL_OPENGL
+    #else // Use glReadPixels() for GLES/WebGL
+
+    /* Read pixels from source texture via intermediate read-FBO */
+    GLReadPixelsFromTexture(dstImageView, textureGL, static_cast<GLint>(region.subresource.baseMipLevel), offset, extent);
+
+    #endif // /LLGL_OPEGNL
+}
 
 void GLTexture::GetTextureSubImage(const TextureRegion& region, const MutableImageView& dstImageView, bool restoreBoundTexture)
 {
     if (!IsRenderbuffer())
     {
-        #ifdef LLGL_OPENGL
-
         #ifdef GL_ARB_get_texture_sub_image
         if (HasExtension(GLExt::ARB_get_texture_sub_image))
         {
@@ -948,13 +1133,6 @@ void GLTexture::GetTextureSubImage(const TextureRegion& region, const MutableIma
             else
                 GLGetTextureImage(*this, region, dstImageView);
         }
-
-        #else
-
-        //TODO: copy texture to unpack buffer, then map buffer range to CPU memory
-        LLGL_TRAP_NOT_IMPLEMENTED();
-
-        #endif // /LLGL_OPENGL
     }
 }
 

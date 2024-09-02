@@ -221,7 +221,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments()
 void GLRenderTarget::BuildColorAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget)
 {
     const GLenum binding = AllocColorAttachmentBinding(colorTarget);
-    if (auto* texture = attachmentDesc.texture)
+    if (attachmentDesc.texture != nullptr)
         BuildAttachmentWithTexture(binding, attachmentDesc);
     else
         BuildAttachmentWithRenderbuffer(binding, attachmentDesc.format);
@@ -247,7 +247,7 @@ void GLRenderTarget::BuildAttachmentWithTexture(GLenum binding, const Attachment
     auto* textureGL = LLGL_CAST(GLTexture*, attachmentDesc.texture);
 
     /* Validate resolution for MIP-map level */
-    auto mipLevel = attachmentDesc.mipLevel;
+    const std::uint32_t mipLevel = attachmentDesc.mipLevel;
     ValidateMipResolution(*textureGL, mipLevel);
 
     /* Attach texture to framebuffer */

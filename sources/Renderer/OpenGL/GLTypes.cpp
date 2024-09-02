@@ -285,7 +285,6 @@ GLenum Map(const DataType dataType)
 
 GLenum Map(const TextureType textureType)
 {
-    #ifdef LLGL_OPENGL
     switch (textureType)
     {
         case TextureType::Texture1D:        return GL_TEXTURE_1D;
@@ -298,16 +297,6 @@ GLenum Map(const TextureType textureType)
         case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
         case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
     }
-    #else
-    switch (textureType)
-    {
-        case TextureType::Texture2D:        return GL_TEXTURE_2D;
-        case TextureType::Texture3D:        return GL_TEXTURE_3D;
-        case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP;
-        case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
-        default:                            break;
-    }
-    #endif
     LLGL_TRAP_GL_MAP(TextureType, textureType);
 }
 
