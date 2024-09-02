@@ -11,13 +11,16 @@ The rendered result will be written to a PNG file called "Offscreen.Results.png"
 This image should look identical to the "Offscreen.png" image.
 */
 
+// Include STBI library to write PNG files - expected in <LLGL-ROOT>/external/stb/
+// Include this first to use regular fopen() for writing output,
+// since ExampleBase.h will override this to use the AAssetManager for file reading.
+#include <stb/stb_image_write.h> // stbi_write_png()
+
 #include <LLGL-C/LLGL.h>
 #include <ExampleBase.h>
 #include <stdio.h> // printf()
 #include <stdlib.h> // malloc()/free()
 #include <math.h> // sinf()/cosf()
-
-#include "../../../external/stb/stb_image_write.h" // stbi_write_png()
 
 #define FRAME_WIDTH             512
 #define FRAME_HEIGHT            512
@@ -57,6 +60,9 @@ float LerpColorWheel(float t, int component)
 
 int ExampleInit()
 {
+    // Register standard output as log callback
+    llglRegisterLogCallbackStd();
+
     // Load render system module
     LLGLReport report = {};
     if (llglLoadRenderSystemExt(&(g_config.rendererDesc), report) == 0)
@@ -161,14 +167,20 @@ int ExampleInit()
         .type       = LLGLShaderTypeVertex,
         .source     = "Offscreen.vert",
         .sourceType = LLGLShaderSourceTypeCodeFile,
-        .flags      = LLGLShaderCompilePatchClippingOrigin
+        .flags      = LLGLShaderCompilePatchClippingOrigin,
+#if LLGLEXAMPLE_MOBILE
+        .profile    = "300 es",
+#endif
     };
     LLGLShaderDescriptor fragShaderDesc =
     {
         .debugName  = "FragmentShader",
         .type       = LLGLShaderTypeFragment,
         .source     = "Offscreen.frag",
-        .sourceType = LLGLShaderSourceTypeCodeFile
+        .sourceType = LLGLShaderSourceTypeCodeFile,
+#if LLGLEXAMPLE_MOBILE
+        .profile    = "300 es",
+#endif
     };
 
     // Specify vertex attributes for vertex shader
@@ -313,12 +325,14 @@ int ExampleInit()
     llglReadTexture(texture, &dstRegion, &dstImageView);
 
     // Save results to disk
+#if defined(ANDROID) || defined(__ANDROID__)
+    const char* outputFilename = "/storage/emulated/0/Documents/Offscreen.Results.png";
+#else
     const char* outputFilename = "Offscreen.Results.png";
+#endif
+    llglLogPrintf("Writing result to PNG output: %s\n", outputFilename);
     if (stbi_write_png(outputFilename, FRAME_WIDTH, FRAME_HEIGHT, 4, imageData, (int)imageRowStride) == 0)
-    {
         llglLogErrorf("Failed to save image to disk: %s\n", outputFilename);
-        return 1;
-    }
 
     // Free temporary resources
     free(imageData);
