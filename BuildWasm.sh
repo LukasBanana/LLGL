@@ -201,7 +201,7 @@ generate_html5_page()
     # Replace meta data
     sed -e "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/g" \
         -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
-        "$SOURCE_DIR/examples/Cpp/ExampleBase/Wasm/index.html" > "$HTML5_ROOT/index.html"
+        "$SOURCE_DIR/examples/Shared/Platform/Wasm/index.html" > "$HTML5_ROOT/index.html"
     
     # Find all required assets in *.assets.txt file of respective project directory and copy them into app folder
     ASSET_DIR="$HTML5_ROOT/assets"
