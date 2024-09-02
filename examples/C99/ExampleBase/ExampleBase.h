@@ -139,6 +139,11 @@ extern float                g_projection[4][4];
 // Render system configuraiton.
 extern ExampleConfig        g_config;
 
+// Android app glue structure. Only available on Android platform.
+#if defined(ANDROID) || defined(__ANDROID__)
+extern struct android_app*  g_androidApp;
+#endif
+
 
 /*
  * Global functions

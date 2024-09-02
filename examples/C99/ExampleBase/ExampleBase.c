@@ -69,6 +69,10 @@ ExampleConfig       g_config            = { .rendererDesc.moduleName    = "OpenG
                                             .debugger                   = false,
                                             .noDepthStencil             = false };
 
+#if defined(ANDROID) || defined(__ANDROID__)
+struct android_app* g_androidApp        = NULL;
+#endif
+
 
 /*
  * Internals
@@ -138,14 +142,14 @@ static float aspect_ratio()
 static void example_config(const ExampleArgs* args)
 {
 #if defined(ANDROID) || defined(__ANDROID__)
-    struct android_app* androidApp = args->androidApp;
+    g_androidApp = args->androidApp;
 
     g_config.rendererDesc.moduleName    = "OpenGLES3";
-    g_config.rendererDesc.androidApp    = androidApp;
+    g_config.rendererDesc.androidApp    = g_androidApp;
 
     // Store pointer to asset manager so we can load assets from the APK bundle
-    if (androidApp->activity != NULL)
-        AndroidSetAssetManager(androidApp->activity->assetManager);
+    if (g_androidApp->activity != NULL)
+        AndroidSetAssetManager(g_androidApp->activity->assetManager);
 #else
     g_config.rendererDesc.moduleName    = "OpenGL";
     g_config.resolution[0]              = 800;
