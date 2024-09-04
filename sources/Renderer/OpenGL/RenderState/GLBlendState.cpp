@@ -143,14 +143,14 @@ void GLBlendState::BindDrawBufferStates(GLStateManager& stateMngr)
         if (HasExtension(GLExt::ARB_draw_buffers_blend))
         {
             /* Bind blend states for respective draw buffers directly via extension */
-            for (GLuint i = 0; i < numDrawBuffers_; ++i)
+            for_range(i, numDrawBuffers_)
                 BindIndexedDrawBufferState(drawBuffers_[i], i);
         }
         else
         #endif // /GL_ARB_draw_buffers_blend
         {
             /* Bind blend states with emulated draw buffer setting */
-            for (GLuint i = 0; i < numDrawBuffers_; ++i)
+            for_range(i, numDrawBuffers_)
             {
                 GLProfile::DrawBuffer(GLTypes::ToColorAttachment(i));
                 BindDrawBufferState(drawBuffers_[i]);
@@ -176,14 +176,14 @@ void GLBlendState::BindDrawBufferColorMasks(GLStateManager& stateMngr)
         if (HasExtension(GLExt::EXT_draw_buffers2))
         {
             /* Bind color mask for respective draw buffers directly via extension */
-            for (GLuint i = 0; i < numDrawBuffers_; ++i)
+            for_range(i, numDrawBuffers_)
                 BindIndexedDrawBufferColorMask(drawBuffers_[i], i);
         }
         else
         #endif // /GL_EXT_draw_buffers2
         {
             /* Bind color masks with emulated draw buffer setting */
-            for (GLuint i = 0; i < numDrawBuffers_; ++i)
+            for_range(i, numDrawBuffers_)
             {
                 GLProfile::DrawBuffer(GLTypes::ToColorAttachment(i));
                 BindDrawBufferColorMask(drawBuffers_[i]);

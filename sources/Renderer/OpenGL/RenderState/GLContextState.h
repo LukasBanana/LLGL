@@ -50,10 +50,10 @@ struct GLContextState
 
     // Blend state
     GLfloat         blendColor[4]                       = { 0.0f, 0.0f, 0.0f, 0.0f };
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     GLenum          logicOpCode                         = GL_COPY;
     #endif
-    #ifdef LLGL_PRIMITIVE_RESTART
+    #if LLGL_PRIMITIVE_RESTART
     GLuint          primitiveRestartIndex               = 0;
     #endif
 

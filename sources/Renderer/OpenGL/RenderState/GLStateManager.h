@@ -312,7 +312,7 @@ class GLStateManager
 
     private:
 
-        struct GLIntermediateBufferWriteMasks;
+        struct GLFramebufferClearState;
 
     private:
 
@@ -337,19 +337,20 @@ class GLStateManager
 
         /* ----- Stacks ----- */
 
-        void PrepareColorMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks);
-        void PrepareDepthMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks);
-        void PrepareStencilMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks);
-        void RestoreWriteMasks(GLIntermediateBufferWriteMasks& intermediateMasks);
+        void PrepareRasterizerStateForClear(GLFramebufferClearState& clearState);
+        void PrepareColorMaskForClear(GLFramebufferClearState& clearState);
+        void PrepareDepthMaskForClear(GLFramebufferClearState& clearState);
+        void PrepareStencilMaskForClear(GLFramebufferClearState& clearState);
+        void RestoreClearState(const GLFramebufferClearState& clearState);
 
         /* ----- Render pass ----- */
 
         std::uint32_t ClearColorBuffers(
-            const std::uint8_t*             colorBuffers,
-            std::uint32_t                   numClearValues,
-            const ClearValue*               clearValues,
-            const ClearValue&               defaultClearValue,
-            GLIntermediateBufferWriteMasks& intermediateMasks
+            const std::uint8_t*         colorBuffers,
+            std::uint32_t               numClearValues,
+            const ClearValue*           clearValues,
+            const ClearValue&           defaultClearValue,
+            GLFramebufferClearState&    clearState
         );
 
     private:

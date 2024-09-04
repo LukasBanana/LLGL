@@ -55,13 +55,17 @@ static const GLenum g_stateCapsEnum[] =
     GL_DEPTH_TEST,
     GL_DITHER,
     GL_POLYGON_OFFSET_FILL,
+    #if LLGL_WEBGL
+    0,
+    #else
     GL_PRIMITIVE_RESTART_FIXED_INDEX,
+    #endif
     GL_RASTERIZER_DISCARD,
     GL_SAMPLE_ALPHA_TO_COVERAGE,
     GL_SAMPLE_COVERAGE,
     GL_SCISSOR_TEST,
     GL_STENCIL_TEST,
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     GL_COLOR_LOGIC_OP,
     GL_DEPTH_CLAMP,
     GL_FRAMEBUFFER_SRGB,
@@ -157,12 +161,13 @@ static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObject
 GLStateManager*             GLStateManager::current_;
 GLStateManager::GLLimits    GLStateManager::commonLimits_;
 
-struct GLStateManager::GLIntermediateBufferWriteMasks
+struct GLStateManager::GLFramebufferClearState
 {
     bool        isDepthMaskInvalidated      = false;
     bool        isStencilMaskInvalidated    = false;
     bool        isColorMaskInvalidated      = false;
-    GLboolean   storedDepthMask             = GL_TRUE;
+    GLboolean   oldDepthMask                = GL_TRUE;
+    bool        oldRasterizerDiscardState   = false;
 };
 
 
@@ -613,7 +618,7 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 void GLStateManager::SetPrimitiveRestartIndex(GLuint index)
 {
-    #ifdef LLGL_PRIMITIVE_RESTART
+    #if LLGL_PRIMITIVE_RESTART
     if (HasExtension(GLExt::ARB_compatibility))
     {
         if (contextState_.primitiveRestartIndex != index)
@@ -905,7 +910,7 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
 
             if (vertexArray != 0)
             {
-                #ifdef LLGL_PRIMITIVE_RESTART
+                #if LLGL_PRIMITIVE_RESTART
 
                 if (contextState_.boundElementArrayBuffer != 0)
                 {
@@ -960,7 +965,7 @@ void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16
         indexType16Bits_                        = indexType16Bits;
 
         /* If a valid VAO is currently being bound, bind the specified buffer directly */
-        #ifdef LLGL_PRIMITIVE_RESTART
+        #if LLGL_PRIMITIVE_RESTART
 
         if (contextState_.boundVertexArray != 0)
         {
@@ -1552,25 +1557,26 @@ void GLStateManager::BindRenderTarget(RenderTarget& renderTarget, GLStateManager
 
 void GLStateManager::Clear(long flags)
 {
+    GLFramebufferClearState clearState;
+    PrepareRasterizerStateForClear(clearState);
+
     /* Setup GL clear mask and clear respective buffer */
     GLbitfield mask = 0;
-    GLIntermediateBufferWriteMasks intermediateMasks;
-
     if ((flags & ClearFlags::Color) != 0)
     {
-        PrepareColorMaskForClear(intermediateMasks);
+        PrepareColorMaskForClear(clearState);
         mask |= GL_COLOR_BUFFER_BIT;
     }
 
     if ((flags & ClearFlags::Depth) != 0)
     {
-        PrepareDepthMaskForClear(intermediateMasks);
+        PrepareDepthMaskForClear(clearState);
         mask |= GL_DEPTH_BUFFER_BIT;
     }
 
     if ((flags & ClearFlags::Stencil) != 0)
     {
-        PrepareStencilMaskForClear(intermediateMasks);
+        PrepareStencilMaskForClear(clearState);
         mask |= GL_STENCIL_BUFFER_BIT;
     }
 
@@ -1578,19 +1584,20 @@ void GLStateManager::Clear(long flags)
     glClear(mask);
 
     /* Restore all buffer write masks that were modified as preparation for clear operations */
-    RestoreWriteMasks(intermediateMasks);
+    RestoreClearState(clearState);
 }
 
 void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    GLIntermediateBufferWriteMasks intermediateMasks;
+    GLFramebufferClearState clearState;
+    PrepareRasterizerStateForClear(clearState);
 
     for (; numAttachments-- > 0; ++attachments)
     {
         if ((attachments->flags & ClearFlags::Color) != 0)
         {
             /* Ensure color mask is enabled */
-            PrepareColorMaskForClear(intermediateMasks);
+            PrepareColorMaskForClear(clearState);
 
             /* Clear color buffer */
             glClearBufferfv(
@@ -1602,8 +1609,8 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
         else if ((attachments->flags & ClearFlags::DepthStencil) == ClearFlags::DepthStencil)
         {
             /* Ensure depth- and stencil masks are enabled */
-            PrepareDepthMaskForClear(intermediateMasks);
-            PrepareStencilMaskForClear(intermediateMasks);
+            PrepareDepthMaskForClear(clearState);
+            PrepareStencilMaskForClear(clearState);
 
             /* Clear depth and stencil buffer simultaneously */
             glClearBufferfi(
@@ -1616,7 +1623,7 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
         else if ((attachments->flags & ClearFlags::Depth) != 0)
         {
             /* Ensure depth mask is enabled */
-            PrepareDepthMaskForClear(intermediateMasks);
+            PrepareDepthMaskForClear(clearState);
 
             /* Clear only depth buffer */
             glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
@@ -1624,7 +1631,7 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
         else if ((attachments->flags & ClearFlags::Stencil) != 0)
         {
             /* Ensure stencil mask is enabled */
-            PrepareStencilMaskForClear(intermediateMasks);
+            PrepareStencilMaskForClear(clearState);
 
             /* Clear only stencil buffer */
             GLint stencil = static_cast<GLint>(attachments->clearValue.stencil);
@@ -1633,7 +1640,7 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
     }
 
     /* Restore all buffer write masks that were modified as preparation for clear operations */
-    RestoreWriteMasks(intermediateMasks);
+    RestoreClearState(clearState);
 }
 
 
@@ -1750,7 +1757,7 @@ void GLStateManager::DetermineLimits()
 
 void GLStateManager::DetermineVendorSpecificExtensions()
 {
-    #if defined GL_NV_conservative_raster || defined GL_INTEL_conservative_rasterization
+    #if GL_NV_conservative_raster || GL_INTEL_conservative_rasterization
 
     /* Initialize extenstion states */
     auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
@@ -1764,12 +1771,12 @@ void GLStateManager::DetermineVendorSpecificExtensions()
         }
     };
 
-    #ifdef GL_NV_conservative_raster
+    #if GL_NV_conservative_raster
     // see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     InitStateExt(GLStateExt::ConservativeRasterization, GLExt::NV_conservative_raster, GL_CONSERVATIVE_RASTERIZATION_NV);
     #endif
 
-    #ifdef GL_INTEL_conservative_rasterization
+    #if GL_INTEL_conservative_rasterization
     // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     InitStateExt(GLStateExt::ConservativeRasterization, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
     #endif
@@ -1781,47 +1788,61 @@ void GLStateManager::DetermineVendorSpecificExtensions()
 
 /* ----- Stacks ----- */
 
-void GLStateManager::PrepareColorMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks)
+void GLStateManager::PrepareRasterizerStateForClear(GLFramebufferClearState& clearState)
 {
-    if (!intermediateMasks.isColorMaskInvalidated)
+    /* Temporarily disable GL_RASTERIZER_DISCARD, or glClear* commands will be ignored */
+    if (IsEnabled(GLState::RasterizerDiscard))
+    {
+        Disable(GLState::RasterizerDiscard);
+        clearState.oldRasterizerDiscardState = true;
+    }
+}
+
+void GLStateManager::PrepareColorMaskForClear(GLFramebufferClearState& clearState)
+{
+    if (!clearState.isColorMaskInvalidated)
     {
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        intermediateMasks.isColorMaskInvalidated = true;
+        clearState.isColorMaskInvalidated = true;
     }
 }
 
-void GLStateManager::PrepareDepthMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks)
+void GLStateManager::PrepareDepthMaskForClear(GLFramebufferClearState& clearState)
 {
-    if (!intermediateMasks.isDepthMaskInvalidated)
+    if (!clearState.isDepthMaskInvalidated)
     {
-        intermediateMasks.storedDepthMask = contextState_.depthMask;
+        clearState.oldDepthMask = contextState_.depthMask;
         SetDepthMask(GL_TRUE);
-        intermediateMasks.isDepthMaskInvalidated = true;
+        clearState.isDepthMaskInvalidated = true;
     }
 }
 
-void GLStateManager::PrepareStencilMaskForClear(GLIntermediateBufferWriteMasks& intermediateMasks)
+void GLStateManager::PrepareStencilMaskForClear(GLFramebufferClearState& clearState)
 {
-    if (!intermediateMasks.isStencilMaskInvalidated)
+    if (!clearState.isStencilMaskInvalidated)
     {
         glStencilMask(0xFFFFFFFF);
-        intermediateMasks.isStencilMaskInvalidated = true;
+        clearState.isStencilMaskInvalidated = true;
     }
 }
 
-void GLStateManager::RestoreWriteMasks(GLIntermediateBufferWriteMasks& intermediateMasks)
+void GLStateManager::RestoreClearState(const GLFramebufferClearState& clearState)
 {
     /* Restore previous depth mask */
-    if (intermediateMasks.isDepthMaskInvalidated)
-        SetDepthMask(intermediateMasks.storedDepthMask);
+    if (clearState.isDepthMaskInvalidated)
+        SetDepthMask(clearState.oldDepthMask);
 
     /* Restore stencil mask from currently bound depth-stencil state */
-    if (intermediateMasks.isStencilMaskInvalidated && boundDepthStencilState_ != nullptr)
+    if (clearState.isStencilMaskInvalidated && boundDepthStencilState_ != nullptr)
         boundDepthStencilState_->BindStencilWriteMaskOnly();
 
     /* Restore color mask from currently bound blend state */
-    if (intermediateMasks.isColorMaskInvalidated && boundBlendState_ != nullptr)
+    if (clearState.isColorMaskInvalidated && boundBlendState_ != nullptr)
         boundBlendState_->BindColorMaskOnly(*this);
+
+    /* Restore GL_RASTERIZER_DISCARD state */
+    if (clearState.oldRasterizerDiscardState)
+        Enable(GLState::RasterizerDiscard);
 }
 
 /* ----- Render pass ----- */
@@ -1834,12 +1855,13 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
     const ClearValue defaultClearValue;
     auto mask = renderPassGL.GetClearMask();
 
-    GLIntermediateBufferWriteMasks intermediateMasks;
+    GLFramebufferClearState clearState;
+    PrepareRasterizerStateForClear(clearState);
 
     /* Clear color attachments */
     std::uint32_t clearValueIndex = 0;
     if ((mask & GL_COLOR_BUFFER_BIT) != 0)
-        clearValueIndex = ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, defaultClearValue, intermediateMasks);
+        clearValueIndex = ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, defaultClearValue, clearState);
 
     /* Clear depth-stencil attachment */
     switch (mask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT))
@@ -1847,8 +1869,8 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
         case (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT):
         {
             /* Ensure depth- and stencil write masks are enabled */
-            PrepareDepthMaskForClear(intermediateMasks);
-            PrepareStencilMaskForClear(intermediateMasks);
+            PrepareDepthMaskForClear(clearState);
+            PrepareStencilMaskForClear(clearState);
 
             /* Clear depth and stencil buffer simultaneously */
             if (clearValueIndex < numClearValues)
@@ -1861,7 +1883,7 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
         case GL_DEPTH_BUFFER_BIT:
         {
             /* Ensure depth write mask is enabled */
-            PrepareDepthMaskForClear(intermediateMasks);
+            PrepareDepthMaskForClear(clearState);
 
             /* Clear only depth buffer */
             if (clearValueIndex < numClearValues)
@@ -1874,7 +1896,7 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
         case GL_STENCIL_BUFFER_BIT:
         {
             /* Ensure stencil write mask is enabled */
-            PrepareStencilMaskForClear(intermediateMasks);
+            PrepareStencilMaskForClear(clearState);
 
             /* Clear only stencil buffer */
             if (clearValueIndex < numClearValues)
@@ -1892,15 +1914,15 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
     }
 
     /* Restore all buffer write masks that were modified as preparation for clear operations */
-    RestoreWriteMasks(intermediateMasks);
+    RestoreClearState(clearState);
 }
 
 std::uint32_t GLStateManager::ClearColorBuffers(
-    const std::uint8_t*             colorBuffers,
-    std::uint32_t                   numClearValues,
-    const ClearValue*               clearValues,
-    const ClearValue&               defaultClearValue,
-    GLIntermediateBufferWriteMasks& intermediateMasks)
+    const std::uint8_t*         colorBuffers,
+    std::uint32_t               numClearValues,
+    const ClearValue*           clearValues,
+    const ClearValue&           defaultClearValue,
+    GLFramebufferClearState&    clearState)
 {
     std::uint32_t clearValueIndex = 0;
 
@@ -1911,7 +1933,7 @@ std::uint32_t GLStateManager::ClearColorBuffers(
         if (colorBuffers[i] == 0xFF)
             return clearValueIndex;
 
-        PrepareColorMaskForClear(intermediateMasks);
+        PrepareColorMaskForClear(clearState);
         glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValues[clearValueIndex].color);
         ++clearValueIndex;
     }
@@ -1923,7 +1945,7 @@ std::uint32_t GLStateManager::ClearColorBuffers(
         if (colorBuffers[i] == 0xFF)
             return clearValueIndex;
 
-        PrepareColorMaskForClear(intermediateMasks);
+        PrepareColorMaskForClear(clearState);
         glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), defaultClearValue.color);
     }
 

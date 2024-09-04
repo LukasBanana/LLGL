@@ -256,10 +256,10 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
 
     // Blend state
     GLGetValue(GL_BLEND_COLOR,              outContextState.blendColor);
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     GLGetValue(GL_LOGIC_OP_MODE,            outContextState.logicOpCode);
     #endif
-    #ifdef LLGL_PRIMITIVE_RESTART
+    #if LLGL_PRIMITIVE_RESTART
     GLGetValue(GL_PRIMITIVE_RESTART_INDEX,  outContextState.primitiveRestartIndex);
     #endif
 
@@ -274,13 +274,16 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
 
     // Capabilities
     for_range(i, GLContextState::numCaps)
-        outContextState.capabilities[i] = (glIsEnabled(GLStateManager::GetGLCapability(static_cast<GLState>(i))) != GL_FALSE);
+    {
+        const GLenum cap = GLStateManager::GetGLCapability(static_cast<GLState>(i));
+        outContextState.capabilities[i] = (cap != 0 && glIsEnabled(cap) != GL_FALSE);
+    }
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     for_range(i, GLContextState::numCapsExt)
     {
-        if (outContextState.capabilitiesExt[i].cap != 0)
-            outContextState.capabilitiesExt[i].enabled = (glIsEnabled(outContextState.capabilitiesExt[i].cap) != GL_FALSE);
+        const GLenum cap = outContextState.capabilitiesExt[i].cap;
+        outContextState.capabilitiesExt[i].enabled = (cap != 0 && glIsEnabled(cap) != GL_FALSE);
     }
     #endif // /LLGL_GL_ENABLE_VENDOR_EXT
 
@@ -400,11 +403,11 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
         inContextState.blendColor[3]
     );
 
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     glLogicOp(inContextState.logicOpCode);
     #endif
 
-    #ifdef LLGL_PRIMITIVE_RESTART
+    #if LLGL_PRIMITIVE_RESTART
     glPrimitiveRestartIndex(inContextState.primitiveRestartIndex);
     #endif
 
@@ -423,18 +426,21 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     for_range(i, GLContextState::numCaps)
     {
         const GLenum cap = GLStateManager::GetGLCapability(static_cast<GLState>(i));
-        if (inContextState.capabilities[i])
-            glEnable(cap);
-        else
-            glDisable(cap);
+        if (cap != 0)
+        {
+            if (inContextState.capabilities[i])
+                glEnable(cap);
+            else
+                glDisable(cap);
+        }
     }
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     for_range(i, GLContextState::numCapsExt)
     {
-        if (inContextState.capabilitiesExt[i].cap != 0)
+        const GLenum cap = inContextState.capabilitiesExt[i].cap;
+        if (cap != 0)
         {
-            const GLenum cap = inContextState.capabilitiesExt[i].cap;
             if (inContextState.capabilitiesExt[i].enabled)
                 glEnable(cap);
             else

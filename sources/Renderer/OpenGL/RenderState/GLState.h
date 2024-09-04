@@ -38,7 +38,7 @@ enum class GLState
     ScissorTest,                // GL_SCISSOR_TEST
     StencilTest,                // GL_STENCIL_TEST
 
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
 
     ColorLogicOp,               // GL_COLOR_LOGIC_OP
     DepthClamp,                 // GL_DEPTH_CLAMP
