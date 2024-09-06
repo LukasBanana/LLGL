@@ -69,6 +69,20 @@ DEF_TEST( ResourceBinding )
     static ResourceHeap* graphicsResourceHeaps[2] = {};
     static ResourceHeap* computeResourceHeaps[2] = {};
 
+    if (frame == 0)
+    {
+        result = TestResult::Passed;
+        renderPass = nullptr;
+        memset(psoLayout, 0, sizeof(psoLayout));
+        memset(pso, 0, sizeof(pso));
+        memset(buffers, 0, sizeof(buffers));
+        intermediateBuffer = nullptr;
+        memset(textures, 0, sizeof(textures));
+        memset(renderTargets, 0, sizeof(renderTargets));
+        memset(graphicsResourceHeaps, 0, sizeof(graphicsResourceHeaps));
+        memset(computeResourceHeaps, 0, sizeof(computeResourceHeaps));
+    }
+
     if (shaders[VSResourceBinding] == nullptr || shaders[PSResourceBinding] == nullptr || shaders[CSResourceBinding] == nullptr)
     {
         Log::Errorf("Missing shaders for backend\n");
