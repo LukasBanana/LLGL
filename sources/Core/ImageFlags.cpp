@@ -413,7 +413,7 @@ static void ReadDepthStencilValue(
     else if (srcFormat == ImageFormat::DepthStencil && dataType == DataType::UInt32)
     {
         /* Read D24UNormS8UInt format: Decompress 24-bit float and 8-bit unsigned integer */
-        value.depth   = static_cast<float>(srcBuffer.uint32[idx] & 0xFFFFFF) / static_cast<float>(0xFFFFFF);
+        value.depth   = static_cast<float>(srcBuffer.uint32[idx] & 0x00FFFFFFu) / static_cast<float>(0x00FFFFFFu);
         value.stencil = srcBuffer.uint32[idx] >> 24;
     }
     else if (srcFormat == ImageFormat::Depth && dataType == DataType::Float32)
@@ -450,8 +450,8 @@ static void WriteDepthStencilValue(
     else if (dstFormat == ImageFormat::DepthStencil && dataType == DataType::UInt32)
     {
         /* Write D24UNormS8UInt format: Decompress 24-bit float and 8-bit unsigned integer */
-        const std::uint32_t depth24 = static_cast<std::uint32_t>(value.depth * static_cast<float>(0xFFFFFF));
-        dstBuffer.uint32[idx] = ((value.stencil & 0xFF)) << 24 | (depth24 & 0xFFFFFF);
+        const std::uint32_t depth24 = static_cast<std::uint32_t>(value.depth * static_cast<float>(0x00FFFFFFu));
+        dstBuffer.uint32[idx] = ((value.stencil & 0x000000FFu)) << 24 | (depth24 & 0x00FFFFFFu);
     }
     else if (dstFormat == ImageFormat::Depth && dataType == DataType::Float32)
     {

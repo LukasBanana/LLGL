@@ -89,6 +89,10 @@ LLGL_ASSERT_STDLAYOUT_STRUCT( GLCmdBindGL2XSampler );
 LLGL_ASSERT_STDLAYOUT_STRUCT( GLCmdPushDebugGroup );
 //LLGL_ASSERT_STDLAYOUT_STRUCT( GLCmdPopDebugGroup ); // Unused
 
+// Structs used as payload
+LLGL_ASSERT_STDLAYOUT_STRUCT( ClearValue ); // Payload for GLCmdClearAttachmentsWithRenderPass
+LLGL_ASSERT_STDLAYOUT_STRUCT( AttachmentClear ); // Payload for GLCmdClearBuffers
+
 
 } // /namespace LLGL
 

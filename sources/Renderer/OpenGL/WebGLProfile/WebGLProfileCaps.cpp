@@ -173,7 +173,7 @@ static void GLGetFeatureLimits(RenderingLimits& limits, GLint version)
 
     /* Query integral attributes */
     limits.maxTextureArrayLayers            = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
-    limits.maxColorAttachments              = GLGetUInt(GL_MAX_DRAW_BUFFERS);
+    limits.maxColorAttachments              = std::min<std::uint32_t>(GLGetUInt(GL_MAX_DRAW_BUFFERS), GLGetUInt(GL_MAX_COLOR_ATTACHMENTS));
     //limits.maxPatchVertices               = ???
     //limits.maxAnisotropy                  = ???
 

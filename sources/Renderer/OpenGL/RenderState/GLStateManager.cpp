@@ -1853,7 +1853,7 @@ void GLStateManager::ClearAttachmentsWithRenderPass(
     const ClearValue*   clearValues)
 {
     const ClearValue defaultClearValue;
-    auto mask = renderPassGL.GetClearMask();
+    GLbitfield mask = renderPassGL.GetClearMask();
 
     GLFramebufferClearState clearState;
     PrepareRasterizerStateForClear(clearState);
