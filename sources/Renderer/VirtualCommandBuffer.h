@@ -10,9 +10,11 @@
 
 
 #include "../Core/Assertion.h"
+#include "../Core/CoreUtils.h"
 #include <cstddef>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <string.h>
 
 
@@ -50,6 +52,8 @@ class VirtualCommandBuffer
         };
 
     public:
+
+        using AlignOffsetType = std::uint8_t;
 
         // View structure for a chunk iterator.
         struct ChunkPayloadView
@@ -207,6 +211,7 @@ class VirtualCommandBuffer
         // Packs the entire buffer to one consecutive memory block.
         void Pack()
         {
+#if 0 //TODO: disabled until preservation of memory alignment can be ensured
             /* Only pack if there is more than one memory chunk */
             if (first_ != nullptr && first_->next != nullptr)
             {
@@ -217,22 +222,80 @@ class VirtualCommandBuffer
                 else
                     PackNew();
             }
+#endif
         }
 
         // Allocates a new opcode in this virtual command buffer.
         void AllocOpcode(const TOpcode opcode)
         {
-            char* data = AllocData(sizeof(opcode));
-            *reinterpret_cast<TOpcode*>(data) = opcode;
+            (void)AllocAlignedDataWithOpcode(opcode);
         }
 
         // Allocates a new command with the specified opcode and optional payload (in bytes).
         template <typename TCommand>
         TCommand* AllocCommand(const TOpcode opcode, std::size_t payloadSize = 0)
         {
-            char* data = AllocData(sizeof(opcode) + sizeof(TCommand) + payloadSize);
-            *reinterpret_cast<TOpcode*>(data) = opcode;
-            return reinterpret_cast<TCommand*>(data + sizeof(opcode));
+            return reinterpret_cast<TCommand*>(AllocAlignedDataWithOpcode(opcode, sizeof(TCommand) + payloadSize, alignof(TCommand)));
+        }
+
+        template <typename Functor, typename... TArgs>
+        void Run(Functor func, TArgs&&... args) const
+        {
+            for (const ChunkPayloadView& chunk : *this)
+            {
+                const char* pc      = chunk.data;
+                const char* pcEnd   = chunk.data + chunk.size;
+
+                while (pc < pcEnd)
+                {
+                    /* Read alignment offset */
+                    const AlignOffsetType offset = *reinterpret_cast<const AlignOffsetType*>(pc);
+                    pc += sizeof(AlignOffsetType);
+                    pc += offset;
+
+                    /* Read opcode */
+                    const TOpcode opcode = reinterpret_cast<const TOpcode*>(pc)[-1];
+
+                    /* Execute command and increment program counter */
+                    pc += func(opcode, pc, std::forward<TArgs&&>(args)...);
+                }
+            }
+        }
+
+    private:
+
+        // Allocates a new memory chunk of the specified capacity plus sizeof(Chunk).
+        static Chunk* AllocChunk(std::size_t capacity, Chunk* next = nullptr)
+        {
+            Chunk* chunk = reinterpret_cast<Chunk*>(::new char[sizeof(Chunk) + capacity]);
+            {
+                chunk->capacity = capacity;
+                chunk->size     = 0;
+                chunk->next     = next;
+            }
+            return chunk;
+        }
+
+        // Deletes the specified memory chunk.
+        static void FreeChunk(Chunk* chunk)
+        {
+            if (chunk != nullptr)
+            {
+                char* buf = reinterpret_cast<char*>(chunk);
+                delete [] buf;
+            }
+        }
+
+        // Returns a raw pointer to the beginning of the chunk data.
+        static char* GetChunkData(Chunk* chunk)
+        {
+            return reinterpret_cast<char*>(chunk + 1);
+        }
+
+        // Returns a raw pointer to the beginning of the chunk data.
+        static const char* GetChunkData(const Chunk* chunk)
+        {
+            return reinterpret_cast<const char*>(chunk + 1);
         }
 
     public:
@@ -259,42 +322,6 @@ class VirtualCommandBuffer
         ChunkIterator end() const
         {
             return cend();
-        }
-
-    private:
-
-        // Allocates a new memory chunk of the specified capacity plus sizeof(Chunk).
-        static Chunk* AllocChunk(std::size_t capacity, Chunk* next = nullptr)
-        {
-            Chunk* chunk = reinterpret_cast<Chunk*>(::new std::uint8_t[sizeof(Chunk) + capacity]);
-            {
-                chunk->capacity = capacity;
-                chunk->size     = 0;
-                chunk->next     = next;
-            }
-            return chunk;
-        }
-
-        // Deletes the specified memory chunk.
-        static void FreeChunk(Chunk* chunk)
-        {
-            if (chunk != nullptr)
-            {
-                std::uint8_t* buf = reinterpret_cast<std::uint8_t*>(chunk);
-                delete [] buf;
-            }
-        }
-
-        // Returns a raw pointer to the beginning of the chunk data.
-        static char* GetChunkData(Chunk* chunk)
-        {
-            return reinterpret_cast<char*>(chunk + 1);
-        }
-
-        // Returns a raw pointer to the beginning of the chunk data.
-        static const char* GetChunkData(const Chunk* chunk)
-        {
-            return reinterpret_cast<const char*>(chunk + 1);
         }
 
     private:
@@ -365,14 +392,52 @@ class VirtualCommandBuffer
         }
 
         // Allocates a data block of the specified size.
-        char* AllocData(std::size_t size)
+        // @param size: Specifies the size of data block.
+        // @param alignment: Specifies the memory alignment.
+        // @param headerSize: Specifies extra data to be allocated in front of the returned data block, excluded from the memory alignment.
+        char* AllocData(std::size_t size, std::size_t alignment = 0, std::size_t headerSize = 0)
         {
-            if (!FitsIntoCurrentChunk(size))
-                AllocNextChunk(std::max(NextCapacity(), size));
+            /* Allocate one extra byte to store offset for alignment */
+            size += sizeof(AlignOffsetType) + headerSize;
+
+            /* Check if new data fits into current chunk */
+            const std::size_t estimatedPadding = (alignment > 0 ? alignment - 1 : 0);
+            const std::size_t sizeWithEstimatedPadding = size + estimatedPadding;
+
+            if (!FitsIntoCurrentChunk(sizeWithEstimatedPadding))
+                AllocNextChunk(std::max(NextCapacity(), sizeWithEstimatedPadding));
+
+            /* Allocate new data block within current chunk and apply memory alignment */
             char* data = VirtualCommandBuffer::GetChunkData(current_) + current_->size;
+            data += sizeof(AlignOffsetType);
+
+            const std::uintptr_t basePtr = reinterpret_cast<std::uintptr_t>(data);
+            const std::uintptr_t offset = GetAlignedSize(basePtr + headerSize, static_cast<std::uintptr_t>(alignment)) - basePtr;
+
+            /* Write offset for alignment at first byte in new data block */
+            constexpr std::uintptr_t maxAlignmentOffset = std::numeric_limits<AlignOffsetType>::max();
+            LLGL_ASSERT(offset <= maxAlignmentOffset);
+
+            *reinterpret_cast<AlignOffsetType*>(data - sizeof(AlignOffsetType)) = static_cast<AlignOffsetType>(offset);
+
+            /* Now shift return pointer to aligned offset minus the input alignment shift (for opcode) */
+            data += offset;
+            size += offset - headerSize;
+
+            /* Keep track of chunk size */
             current_->size += size;
             LLGL_ASSERT(current_->size <= current_->capacity);
             size_ += size;
+            return data;
+        }
+
+        // Allocates a data block with alignment and adds the opcode *before* the aligned payload,
+        // i.e. only the payload data will be aligned since the opcode is usually only 1 byte in size.
+        char* AllocAlignedDataWithOpcode(const TOpcode opcode, std::size_t payloadSize = 0, std::size_t alignment = 0)
+        {
+            /* Allocate data with extra space for alignment */
+            char* data = AllocData(payloadSize, alignment, sizeof(TOpcode));
+            reinterpret_cast<TOpcode*>(data)[-1] = opcode;
             return data;
         }
 

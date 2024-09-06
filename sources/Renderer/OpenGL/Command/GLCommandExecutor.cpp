@@ -489,22 +489,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
 
 static void ExecuteGLCommandsEmulated(const GLVirtualCommandBuffer& virtualCmdBuffer, GLStateManager* stateMngr)
 {
-    /* Initialize program counter to execute virtual GL commands */
-    for (const auto& chunk : virtualCmdBuffer)
-    {
-        auto pc     = chunk.data;
-        auto pcEnd  = chunk.data + chunk.size;
-
-        while (pc < pcEnd)
-        {
-            /* Read opcode */
-            const GLOpcode opcode = *reinterpret_cast<const GLOpcode*>(pc);
-            pc += sizeof(GLOpcode);
-
-            /* Execute command and increment program counter */
-            pc += ExecuteGLCommand(opcode, pc, stateMngr);
-        }
-    }
+    virtualCmdBuffer.Run(ExecuteGLCommand, stateMngr);
 }
 
 #ifdef LLGL_ENABLE_JIT_COMPILER

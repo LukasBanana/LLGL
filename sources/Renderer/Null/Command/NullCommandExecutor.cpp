@@ -98,22 +98,7 @@ static std::size_t ExecuteNullCommand(const NullOpcode opcode, const void* pc)
 
 void ExecuteNullVirtualCommandBuffer(const NullVirtualCommandBuffer& virtualCmdBuffer)
 {
-    /* Initialize program counter to execute virtual GL commands */
-    for (const auto& chunk : virtualCmdBuffer)
-    {
-        auto pc     = chunk.data;
-        auto pcEnd  = chunk.data + chunk.size;
-
-        while (pc < pcEnd)
-        {
-            /* Read opcode */
-            const NullOpcode opcode = *reinterpret_cast<const NullOpcode*>(pc);
-            pc += sizeof(NullOpcode);
-
-            /* Execute command and increment program counter */
-            pc += ExecuteNullCommand(opcode, pc);
-        }
-    }
+    virtualCmdBuffer.Run(ExecuteNullCommand);
 }
 
 

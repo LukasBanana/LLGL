@@ -492,7 +492,7 @@ static std::size_t RequiredLocalStackSize(const GLDeferredCommandBuffer& cmdBuff
 std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdBuffer)
 {
     /* Try to create a JIT-compiler for the active architecture (if supported) */
-    if (auto compiler = JITCompiler::Create())
+    if (std::unique_ptr<JITCompiler> compiler = JITCompiler::Create())
     {
         /* Declare variadic arguments for entry point of JIT program */
         compiler->EntryPointVarArgs({ JIT::ArgType::Ptr });
@@ -504,26 +504,10 @@ std::unique_ptr<JITProgram> AssembleGLDeferredCommandBuffer(const GLDeferredComm
 
         /* Assemble GL commands into JIT program */
         compiler->Begin();
-
-        /* Initialize program counter to execute virtual GL commands */
-        const auto& virtualCmdBuffer = cmdBuffer.GetVirtualCommandBuffer();
-
-        for (const auto& chunk : virtualCmdBuffer)
         {
-            auto pc     = chunk.data;
-            auto pcEnd  = chunk.data + chunk.size;
-
-            while (pc < pcEnd)
-            {
-                /* Read opcode */
-                const GLOpcode opcode = *reinterpret_cast<const GLOpcode*>(pc);
-                pc += sizeof(GLOpcode);
-
-                /* Execute command and increment program counter */
-                pc += AssembleGLCommand(opcode, pc, *compiler);
-            }
+            const GLVirtualCommandBuffer& virtualCmdBuffer = cmdBuffer.GetVirtualCommandBuffer();
+            virtualCmdBuffer.Run(AssembleGLCommand, *compiler);
         }
-
         compiler->End();
 
         /* Build final program */

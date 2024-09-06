@@ -458,22 +458,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
 
 static void ExecuteMTCommandsEmulated(const MTVirtualCommandBuffer& virtualCmdBuffer, MTCommandContext& context)
 {
-    /* Initialize program counter to execute virtual Metal commands */
-    for (const MTVirtualCommandBuffer::ChunkPayloadView& chunk : virtualCmdBuffer)
-    {
-        const char* pc      = chunk.data;
-        const char* pcEnd   = chunk.data + chunk.size;
-
-        while (pc < pcEnd)
-        {
-            /* Read opcode */
-            const MTOpcode opcode = *reinterpret_cast<const MTOpcode*>(pc);
-            pc += sizeof(MTOpcode);
-
-            /* Execute command and increment program counter */
-            pc += ExecuteMTCommand(opcode, pc, context);
-        }
-    }
+    virtualCmdBuffer.Run(ExecuteMTCommand, context);
 }
 
 void ExecuteMTMultiSubmitCommandBuffer(const MTMultiSubmitCommandBuffer& cmdBuffer, MTCommandContext& context)

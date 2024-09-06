@@ -147,22 +147,7 @@ static std::size_t ExecuteD3D11Command(const D3D11Opcode opcode, const void* pc,
 
 static void ExecuteD3D11CommandsEmulated(const D3D11VirtualCommandBuffer& virtualCmdBuffer, D3D11CommandContext& context)
 {
-    /* Initialize program counter to execute virtual GL commands */
-    for (const auto& chunk : virtualCmdBuffer)
-    {
-        auto pc     = chunk.data;
-        auto pcEnd  = chunk.data + chunk.size;
-
-        while (pc < pcEnd)
-        {
-            /* Read opcode */
-            const D3D11Opcode opcode = *reinterpret_cast<const D3D11Opcode*>(pc);
-            pc += sizeof(D3D11Opcode);
-
-            /* Execute command and increment program counter */
-            pc += ExecuteD3D11Command(opcode, pc, context);
-        }
-    }
+    virtualCmdBuffer.Run(ExecuteD3D11Command, context);
 }
 
 void ExecuteD3D11SecondaryCommandBuffer(const D3D11SecondaryCommandBuffer& cmdBuffer, D3D11CommandContext& context)
