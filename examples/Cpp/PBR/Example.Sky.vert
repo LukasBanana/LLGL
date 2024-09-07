@@ -41,7 +41,7 @@ This function generates the coordinates for a fullscreen triangle with its verte
    *----------*--------*
 (-1,-1)    (+1,-1)  (+3,-1)
 */
-vec4 GetFullscreenTriangleVertex(uint id)
+vec4 GetFullscreenTriangleVertex(int id)
 {
     return vec4(
         (id == 2 ? 3.0 : -1.0),

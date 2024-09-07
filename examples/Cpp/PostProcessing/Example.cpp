@@ -13,7 +13,7 @@
 #endif
 
 // Enables custom render pass to clear at the begin of a render pass section (more efficient)
-#define ENABLE_CUSTOM_RENDER_PASS
+#define ENABLE_CUSTOM_RENDER_PASS 1
 
 
 class Example_PostProcessing : public ExampleBase
@@ -59,7 +59,7 @@ class Example_PostProcessing : public ExampleBase
     LLGL::RenderTarget*     renderTargetBlurX   = nullptr;
     LLGL::RenderTarget*     renderTargetBlurY   = nullptr;
 
-    #ifdef ENABLE_CUSTOM_RENDER_PASS
+    #if ENABLE_CUSTOM_RENDER_PASS
     LLGL::RenderPass*       renderPassScene     = nullptr;
     #endif
 
@@ -99,7 +99,7 @@ public:
         CreateSamplers();
         CreateTextures();
         CreateRenderTargets();
-        #ifdef ENABLE_CUSTOM_RENDER_PASS
+        #if ENABLE_CUSTOM_RENDER_PASS
         CreateRenderPasses();
         #endif
         CreatePipelineLayouts();
@@ -168,7 +168,7 @@ public:
 
             // Load final shader program
             shaderPipelineFinal.vs = LoadShader({ LLGL::ShaderType::Vertex,   "PostProcess.vert" });
-            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Final.frag" });
+            shaderPipelineFinal.ps = LoadShader({ LLGL::ShaderType::Fragment, "Final.frag"       });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
@@ -282,7 +282,7 @@ public:
         renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
     }
 
-    #ifdef ENABLE_CUSTOM_RENDER_PASS
+    #if ENABLE_CUSTOM_RENDER_PASS
 
     void CreateRenderPasses()
     {
@@ -524,7 +524,7 @@ private:
             // Set graphics pipeline and vertex buffer for scene rendering
             commands->SetVertexBuffer(*vertexBufferScene);
 
-            #ifdef ENABLE_CUSTOM_RENDER_PASS
+            #if ENABLE_CUSTOM_RENDER_PASS
 
             // Clear scene render target with render pass and initial clear values
             LLGL::ClearValue clearValues[3];
@@ -547,7 +547,7 @@ private:
                 // Set viewport to full size
                 commands->SetViewport(viewportFull);
 
-                #ifndef ENABLE_CUSTOM_RENDER_PASS
+                #if !ENABLE_CUSTOM_RENDER_PASS
 
                 // Clear individual buffers in render target (color, glossiness, depth)
                 constexpr float glossinessColor[4] = { 0, 0, 0, 0 };

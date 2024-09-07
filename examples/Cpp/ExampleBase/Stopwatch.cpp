@@ -23,14 +23,14 @@ void Stopwatch::Start()
 std::uint64_t Stopwatch::Stop()
 {
     isRunning_ = false;
-    auto endTick = LLGL::Timer::Tick();
+    const std::uint64_t endTick = LLGL::Timer::Tick();
     return endTick - startTick_;
 }
 
 void Stopwatch::MeasureTime()
 {
     const bool wasRunning = IsRunning();
-    auto elapsed = Stop();
+    const std::uint64_t elapsed = Stop();
     Start();
     if (wasRunning)
         deltaTime_ = static_cast<double>(elapsed) / static_cast<double>(GetFrequency());

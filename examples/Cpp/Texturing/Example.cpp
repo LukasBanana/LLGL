@@ -10,6 +10,11 @@
 #include <LLGL/Utils/TypeNames.h>
 #include <ImageReader.h>
 #include <DDSImageReader.h>
+#include <LLGL/Platform/Platform.h>
+
+#if !defined(LLGL_OS_ANDROID) && !defined(LLGL_OS_WASM)
+#   define ENABLE_COMPRESSED_TEXTURE_DDX 1
+#endif
 
 
 class Example_Texturing : public ExampleBase
@@ -130,7 +135,7 @@ public:
                 texDesc.type        = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format      = LLGL::Format::BGRA8UNorm;//RGBA8UNorm; //BGRA8UNorm
+                texDesc.format      = LLGL::Format::RGBA8UNorm; //BGRA8UNorm
 
                 // Texture size
                 texDesc.extent      = reader.GetTextureDesc().extent;
@@ -179,8 +184,13 @@ public:
 
     void CreateTextures()
     {
+        #if ENABLE_COMPRESSED_TEXTURE_DDX
         LoadCompressedTexture("Crate-DXT1-MipMapped.dds");
         LoadUncompressedTexture("Crate.jpg");
+        #else
+        LoadUncompressedTexture("Crate.jpg");
+        colorMaps[0] = colorMaps[1];
+        #endif
     }
 
     void CreateSamplers()
@@ -218,10 +228,14 @@ private:
         if (input.KeyDown(LLGL::Key::Tab))
         {
             // Switch to next resource we want to present
+#if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS) || defined(LLGL_OS_WASM)
+            resourceIndex = 3 - resourceIndex;
+#else
             if (input.KeyPressed(LLGL::Key::Shift))
                 resourceIndex = ((resourceIndex - 1) % 4 + 4) % 4;
             else
                 resourceIndex = (resourceIndex + 1) % 4;
+#endif
 
             const std::string spaces(30, ' ');
             LLGL::Log::Printf(

@@ -36,7 +36,7 @@ class DXManagedComPtrArray
         // Emplaces the specified object into the first available entry.
         T* Emplace(const ComPtr<T>& object, std::size_t* outIndex = nullptr)
         {
-            auto index = FindFreeIndex();
+            const std::size_t index = FindFreeIndex();
             if (index < container_.size())
                 container_[index] = object;
             else
@@ -49,7 +49,7 @@ class DXManagedComPtrArray
         // Emplaces the specified object into the first available entry.
         T* Emplace(ComPtr<T>&& object, std::size_t* outIndex = nullptr)
         {
-            auto index = FindFreeIndex();
+            const std::size_t index = FindFreeIndex();
             if (index < container_.size())
                 container_[index] = std::forward<ComPtr<T>&&>(object);
             else
