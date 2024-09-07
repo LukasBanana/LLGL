@@ -114,15 +114,19 @@ static GLenum g_colorAttachmentsBank[32] =
 
 void DrawBuffer(GLenum buf)
 {
-    /*
-    GL_COLOR_ATTACHMENT(i) must only be used at the i-th binding point in GLES/WebGL,
-    so maintain a bank of GL_NONE entries and swap out the corresponding slot with the input attachment.
-    */
-    LLGL_ASSERT(buf >= GL_COLOR_ATTACHMENT0 && buf <= GL_COLOR_ATTACHMENT31);
-    const GLsizei attachmentIndex = (buf - GL_COLOR_ATTACHMENT0);
-    g_colorAttachmentsBank[attachmentIndex] = buf;
-    glDrawBuffers(attachmentIndex + 1, g_colorAttachmentsBank);
-    g_colorAttachmentsBank[attachmentIndex] = GL_NONE;
+    if (buf >= GL_COLOR_ATTACHMENT0 && buf <= GL_COLOR_ATTACHMENT31)
+    {
+        /*
+        GL_COLOR_ATTACHMENT(i) must only be used at the i-th binding point in GLES/WebGL,
+        so maintain a bank of GL_NONE entries and swap out the corresponding slot with the input attachment.
+        */
+        const GLsizei attachmentIndex = (buf - GL_COLOR_ATTACHMENT0);
+        g_colorAttachmentsBank[attachmentIndex] = buf;
+        glDrawBuffers(attachmentIndex + 1, g_colorAttachmentsBank);
+        g_colorAttachmentsBank[attachmentIndex] = GL_NONE;
+    }
+    else
+        glDrawBuffers(1, &buf);
 }
 
 void FramebufferTexture1D(GLenum /*target*/, GLenum /*attachment*/, GLenum /*textarget*/, GLuint /*texture*/, GLint /*level*/)
