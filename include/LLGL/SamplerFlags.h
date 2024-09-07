@@ -136,7 +136,7 @@ struct LLGL_EXPORT SamplerDescriptor
     /**
     \brief MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
     \remarks For Metal and OpenGLES, the LOD bias can only be specified within the shader code.
-    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    \note Only supported with: OpenGL (Desktop only), Vulkan, Direct3D 11, Direct3D 12.
     */
     float               mipMapLODBias   = 0.0f;
 
@@ -148,7 +148,7 @@ struct LLGL_EXPORT SamplerDescriptor
 
     /**
     \brief Maximal anisotropy in the range [1, 16].
-    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12, Metal.
+    \note Only supported with: OpenGL (Desktop only), Vulkan, Direct3D 11, Direct3D 12, Metal.
     */
     std::uint32_t       maxAnisotropy   = 1;
 

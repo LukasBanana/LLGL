@@ -135,22 +135,22 @@ void UnmapBuffer(GLenum target)
     }
 }
 
-// Global memory bank of CL_COLOR_ATTACHMENT0-31 values initialized with GL_NONE
-static GLenum g_colorAttachmentsBank[32] =
+// Global memory bank of CL_COLOR_ATTACHMENT0-7 values initialized with GL_NONE
+static GLenum g_colorAttachmentsBank[8] =
 {
     GL_NONE, GL_NONE, GL_NONE, GL_NONE,
     GL_NONE, GL_NONE, GL_NONE, GL_NONE,
+    #if LLGL_MAX_NUM_COLOR_ATTACHMENTS > 8
     GL_NONE, GL_NONE, GL_NONE, GL_NONE,
     GL_NONE, GL_NONE, GL_NONE, GL_NONE,
-    GL_NONE, GL_NONE, GL_NONE, GL_NONE,
-    GL_NONE, GL_NONE, GL_NONE, GL_NONE,
-    GL_NONE, GL_NONE, GL_NONE, GL_NONE,
-    GL_NONE, GL_NONE, GL_NONE, GL_NONE,
+    #endif
 };
+
+static_assert(LLGL_MAX_NUM_COLOR_ATTACHMENTS <= 16, "WebGL profile can only handle up to 16 color attachments, but LLGL_MAX_NUM_COLOR_ATTACHMENTS exceed that limit");
 
 void DrawBuffer(GLenum buf)
 {
-    if (buf >= GL_COLOR_ATTACHMENT0 && buf <= GL_COLOR_ATTACHMENT31)
+    if (buf >= GL_COLOR_ATTACHMENT0 && buf <= GL_COLOR_ATTACHMENT0 + LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         /*
         GL_COLOR_ATTACHMENT(i) must only be used at the i-th binding point in GLES/WebGL,

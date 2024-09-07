@@ -238,6 +238,8 @@ class VirtualCommandBuffer
             return reinterpret_cast<TCommand*>(AllocAlignedDataWithOpcode(opcode, sizeof(TCommand) + payloadSize, alignof(TCommand)));
         }
 
+        // Runs the input function over every command in this virtual command buffer.
+        // The function callback must return the size (in bytes) of the command being processed.
         template <typename Functor, typename... TArgs>
         void Run(Functor func, TArgs&&... args) const
         {
