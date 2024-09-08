@@ -36,7 +36,7 @@ fi
 
 list_examples()
 {
-    EXCLUDED=(MultiRenderer MultiThreading PBR ComputeShader UnorderedAccess)
+    EXCLUDED=(MultiRenderer StreamOutput)
     EXAMPLE_DIRS=($(ls examples/Cpp))
     for DIR in "${EXAMPLE_DIRS[@]}"; do
         if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
