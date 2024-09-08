@@ -38,7 +38,8 @@ static LLGL::Extent2D GetScaledResolutionByDisplayScale(CGSize size, const LLGL:
 
 @implementation IOSCanvasViewController
 {
-    LLGL::IOSCanvas* canvas_;
+    LLGL::IOSCanvas*    canvas_;
+    CGPoint             oldPanLocation_;
 }
 
 - (nonnull instancetype)initWithCanvas:(nonnull LLGL::IOSCanvas*)canvas;
@@ -86,8 +87,11 @@ static LLGL::Offset2D MapUIGestureLocation(UIGestureRecognizer* recognizer, UIVi
 - (void)handlePanGesture:(UIPanGestureRecognizer*)recognizer
 {
     UIView* view = canvas_->GetUIWindow();
+
     const std::uint32_t numTouches = static_cast<std::uint32_t>([recognizer numberOfTouches]);
-    const LLGL::Offset2D position = MapUIGestureLocation(recognizer, view);
+    CGPoint nativePosition = [recognizer locationInView:view];
+    const LLGL::Offset2D position{ static_cast<std::int32_t>(nativePosition.x), static_cast<std::int32_t>(nativePosition.y) };
+
     switch ([recognizer state])
     {
         case UIGestureRecognizerStateBegan:
@@ -98,7 +102,7 @@ static LLGL::Offset2D MapUIGestureLocation(UIGestureRecognizer* recognizer, UIVi
 
         case UIGestureRecognizerStateChanged:
         {
-            CGPoint velocity = [recognizer translationInView:view];
+            CGPoint velocity = CGPointMake(nativePosition.x - oldPanLocation_.x, nativePosition.y - oldPanLocation_.y);
             canvas_->PostPanGesture(position, numTouches, velocity.x, velocity.y, LLGL::EventAction::Changed);
         }
         break;
@@ -116,6 +120,8 @@ static LLGL::Offset2D MapUIGestureLocation(UIGestureRecognizer* recognizer, UIVi
         }
         break;
     }
+
+    oldPanLocation_ = nativePosition;
 }
 
 @end
