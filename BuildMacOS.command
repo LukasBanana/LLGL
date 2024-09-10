@@ -118,28 +118,6 @@ OPTIONS=(
     -B "$OUTPUT_DIR"
 )
 
-# Compiles the Metal shaders for all examples into the default.metallib file
-compile_example_metal_shaders()
-{
-    EXAMPLE_BASE_DIR=$OUTPUT_DIR/build
-    EXAMPLE_PROJECTS=($EXAMPLE_BASE_DIR/Example_*.app)
-
-    for PROJECT in ${EXAMPLE_PROJECTS[@]}; do
-        SHADER_FILES=()
-        for FILE in $PROJECT/Contents/Resources/*.metal; do
-            if [ -f $FILE ]; then
-                SHADER_FILES+=($FILE)
-            fi
-        done
-        if [ ! -z "$SHADER_FILES" ]; then
-            if [ $VERBOSE -ne 0 ]; then
-                echo "Compile Metal shaders: ${SHADER_FILES[@]}"
-            fi
-            xcrun -sdk macosx metal ${SHADER_FILES[@]} -o "$PROJECT/Contents/Resources/default.metallib"
-        fi
-    done
-}
-
 if [ $PROJECT_ONLY -eq 0 ]; then
     if [ "$GENERATOR" = "" ]; then
         cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${OPTIONS[@]} # CMake default generator
@@ -151,7 +129,12 @@ if [ $PROJECT_ONLY -eq 0 ]; then
     # Compile Metal shaders for all examples into the default.metallib.
     # This is done by Xcode automatically when built from within the IDE,
     # so we only do this when no project files are generated.
-    compile_example_metal_shaders
+    COMPILE_METAL_SCRIPT=$SOURCE_DIR/scripts/CompileMetalToMetallib.sh
+    if [ $VERBOSE -ne 0 ]; then
+        $COMPILE_METAL_SCRIPT macosx "$OUTPUT_DIR/build" -v
+    else
+        $COMPILE_METAL_SCRIPT macosx "$OUTPUT_DIR/build"
+    fi
 else
     if [ "$GENERATOR" = "" ]; then
         GENERATOR="Xcode" # Default to Xcode for project solution
