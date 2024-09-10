@@ -40,13 +40,14 @@ jobs:
     - name: Build
       run: |
         cmake --build ${{github.workspace}}/macOS-x64 --config ${{ matrix.config }}
+        scripts/CompileMetalToMetallib.sh macosx "${{ github.workspace }}/macOS-x64/build" -v
         CURRENT_TIME=$(date)
         echo "LLGL built with Xcode for macOS on $CURRENT_TIME." > ${{ env.README }}
         echo "Place at root of LLGL repository to run examples and testbed." >> ${{ env.README }}
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v4
-      if: matrix.lib == 'Shared' && matrix.config == 'Release'
+      if: matrix.lib == 'Static' && matrix.config == 'Release'
       with:
         name: LLGL-macOS-${{ matrix.config }}-x86_64
         path: |
