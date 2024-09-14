@@ -61,14 +61,23 @@ class GLRenderTarget final : public RenderTarget
 
     private:
 
+        struct GLFramebufferAttachment
+        {
+            const GLTexture*    texture;
+            GLint               level;
+            GLint               layer;
+        };
+
+    private:
+
         void CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc);
         void CreateFramebufferWithNoAttachments();
 
         void BuildColorAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget);
-        void BuildResolveAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget);
+        void BuildResolveAttachment(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isAttachmentListSeparated = false);
         void BuildDepthStencilAttachment(const AttachmentDescriptor& attachmentDesc);
 
-        void BuildAttachmentWithTexture(GLenum binding, const AttachmentDescriptor& attachmentDesc);
+        void BuildAttachmentWithTexture(GLenum binding, const AttachmentDescriptor& attachmentDesc, GLFramebufferAttachment* outAttachmentGL = nullptr);
         void BuildAttachmentWithRenderbuffer(GLenum binding, Format format);
 
         void CreateAndAttachRenderbuffer(GLenum binding, GLenum internalFormat);
@@ -79,25 +88,33 @@ class GLRenderTarget final : public RenderTarget
 
     private:
 
-        GLint                       resolution_[2];
+        GLint                                   resolution_[2];
 
-        GLFramebuffer               framebuffer_;                       // Primary FBO
-        GLFramebuffer               framebufferResolve_;                // Secondary FBO to resolve multi-sampled FBO into
+        GLFramebuffer                           framebuffer_;                       // Primary FBO
+        GLFramebuffer                           framebufferResolve_;                // Secondary FBO to resolve multi-sampled FBO into
+
+        #if LLGL_WEBGL
+        /*
+        For WebGL, we maintain a list of resolve attachments to swap them in and out of GL_COLOR_ATTACHMENT0 binding point,
+        since glDrawBuffers() behaves differently than in Desktop GL.
+        */
+        std::vector<GLFramebufferAttachment>    resolveAttachments_;
+        #endif
 
         /*
         For multi-sampled render targets we also need a renderbuffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
         which is only supported since OpenGL 3.2+, but renderbuffers are supported since OpenGL 3.0+.
         */
-        std::vector<GLRenderbuffer> renderbuffers_;
+        std::vector<GLRenderbuffer>             renderbuffers_;
 
-        SmallVector<GLenum, 2>      drawBuffers_;                       // Values for glDrawBuffers for the primary FBO
-        SmallVector<GLenum, 2>      drawBuffersResolve_;                // Values for glDrawBuffers for the resolve FBO
+        SmallVector<GLenum, 2>                  drawBuffers_;                       // Values for glDrawBuffers for the primary FBO
+        SmallVector<GLenum, 2>                  drawBuffersResolve_;                // Values for glDrawBuffers for the resolve FBO
 
-        GLint                       samples_                = 1;
-        GLenum                      depthStencilBinding_    = 0;        // Equivalent of drawBuffers but for depth-stencil
+        GLint                                   samples_                = 1;
+        GLenum                                  depthStencilBinding_    = 0;        // Equivalent of drawBuffers but for depth-stencil
 
-        const RenderPass*           renderPass_             = nullptr;
+        const RenderPass*                       renderPass_             = nullptr;
 
 };
 
