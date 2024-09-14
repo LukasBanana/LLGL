@@ -84,11 +84,6 @@ struct alignas(sizeof(std::uintptr_t)) GLResourceHeapSegment
     std::uint32_t   data2Offset : 16; // Byte offset after the second sub-buffer, following the third sub-buffer
 };
 
-static_assert(
-    sizeof(GLResourceHeapSegment) % sizeof(std::uintptr_t) == 0,
-    "size of GLResourceHeapSegment must be a multiple of 'uintptr_t'"
-);
-
 LLGL_ASSERT_POD_TYPE(GLResourceHeapSegment);
 
 

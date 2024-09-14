@@ -68,7 +68,7 @@ enum D3DResourceFlags : std::uint32_t
 };
 
 // Resource view heap (RVH) segment structure with up to three dynamic sub-buffers.
-struct D3DResourceHeapSegment
+struct alignas(sizeof(std::uintptr_t)) D3DResourceHeapSegment
 {
     std::uint32_t   size            : 28;
     std::uint32_t   flags           :  1; // D3DResourceFlags

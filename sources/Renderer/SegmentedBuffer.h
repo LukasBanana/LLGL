@@ -84,9 +84,9 @@ class SegmentedBufferAllocator
 
         // Constructs the allocator with a buffer and segment size.
         inline SegmentedBufferAllocator(std::vector<TBaseType>& buffer, std::size_t payloadSize) :
-            buffer_ { buffer                               },
-            offset_ { buffer.size() * sizeof(TBaseType)    },
-            size_   { payloadSize + sizeof(TSegmentHeader) }
+            buffer_ { buffer                                                                  },
+            offset_ { buffer.size() * sizeof(TBaseType)                                       },
+            size_   { GetAlignedSize(payloadSize + sizeof(TSegmentHeader), sizeof(TBaseType)) }
         {
             LLGL_ASSERT(size_ < USHRT_MAX);
             buffer_.resize(DivideRoundUp(offset_ + size_, sizeof(TBaseType)));
