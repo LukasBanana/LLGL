@@ -1,0 +1,68 @@
+name: WebAssembly
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_android:
+    strategy:
+      matrix:
+        config: [Release, Debug]
+      fail-fast: false
+    
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_API_LEVEL: 28
+      README: ${{ github.workspace }}/README.txt
+      GAUSSIAN_LIB_DIR: external/GaussianLib/include
+      EMSDK_CMAKE_DIR: 'upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake'
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies (Emscripten SDK)
+      uses: mymindstorm/setup-emsdk@v14
+
+    - name: Configure CMake
+      run: >
+        cmake -S . -B ${{github.workspace}}/WebAssembly
+        -DCMAKE_TOOLCHAIN_FILE="$EMSDK/${{ env.EMSDK_CMAKE_DIR }}"
+        -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        -DLLGL_BUILD_STATIC_LIB=ON
+        -DLLGL_BUILD_RENDERER_WEBGL=ON
+        -DLLGL_GL_ENABLE_OPENGL2X=OFF
+        -DLLGL_BUILD_RENDERER_NULL=OFF
+        -DLLGL_BUILD_RENDERER_VULKAN=OFF
+        -DLLGL_BUILD_RENDERER_DIRECT3D11=OFF
+        -DLLGL_BUILD_RENDERER_DIRECT3D12=OFF
+        -DLLGL_BUILD_EXAMPLES=ON
+        -DLLGL_BUILD_TESTS=OFF
+        -DGaussLib_INCLUDE_DIR:STRING="${{ env.GAUSSIAN_LIB_DIR }}"
+
+    - name: Build
+      run: |
+        cmake --build ${{github.workspace}}/WebAssembly --config ${{ matrix.config }}
+        CURRENT_TIME=$(date)
+        echo "LLGL built for HTML5/WebAssembly on $CURRENT_TIME." > ${{ env.README }}
+
+    - name: Generate HTML5 pages
+      if: matrix.config == 'Release'
+      run: |
+        scripts/GenerateHTML5Examples.sh . "${{github.workspace}}/WebAssembly" --verbose
+
+    - name: Upload Binaries
+      uses: actions/upload-artifact@v4
+      if: matrix.config == 'Release'
+      with:
+        name: LLGL-WebAssembly
+        path: |
+          ${{ env.README }}
+          ${{ github.workspace }}/WebAssembly/html5
+      
