@@ -83,8 +83,8 @@ static const GLenum g_bufferTargetBindings[] =
     0,
     #endif
 
-    #ifdef GL_DISPATCH_INDIRECT_BUFFER
-    GL_DISPATCH_INDIRECT_BUFFER,
+    #ifdef GL_DISPATCH_INDIRECT_BUFFER_BINDING
+    GL_DISPATCH_INDIRECT_BUFFER_BINDING,
     #else
     0,
     #endif
