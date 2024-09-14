@@ -38,10 +38,6 @@
 #include <algorithm>
 #include <string.h>
 
-#ifdef LLGL_ENABLE_JIT_COMPILER
-#   include "../../../JIT/JITProgram.h"
-#endif
-
 #include <LLGL/Backend/OpenGL/NativeCommand.h>
 
 
@@ -492,30 +488,10 @@ static void ExecuteGLCommandsEmulated(const GLVirtualCommandBuffer& virtualCmdBu
     virtualCmdBuffer.Run(ExecuteGLCommand, stateMngr);
 }
 
-#ifdef LLGL_ENABLE_JIT_COMPILER
-
-static void ExecuteGLCommandsNatively(const JITProgram& exec, GLStateManager& stateMngr)
-{
-    /* Execute native program and pass pointer to state manager */
-    exec.GetEntryPoint()(&stateMngr);
-}
-
-#endif // /LLGL_ENABLE_JIT_COMPILER
-
 void ExecuteGLDeferredCommandBuffer(const GLDeferredCommandBuffer& cmdBuffer, GLStateManager& stateMngr)
 {
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-    if (auto exec = cmdBuffer.GetExecutable().get())
-    {
-        /* Execute GL commands with native executable */
-        ExecuteGLCommandsNatively(*exec, stateMngr);
-    }
-    else
-    #endif // /LLGL_ENABLE_JIT_COMPILER
-    {
-        /* Emulate execution of GL commands */
-        ExecuteGLCommandsEmulated(cmdBuffer.GetVirtualCommandBuffer(), &stateMngr);
-    }
+    /* Emulate execution of GL commands */
+    ExecuteGLCommandsEmulated(cmdBuffer.GetVirtualCommandBuffer(), &stateMngr);
 }
 
 void ExecuteGLCommandBuffer(const GLCommandBuffer& cmdBuffer, GLStateManager& stateMngr)

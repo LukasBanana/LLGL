@@ -15,10 +15,6 @@
 #include <memory>
 #include <vector>
 
-#ifdef LLGL_ENABLE_JIT_COMPILER
-#   include "../../../JIT/JITProgram.h"
-#endif
-
 
 namespace LLGL
 {
@@ -70,28 +66,6 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
             return flags_;
         }
 
-        #ifdef LLGL_ENABLE_JIT_COMPILER
-
-        // Returns the just-in-time compiled command buffer that can be executed natively, or null if not available.
-        inline const std::unique_ptr<JITProgram>& GetExecutable() const
-        {
-            return executable_;
-        }
-
-        // Returns the maximum number of viewports that are set in this command buffer.
-        inline std::uint32_t GetMaxNumViewports() const
-        {
-            return maxNumViewports_;
-        }
-
-        // Returns the maximum number of scissors that are set in this command buffer.
-        inline std::uint32_t GetMaxNumScissors() const
-        {
-            return maxNumScissors_;
-        }
-
-        #endif // /LLGL_ENABLE_JIT_COMPILER
-
     private:
 
         void BindBufferBase(const GLBufferTarget bufferTarget, const GLBuffer& bufferGL, std::uint32_t slot);
@@ -114,15 +88,9 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        long                        flags_                  = 0;
-        GLVirtualCommandBuffer      buffer_;
-        GLRenderTarget*             renderTargetToResolve_  = nullptr;
-
-        #ifdef LLGL_ENABLE_JIT_COMPILER
-        std::unique_ptr<JITProgram> executable_;
-        std::uint32_t               maxNumViewports_        = 0;
-        std::uint32_t               maxNumScissors_         = 0;
-        #endif // /LLGL_ENABLE_JIT_COMPILER
+        long                    flags_                  = 0;
+        GLVirtualCommandBuffer  buffer_;
+        GLRenderTarget*         renderTargetToResolve_  = nullptr;
 
 };
 

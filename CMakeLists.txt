@@ -425,7 +425,6 @@ endif()
 
 option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
-option(LLGL_ENABLE_JIT_COMPILER "Enable Just-in-Time (JIT) compilation for emulated deferred command buffers (experimental)" OFF)
 option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
 
 option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
@@ -474,10 +473,6 @@ endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
     ADD_DEFINE(LLGL_ENABLE_DEBUG_LAYER)
-endif()
-
-if(LLGL_ENABLE_JIT_COMPILER)
-    ADD_DEFINE(LLGL_ENABLE_JIT_COMPILER)
 endif()
 
 if(LLGL_ENABLE_EXCEPTIONS)
@@ -550,22 +545,6 @@ find_source_files(FilesCore                         CXX     "${PROJECT_SOURCE_DI
 find_source_files(FilesPlatformBase                 CXX     "${PROJECT_SOURCE_DIR}/sources/Platform")
 find_source_files(FilesRenderer                     CXX     "${PROJECT_SOURCE_DIR}/sources/Renderer")
 
-if(LLGL_ENABLE_JIT_COMPILER)
-    find_source_files(FilesJIT                      CXX     "${PROJECT_SOURCE_DIR}/sources/JIT")
-    if(ARCH_IA32)
-        find_source_files(FilesJITArch              CXX     "${PROJECT_SOURCE_DIR}/sources/JIT/Arch/IA32")
-    elseif(ARCH_AMD64)
-        find_source_files(FilesJITArch              CXX     "${PROJECT_SOURCE_DIR}/sources/JIT/Arch/AMD64")
-    elseif(ARCH_ARM64)
-        find_source_files(FilesJITArch              CXX     "${PROJECT_SOURCE_DIR}/sources/JIT/Arch/ARM64")
-    endif()
-    if(WIN32)
-        find_source_files(FilesJITPlatform          CXX     "${PROJECT_SOURCE_DIR}/sources/JIT/Platform/Win32")
-    else()
-        find_source_files(FilesJITPlatform          CXX     "${PROJECT_SOURCE_DIR}/sources/JIT/Platform/POSIX")
-    endif()
-endif()
-
 if(LLGL_ENABLE_DEBUG_LAYER)
     find_source_files(FilesRendererDbg              CXX     "${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer")
     find_source_files(FilesRendererDbgBuffer        CXX     "${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/Buffer")
@@ -630,12 +609,6 @@ source_group("Sources\\Core"        FILES ${FilesCore})
 source_group("Sources\\Platform"    FILES ${FilesPlatformBase} ${FilesPlatform})
 source_group("Sources\\Renderer"    FILES ${FilesRenderer})
 
-if(LLGL_ENABLE_JIT_COMPILER)
-    source_group("Sources\\JIT"             FILES ${FilesJIT})
-    source_group("Sources\\JIT\\Arch"       FILES ${FilesJITArch})
-    source_group("Sources\\JIT\\Platform"   FILES ${FilesJITPlatform})
-endif()
-
 if(LLGL_ENABLE_DEBUG_LAYER)
     source_group("Sources\\Renderer\\DebugLayer"                FILES ${FilesRendererDbg})
     source_group("Sources\\Renderer\\DebugLayer\\Buffer"        FILES ${FilesRendererDbgBuffer})
@@ -678,15 +651,6 @@ set(
 
 if(MSVC)
     list(APPEND FilesLLGL ${FilesMsvcNatvis})
-endif()
-
-if(LLGL_ENABLE_JIT_COMPILER)
-    list(
-        APPEND FilesLLGL
-        ${FilesJIT}
-        ${FilesJITArch}
-        ${FilesJITPlatform}
-    )
 endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)

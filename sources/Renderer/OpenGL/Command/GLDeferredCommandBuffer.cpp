@@ -41,10 +41,6 @@
 #include <string.h>
 #include <cstring> // std::strlen
 
-#ifdef LLGL_ENABLE_JIT_COMPILER
-#   include "GLCommandAssembler.h"
-#endif // /LLGL_ENABLE_JIT_COMPILER
-
 
 namespace LLGL
 {
@@ -63,32 +59,13 @@ void GLDeferredCommandBuffer::Begin()
     /* Reset internal command buffer */
     buffer_.Clear();
     ResetRenderState();
-
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-
-    /* Reset states relevant to the GL command assembler */
-    executable_.reset();
-    maxNumViewports_ = 0;
-    maxNumScissors_  = 0;
-
-    #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 void GLDeferredCommandBuffer::End()
 {
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-
-    /* Generate native assembly only if command buffer will be submitted multiple times */
-    if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
-        executable_ = AssembleGLDeferredCommandBuffer(*this);
-
-    #else
-
     /* Pack virtual command buffer if it has to be traversed multiple times */
     if ((GetFlags() & CommandBufferFlags::MultiSubmit) != 0)
         buffer_.Pack();
-
-    #endif // /LLGL_ENABLE_JIT_COMPILER
 }
 
 void GLDeferredCommandBuffer::Execute(CommandBuffer& secondaryCommandBuffer)
@@ -274,10 +251,6 @@ void GLDeferredCommandBuffer::GenerateMips(Texture& texture, const TextureSubres
 
 void GLDeferredCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-    maxNumViewports_ = std::max(maxNumViewports_, 1u);
-    #endif // /LLGL_ENABLE_JIT_COMPILER
-
     auto cmd = AllocCommand<GLCmdViewport>(GLOpcodeViewport);
     {
         cmd->viewport   = GLViewport{ viewport.x, viewport.y, viewport.width, viewport.height };
@@ -289,10 +262,6 @@ void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Vie
 {
     /* Clamp number of viewports to limit */
     numViewports = std::min(numViewports, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
-
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-    maxNumViewports_ = std::max(maxNumViewports_, numViewports);
-    #endif // /LLGL_ENABLE_JIT_COMPILER
 
     /* Encode GL command */
     auto cmd = AllocCommand<GLCmdViewportArray>(GLOpcodeViewportArray, (sizeof(GLViewport) + sizeof(GLDepthRange))*numViewports);
@@ -320,10 +289,6 @@ void GLDeferredCommandBuffer::SetViewports(std::uint32_t numViewports, const Vie
 
 void GLDeferredCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-    maxNumScissors_ = std::max(maxNumScissors_, 1u);
-    #endif // /LLGL_ENABLE_JIT_COMPILER
-
     auto cmd = AllocCommand<GLCmdScissor>(GLOpcodeScissor);
     cmd->scissor = GLScissor{ scissor.x, scissor.y, scissor.width, scissor.height };
 }
@@ -332,10 +297,6 @@ void GLDeferredCommandBuffer::SetScissors(std::uint32_t numScissors, const Sciss
 {
     /* Clamp number of scissors to limit */
     numScissors = std::min(numScissors, LLGL_MAX_NUM_VIEWPORTS_AND_SCISSORS);
-
-    #ifdef LLGL_ENABLE_JIT_COMPILER
-    maxNumScissors_ = std::max(maxNumScissors_, numScissors);
-    #endif // /LLGL_ENABLE_JIT_COMPILER
 
     /* Encode GL command */
     auto cmd = AllocCommand<GLCmdScissorArray>(GLOpcodeScissorArray, sizeof(GLScissor)*numScissors);
