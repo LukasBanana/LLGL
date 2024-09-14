@@ -10,10 +10,12 @@
 
 
 #include "../Core/Assertion.h"
+#include "../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
 #include <vector>
 #include <type_traits>
+#include <cstdint>
 #include <limits.h>
 
 
@@ -68,7 +70,7 @@ TSizeType ConsolidateConsecutiveSequences(
 }
 
 // Helper class to simplify allocations of SegmentedBuffer.
-template <typename TSegmentHeader>
+template <typename TSegmentHeader, typename TBaseType = std::uintptr_t>
 class SegmentedBufferAllocator
 {
 
@@ -81,26 +83,26 @@ class SegmentedBufferAllocator
         SegmentedBufferAllocator& operator = (SegmentedBufferAllocator&&) = default;
 
         // Constructs the allocator with a buffer and segment size.
-        inline SegmentedBufferAllocator(std::vector<char>& buffer, std::size_t payloadSize) :
+        inline SegmentedBufferAllocator(std::vector<TBaseType>& buffer, std::size_t payloadSize) :
             buffer_ { buffer                               },
-            offset_ { buffer.size()                        },
+            offset_ { buffer.size() * sizeof(TBaseType)    },
             size_   { payloadSize + sizeof(TSegmentHeader) }
         {
             LLGL_ASSERT(size_ < USHRT_MAX);
-            buffer_.resize(offset_ + size_);
+            buffer_.resize(DivideRoundUp(offset_ + size_, sizeof(TBaseType)));
         }
 
         // Returns the segment header.
         inline TSegmentHeader* Header()
         {
-            return reinterpret_cast<TSegmentHeader*>(&buffer_[offset_]);
+            return reinterpret_cast<TSegmentHeader*>(Data() + offset_);
         }
 
         // Returns the segment body at the specified offset.
         template <typename T>
         inline T* Payload(std::size_t offset)
         {
-            return reinterpret_cast<T*>(&buffer_[offset_ + sizeof(TSegmentHeader) + offset]);
+            return reinterpret_cast<T*>(Data() + offset_ + sizeof(TSegmentHeader) + offset);
         }
 
         // Returns the total size (in bytes) for this segment allocation, i.e. payload + header size.
@@ -117,9 +119,21 @@ class SegmentedBufferAllocator
 
     private:
 
-        std::vector<char>&  buffer_;
-        std::size_t         offset_;
-        std::size_t         size_;
+        char* Data()
+        {
+            return reinterpret_cast<char*>(buffer_.data());
+        }
+
+        const char* Data() const
+        {
+            return reinterpret_cast<const char*>(buffer_.data());
+        }
+
+    private:
+
+        std::vector<TBaseType>& buffer_;
+        std::size_t             offset_;
+        std::size_t             size_;
 
 };
 
@@ -129,11 +143,16 @@ class SegmentedBuffer
 
     public:
 
+        // Basic type for the internal buffer, used for alignment.
+        using value_type = std::uintptr_t;
+
+    public:
+
         // Allocates a new segment.
         template <typename TSegmentHeader>
-        SegmentedBufferAllocator<TSegmentHeader> AllocSegment(std::size_t payloadSize)
+        SegmentedBufferAllocator<TSegmentHeader, value_type> AllocSegment(std::size_t payloadSize)
         {
-            return SegmentedBufferAllocator<TSegmentHeader>{ buffer_, payloadSize };
+            return SegmentedBufferAllocator<TSegmentHeader, value_type>{ buffer_, payloadSize };
         }
 
         // Finalizes the segments and duplicates them for the specified number of sets.
@@ -141,26 +160,26 @@ class SegmentedBuffer
         {
             LLGL_ASSERT(stride_ == 0);
             LLGL_ASSERT(numSegmentSets > 0);
-            stride_         = buffer_.size();
-            payloadOffset_  = buffer_.size() * numSegmentSets;
-            buffer_.resize(payloadOffset_);
+            stride_         = Size();
+            payloadOffset_  = Size() * numSegmentSets;
+            buffer_.resize(DivideRoundUp(payloadOffset_, sizeof(value_type)));
             for_subrange(i, 1, numSegmentSets)
-                ::memcpy(&buffer_[stride_ * i], &buffer_[0], stride_);
+                ::memcpy(Data() + stride_ * i, Data(), stride_);
         }
 
         // Appends the specified payload data at the end of this buffer.
         inline void AppendPayload(const void* data, std::size_t size)
         {
             LLGL_ASSERT(stride_ != 0);
-            auto startOffset = buffer_.size();
-            buffer_.resize(startOffset + size);
-            ::memcpy(&buffer_[startOffset], data, size);
+            const std::size_t startOffset = Size();
+            buffer_.resize(DivideRoundUp(startOffset + size, sizeof(value_type)));
+            ::memcpy(Data() + startOffset, data, size);
         }
 
         // Returns the size (in bytes) of the entire buffer.
         inline std::size_t Size() const
         {
-            return buffer_.size();
+            return buffer_.size() * sizeof(value_type);
         }
 
         // Returns the stride (in bytes).
@@ -183,12 +202,12 @@ class SegmentedBuffer
 
         inline char* Data()
         {
-            return buffer_.data();
+            return reinterpret_cast<char*>(buffer_.data());
         }
 
         inline const char* Data() const
         {
-            return buffer_.data();
+            return reinterpret_cast<const char*>(buffer_.data());
         }
 
         inline char* SegmentData(std::size_t index)
@@ -213,9 +232,9 @@ class SegmentedBuffer
 
     private:
 
-        std::size_t         stride_         = 0;
-        std::size_t         payloadOffset_  = 0;
-        std::vector<char>   buffer_;
+        std::size_t             stride_         = 0;
+        std::size_t             payloadOffset_  = 0;
+        std::vector<value_type> buffer_;
 
 };
 

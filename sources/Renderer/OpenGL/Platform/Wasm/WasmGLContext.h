@@ -41,7 +41,13 @@ class WasmGLContext : public GLContext
         // Returns the native WebGL context.
         inline EMSCRIPTEN_WEBGL_CONTEXT_HANDLE GetWebGLContext() const
         {
-            return context_;
+            return webGLContextHandle_;
+        }
+
+        // Returns true if this context enabled explicit swap control.
+        inline bool HasExplicitSwapControl() const
+        {
+            return hasExplicitSwapControl_;
         }
 
     private:
@@ -57,7 +63,9 @@ class WasmGLContext : public GLContext
 
     private:
 
-        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context_ = 0;
+        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE webGLContextHandle_     = 0;
+        int                             samples_                = 0;
+        bool                            hasExplicitSwapControl_ = false;
 
 };
 

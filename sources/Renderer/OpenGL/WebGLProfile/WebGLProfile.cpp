@@ -81,7 +81,6 @@ static GLbitfield ToGLESMapBufferRangeAccess(GLenum access)
 // This emulates the glMapBuffer API from GLES3 for WebGL
 static struct MapBufferContext
 {
-    GLuint              buffer  = 0;
     GLintptr            offset  = 0;
     GLsizeiptr          size    = 0;
     GLbitfield          access  = 0;
@@ -105,13 +104,7 @@ void* MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfie
     if (access == 0 || !(length > 0))
         return nullptr;
 
-    /* Get currently bound buffer at the specified target */
-    GLint bufferBinding = GLTypes::BufferTargetToBindingPname(target);
-    GLint buffer = 0;
-    glGetIntegerv(bufferBinding, &buffer);
-
     /* Allocate intermdiate buffer and store in global context */
-    g_mapBufferContext.buffer   = static_cast<GLuint>(buffer);
     g_mapBufferContext.offset   = offset;
     g_mapBufferContext.size     = length;
     g_mapBufferContext.access   = access;

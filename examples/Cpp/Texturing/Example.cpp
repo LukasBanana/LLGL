@@ -12,7 +12,11 @@
 #include <DDSImageReader.h>
 #include <LLGL/Platform/Platform.h>
 
-#if !defined(LLGL_OS_ANDROID) && !defined(LLGL_OS_WASM)
+#if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS) || defined(LLGL_OS_WASM)
+#   define LLGLEXAMPLE_MOBILE 1
+#endif
+
+#if !LLGLEXAMPLE_MOBILE
 #   define ENABLE_COMPRESSED_TEXTURE_DDX 1
 #endif
 
@@ -228,7 +232,7 @@ private:
         if (input.KeyDown(LLGL::Key::Tab))
         {
             // Switch to next resource we want to present
-#if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS) || defined(LLGL_OS_WASM)
+#if LLGLEXAMPLE_MOBILE
             resourceIndex = 3 - resourceIndex;
 #else
             if (input.KeyPressed(LLGL::Key::Shift))

@@ -34,21 +34,17 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
  * WasmGLSwapChainContext class
  */
 
-WasmGLSwapChainContext::WasmGLSwapChainContext(WasmGLContext& context, Surface& surface) :
-    GLSwapChainContext { context                   },
-    context_           { context.GetWebGLContext() }
+WasmGLSwapChainContext::WasmGLSwapChainContext(WasmGLContext& context, Surface& /*surface*/) :
+    GLSwapChainContext      { context                          },
+    webGLContextHandle_     { context.GetWebGLContext()        },
+    hasExplicitSwapControl_ { context.HasExplicitSwapControl() }
 {
-    /* Get native surface handle */
-    //NativeHandle nativeHandle;
-    //surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-	
-	if (!context_)
-        LLGL_TRAP("GetWebGLContext failed");
+	LLGL_ASSERT(webGLContextHandle_ != 0);
 }
 
 WasmGLSwapChainContext::~WasmGLSwapChainContext()
 {
-    //eglDestroySurface(display_, surface_);
+    // dummy
 }
 
 bool WasmGLSwapChainContext::HasDrawable() const
@@ -58,7 +54,10 @@ bool WasmGLSwapChainContext::HasDrawable() const
 
 bool WasmGLSwapChainContext::SwapBuffers()
 {
-    // do nothing
+    /* Nothing to do, the browser will handle this since we didn't request 'explicitSwapControl' */
+    /* Commit frame if explicit swap control was enabled for this WebGL context */
+    if (hasExplicitSwapControl_)
+        emscripten_webgl_commit_frame();
     return true;
 }
 
@@ -69,14 +68,8 @@ void WasmGLSwapChainContext::Resize(const Extent2D& resolution)
 
 bool WasmGLSwapChainContext::MakeCurrentEGLContext(WasmGLSwapChainContext* context)
 {
-    EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context->context_);
-    LLGL_ASSERT(res == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_make_context_current() failed");
-
-    //LLGL_ASSERT(emscripten_webgl_get_current_context() == context->GetGLContext());
-
-    //int width = 0, height = 0, fs = 0;
-    //emscripten_webgl_get_drawing_buffer_size(context->context_, &width, &height);
-
+    EMSCRIPTEN_RESULT result = emscripten_webgl_make_context_current(context->webGLContextHandle_);
+    LLGL_ASSERT(result == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_make_context_current() failed");
     return true;
 }
 

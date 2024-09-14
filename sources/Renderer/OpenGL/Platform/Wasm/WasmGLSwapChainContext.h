@@ -38,7 +38,8 @@ class WasmGLSwapChainContext final : public GLSwapChainContext
 
     private:
 
-        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context_ = 0;
+        EMSCRIPTEN_WEBGL_CONTEXT_HANDLE webGLContextHandle_     = 0;
+        bool                            hasExplicitSwapControl_ = false;
 
 };
 

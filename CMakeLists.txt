@@ -529,7 +529,7 @@ if(EMSCRIPTEN)
     # LLGL needs at least WebGL 2.0
     add_link_options("SHELL:-s MIN_WEBGL_VERSION=2")
     add_link_options("SHELL:-s MAX_WEBGL_VERSION=2")
-
+    add_link_options("SHELL:-s OFFSCREEN_FRAMEBUFFER") # required for explicit swap control
     add_link_options("SHELL:-s ASSERTIONS")
 endif()
 

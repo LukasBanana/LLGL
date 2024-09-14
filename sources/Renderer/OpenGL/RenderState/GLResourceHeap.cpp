@@ -73,7 +73,7 @@ enum GLResourceFlags : std::uint32_t
 };
 
 // Resource view heap (RVH) segment structure with up to three dynamic sub-buffers.
-struct GLResourceHeapSegment
+struct alignas(sizeof(std::uintptr_t)) GLResourceHeapSegment
 {
     std::uint32_t   size        : 28; // Byte size of this segment
     std::uint32_t   flags       :  1; // GLResourceFlags
@@ -83,6 +83,11 @@ struct GLResourceHeapSegment
     std::uint32_t   data1Offset : 16; // Byte offset after the first sub-buffer, following the second sub-buffer
     std::uint32_t   data2Offset : 16; // Byte offset after the second sub-buffer, following the third sub-buffer
 };
+
+static_assert(
+    sizeof(GLResourceHeapSegment) % sizeof(std::uintptr_t) == 0,
+    "size of GLResourceHeapSegment must be a multiple of 'uintptr_t'"
+);
 
 LLGL_ASSERT_POD_TYPE(GLResourceHeapSegment);
 

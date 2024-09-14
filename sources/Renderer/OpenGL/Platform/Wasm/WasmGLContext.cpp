@@ -56,7 +56,6 @@ WasmGLContext::~WasmGLContext()
 
 int WasmGLContext::GetSamples() const
 {
-    int samples_ = 4;
     return samples_;
 }
 
@@ -65,7 +64,7 @@ bool WasmGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
         auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
-        nativeHandleGL->context = context_;
+        nativeHandleGL->context = webGLContextHandle_;
         return true;
     }
     return false;
@@ -97,35 +96,72 @@ static void GetWebGLVersionFromConfig(EmscriptenWebGLContextAttributes& attrs, c
     }
 }
 
+// Run JavaScript code to detect Safari user agent. This is generally not advised because it's not future proof,
+// but there is currently no other way to detect whether WebGL 2 is properly supported or not. It is not on Safari sadly.
+EM_JS(int, EmscriptenIsSafariUserAgent, (void), {
+    return (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') ? 1 : 0);
+})
+
+// Hacky function to determine whether we can trust the browser engine to properly support the WebGL translation layer.
+static bool IsWebGLSwapControlWorkaroundRequired()
+{
+    return (EmscriptenIsSafariUserAgent() != 0);
+}
+
 void WasmGLContext::CreateContext(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile, WasmGLContext* sharedContext)
 {
+    /*
+    With WebGL, we assume that the maximum sample count is 4.
+    When the swap-control workaround is rquired, we enable anti-aliasing and swap-control.
+    Otherwise, synchronization issues with glBufferSubData() can be observed, likely caused by the translation layer (on both macOS and iOS Safari).
+    */
+    if (IsWebGLSwapControlWorkaroundRequired())
+    {
+        samples_ = 4;
+        hasExplicitSwapControl_ = true;
+    }
+    else
+    {
+        samples_ = Clamp(pixelFormat.samples, 1, 4);
+        hasExplicitSwapControl_ = false;
+    }
+
+    /* Initialiye WebGL context attributes; Default to WebGL 2.0 */
 	EmscriptenWebGLContextAttributes attrs = {};
 	emscripten_webgl_init_context_attributes(&attrs);
 
     GetWebGLVersionFromConfig(attrs, profile);
-	attrs.alpha                         = true;//(pixelFormat.colorBits > 24);
-	attrs.depth                         = true;//(pixelFormat.depthBits > 0);
-	attrs.stencil                       = true;//(pixelFormat.stencilBits > 0);
-	attrs.antialias                     = true;//(pixelFormat.samples > 1);
-	attrs.premultipliedAlpha            = false;
-	attrs.preserveDrawingBuffer         = false;
-	attrs.explicitSwapControl           = 0;
-	attrs.failIfMajorPerformanceCaveat  = false;
+	attrs.alpha                         = true;
+	attrs.depth                         = true;
+	attrs.stencil                       = true;
+	attrs.antialias                     = (samples_ > 1);
+	attrs.premultipliedAlpha            = false; // This must be disabled to prevent glitches in the browser canvas
 	attrs.enableExtensionsByDefault     = true;
 	attrs.powerPreference               = EM_WEBGL_POWER_PREFERENCE_DEFAULT;
 
+    /* If explicit swap-control is requested, offscreen back-buffering must also be enabled */
+    if (hasExplicitSwapControl_)
+    {
+        attrs.explicitSwapControl           = true;
+        attrs.renderViaOffscreenBackBuffer  = true;
+    }
+
+    /* Create WebGL context */
     //TODO: determine canvas ID
-	context_ = emscripten_webgl_create_context("#canvas", &attrs);
+	webGLContextHandle_ = emscripten_webgl_create_context("#canvas", &attrs);
+    if (!webGLContextHandle_)
+        LLGL_TRAP("emscripten_webgl_create_context() failed");
 
-    if (!context_)
-        LLGL_TRAP("emscripten_webgl_create_context failed");
-
-    EMSCRIPTEN_RESULT res = emscripten_webgl_make_context_current(context_);
+    /* Make WebGL context current */
+    EMSCRIPTEN_RESULT result = emscripten_webgl_make_context_current(webGLContextHandle_);
+    LLGL_ASSERT(result == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_make_context_current() failed");
 }
 
 void WasmGLContext::DeleteContext()
 {
-    //destroy context_
+    EMSCRIPTEN_RESULT result = emscripten_webgl_destroy_context(webGLContextHandle_);
+    LLGL_ASSERT(result == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_destroy_context() failed");
+    webGLContextHandle_ = 0;
 }
 
 

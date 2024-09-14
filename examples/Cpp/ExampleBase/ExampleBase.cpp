@@ -34,7 +34,6 @@
 #elif defined LLGL_OS_WASM
 #   include <emscripten.h>
 #   include <emscripten/html5.h>
-#   include <LLGL/Backend/OpenGL/NativeCommand.h>
 #endif
 
 #define IMMEDIATE_SUBMIT_CMDBUFFER 0
@@ -515,7 +514,11 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     {
         swapChainDesc.debugName     = "SwapChain";
         swapChainDesc.resolution    = ScaleResolutionForDisplay(g_Config.windowSize, LLGL::Display::GetPrimary());
+        #ifdef LLGL_OS_WASM
+        swapChainDesc.samples       = g_Config.samples; //TODO: workaround to avoid intermediate WebGL context
+        #else
         swapChainDesc.samples       = std::min<std::uint32_t>(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
+        #endif
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
 
@@ -620,20 +623,6 @@ void ExampleBase::OnResize(const LLGL::Extent2D& resolution)
 
 void ExampleBase::MainLoop()
 {
-    #ifdef LLGL_OS_WASM
-
-    // Clear GL state when rendering with WebGL
-    commands->Begin();
-    {
-        LLGL::OpenGL::NativeCommand cmd;
-        cmd.type = LLGL::OpenGL::NativeCommandType::ClearCache;
-        commands->DoNativeCommand(&cmd, sizeof(cmd));
-    }
-    commands->End();
-    commandQueue->Submit(*commands);
-
-    #endif
-
     // Update profiler (if debugging is enabled)
     if (debuggerObj_)
     {
@@ -725,7 +714,7 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
         deviceShaderDesc.defines = defines;
 
         #if defined LLGL_OS_IOS || defined LLGL_OS_MACOS
-        // Always load shaders from default library (default.metallib) when compiling for iOS
+        // Always load shaders from default library (default.metallib) when compiling for iOS and macOS
         deviceShaderDesc.flags |= LLGL::ShaderCompileFlags::DefaultLibrary;
         #endif
 
