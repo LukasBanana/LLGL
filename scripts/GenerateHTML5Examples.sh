@@ -29,6 +29,14 @@ for ARG in "$@"; do
     fi
 done
 
+# Find Emscripten SDK
+if [ -z "$EMSDK" ]; then
+    echo "Error: Missing EMSDK environment variable. Run 'source <PATH-TO-EMSDK>/emsdk_env.sh' to fix it."
+    exit 1
+fi
+
+EMSCRIPTEN_FILE_PACKAGER="$EMSDK/upstream/emscripten/tools/file_packager"
+
 # Copys the input file to the output and removes '\r' EOL characters from text files.
 # Web page will run on Linux server and Git must not convert EOL for this output file.
 # Otherwise, data offsets in the *.data.js script won't match with the *.data file after Git uploaded it.

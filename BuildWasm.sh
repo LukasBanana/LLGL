@@ -117,7 +117,6 @@ if [ -z "$EMSDK" ]; then
 fi
 
 EMSCRIPTEN_CMAKE_TOOLCHAIN="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
-EMSCRIPTEN_FILE_PACKAGER="$EMSDK/upstream/emscripten/tools/file_packager"
 
 if [ ! -f "$EMSCRIPTEN_CMAKE_TOOLCHAIN" ]; then
     echo "Error: Could not find file $EMSCRIPTEN_CMAKE_TOOLCHAIN"
