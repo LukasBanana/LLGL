@@ -7,15 +7,15 @@
 # The input can either be a single Metal shader file, an app folder to compile all of its *.metal files,
 # or a directory with multiple *.app/ subfolders for which a separate default.metallib is generated each.
 
+if [ "$#" -lt 2 ]; then
+    echo "Usage: CompileMetalToMetallib.sh SDK INPUT [-v|--verbose]"
+    exit 1
+fi
+
 # Parse input parameters
 METAL_SDK=$1
 INPUT_PATH=$2
 VERBOSE=0
-
-if [ "$#" -eq 0 ]; then
-    echo "Usage: CompileMetalToMetallib.sh SDK INPUT [-v|--verbose]"
-    exit 1
-fi
 
 if [ "$#" -eq 3 ]; then
     if [ "$3" = "-v" ] || [ "$3" = "--verbose" ]; then

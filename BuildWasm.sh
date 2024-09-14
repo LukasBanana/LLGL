@@ -21,6 +21,7 @@ print_help()
     echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -d, --debug ............... Configure Debug build (default is Release)"
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
+    echo "  -v, --verbose ............. Print additional information"
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
     echo "  --pthreads ................ Enable pthreads (limits browser availability)"
@@ -100,7 +101,7 @@ else
 fi
 
 # Print additional information if in verbose mode
-if [ $VERBOSE -eq 1 ]; then
+if [ $VERBOSE -ne 0 ]; then
     echo "GAUSSIAN_LIB_DIR=$GAUSSIAN_LIB_DIR"
     if [ $PROJECT_ONLY -eq 0 ]; then
         echo "BUILD_TYPE=$BUILD_TYPE"
@@ -157,12 +158,12 @@ copy_file_preserve_linux_eol()
     OUTPUT=$2
     FILE_EXT=${INPUT##*.}
     if [[ "${FILE_EXT,,}" =~ ^(txt|vert|frag|obj)$ ]]; then
-        if [ $VERBOSE -eq 1 ]; then
+        if [ $VERBOSE -ne 0 ]; then
             echo "Copy asset (convert EOL): $(basename $INPUT)"
         fi
         tr -d "\r" < "$INPUT" > "$OUTPUT"
     else
-        if [ $VERBOSE -eq 1 ]; then
+        if [ $VERBOSE -ne 0 ]; then
             echo "Copy asset: $(basename $INPUT)"
         fi
         cp "$INPUT" "$OUTPUT"
@@ -170,86 +171,10 @@ copy_file_preserve_linux_eol()
 }
 
 # Generate HTML pages
-generate_html5_page()
-{
-    CURRENT_PROJECT=$1
-
-    echo "Generate HTML5 page: $CURRENT_PROJECT"
-
-    # Get source folder
-    ASSETS_SOURCE_DIR="$SOURCE_DIR/examples/Shared/Assets"
-    PROJECT_SOURCE_DIR="$SOURCE_DIR/examples/Cpp"
-    if [[ "$CURRENT_PROJECT" == *D ]]; then
-        PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/${CURRENT_PROJECT:0:-1}"
-    else
-        PROJECT_SOURCE_DIR="$PROJECT_SOURCE_DIR/$CURRENT_PROJECT"
-    fi
-
-    # Get destination folder
-    HTML5_ROOT="${OUTPUT_DIR}/html5/Example_$CURRENT_PROJECT"
-    BIN_ROOT=${OUTPUT_DIR}/build
-
-    # Create folder structure
-    mkdir -p "$HTML5_ROOT"
-    BASE_FILENAME="Example_$CURRENT_PROJECT"
-    cp "$BIN_ROOT/$BASE_FILENAME.js" "$HTML5_ROOT/$BASE_FILENAME.js"
-    cp "$BIN_ROOT/$BASE_FILENAME.wasm" "$HTML5_ROOT/$BASE_FILENAME.wasm"
-    if [ $ENABLE_PTHREADS = "ON" ]; then
-        cp "$BIN_ROOT/$BASE_FILENAME.worker.js" "$HTML5_ROOT/$BASE_FILENAME.worker.js"
-    fi
-
-    # Replace meta data
-    sed -e "s/LLGL_EXAMPLE_NAME/${CURRENT_PROJECT}/g" \
-        -e "s/LLGL_EXAMPLE_PROJECT/Example_${CURRENT_PROJECT}/g" \
-        "$SOURCE_DIR/examples/Shared/Platform/Wasm/index.html" > "$HTML5_ROOT/index.html"
-    
-    # Find all required assets in *.assets.txt file of respective project directory and copy them into app folder
-    ASSET_DIR="$HTML5_ROOT/assets"
-    mkdir -p "$ASSET_DIR"
-
-    ASSETS_LIST_FILE=$(find "$PROJECT_SOURCE_DIR" -type f -name *.assets.txt)
-    if [ -f "$ASSETS_LIST_FILE" ]; then
-        # Read asset filenames to copy to package output
-        ASSET_FILES=()
-        for FILTER in $(cat $ASSETS_LIST_FILE); do
-            for FILE in $ASSETS_SOURCE_DIR/$FILTER; do
-                ASSET_FILES+=( $(echo "$FILE" | tr -d '\r') ) # Remove '\r' characters when reading .txt file from WSL
-            done
-        done
-
-        # Copy all asset file into destination folder
-        for FILE in ${ASSET_FILES[@]}; do
-            copy_file_preserve_linux_eol "$FILE" "$ASSET_DIR/$(basename $FILE)"
-        done
-    fi
-
-    # Find all shaders and copy them into app folder
-    for FILE in $PROJECT_SOURCE_DIR/*.vert \
-                $PROJECT_SOURCE_DIR/*.frag; do
-        if [ -f "$FILE" ]; then
-            copy_file_preserve_linux_eol "$FILE" "$ASSET_DIR/$(basename $FILE)"
-        fi
-    done
-
-    # Package assets into .data.js file with Emscripten packager tool
-    (cd "$HTML5_ROOT" && "$EMSCRIPTEN_FILE_PACKAGER" "$BASE_FILENAME.data" --preload assets "--js-output=$BASE_FILENAME.data.js" >/dev/null 2>&1)
-}
-
 if [ $PROJECT_ONLY -eq 0 ] && [ $ENABLE_EXAMPLES == "ON" ]; then
-
-    BIN_FILE_BASE="${OUTPUT_DIR}/build/Example_"
-    BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
-
-    if [ $BUILD_TYPE = "Debug" ]; then
-        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*D.wasm)
-    else
-        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.wasm)
-    fi
-
-    for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do
-        BIN_FILE_LEN=${#BIN_FILE}
-        PROJECT_NAME=${BIN_FILE:BIN_FILE_BASE_LEN:BIN_FILE_LEN-BIN_FILE_BASE_LEN-5}
-        generate_html5_page $PROJECT_NAME
-    done
-
+    scripts/GenerateHTML5Examples.sh                    \
+        "${SOURCE_DIR}"                                 \
+        "${OUTPUT_DIR}"                                 \
+        $([ $BUILD_TYPE = "Debug" ] && echo "--debug")  \
+        $([ $VERBOSE -ne 0 ] && echo "--verbose")
 fi
