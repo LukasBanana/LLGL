@@ -130,7 +130,7 @@ bool MacOSGLContext::CreatePixelFormat(const GLPixelFormat& pixelFormat, const R
     const NSOpenGLPixelFormatAttribute profileAttrib = TranslateNSOpenGLProfile(profile);
 
     /* Find suitable pixel format (for samples > 0) */
-    for (samples_ = pixelFormat.samples; samples_ > 0; --samples_)
+    for (samples_ = std::max<int>(1, pixelFormat.samples); samples_ > 0; --samples_)
     {
         NSOpenGLPixelFormatAttribute attribs[] =
         {

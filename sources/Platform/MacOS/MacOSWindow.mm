@@ -439,17 +439,22 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     #endif
 
     const bool isCentered = ((desc.flags & WindowFlags::Centered) != 0);
+    const bool isVisible = ((desc.flags & WindowFlags::Visible) != 0);
+
+    /* Make this the new key window but only put it into the front if it's initially visible */
+    if (isVisible)
+        [wnd makeKeyAndOrderFront:nil];
+    else
+        [wnd makeKeyWindow];
 
     /* Move this window to the front of the screen list and center if requested */
-    [wnd makeKeyAndOrderFront:nil];
     if (isCentered)
         [wnd center];
     else
         SetRelativeNSWindowPosition(wnd, desc.position);
 
-    /* Show window */
-    if ((desc.flags & WindowFlags::Visible) != 0)
-        [wnd setIsVisible:YES];
+    /* Show or hide window */
+    [wnd setIsVisible:(isVisible ? YES : NO)];
 
     return wnd;
 }

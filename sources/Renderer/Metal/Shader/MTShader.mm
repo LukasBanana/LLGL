@@ -147,7 +147,7 @@ static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc
     return opt;
 }
 
-bool MTShader::CompileFromDefaultLibrary(id<MTLDevice> device, const ShaderDescriptor &shaderDesc)
+bool MTShader::CompileFromDefaultLibrary(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
 {
     library_ = [device newDefaultLibrary];
     return LoadShaderFunction(shaderDesc.entryPoint);
