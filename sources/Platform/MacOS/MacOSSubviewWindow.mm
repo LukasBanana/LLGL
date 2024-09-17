@@ -45,7 +45,11 @@ Extent2D MacOSSubviewWindow::GetContentSize() const
 {
     NSSize size = [view_ frame].size;
 
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     const CGFloat scaleFactor = [[view_ window] backingScaleFactor];
+    #else
+    const CGFloat scaleFactor = 1.0;
+    #endif
 
     return Extent2D
     {

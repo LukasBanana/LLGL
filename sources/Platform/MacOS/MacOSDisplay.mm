@@ -6,6 +6,7 @@
  */
 
 #include "MacOSDisplay.h"
+#include "MacOSCompatibility.h"
 #include "../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 
@@ -57,12 +58,14 @@ static std::uint32_t GetDisplayModeRefreshRate(CGDisplayModeRef displayMode, CGD
 // Converts a CGDisplayMode to a descriptor structure
 static void ConvertCGDisplayMode(DisplayMode& dst, CGDisplayModeRef src, CGDirectDisplayID displayID)
 {
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     if (@available(macOS 10.8, *))
     {
         dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetPixelWidth(src));
         dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetPixelHeight(src));
     }
     else
+    #endif
     {
         dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetWidth(src));
         dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetHeight(src));
@@ -285,6 +288,7 @@ Offset2D MacOSDisplay::GetOffset() const
 
 float MacOSDisplay::GetScale() const
 {
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     if (@available(macOS 10.8, *))
     {
         CGDisplayModeRef modeRef = CGDisplayCopyDisplayMode(displayID_);
@@ -294,6 +298,7 @@ float MacOSDisplay::GetScale() const
         CGDisplayModeRelease(modeRef);
         return scale;
     }
+    #endif
     return 1.0f;
 }
 

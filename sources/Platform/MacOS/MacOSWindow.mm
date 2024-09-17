@@ -159,6 +159,7 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
 
 MacOSWindow::~MacOSWindow()
 {
+#if 0 //TODO: Remove entirely? Crahes on MacOSX 10.6, likely because of NSAutoreleasePool.
     if (wnd_ != nullptr)
     {
         [wnd_ setDelegate:nil];
@@ -166,6 +167,7 @@ MacOSWindow::~MacOSWindow()
     }
     if (wndDelegate_ != nullptr)
         [wndDelegate_ release];
+#endif
 }
 
 bool MacOSWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
@@ -183,7 +185,11 @@ Extent2D MacOSWindow::GetContentSize() const
 {
     NSSize size = [[wnd_ contentView] frame].size;
 
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     const CGFloat scaleFactor = [wnd_ backingScaleFactor];
+    #else
+    const CGFloat scaleFactor = 1.0;
+    #endif
 
     return Extent2D
     {
@@ -413,12 +419,14 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     CGFloat w = static_cast<CGFloat>(desc.size.width);
     CGFloat h = static_cast<CGFloat>(desc.size.height);
 
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     if ((desc.flags & WindowFlags::DisableSizeScaling) != 0)
     {
         const CGFloat scaleFactor = [[NSScreen mainScreen] backingScaleFactor];
         w /= scaleFactor;
         h /= scaleFactor;
     }
+    #endif
 
     NSWindow* wnd = [[NSWindow alloc]
         initWithContentRect:    NSMakeRect(0, 0, w, h)
@@ -461,7 +469,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 
 MacOSWindowDelegate* MacOSWindow::CreateNSWindowDelegate(const WindowDescriptor& desc)
 {
-    return [[MacOSWindowDelegate alloc] initWithWindow:this];
+    return [[MacOSWindowDelegate alloc] initWithPlatformWindow:this];
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)

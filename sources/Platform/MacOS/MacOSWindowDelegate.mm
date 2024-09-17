@@ -15,7 +15,7 @@
 
 @implementation MacOSWindowDelegate
 
-- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window
+- (nonnull instancetype)initWithPlatformWindow:(nonnull LLGL::MacOSWindow*)window
 {
     self = [super init];
     if (self != nil)

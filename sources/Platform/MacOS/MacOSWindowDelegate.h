@@ -27,7 +27,7 @@ namespace LLGL { class MacOSWindow; }
 
 @property (nonatomic, nonnull) LLGL::MacOSWindow* windowInstance;
 
-- (nonnull instancetype)initWithWindow:(nonnull LLGL::MacOSWindow*)window;
+- (nonnull instancetype)initWithPlatformWindow:(nonnull LLGL::MacOSWindow*)window;
 
 - (BOOL)isFullscreenMode;
 

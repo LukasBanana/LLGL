@@ -6,6 +6,7 @@
  */
 
 #include "MacOSAppDelegate.h"
+#include "MacOSCompatibility.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -21,6 +22,7 @@ static NSString* FindMacOSAppName()
     NSDictionary* bundleInfo = [[NSBundle mainBundle] infoDictionary];
     NSString* bundleNameKeys[] = { @"CFBundleDisplayName", @"CFBundleName", @"CFBundleExecutable" };
 
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     for (NSString* key : bundleNameKeys)
     {
         id name = bundleInfo[key];
@@ -31,6 +33,7 @@ static NSString* FindMacOSAppName()
                 return nameStr;
         }
     }
+    #endif
 
     /* Fallback to default name */
     return @"LLGL";
@@ -63,12 +66,14 @@ static void CreateDefaultNSMenuBar()
         action:             @selector(hideOtherApplications:)
         keyEquivalent:      @"h"
     ];
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
     [appMenuItemHideOthers setKeyEquivalentModifierMask:NSEventModifierFlagOption | NSEventModifierFlagCommand];
     [appMenu
         addItemWithTitle:   @"Show All"
         action:             @selector(unhideAllApplications:)
         keyEquivalent:      @""
     ];
+    #endif
     [appMenu addItem:[NSMenuItem separatorItem]];
     [appMenu
         addItemWithTitle:   [NSString stringWithFormat:@"Quit %@", appName]
