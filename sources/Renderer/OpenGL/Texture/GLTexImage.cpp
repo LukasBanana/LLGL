@@ -32,10 +32,16 @@ static std::vector<float> GenImageDataRf(std::uint32_t numPixels, float value)
     return std::vector<float>(static_cast<std::size_t>(numPixels), value);
 }
 
-// Generates an image buffer with floating-points for the Red component and an unsigned byte for the Green component.
+// Generates an image buffer with floating-points for the Red component and unsigned bytes for the Green component.
 static std::vector<GLDepthStencilPair> GenImageDataD32fS8ui(std::uint32_t numPixels, float depth, std::uint8_t stencil)
 {
     return std::vector<GLDepthStencilPair>(static_cast<std::size_t>(numPixels), GLDepthStencilPair{ depth, stencil });
+}
+
+// Generates an image buffer with unsigned bytes for the stencil index.
+static std::vector<std::uint8_t> GenImageDataS8ui(std::uint32_t numPixels, std::uint8_t stencil)
+{
+    return std::vector<std::uint8_t>(static_cast<std::size_t>(numPixels), stencil);
 }
 
 // Returns true if the specified hardware format requires an integer type, e.g. GL_RGBA_INTEGER
@@ -54,6 +60,15 @@ static bool IsClearValueEnabled(const TextureDescriptor& desc)
 static bool CanInitializeTexWithRGBAf(const TextureDescriptor& desc)
 {
     return (IsClearValueEnabled(desc) && !IsCompressedFormat(desc.format) && IsStrictFloatFormat(desc.format));
+}
+
+static GLenum GetDefaultInitialGLImageFormat(Format format)
+{
+    #if LLGL_GL3PLUS_SUPPORTED
+    return (IsIntegerFormat(format) ? GL_RGBA_INTEGER : GL_RGBA);
+    #else
+    return GL_RGBA;
+    #endif
 }
 
 [[noreturn]]
@@ -291,7 +306,7 @@ static void GLTexImage3DBase(
     }
 }
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL && GL_VERSION_3_2
 
 static void GLTexImage2DMultisampleBase(
     GLenum          target,
@@ -351,7 +366,7 @@ static void GLTexImage3DMultisampleBase(
     }
 }
 
-#endif
+#endif // /LLGL_OPENGL && GL_VERSION_3_2
 
 /* ----- Wrapper functions ----- */
 
@@ -443,7 +458,7 @@ static void GLTexImage2DArray(
     GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevels, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL && GL_VERSION_3_2
 
 static void GLTexImageCubeArray(
     std::uint32_t   mipLevels,
@@ -524,7 +539,7 @@ static void GLTexImage1D(const TextureDescriptor& desc, const ImageView* imageVi
             NumMipLevels(desc),
             desc.format,
             desc.extent.width,
-            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GetDefaultInitialGLImageFormat(desc.format),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -551,6 +566,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
     }
     else if (IsStencilFormat(desc.format))
     {
+        #if LLGL_GL3PLUS_SUPPORTED
         if (IsClearValueEnabled(desc))
         {
             /* Initialize depth-stencil texture image with default depth */
@@ -578,6 +594,35 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
                 nullptr
             );
         }
+        #else
+        if (IsClearValueEnabled(desc))
+        {
+            /* Initialize stencil texture image with default index value */
+            auto image = GenImageDataS8ui(desc.extent.width * desc.extent.height, desc.clearValue.stencil);
+            GLTexImage2D(
+                NumMipLevels(desc),
+                FindSuitableDepthFormat(desc),
+                desc.extent.width,
+                desc.extent.height,
+                GL_STENCIL_INDEX,
+                GL_UNSIGNED_BYTE,
+                image.data()
+            );
+        }
+        else
+        {
+            /* Allocate depth-stencil texture image without initial data */
+            GLTexImage2D(
+                NumMipLevels(desc),
+                FindSuitableDepthFormat(desc),
+                desc.extent.width,
+                desc.extent.height,
+                GL_STENCIL_INDEX,
+                GL_UNSIGNED_BYTE,
+                nullptr
+            );
+        }
+        #endif
     }
     else if (IsDepthFormat(desc.format))
     {
@@ -631,7 +676,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.format,
             desc.extent.width,
             desc.extent.height,
-            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GetDefaultInitialGLImageFormat(desc.format),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -684,7 +729,7 @@ static void GLTexImage3D(const TextureDescriptor& desc, const ImageView* imageVi
             desc.extent.width,
             desc.extent.height,
             desc.extent.depth,
-            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GetDefaultInitialGLImageFormat(desc.format),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -727,6 +772,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     {
         Format internalFormat = FindSuitableDepthFormat(desc);
 
+        #if LLGL_GL3PLUS_SUPPORTED
         std::vector<GLDepthStencilPair> image;
         const void* initialData = nullptr;
 
@@ -751,6 +797,32 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
                 initialData
             );
         }
+        #else
+        std::vector<std::uint8_t> image;
+        const void* initialData = nullptr;
+
+        if (IsClearValueEnabled(desc))
+        {
+            /* Initialize depth texture image with default depth */
+            image       = GenImageDataS8ui(desc.extent.width * desc.extent.height, desc.clearValue.stencil);
+            initialData = image.data();
+        }
+
+        /* Allocate depth texture image without initial data */
+        for_range(arrayLayer, desc.arrayLayers)
+        {
+            GLTexImageCube(
+                numMipLevels,
+                internalFormat,
+                desc.extent.width,
+                desc.extent.height,
+                arrayLayer,
+                GL_STENCIL_INDEX,
+                GL_UNSIGNED_BYTE,
+                initialData
+            );
+        }
+        #endif
     }
     else if (IsDepthFormat(desc.format))
     {
@@ -810,7 +882,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
                 desc.extent.width,
                 desc.extent.height,
                 arrayLayer,
-                (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+                GetDefaultInitialGLImageFormat(desc.format),
                 GL_UNSIGNED_BYTE,
                 nullptr
             );
@@ -863,7 +935,7 @@ static void GLTexImage1DArray(const TextureDescriptor& desc, const ImageView* im
             desc.format,
             desc.extent.width,
             desc.arrayLayers,
-            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GetDefaultInitialGLImageFormat(desc.format),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -891,6 +963,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
     }
     else if (IsStencilFormat(desc.format))
     {
+        #if LLGL_GL3PLUS_SUPPORTED
         if (IsClearValueEnabled(desc))
         {
             /* Initialize depth-stencil texture image with default depth */
@@ -920,6 +993,9 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
                 nullptr
             );
         }
+        #else
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("stencil-texImage2DArray");
+        #endif
     }
     else if (IsDepthFormat(desc.format))
     {
@@ -977,14 +1053,14 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GetDefaultInitialGLImageFormat(desc.format),
             GL_UNSIGNED_BYTE,
             nullptr
         );
     }
 }
 
-#ifdef LLGL_OPENGL
+#if LLGL_OPENGL && GL_VERSION_3_2
 
 static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* imageView)
 {
@@ -1032,7 +1108,7 @@ static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* 
             desc.extent.width,
             desc.extent.height,
             desc.arrayLayers,
-            (IsIntegerFormat(desc.format) ? GL_RGBA_INTEGER : GL_RGBA),
+            GetDefaultInitialGLImageFormat(desc.format),
             GL_UNSIGNED_BYTE,
             nullptr
         );
@@ -1093,7 +1169,7 @@ bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
             GLTexImageCube(desc, imageView);
             break;
 
-        #ifdef LLGL_OPENGL
+        #if LLGL_OPENGL && GL_VERSION_3_2
         case TextureType::Texture1DArray:
             GLTexImage1DArray(desc, imageView);
             break;
@@ -1103,7 +1179,7 @@ bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
             GLTexImage2DArray(desc, imageView);
             break;
 
-        #ifdef LLGL_OPENGL
+        #if LLGL_OPENGL && GL_VERSION_3_2
         case TextureType::TextureCubeArray:
             GLTexImageCubeArray(desc, imageView);
             break;

@@ -45,6 +45,7 @@ static const GLenum g_stateCapsEnum[] =
 {
     GL_BLEND,
     GL_CULL_FACE,
+
     #if LLGL_GLEXT_DEBUG
     GL_DEBUG_OUTPUT,
     GL_DEBUG_OUTPUT_SYNCHRONOUS,
@@ -52,55 +53,125 @@ static const GLenum g_stateCapsEnum[] =
     0,
     0,
     #endif // /LLGL_GLEXT_DEBUG
+
     GL_DEPTH_TEST,
     GL_DITHER,
     GL_POLYGON_OFFSET_FILL,
-    #if LLGL_WEBGL
-    0,
-    #else
+
+    #ifdef GL_PRIMITIVE_RESTART_FIXED_INDEX
     GL_PRIMITIVE_RESTART_FIXED_INDEX,
+    #else
+    0,
     #endif
+
+    #ifdef GL_RASTERIZER_DISCARD
     GL_RASTERIZER_DISCARD,
+    #else
+    0,
+    #endif
+
     GL_SAMPLE_ALPHA_TO_COVERAGE,
     GL_SAMPLE_COVERAGE,
     GL_SCISSOR_TEST,
     GL_STENCIL_TEST,
+
     #if LLGL_OPENGL
+
     GL_COLOR_LOGIC_OP,
+
+    #ifdef GL_DEPTH_CLAMP
     GL_DEPTH_CLAMP,
+    #else
+    0,
+    #endif
+
+    #ifdef GL_FRAMEBUFFER_SRGB
     GL_FRAMEBUFFER_SRGB,
+    #else
+    0,
+    #endif
+
     GL_LINE_SMOOTH,
     GL_MULTISAMPLE,
     GL_POLYGON_OFFSET_LINE,
     GL_POLYGON_OFFSET_POINT,
     GL_POLYGON_SMOOTH,
+
+    #ifdef GL_PRIMITIVE_RESTART
     GL_PRIMITIVE_RESTART,
-    GL_PROGRAM_POINT_SIZE,
-    GL_SAMPLE_ALPHA_TO_ONE,
-    GL_SAMPLE_SHADING,
-    GL_SAMPLE_MASK,
-    GL_TEXTURE_CUBE_MAP_SEAMLESS,
+    #else
+    0,
     #endif
+
+    #ifdef GL_PROGRAM_POINT_SIZE
+    GL_PROGRAM_POINT_SIZE,
+    #else
+    0,
+    #endif
+
+    #ifdef GL_SAMPLE_ALPHA_TO_ONE
+    GL_SAMPLE_ALPHA_TO_ONE,
+    #else
+    0,
+    #endif
+
+    #ifdef GL_SAMPLE_SHADING
+    GL_SAMPLE_SHADING,
+    #else
+    0,
+    #endif
+
+    #ifdef GL_SAMPLE_MASK
+    GL_SAMPLE_MASK,
+    #else
+    0,
+    #endif
+
+    #ifdef GL_TEXTURE_CUBE_MAP_SEAMLESS
+    GL_TEXTURE_CUBE_MAP_SEAMLESS,
+    #else
+    0,
+    #endif
+
+    #endif // /LLGL_OPENGL
 };
 
 // Maps GLBufferTarget to <target> in glBindBuffer, glBindBufferBase
 static const GLenum g_bufferTargetsEnum[] =
 {
     GL_ARRAY_BUFFER,
+    #if LLGL_GL3PLUS_SUPPORTED
     GL_ATOMIC_COUNTER_BUFFER,
     GL_COPY_READ_BUFFER,
     GL_COPY_WRITE_BUFFER,
     GL_DISPATCH_INDIRECT_BUFFER,
     GL_DRAW_INDIRECT_BUFFER,
+    #else
+    0, // GL_ATOMIC_COUNTER_BUFFER
+    0, // GL_COPY_READ_BUFFER
+    0, // GL_COPY_WRITE_BUFFER
+    0, // GL_DISPATCH_INDIRECT_BUFFER
+    0, // GL_DRAW_INDIRECT_BUFFER
+    #endif
     GL_ELEMENT_ARRAY_BUFFER,
     GL_PIXEL_PACK_BUFFER,
     GL_PIXEL_UNPACK_BUFFER,
+    #if LLGL_GL3PLUS_SUPPORTED
     GL_QUERY_BUFFER,
     GL_SHADER_STORAGE_BUFFER,
     GL_TEXTURE_BUFFER,
     GL_TRANSFORM_FEEDBACK_BUFFER,
     GL_UNIFORM_BUFFER,
+    #else
+    0, // GL_QUERY_BUFFER
+    0, // GL_SHADER_STORAGE_BUFFER
+    0, // GL_TEXTURE_BUFFER
+    0, // GL_TRANSFORM_FEEDBACK_BUFFER
+    0, // GL_UNIFORM_BUFFER
+    #endif
 };
+
+#if LLGL_GL3PLUS_SUPPORTED
 
 // Maps GLFramebufferTarget to <target> in glBindFramebuffer
 static const GLenum g_framebufferTargetsEnum[] =
@@ -110,20 +181,35 @@ static const GLenum g_framebufferTargetsEnum[] =
     GL_READ_FRAMEBUFFER,
 };
 
+#endif // /LLGL_GL3PLUS_SUPPORTED
+
 // Maps GLTextureTarget to <target> in glBindTexture
 static const GLenum g_textureTargetsEnum[] =
 {
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
     GL_TEXTURE_3D,
+    #if LLGL_GL3PLUS_SUPPORTED
     GL_TEXTURE_1D_ARRAY,
     GL_TEXTURE_2D_ARRAY,
     GL_TEXTURE_RECTANGLE,
+    #else
+    0, // GL_TEXTURE_1D_ARRAY
+    0, // GL_TEXTURE_2D_ARRAY
+    0, // GL_TEXTURE_RECTANGLE
+    #endif
     GL_TEXTURE_CUBE_MAP,
+    #if LLGL_GL3PLUS_SUPPORTED
     GL_TEXTURE_CUBE_MAP_ARRAY,
     GL_TEXTURE_BUFFER,
     GL_TEXTURE_2D_MULTISAMPLE,
     GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+    #else
+    0, // GL_TEXTURE_CUBE_MAP_ARRAY
+    0, // GL_TEXTURE_BUFFER
+    0, // GL_TEXTURE_2D_MULTISAMPLE
+    0, // GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+    #endif
 };
 
 // Maps std::uint32_t to <texture> in glActiveTexture
@@ -804,10 +890,14 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 
 void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer)
 {
+    #if GL_ARB_uniform_buffer_objects
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferBase(g_bufferTargetsEnum[targetIdx], index, buffer);
     contextState_.boundBuffers[targetIdx] = buffer;
+    #else
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_objects");
+    #endif
 }
 
 void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers)
@@ -829,20 +919,28 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     #endif
     if (count > 0)
     {
+        #if GL_ARB_uniform_buffer_objects
         /* Bind each individual buffer, and store last bound buffer */
         contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
         for_range(i, count)
             glBindBufferBase(targetGL, first + i, buffers[i]);
+        #else
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_objects");
+        #endif
     }
 }
 
 void GLStateManager::BindBufferRange(GLBufferTarget target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size)
 {
+    #if GL_EXT_transform_feedback && LLGL_GL3PLUS_SUPPORTED
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferRange(g_bufferTargetsEnum[targetIdx], index, buffer, offset, size);
     contextState_.boundBuffers[targetIdx] = buffer;
+    #else
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_EXT_transform_feedback");
+    #endif
 }
 
 void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr* offsets, const GLsizeiptr* sizes)
@@ -876,8 +974,12 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
         else
         #endif // /GL_NV_transform_feedback
         {
+            #if GL_EXT_transform_feedback && LLGL_GL3PLUS_SUPPORTED
             for_range(i, count)
                 glBindBufferRange(targetGL, first + i, buffers[i], offsets[i], sizes[i]);
+            #else
+            LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_EXT_transform_feedback");
+            #endif
         }
     }
 }
@@ -890,6 +992,8 @@ static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
 {
+    #if LLGL_GL3PLUS_SUPPORTED
+
     /* Only bind VAO if it has changed */
     if (contextState_.boundVertexArray != vertexArray)
     {
@@ -937,6 +1041,12 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
             }
         }
     }
+
+    #else
+
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("Vertex-Array-Objects");
+
+    #endif
 }
 
 void GLStateManager::BindGLBuffer(const GLBuffer& buffer)
@@ -1074,6 +1184,7 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
+    #if LLGL_GL3PLUS_SUPPORTED
     /* Only bind framebuffer if the framebuffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
@@ -1081,6 +1192,7 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
         contextState_.boundFramebuffers[targetIdx] = framebuffer;
         glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
     }
+    #endif
 }
 
 void GLStateManager::PushBoundFramebuffer(GLFramebufferTarget target)
@@ -1122,6 +1234,8 @@ GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
 
 /* ----- Renderbuffer ----- */
 
+#if LLGL_GL3PLUS_SUPPORTED
+
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
     if (contextState_.boundRenderbuffer != renderbuffer)
@@ -1154,6 +1268,30 @@ void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
         InvalidateBoundGLObject(contextState_.boundRenderbuffer, renderbuffer);
     }
 }
+
+#else // LLGL_GL3PLUS_SUPPORTED
+
+void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffers");
+}
+
+void GLStateManager::PushBoundRenderbuffer()
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffers");
+}
+
+void GLStateManager::PopBoundRenderbuffer()
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffers");
+}
+
+void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffers");
+}
+
+#endif // /LLGL_GL3PLUS_SUPPORTED
 
 /* ----- Texture ----- */
 
@@ -1390,6 +1528,8 @@ void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool 
 
 /* ----- Sampler ----- */
 
+#ifdef GL_ARB_sampler_objects
+
 void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 {
     #ifdef LLGL_DEBUG
@@ -1429,6 +1569,25 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
     for (GLuint& boundSampler : contextState_.boundSamplers)
         InvalidateBoundGLObject(boundSampler, sampler);
 }
+
+#else // GL_ARB_sampler_objects
+
+void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_sampler_objects");
+}
+
+void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* samplers)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_sampler_objects");
+}
+
+void GLStateManager::NotifySamplerRelease(GLuint sampler)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_sampler_objects");
+}
+
+#endif // /GL_ARB_sampler_objects
 
 #ifdef LLGL_GL_ENABLE_OPENGL2X
 
@@ -1506,6 +1665,8 @@ GLuint GLStateManager::GetBoundShaderProgram() const
 
 /* ----- Program pipeline ----- */
 
+#if GL_ARB_separate_shader_objects
+
 void GLStateManager::BindProgramPipeline(GLuint pipeline)
 {
     #ifdef LLGL_OPENGL
@@ -1529,6 +1690,25 @@ GLuint GLStateManager::GetBoundProgramPipeline() const
 {
     return contextState_.boundProgramPipeline;
 }
+
+#else // GL_ARB_separate_shader_objects
+
+void GLStateManager::BindProgramPipeline(GLuint pipeline)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_separate_shader_objects");
+}
+
+void GLStateManager::NotifyProgramPipelineRelease(GLProgramPipeline* programPipeline)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_separate_shader_objects");
+}
+
+GLuint GLStateManager::GetBoundProgramPipeline() const
+{
+    return 0; // dummy
+}
+
+#endif // /GL_ARB_separate_shader_objects
 
 /* ----- Render pass ----- */
 
@@ -1587,6 +1767,8 @@ void GLStateManager::Clear(long flags)
     RestoreClearState(clearState);
 }
 
+#if LLGL_GL3PLUS_SUPPORTED
+
 void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
     GLFramebufferClearState clearState;
@@ -1642,6 +1824,15 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
     /* Restore all buffer write masks that were modified as preparation for clear operations */
     RestoreClearState(clearState);
 }
+
+#else // LLGL_GL3PLUS_SUPPORTED
+
+void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("multi-render-targets");
+}
+
+#endif // /LLGL_GL3PLUS_SUPPORTED
 
 
 /*
@@ -1847,6 +2038,8 @@ void GLStateManager::RestoreClearState(const GLFramebufferClearState& clearState
 
 /* ----- Render pass ----- */
 
+#if LLGL_GL3PLUS_SUPPORTED
+
 void GLStateManager::ClearAttachmentsWithRenderPass(
     const GLRenderPass& renderPassGL,
     std::uint32_t       numClearValues,
@@ -1951,6 +2144,28 @@ std::uint32_t GLStateManager::ClearColorBuffers(
 
     return clearValueIndex;
 }
+
+#else // LLGL_GL3PLUS_SUPPORTED
+
+void GLStateManager::ClearAttachmentsWithRenderPass(
+    const GLRenderPass& renderPassGL,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("multi-render-targets");
+}
+
+std::uint32_t GLStateManager::ClearColorBuffers(
+    const std::uint8_t*         colorBuffers,
+    std::uint32_t               numClearValues,
+    const ClearValue*           clearValues,
+    const ClearValue&           defaultClearValue,
+    GLFramebufferClearState&    clearState)
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("multi-render-targets");
+}
+
+#endif // /LLGL_GL3PLUS_SUPPORTED
 
 
 } // /namespace LLGL

@@ -6,6 +6,7 @@
  */
 
 #include "../GLProfile.h"
+#include "../../../Core/Exception.h"
 #include "GLCoreExtensions.h"
 #include <LLGL/RenderSystemFlags.h>
 
@@ -29,7 +30,11 @@ const char* GetModuleName()
 
 const char* GetRendererName()
 {
-    return "OpenGL";
+    #if LLGL_GL3PLUS_SUPPORTED
+    return "OpenGL Core";
+    #else
+    return "OpenGL Compatibility";
+    #endif
 }
 
 const char* GetAPIName()
@@ -44,9 +49,13 @@ const char* GetShadingLanguageName()
 
 GLint GetMaxViewports()
 {
+    #if LLGL_GL3PLUS_SUPPORTED
     GLint value = 0;
     glGetIntegerv(GL_MAX_VIEWPORTS, &value);
     return value;
+    #else
+    return 1;
+    #endif
 }
 
 void DepthRange(GLclamp_t nearVal, GLclamp_t farVal)
@@ -113,7 +122,11 @@ void FramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GL
 
 void FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
 {
+    #if LLGL_GL3PLUS_SUPPORTED
     glFramebufferTextureLayer(target, attachment, texture, level, layer);
+    #else
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("glFramebufferTextureLayer");
+    #endif
 }
 
 

@@ -235,11 +235,11 @@ void GLBlendState::BindDrawBufferColorMask(const GLDrawBufferState& state)
 
 void GLBlendState::BindIndexedDrawBufferColorMask(const GLDrawBufferState& state, GLuint index)
 {
-    #ifdef LLGL_GLEXT_DRAW_BUFFERS2
+    #ifdef LLGL_GLEXT_DRAW_BUFFERS_INDEXED
 
     glColorMaski(index, state.colorMask[0], state.colorMask[1], state.colorMask[2], state.colorMask[3]);
 
-    #endif // /LLGL_GLEXT_DRAW_BUFFERS2
+    #endif // /LLGL_GLEXT_DRAW_BUFFERS_INDEXED
 }
 
 

@@ -22,7 +22,12 @@
 #   include <GL/glext.h>
 #   include <GL/glx.h>
 #elif defined LLGL_OS_MACOS
-#   include <OpenGL/gl3.h>
+#   include "../../../Platform/MacOS/MacOSCompatibility.h"
+#   if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+#       include <OpenGL/gl3.h>
+#   else
+#       include <OpenGL/gl.h>
+#   endif
 #   include <OpenGL/glext.h>
 #   include "../Platform/MacOS/MacOSGLExt.h"
 #else

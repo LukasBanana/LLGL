@@ -305,6 +305,8 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
             GLGetValue(g_bufferTargetBindings[target], outContextState.boundBuffers[target]);
     }
 
+    #if LLGL_GL3PLUS_SUPPORTED
+
     // Framebuffer Objects (FBO)
     GLGetValue(GL_DRAW_FRAMEBUFFER_BINDING, outContextState.boundFramebuffers[static_cast<int>(GLFramebufferTarget::DrawFramebuffer)]);
     GLGetValue(GL_READ_FRAMEBUFFER_BINDING, outContextState.boundFramebuffers[static_cast<int>(GLFramebufferTarget::ReadFramebuffer)]);
@@ -312,6 +314,8 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
 
     // Renerbuffer Objects (RBO)
     GLGetValue(GL_RENDERBUFFER_BINDING, outContextState.boundRenderbuffer);
+
+    #endif // /LLGL_GL3PLUS_SUPPORTED
 
     // Textures and samplers
     GLenum initialActiveTexture = GL_TEXTURE0;
@@ -322,7 +326,9 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
         const GLenum currentActiveTexture = GLStateManager::ToGLTextureLayer(layer);
         glActiveTexture(currentActiveTexture);
 
+        #if GL_ARB_sampler_objects
         GLGetValue(GL_SAMPLER_BINDING, outContextState.boundSamplers[layer]);
+        #endif
 
         for_range(target, GLContextState::numTextureTargets)
         {
@@ -337,7 +343,9 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
     glActiveTexture(initialActiveTexture);
 
     // Vertex Array Objects (VAO)
+    #if LLGL_GL3PLUS_SUPPORTED
     GLGetValue(GL_VERTEX_ARRAY_BINDING, outContextState.boundVertexArray);
+    #endif
     outContextState.boundElementArrayBuffer = outContextState.boundBuffers[static_cast<int>(GLBufferTarget::ElementArrayBuffer)]; //TODO: remove this redundancy
 
     // Programs
@@ -467,12 +475,16 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
             glBindBuffer(GLStateManager::ToGLBufferTarget(static_cast<GLBufferTarget>(target)), inContextState.boundBuffers[target]);
     }
 
+    #if LLGL_GL3PLUS_SUPPORTED
+
     // Framebuffer Objects (FBO)
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, inContextState.boundFramebuffers[static_cast<int>(GLFramebufferTarget::DrawFramebuffer)]);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, inContextState.boundFramebuffers[static_cast<int>(GLFramebufferTarget::ReadFramebuffer)]);
 
     // Renerbuffer Objects (RBO)
     glBindRenderbuffer(GL_RENDERBUFFER_BINDING, inContextState.boundRenderbuffer);
+
+    #endif // /LLGL_GL3PLUS_SUPPORTED
 
     // Textures and samplers
     GLenum initialActiveTexture = GL_TEXTURE0;
@@ -483,7 +495,9 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
         const GLenum currentActiveTexture = GLStateManager::ToGLTextureLayer(layer);
         glActiveTexture(currentActiveTexture);
 
+        #if GL_ARB_sampler_objects
         glBindSampler(layer, inContextState.boundSamplers[layer]);
+        #endif
 
         for_range(target, GLContextState::numTextureTargets)
         {
@@ -497,7 +511,9 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     glActiveTexture(initialActiveTexture);
 
     // Vertex Array Objects (VAO)
+    #if LLGL_GL3PLUS_SUPPORTED
     glBindVertexArray(inContextState.boundVertexArray);
+    #endif
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inContextState.boundElementArrayBuffer);
 
     // Programs

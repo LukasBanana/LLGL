@@ -43,6 +43,8 @@ void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, G
     dst.isInteger       = IsIntegerFormat(src.format);
 }
 
+#if LLGL_GL3PLUS_SUPPORTED
+
 void GLVertexArrayObject::Release()
 {
     //TODO: this must use some form of deferred deletion as this d'tor is not guaranteed to be invoked with the correct GL context in place
@@ -111,6 +113,8 @@ void GLVertexArrayObject::BuildVertexAttribute(const GLVertexAttribute& attribut
         );
     }
 }
+
+#endif // /LLGL_GL3PLUS_SUPPORTED
 
 
 } // /namespace LLGL

@@ -79,6 +79,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     }
 
     /* Set uniform-block bindings */
+    #if GL_ARB_uniform_buffer_object
     for_range(i, numUniformBlockBindings_)
     {
         const NamedResourceBinding& resource = bindings_[resourceIndex++];
@@ -86,6 +87,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
         if (blockIndex != GL_INVALID_INDEX)
             glUniformBlockBinding(program, blockIndex, resource.slot);
     }
+    #endif // /GL_ARB_uniform_buffer_object
 
     /* Set shader-storage bindings (not supported in GLES) */
     #if defined LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && defined LLGL_OPENGL

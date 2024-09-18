@@ -179,7 +179,7 @@ void GLShaderProgram::BindAttribLocations(GLuint program, std::size_t numVertexA
 
 void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs)
 {
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL && EXT_gpu_shader4
     /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outpus anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
@@ -194,6 +194,8 @@ void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragm
 
 static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVaryings, const char* const* varyings)
 {
+    #if LLGL_GL3PLUS_SUPPORTED
+
     if (numVaryings == 0 || varyings == nullptr)
         return;
 
@@ -204,6 +206,8 @@ static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVar
         reinterpret_cast<const GLchar* const*>(varyings),
         GL_INTERLEAVED_ATTRIBS
     );
+
+    #endif // /LLGL_GL3PLUS_SUPPORTED
 }
 
 #ifdef GL_NV_transform_feedback
@@ -324,6 +328,7 @@ static GLMatrixTypeFormat UnmapAttribType(GLenum type)
         case GL_INT_VEC3:           return { Format::RGB32SInt,     1 };
         case GL_INT_VEC4:           return { Format::RGBA32SInt,    1 };
         case GL_UNSIGNED_INT:       return { Format::R32UInt,       1 };
+        #if LLGL_GL3PLUS_SUPPORTED
         case GL_UNSIGNED_INT_VEC2:  return { Format::RG32UInt,      1 };
         case GL_UNSIGNED_INT_VEC3:  return { Format::RGB32UInt,     1 };
         case GL_UNSIGNED_INT_VEC4:  return { Format::RGBA32UInt,    1 };
@@ -342,6 +347,7 @@ static GLMatrixTypeFormat UnmapAttribType(GLenum type)
         case GL_DOUBLE_MAT4x2:      return { Format::RG64Float,     4 };
         case GL_DOUBLE_MAT4x3:      return { Format::RGB64Float,    4 };
         #endif // /LLGL_OPENGL
+        #endif // /LLGL_GL3PLUS_SUPPORTED
     }
     return { Format::R32Float, 0 };
 }
@@ -464,6 +470,8 @@ static void GLQueryVertexAttributes(GLuint program, ShaderReflection& reflection
 
 static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& reflection)
 {
+    #if LLGL_GL3PLUS_SUPPORTED
+
     VertexAttribute soAttrib;
 
     #ifndef __APPLE__
@@ -534,6 +542,8 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
         }
     }
     #endif
+
+    #endif // /LLGL_GL3PLUS_SUPPORTED
 }
 
 #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
@@ -624,6 +634,8 @@ static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& re
 
 static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
 {
+    #if GL_ARB_uniform_buffer_object
+
     if (!HasExtension(GLExt::ARB_uniform_buffer_object))
         return;
 
@@ -664,6 +676,8 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
         }
         reflection.resources.push_back(resource);
     }
+
+    #endif // /GL_ARB_uniform_buffer_object
 }
 
 static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)

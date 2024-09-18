@@ -19,6 +19,10 @@ namespace LLGL
 {
 
 
+#if !LLGL_GL3PLUS_SUPPORTED && !defined(LLGL_GL_ENABLE_OPENGL2X)
+#   error Invalid configuration of OpenGL backend: Either LLGL_GL_ENABLE_OPENGL2X or LLGL_GL3PLUS_SUPPORTED must be enabled
+#endif
+
 class GLStateManager;
 
 // This class emulates the Vertex-Array-Object (VAO) functionality, for GL 2.x.
@@ -41,6 +45,7 @@ class GLSharedContextVertexArray
 
     private:
 
+        #if LLGL_GL3PLUS_SUPPORTED
         struct GLContextVAO
         {
             GLVertexArrayObject vao;
@@ -48,14 +53,19 @@ class GLSharedContextVertexArray
 
             void SetObjectLabel(const char* label);
         };
+        #endif // /LLGL_GL3PLUS_SUPPORTED
 
     private:
+
+        #if LLGL_GL3PLUS_SUPPORTED
 
         // Returns the VAO for the current GL context and creates it on demand.
         GLVertexArrayObject& GetVAOForCurrentContext();
 
         void BuildVertexLayoutForGL3Plus(GLuint bufferID, const ArrayView<VertexAttribute>& attributes);
         void BindForGL3Plus(GLStateManager& stateMngr);
+
+        #endif // /LLGL_GL3PLUS_SUPPORTED
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
 
@@ -68,7 +78,10 @@ class GLSharedContextVertexArray
     private:
 
         std::vector<GLVertexAttribute>      attribs_;
+
+        #if LLGL_GL3PLUS_SUPPORTED
         std::vector<GLContextVAO>           contextDependentVAOs_;
+        #endif
 
         #ifdef LLGL_GL_ENABLE_OPENGL2X
         GLuint                              attribIndexEnd_ = 0;

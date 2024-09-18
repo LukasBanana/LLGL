@@ -17,8 +17,10 @@ namespace LLGL
 
 GLFence::~GLFence()
 {
+    #if GL_ARB_sync
     /* Always call glDeleteSync, it will silently ignore a <sync> value of zero */
     glDeleteSync(sync_);
+    #endif // /GL_ARB_sync
 }
 
 void GLFence::SetDebugName(const char* name)
@@ -31,6 +33,7 @@ void GLFence::SetDebugName(const char* name)
 
 void GLFence::Submit()
 {
+    #if GL_ARB_sync
     if (HasExtension(GLExt::ARB_sync))
     {
         #ifdef LLGL_DEBUG
@@ -49,16 +52,23 @@ void GLFence::Submit()
             GLSetObjectPtrLabel(sync_, name_.c_str());
         #endif
     }
+    #endif // /GL_ARB_sync
 }
 
+#if LLGL_GL3PLUS_SUPPORTED
 bool GLFence::Wait(GLuint64 timeout)
+#else
+bool GLFence::Wait(GLuint timeout)
+#endif
 {
+    #if GL_ARB_sync
     if (HasExtension(GLExt::ARB_sync))
     {
         GLenum result = glClientWaitSync(sync_, GL_SYNC_FLUSH_COMMANDS_BIT, timeout);
         return (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED);
     }
     else
+    #endif // /GL_ARB_sync
     {
         glFinish();
         return true;

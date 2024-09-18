@@ -30,11 +30,18 @@ class GLFence final : public Fence
         ~GLFence();
 
         void Submit();
+
+        #if LLGL_GL3PLUS_SUPPORTED
         bool Wait(GLuint64 timeout);
+        #else
+        bool Wait(GLuint timeout);
+        #endif
 
     private:
 
+        #if LLGL_GL3PLUS_SUPPORTED
         GLsync      sync_ = 0;
+        #endif
 
         #ifdef LLGL_DEBUG
         // Only provide name in debug mode, to keep fence objects as lightweight as possible

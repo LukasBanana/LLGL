@@ -32,7 +32,9 @@ void GLSharedContextVertexArray::BuildVertexLayout(GLuint bufferID, const ArrayV
     else
     #endif
     {
+        #if LLGL_GL3PLUS_SUPPORTED
         BuildVertexLayoutForGL3Plus(bufferID, attributes);
+        #endif
     }
 }
 
@@ -58,13 +60,17 @@ void GLSharedContextVertexArray::Bind(GLStateManager& stateMngr)
     else
     #endif
     {
+        #if LLGL_GL3PLUS_SUPPORTED
         /* Bind vertex array for OpenGL 3+ using VAO */
         BindForGL3Plus(stateMngr);
+        #endif
     }
 }
 
 void GLSharedContextVertexArray::SetDebugName(const char* name)
 {
+    #if LLGL_GL3PLUS_SUPPORTED
+
     /* Store debug name */
     debugName_ = (name != nullptr ? name : "");
 
@@ -75,7 +81,11 @@ void GLSharedContextVertexArray::SetDebugName(const char* name)
     /* If this vertex array already has its attributes set, get the current VAO to cause invaldiated labels to be updated */
     if (!attribs_.empty())
         (void)GetVAOForCurrentContext();
+
+    #endif // /LLGL_GL3PLUS_SUPPORTED
 }
+
+#if LLGL_GL3PLUS_SUPPORTED
 
 void GLSharedContextVertexArray::GLContextVAO::SetObjectLabel(const char* label)
 {
@@ -89,10 +99,14 @@ void GLSharedContextVertexArray::GLContextVAO::SetObjectLabel(const char* label)
     }
 }
 
+#endif // /LLGL_GL3PLUS_SUPPORTED
+
 
 /*
  * ======= Private: =======
  */
+
+#if LLGL_GL3PLUS_SUPPORTED
 
 GLVertexArrayObject& GLSharedContextVertexArray::GetVAOForCurrentContext()
 {
@@ -143,6 +157,8 @@ void GLSharedContextVertexArray::BindForGL3Plus(GLStateManager& stateMngr)
 {
     stateMngr.BindVertexArray(GetVAOForCurrentContext().GetID());
 }
+
+#endif // /LLGL_GL3PLUS_SUPPORTED
 
 #ifdef LLGL_GL_ENABLE_OPENGL2X
 

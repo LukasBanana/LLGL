@@ -12,6 +12,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/Report.h>
 #include <LLGL/Utils/ForRange.h>
 
@@ -19,6 +20,8 @@
 namespace LLGL
 {
 
+
+#if GL_ARB_separate_shader_objects
 
 static GLuint GLCreateProgramPipeline()
 {
@@ -131,6 +134,35 @@ void GLProgramPipeline::UseProgramStages(
 
     BuildSignature(numShaders, reinterpret_cast<const Shader* const*>(shaders), permutation);
 }
+
+#else // GL_ARB_separate_shader_objects
+
+GLProgramPipeline::GLProgramPipeline(
+    std::size_t             numShaders,
+    Shader* const*          shaders,
+    GLShader::Permutation   permutation)
+:
+    GLShaderPipeline { 0 }
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_separate_shader_objects");
+}
+
+void GLProgramPipeline::Bind(GLStateManager& stateMngr)
+{
+    // dummy
+}
+
+void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
+{
+    // dummy
+}
+
+void GLProgramPipeline::QueryInfoLogs(Report& report)
+{
+    // dummy
+}
+
+#endif // /GL_ARB_separate_shader_objects
 
 
 } // /namespace LLGL

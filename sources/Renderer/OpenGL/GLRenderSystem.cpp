@@ -257,10 +257,12 @@ static GLbitfield ToGLMapBufferAccess(CPUAccess access)
 {
     switch (access)
     {
+        #if GL_ARB_buffer_storage
         case CPUAccess::ReadOnly:       return GL_MAP_READ_BIT;
         case CPUAccess::WriteOnly:      return GL_MAP_WRITE_BIT;
         case CPUAccess::WriteDiscard:   return GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT;
         case CPUAccess::ReadWrite:      return GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
+        #endif
         default:                        return 0;
     }
 }

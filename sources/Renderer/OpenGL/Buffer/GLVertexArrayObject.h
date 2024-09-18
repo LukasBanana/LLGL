@@ -36,6 +36,8 @@ struct GLVertexAttribute
 // Converts the specified vertex attribute into a GL specific attributes.
 void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, GLuint srcBuffer);
 
+#if LLGL_GL3PLUS_SUPPORTED
+
 // Wrapper class for an OpenGL Vertex-Array-Object (VAO), for GL 3.0+.
 class GLVertexArrayObject
 {
@@ -63,6 +65,8 @@ class GLVertexArrayObject
         GLuint id_ = 0; //!< Vertex array object ID.
 
 };
+
+#endif // /LLGL_GL3PLUS_SUPPORTED
 
 
 } // /namespace LLGL

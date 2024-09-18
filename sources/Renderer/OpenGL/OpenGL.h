@@ -20,6 +20,9 @@
 #endif
 
 
+//TODO: set this in CMake via option
+#define LLGL_GL3PLUS_SUPPORTED 0
+
 #if LLGL_WEBGL
 
 #define LLGL_GLEXT_TRANSFORM_FEEDBACK
@@ -51,7 +54,7 @@
 #endif
 
 //TODO: which extension?
-#if defined LLGL_OPENGL
+#if defined LLGL_OPENGL && LLGL_GL3PLUS_SUPPORTED
 #   define LLGL_GLEXT_CONDITIONAL_RENDER
 #endif
 
@@ -59,8 +62,8 @@
 #   define LLGL_GLEXT_TRANSFORM_FEEDBACK
 #endif
 
-#if GL_EXT_draw_buffers2 || GL_ES_VERSION_3_2
-#   define LLGL_GLEXT_DRAW_BUFFERS2
+#if GL_EXT_draw_buffers_indexed || GL_ES_VERSION_3_2
+#   define LLGL_GLEXT_DRAW_BUFFERS_INDEXED
 #endif
 
 #if GL_ARB_draw_buffers_blend || GL_ES_VERSION_3_2
@@ -112,6 +115,22 @@
 // GL on macOS, GLES on iOS, and WebGL always require a fragment shader in a shader program.
 #if defined __APPLE__ || LLGL_WEBGL
 #   define LLGL_USE_NULL_FRAGMENT_SHADER 1
+#endif
+
+#if !LLGL_GL3PLUS_SUPPORTED
+#   define glGenFramebuffers                glGenFramebuffersEXT
+#   define glDeleteFramebuffers             glDeleteFramebuffersEXT
+#   define glBlitFramebuffer                glBlitFramebufferEXT
+#   define glFramebufferTexture1D           glFramebufferTexture1DEXT
+#   define glFramebufferTexture2D           glFramebufferTexture2DEXT
+#   define glFramebufferTexture3D           glFramebufferTexture3DEXT
+#   define glCheckFramebufferStatus         glCheckFramebufferStatusEXT
+#   define glGenRenderbuffers               glGenRenderbuffersEXT
+#   define glDeleteRenderbuffers            glDeleteRenderbuffersEXT
+#   define glRenderbufferStorage            glRenderbufferStorageEXT
+#   define glRenderbufferStorageMultisample glRenderbufferStorageMultisampleEXT
+#   define glGetRenderbufferParameteriv     glGetRenderbufferParameterivEXT
+#   define glGenerateMipmap                 glGenerateMipmapEXT
 #endif
 
 

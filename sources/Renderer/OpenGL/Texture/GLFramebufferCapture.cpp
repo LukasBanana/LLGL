@@ -99,9 +99,11 @@ void GLFramebufferCapture::CaptureFramebuffer(
     {
         stateMngr.BindTexture(target, intermediateTex_.texID);
 
+        #if LLGL_GL3PLUS_SUPPORTED
         if (isDepthStencil)
             glTexImage2D(targetGL, 0, textureGL.GetGLInternalFormat(), width, height, 0, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, nullptr);
         else
+        #endif // /LLGL_GL3PLUS_SUPPORTED
             glTexImage2D(targetGL, 0, textureGL.GetGLInternalFormat(), width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
         glCopyTexSubImage2D(targetGL, 0, 0, 0, screenPosX, screenPosY, width, height);

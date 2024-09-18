@@ -109,6 +109,8 @@ static void GLSetUniformFloatNxM(UniformType type, GLint location, GLsizei count
 // Requires GL 3.0
 static void GLSetUniformUInt(UniformType type, GLint location, GLsizei count, const GLuint* data)
 {
+    #if GL_VERSION_3_0
+
     if (!HasExtension(GLExt::ARB_shader_objects_30))
         return;
 
@@ -129,6 +131,8 @@ static void GLSetUniformUInt(UniformType type, GLint location, GLsizei count, co
         default:
             break;
     }
+
+    #endif // /GL_VERSION_3_0
 }
 
 #ifdef LLGL_OPENGL
@@ -136,6 +140,8 @@ static void GLSetUniformUInt(UniformType type, GLint location, GLsizei count, co
 // Requires GL 4.0
 static void GLSetUniformDouble(UniformType type, GLint location, GLsizei count, const GLdouble* data)
 {
+    #if GL_VERSION_4_0
+
     if (!HasExtension(GLExt::ARB_shader_objects_40))
         return;
 
@@ -183,6 +189,8 @@ static void GLSetUniformDouble(UniformType type, GLint location, GLsizei count, 
         default:
             break;
     }
+
+    #endif // /GL_VERSION_4_0
 }
 
 #endif // /LLGL_OPENGL

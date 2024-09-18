@@ -12,12 +12,15 @@
 #include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
 #include "../GLObjectUtils.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
 {
 
+
+#if GL_ARB_separate_shader_objects
 
 GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
     GLShader { /*isSeparable:*/ true, desc }
@@ -124,6 +127,36 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
 
     return status;
 }
+
+#else // GL_ARB_separate_shader_objects
+
+GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
+    GLShader { /*isSeparable:*/ true, desc }
+{
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_separate_shader_objects");
+}
+
+void GLSeparableShader::SetDebugName(const char* name)
+{
+    // dummy
+}
+
+bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
+{
+    return false; // dummy
+}
+
+void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
+{
+    // dummy
+}
+
+void GLSeparableShader::QueryInfoLog(std::string& text, bool& hasErrors)
+{
+    // dummy
+}
+
+#endif // /GL_ARB_separate_shader_objects
 
 
 } // /namespace LLGL

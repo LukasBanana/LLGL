@@ -1000,10 +1000,14 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
+    #if LLGL_GL3PLUS_SUPPORTED
     ENABLE_GLEXT( ARB_vertex_array_object          );
+    #endif
     ENABLE_GLEXT( ARB_vertex_shader                );
     ENABLE_GLEXT( ARB_framebuffer_object           );
+    #if LLGL_GL3PLUS_SUPPORTED
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
+    #endif
     ENABLE_GLEXT( ARB_map_buffer_range             );
 
     /* Enable drawing extensions */
@@ -1012,12 +1016,14 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable shader extensions */
     ENABLE_GLEXT( ARB_shader_objects               );
+    #if LLGL_GL3PLUS_SUPPORTED
     ENABLE_GLEXT( ARB_instanced_arrays             );
     ENABLE_GLEXT( ARB_tessellation_shader          );
     ENABLE_GLEXT( ARB_get_program_binary           );
     ENABLE_GLEXT( ARB_program_interface_query      );
     ENABLE_GLEXT( ARB_separate_shader_objects      );
     ENABLE_GLEXT( EXT_gpu_shader4                  );
+    #endif
 
     /* Enable texture extensions */
     ENABLE_GLEXT( ARB_multitexture                 );
@@ -1026,7 +1032,9 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT( ARB_clear_texture                );
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
+    #if LLGL_GL3PLUS_SUPPORTED
     ENABLE_GLEXT( ARB_sampler_objects              );
+    #endif
 
     /* Enable blending extensions */
     ENABLE_GLEXT( EXT_blend_minmax                 );
@@ -1052,9 +1060,11 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
+    #if LLGL_GL3PLUS_SUPPORTED
     ENABLE_GLEXT( EXT_texture_array                );
     ENABLE_GLEXT( ARB_texture_cube_map_array       );
     ENABLE_GLEXT( ARB_geometry_shader4             );
+    #endif
 
     #undef ENABLE_GLEXT
 

@@ -151,7 +151,9 @@ static constexpr const char* GetDefaultRendererModule()
     return "Direct3D12";
     #elif defined LLGL_OS_WIN32
     return "Direct3D11";
-    #elif defined LLGL_OS_IOS || defined LLGL_OS_MACOS
+    #elif defined LLGL_OS_MACOS
+    return "OpenGL"; //"Metal" //TODO: only pick OpenGL by default on older Mac systems
+    #elif defined LLGL_OS_IOS
     return "Metal";
     #elif defined LLGL_OS_ANDROID
     return "OpenGLES3";

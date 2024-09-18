@@ -221,25 +221,33 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBeginTransformFeedback:
         {
             auto cmd = reinterpret_cast<const GLCmdBeginTransformFeedback*>(pc);
+            #if defined(__APPLE__) && !LLGL_GL3PLUS_SUPPORTED
+            glBeginTransformFeedbackEXT(cmd->primitiveMove);
+            #else
             glBeginTransformFeedback(cmd->primitiveMove);
+            #endif
             return sizeof(*cmd);
         }
         case GLOpcodeBeginTransformFeedbackNV:
         {
             auto cmd = reinterpret_cast<const GLCmdBeginTransformFeedbackNV*>(pc);
-            #ifdef GL_NV_transform_feedback
+            #if GL_NV_transform_feedback
             glBeginTransformFeedbackNV(cmd->primitiveMove);
             #endif
             return sizeof(*cmd);
         }
         case GLOpcodeEndTransformFeedback:
         {
+            #if defined(__APPLE__) && !LLGL_GL3PLUS_SUPPORTED
+            glEndTransformFeedbackEXT();
+            #else
             glEndTransformFeedback();
+            #endif
             return 0;
         }
         case GLOpcodeEndTransformFeedbackNV:
         {
-            #ifdef GL_NV_transform_feedback
+            #if GL_NV_transform_feedback
             glEndTransformFeedbackNV();
             #endif
             return 0;
@@ -318,7 +326,9 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawArraysInstanced:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysInstanced*>(pc);
+            #if LLGL_GL3PLUS_SUPPORTED
             glDrawArraysInstanced(cmd->mode, cmd->first, cmd->count, cmd->instancecount);
+            #endif
             return sizeof(*cmd);
         }
         case GLOpcodeDrawArraysInstancedBaseInstance:
@@ -360,7 +370,9 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawElementsInstanced:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsInstanced*>(pc);
+            #if LLGL_GL3PLUS_SUPPORTED
             glDrawElementsInstanced(cmd->mode, cmd->count, cmd->type, cmd->indices, cmd->instancecount);
+            #endif
             return sizeof(*cmd);
         }
         case GLOpcodeDrawElementsInstancedBaseVertex:

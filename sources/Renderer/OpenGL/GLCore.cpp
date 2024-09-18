@@ -159,11 +159,15 @@ struct GLVersion
 {
     GLVersion()
     {
+        #if defined(GL_MAJOR_VERSION) && defined(GL_MINOR_VERSION)
         GLint major = 0;
         glGetIntegerv(GL_MAJOR_VERSION, &major);
         GLint minor = 0;
         glGetIntegerv(GL_MINOR_VERSION, &minor);
         this->no = major * 100 + minor * 10;
+        #else
+        this->no = 200;
+        #endif
     }
     int no;
 };

@@ -33,8 +33,10 @@ static std::uint32_t GLGetUInt(GLenum param)
 static std::uint32_t GLGetUIntIndexed(GLenum param, GLuint index)
 {
     GLint attr = 0;
+    #if EXT_draw_buffers2
     if (HasExtension(GLExt::EXT_draw_buffers2))
         glGetIntegeri_v(param, index, &attr);
+    #endif
     return static_cast<std::uint32_t>(attr);
 };
 
@@ -45,6 +47,41 @@ static float GLGetFloat(GLenum param)
     return attr;
 }
 
+#if !LLGL_GL3PLUS_SUPPORTED
+
+static const GLubyte* ParseGLVersionInteger(const GLubyte* s, GLint& outValue)
+{
+    outValue = 0;
+    while (*s != '\0' && *s >= '0' && *s <= '9')
+    {
+        GLint digit = *s - '0';
+        outValue *= 10;
+        outValue += digit;
+        ++s;
+    }
+    return s;
+}
+
+static bool ParseGLVersionString(const GLubyte* s, GLint& outMajor, GLint& outMinor)
+{
+    /*
+    GL_VERSION must return a string that starts either with <MAJOR>.<MINOR> or <MAJOR>.<MINOR>.<RELEASE> followed by vendor specific information.
+    Parse only the first two integers separated by a decimal.
+    */
+    GLint major = 0, minor = 0;
+    s = ParseGLVersionInteger(s, major);
+    if (*s != '.')
+        return false;
+    ParseGLVersionInteger(s + 1, minor);
+
+    /* Return version numbers */
+    outMajor = major;
+    outMinor = minor;
+    return true;
+}
+
+#endif // /!LLGL_GL3PLUS_SUPPORTED
+
 static std::vector<ShadingLanguage> GLQueryShadingLanguages()
 {
     std::vector<ShadingLanguage> languages;
@@ -54,8 +91,23 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     {
         /* Derive shading language version by OpenGL version */
         GLint major = 0, minor = 0;
+
+        #if LLGL_GL3PLUS_SUPPORTED
+
+        /* Retrieve version numbers directly for GL 3+ */
         glGetIntegerv(GL_MAJOR_VERSION, &major);
         glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+        #else
+
+        /* Fallback to parsing GL_VERSION string for GL 2.x */
+        if (!ParseGLVersionString(glGetString(GL_VERSION), major, minor))
+        {
+            /* If parsing failed, assume default 2.0 version */
+            major = 2;
+            minor = 0;
+        }
+        #endif
 
         /* Map OpenGL version to GLSL version */
         const GLint version = major * 100 + minor * 10;
@@ -204,7 +256,9 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasConservativeRasterization   = (HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization));
     features.hasStreamOutputs               = (HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasLogicOp                     = true;
+    #if LLGL_GL3PLUS_SUPPORTED
     features.hasPipelineCaching             = (HasExtension(GLExt::ARB_get_program_binary) && GLGetInt(GL_NUM_PROGRAM_BINARY_FORMATS) > 0);
+    #endif
     features.hasPipelineStatistics          = HasExtension(GLExt::ARB_pipeline_statistics_query);
     features.hasRenderCondition             = true;
 }
@@ -222,9 +276,17 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     limits.lineWidthRange[1]                = std::min(aliasedLineRange[1], smoothLineRange[1]);
 
     /* Query integral attributes */
+    #ifdef GL_MAX_ARRAY_TEXTURE_LAYERS
     limits.maxTextureArrayLayers            = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
+    #endif
+    #ifdef GL_MAX_COLOR_ATTACHMENTS
     limits.maxColorAttachments              = std::min<std::uint32_t>(GLGetUInt(GL_MAX_DRAW_BUFFERS), GLGetUInt(GL_MAX_COLOR_ATTACHMENTS));
+    #else
+    limits.maxColorAttachments              = GLGetUInt(GL_MAX_DRAW_BUFFERS);
+    #endif
+    #ifdef GL_MAX_PATCH_VERTICES
     limits.maxPatchVertices                 = GLGetUInt(GL_MAX_PATCH_VERTICES);
+    #endif
     limits.maxAnisotropy                    = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
 
     if (features.hasComputeShaders)
@@ -251,7 +313,11 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     #endif // /GL_ARB_shader_storage_buffer_object
 
     /* Query viewport limits */
+    #ifdef GL_MAX_VIEWPORTS
     limits.maxViewports                     = GLGetUInt(GL_MAX_VIEWPORTS); // GL 4.1: value must be at least 16
+    #else
+    limits.maxViewports                     = 1;
+    #endif
 
     GLint maxViewportDims[2];
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);
@@ -260,7 +326,9 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
 
     /* Determine maximum buffer size to maximum value for <GLsizei> (used in 'glBufferData') */
     limits.maxBufferSize                    = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
+    #ifdef GL_MAX_UNIFORM_BLOCK_SIZE
     limits.maxConstantBufferSize            = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
+    #endif
 
     /* Determine maximum number of stream-outputs */
     #ifdef GL_ARB_transform_feedback3
@@ -278,7 +346,9 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     }
 
     /* Determine tessellation limits */
+    #ifdef GL_MAX_TESS_GEN_LEVEL
     limits.maxTessFactor = GLGetUInt(GL_MAX_TESS_GEN_LEVEL);
+    #endif
 
     /* Determine maximum number of samples for render-target attachments */
     #ifdef GL_ARB_texture_multisample
@@ -291,7 +361,11 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     else
     #endif
     {
+        #if LLGL_GL3PLUS_SUPPORTED
         const GLuint maxSamples = GLGetUInt(GL_MAX_SAMPLES);
+        #else
+        const GLuint maxSamples = 1;
+        #endif
         limits.maxColorBufferSamples    = maxSamples;
         limits.maxDepthBufferSamples    = maxSamples;
         limits.maxStencilBufferSamples  = maxSamples;
