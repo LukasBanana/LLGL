@@ -46,6 +46,11 @@ const char* GetShadingLanguageName()
     return "ESSL";
 }
 
+OpenGLContextProfile GetContextProfile()
+{
+    return OpenGLContextProfile::ESProfile;
+}
+
 GLint GetMaxViewports()
 {
     return 1;

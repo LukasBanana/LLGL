@@ -47,6 +47,15 @@ const char* GetShadingLanguageName()
     return "GLSL";
 }
 
+OpenGLContextProfile GetContextProfile()
+{
+    #if LLGL_GL_ENABLE_OPENGL2X
+    return OpenGLContextProfile::CompatibilityProfile;
+    #else
+    return OpenGLContextProfile::CoreProfile;
+    #endif
+}
+
 GLint GetMaxViewports()
 {
     #if !LLGL_GL_ENABLE_OPENGL2X

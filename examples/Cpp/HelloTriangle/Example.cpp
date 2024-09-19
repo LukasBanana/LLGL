@@ -164,7 +164,6 @@ int main(int argc, char* argv[])
             else
             {
                 vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.120.vert" };
-                //vertShaderDesc = { LLGL::ShaderType::Vertex,   "Example.120compatibility.vert" };
                 fragShaderDesc = { LLGL::ShaderType::Fragment, "Example.120.frag" };
             }
         }

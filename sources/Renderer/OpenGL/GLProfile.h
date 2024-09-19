@@ -9,6 +9,8 @@
 #define LLGL_GL_PROFILE_H
 
 
+#include <LLGL/RendererConfiguration.h>
+
 #if defined LLGL_OPENGL
 #   include "GLCoreProfile/GLCoreProfileTypes.h"
 #elif defined LLGL_OPENGLES3
@@ -42,6 +44,9 @@ const char* GetAPIName();
 
 // Returns the OpenGL shading language name, e.g. "GLSL" or "ESSL".
 const char* GetShadingLanguageName();
+
+// Returns the preferred GL context profile.
+OpenGLContextProfile GetContextProfile();
 
 // Returns the maximum number of viewports (GL_MAX_VIEWPORT for GL, 1 for GLES).
 GLint GetMaxViewports();

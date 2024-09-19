@@ -27,6 +27,15 @@ namespace LLGL
 */
 enum class OpenGLContextProfile
 {
+    /**
+    \brief Automatic profile selection.
+    \remarks This will automatically select the preferred profile for the platform,
+    i.e. OpenGLContextProfile::CompatibilityProfile for desktop OpenGL when \c LLGL_GL_ENABLE_OPENGL2X is defined,
+    OpenGLContextProfile::CoreProfile for desktop OpenGL when \c LLGL_GL_ENABLE_OPENGL2X is \e not defined,
+    and OpenGLContextProfile::ESProfile for mobile OpenGLES.
+    */
+    Auto,
+
     //! OpenGL compatibility profile.
     CompatibilityProfile,
 
@@ -40,15 +49,8 @@ enum class OpenGLContextProfile
     */
     ESProfile,
 
-    /**
-    \brief Default GL profile.
-    \remarks This is equivalent to CoreProfile for OpenGL and ESProfile for OpenGLES.
-    */
-    #if defined(LLGL_OS_ANDROID) || defined(LLGL_OS_IOS) || defined(LLGL_OS_WASM)
-    DefaultProfile = ESProfile,
-    #else
-    DefaultProfile = CoreProfile,
-    #endif
+    //! \deprecated Since 0.04b; Use OpenGLContextProfile::Auto instead!
+    DefaultProfile = Auto, // DEPRECATED
 };
 
 
@@ -118,11 +120,8 @@ struct RendererConfigurationVulkan
 */
 struct RendererConfigurationOpenGL
 {
-    /**
-    \brief Specifies the requested OpenGL context profile. By default OpenGLContextProfile::DefaultProfile.
-    \remarks The default value is either equivalent to OpenGLContextProfile::CoreProfile for OpenGL or OpenGLContextProfile::ESProfile for OpenGLES.
-    */
-    OpenGLContextProfile    contextProfile              = OpenGLContextProfile::DefaultProfile;
+    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::Auto.
+    OpenGLContextProfile    contextProfile              = OpenGLContextProfile::Auto;
 
     /**
     \brief Specifies the requested OpenGL context major version. By default 0.

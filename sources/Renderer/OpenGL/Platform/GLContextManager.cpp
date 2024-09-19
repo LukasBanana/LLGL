@@ -9,6 +9,7 @@
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../GLProfile.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
@@ -28,6 +29,10 @@ GLContextManager::GLContextManager(
     profile_            { profile            },
     newContextCallback_ { newContextCallback }
 {
+    /* Adjust context profile if Auto-selection is specified */
+    if (profile_.contextProfile == OpenGLContextProfile::Auto)
+        profile_.contextProfile = GLProfile::GetContextProfile();
+
     if (customNativeHandle != nullptr && customNativeHandleSize > 0)
     {
         customNativeHandle_.resize(customNativeHandleSize, UninitializeTag{});
