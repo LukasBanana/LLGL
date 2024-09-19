@@ -15,7 +15,7 @@
 #include <LLGL/Container/DynamicVector.h>
 #include "GLResourceType.h"
 #include "../Texture/GLSampler.h"
-#include "../Texture/GL2XSampler.h"
+#include "../Texture/GLEmulatedSampler.h"
 #include <vector>
 
 
@@ -106,9 +106,7 @@ class GLPipelineLayout final : public PipelineLayout
         std::vector<GLPipelineResourceBinding>  bindings_;
         std::vector<GLuint>                     staticSamplerSlots_;
         std::vector<GLSamplerPtr>               staticSamplers_;
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        std::vector<GL2XSamplerPtr>             staticSamplersGL2X_;
-        #endif
+        std::vector<GLEmulatedSamplerPtr>       staticEmulatedSamplers_;
         std::vector<UniformDescriptor>          uniforms_;
         const GLbitfield                        barriers_           = 0;
         const bool                              hasNamedBindings_   = false;

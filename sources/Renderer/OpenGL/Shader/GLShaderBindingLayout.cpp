@@ -156,7 +156,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
             if (binding.type == GLResourceType_Texture  ||
                 binding.type == GLResourceType_Image    ||
                 binding.type == GLResourceType_Sampler  ||
-                binding.type == GLResourceType_GL2XSampler)
+                binding.type == GLResourceType_EmulatedSampler)
             {
                 AppendUniformBinding(name, binding.slot);
             }

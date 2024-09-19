@@ -1,11 +1,11 @@
 /*
- * GL2XSampler.cpp
+ * GLEmulatedSampler.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "GL2XSampler.h"
+#include "GLEmulatedSampler.h"
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
 #include "../../../Core/MacroUtils.h"
@@ -30,7 +30,7 @@ static bool IsGLTextureWrapUsingBorder(GLenum mode)
     return (mode == GL_CLAMP || mode == GL_CLAMP_TO_BORDER);
 }
 
-void GL2XSampler::SamplerParameters(const SamplerDescriptor& desc)
+void GLEmulatedSampler::SamplerParameters(const SamplerDescriptor& desc)
 {
     /* Store texture coordinate wrap modes */
     wrapS_              = GLTypes::Map(desc.addressModeU);
@@ -102,7 +102,7 @@ static void GLChangeTexParameterfv(GLenum target, GLenum param, const GLfloat (&
     }
 }
 
-void GL2XSampler::BindTexParameters(GLenum target, const GL2XSampler* prevSampler) const
+void GLEmulatedSampler::BindTexParameters(GLenum target, const GLEmulatedSampler* prevSampler) const
 {
     if (prevSampler != nullptr)
     {
@@ -140,7 +140,7 @@ void GL2XSampler::BindTexParameters(GLenum target, const GL2XSampler* prevSample
     }
 }
 
-int GL2XSampler::CompareSWO(const GL2XSampler& lhs, const GL2XSampler& rhs)
+int GLEmulatedSampler::CompareSWO(const GLEmulatedSampler& lhs, const GLEmulatedSampler& rhs)
 {
     LLGL_COMPARE_MEMBER_SWO( wrapS_         );
     LLGL_COMPARE_MEMBER_SWO( wrapT_         );

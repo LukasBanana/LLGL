@@ -40,7 +40,6 @@ jobs:
         -DLLGL_BUILD_WRAPPER_C99=ON
         -DLLGL_BUILD_WRAPPER_CSHARP=ON
         -DLLGL_VK_ENABLE_SPIRV_REFLECT=ON
-        -DLLGL_GL_ENABLE_OPENGL2X=ON
         "-DLLGL_D3D11_ENABLE_FEATURELEVEL=${{ matrix.generator == 'Visual Studio 17 2022' && 'Direct3D 11.3' || 'Direct3D 11.0' }}"
         "-DLLGL_D3D12_ENABLE_FEATURELEVEL=${{ matrix.generator == 'Visual Studio 17 2022' && 'Direct3D 12.2' || 'Direct3D 12.0' }}"
 

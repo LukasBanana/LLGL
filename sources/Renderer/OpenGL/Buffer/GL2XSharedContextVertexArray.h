@@ -8,8 +8,6 @@
 #ifndef LLGL_GL2X_SHARED_CONTEXT_VERTEX_ARRAY_H
 #define LLGL_GL2X_SHARED_CONTEXT_VERTEX_ARRAY_H
 
-#if LLGL_GL_ENABLE_OPENGL2X
-
 
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/Container/ArrayView.h>
@@ -52,8 +50,6 @@ class GL2XSharedContextVertexArray
 
 } // /namespace LLGL
 
-
-#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 #endif
 

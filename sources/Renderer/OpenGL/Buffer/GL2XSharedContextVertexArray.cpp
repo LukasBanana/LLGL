@@ -5,8 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#if LLGL_GL_ENABLE_OPENGL2X
-
 #include "GL2XSharedContextVertexArray.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
@@ -111,8 +109,6 @@ void GL2XSharedContextVertexArray::SetDebugName(const char* name)
 
 
 } // /namespace LLGL
-
-#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 
 

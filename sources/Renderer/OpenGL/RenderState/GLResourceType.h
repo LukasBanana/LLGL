@@ -26,7 +26,7 @@ enum GLResourceType : std::uint32_t
     GLResourceType_Texture,
     GLResourceType_Image,
     GLResourceType_Sampler,
-    GLResourceType_GL2XSampler,
+    GLResourceType_EmulatedSampler,
 };
 
 

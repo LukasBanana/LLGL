@@ -33,9 +33,7 @@ class GLSwapChain;
 class GLRenderTarget;
 class GLRenderPass;
 class GLDeferredCommandBuffer;
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-class GL2XSampler;
-#endif
+class GLEmulatedSampler;
 
 
 struct GLCmdBufferSubData
@@ -420,13 +418,11 @@ struct GLCmdBindSampler
     GLuint sampler;
 };
 
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-struct GLCmdBindGL2XSampler
+struct GLCmdBindEmulatedSampler
 {
-    GLuint              layer;
-    const GL2XSampler*  samplerGL2X;
+    GLuint                      layer;
+    const GLEmulatedSampler*    sampler;
 };
-#endif
 
 struct GLCmdMemoryBarrier
 {

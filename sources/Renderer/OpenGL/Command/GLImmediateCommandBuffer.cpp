@@ -26,9 +26,7 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-#   include "../Texture/GL2XSampler.h"
-#endif
+#include "../Texture/GLEmulatedSampler.h"
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLMipGenerator.h"
 #include "../Texture/GLFramebufferCapture.h"
@@ -396,12 +394,10 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
         }
         break;
 
-        case GLResourceType_GL2XSampler:
+        case GLResourceType_EmulatedSampler:
         {
-            #ifdef LLGL_GL_ENABLE_OPENGL2X
-            auto& samplerGL2X = LLGL_CAST(GL2XSampler&, resource);
-            stateMngr_->BindGL2XSampler(binding.slot, samplerGL2X);
-            #endif // /LLGL_GL_ENABLE_OPENGL2X
+            auto& emulatedSamplerGL = LLGL_CAST(GLEmulatedSampler&, resource);
+            stateMngr_->BindEmulatedSampler(binding.slot, emulatedSamplerGL);
         }
         break;
     }

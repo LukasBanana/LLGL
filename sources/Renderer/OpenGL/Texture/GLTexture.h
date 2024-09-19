@@ -20,7 +20,7 @@ namespace LLGL
 struct ImageView;
 struct MutableImageView;
 struct TextureViewDescriptor;
-class GL2XSampler;
+class GLEmulatedSampler;
 
 // Predefined texture swizzles to emulate certain texture format
 enum class GLSwizzleFormat
@@ -95,10 +95,8 @@ class GLTexture final : public Texture
         */
         GLenum GetGLTexLevelTarget() const;
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
         // Binds the texture parameters of the specified sampler to this texture.
-        void BindTexParameters(const GL2XSampler& sampler);
-        #endif
+        void BindTexParameters(const GLEmulatedSampler& sampler);
 
         // Returns the hardware texture ID.
         inline GLuint GetID() const
@@ -153,21 +151,19 @@ class GLTexture final : public Texture
 
     private:
 
-        GLuint                  id_             = 0;                        // GL object name for texture or renderbuffer
-        GLenum                  internalFormat_ = 0;
+        GLuint                      id_                     = 0;                        // GL object name for texture or renderbuffer
+        GLenum                      internalFormat_         = 0;
 
-        const GLsizei           numMipLevels_   = 1;
-        const bool              isRenderbuffer_ = false;
-        const GLSwizzleFormat   swizzleFormat_  = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
+        const GLsizei               numMipLevels_           = 1;
+        const bool                  isRenderbuffer_         = false;
+        const GLSwizzleFormat       swizzleFormat_          = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
 
         #ifndef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
-        GLint                   extent_[3]      = {};
-        GLint                   samples_        = 1;
+        GLint                       extent_[3]              = {};
+        GLint                       samples_                = 1;
         #endif
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        const GL2XSampler*      boundSampler_   = nullptr;                  // Sampler currently bound to this texture
-        #endif
+        const GLEmulatedSampler*    boundEmulatedSampler_   = nullptr;                  // Emulated sampler currently bound to this texture
 
 };
 

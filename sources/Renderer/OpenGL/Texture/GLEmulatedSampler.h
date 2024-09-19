@@ -1,12 +1,12 @@
 /*
- * GL2XSampler.h
+ * GLEmulatedSampler.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_GL2X_SAMPLER_H
-#define LLGL_GL2X_SAMPLER_H
+#ifndef LLGL_GL_EMULATED_SAMPLER_H
+#define LLGL_GL_EMULATED_SAMPLER_H
 
 
 #include <LLGL/Sampler.h>
@@ -18,8 +18,8 @@ namespace LLGL
 {
 
 
-// This class emulates the Sampler-Object (GL_ARB_sampler_objects) functionality, for GL 2.x.
-class GL2XSampler final : public Sampler
+// This class emulates the Sampler-Object (GL_ARB_sampler_objects) functionality, which is only available since GL 3.3.
+class GLEmulatedSampler final : public Sampler
 {
 
     public:
@@ -28,12 +28,12 @@ class GL2XSampler final : public Sampler
         void SamplerParameters(const SamplerDescriptor& desc);
 
         // Binds all attributes of this sampler to the specified GL texture object.
-        void BindTexParameters(GLenum target, const GL2XSampler* prevSampler = nullptr) const;
+        void BindTexParameters(GLenum target, const GLEmulatedSampler* prevSampler = nullptr) const;
 
     public:
 
-        // Compares the two GL2XSampler objects in a strict-weak-order (SWO).
-        static int CompareSWO(const GL2XSampler& lhs, const GL2XSampler& rhs);
+        // Compares the two GLEmulatedSampler objects in a strict-weak-order (SWO).
+        static int CompareSWO(const GLEmulatedSampler& lhs, const GLEmulatedSampler& rhs);
 
     private:
 
@@ -53,7 +53,7 @@ class GL2XSampler final : public Sampler
 
 };
 
-using GL2XSamplerPtr = std::unique_ptr<GL2XSampler>;
+using GLEmulatedSamplerPtr = std::unique_ptr<GLEmulatedSampler>;
 
 
 } // /namespace LLGL

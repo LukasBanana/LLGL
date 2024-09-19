@@ -23,10 +23,8 @@
 
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLSampler.h"
+#include "../Texture/GLEmulatedSampler.h"
 #include "../Texture/GLRenderTarget.h"
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-#   include "../Texture/GL2XSampler.h"
-#endif
 
 #include "../Buffer/GLBufferWithVAO.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
@@ -431,12 +429,10 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         }
         break;
 
-        case GLResourceType_GL2XSampler:
+        case GLResourceType_EmulatedSampler:
         {
-            #ifdef LLGL_GL_ENABLE_OPENGL2X
-            auto& samplerGL2X = LLGL_CAST(GL2XSampler&, resource);
-            BindGL2XSampler(samplerGL2X, binding.slot);
-            #endif // /LLGL_GL_ENABLE_OPENGL2X
+            auto& emulatedSamplerGL = LLGL_CAST(GLEmulatedSampler&, resource);
+            BindEmulatedSampler(emulatedSamplerGL, binding.slot);
         }
         break;
     }
@@ -1048,16 +1044,14 @@ void GLDeferredCommandBuffer::BindSampler(const GLSampler& samplerGL, std::uint3
     }
 }
 
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-void GLDeferredCommandBuffer::BindGL2XSampler(const GL2XSampler& samplerGL2X, std::uint32_t slot)
+void GLDeferredCommandBuffer::BindEmulatedSampler(const GLEmulatedSampler& emulatedSamplerGL, std::uint32_t slot)
 {
-    auto cmd = AllocCommand<GLCmdBindGL2XSampler>(GLOpcodeBindGL2XSampler);
+    auto cmd = AllocCommand<GLCmdBindEmulatedSampler>(GLOpcodeBindEmulatedSampler);
     {
-        cmd->layer          = slot;
-        cmd->samplerGL2X    = &samplerGL2X;
+        cmd->layer      = slot;
+        cmd->sampler    = &emulatedSamplerGL;
     }
 }
-#endif
 
 void GLDeferredCommandBuffer::FlushMemoryBarriers()
 {

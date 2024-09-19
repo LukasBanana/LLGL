@@ -368,16 +368,14 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 {
     CreateGLContextOnce();
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
     if (!HasNativeSamplers())
     {
         /* If GL_ARB_sampler_objects is not supported, use emulated sampler states */
-        auto* samplerGL2X = samplersGL2X_.emplace<GL2XSampler>();
-        samplerGL2X->SamplerParameters(samplerDesc);
-        return samplerGL2X;
+        auto* emulatedSamplerGL = emulatedSamplers_.emplace<GLEmulatedSampler>();
+        emulatedSamplerGL->SamplerParameters(samplerDesc);
+        return emulatedSamplerGL;
     }
     else
-    #endif
     {
         /* Create native GL sampler state */
         LLGL_ASSERT(HasNativeSamplers(), "LLGL was not compiled with LLGL_GL_ENABLE_OPENGL2X but \"GL_ARB_sampler_objects\" is not supported");
@@ -389,15 +387,11 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
 
 void GLRenderSystem::Release(Sampler& sampler)
 {
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* If GL_ARB_sampler_objects is not supported, release emulated sampler states */
     if (!HasNativeSamplers())
-        samplersGL2X_.erase(&sampler);
+        emulatedSamplers_.erase(&sampler);
     else
         samplers_.erase(&sampler);
-    #else
-    samplers_.erase(&sampler);
-    #endif
 }
 
 /* ----- Resource Heaps ----- */

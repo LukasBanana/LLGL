@@ -459,14 +459,12 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr->BindSampler(cmd->layer, cmd->sampler);
             return sizeof(*cmd);
         }
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        case GLOpcodeBindGL2XSampler:
+        case GLOpcodeBindEmulatedSampler:
         {
-            auto cmd = reinterpret_cast<const GLCmdBindGL2XSampler*>(pc);
-            stateMngr->BindGL2XSampler(cmd->layer, *(cmd->samplerGL2X));
+            auto cmd = reinterpret_cast<const GLCmdBindEmulatedSampler*>(pc);
+            stateMngr->BindEmulatedSampler(cmd->layer, *(cmd->sampler));
             return sizeof(*cmd);
         }
-        #endif
         #ifdef LLGL_GLEXT_MEMORY_BARRIERS
         case GLOpcodeMemoryBarrier:
         {

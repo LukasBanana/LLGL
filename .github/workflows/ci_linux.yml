@@ -46,7 +46,6 @@ jobs:
         -DLLGL_BUILD_TESTS=ON
         -DLLGL_BUILD_WRAPPER_C99=${{ env.EXT_FULL }}
         -DLLGL_VK_ENABLE_SPIRV_REFLECT=${{ env.EXT_FULL }}
-        -DLLGL_GL_ENABLE_OPENGL2X=ON
         -DLLGL_GL_ENABLE_DSA_EXT=${{ env.EXT_FULL }}
         -DLLGL_GL_ENABLE_VENDOR_EXT=${{ env.EXT_FULL }}
 

@@ -15,9 +15,7 @@
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-#   include "../Texture/GL2XSampler.h"
-#endif
+#include "../Texture/GLEmulatedSampler.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLTypes.h"
@@ -303,10 +301,8 @@ void GLStateManager::ClearCache()
     GLGetContextState(contextState_);
 
     /* Clear all pointers and remaining bits to cached objects */
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
     ::memset(boundGLTextures_, 0, sizeof(boundGLTextures_));
-    ::memset(boundGL2XSamplers_, 0, sizeof(boundGL2XSamplers_));
-    #endif
+    ::memset(boundGLEmulatedSamplers_, 0, sizeof(boundGLEmulatedSamplers_));
 
     boundRenderTarget_          = nullptr;
     indexType16Bits_            = false;
@@ -1506,15 +1502,16 @@ void GLStateManager::BindGLTexture(GLTexture& texture)
     /* Bind native texture */
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
     /* Manage reference for emulated sampler binding */
-    if (boundGLTextures_[contextState_.activeTexture] != &texture)
+    if (!HasNativeSamplers())
     {
-        boundGLTextures_[contextState_.activeTexture] = &texture;
-        if (auto samplerGL2X = boundGL2XSamplers_[contextState_.activeTexture])
-            texture.BindTexParameters(*samplerGL2X);
+        if (boundGLTextures_[contextState_.activeTexture] != &texture)
+        {
+            boundGLTextures_[contextState_.activeTexture] = &texture;
+            if (const GLEmulatedSampler* emulatedSamplerGL = boundGLEmulatedSamplers_[contextState_.activeTexture])
+                texture.BindTexParameters(*emulatedSamplerGL);
+        }
     }
-    #endif
 }
 
 void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool invalidateActiveLayerOnly)
@@ -1589,23 +1586,26 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
 
 #endif // /GL_ARB_sampler_objects
 
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-
-void GLStateManager::BindGL2XSampler(GLuint layer, const GL2XSampler& sampler)
+void GLStateManager::BindEmulatedSampler(GLuint layer, const GLEmulatedSampler& sampler)
 {
+    LLGL_ASSERT(!HasNativeSamplers(), "emulated samplers not supported when native samplers are supported");
+
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
-    if (boundGL2XSamplers_[layer] != &sampler)
+
+    if (boundGLEmulatedSamplers_[layer] != &sampler)
     {
-        boundGL2XSamplers_[layer] = &sampler;
+        boundGLEmulatedSamplers_[layer] = &sampler;
         if (auto texture = boundGLTextures_[layer])
             texture->BindTexParameters(sampler);
     }
 }
 
-void GLStateManager::BindCombinedGL2XSampler(GLuint layer, const GL2XSampler& sampler, GLTexture& texture)
+void GLStateManager::BindCombinedEmulatedSampler(GLuint layer, const GLEmulatedSampler& sampler, GLTexture& texture)
 {
+    LLGL_ASSERT(!HasNativeSamplers(), "emulated samplers not supported when native samplers are supported");
+
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_UPPER_BOUND(layer, GLContextState::numTextureLayers);
     #endif
@@ -1615,7 +1615,7 @@ void GLStateManager::BindCombinedGL2XSampler(GLuint layer, const GL2XSampler& sa
 
     /* Keep reference to GLTexture for emulated sampler binding */
     boundGLTextures_[layer] = &texture;
-    boundGL2XSamplers_[layer] = &sampler;
+    boundGLEmulatedSamplers_[layer] = &sampler;
 
     /* Update texture parameterf if sampler has changed */
     texture.BindTexParameters(sampler);
@@ -1623,8 +1623,6 @@ void GLStateManager::BindCombinedGL2XSampler(GLuint layer, const GL2XSampler& sa
     /* Bind native texture */
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
-
-#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 /* ----- Shader program ----- */
 

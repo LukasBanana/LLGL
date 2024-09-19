@@ -36,9 +36,7 @@ class GLBlendState;
 class GLRenderPass;
 class GLProgramPipeline;
 class GLShaderProgram;
-#ifdef LLGL_GL_ENABLE_OPENGL2X
-class GL2XSampler;
-#endif
+class GLEmulatedSampler;
 
 // OpenGL state machine manager that keeps track of certain GL states.
 class GLStateManager
@@ -251,10 +249,8 @@ class GLStateManager
 
         void NotifySamplerRelease(GLuint sampler);
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void BindGL2XSampler(GLuint layer, const GL2XSampler& sampler);
-        void BindCombinedGL2XSampler(GLuint layer, const GL2XSampler& sampler, GLTexture& texture);
-        #endif
+        void BindEmulatedSampler(GLuint layer, const GLEmulatedSampler& sampler);
+        void BindCombinedEmulatedSampler(GLuint layer, const GLEmulatedSampler& sampler, GLTexture& texture);
 
         /* ----- Shader program ----- */
 
@@ -401,10 +397,8 @@ class GLStateManager
 
         GLContextState                      contextState_;
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        GLTexture*                          boundGLTextures_[GLContextState::numTextureLayers]      = {};
-        const GL2XSampler*                  boundGL2XSamplers_[GLContextState::numTextureLayers]    = {};
-        #endif
+        GLTexture*                          boundGLTextures_[GLContextState::numTextureLayers]          = {};
+        const GLEmulatedSampler*            boundGLEmulatedSamplers_[GLContextState::numTextureLayers]  = {};
 
         GLRenderTarget*                     boundRenderTarget_          = nullptr;
 

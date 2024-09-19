@@ -96,9 +96,8 @@ class GLResourceHeap final : public ResourceHeap
         void AllocSegmentsTexture(BindingDescriptorIterator& bindingIter);
         void AllocSegmentsImage(BindingDescriptorIterator& bindingIter);
         void AllocSegmentsSampler(BindingDescriptorIterator& bindingIter);
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void AllocSegmentsGL2XSampler(BindingDescriptorIterator& bindingIter);
-        #endif
+        void AllocSegmentsNativeSampler(BindingDescriptorIterator& bindingIter);
+        void AllocSegmentsEmulatedSampler(BindingDescriptorIterator& bindingIter);
 
         void Alloc1PartSegment(
             GLResourceType              type,
@@ -133,9 +132,7 @@ class GLResourceHeap final : public ResourceHeap
         void WriteResourceViewTexture(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewImage(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        void WriteResourceViewGL2XSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        #endif
+        void WriteResourceViewEmulatedSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
 
     private:
 
