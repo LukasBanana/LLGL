@@ -77,7 +77,10 @@ void GLFramebufferCapture::CaptureFramebuffer(
         return /*GL_INVALID_VALUE*/;
 
     const TextureType       type            = textureGL.GetType();
-    const bool              isDepthStencil  = IsDepthOrStencilFormat(textureGL.GetFormat());
+    const FormatAttributes& formatAttribs   = GetFormatAttribs(textureGL.GetFormat());
+    const bool              hasDepth        = ((formatAttribs.flags & FormatFlags::HasDepth) != 0);
+    const bool              hasStencil      = ((formatAttribs.flags & FormatFlags::HasStencil) != 0);
+    const bool              isDepthStencil  = (hasDepth || hasStencil);
 
     const GLTextureTarget   target          = GLStateManager::GetTextureTarget(type);
     const GLenum            targetGL        = GLTypes::Map(type);
@@ -99,12 +102,24 @@ void GLFramebufferCapture::CaptureFramebuffer(
     {
         stateMngr.BindTexture(target, intermediateTex_.texID);
 
-        #if LLGL_GL3PLUS_SUPPORTED
-        if (isDepthStencil)
+        #if !LLGL_GL_ENABLE_OPENGL2X
+        if (hasStencil)
+        {
+            /* Allocate storage for intermediate texture with depth-stencil format (only supported in GL 3+) */
             glTexImage2D(targetGL, 0, textureGL.GetGLInternalFormat(), width, height, 0, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, nullptr);
+        }
         else
-        #endif // /LLGL_GL3PLUS_SUPPORTED
+        #endif // /!LLGL_GL_ENABLE_OPENGL2X
+        if (hasDepth)
+        {
+            /* Allocate storage for intermediate texture with depth-component only format */
+            glTexImage2D(targetGL, 0, textureGL.GetGLInternalFormat(), width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        }
+        else
+        {
+            /* Allocate storage for intermediate texture with color format */
             glTexImage2D(targetGL, 0, textureGL.GetGLInternalFormat(), width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        }
 
         glCopyTexSubImage2D(targetGL, 0, 0, 0, screenPosX, screenPosY, width, height);
     }

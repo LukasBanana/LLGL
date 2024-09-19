@@ -6,6 +6,7 @@
  */
 
 #include "GLVertexArrayObject.h"
+#include "GLSharedContextVertexArray.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
@@ -19,34 +20,10 @@ namespace LLGL
 {
 
 
-void GLConvertVertexAttrib(GLVertexAttribute& dst, const VertexAttribute& src, GLuint srcBuffer)
-{
-    /* Get data type and components of vector type */
-    const FormatAttributes& formatAttribs = GetFormatAttribs(src.format);
-    if ((formatAttribs.flags & FormatFlags::SupportsVertex) == 0)
-    {
-        if (const char* formatStr = ToString(src.format))
-            LLGL_TRAP("LLGL::Format::%s cannot be used for vertex attributes", formatStr);
-        else
-            LLGL_TRAP("unknown format cannot be used for vertex attributes");
-    }
-
-    /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
-    dst.buffer          = srcBuffer;
-    dst.index           = static_cast<GLuint>(src.location);
-    dst.size            = static_cast<GLint>(formatAttribs.components);
-    dst.type            = GLTypes::Map(formatAttribs.dataType);
-    dst.normalized      = GLBoolean((formatAttribs.flags & FormatFlags::IsNormalized) != 0);
-    dst.stride          = static_cast<GLsizei>(src.stride);
-    dst.offsetPtrSized  = static_cast<GLsizeiptr>(src.offset);
-    dst.divisor         = static_cast<GLuint>(src.instanceDivisor);
-    dst.isInteger       = IsIntegerFormat(src.format);
-}
-
-#if LLGL_GL3PLUS_SUPPORTED
-
 void GLVertexArrayObject::Release()
 {
+    #if GL_ARB_vertex_array_object
+
     //TODO: this must use some form of deferred deletion as this d'tor is not guaranteed to be invoked with the correct GL context in place
     if (id_ != 0)
     {
@@ -54,10 +31,14 @@ void GLVertexArrayObject::Release()
         GLStateManager::Get().NotifyVertexArrayRelease(id_);
         id_ = 0;
     }
+
+    #endif // /GL_ARB_vertex_array_object
 }
 
 void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes)
 {
+    #if GL_ARB_vertex_array_object
+
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);
 
     /* Generate a VAO if not already done */
@@ -71,6 +52,12 @@ void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& 
             BuildVertexAttribute(attrib);
     }
     GLStateManager::Get().BindVertexArray(0);
+
+    #else // GL_ARB_vertex_array_object
+
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED(GL_ARB_vertex_array_object);
+
+    #endif // /GL_ARB_vertex_array_object
 }
 
 
@@ -80,6 +67,8 @@ void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& 
 
 void GLVertexArrayObject::BuildVertexAttribute(const GLVertexAttribute& attribute)
 {
+    #if GL_ARB_vertex_array_object
+
     GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, attribute.buffer);
 
     /* Enable array index in currently bound VAO */
@@ -112,9 +101,9 @@ void GLVertexArrayObject::BuildVertexAttribute(const GLVertexAttribute& attribut
             reinterpret_cast<const void*>(attribute.offsetPtrSized)
         );
     }
-}
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+    #endif // /GL_ARB_vertex_array_object
+}
 
 
 } // /namespace LLGL

@@ -1000,12 +1000,12 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_vertex_array_object          );
     #endif
     ENABLE_GLEXT( ARB_vertex_shader                );
     ENABLE_GLEXT( ARB_framebuffer_object           );
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
     #endif
     ENABLE_GLEXT( ARB_map_buffer_range             );
@@ -1016,7 +1016,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable shader extensions */
     ENABLE_GLEXT( ARB_shader_objects               );
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_instanced_arrays             );
     ENABLE_GLEXT( ARB_tessellation_shader          );
     ENABLE_GLEXT( ARB_get_program_binary           );
@@ -1032,7 +1032,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT( ARB_clear_texture                );
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_sampler_objects              );
     #endif
 
@@ -1060,7 +1060,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( EXT_texture_array                );
     ENABLE_GLEXT( ARB_texture_cube_map_array       );
     ENABLE_GLEXT( ARB_geometry_shader4             );
@@ -1119,10 +1119,10 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     #endif
 
     /* Load hardware buffer extensions */
-    LOAD_GLEXT( ARB_vertex_buffer_object         );
-    LOAD_GLEXT( ARB_vertex_array_object          );
-    LOAD_GLEXT( ARB_vertex_shader                );
-    LOAD_GLEXT( ARB_framebuffer_object           );
+    LOAD_GLEXT( ARB_vertex_buffer_object         ); // Always required for GL 3+
+    LOAD_GLEXT( ARB_vertex_array_object          ); // Always required for GL 3+
+    LOAD_GLEXT( ARB_vertex_shader                ); // Always required for GL 3+
+    LOAD_GLEXT( ARB_framebuffer_object           ); // Always required for GL 2.x & GL 3+
     LOAD_GLEXT( ARB_uniform_buffer_object        );
     LOAD_GLEXT( ARB_shader_storage_buffer_object );
     LOAD_GLEXT( ARB_map_buffer_range             );

@@ -542,7 +542,7 @@ void GLImmediateCommandBuffer::EndRenderCondition()
 
 void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
 
     /* Bind transform feedback buffers */
     GLuint soTargets[LLGL_MAX_NUM_SO_BUFFERS];
@@ -566,12 +566,12 @@ void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffe
         glBeginTransformFeedbackNV(GetPrimitiveMode());
     #endif
 
-    #endif // /LLGL_GL3PLUS_SUPPORTED
+    #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 
 void GLImmediateCommandBuffer::EndStreamOutput()
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
 
     /* End transform feedback section */
     #ifdef LLGL_GLEXT_TRANSFORM_FEEDBACK
@@ -583,7 +583,7 @@ void GLImmediateCommandBuffer::EndStreamOutput()
         glEndTransformFeedbackNV();
     #endif
 
-    #endif // /LLGL_GL3PLUS_SUPPORTED
+    #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 
 /* ----- Drawing ----- */
@@ -638,7 +638,7 @@ void GLImmediateCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32
 
 void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     LLGL_FLUSH_MEMORY_BARRIERS();
     glDrawArraysInstanced(
         GetDrawMode(),
@@ -665,7 +665,7 @@ void GLImmediateCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uin
 
 void GLImmediateCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     LLGL_FLUSH_MEMORY_BARRIERS();
     glDrawElementsInstanced(
         GetDrawMode(),

@@ -47,7 +47,7 @@ static float GLGetFloat(GLenum param)
     return attr;
 }
 
-#if !LLGL_GL3PLUS_SUPPORTED
+#if LLGL_GL_ENABLE_OPENGL2X
 
 static const GLubyte* ParseGLVersionInteger(const GLubyte* s, GLint& outValue)
 {
@@ -80,7 +80,7 @@ static bool ParseGLVersionString(const GLubyte* s, GLint& outMajor, GLint& outMi
     return true;
 }
 
-#endif // /!LLGL_GL3PLUS_SUPPORTED
+#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 static std::vector<ShadingLanguage> GLQueryShadingLanguages()
 {
@@ -92,13 +92,7 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
         /* Derive shading language version by OpenGL version */
         GLint major = 0, minor = 0;
 
-        #if LLGL_GL3PLUS_SUPPORTED
-
-        /* Retrieve version numbers directly for GL 3+ */
-        glGetIntegerv(GL_MAJOR_VERSION, &major);
-        glGetIntegerv(GL_MINOR_VERSION, &minor);
-
-        #else
+        #if LLGL_GL_ENABLE_OPENGL2X
 
         /* Fallback to parsing GL_VERSION string for GL 2.x */
         if (!ParseGLVersionString(glGetString(GL_VERSION), major, minor))
@@ -107,7 +101,14 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
             major = 2;
             minor = 0;
         }
-        #endif
+
+        #else // LLGL_GL_ENABLE_OPENGL2X
+
+        /* Retrieve version numbers directly for GL 3+ */
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+        #endif // /LLGL_GL_ENABLE_OPENGL2X
 
         /* Map OpenGL version to GLSL version */
         const GLint version = major * 100 + minor * 10;
@@ -256,7 +257,7 @@ static void GLGetSupportedFeatures(RenderingFeatures& features)
     features.hasConservativeRasterization   = (HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization));
     features.hasStreamOutputs               = (HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback));
     features.hasLogicOp                     = true;
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     features.hasPipelineCaching             = (HasExtension(GLExt::ARB_get_program_binary) && GLGetInt(GL_NUM_PROGRAM_BINARY_FORMATS) > 0);
     #endif
     features.hasPipelineStatistics          = HasExtension(GLExt::ARB_pipeline_statistics_query);
@@ -361,10 +362,10 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     else
     #endif
     {
-        #if LLGL_GL3PLUS_SUPPORTED
-        const GLuint maxSamples = GLGetUInt(GL_MAX_SAMPLES);
-        #else
+        #if LLGL_GL_ENABLE_OPENGL2X
         const GLuint maxSamples = 1;
+        #else
+        const GLuint maxSamples = GLGetUInt(GL_MAX_SAMPLES);
         #endif
         limits.maxColorBufferSamples    = maxSamples;
         limits.maxDepthBufferSamples    = maxSamples;

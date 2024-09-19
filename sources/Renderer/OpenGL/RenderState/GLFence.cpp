@@ -55,16 +55,12 @@ void GLFence::Submit()
     #endif // /GL_ARB_sync
 }
 
-#if LLGL_GL3PLUS_SUPPORTED
-bool GLFence::Wait(GLuint64 timeout)
-#else
-bool GLFence::Wait(GLuint timeout)
-#endif
+bool GLFence::Wait(std::uint64_t timeout)
 {
     #if GL_ARB_sync
     if (HasExtension(GLExt::ARB_sync))
     {
-        GLenum result = glClientWaitSync(sync_, GL_SYNC_FLUSH_COMMANDS_BIT, timeout);
+        GLenum result = glClientWaitSync(sync_, GL_SYNC_FLUSH_COMMANDS_BIT, static_cast<GLuint64>(timeout));
         return (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED);
     }
     else

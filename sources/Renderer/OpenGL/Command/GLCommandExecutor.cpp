@@ -221,7 +221,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeBeginTransformFeedback:
         {
             auto cmd = reinterpret_cast<const GLCmdBeginTransformFeedback*>(pc);
-            #if defined(__APPLE__) && !LLGL_GL3PLUS_SUPPORTED
+            #if defined(__APPLE__) && LLGL_GL_ENABLE_OPENGL2X
             glBeginTransformFeedbackEXT(cmd->primitiveMove);
             #else
             glBeginTransformFeedback(cmd->primitiveMove);
@@ -238,7 +238,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         }
         case GLOpcodeEndTransformFeedback:
         {
-            #if defined(__APPLE__) && !LLGL_GL3PLUS_SUPPORTED
+            #if defined(__APPLE__) && LLGL_GL_ENABLE_OPENGL2X
             glEndTransformFeedbackEXT();
             #else
             glEndTransformFeedback();
@@ -326,7 +326,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawArraysInstanced:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysInstanced*>(pc);
-            #if LLGL_GL3PLUS_SUPPORTED
+            #if !LLGL_GL_ENABLE_OPENGL2X
             glDrawArraysInstanced(cmd->mode, cmd->first, cmd->count, cmd->instancecount);
             #endif
             return sizeof(*cmd);
@@ -370,7 +370,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawElementsInstanced:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsInstanced*>(pc);
-            #if LLGL_GL3PLUS_SUPPORTED
+            #if !LLGL_GL_ENABLE_OPENGL2X
             glDrawElementsInstanced(cmd->mode, cmd->count, cmd->type, cmd->indices, cmd->instancecount);
             #endif
             return sizeof(*cmd);

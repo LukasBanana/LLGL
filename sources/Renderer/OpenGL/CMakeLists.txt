@@ -21,7 +21,7 @@ endif()
 
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_DSA_EXT "Enable OpenGL direct state access (DSA) extension if available" ON)
-option(LLGL_GL_ENABLE_OPENGL2X "Enable support for OpenGL 2.x compatibility profile" OFF)
+option(LLGL_GL_ENABLE_OPENGL2X "Enable OpenGL 2.x compatibility profile instead of OpenGL 3+ core profile" OFF)
 option(LLGL_GL_INCLUDE_EXTERNAL "Include additional OpenGL header files from 'external' folder" ON)
 
 if(LLGL_GL_ENABLE_VENDOR_EXT)

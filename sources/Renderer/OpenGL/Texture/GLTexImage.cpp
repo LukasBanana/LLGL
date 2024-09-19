@@ -64,7 +64,7 @@ static bool CanInitializeTexWithRGBAf(const TextureDescriptor& desc)
 
 static GLenum GetDefaultInitialGLImageFormat(Format format)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     return (IsIntegerFormat(format) ? GL_RGBA_INTEGER : GL_RGBA);
     #else
     return GL_RGBA;
@@ -566,7 +566,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
     }
     else if (IsStencilFormat(desc.format))
     {
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         if (IsClearValueEnabled(desc))
         {
             /* Initialize depth-stencil texture image with default depth */
@@ -595,33 +595,7 @@ static void GLTexImage2D(const TextureDescriptor& desc, const ImageView* imageVi
             );
         }
         #else
-        if (IsClearValueEnabled(desc))
-        {
-            /* Initialize stencil texture image with default index value */
-            auto image = GenImageDataS8ui(desc.extent.width * desc.extent.height, desc.clearValue.stencil);
-            GLTexImage2D(
-                NumMipLevels(desc),
-                FindSuitableDepthFormat(desc),
-                desc.extent.width,
-                desc.extent.height,
-                GL_STENCIL_INDEX,
-                GL_UNSIGNED_BYTE,
-                image.data()
-            );
-        }
-        else
-        {
-            /* Allocate depth-stencil texture image without initial data */
-            GLTexImage2D(
-                NumMipLevels(desc),
-                FindSuitableDepthFormat(desc),
-                desc.extent.width,
-                desc.extent.height,
-                GL_STENCIL_INDEX,
-                GL_UNSIGNED_BYTE,
-                nullptr
-            );
-        }
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("stencil-index texture format");
         #endif
     }
     else if (IsDepthFormat(desc.format))
@@ -772,7 +746,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     {
         Format internalFormat = FindSuitableDepthFormat(desc);
 
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         std::vector<GLDepthStencilPair> image;
         const void* initialData = nullptr;
 
@@ -798,30 +772,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
             );
         }
         #else
-        std::vector<std::uint8_t> image;
-        const void* initialData = nullptr;
-
-        if (IsClearValueEnabled(desc))
-        {
-            /* Initialize depth texture image with default depth */
-            image       = GenImageDataS8ui(desc.extent.width * desc.extent.height, desc.clearValue.stencil);
-            initialData = image.data();
-        }
-
-        /* Allocate depth texture image without initial data */
-        for_range(arrayLayer, desc.arrayLayers)
-        {
-            GLTexImageCube(
-                numMipLevels,
-                internalFormat,
-                desc.extent.width,
-                desc.extent.height,
-                arrayLayer,
-                GL_STENCIL_INDEX,
-                GL_UNSIGNED_BYTE,
-                initialData
-            );
-        }
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("stencil-index texture format");
         #endif
     }
     else if (IsDepthFormat(desc.format))
@@ -963,7 +914,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
     }
     else if (IsStencilFormat(desc.format))
     {
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         if (IsClearValueEnabled(desc))
         {
             /* Initialize depth-stencil texture image with default depth */
@@ -994,7 +945,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
             );
         }
         #else
-        LLGL_TRAP_FEATURE_NOT_SUPPORTED("stencil-texImage2DArray");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("stencil-index texture format");
         #endif
     }
     else if (IsDepthFormat(desc.format))

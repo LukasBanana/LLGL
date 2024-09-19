@@ -17,7 +17,7 @@ namespace GLTypes
 {
 
 
-#if !LLGL_GL3PLUS_SUPPORTED
+#if LLGL_GL_ENABLE_OPENGL2X
 
 #ifndef GL_R8_SNORM
 #define GL_R8_SNORM GL_LUMINANCE8
@@ -179,7 +179,7 @@ namespace GLTypes
 #define GL_BGRA_INTEGER GL_BGRA
 #endif
 
-#endif // /!LLGL_GL3PLUS_SUPPORTED
+#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 
 /* ----- Internal functions ----- */
@@ -606,7 +606,7 @@ GLenum Map(const BlendOp blendOp)
         case BlendOp::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
         case BlendOp::BlendFactor:      return GL_CONSTANT_COLOR;
         case BlendOp::InvBlendFactor:   return GL_ONE_MINUS_CONSTANT_COLOR;
-        #if LLGL_OPENGL && LLGL_GL3PLUS_SUPPORTED
+        #if LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
         case BlendOp::Src1Color:        return GL_SRC1_COLOR;
         case BlendOp::InvSrc1Color:     return GL_ONE_MINUS_SRC1_COLOR;
         case BlendOp::Src1Alpha:        return GL_SRC1_ALPHA;
@@ -732,10 +732,10 @@ GLenum Map(const ShaderType shaderType)
 
 GLenum Map(const RenderConditionMode renderConditionMode)
 {
+    #if !LLGL_GL_ENABLE_OPENGL2X
     #if LLGL_OPENGL
     switch (renderConditionMode)
     {
-        #if LLGL_GL3PLUS_SUPPORTED
         case RenderConditionMode::Wait:                     return GL_QUERY_WAIT;
         case RenderConditionMode::NoWait:                   return GL_QUERY_NO_WAIT;
         case RenderConditionMode::ByRegionWait:             return GL_QUERY_BY_REGION_WAIT;
@@ -746,10 +746,10 @@ GLenum Map(const RenderConditionMode renderConditionMode)
         case RenderConditionMode::ByRegionWaitInverted:     return GL_QUERY_BY_REGION_WAIT_INVERTED;
         case RenderConditionMode::ByRegionNoWaitInverted:   return GL_QUERY_BY_REGION_NO_WAIT_INVERTED;
         #endif // /__APPLE__
-        #endif // /LLGL_GL3PLUS_SUPPORTED
         default:                                            break;
     }
     #endif
+    #endif // /!LLGL_GL_ENABLE_OPENGL2X
     LLGL_TRAP_GL_MAP(RenderConditionMode, renderConditionMode);
 }
 
@@ -798,18 +798,18 @@ GLenum ToDrawMode(const PrimitiveTopology primitiveTopology)
         case PrimitiveTopology::PointList:              return GL_POINTS;
         case PrimitiveTopology::LineList:               return GL_LINES;
         case PrimitiveTopology::LineStrip:              return GL_LINE_STRIP;
-        #if LLGL_OPENGL && LLGL_GL3PLUS_SUPPORTED
+        #if LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
         case PrimitiveTopology::LineListAdjacency:      return GL_LINES_ADJACENCY;
         case PrimitiveTopology::LineStripAdjacency:     return GL_LINE_STRIP_ADJACENCY;
         #endif
         case PrimitiveTopology::TriangleList:           return GL_TRIANGLES;
         case PrimitiveTopology::TriangleStrip:          return GL_TRIANGLE_STRIP;
-        #if LLGL_OPENGL && LLGL_GL3PLUS_SUPPORTED
+        #if LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
         case PrimitiveTopology::TriangleListAdjacency:  return GL_TRIANGLES_ADJACENCY;
         case PrimitiveTopology::TriangleStripAdjacency: return GL_TRIANGLE_STRIP_ADJACENCY;
         #endif
         default:
-            #if LLGL_OPENGL && LLGL_GL3PLUS_SUPPORTED
+            #if LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
             if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
                 return GL_PATCHES;
             #endif
@@ -856,7 +856,7 @@ UniformType UnmapUniformType(const GLenum uniformType)
         case GL_FLOAT_VEC2:         return UniformType::Float2;
         case GL_FLOAT_VEC3:         return UniformType::Float3;
         case GL_FLOAT_VEC4:         return UniformType::Float4;
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case GL_DOUBLE:             return UniformType::Double1;
         case GL_DOUBLE_VEC2:        return UniformType::Double2;
         case GL_DOUBLE_VEC3:        return UniformType::Double3;
@@ -867,7 +867,7 @@ UniformType UnmapUniformType(const GLenum uniformType)
         case GL_INT_VEC3:           return UniformType::Int3;
         case GL_INT_VEC4:           return UniformType::Int4;
         case GL_UNSIGNED_INT:       return UniformType::UInt1;
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
         case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
         case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
@@ -887,7 +887,7 @@ UniformType UnmapUniformType(const GLenum uniformType)
         case GL_FLOAT_MAT4x2:       return UniformType::Float4x2;
         case GL_FLOAT_MAT4x3:       return UniformType::Float4x3;
         case GL_FLOAT_MAT4:         return UniformType::Float4x4;
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case GL_DOUBLE_MAT2:        return UniformType::Double2x2;
         case GL_DOUBLE_MAT2x3:      return UniformType::Double2x3;
         case GL_DOUBLE_MAT2x4:      return UniformType::Double2x4;
@@ -906,7 +906,7 @@ UniformType UnmapUniformType(const GLenum uniformType)
         case GL_SAMPLER_CUBE:
         case GL_SAMPLER_1D_SHADOW:
         case GL_SAMPLER_2D_SHADOW:
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case GL_SAMPLER_1D_ARRAY:
         case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_1D_ARRAY_SHADOW:
@@ -1053,7 +1053,7 @@ GLenum ToTextureCubeMap(std::uint32_t arrayLayer)
 
 GLenum ToColorAttachment(std::uint32_t attachmentIndex)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     if (attachmentIndex < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         static const GLenum g_drawBuffers[] =
@@ -1070,8 +1070,6 @@ GLenum ToColorAttachment(std::uint32_t attachmentIndex)
     #endif
     return 0;
 }
-
-#if LLGL_GL3PLUS_SUPPORTED
 
 Format UnmapFormat(const GLenum internalFormat)
 {
@@ -1273,56 +1271,6 @@ Format UnmapFormat(const GLenum internalFormat)
     return Format::Undefined;
 }
 
-#else // LLGL_GL3PLUS_SUPPORTED
-
-Format UnmapFormat(const GLenum internalFormat)
-{
-    switch (internalFormat)
-    {
-        /* --- Red channel color formats --- */
-        case GL_RED:                                    return Format::R8UNorm;
-
-        case GL_R8:                                     return Format::R8UNorm;
-        case GL_R8_SNORM:                               return Format::R8SNorm;
-        case GL_R8UI:                                   return Format::R8UInt;
-        case GL_R8I:                                    return Format::R8SInt;
-
-        case GL_R16:                                    return Format::R16UNorm;
-
-        /* --- RG color formats --- */
-        case GL_RG:                                     return Format::RG8UNorm;
-
-        case GL_RG16:                                   return Format::RG16UNorm;
-
-        /* --- RGB color formats --- */
-        case GL_RGB:                                    return Format::RGB8UNorm;
-
-        case GL_RGB8:                                   return Format::RGB8UNorm;
-
-        case GL_RGB16:                                  return Format::RGB16UNorm;
-                
-        /* --- RGBA color formats --- */
-        case GL_RGBA:                                   return Format::RGBA8UNorm;
-
-        case GL_RGBA8:                                  return Format::RGBA8UNorm;
-
-        case GL_RGBA16:                                 return Format::RGBA16UNorm;
-
-        /* --- Packed formats --- */
-        case GL_RGB10_A2:                               return Format::RGB10A2UNorm;
-
-        /* --- Depth-stencil formats --- */
-        case GL_DEPTH_COMPONENT16:                      return Format::D16UNorm;
-        case GL_DEPTH_COMPONENT32:                      /* pass */
-        case GL_DEPTH_COMPONENT:                        return Format::D32Float;
-
-        default:                                        break;
-    }
-    return Format::Undefined;
-}
-
-#endif // /LLGL_GL3PLUS_SUPPORTED
-
 DataType UnmapDataType(const GLenum type)
 {
     switch (type)
@@ -1342,7 +1290,7 @@ DataType UnmapDataType(const GLenum type)
     LLGL_TRAP_GL_UNMAP(DataType, type);
 }
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 bool IsIntegerTypedFormat(GLenum internalFormat)
 {
@@ -1378,14 +1326,14 @@ bool IsIntegerTypedFormat(GLenum internalFormat)
     }
 }
     
-#else // LLGL_GL3PLUS_SUPPORTED
+#else // !LLGL_GL_ENABLE_OPENGL2X
 
 bool IsIntegerTypedFormat(GLenum internalFormat)
 {
     return false; // Not supported in GL 2.x
 }
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 bool IsDepthFormat(GLenum internalFormat)
 {
@@ -1404,7 +1352,7 @@ bool IsDepthFormat(GLenum internalFormat)
     }
 }
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 bool IsDepthStencilFormat(GLenum internalFormat)
 {
@@ -1423,14 +1371,14 @@ bool IsDepthStencilFormat(GLenum internalFormat)
     }
 }
 
-#else // LLGL_GL3PLUS_SUPPORTED
+#else // !LLGL_GL_ENABLE_OPENGL2X
 
 bool IsDepthStencilFormat(GLenum internalFormat)
 {
     return false; // Not supported in GL 2.x
 }
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 GLenum BufferTargetToBindingPname(GLenum target)
 {
@@ -1440,7 +1388,7 @@ GLenum BufferTargetToBindingPname(GLenum target)
         case GL_ELEMENT_ARRAY_BUFFER:       return GL_ELEMENT_ARRAY_BUFFER_BINDING;
         case GL_PIXEL_PACK_BUFFER:          return GL_PIXEL_PACK_BUFFER_BINDING;
         case GL_PIXEL_UNPACK_BUFFER:        return GL_PIXEL_UNPACK_BUFFER_BINDING;
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case GL_TRANSFORM_FEEDBACK_BUFFER:  return GL_TRANSFORM_FEEDBACK_BUFFER_BINDING;
         case GL_UNIFORM_BUFFER:             return GL_UNIFORM_BUFFER_BINDING;
         #endif

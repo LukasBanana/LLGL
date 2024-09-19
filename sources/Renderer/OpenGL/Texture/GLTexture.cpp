@@ -359,7 +359,7 @@ static TextureSwizzleRGBA GetTextureSwizzlePermutationAlpha(const TextureSwizzle
 
 static void InitializeGLTextureSwizzle(GLenum target, const TextureSwizzleRGBA& swizzle)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, GLTypes::Map(swizzle.r));
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, GLTypes::Map(swizzle.g));
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, GLTypes::Map(swizzle.b));
@@ -777,6 +777,7 @@ void GLTexture::CopyImageToBuffer(
 {
     /* Get image format and data type from internal texture format */
     const auto& formatAttribs = GetFormatAttribs(GetFormat());
+    LLGL_ASSERT(formatAttribs.dataType != DataType::Undefined, "failed to map GL internal texture format (0x%04X)", GetGLInternalFormat());
 
     /* Read data from unpack buffer with byte offset and equal texture format */
     const MutableImageView dstImageView
@@ -918,7 +919,7 @@ static void GLGetTexImage(
 
     if (dstImageView.format == ImageFormat::Stencil && GLGetVersion() < 440)
     {
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
 
         /* GL_STENCIL_INDEX can only be passed into glGetTexImage in GL 4.4+, so read GL_DEPTH_STENCIL and separate stencil manually */
         std::unique_ptr<GLDepthStencilPair[]> intermediateDSData = MakeUniqueArray<GLDepthStencilPair>(numTexels);
@@ -957,11 +958,11 @@ static void GLGetTexImage(
         for_range(i, numTexels)
             dst[i] = intermediateDSData[i].stencil;
 
-        #else // LLGL_GL3PLUS_SUPPORTED
+        #else // !LLGL_GL_ENABLE_OPENGL2X
 
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("read stencil from texture in GL 2.x");
 
-        #endif // /LLGL_GL3PLUS_SUPPORTED
+        #endif // /!LLGL_GL_ENABLE_OPENGL2X
     }
     else
     {
@@ -1323,7 +1324,7 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &extent[2]);
             }
 
-            #if LLGL_GL3PLUS_SUPPORTED
+            #if !LLGL_GL_ENABLE_OPENGL2X
             if (samples != nullptr)
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_SAMPLES, samples);
             #endif
@@ -1378,7 +1379,7 @@ void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
                 extent[2] = 1;
             }
 
-            #if LLGL_GL3PLUS_SUPPORTED
+            #if !LLGL_GL_ENABLE_OPENGL2X
             if (samples != nullptr)
                 glGetRenderbufferParameteriv(id_, GL_RENDERBUFFER_SAMPLES, samples);
             #endif

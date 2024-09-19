@@ -20,9 +20,6 @@
 #endif
 
 
-//TODO: set this in CMake via option
-#define LLGL_GL3PLUS_SUPPORTED 0
-
 #if LLGL_WEBGL
 
 #define LLGL_GLEXT_TRANSFORM_FEEDBACK
@@ -54,7 +51,7 @@
 #endif
 
 //TODO: which extension?
-#if defined LLGL_OPENGL && LLGL_GL3PLUS_SUPPORTED
+#if defined LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
 #   define LLGL_GLEXT_CONDITIONAL_RENDER
 #endif
 
@@ -117,7 +114,7 @@
 #   define LLGL_USE_NULL_FRAGMENT_SHADER 1
 #endif
 
-#if !LLGL_GL3PLUS_SUPPORTED
+#if LLGL_GL_ENABLE_OPENGL2X
 #   define glGenFramebuffers                glGenFramebuffersEXT
 #   define glDeleteFramebuffers             glDeleteFramebuffersEXT
 #   define glBlitFramebuffer                glBlitFramebufferEXT

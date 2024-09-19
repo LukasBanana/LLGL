@@ -44,7 +44,7 @@ static GLenum MapQueryType(const QueryType queryType, std::size_t idx)
         #ifdef LLGL_OPENGL
         case QueryType::SamplesPassed:                      return GL_SAMPLES_PASSED;
         #endif
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case QueryType::AnySamplesPassed:                   return GL_ANY_SAMPLES_PASSED;
         case QueryType::AnySamplesPassedConservative:       return GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
         #ifdef LLGL_OPENGL
@@ -58,7 +58,7 @@ static GLenum MapQueryType(const QueryType queryType, std::size_t idx)
         #ifdef GL_ARB_pipeline_statistics_query
         case QueryType::PipelineStatistics:                 return g_queryGLTypes[idx];
         #endif
-        #endif // /LLGL_GL3PLUS_SUPPORTED
+        #endif // /!LLGL_GL_ENABLE_OPENGL2X
         default:                                            return 0;
     }
 }

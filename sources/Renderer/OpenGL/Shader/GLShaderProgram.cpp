@@ -194,7 +194,7 @@ void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragm
 
 static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVaryings, const char* const* varyings)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
 
     if (numVaryings == 0 || varyings == nullptr)
         return;
@@ -207,7 +207,7 @@ static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVar
         GL_INTERLEAVED_ATTRIBS
     );
 
-    #endif // /LLGL_GL3PLUS_SUPPORTED
+    #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 
 #ifdef GL_NV_transform_feedback
@@ -328,7 +328,7 @@ static GLMatrixTypeFormat UnmapAttribType(GLenum type)
         case GL_INT_VEC3:           return { Format::RGB32SInt,     1 };
         case GL_INT_VEC4:           return { Format::RGBA32SInt,    1 };
         case GL_UNSIGNED_INT:       return { Format::R32UInt,       1 };
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case GL_UNSIGNED_INT_VEC2:  return { Format::RG32UInt,      1 };
         case GL_UNSIGNED_INT_VEC3:  return { Format::RGB32UInt,     1 };
         case GL_UNSIGNED_INT_VEC4:  return { Format::RGBA32UInt,    1 };
@@ -347,7 +347,7 @@ static GLMatrixTypeFormat UnmapAttribType(GLenum type)
         case GL_DOUBLE_MAT4x2:      return { Format::RG64Float,     4 };
         case GL_DOUBLE_MAT4x3:      return { Format::RGB64Float,    4 };
         #endif // /LLGL_OPENGL
-        #endif // /LLGL_GL3PLUS_SUPPORTED
+        #endif // /!LLGL_GL_ENABLE_OPENGL2X
     }
     return { Format::R32Float, 0 };
 }
@@ -470,7 +470,7 @@ static void GLQueryVertexAttributes(GLuint program, ShaderReflection& reflection
 
 static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& reflection)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
 
     VertexAttribute soAttrib;
 
@@ -543,7 +543,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
     }
     #endif
 
-    #endif // /LLGL_GL3PLUS_SUPPORTED
+    #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 
 #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY

@@ -14,6 +14,7 @@
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Types.h>
 #include "../RenderState/GLState.h"
+#include "../Buffer/GLSharedContextVertexArray.h"
 #include "../GLProfile.h"
 #include <cstdint>
 
@@ -32,7 +33,6 @@ class GLSwapChain;
 class GLRenderTarget;
 class GLRenderPass;
 class GLDeferredCommandBuffer;
-class GLSharedContextVertexArray;
 #ifdef LLGL_GL_ENABLE_OPENGL2X
 class GL2XSampler;
 #endif

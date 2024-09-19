@@ -30,10 +30,10 @@ const char* GetModuleName()
 
 const char* GetRendererName()
 {
-    #if LLGL_GL3PLUS_SUPPORTED
-    return "OpenGL Core";
-    #else
+    #if LLGL_GL_ENABLE_OPENGL2X
     return "OpenGL Compatibility";
+    #else
+    return "OpenGL Core";
     #endif
 }
 
@@ -49,7 +49,7 @@ const char* GetShadingLanguageName()
 
 GLint GetMaxViewports()
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     GLint value = 0;
     glGetIntegerv(GL_MAX_VIEWPORTS, &value);
     return value;
@@ -122,7 +122,7 @@ void FramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GL
 
 void FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     glFramebufferTextureLayer(target, attachment, texture, level, layer);
     #else
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("glFramebufferTextureLayer");

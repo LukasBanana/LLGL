@@ -140,7 +140,7 @@ static const GLenum g_stateCapsEnum[] =
 static const GLenum g_bufferTargetsEnum[] =
 {
     GL_ARRAY_BUFFER,
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     GL_ATOMIC_COUNTER_BUFFER,
     GL_COPY_READ_BUFFER,
     GL_COPY_WRITE_BUFFER,
@@ -156,7 +156,7 @@ static const GLenum g_bufferTargetsEnum[] =
     GL_ELEMENT_ARRAY_BUFFER,
     GL_PIXEL_PACK_BUFFER,
     GL_PIXEL_UNPACK_BUFFER,
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     GL_QUERY_BUFFER,
     GL_SHADER_STORAGE_BUFFER,
     GL_TEXTURE_BUFFER,
@@ -171,7 +171,7 @@ static const GLenum g_bufferTargetsEnum[] =
     #endif
 };
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 // Maps GLFramebufferTarget to <target> in glBindFramebuffer
 static const GLenum g_framebufferTargetsEnum[] =
@@ -181,7 +181,7 @@ static const GLenum g_framebufferTargetsEnum[] =
     GL_READ_FRAMEBUFFER,
 };
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 // Maps GLTextureTarget to <target> in glBindTexture
 static const GLenum g_textureTargetsEnum[] =
@@ -189,7 +189,7 @@ static const GLenum g_textureTargetsEnum[] =
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
     GL_TEXTURE_3D,
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     GL_TEXTURE_1D_ARRAY,
     GL_TEXTURE_2D_ARRAY,
     GL_TEXTURE_RECTANGLE,
@@ -199,7 +199,7 @@ static const GLenum g_textureTargetsEnum[] =
     0, // GL_TEXTURE_RECTANGLE
     #endif
     GL_TEXTURE_CUBE_MAP,
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     GL_TEXTURE_CUBE_MAP_ARRAY,
     GL_TEXTURE_BUFFER,
     GL_TEXTURE_2D_MULTISAMPLE,
@@ -890,13 +890,13 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 
 void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer)
 {
-    #if GL_ARB_uniform_buffer_objects
+    #if GL_ARB_uniform_buffer_object
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferBase(g_bufferTargetsEnum[targetIdx], index, buffer);
     contextState_.boundBuffers[targetIdx] = buffer;
     #else
-    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_objects");
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_object");
     #endif
 }
 
@@ -919,21 +919,21 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     #endif
     if (count > 0)
     {
-        #if GL_ARB_uniform_buffer_objects
+        #if GL_ARB_uniform_buffer_object
         /* Bind each individual buffer, and store last bound buffer */
         contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
         for_range(i, count)
             glBindBufferBase(targetGL, first + i, buffers[i]);
         #else
-        LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_objects");
+        LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_object");
         #endif
     }
 }
 
 void GLStateManager::BindBufferRange(GLBufferTarget target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size)
 {
-    #if GL_EXT_transform_feedback && LLGL_GL3PLUS_SUPPORTED
+    #if GL_EXT_transform_feedback && !LLGL_GL_ENABLE_OPENGL2X
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferRange(g_bufferTargetsEnum[targetIdx], index, buffer, offset, size);
@@ -974,7 +974,7 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
         else
         #endif // /GL_NV_transform_feedback
         {
-            #if GL_EXT_transform_feedback && LLGL_GL3PLUS_SUPPORTED
+            #if GL_EXT_transform_feedback && !LLGL_GL_ENABLE_OPENGL2X
             for_range(i, count)
                 glBindBufferRange(targetGL, first + i, buffers[i], offsets[i], sizes[i]);
             #else
@@ -992,7 +992,7 @@ static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
 
     /* Only bind VAO if it has changed */
     if (contextState_.boundVertexArray != vertexArray)
@@ -1184,7 +1184,7 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     /* Only bind framebuffer if the framebuffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
@@ -1234,7 +1234,7 @@ GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
 
 /* ----- Renderbuffer ----- */
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
@@ -1269,7 +1269,7 @@ void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
     }
 }
 
-#else // LLGL_GL3PLUS_SUPPORTED
+#else // !LLGL_GL_ENABLE_OPENGL2X
 
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
@@ -1291,7 +1291,7 @@ void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffers");
 }
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 /* ----- Texture ----- */
 
@@ -1767,7 +1767,7 @@ void GLStateManager::Clear(long flags)
     RestoreClearState(clearState);
 }
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
@@ -1825,14 +1825,14 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
     RestoreClearState(clearState);
 }
 
-#else // LLGL_GL3PLUS_SUPPORTED
+#else // !LLGL_GL_ENABLE_OPENGL2X
 
 void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("multi-render-targets");
 }
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 
 /*
@@ -2038,7 +2038,7 @@ void GLStateManager::RestoreClearState(const GLFramebufferClearState& clearState
 
 /* ----- Render pass ----- */
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 void GLStateManager::ClearAttachmentsWithRenderPass(
     const GLRenderPass& renderPassGL,
@@ -2145,7 +2145,7 @@ std::uint32_t GLStateManager::ClearColorBuffers(
     return clearValueIndex;
 }
 
-#else // LLGL_GL3PLUS_SUPPORTED
+#else // !LLGL_GL_ENABLE_OPENGL2X
 
 void GLStateManager::ClearAttachmentsWithRenderPass(
     const GLRenderPass& renderPassGL,
@@ -2165,7 +2165,7 @@ std::uint32_t GLStateManager::ClearColorBuffers(
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("multi-render-targets");
 }
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 
 } // /namespace LLGL

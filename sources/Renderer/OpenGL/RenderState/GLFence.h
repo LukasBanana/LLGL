@@ -12,6 +12,7 @@
 #include <LLGL/Fence.h>
 #include "../OpenGL.h"
 #include <string>
+#include <cstdint>
 
 
 namespace LLGL
@@ -31,15 +32,11 @@ class GLFence final : public Fence
 
         void Submit();
 
-        #if LLGL_GL3PLUS_SUPPORTED
-        bool Wait(GLuint64 timeout);
-        #else
-        bool Wait(GLuint timeout);
-        #endif
+        bool Wait(std::uint64_t timeout);
 
     private:
 
-        #if LLGL_GL3PLUS_SUPPORTED
+        #if GL_ARB_sync
         GLsync      sync_ = 0;
         #endif
 
