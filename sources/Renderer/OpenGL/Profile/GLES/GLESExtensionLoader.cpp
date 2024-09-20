@@ -8,7 +8,6 @@
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../Ext/GLExtensionRegistry.h"
 #include "GLESExtensions.h"
-#include "GLESExtensionsProxy.h"
 #include "OpenGLES.h"
 #include "../../GLCore.h"
 #if defined(LLGL_OS_ANDROID)

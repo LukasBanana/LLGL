@@ -9,7 +9,6 @@
 #include "../../Ext/GLExtensionRegistry.h"
 #include "../../../../Core/Exception.h"
 #include "GLCoreExtensions.h"
-#include "GLCoreExtensionsProxy.h"
 #include <LLGL/Utils/ForRange.h>
 #include <functional>
 #include <string>

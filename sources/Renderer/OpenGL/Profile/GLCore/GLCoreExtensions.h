@@ -17,10 +17,22 @@ namespace LLGL
 {
 
 
+/* ~~~~~ Declare all GL core extension functions ~~~~~ */
+
 #define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
     extern PFNTYPE NAME
 
 // Include inline header for object declarations
+#include "GLCoreExtensionsDecl.inl"
+
+#undef DECL_GLPROC
+
+/* ~~~~~ Declare proxy implementations for GL core extension functions ~~~~~ */
+
+#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
+    RTYPE APIENTRY Proxy_##NAME ARGS
+
+// Include inline header for proxy function declarations
 #include "GLCoreExtensionsDecl.inl"
 
 #undef DECL_GLPROC

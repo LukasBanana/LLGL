@@ -6,16 +6,32 @@
  */
 
 #include "GLCoreExtensions.h"
+#include "../../GLCore.h"
 
 
 namespace LLGL
 {
 
 
+/* ~~~~~ Define all GL core extension functions ~~~~~ */
+
 #define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
     PFNTYPE NAME = nullptr
 
 // Include inline header for object definitions
+#include "GLCoreExtensionsDecl.inl"
+
+#undef DECL_GLPROC
+
+/* ~~~~~ Define proxy implementations for GL core extension functions ~~~~~ */
+
+#define DECL_GLPROC(PFNTYPE, NAME, RTYPE, ARGS) \
+    RTYPE APIENTRY Proxy_##NAME ARGS            \
+    {                                           \
+        ErrUnsupportedGLProc(#NAME);            \
+    }
+
+// Include inline header for proxy function definitions
 #include "GLCoreExtensionsDecl.inl"
 
 #undef DECL_GLPROC
