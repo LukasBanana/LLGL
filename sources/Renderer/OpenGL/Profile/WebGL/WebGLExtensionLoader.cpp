@@ -5,10 +5,10 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "../Ext/GLExtensionLoader.h"
-#include "../Ext/GLExtensionRegistry.h"
+#include "../../Ext/GLExtensionLoader.h"
+#include "../../Ext/GLExtensionRegistry.h"
 #include "WebGL.h"
-#include "../GLCore.h"
+#include "../../GLCore.h"
 #if defined(LLGL_OS_WASM)
 #   include <EGL/egl.h>
 #endif

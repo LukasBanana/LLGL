@@ -16,7 +16,7 @@
 #include "../GLSwapChain.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../../CheckedCast.h"

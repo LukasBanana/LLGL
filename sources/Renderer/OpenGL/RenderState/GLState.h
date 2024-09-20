@@ -9,7 +9,7 @@
 #define LLGL_GL_STATE_H
 
 
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 
 
 namespace LLGL

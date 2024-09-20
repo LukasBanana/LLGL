@@ -6,7 +6,7 @@
  */
 
 #include "GLBuffer.h"
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 #include "../GLObjectUtils.h"
 #include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"

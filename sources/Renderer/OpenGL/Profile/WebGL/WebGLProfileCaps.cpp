@@ -5,12 +5,12 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "../GLRenderingCaps.h"
-#include "../GLProfile.h"
-#include "../GLTypes.h"
-#include "../Ext/GLExtensions.h"
-#include "../Ext/GLExtensionRegistry.h"
-#include "../../../Core/CoreUtils.h"
+#include "../../GLRenderingCaps.h"
+#include "../../GLProfile.h"
+#include "../../GLTypes.h"
+#include "../../Ext/GLExtensions.h"
+#include "../../Ext/GLExtensionRegistry.h"
+#include "../../../../Core/CoreUtils.h"
 #include <cstdint>
 #include <limits>
 

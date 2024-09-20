@@ -12,11 +12,11 @@
 #include <LLGL/RendererConfiguration.h>
 
 #if defined LLGL_OPENGL
-#   include "GLCoreProfile/GLCoreProfileTypes.h"
+#   include "GLCore/GLCoreProfileTypes.h"
 #elif defined LLGL_OPENGLES3
-#   include "GLESProfile/GLESProfileTypes.h"
+#   include "GLES/GLESProfileTypes.h"
 #elif defined LLGL_WEBGL
-#   include "WebGLProfile/WebGLProfileTypes.h"
+#   include "WebGL/WebGLProfileTypes.h"
 #else
 #   error Unknwon OpenGL backend
 #endif

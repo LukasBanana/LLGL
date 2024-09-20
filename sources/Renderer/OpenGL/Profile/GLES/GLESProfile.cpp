@@ -5,9 +5,9 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "../GLProfile.h"
-#include "../Ext/GLExtensions.h"
-#include "../../../Core/Assertion.h"
+#include "../../GLProfile.h"
+#include "../../Ext/GLExtensions.h"
+#include "../../../../Core/Assertion.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <cstring>
 

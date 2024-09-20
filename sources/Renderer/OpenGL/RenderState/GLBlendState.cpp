@@ -10,7 +10,7 @@
 #include "../Ext/GLExtensionRegistry.h"
 #include "../GLCore.h"
 #include "../GLTypes.h"
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/MacroUtils.h"
 #include "../Texture/GLRenderTarget.h"

@@ -7,7 +7,7 @@
 
 #include "../ModuleInterface.h"
 #include "GLRenderSystem.h"
-#include "GLProfile.h"
+#include "Profile/GLProfile.h"
 
 
 namespace LLGL

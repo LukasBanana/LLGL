@@ -6,7 +6,7 @@
  */
 
 #include "../GLProfile.h"
-#include "../../../Core/Exception.h"
+#include "../../../../Core/Exception.h"
 #include "GLCoreExtensions.h"
 #include <LLGL/RenderSystemFlags.h>
 

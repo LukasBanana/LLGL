@@ -10,11 +10,11 @@
 
 
 #if LLGL_OPENGL
-#   include "GLCoreProfile/OpenGLCore.h"
+#   include "Profile/GLCore/OpenGLCore.h"
 #elif LLGL_OPENGLES3
-#   include "GLESProfile/OpenGLES.h"
+#   include "Profile/GLES/OpenGLES.h"
 #elif LLGL_WEBGL
-#   include "WebGLProfile/WebGL.h"
+#   include "Profile/WebGL/WebGL.h"
 #else
 #   error Unknown OpenGL backend
 #endif

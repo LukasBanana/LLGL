@@ -7,7 +7,7 @@
 
 #include "GLTexImage.h"
 #include "../GLTypes.h"
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include <LLGL/Utils/ColorRGBA.h>

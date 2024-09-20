@@ -12,7 +12,7 @@
 #include <LLGL/Platform/Platform.h>
 
 #if defined LLGL_OS_WIN32
-#   include "../../../Platform/Win32/Win32LeanAndMean.h"
+#   include "../../../../Platform/Win32/Win32LeanAndMean.h"
 #   include <Windows.h>
 #   include <GL/GL.h>
 #   include <GL/glext.h>
@@ -22,14 +22,14 @@
 #   include <GL/glext.h>
 #   include <GL/glx.h>
 #elif defined LLGL_OS_MACOS
-#   include "../../../Platform/MacOS/MacOSCompatibility.h"
+#   include "../../../../Platform/MacOS/MacOSCompatibility.h"
 #   if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
 #       include <OpenGL/gl3.h>
 #   else
 #       include <OpenGL/gl.h>
 #   endif
 #   include <OpenGL/glext.h>
-#   include "../Platform/MacOS/MacOSGLExt.h"
+#   include "../../Platform/MacOS/MacOSGLExt.h"
 #else
 #   error Unsupported platform for OpenGL
 #endif

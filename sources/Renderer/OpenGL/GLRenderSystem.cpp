@@ -6,7 +6,7 @@
  */
 
 #include "GLRenderSystem.h"
-#include "GLProfile.h"
+#include "Profile/GLProfile.h"
 #include "Texture/GLMipGenerator.h"
 #include "Texture/GLTextureViewPool.h"
 #include "Texture/GLFramebufferCapture.h"

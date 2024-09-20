@@ -60,9 +60,10 @@ find_source_files(FilesRendererGLPlatformBase   CXX ${PROJECT_SOURCE_DIR}/Platfo
 find_source_files(FilesRendererGLRenderState    CXX ${PROJECT_SOURCE_DIR}/RenderState)
 find_source_files(FilesRendererGLShader         CXX ${PROJECT_SOURCE_DIR}/Shader)
 find_source_files(FilesRendererGLTexture        CXX ${PROJECT_SOURCE_DIR}/Texture)
-find_source_files(FilesRendererGLCoreProfile    CXX ${PROJECT_SOURCE_DIR}/GLCoreProfile)
-find_source_files(FilesRendererGLESProfile      CXX ${PROJECT_SOURCE_DIR}/GLESProfile)
-find_source_files(FilesRendererWebGLProfile     CXX ${PROJECT_SOURCE_DIR}/WebGLProfile)
+find_source_files(FilesRendererGLProfile        CXX ${PROJECT_SOURCE_DIR}/Profile)
+find_source_files(FilesRendererGLProfileGLCore  CXX ${PROJECT_SOURCE_DIR}/Profile/GLCore)
+find_source_files(FilesRendererGLProfileGLES    CXX ${PROJECT_SOURCE_DIR}/Profile/GLES)
+find_source_files(FilesRendererGLProfileWebGL   CXX ${PROJECT_SOURCE_DIR}/Profile/WebGL)
 find_source_files(FilesIncludeGL                INC ${BACKEND_INCLUDE_DIR}/OpenGL)
 
 # Remove selected files if GL2X is disabled
@@ -125,9 +126,7 @@ source_group("OpenGL\\Platform"         FILES ${FilesRendererGLPlatformBase} ${F
 source_group("OpenGL\\RenderState"      FILES ${FilesRendererGLRenderState})
 source_group("OpenGL\\Shader"           FILES ${FilesRendererGLShader})
 source_group("OpenGL\\Texture"          FILES ${FilesRendererGLTexture})
-source_group("OpenGL\\GLCoreProfile"    FILES ${FilesRendererGLCoreProfile})
-source_group("OpenGL\\GLESProfile"      FILES ${FilesRendererGLESProfile})
-source_group("OpenGL\\WebGLProfile"     FILES ${FilesRendererWebGLProfile})
+source_group("OpenGL\\Profile"          FILES ${FilesRendererGLProfile} ${FilesRendererGLProfileGLCore} ${FilesRendererGLProfileGLES} ${FilesRendererGLProfileWebGL})
 source_group("Include\\Platform"        FILES ${FilesIncludeGL} ${FilesIncludeGLPlatform})
 
 
@@ -154,7 +153,8 @@ if(LLGL_BUILD_RENDERER_WEBGL)
         ${FilesRendererGLRenderState}
         ${FilesRendererGLES3Shader}
         ${FilesRendererGLTexture}
-        ${FilesRendererWebGLProfile}
+        ${FilesRendererGLProfile}
+        ${FilesRendererGLProfileWebGL}
         ${FilesIncludeGL}
         ${FilesIncludeGLPlatform}
     )
@@ -183,7 +183,8 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
         ${FilesRendererGLRenderState}
         ${FilesRendererGLES3Shader}
         ${FilesRendererGLTexture}
-        ${FilesRendererGLESProfile}
+        ${FilesRendererGLProfile}
+        ${FilesRendererGLProfileGLES}
         ${FilesIncludeGL}
         ${FilesIncludeGLPlatform}
     )
@@ -220,7 +221,8 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         ${FilesRendererGLRenderState}
         ${FilesRendererGLShader}
         ${FilesRendererGLTexture}
-        ${FilesRendererGLCoreProfile}
+        ${FilesRendererGLProfile}
+        ${FilesRendererGLProfileGLCore}
         ${FilesIncludeGL}
         ${FilesIncludeGLPlatform}
     )

@@ -6,7 +6,7 @@
  */
 
 #include "GLTypes.h"
-#include "GLProfile.h"
+#include "Profile/GLProfile.h"
 #include "../../Core/Exception.h"
 
 

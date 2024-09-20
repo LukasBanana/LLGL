@@ -15,7 +15,7 @@
 #include <LLGL/Types.h>
 #include "../RenderState/GLState.h"
 #include "../Buffer/GLSharedContextVertexArray.h"
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 #include <cstdint>
 
 

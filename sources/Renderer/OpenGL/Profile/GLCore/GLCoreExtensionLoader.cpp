@@ -5,9 +5,9 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "../Ext/GLExtensionLoader.h"
-#include "../Ext/GLExtensionRegistry.h"
-#include "../../../Core/Exception.h"
+#include "../../Ext/GLExtensionLoader.h"
+#include "../../Ext/GLExtensionRegistry.h"
+#include "../../../../Core/Exception.h"
 #include "GLCoreExtensions.h"
 #include "GLCoreExtensionsProxy.h"
 #include <LLGL/Utils/ForRange.h>

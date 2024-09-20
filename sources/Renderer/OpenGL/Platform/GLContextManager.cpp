@@ -9,7 +9,7 @@
 #include "../RenderState/GLStateManager.h"
 #include "../Ext/GLExtensionLoader.h"
 #include "../Ext/GLExtensionRegistry.h"
-#include "../GLProfile.h"
+#include "../Profile/GLProfile.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
