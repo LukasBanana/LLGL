@@ -55,7 +55,7 @@ void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& 
 
     #else // GL_ARB_vertex_array_object
 
-    LLGL_TRAP_FEATURE_NOT_SUPPORTED(GL_ARB_vertex_array_object);
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_vertex_array_object");
 
     #endif // /GL_ARB_vertex_array_object
 }

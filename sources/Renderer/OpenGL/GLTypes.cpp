@@ -17,171 +17,6 @@ namespace GLTypes
 {
 
 
-#if LLGL_GL_ENABLE_OPENGL2X
-
-#ifndef GL_R8_SNORM
-#define GL_R8_SNORM GL_LUMINANCE8
-#endif
-
-#ifndef GL_R16_SNORM
-#define GL_R16_SNORM GL_LUMINANCE16
-#endif
-
-#ifndef GL_RG8_SNORM
-#define GL_RG8_SNORM GL_LUMINANCE8_ALPHA8
-#endif
-
-#ifndef GL_RG16_SNORM
-#define GL_RG16_SNORM GL_LUMINANCE16_ALPHA16
-#endif
-
-#ifndef GL_RGB8_SNORM
-#define GL_RGB8_SNORM GL_RGB8
-#endif
-
-#ifndef GL_RGB8UI
-#define GL_RGB8UI GL_RGB8
-#endif
-
-#ifndef GL_RGB8I
-#define GL_RGB8I GL_RGB8
-#endif
-
-#ifndef GL_RGB16_SNORM
-#define GL_RGB16_SNORM GL_RGB16
-#endif
-
-#ifndef GL_RGB16UI
-#define GL_RGB16UI GL_RGB16
-#endif
-
-#ifndef GL_RGB16I
-#define GL_RGB16I GL_RGB16
-#endif
-
-#ifndef GL_RGB16F
-#define GL_RGB16F GL_RGB16
-#endif
-
-#ifndef GL_RGB32UI
-#define GL_RGB32UI 0
-#endif
-
-#ifndef GL_RGB32I
-#define GL_RGB32I 0
-#endif
-
-#ifndef GL_RGB32F
-#define GL_RGB32F 0
-#endif
-
-#ifndef GL_RGBA8_SNORM
-#define GL_RGBA8_SNORM GL_RGBA8
-#endif
-
-#ifndef GL_RGBA8UI
-#define GL_RGBA8UI GL_RGBA8
-#endif
-
-#ifndef GL_RGBA8I
-#define GL_RGBA8I GL_RGBA8
-#endif
-
-#ifndef GL_RGBA16_SNORM
-#define GL_RGBA16_SNORM GL_RGBA16
-#endif
-
-#ifndef GL_RGBA16UI
-#define GL_RGBA16UI GL_RGBA16
-#endif
-
-#ifndef GL_RGBA16I
-#define GL_RGBA16I GL_RGBA16
-#endif
-
-#ifndef GL_RGBA16F
-#define GL_RGBA16F GL_RGBA16
-#endif
-
-#ifndef GL_RGBA32UI
-#define GL_RGBA32UI 0
-#endif
-
-#ifndef GL_RGBA32I
-#define GL_RGBA32I 0
-#endif
-
-#ifndef GL_RGBA32F
-#define GL_RGBA32F 0
-#endif
-
-#ifndef GL_RGB10_A2UI
-#define GL_RGB10_A2UI GL_RGB10_A2
-#endif
-
-#ifndef GL_R11F_G11F_B10F
-#define GL_R11F_G11F_B10F 0
-#endif
-
-#ifndef GL_RGB9_E5
-#define GL_RGB9_E5 0
-#endif
-
-#ifndef GL_DEPTH24_STENCIL8
-#define GL_DEPTH24_STENCIL8 0
-#endif
-
-#ifndef GL_DEPTH32F_STENCIL8
-#define GL_DEPTH32F_STENCIL8 0
-#endif
-
-#ifndef GL_TEXTURE_1D_ARRAY
-#define GL_TEXTURE_1D_ARRAY 0
-#endif
-
-#ifndef GL_TEXTURE_2D_ARRAY
-#define GL_TEXTURE_2D_ARRAY 0
-#endif
-
-#ifndef GL_TEXTURE_CUBE_MAP_ARRAY
-#define GL_TEXTURE_CUBE_MAP_ARRAY 0
-#endif
-
-#ifndef GL_TEXTURE_2D_MULTISAMPLE
-#define GL_TEXTURE_2D_MULTISAMPLE 0
-#endif
-
-#ifndef GL_TEXTURE_2D_MULTISAMPLE_ARRAY
-#define GL_TEXTURE_2D_MULTISAMPLE_ARRAY 0
-#endif
-
-#ifndef GL_DEPTH_STENCIL
-#define GL_DEPTH_STENCIL 0
-#endif
-
-#ifndef GL_RED_INTEGER
-#define GL_RED_INTEGER GL_RED
-#endif
-
-#ifndef GL_RGB_INTEGER
-#define GL_RGB_INTEGER GL_RGB
-#endif
-
-#ifndef GL_BGR_INTEGER
-#define GL_BGR_INTEGER GL_BGR
-#endif
-
-#ifndef GL_RGBA_INTEGER
-#define GL_RGBA_INTEGER GL_RGBA
-#endif
-
-#ifndef GL_BGRA_INTEGER
-#define GL_BGRA_INTEGER GL_BGRA
-#endif
-
-#endif // /LLGL_GL_ENABLE_OPENGL2X
-
-
 /* ----- Internal functions ----- */
 
 #define LLGL_TRAP_GL_MAP(TYPE, VALUE) \
@@ -192,6 +27,52 @@ namespace GLTypes
 
 
 /* ----- MapOrZero functions ----- */
+
+#if LLGL_GL_ENABLE_OPENGL2X
+
+GLenum MapOrZero(const Format format)
+{
+    switch (format)
+    {
+        case Format::Undefined:         return 0;
+
+        /* --- Alpha channel color formats --- */
+        case Format::A8UNorm:           return GL_ALPHA8;
+
+        /* --- Red channel color formats --- */
+        case Format::R8UNorm:           return GL_LUMINANCE8;
+
+        case Format::R16UNorm:          return GL_LUMINANCE16;
+
+        /* --- RG color formats --- */
+        case Format::RG8UNorm:          return GL_LUMINANCE8_ALPHA8;
+
+        case Format::RG16UNorm:         return GL_LUMINANCE16_ALPHA16;
+
+        /* --- RGB color formats --- */
+        case Format::RGB8UNorm:         return GL_RGB8;
+        case Format::RGB8UNorm_sRGB:    return GL_SRGB8;
+
+        case Format::RGB16UNorm:        return GL_RGB16;
+
+        /* --- RGBA color formats --- */
+        case Format::RGBA8UNorm:        return GL_RGBA8;
+        case Format::RGBA8UNorm_sRGB:   return GL_SRGB8_ALPHA8;
+
+        case Format::RGBA16UNorm:       return GL_RGBA16;
+
+        /* --- Packed formats --- */
+        case Format::RGB10A2UNorm:      return GL_RGB10_A2;
+                
+        /* --- Depth-stencil formats --- */
+        case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
+        case Format::D32Float:          return GL_DEPTH_COMPONENT32;
+
+        default:                        return 0;
+    }
+}
+
+#else // LLGL_GL_ENABLE_OPENGL2X
 
 GLenum MapOrZero(const Format format)
 {
@@ -410,6 +291,8 @@ GLenum MapOrZero(const Format format)
     }
 }
 
+#endif // /LLGL_GL_ENABLE_OPENGL2X
+
 /* ----- Map functions ----- */
 
 GLenum Map(const CPUAccess cpuAccess)
@@ -456,11 +339,15 @@ GLenum Map(const TextureType textureType)
         case TextureType::Texture2D:        return GL_TEXTURE_2D;
         case TextureType::Texture3D:        return GL_TEXTURE_3D;
         case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP;
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case TextureType::Texture1DArray:   return GL_TEXTURE_1D_ARRAY;
         case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
         case TextureType::TextureCubeArray: return GL_TEXTURE_CUBE_MAP_ARRAY;
         case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
         case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+        #else
+        default:                            break;
+        #endif
     }
     LLGL_TRAP_GL_MAP(TextureType, textureType);
 }
@@ -506,7 +393,9 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
         case ImageFormat::BGRA:             return GL_BGRA;
         #endif
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
+        #if !LLGL_GL_ENABLE_OPENGL2X
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
+        #endif
         #ifdef LLGL_OPENGL
         case ImageFormat::Stencil:          return GL_STENCIL_INDEX;
         #endif
@@ -517,6 +406,7 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
 
 static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
 {
+    #if !LLGL_GL_ENABLE_OPENGL2X
     switch (imageFormat)
     {
         #ifdef LLGL_WEBGL
@@ -542,6 +432,9 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
         default:                            break;
     }
     LLGL_TRAP_GL_MAP(ImageFormat, imageFormat);
+    #else
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("integer image formats");
+    #endif
 }
 
 GLenum Map(const ImageFormat imageFormat)
@@ -1070,6 +963,58 @@ GLenum ToColorAttachment(std::uint32_t attachmentIndex)
     #endif
     return 0;
 }
+    
+#if LLGL_GL_ENABLE_OPENGL2X
+
+Format UnmapFormat(const GLenum internalFormat)
+{
+    switch (internalFormat)
+    {
+        /* --- Alpha channel color formats --- */
+        case GL_ALPHA:                                  /*pass*/
+        case GL_ALPHA8:                                 return Format::A8UNorm;
+
+        /* --- Red channel color formats --- */
+        case GL_LUMINANCE:                              /*pass*/
+        case GL_LUMINANCE8:                             return Format::R8UNorm;
+
+        case GL_LUMINANCE16:                            return Format::R16UNorm;
+
+        /* --- RG color formats --- */
+        case GL_LUMINANCE_ALPHA:                        /*pass*/
+        case GL_LUMINANCE8_ALPHA8:                      return Format::RG8UNorm;
+
+        case GL_LUMINANCE16_ALPHA16:                    return Format::RG16UNorm;
+        /* --- RGB color formats --- */
+
+        case GL_RGB:                                    /*pass*/
+        case GL_RGB8:                                   return Format::RGB8UNorm;
+
+        case GL_RGB16:                                  return Format::RGB16UNorm;
+
+        /* --- RGBA color formats --- */
+        case GL_RGBA:                                   /*pass*/
+        case GL_RGBA8:                                  return Format::RGBA8UNorm;
+            
+        case GL_SRGB_ALPHA:                             /*pass*/
+        case GL_SRGB8_ALPHA8:                           return Format::RGBA8UNorm_sRGB;
+
+        case GL_RGBA16:                                 return Format::RGBA16UNorm;
+
+        /* --- Packed formats --- */
+        case GL_RGB10_A2:                               return Format::RGB10A2UNorm;
+
+        /* --- Depth-stencil formats --- */
+        case GL_DEPTH_COMPONENT16:                      return Format::D16UNorm;
+        case GL_DEPTH_COMPONENT32:                      /* pass */
+        case GL_DEPTH_COMPONENT:                        return Format::D32Float;
+
+        default:                                        break;
+    }
+    return Format::Undefined;
+}
+
+#else
 
 Format UnmapFormat(const GLenum internalFormat)
 {
@@ -1270,6 +1215,8 @@ Format UnmapFormat(const GLenum internalFormat)
     }
     return Format::Undefined;
 }
+
+#endif // /LLGL_GL_ENABLE_OPENGL2X
 
 DataType UnmapDataType(const GLenum type)
 {
