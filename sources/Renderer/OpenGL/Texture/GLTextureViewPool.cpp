@@ -49,7 +49,7 @@ void GLTextureViewPool::Clear()
 
 GLuint GLTextureViewPool::CreateTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc, bool restoreBoundTexture)
 {
-    #ifdef GL_ARB_texture_view
+    #if LLGL_GLEXT_TEXTURE_VIEW
 
     if (!HasExtension(GLExt::ARB_texture_view))
         return 0;
@@ -153,7 +153,7 @@ int GLTextureViewPool::CompareTextureViewSWO(const GLTextureView& lhs, const GLT
     return CompareCompressedTexViewSWO(lhs.view, rhs.view);
 }
 
-#ifdef GL_ARB_texture_view
+#if LLGL_GLEXT_TEXTURE_VIEW
 
 static void InitializeTextureViewSwizzle(GLuint texID, const GLTextureTarget target, const TextureViewDescriptor& textureViewDesc)
 {
@@ -161,13 +161,13 @@ static void InitializeTextureViewSwizzle(GLuint texID, const GLTextureTarget tar
     GLTexture::TexParameterSwizzle(textureViewDesc.type, textureViewDesc.format, textureViewDesc.swizzle);
 }
 
-#endif // /GL_ARB_texture_view
+#endif // /LLGL_GLEXT_TEXTURE_VIEW
 
 static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc, bool restoreBoundTexture)
 {
     GLuint texID = 0;
 
-    #ifdef GL_ARB_texture_view
+    #if LLGL_GLEXT_TEXTURE_VIEW
 
     if (HasExtension(GLExt::ARB_texture_view))
     {
@@ -202,7 +202,7 @@ static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& 
         }
     }
 
-    #endif // /GL_ARB_texture_view
+    #endif // /LLGL_GLEXT_TEXTURE_VIEW
 
     return texID;
 }

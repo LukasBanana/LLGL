@@ -93,7 +93,7 @@ bool GLFramebuffer::FramebufferParameters(
     GLint samples,
     GLint fixedSampleLocations)
 {
-    #ifdef GL_ARB_framebuffer_no_attachments
+    #if LLGL_GLEXT_FRAMEBUFFER_NO_ATTACHMENTS
     if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
     {
         GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::Framebuffer, GetID());
@@ -104,7 +104,7 @@ bool GLFramebuffer::FramebufferParameters(
         glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, fixedSampleLocations);
         return true;
     }
-    #endif // /GL_ARB_framebuffer_no_attachments
+    #endif // /LLGL_GLEXT_FRAMEBUFFER_NO_ATTACHMENTS
     return false;
 }
 

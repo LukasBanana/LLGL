@@ -22,7 +22,7 @@ namespace LLGL
 
 void GLVertexArrayObject::Release()
 {
-    #if GL_ARB_vertex_array_object
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     //TODO: this must use some form of deferred deletion as this d'tor is not guaranteed to be invoked with the correct GL context in place
     if (id_ != 0)
@@ -32,12 +32,12 @@ void GLVertexArrayObject::Release()
         id_ = 0;
     }
 
-    #endif // /GL_ARB_vertex_array_object
+    #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
 void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& attributes)
 {
-    #if GL_ARB_vertex_array_object
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     LLGL_ASSERT_GL_EXT(ARB_vertex_array_object);
 
@@ -53,11 +53,11 @@ void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& 
     }
     GLStateManager::Get().BindVertexArray(0);
 
-    #else // GL_ARB_vertex_array_object
+    #else // LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_vertex_array_object");
 
-    #endif // /GL_ARB_vertex_array_object
+    #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
 
@@ -67,7 +67,7 @@ void GLVertexArrayObject::BuildVertexLayout(const ArrayView<GLVertexAttribute>& 
 
 void GLVertexArrayObject::BuildVertexAttribute(const GLVertexAttribute& attribute)
 {
-    #if GL_ARB_vertex_array_object
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     GLStateManager::Get().BindBuffer(GLBufferTarget::ArrayBuffer, attribute.buffer);
 
@@ -102,7 +102,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const GLVertexAttribute& attribut
         );
     }
 
-    #endif // /GL_ARB_vertex_array_object
+    #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
 

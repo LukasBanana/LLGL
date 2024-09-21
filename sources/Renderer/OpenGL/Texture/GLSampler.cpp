@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-#if GL_ARB_sampler_objects
+#if LLGL_GLEXT_SAMPLER_OBJECTS
 
 GLSampler::GLSampler(const char* debugName)
 {
@@ -76,12 +76,12 @@ void GLSampler::SamplerParameters(const SamplerDescriptor& desc)
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
     /* Set border color */
-    #ifdef LLGL_SAMPLER_BORDER_COLOR
+    #if LLGL_SAMPLER_BORDER_COLOR
     glSamplerParameterfv(id_, GL_TEXTURE_BORDER_COLOR, desc.borderColor);
     #endif
 }
 
-#else // GL_ARB_sampler_objects
+#else // LLGL_GLEXT_SAMPLER_OBJECTS
 
 GLSampler::GLSampler(const char* debugName)
 {
@@ -103,7 +103,7 @@ void GLSampler::SamplerParameters(const SamplerDescriptor& desc)
     // dummy
 }
 
-#endif // /GL_ARB_sampler_objects
+#endif // /LLGL_GLEXT_SAMPLER_OBJECTS
 
 
 } // /namespace LLGL

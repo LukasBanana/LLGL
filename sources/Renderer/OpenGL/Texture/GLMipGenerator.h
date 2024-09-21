@@ -73,7 +73,7 @@ class GLMipGenerator
             GLint           numArrayLayers
         );
 
-        #ifdef GL_ARB_texture_view
+        #if LLGL_GLEXT_TEXTURE_VIEW
         void GenerateMipsRangeWithTextureView(
             GLStateManager& stateMngr,
             GLTexture&      textureGL,
@@ -82,7 +82,7 @@ class GLMipGenerator
             GLuint          baseArrayLayer,
             GLuint          numArrayLayers
         );
-        #endif // /GL_ARB_texture_view
+        #endif // /LLGL_GLEXT_TEXTURE_VIEW
 
     private:
 

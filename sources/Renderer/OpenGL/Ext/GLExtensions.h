@@ -10,7 +10,11 @@
 
 
 #if LLGL_OPENGL
-#   include "../Profile/GLCore/GLCoreExtensions.h"
+#   if LLGL_GL_ENABLE_OPENGL2X
+#       include "../Profile/GLCompat/GLCompatExtensions.h"
+#   else
+#       include "../Profile/GLCore/GLCoreExtensions.h"
+#   endif
 #elif LLGL_OPENGLES3
 #   include "../Profile/GLES/GLESExtensions.h"
 #endif

@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-#if GL_ARB_separate_shader_objects
+#if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
     GLShader { /*isSeparable:*/ true, desc }
@@ -128,7 +128,7 @@ bool GLSeparableShader::CreateAndLinkSeparableGLProgram(GLLegacyShader& intermed
     return status;
 }
 
-#else // GL_ARB_separate_shader_objects
+#else // LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 GLSeparableShader::GLSeparableShader(const ShaderDescriptor& desc) :
     GLShader { /*isSeparable:*/ true, desc }
@@ -156,7 +156,7 @@ void GLSeparableShader::QueryInfoLog(std::string& text, bool& hasErrors)
     // dummy
 }
 
-#endif // /GL_ARB_separate_shader_objects
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 
 } // /namespace LLGL

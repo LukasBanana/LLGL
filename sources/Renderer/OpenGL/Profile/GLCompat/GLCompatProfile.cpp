@@ -1,5 +1,5 @@
 /*
- * GLCoreProfile.cpp
+ * GLCompatProfile.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -7,7 +7,7 @@
 
 #include "../GLProfile.h"
 #include "../../../../Core/Exception.h"
-#include "GLCoreExtensions.h"
+#include "GLCompatExtensions.h"
 #include <LLGL/RenderSystemFlags.h>
 
 
@@ -30,7 +30,7 @@ const char* GetModuleName()
 
 const char* GetRendererName()
 {
-    return "OpenGL Core";
+    return "OpenGL Compatibility";
 }
 
 const char* GetAPIName()
@@ -45,14 +45,12 @@ const char* GetShadingLanguageName()
 
 OpenGLContextProfile GetContextProfile()
 {
-    return OpenGLContextProfile::CoreProfile;
+    return OpenGLContextProfile::CompatibilityProfile;
 }
 
 GLint GetMaxViewports()
 {
-    GLint value = 0;
-    glGetIntegerv(GL_MAX_VIEWPORTS, &value);
-    return value;
+    return 1;
 }
 
 void DepthRange(GLclamp_t nearVal, GLclamp_t farVal)
@@ -119,7 +117,7 @@ void FramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GL
 
 void FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
 {
-    glFramebufferTextureLayer(target, attachment, texture, level, layer);
+    LLGL_TRAP_FEATURE_NOT_SUPPORTED("glFramebufferTextureLayer");
 }
 
 

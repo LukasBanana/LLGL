@@ -361,7 +361,7 @@ void GLDeferredCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::u
     auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
     cmd->resourceHeap   = LLGL_CAST(GLResourceHeap*, &resourceHeap);
     cmd->descriptorSet  = descriptorSet;
-    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+    #if LLGL_GLEXT_MEMORY_BARRIERS
     InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     #endif
 }
@@ -393,7 +393,7 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
             BindBufferBase(GLBufferTarget::ShaderStorageBuffer, bufferGL, binding.slot);
-            #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+            #if LLGL_GLEXT_MEMORY_BARRIERS
             if ((bufferGL.GetBindFlags() & BindFlags::Storage) != 0)
                 InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT);
             #endif
@@ -404,7 +404,7 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         {
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
             BindTexture(textureGL, binding.slot);
-            #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+            #if LLGL_GLEXT_MEMORY_BARRIERS
             if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
                 InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
             #endif
@@ -415,7 +415,7 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
         {
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
             BindImageTexture(textureGL, binding.slot);
-            #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+            #if LLGL_GLEXT_MEMORY_BARRIERS
             if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
                 InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
             #endif
@@ -682,7 +682,7 @@ In the following Draw* functions, 'indices' is from type <GLintptr> to have the 
 The indices actually store the index start offset, but must be passed to GL as a void-pointer, due to an obsolete API.
 */
 
-#ifdef LLGL_GLEXT_MEMORY_BARRIERS
+#if LLGL_GLEXT_MEMORY_BARRIERS
 #   define LLGL_FLUSH_MEMORY_BARRIERS() \
         FlushMemoryBarriers()
 #else

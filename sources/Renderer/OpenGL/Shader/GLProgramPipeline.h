@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-#if GL_ARB_separate_shader_objects
+#if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 class GLSeparableShader;
 
@@ -47,7 +47,7 @@ class GLProgramPipeline final : public GLShaderPipeline
 
 };
 
-#else // GL_ARB_separate_shader_objects
+#else // LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 class GLProgramPipeline final : public GLShaderPipeline
 {
@@ -66,7 +66,7 @@ class GLProgramPipeline final : public GLShaderPipeline
 
 };
 
-#endif // /GL_ARB_separate_shader_objects
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 
 } // /namespace LLGL

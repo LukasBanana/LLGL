@@ -52,7 +52,7 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
 {
     if (numMipLevels > 0 && numArrayLayers > 0)
     {
-        #ifdef GL_ARB_texture_view
+        #if LLGL_GLEXT_TEXTURE_VIEW
         if (HasExtension(GLExt::ARB_texture_view))
         {
             /* Generate MIP-maps in GL_ARB_texture_view extension process */
@@ -66,7 +66,7 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
             );
         }
         else
-        #endif // /GL_ARB_texture_view
+        #endif // /LLGL_GLEXT_TEXTURE_VIEW
         if (textureGL.GetType() == TextureType::Texture3D)
         {
             /* Generate MIP-maps in default process */
@@ -96,14 +96,14 @@ void GLMipGenerator::GenerateMipsRangeForTexture(
 
 void GLMipGenerator::GenerateMipsPrimary(GLStateManager& stateMngr, GLuint texID, const TextureType texType)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Generate MIP-maps of named texture object */
         glGenerateTextureMipmap(texID);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Restore previously bound texture on active layer */
         auto texTarget = GLStateManager::GetTextureTarget(texType);
@@ -271,7 +271,7 @@ void GLMipGenerator::GenerateMipsRangeWithFBO(
     stateMngr.PopBoundFramebuffer();
 }
 
-#ifdef GL_ARB_texture_view
+#if LLGL_GLEXT_TEXTURE_VIEW
 
 void GLMipGenerator::GenerateMipsRangeWithTextureView(
     GLStateManager& stateMngr,
@@ -305,7 +305,7 @@ void GLMipGenerator::GenerateMipsRangeWithTextureView(
     glDeleteTextures(1, &texViewID);
 }
 
-#endif // /GL_ARB_texture_view
+#endif // /LLGL_GLEXT_TEXTURE_VIEW
 
 
 } // /namespace LLGL

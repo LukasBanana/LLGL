@@ -52,19 +52,20 @@ endif()
 
 # === Source files ===
 
-find_source_files(FilesRendererGL               CXX ${PROJECT_SOURCE_DIR})
-find_source_files(FilesRendererGLBuffer         CXX ${PROJECT_SOURCE_DIR}/Buffer)
-find_source_files(FilesRendererGLCommand        CXX ${PROJECT_SOURCE_DIR}/Command)
-find_source_files(FilesRendererGLExt            CXX ${PROJECT_SOURCE_DIR}/Ext)
-find_source_files(FilesRendererGLPlatformBase   CXX ${PROJECT_SOURCE_DIR}/Platform)
-find_source_files(FilesRendererGLRenderState    CXX ${PROJECT_SOURCE_DIR}/RenderState)
-find_source_files(FilesRendererGLShader         CXX ${PROJECT_SOURCE_DIR}/Shader)
-find_source_files(FilesRendererGLTexture        CXX ${PROJECT_SOURCE_DIR}/Texture)
-find_source_files(FilesRendererGLProfile        CXX ${PROJECT_SOURCE_DIR}/Profile)
-find_source_files(FilesRendererGLProfileGLCore  CXX ${PROJECT_SOURCE_DIR}/Profile/GLCore)
-find_source_files(FilesRendererGLProfileGLES    CXX ${PROJECT_SOURCE_DIR}/Profile/GLES)
-find_source_files(FilesRendererGLProfileWebGL   CXX ${PROJECT_SOURCE_DIR}/Profile/WebGL)
-find_source_files(FilesIncludeGL                INC ${BACKEND_INCLUDE_DIR}/OpenGL)
+find_source_files(FilesRendererGL                   CXX ${PROJECT_SOURCE_DIR})
+find_source_files(FilesRendererGLBuffer             CXX ${PROJECT_SOURCE_DIR}/Buffer)
+find_source_files(FilesRendererGLCommand            CXX ${PROJECT_SOURCE_DIR}/Command)
+find_source_files(FilesRendererGLExt                CXX ${PROJECT_SOURCE_DIR}/Ext)
+find_source_files(FilesRendererGLPlatformBase       CXX ${PROJECT_SOURCE_DIR}/Platform)
+find_source_files(FilesRendererGLRenderState        CXX ${PROJECT_SOURCE_DIR}/RenderState)
+find_source_files(FilesRendererGLShader             CXX ${PROJECT_SOURCE_DIR}/Shader)
+find_source_files(FilesRendererGLTexture            CXX ${PROJECT_SOURCE_DIR}/Texture)
+find_source_files(FilesRendererGLProfile            CXX ${PROJECT_SOURCE_DIR}/Profile)
+find_source_files(FilesRendererGLProfileGLCompat    CXX ${PROJECT_SOURCE_DIR}/Profile/GLCompat)
+find_source_files(FilesRendererGLProfileGLCore      CXX ${PROJECT_SOURCE_DIR}/Profile/GLCore)
+find_source_files(FilesRendererGLProfileGLES        CXX ${PROJECT_SOURCE_DIR}/Profile/GLES)
+find_source_files(FilesRendererGLProfileWebGL       CXX ${PROJECT_SOURCE_DIR}/Profile/WebGL)
+find_source_files(FilesIncludeGL                    INC ${BACKEND_INCLUDE_DIR}/OpenGL)
 
 # Remove selected files if GL2X is disabled
 if(NOT LLGL_GL_ENABLE_OPENGL2X)
@@ -118,6 +119,15 @@ endif()
 
 # === Source group folders ===
 
+set(
+    FilesRendererGLProfileAll
+    ${FilesRendererGLProfile}
+    ${FilesRendererGLProfileGLCompat}
+    ${FilesRendererGLProfileGLCore}
+    ${FilesRendererGLProfileGLES}
+    ${FilesRendererGLProfileWebGL}
+)
+
 source_group("OpenGL"                   FILES ${FilesRendererGL})
 source_group("OpenGL\\Buffer"           FILES ${FilesRendererGLBuffer})
 source_group("OpenGL\\Command"          FILES ${FilesRendererGLCommand})
@@ -126,7 +136,7 @@ source_group("OpenGL\\Platform"         FILES ${FilesRendererGLPlatformBase} ${F
 source_group("OpenGL\\RenderState"      FILES ${FilesRendererGLRenderState})
 source_group("OpenGL\\Shader"           FILES ${FilesRendererGLShader})
 source_group("OpenGL\\Texture"          FILES ${FilesRendererGLTexture})
-source_group("OpenGL\\Profile"          FILES ${FilesRendererGLProfile} ${FilesRendererGLProfileGLCore} ${FilesRendererGLProfileGLES} ${FilesRendererGLProfileWebGL})
+source_group("OpenGL\\Profile"          FILES ${FilesRendererGLProfileAll})
 source_group("Include\\Platform"        FILES ${FilesIncludeGL} ${FilesIncludeGLPlatform})
 
 
@@ -222,10 +232,15 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         ${FilesRendererGLShader}
         ${FilesRendererGLTexture}
         ${FilesRendererGLProfile}
-        ${FilesRendererGLProfileGLCore}
         ${FilesIncludeGL}
         ${FilesIncludeGLPlatform}
     )
+
+    if(LLGL_GL_ENABLE_OPENGL2X)
+        list(APPEND FilesGL ${FilesRendererGLProfileGLCompat})
+    else()
+        list(APPEND FilesGL ${FilesRendererGLProfileGLCore})
+    endif()
 
     set(OpenGL_GL_PREFERENCE GLVND)
     find_package(OpenGL REQUIRED)

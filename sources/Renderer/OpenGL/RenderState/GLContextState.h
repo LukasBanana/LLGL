@@ -59,7 +59,7 @@ struct GLContextState
 
     // Clip control
     GLenum          clipOrigin                          = GL_LOWER_LEFT;
-    #ifdef LLGL_GLEXT_CLIP_CONTROL
+    #if LLGL_GLEXT_CLIP_CONTROL
     GLenum          clipDepthMode                       = GL_NEGATIVE_ONE_TO_ONE;
     #else
     GLenum          clipDepthMode                       = 0;

@@ -96,7 +96,7 @@ static Format FindSuitableDepthFormat(const TextureDescriptor& desc)
     return desc.format;
 }
 
-#ifdef GL_ARB_texture_storage
+#if LLGL_GLEXT_TEXTURE_STORAGE
 
 // Returns true if the specified GL texture target is a cube face other than GL_TEXTURE_CUBE_MAP_POSITIVE_X
 static bool IsSecondaryCubeFaceTarget(GLenum target)
@@ -111,7 +111,7 @@ static bool IsSecondaryCubeFaceTarget(GLenum target)
     );
 }
 
-#endif // /GL_ARB_texture_storage
+#endif // /LLGL_GLEXT_TEXTURE_STORAGE
 
 /* ----- Back-end OpenGL functions ----- */
 
@@ -130,7 +130,7 @@ static void GLTexImage1DBase(
     GLenum  internalFormat  = GLTypes::Map(textureFormat);
     GLsizei sx              = static_cast<GLsizei>(width);
 
-    #ifdef GL_ARB_texture_storage
+    #if LLGL_GLEXT_TEXTURE_STORAGE
     if (HasExtension(GLExt::ARB_texture_storage))
     {
         /* Allocate immutable texture storage */
@@ -147,7 +147,7 @@ static void GLTexImage1DBase(
         }
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_TEXTURE_STORAGE
     {
         /* Allocate mutable texture storage and initialize highest MIP level */
         if (IsCompressedFormat(textureFormat))
@@ -184,7 +184,7 @@ static void GLTexImage2DBase(
     GLsizei sx              = static_cast<GLsizei>(width);
     GLsizei sy              = static_cast<GLsizei>(height);
 
-    #ifdef GL_ARB_texture_storage
+    #if LLGL_GLEXT_TEXTURE_STORAGE
     if (HasExtension(GLExt::ARB_texture_storage))
     {
         /* Allocate immutable texture storage (only once, not for ever cube face!) */
@@ -204,7 +204,7 @@ static void GLTexImage2DBase(
         }
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_TEXTURE_STORAGE
     {
         /* Allocate mutable texture storage and initialize highest MIP level */
         if (IsCompressedFormat(textureFormat))
@@ -255,7 +255,7 @@ static void GLTexImage3DBase(
     GLsizei sy              = static_cast<GLsizei>(height);
     GLsizei sz              = static_cast<GLsizei>(depth);
 
-    #ifdef GL_ARB_texture_storage
+    #if LLGL_GLEXT_TEXTURE_STORAGE
     if (HasExtension(GLExt::ARB_texture_storage))
     {
         /* Allocate immutable texture storage */
@@ -272,7 +272,7 @@ static void GLTexImage3DBase(
         }
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_TEXTURE_STORAGE
     {
         /* Allocate mutable texture storage and initialize highest MIP level */
         if (IsCompressedFormat(textureFormat))
@@ -306,7 +306,7 @@ static void GLTexImage3DBase(
     }
 }
 
-#if LLGL_OPENGL && GL_VERSION_3_2
+#if LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 static void GLTexImage2DMultisampleBase(
     GLenum          target,
@@ -322,7 +322,7 @@ static void GLTexImage2DMultisampleBase(
     GLsizei     sy                      = static_cast<GLsizei>(height);
     GLboolean   fixedSampleLocations    = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
 
-    #ifdef GL_ARB_texture_storage_multisample
+    #if LLGL_GLEXT_TEXTURE_STORAGE_MULTISAMPLE
     if (HasExtension(GLExt::ARB_texture_storage_multisample))
     {
         /* Allocate immutable texture storage */
@@ -352,7 +352,7 @@ static void GLTexImage3DMultisampleBase(
     GLsizei     sz                      = static_cast<GLsizei>(depth);
     GLboolean   fixedSampleLocations    = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
 
-    #ifdef GL_ARB_texture_storage_multisample
+    #if LLGL_GLEXT_TEXTURE_STORAGE_MULTISAMPLE
     if (HasExtension(GLExt::ARB_texture_storage_multisample))
     {
         /* Allocate immutable texture storage */
@@ -366,7 +366,7 @@ static void GLTexImage3DMultisampleBase(
     }
 }
 
-#endif // /LLGL_OPENGL && GL_VERSION_3_2
+#endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 /* ----- Wrapper functions ----- */
 
@@ -458,7 +458,7 @@ static void GLTexImage2DArray(
     GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevels, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
 
-#if LLGL_OPENGL && GL_VERSION_3_2
+#if LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 static void GLTexImageCubeArray(
     std::uint32_t   mipLevels,
@@ -495,7 +495,7 @@ static void GLTexImage2DMultisampleArray(
     GLTexImage3DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, depth, fixedSamples);
 }
 
-#endif
+#endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 #ifdef LLGL_OPENGL
 
@@ -1011,7 +1011,7 @@ static void GLTexImage2DArray(const TextureDescriptor& desc, const ImageView* im
     }
 }
 
-#if LLGL_OPENGL && GL_VERSION_3_2
+#if LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 static void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageView* imageView)
 {
@@ -1091,7 +1091,7 @@ static void GLTexImage2DMSArray(const TextureDescriptor& desc)
     );
 }
 
-#endif
+#endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
 bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
 {
@@ -1120,17 +1120,17 @@ bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
             GLTexImageCube(desc, imageView);
             break;
 
-        #if LLGL_OPENGL && GL_VERSION_3_2
+        #if LLGL_GLEXT_TEXTURE_MULTISAMPLE
         case TextureType::Texture1DArray:
             GLTexImage1DArray(desc, imageView);
             break;
-        #endif
+        #endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
         case TextureType::Texture2DArray:
             GLTexImage2DArray(desc, imageView);
             break;
 
-        #if LLGL_OPENGL && GL_VERSION_3_2
+        #if LLGL_GLEXT_TEXTURE_MULTISAMPLE
         case TextureType::TextureCubeArray:
             GLTexImageCubeArray(desc, imageView);
             break;
@@ -1142,7 +1142,7 @@ bool GLTexImage(const TextureDescriptor& desc, const ImageView* imageView)
         case TextureType::Texture2DMSArray:
             GLTexImage2DMSArray(desc);
             break;
-        #endif
+        #endif // /LLGL_GLEXT_TEXTURE_MULTISAMPLE
 
         default:
             return false;

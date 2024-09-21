@@ -58,7 +58,7 @@ static void GLRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei widt
         glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
 }
 
-#if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+#if LLGL_GLEXT_DIRECT_STATE_ACCESS
 
 static void GLNamedRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
@@ -69,7 +69,7 @@ static void GLNamedRenderbufferStorage(GLuint id, GLenum internalFormat, GLsizei
         glNamedRenderbufferStorage(id, internalFormat, width, height);
 }
 
-#endif // /GL_ARB_direct_state_access
+#endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
 
 void GLRenderbuffer::BindAndAllocStorage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
@@ -78,14 +78,14 @@ void GLRenderbuffer::BindAndAllocStorage(GLenum internalFormat, GLsizei width, G
 
 void GLRenderbuffer::AllocStorage(GLuint id, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Define storage of named renderbuffer directly */
         GLNamedRenderbufferStorage(id, internalFormat, width, height, samples);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Bind and define storage of renderbuffer */
         GLRenderbufferStorage(id, internalFormat, width, height, samples);

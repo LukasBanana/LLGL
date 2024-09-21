@@ -634,7 +634,7 @@ static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& re
 
 static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
 {
-    #if GL_ARB_uniform_buffer_object
+    #if LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
 
     if (!HasExtension(GLExt::ARB_uniform_buffer_object))
         return;
@@ -677,12 +677,12 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
         reflection.resources.push_back(resource);
     }
 
-    #endif // /GL_ARB_uniform_buffer_object
+    #endif // /LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
 }
 
 static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
 {
-    #ifdef LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
+    #if LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
 
     if (!HasExtension(GLExt::ARB_shader_storage_buffer_object) || !HasExtension(GLExt::ARB_program_interface_query))
         return;

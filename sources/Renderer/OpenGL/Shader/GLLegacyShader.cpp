@@ -138,7 +138,7 @@ void GLLegacyShader::CompileSource(const ShaderDescriptor& shaderDesc)
 
 void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
 {
-    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
+    #if LLGL_GLEXT_GL_SPIRV
     const GLuint shader = CreateShaderPermutation(PermutationDefault);
 
     if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
@@ -170,7 +170,7 @@ void GLLegacyShader::LoadBinary(const ShaderDescriptor& shaderDesc)
         glSpecializeShader(shader, entryPoint, 0, nullptr, nullptr);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_GL_SPIRV
     {
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("loading binary shader");
     }

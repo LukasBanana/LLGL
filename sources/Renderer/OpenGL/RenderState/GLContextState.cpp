@@ -264,7 +264,7 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
     #endif
 
     // Clip control
-    #ifdef LLGL_GLEXT_CLIP_CONTROL
+    #if LLGL_GLEXT_CLIP_CONTROL
     if (HasExtension(GLExt::ARB_clip_control))
     {
         GLGetValue(GL_CLIP_ORIGIN,      outContextState.clipOrigin);
@@ -326,7 +326,7 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
         const GLenum currentActiveTexture = GLStateManager::ToGLTextureLayer(layer);
         glActiveTexture(currentActiveTexture);
 
-        #if GL_ARB_sampler_objects
+        #if LLGL_GLEXT_SAMPLER_OBJECTS
         GLGetValue(GL_SAMPLER_BINDING, outContextState.boundSamplers[layer]);
         #endif
 
@@ -343,7 +343,7 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
     glActiveTexture(initialActiveTexture);
 
     // Vertex Array Objects (VAO)
-    #if GL_ARB_vertex_array_object
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
     GLGetValue(GL_VERTEX_ARRAY_BINDING, outContextState.boundVertexArray);
     #endif
     outContextState.boundElementArrayBuffer = outContextState.boundBuffers[static_cast<int>(GLBufferTarget::ElementArrayBuffer)]; //TODO: remove this redundancy
@@ -354,12 +354,9 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
         GLGetValue(GL_CURRENT_PROGRAM, outContextState.boundProgram);
     #endif
 
-    #if GL_ARB_separate_shader_objects
+    #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
     if (HasExtension(GLExt::ARB_separate_shader_objects))
         GLGetValue(GL_PROGRAM_PIPELINE_BINDING, outContextState.boundProgramPipeline);
-    #elif GL_EXT_separate_shader_objects
-    if (HasExtension(GLExt::ARB_separate_shader_objects))
-        GLGetValue(GL_PROGRAM_PIPELINE_BINDING_EXT, outContextState.boundProgramPipeline);
     #endif
 };
 
@@ -420,7 +417,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     #endif
 
     // Clip control
-    #ifdef LLGL_GLEXT_CLIP_CONTROL
+    #if LLGL_GLEXT_CLIP_CONTROL
     if (HasExtension(GLExt::ARB_clip_control))
     {
         glClipControl(
@@ -495,7 +492,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
         const GLenum currentActiveTexture = GLStateManager::ToGLTextureLayer(layer);
         glActiveTexture(currentActiveTexture);
 
-        #if GL_ARB_sampler_objects
+        #if LLGL_GLEXT_SAMPLER_OBJECTS
         glBindSampler(layer, inContextState.boundSamplers[layer]);
         #endif
 
@@ -511,7 +508,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     glActiveTexture(initialActiveTexture);
 
     // Vertex Array Objects (VAO)
-    #if GL_ARB_vertex_array_object
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
     glBindVertexArray(inContextState.boundVertexArray);
     #endif
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, inContextState.boundElementArrayBuffer);
@@ -522,7 +519,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
         glUseProgram(inContextState.boundProgram);
     #endif
 
-    #ifdef GL_ARB_separate_shader_objects
+    #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
     if (HasExtension(GLExt::ARB_separate_shader_objects))
         glBindProgramPipeline(inContextState.boundProgramPipeline);
     #endif

@@ -235,14 +235,14 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
 
 void GLRenderTarget::CreateFramebufferWithNoAttachments()
 {
-    #ifdef GL_ARB_framebuffer_no_attachments
+    #if LLGL_GLEXT_FRAMEBUFFER_NO_ATTACHMENTS
     if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
     {
         /* Set default framebuffer parameters */
         framebuffer_.FramebufferParameters(resolution_[0], resolution_[1], /*layers:*/ 1, samples_, /*fixedSampleLocations:*/ 0);
     }
     else
-    #endif // /GL_ARB_framebuffer_no_attachments
+    #endif // /LLGL_GLEXT_FRAMEBUFFER_NO_ATTACHMENTS
     {
         /* Bind primary FBO and create dummy renderbuffer attachment */
         GLStateManager::Get().BindFramebuffer(GLFramebufferTarget::DrawFramebuffer, framebuffer_.GetID());

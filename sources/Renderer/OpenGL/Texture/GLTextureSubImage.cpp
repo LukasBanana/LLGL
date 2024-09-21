@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-#if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+#if LLGL_GLEXT_DIRECT_STATE_ACCESS
 
 static void GLTextureSubImage1DBase(
     GLuint              texID,
@@ -246,7 +246,7 @@ static void GLTextureSubImageCubeArray(GLuint texID, const TextureRegion& region
     );
 }
 
-#endif // GL_ARB_direct_state_access && LLGL_GL_ENABLE_DSA_EXT
+#endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
 
 void GLTextureSubImage(
     GLuint                  texID,
@@ -255,7 +255,7 @@ void GLTextureSubImage(
     const ImageView&        imageView,
     GLenum                  internalFormat)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     switch (type)
     {
         case TextureType::Texture1D:
@@ -289,7 +289,7 @@ void GLTextureSubImage(
         default:
             break;
     }
-    #endif // GL_ARB_direct_state_access && LLGL_GL_ENABLE_DSA_EXT
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
 }
 
 

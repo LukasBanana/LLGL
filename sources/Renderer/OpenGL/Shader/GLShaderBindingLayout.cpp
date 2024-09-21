@@ -30,7 +30,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     std::size_t resourceIndex = 0;
 
     /* Set uniform bindings */
-    #ifdef GL_ARB_separate_shader_objects
+    #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
     if (HasExtension(GLExt::ARB_separate_shader_objects))
     {
         for_range(i, numUniformBindings_)
@@ -79,7 +79,7 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     }
 
     /* Set uniform-block bindings */
-    #if GL_ARB_uniform_buffer_object
+    #if LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
     for_range(i, numUniformBlockBindings_)
     {
         const NamedResourceBinding& resource = bindings_[resourceIndex++];
@@ -87,10 +87,10 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
         if (blockIndex != GL_INVALID_INDEX)
             glUniformBlockBinding(program, blockIndex, resource.slot);
     }
-    #endif // /GL_ARB_uniform_buffer_object
+    #endif // /LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
 
     /* Set shader-storage bindings (not supported in GLES) */
-    #if defined LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && defined LLGL_OPENGL
+    #if LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && LLGL_OPENGL
     for_range(i, numShaderStorageBindings_)
     {
         const NamedResourceBinding& resource = bindings_[resourceIndex++];

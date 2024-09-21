@@ -235,14 +235,14 @@ void GLRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
 
-    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+    #if LLGL_GLEXT_MEMORY_BARRIERS
     if ((bufferGL.GetBindFlags() & BindFlags::Storage) != 0)
     {
         /* Ensure all shader writes to the buffer completed */
         if (HasExtension(GLExt::ARB_shader_image_load_store))
             glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     }
-    #endif
+    #endif // /LLGL_GLEXT_MEMORY_BARRIERS
 
     bufferGL.GetBufferSubData(static_cast<GLintptr>(offset), static_cast<GLsizeiptr>(dataSize), data);
 }
@@ -351,14 +351,14 @@ void GLRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     LLGL_ASSERT_PTR(dstImageView.data);
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
 
-    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+    #if LLGL_GLEXT_MEMORY_BARRIERS
     if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
     {
         /* Ensure all shader writes to the texture completed */
         if (HasExtension(GLExt::ARB_shader_image_load_store))
             glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
     }
-    #endif
+    #endif // /LLGL_GLEXT_MEMORY_BARRIERS
 
     textureGL.GetTextureSubImage(textureRegion, dstImageView, false);
 }
@@ -378,7 +378,6 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& samplerDesc)
     else
     {
         /* Create native GL sampler state */
-        LLGL_ASSERT(HasNativeSamplers(), "LLGL was not compiled with LLGL_GL_ENABLE_OPENGL2X but \"GL_ARB_sampler_objects\" is not supported");
         auto* samplerGL = samplers_.emplace<GLSampler>(samplerDesc.debugName);
         samplerGL->SamplerParameters(samplerDesc);
         return samplerGL;

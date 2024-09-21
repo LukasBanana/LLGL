@@ -20,7 +20,7 @@ namespace LLGL
 class GLLegacyShader;
 class GLShaderBindingLayout;
 
-#if GL_ARB_separate_shader_objects
+#if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 // Shader implementation for separable GL shader programs; requires GL_ARB_separate_shader_objects extension.
 class GLSeparableShader final : public GLShader
@@ -52,7 +52,7 @@ class GLSeparableShader final : public GLShader
 
 };
 
-#else // GL_ARB_separate_shader_objects
+#else // LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 class GLSeparableShader final : public GLShader
 {
@@ -71,7 +71,7 @@ class GLSeparableShader final : public GLShader
 
 };
 
-#endif // /GL_ARB_separate_shader_objects
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 
 } // /namespace LLGL

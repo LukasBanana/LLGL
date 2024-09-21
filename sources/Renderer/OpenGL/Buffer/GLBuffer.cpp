@@ -41,7 +41,7 @@ GLBuffer::GLBuffer(long bindFlags, const char* debugName) :
     Buffer  { bindFlags                          },
     target_ { FindPrimaryBufferTarget(bindFlags) }
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Creates a new GL buffer object and binds it to an unspecified target */
@@ -104,14 +104,14 @@ BufferDescriptor GLBuffer::GetDesc() const
 
 void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags, GLenum usage)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Allocate buffer with immutable storage (4.5+) */
         glNamedBufferStorage(GetID(), size, data, flags);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     #ifdef GL_ARB_buffer_storage
     if (HasExtension(GLExt::ARB_buffer_storage))
     {
@@ -130,13 +130,13 @@ void GLBuffer::BufferStorage(GLsizeiptr size, const void* data, GLbitfield flags
 
 void GLBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glNamedBufferSubData(GetID(), offset, size, data);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         GLStateManager::Get().BindGLBuffer(*this);
         glBufferSubData(GetGLTarget(), offset, size, data);
@@ -145,13 +145,13 @@ void GLBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data)
 
 void GLBuffer::GetBufferSubData(GLintptr offset, GLsizeiptr size, void* data)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glGetNamedBufferSubData(GetID(), offset, size, data);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         GLStateManager::Get().BindGLBuffer(*this);
         GLProfile::GetBufferSubData(GetGLTarget(), offset, size, data);
@@ -160,13 +160,13 @@ void GLBuffer::GetBufferSubData(GLintptr offset, GLsizeiptr size, void* data)
 
 void GLBuffer::ClearBufferData(std::uint32_t data)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glClearNamedBufferData(GetID(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &data);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     #ifdef GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
     {
@@ -196,13 +196,13 @@ void GLBuffer::ClearBufferData(std::uint32_t data)
 void GLBuffer::ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_t data)
 {
     #if 0 // TODO: does not work properly here with DSA version???
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glClearNamedBufferSubData(GetID(), GL_R32UI, offset, size, GL_RED_INTEGER, GL_UNSIGNED_INT, &data);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     #endif // /TODO
     #ifdef GL_ARB_clear_buffer_object
     if (HasExtension(GLExt::ARB_clear_buffer_object))
@@ -226,14 +226,14 @@ void GLBuffer::ClearBufferSubData(GLintptr offset, GLsizeiptr size, std::uint32_
 
 void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Copy buffer directly (GL 4.5+) */
         glCopyNamedBufferSubData(readBuffer.GetID(), GetID(), readOffset, writeOffset, size);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     #ifdef GL_ARB_copy_buffer
     if (HasExtension(GLExt::ARB_copy_buffer))
     {
@@ -260,13 +260,13 @@ void GLBuffer::CopyBufferSubData(const GLBuffer& readBuffer, GLintptr readOffset
 
 void* GLBuffer::MapBuffer(GLenum access)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         return glMapNamedBuffer(GetID(), access);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         GLStateManager::Get().BindGLBuffer(*this);
         return GLProfile::MapBuffer(GetGLTarget(), access);
@@ -275,13 +275,13 @@ void* GLBuffer::MapBuffer(GLenum access)
 
 void* GLBuffer::MapBufferRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         return glMapNamedBufferRange(GetID(), offset, length, access);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     #ifdef GL_ARB_map_buffer_range
     if (HasExtension(GLExt::ARB_map_buffer_range))
     {
@@ -298,13 +298,13 @@ void* GLBuffer::MapBufferRange(GLintptr offset, GLsizeiptr length, GLbitfield ac
 
 void GLBuffer::UnmapBuffer()
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glUnmapNamedBuffer(GetID());
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         GLStateManager::Get().BindGLBuffer(*this);
         GLProfile::UnmapBuffer(GetGLTarget());
@@ -313,7 +313,7 @@ void GLBuffer::UnmapBuffer()
 
 void GLBuffer::GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Query buffer attributes directly using DSA */
@@ -327,7 +327,7 @@ void GLBuffer::GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) c
             glGetNamedBufferParameteriv(GetID(), GL_BUFFER_STORAGE_FLAGS, storageFlags);
     }
     else
-    #endif // /GL_ARB_direct_state_access
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Push currently bound texture onto stack to restore it after query */
         GLStateManager::Get().PushBoundBuffer(GetTarget());

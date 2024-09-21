@@ -84,14 +84,14 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
 {
     if (IsRenderbuffer())
     {
-        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             /* Create new GL renderbuffer object */
             glCreateRenderbuffers(1, &id_);
         }
         else
-        #endif
+        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
         {
             /* Create new GL renderbuffer object (must be bound to a target before it can be used) */
             glGenRenderbuffers(1, &id_);
@@ -99,14 +99,14 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
     }
     else
     {
-        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             /* Create new GL texture object with respective target */
             glCreateTextures(GetGLTexTarget(), 1, &id_);
         }
         else
-        #endif
+        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
         {
             /* Create new GL texture object (must be bound to a target before it can be used) */
             glGenTextures(1, &id_);
@@ -838,14 +838,14 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
 {
     if (!IsRenderbuffer())
     {
-        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             /* Transfer image data directly to GL texture */
             GLTextureSubImage(GetID(), GetType(), region, srcImageView, GetGLInternalFormat());
         }
         else
-        #endif
+        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
         {
             const GLTextureTarget target = GLStateManager::GetTextureTarget(GetType());
             if (restoreBoundTexture)
@@ -868,7 +868,7 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
     }
 }
 
-#ifdef GL_ARB_get_texture_sub_image
+#if LLGL_GLEXT_GET_TEXTURE_SUB_IMAGE
 
 static void GLGetTextureSubImage(
     GLTexture&                  textureGL,
@@ -898,7 +898,7 @@ static void GLGetTextureSubImage(
     );
 }
 
-#endif // /GL_ARB_get_texture_sub_image
+#endif // /LLGL_GLEXT_GET_TEXTURE_SUB_IMAGE
 
 #if LLGL_OPENGL
 
@@ -1061,7 +1061,7 @@ static void GLGetTextureImage(
         GLStateManager::Get().PopBoundFramebuffer();
 
         /* Use staging texture as source for copy operation, so also reset source MIP-map level */
-        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             glGetTextureImage(
@@ -1074,7 +1074,7 @@ static void GLGetTextureImage(
             );
         }
         else
-        #endif // /GL_ARB_direct_state_access
+        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
         {
             /* Bind texture and read image data from texture */
             GLGetTexImage(stagingTextureTarget, stagingTextureID, textureGL.GetGLInternalFormat(), 0, dstImageView, numTexels);
@@ -1088,7 +1088,7 @@ static void GLGetTextureImage(
         /* Use input texture as source for copy operation */
         const GLuint srcTextureID = textureGL.GetID();
 
-        #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
         if (HasExtension(GLExt::ARB_direct_state_access))
         {
             glGetTextureImage(
@@ -1101,7 +1101,7 @@ static void GLGetTextureImage(
             );
         }
         else
-        #endif // /GL_ARB_direct_state_access
+        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
         {
             /* Bind texture and read image data from texture */
             const GLTextureTarget srcTextureTarget = GLStateManager::GetTextureTarget(type);
@@ -1121,14 +1121,14 @@ void GLTexture::GetTextureSubImage(const TextureRegion& region, const MutableIma
 {
     if (!IsRenderbuffer())
     {
-        #ifdef GL_ARB_get_texture_sub_image
+        #if LLGL_GLEXT_GET_TEXTURE_SUB_IMAGE
         if (HasExtension(GLExt::ARB_get_texture_sub_image))
         {
             /* Use native function to retrieve sub image data */
             GLGetTextureSubImage(*this, region, dstImageView);
         }
         else
-        #endif // /GL_ARB_get_texture_sub_image
+        #endif // /LLGL_GLEXT_GET_TEXTURE_SUB_IMAGE
         {
             /* Emulate functionality by copying the entire texture image into an intermediate buffer */
             const GLTextureTarget target = GLStateManager::GetTextureTarget(GetType());
@@ -1287,7 +1287,7 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
 {
     #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Query texture attributes directly using DSA */
@@ -1302,7 +1302,7 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_SAMPLES, samples);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Push currently bound texture onto stack to restore it after query */
         GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
@@ -1343,7 +1343,7 @@ void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
 
 void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Query texture attributes directly using DSA */
@@ -1358,7 +1358,7 @@ void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
             glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_SAMPLES, samples);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Push currently bound texture onto stack to restore it after query */
         GLStateManager::Get().PushBoundRenderbuffer();
@@ -1386,7 +1386,7 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
 {
     #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         /* Query texture attributes directly using DSA */
@@ -1395,7 +1395,7 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
         glGetTextureLevelParameteriv(id_, level, GL_TEXTURE_DEPTH,  &texSize[2]);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Push currently bound texture onto stack to restore it after query */
         GLStateManager::Get().PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
@@ -1442,7 +1442,7 @@ void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
 
 void GLTexture::GetRenderbufferSize(GLint (&texSize)[3]) const
 {
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glGetNamedRenderbufferParameteriv(id_, GL_RENDERBUFFER_WIDTH, &texSize[0]);
@@ -1450,7 +1450,7 @@ void GLTexture::GetRenderbufferSize(GLint (&texSize)[3]) const
         texSize[2] = 1;
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Push currently bound texture onto stack to restore it after query */
         GLStateManager::Get().PushBoundRenderbuffer();

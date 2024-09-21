@@ -177,7 +177,7 @@ static bool DECL_LOADGLEXT_PROC(ARB_framebuffer_object)
     LOAD_GLPROC( glDeleteFramebuffers                  );
     LOAD_GLPROC( glBindFramebuffer                     );
     LOAD_GLPROC( glCheckFramebufferStatus              );
-    LOAD_GLPROC( glFramebufferTexture                  ); // <--- other extension! (but which one???)
+    //LOAD_GLPROC( glFramebufferTexture                  ); // <--- other extension! (but which one???)
     LOAD_GLPROC( glFramebufferTexture1D                );
     LOAD_GLPROC( glFramebufferTexture2D                );
     LOAD_GLPROC( glFramebufferTexture3D                );
@@ -937,7 +937,7 @@ static GLExtensionMap QuerySupportedOpenGLExtensions(bool isCoreProfile)
 // Includes all GL extensions that are considered default for core profiles
 static void IncludeDefaultCoreProfileExtensions(GLExtensionMap& extensions)
 {
-    static const std::string coreProfileDefaultExtenions[] =
+    static const char* coreProfileDefaultExtenions[] =
     {
         "GL_ARB_compatibility",
         "GL_ARB_multitexture",          // GL 1.2
@@ -952,7 +952,7 @@ static void IncludeDefaultCoreProfileExtensions(GLExtensionMap& extensions)
         "GL_EXT_stencil_two_side",      // GL 2.0
         "GL_EXT_texture3D",
     };
-    for (const auto& ext : coreProfileDefaultExtenions)
+    for (const char* ext : coreProfileDefaultExtenions)
         extensions[ext] = false;
 }
 
@@ -999,14 +999,10 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
-    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_vertex_array_object          );
-    #endif
     ENABLE_GLEXT( ARB_vertex_shader                );
     ENABLE_GLEXT( ARB_framebuffer_object           );
-    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
-    #endif
     ENABLE_GLEXT( ARB_map_buffer_range             );
 
     /* Enable drawing extensions */
@@ -1015,14 +1011,12 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable shader extensions */
     ENABLE_GLEXT( ARB_shader_objects               );
-    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_instanced_arrays             );
     ENABLE_GLEXT( ARB_tessellation_shader          );
     ENABLE_GLEXT( ARB_get_program_binary           );
     ENABLE_GLEXT( ARB_program_interface_query      );
     ENABLE_GLEXT( ARB_separate_shader_objects      );
     ENABLE_GLEXT( EXT_gpu_shader4                  );
-    #endif
 
     /* Enable texture extensions */
     ENABLE_GLEXT( ARB_multitexture                 );
@@ -1031,9 +1025,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT( ARB_clear_texture                );
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
-    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( ARB_sampler_objects              );
-    #endif
 
     /* Enable blending extensions */
     ENABLE_GLEXT( EXT_blend_minmax                 );
@@ -1059,11 +1051,9 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
-    #if !LLGL_GL_ENABLE_OPENGL2X
     ENABLE_GLEXT( EXT_texture_array                );
     ENABLE_GLEXT( ARB_texture_cube_map_array       );
     ENABLE_GLEXT( ARB_geometry_shader4             );
-    #endif
 
     #undef ENABLE_GLEXT
 
@@ -1196,7 +1186,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     #endif
 
     /* Enable extensions and ignore procedures */
-    ENABLE_GLEXT( ARB_transform_feedback3 );
+    ENABLE_GLEXT( ARB_transform_feedback3          );
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_geometry_shader4             );

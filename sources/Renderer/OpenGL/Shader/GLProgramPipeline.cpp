@@ -21,18 +21,18 @@ namespace LLGL
 {
 
 
-#if GL_ARB_separate_shader_objects
+#if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 static GLuint GLCreateProgramPipeline()
 {
     GLuint id = 0;
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glCreateProgramPipelines(1, &id);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
     {
         /* Generate new program pipeline and initialize to its default state via glBindProgramPipeline */
         glGenProgramPipelines(1, &id);
@@ -135,7 +135,7 @@ void GLProgramPipeline::UseProgramStages(
     BuildSignature(numShaders, reinterpret_cast<const Shader* const*>(shaders), permutation);
 }
 
-#else // GL_ARB_separate_shader_objects
+#else // LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 GLProgramPipeline::GLProgramPipeline(
     std::size_t             numShaders,
@@ -162,7 +162,7 @@ void GLProgramPipeline::QueryInfoLogs(Report& report)
     // dummy
 }
 
-#endif // /GL_ARB_separate_shader_objects
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 
 } // /namespace LLGL

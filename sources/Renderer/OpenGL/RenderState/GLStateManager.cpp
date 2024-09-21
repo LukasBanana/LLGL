@@ -481,7 +481,7 @@ void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
 
 void GLStateManager::SetViewportArray(GLuint first, GLsizei count, const GLViewport* viewports)
 {
-    #ifdef GL_ARB_viewport_array
+    #ifdef LLGL_GLEXT_VIEWPORT_ARRAY
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
@@ -500,7 +500,7 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, const GLViewp
             glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(viewports));
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_VIEWPORT_ARRAY
     if (count == 1)
     {
         /* Set as single viewport */
@@ -515,14 +515,14 @@ void GLStateManager::SetDepthRange(const GLDepthRange& depthRange)
 
 void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDepthRange* depthRanges)
 {
-    #ifdef GL_ARB_viewport_array
+    #ifdef LLGL_GLEXT_VIEWPORT_ARRAY
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
         glDepthRangeArrayv(first, count, reinterpret_cast<const GLdouble*>(depthRanges));
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_VIEWPORT_ARRAY
     if (count == 1)
     {
         /* Set as single depth-range */
@@ -553,7 +553,7 @@ void GLStateManager::SetScissor(const GLScissor& scissor)
 
 void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScissor* scissors)
 {
-    #ifdef GL_ARB_viewport_array
+    #if LLGL_GLEXT_VIEWPORT_ARRAY
     if (first + count > 1)
     {
         AssertViewportLimit(first, count);
@@ -572,7 +572,7 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, const GLScisso
             glScissorArrayv(first, count, reinterpret_cast<const GLint*>(scissors));
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_VIEWPORT_ARRAY
     if (count == 1)
     {
         /* Set as single scissor box */
@@ -587,7 +587,7 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     /* Flip viewport if origin is emulated and set to upper-left corner */
     flipViewportYPos_ = !isOriginUpperLeft;
 
-    #ifdef LLGL_GLEXT_CLIP_CONTROL
+    #if LLGL_GLEXT_CLIP_CONTROL
     if (HasExtension(GLExt::ARB_clip_control))
     {
         /* Use GL extension to transform clipping space */
@@ -599,7 +599,7 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     {
         /* Emulate clipping space modification; this has to be addressed by transforming gl_Position in each vertex shader */
         emulateOriginUpperLeft_ = isOriginUpperLeft;
-        #ifdef LLGL_GLEXT_CLIP_CONTROL
+        #if LLGL_GLEXT_CLIP_CONTROL
         emulateDepthModeZeroToOne_ = (depth == GL_ZERO_TO_ONE);
         #else
         emulateDepthModeZeroToOne_ = true;
@@ -886,14 +886,14 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 
 void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer)
 {
-    #if GL_ARB_uniform_buffer_object
+    #if LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferBase(g_bufferTargetsEnum[targetIdx], index, buffer);
     contextState_.boundBuffers[targetIdx] = buffer;
-    #else
+    #else // LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_object");
-    #endif
+    #endif // /LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
 }
 
 void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers)
@@ -902,7 +902,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     auto targetIdx = static_cast<std::size_t>(target);
     auto targetGL = g_bufferTargetsEnum[targetIdx];
 
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /*
@@ -912,18 +912,18 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
         glBindBuffersBase(targetGL, first, count, buffers);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_MULTI_BIND
     if (count > 0)
     {
-        #if GL_ARB_uniform_buffer_object
+        #if LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
         /* Bind each individual buffer, and store last bound buffer */
         contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
         for_range(i, count)
             glBindBufferBase(targetGL, first + i, buffers[i]);
-        #else
+        #else // LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_uniform_buffer_object");
-        #endif
+        #endif // /LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
     }
 }
 
@@ -945,7 +945,7 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
     auto targetIdx = static_cast<std::size_t>(target);
     auto targetGL = g_bufferTargetsEnum[targetIdx];
 
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /*
@@ -955,7 +955,7 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
         glBindBuffersRange(targetGL, first, count, buffers, offsets, sizes);
     }
     else
-    #endif // /GL_ARB_multi_bind
+    #endif // /LLGL_GLEXT_MULTI_BIND
     if (count > 0)
     {
         /* Bind each individual buffer, and store last bound buffer */
@@ -1347,7 +1347,7 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 
 void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
 {
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound textures */
@@ -1365,7 +1365,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
         glBindTextures(first, count, textures);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_MULTI_BIND
     {
         /* Bind each texture layer individually */
         for_range(i, count)
@@ -1378,7 +1378,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
 
 void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
 {
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Reset bound textures */
@@ -1396,7 +1396,7 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
         glBindTextures(first, count, nullptr);
     }
     else
-    #endif // /GL_ARB_multi_bind
+    #endif // /LLGL_GLEXT_MULTI_BIND
     {
         /* Unbind all targets for each texture layer individually */
         for_range(i, count)
@@ -1410,7 +1410,7 @@ void GLStateManager::UnbindTextures(GLuint first, GLsizei count)
 
 void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, GLuint texture)
 {
-    #ifdef GL_ARB_shader_image_load_store
+    #if LLGL_GLEXT_SHADER_IMAGE_LOAD_STORE
     if (HasExtension(GLExt::ARB_shader_image_load_store))
     {
         #ifdef LLGL_DEBUG
@@ -1423,7 +1423,7 @@ void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, G
             glBindImageTexture(unit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8);
     }
     else
-    #endif // /GL_ARB_shader_image_load_store
+    #endif // /LLGL_GLEXT_SHADER_IMAGE_LOAD_STORE
     {
         /* Error: extension not supported */
         LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_shader_image_load_store");
@@ -1432,14 +1432,14 @@ void GLStateManager::BindImageTexture(GLuint unit, GLint level, GLenum format, G
 
 void GLStateManager::BindImageTextures(GLuint first, GLsizei count, const GLenum* formats, const GLuint* textures)
 {
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind all image units at once */
         glBindImageTextures(first, count, textures);
     }
     else
-    #endif // /GL_ARB_multi_bind
+    #endif // /LLGL_GLEXT_MULTI_BIND
     {
         /* Bind image units individually */
         for_range(i, count)
@@ -1449,14 +1449,14 @@ void GLStateManager::BindImageTextures(GLuint first, GLsizei count, const GLenum
 
 void GLStateManager::UnbindImageTextures(GLuint first, GLsizei count)
 {
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind all image units at once */
         glBindImageTextures(first, count, nullptr);
     }
     else
-    #endif // /GL_ARB_multi_bind
+    #endif // /LLGL_GLEXT_MULTI_BIND
     {
         /* Unbind all image units individually */
         for_range(i, count)
@@ -1525,7 +1525,7 @@ void GLStateManager::DeleteTexture(GLuint texture, GLTextureTarget target, bool 
 
 /* ----- Sampler ----- */
 
-#ifdef GL_ARB_sampler_objects
+#ifdef LLGL_GLEXT_SAMPLER_OBJECTS
 
 void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 {
@@ -1542,7 +1542,7 @@ void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 
 void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* samplers)
 {
-    #ifdef GL_ARB_multi_bind
+    #if LLGL_GLEXT_MULTI_BIND
     if (count >= 2 && HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound samplers */
@@ -1553,7 +1553,7 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
         glBindSamplers(first, count, samplers);
     }
     else
-    #endif
+    #endif // /LLGL_GLEXT_MULTI_BIND
     {
         /* Bind each sampler individually */
         for_range(i, count)
@@ -1567,7 +1567,7 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
         InvalidateBoundGLObject(boundSampler, sampler);
 }
 
-#else // GL_ARB_sampler_objects
+#else // LLGL_GLEXT_SAMPLER_OBJECTS
 
 void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 {
@@ -1584,7 +1584,7 @@ void GLStateManager::NotifySamplerRelease(GLuint sampler)
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("GL_ARB_sampler_objects");
 }
 
-#endif // /GL_ARB_sampler_objects
+#endif // /LLGL_GLEXT_SAMPLER_OBJECTS
 
 void GLStateManager::BindEmulatedSampler(GLuint layer, const GLEmulatedSampler& sampler)
 {
@@ -1663,7 +1663,7 @@ GLuint GLStateManager::GetBoundShaderProgram() const
 
 /* ----- Program pipeline ----- */
 
-#if GL_ARB_separate_shader_objects
+#if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 void GLStateManager::BindProgramPipeline(GLuint pipeline)
 {
@@ -1689,7 +1689,7 @@ GLuint GLStateManager::GetBoundProgramPipeline() const
     return contextState_.boundProgramPipeline;
 }
 
-#else // GL_ARB_separate_shader_objects
+#else // LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 void GLStateManager::BindProgramPipeline(GLuint pipeline)
 {
@@ -1706,7 +1706,7 @@ GLuint GLStateManager::GetBoundProgramPipeline() const
     return 0; // dummy
 }
 
-#endif // /GL_ARB_separate_shader_objects
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
 /* ----- Render pass ----- */
 
@@ -1929,14 +1929,14 @@ void GLStateManager::DetermineLimits()
     limits_.maxTextureLayers = std::min(static_cast<GLuint>(GLContextState::numTextureLayers), static_cast<GLuint>(maxTextureImageUnits));
 
     /* Get maximum number of image units */
-    #ifdef GL_ARB_shader_image_load_store
+    #if LLGL_GLEXT_SHADER_IMAGE_LOAD_STORE
     if (HasExtension(GLExt::ARB_shader_image_load_store))
     {
         GLint maxImageUnits = 0;
         glGetIntegerv(GL_MAX_IMAGE_UNITS, &maxImageUnits);
         limits_.maxImageUnits = std::min(static_cast<GLuint>(GLContextState::numImageUnits), static_cast<GLuint>(maxImageUnits));
     }
-    #endif // /GL_ARB_shader_image_load_store
+    #endif // /LLGL_GLEXT_SHADER_IMAGE_LOAD_STORE
 
     /* Accumulate common limitations */
     AccumCommonGLLimits(GLStateManager::commonLimits_, limits_);

@@ -34,7 +34,7 @@ static GLbitfield ToMemoryBarrierBitfield(long barrierFlags)
 {
     GLbitfield barriers = 0;
 
-    #ifdef LLGL_GLEXT_MEMORY_BARRIERS
+    #if LLGL_GLEXT_MEMORY_BARRIERS
 
     if (HasExtension(GLExt::ARB_shader_image_load_store))
     {

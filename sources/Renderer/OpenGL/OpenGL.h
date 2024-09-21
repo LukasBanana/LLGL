@@ -26,24 +26,75 @@
 
 #else // LLGL_WEBGL
 
+#if !LLGL_GL_ENABLE_OPENGL2X
+
+#if GL_ARB_vertex_array_object || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_VERTEX_ARRAY_OBJECT 1
+#endif
+
+#if GL_ARB_sampler_objects || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_SAMPLER_OBJECTS 1
+#endif
+
+#if GL_ARB_separate_shader_objects || GL_ES_VERSION_3_1
+#   define LLGL_GLEXT_SEPARATE_SHADER_OBJECTS 1
+#elif GL_EXT_separate_shader_objects
+#   define LLGL_GLEXT_SEPARATE_SHADER_OBJECTS 1
+#   ifndef GL_PROGRAM_PIPELINE_BINDING
+#       define GL_PROGRAM_PIPELINE_BINDING GL_PROGRAM_PIPELINE_BINDING_EXT
+#   endif
+#endif
+
+#if GL_ARB_uniform_buffer_object || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_UNIFORM_BUFFER_OBJECT 1
+#endif
+
+#if GL_ARB_texture_multisample || GL_ES_VERSION_3_2
+#   define LLGL_GLEXT_TEXTURE_MULTISAMPLE 1
+#endif
+
+#if GL_ARB_gl_spirv && GL_ARB_ES2_compatibility
+#   define LLGL_GLEXT_GL_SPIRV 1
+#endif
+
+#if GL_ARB_get_texture_sub_image
+#   define LLGL_GLEXT_GET_TEXTURE_SUB_IMAGE 1
+#endif
+
+#if GL_ARB_viewport_array
+#   define LLGL_GLEXT_VIEWPORT_ARRAY 1
+#endif
+
+#if GL_ARB_multi_bind
+#   define LLGL_GLEXT_MULTI_BIND 1
+#endif
+
+#if GL_ARB_shader_image_load_store || GL_ES_VERSION_3_1
+#   define LLGL_GLEXT_SHADER_IMAGE_LOAD_STORE 1
+#endif
+
 #if GL_ARB_draw_indirect || GL_ES_VERSION_3_1
-#   define LLGL_GLEXT_DRAW_INDIRECT
+#   define LLGL_GLEXT_DRAW_INDIRECT 1
 #endif
 
 #if GL_ARB_draw_elements_base_vertex || GL_ES_VERSION_3_2
-#   define LLGL_GLEXT_DRAW_ELEMENTS_BASE_VERTEX
+#   define LLGL_GLEXT_DRAW_ELEMENTS_BASE_VERTEX 1
+#endif
+
+#if GL_ARB_framebuffer_no_attachments || GL_ES_VERSION_3_1
+#   define LLGL_GLEXT_FRAMEBUFFER_NO_ATTACHMENTS 1
 #endif
 
 #if GL_ARB_base_instance
-#   define LLGL_GLEXT_BASE_INSTANCE
+#   define LLGL_GLEXT_BASE_INSTANCE 1
 #endif
 
 #if GL_ARB_multi_draw_indirect
-#   define LLGL_GLEXT_MULTI_DRAW_INDIRECT
+#   define LLGL_GLEXT_MULTI_DRAW_INDIRECT 1
 #endif
 
 #if GL_ARB_compute_shader || GL_ES_VERSION_3_1
-#   define LLGL_GLEXT_COMPUTE_SHADER
+#   define LLGL_GLEXT_COMPUTE_SHADER 1
 #endif
 
 #if GL_KHR_debug || GL_ES_VERSION_3_2
@@ -52,11 +103,11 @@
 
 //TODO: which extension?
 #if defined LLGL_OPENGL && !LLGL_GL_ENABLE_OPENGL2X
-#   define LLGL_GLEXT_CONDITIONAL_RENDER
+#   define LLGL_GLEXT_CONDITIONAL_RENDER 1
 #endif
 
 #if GL_ES_VERSION_3_0 || defined __APPLE__
-#   define LLGL_GLEXT_TRANSFORM_FEEDBACK
+#   define LLGL_GLEXT_TRANSFORM_FEEDBACK 1
 #endif
 
 #if GL_EXT_draw_buffers_indexed || GL_ES_VERSION_3_2
@@ -72,7 +123,23 @@
 #endif
 
 #if GL_ARB_shader_storage_buffer_object || GL_ES_VERSION_3_1
-#   define LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT
+#   define LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT 1
+#endif
+
+#if GL_ARB_texture_view
+#   define LLGL_GLEXT_TEXTURE_VIEW 1
+#endif
+
+#if GL_ARB_direct_state_access && LLGL_GL_ENABLE_DSA_EXT
+#   define LLGL_GLEXT_DIRECT_STATE_ACCESS 1
+#endif
+
+#if GL_ARB_get_program_binary || GL_ES_VERSION_3_1
+#   define LLGL_GLEXT_GET_PROGRAM_BINARY 1
+#endif
+
+#if GL_ARB_texture_storage || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_TEXTURE_STORAGE 1
 #endif
 
 #if GL_ARB_program_interface_query || GL_ES_VERSION_3_1
@@ -84,15 +151,19 @@
 #endif
 
 #if GL_ARB_clip_control
-#   define LLGL_GLEXT_CLIP_CONTROL
+#   define LLGL_GLEXT_CLIP_CONTROL 1
+#endif
+
+#if GL_ARB_texture_storage_multisample && !LLGL_GL_ENABLE_OPENGL2X
+#   define LLGL_GLEXT_TEXTURE_STORAGE_MULTISAMPLE 1
 #endif
 
 #if GL_TEXTURE_BORDER_COLOR
-#   define LLGL_SAMPLER_BORDER_COLOR
+#   define LLGL_SAMPLER_BORDER_COLOR 1
 #endif
 
 #if GL_ARB_shader_image_load_store || GL_ES_VERSION_3_1
-#   define LLGL_GLEXT_MEMORY_BARRIERS
+#   define LLGL_GLEXT_MEMORY_BARRIERS 1
 #endif
 
 // At most one of these should be defined to indicate which API
@@ -102,6 +173,16 @@
 #elif GL_VERSION_3_1
 #   define LLGL_PRIMITIVE_RESTART 1
 #endif
+
+#if GL_VERSION_3_0 || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_SHADER_OBJECTS_30 1
+#endif
+
+#if GL_VERSION_4_0
+#   define LLGL_GLEXT_SHADER_OBJECTS_40 1
+#endif
+
+#endif // !LLGL_GL_ENABLE_OPENGL2X
 
 // WebGL does not support independent stencil face values, even though glStencilFuncSeparate() is provided.
 // Since D3D does not support independent stencil faces, WebGL cannot emulate it in ANGLE or other web rendering abstraction layers.
@@ -115,19 +196,23 @@
 #endif
 
 #if LLGL_GL_ENABLE_OPENGL2X
-#   define glGenFramebuffers                glGenFramebuffersEXT
-#   define glDeleteFramebuffers             glDeleteFramebuffersEXT
-#   define glBlitFramebuffer                glBlitFramebufferEXT
-#   define glFramebufferTexture1D           glFramebufferTexture1DEXT
-#   define glFramebufferTexture2D           glFramebufferTexture2DEXT
-#   define glFramebufferTexture3D           glFramebufferTexture3DEXT
-#   define glCheckFramebufferStatus         glCheckFramebufferStatusEXT
-#   define glGenRenderbuffers               glGenRenderbuffersEXT
-#   define glDeleteRenderbuffers            glDeleteRenderbuffersEXT
-#   define glRenderbufferStorage            glRenderbufferStorageEXT
-#   define glRenderbufferStorageMultisample glRenderbufferStorageMultisampleEXT
-#   define glGetRenderbufferParameteriv     glGetRenderbufferParameterivEXT
-#   define glGenerateMipmap                 glGenerateMipmapEXT
+#   define glGenFramebuffers                        glGenFramebuffersEXT
+#   define glDeleteFramebuffers                     glDeleteFramebuffersEXT
+#   define glBindFramebuffer                        glBindFramebufferEXT
+#   define glBindRenderbuffer                       glBindRenderbufferEXT
+#   define glBlitFramebuffer                        glBlitFramebufferEXT
+#   define glFramebufferTexture1D                   glFramebufferTexture1DEXT
+#   define glFramebufferTexture2D                   glFramebufferTexture2DEXT
+#   define glFramebufferTexture3D                   glFramebufferTexture3DEXT
+#   define glFramebufferRenderbuffer                glFramebufferRenderbufferEXT
+#   define glCheckFramebufferStatus                 glCheckFramebufferStatusEXT
+#   define glGenRenderbuffers                       glGenRenderbuffersEXT
+#   define glDeleteRenderbuffers                    glDeleteRenderbuffersEXT
+#   define glRenderbufferStorage                    glRenderbufferStorageEXT
+#   define glRenderbufferStorageMultisample         glRenderbufferStorageMultisampleEXT
+#   define glGetRenderbufferParameteriv             glGetRenderbufferParameterivEXT
+#   define glGetFramebufferAttachmentParameteriv    glGetFramebufferAttachmentParameterivEXT
+#   define glGenerateMipmap                         glGenerateMipmapEXT
 #endif
 
 

@@ -98,7 +98,7 @@ Blob GLPipelineCache::GetBlob() const
 bool GLPipelineCache::ProgramBinary(GLShader::Permutation permutation, GLuint program)
 {
     /* No need to check for extension support at runtime here, this is checked before GLPipelineCache is created */
-    #ifdef GL_ARB_get_program_binary
+    #if LLGL_GLEXT_GET_PROGRAM_BINARY
 
     if (!HasProgramBinary(permutation))
         return false;
@@ -113,17 +113,17 @@ bool GLPipelineCache::ProgramBinary(GLShader::Permutation permutation, GLuint pr
 
     return (status != GL_FALSE);
 
-    #else // GL_ARB_get_program_binary
+    #else // LLGL_GLEXT_GET_PROGRAM_BINARY
 
     return false;
 
-    #endif // /GL_ARB_get_program_binary
+    #endif // /LLGL_GLEXT_GET_PROGRAM_BINARY
 }
 
 bool GLPipelineCache::GetProgramBinary(GLShader::Permutation permutation, GLuint program)
 {
     /* No need to check for extension support at runtime here, this is checked before GLPipelineCache is created */
-    #ifdef GL_ARB_get_program_binary
+    #if LLGL_GLEXT_GET_PROGRAM_BINARY
 
     CacheEntry& entry = entries_[permutation];
 
@@ -151,11 +151,11 @@ bool GLPipelineCache::GetProgramBinary(GLShader::Permutation permutation, GLuint
 
     return true;
 
-    #else // GL_ARB_get_program_binary
+    #else // LLGL_GLEXT_GET_PROGRAM_BINARY
 
     return false;
 
-    #endif // /GL_ARB_get_program_binary
+    #endif // /LLGL_GLEXT_GET_PROGRAM_BINARY
 }
 
 
