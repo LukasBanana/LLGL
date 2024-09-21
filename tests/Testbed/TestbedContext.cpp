@@ -825,20 +825,13 @@ void TestbedContext::LogRendererInfo()
 
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)
     {
+        const bool hasDSAExtension = (std::find(info.extensionNames.begin(), info.extensionNames.end(), "GL_ARB_direct_state_access") != info.extensionNames.end());
         Log::Printf(
             "Configuration:\n"
-
-            #ifdef LLGL_GL_ENABLE_OPENGL2X
-            " - OpenGL 2.x ( Enabled )\n"
-            #else
-            " - OpenGL 2.x ( Disabled )\n"
-            #endif // /LLGL_GL_ENABLE_OPENGL2X
-
-            #ifdef LLGL_GL_ENABLE_DSA_EXT
-            " - GL_ARB_direct_state_access ( Enabled )\n"
-            #else
-            " - GL_ARB_direct_state_access ( Disabled )\n"
-            #endif // /LLGL_GL_ENABLE_DSA_EXT
+            " - Profile: %s\n"
+            " - DSA extension: %s\n",
+            renderer->GetName(),
+            (hasDSAExtension ? "Yes" : "No")
         );
     }
 }
