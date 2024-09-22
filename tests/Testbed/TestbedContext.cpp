@@ -876,6 +876,11 @@ bool TestbedContext::LoadShaders()
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
+        if (std::find(caps.shadingLanguages.begin(), caps.shadingLanguages.end(), LLGL::ShadingLanguage::GLSL_330) == caps.shadingLanguages.end())
+        {
+            Log::Errorf("OpenGL backend does not support GLSL 330\n");
+            return false;
+        }
         shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",          ShaderType::Vertex);
         shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",          ShaderType::Fragment);
         shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);

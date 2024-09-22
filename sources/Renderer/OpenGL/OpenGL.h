@@ -26,6 +26,10 @@
 
 #else // LLGL_WEBGL
 
+#if GL_ARB_framebuffer_object || GL_EXT_framebuffer_object || GL_ES_VERSION_2_0 || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_FRAMEBUFFER_OBJECT 1
+#endif
+
 #if !LLGL_GL_ENABLE_OPENGL2X
 
 #if GL_ARB_vertex_array_object || GL_ES_VERSION_3_0
@@ -34,6 +38,10 @@
 
 #if GL_ARB_sampler_objects || GL_ES_VERSION_3_0
 #   define LLGL_GLEXT_SAMPLER_OBJECTS 1
+#endif
+
+#if GL_ARB_draw_instanced || GL_ES_VERSION_3_0
+#   define LLGL_GLEXT_DRAW_INSTANCED 1
 #endif
 
 #if GL_ARB_separate_shader_objects || GL_ES_VERSION_3_1
@@ -194,27 +202,6 @@
 #if defined __APPLE__ || LLGL_WEBGL
 #   define LLGL_USE_NULL_FRAGMENT_SHADER 1
 #endif
-
-#if LLGL_GL_ENABLE_OPENGL2X
-#   define glGenFramebuffers                        glGenFramebuffersEXT
-#   define glDeleteFramebuffers                     glDeleteFramebuffersEXT
-#   define glBindFramebuffer                        glBindFramebufferEXT
-#   define glBindRenderbuffer                       glBindRenderbufferEXT
-#   define glBlitFramebuffer                        glBlitFramebufferEXT
-#   define glFramebufferTexture1D                   glFramebufferTexture1DEXT
-#   define glFramebufferTexture2D                   glFramebufferTexture2DEXT
-#   define glFramebufferTexture3D                   glFramebufferTexture3DEXT
-#   define glFramebufferRenderbuffer                glFramebufferRenderbufferEXT
-#   define glCheckFramebufferStatus                 glCheckFramebufferStatusEXT
-#   define glGenRenderbuffers                       glGenRenderbuffersEXT
-#   define glDeleteRenderbuffers                    glDeleteRenderbuffersEXT
-#   define glRenderbufferStorage                    glRenderbufferStorageEXT
-#   define glRenderbufferStorageMultisample         glRenderbufferStorageMultisampleEXT
-#   define glGetRenderbufferParameteriv             glGetRenderbufferParameterivEXT
-#   define glGetFramebufferAttachmentParameteriv    glGetFramebufferAttachmentParameterivEXT
-#   define glGenerateMipmap                         glGenerateMipmapEXT
-#endif
-
 
 #endif
 

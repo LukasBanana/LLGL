@@ -283,11 +283,6 @@ DECL_GLPROC(PFNGLCOPYIMAGESUBDATAPROC,                              glCopyImageS
 
 DECL_GLPROC(PFNGLPOLYGONOFFSETCLAMPPROC,                            glPolygonOffsetClamp,                           void,           (GLfloat, GLfloat, GLfloat));
 
-/* GL_ARB_framebuffer_no_attachments */
-
-DECL_GLPROC(PFNGLFRAMEBUFFERPARAMETERIPROC,                         glFramebufferParameteri,                        void,           (GLenum, GLenum, GLint));
-DECL_GLPROC(PFNGLGETFRAMEBUFFERPARAMETERIVPROC,                     glGetFramebufferParameteriv,                    void,           (GLenum, GLenum, GLint*));
-
 /* GL_ARB_clear_buffer_object */
 
 DECL_GLPROC(PFNGLCLEARBUFFERDATAPROC,                               glClearBufferData,                              void,           (GLenum, GLenum, GLenum, GLenum, const void*));

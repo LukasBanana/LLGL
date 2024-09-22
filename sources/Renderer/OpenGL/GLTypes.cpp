@@ -946,7 +946,7 @@ GLenum ToTextureCubeMap(std::uint32_t arrayLayer)
 
 GLenum ToColorAttachment(std::uint32_t attachmentIndex)
 {
-    #if !LLGL_GL_ENABLE_OPENGL2X
+    #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
     if (attachmentIndex < LLGL_MAX_NUM_COLOR_ATTACHMENTS)
     {
         static const GLenum g_drawBuffers[] =

@@ -116,6 +116,9 @@ enum class GLExt
     /* Intel sepcific extensions (INTEL) */
     INTEL_conservative_rasterization,   // no procedures
 
+    /* Substitute extensions for GL 2.x only - do *not* used in HasExtension() calls! */
+    EXT_framebuffer_object,
+
     /* Enumeration entry counter */
     Count,
 };
@@ -129,9 +132,6 @@ bool HasExtension(const GLExt extension);
 
 // Returns ture if GL_ARB_sampler_objects is supported. Shortcut for 'HasExtension(GLExt::ARB_sampler_objects)'.
 bool HasNativeSamplers();
-
-// Returns true if GL_ARB_vertex_array_object is supported. Shortcut for 'HasExtension(GLExt::ARB_vertex_array_object)'.
-bool HasNativeVAO();
 
 
 } // /namespace LLGL

@@ -11,6 +11,7 @@
 
 #include <LLGL/Platform/Platform.h>
 #include "../../OpenGL.h"
+#include "GLCompatExtensionMapping.h"
 
 
 namespace LLGL

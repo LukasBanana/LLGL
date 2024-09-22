@@ -156,8 +156,7 @@ static bool DECL_LOADGLEXT_PROC(ARB_vertex_shader)
     return true;
 }
 
-// For GL 2.x, this is substituted with GL_EXT_framebuffer_object
-static bool DECL_LOADGLEXT_PROC(ARB_framebuffer_object)
+static bool DECL_LOADGLEXT_PROC(EXT_framebuffer_object)
 {
     LOAD_GLPROC( glGenRenderbuffersEXT                    );
     LOAD_GLPROC( glDeleteRenderbuffersEXT                 );
@@ -438,13 +437,6 @@ static bool DECL_LOADGLEXT_PROC(ARB_polygon_offset_clamp)
     return true;
 }
 
-static bool DECL_LOADGLEXT_PROC(ARB_framebuffer_no_attachments)
-{
-    LOAD_GLPROC( glFramebufferParameteri     );
-    LOAD_GLPROC( glGetFramebufferParameteriv );
-    return true;
-}
-
 static bool DECL_LOADGLEXT_PROC(ARB_clear_buffer_object)
 {
     LOAD_GLPROC( glClearBufferData    );
@@ -549,7 +541,7 @@ bool LoadSupportedOpenGLExtensions(bool /*isCoreProfile*/, bool abortOnFailure)
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
     ENABLE_GLEXT( ARB_vertex_shader                );
-    ENABLE_GLEXT( ARB_framebuffer_object           );
+    ENABLE_GLEXT( EXT_framebuffer_object           );
     ENABLE_GLEXT( ARB_map_buffer_range             );
 
     /* Enable shader extensions */
@@ -640,7 +632,7 @@ bool LoadSupportedOpenGLExtensions(bool /*isCoreProfile*/, bool abortOnFailure)
     /* Load hardware buffer extensions */
     LOAD_GLEXT( ARB_vertex_buffer_object         ); // Always required for GL 2.x
     LOAD_GLEXT( ARB_vertex_shader                ); // Always required for GL 2.x
-    LOAD_GLEXT( ARB_framebuffer_object           ); // Always required for GL 2.x
+    LOAD_GLEXT( EXT_framebuffer_object           ); // Always required for GL 2.x
     LOAD_GLEXT( ARB_map_buffer_range             );
 
     /* Load shader extensions */
@@ -677,7 +669,6 @@ bool LoadSupportedOpenGLExtensions(bool /*isCoreProfile*/, bool abortOnFailure)
     LOAD_GLEXT( ARB_copy_buffer                  );
     LOAD_GLEXT( ARB_copy_image                   );
     LOAD_GLEXT( ARB_polygon_offset_clamp         );
-    LOAD_GLEXT( ARB_framebuffer_no_attachments   );
     LOAD_GLEXT( ARB_clear_buffer_object          );
 
     /* Enable extensions and ignore procedures */

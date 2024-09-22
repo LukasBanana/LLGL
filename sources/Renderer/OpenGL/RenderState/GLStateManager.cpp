@@ -169,7 +169,7 @@ static const GLenum g_bufferTargetsEnum[] =
     #endif
 };
 
-#if !LLGL_GL_ENABLE_OPENGL2X
+#if LLGL_GLEXT_FRAMEBUFFER_OBJECT
 
 // Maps GLFramebufferTarget to <target> in glBindFramebuffer
 static const GLenum g_framebufferTargetsEnum[] =
@@ -179,7 +179,7 @@ static const GLenum g_framebufferTargetsEnum[] =
     GL_READ_FRAMEBUFFER,
 };
 
-#endif // /!LLGL_GL_ENABLE_OPENGL2X
+#endif // /LLGL_GLEXT_FRAMEBUFFER_OBJECT
 
 // Maps GLTextureTarget to <target> in glBindTexture
 static const GLenum g_textureTargetsEnum[] =
@@ -988,7 +988,7 @@ static GLuint GetPrimitiveRestartIndex(bool indexType16Bits)
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
 {
-    #if !LLGL_GL_ENABLE_OPENGL2X
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     /* Only bind VAO if it has changed */
     if (contextState_.boundVertexArray != vertexArray)
@@ -997,52 +997,46 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
         glBindVertexArray(vertexArray);
         contextState_.boundVertexArray = vertexArray;
 
-        #ifdef LLGL_GL_ENABLE_OPENGL2X
-        /* Only perform deferred binding of element array buffer if VAOs are supported */
-        if (HasNativeVAO())
-        #endif // /LLGL_GL_ENABLE_OPENGL2X
+        /*
+        Always reset index buffer binding
+        -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
+        */
+        contextState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ElementArrayBuffer)] = 0;
+
+        if (vertexArray != 0)
         {
-            /*
-            Always reset index buffer binding
-            -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
-            */
-            contextState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ElementArrayBuffer)] = 0;
+            #if LLGL_PRIMITIVE_RESTART
 
-            if (vertexArray != 0)
+            if (contextState_.boundElementArrayBuffer != 0)
             {
-                #if LLGL_PRIMITIVE_RESTART
-
-                if (contextState_.boundElementArrayBuffer != 0)
-                {
-                    /* Bind deferred index buffer and enable primitive restart index */
-                    BindBuffer(GLBufferTarget::ElementArrayBuffer, contextState_.boundElementArrayBuffer);
-                    Enable(GLState::PrimitiveRestart);
-                    SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
-                }
-                else
-                {
-                    /* Disable primitive restart index if no index buffer is bound */
-                    Disable(GLState::PrimitiveRestart);
-                }
-
-                #else // LLGL_PRIMITIVE_RESTART
-
-                if (contextState_.boundElementArrayBuffer != 0)
-                {
-                    /* Bind deferred index buffer */
-                    BindBuffer(GLBufferTarget::ElementArrayBuffer, contextState_.boundElementArrayBuffer);
-                }
-
-                #endif // /LLGL_PRIMITIVE_RESTART
+                /* Bind deferred index buffer and enable primitive restart index */
+                BindBuffer(GLBufferTarget::ElementArrayBuffer, contextState_.boundElementArrayBuffer);
+                Enable(GLState::PrimitiveRestart);
+                SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
             }
+            else
+            {
+                /* Disable primitive restart index if no index buffer is bound */
+                Disable(GLState::PrimitiveRestart);
+            }
+
+            #else // LLGL_PRIMITIVE_RESTART
+
+            if (contextState_.boundElementArrayBuffer != 0)
+            {
+                /* Bind deferred index buffer */
+                BindBuffer(GLBufferTarget::ElementArrayBuffer, contextState_.boundElementArrayBuffer);
+            }
+
+            #endif // /LLGL_PRIMITIVE_RESTART
         }
     }
 
-    #else
+    #else // LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("Vertex-Array-Objects");
 
-    #endif
+    #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
 void GLStateManager::BindGLBuffer(const GLBuffer& buffer)
@@ -1057,45 +1051,44 @@ void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
 
 void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer, bool indexType16Bits)
 {
-    #ifdef LLGL_GL_ENABLE_OPENGL2X
-    if (!HasNativeVAO())
+    #if LLGL_GLEXT_VERTEX_ARRAY_OBJECT
+
+    /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
+    contextState_.boundElementArrayBuffer   = buffer;
+    indexType16Bits_                        = indexType16Bits;
+
+    /* If a valid VAO is currently being bound, bind the specified buffer directly */
+    #if LLGL_PRIMITIVE_RESTART
+
+    if (contextState_.boundVertexArray != 0)
     {
-        /* Bind element array buffer directly (for GL 2.x compatibility) */
+        /* Bind index buffer and enable primitive restart index */
         BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
+        Enable(GLState::PrimitiveRestart);
+        SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
     }
     else
-    #endif // /LLGL_GL_ENABLE_OPENGL2X
     {
-        /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
-        contextState_.boundElementArrayBuffer   = buffer;
-        indexType16Bits_                        = indexType16Bits;
-
-        /* If a valid VAO is currently being bound, bind the specified buffer directly */
-        #if LLGL_PRIMITIVE_RESTART
-
-        if (contextState_.boundVertexArray != 0)
-        {
-            /* Bind index buffer and enable primitive restart index */
-            BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
-            Enable(GLState::PrimitiveRestart);
-            SetPrimitiveRestartIndex(GetPrimitiveRestartIndex(indexType16Bits_));
-        }
-        else
-        {
-            /* Disable primitive restart index */
-            Disable(GLState::PrimitiveRestart);
-        }
-
-        #else
-
-        if (contextState_.boundVertexArray != 0)
-        {
-            /* Bind index buffer */
-            BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
-        }
-
-        #endif
+        /* Disable primitive restart index */
+        Disable(GLState::PrimitiveRestart);
     }
+
+    #else // LLGL_PRIMITIVE_RESTART
+
+    if (contextState_.boundVertexArray != 0)
+    {
+        /* Bind index buffer */
+        BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
+    }
+
+    #endif // /LLGL_PRIMITIVE_RESTART
+
+    #else // !LLGL_GLEXT_VERTEX_ARRAY_OBJECT
+
+    /* Bind element array buffer directly (for GL 2.x compatibility) */
+    BindBuffer(GLBufferTarget::ElementArrayBuffer, buffer);
+
+    #endif // /LLGL_GLEXT_VERTEX_ARRAY_OBJECT
 }
 
 void GLStateManager::PushBoundBuffer(GLBufferTarget target)
@@ -1180,7 +1173,7 @@ void GLStateManager::BindGLRenderTarget(GLRenderTarget* renderTarget)
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
-    #if !LLGL_GL_ENABLE_OPENGL2X
+    #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
     /* Only bind framebuffer if the framebuffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     if (contextState_.boundFramebuffers[targetIdx] != framebuffer)
@@ -1230,7 +1223,7 @@ GLRenderTarget* GLStateManager::GetBoundRenderTarget() const
 
 /* ----- Renderbuffer ----- */
 
-#if !LLGL_GL_ENABLE_OPENGL2X
+#if LLGL_GLEXT_FRAMEBUFFER_OBJECT
 
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
@@ -1265,7 +1258,7 @@ void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
     }
 }
 
-#else // !LLGL_GL_ENABLE_OPENGL2X
+#else // LLGL_GLEXT_FRAMEBUFFER_OBJECT
 
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
@@ -1287,7 +1280,7 @@ void GLStateManager::DeleteRenderbuffer(GLuint renderbuffer)
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffers");
 }
 
-#endif // /!LLGL_GL_ENABLE_OPENGL2X
+#endif // /LLGL_GLEXT_FRAMEBUFFER_OBJECT
 
 /* ----- Texture ----- */
 

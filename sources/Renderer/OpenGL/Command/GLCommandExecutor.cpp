@@ -326,7 +326,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawArraysInstanced:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawArraysInstanced*>(pc);
-            #if !LLGL_GL_ENABLE_OPENGL2X
+            #if LLGL_GLEXT_DRAW_INSTANCED
             glDrawArraysInstanced(cmd->mode, cmd->first, cmd->count, cmd->instancecount);
             #endif
             return sizeof(*cmd);
@@ -370,7 +370,7 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
         case GLOpcodeDrawElementsInstanced:
         {
             auto cmd = reinterpret_cast<const GLCmdDrawElementsInstanced*>(pc);
-            #if !LLGL_GL_ENABLE_OPENGL2X
+            #if LLGL_GLEXT_DRAW_INSTANCED
             glDrawElementsInstanced(cmd->mode, cmd->count, cmd->type, cmd->indices, cmd->instancecount);
             #endif
             return sizeof(*cmd);

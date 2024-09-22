@@ -116,14 +116,14 @@ void GLFramebuffer::AttachTexture(
     GLenum              target)
 {
     GLuint texID = texture.GetID();
-    #if !LLGL_GL_ENABLE_OPENGL2X
+    #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
     if (texture.IsRenderbuffer())
     {
         /* Attach renderbuffer to FBO */
         glFramebufferRenderbuffer(target, attachment, GL_RENDERBUFFER, texID);
     }
     else
-    #endif // /!LLGL_GL_ENABLE_OPENGL2X
+    #endif // /LLGL_GLEXT_FRAMEBUFFER_OBJECT
     {
         /* Attach texture to FBO */
         switch (texture.GetType())
@@ -163,7 +163,7 @@ void GLFramebuffer::AttachTexture(
 
 void GLFramebuffer::AttachRenderbuffer(GLenum attachment, GLuint renderbufferID)
 {
-    #if !LLGL_GL_ENABLE_OPENGL2X
+    #if LLGL_GLEXT_FRAMEBUFFER_OBJECT
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderbufferID);
     #else
     LLGL_TRAP_FEATURE_NOT_SUPPORTED("renderbuffer");
