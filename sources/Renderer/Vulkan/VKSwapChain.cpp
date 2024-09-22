@@ -480,7 +480,12 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
             createInfo.pQueueFamilyIndices      = nullptr;
         }
 
-        createInfo.preTransform                 = surfaceSupportDetails_.caps.currentTransform;
+        /* Prefer identity transformation */
+        if ((surfaceSupportDetails_.caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) != 0)
+            createInfo.preTransform             = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        else
+            createInfo.preTransform             = surfaceSupportDetails_.caps.currentTransform;
+
         createInfo.compositeAlpha               = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
         createInfo.presentMode                  = presentMode;
         createInfo.clipped                      = VK_TRUE;
