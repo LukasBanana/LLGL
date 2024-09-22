@@ -26,15 +26,6 @@
 #   define LLGL_DEPRECATED_IGNORE_POP() \
         _Pragma("clang diagnostic pop")
 
-#elif __cplusplus >= 201402L // C++14
-
-#   define LLGL_DEPRECATED(MESSAGE, ...) \
-        [[deprecated(MESSAGE)]]
-
-#   define LLGL_DEPRECATED_IGNORE_PUSH()
-
-#   define LLGL_DEPRECATED_IGNORE_POP()
-
 #elif defined __GNUC__
 
 #   define LLGL_DEPRECATED(MESSAGE, ...) \
@@ -58,6 +49,15 @@
 
 #   define LLGL_DEPRECATED_IGNORE_POP() \
         __pragma(warning(pop))
+
+#elif __cplusplus >= 201402L // C++14
+
+#   define LLGL_DEPRECATED(MESSAGE, ...) \
+        [[deprecated(MESSAGE)]]
+
+#   define LLGL_DEPRECATED_IGNORE_PUSH()
+
+#   define LLGL_DEPRECATED_IGNORE_POP()
 
 #else
 
