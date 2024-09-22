@@ -63,11 +63,12 @@ static bool IsVulkanInstanceExtRequired(const StringView& name)
     return
     (
         name == VK_KHR_SURFACE_EXTENSION_NAME
-        #ifdef LLGL_OS_WIN32
+        #if defined LLGL_OS_WIN32
         || name == VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-        #endif
-        #ifdef LLGL_OS_LINUX
+        #elif defined LLGL_OS_LINUX
         || name == VK_KHR_XLIB_SURFACE_EXTENSION_NAME
+        #elif defined LLGL_OS_ANDROID
+        || name == VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
         #endif
     );
 }

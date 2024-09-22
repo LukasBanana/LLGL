@@ -19,9 +19,15 @@ namespace LLGL
 {
 
 
+/* ----- Macros ----- */
+
+#define LLGL_VK_FAILED(RESULT)      ((RESULT) < 0)
+#define LLGL_VK_SUCCEEDED(RESULT)   ((RESULT) >= 0)
+
+
 /* ----- Structures ----- */
 
-struct alignas(alignof(std::uint32_t)) QueueFamilyIndices
+struct alignas(alignof(std::uint32_t)) VKQueueFamilyIndices
 {
     static constexpr std::uint32_t invalidIndex = ~0u;
 
@@ -32,13 +38,17 @@ struct alignas(alignof(std::uint32_t)) QueueFamilyIndices
     // Returns a pointer to the number of indices
     inline const std::uint32_t* Ptr() const
     {
+        static_assert(
+            offsetof(VKQueueFamilyIndices, graphicsFamily) == 0,
+            "LLGL::VKQueueFamilyIndices::graphicsFamily is expected to have memory offset 0"
+        );
         return (&graphicsFamily);
     }
 
     // Returns the number of indices this structure has.
     inline std::uint32_t Count() const
     {
-        return sizeof(QueueFamilyIndices)/sizeof(std::uint32_t);
+        return sizeof(VKQueueFamilyIndices)/sizeof(std::uint32_t);
     }
 
     // Returns true if all indices have been set to a valid index.
@@ -48,11 +58,9 @@ struct alignas(alignof(std::uint32_t)) QueueFamilyIndices
     }
 };
 
-static_assert(offsetof(QueueFamilyIndices, graphicsFamily) == 0, "LLGL::QueueFamilyIndices::graphicsFamily is expected to have memory offset 0");
-
-struct SurfaceSupportDetails
+struct VKSurfaceSupportDetails
 {
-    VkSurfaceCapabilitiesKHR        caps;
+    VkSurfaceCapabilitiesKHR        caps            = {};
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR>   presentModes;
 };
@@ -82,8 +90,8 @@ std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance);
 std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device);
 std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevice device);
 
-SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
-QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
+VKSurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+VKQueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
 VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* candidates, std::size_t numCandidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
 // Returns the memory type index that supports the specified type bits and properties, or traps program execution on failure.

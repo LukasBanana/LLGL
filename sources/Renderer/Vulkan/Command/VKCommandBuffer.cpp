@@ -52,7 +52,7 @@ VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
     VkDevice                        device,
     VkQueue                         commandQueue,
-    const QueueFamilyIndices&       queueFamilyIndices,
+    const VKQueueFamilyIndices&     queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
     device_                 { device                                        },

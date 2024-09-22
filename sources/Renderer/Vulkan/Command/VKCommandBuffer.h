@@ -43,7 +43,7 @@ class VKCommandBuffer final : public CommandBuffer
             const VKPhysicalDevice&         physicalDevice,
             VkDevice                        device,
             VkQueue                         commandQueue,
-            const QueueFamilyIndices&       queueFamilyIndices,
+            const VKQueueFamilyIndices&     queueFamilyIndices,
             const CommandBufferDescriptor&  desc
         );
 

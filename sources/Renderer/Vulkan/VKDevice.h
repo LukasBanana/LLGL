@@ -91,7 +91,7 @@ class VKDevice
         }
 
         // Returns the indices for the graphics and compute queues.
-        inline const QueueFamilyIndices& GetQueueFamilyIndices() const
+        inline const VKQueueFamilyIndices& GetQueueFamilyIndices() const
         {
             return queueFamilyIndices_;
         }
@@ -111,7 +111,7 @@ class VKDevice
     private:
 
         VKPtr<VkDevice>         device_;
-        QueueFamilyIndices      queueFamilyIndices_;
+        VKQueueFamilyIndices    queueFamilyIndices_;
         VkQueue                 graphicsQueue_      = VK_NULL_HANDLE;
         VKPtr<VkCommandPool>    commandPool_;
 

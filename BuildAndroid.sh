@@ -252,12 +252,13 @@ generate_app_project()
 
     # Create folder structure
     mkdir -p "$APP_ROOT"
-    cp -r "$SOURCE_DIR/examples/Shared/Platform/Android/app" "$APP_ROOT"
-    cp "$SOURCE_DIR/examples/Shared/Platform/Android/build.gradle" "$APP_ROOT/build.gradle"
-    cp "$SOURCE_DIR/examples/Shared/Platform/Android/settings.gradle" "$APP_ROOT/settings.gradle"
+    PLATFORM_SOURCE_DIR="$SOURCE_DIR/examples/Shared/Platform/Android"
+    cp -r "$PLATFORM_SOURCE_DIR/app" "$APP_ROOT"
+    cp "$PLATFORM_SOURCE_DIR/build.gradle" "$APP_ROOT/build.gradle"
+    cp "$PLATFORM_SOURCE_DIR/settings.gradle" "$APP_ROOT/settings.gradle"
 
     mkdir -p "$APP_ROOT/gradle/wrapper"
-    cp -r "$SOURCE_DIR/examples/Shared/Platform/Android/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
+    cp -r "$PLATFORM_SOURCE_DIR/gradle/wrapper/gradle-wrapper.properties" "$APP_ROOT/gradle/wrapper/gradle-wrapper.properties"
 
     # Copy binary files into JNI lib folders for respective ABI
     for ABI in ${SUPPORTED_ANDROID_ABIS[@]}; do

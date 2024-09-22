@@ -134,7 +134,7 @@ class VKSwapChain final : public SwapChain
         VKDeviceMemoryManager&  deviceMemoryMngr_;
 
         VKPtr<VkSurfaceKHR>     surface_;
-        SurfaceSupportDetails   surfaceSupportDetails_;
+        VKSurfaceSupportDetails surfaceSupportDetails_;
 
         VKPtr<VkSwapchainKHR>   swapChain_;
         VKRenderPass            swapChainRenderPass_;

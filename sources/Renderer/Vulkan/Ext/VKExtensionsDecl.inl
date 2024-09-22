@@ -33,9 +33,13 @@ Depending on the following macros being defined, the respective implementation i
 
 DECL_VKPROC( vkCreateWin32SurfaceKHR );
 
-#elif defined(LLGL_OS_LINUX)
+#elif defined LLGL_OS_LINUX
 
-//???
+DECL_VKPROC( vkCreateXlibSurfaceKHR );
+
+#elif defined LLGL_OS_ANDROID
+
+DECL_VKPROC( vkCreateAndroidSurfaceKHR );
 
 #endif
 

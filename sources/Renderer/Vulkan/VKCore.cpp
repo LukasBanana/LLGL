@@ -105,7 +105,7 @@ static const char* VKResultToStrOrHex(const VkResult result)
 
 void VKThrowIfFailed(const VkResult result, const char* details)
 {
-    if (result != VK_SUCCESS)
+    if (LLGL_VK_FAILED(result))
     {
         const char* resultStr = VKResultToStrOrHex(result);
         if (details != nullptr && *details != '\0')
@@ -117,7 +117,7 @@ void VKThrowIfFailed(const VkResult result, const char* details)
 
 void VKThrowIfCreateFailed(const VkResult result, const char* interfaceName, const char* contextInfo)
 {
-    if (result != VK_SUCCESS)
+    if (LLGL_VK_FAILED(result))
     {
         std::string s;
         {
@@ -220,12 +220,12 @@ std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevi
     return queueFamilies;
 }
 
-SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+VKSurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-    SurfaceSupportDetails details;
+    VKSurfaceSupportDetails details;
 
     /* Query surface capabilities */
-    VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);
+    VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &(details.caps));
     VKThrowIfFailed(result, "failed to query Vulkan surface capabilities");
 
     /* Query surface formats */
@@ -255,9 +255,9 @@ SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKH
     return details;
 }
 
-QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface)
+VKQueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface)
 {
-    QueueFamilyIndices indices;
+    VKQueueFamilyIndices indices;
 
     const std::vector<VkQueueFamilyProperties> queueFamilies = VKQueryQueueFamilyProperties(device);
 
