@@ -280,52 +280,18 @@ struct ComputeShaderAttributes
     Extent3D workGroupSize = { 1, 1, 1 };
 };
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 /**
 \brief Shader source and binary code descriptor structure.
 \see RenderSystem::CreateShader
 */
 struct ShaderDescriptor
 {
-    LLGL_DEPRECATED_IGNORE_PUSH()
-
     ShaderDescriptor() = default;
 
-    #if 1 //TODO: remove as soon as 'name' field is removed
-    inline ShaderDescriptor(const ShaderDescriptor& other) :
-        debugName  { other.debugName  },
-        type       { other.type       },
-        source     { other.source     },
-        sourceSize { other.sourceSize },
-        sourceType { other.sourceType },
-        entryPoint { other.entryPoint },
-        profile    { other.profile    },
-        defines    { other.defines    },
-        flags      { other.flags      },
-        vertex     { other.vertex     },
-        fragment   { other.fragment   },
-        compute    { other.compute    }
-    {
-    }
-    inline ShaderDescriptor& operator = (const ShaderDescriptor& other)
-    {
-        this->debugName  = other.debugName;
-        this->type       = other.type;
-        this->source     = other.source;
-        this->sourceSize = other.sourceSize;
-        this->sourceType = other.sourceType;
-        this->entryPoint = other.entryPoint;
-        this->profile    = other.profile;
-        this->defines    = other.defines;
-        this->flags      = other.flags;
-        this->vertex     = other.vertex;
-        this->fragment   = other.fragment;
-        this->compute    = other.compute;
-        return *this;
-    }
-    #else
     ShaderDescriptor(const ShaderDescriptor&) = default;
     ShaderDescriptor& operator = (const ShaderDescriptor&) = default;
-    #endif
 
     //! Constructor to initialize the shader descriptor with a source filename.
     inline ShaderDescriptor(const ShaderType type, const char* source) :
@@ -349,8 +315,6 @@ struct ShaderDescriptor
         flags      { flags      }
     {
     }
-
-    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.
@@ -433,7 +397,7 @@ struct ShaderDescriptor
 
     //! \deprecated Since 0.04b; Use ShaderDescriptor::debugName instead.
     LLGL_DEPRECATED("ShaderDescriptor::name is deprecated since 0.04b; Use ShaderDescriptor::debugName instead!", "debugName")
-    const char*                 name;
+    const char*                 name            = nullptr;
 
     //! Vertex (or geometry) shader specific attributes.
     VertexShaderAttributes      vertex;
@@ -448,6 +412,8 @@ struct ShaderDescriptor
     */
     ComputeShaderAttributes     compute;
 };
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 
 /* ----- Functions ----- */

@@ -99,6 +99,8 @@ struct ResourceViewDescriptor
     std::uint32_t           initialCount    = 0;
 };
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 /**
 \brief Resource heap descriptor structure.
 \remarks For the render systems of modern graphics APIs (i.e. Vulkan and Direct3D 12), a resource heap is the only way to bind hardware resources to a shader pipeline.
@@ -108,8 +110,6 @@ The resource heap is a container for one or more resources such as textures, sam
 struct ResourceHeapDescriptor
 {
     ResourceHeapDescriptor() = default;
-
-    LLGL_DEPRECATED_IGNORE_PUSH()
 
     //! Initializes the resource heap descriptor with the specified pipeline layout and optional secondary parameters.
     inline ResourceHeapDescriptor(PipelineLayout* pipelineLayout, std::uint32_t numResourceViews = 0) :
@@ -126,8 +126,6 @@ struct ResourceHeapDescriptor
         barrierFlags     { barrierFlags     }
     {
     }
-
-    LLGL_DEPRECATED_IGNORE_POP()
 
     /**
     \brief Optional name for debugging purposes. By default null.
@@ -153,6 +151,8 @@ struct ResourceHeapDescriptor
     LLGL_DEPRECATED("ResourceHeapDescriptor::barrierFlags is deprecated since 0.04b; Use PipelineLayoutDescriptor::barrierFlags instead!")
     long            barrierFlags        = 0;
 };
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 
 } // /namespace LLGL

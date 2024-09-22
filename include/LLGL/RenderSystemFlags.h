@@ -454,21 +454,14 @@ struct RenderSystemDescriptor
     #endif // /LLGL_OS_ANDROID
 };
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
 /**
 \brief Contains the attributes for all supported rendering features.
 \see RenderingCapabilities::features
 */
 struct RenderingFeatures
 {
-    LLGL_DEPRECATED_IGNORE_PUSH()
-
-    // Declared to ignore initialization warning of deprecated members
-    RenderingFeatures() = default;
-    RenderingFeatures(const RenderingFeatures&) = default;
-    RenderingFeatures& operator = (const RenderingFeatures&) = default;
-
-    LLGL_DEPRECATED_IGNORE_POP()
-
     /**
     \brief Specifies whether render targets (also "framebuffer objects") are supported.
     \todo Deprecate this field: All backends should support render targets.
@@ -670,6 +663,8 @@ struct RenderingFeatures
     */
     bool hasRenderCondition             = false;
 };
+
+LLGL_DEPRECATED_IGNORE_POP()
 
 /**
 \brief Contains all rendering limitations such as maximum buffer size, maximum texture resolution etc.
