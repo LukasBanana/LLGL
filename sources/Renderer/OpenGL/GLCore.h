@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-// Throws an std::runtime_error exception if 'status' is not equal to 'statusRequired'.
+// Traps program execution if 'status' is not equal to 'statusRequired'.
 void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info = nullptr);
 
 // Converts the GL debug source into a string.
@@ -38,7 +38,7 @@ bool GLParseVersionString(const GLubyte* s, GLint& major, GLint& minor);
 // Returns the GL profile version as a single number, e.g. 450 for OpenGL 4.5.
 int GLGetVersion();
 
-// Throws an std::runtime_error exception reporting a call to an unsupported OpenGL procedure.
+// Traps program execution reporting a call to an unsupported OpenGL procedure.
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name);
 

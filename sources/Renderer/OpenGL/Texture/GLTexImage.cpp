@@ -10,6 +10,7 @@
 #include "../Profile/GLProfile.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
+#include "../../../Core/Exception.h"
 #include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/Utils/ForRange.h>
 #include <array>
@@ -74,7 +75,7 @@ static GLenum GetDefaultInitialGLImageFormat(Format format)
 [[noreturn]]
 static void ErrIllegalUseOfDepthFormat()
 {
-    throw std::runtime_error("illegal use of depth-stencil format for texture");
+    LLGL_TRAP("illegal use of depth-stencil format for texture");
 }
 
 // Converts the internal format if necessary

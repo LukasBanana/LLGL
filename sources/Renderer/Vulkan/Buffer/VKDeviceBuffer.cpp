@@ -8,6 +8,8 @@
 #include "VKDeviceBuffer.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../VKCore.h"
+#include "../../../Core/PrintfUtils.h"
+#include "../../../Core/Assertion.h"
 #include <algorithm>
 
 
@@ -75,7 +77,7 @@ void VKDeviceBuffer::CreateVkBufferAndMemoryRegion(
     /* Create Vulkan bnuffer object */
     CreateVkBuffer(device, createInfo);
 
-    if (auto memoryRegion = deviceMemoryMngr.Allocate(requirements_, memoryProperties))
+    if (VKDeviceMemoryRegion* memoryRegion = deviceMemoryMngr.Allocate(requirements_, memoryProperties))
     {
         /* Bind allocated memory region to buffer */
         BindMemoryRegion(device, memoryRegion);
@@ -83,10 +85,7 @@ void VKDeviceBuffer::CreateVkBufferAndMemoryRegion(
     else
     {
         /* Failed to allocate device memory */
-        throw std::runtime_error(
-            "failed to allocate " + std::to_string(requirements_.size) +
-            " byte(s) of device memory for Vulkan buffer"
-        );
+        LLGL_TRAP("failed to allocate %" PRIu64 " byte(s) of device memory for Vulkan buffer", requirements_.size);
     }
 }
 

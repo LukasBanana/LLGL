@@ -69,7 +69,7 @@ GLQueryHeap::GLQueryHeap(const QueryHeapDescriptor& desc) :
     #ifdef GL_ARB_pipeline_statistics_query
     if (desc.type == QueryType::PipelineStatistics)
     {
-        /* Allocate IDs for all pipeline statistics queries or throw error on failure */
+        /* Allocate IDs for all pipeline statistics queries or trap program execution on failure */
         LLGL_ASSERT_GL_EXT(ARB_pipeline_statistics_query);
         groupSize_ = static_cast<std::uint32_t>(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
     }

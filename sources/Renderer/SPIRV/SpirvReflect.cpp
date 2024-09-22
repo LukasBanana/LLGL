@@ -8,6 +8,7 @@
 #include "SpirvReflect.h"
 #include "SpirvModule.h"
 #include "../../Core/CoreUtils.h"
+#include "../../Core/Assertion.h"
 #include <string>
 
 
@@ -640,16 +641,14 @@ void SpirvReflect::OpTypeFunction(const Instr& instr, SpvType& type)
 const SpirvReflect::SpvType* SpirvReflect::FindType(spv::Id id) const
 {
     auto it = types_.find(id);
-    if (it == types_.end())
-        throw std::runtime_error("cannot find SPIR-V OpType* instruction with result ID %" + std::to_string(id));
+    LLGL_ASSERT(it != types_.end(), "cannot find SPIR-V OpType* instruction with result ID %%%u", id);
     return &(it->second);
 }
 
 const SpirvReflect::SpvConstant* SpirvReflect::FindConstant(spv::Id id) const
 {
     auto it = constants_.find(id);
-    if (it == constants_.end())
-        throw std::runtime_error("cannot find SPIR-V OpConstant instruction with with result ID %" + std::to_string(id));
+    LLGL_ASSERT(it != constants_.end(), "cannot find SPIR-V OpConstant instruction with with result ID %%%u", id);
     return &(it->second);
 }
 

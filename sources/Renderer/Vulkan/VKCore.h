@@ -60,10 +60,10 @@ struct SurfaceSupportDetails
 
 /* ----- Basic Functions ----- */
 
-// Throws an std::runtime_error exception if 'result' is not VK_SUCCESS.
+// Traps program execution if 'result' is not VK_SUCCESS.
 void VKThrowIfFailed(const VkResult result, const char* details);
 
-// Throws an std::runtime_error exception if 'result' is not VK_SUCCESS, with an info about the failed interface creation.
+// Traps program execution if 'result' is not VK_SUCCESS, with an info about the failed interface creation.
 void VKThrowIfCreateFailed(const VkResult result, const char* interfaceName, const char* contextInfo = nullptr);
 
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
@@ -86,7 +86,7 @@ SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKH
 QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
 VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const VkFormat* candidates, std::size_t numCandidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
-// Returns the memory type index that supports the specified type bits and properties, or throws an std::runtime_error exception on failure.
+// Returns the memory type index that supports the specified type bits and properties, or traps program execution on failure.
 std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);
 
 

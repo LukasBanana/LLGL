@@ -39,43 +39,43 @@ class Report;
 [[noreturn]]
 LLGL_EXPORT void Trap(const char* origin, const char* format, ...);
 
-// Throws an std::runtime_error exception with the message, that the specified assertion that failed.
+// Traps program execution with the message that the specified assertion that failed.
 [[noreturn]]
 LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const char* details = nullptr, ...);
 
-// Throws an std::runtime_error exception with the message, that the specified feature is not supported.
+// Traps program execution with the message that the specified feature is not supported.
 [[noreturn]]
 LLGL_EXPORT void TrapFeatureNotSupported(const char* origin, const char* featureName);
 
-// Throws an std::runtime_error exception with the message, that the specified rendering feature is not supported by the renderer (see RenderingFeatures).
+// Traps program execution with the message that the specified rendering feature is not supported by the renderer (see RenderingFeatures).
 [[noreturn]]
 LLGL_EXPORT void TrapRenderingFeatureNotSupported(const char* origin, const char* featureName);
 
-// Throws an std::runtime_error exception with the message, that the specified OpenGL extension is not supported.
+// Traps program execution with the message that the specified OpenGL extension is not supported.
 [[noreturn]]
 LLGL_EXPORT void TrapGLExtensionNotSupported(const char* origin, const char* extensionName, const char* useCase = nullptr);
 
-// Throws an std::runtime_error exception with the message, that the specified Vulkan extension is not supported.
+// Traps program execution with the message that the specified Vulkan extension is not supported.
 [[noreturn]]
 LLGL_EXPORT void TrapVKExtensionNotSupported(const char* origin, const char* extensionName, const char* useCase = nullptr);
 
-// Throws an std::runtime_error exception with the message, that the specified interface function is not implemented yet.
+// Traps program execution with the message that the specified interface function is not implemented yet.
 [[noreturn]]
 LLGL_EXPORT void TrapNotImplemented(const char* origin, const char* useCase = nullptr);
 
-// Throws an std::runtime_error exception with the message, that a null pointer was passed.
+// Traps program execution with the message that a null pointer was passed.
 [[noreturn]]
 LLGL_EXPORT void TrapNullPointer(const char* origin, const char* expr);
 
-// Throws an std::runtime_error exception with the message, that a value has exceeded an upper bound, i.e. <value> is not in the half-open range [0, upperBound).
+// Traps program execution with the message that a value has exceeded an upper bound, i.e. <value> is not in the half-open range [0, upperBound).
 [[noreturn]]
 LLGL_EXPORT void TrapParamExceededUpperBound(const char* origin, const char* paramName, int value, int upperBound);
 
-// Throws an std::runtime_error exception with the message, that a value has exceeded its maximum, i.e. <value> is not in the closed range [0, maximum].
+// Traps program execution with the message that a value has exceeded its maximum, i.e. <value> is not in the closed range [0, maximum].
 [[noreturn]]
 LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramName, int value, int maximum);
 
-// THrows an std::runtime_error exception with the message from the specified report, cutting off any trailing new-line characters.
+// Traps program execution with the message from the specified report, cutting off any trailing new-line characters.
 [[noreturn]]
 LLGL_EXPORT void TrapReport(const char* origin, const Report& report);
 

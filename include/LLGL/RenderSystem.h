@@ -166,7 +166,6 @@ class LLGL_EXPORT RenderSystem : public Interface
         }
         LLGL::RenderSystemPtr myRenderSystem = LLGL::RenderSystem::Load(myRendererDesc);
         \endcode
-        \throws std::runtime_error If loading the render system from the specified module failed.
         \see RenderSystemDescriptor::moduleName
         */
         static RenderSystemPtr Load(const RenderSystemDescriptor& renderSystemDesc, Report* report = nullptr);
@@ -411,7 +410,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new Sampler object.
-        \throws std::runtime_error If the renderer does not support Sampler objects (e.g. if OpenGL 3.1 or lower is used).
+        \remarks Samplers (aka. sampler states) define how to sample texture resources in shaders.
         \see GetRenderingCaps
         */
         virtual Sampler* CreateSampler(const SamplerDescriptor& samplerDesc) = 0;
@@ -475,7 +474,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new RenderTarget object.
-        \throws std::runtime_error If the renderer does not support RenderTarget objects (e.g. if OpenGL 2.1 or lower is used).
+        \remarks Use render targets to render into a texture instead of a swap-chain (i.e. the screen).
         */
         virtual RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& renderTargetDesc) = 0;
 

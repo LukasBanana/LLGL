@@ -21,6 +21,7 @@
 #include "../../BufferUtils.h"
 #include "../../StaticAssertions.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
@@ -118,7 +119,7 @@ D3D11ResourceHeap::D3D11ResourceHeap(
     /* Get pipeline layout object */
     auto* pipelineLayoutD3D = LLGL_CAST(D3D11PipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutD3D)
-        throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
+        LLGL_TRAP("failed to create resource heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
     const auto&         bindings            = pipelineLayoutD3D->GetHeapBindings();
@@ -1058,8 +1059,7 @@ static UINT GetFormatBufferStride(const Format format)
     /* Get buffer stride by format */
     const FormatAttributes& formatAttribs = GetFormatAttribs(format);
     const UINT stride = (formatAttribs.bitSize / formatAttribs.blockWidth / formatAttribs.blockHeight / 8);
-    if (stride == 0)
-        throw std::runtime_error("cannot create buffer subresource with format stride of 0");
+    LLGL_ASSERT(stride > 0, "cannot create buffer subresource with format stride of 0");
     return stride;
 }
 

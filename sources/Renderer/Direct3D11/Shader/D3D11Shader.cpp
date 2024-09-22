@@ -13,10 +13,10 @@
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../../Core/ReportUtils.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
-#include <stdexcept>
 #include <d3dcompiler.h>
 
 
@@ -89,24 +89,12 @@ bool D3D11Shader::BuildShader(ID3D11Device* device, const ShaderDescriptor& shad
         return LoadBinary(device, shaderDesc);
 }
 
-static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
-{
-    try
-    {
-        return DXTypes::ToDXGIFormat(attrib.format);
-    }
-    catch (const std::exception& e)
-    {
-        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + std::string(attrib.name.c_str()));
-    }
-}
-
 // Converts a vertex attribute to a D3D input element descriptor
 static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexAttribute& src)
 {
     dst.SemanticName            = src.name.c_str();
     dst.SemanticIndex           = src.semanticIndex;
-    dst.Format                  = GetInputElementFormat(src);
+    dst.Format                  = DXTypes::ToDXGIFormat(src.format);
     dst.InputSlot               = src.slot;
     dst.AlignedByteOffset       = src.offset;
     dst.InputSlotClass          = (src.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
@@ -130,8 +118,7 @@ void D3D11Shader::BuildInputLayout(ID3D11Device* device, UINT numVertexAttribs, 
         return;
 
     /* Check if input layout is allowed */
-    if (GetType() != ShaderType::Vertex)
-        throw std::runtime_error("cannot build input layout for shader unless it is a vertex shader");
+    LLGL_ASSERT(GetType() == ShaderType::Vertex, "cannot build input layout for non-vertex-shader");
 
     /* Setup input element descriptors */
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;

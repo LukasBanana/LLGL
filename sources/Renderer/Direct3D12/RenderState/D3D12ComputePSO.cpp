@@ -14,7 +14,6 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
-#include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
 
 
@@ -32,7 +31,10 @@ D3D12ComputePSO::D3D12ComputePSO(
 {
     auto* computeShaderD3D = LLGL_CAST(const D3D12Shader*, desc.computeShader);
     if (computeShaderD3D == nullptr)
-        throw std::runtime_error("cannot create D3D compute pipeline without compute shader");
+    {
+        ResetReport("cannot create D3D compute PSO without compute shader", true);
+        return;
+    }
 
     /* Create native compute PSO */
     if (pipelineCache != nullptr)

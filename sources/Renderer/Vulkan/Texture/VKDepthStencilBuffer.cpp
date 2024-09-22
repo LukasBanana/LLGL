@@ -42,8 +42,7 @@ void VKDepthStencilBuffer::Create(
 {
     /* Determine image aspect */
     const VkImageAspectFlags aspectFlags = GetVkImageAspectByFormat(format);
-    if (!aspectFlags)
-        throw std::invalid_argument("invalid format for Vulkan depth-stencil buffer");
+    LLGL_ASSERT(aspectFlags != 0, "invalid format (%d) for Vulkan depth-stencil buffer", static_cast<int>(format));
 
     /* Create depth-stencil image */
     VKRenderBuffer::Create(

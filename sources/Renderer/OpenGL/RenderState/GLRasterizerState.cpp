@@ -11,6 +11,7 @@
 #include "../GLCore.h"
 #include "../GLTypes.h"
 #include "../../../Core/MacroUtils.h"
+#include "../../../Core/Exception.h"
 #include "GLStateManager.h"
 #include <LLGL/PipelineStateFlags.h>
 
@@ -32,7 +33,7 @@ static GLState ToPolygonOffsetState(const PolygonMode mode)
         case PolygonMode::Points:       break;
         #endif
     }
-    throw std::invalid_argument("failed to map 'PolygonMode' to polygon offset mode (GL_POLYGON_OFFSET_FILL, GL_POLYGON_OFFSET_LINE, or GL_POLYGON_OFFSET_POINT)");
+    LLGL_TRAP("failed to map LLGL::PolygonMode(%d) to polygon offset mode (GL_POLYGON_OFFSET_FILL, GL_POLYGON_OFFSET_LINE, or GL_POLYGON_OFFSET_POINT)", static_cast<int>(mode));
 }
 
 static bool IsPolygonOffsetEnabled(const DepthBiasDescriptor& desc)

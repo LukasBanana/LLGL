@@ -11,8 +11,13 @@
 
 #include "../Platform/Debug.h"
 
-#ifdef LLGL_ENABLE_CHECKED_CAST
-#   include <typeinfo>
+#if LLGL_ENABLE_CHECKED_CAST
+#   if LLGL_ENABLE_EXCEPTIONS
+#       include <typeinfo>
+#   else
+#       include <LLGL/TypeInfo.h>
+#       include "../Core/Assertion.h"
+#   endif
 #endif
 
 
@@ -20,11 +25,13 @@ namespace LLGL
 {
 
 
-#ifdef LLGL_ENABLE_CHECKED_CAST
+#if LLGL_ENABLE_CHECKED_CAST
 
 template <typename TDst, typename TSrc>
 inline TDst& ObjectCast(TSrc& obj)
 {
+    #if LLGL_ENABLE_EXCEPTIONS
+
     try
     {
         return dynamic_cast<TDst&>(obj);
@@ -34,6 +41,12 @@ inline TDst& ObjectCast(TSrc& obj)
         LLGL_DEBUG_BREAK();
         throw;
     }
+
+    #else // LLGL_ENABLE_EXCEPTIONS
+
+    return dynamic_cast<TDst&>(obj);
+
+    #endif
 }
 
 template <typename TDst, typename TSrc>
@@ -41,6 +54,9 @@ inline TDst ObjectCast(TSrc* obj)
 {
     if (obj == nullptr)
         return nullptr;
+
+    #if LLGL_ENABLE_EXCEPTIONS
+
     try
     {
         TDst objInstance = dynamic_cast<TDst>(obj);
@@ -53,9 +69,17 @@ inline TDst ObjectCast(TSrc* obj)
         LLGL_DEBUG_BREAK();
         throw;
     }
+
+    #else // LLGL_ENABLE_EXCEPTIONS
+
+    TDst objInstance = dynamic_cast<TDst>(obj);
+    LLGL_ASSERT(objInstance != nullptr);
+    return objInstance;
+
+    #endif // /LLGL_ENABLE_EXCEPTIONS
 }
 
-#else
+#else // LLGL_ENABLE_CHECKED_CAST
 
 template <typename TDst, typename TSrc>
 inline TDst ObjectCast(TSrc&& obj)
@@ -63,9 +87,10 @@ inline TDst ObjectCast(TSrc&& obj)
     return static_cast<TDst>(obj);
 }
 
-#endif
+#endif // /LLGL_ENABLE_CHECKED_CAST
 
-#define LLGL_CAST(TYPE, OBJ) ObjectCast<TYPE>(OBJ)
+#define LLGL_CAST(TYPE, OBJ) \
+    ObjectCast<TYPE>(OBJ)
 
 
 } // /namespace LLGL
