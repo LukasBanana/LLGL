@@ -42,6 +42,10 @@ On Windows, MSYS2 can be used to run *BuildAndroid.sh*.
     <img src="Showcase/Showcase_Build_AndroidStudio.png" alt="Screenshot missing: AndroidStudio Build Showcase" style="max-width:600px;width:70%;height:auto;">
 </p>
 
+#### Known issues
+
+Currently only the GLES backend is supported for Android. Vulkan backend compiles but is not stable and untested at the moment.
+
 
 ## GNU/Linux
 
@@ -83,4 +87,10 @@ Then launch your web browser of choice and open the URL http://localhost:8000/.
 <p align="center">
     <img src="Showcase/Showcase_Build_Wasm.png" alt="Screenshot missing: HTML5 Example Showcase" style="max-width:600px;width:70%;height:auto;">
 </p>
+
+#### Known issues
+
+The **WebGL backend does not work correctly on Safari**. There is a workaround which detects Safari browsers to disable anti-aliasing which mitigates the issue on Intel based Macs.
+On all ARM based Macs and iOS devices, Safari shows synchronization issues that mostly affect buffer updates via `glBufferSubData` making it look as if staging buffers
+are not synchronized between CPU and GPU, even though WebGL does not have a concept of staging buffers like Vulkan or D3D.
 

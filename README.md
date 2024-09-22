@@ -37,7 +37,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 | <img src="docu/Icons/linux.svg" height="20" /> GNU/Linux | [![GNU/Linux CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
 | <img src="docu/Icons/macos.svg" height="20" /> macOS | [![macOS CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_macos.yml) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
 | <img src="docu/Icons/ios.svg" height="20" /> iOS | [![iOS CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_ios.yml) | N/A | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: |
-| <img src="docu/Icons/android.svg" height="20" /> Android | [![Android CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_android.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_android.yml) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
+| <img src="docu/Icons/android.svg" height="20" /> Android | [![Android CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_android.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_android.yml) | N/A | N/A | :construction: | :heavy_check_mark: | N/A |
 | <img src="docu/Icons/wasm.svg" height="20" /> Wasm | [![WebAssembly CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_wasm.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_wasm.yml) | N/A | N/A | N/A | :heavy_check_mark: | N/A |
 
 
