@@ -6,7 +6,6 @@
  */
 
 #include "../../GLRenderingCaps.h"
-#include "../../GLProfile.h"
 #include "../../GLTypes.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionRegistry.h"

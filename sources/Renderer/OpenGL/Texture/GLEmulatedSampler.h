@@ -42,14 +42,20 @@ class GLEmulatedSampler final : public Sampler
         GLint   wrapR_              = GL_REPEAT;
         GLint   minFilter_          = GL_NEAREST_MIPMAP_LINEAR;
         GLint   magFilter_          = GL_LINEAR;
+        #if LLGL_OPENGL
         GLfloat maxAnisotropy_      = 0.0f;
+        #endif
         GLfloat minLod_             = -1000.0f;
         GLfloat maxLod_             = +1000.0f;
+        #if LLGL_OPENGL
         GLfloat lodBias_            = 0.0f;
+        #endif
         GLint   compareMode_        = GL_NONE;
         GLint   compareFunc_        = GL_LESS;
+        #if LLGL_SAMPLER_BORDER_COLOR
         GLfloat borderColor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool    borderColorUsed_    = false;
+        #endif
 
 };
 

@@ -44,13 +44,8 @@
 #   define LLGL_GLEXT_DRAW_INSTANCED 1
 #endif
 
-#if GL_ARB_separate_shader_objects || GL_ES_VERSION_3_1
+#if GL_ARB_separate_shader_objects
 #   define LLGL_GLEXT_SEPARATE_SHADER_OBJECTS 1
-#elif GL_EXT_separate_shader_objects
-#   define LLGL_GLEXT_SEPARATE_SHADER_OBJECTS 1
-#   ifndef GL_PROGRAM_PIPELINE_BINDING
-#       define GL_PROGRAM_PIPELINE_BINDING GL_PROGRAM_PIPELINE_BINDING_EXT
-#   endif
 #endif
 
 #if GL_ARB_uniform_buffer_object || GL_ES_VERSION_3_0

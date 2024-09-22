@@ -5,7 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "../../GLProfile.h"
+#include "../GLProfile.h"
 #include "../../GLTypes.h"
 #include "../../Ext/GLExtensions.h"
 #include "../../../../Core/Assertion.h"

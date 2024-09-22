@@ -316,17 +316,13 @@ generate_app_project()
 
 if [ $BUILD_APPS -ne 0 ]; then
 
-    PROJECT_DEBUG_BUILD=0
-
     BIN_FILE_BASE="${OUTPUT_DIR}/${SUPPORTED_ANDROID_ABIS[0]}/build/libExample_"
     BIN_FILE_BASE_LEN=${#BIN_FILE_BASE}
 
-    EXAMPLE_BIN_FILES_D=(${BIN_FILE_BASE}*D.so)
-    if [ -z "$EXAMPLE_BIN_FILES_D" ]; then
-        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.so)
+    if [ $BUILD_TYPE = "Debug" ]; then
+        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*D.so)
     else
-        EXAMPLE_BIN_FILES=(${EXAMPLE_BIN_FILES_D[@]})
-        PROJECT_DEBUG_BUILD=1
+        EXAMPLE_BIN_FILES=(${BIN_FILE_BASE}*.so)
     fi
 
     for BIN_FILE in ${EXAMPLE_BIN_FILES[@]}; do

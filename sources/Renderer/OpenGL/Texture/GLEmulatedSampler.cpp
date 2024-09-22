@@ -24,11 +24,15 @@ static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
         return GLTypes::Map(desc.minFilter);
 }
 
+#if LLGL_SAMPLER_BORDER_COLOR
+
 static bool IsGLTextureWrapUsingBorder(GLenum mode)
 {
     /* Accroding to GL2.x spec: "Border texture elements are accessed only if wrapping is set to GL_CLAMP or GL_CLAMP_TO_BORDER" */
     return (mode == GL_CLAMP || mode == GL_CLAMP_TO_BORDER);
 }
+
+#endif // /LLGL_SAMPLER_BORDER_COLOR
 
 void GLEmulatedSampler::SamplerParameters(const SamplerDescriptor& desc)
 {
@@ -40,28 +44,38 @@ void GLEmulatedSampler::SamplerParameters(const SamplerDescriptor& desc)
     /* Store filter states */
     minFilter_          = GetGLSamplerMinFilter(desc);
     magFilter_          = GLTypes::Map(desc.magFilter);
+    #if LLGL_OPENGL
     maxAnisotropy_      = static_cast<float>(desc.maxAnisotropy);
+    #endif
 
     /* Store MIP-map level selection */
     minLod_             = desc.minLOD;
     maxLod_             = desc.maxLOD;
+    #if LLGL_OPENGL
     lodBias_            = desc.mipMapLODBias;
+    #endif
 
     /* Store compare operation */
     if (desc.compareEnabled)
     {
+        #if LLGL_GL_ENABLE_OPENGL2X
         compareMode_    = GL_COMPARE_R_TO_TEXTURE;
+        #else
+        compareMode_    = GL_COMPARE_REF_TO_TEXTURE;
+        #endif
         compareFunc_    = GLTypes::Map(desc.compareOp);
     }
     else
         compareMode_    = GL_NONE;
 
+    #if LLGL_SAMPLER_BORDER_COLOR
     /* Set border color */
     borderColor_[0]     = (std::max)(0.0f, (std::min)(desc.borderColor[0], 1.0f));
     borderColor_[1]     = (std::max)(0.0f, (std::min)(desc.borderColor[1], 1.0f));
     borderColor_[2]     = (std::max)(0.0f, (std::min)(desc.borderColor[2], 1.0f));
     borderColor_[3]     = (std::max)(0.0f, (std::min)(desc.borderColor[3], 1.0f));
     borderColorUsed_    = (IsGLTextureWrapUsingBorder(wrapS_) || IsGLTextureWrapUsingBorder(wrapT_) || IsGLTextureWrapUsingBorder(wrapR_));
+    #endif // /LLGL_SAMPLER_BORDER_COLOR
 }
 
 static void GLSetTexParameteri(GLenum target, GLenum param, GLint value)
@@ -112,15 +126,21 @@ void GLEmulatedSampler::BindTexParameters(GLenum target, const GLEmulatedSampler
         GLChangeTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR_, prevSampler->wrapR_);
         GLChangeTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilter_, prevSampler->minFilter_);
         GLChangeTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilter_, prevSampler->magFilter_);
+        #if LLGL_OPENGL
         GLChangeTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy_, prevSampler->maxAnisotropy_);
+        #endif
         GLChangeTexParameterf(target, GL_TEXTURE_MIN_LOD, minLod_, prevSampler->minLod_);
         GLChangeTexParameterf(target, GL_TEXTURE_MAX_LOD, maxLod_, prevSampler->maxLod_);
+        #if LLGL_OPENGL
         GLChangeTexParameterf(target, GL_TEXTURE_LOD_BIAS, lodBias_, prevSampler->lodBias_);
+        #endif
         GLChangeTexParameteri(target, GL_TEXTURE_COMPARE_MODE, compareMode_, prevSampler->compareMode_);
         if (compareMode_ != GL_NONE)
             GLChangeTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, compareFunc_, prevSampler->compareFunc_);
+        #if LLGL_SAMPLER_BORDER_COLOR
         if (borderColorUsed_)
             GLChangeTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, borderColor_, prevSampler->borderColor_);
+        #endif
     }
     else
     {
@@ -130,13 +150,19 @@ void GLEmulatedSampler::BindTexParameters(GLenum target, const GLEmulatedSampler
         GLSetTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR_);
         GLSetTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilter_);
         GLSetTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilter_);
+        #if LLGL_OPENGL
         GLSetTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY, maxAnisotropy_);
+        #endif
         GLSetTexParameterf(target, GL_TEXTURE_MIN_LOD, minLod_);
         GLSetTexParameterf(target, GL_TEXTURE_MAX_LOD, maxLod_);
+        #if LLGL_OPENGL
         GLSetTexParameterf(target, GL_TEXTURE_LOD_BIAS, lodBias_);
+        #endif
         GLSetTexParameteri(target, GL_TEXTURE_COMPARE_MODE, compareMode_);
         GLSetTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, compareFunc_);
+        #if LLGL_SAMPLER_BORDER_COLOR
         GLSetTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, borderColor_);
+        #endif
     }
 }
 
@@ -147,16 +173,21 @@ int GLEmulatedSampler::CompareSWO(const GLEmulatedSampler& lhs, const GLEmulated
     LLGL_COMPARE_MEMBER_SWO( wrapR_         );
     LLGL_COMPARE_MEMBER_SWO( minFilter_     );
     LLGL_COMPARE_MEMBER_SWO( magFilter_     );
+    #if LLGL_OPENGL
     LLGL_COMPARE_MEMBER_SWO( maxAnisotropy_ );
+    #endif
     LLGL_COMPARE_MEMBER_SWO( minLod_        );
     LLGL_COMPARE_MEMBER_SWO( maxLod_        );
+    #if LLGL_OPENGL
     LLGL_COMPARE_MEMBER_SWO( lodBias_       );
+    #endif
     LLGL_COMPARE_MEMBER_SWO( compareMode_   );
     if (lhs.compareMode_ != GL_NONE)
     {
         /* Only compare comparison-function if compare-mode is enabled */
         LLGL_COMPARE_MEMBER_SWO( compareFunc_ );
     }
+    #if LLGL_SAMPLER_BORDER_COLOR
     if (lhs.borderColorUsed_)
     {
         LLGL_COMPARE_MEMBER_SWO( borderColor_[0] );
@@ -164,6 +195,7 @@ int GLEmulatedSampler::CompareSWO(const GLEmulatedSampler& lhs, const GLEmulated
         LLGL_COMPARE_MEMBER_SWO( borderColor_[2] );
         LLGL_COMPARE_MEMBER_SWO( borderColor_[3] );
     }
+    #endif // /LLGL_SAMPLER_BORDER_COLOR
     return 0;
 }
 
