@@ -19,6 +19,27 @@ VKRenderBuffer::VKRenderBuffer(VkDevice device) :
 {
 }
 
+VKRenderBuffer::VKRenderBuffer(VKRenderBuffer&& rhs) :
+    VKDeviceImage { std::move(rhs)            },
+    imageView_    { std::move(rhs.imageView_) },
+    format_       { rhs.format_               },
+    memoryMngr_   { rhs.memoryMngr_           }
+{
+    rhs.format_     = VK_FORMAT_UNDEFINED;
+    rhs.memoryMngr_ = nullptr;
+}
+
+VKRenderBuffer& VKRenderBuffer::operator = (VKRenderBuffer&& rhs)
+{
+    VKDeviceImage::operator=(std::move(rhs));
+    this->imageView_    = std::move(rhs.imageView_);
+    this->format_       = rhs.format_;
+    this->memoryMngr_   = rhs.memoryMngr_;
+    rhs.format_         = VK_FORMAT_UNDEFINED;
+    rhs.memoryMngr_     = nullptr;
+    return *this;
+}
+
 VKRenderBuffer::~VKRenderBuffer()
 {
     Release();

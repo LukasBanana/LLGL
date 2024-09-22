@@ -30,12 +30,16 @@ class VKDeviceImage
 
     public:
 
-        VKDeviceImage(VkDevice device);
+        VKDeviceImage() = default;
         virtual ~VKDeviceImage() = default;
 
-        // Explicit default move constructors required for GCC (to be used in VKSwapChain c'tor)
-        VKDeviceImage(VKDeviceImage&&) = default;
-        VKDeviceImage& operator = (VKDeviceImage&&) = default;
+        VKDeviceImage(VkDevice device);
+
+        VKDeviceImage(VKDeviceImage&& rhs);
+        VKDeviceImage& operator = (VKDeviceImage&& rhs);
+
+        VKDeviceImage(const VKDeviceImage&) = delete;
+        VKDeviceImage& operator = (const VKDeviceImage&) = delete;
 
         void AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
         void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);

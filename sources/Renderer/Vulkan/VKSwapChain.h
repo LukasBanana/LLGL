@@ -124,43 +124,43 @@ class VKSwapChain final : public SwapChain
 
     private:
 
-        static constexpr std::uint32_t maxNumColorBuffers   = 3;
         static constexpr std::uint32_t maxNumFramesInFlight = 3;
 
-        VkInstance              instance_                                   = VK_NULL_HANDLE;
-        VkPhysicalDevice        physicalDevice_                             = VK_NULL_HANDLE;
-        VkDevice                device_;
+        VkInstance                          instance_                                   = VK_NULL_HANDLE;
+        VkPhysicalDevice                    physicalDevice_                             = VK_NULL_HANDLE;
+        VkDevice                            device_;
 
-        VKDeviceMemoryManager&  deviceMemoryMngr_;
+        VKDeviceMemoryManager&              deviceMemoryMngr_;
 
-        VKPtr<VkSurfaceKHR>     surface_;
-        VKSurfaceSupportDetails surfaceSupportDetails_;
+        VKPtr<VkSurfaceKHR>                 surface_;
+        VKSurfaceSupportDetails             surfaceSupportDetails_;
 
-        VKPtr<VkSwapchainKHR>   swapChain_;
-        VKRenderPass            swapChainRenderPass_;
-        VkSurfaceFormatKHR      swapChainFormat_                            = {};
-        std::uint32_t           swapChainSamples_                           = 1;
-        VkExtent2D              swapChainExtent_                            = { 0, 0 };
-        VkImage                 swapChainImages_[maxNumColorBuffers];
-        VKPtr<VkImageView>      swapChainImageViews_[maxNumColorBuffers];
-        VKPtr<VkFramebuffer>    swapChainFramebuffers_[maxNumColorBuffers];
+        VKPtr<VkSwapchainKHR>               swapChain_;
+        VKRenderPass                        swapChainRenderPass_;
+        VkSurfaceFormatKHR                  swapChainFormat_                            = {};
+        std::uint32_t                       swapChainSamples_                           = 1;
+        VkExtent2D                          swapChainExtent_                            = { 0, 0 };
+        std::vector<VkImage>                swapChainImages_;
+        std::vector<VKPtr<VkImageView>>     swapChainImageViews_;
+        std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
 
-        std::uint32_t           numColorBuffers_                            = 2;
-        std::uint32_t           currentColorBuffer_                         = 0; // determined by vkAcquireNextImageKHR
-        std::uint32_t           currentFrameInFlight_                       = 0; // current index for maximum frames in flight
-        std::uint32_t           vsyncInterval_                              = 0;
+        std::uint32_t                       numPreferredColorBuffers_                   = 2;
+        std::uint32_t                       numColorBuffers_                            = 0;
+        std::uint32_t                       currentColorBuffer_                         = 0; // determined by vkAcquireNextImageKHR
+        std::uint32_t                       currentFrameInFlight_                       = 0; // current index for maximum frames in flight
+        std::uint32_t                       vsyncInterval_                              = 0;
 
-        VKRenderPass            secondaryRenderPass_;
-        VkFormat                depthStencilFormat_                         = VK_FORMAT_UNDEFINED;
-        VKDepthStencilBuffer    depthStencilBuffer_;
-        VKColorBuffer           colorBuffers_[maxNumColorBuffers];
+        VKRenderPass                        secondaryRenderPass_;
+        VkFormat                            depthStencilFormat_                         = VK_FORMAT_UNDEFINED;
+        VKDepthStencilBuffer                depthStencilBuffer_;
+        std::vector<VKColorBuffer>          colorBuffers_;
 
-        VkQueue                 graphicsQueue_                              = VK_NULL_HANDLE;
-        VkQueue                 presentQueue_                               = VK_NULL_HANDLE;
+        VkQueue                             graphicsQueue_                              = VK_NULL_HANDLE;
+        VkQueue                             presentQueue_                               = VK_NULL_HANDLE;
 
-        VKPtr<VkSemaphore>      imageAvailableSemaphore_[maxNumFramesInFlight];
-        VKPtr<VkSemaphore>      renderFinishedSemaphore_[maxNumFramesInFlight];
-        VKPtr<VkFence>          inFlightFences_[maxNumFramesInFlight];
+        VKPtr<VkSemaphore>                  imageAvailableSemaphore_[maxNumFramesInFlight];
+        VKPtr<VkSemaphore>                  renderFinishedSemaphore_[maxNumFramesInFlight];
+        VKPtr<VkFence>                      inFlightFences_[maxNumFramesInFlight];
 
 };
 

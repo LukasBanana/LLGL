@@ -22,12 +22,12 @@ class VKRenderBuffer : private VKDeviceImage
 
     public:
 
+        VKRenderBuffer() = default;
         VKRenderBuffer(VkDevice device);
         ~VKRenderBuffer();
 
-        // Explicit default move constructors required for GCC (to be used in VKSwapChain c'tor)
-        VKRenderBuffer(VKRenderBuffer&&) = default;
-        VKRenderBuffer& operator = (VKRenderBuffer&&) = default;
+        VKRenderBuffer(VKRenderBuffer&& rhs);
+        VKRenderBuffer& operator = (VKRenderBuffer&& rhs);
 
         void Create(
             VKDeviceMemoryManager&  deviceMemoryMngr,

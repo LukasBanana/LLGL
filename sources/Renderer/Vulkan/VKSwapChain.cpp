@@ -26,7 +26,6 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-constexpr std::uint32_t VKSwapChain::maxNumColorBuffers;
 constexpr std::uint32_t VKSwapChain::maxNumFramesInFlight;
 
 static VKPtr<VkImageView> NullVkImageView(VkDevice device)
@@ -67,15 +66,8 @@ VKSwapChain::VKSwapChain(
     swapChain_               { device, vkDestroySwapchainKHR   },
     swapChainRenderPass_     { device                          },
     swapChainSamples_        { GetClampedSamples(desc.samples) },
-    swapChainImageViews_     { NullVkImageView(device_),
-                               NullVkImageView(device_),
-                               NullVkImageView(device_)        },
-    swapChainFramebuffers_   { NullVkFramebuffer(device_),
-                               NullVkFramebuffer(device_),
-                               NullVkFramebuffer(device_)      },
     secondaryRenderPass_     { device                          },
     depthStencilBuffer_      { device                          },
-    colorBuffers_            { device, device, device          },
     imageAvailableSemaphore_ { NullVkSemaphore(device_),
                                NullVkSemaphore(device_),
                                NullVkSemaphore(device_)        },
@@ -92,8 +84,8 @@ VKSwapChain::VKSwapChain(
     CreateGpuSurface();
 
     /* Pick image count for swap-chain and depth-stencil format */
-    numColorBuffers_    = PickSwapChainSize(desc.swapBuffers);
-    depthStencilFormat_ = PickDepthStencilFormat(desc.depthBits, desc.stencilBits);
+    numPreferredColorBuffers_   = PickSwapChainSize(desc.swapBuffers);
+    depthStencilFormat_         = PickDepthStencilFormat(desc.depthBits, desc.stencilBits);
 
     /* Create Vulkan render passes, swap-chain, depth-stencil buffer, and multisampling color buffers */
     CreateDefaultAndSecondaryRenderPass();
@@ -264,6 +256,7 @@ void VKSwapChain::CopyImage(
         }
         else
         {
+            LLGL_ASSERT(srcColorBuffer < colorBuffers_.size());
             VkImage srcImage = colorBuffers_[srcColorBuffer].GetVkImage();
             context.ResolveImage(srcImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, dstImage, dstImageLayout, resolveRegion, format);
         }
@@ -283,6 +276,7 @@ void VKSwapChain::CopyImage(
         }
         else
         {
+            LLGL_ASSERT(srcColorBuffer < swapChainImages_.size());
             VkImage srcImage = swapChainImages_[srcColorBuffer];
             context.CopyImage(srcImage, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, dstImage, dstImageLayout, copyRegion, format);
         }
@@ -459,7 +453,7 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
         createInfo.pNext                        = nullptr;
         createInfo.flags                        = 0;
         createInfo.surface                      = surface_;
-        createInfo.minImageCount                = numColorBuffers_;
+        createInfo.minImageCount                = numPreferredColorBuffers_;
         createInfo.imageFormat                  = swapChainFormat_.format;
         createInfo.imageColorSpace              = swapChainFormat_.colorSpace;
         createInfo.imageExtent                  = swapChainExtent_;
@@ -495,11 +489,12 @@ void VKSwapChain::CreateSwapChain(const Extent2D& resolution, std::uint32_t vsyn
     VKThrowIfFailed(result, "failed to create Vulkan swap-chain");
 
     /* Query swap-chain images */
+    numColorBuffers_ = numPreferredColorBuffers_;
     result = vkGetSwapchainImagesKHR(device_, swapChain_, &numColorBuffers_, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan swap-chain images");
 
-    numColorBuffers_ = std::min(numColorBuffers_, maxNumColorBuffers);
-    result = vkGetSwapchainImagesKHR(device_, swapChain_, &numColorBuffers_, swapChainImages_);
+    swapChainImages_.resize(numColorBuffers_, VK_NULL_HANDLE);
+    result = vkGetSwapchainImagesKHR(device_, swapChain_, &numColorBuffers_, swapChainImages_.data());
     VKThrowIfFailed(result, "failed to query Vulkan swap-chain images");
 
     /* Create swap-chain image views */
@@ -532,14 +527,17 @@ void VKSwapChain::CreateSwapChainImageViews()
     }
 
     /* Create all image views for the swap-chain */
+    swapChainImageViews_.resize(numColorBuffers_);
     for_range(i, numColorBuffers_)
     {
         /* Update image handle in Vulkan descriptor */
         createInfo.image = swapChainImages_[i];
 
         /* Create image view for framebuffer */
-        VkResult result = vkCreateImageView(device_, &createInfo, nullptr, swapChainImageViews_[i].ReleaseAndGetAddressOf());
+        VKPtr<VkImageView> imageView{ NullVkImageView(device_) };
+        VkResult result = vkCreateImageView(device_, &createInfo, nullptr, imageView.ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Vulkan swap-chain image view");
+        swapChainImageViews_[i] = std::move(imageView);
     }
 }
 
@@ -574,11 +572,15 @@ void VKSwapChain::CreateSwapChainFramebuffers()
     }
 
     /* Create all framebuffers for the swap-chain */
+    swapChainFramebuffers_.resize(numColorBuffers_);
     for_range(i, numColorBuffers_)
     {
+        LLGL_ASSERT(swapChainImageViews_[i].Get() != VK_NULL_HANDLE, "failed to create Vulkan framebuffer for swap-buffer [%u]", i);
+
         /* Update image view in Vulkan descriptor */
         if (HasMultiSampling())
         {
+            LLGL_ASSERT(colorBuffers_[i].GetVkImageView() != VK_NULL_HANDLE, "failed to create Vulkan framebuffer for swap-buffer [%u]", i);
             attachments[attachmentColor] = colorBuffers_[i].GetVkImageView();
             attachments[attachmentResolve] = swapChainImageViews_[i];
         }
@@ -586,8 +588,10 @@ void VKSwapChain::CreateSwapChainFramebuffers()
             attachments[attachmentColor] = swapChainImageViews_[i];
 
         /* Create framebuffer */
-        VkResult result = vkCreateFramebuffer(device_, &createInfo, nullptr, swapChainFramebuffers_[i].ReleaseAndGetAddressOf());
+        VKPtr<VkFramebuffer> framebuffer{ NullVkFramebuffer(device_) };
+        VkResult result = vkCreateFramebuffer(device_, &createInfo, nullptr, framebuffer.ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");
+        swapChainFramebuffers_[i] = std::move(framebuffer);
     }
 }
 
@@ -601,8 +605,13 @@ void VKSwapChain::CreateColorBuffers(const Extent2D& resolution)
 {
     /* Create VkImage objects for each swap-chain buffer */
     const VkSampleCountFlagBits sampleCountBits = VKTypes::ToVkSampleCountBits(swapChainSamples_);
+    colorBuffers_.resize(numColorBuffers_);
     for_range(i, numColorBuffers_)
-        colorBuffers_[i].Create(deviceMemoryMngr_, resolution, swapChainFormat_.format, sampleCountBits);
+    {
+        VKColorBuffer colorBuffer{ device_ };
+        colorBuffer.Create(deviceMemoryMngr_, resolution, swapChainFormat_.format, sampleCountBits);
+        colorBuffers_[i] = std::move(colorBuffer);
+    }
 }
 
 void VKSwapChain::ReleaseRenderBuffers()
@@ -699,8 +708,8 @@ std::uint32_t VKSwapChain::PickSwapChainSize(std::uint32_t swapBuffers) const
 {
     return Clamp(
         swapBuffers,
-        std::max(surfaceSupportDetails_.caps.minImageCount, 1u),
-        std::min(surfaceSupportDetails_.caps.maxImageCount, VKSwapChain::maxNumColorBuffers)
+        surfaceSupportDetails_.caps.minImageCount,
+        surfaceSupportDetails_.caps.maxImageCount
     );
 }
 
@@ -716,6 +725,12 @@ void VKSwapChain::AcquireNextColorBuffer()
         imageAvailableSemaphore_[currentFrameInFlight_],
         VK_NULL_HANDLE,
         &currentColorBuffer_
+    );
+
+    LLGL_ASSERT(
+        currentColorBuffer_ < numColorBuffers_,
+        "next swap-chain image index (%u) exceeds upper bound (%u)",
+        currentColorBuffer_, numColorBuffers_
     );
 
     vkResetFences(device_, 1, inFlightFences_[currentFrameInFlight_].GetAddressOf());

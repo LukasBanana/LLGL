@@ -23,6 +23,23 @@ VKDeviceImage::VKDeviceImage(VkDevice device) :
 {
 }
 
+VKDeviceImage::VKDeviceImage(VKDeviceImage&& rhs) :
+    image_              { std::move(rhs.image_)   },
+    layout_             { rhs.layout_             },
+    memoryRequirements_ { rhs.memoryRequirements_ },
+    memoryRegion_       { rhs.memoryRegion_       }
+{
+}
+
+VKDeviceImage& VKDeviceImage::operator = (VKDeviceImage&& rhs)
+{
+    image_              = std::move(rhs.image_);
+    layout_             = rhs.layout_;
+    memoryRequirements_ = rhs.memoryRequirements_;
+    memoryRegion_       = rhs.memoryRegion_;
+    return *this;
+}
+
 void VKDeviceImage::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
 {
     VkDevice device = deviceMemoryMngr.GetVkDevice();
