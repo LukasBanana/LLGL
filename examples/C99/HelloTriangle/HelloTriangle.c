@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
     };
 
     // Enter main loop
-    while (llglProcessSurfaceEvents(surface) && !llglHasWindowQuit(window))
+    while (llglProcessSurfaceEvents() && !llglHasWindowQuit(window))
     {
         // Begin recording commands
         llglBegin(cmdBuffer);
