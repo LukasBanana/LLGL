@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build_android:
+  build_wasm:
     strategy:
       matrix:
         config: [Release, Debug]
@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ANDROID_API_LEVEL: 28
       README: ${{ github.workspace }}/README.txt
       GAUSSIAN_LIB_DIR: external/GaussianLib/include
       EMSDK_CMAKE_DIR: 'upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake'
