@@ -662,8 +662,6 @@ DECL_GLPROC(PFNGLGETQUERYBUFFEROBJECTUIVPROC,                       glGetQueryBu
 DECL_GLPROC(PFNGLGETQUERYBUFFEROBJECTI64VPROC,                      glGetQueryBufferObjecti64v,                     void,           (GLuint, GLuint, GLenum, GLintptr));
 DECL_GLPROC(PFNGLGETQUERYBUFFEROBJECTUI64VPROC,                     glGetQueryBufferObjectui64v,                    void,           (GLuint, GLuint, GLenum, GLintptr));
 
-#undef DECL_GLPROC
-
 #endif // /__APPLE__
 
 

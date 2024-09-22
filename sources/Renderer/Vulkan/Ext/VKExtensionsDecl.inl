@@ -7,25 +7,11 @@
 
 // THIS FILE MUST NOT HAVE A HEADER GUARD
 
-/*
-All Vulkan extension functions are declared here.
-Depending on the following macros being defined, the respective implementation is enabled:
-- LLGL_DEF_VK_EXT_PROCS: defines the global function pointer for Vulkan extensions
-- None: declares the global function pointer for Vulkan extensions
-*/
 
-
-#if defined LLGL_DEF_VK_EXT_PROCS
-
-#define DECL_VKPROC(NAME) \
-    PFN_##NAME NAME = nullptr
-
-#else
-
-#define DECL_VKPROC(NAME) \
-    extern PFN_##NAME NAME
-
+#ifndef DECL_VKPROC
+#error Missing definition of macro DECL_VKPROC(NAME)
 #endif
+
 
 /* Platform specific VL extensions */
 
@@ -74,8 +60,6 @@ DECL_VKPROC( vkGetPhysicalDeviceImageFormatProperties2KHR       );
 DECL_VKPROC( vkGetPhysicalDeviceQueueFamilyProperties2KHR       );
 DECL_VKPROC( vkGetPhysicalDeviceMemoryProperties2KHR            );
 DECL_VKPROC( vkGetPhysicalDeviceSparseImageFormatProperties2KHR );
-
-#undef DECL_VKPROC
 
 
 
