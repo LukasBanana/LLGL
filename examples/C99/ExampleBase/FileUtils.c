@@ -48,8 +48,7 @@ AssetContainer read_asset(const char* name)
         asset.data = (char*)malloc(len);
         if (asset.data != NULL)
         {
-            fread(asset.data, 1, len, file);
-            asset.size = len;
+            asset.size = fread(asset.data, 1, len, file);
         }
         else
         {

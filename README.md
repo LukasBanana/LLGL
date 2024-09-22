@@ -30,8 +30,8 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 
 ## Platform Support
 
-| Platform | CI | D3D12 | D3D11 | Vulkan | GL/GLES/WebGL | Metal |
-|----------|:--:|:-----:|:-----:|:------:|:--------:|:-----:|
+| Platform | CI | D3D12 | D3D11 | Vulkan | OpenGL | Metal |
+|----------|:--:|:-----:|:-----:|:------:|:------:|:-----:|
 | <img src="docu/Icons/windows.svg" height="20" /> Windows | <p>[![MSVC16+ CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_windows.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_windows.yml)</p> <p>[![MSVC14 CI](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl)</p> | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A |
 | <img src="docu/Icons/uwp.svg" height="20" /> UWP | [![UWP CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_uwp.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_uwp.yml) | :heavy_check_mark: | :heavy_check_mark: | N/A | N/A | N/A |
 | <img src="docu/Icons/linux.svg" height="20" /> GNU/Linux | [![GNU/Linux CI](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/LukasBanana/LLGL/actions/workflows/ci_linux.yml) | N/A | N/A | :heavy_check_mark: | :heavy_check_mark: | N/A |
@@ -53,6 +53,7 @@ The Windows SDK is also required to build D3D11 and D3D12 backends.
 ### macOS, iOS
 
 [**Xcode 9**](https://developer.apple.com/xcode/) or later is required to build LLGL on macOS and iOS.
+For older Macs, there is a legacy mode to build LLGL for Mac OS X 10.6 using [MacPorts](https://www.macports.org/) of Clang.
 
 ### GNU/Linux
 
@@ -63,8 +64,6 @@ LLGL on GNU/Linux requires the development libraries for [X11](https://www.x.org
 The [Android NDK](https://developer.android.com/ndk) with at least API level 21 is required.
 The build script to generate project files is currently only supported on **GNU/Linux**
 and requires [CMake 3.10](https://cmake.org/) or later and the [Code::Blocks](http://www.codeblocks.org/) IDE.
-
-*This platform support is currently in an experimental state.*
 
 ## Installing (vcpkg)
 

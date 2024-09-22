@@ -18,6 +18,10 @@ To build D3D11 and D3D12 backends, the Windows SDK 10 (10.0.10240.0 or later) is
 
 LLGL for macOS is compatible with [Xcode](https://developer.apple.com/xcode/) 9 and later.
 
+To build LLGL on older Macs back to Mac OS X 10.6 Snow Leopard with Xcode 3,
+there is a legacy mode (run `$ ./BuildMacOS.command --legacy`) using [MacPorts](https://www.macports.org/) of Clang.
+This mode only supports the OpenGL backend with compatibility profile for GL 2.0-2.1.
+
 
 ## iOS
 
