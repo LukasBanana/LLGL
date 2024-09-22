@@ -44,7 +44,7 @@ On Windows, MSYS2 can be used to run *BuildAndroid.sh*.
 
 #### Known issues
 
-Currently only the GLES backend is supported for Android. Vulkan backend compiles but is not stable and untested at the moment.
+Currently only the GLES backend is supported for Android. Vulkan backend compiles but is not stable (synchronization issues are visible).
 
 
 ## GNU/Linux

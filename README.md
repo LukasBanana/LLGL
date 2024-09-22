@@ -61,9 +61,8 @@ LLGL on GNU/Linux requires the development libraries for [X11](https://www.x.org
 
 ### Android
 
-The [Android NDK](https://developer.android.com/ndk) with at least API level 21 is required.
-The build script to generate project files is currently only supported on **GNU/Linux**
-and requires [CMake 3.10](https://cmake.org/) or later and the [Code::Blocks](http://www.codeblocks.org/) IDE.
+[Android NDK](https://developer.android.com/ndk) with at least API level 21 is required.
+The build script supports generating project files for [Android Studio](https://developer.android.com/studio).
 
 ## Installing (vcpkg)
 
