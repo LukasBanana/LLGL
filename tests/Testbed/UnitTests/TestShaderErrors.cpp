@@ -73,7 +73,7 @@ DEF_TEST( ShaderErrors )
             }
         };
 
-        const std::string shaderPath = "Shaders/";
+        const std::string shaderPath = "Shaders/SemanticErrors/";
 
         std::string shaderFilename = name;
         Shader* shader = nullptr;

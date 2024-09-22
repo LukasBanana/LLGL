@@ -849,30 +849,28 @@ bool TestbedContext::LoadShaders()
         ShaderMacro{ nullptr, nullptr }
     };
 
-    const std::string shaderPath = "Shaders/";
-
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0");
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0", definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",   ShaderType::Vertex,   "VSMain",  "vs_5_0");
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.hlsl",   ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",    ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.hlsl",    ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
-        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Vertex,   "VShadow", "vs_5_0");
-        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Vertex,   "VScene",  "vs_5_0");
-        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.hlsl",         ShaderType::Fragment, "PScene",  "ps_5_0");
-        shaders[VSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.hlsl",        ShaderType::Vertex,   "VSMain",  "vs_5_0");
-        shaders[PSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.hlsl",        ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.hlsl",       ShaderType::Compute,  "CSMain",  "cs_5_0");
-        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.hlsl",           ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.hlsl",           ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0");
+        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Vertex,   "VSMain",  "vs_5_0");
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
+        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,   "VShadow", "vs_5_0");
+        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,   "VScene",  "vs_5_0");
+        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Fragment, "PScene",  "ps_5_0");
+        shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Vertex,   "VSMain",  "vs_5_0");
+        shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Compute,  "CSMain",  "cs_5_0");
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Fragment, "PSMain",  "ps_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -881,76 +879,76 @@ bool TestbedContext::LoadShaders()
             Log::Errorf("OpenGL backend does not support GLSL 330\n");
             return false;
         }
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",          ShaderType::Vertex);
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",          ShaderType::Fragment);
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.vert",   ShaderType::Vertex,   nullptr, nullptr);
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.330core.frag",   ShaderType::Fragment, nullptr, nullptr);
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.330core.frag",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex);
+        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment);
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.330core.vert",          ShaderType::Vertex,   nullptr, nullptr, definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.330core.frag",          ShaderType::Fragment, nullptr, nullptr, definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.330core.vert",   ShaderType::Vertex,   nullptr, nullptr);
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.330core.frag",   ShaderType::Fragment, nullptr, nullptr);
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.330core.vert",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.330core.frag",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_420))
         {
-            shaders[VSDualSourceBlend] = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.vert", ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-            shaders[PSDualSourceBlend] = LoadShaderFromFile(shaderPath + "DualSourceBlending.420core.frag", ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[VSDualSourceBlend] = LoadShaderFromFile("DualSourceBlending.420core.vert", ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[PSDualSourceBlend] = LoadShaderFromFile("DualSourceBlending.420core.frag", ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
         }
-        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.VShadow.330core.vert", ShaderType::Vertex);
-        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.VScene.330core.vert",  ShaderType::Vertex);
-        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.330core.frag",  ShaderType::Fragment);
+        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.VShadow.330core.vert", ShaderType::Vertex);
+        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.VScene.330core.vert",  ShaderType::Vertex);
+        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.PScene.330core.frag",  ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_450))
         {
-            shaders[VSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.vert",    ShaderType::Vertex);
-            shaders[PSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.frag",    ShaderType::Fragment);
-            shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-            shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag",   ShaderType::Fragment);
-            shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp",   ShaderType::Compute);
+            shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.vert",    ShaderType::Vertex);
+            shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.frag",    ShaderType::Fragment);
+            shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+            shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag",   ShaderType::Fragment);
+            shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp",   ShaderType::Compute);
         }
-        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.330core.frag",           ShaderType::Fragment);
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1");
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1");
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1", definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",  ShaderType::Vertex,   "VSMain",  "1.1");
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.metal",  ShaderType::Fragment, "PSMain",  "1.1");
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.metal",      ShaderType::Fragment, "PSMain",  "1.1", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",   ShaderType::Vertex,   "VSMain",  "1.2", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.metal",   ShaderType::Fragment, "PSMain",  "1.2", nullptr, VertFmtEmpty);
-        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.metal",        ShaderType::Vertex,   "VShadow", "1.1");
-        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.metal",        ShaderType::Vertex,   "VScene",  "1.1");
-        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.metal",        ShaderType::Fragment, "PScene",  "1.1");
-//      shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
-//      shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.metal",      ShaderType::Fragment, "PSMain",  "1.1");
-//      shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.metal",      ShaderType::Compute,  "CSMain",  "1.1");
-        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
-        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.metal",          ShaderType::Fragment, "PSMain",  "1.1");
+        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1");
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Vertex,   "VSMain",  "1.1", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.metal",         ShaderType::Fragment, "PSMain",  "1.1", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.metal",  ShaderType::Vertex,   "VSMain",  "1.1");
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.metal",  ShaderType::Fragment, "PSMain",  "1.1");
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.metal",      ShaderType::Fragment, "PSMain",  "1.1", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.metal",   ShaderType::Vertex,   "VSMain",  "1.2", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.metal",   ShaderType::Fragment, "PSMain",  "1.2", nullptr, VertFmtEmpty);
+        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.metal",        ShaderType::Vertex,   "VShadow", "1.1");
+        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.metal",        ShaderType::Vertex,   "VScene",  "1.1");
+        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.metal",        ShaderType::Fragment, "PScene",  "1.1");
+//      shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
+//      shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Fragment, "PSMain",  "1.1");
+//      shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Compute,  "CSMain",  "1.1");
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Fragment, "PSMain",  "1.1");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {
-        shaders[VSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.vert.spv",          ShaderType::Vertex);
-        shaders[PSSolid]            = LoadShaderFromFile(shaderPath + "TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
-        shaders[VSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
-        shaders[PSTextured]         = LoadShaderFromFile(shaderPath + "TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
-        shaders[VSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.450core.vert.spv",   ShaderType::Vertex);
-        shaders[PSDynamic]          = LoadShaderFromFile(shaderPath + "DynamicTriangleMesh.450core.frag.spv",   ShaderType::Fragment);
-        shaders[VSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile(shaderPath + "UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.vert.spv",    ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile(shaderPath + "DualSourceBlending.450core.frag.spv",    ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[VSShadowMap]        = LoadShaderFromFile(shaderPath + "ShadowMapping.VShadow.450core.vert.spv", ShaderType::Vertex);
-        shaders[VSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.VScene.450core.vert.spv",  ShaderType::Vertex);
-        shaders[PSShadowedScene]    = LoadShaderFromFile(shaderPath + "ShadowMapping.PScene.450core.frag.spv",  ShaderType::Fragment);
-        shaders[VSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.vert.spv",        ShaderType::Vertex);
-        shaders[PSResourceArrays]   = LoadShaderFromFile(shaderPath + "ResourceArrays.450core.frag.spv",        ShaderType::Fragment);
-        shaders[VSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.frag.spv",       ShaderType::Fragment);
-        shaders[CSResourceBinding]  = LoadShaderFromFile(shaderPath + "ResourceBinding.450core.comp.spv",       ShaderType::Compute);
-        shaders[VSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.450core.vert.spv",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
-        shaders[PSClear]            = LoadShaderFromFile(shaderPath + "ClearScreen.450core.frag.spv",           ShaderType::Fragment);
+        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.450core.vert.spv",          ShaderType::Vertex);
+        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.450core.frag.spv",          ShaderType::Fragment);
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.vert.spv", ShaderType::Vertex);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.Textured.450core.frag.spv", ShaderType::Fragment);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.450core.vert.spv",   ShaderType::Vertex);
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.450core.frag.spv",   ShaderType::Fragment);
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.450core.frag.spv",       ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.450core.vert.spv",    ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.450core.frag.spv",    ShaderType::Fragment, nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.VShadow.450core.vert.spv", ShaderType::Vertex);
+        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.VScene.450core.vert.spv",  ShaderType::Vertex);
+        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.PScene.450core.frag.spv",  ShaderType::Fragment);
+        shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.vert.spv",        ShaderType::Vertex);
+        shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.450core.frag.spv",        ShaderType::Fragment);
+        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert.spv",       ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag.spv",       ShaderType::Fragment);
+        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp.spv",       ShaderType::Compute);
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.450core.vert.spv",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.450core.frag.spv",           ShaderType::Fragment);
     }
     else
     {
@@ -1204,10 +1202,21 @@ Shader* TestbedContext::LoadShaderFromFile(
     if (opt.verbose)
         PrintLoadingInfo();
 
+    // Resolve file path
+    const std::string shaderRootDir = "Shaders/";
+
+    std::string filePath = shaderRootDir;
+
+    std::string::size_type filePartEnd = filename.find('.');
+    filePath += (filePartEnd != std::string::npos ? filename.substr(0, filePartEnd) : filename);
+    filePath += '/';
+    filePath += filename;
+
+    // Create shader from file
     ShaderDescriptor shaderDesc;
     {
         shaderDesc.type                 = type;
-        shaderDesc.source               = filename.c_str();
+        shaderDesc.source               = filePath.c_str();
         shaderDesc.sourceType           = (isFileBinary ? ShaderSourceType::BinaryFile : ShaderSourceType::CodeFile);
         shaderDesc.entryPoint           = entry;
         shaderDesc.profile              = profile;
