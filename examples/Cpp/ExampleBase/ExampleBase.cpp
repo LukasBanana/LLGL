@@ -348,7 +348,7 @@ struct ExampleConfig
 static ExampleConfig g_Config;
 
 #ifdef LLGL_OS_ANDROID
-android_app* ExampleBase::androidApp_;
+android_app* ExampleBase::androidApp_ = nullptr;
 #endif
 
 void ExampleBase::ParseProgramArgs(int argc, char* argv[])
@@ -468,19 +468,20 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::RenderSystemDescriptor rendererDesc = g_Config.rendererModule;
 
     #if defined LLGL_OS_ANDROID
+
+    LLGL::RendererConfigurationOpenGL cfgGL;
+
+    if (android_app* app = ExampleBase::androidApp_)
+        rendererDesc.androidApp = app;
+    else
+        throw std::invalid_argument("'android_app' state was not specified");
+
     if (rendererDesc.moduleName == "OpenGLES3")
     {
-        LLGL::RendererConfigurationOpenGL cfgGL;
-        if (android_app* app = ExampleBase::androidApp_)
-        {
-            rendererDesc.androidApp         = app;
-            cfgGL.majorVersion = 3;
-            cfgGL.minorVersion = 1;
-            rendererDesc.rendererConfig     = &cfgGL;
-            rendererDesc.rendererConfigSize = sizeof(cfgGL);
-        }
-        else
-            throw std::invalid_argument("'android_app' state was not specified");
+        cfgGL.majorVersion = 3;
+        cfgGL.minorVersion = 1;
+        rendererDesc.rendererConfig     = &cfgGL;
+        rendererDesc.rendererConfigSize = sizeof(cfgGL);
     }
     #endif
 

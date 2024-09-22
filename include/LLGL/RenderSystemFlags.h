@@ -449,7 +449,7 @@ struct RenderSystemDescriptor
     \endcode
     \note Only supported on: Android.
     */
-    android_app*    androidApp;
+    android_app*        androidApp          = nullptr;
 
     #endif // /LLGL_OS_ANDROID
 };

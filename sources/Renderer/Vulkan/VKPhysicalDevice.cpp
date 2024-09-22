@@ -455,11 +455,11 @@ void VKPhysicalDevice::QueryDeviceFeatures()
 
     vkGetPhysicalDeviceFeatures2(physicalDevice_, &features_);
 
-    #else
+    #else // VK_KHR_get_physical_device_properties2
 
     vkGetPhysicalDeviceFeatures(physicalDevice_, &(features_.features));
 
-    #endif
+    #endif // /VK_KHR_get_physical_device_properties2
 }
 
 void VKPhysicalDevice::QueryDeviceProperties()
@@ -496,11 +496,11 @@ void VKPhysicalDevice::QueryDeviceProperties()
     /* Store primary device properties */
     properties_ = propertiesExt.properties;
 
-    #else
+    #else // VK_KHR_get_physical_device_properties2
 
     vkGetPhysicalDeviceProperties(physicalDevice_, &properties_);
 
-    #endif
+    #endif // /VK_KHR_get_physical_device_properties2
 }
 
 void VKPhysicalDevice::QueryDeviceMemoryProperties()

@@ -388,6 +388,7 @@ void VKSwapChain::CreateGpuSurface()
 
     #elif defined LLGL_OS_ANDROID
 
+    LLGL_ASSERT(nativeHandle.window != nullptr, "missing valid ANativeWindow object to create Vulkan surface on Android");
     VkAndroidSurfaceCreateInfoKHR createInfo;
     {
         createInfo.sType    = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
@@ -397,6 +398,10 @@ void VKSwapChain::CreateGpuSurface()
     }
     VkResult result = vkCreateAndroidSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Android surface for Vulkan swap-chain");
+
+    #else
+
+    #error Platform not supported for Vulkan backend
 
     #endif
 
