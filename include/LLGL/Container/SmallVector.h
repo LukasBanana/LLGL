@@ -463,7 +463,7 @@ class LLGL_EXPORT SmallVector
                 {
                     /* Destroy range, move tail backwards, and reduce container size */
                     destroy_range(const_cast<iterator>(from), const_cast<iterator>(to));
-                    move_tail(const_cast<iterator>(from), to, end());
+                    move_tail(const_cast<iterator>(from), const_cast<iterator>(to), end());
                     size_ -= count;
                     return const_cast<iterator>(to);
                 }
