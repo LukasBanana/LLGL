@@ -60,7 +60,7 @@ LLGL_DECLARE_STATIC_MODULE_INTERFACE(Direct3D12);
 #endif
 
 
-namespace StaticModule
+namespace StaticModules
 {
 
 
@@ -225,7 +225,7 @@ RenderSystem* AllocRenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 }
 
 
-} // /namespace StaticModule
+} // /namespace StaticModules
 
 } // /namespace LLGL
 

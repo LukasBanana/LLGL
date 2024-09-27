@@ -43,7 +43,7 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
 
     LLGL_STRING_PRINTF(report, format);
 
-    #ifdef LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_ENABLE_EXCEPTIONS
 
     /* Throw exception with report and optional origin */
     throw std::runtime_error(report);
@@ -167,13 +167,13 @@ LLGL_EXPORT void TrapReport(const char* origin, const Report& report)
 
 LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, ...)
 {
-    #ifdef LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_ENABLE_EXCEPTIONS
 
     std::string errorStr;
     LLGL_STRING_PRINTF(errorStr, format);
     throw std::runtime_error(errorStr);
 
-    #else
+    #else // LLGL_ENABLE_EXCEPTIONS
 
     if (report != nullptr)
     {
@@ -184,7 +184,7 @@ LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, .
 
     return nullptr;
 
-    #endif
+    #endif // /LLGL_ENABLE_EXCEPTIONS
 }
 
 

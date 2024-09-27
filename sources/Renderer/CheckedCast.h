@@ -46,7 +46,7 @@ inline TDst& ObjectCast(TSrc& obj)
 
     return dynamic_cast<TDst&>(obj);
 
-    #endif
+    #endif // /LLGL_ENABLE_EXCEPTIONS
 }
 
 template <typename TDst, typename TSrc>

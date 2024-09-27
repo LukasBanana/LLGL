@@ -8,7 +8,7 @@
 #ifndef LLGL_STATIC_MODULE_INTERFACE_H
 #define LLGL_STATIC_MODULE_INTERFACE_H
 
-#ifdef LLGL_BUILD_STATIC_LIB
+#if LLGL_BUILD_STATIC_LIB
 
 
 #include <LLGL/RenderSystemFlags.h>
@@ -20,7 +20,7 @@ namespace LLGL
 
 class RenderSystem;
 
-namespace StaticModule
+namespace StaticModules
 {
 
 
@@ -37,7 +37,7 @@ int GetRendererID(const std::string& moduleName);
 RenderSystem* AllocRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
 
 
-} // /namespace StaticModule
+} // /namespace StaticModules
 
 } // /namespace LLGL
 
