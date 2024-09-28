@@ -8,6 +8,7 @@
 #include "LinuxDisplay.h"
 #include "../../Core/CoreUtils.h"
 #include <X11/extensions/Xrandr.h>
+#include <dlfcn.h>
 
 
 namespace LLGL
@@ -16,7 +17,7 @@ namespace LLGL
 
 static std::vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
 static std::vector<Display*>                        g_displayRefList;
-static Display*                                     g_primaryDisplay;
+static Display*                                     g_primaryDisplay    = nullptr;
 
 LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
 {
@@ -49,6 +50,10 @@ static bool UpdateDisplayList()
  * LinuxSharedX11Display class
  */
 
+#if !LLGL_BUILD_STATIC_LIB
+static void* g_retainedLibGL = nullptr;
+#endif
+
 LinuxSharedX11Display::LinuxSharedX11Display() :
     native_ { XOpenDisplay(nullptr) }
 {
@@ -59,6 +64,24 @@ LinuxSharedX11Display::LinuxSharedX11Display() :
 LinuxSharedX11Display::~LinuxSharedX11Display()
 {
     XCloseDisplay(native_);
+
+    #if !LLGL_BUILD_STATIC_LIB
+    /*
+    If libGL.so was retained, release it now.
+    This library must be unloaded *after* the connection to the X11 display is closed, because GL might have registerd shutdown callbacks.
+    If we unload libGL.so too soon, XCloseDisplay() will crash with SIGSEGV on Linux.
+    */
+    if (g_retainedLibGL)
+        dlclose(g_retainedLibGL);
+    #endif
+}
+
+void LinuxSharedX11Display::RetainLibGL()
+{
+    #if !LLGL_BUILD_STATIC_LIB
+    if (!g_retainedLibGL)
+        g_retainedLibGL = dlopen("libGL.so", RTLD_LAZY);
+    #endif
 }
 
 

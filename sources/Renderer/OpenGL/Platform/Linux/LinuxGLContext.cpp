@@ -14,6 +14,7 @@
 #include "../../../RenderSystemUtils.h"
 #include "../../../../Core/CoreUtils.h"
 #include "../../../../Core/Assertion.h"
+#include "../../../../Platform/Linux/LinuxDisplay.h"
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
@@ -68,6 +69,10 @@ LinuxGLContext::LinuxGLContext(
 :
     samples_ { pixelFormat.samples }
 {
+    /* Notify the shared X11 display that it'll be used by libGL.so to ensure a clean teardown */
+    LinuxSharedX11Display::RetainLibGL();
+
+    /* Create GLX or proxy context if a custom one is specified */
     NativeHandle nativeWindowHandle = {};
     surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
     if (customNativeHandle != nullptr)
@@ -194,6 +199,11 @@ void LinuxGLContext::CreateGLXContext(
 
     /* Get X11 display, window, and visual information */
     display_ = nativeHandle.display;
+
+    /* Ensure GLX is a supported X11 extension */
+    int errorBase = 0, eventBase = 0;
+    if (glXQueryExtension(display_, &errorBase, &eventBase) == False)
+        LLGL_TRAP("GLX extension is not supported by X11 implementation");
 
     /* Get X11 visual information or choose it now */
     ::XVisualInfo* visual = nativeHandle.visual;

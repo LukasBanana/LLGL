@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-    RenderSystemRegistry& RenderSystemRegistry::Get()
+RenderSystemRegistry& RenderSystemRegistry::Get()
 {
     static RenderSystemRegistry instance;
     return instance;

@@ -34,6 +34,9 @@ class LinuxSharedX11Display
         // Returns a shared instance of the X11 display.
         static LinuxSharedX11DisplaySPtr GetShared();
 
+        // Notify to retain a reference to libGL.so for the shared X11 display connection.
+        static void RetainLibGL();
+
         // Returns the native X11 display.
         inline ::Display* GetNative() const
         {
