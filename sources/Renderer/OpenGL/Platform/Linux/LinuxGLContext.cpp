@@ -101,6 +101,72 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
     return false;
 }
 
+::XVisualInfo* LinuxGLContext::ChooseVisual(::Display* display, int screen, const GLPixelFormat& pixelFormat, int& outSamples)
+{
+    GLXFBConfig framebufferConfig = 0;
+
+    /* Find suitable multi-sample format (for samples > 1) */
+    for (outSamples = pixelFormat.samples; outSamples > 1; --outSamples)
+    {
+        /* Create framebuffer configuration for multi-sampling */
+        const int framebufferAttribs[] =
+        {
+            GLX_DOUBLEBUFFER,   True,
+            GLX_X_RENDERABLE,   True,
+            GLX_DRAWABLE_TYPE,  GLX_WINDOW_BIT,
+            GLX_RENDER_TYPE,    GLX_RGBA_BIT,
+            GLX_X_VISUAL_TYPE,  GLX_TRUE_COLOR,
+            GLX_RED_SIZE,       8,
+            GLX_GREEN_SIZE,     8,
+            GLX_BLUE_SIZE,      8,
+            GLX_ALPHA_SIZE,     (pixelFormat.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     pixelFormat.depthBits,
+            GLX_STENCIL_SIZE,   pixelFormat.stencilBits,
+            GLX_SAMPLE_BUFFERS, 1,
+            GLX_SAMPLES,        outSamples,
+            None
+        };
+
+        int fbConfigsCount = 0;
+        GLXFBConfig* fbConfigs = glXChooseFBConfig(display, screen, framebufferAttribs, &fbConfigsCount);
+
+        if (fbConfigs != nullptr)
+        {
+            if (fbConfigsCount > 0)
+            {
+                framebufferConfig = fbConfigs[0];
+                if (framebufferConfig != 0)
+                    break;
+            }
+            XFree(fbConfigs);
+        }
+    }
+
+    if (framebufferConfig)
+    {
+        /* Choose XVisualInfo from FB config */
+        return glXGetVisualFromFBConfig(display, framebufferConfig);
+    }
+    else
+    {
+        /* Choose standard XVisualInfo structure */
+        int visualAttribs[] =
+        {
+            GLX_RGBA,
+            GLX_DOUBLEBUFFER,
+            GLX_RED_SIZE,       8,
+            GLX_GREEN_SIZE,     8,
+            GLX_BLUE_SIZE,      8,
+            GLX_ALPHA_SIZE,     (pixelFormat.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     pixelFormat.depthBits,
+            GLX_STENCIL_SIZE,   pixelFormat.stencilBits,
+            None
+        };
+
+        return glXChooseVisual(display, screen, visualAttribs);
+    }
+}
+
 
 /*
  * ======= Private: =======
@@ -123,15 +189,22 @@ void LinuxGLContext::CreateGLXContext(
 {
     LLGL_ASSERT_PTR(nativeHandle.display);
     LLGL_ASSERT_PTR(nativeHandle.window);
-    LLGL_ASSERT_PTR(nativeHandle.visual);
 
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
 
     /* Get X11 display, window, and visual information */
     display_ = nativeHandle.display;
 
+    /* Get X11 visual information or choose it now */
+    ::XVisualInfo* visual = nativeHandle.visual;
+    if (visual == nullptr)
+    {
+        visual = LinuxGLContext::ChooseVisual(display_, nativeHandle.screen, pixelFormat, samples_);
+        LLGL_ASSERT(visual != nullptr, "failed to choose X11VisualInfo");
+    }
+
     /* Create intermediate GL context OpenGL context with X11 lib */
-    GLXContext intermediateGlc = CreateGLXContextCompatibilityProfile(nativeHandle.visual, nullptr);
+    GLXContext intermediateGlc = CreateGLXContextCompatibilityProfile(visual, nullptr);
 
     if (glXMakeCurrent(display_, nativeHandle.window, intermediateGlc) != True)
         Log::Errorf("glXMakeCurrent failed on GLX compatibility profile\n");

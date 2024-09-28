@@ -41,6 +41,10 @@ class LinuxGLContext : public GLContext
 
     public:
 
+        // Tries to find an X11 visual configuration for the specified pixel format and
+        // modifies the sample count depending on availability. Returns null if no such visual could be found.
+        static ::XVisualInfo* ChooseVisual(::Display* display, int screen, const GLPixelFormat& pixelFormat, int& outSamples);
+
         // Returns the native X11 <GLXContext> object.
         inline ::GLXContext GetGLXContext() const
         {
@@ -59,7 +63,7 @@ class LinuxGLContext : public GLContext
             const NativeHandle&                 nativeHandle,
             LinuxGLContext*                     sharedContext
         );
-        
+
         void DeleteGLXContext();
 
         GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
