@@ -10,6 +10,7 @@ ENABLE_D3D11="OFF"
 ENABLE_D3D12="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
+ENABLE_GL2X="OFF"
 BUILD_TYPE="Release"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
@@ -39,6 +40,7 @@ fi
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -S, --skip-validation ..... Skip check for missing packages (X11, OpenGL etc.)"
     echo "  -v, --verbose ............. Print additional information"
+    echo "  --legacy .................. Use GL2.x legacy mode"
     echo "  --null .................... Include Null renderer"
     echo "  --vulkan .................. Include Vulkan renderer"
 if [ $PLATFORM_MSYS -eq 1 ]; then
@@ -74,6 +76,8 @@ for ARG in "$@"; do
         VERBOSE=1
     elif [ "$ARG" = "-S" ] || [ "$ARG" = "--skip-validation" ]; then
         SKIP_VALIDATION=1
+    elif [ "$ARG" = "--legacy" ]; then
+        ENABLE_GL2X="ON"
     elif [ "$ARG" = "--null" ]; then
         ENABLE_NULL="ON"
     elif [ "$ARG" = "--vulkan" ]; then
@@ -145,7 +149,7 @@ fi
 OPTIONS=(
     -DLLGL_BUILD_WRAPPER_C99=ON
     -DLLGL_BUILD_RENDERER_OPENGL=ON
-    -DLLGL_GL_ENABLE_OPENGL2X=ON
+    -DLLGL_GL_ENABLE_OPENGL2X=$ENABLE_GL2X
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
     -DLLGL_BUILD_RENDERER_DIRECT3D11=$ENABLE_D3D11
