@@ -42,6 +42,12 @@ class DbgShader final : public Shader
         // Returns true if this shader has no errors.
         bool IsCompiled() const;
 
+        // Returns true if this shader has any output attributes.
+        inline bool HasAnyOutputAttributes() const
+        {
+            return hasAnyOutputAttribs_;
+        }
+
     public:
 
         Shader&                 instance;
@@ -50,12 +56,13 @@ class DbgShader final : public Shader
 
     private:
 
-        void QueryInstanceAndVertexIDs();
+        void CacheShaderReflection();
 
     private:
 
         std::string             vertexID_;
         std::string             instanceID_;
+        bool                    hasAnyOutputAttribs_    = false;
 
 };
 

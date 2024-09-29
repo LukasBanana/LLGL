@@ -19,8 +19,15 @@ DbgShader::DbgShader(Shader& instance, const ShaderDescriptor& desc) :
     desc      { desc                 },
     label     { LLGL_DBG_LABEL(desc) }
 {
-    if (GetType() == ShaderType::Vertex)
-        QueryInstanceAndVertexIDs();
+    switch (GetType())
+    {
+        case ShaderType::Vertex:
+        case ShaderType::Fragment:
+            CacheShaderReflection();
+            break;
+        default:
+            break;
+    }
 }
 
 void DbgShader::SetDebugName(const char* name)
@@ -61,13 +68,12 @@ bool DbgShader::IsCompiled() const
  * ======= Private: =======
  */
 
-void DbgShader::QueryInstanceAndVertexIDs()
+void DbgShader::CacheShaderReflection()
 {
     ShaderReflection reflect;
-    #if 0 //TODO
     if (instance.Reflect(reflect))
     {
-        for (const auto& attr : reflect.vertex.inputAttribs)
+        for (const VertexAttribute& attr : reflect.vertex.inputAttribs)
         {
             if (vertexID_.empty())
             {
@@ -82,8 +88,9 @@ void DbgShader::QueryInstanceAndVertexIDs()
             if (!vertexID_.empty() && !instanceID_.empty())
                 break;
         }
+
+        hasAnyOutputAttribs_ = !(reflect.vertex.outputAttribs.empty() && reflect.fragment.outputAttribs.empty());
     }
-    #endif
 }
 
 

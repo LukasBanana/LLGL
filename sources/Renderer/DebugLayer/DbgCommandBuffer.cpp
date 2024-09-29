@@ -854,14 +854,20 @@ void DbgCommandBuffer::SetPipelineState(PipelineState& pipelineState)
         /* Bind graphics pipeline and unbind compute pipeline */
         bindings_.pipelineState         = (&pipelineStateDbg);
         bindings_.anyShaderAttributes   = false;
+        bindings_.anyFragmentOutput     = false;
 
         if (pipelineStateDbg.isGraphicsPSO)
         {
-            if (auto vertexShader = pipelineStateDbg.graphicsDesc.vertexShader)
+            if (auto* vertexShader = pipelineStateDbg.graphicsDesc.vertexShader)
             {
                 auto vertexShaderDbg = LLGL_CAST(const DbgShader*, vertexShader);
                 //TODO: store bound vertex shader
                 bindings_.anyShaderAttributes = !(vertexShaderDbg->desc.vertex.inputAttribs.empty());
+            }
+            if (auto* fragmentShader = pipelineStateDbg.graphicsDesc.fragmentShader)
+            {
+                auto fragmentShaderDbg = LLGL_CAST(const DbgShader*, fragmentShader);
+                bindings_.anyFragmentOutput = fragmentShaderDbg->HasAnyOutputAttributes();
             }
 
             /* Store dynamic states */
@@ -1735,6 +1741,7 @@ void DbgCommandBuffer::ValidateDrawCmd(
     ValidateVertexID(firstVertex);
     ValidateInstanceID(firstInstance);
     ValidateBindingTable();
+    ValidateBlendStates();
 
     if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
         ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
@@ -1755,6 +1762,7 @@ void DbgCommandBuffer::ValidateDrawIndexedCmd(
     ValidateNumInstances(numInstances);
     ValidateInstanceID(firstInstance);
     ValidateBindingTable();
+    ValidateBlendStates();
 
     if (bindings_.indexBuffer)
     {
@@ -2334,10 +2342,31 @@ void DbgCommandBuffer::ValidateBindingTable()
         }
     };
 
-    if (auto pso = bindings_.pipelineState)
+    if (auto* pso = bindings_.pipelineState)
     {
-        if (auto pipelineLayout = pso->pipelineLayout)
+        if (auto* pipelineLayout = pso->pipelineLayout)
             ValidateBindingTableWithLayout(*pso, bindings_.bindingTable, pipelineLayout->desc);
+    }
+}
+
+void DbgCommandBuffer::ValidateBlendStates()
+{
+    if (auto* pso = bindings_.pipelineState)
+    {
+        /* If 'sampleMask' is zero, check if this might have been unintentional */
+        if (pso->isGraphicsPSO && pso->graphicsDesc.blend.sampleMask == 0)
+        {
+            /* If fragment discard is disabled and there is any fragment shader output, this configuration might have been unintentional */
+            if (!pso->graphicsDesc.rasterizer.discardEnabled && bindings_.anyFragmentOutput)
+            {
+                const std::string psoLabel = (!pso->label.empty() ? " \'" + pso->label + '\'' : "");
+                LLGL_DBG_WARN(
+                    WarningType::PointlessOperation,
+                    "drawing to output merger with pipeline state%s [blend.sampleMask=0] might be unintentional",
+                    psoLabel.c_str()
+                );
+            }
+        }
     }
 }
 

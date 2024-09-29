@@ -82,6 +82,7 @@ class DbgCommandBuffer final : public CommandBuffer
             DbgSwapChain*       swapChain                                           = nullptr;
             DbgRenderTarget*    renderTarget                                        = nullptr;
             std::uint32_t       numViewports                                        = 0;
+            bool                anyFragmentOutput                                   = false;
 
             // Stream inputs/outputs
             DbgBuffer*          vertexBufferStore[1]                                = {};
@@ -176,6 +177,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void ValidateDynamicStates();
         void ValidateBindingTable();
+        void ValidateBlendStates();
 
         DbgPipelineState* AssertAndGetGraphicsPSO();
         DbgPipelineState* AssertAndGetComputePSO();
