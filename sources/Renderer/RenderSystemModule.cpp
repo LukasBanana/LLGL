@@ -122,7 +122,7 @@ RenderSystemPtr RenderSystemModule::AllocRenderSystem(const RenderSystemDescript
         return ReportException(outReport, "failed to load 'LLGL_RenderSystem_Alloc' procedure from module: %s", filename_.c_str());
 
     auto* renderSystem = reinterpret_cast<RenderSystem*>(allocProc_(&renderSystemDesc, static_cast<int>(sizeof(renderSystemDesc))));
-    if (!renderSystem)
+    if (renderSystem == nullptr)
         return ReportException(outReport, "failed to allocate render system from module: %s", filename_.c_str());
 
     /* Check if errors where reported and the render system is unusable */

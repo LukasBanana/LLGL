@@ -12,7 +12,7 @@
 #define FONT_COURIER_NEW_16         ( 0 )
 #define FONT_LUCIDA_CONSOLE_32      ( 1 )
 
-#ifdef LLGL_OS_IOS
+#if defined LLGL_OS_IOS || defined LLGL_OS_ANDROID
 #   define SELECTED_FONT            ( FONT_LUCIDA_CONSOLE_32 )
 #   define FONTS_TEXT_MARGIN        ( 25 )
 #   define FONTS_PARAGRAPH_MARGIN   ( 140 )
@@ -38,7 +38,7 @@ class Example_Fonts : public ExampleBase
     LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
     // Constant buffer structure
-    struct Settings
+    struct alignas(16) Settings
     {
         Gs::Matrix4f    wvpMatrix;
         float           glyphTextureInvSize[2];
@@ -47,7 +47,7 @@ class Example_Fonts : public ExampleBase
     settings;
 
     // Vertex for a font glyph
-    struct Vertex
+    struct alignas(4) Vertex
     {
         std::int16_t position[2];
         std::int16_t texCoord[2];

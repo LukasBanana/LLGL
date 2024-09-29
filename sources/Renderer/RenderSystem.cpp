@@ -85,14 +85,16 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
 
     #endif
 
-    #ifdef LLGL_BUILD_STATIC_LIB
+    #if LLGL_BUILD_STATIC_LIB
 
     /* Allocate render system */
     RenderSystemPtr renderSystem{ StaticModules::AllocRenderSystem(renderSystemDesc) };
+    if (renderSystem == nullptr)
+        return ReportException(report, "failed to allocate render system from module: %s", renderSystemDesc.moduleName.c_str());
 
     if (renderSystemDesc.debugger != nullptr)
     {
-        #ifdef LLGL_ENABLE_DEBUG_LAYER
+        #if LLGL_ENABLE_DEBUG_LAYER
 
         /* Create debug layer render system */
         renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.debugger } };
