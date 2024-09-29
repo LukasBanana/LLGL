@@ -76,6 +76,9 @@ DECL_TEST( ViewportAndScissor );
 DECL_TEST( ResourceBinding );
 DECL_TEST( ResourceArrays );
 
+// C99 tests
+DECL_TEST( OffscreenC99 );
+
 #undef DECL_TEST
 
 

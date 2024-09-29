@@ -242,6 +242,7 @@ int ExampleInit()
         #if ENABLE_MULTISAMPLING
         .rasterizer.multiSampleEnabled  = true,
         #endif
+        .blend.sampleMask               = ~0u,
         .blend.targets[0].colorMask     = LLGLColorMaskAll,
     };
     LLGLPipelineState pipeline = llglCreateGraphicsPipelineState(&pipelineDesc);

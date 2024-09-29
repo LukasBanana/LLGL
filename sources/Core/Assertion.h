@@ -12,6 +12,8 @@
 #include "Exception.h"
 
 
+/* --- Assertions --- */
+
 #define LLGL_ASSERT(EXPR, ...) \
     if (!(EXPR)) { LLGL::TrapAssertionFailed(__FUNCTION__, #EXPR LLGL_VA_ARGS(__VA_ARGS__)); }
 
@@ -26,6 +28,23 @@
 
 #define LLGL_ASSERT_RENDERING_FEATURE_SUPPORT(FEATURE) \
     if (!GetRenderingCaps().features.FEATURE) { LLGL::TrapRenderingFeatureNotSupported(__FUNCTION__, #FEATURE); }
+
+/* --- Debug only assertions --- */
+
+#if LLGL_DEBUG
+
+#define LLGL_DEBUG_ASSERT(EXPR, ...) \
+    LLGL_ASSERT(EXPR, __VA_ARGS__)
+
+#define LLGL_DEBUG_ASSERT_PTR(EXPR) \
+    LLGL_ASSERT_PTR(EXPR)
+
+#else // LLGL_DEBUG
+
+#define LLGL_DEBUG_ASSERT(EXPR, ...)
+#define LLGL_DEBUG_ASSERT_PTR(EXPR)
+
+#endif // /LLGL_DEBUG
 
 
 #endif

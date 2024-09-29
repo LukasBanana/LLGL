@@ -277,6 +277,7 @@ class TestbedContext
 
         LLGL::RenderingDebugger         debugger;
         LLGL::RenderSystemPtr           renderer;
+        LLGL::RendererInfo              rendererInfo;
         LLGL::RenderingCapabilities     caps;
         LLGL::SwapChain*                swapChain               = nullptr;
         LLGL::CommandBuffer*            cmdBuffer               = nullptr;

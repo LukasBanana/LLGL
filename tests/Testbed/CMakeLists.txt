@@ -41,6 +41,9 @@ include_directories("${TEST_PROJECTS_DIR}/Testbed")
 # Testbed project
 if(LLGL_BUILD_TESTS)
     add_llgl_example_project(Testbed CXX "${FilesTestbed}" "${LLGL_MODULE_LIBS}")
+    if(LLGL_BUILD_WRAPPER_C99)
+        ADD_PROJECT_DEFINE(Testbed LLGL_TESTBED_INCLUDE_C99_TESTS)
+    endif()
 endif(LLGL_BUILD_TESTS)
 
 

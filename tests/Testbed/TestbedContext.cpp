@@ -185,6 +185,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         cmdBuffer = renderer->CreateCommandBuffer(CommandBufferFlags::ImmediateSubmit);
 
         // Print renderer information
+        rendererInfo = renderer->GetRendererInfo();
         if (opt.verbose)
             LogRendererInfo();
 
@@ -309,6 +310,13 @@ unsigned TestbedContext::RunAllTests()
             RecordTestResult(result, #TEST);                                        \
         }
 
+    #define RUN_C99_TEST(TEST)                          \
+        if (opt.ContainsTest(#TEST))                    \
+        {                                               \
+            const TestResult result = Test##TEST(0);    \
+            RecordTestResult(result, #TEST);            \
+        }
+
     // Run all command buffer tests
     RUN_TEST( CommandBufferSubmit         );
     RUN_TEST( CommandBufferEncode         );
@@ -346,6 +354,11 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ViewportAndScissor          );
     RUN_TEST( ResourceBinding             );
     RUN_TEST( ResourceArrays              );
+
+    // Reset main renderer and run C99 tests
+    // LLGL can't run the same render system in multiple instances (confused the context management in GL backend)
+    renderer.reset();
+    RUN_C99_TEST( OffscreenC99 );
 
     #undef RUN_TEST
 
@@ -820,7 +833,7 @@ double TestbedContext::ToMillisecs(std::uint64_t t0, std::uint64_t t1)
 
 void TestbedContext::LogRendererInfo()
 {
-    const RendererInfo& info = renderer->GetRendererInfo();
+    const RendererInfo& info = rendererInfo;
     Log::Printf("Renderer: %s (%s)\n", info.rendererName.c_str(), info.deviceName.c_str());
 
     if (renderer->GetRendererID() == LLGL::RendererID::OpenGL)

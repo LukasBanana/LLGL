@@ -14,6 +14,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/CommandBufferFlags.h>
 #include "../OpenGL.h"
+#include "../../../Core/Assertion.h"
 #include <array>
 #include <stack>
 #include <cstdint>
@@ -66,10 +67,12 @@ class GLStateManager
         /* ----- Common ----- */
 
         GLStateManager();
+        ~GLStateManager();
 
         // Returns the active GL state manager.
         static inline GLStateManager& Get()
         {
+            LLGL_DEBUG_ASSERT_PTR(current_);
             return *current_;
         }
 

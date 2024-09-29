@@ -266,6 +266,13 @@ GLStateManager::GLStateManager()
         GLStateManager::current_ = this;
 }
 
+GLStateManager::~GLStateManager()
+{
+    /* Clean up reference to this state manager if it's the current one */
+    if (GLStateManager::current_ == this)
+        GLStateManager::current_ = nullptr;
+}
+
 void GLStateManager::SetCurrentFromGLContext(GLContext& context)
 {
     current_ = &(context.GetStateManager());
