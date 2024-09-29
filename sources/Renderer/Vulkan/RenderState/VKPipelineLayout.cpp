@@ -13,6 +13,7 @@
 #include "../Texture/VKSampler.h"
 #include "../Shader/VKShader.h"
 #include "../Shader/VKShaderModulePool.h"
+#include "../../ResourceUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
@@ -261,14 +262,21 @@ static VkDescriptorType GetVkDescriptorType(const BindingDescriptor& desc)
     {
         case ResourceType::Sampler:
             return VK_DESCRIPTOR_TYPE_SAMPLER;
+
         case ResourceType::Texture:
-            return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            if ((desc.bindFlags & (BindFlags::Storage)) != 0)
+                return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            else
+                return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            break;
+
         case ResourceType::Buffer:
             if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
                 return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
                 return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             break;
+
         default:
             break;
     }
@@ -292,7 +300,7 @@ void VKPipelineLayout::CreateVkDescriptorSetLayout(
     VKThrowIfFailed(result, "failed to create Vulkan descriptor set layout");
 }
 
-static void Convert(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
+static void ConvertBindingDesc(VkDescriptorSetLayoutBinding& dst, const BindingDescriptor& src)
 {
     dst.binding             = src.slot.index;
     dst.descriptorType      = GetVkDescriptorType(src);
@@ -308,11 +316,11 @@ void VKPipelineLayout::CreateBindingSetLayout(
     SetLayoutType                           setLayoutType)
 {
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
-    const auto numBindings = inBindings.size();
+    const std::size_t numBindings = inBindings.size();
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
-        Convert(setLayoutBindings[i], inBindings[i]);
+        ConvertBindingDesc(setLayoutBindings[i], inBindings[i]);
 
     CreateVkDescriptorSetLayout(device, setLayoutType, setLayoutBindings);
 
@@ -320,18 +328,22 @@ void VKPipelineLayout::CreateBindingSetLayout(
     outBindings.reserve(numBindings);
     for_range(i, numBindings)
     {
-        outBindings.push_back(
-            VKLayoutBinding
-            {
-                inBindings[i].slot.index,
-                inBindings[i].stageFlags,
-                setLayoutBindings[i].descriptorType
-            }
-        );
+        for_range(arrayElement, setLayoutBindings[i].descriptorCount)
+        {
+            outBindings.push_back(
+                VKLayoutBinding
+                {
+                    /*dstBinding:*/         inBindings[i].slot.index,
+                    /*dstArrayElement:*/    arrayElement,
+                    /*stageFlags:*/         inBindings[i].stageFlags,
+                    /*descriptorType:*/     setLayoutBindings[i].descriptorType
+                }
+            );
+        }
     }
 }
 
-static void Convert(VkDescriptorSetLayoutBinding& dst, const StaticSamplerDescriptor& src, const VkSampler* immutableSamplerVK)
+static void ConvertImmutableSamplerDesc(VkDescriptorSetLayoutBinding& dst, const StaticSamplerDescriptor& src, const VkSampler* immutableSamplerVK)
 {
     dst.binding             = src.slot.index;
     dst.descriptorType      = VK_DESCRIPTOR_TYPE_SAMPLER;
@@ -352,7 +364,7 @@ void VKPipelineLayout::CreateImmutableSamplers(VkDevice device, const ArrayView<
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
-        Convert(setLayoutBindings[i], staticSamplers[i], immutableSamplers_[i].GetAddressOf());
+        ConvertImmutableSamplerDesc(setLayoutBindings[i], staticSamplers[i], immutableSamplers_[i].GetAddressOf());
 
     CreateVkDescriptorSetLayout(device, SetLayoutType_ImmutableSamplers, setLayoutBindings);
 }

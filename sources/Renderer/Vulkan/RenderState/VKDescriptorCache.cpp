@@ -161,7 +161,7 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
-        writeDesc->dstArrayElement  = 0;
+        writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = nullptr;
@@ -170,8 +170,10 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
     }
 }
 
-static VkImageLayout GetShaderReadOptimalImageLayout(Format format)
+static VkImageLayout GetShaderReadOptimalImageLayout(VkDescriptorType descriptorType, Format format)
 {
+    if (descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+        return VK_IMAGE_LAYOUT_GENERAL;
     #if 0
     if (IsDepthFormat(format))
         return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL; // VK_VERSION_1_1
@@ -188,13 +190,13 @@ void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKL
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
         imageInfo->imageView     = textureVK.GetVkImageView();
-        imageInfo->imageLayout   = GetShaderReadOptimalImageLayout(textureVK.GetFormat());
+        imageInfo->imageLayout   = GetShaderReadOptimalImageLayout(binding.descriptorType, textureVK.GetFormat());
     }
     auto writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
-        writeDesc->dstArrayElement  = 0;
+        writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = imageInfo;
@@ -215,7 +217,7 @@ void VKDescriptorCache::EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKL
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
-        writeDesc->dstArrayElement  = 0;
+        writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = imageInfo;
@@ -255,11 +257,11 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
     }
 
     /* Iterate over all bindings and create a new copy descriptor whenever the type changes */
-    VkDescriptorType descTypePrev = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+    VkDescriptorType groupDescType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
     std::uint32_t firstBinding = 0;
     std::uint32_t numBindings = 0;
 
-    auto FlushBindingsToCopyDesc = [this, &descTypePrev, &numBindings, &firstBinding]()
+    auto FlushBindingsToCopyDesc = [this, &numBindings, &firstBinding]()
     {
         if (numBindings > 0)
         {
@@ -282,16 +284,18 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
 
     for (const VKLayoutBinding& binding : bindings)
     {
-        if (descTypePrev == VK_DESCRIPTOR_TYPE_MAX_ENUM)
+        if (groupDescType == VK_DESCRIPTOR_TYPE_MAX_ENUM)
         {
+            /* Initialize first group of consecutive bindings */
             firstBinding = binding.dstBinding;
-            descTypePrev = binding.descriptorType;
+            groupDescType = binding.descriptorType;
         }
-        else if (descTypePrev != binding.descriptorType)
+        else if (groupDescType != binding.descriptorType || binding.dstBinding != firstBinding + numBindings)
         {
+            /* Start new group of bindings when type changes or binding point is not the next one in order */
             FlushBindingsToCopyDesc();
             firstBinding = binding.dstBinding;
-            descTypePrev = binding.descriptorType;
+            groupDescType = binding.descriptorType;
         }
         ++numBindings;
     }

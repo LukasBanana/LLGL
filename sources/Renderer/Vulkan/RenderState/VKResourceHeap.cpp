@@ -43,7 +43,7 @@ VKResourceHeap::VKResourceHeap(
         LLGL_TRAP("failed to create resource view heap due to missing pipeline layout");
 
     /* Get and validate number of bindings and resource views */
-    CopyLayoutBindings(pipelineLayoutVK->GetLayoutHeapBindings());
+    ConvertLayoutBindings(pipelineLayoutVK->GetLayoutHeapBindings());
 
     const std::uint32_t numBindings         = static_cast<std::uint32_t>(bindings_.size());
     const std::uint32_t numResourceViews    = GetNumResourceViewsOrThrow(numBindings, desc, initialResourceViews);
@@ -210,16 +210,17 @@ static bool IsDescriptorTypeBufferView(VkDescriptorType type)
     );
 }
 
-void VKResourceHeap::CopyLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings)
+void VKResourceHeap::ConvertLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings)
 {
     bindings_.resize(layoutBindings.size());
     for_range(i, layoutBindings.size())
-        CopyLayoutBinding(bindings_[i], layoutBindings[i]);
+        ConvertLayoutBinding(bindings_[i], layoutBindings[i]);
 }
 
-void VKResourceHeap::CopyLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src)
+void VKResourceHeap::ConvertLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src)
 {
     dst.dstBinding      = src.dstBinding;
+    dst.dstArrayElement = src.dstArrayElement;
     dst.descriptorType  = src.descriptorType;
     dst.stageFlags      = ToVkStageFlags(src.stageFlags);
     dst.imageViewIndex  = (IsDescriptorTypeImageView(src.descriptorType) ? numImageViewsPerSet_++ : VKResourceHeap::invalidViewIndex);
@@ -294,7 +295,7 @@ void VKResourceHeap::FillWriteDescriptorWithSampler(
     {
         writeDesc->dstSet           = descriptorSets_[descriptorSet];
         writeDesc->dstBinding       = binding.dstBinding;
-        writeDesc->dstArrayElement  = 0;
+        writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = imageInfo;
@@ -318,7 +319,7 @@ void VKResourceHeap::FillWriteDescriptorWithImageView(
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
         imageInfo->imageView     = GetOrCreateImageView(device, *textureVK, desc, imageViewIndex);
-        imageInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; //TODO: VK_IMAGE_LAYOUT_GENERAL for storage image
     }
 
     /* Initialize write descriptor */
@@ -326,7 +327,7 @@ void VKResourceHeap::FillWriteDescriptorWithImageView(
     {
         writeDesc->dstSet           = descriptorSets_[descriptorSet];
         writeDesc->dstBinding       = binding.dstBinding;
-        writeDesc->dstArrayElement  = 0;
+        writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = imageInfo;
@@ -366,7 +367,7 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
     {
         writeDesc->dstSet           = descriptorSets_[descriptorSet];
         writeDesc->dstBinding       = binding.dstBinding;
-        writeDesc->dstArrayElement  = 0;
+        writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = nullptr;

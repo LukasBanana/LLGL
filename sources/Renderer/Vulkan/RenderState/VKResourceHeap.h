@@ -71,9 +71,11 @@ class VKResourceHeap final : public ResourceHeap
 
         static constexpr std::uint32_t invalidViewIndex = 0xFFFF;
 
+        //TODO: merge with or inherit from VKLayoutBinding
         struct VKDescriptorBinding
         {
             std::uint32_t           dstBinding;
+            std::uint32_t           dstArrayElement;
             VkDescriptorType        descriptorType;
             VkPipelineStageFlags    stageFlags;
             std::uint32_t           imageViewIndex  : 16; // Index (per descriptor set) to the intermediate VkImageView or 0xFFFF if unused.
@@ -87,8 +89,8 @@ class VKResourceHeap final : public ResourceHeap
 
     private:
 
-        void CopyLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
-        void CopyLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src);
+        void ConvertLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
+        void ConvertLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src);
 
         void CreateDescriptorPool(VkDevice device, std::uint32_t numDescriptorSets);
 

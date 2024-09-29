@@ -29,6 +29,7 @@ class VKPoolSizeAccumulator;
 struct VKLayoutBinding
 {
     std::uint32_t       dstBinding;
+    std::uint32_t       dstArrayElement;
     long                stageFlags;
     VkDescriptorType    descriptorType;
 };
