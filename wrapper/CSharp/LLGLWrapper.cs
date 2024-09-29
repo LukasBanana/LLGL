@@ -1219,8 +1219,10 @@ namespace LLGL
 
     public class ProfileTimeRecord
     {
-        public AnsiString Annotation { get; set; }  = "";
-        public long       ElapsedTime { get; set; } = 0;
+        public AnsiString Annotation { get; set; }    = "";
+        public long       CPUTicksStart { get; set; } = 0;
+        public long       CPUTicksEnd { get; set; }   = 0;
+        public long       ElapsedTime { get; set; }   = 0;
 
         public ProfileTimeRecord() { }
 
@@ -1240,7 +1242,9 @@ namespace LLGL
                     {
                         native.annotation = annotationPtr;
                     }
-                    native.elapsedTime = ElapsedTime;
+                    native.cpuTicksStart = CPUTicksStart;
+                    native.cpuTicksEnd   = CPUTicksEnd;
+                    native.elapsedTime   = ElapsedTime;
                 }
                 return native;
             }
@@ -1248,8 +1252,10 @@ namespace LLGL
             {
                 unsafe
                 {
-                    Annotation  = Marshal.PtrToStringAnsi((IntPtr)value.annotation);
-                    ElapsedTime = value.elapsedTime;
+                    Annotation    = Marshal.PtrToStringAnsi((IntPtr)value.annotation);
+                    CPUTicksStart = value.cpuTicksStart;
+                    CPUTicksEnd   = value.cpuTicksEnd;
+                    ElapsedTime   = value.elapsedTime;
                 }
             }
         }
@@ -3498,8 +3504,10 @@ namespace LLGL
 
         public unsafe struct ProfileTimeRecord
         {
-            public byte* annotation;  /* = "" */
-            public long  elapsedTime; /* = 0 */
+            public byte* annotation;    /* = "" */
+            public long  cpuTicksStart; /* = 0 */
+            public long  cpuTicksEnd;   /* = 0 */
+            public long  elapsedTime;   /* = 0 */
         }
 
         public unsafe struct ProfileCommandQueueRecord
@@ -4235,8 +4243,14 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglSetCanvasTitle", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetCanvasTitle(Canvas canvas, [MarshalAs(UnmanagedType.LPWStr)] string title);
 
+        [DllImport(DllName, EntryPoint="llglSetCanvasTitleUTF8", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void SetCanvasTitleUTF8(Canvas canvas, [MarshalAs(UnmanagedType.LPStr)] string title);
+
         [DllImport(DllName, EntryPoint="llglGetCanvasTitle", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr GetCanvasTitle(Canvas canvas, IntPtr outTitleLength, char* outTitle);
+
+        [DllImport(DllName, EntryPoint="llglGetCanvasTitleUTF8", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe IntPtr GetCanvasTitleUTF8(Canvas canvas, IntPtr outTitleLength, byte* outTitle);
 
         [DllImport(DllName, EntryPoint="llglHasCanvasQuit", CallingConvention=CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.I1)]

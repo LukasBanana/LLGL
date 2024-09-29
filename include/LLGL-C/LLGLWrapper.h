@@ -1105,8 +1105,10 @@ LLGLQueryPipelineStatistics;
 
 typedef struct LLGLProfileTimeRecord
 {
-    const char* annotation;  /* = "" */
-    uint64_t    elapsedTime; /* = 0 */
+    const char* annotation;    /* = "" */
+    uint64_t    cpuTicksStart; /* = 0 */
+    uint64_t    cpuTicksEnd;   /* = 0 */
+    uint64_t    elapsedTime;   /* = 0 */
 }
 LLGLProfileTimeRecord;
 
@@ -1468,7 +1470,7 @@ typedef struct LLGLRenderSystemDescriptor
     const void*           nativeHandle;       /* = NULL */
     size_t                nativeHandleSize;   /* = 0 */
 #if __ANDROID__
-    struct android_app*   androidApp;
+    struct android_app*   androidApp;         /* = NULL */
 #endif /* __ANDROID__ */
 }
 LLGLRenderSystemDescriptor;

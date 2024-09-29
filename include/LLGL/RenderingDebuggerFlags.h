@@ -49,10 +49,25 @@ enum class WarningType
 struct ProfileTimeRecord
 {
     //! Time record annotation, e.g. function name that was recorded from the CommandBuffer.
-    const char*     annotation  = "";
+    const char*     annotation      = "";
 
-    //! Elapsed time (in nanoseconds) to execute the respective command.
-    std::uint64_t   elapsedTime = 0;
+    /**
+    \brief CPU ticks at the beginning of the command.
+    \see Timer::Tick
+    */
+    std::uint64_t   cpuTicksStart   = 0;
+
+    /**
+    \brief CPU ticks at the end of the command.
+    \see Timer::Tick
+    */
+    std::uint64_t   cpuTicksEnd     = 0;
+
+    /**
+    \brief Elapsed time (in nanoseconds) to execute the respective command on the GPU.
+    \remarks If no GPU time has been recorded for this command (e.g. for the record of debug groups), this value remains zero.
+    */
+    std::uint64_t   elapsedTime     = 0;
 };
 
 struct ProfileCommandQueueRecord

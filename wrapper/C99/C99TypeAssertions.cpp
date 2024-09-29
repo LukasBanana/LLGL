@@ -1116,6 +1116,12 @@ LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, renderConditionSections);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, drawCommands);
 LLGL_STATIC_ASSERT_OFFSET(ProfileCommandBufferRecord, dispatchCommands);
 
+LLGL_STATIC_ASSERT_SIZE(ProfileTimeRecord);
+LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, annotation);
+LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, cpuTicksStart);
+LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, cpuTicksEnd);
+LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, elapsedTime);
+
 
 // } /namespace LLGL
 

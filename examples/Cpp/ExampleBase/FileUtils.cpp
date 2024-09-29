@@ -9,6 +9,7 @@
 #include <fstream>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Log.h>
+#include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <string.h>
 
@@ -158,5 +159,57 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
     };
 
     #endif
+}
+
+std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile)
+{
+    std::string s;
+
+    s += "{\n";
+    s += "\t\"traceEvents\": [\n";
+
+    for_range(i, frameProfile.timeRecords.size())
+    {
+        const LLGL::ProfileTimeRecord& rec = frameProfile.timeRecords[i];
+
+        s += "\t\t{ \"pid\": 1, \"tid\": 1, ";
+
+        s += "\"ts\": ";
+        s += std::to_string(rec.cpuTicksStart);
+        s += ", ";
+
+        s += "\"dur\": ";
+        s += std::to_string(rec.cpuTicksEnd - rec.cpuTicksStart);
+        s += ", ";
+
+        s += "\"ph\": \"X\", \"name\": \"";
+        s += rec.annotation;
+        s += "\", ";
+
+        s += "\"args\": { \"Elapsed GPU Time\": ";
+        s += std::to_string(rec.elapsedTime);
+        s += "} ";
+
+        s += '}';
+        s += (i + 1 < for_range_end(i) ? ",\n" : "\n");
+    }
+
+    s += "\t],\n";
+    s += "\t\"meta_user\": \"LLGL\"\n";
+    s += "}\n";
+
+    return s;
+}
+
+bool WriteFrameProfileToJsonFile(const LLGL::FrameProfile& frameProfile, const char* filename)
+{
+    std::ofstream file{ filename };
+    if (file.good())
+    {
+        std::string jsonContent = WriteFrameProfileToJson(frameProfile);
+        file.write(jsonContent.c_str(), jsonContent.size());
+        return true;
+    }
+    return false;
 }
 

@@ -19,10 +19,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
- /*
- Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
- See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
- */
+/*
+Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
+See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
+*/
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
@@ -639,11 +639,17 @@ void ExampleBase::MainLoop()
                 "FRAME TIME RECORDS:\n"
                 "-------------------\n"
             );
+            const double invTicksFreqMS = 1000.0 / LLGL::Timer::Frequency();
             for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
-                LLGL::Log::Printf("%s: %" PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
+                LLGL::Log::Printf("%s: GPU time: %" PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
 
             debuggerObj_->SetTimeRecording(false);
             showTimeRecords_ = false;
+
+            // Write frame profile to JSON file to be viewed in Google Chrome's Trace Viewer
+            const char* frameProfileFilename = "LLGL.trace.json";
+            WriteFrameProfileToJsonFile(frameProfile, frameProfileFilename);
+            LLGL::Log::Printf("Saved frame profile to file: %s\n", frameProfileFilename);
         }
         else if (input.KeyDown(LLGL::Key::F1))
         {

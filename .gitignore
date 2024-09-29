@@ -13,6 +13,7 @@ build*/
 Screenshot.*
 Capture.*
 *.Results.png
+LLGL.trace.json
 
 # Output files from individual tests (Testbed is handled separately)
 tests/Output

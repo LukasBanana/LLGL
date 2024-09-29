@@ -112,7 +112,7 @@ DEF_TEST( TriangleStripCutOff )
             }
             readbackTex[0] = CaptureFramebuffer(*cmdBuffer, swapChain->GetColorFormat(), opt.resolution);
 
-            // Draw first capture with undefined index format
+            // Draw second capture with fixed index format R16UInt (pso[1]) and R32UInt (pso[2])
             cmdBuffer->Clear(ClearFlags::Color);
             {
                 cmdBuffer->SetPipelineState(*pso[1]);

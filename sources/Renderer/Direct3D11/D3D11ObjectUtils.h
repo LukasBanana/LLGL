@@ -41,7 +41,7 @@ void D3D11CastShader(ComPtr<TDst>& dst, const ComPtr<ID3D11DeviceChild>& src, Sh
     if (src.Get() != nullptr)
         src.As(&dst);
     else
-        report.Errorf("Failed to load %s shader into D3D11 graphics pipeline state [%s]", ToString(type), GetOptionalDebugName(psoDebugName));
+        report.Errorf("Failed to load %s shader into D3D11 graphics pipeline state [%s]\n", ToString(type), GetOptionalDebugName(psoDebugName));
 }
 
 

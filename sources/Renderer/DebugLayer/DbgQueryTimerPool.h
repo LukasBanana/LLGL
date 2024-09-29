@@ -12,6 +12,7 @@
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/RenderingDebugger.h>
 #include <vector>
+#include <stack>
 
 
 namespace LLGL
@@ -53,10 +54,12 @@ class DbgQueryTimerPool
         CommandBuffer&                      commandBuffer_;
 
         std::vector<QueryHeap*>             queryHeaps_;
+        std::stack<std::size_t>             pendingRecordStack_;
         std::uint32_t                       currentQuery_       = 0;
         std::uint32_t                       currentQueryHeap_   = 0;
 
         DynamicVector<ProfileTimeRecord>    records_;
+        std::uint64_t                       cpuTicksBase_       = 0;
 
 };
 

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <type_traits>
+#include <LLGL/RenderingDebuggerFlags.h>
 
 
 /*
@@ -61,6 +62,13 @@ class AssetReader
 // Returns the content of the specified asset.
 // If the file could not be found, an empty container is returned and an error is reported to the log.
 std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath = nullptr);
+
+// Writes the specified FrameProfile as a JSON body string.
+// This can be loaded up in Goolge Chrome's Trace Viewer (see https://google.github.io/trace-viewer/).
+std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile);
+
+// Writes the specified FrameProfile to a JSON file.
+bool WriteFrameProfileToJsonFile(const LLGL::FrameProfile& frameProfile, const char* filename);
 
 
 #endif

@@ -38,17 +38,25 @@ namespace LLGL
 {
 
 
-#define LLGL_DBG_COMMAND(NAME, CMD) \
-    if (perfProfilerEnabled_)       \
-    {                               \
-        StartTimer(NAME);           \
-        CMD;                        \
-        EndTimer();                 \
-    }                               \
-    else                            \
-    {                               \
-        CMD;                        \
+#define LLGL_DBG_COMMAND(ANNOTATION, CMD)   \
+    if (perfProfilerEnabled_)               \
+    {                                       \
+        StartTimer(ANNOTATION);             \
+        CMD;                                \
+        EndTimer();                         \
+    }                                       \
+    else                                    \
+    {                                       \
+        CMD;                                \
     }
+
+#define LLGL_DBG_START_TIMER(ANNOTATION)    \
+    if (perfProfilerEnabled_)               \
+        StartTimer(ANNOTATION)
+
+#define LLGL_DBG_END_TIMER()   \
+    if (perfProfilerEnabled_)   \
+        EndTimer()
 
 #define LLGL_DBG_ASSERT_PTR(NAME) \
     AssertNullPointer(NAME, #NAME)
@@ -112,6 +120,7 @@ void DbgCommandBuffer::Begin()
     }
 
     instance.Begin();
+    LLGL_DBG_START_TIMER("CommandBuffer");
 
     profile_.commandBufferRecord.encodings++;
 }
@@ -124,6 +133,8 @@ void DbgCommandBuffer::End()
         LLGL_DBG_SOURCE();
         ValidateEndOfRecording();
     }
+
+    LLGL_DBG_END_TIMER();
     instance.End();
 
     /* Resolve timer query results for performance profiler */
@@ -764,6 +775,7 @@ void DbgCommandBuffer::BeginRenderPass(
             ValidateSwapBufferIndex(swapChainDbg, actualSwapBufferIndex);
         }
 
+        LLGL_DBG_START_TIMER("BeginRenderPass");
         instance.BeginRenderPass(swapChainDbg.instance, renderPassInstance, numClearValues, clearValues, swapBufferIndex);
     }
     else
@@ -773,6 +785,7 @@ void DbgCommandBuffer::BeginRenderPass(
         bindings_.swapChain     = nullptr;
         bindings_.renderTarget  = &renderTargetDbg;
 
+        LLGL_DBG_START_TIMER("BeginRenderPass");
         instance.BeginRenderPass(renderTargetDbg.instance, renderPassInstance, numClearValues, clearValues, swapBufferIndex);
     }
 
@@ -792,6 +805,7 @@ void DbgCommandBuffer::EndRenderPass()
     }
 
     instance.EndRenderPass();
+    LLGL_DBG_END_TIMER();
 }
 
 void DbgCommandBuffer::Clear(long flags, const ClearValue& clearValue)
@@ -957,6 +971,7 @@ void DbgCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
         }
     }
 
+    LLGL_DBG_START_TIMER("BeginQuery");
     instance.BeginQuery(queryHeapDbg.instance, query);
 
     profile_.commandBufferRecord.querySections++;
@@ -980,6 +995,7 @@ void DbgCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     }
 
     instance.EndQuery(queryHeapDbg.instance, query);
+    LLGL_DBG_END_TIMER();
 }
 
 void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t query, const RenderConditionMode mode)
@@ -994,6 +1010,7 @@ void DbgCommandBuffer::BeginRenderCondition(QueryHeap& queryHeap, std::uint32_t 
         ValidateRenderCondition(queryHeapDbg, query);
     }
 
+    LLGL_DBG_START_TIMER("BeginRenderCondition");
     instance.BeginRenderCondition(queryHeapDbg.instance, query, mode);
 
     profile_.commandBufferRecord.renderConditionSections++;
@@ -1008,6 +1025,7 @@ void DbgCommandBuffer::EndRenderCondition()
         AssertPrimaryCommandBuffer();
     }
     instance.EndRenderCondition();
+    LLGL_DBG_END_TIMER();
 }
 
 /* ----- Stream Output ------ */
@@ -1064,6 +1082,7 @@ void DbgCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const
         }
     }
 
+    LLGL_DBG_START_TIMER("BeginStreamOutput");
     if (!validationFailed)
         instance.BeginStreamOutput(numBuffers, bufferInstances);
 
@@ -1087,6 +1106,7 @@ void DbgCommandBuffer::EndStreamOutput()
     }
 
     instance.EndStreamOutput();
+    LLGL_DBG_END_TIMER();
 }
 
 /* ----- Drawing ----- */
@@ -1332,12 +1352,16 @@ void DbgCommandBuffer::PushDebugGroup(const char* name)
         name = "<null pointer>";
 
     debugGroups_.push(name);
+
+    LLGL_DBG_START_TIMER("PushDebugGroup");
     instance.PushDebugGroup(name);
 }
 
 void DbgCommandBuffer::PopDebugGroup()
 {
     instance.PopDebugGroup();
+    LLGL_DBG_END_TIMER();
+
     debugGroups_.pop();
 
     if (debugger_)

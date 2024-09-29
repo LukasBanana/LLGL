@@ -1025,8 +1025,10 @@ type QueryPipelineStatistics struct {
 }
 
 type ProfileTimeRecord struct {
-    Annotation  string /* = "" */
-    ElapsedTime uint64 /* = 0 */
+    Annotation    string /* = "" */
+    CPUTicksStart uint64 /* = 0 */
+    CPUTicksEnd   uint64 /* = 0 */
+    ElapsedTime   uint64 /* = 0 */
 }
 
 type ProfileCommandQueueRecord struct {
