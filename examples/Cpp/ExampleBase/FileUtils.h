@@ -63,6 +63,9 @@ class AssetReader
 // If the file could not be found, an empty container is returned and an error is reported to the log.
 std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath = nullptr);
 
+// Reads the specified asset as text file and returns each line in an array.
+std::vector<std::string> ReadTextLines(const std::string& name, std::string* outFullPath = nullptr);
+
 // Writes the specified FrameProfile as a JSON body string.
 // This can be loaded up in Goolge Chrome's Trace Viewer (see https://google.github.io/trace-viewer/).
 std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile);

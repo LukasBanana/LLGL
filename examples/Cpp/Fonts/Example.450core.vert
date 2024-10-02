@@ -2,10 +2,10 @@
 
 #version 450 core
 
-layout(std140, binding = 1) uniform Settings
+layout(push_constant) uniform Scene
 {
-    mat4 wvpMatrix;
-    vec2 glyphTextureInvSize;
+    mat4 projection;
+    vec2 glyphAtlasInvSize;
 };
 
 out gl_PerVertex
@@ -29,7 +29,7 @@ void main()
     float v = float(texCoord.y);
 
     // Write vertex output attributes
-    gl_Position = wvpMatrix * vec4(x, y, 0, 1);
-    vTexCoord = glyphTextureInvSize * vec2(u, v);
+    gl_Position = projection * vec4(x, y, 0, 1);
+    vTexCoord = glyphAtlasInvSize * vec2(u, v);
     vColor    = color;
 }

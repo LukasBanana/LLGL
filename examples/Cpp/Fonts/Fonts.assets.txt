@@ -1,1 +1,2 @@
-Textures/FontAtlas_*.png
+Fonts/Tuffy.atlas-*
+Fonts/Black.atlas-*

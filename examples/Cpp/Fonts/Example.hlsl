@@ -1,9 +1,9 @@
 // HLSL texturing shader
 
-cbuffer Settings : register(b1)
+cbuffer Scene : register(b1)
 {
-    float4x4    wvpMatrix;
-    float2      glyphTextureInvSize;
+    float4x4    projection;
+    float2      glyphAtlasInvSize;
 }
 
 struct InputVS
@@ -32,8 +32,8 @@ void VS(InputVS inp, out OutputVS outp)
     float v = (float)inp.texCoord.y;
 
     // Write vertex output attributes
-    outp.position = mul(wvpMatrix, float4(x, y, 0, 1));
-    outp.texCoord = glyphTextureInvSize * float2(u, v);
+    outp.position = mul(projection, float4(x, y, 0, 1));
+    outp.texCoord = glyphAtlasInvSize * float2(u, v);
     outp.color    = inp.color;
 }
 

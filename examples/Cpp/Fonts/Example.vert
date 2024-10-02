@@ -6,11 +6,8 @@
 precision mediump float;
 #endif
 
-layout(std140) uniform Settings
-{
-    mat4 wvpMatrix;
-    vec2 glyphTextureInvSize;
-};
+uniform mat4 projection;
+uniform vec2 glyphAtlasInvSize;
 
 in ivec2 position;
 in ivec2 texCoord;
@@ -28,7 +25,7 @@ void main()
     float v = float(texCoord.y);
 
     // Write vertex output attributes
-    gl_Position = wvpMatrix * vec4(x, y, 0, 1);
-    vTexCoord = glyphTextureInvSize * vec2(u, v);
+    gl_Position = projection * vec4(x, y, 0, 1);
+    vTexCoord = glyphAtlasInvSize * vec2(u, v);
     vColor    = color;
 }

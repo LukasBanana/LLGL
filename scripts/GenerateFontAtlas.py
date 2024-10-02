@@ -1,9 +1,11 @@
 #
 # GenerateFontAtlas.py
 #
-# Copyright (c) 2024 L. Hermanns. All rights reserved.
-# Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
-#
+
+# Part of the LLGL project
+# Written by L. Hermanns 10/1/2024
+# --------------------------------
+# Generates a font atlas (PNG image) with texture-coordinate mappings (TXT file) using the PIL (Pillow) Python package
 
 import sys
 import os
@@ -137,7 +139,7 @@ class FontAtlas:
             for ch in glyphSet:
                 glyph = Glyph(self.font, ch)
                 if not self.glyphTree.putGlyph(glyph):
-                    if atlasSize[1] < atlasSize[0]:
+                    if atlasSize[0] < atlasSize[1]:
                         atlasSize = (atlasSize[0]*2, atlasSize[1])
                     else:
                         atlasSize = (atlasSize[0], atlasSize[1]*2)

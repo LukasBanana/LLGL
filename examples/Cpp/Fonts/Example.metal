@@ -21,8 +21,8 @@ struct VertexOut
 
 struct Scene
 {
-    float4x4    wvpMatrix;
-    float2      glyphTextureInvSize;
+    float4x4    projection;
+    float2      glyphAtlasInvSize;
 };
 
 vertex VertexOut VS(
@@ -38,8 +38,8 @@ vertex VertexOut VS(
     float v = (float)inp.texCoord.y;
 
     // Write vertex output attributes
-    outp.position = scene.wvpMatrix * float4(x, y, 0, 1);
-    outp.texCoord = scene.glyphTextureInvSize * float2(u, v);
+    outp.position = scene.projection * float4(x, y, 0, 1);
+    outp.texCoord = scene.glyphAtlasInvSize * float2(u, v);
     outp.color    = inp.color;
 
     return outp;

@@ -6,21 +6,11 @@
  */
 
 #include <ExampleBase.h>
+#include <FileUtils.h>
 #include <LLGL/Platform/Platform.h>
 #include <chrono>
-
-#define FONT_COURIER_NEW_16         ( 0 )
-#define FONT_LUCIDA_CONSOLE_32      ( 1 )
-
-#if defined LLGL_OS_IOS || defined LLGL_OS_ANDROID
-#   define SELECTED_FONT            ( FONT_LUCIDA_CONSOLE_32 )
-#   define FONTS_TEXT_MARGIN        ( 25 )
-#   define FONTS_PARAGRAPH_MARGIN   ( 140 )
-#else
-#   define SELECTED_FONT            ( FONT_COURIER_NEW_16 )
-#   define FONTS_TEXT_MARGIN        ( 5 )
-#   define FONTS_PARAGRAPH_MARGIN   ( 40 )
-#endif
+#include <sstream>
+#include <map>
 
 
 class Example_Fonts : public ExampleBase
@@ -32,34 +22,37 @@ class Example_Fonts : public ExampleBase
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
     LLGL::PipelineState*        pipeline            = nullptr;
     LLGL::Buffer*               vertexBuffer        = nullptr;
-    LLGL::Buffer*               constantBuffer      = nullptr;
-    LLGL::Texture*              glyphTexture        = nullptr;
     LLGL::Sampler*              linearSampler       = nullptr;
-    LLGL::ResourceHeap*         resourceHeap        = nullptr;
 
-    // Constant buffer structure
-    struct alignas(16) Settings
-    {
-        Gs::Matrix4f    wvpMatrix;
-        float           glyphTextureInvSize[2];
-        float           _pad0[2];
-    }
-    settings;
+    struct Font;
+    std::vector<Font>           fonts;
+    std::size_t                 selectedFontProfile = 1; // 0 = small fonts, 1 = large fonts
 
     // Vertex for a font glyph
     struct alignas(4) Vertex
     {
-        std::int16_t position[2];
-        std::int16_t texCoord[2];
-        std::uint8_t color[4];
+        std::int16_t    position[2];
+        std::int16_t    texCoord[2];
+        std::uint8_t    color[4];
     };
 
     // Glyph structure for 128 ASCII characters with 4 vertices
     struct Glyph
     {
-        Vertex verts[4];
-    }
-    glyphs[128];
+        Vertex          verts[4];
+        std::int16_t    offset[2];
+        std::int16_t    spacing;
+    };
+
+    // Font dataset and glyph texture map
+    struct Font
+    {
+        const char*     fontName;
+        int             fontHeight          = 16;
+        Glyph           glyphs[128];
+        LLGL::Texture*  atlasTexture        = nullptr;
+        LLGL::Extent3D  atlasSize;
+    };
 
     // Some numbers to display on screen.
     struct DisplayNumbers
@@ -77,22 +70,6 @@ class Example_Fonts : public ExampleBase
     }
     avgFPS;
 
-    // Pre-defined fonts
-    struct FontMetaData
-    {
-        const char* fontName;
-        unsigned    atlasWidth;
-        unsigned    atlasHeight;
-        unsigned    numGlyphsX;
-        unsigned    numGlyphsY;
-    };
-
-    const FontMetaData  fonts[2]
-    {
-        FontMetaData{ "CourierNew_Bold_16",    247u, 114u, 19u, 5u },
-        FontMetaData{ "LucidaConsole_Bold_32", 512u, 213u, 19u, 5u },
-    };
-
     // Flags for drawing a set of glyphs
     enum GlyphDrawFlags
     {
@@ -103,11 +80,10 @@ class Example_Fonts : public ExampleBase
         DrawShadow          = (1 << 3),
     };
 
-    std::vector<Vertex> vertexBatch;                // Dynamic array list for glyph batch
-    std::uint32_t       currentBatchSize    = 0;    // Number of glyphs in the current batch
+    std::vector<Vertex> vertexBatch;                    // Dynamic array list for glyph batch
+    std::uint32_t       currentBatchSize    = 0;        // Number of glyphs in the current batch
     std::uint32_t       numBatches          = 0;
-    LLGL::Extent3D      glyphTextureExtent;         // Extent of the glyph texture
-    int                 fontHeight          = 16;
+    LLGL::Texture*      currentAtlasTexture = nullptr;
 
     struct Configuration
     {
@@ -124,9 +100,13 @@ public:
         // Create all graphics objects
         const LLGL::VertexFormat vertexFormat = CreateBuffers();
         CreatePipelines(vertexFormat);
-        CreateFontAtlas(fonts[SELECTED_FONT]);
-        CreateResourceHeaps();
         swapChain->SetVsyncInterval(config.vsync ? 1 : 0);
+
+        // Create all fonts atlases
+        CreateFontAtlas("Tuffy", 12);
+        CreateFontAtlas("Tuffy", 23);
+        CreateFontAtlas("Black", 23);
+        CreateFontAtlas("Black", 50);
     }
 
 private:
@@ -151,11 +131,6 @@ private:
         }
         vertexBuffer = renderer->CreateBuffer(bufferDesc);
 
-        // Create constant buffer and initialize world-view-projection (WVP) matrix for 2D drawing
-        const LLGL::Extent2D& res = swapChain->GetResolution();
-        settings.wvpMatrix = Gs::ProjectionMatrix4f::Planar(static_cast<float>(res.width), static_cast<float>(res.height));
-        constantBuffer = CreateConstantBuffer(settings);
-
         return vertexFormat;
     }
 
@@ -163,9 +138,14 @@ private:
     {
         // Create pipeline layout
         pipelineLayout = renderer->CreatePipelineLayout(
-            IsVulkan()
-                ? LLGL::Parse("heap{cbuffer(Settings@1):vert:frag, texture(glyphTexture@2):frag, sampler(linearSampler@3):frag}")
-                : LLGL::Parse("heap{cbuffer(Settings@1):vert:frag, texture(glyphTexture@0):frag, sampler(linearSampler@0):frag}")
+            LLGL::Parse(
+                "sampler(linearSampler@%d):frag,"
+                "texture(glyphTexture@%d):frag,"
+                "float4x4(projection),"
+                "float2(glyphAtlasInvSize),",
+                IsVulkan() ? 3 : 0,
+                IsVulkan() ? 2 : 0
+            )
         );
 
         // Create graphics pipeline
@@ -189,73 +169,109 @@ private:
         }
     }
 
-    void CreateFontAtlas(const FontMetaData& font)
+    void CreateFontAtlas(const char* fontName, int fontSize)
     {
+        Font font;
+
+        const std::string fontAtlasName = std::string(fontName) + ".atlas-" + std::to_string(fontSize);
+
         // Load glyph texture as alpha-only texture (automatically interprets color input as alpha channel for transparency)
-        glyphTexture = LoadTexture(
-            "FontAtlas_" + std::string(font.fontName) + ".png",
+        font.atlasTexture = LoadTexture(
+            fontAtlasName + ".png",
             (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
             LLGL::Format::A8UNorm
         );
 
         // Store size and inverse size of glyph texture
-        glyphTextureExtent = glyphTexture->GetMipExtent(0);
-
-        settings.glyphTextureInvSize[0] = 1.0f / static_cast<float>(glyphTextureExtent.width);
-        settings.glyphTextureInvSize[1] = 1.0f / static_cast<float>(glyphTextureExtent.height);
+        font.atlasSize = font.atlasTexture->GetMipExtent(0);
 
         // Create default linear sampler state
         linearSampler = renderer->CreateSampler(LLGL::Parse("filter.mip=none"));
 
         // Build glyph set with font meta data
-        BuildGlyphSet(' ', '~', font.atlasWidth, font.atlasHeight, font.numGlyphsX, font.numGlyphsY);
+        BuildGlyphSet(font, fontAtlasName + ".map", ' ', '~', font.atlasSize.width, font.atlasSize.height);
 
         // Store font height to render appropriately for the loaded font
-        fontHeight = font.atlasHeight / font.numGlyphsY;
+        font.fontHeight = fontSize;
+
+        fonts.push_back(std::move(font));
     }
 
-    void CreateResourceHeaps()
+    bool BuildGlyphSet(Font& font, const std::string& mapFilename, char firstChar, char lastChar, std::uint32_t atlasWidth, std::uint32_t atlasHeight)
     {
-        resourceHeap = renderer->CreateResourceHeap(
-            pipelineLayout,
-            { constantBuffer, glyphTexture, linearSampler }
-        );
-    }
+        // Read glyph map from text file
+        std::vector<std::string> lines = ReadTextLines(mapFilename);
+        if (lines.empty())
+        {
+            LLGL::Log::Errorf("Failed to read font map: %s\n", mapFilename.c_str());
+            return false;
+        }
 
-    void BuildGlyphSet(char firstChar, char lastChar, unsigned atlasWidth, unsigned atlasHeight, unsigned numGlyphsX, unsigned numGlyphsY)
-    {
-        // Build glyph geomtry for all 10 digits
-        const float w = static_cast<float>(atlasWidth) / numGlyphsX;
-        const float h = static_cast<float>(atlasHeight) / numGlyphsY;
+        struct GlyphMapping
+        {
+            int x0, y0, x1, y1, offset[2], spacing;
+        };
+
+        std::map<char, GlyphMapping> mappings;
+
+        // Read glyph mapping, i.e. bounding box within texture atlas, offset, and spacing, line by line
+        for (const std::string& ln : lines)
+        {
+            // Ignore empty lines and comments (staging with '#')
+            if (ln.empty() || ln.front() == '#')
+                continue;
+
+            int ch = 0;
+            GlyphMapping m;
+            {
+                std::stringstream s;
+                s << ln;
+                s >> ch >> m.x0 >> m.y0 >> m.x1 >> m.y1 >> m.offset[0] >> m.offset[1] >> m.spacing;
+            }
+            mappings[static_cast<char>(ch)] = m;
+        }
+
+        // Build glyph geomtry for specified character range
+        int numGlyphsX = 1;
+        int numGlyphsY = 1;
 
         for (char c = firstChar; ; ++c)
         {
             const unsigned glyphIndex = static_cast<unsigned>(c - firstChar);
-            auto& verts = glyphs[glyphIndex].verts;
+            Glyph& glyph = font.glyphs[glyphIndex];
+            auto& verts = glyph.verts;
+
+            const GlyphMapping& map = mappings[c];
+
+            glyph.offset[0] = map.offset[0];
+            glyph.offset[1] = map.offset[1];
+            glyph.spacing = map.spacing;
 
             verts[0].position[0] = 0;
             verts[0].position[1] = 0;
-            verts[0].texCoord[0] = static_cast<std::int16_t>(w * (glyphIndex % numGlyphsX));
-            verts[0].texCoord[1] = static_cast<std::int16_t>(h * (glyphIndex / numGlyphsX));
+            verts[0].texCoord[0] = static_cast<std::int16_t>(map.x0);
+            verts[0].texCoord[1] = static_cast<std::int16_t>(map.y0);
 
-            verts[1].position[0] = static_cast<std::int16_t>(w);
+            verts[1].position[0] = static_cast<std::int16_t>(map.x1 - map.x0);
             verts[1].position[1] = 0;
-            verts[1].texCoord[0] = static_cast<std::int16_t>(w * (glyphIndex % numGlyphsX + 1));
-            verts[1].texCoord[1] = static_cast<std::int16_t>(h * (glyphIndex / numGlyphsX));
+            verts[1].texCoord[0] = static_cast<std::int16_t>(map.x1);
+            verts[1].texCoord[1] = static_cast<std::int16_t>(map.y0);
 
-            verts[2].position[0] = static_cast<std::int16_t>(w);
-            verts[2].position[1] = static_cast<std::int16_t>(h);
-            verts[2].texCoord[0] = static_cast<std::int16_t>(w * (glyphIndex % numGlyphsX + 1));
-            verts[2].texCoord[1] = static_cast<std::int16_t>(h * (glyphIndex / numGlyphsX + 1));
+            verts[2].position[0] = static_cast<std::int16_t>(map.x1 - map.x0);
+            verts[2].position[1] = static_cast<std::int16_t>(map.y1 - map.y0);
+            verts[2].texCoord[0] = static_cast<std::int16_t>(map.x1);
+            verts[2].texCoord[1] = static_cast<std::int16_t>(map.y1);
 
             verts[3].position[0] = 0;
-            verts[3].position[1] = static_cast<std::int16_t>(h);
-            verts[3].texCoord[0] = static_cast<std::int16_t>(w * (glyphIndex % numGlyphsX));
-            verts[3].texCoord[1] = static_cast<std::int16_t>(h * (glyphIndex / numGlyphsX + 1));
+            verts[3].position[1] = static_cast<std::int16_t>(map.y1 - map.y0);
+            verts[3].texCoord[0] = static_cast<std::int16_t>(map.x0);
+            verts[3].texCoord[1] = static_cast<std::int16_t>(map.y1);
 
             if (c == lastChar)
                 break;
         }
+
+        return true;
     }
 
     void FlushGlyphBatch()
@@ -272,34 +288,43 @@ private:
         }
     }
 
-    // Returns the width of the specifid glyph, although all glyphs have the same size in this example
-    int GetGlyphWidth(unsigned glyphIndex)
+    void SetFontAtlas(const Font& font)
     {
-        if (glyphIndex < 128)
+        // Only send data to GPU if the atlas texture has changed
+        if (currentAtlasTexture != font.atlasTexture)
         {
-            return
-            (
-                glyphs[glyphIndex].verts[1].position[0] -
-                glyphs[glyphIndex].verts[0].position[0]
-            );
+            currentAtlasTexture = font.atlasTexture;
+
+            // Flush pending glyphs before we change the font settings
+            FlushGlyphBatch();
+
+            // Update shader constant for inverse atlas texture size
+            float glyphAtlasInvSize[2] =
+            {
+                1.0f / static_cast<float>(font.atlasSize.width),
+                1.0f / static_cast<float>(font.atlasSize.height)
+            };
+            commands->SetUniforms(1, glyphAtlasInvSize, sizeof(glyphAtlasInvSize));
+
+            // Set new atlas texture
+            commands->SetResource(1, *font.atlasTexture);
         }
-        return 0;
     }
 
-    int GetTextWidth(const char* text)
+    int GetTextWidth(const Font& font, const char* text)
     {
         int len = 0;
 
         while (char chr = *text++)
         {
             unsigned glyphIndex = static_cast<std::uint8_t>(chr - ' ');
-            len += GetGlyphWidth(glyphIndex);
+            len += font.glyphs[glyphIndex].spacing;
         }
 
         return len;
     }
 
-    void DrawGlyph(unsigned glyphIndex, int x, int y, const LLGL::ColorRGBAub& color)
+    void DrawGlyph(const Font& font, unsigned glyphIndex, int x, int y, const LLGL::ColorRGBAub& color)
     {
         if (glyphIndex >= 128)
             return;
@@ -316,11 +341,12 @@ private:
         {
             // Copy vertex from template
             Vertex& vert = vertexBatch[currentBatchSize++];
-            vert = glyphs[glyphIndex].verts[perm];
+            const Glyph& glyph = font.glyphs[glyphIndex];
+            vert = glyph.verts[perm];
 
             // Apply position and color
-            vert.position[0] += static_cast<std::int16_t>(x);
-            vert.position[1] += static_cast<std::int16_t>(y);
+            vert.position[0] += static_cast<std::int16_t>(x + glyph.offset[0]);
+            vert.position[1] += static_cast<std::int16_t>(y + glyph.offset[1]);
             vert.color[0] = color.r;
             vert.color[1] = color.g;
             vert.color[2] = color.b;
@@ -328,48 +354,51 @@ private:
         }
     }
 
-    int DrawFontPrimary(const char* text, int x, int y, const LLGL::ColorRGBAub& color)
+    int DrawFontPrimary(const Font& font, const char* text, int x, int y, const LLGL::ColorRGBAub& color)
     {
+        // Set font for current drawing operation
+        SetFontAtlas(font);
+
         // Draw all glyphs for the characters in the input string
         while (char chr = *text++)
         {
             // Draw glyph and shift X-coordinate to the right by the width of the glyph
             unsigned glyphIndex = static_cast<unsigned>(chr - ' ');
             if (chr != ' ')
-                DrawGlyph(glyphIndex, x, y, color);
-            x += GetGlyphWidth(glyphIndex);
+                DrawGlyph(font, glyphIndex, x, y, color);
+            x += font.glyphs[glyphIndex].spacing;
         }
 
         // Return shifted X-coordinate
         return x;
     }
 
-    int DrawFont(const char* text, int x, int y, const LLGL::ColorRGBAub& color, long flags = 0)
+    int DrawFont(const Font& font, const char* text, int x, int y, const LLGL::ColorRGBAub& color, long flags = 0)
     {
         // Apply drawing flags
         if ((flags & DrawCenteredX) != 0)
-            x -= GetTextWidth(text) / 2;
+            x -= GetTextWidth(font, text) / 2;
         else if ((flags & DrawRightAligned) != 0)
-            x -= GetTextWidth(text);
+            x -= GetTextWidth(font, text);
 
         if ((flags & DrawCenteredY) != 0)
-            y -= static_cast<int>(glyphTextureExtent.height / 2);
+            y -= static_cast<int>(font.atlasSize.height / 2);
 
         if ((flags & DrawShadow) != 0)
         {
             // Draw a drop shadow
             const LLGL::ColorRGBAub shadow{ std::uint8_t(color.r/2u), std::uint8_t(color.g/2u), std::uint8_t(color.b/2u), color.a };
             constexpr int shadowOffset = 2;
-            DrawFontPrimary(text, x + shadowOffset, y + shadowOffset, shadow);
+            DrawFontPrimary(font, text, x + shadowOffset, y + shadowOffset, shadow);
         }
 
         // Draw primary font glyphs
-        return DrawFontPrimary(text, x, y, color);
+        return DrawFontPrimary(font, text, x, y, color);
     }
 
-    int DrawFont(const std::string& text, int x, int y, const LLGL::ColorRGBAub& color, long flags = 0)
+    int DrawFont(const Font& font, const std::string& text, int x, int y, const LLGL::ColorRGBAub& color, long flags = 0)
     {
-        return DrawFont(text.c_str(), x, y, color, flags);
+        return DrawFont(font, text.c_str(), x, y, color, flags);
     }
 
     void ProcessInput()
@@ -382,6 +411,9 @@ private:
         }
         if (input.KeyDown(LLGL::Key::S))
             config.shadow = !config.shadow;
+
+        if (input.KeyDown(LLGL::Key::Tab))
+            selectedFontProfile = (selectedFontProfile + 1) % 2;
 
         // Update frame counters
         displayNumbers.frameCounter++;
@@ -422,45 +454,48 @@ private:
         if (config.shadow)
             fontFlags |= DrawShadow;
 
+        const Font& fntA = fonts[selectedFontProfile];
+        const Font& fntB = fonts[2 + selectedFontProfile];
+
         // Draw headline
         const int screenWidth   = static_cast<int>(res.width);
         const int screenCenterX = screenWidth / 2;
 
-        constexpr int textMargin        = FONTS_TEXT_MARGIN;
-        constexpr int paragraphMargin   = FONTS_PARAGRAPH_MARGIN;
+        const int textMargin        = fntA.fontHeight / 4;
+        const int paragraphMargin   = textMargin * 3;
 
-        int paragraphPosY = paragraphMargin + fontHeight;
+        int paragraphPosY = paragraphMargin + fntA.fontHeight;
         DrawFont(
-            "LLGL example for font rendering",
+            fntA, "LLGL example for font rendering",
             screenCenterX, paragraphPosY, colorWhite, fontFlags | DrawCenteredX
         );
-        paragraphPosY += fontHeight + paragraphMargin;
+        paragraphPosY += fntA.fontHeight + paragraphMargin;
 
         // Draw swap-chain configuration
         DrawFont(
-            std::string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
+            fntA, std::string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
             paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
-        paragraphPosY += fontHeight + textMargin;
+        paragraphPosY += fntA.fontHeight + textMargin;
 
         // Draw frame counter
         DrawFont(
-            "Frame counter: " + std::to_string(displayNumbers.frameCounter),
+            fntA, "Frame counter: " + std::to_string(displayNumbers.frameCounter),
             screenWidth - paragraphMargin, paragraphPosY, colorYellow,
             fontFlags | DrawRightAligned
         );
-        paragraphPosY += fontHeight + textMargin;
+        paragraphPosY += fntA.fontHeight + textMargin;
 
         // Draw rendering configuration
         DrawFont(
-            std::string("Draw Shadow (S): ") + (config.shadow ? "Enabled" : "Disabled"),
+            fntA, std::string("Draw Shadow (S): ") + (config.shadow ? "Enabled" : "Disabled"),
             paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
-        paragraphPosY += fontHeight + textMargin;
+        paragraphPosY += fntA.fontHeight + textMargin;
 
         // Draw number of frames per second (FPS)
         DrawFont(
-            "FPS = " + std::to_string(displayNumbers.averageFPS),
+            fntA, "FPS = " + std::to_string(displayNumbers.averageFPS),
             screenWidth - paragraphMargin, paragraphPosY, colorRed,
             fontFlags | DrawRightAligned
         );
@@ -470,10 +505,12 @@ private:
         (
             "This example demonstrates how to efficiently render text onto "
             "the screen using a font atlas and batched draw calls. "
+            "Use the \"GenerateFontAtlas.py\" script to generate different font atlases. "
+            "Press Tab to switch font size. "
         );
 
         int paragraphPosX = paragraphMargin;
-        paragraphPosY += fontHeight + paragraphMargin;
+        paragraphPosY += fntA.fontHeight + paragraphMargin;
         std::string word;
 
         for (std::size_t start = 0, end = 0; start < paragraph.size(); start = end)
@@ -490,15 +527,15 @@ private:
                 word = paragraph.substr(start);
 
             // Move to next line if current line is full
-            const int wordWidth = GetTextWidth(word.c_str());
+            const int wordWidth = GetTextWidth(fntB, word.c_str());
             if (paragraphPosX + wordWidth > screenWidth - paragraphMargin)
             {
                 paragraphPosX = paragraphMargin;
-                paragraphPosY += (fontHeight + textMargin);
+                paragraphPosY += (fntB.fontHeight + textMargin);
             }
 
             // Draw current word
-            paragraphPosX = DrawFont(word, paragraphPosX, paragraphPosY, colorWhite, fontFlags);
+            paragraphPosX = DrawFont(fntB, word, paragraphPosX, paragraphPosY, colorWhite, fontFlags);
         }
     }
 
@@ -510,15 +547,13 @@ private:
 
         ProcessInput();
 
+        // Initial atlas texture must always be bound when start a new frame, so reset this state
+        currentAtlasTexture = nullptr;
+
         commands->Begin();
         {
             // Bind vertex buffer
             commands->SetVertexBuffer(*vertexBuffer);
-
-            // Update constant buffer
-            const auto& res = swapChain->GetResolution();
-            settings.wvpMatrix = Gs::ProjectionMatrix4f::Planar(static_cast<float>(res.width), static_cast<float>(res.height));
-            commands->UpdateBuffer(*constantBuffer, 0, &settings, sizeof(settings));
 
             commands->BeginRenderPass(*swapChain);
             {
@@ -527,7 +562,14 @@ private:
                 commands->SetViewport(swapChain->GetResolution());
 
                 commands->SetPipelineState(*pipeline);
-                commands->SetResourceHeap(*resourceHeap);
+
+                // Set projection constant
+                const auto& res = swapChain->GetResolution();
+                const Gs::Matrix4f projection = Gs::ProjectionMatrix4f::Planar(static_cast<float>(res.width), static_cast<float>(res.height));
+                commands->SetUniforms(0, projection.Ptr(), sizeof(projection));
+
+                // Set texture sampler state
+                commands->SetResource(0, *linearSampler);
 
                 // Draw scene with digits
                 Draw2DScene();

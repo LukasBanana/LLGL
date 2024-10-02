@@ -87,21 +87,14 @@ static std::string FindAssetFilename(const std::string& name)
     if (FileExists(name))
         return name;
 
-    // Search file in resource dependent paths
-    auto extPos = name.find_last_of('.');
-    const std::string ext = (extPos != std::string::npos ? name.substr(extPos + 1) : "");
-
+    // Search file in known asset folders
     const std::string assetsRoot = "../../Shared/Assets/";
 
-    if (ext == "obj")
+    for (const char* folder : { "Textures", "Models", "Fonts"  })
     {
-        if (FileExists(assetsRoot + "Models/" + name))
-            return assetsRoot + "Models/" + name;
-    }
-    else if (ext == "png" || ext == "jpg" || ext == "tga" || ext == "dds")
-    {
-        if (FileExists(assetsRoot + "Textures/" + name))
-            return assetsRoot + "Textures/" + name;
+        const std::string filename = assetsRoot + folder + "/" + name;
+        if (FileExists(filename))
+            return filename;
     }
 
     #endif
@@ -159,6 +152,23 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
     };
 
     #endif
+}
+
+std::vector<std::string> ReadTextLines(const std::string& name, std::string* outFullPath)
+{
+    const std::vector<char> content = ReadAsset(name, outFullPath);
+    std::vector<std::string> lines;
+    if (!content.empty())
+    {
+        std::vector<char>::const_iterator itStart = content.begin(), itEnd;
+        while ((itEnd = std::find(itStart, content.end(), '\n')) != content.end())
+        {
+            lines.push_back(std::string{ itStart, itEnd });
+            itStart = itEnd + 1;
+        }
+        lines.push_back(std::string{ itStart, itEnd });
+    }
+    return lines;
 }
 
 std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile)
