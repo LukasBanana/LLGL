@@ -265,7 +265,12 @@ void GLShader::BuildTransformFeedbackVaryings(std::size_t numVaryings, const Ver
     {
         transformFeedbackVaryings_.reserve(numVaryings);
         for_range(i, numVaryings)
-            transformFeedbackVaryings_.push_back(shaderAttribNames_.CopyString(varyings[i].name));
+        {
+            if (const char* systemValueName = GLTypes::SystemValueToString(varyings[i].systemValue, GetType()))
+                transformFeedbackVaryings_.push_back(systemValueName);
+            else
+                transformFeedbackVaryings_.push_back(shaderAttribNames_.CopyString(varyings[i].name));
+        }
     }
 }
 

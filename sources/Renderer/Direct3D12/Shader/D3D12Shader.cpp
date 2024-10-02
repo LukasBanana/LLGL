@@ -166,10 +166,11 @@ void D3D12Shader::BuildInputLayout(UINT numVertexAttribs, const VertexAttribute*
 Converts a vertex attributes to a D3D12 input element descriptor
 and stores the semantic name in the specified linear string container
 */
-static void Convert(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
+static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
 {
+    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
     dst.Stream          = 0;//src.location;
-    dst.SemanticName    = stringContainer.CopyString(src.name);
+    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
     dst.SemanticIndex   = src.semanticIndex;
     dst.StartComponent  = 0;//src.offset;
     dst.ComponentCount  = GetFormatAttribs(src.format).components;
@@ -196,10 +197,10 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
         const auto& attr = vertexAttribs[i];
 
         /* Convert vertex attribute to stream-output entry */
-        Convert(soDeclEntries_[i], attr, vertexAttribNames_);
+        ConvertSODeclEntry(soDeclEntries_[i], attr, vertexAttribNames_);
 
         /* Store buffer stide */
-        UINT bufferStride = soBufferStrides_[attr.slot];
+        UINT& bufferStride = soBufferStrides_[attr.slot];
         if (attr.stride == 0)
         {
             /* Error: vertex attribute must not have stride of zero */
@@ -411,7 +412,7 @@ static ShaderResourceReflection* FetchOrInsertResource(
 }
 
 // Converts a D3D12 signature parameter into a vertex attribute
-static void Convert(VertexAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
+static void ConvertSignatureParamDescToVertexAttrib(VertexAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
 {
     dst.name            = std::string(src.SemanticName);
     dst.format          = DXGetSignatureParameterType(src.ComponentType, src.Mask);
@@ -434,7 +435,7 @@ static HRESULT ReflectShaderVertexAttributes(
 
         /* Add vertex input attribute to output list */
         VertexAttribute vertexAttrib;
-        Convert(vertexAttrib, paramDesc);
+        ConvertSignatureParamDescToVertexAttrib(vertexAttrib, paramDesc);
         reflection.vertex.inputAttribs.push_back(vertexAttrib);
     }
 
@@ -448,7 +449,7 @@ static HRESULT ReflectShaderVertexAttributes(
 
         /* Add vertex output attribute to output list */
         VertexAttribute vertexAttrib;
-        Convert(vertexAttrib, paramDesc);
+        ConvertSignatureParamDescToVertexAttrib(vertexAttrib, paramDesc);
         reflection.vertex.outputAttribs.push_back(vertexAttrib);
     }
 
@@ -456,7 +457,7 @@ static HRESULT ReflectShaderVertexAttributes(
 }
 
 // Converts a D3D12 signature parameter into a fragment attribute
-static void Convert(FragmentAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
+static void ConvertSignatureParamDescToFragmentAttrib(FragmentAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
 {
     dst.name        = std::string(src.SemanticName);
     dst.format      = DXGetSignatureParameterType(src.ComponentType, src.Mask);
@@ -479,7 +480,7 @@ static HRESULT ReflectShaderFragmentAttributes(
 
         /* Add fragment attribute to output list */
         FragmentAttribute fragmentAttrib;
-        Convert(fragmentAttrib, paramDesc);
+        ConvertSignatureParamDescToFragmentAttrib(fragmentAttrib, paramDesc);
         reflection.fragment.outputAttribs.push_back(fragmentAttrib);
     }
 

@@ -60,11 +60,7 @@ public:
         // Specify stream-output format
         LLGL::VertexAttribute soAttrib;
         {
-            const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-            if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
-                soAttrib.name = "SV_Position";
-            else
-                soAttrib.name = "gl_Position";
+            soAttrib.systemValue = LLGL::SystemValue::Position;
         }
         streamOutputFormat.AppendAttribute(soAttrib);
 

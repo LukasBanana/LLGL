@@ -847,17 +847,17 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
 
     numSOBuffers_ = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
 
-#if 0 //TODO: this does not work in multi-threaded environment
     /* Store native buffer views and transition resources */
     for_range(i, numSOBuffers_)
     {
         auto* bufferD3D = LLGL_CAST(D3D12Buffer*, buffers[i]);
         boundSOBuffers_[i] = bufferD3D;
         soBufferViews[i] = bufferD3D->GetSOBufferView();
+#if 1 //TODO: this does not work in multi-threaded environment
         commandContext_.TransitionResource(bufferD3D->GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
+#endif
     }
     commandContext_.FlushResourceBarrieres();
-#endif
 
     /* Reset counter values in buffers by copying from a static zero-initialized buffer to the stream-output targets */
     const D3D12BufferConstantsView srcBufferView = D3D12BufferConstantsPool::Get().FetchConstants(D3D12BufferConstants::ZeroUInt64);

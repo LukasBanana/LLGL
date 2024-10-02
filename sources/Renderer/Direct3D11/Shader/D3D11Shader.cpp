@@ -104,8 +104,9 @@ static void ConvertInputElementDesc(D3D11_INPUT_ELEMENT_DESC& dst, const VertexA
 // Converts a vertex attribute to a D3D stream-output entry
 static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
+    const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
     dst.Stream          = 0;//src.location;
-    dst.SemanticName    = src.name.c_str();
+    dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
     dst.SemanticIndex   = src.semanticIndex;
     dst.StartComponent  = 0;//src.offset;
     dst.ComponentCount  = GetFormatAttribs(src.format).components;

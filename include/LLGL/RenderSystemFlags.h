@@ -629,6 +629,7 @@ struct RenderingFeatures
 
     /**
     \brief Specifies whether stream-output is supported.
+    \note Only supported with: Direct3D 12, Direct3D 11, OpenGL.
     \see VertexShaderAttributes::outputAttribs
     \see CommandBuffer::BeginStreamOutput
     \see RenderingLimits::maxStreamOutputs

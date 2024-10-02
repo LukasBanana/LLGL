@@ -860,6 +860,31 @@ bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT va
     return false;
 }
 
+const char* SystemValueToString(SystemValue sytemValue)
+{
+    switch (sytemValue)
+    {
+        case SystemValue::Undefined:            break;
+        case SystemValue::ClipDistance:         return "SV_ClipDistance";
+        case SystemValue::Color:                return "SV_Target";
+        case SystemValue::CullDistance:         return "SV_CullDistance";
+        case SystemValue::Depth:                return "SV_Depth";
+        case SystemValue::DepthGreater:         return "SV_DepthGreaterEqual";
+        case SystemValue::DepthLess:            return "SV_DepthLessEqual";
+        case SystemValue::FrontFacing:          return "SV_IsFrontFace";
+        case SystemValue::InstanceID:           return "SV_InstanceID";
+        case SystemValue::Position:             return "SV_Position";
+        case SystemValue::PrimitiveID:          return "SV_PrimitiveID";
+        case SystemValue::RenderTargetIndex:    return "SV_RenderTargetArrayIndex";
+        case SystemValue::SampleMask:           return "SV_Coverage";
+        case SystemValue::SampleID:             return "SV_SampleIndex";
+        case SystemValue::Stencil:              return "SV_StencilRef";
+        case SystemValue::VertexID:             return "SV_VertexID";
+        case SystemValue::ViewportIndex:        return "SV_ViewportArrayIndex";
+    }
+    return nullptr;
+}
+
 
 } // /namespace DXTypes
 

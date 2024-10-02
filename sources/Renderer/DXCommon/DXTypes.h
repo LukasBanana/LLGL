@@ -15,6 +15,7 @@
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/BufferFlags.h>
+#include <LLGL/SystemValue.h>
 #include <dxgiformat.h>
 #include <d3dcommon.h>
 
@@ -71,6 +72,9 @@ ResourceType            Unmap( const D3D_SRV_DIMENSION      dimension );
 bool HasStencilComponent(const DXGI_FORMAT format);
 bool IsDXGIFormatSRGB(const DXGI_FORMAT format);
 bool MakeUAVClearVector(const DXGI_FORMAT format, UINT (&valuesVec4)[4], UINT value);
+
+// Converts a vertex output system value to its HLSL semantic identifier or null if there is no such semantic.
+const char* SystemValueToString(SystemValue sytemValue);
 
 
 } // /namespace DXTypes

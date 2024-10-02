@@ -1366,6 +1366,31 @@ GLenum BufferTargetToBindingPname(GLenum target)
     }
 }
 
+const char* SystemValueToString(SystemValue sytemValue, ShaderType shaderType)
+{
+    switch (sytemValue)
+    {
+        case SystemValue::Undefined:            break;
+        case SystemValue::ClipDistance:         return "gl_ClipDistance";
+        case SystemValue::Color:                break; // n/a
+        case SystemValue::CullDistance:         return "gl_CullDistance";
+        case SystemValue::Depth:                return "gl_FragDepth";
+        case SystemValue::DepthGreater:         break; // n/a
+        case SystemValue::DepthLess:            break; // n/a
+        case SystemValue::FrontFacing:          return "gl_FrontFacing";
+        case SystemValue::InstanceID:           return "gl_InstanceID";
+        case SystemValue::Position:             return (shaderType == ShaderType::Fragment ? "gl_FragCoord" : "gl_Position");
+        case SystemValue::PrimitiveID:          return "gl_PrimitiveID";
+        case SystemValue::RenderTargetIndex:    return "gl_Layer";
+        case SystemValue::SampleMask:           return "gl_SampleMask";
+        case SystemValue::SampleID:             return "gl_SampleID";
+        case SystemValue::Stencil:              return "gl_Stencil";
+        case SystemValue::VertexID:             return "gl_VertexID";
+        case SystemValue::ViewportIndex:        return "gl_ViewportIndex";
+    }
+    return nullptr;
+}
+
 
 } // /namespace GLTypes
 
