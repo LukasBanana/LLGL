@@ -10,7 +10,7 @@
 #include "D3D11PipelineLayout.h"
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
-#include "../Shader/D3D11Shader.h"
+#include "../Shader/D3D11VertexShader.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/Assertion.h"
@@ -56,8 +56,12 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& des
     D3D11PipelineState { /*isGraphicsPSO:*/ true, desc.pipelineLayout, GetShadersAsArray(desc) }
 {
     /* Validate pointers and get D3D shader objects */
-    if (auto* vertexShaderD3D = LLGL_CAST(const D3D11Shader*, desc.vertexShader))
+    if (auto* vertexShaderD3D = LLGL_CAST(const D3D11VertexShader*, desc.vertexShader))
+    {
+        /* Take input layout and store optional proxy geometry-shader for stream-output */
         inputLayout_ = vertexShaderD3D->GetInputLayout();
+        gs_ = vertexShaderD3D->GetProxyGeometryShader();
+    }
     else
         ResetReport("cannot create D3D graphics PSO without vertex shader", true);
 
