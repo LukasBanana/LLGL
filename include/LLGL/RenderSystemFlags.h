@@ -632,6 +632,7 @@ struct RenderingFeatures
     \note Only supported with: Direct3D 12, Direct3D 11, OpenGL.
     \see VertexShaderAttributes::outputAttribs
     \see CommandBuffer::BeginStreamOutput
+    \see CommandBuffer::DrawStreamOutput
     \see RenderingLimits::maxStreamOutputs
     */
     bool hasStreamOutputs               = false;

@@ -1002,6 +1002,11 @@ void D3D11PrimaryCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_
     context_.DrawIndexedInstancedIndirectN(bufferD3D.GetNative(), static_cast<UINT>(offset), numCommands, stride);
 }
 
+void D3D11PrimaryCommandBuffer::DrawStreamOutput()
+{
+    context_.DrawAuto();
+}
+
 /* ----- Compute ----- */
 
 void D3D11PrimaryCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

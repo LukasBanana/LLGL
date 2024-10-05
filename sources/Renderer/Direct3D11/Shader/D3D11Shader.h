@@ -77,6 +77,7 @@ class D3D11Shader : public Shader
             ID3DBlob*               blob,
             std::size_t             numStreamOutputAttribs  = 0,
             const VertexAttribute*  streamOutputAttribs     = nullptr,
+            UINT                    rasterizedStream        = D3D11_SO_NO_RASTERIZED_STREAM,
             ID3D11ClassLinkage*     classLinkage            = nullptr
         );
 
@@ -92,8 +93,7 @@ class D3D11Shader : public Shader
         void CreateNativeShader(
             ID3D11Device*           device,
             std::size_t             numStreamOutputAttribs  = 0,
-            const VertexAttribute*  streamOutputAttribs     = nullptr,
-            ID3D11ClassLinkage*     classLinkage            = nullptr
+            const VertexAttribute*  streamOutputAttribs     = nullptr
         );
 
         HRESULT ReflectShaderByteCode(ShaderReflection& reflection) const;

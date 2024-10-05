@@ -856,6 +856,11 @@ void MTMultiSubmitCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64
 #endif
 }
 
+void MTMultiSubmitCommandBuffer::DrawStreamOutput()
+{
+    LLGL_TRAP("stream-outputs not supported");
+}
+
 /* ----- Compute ----- */
 
 void MTMultiSubmitCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

@@ -902,6 +902,18 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride) = 0;
 
+        /**
+        \brief Performs an automatic draw command whose number of primitives is provided by a stream-output buffer that is bound to the input assembler stage.
+
+        \remarks This command only supports a single vertex buffer in the input assembler stage
+        and it must have been created with the BindFlags::VertexBuffer and BindFlags::StreamOutputBuffer binding flags.
+
+        \remarks This can be used to pre-transform vertices and render the output later one or multiple times.
+
+        \see RenderingFeatures::hasStreamOutputs
+        */
+        virtual void DrawStreamOutput() = 0;
+
         /* ----- Compute ----- */
 
         /**

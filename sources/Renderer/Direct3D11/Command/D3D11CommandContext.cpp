@@ -405,6 +405,12 @@ void D3D11CommandContext::DrawIndexedInstancedIndirectN(ID3D11Buffer* bufferForA
     }
 }
 
+void D3D11CommandContext::DrawAuto()
+{
+    FlushGraphicsResourceBindingCache();
+    context_->DrawAuto();
+}
+
 /* ----- Compute ----- */
 
 void D3D11CommandContext::Dispatch(UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ)
@@ -494,8 +500,7 @@ void D3D11CommandContext::FlushGraphicsResourceBindingCache()
 {
     if (boundConstantsCache_ != nullptr)
         boundConstantsCache_->Flush(*stateMngr_);
-    if (bindingTable_ != nullptr)
-        bindingTable_->FlushOutputMergerUAVs();
+    bindingTable_->FlushOutputMergerUAVs();
 }
 
 void D3D11CommandContext::FlushComputeResourceBindingCache()

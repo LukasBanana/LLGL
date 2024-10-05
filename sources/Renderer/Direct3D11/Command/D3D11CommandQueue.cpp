@@ -98,10 +98,10 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         /* Query result from data of type: UINT64 */
         case D3D11_QUERY_OCCLUSION:
         {
-            UINT64 tempData = 0;
-            if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) == S_OK)
+            UINT64 occlusionData = 0;
+            if (context_->GetData(queryHeapD3D.GetNative(query), &occlusionData, sizeof(occlusionData), 0) == S_OK)
             {
-                data = tempData;
+                data = occlusionData;
                 return true;
             }
         }
@@ -149,10 +149,10 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         case D3D11_QUERY_OCCLUSION_PREDICATE:
         case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
         {
-            BOOL tempData = FALSE;
-            if (context_->GetData(queryHeapD3D.GetPredicate(query), &tempData, sizeof(tempData), 0) == S_OK)
+            BOOL predicateData = FALSE;
+            if (context_->GetData(queryHeapD3D.GetPredicate(query), &predicateData, sizeof(predicateData), 0) == S_OK)
             {
-                data = tempData;
+                data = predicateData;
                 return true;
             }
         }
@@ -161,10 +161,10 @@ bool D3D11CommandQueue::QueryResultSingleUInt64(
         /* Query result from data of type: D3D11_QUERY_DATA_SO_STATISTICS */
         case D3D11_QUERY_SO_STATISTICS:
         {
-            D3D11_QUERY_DATA_SO_STATISTICS tempData;
-            if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) == S_OK)
+            D3D11_QUERY_DATA_SO_STATISTICS streamOutputStatsData;
+            if (context_->GetData(queryHeapD3D.GetNative(query), &streamOutputStatsData, sizeof(streamOutputStatsData), 0) == S_OK)
             {
-                data = tempData.NumPrimitivesWritten;
+                data = streamOutputStatsData.NumPrimitivesWritten;
                 return true;
             }
         }
@@ -185,9 +185,9 @@ bool D3D11CommandQueue::QueryResultUInt32(
 {
     for_range(i, numQueries)
     {
-        std::uint64_t tempData = 0;
-        if (QueryResultSingleUInt64(queryHeapD3D, firstQuery + i, tempData))
-            data[i] = static_cast<std::uint32_t>(tempData);
+        std::uint64_t intermediate64BitData = 0;
+        if (QueryResultSingleUInt64(queryHeapD3D, firstQuery + i, intermediate64BitData))
+            data[i] = static_cast<std::uint32_t>(intermediate64BitData);
         else
             return false;
     }
@@ -250,21 +250,21 @@ bool D3D11CommandQueue::QueryResultPipelineStatistics(
             else
             {
                 /* Copy temporary query data to output */
-                D3D11_QUERY_DATA_PIPELINE_STATISTICS tempData;
-                if (context_->GetData(queryHeapD3D.GetNative(query), &tempData, sizeof(tempData), 0) != S_OK)
+                D3D11_QUERY_DATA_PIPELINE_STATISTICS pipelineStatsData;
+                if (context_->GetData(queryHeapD3D.GetNative(query), &pipelineStatsData, sizeof(pipelineStatsData), 0) != S_OK)
                     return false;
 
-                data->inputAssemblyVertices             = tempData.IAVertices;
-                data->inputAssemblyPrimitives           = tempData.IAPrimitives;
-                data->vertexShaderInvocations           = tempData.VSInvocations;
-                data->geometryShaderInvocations         = tempData.GSInvocations;
-                data->geometryShaderPrimitives          = tempData.GSPrimitives;
-                data->clippingInvocations               = tempData.CInvocations;
-                data->clippingPrimitives                = tempData.CPrimitives;
-                data->fragmentShaderInvocations         = tempData.PSInvocations;
-                data->tessControlShaderInvocations      = tempData.HSInvocations;
-                data->tessEvaluationShaderInvocations   = tempData.DSInvocations;
-                data->computeShaderInvocations          = tempData.CSInvocations;
+                data->inputAssemblyVertices             = pipelineStatsData.IAVertices;
+                data->inputAssemblyPrimitives           = pipelineStatsData.IAPrimitives;
+                data->vertexShaderInvocations           = pipelineStatsData.VSInvocations;
+                data->geometryShaderInvocations         = pipelineStatsData.GSInvocations;
+                data->geometryShaderPrimitives          = pipelineStatsData.GSPrimitives;
+                data->clippingInvocations               = pipelineStatsData.CInvocations;
+                data->clippingPrimitives                = pipelineStatsData.CPrimitives;
+                data->fragmentShaderInvocations         = pipelineStatsData.PSInvocations;
+                data->tessControlShaderInvocations      = pipelineStatsData.HSInvocations;
+                data->tessEvaluationShaderInvocations   = pipelineStatsData.DSInvocations;
+                data->computeShaderInvocations          = pipelineStatsData.CSInvocations;
             }
         }
         return true;

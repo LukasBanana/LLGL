@@ -989,6 +989,11 @@ void MTDirectCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t of
     }
 }
 
+void MTDirectCommandBuffer::DrawStreamOutput()
+{
+    LLGL_TRAP("stream-outputs not supported");
+}
+
 /* ----- Compute ----- */
 
 void MTDirectCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

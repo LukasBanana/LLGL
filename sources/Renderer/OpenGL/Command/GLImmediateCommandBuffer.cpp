@@ -813,6 +813,11 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
     #endif // /LLGL_GLEXT_DRAW_INDIRECT
 }
 
+void GLImmediateCommandBuffer::DrawStreamOutput()
+{
+    //TODO
+}
+
 /* ----- Compute ----- */
 
 void GLImmediateCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

@@ -81,6 +81,10 @@ virtual void DrawIndexedIndirect(
     std::uint32_t   stride
 ) override final;
 
+virtual void DrawStreamOutput(
+    void
+) override final;
+
 
 
 // ================================================================================

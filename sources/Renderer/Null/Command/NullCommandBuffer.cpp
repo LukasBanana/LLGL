@@ -551,6 +551,11 @@ void NullCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset
     }
 }
 
+void NullCommandBuffer::DrawStreamOutput()
+{
+    // dummy
+}
+
 /* ----- Compute ----- */
 
 void NullCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

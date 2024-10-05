@@ -1055,6 +1055,12 @@ void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
         vkCmdDrawIndexedIndirect(commandBuffer_, bufferVK.GetVkBuffer(), offset, numCommands, stride);
 }
 
+void VKCommandBuffer::DrawStreamOutput()
+{
+    //TODO
+    //vkCmdDrawIndirectByteCountEXT(commandBuffer_, 1, 0, soBufferIASlot0_, soBufferIASlot0_, soBufferIASlot0CounterOffset_, soBufferIASlot0VertexStride_);
+}
+
 /* ----- Compute ----- */
 
 void VKCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

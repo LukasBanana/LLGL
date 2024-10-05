@@ -47,7 +47,7 @@ void D3D11BuiltinShaderFactory::Clear()
 ID3D11ComputeShader* D3D11BuiltinShaderFactory::GetBulitinComputeShader(const D3D11BuiltinShader builtin) const
 {
     const std::size_t idx = static_cast<std::size_t>(builtin);
-    if (idx < D3D11BuiltinShaderFactory::g_numBuiltinShaders)
+    if (idx < D3D11BuiltinShaderFactory::numBuiltinShaders)
         return builtinComputeShaders_[idx].Get();
     else
         return nullptr;

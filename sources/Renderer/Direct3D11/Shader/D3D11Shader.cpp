@@ -88,10 +88,10 @@ bool D3D11Shader::BuildShader(ID3D11Device* device, const ShaderDescriptor& shad
 static void ConvertSODeclEntry(D3D11_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src)
 {
     const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0;//src.location;
+    dst.Stream          = 0; //TODO: not sure what Stream refers to here, since OutputSlot is already used for 
     dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : src.name.c_str());
     dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = 0;//src.offset;
+    dst.StartComponent  = 0;
     dst.ComponentCount  = GetFormatAttribs(src.format).components;
     dst.OutputSlot      = src.slot;
 }
@@ -181,6 +181,7 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
     ID3DBlob*               blob,
     std::size_t             numStreamOutputAttribs,
     const VertexAttribute*  streamOutputAttribs,
+    UINT                    rasterizedStream,
     ID3D11ClassLinkage*     classLinkage)
 {
     if (blob == nullptr)
@@ -224,8 +225,16 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
                 std::vector<D3D11_SO_DECLARATION_ENTRY> outputElements;
                 outputElements.resize(numStreamOutputAttribs);
 
+                UINT bufferStrides[D3D11_SO_BUFFER_SLOT_COUNT];
+                UINT numBufferStrides = 0;
+
                 for_range(i, numStreamOutputAttribs)
+                {
                     ConvertSODeclEntry(outputElements[i], streamOutputAttribs[i]);
+                    LLGL_ASSERT(outputElements[i].OutputSlot < D3D11_SO_BUFFER_SLOT_COUNT); //TODO: replace with error report
+                    bufferStrides[outputElements[i].OutputSlot] = streamOutputAttribs[i].stride;
+                    numBufferStrides = std::max<UINT>(numBufferStrides, outputElements[i].OutputSlot + 1);
+                }
 
                 /* Create geometry shader with stream-output declaration */
                 HRESULT hr = device->CreateGeometryShaderWithStreamOutput(
@@ -233,9 +242,9 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
                     blob->GetBufferSize(),
                     outputElements.data(),
                     static_cast<UINT>(outputElements.size()),
-                    nullptr,
-                    0,
-                    0,//D3D11_SO_NO_RASTERIZED_STREAM,
+                    bufferStrides,
+                    numBufferStrides,
+                    0,//rasterizedStream,
                     classLinkage,
                     &geometryShader
                 );
@@ -275,16 +284,14 @@ ComPtr<ID3D11DeviceChild> D3D11Shader::CreateNativeShaderFromBlob(
 void D3D11Shader::CreateNativeShader(
     ID3D11Device*           device,
     std::size_t             numStreamOutputAttribs,
-    const VertexAttribute*  streamOutputAttribs,
-    ID3D11ClassLinkage*     classLinkage)
+    const VertexAttribute*  streamOutputAttribs)
 {
     native_ = D3D11Shader::CreateNativeShaderFromBlob(
         device,
         GetType(),
         byteCode_.Get(),
         numStreamOutputAttribs,
-        streamOutputAttribs,
-        classLinkage
+        streamOutputAttribs
     );
 }
 

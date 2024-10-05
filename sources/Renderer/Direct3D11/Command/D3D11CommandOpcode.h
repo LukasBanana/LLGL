@@ -35,6 +35,7 @@ enum D3D11Opcode : std::uint8_t
     D3D11OpcodeDrawInstancedIndirectN,
     D3D11OpcodeDrawIndexedInstancedIndirect,
     D3D11OpcodeDrawIndexedInstancedIndirectN,
+    D3D11OpcodeDrawAuto,
     D3D11OpcodeDispatch,
     D3D11OpcodeDispatchIndirect,
 };

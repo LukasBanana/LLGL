@@ -450,6 +450,11 @@ void D3D11SecondaryCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint6
     }
 }
 
+void D3D11SecondaryCommandBuffer::DrawStreamOutput()
+{
+    AllocOpcode(D3D11OpcodeDrawAuto);
+}
+
 /* ----- Compute ----- */
 
 void D3D11SecondaryCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

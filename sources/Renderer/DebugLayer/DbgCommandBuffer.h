@@ -144,6 +144,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         void ValidateDrawCmd(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance);
         void ValidateDrawIndexedCmd(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance);
+        void ValidateDrawStreamOutputCmd();
 
         void ValidateVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
         void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
@@ -194,6 +195,7 @@ class DbgCommandBuffer final : public CommandBuffer
         void AssertInstancingSupported();
         void AssertOffsetInstancingSupported();
         void AssertIndirectDrawingSupported();
+        void AssertStreamOutputSupported();
 
         void AssertNullPointer(const void* ptr, const char* name);
 

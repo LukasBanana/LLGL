@@ -992,6 +992,11 @@ void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
     }
 }
 
+void D3D12CommandBuffer::DrawStreamOutput()
+{
+    //TODO
+}
+
 /* ----- Compute ----- */
 
 void D3D12CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

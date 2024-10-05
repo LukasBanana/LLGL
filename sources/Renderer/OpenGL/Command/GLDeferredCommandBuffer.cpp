@@ -889,6 +889,11 @@ void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t 
     }
 }
 
+void GLDeferredCommandBuffer::DrawStreamOutput()
+{
+    //TODO
+}
+
 /* ----- Compute ----- */
 
 void GLDeferredCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)

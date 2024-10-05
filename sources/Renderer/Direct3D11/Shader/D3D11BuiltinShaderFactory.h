@@ -60,9 +60,9 @@ class D3D11BuiltinShaderFactory
 
     private:
 
-        static const std::size_t g_numBuiltinShaders = static_cast<std::size_t>(D3D11BuiltinShader::Num);
+        static constexpr std::size_t numBuiltinShaders = static_cast<std::size_t>(D3D11BuiltinShader::Num);
 
-        ComPtr<ID3D11ComputeShader> builtinComputeShaders_[D3D11BuiltinShaderFactory::g_numBuiltinShaders];
+        ComPtr<ID3D11ComputeShader> builtinComputeShaders_[D3D11BuiltinShaderFactory::numBuiltinShaders];
 
 };
 

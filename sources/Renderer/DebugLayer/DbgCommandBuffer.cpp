@@ -1248,6 +1248,19 @@ void DbgCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset,
     profile_.commandBufferRecord.drawCommands += numCommands;
 }
 
+void DbgCommandBuffer::DrawStreamOutput()
+{
+    if (LLGL_DBG_SOURCE())
+    {
+        AssertStreamOutputSupported();
+        ValidateDrawStreamOutputCmd();
+    }
+
+    LLGL_DBG_COMMAND( "DrawStreamOutput", instance.DrawStreamOutput() );
+
+    profile_.commandBufferRecord.drawCommands++;
+}
+
 /* ----- Compute ----- */
 
 void DbgCommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t numWorkGroupsY, std::uint32_t numWorkGroupsZ)
@@ -1722,6 +1735,39 @@ void DbgCommandBuffer::ValidateDrawIndexedCmd(
                 static_cast<std::uint32_t>(bindings_.indexBuffer->elements)
             );
         }
+    }
+}
+
+void DbgCommandBuffer::ValidateDrawStreamOutputCmd()
+{
+    AssertRecording();
+    AssertInsideRenderPass();
+    AssertGraphicsPipelineBound();
+    AssertVertexBufferBound();
+    AssertViewportBound();
+    ValidateDynamicStates();
+    ValidateVertexLayout();
+    ValidateBindingTable();
+    ValidateBlendStates();
+
+    /* Don't check for empty vertex buffer arrays here, this is already done in AssertVertexBufferBound() */
+    if (bindings_.numVertexBuffers == 1)
+    {
+        if ((bindings_.vertexBuffers[0]->desc.bindFlags & BindFlags::StreamOutputBuffer) == 0)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "bound vertex buffer must have been created with bind flag 'LLGL::BindFlags::StreamOutputBuffer' for automatic draw commands"
+            );
+        }
+    }
+    else if (bindings_.numVertexBuffers > 1)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidState,
+            "automatic draw commands only support a single vertex buffer, but %u are bound",
+            bindings_.numVertexBuffers
+        );
     }
 }
 

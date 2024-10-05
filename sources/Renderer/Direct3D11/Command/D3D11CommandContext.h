@@ -80,6 +80,8 @@ class D3D11CommandContext
         void DrawIndexedInstancedIndirect(ID3D11Buffer* bufferForArgs, UINT alignedByteOffsetForArgs);
         void DrawIndexedInstancedIndirectN(ID3D11Buffer* bufferForArgs, UINT alignedByteOffsetForArgs, UINT numCommands, UINT stride);
 
+        void DrawAuto();
+
         void Dispatch(UINT numWorkGroupsX, UINT numWorkGroupsY, UINT numWorkGroupsZ);
         void DispatchIndirect(ID3D11Buffer* bufferForArgs, UINT alignedByteOffsetForArgs);
 

@@ -128,6 +128,11 @@ static std::size_t ExecuteD3D11Command(const D3D11Opcode opcode, const void* pc,
             context.DrawIndexedInstancedIndirectN(cmd->bufferForArgs, cmd->alignedByteOffsetForArgs, cmd->numCommands, cmd->stride);
             return sizeof(*cmd);
         }
+        case D3D11OpcodeDrawAuto:
+        {
+            context.DrawAuto();
+            return 0;
+        }
         case D3D11OpcodeDispatch:
         {
             auto cmd = reinterpret_cast<const D3D11CmdDispatch*>(pc);
