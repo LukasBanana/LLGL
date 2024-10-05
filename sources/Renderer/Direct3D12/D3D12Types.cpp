@@ -25,7 +25,7 @@ D3D12_FILL_MODE Map(const PolygonMode polygonMode)
         case PolygonMode::Wireframe:    return D3D12_FILL_MODE_WIREFRAME;
         case PolygonMode::Points:       break;
     }
-    DXTypes::MapFailed("PolygonMode", "D3D12_FILL_MODE");
+    LLGL_TRAP_DX_MAP(PolygonMode, polygonMode, D3D12_FILL_MODE);
 }
 
 D3D12_CULL_MODE Map(const CullMode cullMode)
@@ -36,7 +36,7 @@ D3D12_CULL_MODE Map(const CullMode cullMode)
         case CullMode::Front:       return D3D12_CULL_MODE_FRONT;
         case CullMode::Back:        return D3D12_CULL_MODE_BACK;
     }
-    DXTypes::MapFailed("CullMode", "D3D12_CULL_MODE");
+    LLGL_TRAP_DX_MAP(CullMode, cullMode, D3D12_CULL_MODE);
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770338(v=vs.85).aspx
@@ -62,7 +62,7 @@ D3D12_BLEND Map(const BlendOp blendOp)
         case BlendOp::Src1Alpha:        return D3D12_BLEND_SRC1_ALPHA;
         case BlendOp::InvSrc1Alpha:     return D3D12_BLEND_INV_SRC1_ALPHA;
     }
-    DXTypes::MapFailed("BlendOp", "D3D12_BLEND");
+    LLGL_TRAP_DX_MAP(BlendOp, blendOp, D3D12_BLEND);
 }
 
 D3D12_BLEND_OP Map(const BlendArithmetic blendArithmetic)
@@ -75,7 +75,7 @@ D3D12_BLEND_OP Map(const BlendArithmetic blendArithmetic)
         case BlendArithmetic::Min:          return D3D12_BLEND_OP_MIN;
         case BlendArithmetic::Max:          return D3D12_BLEND_OP_MAX;
     }
-    DXTypes::MapFailed("BlendArithmetic", "D3D12_BLEND_OP");
+    LLGL_TRAP_DX_MAP(BlendArithmetic, blendArithmetic, D3D12_BLEND_OP);
 }
 
 D3D12_COMPARISON_FUNC Map(const CompareOp compareOp)
@@ -91,7 +91,7 @@ D3D12_COMPARISON_FUNC Map(const CompareOp compareOp)
         case CompareOp::GreaterEqual:   return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
         case CompareOp::AlwaysPass:     return D3D12_COMPARISON_FUNC_ALWAYS;
     }
-    DXTypes::MapFailed("CompareOp", "D3D12_COMPARISON_FUNC");
+    LLGL_TRAP_DX_MAP(CompareOp, compareOp, D3D12_COMPARISON_FUNC);
 }
 
 D3D12_STENCIL_OP Map(const StencilOp stencilOp)
@@ -107,7 +107,7 @@ D3D12_STENCIL_OP Map(const StencilOp stencilOp)
         case StencilOp::IncWrap:    return D3D12_STENCIL_OP_INCR;
         case StencilOp::DecWrap:    return D3D12_STENCIL_OP_DECR;
     }
-    DXTypes::MapFailed("StencilOp", "D3D12_STENCIL_OP");
+    LLGL_TRAP_DX_MAP(StencilOp, stencilOp, D3D12_STENCIL_OP);
 }
 
 D3D12_FILTER Map(const SamplerDescriptor& samplerDesc)
@@ -174,7 +174,7 @@ D3D12_FILTER Map(const SamplerDescriptor& samplerDesc)
             }
         }
     }
-    DXTypes::MapFailed("SamplerDescriptor", "D3D12_FILTER");
+    LLGL_TRAP_DX_MAP_NOVALUE(SamplerDescriptor, D3D12_FILTER);
 }
 
 D3D12_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
@@ -187,7 +187,7 @@ D3D12_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
         case SamplerAddressMode::Border:       return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
         case SamplerAddressMode::MirrorOnce:   return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
     }
-    DXTypes::MapFailed("SamplerAddressMode", "D3D12_TEXTURE_ADDRESS_MODE");
+    LLGL_TRAP_DX_MAP(SamplerAddressMode, addressMode, D3D12_TEXTURE_ADDRESS_MODE);
 }
 
 D3D12_LOGIC_OP Map(const LogicOp logicOp)
@@ -212,7 +212,7 @@ D3D12_LOGIC_OP Map(const LogicOp logicOp)
         case LogicOp::XOR:          return D3D12_LOGIC_OP_XOR;
         case LogicOp::Equiv:        return D3D12_LOGIC_OP_EQUIV;
     }
-    DXTypes::MapFailed("LogicOp", "D3D12_LOGIC_OP");
+    LLGL_TRAP_DX_MAP(LogicOp, logicOp, D3D12_LOGIC_OP);
 }
 
 D3D12_SHADER_COMPONENT_MAPPING Map(const TextureSwizzle textureSwizzle)
@@ -226,7 +226,7 @@ D3D12_SHADER_COMPONENT_MAPPING Map(const TextureSwizzle textureSwizzle)
         case TextureSwizzle::Blue:  return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_2;
         case TextureSwizzle::Alpha: return D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_3;
     }
-    DXTypes::MapFailed("TextureSwizzle", "D3D12_SHADER_COMPONENT_MAPPING");
+    LLGL_TRAP_DX_MAP(TextureSwizzle, textureSwizzle, D3D12_SHADER_COMPONENT_MAPPING);
 }
 
 UINT Map(const TextureSwizzleRGBA& textureSwizzle)
@@ -253,7 +253,7 @@ D3D12_SRV_DIMENSION MapSrvDimension(const TextureType textureType)
         case TextureType::Texture2DMS:      return D3D12_SRV_DIMENSION_TEXTURE2DMS;
         case TextureType::Texture2DMSArray: return D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
     }
-    DXTypes::MapFailed("TextureType", "D3D12_SRV_DIMENSION");
+    LLGL_TRAP_DX_MAP(TextureType, textureType, D3D12_SRV_DIMENSION);
 }
 
 D3D12_UAV_DIMENSION MapUavDimension(const TextureType textureType)
@@ -270,7 +270,7 @@ D3D12_UAV_DIMENSION MapUavDimension(const TextureType textureType)
         case TextureType::Texture2DMS:      break;
         case TextureType::Texture2DMSArray: break;
     }
-    DXTypes::MapFailed("TextureType", "D3D12_UAV_DIMENSION");
+    LLGL_TRAP_DX_MAP(TextureType, textureType, D3D12_UAV_DIMENSION);
 }
 
 D3D12_RESOURCE_DIMENSION MapResourceDimension(const TextureType textureType)
@@ -287,7 +287,7 @@ D3D12_RESOURCE_DIMENSION MapResourceDimension(const TextureType textureType)
         case TextureType::Texture2DMSArray: return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         case TextureType::Texture3D:        return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
     }
-    DXTypes::MapFailed("TextureType", "D3D12_RESOURCE_DIMENSION");
+    LLGL_TRAP_DX_MAP(TextureType, textureType, D3D12_RESOURCE_DIMENSION);
 }
 
 D3D12_QUERY_TYPE MapQueryType(const QueryType queryType)
@@ -302,7 +302,7 @@ D3D12_QUERY_TYPE MapQueryType(const QueryType queryType)
         case QueryType::StreamOutOverflow:              break; // D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1 ???
         case QueryType::PipelineStatistics:             return D3D12_QUERY_TYPE_PIPELINE_STATISTICS;
     }
-    DXTypes::MapFailed("QueryType", "D3D12_QUERY_TYPE");
+    LLGL_TRAP_DX_MAP(QueryType, queryType, D3D12_QUERY_TYPE);
 }
 
 D3D12_QUERY_HEAP_TYPE MapQueryHeapType(const QueryType queryType)
@@ -317,7 +317,7 @@ D3D12_QUERY_HEAP_TYPE MapQueryHeapType(const QueryType queryType)
         case QueryType::StreamOutOverflow:              return D3D12_QUERY_HEAP_TYPE_SO_STATISTICS;
         case QueryType::PipelineStatistics:             return D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS;
     }
-    DXTypes::MapFailed("QueryType", "D3D12_QUERY_HEAP_TYPE");
+    LLGL_TRAP_DX_MAP(QueryType, queryType, D3D12_QUERY_HEAP_TYPE);
 }
 
 Format Unmap(const DXGI_FORMAT format)

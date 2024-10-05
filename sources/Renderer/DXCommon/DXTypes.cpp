@@ -6,7 +6,6 @@
  */
 
 #include "DXTypes.h"
-#include "../../Core/Exception.h"
 #include <stdexcept>
 #include <string>
 
@@ -17,24 +16,6 @@ namespace LLGL
 namespace DXTypes
 {
 
-
-[[noreturn]]
-void MapFailed(const char* typeName, const char* dxTypeName)
-{
-    LLGL_TRAP("failed to map <LLGL::%s> to <%s> Direct3D parameter", typeName, dxTypeName);
-}
-
-[[noreturn]]
-void UnmapFailed(const char* typeName, const char* dxTypeName)
-{
-    LLGL_TRAP("failed to unmap <LLGL::%s> from <%s> Direct3D parameter", typeName, dxTypeName);
-}
-
-[[noreturn]]
-void ParamNotSupported(const char* paramName, const char* requirement)
-{
-    LLGL_TRAP("parameter '%s' requires %s", paramName, requirement);
-}
 
 DXGI_FORMAT ToDXGIFormat(const DataType dataType)
 {
@@ -51,7 +32,7 @@ DXGI_FORMAT ToDXGIFormat(const DataType dataType)
         case DataType::Float32:     return DXGI_FORMAT_R32_FLOAT;
         case DataType::Float64:     break;
     }
-    MapFailed("DataType", "DXGI_FORMAT");
+    LLGL_TRAP_DX_MAP(DataType, dataType, DXGI_FORMAT);
 }
 
 DXGI_FORMAT ToDXGIFormat(const Format format)
@@ -203,7 +184,7 @@ DXGI_FORMAT ToDXGIFormat(const Format format)
         case Format::ETC2UNorm:         break;
         case Format::ETC2UNorm_sRGB:    break;
     }
-    MapFailed("Format", "DXGI_FORMAT");
+    LLGL_TRAP_DX_MAP(Format, format, DXGI_FORMAT);
 }
 
 D3D_PRIMITIVE_TOPOLOGY ToD3DPrimitiveTopology(const PrimitiveTopology topology)
@@ -252,7 +233,7 @@ D3D_PRIMITIVE_TOPOLOGY ToD3DPrimitiveTopology(const PrimitiveTopology topology)
         case PrimitiveTopology::Patches31:              return D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST;
         case PrimitiveTopology::Patches32:              return D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST;
     }
-    MapFailed("PrimitiveTopology", "D3D_PRIMITIVE_TOPOLOGY");
+    LLGL_TRAP_DX_MAP(PrimitiveTopology, topology, D3D_PRIMITIVE_TOPOLOGY);
 }
 
 Format Unmap(const DXGI_FORMAT format)

@@ -28,7 +28,7 @@ D3D11_FILL_MODE Map(const PolygonMode polygonMode)
         case PolygonMode::Wireframe:    return D3D11_FILL_WIREFRAME;
         case PolygonMode::Points:       break;
     }
-    DXTypes::MapFailed("PolygonMode", "D3D11_FILL_MODE");
+    LLGL_TRAP_DX_MAP(PolygonMode, polygonMode, D3D11_FILL_MODE);
 }
 
 D3D11_CULL_MODE Map(const CullMode cullMode)
@@ -39,7 +39,7 @@ D3D11_CULL_MODE Map(const CullMode cullMode)
         case CullMode::Front:       return D3D11_CULL_FRONT;
         case CullMode::Back:        return D3D11_CULL_BACK;
     }
-    DXTypes::MapFailed("CullMode", "D3D11_CULL_MODE");
+    LLGL_TRAP_DX_MAP(CullMode, cullMode, D3D11_CULL_MODE);
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476086(v=vs.85).aspx
@@ -65,7 +65,7 @@ D3D11_BLEND Map(const BlendOp blendOp)
         case BlendOp::Src1Alpha:        return D3D11_BLEND_SRC1_ALPHA;
         case BlendOp::InvSrc1Alpha:     return D3D11_BLEND_INV_SRC1_ALPHA;
     }
-    DXTypes::MapFailed("BlendOp", "D3D11_BLEND");
+    LLGL_TRAP_DX_MAP(BlendOp, blendOp, D3D11_BLEND);
 }
 
 D3D11_BLEND_OP Map(const BlendArithmetic blendArithmetic)
@@ -78,7 +78,7 @@ D3D11_BLEND_OP Map(const BlendArithmetic blendArithmetic)
         case BlendArithmetic::Min:          return D3D11_BLEND_OP_MIN;
         case BlendArithmetic::Max:          return D3D11_BLEND_OP_MAX;
     }
-    DXTypes::MapFailed("BlendArithmetic", "D3D11_BLEND_OP");
+    LLGL_TRAP_DX_MAP(BlendArithmetic, blendArithmetic, D3D11_BLEND_OP);
 }
 
 D3D11_COMPARISON_FUNC Map(const CompareOp compareOp)
@@ -94,7 +94,7 @@ D3D11_COMPARISON_FUNC Map(const CompareOp compareOp)
         case CompareOp::GreaterEqual:   return D3D11_COMPARISON_GREATER_EQUAL;
         case CompareOp::AlwaysPass:     return D3D11_COMPARISON_ALWAYS;
     }
-    DXTypes::MapFailed("CompareOp", "D3D11_COMPARISON_FUNC");
+    LLGL_TRAP_DX_MAP(CompareOp, compareOp, D3D11_COMPARISON_FUNC);
 }
 
 D3D11_STENCIL_OP Map(const StencilOp stencilOp)
@@ -110,7 +110,7 @@ D3D11_STENCIL_OP Map(const StencilOp stencilOp)
         case StencilOp::IncWrap:    return D3D11_STENCIL_OP_INCR;
         case StencilOp::DecWrap:    return D3D11_STENCIL_OP_DECR;
     }
-    DXTypes::MapFailed("StencilOp", "D3D11_STENCIL_OP");
+    LLGL_TRAP_DX_MAP(StencilOp, stencilOp, D3D11_STENCIL_OP);
 }
 
 D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
@@ -177,7 +177,7 @@ D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
             }
         }
     }
-    DXTypes::MapFailed("SamplerDescriptor", "D3D11_FILTER");
+    LLGL_TRAP_DX_MAP_NOVALUE(SamplerDescriptor, D3D11_FILTER);
 }
 
 D3D11_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
@@ -190,7 +190,7 @@ D3D11_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
         case SamplerAddressMode::Border:       return D3D11_TEXTURE_ADDRESS_BORDER;
         case SamplerAddressMode::MirrorOnce:   return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
     }
-    DXTypes::MapFailed("SamplerAddressMode", "D3D11_TEXTURE_ADDRESS_MODE");
+    LLGL_TRAP_DX_MAP(SamplerAddressMode, addressMode, D3D11_TEXTURE_ADDRESS_MODE);
 }
 
 D3D11_QUERY Map(const QueryType queryType)
@@ -205,7 +205,7 @@ D3D11_QUERY Map(const QueryType queryType)
         case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
         case QueryType::PipelineStatistics:                 return D3D11_QUERY_PIPELINE_STATISTICS;
     }
-    DXTypes::MapFailed("QueryType", "D3D11_QUERY");
+    LLGL_TRAP_DX_MAP(QueryType, queryType, D3D11_QUERY);
 }
 
 D3D11_MAP Map(const CPUAccess cpuAccess)
@@ -217,7 +217,7 @@ D3D11_MAP Map(const CPUAccess cpuAccess)
         case CPUAccess::WriteDiscard:   return D3D11_MAP_WRITE_DISCARD;
         case CPUAccess::ReadWrite:      return D3D11_MAP_READ_WRITE;
     }
-    DXTypes::MapFailed("CPUAccess", "D3D11_MAP");
+    LLGL_TRAP_DX_MAP(CPUAccess, cpuAccess, D3D11_MAP);
 }
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
@@ -245,7 +245,7 @@ D3D11_LOGIC_OP Map(const LogicOp logicOp)
         case LogicOp::XOR:          return D3D11_LOGIC_OP_XOR;
         case LogicOp::Equiv:        return D3D11_LOGIC_OP_EQUIV;
     }
-    DXTypes::MapFailed("LogicOp", "D3D11_LOGIC_OP");
+    LLGL_TRAP_DX_MAP(LogicOp, logicOp, D3D11_LOGIC_OP);
 }
 
 #endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
@@ -279,7 +279,7 @@ void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, con
 void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
 {
     if (src.conservativeRasterization)
-        DXTypes::ParamNotSupported("LLGL::RasterizerDescriptor::conservativeRasterization", "Direct3D 11.3");
+        LLGL_TRAP_DX_PARAM_UNSUPPORTED("LLGL::RasterizerDescriptor::conservativeRasterization", "Direct3D 11.3");
 
     dst.FillMode                = Map(src.polygonMode);
     dst.CullMode                = Map(src.cullMode);
@@ -341,7 +341,7 @@ static void Convert(D3D11_RENDER_TARGET_BLEND_DESC& dst, const BlendTargetDescri
 void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src)
 {
     if (src.logicOp != LogicOp::Disabled)
-        DXTypes::ParamNotSupported("LLGL::BlendDescriptor::logicOp", "Direct3D 11.1");
+        LLGL_TRAP_DX_PARAM_UNSUPPORTED("LLGL::BlendDescriptor::logicOp", "Direct3D 11.1");
 
     dst.AlphaToCoverageEnable   = DXBoolean(src.alphaToCoverageEnabled);
     dst.IndependentBlendEnable  = DXBoolean(src.independentBlendEnabled);
