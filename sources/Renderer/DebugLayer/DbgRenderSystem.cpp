@@ -18,6 +18,7 @@
 #include <LLGL/Constants.h>
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/ForRange.h>
+#include <unordered_map>
 
 
 namespace LLGL
@@ -108,11 +109,8 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const 
     /* Validate and store format size (if supported) */
     std::uint32_t formatSize = 0;
 
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidateBufferDesc(bufferDesc, &formatSize);
-    }
 
     /* Create buffer object */
     auto* bufferDbg = buffers_.emplace<DbgBuffer>(*instance_->CreateBuffer(bufferDesc, initialData), bufferDesc);
@@ -157,10 +155,8 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const vo
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
     {
-        LLGL_DBG_SOURCE();
-
         if (dataSize > 0)
         {
             /* Assume buffer to be initialized even if only partially as we cannot keep track of each bit inside the buffer */
@@ -182,10 +178,8 @@ void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* dat
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
     {
-        LLGL_DBG_SOURCE();
-
         if (!bufferDbg.initialized)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "reading uninitialized buffer");
         if (!data)
@@ -203,9 +197,8 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
     {
-        LLGL_DBG_SOURCE();
         ValidateResourceCPUAccess(bufferDbg.desc.cpuAccessFlags, access, "buffer");
         ValidateBufferMapping(bufferDbg, true);
     }
@@ -224,9 +217,8 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::ui
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
     {
-        LLGL_DBG_SOURCE();
         ValidateResourceCPUAccess(bufferDbg.desc.cpuAccessFlags, access, "buffer");
         ValidateBufferMapping(bufferDbg, true);
         ValidateBufferBoundary(bufferDbg.desc.size, offset, length);
@@ -246,11 +238,8 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidateBufferMapping(bufferDbg, false);
-    }
 
     instance_->UnmapBuffer(bufferDbg.instance);
 
@@ -261,11 +250,8 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageView* initialImage)
 {
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidateTextureDesc(textureDesc, initialImage);
-    }
     return textures_.emplace<DbgTexture>(*instance_->CreateTexture(textureDesc, initialImage), textureDesc);
 }
 
@@ -278,9 +264,8 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
     {
-        LLGL_DBG_SOURCE();
         ValidateTextureRegion(textureDbg, textureRegion);
         ValidateImageDataSize(textureDbg, textureRegion, srcImageView.format, srcImageView.dataType, srcImageView.dataSize);
     }
@@ -294,9 +279,8 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
     {
-        LLGL_DBG_SOURCE();
         ValidateTextureRegion(textureDbg, textureRegion);
         ValidateImageDataSize(textureDbg, textureRegion, dstImageView.format, dstImageView.dataType, dstImageView.dataSize);
     }
@@ -376,11 +360,8 @@ std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy
 
 ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews)
 {
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidateResourceHeapDesc(resourceHeapDesc, initialResourceViews);
-    }
 
     /* Create copy of resource view descriptors to pass native resource object references */
     auto instanceResourceViews = GetResourceViewInstanceCopy(initialResourceViews);
@@ -406,11 +387,8 @@ std::uint32_t DbgRenderSystem::WriteResourceHeap(ResourceHeap& resourceHeap, std
 {
     auto& resourceHeapDbg = LLGL_CAST(DbgResourceHeap&, resourceHeap);
 
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidateResourceHeapRange(resourceHeapDbg, firstDescriptor, resourceViews);
-    }
 
     auto instanceResourceViews = GetResourceViewInstanceCopy(resourceViews);
     return instance_->WriteResourceHeap(resourceHeapDbg.instance, firstDescriptor, instanceResourceViews);
@@ -473,6 +451,8 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
+    if (LLGL_DBG_SOURCE())
+        ValidateShaderDesc(shaderDesc);
     return shaders_.emplace<DbgShader>(*instance_->CreateShader(shaderDesc), shaderDesc);
 }
 
@@ -485,11 +465,8 @@ void DbgRenderSystem::Release(Shader& shader)
 
 PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidatePipelineLayoutDesc(pipelineLayoutDesc);
-    }
     return pipelineLayouts_.emplace<DbgPipelineLayout>(*instance_->CreatePipelineLayout(pipelineLayoutDesc), pipelineLayoutDesc);
 }
 
@@ -514,9 +491,7 @@ void DbgRenderSystem::Release(PipelineCache& pipelineCache)
 
 PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    LLGL_DBG_SOURCE();
-
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
         ValidateGraphicsPipelineDesc(pipelineStateDesc);
 
     GraphicsPipelineDescriptor instanceDesc = pipelineStateDesc;
@@ -536,9 +511,7 @@ PipelineState* DbgRenderSystem::CreatePipelineState(const GraphicsPipelineDescri
 
 PipelineState* DbgRenderSystem::CreatePipelineState(const ComputePipelineDescriptor& pipelineStateDesc, PipelineCache* pipelineCache)
 {
-    LLGL_DBG_SOURCE();
-
-    if (debugger_)
+    if (LLGL_DBG_SOURCE())
         ValidateComputePipelineDesc(pipelineStateDesc);
 
     ComputePipelineDescriptor instanceDesc = pipelineStateDesc;
@@ -1477,6 +1450,150 @@ static std::string GetBindingDescLabel(const BindingDescriptor& bindingDesc)
     label += "at ";
     label += GetBindingSlotLabel(bindingDesc.slot);
     return label;
+}
+
+static bool IsStreamOutputCompatibleFormat(const Format format)
+{
+    switch (format)
+    {
+        case Format::R32Float:
+        case Format::RG32Float:
+        case Format::RGB32Float:
+        case Format::RGBA32Float:
+            return true;
+        default:
+            return false;
+    }
+}
+
+void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
+{
+    /* Validate shader output-stream attributes */
+    std::unordered_map<std::string, std::size_t> attribNameToIndexMap;
+    std::unordered_map<SystemValue, std::size_t> attribSVToIndexMap;
+
+    struct BufferStrideRef
+    {
+        std::size_t     firstAttribIndex    = -1;
+        std::uint32_t   stride              = 0;
+    };
+    BufferStrideRef bufferStridesRefs[LLGL_MAX_NUM_SO_BUFFERS];
+
+    const std::string shaderLabelPrefix =
+    (
+        shaderDesc.debugName != nullptr && *shaderDesc.debugName != '\0'
+            ? "shader '" + std::string(shaderDesc.debugName) + "': "
+            : ""
+    );
+    std::string attribLabel;
+
+    for_range(i, shaderDesc.vertex.outputAttribs.size())
+    {
+        const VertexAttribute& attrib = shaderDesc.vertex.outputAttribs[i];
+
+        /* Construct label for each attribute */;
+        attribLabel = shaderLabelPrefix + "stream-output attribute [" + std::to_string(i) + "]";
+        if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
+            attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
+
+        /* Validate attribute format */
+        if (const char* formatIdent = ToString(attrib.format))
+        {
+            if (!IsStreamOutputCompatibleFormat(attrib.format))
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s format 'LLGL::Format::%s' is not supported in this context",
+                    attribLabel.c_str(), formatIdent
+                );
+            }
+        }
+        else
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s format is invalid (%0x08X)",
+                attribLabel.c_str(), static_cast<int>(attrib.format)
+            );
+        }
+
+        /* Validate attribute stride and slot */
+        if (attrib.slot < LLGL_MAX_NUM_SO_BUFFERS)
+        {
+            BufferStrideRef& strideRef = bufferStridesRefs[attrib.slot];
+            if (strideRef.firstAttribIndex == -1)
+            {
+                /* Initialize buffer stride with first attribute that defines it */
+                strideRef.firstAttribIndex = i;
+                strideRef.stride           = attrib.stride;
+            }
+            else if (strideRef.stride != attrib.stride)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s stride mismatch for slot [%u]: %u specified but attribute [%zu] defined it as %u",
+                    attribLabel.c_str(), attrib.slot, attrib.stride, strideRef.firstAttribIndex, strideRef.stride
+                );
+            }
+        }
+        else
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s slot index out of bounds: %u specified but upper bound is %u",
+                attribLabel.c_str(), attrib.slot, LLGL_MAX_NUM_SO_BUFFERS
+            );
+        }
+
+        /* Validate attribute name and system-value */
+        if (attrib.systemValue != SystemValue::Undefined)
+        {
+            if (const char* systemValueIdent = ToString(attrib.systemValue))
+            {
+                auto systemValueIt = attribSVToIndexMap.find(attrib.systemValue);
+                if (systemValueIt != attribSVToIndexMap.end())
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "%s uses duplicate system-value '%s' that is already defined for attribute [%zu]",
+                        attribLabel.c_str(), systemValueIdent, systemValueIt->second
+                    );
+                }
+                else
+                    attribSVToIndexMap[attrib.systemValue] = i;
+            }
+            else
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s uses unknown system-value (0x%08X)",
+                    attribLabel.c_str(), static_cast<int>(attrib.systemValue)
+                );
+            }
+        }
+        else if (!attrib.name.empty())
+        {
+            auto nameIt = attribNameToIndexMap.find(attrib.name.c_str());
+            if (nameIt != attribNameToIndexMap.end())
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "%s uses duplicate name '%s' that is already defined for attribute [%zu]",
+                    attribLabel.c_str(), attrib.name.c_str(), nameIt->second
+                );
+            }
+            else
+                attribNameToIndexMap[attrib.name.c_str()] = i;
+        }
+        else
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "%s defines neither name nor system-value",
+                attribLabel.c_str()
+            );
+        }
+    }
 }
 
 void DbgRenderSystem::ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor& pipelineLayoutDesc)

@@ -30,11 +30,8 @@ void DbgCommandQueue::Submit(CommandBuffer& commandBuffer)
 {
     auto& commandBufferDbg = LLGL_CAST(DbgCommandBuffer&, commandBuffer);
 
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         commandBufferDbg.ValidateSubmit();
-    }
 
     instance.Submit(commandBufferDbg.instance);
 
@@ -52,11 +49,8 @@ bool DbgCommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQuery
 {
     auto& queryHeapDbg = LLGL_CAST(DbgQueryHeap&, queryHeap);
 
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE();
+    if (LLGL_DBG_SOURCE())
         ValidateQueryResult(queryHeapDbg, firstQuery, numQueries, data, dataSize);
-    }
 
     return instance.QueryResult(queryHeapDbg.instance, firstQuery, numQueries, data, dataSize);
 }

@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Utils/TypeNames.h>
+#include "MacroUtils.h"
 
 
 namespace LLGL
@@ -60,6 +61,7 @@ LLGL_EXPORT const char* ToString(const WarningType val)
     return nullptr;
 }
 
+//TODO: rename ToString() functions that return a more human readable friendly name to ToName() or ToLabel.
 LLGL_EXPORT const char* ToString(const ShadingLanguage val)
 {
     using T = ShadingLanguage;
@@ -128,154 +130,152 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage val)
 
 LLGL_EXPORT const char* ToString(const Format val)
 {
-    using T = Format;
-
     switch (val)
     {
-        case T::Undefined:          return "Undefined";
+        LLGL_CASE_TO_STR_TYPED( Format, Undefined         );
 
         /* --- Alpha channel color formats --- */
-        case T::A8UNorm:            return "A8UNorm";
+        LLGL_CASE_TO_STR_TYPED( Format, A8UNorm           );
 
         /* --- Red channel color formats --- */
-        case T::R8UNorm:            return "R8UNorm";
-        case T::R8SNorm:            return "R8SNorm";
-        case T::R8UInt:             return "R8UInt";
-        case T::R8SInt:             return "R8SInt";
+        LLGL_CASE_TO_STR_TYPED( Format, R8UNorm           );
+        LLGL_CASE_TO_STR_TYPED( Format, R8SNorm           );
+        LLGL_CASE_TO_STR_TYPED( Format, R8UInt            );
+        LLGL_CASE_TO_STR_TYPED( Format, R8SInt            );
 
-        case T::R16UNorm:           return "R16UNorm";
-        case T::R16SNorm:           return "R16SNorm";
-        case T::R16UInt:            return "R16UInt";
-        case T::R16SInt:            return "R16SInt";
-        case T::R16Float:           return "R16Float";
+        LLGL_CASE_TO_STR_TYPED( Format, R16UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, R16SNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, R16UInt           );
+        LLGL_CASE_TO_STR_TYPED( Format, R16SInt           );
+        LLGL_CASE_TO_STR_TYPED( Format, R16Float          );
 
-        case T::R32UInt:            return "R32UInt";
-        case T::R32SInt:            return "R32SInt";
-        case T::R32Float:           return "R32Float";
+        LLGL_CASE_TO_STR_TYPED( Format, R32UInt           );
+        LLGL_CASE_TO_STR_TYPED( Format, R32SInt           );
+        LLGL_CASE_TO_STR_TYPED( Format, R32Float          );
 
-        case T::R64Float:           return "R64Float";
+        LLGL_CASE_TO_STR_TYPED( Format, R64Float          );
 
         /* --- RG color formats --- */
-        case T::RG8UNorm:           return "RG8UNorm";
-        case T::RG8SNorm:           return "RG8SNorm";
-        case T::RG8UInt:            return "RG8UInt";
-        case T::RG8SInt:            return "RG8SInt";
+        LLGL_CASE_TO_STR_TYPED( Format, RG8UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, RG8SNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, RG8UInt           );
+        LLGL_CASE_TO_STR_TYPED( Format, RG8SInt           );
 
-        case T::RG16UNorm:          return "RG16UNorm";
-        case T::RG16SNorm:          return "RG16SNorm";
-        case T::RG16UInt:           return "RG16UInt";
-        case T::RG16SInt:           return "RG16SInt";
-        case T::RG16Float:          return "RG16Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RG16UNorm         );
+        LLGL_CASE_TO_STR_TYPED( Format, RG16SNorm         );
+        LLGL_CASE_TO_STR_TYPED( Format, RG16UInt          );
+        LLGL_CASE_TO_STR_TYPED( Format, RG16SInt          );
+        LLGL_CASE_TO_STR_TYPED( Format, RG16Float         );
 
-        case T::RG32UInt:           return "RG32UInt";
-        case T::RG32SInt:           return "RG32SInt";
-        case T::RG32Float:          return "RG32Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RG32UInt          );
+        LLGL_CASE_TO_STR_TYPED( Format, RG32SInt          );
+        LLGL_CASE_TO_STR_TYPED( Format, RG32Float         );
 
-        case T::RG64Float:          return "RG64Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RG64Float         );
 
         /* --- RGB color formats --- */
-        case T::RGB8UNorm:          return "RGB8UNorm";
-        case T::RGB8UNorm_sRGB:     return "RGB8UNorm_sRGB";
-        case T::RGB8SNorm:          return "RGB8SNorm";
-        case T::RGB8UInt:           return "RGB8UInt";
-        case T::RGB8SInt:           return "RGB8SInt";
+        LLGL_CASE_TO_STR_TYPED( Format, RGB8UNorm         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB8UNorm_sRGB    );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB8SNorm         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB8UInt          );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB8SInt          );
 
-        case T::RGB16UNorm:         return "RGB16UNorm";
-        case T::RGB16SNorm:         return "RGB16SNorm";
-        case T::RGB16UInt:          return "RGB16UInt";
-        case T::RGB16SInt:          return "RGB16SInt";
-        case T::RGB16Float:         return "RGB16Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGB16UNorm        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB16SNorm        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB16UInt         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB16SInt         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB16Float        );
 
-        case T::RGB32UInt:          return "RGB32UInt";
-        case T::RGB32SInt:          return "RGB32SInt";
-        case T::RGB32Float:         return "RGB32Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGB32UInt         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB32SInt         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB32Float        );
 
-        case T::RGB64Float:         return "RGB64Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGB64Float        );
 
         /* --- RGBA color formats --- */
-        case T::RGBA8UNorm:         return "RGBA8UNorm";
-        case T::RGBA8UNorm_sRGB:    return "RGBA8UNorm_sRGB";
-        case T::RGBA8SNorm:         return "RGBA8SNorm";
-        case T::RGBA8UInt:          return "RGBA8UInt";
-        case T::RGBA8SInt:          return "RGBA8SInt";
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA8UNorm        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA8UNorm_sRGB   );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA8SNorm        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA8UInt         );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA8SInt         );
 
-        case T::RGBA16UNorm:        return "RGBA16UNorm";
-        case T::RGBA16SNorm:        return "RGBA16SNorm";
-        case T::RGBA16UInt:         return "RGBA16UInt";
-        case T::RGBA16SInt:         return "RGBA16SInt";
-        case T::RGBA16Float:        return "RGBA16Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA16UNorm       );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA16SNorm       );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA16UInt        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA16SInt        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA16Float       );
 
-        case T::RGBA32UInt:         return "RGBA32UInt";
-        case T::RGBA32SInt:         return "RGBA32SInt";
-        case T::RGBA32Float:        return "RGBA32Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA32UInt        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA32SInt        );
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA32Float       );
 
-        case T::RGBA64Float:        return "RGBA64Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGBA64Float       );
 
         /* --- BGRA color formats --- */
-        case T::BGRA8UNorm:         return "BGRA8UNorm";
-        case T::BGRA8UNorm_sRGB:    return "BGRA8UNorm_sRGB";
-        case T::BGRA8SNorm:         return "BGRA8SNorm";
-        case T::BGRA8UInt:          return "BGRA8UInt";
-        case T::BGRA8SInt:          return "BGRA8SInt";
+        LLGL_CASE_TO_STR_TYPED( Format, BGRA8UNorm        );
+        LLGL_CASE_TO_STR_TYPED( Format, BGRA8UNorm_sRGB   );
+        LLGL_CASE_TO_STR_TYPED( Format, BGRA8SNorm        );
+        LLGL_CASE_TO_STR_TYPED( Format, BGRA8UInt         );
+        LLGL_CASE_TO_STR_TYPED( Format, BGRA8SInt         );
 
         /* --- Packed formats --- */
-        case T::RGB10A2UNorm:       return "RGB10A2UNorm";
-        case T::RGB10A2UInt:        return "RGB10A2UInt";
-        case T::RG11B10Float:       return "RG11B10Float";
-        case T::RGB9E5Float:        return "RGB9E5Float";
+        LLGL_CASE_TO_STR_TYPED( Format, RGB10A2UNorm      );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB10A2UInt       );
+        LLGL_CASE_TO_STR_TYPED( Format, RG11B10Float      );
+        LLGL_CASE_TO_STR_TYPED( Format, RGB9E5Float       );
 
         /* --- Depth-stencil formats --- */
-        case T::D16UNorm:           return "D16UNorm";
-        case T::D32Float:           return "D32Float";
-        case T::D24UNormS8UInt:     return "D24UNormS8UInt";
-        case T::D32FloatS8X24UInt:  return "D32FloatS8X24UInt";
+        LLGL_CASE_TO_STR_TYPED( Format, D16UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, D32Float          );
+        LLGL_CASE_TO_STR_TYPED( Format, D24UNormS8UInt    );
+        LLGL_CASE_TO_STR_TYPED( Format, D32FloatS8X24UInt );
 
         /* --- Block compression (BC) formats --- */
-        case T::BC1UNorm:           return "BC1UNorm";
-        case T::BC1UNorm_sRGB:      return "BC1UNorm_sRGB";
-        case T::BC2UNorm:           return "BC2UNorm";
-        case T::BC2UNorm_sRGB:      return "BC2UNorm_sRGB";
-        case T::BC3UNorm:           return "BC3UNorm";
-        case T::BC3UNorm_sRGB:      return "BC3UNorm_sRGB";
-        case T::BC4UNorm:           return "BC4UNorm";
-        case T::BC4SNorm:           return "BC4SNorm";
-        case T::BC5UNorm:           return "BC5UNorm";
-        case T::BC5SNorm:           return "BC5SNorm";
+        LLGL_CASE_TO_STR_TYPED( Format, BC1UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, BC1UNorm_sRGB     );
+        LLGL_CASE_TO_STR_TYPED( Format, BC2UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, BC2UNorm_sRGB     );
+        LLGL_CASE_TO_STR_TYPED( Format, BC3UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, BC3UNorm_sRGB     );
+        LLGL_CASE_TO_STR_TYPED( Format, BC4UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, BC4SNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, BC5UNorm          );
+        LLGL_CASE_TO_STR_TYPED( Format, BC5SNorm          );
 
         /* --- Advanced scalable texture compression (ASTC) formats --- */
-        case T::ASTC4x4:            return "ASTC4x4";
-        case T::ASTC4x4_sRGB:       return "ASTC4x4_sRGB";
-        case T::ASTC5x4:            return "ASTC5x4";
-        case T::ASTC5x4_sRGB:       return "ASTC5x4_sRGB";
-        case T::ASTC5x5:            return "ASTC5x5";
-        case T::ASTC5x5_sRGB:       return "ASTC5x5_sRGB";
-        case T::ASTC6x5:            return "ASTC6x5";
-        case T::ASTC6x5_sRGB:       return "ASTC6x5_sRGB";
-        case T::ASTC6x6:            return "ASTC6x6";
-        case T::ASTC6x6_sRGB:       return "ASTC6x6_sRGB";
-        case T::ASTC8x5:            return "ASTC8x5";
-        case T::ASTC8x5_sRGB:       return "ASTC8x5_sRGB";
-        case T::ASTC8x6:            return "ASTC8x6";
-        case T::ASTC8x6_sRGB:       return "ASTC8x6_sRGB";
-        case T::ASTC8x8:            return "ASTC8x8";
-        case T::ASTC8x8_sRGB:       return "ASTC8x8_sRGB";
-        case T::ASTC10x5:           return "ASTC10x5";
-        case T::ASTC10x5_sRGB:      return "ASTC10x5_sRGB";
-        case T::ASTC10x6:           return "ASTC10x6";
-        case T::ASTC10x6_sRGB:      return "ASTC10x6_sRGB";
-        case T::ASTC10x8:           return "ASTC10x8";
-        case T::ASTC10x8_sRGB:      return "ASTC10x8_sRGB";
-        case T::ASTC10x10:          return "ASTC10x10";
-        case T::ASTC10x10_sRGB:     return "ASTC10x10_sRGB";
-        case T::ASTC12x10:          return "ASTC12x10";
-        case T::ASTC12x10_sRGB:     return "ASTC12x10_sRGB";
-        case T::ASTC12x12:          return "ASTC12x12";
-        case T::ASTC12x12_sRGB:     return "ASTC12x12_sRGB";
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC4x4           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC4x4_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC5x4           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC5x4_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC5x5           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC5x5_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC6x5           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC6x5_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC6x6           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC6x6_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC8x5           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC8x5_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC8x6           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC8x6_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC8x8           );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC8x8_sRGB      );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x5          );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x5_sRGB     );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x6          );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x6_sRGB     );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x8          );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x8_sRGB     );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x10         );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC10x10_sRGB    );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC12x10         );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC12x10_sRGB    );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC12x12         );
+        LLGL_CASE_TO_STR_TYPED( Format, ASTC12x12_sRGB    );
 
         /* --- Ericsson texture compression (ETC) formats --- */
-        case T::ETC1UNorm:          return "ETC1UNorm";
-        case T::ETC2UNorm:          return "ETC2UNorm";
-        case T::ETC2UNorm_sRGB:     return "ETC2UNorm_sRGB";
+        LLGL_CASE_TO_STR_TYPED( Format, ETC1UNorm         );
+        LLGL_CASE_TO_STR_TYPED( Format, ETC2UNorm         );
+        LLGL_CASE_TO_STR_TYPED( Format, ETC2UNorm_sRGB    );
     }
 
     return nullptr;
@@ -318,44 +318,42 @@ LLGL_EXPORT const char* ToString(const ImageFormat val)
 
 LLGL_EXPORT const char* ToString(const TextureType val)
 {
-    using T = TextureType;
     switch (val)
     {
-        case T::Texture1D:          return "Texture1D";
-        case T::Texture2D:          return "Texture2D";
-        case T::Texture3D:          return "Texture3D";
-        case T::TextureCube:        return "TextureCube";
-        case T::Texture1DArray:     return "Texture1DArray";
-        case T::Texture2DArray:     return "Texture2DArray";
-        case T::TextureCubeArray:   return "TextureCubeArray";
-        case T::Texture2DMS:        return "Texture2DMS";
-        case T::Texture2DMSArray:   return "Texture2DMSArray";
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture1D        );
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture2D        );
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture3D        );
+        LLGL_CASE_TO_STR_TYPED( TextureType, TextureCube      );
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture1DArray   );
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture2DArray   );
+        LLGL_CASE_TO_STR_TYPED( TextureType, TextureCubeArray );
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture2DMS      );
+        LLGL_CASE_TO_STR_TYPED( TextureType, Texture2DMSArray );
     }
     return nullptr;
 }
 
 LLGL_EXPORT const char* ToString(const BlendOp val)
 {
-    using T = BlendOp;
     switch (val)
     {
-        case T::Zero:               return "Zero";
-        case T::One:                return "One";
-        case T::SrcColor:           return "SrcColor";
-        case T::InvSrcColor:        return "InvSrcColor";
-        case T::SrcAlpha:           return "SrcAlpha";
-        case T::InvSrcAlpha:        return "InvSrcAlpha";
-        case T::DstColor:           return "DstColor";
-        case T::InvDstColor:        return "InvDstColor";
-        case T::DstAlpha:           return "DstAlpha";
-        case T::InvDstAlpha:        return "InvDstAlpha";
-        case T::SrcAlphaSaturate:   return "SrcAlphaSaturate";
-        case T::BlendFactor:        return "BlendFactor";
-        case T::InvBlendFactor:     return "InvBlendFactor";
-        case T::Src1Color:          return "Src1Color";
-        case T::InvSrc1Color:       return "InvSrc1Color";
-        case T::Src1Alpha:          return "Src1Alpha";
-        case T::InvSrc1Alpha:       return "InvSrc1Alpha";
+        LLGL_CASE_TO_STR_TYPED( BlendOp, Zero             );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, One              );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, SrcColor         );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvSrcColor      );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, SrcAlpha         );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvSrcAlpha      );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, DstColor         );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvDstColor      );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, DstAlpha         );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvDstAlpha      );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, SrcAlphaSaturate );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, BlendFactor      );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvBlendFactor   );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, Src1Color        );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvSrc1Color     );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, Src1Alpha        );
+        LLGL_CASE_TO_STR_TYPED( BlendOp, InvSrc1Alpha     );
     }
     return nullptr;
 }
@@ -369,6 +367,31 @@ LLGL_EXPORT const char* ToString(const ResourceType val)
         case T::Buffer:     return "buffer";
         case T::Texture:    return "texture";
         case T::Sampler:    return "sampler";
+    }
+    return nullptr;
+}
+
+LLGL_EXPORT const char* ToString(const SystemValue val)
+{
+    switch (val)
+    {
+        LLGL_CASE_TO_STR_TYPED( SystemValue, Undefined         );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, ClipDistance      );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, Color             );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, CullDistance      );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, Depth             );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, DepthGreater      );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, DepthLess         );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, FrontFacing       );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, InstanceID        );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, Position          );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, PrimitiveID       );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, RenderTargetIndex );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, SampleMask        );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, SampleID          );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, Stencil           );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, VertexID          );
+        LLGL_CASE_TO_STR_TYPED( SystemValue, ViewportIndex     );
     }
     return nullptr;
 }

@@ -226,9 +226,10 @@ struct ShaderMacro
 };
 
 /**
-\brief Vertex (or geometry) shader specific structure.
+\brief Vertex (or geometry or tessellation-evaluation) shader specific structure.
 \see ShaderDescriptor::vertex
 \see ShaderReflection::vertex
+\todo Merge this into one structure \c ShaderAttributes with fields \c vertexAttribs, \c streamOutputAttribs, \c fragmentAttribs, and \c workGroupSize.
 */
 struct VertexShaderAttributes
 {
@@ -241,10 +242,15 @@ struct VertexShaderAttributes
     std::vector<VertexAttribute> inputAttribs;
 
     /**
-    \brief Vertex (or geometry) shader stream-output attributes.
+    \brief Vertex (or geometry or tessellation-evaluation) shader stream-output attributes.
     \remarks Some rendering APIs need the output stream attributes for the vertex shader and other APIs need them for the geometry shader.
     To keep the code logic simple, it is valid to declare the output attributes for both the vertex and geometry shader (or even all that will be used in the same shader program).
     Output attributes are ignored where they cannot be used.
+    \remarks Stream-output attributes can only have 32-bit floating-point formats, i.e. only the following formats are supported:
+    - Format::R32Float
+    - Format::RG32Float
+    - Format::RGB32Float
+    - Format::RGBA32Float
     \see RenderingFeatures::hasStreamOutputs
     \see CommandBuffer::BeginStreamOutput
     */

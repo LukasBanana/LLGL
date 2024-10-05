@@ -89,6 +89,8 @@ class DbgRenderSystem final : public RenderSystem
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment);
 
+        void ValidateShaderDesc(const ShaderDescriptor& shaderDesc);
+
         void ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor& pipelineLayoutDesc);
 
         void ValidateResourceHeapDesc(const ResourceHeapDescriptor& resourceHeapDesc, const ArrayView<ResourceViewDescriptor>& initialResourceViews);

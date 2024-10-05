@@ -29,6 +29,9 @@
 #define LLGL_CASE_TO_STR(VALUE) \
     case VALUE: return #VALUE
 
+#define LLGL_CASE_TO_STR_TYPED(TYPE, VALUE) \
+    case TYPE::VALUE: return #VALUE
+
 #define LLGL_VS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::VertexStage        ) != 0 )
 #define LLGL_HS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::TessControlStage   ) != 0 )
 #define LLGL_DS_STAGE(FLAGS)        ( ((FLAGS) & StageFlags::TessEvaluationStage) != 0 )

@@ -23,11 +23,8 @@ namespace LLGL
 {
 
 
-#define LLGL_DBG_SOURCE()                       \
-    {                                           \
-        if (debugger_ != nullptr)               \
-            debugger_->SetSource(__FUNCTION__); \
-    }
+#define LLGL_DBG_SOURCE() \
+    DbgSetSourceChecked(debugger_, __FUNCTION__)
 
 #define LLGL_DBG_ERROR(TYPE, FORMAT, ...)                                   \
     do                                                                      \
@@ -56,6 +53,17 @@ namespace LLGL
         [&]() -> void { LLGL_ASSERT(&OBJ != nullptr, #OBJ " reference must not be null"); }(),  \
         ObjectCast<TYPE>(OBJ)                                                                   \
     )
+
+// Sets the current source name and returns true if the debugger is set.
+inline bool DbgSetSourceChecked(RenderingDebugger* debugger, const char* sourceName)
+{
+    if (debugger != nullptr)
+    {
+        debugger->SetSource(sourceName);
+        return true;
+    }
+    return false;
+}
 
 // Sets the name of the specified debug layer object.
 template <typename T>

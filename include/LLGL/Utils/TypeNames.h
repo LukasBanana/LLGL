@@ -87,6 +87,12 @@ LLGL_EXPORT const char* ToString(const BlendOp val);
 */
 LLGL_EXPORT const char* ToString(const ResourceType val);
 
+/**
+\brief Returns a string representation for the specified SystemValue value, or null if the input type is invalid.
+\remarks Return value examples are \c "Position", \c "ClipDistance".
+*/
+LLGL_EXPORT const char* ToString(const SystemValue val);
+
 /** @} */
 
 
