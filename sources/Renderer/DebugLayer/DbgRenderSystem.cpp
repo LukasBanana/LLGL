@@ -1470,7 +1470,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
 {
     /* Validate shader output-stream attributes */
     std::unordered_map<std::string, std::size_t> attribNameToIndexMap;
-    std::unordered_map<SystemValue, std::size_t> attribSVToIndexMap;
+    std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>> attribSVToIndexMap;
 
     struct BufferStrideRef
     {

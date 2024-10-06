@@ -25,7 +25,20 @@ namespace LLGL
 {
 
 
-/* ----- Templates ----- */
+/* ----- Template structures ----- */
+
+// Required for std::unordered_map in Android/Clang compiler environment
+template <typename T>
+struct EnumHasher
+{
+    std::size_t operator() (const T& key) const
+    {
+        return std::hash<typename std::underlying_type<T>::type>{}(static_cast<typename std::underlying_type<T>::type>(key));
+    }
+};
+
+
+/* ----- Template functions ----- */
 
 // Alternative to std::make_unique<T> for strict C++11 support.
 template <typename T, typename... Args>
