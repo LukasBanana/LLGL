@@ -65,6 +65,7 @@ LLGL_C_EXPORT void llglDrawIndirect(LLGLBuffer buffer, uint64_t offset);
 LLGL_C_EXPORT void llglDrawIndirectExt(LLGLBuffer buffer, uint64_t offset, uint32_t numCommands, uint32_t stride);
 LLGL_C_EXPORT void llglDrawIndexedIndirect(LLGLBuffer buffer, uint64_t offset);
 LLGL_C_EXPORT void llglDrawIndexedIndirectExt(LLGLBuffer buffer, uint64_t offset, uint32_t numCommands, uint32_t stride);
+LLGL_C_EXPORT void llglDrawStreamOutput();
 LLGL_C_EXPORT void llglDispatch(uint32_t numWorkGroupsX, uint32_t numWorkGroupsY, uint32_t numWorkGroupsZ);
 LLGL_C_EXPORT void llglDispatchIndirect(LLGLBuffer buffer, uint64_t offset);
 LLGL_C_EXPORT void llglPushDebugGroup(const char* name);

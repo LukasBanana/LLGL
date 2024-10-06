@@ -64,6 +64,7 @@ type CommandBuffer interface {
 	DrawIndirectExt(buffer Buffer, offset uint64, numCommands uint32, stride uint32)
 	DrawIndexedIndirect(buffer Buffer, offset uint64)
 	DrawIndexedIndirectExt(buffer Buffer, offset uint64, numCommands uint32, stride uint32)
+	DrawStreamOutput()
 	Dispatch(numWorkGroupsX uint32, numWorkGroupsY uint32, numWorkGroupsZ uint32)
 	DispatchIndirect(buffer Buffer, offset uint64)
 	PushDebugGroup(name string)
@@ -285,6 +286,10 @@ func (self commandBufferImpl) DrawIndexedIndirect(buffer Buffer, offset uint64) 
 
 func (self commandBufferImpl) DrawIndexedIndirectExt(buffer Buffer, offset uint64, numCommands uint32, stride uint32) {
 	C.llglDrawIndexedIndirectExt(buffer.(bufferImpl).native, C.uint64_t(offset), C.uint32_t(numCommands), C.uint32_t(stride))
+}
+
+func (self commandBufferImpl) DrawStreamOutput() {
+	C.llglDrawStreamOutput()
 }
 
 func (self commandBufferImpl) Dispatch(numWorkGroupsX uint32, numWorkGroupsY uint32, numWorkGroupsZ uint32) {

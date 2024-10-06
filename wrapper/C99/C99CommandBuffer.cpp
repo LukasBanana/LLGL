@@ -272,6 +272,11 @@ LLGL_C_EXPORT void llglDrawIndexedIndirectExt(LLGLBuffer buffer, uint64_t offset
     g_CurrentCmdBuf->DrawIndexedIndirect(LLGL_REF(Buffer, buffer), offset, numCommands, stride);
 }
 
+LLGL_C_EXPORT void llglDrawStreamOutput()
+{
+    g_CurrentCmdBuf->DrawStreamOutput();
+}
+
 LLGL_C_EXPORT void llglDispatch(uint32_t numWorkGroupsX, uint32_t numWorkGroupsY, uint32_t numWorkGroupsZ)
 {
     g_CurrentCmdBuf->Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);

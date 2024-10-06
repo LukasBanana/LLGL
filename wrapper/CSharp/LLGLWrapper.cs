@@ -4442,6 +4442,9 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglDrawIndexedIndirectExt", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void DrawIndexedIndirectExt(Buffer buffer, long offset, int numCommands, int stride);
 
+        [DllImport(DllName, EntryPoint="llglDrawStreamOutput", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void DrawStreamOutput();
+
         [DllImport(DllName, EntryPoint="llglDispatch", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void Dispatch(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ);
 

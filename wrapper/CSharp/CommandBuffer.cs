@@ -356,6 +356,11 @@ namespace LLGL
             NativeLLGL.DrawIndexedIndirectExt(buffer.Native, offset, numCommands, stride);
         }
 
+        public void DrawStreamOutput()
+        {
+            NativeLLGL.DrawStreamOutput();
+        }
+
         public void Dispatch(int numWorkGroupsX, int numWorkGroupsY, int numWorkGroupsZ)
         {
             NativeLLGL.Dispatch(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
