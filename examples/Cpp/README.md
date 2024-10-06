@@ -69,13 +69,6 @@ Small example with a compute shader and a storage buffer for the indirect draw c
 <p align="center"><img src="IndirectDraw/Example.png" style="width:400px;height:auto;"/></p>
 
 
-### [Stream-Output](StreamOutput)
-
-Small example with a geometry shader and a stream-output buffer.
-
-<p align="center"><img src="StreamOutput/Example.png" style="width:400px;height:auto;"/></p>
-
-
 ### [Instancing](Instancing)
 
 Practical example of hardware instancing by rendering tens of thousands of different textured plants instances.

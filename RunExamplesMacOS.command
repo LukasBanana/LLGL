@@ -36,7 +36,7 @@ fi
 
 list_examples()
 {
-    EXCLUDED=(MultiRenderer StreamOutput)
+    EXCLUDED=() # List any examples that are specifically excluded on Mac
     EXAMPLE_DIRS=($(ls examples/Cpp))
     for DIR in "${EXAMPLE_DIRS[@]}"; do
         if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
