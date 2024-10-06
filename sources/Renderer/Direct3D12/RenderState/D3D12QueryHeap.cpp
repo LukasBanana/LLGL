@@ -39,17 +39,28 @@ ComPtr<ID3D12Resource> DXCreateResultResource(
     return resource;
 }
 
-D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& desc) :
-    QueryHeap    { desc.type                           },
-    nativeType_  { D3D12Types::MapQueryType(desc.type) },
-    isPredicate_ { desc.renderCondition                }
+static UINT GetD3D12QueryDataSize(D3D12_QUERY_TYPE queryType)
 {
-    /* Determine buffer stride for each group of queries */
-    if (nativeType_ == D3D12_QUERY_TYPE_PIPELINE_STATISTICS)
-        alignedStride_ = sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS);
-    else
-        alignedStride_ = sizeof(UINT64);
+    switch (queryType)
+    {
+        case D3D12_QUERY_TYPE_PIPELINE_STATISTICS:
+            return sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS);
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM0:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM2:
+        case D3D12_QUERY_TYPE_SO_STATISTICS_STREAM3:
+            return sizeof(D3D12_QUERY_DATA_SO_STATISTICS);
+        default:
+            return sizeof(UINT64);
+    }
+}
 
+D3D12QueryHeap::D3D12QueryHeap(D3D12Device& device, const QueryHeapDescriptor& desc) :
+    QueryHeap      { desc.type                           },
+    nativeType_    { D3D12Types::MapQueryType(desc.type) },
+    alignedStride_ { GetD3D12QueryDataSize(nativeType_)  },
+    isPredicate_   { desc.renderCondition                }
+{
     /* For some query types, multiple internal queries must be created */
     queryPerType_ = (desc.type == QueryType::TimeElapsed ? 2 : 1);
 

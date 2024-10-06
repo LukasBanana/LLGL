@@ -16,6 +16,7 @@
 #include "../RenderState/D3D12DescriptorCache.h"
 #include "../Buffer/D3D12StagingBufferPool.h"
 #include "../Buffer/D3D12IntermediateBufferPool.h"
+#include "../../../Core/CompilerExtensions.h"
 #include <d3d12.h>
 #include <cstddef>
 #include <cstdint>
@@ -204,6 +205,12 @@ class D3D12CommandContext
         inline ID3D12Device* GetDevice() const
         {
             return device_;
+        }
+
+        // Returns the currently bound PSO.
+        inline ID3D12PipelineState* GetCurrentPipelineState() const
+        {
+            return stateCache_.pipelineState;
         }
 
     private:

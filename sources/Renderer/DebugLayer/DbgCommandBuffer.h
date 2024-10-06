@@ -164,6 +164,7 @@ class DbgCommandBuffer final : public CommandBuffer
 
         bool ValidateQueryIndex(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
         DbgQueryHeap::State* GetAndValidateQueryState(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
+        void ValidateQueryContext(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
         void ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::uint32_t query);
 
         void ValidateRenderTargetRange(DbgRenderTarget& renderTargetDbg, const Offset2D& offset, const Extent2D& extent);

@@ -11,6 +11,8 @@
 
 #include "../D3D12Resource.h"
 #include <d3d12.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/Container/SmallVector.h>
 #include <vector>
 
 
@@ -58,11 +60,11 @@ class D3D12BufferConstantsPool
         void Clear();
 
         // Returns the buffer view for the specified constants.
-        D3D12BufferConstantsView FetchConstants(const D3D12BufferConstants id);
+        D3D12BufferConstantsView FetchConstantsView(const D3D12BufferConstants id);
 
     private:
 
-        struct ConstantRegister
+        struct ConstantRange
         {
             UINT64 offset;
             UINT64 size;
@@ -72,25 +74,31 @@ class D3D12BufferConstantsPool
 
         D3D12BufferConstantsPool() = default;
 
-        void RegisterConstants(
+        std::uint32_t* AllocConstants(
             const D3D12BufferConstants  id,
-            UINT64                      value,
-            UINT64                      count,
-            std::vector<std::uint64_t>& data
+            std::size_t                 size,
+            SmallVector<std::uint32_t>& data
         );
 
+        template <typename T>
+        T* AllocConstants(const D3D12BufferConstants id, SmallVector<std::uint32_t>& data)
+        {
+            static_assert(sizeof(T) % 4 == 0, "D3D12 constants pool must be 4 byte aligned");
+            return reinterpret_cast<T*>(AllocConstants(id, sizeof(T), data));
+        }
+
         void CreateImmutableBuffer(
-            ID3D12Device*               device,
-            D3D12CommandContext&        commandContext,
-            D3D12CommandQueue&          commandQueue,
-            D3D12StagingBufferPool&     stagingBufferPool,
-            std::vector<std::uint64_t>& data
+            ID3D12Device*                   device,
+            D3D12CommandContext&            commandContext,
+            D3D12CommandQueue&              commandQueue,
+            D3D12StagingBufferPool&         stagingBufferPool,
+            const ArrayView<std::uint32_t>& data
         );
 
     private:
 
-        D3D12Resource                   resource_;
-        std::vector<ConstantRegister>   registers_;
+        D3D12Resource               resource_;
+        std::vector<ConstantRange>  constants_;
 
 };
 

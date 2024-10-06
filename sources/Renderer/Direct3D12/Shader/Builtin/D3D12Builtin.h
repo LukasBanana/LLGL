@@ -39,6 +39,8 @@
 #include "GenerateMips3DCS.sRGB.OddYZ.cso.inl"
 #include "GenerateMips3DCS.sRGB.OddXYZ.cso.inl"
 
+#include "StreamOutputDrawArgs.dxil.inl"
+
 #define LLGL_IDR_GENERATEMIPS1D_CS              g_GenerateMips1DCS
 #define LLGL_IDR_GENERATEMIPS1D_CS_ODDX         g_GenerateMips1DCS_OddX
 #define LLGL_IDR_GENERATEMIPS1D_CS_SRGB         g_GenerateMips1DCS_sRGB
@@ -69,6 +71,8 @@
 #define LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXZ   g_GenerateMips3DCS_sRGB_OddXZ
 #define LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDYZ   g_GenerateMips3DCS_sRGB_OddYZ
 #define LLGL_IDR_GENERATEMIPS3D_CS_SRGB_ODDXYZ  g_GenerateMips3DCS_sRGB_OddXYZ
+
+#define LLGL_IDR_STREAMOUTPUTDRAWARGS_CS        g_StreamOutputDrawArgsCS
 
 
 #endif

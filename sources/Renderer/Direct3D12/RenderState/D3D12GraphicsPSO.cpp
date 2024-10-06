@@ -361,11 +361,13 @@ static D3D12_INPUT_LAYOUT_DESC GetD3DInputLayoutDesc(const Shader* vs)
     return desc;
 }
 
-static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const Shader* gs)
+static D3D12_STREAM_OUTPUT_DESC GetD3DStreamOutputDesc(const Shader* vs, const Shader* ds, const Shader* gs)
 {
     D3D12_STREAM_OUTPUT_DESC desc = {};
     if (gs != nullptr)
         LLGL_CAST(const D3D12Shader*, gs)->GetStreamOutputDesc(desc);
+    else if (ds != nullptr)
+        LLGL_CAST(const D3D12Shader*, ds)->GetStreamOutputDesc(desc);
     else if (vs != nullptr)
         LLGL_CAST(const D3D12Shader*, vs)->GetStreamOutputDesc(desc);
     return desc;
@@ -418,13 +420,17 @@ void D3D12GraphicsPSO::CreateNativePSO(
     /* Convert other states */
     const bool isStripTopology = IsPrimitiveTopologyStrip(desc.primitiveTopology);
     stateDesc.InputLayout           = GetD3DInputLayoutDesc(desc.vertexShader);
-    stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.geometryShader);
+    stateDesc.StreamOutput          = GetD3DStreamOutputDesc(desc.vertexShader, desc.tessEvaluationShader, desc.geometryShader);
     stateDesc.IBStripCutValue       = (isStripTopology ? GetIndexFormatStripCutValue(desc.indexFormat) : D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED);
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = desc.blend.sampleMask;
     stateDesc.NumRenderTargets      = numAttachments;
     stateDesc.SampleDesc.Count      = (renderPass != nullptr ? renderPass->GetSampleDesc().Count : 1);
     stateDesc.SampleDesc.Quality    = 0;
+
+    /* If rasterizer stage is discarded, don't sent stream-output data to the rasterizer */
+    if (desc.rasterizer.discardEnabled)
+        stateDesc.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
 
     /* Set PSO cache if specified */
     if (pipelineCache != nullptr)

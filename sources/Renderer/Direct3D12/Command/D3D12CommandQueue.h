@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include <LLGL/QueryHeapFlags.h>
 #include "D3D12CommandContext.h"
 #include "../RenderState/D3D12Fence.h"
 #include "../../DXCommon/ComPtr.h"
@@ -65,14 +66,14 @@ class D3D12CommandQueue final : public CommandQueue
         void DetermineTimestampFrequency();
 
         void QueryResultSingleUInt64(
-            D3D12_QUERY_TYPE    queryType,
+            QueryType           queryType,
             const void*         mappedData,
             std::uint32_t       query,
             std::uint64_t&      data
         );
 
         void QueryResultUInt32(
-            D3D12_QUERY_TYPE    queryType,
+            QueryType           queryType,
             const void*         mappedData,
             std::uint32_t       firstQuery,
             std::uint32_t       numQueries,
@@ -80,7 +81,7 @@ class D3D12CommandQueue final : public CommandQueue
         );
 
         void QueryResultUInt64(
-            D3D12_QUERY_TYPE    queryType,
+            QueryType           queryType,
             const void*         mappedData,
             std::uint32_t       firstQuery,
             std::uint32_t       numQueries,
@@ -88,7 +89,7 @@ class D3D12CommandQueue final : public CommandQueue
         );
 
         bool QueryResultPipelineStatistics(
-            D3D12_QUERY_TYPE            queryType,
+            QueryType                   queryType,
             const void*                 mappedData,
             std::uint32_t               firstQuery,
             std::uint32_t               numQueries,

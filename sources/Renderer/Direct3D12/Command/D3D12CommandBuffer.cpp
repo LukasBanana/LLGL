@@ -31,6 +31,8 @@
 #include "../RenderState/D3D12GraphicsPSO.h"
 #include "../RenderState/D3D12ComputePSO.h"
 
+#include "../Shader/D3D12BuiltinShaderFactory.h"
+
 #include <LLGL/TypeInfo.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
@@ -57,6 +59,7 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem, const Co
     CreateCommandContext(renderSystem, desc);
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+    CreateSOIndirectDrawArgBuffer(renderSystem.GetDXDevice());
 }
 
 void D3D12CommandBuffer::SetDebugName(const char* name)
@@ -518,6 +521,9 @@ void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
     commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, true);
 #endif
     GetNative()->IASetVertexBuffers(0, 1, &(bufferD3D.GetVertexBufferView()));
+
+    if ((bufferD3D.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+        soBufferIASlot0_ = &bufferD3D;
 }
 
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
@@ -860,20 +866,20 @@ void D3D12CommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* con
     commandContext_.FlushResourceBarrieres();
 
     /* Reset counter values in buffers by copying from a static zero-initialized buffer to the stream-output targets */
-    const D3D12BufferConstantsView srcBufferView = D3D12BufferConstantsPool::Get().FetchConstants(D3D12BufferConstants::ZeroUInt64);
+    const D3D12BufferConstantsView srcBufferView = D3D12BufferConstantsPool::Get().FetchConstantsView(D3D12BufferConstants::ZeroUInt64);
 
     for_range(i, numSOBuffers_)
     {
         GetNative()->CopyBufferRegion(
             boundSOBuffers_[i]->GetNative(),
-            boundSOBuffers_[i]->GetBufferSize(),
+            boundSOBuffers_[i]->GetStreamOutputCounterOffset(),
             srcBufferView.resource,
             srcBufferView.offset,
             srcBufferView.size
         );
     }
 
-#if 0 //TODO: this does not work in multi-threaded environment
+#if 1 //TODO: this does not work in multi-threaded environment
     /* Transition resources to stream-output */
     for_range(i, numSOBuffers_)
         commandContext_.TransitionResource(boundSOBuffers_[i]->GetResource(), D3D12_RESOURCE_STATE_STREAM_OUT);
@@ -890,7 +896,7 @@ void D3D12CommandBuffer::EndStreamOutput()
     const D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferViewsNull[LLGL_MAX_NUM_SO_BUFFERS] = {};
     GetNative()->SOSetTargets(0, LLGL_MAX_NUM_SO_BUFFERS, soBufferViewsNull);
 
-#if 0 //TODO: this does not work in multi-threaded environment
+#if 1 //TODO: this does not work in multi-threaded environment
     /* Transition resources back to their common usage */
     for_range(i, numSOBuffers_)
         commandContext_.TransitionResource(boundSOBuffers_[i]->GetResource(), boundSOBuffers_[i]->GetResource().usageState);
@@ -992,9 +998,49 @@ void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offse
     }
 }
 
+/*
+D3D12 stream-outputs only write out the fill buffer size. This cannot be used directly as indirect draw arguments for three reasons:
+ 1. It's a UINT64 instead of the required UINT (see D3D12_DRAW_ARGUMENTS::VertexCountPerInstance).
+ 2. It's a byte size instead of a vertex count (as opposed to D3D11).
+ 3. It does not contain any other draw arguments such as instance count - this could be compensated by providing these constants at buffer creation time.
+For these reasons, this function dispatches a single compute shader invocation to write out the draw arguments as follows:
+D3D12_DRAW_ARGUMENTS {
+  VertexCountPerInstance = SOFillBufferSize / VertexStride
+  InstanceCount          = 1
+  StartVertexLocation    = 0
+  StartInstanceLocation  = 0
+}
+*/
 void D3D12CommandBuffer::DrawStreamOutput()
 {
-    //TODO
+    if unlikely(soBufferIASlot0_ == nullptr)
+        return /*E_INVALIDARG*/;
+
+    ID3D12PipelineState* soDrawArgsPSO = nullptr;
+    ID3D12RootSignature* soDrawArgsRootSig = nullptr;
+    D3D12BuiltinShaderFactory::Get().GetBulitinPSO(D3D12BuiltinPSO::StreamOutputDrawArgsCS, soDrawArgsPSO, soDrawArgsRootSig);
+
+    ID3D12GraphicsCommandList* commandList = commandContext_.GetCommandList();
+    ID3D12PipelineState* oldGraphicsPSO = commandContext_.GetCurrentPipelineState();
+
+    /* Copy stream-output fill buffer size into draw argument buffer */
+    commandContext_.TransitionResource(soBufferIASlot0_->GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+    commandContext_.TransitionResource(soDrawArgBuffer_, D3D12_RESOURCE_STATE_COPY_DEST, true);
+    commandList->CopyBufferRegion(soDrawArgBuffer_.Get(), 0, soBufferIASlot0_->GetNative(), soBufferIASlot0_->GetStreamOutputCounterOffset(), sizeof(UINT64));
+
+    /* Generate indirect draw arguments with a single compute shader invocation */
+    commandContext_.TransitionResource(soDrawArgBuffer_, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+    commandContext_.SetComputeRootSignature(soDrawArgsRootSig);
+    commandList->SetPipelineState(soDrawArgsPSO);
+    commandList->SetComputeRoot32BitConstant(0, soBufferIASlot0_->GetStride(), 0);
+    commandList->SetComputeRootUnorderedAccessView(1, soDrawArgBuffer_.Get()->GetGPUVirtualAddress());
+    commandContext_.Dispatch(1, 1, 1);
+
+    /* Submit indirect draw command with previous graphics PSO */
+    commandList->SetPipelineState(oldGraphicsPSO);
+    commandContext_.UAVBarrier(soDrawArgBuffer_.Get());
+    commandContext_.TransitionResource(soDrawArgBuffer_, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, true);
+    commandContext_.DrawIndirect(cmdSignatureFactory_->GetSignatureDrawIndirect(), 1, soDrawArgBuffer_.Get(), 0);
 }
 
 /* ----- Compute ----- */
@@ -1303,10 +1349,27 @@ void D3D12CommandBuffer::ResetBindingStates()
 {
     numDefaultScissorRects_ = 0;
     numSOBuffers_           = 0;
+    soBufferIASlot0_        = nullptr;
     boundRenderTarget_      = nullptr;
     boundSwapChain_         = nullptr;
     boundPipelineLayout_    = nullptr;
     boundPipelineState_     = nullptr;
+}
+
+void D3D12CommandBuffer::CreateSOIndirectDrawArgBuffer(ID3D12Device* device)
+{
+    const CD3DX12_HEAP_PROPERTIES heapProperties{ D3D12_HEAP_TYPE_DEFAULT };
+    const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(D3D12_DRAW_ARGUMENTS), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    HRESULT hr = device->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_COMMON, // Buffers are effectively created in D3D12_RESOURCE_STATE_COMMON state
+        nullptr,
+        IID_PPV_ARGS(soDrawArgBuffer_.native.ReleaseAndGetAddressOf())
+    );
+    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 indirect draw argument buffer");
+    soDrawArgBuffer_.native->SetName(L"LLGL.SODrawArgBuffer");
 }
 
 

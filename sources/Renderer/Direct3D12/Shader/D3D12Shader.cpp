@@ -33,7 +33,9 @@ D3D12Shader::D3D12Shader(D3D12RenderSystem& renderSystem, const ShaderDescriptor
 {
     if (BuildShader(desc))
     {
-        if (GetType() == ShaderType::Vertex || GetType() == ShaderType::Geometry)
+        if (GetType() == ShaderType::Vertex         ||
+            GetType() == ShaderType::TessEvaluation ||
+            GetType() == ShaderType::Geometry)
         {
             /* Build input layout and stream-output descriptors for vertex/geometry shaders */
             ReserveVertexAttribs(desc);
@@ -89,7 +91,7 @@ bool D3D12Shader::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) cons
         layoutDesc.NumEntries       = static_cast<UINT>(soDeclEntries_.size());
         layoutDesc.pBufferStrides   = soBufferStrides_.data();
         layoutDesc.NumStrides       = static_cast<UINT>(soBufferStrides_.size());
-        layoutDesc.RasterizedStream = 0;//D3D12_SO_NO_RASTERIZED_STREAM;
+        layoutDesc.RasterizedStream = 0;
         return true;
     }
     return false;
@@ -169,10 +171,10 @@ and stores the semantic name in the specified linear string container
 static void ConvertSODeclEntry(D3D12_SO_DECLARATION_ENTRY& dst, const VertexAttribute& src, LinearStringContainer& stringContainer)
 {
     const char* systemValueSemantic = DXTypes::SystemValueToString(src.systemValue);
-    dst.Stream          = 0;//src.location;
+    dst.Stream          = 0;
     dst.SemanticName    = (systemValueSemantic != nullptr ? systemValueSemantic : stringContainer.CopyString(src.name));
     dst.SemanticIndex   = src.semanticIndex;
-    dst.StartComponent  = 0;//src.offset;
+    dst.StartComponent  = 0;
     dst.ComponentCount  = GetFormatAttribs(src.format).components;
     dst.OutputSlot      = src.slot;
 }

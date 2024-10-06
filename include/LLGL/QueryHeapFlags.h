@@ -37,10 +37,18 @@ enum class QueryType
     //! Elapsed time (in nanoseconds) between the begin- and end query command.
     TimeElapsed,
 
-    //! Number of vertices that have been written into a stream output (also called "Transform Feedback").
+    /**
+    \breif Number of vertices that have been written into a stream output (also called "Transform Feedback").
+    \remarks If this query is not generated inside a stream-output section,
+    i.e. between CommandBuffer::BeginStreamOutput and CommandBuffer::EndStreamOutput, the result is undefined.
+    */
     StreamOutPrimitivesWritten,
 
-    //! Non-zero if any of the streaming output buffers (also called "Transform Feedback Buffers") has an overflow.
+    /**
+    \brief Non-zero if any of the streaming output buffers (also called "Transform Feedback Buffers") has an overflow.
+    \remarks If this query is not generated inside a stream-output section,
+    i.e. between CommandBuffer::BeginStreamOutput and CommandBuffer::EndStreamOutput, the result is undefined.
+    */
     StreamOutOverflow,
 
     /**

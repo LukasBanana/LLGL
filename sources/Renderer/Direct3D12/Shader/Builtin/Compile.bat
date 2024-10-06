@@ -31,3 +31,5 @@ fxc /Qstrip_reflect /D NPOT_TEXTURE_CLASS=4 /D LINEAR_TO_SRGB=1 /T cs_5_0 /E Gen
 fxc /Qstrip_reflect /D NPOT_TEXTURE_CLASS=5 /D LINEAR_TO_SRGB=1 /T cs_5_0 /E GenerateMips3DCS /Vn g_GenerateMips3DCS_sRGB_OddXZ /Fh GenerateMips3DCS.sRGB.OddXZ.cso.inl GenerateMips3D.hlsl
 fxc /Qstrip_reflect /D NPOT_TEXTURE_CLASS=6 /D LINEAR_TO_SRGB=1 /T cs_5_0 /E GenerateMips3DCS /Vn g_GenerateMips3DCS_sRGB_OddYZ /Fh GenerateMips3DCS.sRGB.OddYZ.cso.inl GenerateMips3D.hlsl
 fxc /Qstrip_reflect /D NPOT_TEXTURE_CLASS=7 /D LINEAR_TO_SRGB=1 /T cs_5_0 /E GenerateMips3DCS /Vn g_GenerateMips3DCS_sRGB_OddXYZ /Fh GenerateMips3DCS.sRGB.OddXYZ.cso.inl GenerateMips3D.hlsl
+
+dxc -Qstrip_reflect -T cs_6_0 -E StreamOutputDrawArgsCS -Vn g_StreamOutputDrawArgsCS -Fh StreamOutputDrawArgs.dxil.inl StreamOutputDrawArgs.hlsl

@@ -932,7 +932,8 @@ void DbgCommandBuffer::BeginQuery(QueryHeap& queryHeap, std::uint32_t query)
     {
         AssertRecording();
         AssertPrimaryCommandBuffer();
-        if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
+        ValidateQueryContext(queryHeapDbg, query);
+        if (DbgQueryHeap::State* state = GetAndValidateQueryState(queryHeapDbg, query))
         {
             if (*state == DbgQueryHeap::State::Busy)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "query is already busy");
@@ -954,7 +955,7 @@ void DbgCommandBuffer::EndQuery(QueryHeap& queryHeap, std::uint32_t query)
     {
         AssertRecording();
         AssertPrimaryCommandBuffer();
-        if (auto state = GetAndValidateQueryState(queryHeapDbg, query))
+        if (DbgQueryHeap::State* state = GetAndValidateQueryState(queryHeapDbg, query))
         {
             if (*state != DbgQueryHeap::State::Busy)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "query has not started");
@@ -2122,6 +2123,29 @@ DbgQueryHeap::State* DbgCommandBuffer::GetAndValidateQueryState(DbgQueryHeap& qu
         return &(queryHeapDbg.states[query]);
     else
         return nullptr;
+}
+
+void DbgCommandBuffer::ValidateQueryContext(DbgQueryHeap& queryHeapDbg, std::uint32_t query)
+{
+    switch (queryHeapDbg.desc.type)
+    {
+        case QueryType::StreamOutPrimitivesWritten:
+        case QueryType::StreamOutOverflow:
+        {
+            if (bindings_.numStreamOutputs == 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use stream-output query [%u] outside a stream-output section",
+                    query
+                );
+            }
+        }
+        break;
+
+        default:
+        break;
+    }
 }
 
 void DbgCommandBuffer::ValidateRenderCondition(DbgQueryHeap& queryHeapDbg, std::uint32_t query)

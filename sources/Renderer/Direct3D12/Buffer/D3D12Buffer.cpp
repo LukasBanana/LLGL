@@ -23,8 +23,8 @@ namespace LLGL
 
 // BufferFilledSize actually only needs 4 bytes, but we keep it 16 byte aligned
 // see https://docs.microsoft.com/en-us/windows/win32/direct3d12/stream-output-counters#bufferfilledsize
-static const UINT64 g_soBufferFillSizeLen   = sizeof(UINT64);
-static const UINT64 g_cBufferAlignment      = 256u;
+static constexpr UINT64 g_soBufferFillSizeLen   = sizeof(UINT64);
+static constexpr UINT64 g_cBufferAlignment      = 256u;
 
 // Returns DXGI_FORMAT_UNKNOWN for a structured buffer, or maps the format attribute to DXGI_FORMAT enum.
 static DXGI_FORMAT GetDXFormatForBuffer(const BufferDescriptor& desc)
@@ -401,9 +401,13 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
     stride_     = GetStorageBufferStride(desc);
 
     /* Determine actual resource size */
-    internalSize_ = bufferSize_;
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        internalSize_ += g_soBufferFillSizeLen;
+    {
+        internalSize_   = bufferSize_ + g_soBufferFillSizeLen;
+        stride_         = (!desc.vertexAttribs.empty() ? desc.vertexAttribs[0].stride : 0);
+    }
+    else
+        internalSize_ = bufferSize_;
 
     /* Store buffer primary usage stage */
     resource_.usageState = GetD3DUsageState(desc.bindFlags);

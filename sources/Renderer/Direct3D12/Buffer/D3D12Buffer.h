@@ -99,6 +99,12 @@ class D3D12Buffer : public Buffer
             return bufferSize_;
         }
 
+        // Returns the offset within this buffer to the steam-output counter.
+        inline UINT64 GetStreamOutputCounterOffset() const
+        {
+            return GetBufferSize();
+        }
+
         // Returns the internal buffer size: original size plus meta data (like stream-output size).
         UINT64 GetInternalBufferSize() const
         {
@@ -124,9 +130,15 @@ class D3D12Buffer : public Buffer
         }
 
         // Returns the memory alignment required for this buffer.
-        inline UINT64 GetAlignment() const
+        inline UINT GetAlignment() const
         {
             return alignment_;
+        }
+
+        // Returns the stride for this buffer. Used for structured, typed, vertex, and stream-output buffers.
+        inline UINT GetStride() const
+        {
+            return stride_;
         }
 
         // Returns the native format of the buffer or DXGI_FORMAT_UNKNOWN; only used for storage buffers.

@@ -13,6 +13,7 @@
 #include <LLGL/Constants.h>
 #include <cstddef>
 #include "D3D12CommandContext.h"
+#include "../D3D12Resource.h"
 #include "../../DXCommon/ComPtr.h"
 #include "../../DXCommon/DXCore.h"
 
@@ -35,7 +36,6 @@ class D3D12Sampler;
 class D3D12PipelineLayout;
 class D3D12PipelineState;
 class D3D12SignatureFactory;
-struct D3D12Resource;
 
 class D3D12CommandBuffer final : public CommandBuffer
 {
@@ -109,6 +109,8 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         void ResetBindingStates();
 
+        void CreateSOIndirectDrawArgBuffer(ID3D12Device* device);
+
     private:
 
         D3D12CommandContext             commandContext_;
@@ -133,6 +135,9 @@ class D3D12CommandBuffer final : public CommandBuffer
         const D3D12PipelineLayout*      boundPipelineLayout_                        = nullptr;
         D3D12PipelineState*             boundPipelineState_                         = nullptr;
         D3D12Buffer*                    boundSOBuffers_[LLGL_MAX_NUM_SO_BUFFERS]    = {};
+
+        D3D12Buffer*                    soBufferIASlot0_                            = 0;
+        D3D12Resource                   soDrawArgBuffer_;
 
 };
 

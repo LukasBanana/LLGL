@@ -98,7 +98,7 @@ class D3D12QueryHeap final : public QueryHeap
         D3D12_QUERY_TYPE        nativeType_     = D3D12_QUERY_TYPE_OCCLUSION;
         ComPtr<ID3D12QueryHeap> native_;
         ComPtr<ID3D12Resource>  resultResource_;
-        UINT                    alignedStride_  = 0;
+        UINT                    alignedStride_  = 0;        // 8 bytes aligned
         UINT                    queryPerType_   = 1;
         bool                    isPredicate_    = false;
         UINT                    dirtyRange_[2]  = {};       // Begin/end range of queries that need to be resolved

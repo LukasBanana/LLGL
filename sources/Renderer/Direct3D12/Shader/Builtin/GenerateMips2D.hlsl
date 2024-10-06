@@ -1,8 +1,8 @@
 /*
  * GenerateMips2D.hlsl
  * 
- * This file is part of the "LLGL" project (Copyright (c) 2015-2019 by Lukas Hermanns)
- * See "LICENSE.txt" for license information.
+ * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
+ * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
 #include "GenerateMips.hlsli"
@@ -29,7 +29,7 @@ cbuffer TextureDescriptor : register(b0)
     uint    baseMipLevel;   // Base MIP-map level of srcMipLevel
     uint    numMipLevels;   // Number of MIP-map levels to write: [1..4]
     uint    baseArrayLayer; // Base array layer of srcMipLevel
-};
+}
 
 
 /* Next 4 output MIP-map levels and source MIP-map level */

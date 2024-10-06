@@ -299,7 +299,7 @@ D3D12_QUERY_TYPE MapQueryType(const QueryType queryType)
         case QueryType::AnySamplesPassedConservative:   return D3D12_QUERY_TYPE_BINARY_OCCLUSION;
         case QueryType::TimeElapsed:                    return D3D12_QUERY_TYPE_TIMESTAMP;
         case QueryType::StreamOutPrimitivesWritten:     return D3D12_QUERY_TYPE_SO_STATISTICS_STREAM0;
-        case QueryType::StreamOutOverflow:              break; // D3D12_QUERY_TYPE_SO_STATISTICS_STREAM1 ???
+        case QueryType::StreamOutOverflow:              return D3D12_QUERY_TYPE_SO_STATISTICS_STREAM0; // Same query type, different interpretation
         case QueryType::PipelineStatistics:             return D3D12_QUERY_TYPE_PIPELINE_STATISTICS;
     }
     LLGL_TRAP_DX_MAP(QueryType, queryType, D3D12_QUERY_TYPE);

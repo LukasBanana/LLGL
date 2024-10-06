@@ -21,6 +21,8 @@
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 #include <limits.h>
 
+#include "Shader/D3D12BuiltinShaderFactory.h"
+
 #include "Buffer/D3D12Buffer.h"
 #include "Buffer/D3D12BufferArray.h"
 #include "Buffer/D3D12BufferConstantsPool.h"
@@ -75,6 +77,7 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     stagingBufferPool_.InitializeDevice(device_.GetNative(), 0);
     D3D12MipGenerator::Get().InitializeDevice(device_.GetNative());
     D3D12BufferConstantsPool::Get().InitializeDevice(device_.GetNative(), *commandContext_, *commandQueue_, stagingBufferPool_);
+    D3D12BuiltinShaderFactory::Get().CreateBuiltinPSOs(device_.GetNative());
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -93,6 +96,7 @@ D3D12RenderSystem::~D3D12RenderSystem()
     /* Clear resources of singletons */
     D3D12MipGenerator::Get().Clear();
     D3D12BufferConstantsPool::Get().Clear();
+    D3D12BuiltinShaderFactory::Get().Clear();
 }
 
 /* ----- Swap-chain ----- */
