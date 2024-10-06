@@ -100,6 +100,8 @@ class TestbedContext
         enum VertFmt
         {
             VertFmtStd = 0,
+            VertFmtColored,
+            VertFmtColoredSO,
             VertFmtUnprojected,
             VertFmtEmpty,
 
@@ -118,24 +120,38 @@ class TestbedContext
         {
             VSSolid = 0,
             PSSolid,
+
             VSTextured,
             PSTextured,
+
             VSDynamic,
             PSDynamic,
+
             VSUnprojected,
             PSUnprojected,
+
             VSDualSourceBlend,
             PSDualSourceBlend,
+
             VSShadowMap,
             VSShadowedScene,
             PSShadowedScene,
+
             VSResourceArrays,
             PSResourceArrays,
+
             VSResourceBinding,
             PSResourceBinding,
             CSResourceBinding,
+
             VSClear,
             PSClear,
+
+            VSStreamOutput,
+            HSStreamOutput,
+            DSStreamOutput,
+            GSStreamOutput,
+            PSStreamOutput,
 
             ShaderCount,
         };
@@ -193,6 +209,13 @@ class TestbedContext
             float position[3];
             float normal[3];
             float texCoord[2];
+        };
+
+        struct ColoredVertex
+        {
+            float position[4];
+            float normal[3];
+            float color[3];
         };
 
         struct UnprojectedVertex
@@ -327,6 +350,8 @@ class TestbedContext
         void CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
         void CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
 
+        void ConvertToColoredVertexList(const IndexedTriangleMeshBuffer& scene, std::vector<ColoredVertex>& outVertices, const LLGL::ColorRGBAf& color = {});
+
         void CreateConstantBuffers();
 
         LLGL::Shader* LoadShaderFromFile(
@@ -335,7 +360,8 @@ class TestbedContext
             const char*                 entry       = nullptr,
             const char*                 profile     = nullptr,
             const LLGL::ShaderMacro*    defines     = nullptr,
-            VertFmt                     vertFmt     = VertFmtStd
+            VertFmt                     vertFmt     = VertFmtStd,
+            VertFmt                     vertOutFmt  = VertFmtCount
         );
 
         void SaveColorImage(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);

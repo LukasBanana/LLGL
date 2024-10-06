@@ -354,6 +354,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ViewportAndScissor          );
     RUN_TEST( ResourceBinding             );
     RUN_TEST( ResourceArrays              );
+    RUN_TEST( StreamOutput                );
 
     // Reset main renderer and run C99 tests
     // LLGL can't run the same render system in multiple instances (confused the context management in GL backend)
@@ -864,26 +865,31 @@ bool TestbedContext::LoadShaders()
 
     if (IsShadingLanguageSupported(ShadingLanguage::HLSL))
     {
-        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0");
-        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,   "VSMain",  "vs_5_0", definesEnableTexturing);
-        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment, "PSMain",  "ps_5_0", definesEnableTexturing);
-        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Vertex,   "VSMain",  "vs_5_0");
-        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtUnprojected);
-        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtUnprojected);
-        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Fragment, "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
-        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,   "VShadow", "vs_5_0");
-        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,   "VScene",  "vs_5_0");
-        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Fragment, "PScene",  "ps_5_0");
-        shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Vertex,   "VSMain",  "vs_5_0");
-        shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Fragment, "PSMain",  "ps_5_0");
-        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Compute,  "CSMain",  "cs_5_0");
-        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,   "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Fragment, "PSMain",  "ps_5_0");
+        shaders[VSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSSolid]            = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[VSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", definesEnableTexturing);
+        shaders[PSTextured]         = LoadShaderFromFile("TriangleMesh.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", definesEnableTexturing);
+        shaders[VSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSDynamic]          = LoadShaderFromFile("DynamicTriangleMesh.hlsl",   ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[VSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtUnprojected);
+        shaders[PSUnprojected]      = LoadShaderFromFile("UnprojectedMesh.hlsl",       ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtUnprojected);
+        shaders[VSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSDualSourceBlend]  = LoadShaderFromFile("DualSourceBlending.hlsl",    ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtEmpty);
+        shaders[VSShadowMap]        = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,          "VShadow", "vs_5_0");
+        shaders[VSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Vertex,          "VScene",  "vs_5_0");
+        shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Fragment,        "PScene",  "ps_5_0");
+        shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Compute,         "CSMain",  "cs_5_0");
+        shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+        shaders[PSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessControl,     "HSMain",  "hs_5_0");
+        shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessEvaluation,  "DSMain",  "ds_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[GSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Geometry,        "GSMain",  "gs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -1087,6 +1093,16 @@ void TestbedContext::CreateTriangleMeshes()
         VertexAttribute{ "texCoord", Format::RG32Float,  2, offsetof(StandardVertex, texCoord), sizeof(StandardVertex) },
     };
 
+    vertexFormats[VertFmtColored].attributes =
+    {
+        VertexAttribute{ "position", Format::RGBA32Float, 0, offsetof(ColoredVertex, position), sizeof(ColoredVertex) },
+        VertexAttribute{ "normal",   Format::RGB32Float,  1, offsetof(ColoredVertex, normal  ), sizeof(ColoredVertex) },
+        VertexAttribute{ "color",    Format::RGB32Float,  2, offsetof(ColoredVertex, color   ), sizeof(ColoredVertex) },
+    };
+
+    vertexFormats[VertFmtColoredSO].attributes = vertexFormats[VertFmtColored].attributes;
+    vertexFormats[VertFmtColoredSO].attributes[0].systemValue = SystemValue::Position;
+
     vertexFormats[VertFmtUnprojected].attributes =
     {
         VertexAttribute{ "position", Format::RG32Float,  0, offsetof(UnprojectedVertex, position), sizeof(UnprojectedVertex) },
@@ -1181,6 +1197,33 @@ void TestbedContext::CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTr
     scene.FinalizeMesh(outMesh);
 }
 
+void TestbedContext::ConvertToColoredVertexList(const IndexedTriangleMeshBuffer& scene, std::vector<ColoredVertex>& outVertices, const LLGL::ColorRGBAf& color)
+{
+    outVertices.reserve(scene.indices.size());
+
+    auto ConvertToColoredVertex = [](TestbedContext::ColoredVertex& dst, const TestbedContext::StandardVertex& src) -> void
+    {
+        dst.position[0] = src.position[0];
+        dst.position[1] = src.position[1];
+        dst.position[2] = src.position[2];
+        dst.position[3] = 1.0f;
+        dst.normal[0] = src.normal[0];
+        dst.normal[1] = src.normal[1];
+        dst.normal[2] = src.normal[2];
+    };
+
+    ColoredVertex vert;
+    vert.color[0] = color.r;
+    vert.color[1] = color.g;
+    vert.color[2] = color.b;
+
+    for (std::uint32_t index : scene.indices)
+    {
+        ConvertToColoredVertex(vert, scene.vertices[index]);
+        outVertices.push_back(vert);
+    }
+}
+
 void TestbedContext::CreateConstantBuffers()
 {
     BufferDescriptor bufDesc;
@@ -1198,7 +1241,8 @@ Shader* TestbedContext::LoadShaderFromFile(
     const char*         entry,
     const char*         profile,
     const ShaderMacro*  defines,
-    VertFmt             vertFmt)
+    VertFmt             vertFmt,
+    VertFmt             vertOutFmt)
 {
     auto StringEndsWith = [](const std::string& str, const std::string& suffix) -> bool
     {
@@ -1235,7 +1279,10 @@ Shader* TestbedContext::LoadShaderFromFile(
         shaderDesc.profile              = profile;
         shaderDesc.defines              = defines;
         shaderDesc.flags                = ShaderCompileFlags::PatchClippingOrigin;
-        shaderDesc.vertex.inputAttribs  = vertexFormats[vertFmt].attributes;
+        if (type == ShaderType::Vertex)
+            shaderDesc.vertex.inputAttribs  = vertexFormats[vertFmt].attributes;
+        if (vertOutFmt != VertFmtCount)
+            shaderDesc.vertex.outputAttribs = vertexFormats[vertOutFmt].attributes;
     }
     Shader* shader = renderer->CreateShader(shaderDesc);
 

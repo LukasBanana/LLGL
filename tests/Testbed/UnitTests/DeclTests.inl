@@ -75,6 +75,7 @@ DECL_TEST( ShadowMapping );
 DECL_TEST( ViewportAndScissor );
 DECL_TEST( ResourceBinding );
 DECL_TEST( ResourceArrays );
+DECL_TEST( StreamOutput );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );

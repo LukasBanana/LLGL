@@ -22,7 +22,7 @@ A texture view of BGRA with swizzling BGRA should cancel each other out and resu
 DEF_TEST( TextureViews )
 {
     // Skip if texture swizzling is not supported
-    if (!renderer->GetRenderingCaps().features.hasTextureViewSwizzle)
+    if (!caps.features.hasTextureViewSwizzle)
         return TestResult::Skipped;
 
     if (shaders[VSTextured] == nullptr || shaders[PSTextured] == nullptr)
