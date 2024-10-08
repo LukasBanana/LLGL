@@ -226,7 +226,7 @@ static_assert(
 LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
 {
     // Rasterizer state
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     GLint polygonModes[2] = {};
     GLGetValue(GL_POLYGON_MODE, polygonModes);
     outContextState.polygonMode = polygonModes[0];
@@ -235,7 +235,7 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
     GLGetValue(GL_POLYGON_OFFSET_FACTOR,    outContextState.offsetFactor);
     GLGetValue(GL_POLYGON_OFFSET_UNITS,     outContextState.offsetUnits);
 
-    #ifdef GL_ARB_polygon_offset_clamp
+    #if LLGL_GLEXT_POLYGON_OFFSET_CLAMP
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
         GLGetValue(GL_POLYGON_OFFSET_CLAMP, outContextState.offsetClamp);
     #endif
@@ -243,7 +243,7 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
     GLGetValue(GL_CULL_FACE_MODE,           outContextState.cullFace);
     GLGetValue(GL_FRONT_FACE,               outContextState.frontFace);
 
-    #ifdef LLGL_GLEXT_TESSELLATION_SHADER
+    #if LLGL_GLEXT_TESSELLATION_SHADER
     if (HasExtension(GLExt::ARB_tessellation_shader))
         GLGetValue(GL_PATCH_VERTICES,       outContextState.patchVertices);
     #endif
@@ -358,6 +358,11 @@ LLGL_EXPORT void GLGetContextState(GLContextState& outContextState)
     if (HasExtension(GLExt::ARB_separate_shader_objects))
         GLGetValue(GL_PROGRAM_PIPELINE_BINDING, outContextState.boundProgramPipeline);
     #endif
+
+    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    if (HasExtension(GLExt::ARB_transform_feedback2))
+        GLGetValue(GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, outContextState.boundTransformFeedback);
+    #endif
 };
 
 
@@ -368,7 +373,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     glPolygonMode(GL_FRONT_AND_BACK, inContextState.polygonMode);
     #endif
 
-    #ifdef GL_ARB_polygon_offset_clamp
+    #if LLGL_GLEXT_POLYGON_OFFSET_CLAMP
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
     {
         glPolygonOffsetClamp(
@@ -389,7 +394,7 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     glCullFace(inContextState.cullFace);
     glFrontFace(inContextState.frontFace);
 
-    #ifdef LLGL_GLEXT_TESSELLATION_SHADER
+    #if LLGL_GLEXT_TESSELLATION_SHADER
     if (HasExtension(GLExt::ARB_tessellation_shader))
         glPatchParameteri(GL_PATCH_VERTICES, inContextState.patchVertices);
     #endif
@@ -522,6 +527,11 @@ LLGL_EXPORT void GLSetContextState(const GLContextState& inContextState)
     #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
     if (HasExtension(GLExt::ARB_separate_shader_objects))
         glBindProgramPipeline(inContextState.boundProgramPipeline);
+    #endif
+
+    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    if (HasExtension(GLExt::ARB_transform_feedback2))
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, inContextState.boundTransformFeedback);
     #endif
 }
 

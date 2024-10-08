@@ -396,6 +396,21 @@ LLGL_EXPORT const char* ToString(const SystemValue val)
     return nullptr;
 }
 
+LLGL_EXPORT const char* ToString(const QueryType val)
+{
+    switch (val)
+    {
+        LLGL_CASE_TO_STR_TYPED( QueryType, SamplesPassed                );
+        LLGL_CASE_TO_STR_TYPED( QueryType, AnySamplesPassed             );
+        LLGL_CASE_TO_STR_TYPED( QueryType, AnySamplesPassedConservative );
+        LLGL_CASE_TO_STR_TYPED( QueryType, TimeElapsed                  );
+        LLGL_CASE_TO_STR_TYPED( QueryType, StreamOutPrimitivesWritten   );
+        LLGL_CASE_TO_STR_TYPED( QueryType, StreamOutOverflow            );
+        LLGL_CASE_TO_STR_TYPED( QueryType, PipelineStatistics           );
+    }
+    return nullptr;
+}
+
 
 } // /namespace LLGL
 

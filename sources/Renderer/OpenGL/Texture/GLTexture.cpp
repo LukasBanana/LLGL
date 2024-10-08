@@ -113,7 +113,7 @@ GLTexture::GLTexture(const TextureDescriptor& desc) :
         }
     }
 
-    #ifndef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    #if !LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
     /* Store additional parameters for GLES */
     extent_[0]  = static_cast<GLint>(desc.extent.width);
     extent_[1]  = static_cast<GLint>(desc.extent.height);
@@ -1285,7 +1285,7 @@ void GLTexture::AllocRenderbufferStorage(const TextureDescriptor& textureDesc)
 
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const
 {
-    #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    #if LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 
     #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))
@@ -1384,7 +1384,7 @@ void GLTexture::GetRenderbufferParams(GLint* extent, GLint* samples) const
 
 void GLTexture::GetTextureMipSize(GLint level, GLint (&texSize)[3]) const
 {
-    #ifdef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+    #if LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
 
     #if LLGL_GLEXT_DIRECT_STATE_ACCESS
     if (HasExtension(GLExt::ARB_direct_state_access))

@@ -18,6 +18,7 @@ namespace LLGL
 
 class GLPipelineLayout;
 class GLPipelineState;
+class GLBufferWithXFB;
 
 /* ----- Enumerations ----- */
 
@@ -147,15 +148,16 @@ struct GLScissor
 
 struct GLRenderState
 {
-    GLenum                  drawMode            = GL_TRIANGLES;
-    GLenum                  primitiveMode       = GL_TRIANGLES;
-    GLenum                  indexBufferDataType = GL_UNSIGNED_INT;
-    GLsizeiptr              indexBufferStride   = 4;
-    GLsizeiptr              indexBufferOffset   = 0;
-    const GLPipelineLayout* boundPipelineLayout = nullptr;
-    const GLPipelineState*  boundPipelineState  = nullptr;
-    GLbitfield              activeBarriers      = 0;
-    GLbitfield              dirtyBarriers       = 0;
+    GLenum                  drawMode                = GL_TRIANGLES;
+    GLenum                  primitiveMode           = GL_TRIANGLES;
+    GLenum                  indexBufferDataType     = GL_UNSIGNED_INT;
+    GLsizeiptr              indexBufferStride       = 4;
+    GLsizeiptr              indexBufferOffset       = 0;
+    const GLPipelineLayout* boundPipelineLayout     = nullptr;
+    const GLPipelineState*  boundPipelineState      = nullptr;
+    GLBufferWithXFB*        boundBufferWithFxb      = nullptr;
+    GLbitfield              activeBarriers          = 0;
+    GLbitfield              dirtyBarriers           = 0;
 };
 
 struct GLPixelStore

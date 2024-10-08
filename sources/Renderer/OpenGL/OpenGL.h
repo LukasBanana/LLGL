@@ -52,6 +52,10 @@
 #   define LLGL_GLEXT_UNIFORM_BUFFER_OBJECT 1
 #endif
 
+#if GL_ARB_polygon_offset_clamp
+#   define LLGL_GLEXT_POLYGON_OFFSET_CLAMP 1
+#endif
+
 #if GL_ARB_texture_multisample || GL_ES_VERSION_3_2
 #   define LLGL_GLEXT_TEXTURE_MULTISAMPLE 1
 #endif
@@ -113,16 +117,20 @@
 #   define LLGL_GLEXT_TRANSFORM_FEEDBACK 1
 #endif
 
+#if GL_ARB_transform_feedback2
+#   define LLGL_GLEXT_TRNASFORM_FEEDBACK2 1
+#endif
+
 #if GL_EXT_draw_buffers_indexed || GL_ES_VERSION_3_2
-#   define LLGL_GLEXT_DRAW_BUFFERS_INDEXED
+#   define LLGL_GLEXT_DRAW_BUFFERS_INDEXED 1
 #endif
 
 #if GL_ARB_draw_buffers_blend || GL_ES_VERSION_3_2
-#   define LLGL_GLEXT_DRAW_BUFFERS_BLEND
+#   define LLGL_GLEXT_DRAW_BUFFERS_BLEND 1
 #endif
 
 #if GL_ARB_tessellation_shader || GL_ES_VERSION_3_2
-#   define LLGL_GLEXT_TESSELLATION_SHADER
+#   define LLGL_GLEXT_TESSELLATION_SHADER 1
 #endif
 
 #if GL_ARB_shader_storage_buffer_object || GL_ES_VERSION_3_1
@@ -150,7 +158,7 @@
 #endif
 
 #if LLGL_OPENGL || GL_ES_VERSION_3_1
-#   define LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+#   define LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER 1
 #endif
 
 #if GL_ARB_clip_control

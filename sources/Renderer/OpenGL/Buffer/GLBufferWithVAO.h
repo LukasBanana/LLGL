@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-class GLBufferWithVAO final : public GLBuffer
+class GLBufferWithVAO : public GLBuffer
 {
 
     public:

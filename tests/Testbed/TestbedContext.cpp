@@ -924,6 +924,14 @@ bool TestbedContext::LoadShaders()
         }
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);
+        if (IsShadingLanguageSupported(ShadingLanguage::GLSL_410))
+        {
+            shaders[VSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.vert",          ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[HSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.tesc",          ShaderType::TessControl);
+            shaders[DSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.tese",          ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[GSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.geom",          ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[PSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.frag",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        }
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {
@@ -1676,6 +1684,30 @@ void TestbedContext::RecordTestResult(TestResult result, const char* name)
     PrintTestResult(result, name, highlighted);
     if (TestFailed(result))
         ++failures;
+}
+
+bool TestbedContext::QueryResultsWithTimeout(
+    LLGL::QueryHeap&    queryHeap,
+    std::uint32_t       firstQuery,
+    std::uint32_t       numQueries,
+    void*               data,
+    std::size_t         dataSize)
+{
+    const std::uint64_t ticksUntilTimeout = Timer::Frequency() / 2; // 0.5 seconds until timeout
+    const std::uint64_t startTick = Timer::Tick();
+
+    while (!cmdQueue->QueryResult(queryHeap, firstQuery, numQueries, data, dataSize))
+    {
+        const std::uint64_t endTick = Timer::Tick();
+        if (endTick - startTick > ticksUntilTimeout)
+        {
+            Log::Errorf("Query object 'LLGL::QueryType::%s' timed out\n", ToString(queryHeap.GetType()));
+            return false;
+        }
+        std::this_thread::yield();
+    }
+
+    return true;
 }
 
 

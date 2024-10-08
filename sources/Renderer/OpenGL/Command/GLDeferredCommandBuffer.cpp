@@ -27,6 +27,7 @@
 #include "../Texture/GLRenderTarget.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
+#include "../Buffer/GLBufferWithXFB.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
@@ -322,6 +323,15 @@ void GLDeferredCommandBuffer::SetVertexBuffer(Buffer& buffer)
         auto& bufferWithVAO = LLGL_CAST(GLBufferWithVAO&, buffer);
         auto cmd = AllocCommand<GLCmdBindVertexArray>(GLOpcodeBindVertexArray);
         cmd->vertexArray = bufferWithVAO.GetVertexArray();
+        
+        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        /* Store ID to transform feedback object */
+        if ((buffer.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+        {
+            auto& streamOutputBufferGL = LLGL_CAST(GLBufferWithXFB&, bufferWithVAO);
+            SetTransformFeedback(streamOutputBufferGL);
+        }
+        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
     }
 }
 
@@ -638,6 +648,15 @@ void GLDeferredCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer
 {
     /* Bind transform feedback buffers */
     numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+
+    if (numBuffers > 0)
+    {
+        auto* bufferWithXfbGL = LLGL_CAST(GLBufferWithXFB*, buffers[0]);
+        auto cmd = AllocCommand<GLCmdBeginBufferXfb>(GLOpcodeBeginBufferXfb);
+        cmd->bufferWithXfb = bufferWithXfbGL;
+        cmd->primitiveMode = GetPrimitiveMode();
+    }
+
     BindBuffersBase(GLBufferTarget::TransformFeedbackBuffer, 0, numBuffers, buffers);
 
     /* Begin transform feedback section */
@@ -672,6 +691,7 @@ void GLDeferredCommandBuffer::EndStreamOutput()
     else
         LLGL_TRAP_TRANSFORM_FEEDBACK_NOT_SUPPORTED();
     #endif
+    AllocOpcode(GLOpcodeEndBufferXfb);
 }
 
 /* ----- Drawing ----- */
@@ -891,7 +911,28 @@ void GLDeferredCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t 
 
 void GLDeferredCommandBuffer::DrawStreamOutput()
 {
-    //TODO
+    LLGL_FLUSH_MEMORY_BARRIERS();
+    if (GLBufferWithXFB* bufferWithXfbGL = GetRenderState().boundBufferWithFxb)
+    {
+        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        if (HasExtension(GLExt::ARB_transform_feedback2))
+        {
+            auto cmd = AllocCommand<GLCmdDrawTransformFeedback>(GLOpcodeDrawTransformFeedback);
+            {
+                cmd->mode   = GetDrawMode();
+                cmd->xfbID  = bufferWithXfbGL->GetTransformFeedbackID();
+            }
+        }
+        else
+        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        {
+            auto cmd = AllocCommand<GLCmdDrawEmulatedTransformFeedback>(GLOpcodeDrawEmulatedTransformFeedback);
+            {
+                cmd->mode           = GetDrawMode();
+                cmd->bufferWithXfb  = bufferWithXfbGL;
+            }
+        }
+    }
 }
 
 /* ----- Compute ----- */

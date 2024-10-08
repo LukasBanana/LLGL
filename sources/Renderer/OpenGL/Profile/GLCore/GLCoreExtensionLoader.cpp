@@ -652,6 +652,18 @@ static bool DECL_LOADGLEXT_PROC(NV_transform_feedback)
     return true;
 }
 
+static bool DECL_LOADGLEXT_PROC(ARB_transform_feedback2)
+{
+    LOAD_GLPROC( glBindTransformFeedback    );
+    LOAD_GLPROC( glDeleteTransformFeedbacks );
+    LOAD_GLPROC( glGenTransformFeedbacks    );
+    LOAD_GLPROC( glIsTransformFeedback      );
+    LOAD_GLPROC( glPauseTransformFeedback   );
+    LOAD_GLPROC( glResumeTransformFeedback  );
+    LOAD_GLPROC( glDrawTransformFeedback    );
+    return true;
+}
+
 static bool DECL_LOADGLEXT_PROC(ARB_sync)
 {
     LOAD_GLPROC( glFenceSync      );
@@ -1164,6 +1176,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     LOAD_GLEXT( EXT_draw_buffers2                );
     LOAD_GLEXT( EXT_transform_feedback           );
     LOAD_GLEXT( NV_transform_feedback            );
+    LOAD_GLEXT( ARB_transform_feedback2          );
     LOAD_GLEXT( ARB_sync                         );
     LOAD_GLEXT( ARB_internalformat_query         );
     LOAD_GLEXT( ARB_internalformat_query2        );
@@ -1186,7 +1199,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     #endif
 
     /* Enable extensions and ignore procedures */
-    ENABLE_GLEXT( ARB_transform_feedback3          );
+    ENABLE_GLEXT( ARB_transform_feedback3          ); // Only used for GL_MAX_TRANSFORM_FEEDBACK_BUFFERS
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_geometry_shader4             );

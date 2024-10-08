@@ -28,12 +28,12 @@ struct GLContextState
     static constexpr GLuint numFboTargets       = static_cast<GLuint>(GLFramebufferTarget::Num);
     static constexpr GLuint numTextureTargets   = static_cast<GLuint>(GLTextureTarget::Num);
 
-    #ifdef LLGL_GL_ENABLE_VENDOR_EXT
+    #if LLGL_GL_ENABLE_VENDOR_EXT
     static constexpr GLuint numCapsExt          = static_cast<GLuint>(GLStateExt::Num);
     #endif
 
     // Rasterizer state
-    #ifdef LLGL_OPENGL
+    #if LLGL_OPENGL
     GLenum          polygonMode                         = GL_FILL;
     #endif
     GLfloat         offsetFactor                        = 0.0f;
@@ -68,7 +68,7 @@ struct GLContextState
     // Capabilities
     bool            capabilities[numCaps]               = {};
 
-    #ifdef LLGL_GL_ENABLE_VENDOR_EXT
+    #if LLGL_GL_ENABLE_VENDOR_EXT
 
     struct ExtensionState
     {
@@ -78,7 +78,7 @@ struct GLContextState
 
     ExtensionState  capabilitiesExt[numCapsExt]         = {};
 
-    #endif
+    #endif // /LLGL_GL_ENABLE_VENDOR_EXT
 
     // Pixel store
     GLPixelStore    pixelStorePack;
@@ -115,6 +115,9 @@ struct GLContextState
 
     // Samplers
     GLuint          boundSamplers[numTextureLayers]     = {};
+
+    // Transform-feedback
+    GLuint          boundTransformFeedback              = 0;
 };
 
 

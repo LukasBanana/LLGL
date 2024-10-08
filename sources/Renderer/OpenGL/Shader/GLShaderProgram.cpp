@@ -860,6 +860,7 @@ void GLShaderProgram::QueryReflection(GLuint program, GLenum shaderStage, Shader
 struct GLOrderedShaders
 {
     const GLShader* vertexShader                = nullptr;
+    const GLShader* tessEvaluationShader        = nullptr;
     const GLShader* geometryShader              = nullptr;
     const GLShader* fragmentShader              = nullptr;
     const GLShader* shaderWithFlippedYPosition  = nullptr; // Last shader that modifies gl_Position (vertex, tessellation-evaluation, or geometry)
@@ -894,6 +895,9 @@ static void AttachGLLegacyShaders(
             {
                 case ShaderType::Vertex:
                     orderedShaders.vertexShader = shaderGL;
+                    break;
+                case ShaderType::TessEvaluation:
+                    orderedShaders.tessEvaluationShader = shaderGL;
                     break;
                 case ShaderType::Geometry:
                     orderedShaders.geometryShader = shaderGL;
@@ -958,6 +962,11 @@ void GLShaderProgram::BuildProgramBinary(
     {
         if (!gs->GetTransformFeedbackVaryings().empty())
             shaderWithVaryings = gs;
+    }
+    else if (const GLShader* ts = orderedShaders.tessEvaluationShader)
+    {
+        if (!ts->GetTransformFeedbackVaryings().empty())
+            shaderWithVaryings = ts;
     }
     else if (const GLShader* vs = orderedShaders.vertexShader)
     {

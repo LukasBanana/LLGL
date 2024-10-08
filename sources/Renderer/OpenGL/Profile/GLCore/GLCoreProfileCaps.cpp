@@ -281,7 +281,7 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
     #endif
 
     /* Determine maximum number of stream-outputs */
-    #ifdef GL_ARB_transform_feedback3
+    #if GL_ARB_transform_feedback3
     if (HasExtension(GLExt::ARB_transform_feedback3))
     {
         /* Get maximum number of stream-outputs from <GL_ARB_transform_feedback3> extension */

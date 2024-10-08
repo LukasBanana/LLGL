@@ -34,7 +34,7 @@ Repeat several times and then render the final result with a geometry shader to 
 DEF_TEST( StreamOutput )
 {
 #if 1 //TODO: not implemented for GL and VK backends yet
-    if (!(renderer->GetRendererID() == RendererID::Direct3D11 || renderer->GetRendererID() == RendererID::Direct3D12))
+    if (renderer->GetRendererID() == RendererID::Vulkan || renderer->GetRendererID() == RendererID::Metal)
         return TestResult::Skipped;
 #endif
 
@@ -356,42 +356,44 @@ DEF_TEST( StreamOutput )
     }
     cmdBuffer->End();
 
+    cmdQueue->Submit(*cmdBuffer);
+
     // Query number of written stream-output vertices and match them with the expected numbers per frame
     const std::uint32_t expectedNumPrimitives = expectedSOVerticesPerFrame[frame] / 3;
     std::uint32_t actualNumPrimitives = 0;
-    while (!cmdQueue->QueryResult(*queryHeaps[0], 0, 1, &actualNumPrimitives, sizeof(actualNumPrimitives)))
+    if (QueryResultsWithTimeout(*queryHeaps[0], 0, 1, &actualNumPrimitives, sizeof(actualNumPrimitives)))
     {
-        std::this_thread::yield();
+        if (actualNumPrimitives != expectedNumPrimitives)
+        {
+            Log::Errorf(
+                "Mismatch between number of written stream-output primitives (%u) in frame [%u] and expected value (%u)\n",
+                actualNumPrimitives, frame, expectedNumPrimitives
+            );
+            result = TestResult::FailedMismatch;
+            if (!opt.greedy)
+                return result;
+        }
     }
-
-    if (actualNumPrimitives != expectedNumPrimitives)
-    {
-        Log::Errorf(
-            "Mismatch between number of written stream-output primitives (%u) in frame [%u] and expected value (%u)\n",
-            actualNumPrimitives, frame, expectedNumPrimitives
-        );
-        result = TestResult::FailedMismatch;
-        if (!opt.greedy)
-            return result;
-    }
+    else
+        result = TestResult::FailedErrors;
 
     const std::uint32_t expectedPrimitiveOverflow = 0;
     std::uint32_t actualPrimitiveOverflow = 0;
-    while (!cmdQueue->QueryResult(*queryHeaps[1], 0, 1, &actualPrimitiveOverflow, sizeof(actualPrimitiveOverflow)))
+    if (QueryResultsWithTimeout(*queryHeaps[1], 0, 1, &actualPrimitiveOverflow, sizeof(actualPrimitiveOverflow)))
     {
-        std::this_thread::yield();
+        if (actualPrimitiveOverflow != expectedPrimitiveOverflow)
+        {
+            Log::Errorf(
+                "Mismatch between stream-output primitive overflow flag (%u) in frame [%u] and expected value (%u)\n",
+                actualPrimitiveOverflow, frame, expectedPrimitiveOverflow
+            );
+            result = TestResult::FailedMismatch;
+            if (!opt.greedy)
+                return result;
+        }
     }
-
-    if (actualPrimitiveOverflow != expectedPrimitiveOverflow)
-    {
-        Log::Errorf(
-            "Mismatch between stream-output primitive overflow flag (%u) in frame [%u] and expected value (%u)\n",
-            actualPrimitiveOverflow, frame, expectedPrimitiveOverflow
-        );
-        result = TestResult::FailedMismatch;
-        if (!opt.greedy)
-            return result;
-    }
+    else
+        result = TestResult::FailedErrors;
 
     // Match entire color buffer and create delta heat map
     const std::string colorBufferName = "StreamOutput_Frame" + std::to_string(frame);

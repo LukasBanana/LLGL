@@ -729,7 +729,7 @@ GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
             return GL_TRIANGLES;
         default:
             if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
-                return 0;
+                return GL_TRIANGLES; //TODO: this might be dependent on the tessellation-evaluation signature, e.g. 'layout(triangles) in;'
             break;
     }
     LLGL_TRAP_GL_MAP(PrimitiveTopology, primitiveTopology);

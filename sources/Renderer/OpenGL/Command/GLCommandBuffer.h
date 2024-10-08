@@ -21,6 +21,7 @@ namespace LLGL
 
 
 struct GLRenderState;
+class GLBufferWithXFB;
 
 class GLCommandBuffer : public CommandBuffer
 {
@@ -44,6 +45,9 @@ class GLCommandBuffer : public CommandBuffer
 
         // Stores the render states for the specified PSO: Draw mode, primitive mode, binding layout.
         void SetPipelineRenderState(const GLPipelineState& pipelineStateGL);
+
+        // Sets the transform-feedback object for the next DrawStreamOutput() invocation.
+        void SetTransformFeedback(GLBufferWithXFB& bufferWithXfbGL);
 
         // InvalidaTes the specified memory barrier bits.
         void InvalidateMemoryBarriers(GLbitfield barriers);

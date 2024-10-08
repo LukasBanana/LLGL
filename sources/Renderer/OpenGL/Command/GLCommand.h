@@ -25,6 +25,7 @@ namespace LLGL
 
 class RenderTarget;
 class GLBuffer;
+class GLBufferWithXFB;
 class GLTexture;
 class GLResourceHeap;
 class GLPipelineState;
@@ -208,6 +209,12 @@ struct GLCmdBindBuffersBase
 //  GLuint          buffer[count];
 };
 
+struct GLCmdBeginBufferXfb
+{
+    GLBufferWithXFB*    bufferWithXfb;
+    GLenum              primitiveMode;
+};
+
 struct GLCmdBeginTransformFeedback
 {
     GLenum primitiveMove;
@@ -385,6 +392,18 @@ struct GLCmdMultiDrawElementsIndirect
     const GLvoid*   indirect;
     GLsizei         drawcount;
     GLsizei         stride;
+};
+
+struct GLCmdDrawTransformFeedback
+{
+    GLenum  mode;
+    GLuint  xfbID;
+};
+
+struct GLCmdDrawEmulatedTransformFeedback
+{
+    GLenum              mode;
+    GLBufferWithXFB*    bufferWithXfb;
 };
 
 struct GLCmdDispatchCompute

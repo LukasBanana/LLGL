@@ -13,6 +13,7 @@
 #include "../Shader/GLShaderProgram.h"
 #include "../GLSwapChain.h"
 #include "../Buffer/GLBuffer.h"
+#include "../Buffer/GLBufferWithXFB.h"
 #include "../Texture/GLTexture.h"
 #include "../Texture/GLRenderTarget.h"
 #include "../Texture/GLEmulatedSampler.h"
@@ -635,7 +636,7 @@ void GLStateManager::SetPolygonMode(GLenum mode)
 
 void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp)
 {
-    #ifdef GL_ARB_polygon_offset_clamp
+    #if LLGL_GLEXT_POLYGON_OFFSET_CLAMP
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
     {
         if (contextState_.offsetFactor != factor || contextState_.offsetUnits != units || contextState_.offsetClamp != clamp)
@@ -682,7 +683,7 @@ void GLStateManager::SetFrontFace(GLenum mode)
 
 void GLStateManager::SetPatchVertices(GLint patchVertices)
 {
-    #ifdef LLGL_GLEXT_TESSELLATION_SHADER
+    #if LLGL_GLEXT_TESSELLATION_SHADER
     if (HasExtension(GLExt::ARB_tessellation_shader))
     {
         if (contextState_.patchVertices != patchVertices)
@@ -1831,6 +1832,25 @@ void GLStateManager::ClearBuffers(std::uint32_t numAttachments, const Attachment
 }
 
 #endif // /!LLGL_GL_ENABLE_OPENGL2X
+
+/* ----- Transform feedback ----- */
+
+void GLStateManager::BindTransformFeedback(GLuint transformFeedback)
+{
+    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    if (contextState_.boundTransformFeedback != transformFeedback)
+    {
+        contextState_.boundTransformFeedback = transformFeedback;
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, transformFeedback);
+    }
+    #endif
+}
+
+void GLStateManager::NotifyTransformFeedbackRelease(GLBufferWithXFB* bufferWithXfb)
+{
+    if (bufferWithXfb != nullptr)
+        InvalidateBoundGLObject(contextState_.boundTransformFeedback, bufferWithXfb->GetTransformFeedbackID());
+}
 
 
 /*

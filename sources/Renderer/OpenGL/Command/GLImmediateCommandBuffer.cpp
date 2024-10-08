@@ -32,6 +32,7 @@
 #include "../Texture/GLFramebufferCapture.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
+#include "../Buffer/GLBufferWithXFB.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
@@ -289,6 +290,15 @@ void GLImmediateCommandBuffer::SetVertexBuffer(Buffer& buffer)
         /* Bind vertex buffer */
         auto& vertexBufferGL = LLGL_CAST(GLBufferWithVAO&, buffer);
         vertexBufferGL.GetVertexArray()->Bind(*stateMngr_);
+
+        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        /* Store ID to transform feedback object */
+        if ((buffer.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+        {
+            auto& streamOutputBufferGL = LLGL_CAST(GLBufferWithXFB&, vertexBufferGL);
+            SetTransformFeedback(streamOutputBufferGL);
+        }
+        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
     }
 }
 
@@ -544,9 +554,15 @@ void GLImmediateCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffe
     GLuint soTargets[LLGL_MAX_NUM_SO_BUFFERS];
     numBuffers = std::min(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
 
+    if (numBuffers > 0)
+    {
+        auto* bufferWithXfbGL = LLGL_CAST(GLBufferWithXFB*, buffers[0]);
+        GLBufferWithXFB::BeginTransformFeedback(*stateMngr_, *bufferWithXfbGL, GetPrimitiveMode());
+    }
+
     for_range(i, numBuffers)
     {
-        auto bufferGL = LLGL_CAST(GLBuffer*, buffers[i]);
+        auto* bufferGL = LLGL_CAST(GLBuffer*, buffers[i]);
         soTargets[i] = bufferGL->GetID();
     }
 
@@ -578,6 +594,8 @@ void GLImmediateCommandBuffer::EndStreamOutput()
     else if (HasExtension(GLExt::NV_transform_feedback))
         glEndTransformFeedbackNV();
     #endif
+
+    GLBufferWithXFB::EndTransformFeedback(*stateMngr_);
 
     #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
@@ -815,7 +833,22 @@ void GLImmediateCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t
 
 void GLImmediateCommandBuffer::DrawStreamOutput()
 {
-    //TODO
+    if (GLBufferWithXFB* bufferWithXfbGL = GetRenderState().boundBufferWithFxb)
+    {
+        LLGL_FLUSH_MEMORY_BARRIERS();
+        #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        if (HasExtension(GLExt::ARB_transform_feedback2))
+        {
+            /* Draw primitives with internal number of vertices */
+            glDrawTransformFeedback(GetDrawMode(), bufferWithXfbGL->GetTransformFeedbackID());
+        }
+        else
+        #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
+        {
+            /* Draw primitives with the queried number of vertices */
+            glDrawArrays(GetDrawMode(), 0, bufferWithXfbGL->QueryVertexCount());
+        }
+    }
 }
 
 /* ----- Compute ----- */

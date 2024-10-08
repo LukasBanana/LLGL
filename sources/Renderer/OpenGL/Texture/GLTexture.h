@@ -158,7 +158,7 @@ class GLTexture final : public Texture
         const bool                  isRenderbuffer_         = false;
         const GLSwizzleFormat       swizzleFormat_          = GLSwizzleFormat::RGBA;    // Identity texture swizzle by default
 
-        #ifndef LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
+        #if !LLGL_GLEXT_GET_TEX_LEVEL_PARAMETER
         GLint                       extent_[3]              = {};
         GLint                       samples_                = 1;
         #endif

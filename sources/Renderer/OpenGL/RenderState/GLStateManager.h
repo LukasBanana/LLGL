@@ -30,6 +30,7 @@ class GLContext;
 class GLRenderTarget;
 class GLSwapChain;
 class GLBuffer;
+class GLBufferWithXFB;
 class GLTexture;
 class GLDepthStencilState;
 class GLRasterizerState;
@@ -286,6 +287,12 @@ class GLStateManager
 
         void Clear(long flags);
         void ClearBuffers(std::uint32_t numAttachments, const AttachmentClear* attachments);
+
+        /* ----- Transform feedback ----- */
+
+        void BindTransformFeedback(GLuint transformFeedback);
+
+        void NotifyTransformFeedbackRelease(GLBufferWithXFB* bufferWithXfb);
 
         /* ----- Feedback ----- */
 

@@ -27,6 +27,7 @@
 #include "../Texture/GLFramebufferCapture.h"
 
 #include "../Buffer/GLBufferWithVAO.h"
+#include "../Buffer/GLBufferWithXFB.h"
 #include "../Buffer/GLBufferArrayWithVAO.h"
 
 #include "../RenderState/GLStateManager.h"
@@ -217,6 +218,17 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             auto cmd = reinterpret_cast<const GLCmdBindBuffersBase*>(pc);
             stateMngr->BindBuffersBase(cmd->target, cmd->first, cmd->count, reinterpret_cast<const GLuint*>(cmd + 1));
             return (sizeof(*cmd) + sizeof(GLuint)*cmd->count);
+        }
+        case GLOpcodeBeginBufferXfb:
+        {
+            auto cmd = reinterpret_cast<const GLCmdBeginBufferXfb*>(pc);
+            GLBufferWithXFB::BeginTransformFeedback(*stateMngr, *(cmd->bufferWithXfb), cmd->primitiveMode);
+            return sizeof(*cmd);
+        }
+        case GLOpcodeEndBufferXfb:
+        {
+            GLBufferWithXFB::EndTransformFeedback(*stateMngr);
+            return 0;
         }
         case GLOpcodeBeginTransformFeedback:
         {
@@ -421,6 +433,20 @@ static std::size_t ExecuteGLCommand(const GLOpcode opcode, const void* pc, GLSta
             stateMngr->BindBuffer(GLBufferTarget::DrawIndirectBuffer, cmd->id);
             glMultiDrawElementsIndirect(cmd->mode, cmd->type, cmd->indirect, cmd->drawcount, cmd->stride);
             #endif
+            return sizeof(*cmd);
+        }
+        case GLOpcodeDrawTransformFeedback:
+        {
+            auto cmd = reinterpret_cast<const GLCmdDrawTransformFeedback*>(pc);
+            #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+            glDrawTransformFeedback(cmd->mode, cmd->xfbID);
+            #endif
+            return sizeof(*cmd);
+        }
+        case GLOpcodeDrawEmulatedTransformFeedback:
+        {
+            auto cmd = reinterpret_cast<const GLCmdDrawEmulatedTransformFeedback*>(pc);
+            glDrawArrays(cmd->mode, 0, cmd->bufferWithXfb->QueryVertexCount());
             return sizeof(*cmd);
         }
         case GLOpcodeDispatchCompute:

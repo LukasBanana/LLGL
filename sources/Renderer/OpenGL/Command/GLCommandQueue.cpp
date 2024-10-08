@@ -46,7 +46,7 @@ static bool AreQueryResultsAvailable(GLQueryHeap& queryHeapGL, std::uint32_t fir
     /* Check if query results are available */
     const auto& idList = queryHeapGL.GetIDs();
 
-    for (std::uint32_t i = 0; i < numQueries; ++i)
+    for_range(i, numQueries)
     {
         GLuint available = 0;
         glGetQueryObjectuiv(idList[firstQuery + i], GL_QUERY_RESULT_AVAILABLE, &available);
@@ -61,25 +61,25 @@ static void QueryResultUInt32(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery
 {
     /* Get query result with 32-bit version */
     const auto& idList = queryHeapGL.GetIDs();
-    for (std::uint32_t i = 0; i < numQueries; ++i)
+    for_range(i, numQueries)
         glGetQueryObjectuiv(idList[firstQuery + i], GL_QUERY_RESULT, &data[i]);
 }
 
 static void QueryResultUInt64(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery, std::uint32_t numQueries, std::uint64_t* data)
 {
     const auto& idList = queryHeapGL.GetIDs();
-    #ifdef GL_ARB_timer_query
+    #if GL_ARB_timer_query
     if (HasExtension(GLExt::ARB_timer_query))
     {
         /* Get query result with 64-bit version */
-        for (std::uint32_t i = 0; i < numQueries; ++i)
+        for_range(i, numQueries)
             glGetQueryObjectui64v(idList[firstQuery + i], GL_QUERY_RESULT, &data[i]);
     }
     else
     #endif // /GL_ARB_timer_query
     {
         /* Get query result with 32-bit version */
-        for (std::uint32_t i = 0; i < numQueries; ++i)
+        for_range(i, numQueries)
         {
             GLuint result32 = 0;
             glGetQueryObjectuiv(idList[firstQuery + i], GL_QUERY_RESULT, &result32);
@@ -90,7 +90,7 @@ static void QueryResultUInt64(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery
 
 static void QueryResultPipelineStatistics(GLQueryHeap& queryHeapGL, std::uint32_t firstQuery, std::uint32_t numQueries, QueryPipelineStatistics* data)
 {
-    #ifdef GL_ARB_pipeline_statistics_query
+    #if GL_ARB_pipeline_statistics_query
     if (HasExtension(GLExt::ARB_pipeline_statistics_query))
     {
         /* Parameter setup for 32-bit and 64-bit version of query function */

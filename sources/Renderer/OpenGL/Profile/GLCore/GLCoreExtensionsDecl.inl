@@ -475,6 +475,16 @@ DECL_GLPROC(PFNGLTRANSFORMFEEDBACKVARYINGSNVPROC,                   glTransformF
 DECL_GLPROC(PFNGLGETVARYINGLOCATIONNVPROC,                          glGetVaryingLocationNV,                         GLint,          (GLuint, const GLchar*));
 DECL_GLPROC(PFNGLGETACTIVEVARYINGNVPROC,                            glGetActiveVaryingNV,                           void,           (GLuint, GLuint, GLsizei, GLsizei*, GLsizei*, GLenum*, GLchar*));
 
+/* GL_ARB_transform_feedback2 */
+
+DECL_GLPROC(PFNGLBINDTRANSFORMFEEDBACKPROC,                         glBindTransformFeedback,                        void,           (GLenum, GLuint));
+DECL_GLPROC(PFNGLDELETETRANSFORMFEEDBACKSPROC,                      glDeleteTransformFeedbacks,                     void,           (GLsizei, const GLuint*));
+DECL_GLPROC(PFNGLGENTRANSFORMFEEDBACKSPROC,                         glGenTransformFeedbacks,                        void,           (GLsizei, GLuint*));
+DECL_GLPROC(PFNGLISTRANSFORMFEEDBACKPROC,                           glIsTransformFeedback,                          GLboolean,      (GLuint));
+DECL_GLPROC(PFNGLPAUSETRANSFORMFEEDBACKPROC,                        glPauseTransformFeedback,                       void,           (void));
+DECL_GLPROC(PFNGLRESUMETRANSFORMFEEDBACKPROC,                       glResumeTransformFeedback,                      void,           (void));
+DECL_GLPROC(PFNGLDRAWTRANSFORMFEEDBACKPROC,                         glDrawTransformFeedback,                        void,           (GLenum, GLuint));
+
 /* GL_ARB_sync */
 
 DECL_GLPROC(PFNGLFENCESYNCPROC,                                     glFenceSync,                                    GLsync,         (GLenum, GLbitfield));

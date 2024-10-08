@@ -21,6 +21,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/PipelineStateFlags.h>
+#include <LLGL/QueryHeapFlags.h>
 
 
 namespace LLGL
@@ -92,6 +93,12 @@ LLGL_EXPORT const char* ToString(const ResourceType val);
 \remarks Return value examples are \c "Position", \c "ClipDistance".
 */
 LLGL_EXPORT const char* ToString(const SystemValue val);
+
+/**
+\brief Returns a string representation for the specified QueryType value, or null if the input type is invalid.
+\remarks Return value examples are \c "SamplesPassed", \c "AnySamplesPassed".
+*/
+LLGL_EXPORT const char* ToString(const QueryType val);
 
 /** @} */
 
