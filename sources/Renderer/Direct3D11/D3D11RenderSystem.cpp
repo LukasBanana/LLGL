@@ -35,6 +35,7 @@
 #include "RenderState/D3D11ComputePSO.h"
 
 #include "Shader/D3D11CommonShader.h"
+#include "Shader/D3D11DomainShader.h"
 #include "Shader/D3D11VertexShader.h"
 
 #include <LLGL/Backend/Direct3D11/NativeHandle.h>
@@ -416,10 +417,15 @@ void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& shaderDesc)
 {
     RenderSystem::AssertCreateShader(shaderDesc);
-    if (shaderDesc.type == ShaderType::Vertex)
-        return shaders_.emplace<D3D11VertexShader>(device_.Get(), shaderDesc);
-    else
-        return shaders_.emplace<D3D11CommonShader>(device_.Get(), shaderDesc);
+    switch (shaderDesc.type)
+    {
+        case ShaderType::Vertex:
+            return shaders_.emplace<D3D11VertexShader>(device_.Get(), shaderDesc);
+        case ShaderType::TessEvaluation:
+            return shaders_.emplace<D3D11DomainShader>(device_.Get(), shaderDesc);
+        default:
+            return shaders_.emplace<D3D11CommonShader>(device_.Get(), shaderDesc);
+    }
 }
 
 void D3D11RenderSystem::Release(Shader& shader)

@@ -10,6 +10,7 @@
 #include "D3D11PipelineLayout.h"
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
+#include "../Shader/D3D11DomainShader.h"
 #include "../Shader/D3D11VertexShader.h"
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
@@ -64,6 +65,13 @@ D3D11GraphicsPSOBase::D3D11GraphicsPSOBase(const GraphicsPipelineDescriptor& des
     }
     else
         ResetReport("cannot create D3D graphics PSO without vertex shader", true);
+
+    /* Override proxy geometry shader if the domain shader has one */
+    if (auto* domainShaderD3D = LLGL_CAST(const D3D11DomainShader*, desc.tessEvaluationShader))
+    {
+        if (domainShaderD3D->GetProxyGeometryShader())
+            gs_ = domainShaderD3D->GetProxyGeometryShader();
+    }
 
     GetD3DNativeShaders(desc);
 

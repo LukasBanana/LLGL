@@ -17,7 +17,7 @@ namespace LLGL
 
 
 // The vertex shader has its own implementation to store additional information,
-// input-layout and an optional proxyt geometry-shader for stream-outputs that is.
+// input-layout and an optional proxy geometry-shader for stream-outputs that is.
 class D3D11VertexShader final : public D3D11Shader
 {
 

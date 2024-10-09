@@ -84,6 +84,7 @@ class D3D11Shader : public Shader
     protected:
 
         bool BuildShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
+        bool BuildProxyGeometryShader(ID3D11Device* device, const ShaderDescriptor& shaderDesc, ComPtr<ID3D11GeometryShader>& outProxyGeomtryShader);
 
     private:
 

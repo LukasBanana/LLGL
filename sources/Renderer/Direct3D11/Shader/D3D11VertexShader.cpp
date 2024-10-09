@@ -26,20 +26,7 @@ D3D11VertexShader::D3D11VertexShader(ID3D11Device* device, const ShaderDescripto
 
         /* Build optional proxy geometry shader if there are any output attributes */
         if (!desc.vertex.outputAttribs.empty())
-        {
-            /*
-            Pass vertex shader bytecode into ID3D11Device::CreateGeometryShaderWithStreamOutput().
-            This can also be the output of D3DGetOutputSignatureBlob(), but we already have the compiled shader bytecode, which is also supported.
-            */
-            ComPtr<ID3D11DeviceChild> geometryShader = D3D11Shader::CreateNativeShaderFromBlob(
-                device,
-                ShaderType::Geometry,
-                GetByteCode(),
-                desc.vertex.outputAttribs.size(),
-                desc.vertex.outputAttribs.data()
-            );
-            geometryShader.As<ID3D11GeometryShader>(&proxyGeomtryShader_);
-        }
+            BuildProxyGeometryShader(device, desc, proxyGeomtryShader_);
     }
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
