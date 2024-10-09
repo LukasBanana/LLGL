@@ -93,16 +93,36 @@ static bool HasProgramArgument(int argc, char* argv[], const char* search)
 
 static void PrintHelpDocs()
 {
+    // Find available modules
+    auto availableModules = RenderSystem::FindModules();
+    std::string availableModulesStr;
+
+    auto ListModuleIfAvailable = [&availableModules, &availableModulesStr](const char* name, const char* docu) -> void
+    {
+        auto it = std::find_if(
+            availableModules.begin(), availableModules.end(),
+            [name](const std::string& entry) -> bool
+            {
+                return (entry.compare(name) == 0);
+            }
+        );
+        if (it != availableModules.end())
+            availableModulesStr += docu;
+    };
+
+    ListModuleIfAvailable("Direct3D11", "  d3d11, dx11, direct3d11 ............ Direct3D 11 module\n");
+    ListModuleIfAvailable("Direct3D12", "  d3d12, dx12, direct3d12 ............ Direct3D 12 module\n");
+    ListModuleIfAvailable("OpenGL",     "  gl, gl[VER], opengl, opengl[VER] ... OpenGL module with optional version, e.g. gl330\n");
+    ListModuleIfAvailable("Metal",      "  mt, mtl, metal ..................... Metal module\n");
+    ListModuleIfAvailable("Vulkan",     "  vk, vulkan ......................... Vulkan module\n");
+
+    // Print help listing
     Log::Printf(
         "Testbed MODULES* OPTIONS*\n"
         "  -> Runs LLGL's unit tests\n"
         "\n"
         "MODULE:\n"
-        "  gl, gl[VER], opengl, opengl[VER] ... OpenGL module with optional version, e.g. gl330\n"
-        "  vk, vulkan ......................... Vulkan module\n"
-        "  mt, mtl, metal ..................... Metal module\n"
-        "  d3d11, dx11, direct3d11 ............ Direct3D 11 module\n"
-        "  d3d12, dx12, direct3d12 ............ Direct3D 12 module\n"
+        "%s"
         "\n"
         "OPTIONS:\n"
         "  -d, --debug [=OPT] ................. Enable debug layers (gpu, cpu, gpu+cpu)\n"
@@ -110,13 +130,14 @@ static void PrintHelpDocs()
         "  -g, --greedy ....................... Keep running each test even after failure\n"
         "  -h, --help ......................... Print this help document\n"
         "  -p, --pedantic ..................... Disable diff-checking threshold\n"
-        "  -run=LIST .......................... Only run tests in comma separated list"
+        "  -run=LIST .......................... Only run tests in comma separated list\n"
         "  -s, --santiy-check ................. Print some test results even on success\n"
         "  -t, --timing ....................... Print timing results\n"
         "  -v, --verbose ...................... Print more information\n"
         "  --amd .............................. Prefer AMD device\n"
         "  --intel ............................ Prefer Intel device\n"
-        "  --nvidia ........................... Prefer NVIDIA device\n"
+        "  --nvidia ........................... Prefer NVIDIA device\n",
+        availableModulesStr.c_str()
     );
 }
 

@@ -18,6 +18,7 @@
 #include "GLCore.h"
 #include "Shader/GLLegacyShader.h"
 #include "Buffer/GLBufferWithVAO.h"
+#include "Buffer/GLBufferWithXFB.h"
 #include "Buffer/GLBufferArrayWithVAO.h"
 #include "../CheckedCast.h"
 #include "../BufferUtils.h"
@@ -117,7 +118,7 @@ void GLRenderSystem::Release(CommandBuffer& commandBuffer)
 
 static GLbitfield GetGLBufferStorageFlags(long cpuAccessFlags)
 {
-    #ifdef GL_ARB_buffer_storage
+    #if GL_ARB_buffer_storage
 
     GLbitfield flagsGL = 0;
 
@@ -170,7 +171,19 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
 // private
 GLBuffer* GLRenderSystem::CreateGLBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
-    /* Create either base of sub-class GLBuffer object */
+    #if LLGL_GLEXT_TRNASFORM_FEEDBACK2
+    if ((bufferDesc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
+    {
+        /* Create buffer with VAO and transform feedback object */
+        auto* bufferGL = buffers_.emplace<GLBufferWithXFB>(bufferDesc.bindFlags, bufferDesc.debugName);
+        {
+            GLBufferStorage(*bufferGL, bufferDesc, initialData);
+            bufferGL->BuildVertexArray(bufferDesc.vertexAttribs);
+        }
+        return bufferGL;
+    }
+    else
+    #endif // /LLGL_GLEXT_TRNASFORM_FEEDBACK2
     if ((bufferDesc.bindFlags & BindFlags::VertexBuffer) != 0)
     {
         /* Create buffer with VAO and build vertex array */
