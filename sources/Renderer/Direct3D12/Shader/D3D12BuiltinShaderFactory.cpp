@@ -36,8 +36,10 @@ void D3D12BuiltinShaderFactory::CreateBuiltinPSOs(ID3D12Device* device)
 
 void D3D12BuiltinShaderFactory::Clear()
 {
-    for (ComPtr<ID3D12PipelineState>& native : builtinPSOs_)
-        native.Reset();
+    for (ComPtr<ID3D12RootSignature>& nativeRootSignature : rootSignatures_)
+        nativeRootSignature.Reset();
+    for (ComPtr<ID3D12PipelineState>& nativePipelineState : builtinPSOs_)
+        nativePipelineState.Reset();
 }
 
 bool D3D12BuiltinShaderFactory::GetBulitinPSO(const D3D12BuiltinPSO builtin, ID3D12PipelineState*& outPipelineState, ID3D12RootSignature*& outRootSignature) const
