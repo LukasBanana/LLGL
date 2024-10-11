@@ -37,6 +37,13 @@ class VKBuffer : public Buffer
         void* Map(VKDevice& device, const CPUAccess access, VkDeviceSize offset, VkDeviceSize length);
         void Unmap(VKDevice& device);
 
+        // Returns the actual size of this buffer.
+        // This might be larger than GetSize() if the buffer has additional payload such as the transform-feedback counter.
+        VkDeviceSize GetInternalSize() const;
+
+        // Returns the offset to the transform-feedback counter within this buffer or 0 if there is no such counter.
+        VkDeviceSize GetXfbCounterOffset() const;
+
         // Returns the device buffer object.
         inline VKDeviceBuffer& GetDeviceBuffer()
         {
@@ -91,6 +98,12 @@ class VKBuffer : public Buffer
             return accessFlags_;
         }
 
+        // Returns true element stride this buffer was created with. Currently only used for vertex buffers.
+        inline std::uint32_t GetStride() const
+        {
+            return stride_;
+        }
+
     private:
 
         VKDeviceBuffer  bufferObj_;
@@ -102,6 +115,7 @@ class VKBuffer : public Buffer
         VkIndexType     indexType_              = VK_INDEX_TYPE_MAX_ENUM;
 
         VkAccessFlags   accessFlags_            = 0;
+        std::uint32_t   stride_                 = 0;
 
 };
 

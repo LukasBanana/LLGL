@@ -24,7 +24,7 @@ class VKQueryHeap : public QueryHeap
 
     public:
 
-        VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc);
+        VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc, bool hasPredicates = false);
 
         // Returns the Vulkan VkQueryPool object.
         inline VkQueryPool GetVkQueryPool() const
@@ -60,9 +60,9 @@ class VKQueryHeap : public QueryHeap
 
         VKPtr<VkQueryPool>  queryPool_;
         VkQueryControlFlags controlFlags_   = 0;
+        const bool          hasPredicates_  = false;
         std::uint32_t       groupSize_      = 1;
         std::uint32_t       numQueries_     = 0;
-        bool                hasPredicates_  = false;
 
 };
 

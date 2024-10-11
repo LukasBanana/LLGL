@@ -63,7 +63,7 @@ VKDeviceBuffer& VKDeviceBuffer::operator = (VKDeviceBuffer&& rhs) noexcept
 void VKDeviceBuffer::CreateVkBuffer(VkDevice device, const VkBufferCreateInfo& createInfo)
 {
     /* Create Vulkan buffer object and query memory requirements */
-    auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateBuffer(device, &createInfo, nullptr, buffer_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan buffer");
     vkGetBufferMemoryRequirements(device, buffer_, &requirements_);
 }

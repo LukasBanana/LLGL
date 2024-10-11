@@ -98,7 +98,7 @@ void VKDevice::CreateLogicalDevice(
         createInfo.enabledExtensionCount    = numExtensions;
         createInfo.ppEnabledExtensionNames  = extensions;
 
-        /* If must pass the feature flags either through the chain of pNext (Vulkan 1.1+), or only through pEnabledFeatures (Vulkan 1.0) */
+        /* Must pass the feature flags either through the chain of pNext (Vulkan 1.1+), or only through pEnabledFeatures (Vulkan 1.0) */
         if (features->pNext != nullptr)
         {
             createInfo.pNext                = features;

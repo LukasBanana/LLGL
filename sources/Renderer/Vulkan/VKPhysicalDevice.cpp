@@ -113,8 +113,8 @@ bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, long preferredDev
 
         /* Store device and store properties */
         physicalDevice_ = device;
-        QueryDeviceInfo();
         EnableExtensions(GetOptionalExtensions());
+        QueryDeviceInfo();
 
         return true;
     };
@@ -333,7 +333,7 @@ void VKPhysicalDevice::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
     caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
     caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
-    caps.limits.maxStreamOutputs                    = 0; //TODO
+    caps.limits.maxStreamOutputs                    = transformFeedbackProps_.maxTransformFeedbackBuffers;
     caps.limits.maxTessFactor                       = limits.maxTessellationGenerationLevel;
     caps.limits.minConstantBufferAlignment          = limits.minUniformBufferOffsetAlignment;
     caps.limits.minSampledBufferAlignment           = limits.minStorageBufferOffsetAlignment; // Use SSBO for both sampled and storage buffers
@@ -446,12 +446,30 @@ void VKPhysicalDevice::QueryDeviceFeatures()
 
     VKBaseStructureInfo* currentDesc = nullptr;
 
-    #ifdef VK_EXT_nested_command_buffer
-    featuresNestedCmdBuffers_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT;
-    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&featuresNestedCmdBuffers_);
+    auto ChainDescriptor = [&currentDesc](void* descPtr, VkStructureType type)
+    {
+        /* Chain next descriptor into previous one */
+        currentDesc->pNext = descPtr;
+
+        /* Write structure type and store next descriptor */
+        auto baseDescPtr = reinterpret_cast<VKBaseStructureInfo*>(descPtr);
+        {
+            baseDescPtr->sType = type;
+        }
+        currentDesc = baseDescPtr;
+    };
+
+    features_.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&features_);
+
+    #if VK_EXT_nested_command_buffer
+    ChainDescriptor(&featuresNestedCmdBuffers_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
     #endif
 
-    features_.pNext = currentDesc;
+    #if VK_EXT_transform_feedback
+    if (SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
+        ChainDescriptor(&transformFeedbackFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
+    #endif
 
     vkGetPhysicalDeviceFeatures2(physicalDevice_, &features_);
 
@@ -468,7 +486,7 @@ void VKPhysicalDevice::QueryDeviceProperties()
 
     VKBaseStructureInfo* currentDesc = nullptr;
 
-    auto ChainDescritpor = [&currentDesc](void* descPtr, VkStructureType type)
+    auto ChainDescriptor = [&currentDesc](void* descPtr, VkStructureType type)
     {
         /* Chain next descriptor into previous one */
         currentDesc->pNext = descPtr;
@@ -487,8 +505,13 @@ void VKPhysicalDevice::QueryDeviceProperties()
 
     currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&propertiesExt);
 
-    if (HasExtension(VKExt::EXT_conservative_rasterization))
-        ChainDescritpor(&conservRasterProps_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT);
+    if (SupportsExtension(VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME))
+        ChainDescriptor(&conservRasterProps_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT);
+
+    #if VK_EXT_transform_feedback
+    if (SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
+        ChainDescriptor(&transformFeedbackProps_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_PROPERTIES_EXT);
+    #endif
 
     /* Query device properties with extension "VK_KHR_get_physical_device_properties2" */
     vkGetPhysicalDeviceProperties2(physicalDevice_, &propertiesExt);

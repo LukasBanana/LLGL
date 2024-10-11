@@ -17,11 +17,11 @@ struct alignas(16) SOScene
 {
     Gs::Matrix4f    vsMatrix;
     Gs::Matrix4f    gsMatrices[3];
-    Gs::Vector4f    lightVec = { 0, 0, -1, 0 };
-    float           normalizeFactorVS;
-    float           normalizeFactorDS;
-    float           tessLevelOuter;
-    float           tessLevelInner;
+    Gs::Vector4f    lightVec            = { 0, 0, -1, 0 };
+    float           normalizeFactorVS   = 0.0f;
+    float           normalizeFactorDS   = 0.0f;
+    float           tessLevelOuter      = 0.0f;
+    float           tessLevelInner      = 0.0f;
 };
 
 static_assert(sizeof(SOScene) == (16*4+4+4)*sizeof(float), "SOScene must be 18 float4-vectors large (288 bytes)");
@@ -34,7 +34,7 @@ Repeat several times and then render the final result with a geometry shader to 
 DEF_TEST( StreamOutput )
 {
 #if 1 //TODO: not implemented for GL and VK backends yet
-    if (renderer->GetRendererID() == RendererID::Vulkan || renderer->GetRendererID() == RendererID::Metal)
+    if (renderer->GetRendererID() == RendererID::Metal)
         return TestResult::Skipped;
 #endif
 
@@ -80,11 +80,13 @@ DEF_TEST( StreamOutput )
     {
         result = TestResult::Passed;
 
-        if (shaders[VSStreamOutput] == nullptr ||
-            shaders[HSStreamOutput] == nullptr ||
-            shaders[DSStreamOutput] == nullptr ||
-            shaders[GSStreamOutput] == nullptr ||
-            shaders[PSStreamOutput] == nullptr)
+        if (shaders[VSStreamOutput   ] == nullptr ||
+            shaders[VSStreamOutputXfb] == nullptr ||
+            shaders[HSStreamOutput   ] == nullptr ||
+            shaders[DSStreamOutput   ] == nullptr ||
+            shaders[DSStreamOutputXfb] == nullptr ||
+            shaders[GSStreamOutputXfb] == nullptr ||
+            shaders[PSStreamOutput   ] == nullptr)
         {
             Log::Errorf("Missing shaders for backend\n");
             return TestResult::FailedErrors;
@@ -124,6 +126,7 @@ DEF_TEST( StreamOutput )
         IndexedTriangleMesh indexedCubeMesh;
         CreateModelCube(indexedCubeMeshBuffer, indexedCubeMesh);
 
+        cubeVertices.clear();
         ConvertToColoredVertexList(indexedCubeMeshBuffer, cubeVertices);
         numInitialVertices = static_cast<std::uint32_t>(cubeVertices.size());
 
@@ -155,7 +158,7 @@ DEF_TEST( StreamOutput )
             psoVertDesc.debugName                       = "SO.VERT.PSO";
             psoVertDesc.pipelineLayout                  = psoLayoutVert;
             psoVertDesc.renderPass                      = swapChain->GetRenderPass();
-            psoVertDesc.vertexShader                    = shaders[VSStreamOutput];
+            psoVertDesc.vertexShader                    = shaders[VSStreamOutputXfb];
             psoVertDesc.primitiveTopology               = PrimitiveTopology::TriangleList;
             psoVertDesc.rasterizer.discardEnabled       = true;
         }
@@ -170,7 +173,7 @@ DEF_TEST( StreamOutput )
             psoTessDesc.renderPass                      = swapChain->GetRenderPass();
             psoTessDesc.vertexShader                    = shaders[VSStreamOutput];
             psoTessDesc.tessControlShader               = shaders[HSStreamOutput];
-            psoTessDesc.tessEvaluationShader            = shaders[DSStreamOutput];
+            psoTessDesc.tessEvaluationShader            = shaders[DSStreamOutputXfb];
             psoTessDesc.primitiveTopology               = PrimitiveTopology::Patches3;
             psoTessDesc.rasterizer.discardEnabled       = true;
         }
@@ -186,7 +189,7 @@ DEF_TEST( StreamOutput )
             psoGeomDesc.vertexShader                    = shaders[VSStreamOutput];
             psoGeomDesc.tessControlShader               = shaders[HSStreamOutput];
             psoGeomDesc.tessEvaluationShader            = shaders[DSStreamOutput];
-            psoGeomDesc.geometryShader                  = shaders[GSStreamOutput];
+            psoGeomDesc.geometryShader                  = shaders[GSStreamOutputXfb];
             psoGeomDesc.primitiveTopology               = PrimitiveTopology::Patches3;
             psoGeomDesc.rasterizer.discardEnabled       = true;
         }
@@ -360,13 +363,13 @@ DEF_TEST( StreamOutput )
 
     // Query number of written stream-output vertices and match them with the expected numbers per frame
     const std::uint32_t expectedNumPrimitives = expectedSOVerticesPerFrame[frame] / 3;
-    std::uint32_t actualNumPrimitives = 0;
+    std::uint32_t actualNumPrimitives = 0xDEADBEEF;
     if (QueryResultsWithTimeout(*queryHeaps[0], 0, 1, &actualNumPrimitives, sizeof(actualNumPrimitives)))
     {
         if (actualNumPrimitives != expectedNumPrimitives)
         {
             Log::Errorf(
-                "Mismatch between number of written stream-output primitives (%u) in frame [%u] and expected value (%u)\n",
+                "Mismatch between number of written stream-output primitives (0x%08X) in frame [%u] and expected value (0x%08X)\n",
                 actualNumPrimitives, frame, expectedNumPrimitives
             );
             result = TestResult::FailedMismatch;
@@ -378,13 +381,13 @@ DEF_TEST( StreamOutput )
         result = TestResult::FailedErrors;
 
     const std::uint32_t expectedPrimitiveOverflow = 0;
-    std::uint32_t actualPrimitiveOverflow = 0;
+    std::uint32_t actualPrimitiveOverflow = 0xDEADBEEF;
     if (QueryResultsWithTimeout(*queryHeaps[1], 0, 1, &actualPrimitiveOverflow, sizeof(actualPrimitiveOverflow)))
     {
         if (actualPrimitiveOverflow != expectedPrimitiveOverflow)
         {
             Log::Errorf(
-                "Mismatch between stream-output primitive overflow flag (%u) in frame [%u] and expected value (%u)\n",
+                "Mismatch between stream-output primitive overflow flag (0x%08X) in frame [%u] and expected value (0x%08X)\n",
                 actualPrimitiveOverflow, frame, expectedPrimitiveOverflow
             );
             result = TestResult::FailedMismatch;

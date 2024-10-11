@@ -114,8 +114,8 @@ class VKPhysicalDevice
         std::vector<const char*>                                enabledExtensionNames_;
 
         // Common device properties and features
-        VkPhysicalDeviceFeatures2                               features_                   = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
-        #ifdef VK_EXT_nested_command_buffer
+        VkPhysicalDeviceFeatures2                               features_                   = {};
+        #if VK_EXT_nested_command_buffer
         VkPhysicalDeviceNestedCommandBufferFeaturesEXT          featuresNestedCmdBuffers_   = {};
         #endif
         VkPhysicalDeviceProperties                              properties_                 = {};
@@ -123,6 +123,10 @@ class VKPhysicalDevice
 
         // Extension specific
         VkPhysicalDeviceConservativeRasterizationPropertiesEXT  conservRasterProps_         = {};
+        #if VK_EXT_transform_feedback
+        VkPhysicalDeviceTransformFeedbackPropertiesEXT          transformFeedbackProps_     = {};
+        VkPhysicalDeviceTransformFeedbackFeaturesEXT            transformFeedbackFeatures_  = {};
+        #endif
 
 };
 

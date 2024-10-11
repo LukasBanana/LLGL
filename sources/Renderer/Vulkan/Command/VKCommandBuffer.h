@@ -133,6 +133,23 @@ class VKCommandBuffer final : public CommandBuffer
 
     private:
 
+        struct InputAssemblyState
+        {
+            // Input-assembly state for slot 0 only (IA0)
+            VkBuffer        ia0XfbCounterBuffer         = VK_NULL_HANDLE;
+            VkDeviceSize    ia0XfbCounterBufferOffset   = 0;
+            std::uint32_t   ia0VertexStride             = 0;
+        };
+
+        struct TransformFeedbackState
+        {
+            VkBuffer        xfbBuffers[LLGL_MAX_NUM_SO_BUFFERS]         = {};
+            VkDeviceSize    xfbCounterOffsets[LLGL_MAX_NUM_SO_BUFFERS]  = {};
+            std::uint32_t   numXfbBuffers                               = 0;
+        };
+
+    private:
+
         static constexpr std::uint32_t maxNumCommandBuffers = 3;
 
         VkDevice                        device_                                         = VK_NULL_HANDLE;
@@ -183,7 +200,10 @@ class VKCommandBuffer final : public CommandBuffer
         VKDescriptorCache*              descriptorCache_                                = nullptr;
         VKDescriptorSetWriter           descriptorSetWriter_;
 
-        #if 1//TODO: optimize usage of query pools
+        InputAssemblyState              iaState_;
+        TransformFeedbackState          xfbState_;
+
+        #if 0//TODO: optimize usage of query pools
         std::vector<VKQueryHeap*>       queryHeapsInFlight_;
         std::size_t                     numQueryHeapsInFlight_                          = 0;
         #endif

@@ -886,9 +886,11 @@ bool TestbedContext::LoadShaders()
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[VSStreamOutputXfb]  = shaders[VSStreamOutput];
         shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessControl,     "HSMain",  "hs_5_0");
         shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::TessEvaluation,  "DSMain",  "ds_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
-        shaders[GSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Geometry,        "GSMain",  "gs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[DSStreamOutputXfb]  = shaders[DSStreamOutput];
+        shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Geometry,        "GSMain",  "gs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
         shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
@@ -926,11 +928,13 @@ bool TestbedContext::LoadShaders()
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_410))
         {
-            shaders[VSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.vert",          ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-            shaders[HSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.tesc",          ShaderType::TessControl);
-            shaders[DSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.tese",          ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-            shaders[GSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.geom",          ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-            shaders[PSStreamOutput] = LoadShaderFromFile("StreamOutput.410core.frag",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.vert",          ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[VSStreamOutputXfb]  = shaders[VSStreamOutput];
+            shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tesc",          ShaderType::TessControl);
+            shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tese",          ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[DSStreamOutputXfb]  = shaders[DSStreamOutput];
+            shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.410core.geom",          ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.frag",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
         }
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
@@ -976,6 +980,13 @@ bool TestbedContext::LoadShaders()
         shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp.spv",       ShaderType::Compute);
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.450core.vert.spv",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.450core.frag.spv",           ShaderType::Fragment);
+        shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.vert.spv",          ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[VSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.vert.xfb.spv",      ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.tesc.spv",          ShaderType::TessControl);
+        shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.tese.spv",          ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[DSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.tese.xfb.spv",      ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.geom.xfb.spv",      ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.frag.spv",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
     }
     else
     {

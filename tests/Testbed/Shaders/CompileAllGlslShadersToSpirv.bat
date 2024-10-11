@@ -21,6 +21,13 @@ glslangValidator -V -DENABLE_SPIRV=1 -o ResourceBinding\ResourceBinding.450core.
 glslangValidator -V -DENABLE_SPIRV=1 -o ResourceBinding\ResourceBinding.450core.frag.spv ResourceBinding\ResourceBinding.450core.frag
 glslangValidator -V -DENABLE_SPIRV=1 -o ClearScreen\ClearScreen.450core.vert.spv ClearScreen\ClearScreen.450core.vert
 glslangValidator -V -DENABLE_SPIRV=1 -o ClearScreen\ClearScreen.450core.frag.spv ClearScreen\ClearScreen.450core.frag
+glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=0 -o StreamOutput\StreamOutput.450core.vert.spv StreamOutput\StreamOutput.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=1 -o StreamOutput\StreamOutput.450core.vert.xfb.spv StreamOutput\StreamOutput.450core.vert
+glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=0 -o StreamOutput\StreamOutput.450core.tesc.spv StreamOutput\StreamOutput.450core.tesc
+glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=0 -o StreamOutput\StreamOutput.450core.tese.spv StreamOutput\StreamOutput.450core.tese
+glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=1 -o StreamOutput\StreamOutput.450core.tese.xfb.spv StreamOutput\StreamOutput.450core.tese
+glslangValidator -V -DENABLE_SPIRV=1 -DXFB_OUTPUT=1 -o StreamOutput\StreamOutput.450core.geom.xfb.spv StreamOutput\StreamOutput.450core.geom
+glslangValidator -V -DENABLE_SPIRV=1 -o StreamOutput\StreamOutput.450core.frag.spv StreamOutput\StreamOutput.450core.frag
 
 echo DONE
 pause

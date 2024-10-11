@@ -520,6 +520,14 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
     VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(commandBuffer_, 0, 1, buffers, offsets);
+
+    /* Store input-assembly state for slot 0 in case it's used for stream-output */
+    if ((bufferVK.GetBindFlags() & BindFlags::StreamOutputBuffer) != 0)
+    {
+        iaState_.ia0VertexStride            = bufferVK.GetStride();
+        iaState_.ia0XfbCounterBuffer        = bufferVK.GetVkBuffer();
+        iaState_.ia0XfbCounterBufferOffset  = bufferVK.GetXfbCounterOffset();
+    }
 }
 
 void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
@@ -925,32 +933,50 @@ void VKCommandBuffer::EndRenderCondition()
 
 /* ----- Stream Output ------ */
 
-#if 0
-void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
-{
-    LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
-
-    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-
-    VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
-    VkDeviceSize offsets[] = { 0 };
-    VkDeviceSize sizes[] = { bufferVK.GetSize() };
-
-    vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, 1, buffers, offsets, sizes);
-}
-#endif
-
 void VKCommandBuffer::BeginStreamOutput(std::uint32_t numBuffers, Buffer* const * buffers)
 {
     LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
-    //TODO: bind buffers
+
+    /* Get native Vulkan transform-feedback buffers */
+    VkDeviceSize xfbOffsets[LLGL_MAX_NUM_SO_BUFFERS];
+    VkDeviceSize xfbSizes[LLGL_MAX_NUM_SO_BUFFERS];
+
+    xfbState_.numXfbBuffers = std::min<std::uint32_t>(numBuffers, LLGL_MAX_NUM_SO_BUFFERS);
+
+    for_range(i, xfbState_.numXfbBuffers)
+    {
+        VKBuffer* bufferVK = LLGL_CAST(VKBuffer*, buffers[i]);
+        xfbState_.xfbBuffers[i] = bufferVK->GetVkBuffer();
+        xfbState_.xfbCounterOffsets[i] = bufferVK->GetXfbCounterOffset();
+        xfbOffsets[i] = 0;
+        xfbSizes[i] = bufferVK->GetSize();
+    }
+
+    /* Bind transform-feedback buffers and start recording stream-outpuits */
+    vkCmdBindTransformFeedbackBuffersEXT(commandBuffer_, 0, xfbState_.numXfbBuffers, xfbState_.xfbBuffers, xfbOffsets, xfbSizes);
     vkCmdBeginTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
 }
 
 void VKCommandBuffer::EndStreamOutput()
 {
     LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
-    vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, 0, nullptr, nullptr);
+
+    /* End transform-feedback and specify counter buffers here to write the final counter values */
+    vkCmdEndTransformFeedbackEXT(commandBuffer_, 0, xfbState_.numXfbBuffers, xfbState_.xfbBuffers, xfbState_.xfbCounterOffsets);
+
+    /* Ensure transform-feedback counter values are accessible in subsequent DrawStreamOutput() commands */
+    for_range(i, xfbState_.numXfbBuffers)
+    {
+        BufferPipelineBarrier(
+            xfbState_.xfbBuffers[i],
+            xfbState_.xfbCounterOffsets[i],
+            sizeof(std::uint32_t),
+            VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_WRITE_BIT_EXT,
+            VK_ACCESS_TRANSFORM_FEEDBACK_COUNTER_READ_BIT_EXT,
+            VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT,
+            VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT
+        );
+    }
 }
 
 /* ----- Drawing ----- */
@@ -1057,8 +1083,9 @@ void VKCommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, 
 
 void VKCommandBuffer::DrawStreamOutput()
 {
-    //TODO
-    //vkCmdDrawIndirectByteCountEXT(commandBuffer_, 1, 0, soBufferIASlot0_, soBufferIASlot0_, soBufferIASlot0CounterOffset_, soBufferIASlot0VertexStride_);
+    LLGL_ASSERT_VK_EXT(EXT_transform_feedback);
+    FlushDescriptorCache();
+    vkCmdDrawIndirectByteCountEXT(commandBuffer_, 1, 0, iaState_.ia0XfbCounterBuffer, iaState_.ia0XfbCounterBufferOffset, 0, iaState_.ia0VertexStride);
 }
 
 /* ----- Compute ----- */
@@ -1332,6 +1359,7 @@ void VKCommandBuffer::ResetBindingStates()
     descriptorCache_        = nullptr;
 }
 
+#if 0
 void VKCommandBuffer::ResetQueryPoolsInFlight()
 {
     for_range(i, numQueryHeapsInFlight_)
@@ -1355,6 +1383,7 @@ void VKCommandBuffer::AppendQueryPoolInFlight(VKQueryHeap* queryHeap)
         queryHeapsInFlight_[numQueryHeapsInFlight_] = queryHeap;
     ++numQueryHeapsInFlight_;
 }
+#endif
 
 std::uint32_t VKCommandBuffer::GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
 {

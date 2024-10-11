@@ -68,7 +68,7 @@ bool VKCommandQueue::QueryResult(
     auto& queryHeapVK = LLGL_CAST(VKQueryHeap&, queryHeap);
 
     /* Store result directly into output parameter */
-    auto stateResult = GetQueryResults(queryHeapVK, firstQuery, numQueries, data, dataSize);
+    VkResult stateResult = GetQueryResults(queryHeapVK, firstQuery, numQueries, data, dataSize);
     if (stateResult == VK_NOT_READY)
         return false;
 
@@ -148,9 +148,10 @@ VkResult VKCommandQueue::GetQueryResults(
     else
         return VK_ERROR_VALIDATION_FAILED_EXT;
 
-    if (queryHeapVK.GetType() == QueryType::TimeElapsed)
+    /* NOTE: vkGetQueryPoolResults() seems to disregard 32-bit requests and corrupts memory, so we always query with VK_QUERY_RESULT_64_BIT */
+    if (queryHeapVK.GetType() == QueryType::TimeElapsed || stride != sizeof(std::uint64_t))
     {
-        /* Get elapsed time values from difference between start and end timestamps */
+        /* Query results individually */
         auto dataByteAligned = reinterpret_cast<std::uint8_t*>(data);
 
         for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
@@ -179,6 +180,7 @@ VkResult VKCommandQueue::GetQueryBatchedResults(
     VkDeviceSize        stride,
     VkQueryResultFlags  flags)
 {
+    /* Use output buffer directly to store query result */
     return vkGetQueryPoolResults(
         device_,
         queryHeapVK.GetVkQueryPool(),
@@ -235,17 +237,19 @@ VkResult VKCommandQueue::GetQuerySingleResult(
     }
     else
     {
-        /* Use output buffer directly to store query result */
+        /* NOTE: vkGetQueryPoolResults() seems to disregard 32-bit requests and corrupts memory, so we always query with 64-bit values */
+        std::uint64_t intermediateResult = 0;
         result = vkGetQueryPoolResults(
             device_,
             queryHeapVK.GetVkQueryPool(),
             query,
-            queryHeapVK.GetGroupSize(),
-            static_cast<std::size_t>(stride),
-            data,
-            stride,
+            1,
+            static_cast<std::size_t>(intermediateResult),
+            &intermediateResult,
+            0,
             flags
         );
+        reinterpret_cast<std::uint32_t*>(data)[0] = static_cast<std::uint32_t>(intermediateResult);
     }
 
     return result;

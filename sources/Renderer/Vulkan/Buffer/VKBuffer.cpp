@@ -19,6 +19,8 @@ namespace LLGL
 {
 
 
+static constexpr VkDeviceSize k_xfbCounterSize = sizeof(std::uint32_t);
+
 static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 {
     VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
@@ -40,6 +42,8 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
         {
             /* Enable transform feedback with extension VK_EXT_transform_feedback */
             flags |= VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_BUFFER_BIT_EXT;
+            flags |= VK_BUFFER_USAGE_TRANSFORM_FEEDBACK_COUNTER_BUFFER_BIT_EXT;
+            flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
         }
         else
         {
@@ -76,12 +80,19 @@ static VkAccessFlags GetBufferVkAccessFlags(long bindFlags)
     return accessFlags;
 }
 
+static std::uint32_t GetVKBufferStride(const BufferDescriptor& desc)
+{
+    /* Just return first vertex attribute stride, since all attributes must have equal strides within the same buffer */
+    return (desc.vertexAttribs.empty() ? 1 : std::max<std::uint32_t>(1u, desc.vertexAttribs[0].stride));
+}
+
 VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
     Buffer            { desc.bindFlags                         },
     bufferObj_        { device                                 },
     bufferObjStaging_ { device                                 },
     size_             { desc.size                              },
-    accessFlags_      { GetBufferVkAccessFlags(desc.bindFlags) }
+    accessFlags_      { GetBufferVkAccessFlags(desc.bindFlags) },
+    stride_           { GetVKBufferStride(desc)                }
 {
     if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
         indexType_ = VKTypes::ToVkIndexType(desc.format);
@@ -91,7 +102,7 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
         createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = 0;
-        createInfo.size                     = desc.size;
+        createInfo.size                     = GetInternalSize();
         createInfo.usage                    = GetVkBufferUsageFlags(desc);
         createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount    = 0;
@@ -161,6 +172,16 @@ void VKBuffer::Unmap(VKDevice& device)
             mappedWriteRange_[1] = 0;
         }
     }
+}
+
+VkDeviceSize VKBuffer::GetInternalSize() const
+{
+    return ((GetBindFlags() & BindFlags::StreamOutputBuffer) != 0 ? GetSize() + k_xfbCounterSize : GetSize());
+}
+
+VkDeviceSize VKBuffer::GetXfbCounterOffset() const
+{
+    return ((GetBindFlags() & BindFlags::StreamOutputBuffer) != 0 ? GetSize() : 0);
 }
 
 

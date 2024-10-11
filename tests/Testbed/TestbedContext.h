@@ -148,9 +148,11 @@ class TestbedContext
             PSClear,
 
             VSStreamOutput,
+            VSStreamOutputXfb,
             HSStreamOutput,
             DSStreamOutput,
-            GSStreamOutput,
+            DSStreamOutputXfb,
+            GSStreamOutputXfb,
             PSStreamOutput,
 
             ShaderCount,

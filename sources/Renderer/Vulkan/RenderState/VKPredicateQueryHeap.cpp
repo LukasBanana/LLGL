@@ -22,7 +22,7 @@ VKPredicateQueryHeap::VKPredicateQueryHeap(
     VKDeviceMemoryManager&      deviceMemoryManager,
     const QueryHeapDescriptor&  desc)
 :
-    VKQueryHeap   { device, desc        },
+    VKQueryHeap   { device, desc, true  },
     resultBuffer_ { device              },
     memoryMngr_   { deviceMemoryManager }
 {
