@@ -253,6 +253,7 @@ struct GLStateManager::GLFramebufferClearState
     bool        isColorMaskInvalidated      = false;
     GLboolean   oldDepthMask                = GL_TRUE;
     bool        oldRasterizerDiscardState   = false;
+    bool        oldScissorTestState         = false;
 };
 
 
@@ -2005,6 +2006,13 @@ void GLStateManager::PrepareRasterizerStateForClear(GLFramebufferClearState& cle
         Disable(GLState::RasterizerDiscard);
         clearState.oldRasterizerDiscardState = true;
     }
+
+    /* Temporarily disable scissor test */
+    if (IsEnabled(GLState::ScissorTest))
+    {
+        Disable(GLState::ScissorTest);
+        clearState.oldScissorTestState = true;
+    }
 }
 
 void GLStateManager::PrepareColorMaskForClear(GLFramebufferClearState& clearState)
@@ -2052,6 +2060,10 @@ void GLStateManager::RestoreClearState(const GLFramebufferClearState& clearState
     /* Restore GL_RASTERIZER_DISCARD state */
     if (clearState.oldRasterizerDiscardState)
         Enable(GLState::RasterizerDiscard);
+
+    /* Restore GL_SCISSOR_TEST state */
+    if (clearState.oldScissorTestState)
+        Enable(GLState::ScissorTest);
 }
 
 /* ----- Render pass ----- */
