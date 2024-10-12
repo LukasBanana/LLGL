@@ -1,28 +1,45 @@
 // GLSL tessellation control shader
-#version 400
+#version 400 core
 
 // Tessellation control output configuration
 layout(vertices = 4) out;
 
-// Uniform buffer object (also named "Constant Buffer")
-layout(std140) uniform Settings
+// Input constant data
+layout(std140) uniform Scene
 {
-	mat4 wvpMatrix;
-	float tessLevelInner;
-	float tessLevelOuter;
-	float twist;
-	float _pad0;
+    mat4    vpMatrix;
+    mat4    vMatrix;
+    mat4    wMatrix;
+    vec3    lightVec;
+    float   texScale;
+    float   tessLevelInner;
+    float   tessLevelOuter;
+    float   maxHeightFactor;
+    float   shininessPower;
 };
 
 // Input and output attributes
-in vec3 vPosition[];
-out vec3 tcPosition[];
+in vec3 vWorldPos[];
+in vec3 vNormal[];
+in vec3 vTangent[];
+in vec3 vBitangent[];
+in vec2 vTexCoord[];
 
-// Tessellation control shader main function
+out vec3 tcWorldPos[];
+out vec3 tcNormal[];
+out vec3 tcTangent[];
+out vec3 tcBitangent[];
+out vec2 tcTexCoord[];
+
+// Tessellation-control shader main function
 void main()
 {
-	// Pass vertex input position to tessellation control output position
-	tcPosition[gl_InvocationID] = vPosition[gl_InvocationID];
+	// Pass vertex input from tessellation-control to tessellation-evaluation stage
+	tcWorldPos[gl_InvocationID] 	= vWorldPos[gl_InvocationID];
+	tcNormal[gl_InvocationID] 		= vNormal[gl_InvocationID];
+	tcTangent[gl_InvocationID] 		= vTangent[gl_InvocationID];
+	tcBitangent[gl_InvocationID] 	= vBitangent[gl_InvocationID];
+	tcTexCoord[gl_InvocationID] 	= vTexCoord[gl_InvocationID];
 	
 	// Write tessellation levels only once
 	if (gl_InvocationID == 0)

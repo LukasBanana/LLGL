@@ -97,12 +97,6 @@ call :CompileGlslToSpirv StencilBuffer/Scene.450core.vert
 call :CompileGlslToSpirv StencilBuffer/Scene.450core.frag
 echo DONE
 
-echo ####### StreamOutput #######
-call :CompileGlslToSpirv StreamOutput/Example.450core.vert
-call :CompileGlslToSpirv StreamOutput/Example.450core.geom
-call :CompileGlslToSpirv StreamOutput/Example.450core.frag
-echo DONE
-
 echo ####### Tessellation #######
 call :CompileGlslToSpirv Tessellation/Example.450core.vert
 call :CompileGlslToSpirv Tessellation/Example.450core.tesc

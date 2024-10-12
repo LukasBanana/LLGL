@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
+#include <sstream>
+#include <LLGL/Utils/ForRange.h>
 
 
 /*
@@ -23,7 +25,7 @@ std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
     return vertices;
 }
 
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename)
+TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace)
 {
     // Read obj file
     std::vector<char> fileContent = ReadAsset(filename);
@@ -79,7 +81,7 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
         {
             unsigned int v = 0, vt = 0, vn = 0;
 
-            for (int i = 0; i < 3; ++i)
+            for (unsigned i = 0; i < verticesPerFace; ++i)
             {
                 // Read vertex index
                 s >> v;
@@ -132,19 +134,6 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices()
         1, 5, 6, 1, 6, 2, // top
         4, 0, 3, 4, 3, 7, // bottom
         7, 6, 5, 7, 5, 4, // back
-    };
-}
-
-std::vector<std::uint32_t> GenerateCubeQuadIndices()
-{
-    return
-    {
-        0, 1, 3, 2, // front
-        3, 2, 7, 6, // right
-        4, 5, 0, 1, // left
-        1, 5, 2, 6, // top
-        4, 0, 7, 3, // bottom
-        7, 6, 4, 5, // back
     };
 }
 
@@ -204,6 +193,31 @@ std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
     };
 }
 
+std::vector<std::uint32_t> GenerateTexturedCubeQuadIndices(std::uint32_t numVertices, std::uint32_t firstVertex)
+{
+    // Assume the vertices are already laid out as quads. Generate indices 0/1/3/2 for each quad.
+    std::vector<std::uint32_t> indices;
+    indices.resize(numVertices);
+
+    for_range(i, numVertices)
+    {
+        switch (i % 4)
+        {
+            case 2:
+                indices[i] = firstVertex + i + 1;
+                break;
+            case 3:
+                indices[i] = firstVertex + i - 1;
+                break;
+            default:
+                indices[i] = firstVertex + i;
+                break;
+        }
+    }
+
+    return indices;
+}
+
 static void CopyVertex(TangentSpaceVertex& dst, const TexturedVertex& src)
 {
     dst.position = src.position;
@@ -250,6 +264,46 @@ std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayVi
 
         // Generate tangent-space
         GenerateTangentSpace(outp[i], outp[i + 1], outp[i + 2]);
+    }
+
+    return outp;
+}
+
+static void GenerateTangentSpaceQuad(TangentSpaceVertex& v0, TangentSpaceVertex& v1, TangentSpaceVertex& v2, TangentSpaceVertex& v3)
+{
+    const Gs::Vector3f edge1 = v1.position - v0.position;
+    const Gs::Vector3f edge2 = v2.position - v0.position;
+
+    const Gs::Vector2f deltaUV1 = v1.texCoord - v0.texCoord;
+    const Gs::Vector2f deltaUV2 = v2.texCoord - v0.texCoord;
+
+    Gs::Vector3f tangent0 = edge1 * deltaUV2.y - edge2 * deltaUV1.y;
+    Gs::Vector3f tangent1 = edge1 * deltaUV2.x - edge2 * deltaUV1.x;
+
+    tangent0.Normalize();
+    tangent1.Normalize();
+
+    NormalizeTangents(v0, tangent0, tangent1);
+    NormalizeTangents(v1, tangent0, tangent1);
+    NormalizeTangents(v2, tangent0, tangent1);
+    NormalizeTangents(v3, tangent0, tangent1);
+}
+
+std::vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::ArrayView<TexturedVertex>& vertices)
+{
+    std::vector<TangentSpaceVertex> outp;
+    outp.resize(vertices.size());
+
+    for (std::size_t i = 0, n = outp.size(); i + 4 <= n; i += 4)
+    {
+        // Copy position, normal, and texture-coordinate
+        CopyVertex(outp[i    ], vertices[i    ]);
+        CopyVertex(outp[i + 1], vertices[i + 1]);
+        CopyVertex(outp[i + 2], vertices[i + 2]);
+        CopyVertex(outp[i + 3], vertices[i + 3]);
+
+        // Generate tangent-space
+        GenerateTangentSpaceQuad(outp[i], outp[i + 1], outp[i + 2], outp[i + 3]);
     }
 
     return outp;

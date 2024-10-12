@@ -1,0 +1,3 @@
+Textures/PBR/rocks/*.jpg
+Textures/PBR/rocks/*.png
+Models/UVCube2x.obj
