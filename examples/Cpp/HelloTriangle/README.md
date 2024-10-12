@@ -58,7 +58,7 @@ LLGL::VertexFormat myVertexFormat;
 myVertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  });
 myVertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
 ```
-Since `VertexFormat` is a utility structure that is not required for LLGL for function, we have to include it explicitly via `#include <LLGL/Misc/VertexFormat.h>`.
+Since `VertexFormat` is a utility structure that is not required for LLGL to function, we have to include it explicitly via `#include <LLGL/Misc/VertexFormat.h>`.
 
 The strings "position" and "color" must be equal to the identifiers used in the shader, not the one we used in our `MyVertex` structure! We use an RGBA format for the color components even though the alpha channel is not used, because RGB formats are only supported by OpenGL and Vulkan. The identifier `UNorm` denotes an 'unsigned integer normalized' format, i.e. the unsigned byte values in the range [0, 255] will be normalized to the range [0, 1].
 
@@ -75,7 +75,7 @@ The parameter `bindFlags` takes a bitwise OR combination of the enumeration entr
 
 ## Shaders
 
-In LLGL, shaders are attached to graphics and compute pipelines individually. In this tutorial we only need a vertex and fragment shader. We can either store them (of type `LLGL::Shader*`) or we just pass them to the `GraphicsPipelineDescriptor`. To determine which shading language is supported by the current renderer, we can use the `shadingLanguages` container as shown here:
+In LLGL, shaders are attached to graphics and compute pipelines individually. In this tutorial we only need a vertex and fragment shader. To determine which shading language is supported by the current renderer, we can use the `shadingLanguages` container as shown here:
 ```cpp
 bool IsSupported(LLGL::ShadingLanguage lang) {
     const auto& supportedLangs = myRenderer->GetRenderingCaps().shadingLanguages;
@@ -99,7 +99,7 @@ myVSDesc.vertex.inputAttribs = myVertexFormat.attributes;
 LLGL::Shader* myVertexShader   = myRenderer->CreateShader(myVSDesc);
 LLGL::Shader* myFragmentShader = myRenderer->CreateShader(myFSDesc);
 ```
-The initializer list within the `CreateShader` function call constructs the descriptor `ShaderDescriptor`. The descriptor provides members to specifiy the shader code as content or as filename which is then loaded by the framework. In our case, we just load the shaders from file (e.g. `MyShader.hlsl`). The descriptor also provides a member to specify whether our shader is in binary or text form. However, not all render systems provide both. For example, Vulkan can only load binary SPIR-V modules. With Direct3D 11 and Direct3D 12, we can load either our HLSL shader directly from a text file, or load a pre-compiled DXBC binary file. Here is an example how to load a shader as content instead of loading it from file:
+The initializer list within the `CreateShader` function call constructs the descriptor `ShaderDescriptor`. The descriptor provides members to specifiy the shader code as content or as filename which is then loaded by the framework. In our case, we just load the shaders from file (e.g. `MyShader.hlsl`). The descriptor also provides a member to specify whether our shader is in binary or text form. However, not all render systems provide both. For example, Vulkan can only load binary SPIR-V modules. With Direct3D 11 and Direct3D 12, we can load either our HLSL shader directly from a text file, or load a pre-compiled DXBC (D3D11/D3D12) or DXIL (D3D12 only) binary file. Here is an example how to load a shader as content instead of loading it from file:
 ```cpp
 LLGL::ShaderDescriptor myShaderDesc;
 myShaderDesc.type                = LLGL::ShaderType::Vertex;
@@ -107,23 +107,23 @@ myShaderDesc.source              = "#version 330\n"
                                    "void main() {\n"
                                    "    gl_Position = vec4(0, 0, 0, 1);\n"
                                    "}\n";
-myShaderDesc.sourceSize          = 0;                                    // Ignored for null-terminated sources
-myShaderDesc.sourceType          = LLGL::ShaderSourceType::CodeString;   // Source is a null-terminated string and in a high-level language
-myShaderDesc.entryPoint          = "";                                   // Only required for HLSL (can also be null)
-myShaderDesc.profile             = "";                                   // Only required for HLSL (can also be null)
-myShaderDesc.vertex.inputAttribs = myVertexFormat.attributes;            // Vertex input attribnutes (only for vertex shaders)
+myShaderDesc.sourceSize          = 0;                                  // Ignored for NUL-terminated sources
+myShaderDesc.sourceType          = LLGL::ShaderSourceType::CodeString; // Source is provided as string in high-level language
+myShaderDesc.entryPoint          = "";                                 // Only required for HLSL/Metal (can be null)
+myShaderDesc.profile             = "";                                 // Only required for HLSL/Metal (can be null)
+myShaderDesc.vertex.inputAttribs = myVertexFormat.attributes;          // Vertex input attribnutes (vertex shaders only)
 LLGL::Shader* myExampleShader = myRenderer->CreateShader(myShaderDesc);
 ```
-The members `entryPoint` and `profile` are only required for HLSL (e.g. `entryPoint="main"` and `profile="vs_4_0"`). The member `source` is of type `const char*` and is either a null-terminated string or a raw byte buffer (for shader byte code). If the source type is either `CodeFile` or `BinaryFile`, the source code is read from file using the C++ standard file streams (i.e. `std::ifstream`).
+The members `entryPoint` and `profile` are only required for HLSL (e.g. `entryPoint="main"` and `profile="vs_4_0"`) and Metal (e.g. `entryPoint="main"` and `profile="1.1"`). The member `source` is of type `const char*` and is either a NUL-terminated string or a raw byte buffer (for shader byte code). If the source type is either `CodeFile` or `BinaryFile`, the source code is read from file.
 
 Even if a shader compiles successfully, we can query the information log if the shader compiler reports some warnings:
 ```cpp
 for (LLGL::Shader* shader : { myVertexShader, myFragmentShader }) {
     if (const LLGL::Report* report = shader->GetReport()) {
         if (report->HasErrors()) {
-            std::cerr << report->GetText() << std::endl;
+            LLGL::Log::Errorf("Shader compile errors:\n%s", report->GetText());
         } else {
-            std::cout << report->GetText() << std::endl;
+            LLGL::Log::Printf("Shader compile warnings:\n%s", report->GetText());
         }
     }
 }
