@@ -258,10 +258,11 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
 
     /* Iterate over all bindings and create a new copy descriptor whenever the type changes */
     VkDescriptorType groupDescType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+    long groupStageFlags = 0;
     std::uint32_t firstBinding = 0;
     std::uint32_t numBindings = 0;
 
-    auto FlushBindingsToCopyDesc = [this, &numBindings, &firstBinding]()
+    auto FlushBindingsToCopyDesc = [this, &numBindings, &firstBinding]() -> void
     {
         if (numBindings > 0)
         {
@@ -282,20 +283,32 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
         }
     };
 
+    auto StartNewBindingGroup = [&firstBinding, &groupDescType, &groupStageFlags](const VKLayoutBinding& binding) -> void
+    {
+        firstBinding = binding.dstBinding;
+        groupDescType = binding.descriptorType;
+        groupStageFlags = binding.stageFlags;
+    };
+
     for (const VKLayoutBinding& binding : bindings)
     {
         if (groupDescType == VK_DESCRIPTOR_TYPE_MAX_ENUM)
         {
             /* Initialize first group of consecutive bindings */
-            firstBinding = binding.dstBinding;
-            groupDescType = binding.descriptorType;
+            StartNewBindingGroup(binding);
         }
-        else if (groupDescType != binding.descriptorType || binding.dstBinding != firstBinding + numBindings)
+        else if (groupDescType != binding.descriptorType            ||
+                 groupStageFlags != binding.stageFlags              ||
+                 binding.dstBinding != firstBinding + numBindings)
         {
-            /* Start new group of bindings when type changes or binding point is not the next one in order */
+            /*
+            Start new group of bindings when at least one of the following attributes change:
+             1. Descriptor type changed
+             2. Stage flags changed
+             3. Binding is not the next in consecutive order
+            */
             FlushBindingsToCopyDesc();
-            firstBinding = binding.dstBinding;
-            groupDescType = binding.descriptorType;
+            StartNewBindingGroup(binding);
         }
         ++numBindings;
     }
