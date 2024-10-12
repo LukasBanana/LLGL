@@ -34,11 +34,6 @@ call :CompileGlslToSpirv Instancing/Example.450core.vert
 call :CompileGlslToSpirv Instancing/Example.450core.frag
 echo DONE
 
-echo ####### Mapping #######
-call :CompileGlslToSpirv Mapping/Example.450core.vert
-call :CompileGlslToSpirv Mapping/Example.450core.frag
-echo DONE
-
 echo ####### MultiContext #######
 call :CompileGlslToSpirv MultiContext/Example.450core.vert
 call :CompileGlslToSpirv MultiContext/Example.450core.geom
