@@ -11,7 +11,6 @@
 #include <Gauss/Gauss.h>
 #include <memory>
 #include <string>
-#include <sstream>
 
 
 #define TEST_RENDER_TARGET      0

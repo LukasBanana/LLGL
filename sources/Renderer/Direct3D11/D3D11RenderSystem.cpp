@@ -18,8 +18,6 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
-#include <sstream>
-#include <iomanip>
 #include <limits.h>
 
 #include "Command/D3D11PrimaryCommandBuffer.h"

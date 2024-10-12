@@ -8,7 +8,6 @@
 #include <LLGL/LLGL.h>
 #include <memory>
 #include <string>
-#include <sstream>
 
 
 static void printWindowSize(LLGL::Window& wnd)
@@ -102,25 +101,6 @@ int main()
                 window->SetTitle("RButton Down");
             if (input.KeyDown(LLGL::Key::MButton))
                 window->SetTitle("MButton Down");
-
-            #ifdef __APPLE__
-
-            auto mousePos = input.GetMousePosition();
-            std::wstringstream s;
-            s << "X = " << mousePos.x << ", Y = " << mousePos.y;
-            //window->SetTitle(s.str());
-
-            s << ", Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height;
-            window->SetTitle(s.str());
-
-            /*auto wheel = input.GetWheelMotion();
-            if (wheel != 0)
-            {
-                pos.y += wheel;
-                window->SetPosition(pos);
-            }*/
-
-            #endif
 
             if (input.KeyPressed(LLGL::Key::Right) && pos.x < 1920)
             {
