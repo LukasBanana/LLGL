@@ -9,6 +9,10 @@
 #include "Testset.h"
 
 
+/*
+Tests the CopyTextureFromBuffer() and CopyBufferFromTexture() functions starting from a texture with various texture formats.
+There is no rendering. The values are only validated via ReadTexture().
+*/
 DEF_TEST( TextureToBufferCopy )
 {
     auto CopyToBufferAndReadback = [this](

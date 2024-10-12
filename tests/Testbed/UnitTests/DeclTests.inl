@@ -76,6 +76,7 @@ DECL_TEST( ViewportAndScissor );
 DECL_TEST( ResourceBinding );
 DECL_TEST( ResourceArrays );
 DECL_TEST( StreamOutput );
+DECL_TEST( ResourceCopy );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );

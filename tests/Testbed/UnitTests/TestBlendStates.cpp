@@ -65,7 +65,7 @@ DEF_TEST( BlendStates )
             target0Desc.dstColor = blendPairs[j].color;
             target0Desc.srcAlpha = blendPairs[i].alpha;
             target0Desc.dstAlpha = blendPairs[j].alpha;
-            CreateGraphicsPSO(psoDesc, "psoBlendStates", &pso[i][j]);
+            CREATE_GRAPHICS_PSO_EXT(pso[i][j], psoDesc, "psoBlendStates");
         }
     }
 

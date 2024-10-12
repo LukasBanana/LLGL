@@ -129,7 +129,7 @@ DEF_TEST( CommandBufferEncode )
             psoDesc.fragmentShader      = shaders[PSClear];
             //psoDesc.primitiveTopology   = PrimitiveTopology::PointList;
         }
-        CreateGraphicsPSO(psoDesc, "psoCmdBufEncode", &pso);
+        CREATE_GRAPHICS_PSO_EXT(pso, psoDesc, "psoCmdBufEncode");
     }
 
     // Re-record command buffers several times until we're ready to submit

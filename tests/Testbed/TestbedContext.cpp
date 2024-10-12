@@ -355,6 +355,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ResourceBinding             );
     RUN_TEST( ResourceArrays              );
     RUN_TEST( StreamOutput                );
+    RUN_TEST( ResourceCopy                );
 
     // Reset main renderer and run C99 tests
     // LLGL can't run the same render system in multiple instances (confused the context management in GL backend)

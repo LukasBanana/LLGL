@@ -110,16 +110,7 @@ DEF_TEST( ShadowMapping )
             psoDesc.depth.writeEnabled  = true;
             psoDesc.rasterizer.cullMode = CullMode::Back;
         }
-        CreateGraphicsPSO(psoDesc, "psoShadowScene", &psoScene);
-
-        if (const Report* report = psoScene->GetReport())
-        {
-            if (report->HasErrors())
-            {
-                Log::Errorf("Scene PSO creation failed:\n%s", report->GetText());
-                return TestResult::FailedErrors;
-            }
-        }
+        CREATE_GRAPHICS_PSO_EXT(psoScene, psoDesc, "psoShadowScene");
 
         // Create scene constant buffer
         BufferDescriptor bufDesc;
@@ -189,16 +180,7 @@ DEF_TEST( ShadowMapping )
             psoDesc.rasterizer.depthBias.slopeFactor    = 1.5f;
             psoDesc.blend.targets[0].colorMask          = 0x0;
         }
-        CreateGraphicsPSO(psoDesc, "psoShadowMap", &(resources.pso));
-
-        if (const Report* report = resources.pso->GetReport())
-        {
-            if (report->HasErrors())
-            {
-                Log::Errorf("Shadow map PSO creation failed:\n%s", report->GetText());
-                return TestResult::FailedErrors;
-            }
-        }
+        CREATE_GRAPHICS_PSO_EXT(resources.pso, psoDesc, "psoShadowMap");
 
         return TestResult::Passed;
     };

@@ -67,16 +67,7 @@ DEF_TEST( Uniforms )
             psoDesc.rasterizer.cullMode             = CullMode::Back;
             psoDesc.blend.targets[0].blendEnabled   = true;
         }
-        CreateGraphicsPSO(psoDesc, nullptr, &pso);
-
-        if (const Report* report = pso->GetReport())
-        {
-            if (report->HasErrors())
-            {
-                Log::Errorf("PSO creation failed:\n%s", report->GetText());
-                return TestResult::FailedErrors;
-            }
-        }
+        CREATE_GRAPHICS_PSO_EXT(pso, psoDesc, nullptr);
     }
 
     // Skip every other frame on fast test

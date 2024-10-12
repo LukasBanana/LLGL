@@ -33,11 +33,6 @@ Repeat several times and then render the final result with a geometry shader to 
 */
 DEF_TEST( StreamOutput )
 {
-#if 1 //TODO: not implemented for GL and VK backends yet
-    if (renderer->GetRendererID() == RendererID::Metal)
-        return TestResult::Skipped;
-#endif
-
     if (!caps.features.hasStreamOutputs)
         return TestResult::Skipped;
 
@@ -162,9 +157,7 @@ DEF_TEST( StreamOutput )
             psoVertDesc.primitiveTopology               = PrimitiveTopology::TriangleList;
             psoVertDesc.rasterizer.discardEnabled       = true;
         }
-        result = CreateGraphicsPSO(psoVertDesc, nullptr, &psoVert);
-        if (result != TestResult::Passed)
-            return result;
+        CREATE_GRAPHICS_PSO_EXT(psoVert, psoVertDesc, nullptr);
 
         GraphicsPipelineDescriptor psoTessDesc;
         {
@@ -177,9 +170,7 @@ DEF_TEST( StreamOutput )
             psoTessDesc.primitiveTopology               = PrimitiveTopology::Patches3;
             psoTessDesc.rasterizer.discardEnabled       = true;
         }
-        result = CreateGraphicsPSO(psoTessDesc, nullptr, &psoTess);
-        if (result != TestResult::Passed)
-            return result;
+        CREATE_GRAPHICS_PSO_EXT(psoTess, psoTessDesc, nullptr);
 
         GraphicsPipelineDescriptor psoGeomDesc;
         {
@@ -193,9 +184,7 @@ DEF_TEST( StreamOutput )
             psoGeomDesc.primitiveTopology               = PrimitiveTopology::Patches3;
             psoGeomDesc.rasterizer.discardEnabled       = true;
         }
-        result = CreateGraphicsPSO(psoGeomDesc, nullptr, &psoGeom);
-        if (result != TestResult::Passed)
-            return result;
+        CREATE_GRAPHICS_PSO_EXT(psoGeom, psoGeomDesc, nullptr);
 
         GraphicsPipelineDescriptor psoFragDesc;
         {
@@ -209,9 +198,7 @@ DEF_TEST( StreamOutput )
             psoFragDesc.depth.writeEnabled              = true;
             psoFragDesc.rasterizer.cullMode             = CullMode::Back;
         }
-        result = CreateGraphicsPSO(psoFragDesc, nullptr, &psoFrag);
-        if (result != TestResult::Passed)
-            return result;
+        CREATE_GRAPHICS_PSO_EXT(psoFrag, psoFragDesc, nullptr);
     }
 
     // Skip every other frame on fast test

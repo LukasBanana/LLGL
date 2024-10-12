@@ -9,6 +9,10 @@
 #include "Testset.h"
 
 
+/*
+Tests the CopyTextureFromBuffer() and CopyBufferFromTexture() functions starting from a buffer with various texture formats.
+There is no rendering. The values are only validated via ReadBuffer().
+*/
 DEF_TEST( BufferToTextureCopy )
 {
     const ArrayView<ColorRGBAub> colorsRgbaUb8 = Testset::GetColorsRgbaUb8();

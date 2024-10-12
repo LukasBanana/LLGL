@@ -41,9 +41,7 @@ DEF_TEST( SceneUpdate )
             psoDesc.depth.writeEnabled  = true;
             psoDesc.rasterizer.cullMode = CullMode::Back;
         }
-        result = CreateGraphicsPSO(psoDesc, "psoSceneUpdate", &pso);
-        if (result != TestResult::Passed)
-            return result;
+        CREATE_GRAPHICS_PSO_EXT(pso, psoDesc, "psoSceneUpdate");
     }
 
     // Skip every other frame on fast test
