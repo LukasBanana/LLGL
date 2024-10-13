@@ -411,8 +411,8 @@ int RunExample(int argc, char* argv[])
     try
     {
         ExampleBase::ParseProgramArgs(argc, argv);
-        T tutorial;
-        tutorial.Run();
+        T example;
+        example.Run();
     }
     catch (const std::exception& e)
     {

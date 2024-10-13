@@ -309,3 +309,22 @@ std::vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::Arr
     return outp;
 }
 
+Gs::Vector3f ClosestPointOnLineSegment(const Gs::Vector3f& linePointA, const Gs::Vector3f& linePointB, const Gs::Vector3f& referencePoint)
+{
+    Gs::Vector3f relativePoint = referencePoint - linePointA;
+    Gs::Vector3f lineDirection = linePointB - linePointA;
+
+    float lineLength = Gs::Length(lineDirection);
+    lineDirection *= (1.0f / lineLength);
+
+    float interpolation = Gs::Dot(lineDirection, relativePoint);
+    if (interpolation <= 0.0f)
+        return linePointA;
+    if (interpolation >= lineLength)
+        return linePointB;
+
+    lineDirection *= interpolation;
+
+    return linePointA + lineDirection;
+}
+

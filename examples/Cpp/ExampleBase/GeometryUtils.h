@@ -77,6 +77,9 @@ std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayVi
 // Generates tangent-space vertices (per quad) from the specified list of textured vertices.
 std::vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::ArrayView<TexturedVertex>& vertices);
 
+// Returns a point on the specified line segment that is the closest to the reference point.
+Gs::Vector3f ClosestPointOnLineSegment(const Gs::Vector3f& linePointA, const Gs::Vector3f& linePointB, const Gs::Vector3f& referencePoint);
+
 
 #endif
 

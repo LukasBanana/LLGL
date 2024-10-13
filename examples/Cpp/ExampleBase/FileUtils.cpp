@@ -154,6 +154,11 @@ std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath)
     #endif
 }
 
+static bool IsNewlineChar(char c)
+{
+    return (c == '\n' || c == '\r');
+}
+
 std::vector<std::string> ReadTextLines(const std::string& name, std::string* outFullPath)
 {
     const std::vector<char> content = ReadAsset(name, outFullPath);
@@ -161,10 +166,13 @@ std::vector<std::string> ReadTextLines(const std::string& name, std::string* out
     if (!content.empty())
     {
         std::vector<char>::const_iterator itStart = content.begin(), itEnd;
-        while ((itEnd = std::find(itStart, content.end(), '\n')) != content.end())
+        while ((itEnd = std::find_if(itStart, content.end(), IsNewlineChar)) != content.end())
         {
             lines.push_back(std::string{ itStart, itEnd });
-            itStart = itEnd + 1;
+            if (itEnd != content.end() && *itEnd == '\r' && itEnd + 1 != content.end() && *(itEnd + 1) == '\n')
+                itStart = itEnd + 2;
+            else
+                itStart = itEnd + 1;
         }
         lines.push_back(std::string{ itStart, itEnd });
     }

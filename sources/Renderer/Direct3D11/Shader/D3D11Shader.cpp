@@ -621,6 +621,9 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
 
     HRESULT hr = S_OK;
 
+    if (!byteCode_)
+        return E_FAIL;
+
     /* Get shader reflection */
     ComPtr<ID3D11ShaderReflection> reflectionObject;
     hr = D3DReflect(byteCode_->GetBufferPointer(), byteCode_->GetBufferSize(), IID_PPV_ARGS(reflectionObject.ReleaseAndGetAddressOf()));
