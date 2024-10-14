@@ -9,6 +9,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include "FileUtils.h"
 #include <algorithm>
+#include <limits.h>
 
 
 // Enables cheats by allowing page up/down to select next or previous level
@@ -28,37 +29,59 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  wallPosY                = 2.0f;
     static constexpr int    inputStackSize          = 4;
     static constexpr float  playerColor[3]          = { 0.6f, 0.7f, 1.0f };
+    static constexpr float  treeColorGradient[2][3] = { { 0.1f, 0.5f, 0.1f }, { 0.2f, 0.8f, 0.3f } };
+    static constexpr float  treeAnimSpeed           = 8.0f; // in seconds
+    static constexpr float  treeAnimRadius          = 0.2f;
+    static constexpr int    shadowMapSize           = 512;
 
-    LLGL::PipelineLayout*   psoLayoutScene          = nullptr;
-    LLGL::PipelineState*    psoScene                = nullptr;
+    LLGL::PipelineLayout*   scenePSOLayout[2]       = {};
+    LLGL::PipelineState*    scenePSO[2]             = {};
     ShaderPipeline          sceneShaders;
+
+    LLGL::PipelineLayout*   groundPSOLayout         = nullptr;
+    LLGL::PipelineState*    groundPSO               = nullptr;
+    ShaderPipeline          groundShaders;
 
     LLGL::Buffer*           cbufferScene            = nullptr;
     LLGL::Buffer*           vertexBuffer            = nullptr;
     LLGL::Buffer*           instanceBuffer          = nullptr;
     std::uint32_t           instanceBufferCapacity  = 0; // Number of instances the instance buffer can hold
 
+    LLGL::Texture*          groundColorMap          = nullptr;
+    LLGL::Sampler*          groundColorMapSampler   = nullptr;
+
+    LLGL::Texture*          shadowMap               = nullptr;
+    LLGL::Sampler*          shadowMapSampler        = nullptr;
+    LLGL::RenderTarget*     shadowMapTarget         = nullptr;
+
     LLGL::VertexFormat      vertexFormat;
 
     TriangleMesh            mdlPlayer;
     TriangleMesh            mdlBlock;
     TriangleMesh            mdlTree;
+    TriangleMesh            mdlGround;
 
     struct alignas(16) Scene
     {
         Gs::Matrix4f    vpMatrix;
+        Gs::Matrix4f    vpShadowMatrix;
         Gs::Vector3f    lightDir        = Gs::Vector3f(-0.25f, -0.7f, 1.25f).Normalized();
         float           shininess       = 90.0f;                                            // Blinn-phong specular power factor
         Gs::Vector3f    viewPos;                                                        // World-space camera position
-        float           pad0;
+        float           shadowSizeInv   = 0.0f;
         Gs::Vector3f    warpCenter;
         float           warpIntensity   = 0.0f;
+        Gs::Vector3f    bendDir;
+        float           ambientItensity = 0.6f;
+        float           groundTint[3]   = { 0.8f, 1.0f, 0.6f };
+        float           groundScale     = 2.0f;
     }
     scene;
 
-    struct alignas(16) Uniforms
+    struct alignas(4) Uniforms
     {
         float           worldOffset[3]  = { 0.0f, 0.0f, 0.0f };
+        float           bendIntensity   = 0.0f;
         std::uint32_t   firstInstance   = 0;
     }
     uniforms;
@@ -79,7 +102,8 @@ class Example_HelloGame : public ExampleBase
     // Decor for trees in the background
     struct Decor
     {
-
+        int             gridPos[2]      = {};
+        std::uint32_t   instanceIndex   = 0;
     };
 
     struct Tile
@@ -162,14 +186,45 @@ class Example_HelloGame : public ExampleBase
 
     struct Player;
 
+    struct InstanceRange
+    {
+        std::uint32_t begin = ~0u;
+        std::uint32_t end   = 0u;
+
+        std::uint32_t Count() const
+        {
+            return (begin < end ? end - begin : 0);
+        }
+
+        void Invalidate()
+        {
+            begin   = ~0u;
+            end     = 0u;
+        }
+
+        void Insert(std::uint32_t newBegin, std::uint32_t newEnd)
+        {
+            begin   = std::min<std::uint32_t>(begin, newBegin);
+            end     = std::max<std::uint32_t>(end, newEnd);
+        }
+
+        void Insert(std::uint32_t index)
+        {
+            Insert(index, index + 1);
+        }
+    };
+
     struct Level
     {
         std::string             name;
         LLGL::ColorRGBub        wallColors[2];
         TileGrid                floor;
         TileGrid                walls;
+        std::vector<Decor>      trees;
         std::vector<Instance>   meshInstances;
-        std::uint32_t           meshInstanceDirtyRange[2]   = { ~0u, 0u };
+        InstanceRange           meshInstanceDirtyRange;
+        InstanceRange           tileInstanceRange;
+        InstanceRange           treeInstanceRange;
         int                     gridSize[2]                 = {}; // Bounding box in grid coordinates
         int                     playerStart[2]              = {};
         float                   viewDistance                = 0.0f;
@@ -202,17 +257,6 @@ class Example_HelloGame : public ExampleBase
             return (tile == nullptr || !tile->IsValid());
         }
 
-        void InvalidateMeshInstances(std::uint32_t begin, std::uint32_t end)
-        {
-            meshInstanceDirtyRange[0] = std::min<std::uint32_t>(meshInstanceDirtyRange[0], begin);
-            meshInstanceDirtyRange[1] = std::max<std::uint32_t>(meshInstanceDirtyRange[1], end);
-        }
-
-        void InvalidateMeshInstance(std::uint32_t index)
-        {
-            InvalidateMeshInstances(index, index + 1);
-        }
-
         // Returns true if all tiles have been activated.
         bool IsCompleted() const
         {
@@ -234,7 +278,7 @@ class Example_HelloGame : public ExampleBase
                         instance.color[1] = color[1];
                         instance.color[2] = color[2];
                     }
-                    InvalidateMeshInstance(tile->instanceIndex);
+                    meshInstanceDirtyRange.Insert(tile->instanceIndex);
                     ++activatedTiles;
                     return IsCompleted();
                 }
@@ -296,8 +340,8 @@ class Example_HelloGame : public ExampleBase
         void FocusOnLevel(const Level& level)
         {
             viewDistance = level.viewDistance;
-            levelCenterPos.x = static_cast<float>(level.gridSize[0]) - 2.0f;
-            levelCenterPos.y = static_cast<float>(level.gridSize[1]) - 2.0f;
+            levelCenterPos.x = static_cast<float>(level.gridSize[0]) - 1.0f;
+            levelCenterPos.y = static_cast<float>(level.gridSize[1]) - 1.0f;
         }
 
         void TransitionBetweenLevels(const Level& levelA, const Level& levelB, float transition)
@@ -377,8 +421,9 @@ class Example_HelloGame : public ExampleBase
 
     struct Effects
     {
-        bool    warpEnabled = false;
-        float   warpTime    = 0.0f;
+        bool    warpEnabled     = false;
+        float   warpTime        = 0.0f;
+        float   treeBendTime    = 0.0f;
 
         void StartWarp()
         {
@@ -419,10 +464,66 @@ private:
         mdlPlayer   = LoadObjModel(vertices, "HelloGame_Player.obj");
         mdlBlock    = LoadObjModel(vertices, "HelloGame_Block.obj");
         mdlTree     = LoadObjModel(vertices, "HelloGame_Tree.obj");
+        mdlGround   = LoadObjModel(vertices, "HelloGame_Ground.obj");
 
         // Create vertex, index, and constant buffer
         vertexBuffer    = CreateVertexBuffer(vertices, vertexFormat);
         cbufferScene    = CreateConstantBuffer(scene);
+
+        // Load texture and sampler
+        groundColorMap = LoadTexture("Grass.jpg");
+        groundColorMapSampler = renderer->CreateSampler({});
+
+        // Create shadow map
+        LLGL::TextureDescriptor shadowMapDesc;
+        {
+            shadowMapDesc.debugName     = "ShadowMap";
+            shadowMapDesc.type          = LLGL::TextureType::Texture2D;
+            shadowMapDesc.bindFlags     = LLGL::BindFlags::DepthStencilAttachment | LLGL::BindFlags::Sampled;
+            shadowMapDesc.format        = LLGL::Format::D32Float;
+            shadowMapDesc.extent.width  = static_cast<std::uint32_t>(shadowMapSize);
+            shadowMapDesc.extent.height = static_cast<std::uint32_t>(shadowMapSize);
+            shadowMapDesc.extent.depth  = 1;
+            shadowMapDesc.mipLevels     = 1;
+        }
+        shadowMap = renderer->CreateTexture(shadowMapDesc);
+
+        LLGL::RenderTargetDescriptor shadowTargetDesc;
+        {
+            shadowTargetDesc.debugName              = "ShadowMapTarget";
+            shadowTargetDesc.resolution.width       = shadowMapDesc.extent.width;
+            shadowTargetDesc.resolution.height      = shadowMapDesc.extent.height;
+            shadowTargetDesc.depthStencilAttachment = shadowMap;
+        }
+        shadowMapTarget = renderer->CreateRenderTarget(shadowTargetDesc);
+
+        LLGL::SamplerDescriptor shadowSamplerDesc;
+        {
+            // Clamp-to-border sampler address mode requires GLES 3.2, so use standard clamp mode in case hardware only supports GLES 3.0
+            if (renderer->GetRendererID() == LLGL::RendererID::OpenGLES ||
+                renderer->GetRendererID() == LLGL::RendererID::WebGL)
+            {
+                shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Clamp;
+                shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Clamp;
+                shadowSamplerDesc.addressModeW      = LLGL::SamplerAddressMode::Clamp;
+            }
+            else
+            {
+                shadowSamplerDesc.addressModeU      = LLGL::SamplerAddressMode::Border;
+                shadowSamplerDesc.addressModeV      = LLGL::SamplerAddressMode::Border;
+                shadowSamplerDesc.addressModeW      = LLGL::SamplerAddressMode::Border;
+                shadowSamplerDesc.borderColor[0]    = 1.0f;
+                shadowSamplerDesc.borderColor[1]    = 1.0f;
+                shadowSamplerDesc.borderColor[2]    = 1.0f;
+                shadowSamplerDesc.borderColor[3]    = 1.0f;
+            }
+            shadowSamplerDesc.compareEnabled    = true;
+            shadowSamplerDesc.mipMapEnabled     = false;
+        }
+        shadowMapSampler = renderer->CreateSampler(shadowSamplerDesc);
+
+        // Pass inverse size of shadow map to shader for PCF shadow mapping
+        scene.shadowSizeInv = 1.0f / static_cast<float>(shadowMapSize);
 
         return vertexFormat;
     }
@@ -451,7 +552,16 @@ private:
 
     void CreateShaders(const LLGL::VertexFormat& vertexFormat)
     {
-        if (Supported(LLGL::ShadingLanguage::GLSL))
+        if (Supported(LLGL::ShadingLanguage::HLSL))
+        {
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "vs_5_0" }, { vertexFormat });
+            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "ps_5_0" });
+
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" }, { vertexFormat });
+            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
+        }
+#if 0
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.vert" }, { vertexFormat });
             sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.frag" });
@@ -461,44 +571,96 @@ private:
             sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.450core.vert.spv" }, { vertexFormat });
             sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.450core.frag.spv" });
         }
-        else if (Supported(LLGL::ShadingLanguage::HLSL))
-        {
-            sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.hlsl", "VSMain", "vs_5_0" }, { vertexFormat });
-            sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.hlsl", "PSMain", "ps_5_0" });
-        }
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.metal", "VSMain", "vs_5_0" }, { vertexFormat });
-            sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.metal", "PSMain", "ps_5_0" });
+            sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.metal", "VSInstance", "vs_5_0" }, { vertexFormat });
+            sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.metal", "PSInstance", "ps_5_0" });
+        }
+#endif
+        else
+        {
+            throw std::runtime_error("No shaders provided for this backend");
         }
     }
 
     void CreatePipelines()
     {
-        // Create pipeline layout
-        psoLayoutScene = renderer->CreatePipelineLayout(
+        // Create PSO for instanced meshes
+        scenePSOLayout[0] = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
                 "buffer(instances@2):vert,"
+                "texture(shadowMap@3):frag,"
+                "sampler(shadowMapSampler@3):frag,"
                 "float3(worldOffset),"
+                "float(bendIntensity),"
                 "uint(firstInstance),"
             )
         );
 
-        // Create graphics pipeline for scene rendering
-        LLGL::GraphicsPipelineDescriptor psoSceneDesc;
+        LLGL::GraphicsPipelineDescriptor scenePSODesc;
         {
-            psoSceneDesc.vertexShader                   = sceneShaders.vs;
-            psoSceneDesc.fragmentShader                 = sceneShaders.ps;
-            psoSceneDesc.renderPass                     = swapChain->GetRenderPass();
-            psoSceneDesc.pipelineLayout                 = psoLayoutScene;
-            psoSceneDesc.depth.testEnabled              = true;
-            psoSceneDesc.depth.writeEnabled             = true;
-            psoSceneDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-            psoSceneDesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+            scenePSODesc.debugName                      = "InstancedMesh.PSO";
+            scenePSODesc.pipelineLayout                 = scenePSOLayout[0];
+            scenePSODesc.vertexShader                   = sceneShaders.vs;
+            scenePSODesc.fragmentShader                 = sceneShaders.ps;
+            scenePSODesc.renderPass                     = swapChain->GetRenderPass();
+            scenePSODesc.depth.testEnabled              = true;
+            scenePSODesc.depth.writeEnabled             = true;
+            scenePSODesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+            scenePSODesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
         }
-        psoScene = renderer->CreatePipelineState(psoSceneDesc);
-        ReportPSOErrors(psoScene);
+        scenePSO[0] = renderer->CreatePipelineState(scenePSODesc);
+        ReportPSOErrors(scenePSO[0]);
+
+        // Create PSO for shadow-mapping but without a fragment shader
+        scenePSOLayout[1] = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(Scene@1):vert,"
+                "buffer(instances@2):vert,"
+                "float3(worldOffset),"
+                "float(bendIntensity),"
+                "uint(firstInstance),"
+            )
+        );
+
+        {
+            scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
+            scenePSODesc.pipelineLayout                         = scenePSOLayout[1];
+            scenePSODesc.fragmentShader                         = nullptr;
+            scenePSODesc.rasterizer.depthBias.constantFactor    = 4.0f;
+            scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.5f;
+            scenePSODesc.rasterizer.cullMode                    = LLGL::CullMode::Front;
+            scenePSODesc.blend.targets[0].colorMask             = 0x0;
+        }
+        scenePSO[1] = renderer->CreatePipelineState(scenePSODesc);
+        ReportPSOErrors(scenePSO[1]);
+
+        // Create PSO for background
+        groundPSOLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "cbuffer(Scene@1):vert,"
+                "texture(colorMap@0):frag,"
+                "sampler(colorMapSampler@0):frag,"
+                "texture(shadowMap@3):frag,"
+                "sampler(shadowMapSampler@3):frag,"
+            )
+        );
+
+        LLGL::GraphicsPipelineDescriptor groundPSODesc;
+        {
+            groundPSODesc.debugName                     = "Ground.PSO";
+            groundPSODesc.pipelineLayout                = groundPSOLayout;
+            groundPSODesc.vertexShader                  = groundShaders.vs;
+            groundPSODesc.fragmentShader                = groundShaders.ps;
+            groundPSODesc.renderPass                    = swapChain->GetRenderPass();
+            groundPSODesc.depth.testEnabled             = true;
+            groundPSODesc.depth.writeEnabled            = true;
+            groundPSODesc.rasterizer.cullMode           = LLGL::CullMode::Back;
+            groundPSODesc.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
+        }
+        groundPSO = renderer->CreatePipelineState(groundPSODesc);
+        ReportPSOErrors(groundPSO);
     }
 
     static Gs::Vector3f GridPosToWorldPos(const int (&gridPos)[2], float posY)
@@ -551,7 +713,7 @@ private:
         }
     }
 
-    void SetTileInstance(Instance& instance, const int (&gridPos)[2], float posY, const Gradient* gradient = nullptr)
+    void SetInstanceAttribs(Instance& instance, const int (&gridPos)[2], float posY, const Gradient* gradient = nullptr)
     {
         Gs::AffineMatrix4f& wMatrix = *reinterpret_cast<Gs::AffineMatrix4f*>(instance.wMatrix);
         wMatrix.LoadIdentity();
@@ -569,7 +731,7 @@ private:
         instance.color[3] = 1.0f;
     }
 
-    void GenerateTileInstances(TileGrid& grid, std::vector<Instance>& meshInstances, std::uint32_t& tileCounter, float posY, const Gradient* gradient)
+    void GenerateTileInstances(TileGrid& grid, std::vector<Instance>& meshInstances, std::uint32_t& instanceCounter, float posY, const Gradient* gradient)
     {
         int gridPos[2];
 
@@ -581,28 +743,48 @@ private:
                 Tile& tile = row.tiles[gridPos[0]];
                 if (tile.IsValid())
                 {
-                    tile.instanceIndex = tileCounter++;
-                    SetTileInstance(meshInstances[tile.instanceIndex], gridPos, posY, gradient);
+                    tile.instanceIndex = instanceCounter++;
+                    SetInstanceAttribs(meshInstances[tile.instanceIndex], gridPos, posY, gradient);
                 }
             }
+        }
+    }
+
+    void GenerateDecorInstances(std::vector<Decor>& decors, std::vector<Instance>& meshInstances, std::uint32_t& instanceCounter, const Gradient* gradient)
+    {
+        for (Decor& decor : decors)
+        {
+            decor.instanceIndex = instanceCounter++;
+            SetInstanceAttribs(meshInstances[decor.instanceIndex], decor.gridPos, 0.0f, gradient);
         }
     }
 
     void FinalizeLevel(Level& level)
     {
         // Build instance data from tiles
-        level.meshInstances.resize(level.floor.CountTiles() + level.walls.CountTiles());
+        level.meshInstances.resize(level.floor.CountTiles() + level.walls.CountTiles() + level.trees.size());
 
         // Colorize wall tiles with gradient
-        Gradient wallGradient;
-        wallGradient.colors[0] = level.wallColors[0].Cast<float>();
-        wallGradient.colors[1] = level.wallColors[1].Cast<float>();
-        wallGradient.points[0] = Gs::Vector3f{ 0.0f, wallPosY, 0.0f };
-        wallGradient.points[1] = Gs::Vector3f{ static_cast<float>(level.gridSize[0])*2.0f, wallPosY, static_cast<float>(level.gridSize[1])*2.0f };
+        Gradient gradient;
+        gradient.colors[0] = level.wallColors[0].Cast<float>();
+        gradient.colors[1] = level.wallColors[1].Cast<float>();
+        gradient.points[0] = Gs::Vector3f{ 0.0f, wallPosY, 0.0f };
+        gradient.points[1] = Gs::Vector3f{ static_cast<float>(level.gridSize[0])*2.0f, wallPosY, static_cast<float>(level.gridSize[1])*2.0f };
 
-        std::uint32_t tileCounter = 0;
-        GenerateTileInstances(level.floor, level.meshInstances, tileCounter, 0.0f, nullptr);
-        GenerateTileInstances(level.walls, level.meshInstances, tileCounter, wallPosY, &wallGradient);
+        std::uint32_t instanceCounter = 0;
+        GenerateTileInstances(level.floor, level.meshInstances, instanceCounter, 0.0f, nullptr);
+        GenerateTileInstances(level.walls, level.meshInstances, instanceCounter, wallPosY, &gradient);
+        level.tileInstanceRange.Insert(0, instanceCounter);
+
+        // Colorize tree decors with gradient
+        gradient.colors[0] = LLGL::ColorRGBf{ treeColorGradient[0][0], treeColorGradient[0][1], treeColorGradient[0][2] };
+        gradient.colors[1] = LLGL::ColorRGBf{ treeColorGradient[1][0], treeColorGradient[1][1], treeColorGradient[1][2] };
+        gradient.points[0] = Gs::Vector3f{ 0.0f, wallPosY, 0.0f };
+        gradient.points[1] = Gs::Vector3f{ static_cast<float>(level.gridSize[0])*2.0f, wallPosY, static_cast<float>(level.gridSize[1])*2.0f };
+
+        std::uint32_t treeInstanceStart = instanceCounter;
+        GenerateDecorInstances(level.trees, level.meshInstances, instanceCounter, &gradient);
+        level.treeInstanceRange.Insert(treeInstanceStart, instanceCounter);
     }
 
     void LoadLevels()
@@ -673,11 +855,23 @@ private:
             }
 
             // Determine longest row
+            int gridOffset[2] = { INT_MAX, INT_MAX };
             newLevel.gridSize[0] = 0;
-            newLevel.gridSize[1] = static_cast<int>(currentGrid.size());
+            newLevel.gridSize[1] = 0;
 
-            for (const std::string& row : currentGrid)
-                newLevel.gridSize[0] = std::max<int>(newLevel.gridSize[0], static_cast<int>(row.size()));
+            for_range(i, currentGrid.size())
+            {
+                const std::string& row = currentGrid[i];
+                const std::size_t rowStart = row.find_first_of(".#@");
+                if (rowStart != std::string::npos)
+                {
+                    gridOffset[0] = std::min<int>(gridOffset[0], static_cast<int>(rowStart));
+                    gridOffset[1] = std::min<int>(gridOffset[1], static_cast<int>(i));
+                    const std::size_t rowEnd = row.find_last_of(".#@");
+                    newLevel.gridSize[0] = std::max<int>(newLevel.gridSize[0], static_cast<int>(rowEnd - rowStart) + 1);
+                    newLevel.gridSize[1]++;
+                }
+            }
 
             newLevel.viewDistance = static_cast<float>(std::max<int>(newLevel.gridSize[0], newLevel.gridSize[1])) * 2.7f;
 
@@ -685,11 +879,11 @@ private:
             Tile initialTile;
             initialTile.instanceIndex = 0;
 
-            int gridPosY = newLevel.gridSize[1];
+            int gridPosY = newLevel.gridSize[1] + gridOffset[1];
             for (const std::string& row : currentGrid)
             {
                 --gridPosY;
-                int gridPosX = 0;
+                int gridPosX = -gridOffset[0];
 
                 for (char c : row)
                 {
@@ -710,6 +904,14 @@ private:
                         newLevel.floor.Put(gridPosX, gridPosY, &initialTile);
                         newLevel.playerStart[0] = gridPosX;
                         newLevel.playerStart[1] = gridPosY;
+                    }
+                    else if (c == '$')
+                    {
+                        // Add floor tile only
+                        Decor newDecor;
+                        newDecor.gridPos[0] = gridPosX;
+                        newDecor.gridPos[1] = gridPosY;
+                        newLevel.trees.push_back(newDecor);
                     }
                     ++gridPosX;
                 }
@@ -807,6 +1009,58 @@ private:
         levelInstanceOffset = 0;
     }
 
+    void SetShadowMapView()
+    {
+        // Generate shadow map projection for light direction
+        Gs::Vector3f lightDir = scene.lightDir;
+        Gs::Vector3f upVector = (lightDir.y < 0.999f ? Gs::Vector3f{ 0, 1, 0 } : Gs::Vector3f{ 0, 0, -1 });
+        Gs::Vector3f tangentU = Gs::Cross(upVector, lightDir).Normalized();
+        Gs::Vector3f tangentV = Gs::Cross(lightDir, tangentU);
+
+        Gs::Matrix4f lightOrientation;
+
+        lightOrientation(0, 0) = tangentU.x;
+        lightOrientation(0, 1) = tangentU.y;
+        lightOrientation(0, 2) = tangentU.z;
+
+        lightOrientation(1, 0) = tangentV.x;
+        lightOrientation(1, 1) = tangentV.y;
+        lightOrientation(1, 2) = tangentV.z;
+
+        lightOrientation(2, 0) = lightDir.x;
+        lightOrientation(2, 1) = lightDir.y;
+        lightOrientation(2, 2) = lightDir.z;
+
+        lightOrientation.MakeInverse();
+
+        // Update view transformation from light perspective
+        scene.vpMatrix.LoadIdentity();
+        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0.0f, camera.levelCenterPos.y });
+        scene.vpMatrix *= lightOrientation;
+        Gs::Translate(scene.vpMatrix, { 0, 0, -50.0f });
+
+        const float shadowMapScale = camera.viewDistance*1.5f;
+        Gs::Matrix4f lightProjection = OrthogonalProjection(shadowMapScale, shadowMapScale, 0.1f, 100.0f);
+
+        scene.vpMatrix.MakeInverse();
+        scene.vpMatrix = lightProjection * scene.vpMatrix;
+
+        // Update shadow map matrix for texture space
+        scene.vpShadowMatrix = scene.vpMatrix;
+    }
+
+    void SetCameraView()
+    {
+        // Update view transformation from camera perspective
+        scene.vpMatrix.LoadIdentity();
+        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0, camera.levelCenterPos.y });
+        Gs::RotateFree(scene.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-65.0f));
+        Gs::Translate(scene.vpMatrix, { 0, 0, -camera.viewDistance });
+        scene.viewPos = Gs::TransformVector(scene.vpMatrix, Gs::Vector3f{ 0, 0, 0 });
+        scene.vpMatrix.MakeInverse();
+        scene.vpMatrix = projection * scene.vpMatrix;
+    }
+
     void UpdateScene(float dt)
     {
         // Update user input, but not while transitioning
@@ -865,15 +1119,6 @@ private:
                 }
             }
         }
-
-        // Update view transformation
-        scene.vpMatrix.LoadIdentity();
-        Gs::Translate(scene.vpMatrix, { camera.levelCenterPos.x, 0, camera.levelCenterPos.y });
-        Gs::RotateFree(scene.vpMatrix, { 1, 0, 0 }, Gs::Deg2Rad(-65.0f));
-        Gs::Translate(scene.vpMatrix, { 0, 0, -camera.viewDistance });
-        scene.viewPos = Gs::TransformVector(scene.vpMatrix, Gs::Vector3f{ 0, 0, 0 });
-        scene.vpMatrix.MakeInverse();
-        scene.vpMatrix = projection * scene.vpMatrix;
 
         // Update player transformation
         Gs::AffineMatrix4f& wMatrixPlayer = *reinterpret_cast<Gs::AffineMatrix4f*>(player.instance.wMatrix);
@@ -996,6 +1241,12 @@ private:
             }
         }
 
+        // Animate tree rotation
+        effects.treeBendTime = std::fmodf(effects.treeBendTime + dt / treeAnimSpeed, 1.0f);
+        const float treeBendAngle = effects.treeBendTime * Gs::pi * 2.0f;
+        scene.bendDir.x = std::sinf(treeBendAngle) * treeAnimRadius;
+        scene.bendDir.z = std::cosf(treeBendAngle) * treeAnimRadius * 0.5f;
+
         // Update player color
         player.instance.color[0] = playerColor[0];
         player.instance.color[1] = playerColor[1];
@@ -1003,40 +1254,59 @@ private:
         player.instance.color[3] = 1.0f;
     }
 
-    void RenderScene()
+    void RenderLevel(const Level& level, float worldOffsetX, std::uint32_t instanceOffset)
     {
-        commands->SetPipelineState(*psoScene);
+        uniforms.worldOffset[0] = worldOffsetX;
+        uniforms.worldOffset[1] = 0.0f;
+        uniforms.worldOffset[2] = 0.0f;
+
+        // Draw all tiles (floor and walls)
+        uniforms.firstInstance = 1 + instanceOffset;
+        uniforms.bendIntensity = 0.0f;
+        commands->SetUniforms(0, &uniforms, sizeof(uniforms));
+
+        const std::uint32_t numTiles = level.tileInstanceRange.Count();
+        commands->DrawInstanced(mdlBlock.numVertices, mdlBlock.firstVertex, numTiles);
+
+        // Draw decor (trees)
+        uniforms.firstInstance += numTiles;
+        uniforms.bendIntensity = 0.5f;
+        commands->SetUniforms(0, &uniforms, sizeof(uniforms));
+
+        const std::uint32_t numTrees = level.treeInstanceRange.Count();
+        commands->DrawInstanced(mdlTree.numVertices, mdlTree.firstVertex, numTrees);
+    }
+
+    void RenderScene(bool renderShadowMap)
+    {
+        const int psoIndex = (renderShadowMap ? 1 : 0);
+
+        commands->SetPipelineState(*scenePSO[psoIndex]);
         commands->SetResource(0, *cbufferScene);
         commands->SetResource(1, *instanceBuffer);
 
-        // Draw all tile instances
+        if (!renderShadowMap)
+        {
+            commands->SetResource(2, *shadowMap);
+            commands->SetResource(3, *shadowMapSampler);
+        }
+
         if (currentLevel != nullptr)
         {
-            const std::uint32_t numTilesCurrentLevel = static_cast<std::uint32_t>(currentLevel->meshInstances.size());
+            // Render current level
             commands->PushDebugGroup("CurrentLevel");
             {
-                uniforms.worldOffset[0] = Gs::Lerp(0.0f, -levelDistance, levelTransition);
-                uniforms.worldOffset[1] = 0.0f;
-                uniforms.worldOffset[2] = 0.0f;
-                uniforms.firstInstance  = 1 + levelInstanceOffset;
-                commands->SetUniforms(0, &uniforms, sizeof(uniforms));
-
-                commands->DrawInstanced(mdlBlock.numVertices, mdlBlock.firstVertex, numTilesCurrentLevel);
+                RenderLevel(*currentLevel, Gs::Lerp(0.0f, -levelDistance, levelTransition), levelInstanceOffset);
             }
             commands->PopDebugGroup();
 
+            // Render next level if there is one
             if (nextLevel != nullptr)
             {
-                const std::uint32_t numBlocksNextLevel = static_cast<std::uint32_t>(nextLevel->meshInstances.size());
+                const std::uint32_t numInstancesCurrentLevel = static_cast<std::uint32_t>(currentLevel->meshInstances.size());
                 commands->PushDebugGroup("NextLevel");
                 {
-                    uniforms.worldOffset[0] = Gs::Lerp(levelDistance, 0.0f, levelTransition);
-                    uniforms.worldOffset[1] = 0.0f;
-                    uniforms.worldOffset[2] = 0.0f;
-                    uniforms.firstInstance  = 1 + numTilesCurrentLevel;
-                    commands->SetUniforms(0, &uniforms, sizeof(uniforms));
-
-                    commands->DrawInstanced(mdlBlock.numVertices, mdlBlock.firstVertex, numBlocksNextLevel);
+                    RenderLevel(*nextLevel, Gs::Lerp(levelDistance, 0.0f, levelTransition), numInstancesCurrentLevel);
                 }
                 commands->PopDebugGroup();
             }
@@ -1045,19 +1315,36 @@ private:
         // Draw player mesh, but not while transitioning
         commands->PushDebugGroup("Player");
         {
+            // Always position player at the next level if there is one
             if (nextLevel == nullptr)
             {
                 uniforms.worldOffset[0] = 0.0f;
                 uniforms.worldOffset[1] = 0.0f;
                 uniforms.worldOffset[2] = 0.0f;
             }
-            uniforms.firstInstance  = 0;
-
+            uniforms.firstInstance = 0;
+            uniforms.bendIntensity = 0.0f;
             commands->SetUniforms(0, &uniforms, sizeof(uniforms));
 
             commands->Draw(mdlPlayer.numVertices, mdlPlayer.firstVertex);
         }
         commands->PopDebugGroup();
+
+        // Draw ground floor last, to cover the rest of the framebuffer
+        if (!renderShadowMap)
+        {
+            commands->PushDebugGroup("Ground");
+            {
+                commands->SetPipelineState(*groundPSO);
+                commands->SetResource(0, *cbufferScene);
+                commands->SetResource(1, *groundColorMap);
+                commands->SetResource(2, *groundColorMapSampler);
+                commands->SetResource(3, *shadowMap);
+                commands->SetResource(4, *shadowMapSampler);
+                commands->Draw(mdlGround.numVertices, mdlGround.firstVertex);
+            }
+            commands->PopDebugGroup();
+        }
     }
 
     void OnDrawFrame() override
@@ -1070,39 +1357,58 @@ private:
         {
             // Bind common input assembly
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->UpdateBuffer(*cbufferScene, 0, &scene, sizeof(scene));
             commands->UpdateBuffer(*instanceBuffer, 0, &player.instance, sizeof(player.instance));
 
             // Update mesh instances in dirty range
             if (currentLevel != nullptr)
             {
-                if (currentLevel->meshInstanceDirtyRange[0] < currentLevel->meshInstanceDirtyRange[1])
+                const std::uint32_t numInstancesToUpdate = currentLevel->meshInstanceDirtyRange.Count();
+                if (numInstancesToUpdate > 0)
                 {
                     // Update mesh instance buffer
-                    const std::uint32_t firstInstanceToUpdate = (1 + levelInstanceOffset + currentLevel->meshInstanceDirtyRange[0]);
-                    const std::uint32_t numInstancesToUpdate = (currentLevel->meshInstanceDirtyRange[1] - currentLevel->meshInstanceDirtyRange[0]);
+                    const std::uint32_t firstInstanceToUpdate = (1 + levelInstanceOffset + currentLevel->meshInstanceDirtyRange.begin);
 
                     commands->UpdateBuffer(
                         *instanceBuffer,
                         sizeof(Instance) * firstInstanceToUpdate,
-                        &(currentLevel->meshInstances[currentLevel->meshInstanceDirtyRange[0]]),
+                        &(currentLevel->meshInstances[currentLevel->meshInstanceDirtyRange.begin]),
                         static_cast<std::uint16_t>(sizeof(Instance) * numInstancesToUpdate)
                     );
 
                     // Reset dirty range
-                    currentLevel->meshInstanceDirtyRange[0] = ~0u;
-                    currentLevel->meshInstanceDirtyRange[1] = 0u;
+                    currentLevel->meshInstanceDirtyRange.Invalidate();
                 }
             }
 
+            // Render shadow-map
+            SetShadowMapView();
+            commands->UpdateBuffer(*cbufferScene, 0, &scene, sizeof(scene));
+
+            commands->BeginRenderPass(*shadowMapTarget);
+            {
+                // Clear depth buffer only, we will render the entire framebuffer
+                commands->Clear(LLGL::ClearFlags::Depth);
+                commands->SetViewport(shadowMapTarget->GetResolution());
+                commands->PushDebugGroup("RenderShadowMap");
+                {
+                    RenderScene(true);
+                }
+                commands->PopDebugGroup();
+            }
+            commands->EndRenderPass();
+
             // Render everything directly into the swap-chain
+            SetCameraView();
+            commands->UpdateBuffer(*cbufferScene, 0, &scene, sizeof(scene));
+
             commands->BeginRenderPass(*swapChain);
             {
-                commands->Clear(LLGL::ClearFlags::ColorDepth, backgroundColor);
+                // Clear depth buffer only, we will render the entire framebuffer
+                commands->Clear(LLGL::ClearFlags::Depth);
                 commands->SetViewport(swapChain->GetResolution());
                 commands->PushDebugGroup("RenderScene");
                 {
-                    RenderScene();
+                    RenderScene(false);
                 }
                 commands->PopDebugGroup();
             }
