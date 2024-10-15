@@ -15,6 +15,8 @@ cbuffer Scene : register(b1)
     float       ambientItensity;
     float3      groundTint;
     float       groundScale;
+    float3      lightColor;
+    float       warpScaleInv;
 };
 
 struct Instance
@@ -50,7 +52,7 @@ struct VertexOut
 
 float WarpIntensityCurve(float d)
 {
-    return 1.0/(1.0 + d*d);
+    return 1.0/(1.0 + d*d*warpScaleInv);
 }
 
 float3 MeshAnimation(float3 pos)
@@ -134,7 +136,7 @@ float4 PSInstance(VertexOut inp) : SV_Target
     float   shadow      = lerp(ambientItensity, 1.0, SampleShadowMapPCF(inp.position.xy, inp.worldPos));
 
     // Set final output color
-    float3  light       = (diffuse + specular) * shadow;
+    float3  light       = lightColor * (diffuse + specular) * shadow;
     return float4(light, albedo.a);
 }
 
@@ -170,6 +172,6 @@ float4 PSGround(GroundVertexOut inp) : SV_Target
     float   shadow = lerp(ambientItensity, 1.0, SampleShadowMapPCF(inp.position.xy, inp.worldPos));
 
     // Set final output color
-    return float4(albedo.rgb * shadow, albedo.a);
+    return float4(albedo.rgb * lightColor * shadow, albedo.a);
 }
 

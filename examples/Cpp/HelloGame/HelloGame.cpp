@@ -10,22 +10,34 @@
 #include "FileUtils.h"
 #include <algorithm>
 #include <limits.h>
+#include <sstream>
 
 
 // Enables cheats by allowing page up/down to select next or previous level
-#define ENABLE_CHEATS 0
+#define ENABLE_CHEATS 1
 
+
+struct TimeOfDay
+{
+    Gs::Vector3f    lightDir;
+    LLGL::ColorRGBf lightColor;
+    float           ambientIntensity;
+
+    static TimeOfDay Interpolate(const TimeOfDay& a, const TimeOfDay& b, float t)
+    {
+        TimeOfDay result;
+        result.lightDir         = Gs::Lerp(a.lightDir, b.lightDir, t).Normalized();
+        result.lightColor       = Gs::Lerp(a.lightColor, b.lightColor, t);
+        result.ambientIntensity = Gs::Lerp(a.ambientIntensity, b.ambientIntensity, t);
+        return result;
+    }
+};
 
 class Example_HelloGame : public ExampleBase
 {
 
     static constexpr float  levelTransitionSpeed    = 0.5f; // in seconds
     static constexpr float  levelDoneSpeed          = 1.0f; // in seconds
-    static constexpr float  playerMoveSpeed         = 0.25f; // in seconds
-    static constexpr float  playerFallAcceleration  = 2.0f; // in units per seconds
-    static constexpr float  warpEffectDuration      = 1.0f; // in seconds
-    static constexpr int    warpEffectBounces       = 3;
-    static constexpr float  warpEffectScale         = 2.0f;
     static constexpr float  wallPosY                = 2.0f;
     static constexpr int    inputStackSize          = 4;
     static constexpr float  playerColor[3]          = { 0.6f, 0.7f, 1.0f };
@@ -33,6 +45,17 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  treeAnimSpeed           = 8.0f; // in seconds
     static constexpr float  treeAnimRadius          = 0.2f;
     static constexpr int    shadowMapSize           = 512;
+    static constexpr float  timeOfDayChangeSpeed    = 2.0f; // in seconds
+
+    static constexpr float  playerMoveSpeed         = 0.25f; // in seconds
+    static constexpr float  playerFallAcceleration  = 2.0f; // in units per seconds
+    static constexpr float  playerJumpWait          = 3.0f; // in seconds
+    static constexpr float  playerJumpDuration      = 1.0f; // in seconds
+    static constexpr float  playerJumpHeight        = 0.7f;
+    static constexpr int    playerJumpBounces       = 3;
+
+    const TimeOfDay         timeOfDayMorning        = { Gs::Vector3f{ +0.15f, -1.0f, 0.25f }, LLGL::ColorRGBf{ 1.0f, 1.0f, 1.0f }, 0.6f };
+    const TimeOfDay         timeOfDayEvening        = { Gs::Vector3f{ -0.75f, -0.7f, 2.25f }, LLGL::ColorRGBf{ 0.6f, 0.5f, 0.2f }, 0.2f };
 
     LLGL::PipelineLayout*   scenePSOLayout[2]       = {};
     LLGL::PipelineState*    scenePSO[2]             = {};
@@ -75,6 +98,8 @@ class Example_HelloGame : public ExampleBase
         float           ambientItensity = 0.6f;
         float           groundTint[3]   = { 0.8f, 1.0f, 0.6f };
         float           groundScale     = 2.0f;
+        LLGL::ColorRGBf lightColor      = {};
+        float           warpScaleInv    = 1.0f;
     }
     scene;
 
@@ -95,7 +120,7 @@ class Example_HelloGame : public ExampleBase
 
     struct Instance
     {
-        float           wMatrix[3][4];
+        float           wMatrix[4][3];
         float           color[4];
     };
 
@@ -155,7 +180,10 @@ class Example_HelloGame : public ExampleBase
         {
             Resize(x + 1, y + 1);
             if (tile != nullptr)
-                *Get(x, y) = *tile;
+            {
+                if (Tile* ownTile = Get(x, y))
+                    *ownTile = *tile;
+            }
         }
 
         Tile* Get(int x, int y)
@@ -230,6 +258,7 @@ class Example_HelloGame : public ExampleBase
         float                   viewDistance                = 0.0f;
         int                     activatedTiles              = 0;
         int                     maxTilesToActivate          = 0;
+        float                   lightPhase                  = 0.0f;
 
         bool IsWall(int x, int y) const
         {
@@ -363,6 +392,7 @@ class Example_HelloGame : public ExampleBase
         int         moveDir[inputStackSize][2]  = {};
         float       moveTransition              = 0.0f;
         bool        isFalling                   = false;
+        bool        hasExploded                 = false;
         float       fallDepth                   = 0.0f;
         float       fallVelocity                = 0.0f;
 
@@ -389,11 +419,19 @@ class Example_HelloGame : public ExampleBase
             moveDirStack    = 0;
             moveTransition  = 0.0f;
             isFalling       = false;
+            hasExploded     = false;
             fallDepth       = 0.0f;
             fallVelocity    = 0.0f;
         }
     }
     player;
+
+    enum class Movement
+    {
+        Free,
+        BlockedByWall,
+        BlockedByTile,
+    };
 
     std::vector<Level>  levels;
     int                 currentLevelIndex   = -1;
@@ -421,15 +459,21 @@ class Example_HelloGame : public ExampleBase
 
     struct Effects
     {
-        bool    warpEnabled     = false;
-        float   warpTime        = 0.0f;
-        float   treeBendTime    = 0.0f;
+        bool    warpEnabled         = false;
+        float   warpDuration        = 1.0f; // in seconds
+        int     warpBounces         = 3;
+        float   warpMaxIntensity    = 2.0f;
+        float   warpTime            = 0.0f;
 
-        void StartWarp()
-        {
-            warpEnabled = true;
-            warpTime    = 0.0f;
-        }
+        float   treeBendTime        = 0.0f;
+
+        bool    lightPhaseChanged   = false;
+        float   lightPhase          = 0.0f;
+        float   lightPhaseTarget    = 0.0f;
+
+        float   playerJumpTime      = 0.0f; // Make the player jump to get the user's attention
+        bool    playerJumpEnabled   = false;
+        float   playerJumpPhase     = 0.0f; // [0..1]
     }
     effects;
 
@@ -628,8 +672,8 @@ private:
             scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
             scenePSODesc.pipelineLayout                         = scenePSOLayout[1];
             scenePSODesc.fragmentShader                         = nullptr;
-            scenePSODesc.rasterizer.depthBias.constantFactor    = 4.0f;
-            scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.5f;
+            scenePSODesc.rasterizer.depthBias.constantFactor    = 1.0f;
+            scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.0f;
             scenePSODesc.rasterizer.cullMode                    = LLGL::CullMode::Front;
             scenePSODesc.blend.targets[0].colorMask             = 0x0;
         }
@@ -680,13 +724,25 @@ private:
         Gs::RotateFree(outMatrix, axis, angle);
     }
 
-    void SetPlayerTransform(Gs::AffineMatrix4f& outMatrix, const int (&gridPosA)[2], int moveX, int moveZ, float posY, float transition)
+    void SetPlayerTransform(Gs::AffineMatrix4f& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
     {
         outMatrix.LoadIdentity();
 
-        const Gs::Vector3f posA = GridPosToWorldPos(gridPosA, posY);
+        // Position player onto current grid
+        const Gs::Vector3f posA = GridPosToWorldPos(gridPos, posY);
         Gs::Translate(outMatrix, posA);
 
+        // Animate jumping as a scaling factor
+        if (effects.playerJumpEnabled)
+        {
+            const float jumpDamping = Gs::SmoothStep(1.0f - effects.playerJumpPhase);
+            const float jumpPhase   = Gs::pi + effects.playerJumpPhase * Gs::pi * 2.0f * static_cast<float>(playerJumpBounces);
+            const float jumpHeight  = std::sinf(jumpPhase) * playerJumpHeight * jumpDamping;
+            Gs::Translate(outMatrix, Gs::Vector3f{ 0, jumpHeight*0.5f, 0 });
+            Gs::Scale(outMatrix, Gs::Vector3f{ 1, 1.0f + jumpHeight, 1 });
+        }
+
+        // Rotate around the edge to move the player
         if (transition > 0.0f)
         {
             const float angle = Gs::SmoothStep(transition) * Gs::pi * 0.5f;
@@ -711,6 +767,12 @@ private:
                 RotateAroundPivot(outMatrix, Gs::Vector3f{  0,-1,+1 }, Gs::Vector3f{ 1,0,0 }, -angle);
             }
         }
+    }
+
+    void SetPlayerTransformBounce(Gs::AffineMatrix4f& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
+    {
+        const float bounceTransition = std::abs(std::sinf(transition * Gs::pi * 2.0f)) * Gs::SmoothStep(1.0f - transition * 0.5f) * 0.2f;
+        SetPlayerTransform(outMatrix, gridPos, moveX, moveZ, posY, bounceTransition);
     }
 
     void SetInstanceAttribs(Instance& instance, const int (&gridPos)[2], float posY, const Gradient* gradient = nullptr)
@@ -795,6 +857,7 @@ private:
         std::string name;
         std::string wallGradient;
         std::vector<std::string> currentGrid;
+        float timeOfDay = 0.0f;
 
         auto HexToInt = [](char c) -> int
         {
@@ -806,6 +869,14 @@ private:
                 return 0xA + (c - 'A');
             else
                 return -1;
+        };
+
+        auto FloatFromString = [](const std::string& s) -> float
+        {
+            std::stringstream sstr(s);
+            float val = 0.0f;
+            sstr >> val;
+            return val;
         };
 
         auto ParseColorRGB = [&HexToInt](const char*& s) -> LLGL::ColorRGBub
@@ -840,7 +911,8 @@ private:
             // Construct a new level
             Level newLevel;
 
-            newLevel.name = (name.empty() ? "Unnamed" : name);
+            newLevel.name       = (name.empty() ? "Unnamed" : name);
+            newLevel.lightPhase = timeOfDay;
 
             if (!wallGradient.empty())
             {
@@ -934,6 +1006,8 @@ private:
                 name = line.substr(line.find_first_not_of(" \t", 6));
             else if (line.compare(0, 6, "WALLS:") == 0)
                 wallGradient = line.substr(line.find_first_not_of(" \t", 6));
+            else if (line.compare(0, 5, "TIME:") == 0)
+                timeOfDay = FloatFromString(line.substr(5));
             else
                 currentGrid.push_back(line);
         }
@@ -978,7 +1052,6 @@ private:
 
             // Position player
             nextLevel->ResetTiles();
-            nextLevel->PutPlayer(player);
 
             // Update instance buffer from current and next level instance data plus one instance for the player model
             CreateInstanceBuffer(1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size() + nextLevel->meshInstances.size()));
@@ -997,7 +1070,6 @@ private:
 
             // Position player
             currentLevel->ResetTiles();
-            currentLevel->PutPlayer(player);
 
             // Update instance buffer from current level instance data plus one instance for the player model
             CreateInstanceBuffer(1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size()));
@@ -1007,6 +1079,14 @@ private:
         // Store index to current level to conveneintly selecting next and previous levels
         currentLevelIndex = index;
         levelInstanceOffset = 0;
+
+        // Position player to start location and set new target light phase
+        levels[index].PutPlayer(player);
+        SetTargetLightPhase(levels[index].lightPhase);
+
+        // Cancel ongoing effects
+        effects.warpEnabled = false;
+        scene.warpIntensity = 0.0f;
     }
 
     void SetShadowMapView()
@@ -1061,6 +1141,42 @@ private:
         scene.vpMatrix = projection * scene.vpMatrix;
     }
 
+    void StartWarpEffect(float duration = 1.0f, int bounces = 3, float scale = 1.0f, float maxIntensity = 2.0f)
+    {
+        effects.warpEnabled         = true;
+        effects.warpDuration        = duration;
+        effects.warpBounces         = bounces;
+        effects.warpMaxIntensity    = maxIntensity;
+        effects.warpTime            = 0.0f;
+        scene.warpCenter.x          = player.instance.wMatrix[3][0];
+        scene.warpCenter.y          = player.instance.wMatrix[3][1];
+        scene.warpCenter.z          = player.instance.wMatrix[3][2];
+        scene.warpScaleInv          = 1.0f / scale;
+    }
+
+    void SetTargetLightPhase(float phase)
+    {
+        effects.lightPhaseChanged = true;
+        effects.lightPhaseTarget = Gs::Saturate(phase);
+    }
+
+    void SetLightPhase(float phase)
+    {
+        phase = Gs::Saturate(phase);
+        TimeOfDay timeOfDay = TimeOfDay::Interpolate(timeOfDayMorning, timeOfDayEvening, phase);
+        scene.lightDir          = timeOfDay.lightDir;
+        scene.ambientItensity   = timeOfDay.ambientIntensity;
+        scene.lightColor        = timeOfDay.lightColor;
+        effects.lightPhase      = phase;
+    }
+
+    void MovePlayer(int moveX, int moveZ)
+    {
+        // Move player and reset jump timer (only grab user's attention when they are not interacting)
+        player.Move(moveX, moveZ);
+        effects.playerJumpTime = 0.0f;
+    }
+
     void UpdateScene(float dt)
     {
         // Update user input, but not while transitioning
@@ -1069,20 +1185,29 @@ private:
             if (player.moveDirStack < inputStackSize)
             {
                 if (input.KeyDownRepeated(LLGL::Key::Left))
-                    player.Move(-1, 0);
+                    MovePlayer(-1, 0);
                 else if (input.KeyDownRepeated(LLGL::Key::Right))
-                    player.Move(+1, 0);
+                    MovePlayer(+1, 0);
                 else if (input.KeyDownRepeated(LLGL::Key::Up))
-                    player.Move(0, +1);
+                    MovePlayer(0, +1);
                 else if (input.KeyDownRepeated(LLGL::Key::Down))
-                    player.Move(0, -1);
+                    MovePlayer(0, -1);
             }
+
             #if ENABLE_CHEATS
+
             if (input.KeyDown(LLGL::Key::PageUp))
                 SelectLevel(currentLevelIndex + 1);
             else if (input.KeyDown(LLGL::Key::PageDown))
                 SelectLevel(currentLevelIndex - 1);
-            #endif
+
+            if (input.KeyPressed(LLGL::Key::LButton))
+            {
+                const float delta = static_cast<float>(input.GetMouseMotion().x) * 0.01f;
+                SetLightPhase(effects.lightPhase + delta);
+            }
+            
+            #endif // /ENABLE_CHEATS
         }
 
         // Get information from current level
@@ -1123,7 +1248,7 @@ private:
         // Update player transformation
         Gs::AffineMatrix4f& wMatrixPlayer = *reinterpret_cast<Gs::AffineMatrix4f*>(player.instance.wMatrix);
 
-        bool isMovementBlocked = false;
+        Movement movement = Movement::Free;
 
         if (player.moveDirStack > 0 && !player.isFalling && !(currentLevel != nullptr && currentLevel->IsCompleted()))
         {
@@ -1137,9 +1262,9 @@ private:
                 if (currentLevel->IsTileBlocked(nextPosX, nextPosY))
                 {
                     // Block player from moving when hitting a wall or already activated tile
+                    movement = (currentLevel->IsWall(nextPosX, nextPosY) ? Movement::BlockedByWall : Movement::BlockedByTile);
                     nextPosX = player.gridPos[0];
                     nextPosY = player.gridPos[1];
-                    isMovementBlocked = true;
                 }
             }
 
@@ -1159,7 +1284,7 @@ private:
                         }
                         else if (currentLevel->ActivateTile(nextPosX, nextPosY, playerColor))
                         {
-                            effects.StartWarp();
+                            StartWarpEffect();
                         }
                     }
                 }
@@ -1171,7 +1296,7 @@ private:
                 player.moveDirStack--;
 
                 // Cancel remaining movements if they are also blocked in the same direction
-                while (isMovementBlocked &&
+                while (movement != Movement::Free &&
                     player.moveDirStack > 0 &&
                     player.moveDir[moveStackPos][0] == player.moveDir[player.moveDirStack - 1][0] &&
                     player.moveDir[moveStackPos][1] == player.moveDir[player.moveDirStack - 1][1])
@@ -1184,32 +1309,47 @@ private:
         if (player.isFalling)
         {
             // Fall animation
-            if (player.fallDepth < 100.0f)
+            if (player.fallDepth < 10.0f)
             {
                 player.fallVelocity += dt * playerFallAcceleration;
                 player.fallDepth += player.fallVelocity;
-                SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, wallPosY - player.fallDepth, 0.0f);
+                const float playerPosY = wallPosY - player.fallDepth;
+                SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, playerPosY, 0.0f);
+
+                if (!player.hasExploded && playerPosY < -2.0f)
+                {
+                    StartWarpEffect(2.0f, 4, 5.0f, 5.0f);
+                    player.hasExploded = true;
+                }
             }
         }
         else if (player.moveDirStack > 0)
         {
             const int moveStackPos  = player.moveDirStack - 1;
-            const int moveDirX      = player.moveDir[moveStackPos][0];
-            const int moveDirY      = player.moveDir[moveStackPos][1];
-            if (isMovementBlocked)
+            const int moveDirX = player.moveDir[moveStackPos][0];
+            const int moveDirY = player.moveDir[moveStackPos][1];
+            if (movement != Movement::Free)
             {
-                const int oppositePosX = player.gridPos[0] - moveDirX;
-                const int oppositePosY = player.gridPos[1] - moveDirY;
-                if (currentLevel != nullptr && !currentLevel->IsWall(oppositePosX, oppositePosY))
+                if (movement == Movement::BlockedByWall)
                 {
-                    // Animate player to bounce off the wall
-                    const float bounceTransition = std::abs(std::sinf(player.moveTransition * Gs::pi * 2.0f)) * Gs::SmoothStep(1.0f - player.moveTransition * 0.5f) * 0.2f;
-                    SetPlayerTransform(wMatrixPlayer, player.gridPos, -moveDirX, -moveDirY, wallPosY, bounceTransition);
+                    // If movement is blocked by a wall, make the player bounce back.
+                    const int oppositePosX = player.gridPos[0] - moveDirX;
+                    const int oppositePosY = player.gridPos[1] - moveDirY;
+                    if (currentLevel != nullptr && !currentLevel->IsWall(oppositePosX, oppositePosY))
+                    {
+                        // Animate player to bounce off the wall
+                        SetPlayerTransformBounce(wMatrixPlayer, player.gridPos, -moveDirX, -moveDirY, wallPosY, player.moveTransition);
+                    }
+                    else
+                    {
+                        // Player is completely blocked, no animation
+                        SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, wallPosY, 0.0f);
+                    }
                 }
-                else
+                else if (movement == Movement::BlockedByTile)
                 {
-                    // Player is completely blocked, no animation
-                    SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, wallPosY, 0.0f);
+                    // Animate player to bounce forward
+                    SetPlayerTransformBounce(wMatrixPlayer, player.gridPos, moveDirX, moveDirY, wallPosY, player.moveTransition);
                 }
             }
             else
@@ -1227,12 +1367,11 @@ private:
         // Apply warp effect around player position
         if (effects.warpEnabled)
         {
-            effects.warpTime += dt / warpEffectDuration;
-            float maxWarpIntensity = (1.0f - effects.warpTime) * warpEffectScale;
+            effects.warpTime += dt / effects.warpDuration;
+            float maxWarpIntensity = (1.0f - effects.warpTime) * effects.warpMaxIntensity;
             if (maxWarpIntensity > 0.0f)
             {
-                scene.warpCenter    = Gs::TransformVector(wMatrixPlayer, Gs::Vector3f{});
-                scene.warpIntensity = std::sinf(effects.warpTime * Gs::pi * 2.0f * static_cast<float>(warpEffectBounces)) * maxWarpIntensity;
+                scene.warpIntensity = std::sinf(effects.warpTime * Gs::pi * 2.0f * static_cast<float>(effects.warpBounces)) * maxWarpIntensity;
             }
             else
             {
@@ -1252,6 +1391,42 @@ private:
         player.instance.color[1] = playerColor[1];
         player.instance.color[2] = playerColor[2];
         player.instance.color[3] = 1.0f;
+
+        // Animate player to get user's attention, so they know what block represents the player
+        if (effects.playerJumpEnabled)
+        {
+            effects.playerJumpPhase += dt / playerJumpDuration;
+            if (effects.playerJumpPhase >= 1.0f)
+                effects.playerJumpEnabled = false;
+        }
+        else
+        {
+            effects.playerJumpTime += dt;
+            if (effects.playerJumpTime > playerJumpWait)
+            {
+                effects.playerJumpEnabled   = true;
+                effects.playerJumpTime      = 0.0f;
+                effects.playerJumpPhase     = 0.0f;
+            }
+        }
+
+        // Progress light direction as time of day simulation
+        if (effects.lightPhaseChanged)
+        {
+            if (effects.lightPhase < effects.lightPhaseTarget)
+            {
+                effects.lightPhase += dt / timeOfDayChangeSpeed;
+                if (!(effects.lightPhase < effects.lightPhaseTarget))
+                    effects.lightPhaseChanged = false;
+            }
+            else if (effects.lightPhase > effects.lightPhaseTarget)
+            {
+                effects.lightPhase -= dt / timeOfDayChangeSpeed;
+                if (!(effects.lightPhase > effects.lightPhaseTarget))
+                    effects.lightPhaseChanged = false;
+            }
+            SetLightPhase(effects.lightPhase);
+        }
     }
 
     void RenderLevel(const Level& level, float worldOffsetX, std::uint32_t instanceOffset)
@@ -1270,6 +1445,7 @@ private:
 
         // Draw decor (trees)
         uniforms.firstInstance += numTiles;
+        uniforms.worldOffset[1] = -1.0f;
         uniforms.bendIntensity = 0.5f;
         commands->SetUniforms(0, &uniforms, sizeof(uniforms));
 
