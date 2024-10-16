@@ -71,8 +71,8 @@ float3 WarpPosition(float3 pos)
 void VSInstance(VertexIn inp, uint instID : SV_InstanceID, out VertexOut outp)
 {
     Instance inst = instances[instID + firstInstance];
-    float4 modelPos = float4(MeshAnimation(inp.position) + worldOffset, 1);
-    outp.worldPos   = WarpPosition(mul(inst.wMatrix, modelPos));
+    float4 modelPos = float4(MeshAnimation(inp.position), 1);
+    outp.worldPos   = WarpPosition(mul(inst.wMatrix, modelPos) + worldOffset);
     outp.position   = mul(vpMatrix, float4(outp.worldPos, 1));
     outp.normal     = mul(inst.wMatrix, float4(inp.normal, 0));
     outp.texCoord   = inp.texCoord;

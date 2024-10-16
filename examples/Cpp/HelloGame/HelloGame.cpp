@@ -53,6 +53,10 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  playerJumpDuration      = 1.0f; // in seconds
     static constexpr float  playerJumpHeight        = 0.7f;
     static constexpr int    playerJumpBounces       = 3;
+    static constexpr float  playerExplodeDuration   = 3.0f;
+    static constexpr float  playerDescendRotations  = 4.0f;
+    static constexpr float  playerDescendHeight     = 6.0f;
+    static constexpr float  playerDescendDuration   = 1.5f;
 
     const TimeOfDay         timeOfDayMorning        = { Gs::Vector3f{ +0.15f, -1.0f, 0.25f }, LLGL::ColorRGBf{ 1.0f, 1.0f, 1.0f }, 0.6f };
     const TimeOfDay         timeOfDayEvening        = { Gs::Vector3f{ -0.75f, -0.7f, 2.25f }, LLGL::ColorRGBf{ 0.6f, 0.5f, 0.2f }, 0.2f };
@@ -97,7 +101,7 @@ class Example_HelloGame : public ExampleBase
         Gs::Vector3f    bendDir;
         float           ambientItensity = 0.6f;
         float           groundTint[3]   = { 0.8f, 1.0f, 0.6f };
-        float           groundScale     = 2.0f;
+        float           groundScale     = 5.0f;
         LLGL::ColorRGBf lightColor      = {};
         float           warpScaleInv    = 1.0f;
     }
@@ -391,8 +395,11 @@ class Example_HelloGame : public ExampleBase
         int         moveDirStack                = 0;
         int         moveDir[inputStackSize][2]  = {};
         float       moveTransition              = 0.0f;
+        bool        isDescending                = false;
         bool        isFalling                   = false;
         bool        hasExploded                 = false;
+        float       explodeTime                 = 0.0f;
+        float       descendPhase                = 0.0f;
         float       fallDepth                   = 0.0f;
         float       fallVelocity                = 0.0f;
 
@@ -414,14 +421,23 @@ class Example_HelloGame : public ExampleBase
         void Put(const int (&pos)[2])
         {
             // Reset all player states and place onto grid position
-            gridPos[0]      = pos[0];
-            gridPos[1]      = pos[1];
-            moveDirStack    = 0;
-            moveTransition  = 0.0f;
-            isFalling       = false;
-            hasExploded     = false;
-            fallDepth       = 0.0f;
-            fallVelocity    = 0.0f;
+            gridPos[0]          = pos[0];
+            gridPos[1]          = pos[1];
+            moveDirStack        = 0;
+            moveTransition      = 0.0f;
+            isDescending        = true;
+            isFalling           = false;
+            hasExploded         = false;
+            explodeTime         = 0.0f;
+            descendPhase        = 0.0f;
+            fallDepth           = 0.0f;
+            fallVelocity        = 0.0f;
+
+            // Reset player color
+            instance.color[0]   = playerColor[0];
+            instance.color[1]   = playerColor[1];
+            instance.color[2]   = playerColor[2];
+            instance.color[3]   = 0.0f;
         }
     }
     player;
@@ -434,13 +450,14 @@ class Example_HelloGame : public ExampleBase
     };
 
     std::vector<Level>  levels;
-    int                 currentLevelIndex   = -1;
-    Level*              currentLevel        = nullptr;
-    Level*              nextLevel           = nullptr;
-    float               levelTransition     = 0.0f; // Transitioning state between two levesl - in the range [0, 1]
-    float               levelDistance       = 0.0f; // Distance between two levels (to transition between them)
-    std::uint32_t       levelInstanceOffset = 0;
-    float               levelDoneTransition = 0.0f; // Transition starting when the level is completed
+    int                 currentLevelIndex           = -1;
+    Level*              currentLevel                = nullptr;
+    Level*              nextLevel                   = nullptr;
+    std::uint32_t       currentLevelInstanceOffset  = 0;
+    std::uint32_t       nextLevelInstanceOffset     = 0;
+    float               levelTransition             = 0.0f; // Transitioning state between two levesl - in the range [0, 1]
+    float               levelDistance               = 0.0f; // Distance between two levels (to transition between them)
+    float               levelDoneTransition         = 0.0f; // Transition starting when the level is completed
 
     struct Gradient
     {
@@ -646,13 +663,14 @@ private:
         {
             scenePSODesc.debugName                      = "InstancedMesh.PSO";
             scenePSODesc.pipelineLayout                 = scenePSOLayout[0];
+            scenePSODesc.renderPass                     = swapChain->GetRenderPass();
             scenePSODesc.vertexShader                   = sceneShaders.vs;
             scenePSODesc.fragmentShader                 = sceneShaders.ps;
-            scenePSODesc.renderPass                     = swapChain->GetRenderPass();
             scenePSODesc.depth.testEnabled              = true;
             scenePSODesc.depth.writeEnabled             = true;
             scenePSODesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-            scenePSODesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+            //scenePSODesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+            scenePSODesc.blend.targets[0].blendEnabled  = true;
         }
         scenePSO[0] = renderer->CreatePipelineState(scenePSODesc);
         ReportPSOErrors(scenePSO[0]);
@@ -671,10 +689,13 @@ private:
         {
             scenePSODesc.debugName                              = "InstancedMesh.Shadow.PSO";
             scenePSODesc.pipelineLayout                         = scenePSOLayout[1];
+            scenePSODesc.renderPass                             = shadowMapTarget->GetRenderPass();
             scenePSODesc.fragmentShader                         = nullptr;
             scenePSODesc.rasterizer.depthBias.constantFactor    = 1.0f;
             scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.0f;
             scenePSODesc.rasterizer.cullMode                    = LLGL::CullMode::Front;
+            //scenePSODesc.rasterizer.multiSampleEnabled          = false;
+            scenePSODesc.blend.targets[0].blendEnabled          = false;
             scenePSODesc.blend.targets[0].colorMask             = 0x0;
         }
         scenePSO[1] = renderer->CreatePipelineState(scenePSODesc);
@@ -683,7 +704,7 @@ private:
         // Create PSO for background
         groundPSOLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
-                "cbuffer(Scene@1):vert,"
+                "cbuffer(Scene@1):vert:frag,"
                 "texture(colorMap@0):frag,"
                 "sampler(colorMapSampler@0):frag,"
                 "texture(shadowMap@3):frag,"
@@ -701,7 +722,7 @@ private:
             groundPSODesc.depth.testEnabled             = true;
             groundPSODesc.depth.writeEnabled            = true;
             groundPSODesc.rasterizer.cullMode           = LLGL::CullMode::Back;
-            groundPSODesc.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
+            //groundPSODesc.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
         }
         groundPSO = renderer->CreatePipelineState(groundPSODesc);
         ReportPSOErrors(groundPSO);
@@ -729,8 +750,8 @@ private:
         outMatrix.LoadIdentity();
 
         // Position player onto current grid
-        const Gs::Vector3f posA = GridPosToWorldPos(gridPos, posY);
-        Gs::Translate(outMatrix, posA);
+        const Gs::Vector3f pos = GridPosToWorldPos(gridPos, posY);
+        Gs::Translate(outMatrix, pos);
 
         // Animate jumping as a scaling factor
         if (effects.playerJumpEnabled)
@@ -773,6 +794,28 @@ private:
     {
         const float bounceTransition = std::abs(std::sinf(transition * Gs::pi * 2.0f)) * Gs::SmoothStep(1.0f - transition * 0.5f) * 0.2f;
         SetPlayerTransform(outMatrix, gridPos, moveX, moveZ, posY, bounceTransition);
+    }
+
+    void SetPlayerTransformSpin(Gs::AffineMatrix4f& outMatrix, float& outTransparency, const int (&gridPos)[2], float transition)
+    {
+        outMatrix.LoadIdentity();
+
+        // Interpolate between start and end positions
+        const float phase       = std::powf(transition, 0.3f);
+        const float posYStart   = wallPosY + playerDescendHeight;
+        const float posYEnd     = wallPosY;
+        const float posY        = Gs::Lerp(posYStart, posYEnd, phase);
+
+        // Position player onto current grid
+        const Gs::Vector3f pos = GridPosToWorldPos(gridPos, posY);
+        Gs::Translate(outMatrix, pos);
+
+        // Add full rotations on Y-axid
+        const float angle = playerDescendRotations * phase * Gs::pi * 2.0f;
+        Gs::RotateFree(outMatrix, Gs::Vector3f{ 0, 1, 0 }, angle);
+
+        // Transition transparency
+        outTransparency = phase;
     }
 
     void SetInstanceAttribs(Instance& instance, const int (&gridPos)[2], float posY, const Gradient* gradient = nullptr)
@@ -1036,11 +1079,7 @@ private:
         if (index >= numLevels)
             index = index % numLevels;
 
-        if (currentLevelIndex == index)
-        {
-            // Level unchanged
-            return;
-        }
+        const float moveDirection = (index > currentLevelIndex ? 1.0f : -1.0f);
 
         // Update instance buffer
         const std::uint64_t playerBufferSize = sizeof(Instance);
@@ -1048,10 +1087,9 @@ private:
         {
             // Select next level to transition to
             nextLevel = &levels[index];
-            levelDistance = static_cast<float>(currentLevel->gridSize[0] + nextLevel->gridSize[0]) * 1.5f;
-
-            // Position player
             nextLevel->ResetTiles();
+            levelDistance           = static_cast<float>(currentLevel->gridSize[0] + nextLevel->gridSize[0]) * 1.5f * moveDirection;
+            nextLevelInstanceOffset = static_cast<std::uint32_t>(currentLevel->meshInstances.size());
 
             // Update instance buffer from current and next level instance data plus one instance for the player model
             CreateInstanceBuffer(1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size() + nextLevel->meshInstances.size()));
@@ -1066,19 +1104,18 @@ private:
         {
             // Select first level
             currentLevel = &levels[index];
-            levelDistance = 0.0f;
-
-            // Position player
             currentLevel->ResetTiles();
+            levelDistance           = 0.0f;
+            nextLevelInstanceOffset = 0;
 
             // Update instance buffer from current level instance data plus one instance for the player model
             CreateInstanceBuffer(1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size()));
             renderer->WriteBuffer(*instanceBuffer, playerBufferSize, currentLevel->meshInstances.data(), sizeof(Instance) * currentLevel->meshInstances.size());
         }
 
-        // Store index to current level to conveneintly selecting next and previous levels
-        currentLevelIndex = index;
-        levelInstanceOffset = 0;
+        // Store index to current level to conveniently selecting next and previous levels
+        currentLevelIndex           = index;
+        currentLevelInstanceOffset  = 0;
 
         // Position player to start location and set new target light phase
         levels[index].PutPlayer(player);
@@ -1182,7 +1219,7 @@ private:
         // Update user input, but not while transitioning
         if (nextLevel == nullptr)
         {
-            if (player.moveDirStack < inputStackSize)
+            if (player.moveDirStack < inputStackSize && !player.isDescending && !player.isFalling)
             {
                 if (input.KeyDownRepeated(LLGL::Key::Left))
                     MovePlayer(-1, 0);
@@ -1225,10 +1262,10 @@ private:
                 // Finish transition interpolation reached the end of [0..1] interval
                 if (levelTransition >= 1.0f)
                 {
-                    levelTransition     = 0.0f;
-                    levelInstanceOffset = static_cast<std::uint32_t>(currentLevel->meshInstances.size());
-                    currentLevel        = nextLevel;
-                    nextLevel           = nullptr;
+                    levelTransition             = 0.0f;
+                    currentLevelInstanceOffset  = nextLevelInstanceOffset;
+                    currentLevel                = nextLevel;
+                    nextLevel                   = nullptr;
 
                     camera.FocusOnLevel(*currentLevel);
                 }
@@ -1306,17 +1343,43 @@ private:
             }
         }
 
-        if (player.isFalling)
+        if (player.isDescending)
+        {
+            // Animate player descending downards into place
+            player.descendPhase += dt / playerDescendDuration;
+            if (player.descendPhase >= 1.0f)
+            {
+                // Stop descending and reset player transparency
+                player.descendPhase         = 0.0f;
+                player.isDescending         = false;
+                player.instance.color[3]    = 1.0f;
+                SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, wallPosY, 0.0f);
+            }
+            else
+            {
+                SetPlayerTransformSpin(wMatrixPlayer, player.instance.color[3], player.gridPos, player.descendPhase);
+            }
+        }
+        else if (player.isFalling)
         {
             // Fall animation
-            if (player.fallDepth < 10.0f)
-            {
-                player.fallVelocity += dt * playerFallAcceleration;
-                player.fallDepth += player.fallVelocity;
-                const float playerPosY = wallPosY - player.fallDepth;
-                SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, playerPosY, 0.0f);
+            player.fallVelocity += dt * playerFallAcceleration;
+            player.fallDepth += player.fallVelocity;
+            const float playerPosY = wallPosY - player.fallDepth;
+            SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, playerPosY, 0.0f);
 
-                if (!player.hasExploded && playerPosY < -2.0f)
+            if (player.hasExploded)
+            {
+                player.explodeTime += dt;
+                if (player.explodeTime > playerExplodeDuration)
+                {
+                    // Restart current level
+                    SelectLevel(currentLevelIndex);
+                }
+            }
+            else
+            {
+                if (playerPosY < -2.0f)
                 {
                     StartWarpEffect(2.0f, 4, 5.0f, 5.0f);
                     player.hasExploded = true;
@@ -1386,12 +1449,6 @@ private:
         scene.bendDir.x = std::sinf(treeBendAngle) * treeAnimRadius;
         scene.bendDir.z = std::cosf(treeBendAngle) * treeAnimRadius * 0.5f;
 
-        // Update player color
-        player.instance.color[0] = playerColor[0];
-        player.instance.color[1] = playerColor[1];
-        player.instance.color[2] = playerColor[2];
-        player.instance.color[3] = 1.0f;
-
         // Animate player to get user's attention, so they know what block represents the player
         if (effects.playerJumpEnabled)
         {
@@ -1444,13 +1501,16 @@ private:
         commands->DrawInstanced(mdlBlock.numVertices, mdlBlock.firstVertex, numTiles);
 
         // Draw decor (trees)
-        uniforms.firstInstance += numTiles;
-        uniforms.worldOffset[1] = -1.0f;
-        uniforms.bendIntensity = 0.5f;
-        commands->SetUniforms(0, &uniforms, sizeof(uniforms));
-
         const std::uint32_t numTrees = level.treeInstanceRange.Count();
-        commands->DrawInstanced(mdlTree.numVertices, mdlTree.firstVertex, numTrees);
+        if (numTrees > 0)
+        {
+            uniforms.firstInstance += numTiles;
+            uniforms.worldOffset[1] = -1.0f;
+            uniforms.bendIntensity = 0.5f;
+            commands->SetUniforms(0, &uniforms, sizeof(uniforms));
+
+            commands->DrawInstanced(mdlTree.numVertices, mdlTree.firstVertex, numTrees);
+        }
     }
 
     void RenderScene(bool renderShadowMap)
@@ -1472,7 +1532,7 @@ private:
             // Render current level
             commands->PushDebugGroup("CurrentLevel");
             {
-                RenderLevel(*currentLevel, Gs::Lerp(0.0f, -levelDistance, levelTransition), levelInstanceOffset);
+                RenderLevel(*currentLevel, Gs::Lerp(0.0f, -levelDistance, levelTransition), currentLevelInstanceOffset);
             }
             commands->PopDebugGroup();
 
@@ -1542,7 +1602,7 @@ private:
                 if (numInstancesToUpdate > 0)
                 {
                     // Update mesh instance buffer
-                    const std::uint32_t firstInstanceToUpdate = (1 + levelInstanceOffset + currentLevel->meshInstanceDirtyRange.begin);
+                    const std::uint32_t firstInstanceToUpdate = (1 + nextLevelInstanceOffset + currentLevel->meshInstanceDirtyRange.begin);
 
                     commands->UpdateBuffer(
                         *instanceBuffer,
