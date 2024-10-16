@@ -19,6 +19,16 @@ namespace LLGL
 {
 
 
+static bool IsAnyShaderInvalid(const ArrayView<D3D11Shader*>& shaders)
+{
+    for (D3D11Shader* shader : shaders)
+    {
+        if (shader->GetByteCode() == nullptr)
+            return true;
+    }
+    return false;
+}
+
 D3D11PipelineState::D3D11PipelineState(
     bool                        isGraphicsPSO,
     const PipelineLayout*       pipelineLayout,
@@ -29,10 +39,9 @@ D3D11PipelineState::D3D11PipelineState(
 {
     if (pipelineLayout_ != nullptr && !pipelineLayout_->GetUniforms().empty())
     {
-        constantsCache_ = MakeUnique<D3D11ConstantsCache>(
-            CastShaderArray<D3D11Shader>(shaders),
-            pipelineLayout_->GetUniforms()
-        );
+        SmallVector<D3D11Shader*, 5> shadersD3D = CastShaderArray<D3D11Shader>(shaders);
+        if (!IsAnyShaderInvalid(shadersD3D))
+            constantsCache_ = MakeUnique<D3D11ConstantsCache>(shadersD3D, pipelineLayout_->GetUniforms());
     }
 }
 
