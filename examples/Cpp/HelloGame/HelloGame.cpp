@@ -17,22 +17,12 @@
 #define ENABLE_CHEATS 1
 
 
-struct TimeOfDay
-{
-    Gs::Vector3f    lightDir;
-    LLGL::ColorRGBf lightColor;
-    float           ambientIntensity;
-
-    static TimeOfDay Interpolate(const TimeOfDay& a, const TimeOfDay& b, float t)
-    {
-        TimeOfDay result;
-        result.lightDir         = Gs::Lerp(a.lightDir, b.lightDir, t).Normalized();
-        result.lightColor       = Gs::Lerp(a.lightColor, b.lightColor, t);
-        result.ambientIntensity = Gs::Lerp(a.ambientIntensity, b.ambientIntensity, t);
-        return result;
-    }
-};
-
+/*
+This is a simple puzzle game to showcase a small example on how to create a game with LLGL.
+Use the arrow keys to move the player cube and try to activate all tiles without locking yourself in.
+If cheats are enabled, use page up/down to switch to different levels on demand.
+All levels are described in the "HelloGame.levels.txt" text file.
+*/
 class Example_HelloGame : public ExampleBase
 {
 
@@ -57,6 +47,22 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  playerDescendRotations  = 4.0f;
     static constexpr float  playerDescendHeight     = 6.0f;
     static constexpr float  playerDescendDuration   = 1.5f;
+
+    struct TimeOfDay
+    {
+        Gs::Vector3f    lightDir;
+        LLGL::ColorRGBf lightColor;
+        float           ambientIntensity;
+
+        static TimeOfDay Interpolate(const TimeOfDay& a, const TimeOfDay& b, float t)
+        {
+            TimeOfDay result;
+            result.lightDir         = Gs::Lerp(a.lightDir, b.lightDir, t).Normalized();
+            result.lightColor       = Gs::Lerp(a.lightColor, b.lightColor, t);
+            result.ambientIntensity = Gs::Lerp(a.ambientIntensity, b.ambientIntensity, t);
+            return result;
+        }
+    };
 
     const TimeOfDay         timeOfDayMorning        = { Gs::Vector3f{ +0.15f, -1.0f, 0.25f }, LLGL::ColorRGBf{ 1.0f, 1.0f, 1.0f }, 0.6f };
     const TimeOfDay         timeOfDayEvening        = { Gs::Vector3f{ -0.75f, -0.7f, 2.25f }, LLGL::ColorRGBf{ 0.6f, 0.5f, 0.2f }, 0.2f };
@@ -87,6 +93,8 @@ class Example_HelloGame : public ExampleBase
     TriangleMesh            mdlBlock;
     TriangleMesh            mdlTree;
     TriangleMesh            mdlGround;
+
+    using InstanceMatrixType = Gs::AffineMatrix4f;
 
     struct alignas(16) Scene
     {
@@ -621,17 +629,23 @@ private:
             groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" }, { vertexFormat });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
         }
-#if 0
         else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
-            sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.vert" }, { vertexFormat });
-            sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.frag" });
+            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" }, { vertexFormat });
+            sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag" });
+
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert" }, { vertexFormat });
+            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
-            sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.450core.vert.spv" }, { vertexFormat });
-            sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.450core.frag.spv" });
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert.spv" }, { vertexFormat });
+            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag.spv" });
+
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert.spv" }, { vertexFormat });
+            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag.spv" });
         }
+#if 0
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
             sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.metal", "VSInstance", "vs_5_0" }, { vertexFormat });
@@ -646,16 +660,20 @@ private:
 
     void CreatePipelines()
     {
+        const bool needsExplicitMultiSample = (GetSampleCount() > 1 && !IsDirect3D());
+        const bool needsUniqueBindingSlots  = (IsVulkan());
+
         // Create PSO for instanced meshes
         scenePSOLayout[0] = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
                 "buffer(instances@2):vert,"
                 "texture(shadowMap@3):frag,"
-                "sampler(shadowMapSampler@3):frag,"
+                "sampler(shadowMapSampler@%d):frag,"
                 "float3(worldOffset),"
                 "float(bendIntensity),"
-                "uint(firstInstance),"
+                "uint(firstInstance),",
+                (needsUniqueBindingSlots ? 4 : 3)
             )
         );
 
@@ -669,7 +687,7 @@ private:
             scenePSODesc.depth.testEnabled              = true;
             scenePSODesc.depth.writeEnabled             = true;
             scenePSODesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-            //scenePSODesc.rasterizer.multiSampleEnabled  = (GetSampleCount() > 1);
+            scenePSODesc.rasterizer.multiSampleEnabled  = needsExplicitMultiSample;
             scenePSODesc.blend.targets[0].blendEnabled  = true;
         }
         scenePSO[0] = renderer->CreatePipelineState(scenePSODesc);
@@ -694,7 +712,7 @@ private:
             scenePSODesc.rasterizer.depthBias.constantFactor    = 1.0f;
             scenePSODesc.rasterizer.depthBias.slopeFactor       = 1.0f;
             scenePSODesc.rasterizer.cullMode                    = LLGL::CullMode::Front;
-            //scenePSODesc.rasterizer.multiSampleEnabled          = false;
+            scenePSODesc.rasterizer.multiSampleEnabled          = false;
             scenePSODesc.blend.targets[0].blendEnabled          = false;
             scenePSODesc.blend.targets[0].colorMask             = 0x0;
         }
@@ -705,10 +723,12 @@ private:
         groundPSOLayout = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
-                "texture(colorMap@0):frag,"
-                "sampler(colorMapSampler@0):frag,"
-                "texture(shadowMap@3):frag,"
-                "sampler(shadowMapSampler@3):frag,"
+                "texture(colorMap@2):frag,"
+                "sampler(colorMapSampler@%d):frag,"
+                "texture(shadowMap@4):frag,"
+                "sampler(shadowMapSampler@%d):frag,",
+                (needsUniqueBindingSlots ? 3 : 2),
+                (needsUniqueBindingSlots ? 5 : 4)
             )
         );
 
@@ -722,7 +742,7 @@ private:
             groundPSODesc.depth.testEnabled             = true;
             groundPSODesc.depth.writeEnabled            = true;
             groundPSODesc.rasterizer.cullMode           = LLGL::CullMode::Back;
-            //groundPSODesc.rasterizer.multiSampleEnabled = (GetSampleCount() > 1);
+            groundPSODesc.rasterizer.multiSampleEnabled = needsExplicitMultiSample;
         }
         groundPSO = renderer->CreatePipelineState(groundPSODesc);
         ReportPSOErrors(groundPSO);
@@ -735,7 +755,7 @@ private:
         return Gs::Vector3f{ posX, posY, posZ };
     }
 
-    static void RotateAroundPivot(Gs::AffineMatrix4f& outMatrix, const Gs::Vector3f& pivot, const Gs::Vector3f& axis, float angle)
+    static void RotateAroundPivot(InstanceMatrixType& outMatrix, const Gs::Vector3f& pivot, const Gs::Vector3f& axis, float angle)
     {
         Gs::Matrix3f rotation;
         Gs::RotateFree(rotation, axis, angle);
@@ -745,7 +765,7 @@ private:
         Gs::RotateFree(outMatrix, axis, angle);
     }
 
-    void SetPlayerTransform(Gs::AffineMatrix4f& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
+    void SetPlayerTransform(InstanceMatrixType& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
     {
         outMatrix.LoadIdentity();
 
@@ -790,13 +810,13 @@ private:
         }
     }
 
-    void SetPlayerTransformBounce(Gs::AffineMatrix4f& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
+    void SetPlayerTransformBounce(InstanceMatrixType& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
     {
         const float bounceTransition = std::abs(std::sinf(transition * Gs::pi * 2.0f)) * Gs::SmoothStep(1.0f - transition * 0.5f) * 0.2f;
         SetPlayerTransform(outMatrix, gridPos, moveX, moveZ, posY, bounceTransition);
     }
 
-    void SetPlayerTransformSpin(Gs::AffineMatrix4f& outMatrix, float& outTransparency, const int (&gridPos)[2], float transition)
+    void SetPlayerTransformSpin(InstanceMatrixType& outMatrix, float& outTransparency, const int (&gridPos)[2], float transition)
     {
         outMatrix.LoadIdentity();
 
@@ -820,7 +840,7 @@ private:
 
     void SetInstanceAttribs(Instance& instance, const int (&gridPos)[2], float posY, const Gradient* gradient = nullptr)
     {
-        Gs::AffineMatrix4f& wMatrix = *reinterpret_cast<Gs::AffineMatrix4f*>(instance.wMatrix);
+        InstanceMatrixType& wMatrix = *reinterpret_cast<InstanceMatrixType*>(instance.wMatrix);
         wMatrix.LoadIdentity();
 
         const Gs::Vector3f pos = GridPosToWorldPos(gridPos, posY);
@@ -1283,7 +1303,7 @@ private:
         }
 
         // Update player transformation
-        Gs::AffineMatrix4f& wMatrixPlayer = *reinterpret_cast<Gs::AffineMatrix4f*>(player.instance.wMatrix);
+        InstanceMatrixType& wMatrixPlayer = *reinterpret_cast<InstanceMatrixType*>(player.instance.wMatrix);
 
         Movement movement = Movement::Free;
 
@@ -1548,7 +1568,7 @@ private:
             }
         }
 
-        // Draw player mesh, but not while transitioning
+        // Draw player mesh
         commands->PushDebugGroup("Player");
         {
             // Always position player at the next level if there is one

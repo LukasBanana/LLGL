@@ -18,6 +18,18 @@ call :CompileGlslToSpirv Fonts/Example.450core.vert
 call :CompileGlslToSpirv Fonts/Example.450core.frag
 echo DONE
 
+echo ####### HelloGame #######
+call :CompileGlslToSpirv HelloGame/HelloGame.VSInstance.450core.vert
+call :CompileGlslToSpirv HelloGame/HelloGame.PSInstance.450core.frag
+call :CompileGlslToSpirv HelloGame/HelloGame.VSGround.450core.vert
+call :CompileGlslToSpirv HelloGame/HelloGame.PSGround.450core.frag
+echo DONE
+
+echo ####### HelloTriangle #######
+call :CompileGlslToSpirv HelloTriangle/Example.450core.vert
+call :CompileGlslToSpirv HelloTriangle/Example.450core.frag
+echo DONE
+
 echo ####### HelloTriangle #######
 call :CompileGlslToSpirv HelloTriangle/Example.450core.vert
 call :CompileGlslToSpirv HelloTriangle/Example.450core.frag

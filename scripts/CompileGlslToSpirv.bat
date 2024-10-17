@@ -9,7 +9,7 @@ set INPUT_FILE=%1
 set OUTPUT_FILE=%INPUT_FILE%.spv
 
 if "%2"=="" (
-    glslangValidator -V -o %OUTPUT_FILE% %INPUT_FILE%
+    glslangValidator -V -DENABLE_SPIRV=1 -o %OUTPUT_FILE% %INPUT_FILE%
 ) else (
-    glslangValidator -V -S %2 -o %OUTPUT_FILE% %INPUT_FILE%
+    glslangValidator -V -DENABLE_SPIRV=1 -S %2 -o %OUTPUT_FILE% %INPUT_FILE%
 )

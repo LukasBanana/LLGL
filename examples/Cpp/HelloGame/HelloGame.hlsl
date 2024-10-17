@@ -160,8 +160,8 @@ void VSGround(VertexIn inp, out GroundVertexOut outp)
 
 // PIXEL SHADER GROUND
 
-Texture2D colorMap : register(t0);
-SamplerState colorMapSampler : register(s0);
+Texture2D colorMap : register(t2);
+SamplerState colorMapSampler : register(s2);
 
 float4 PSGround(GroundVertexOut inp) : SV_Target
 {
