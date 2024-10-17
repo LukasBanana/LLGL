@@ -99,10 +99,19 @@ generate_html5_page()
     ASSETS_LIST_FILE=$(find "$PROJECT_SOURCE_DIR" -type f -name *.assets.txt)
     if [ -f "$ASSETS_LIST_FILE" ]; then
         # Read asset filenames to copy to package output
+        # and remove '\r' characters when reading the *.asset.txt file from WSL
         ASSET_FILES=()
-        for FILTER in $(cat $ASSETS_LIST_FILE); do
+        for FILTER in $(cat $ASSETS_LIST_FILE | tr -d '\r'); do
+            # Search for patterns in both the shared assets and current project folder
             for FILE in $ASSETS_SOURCE_DIR/$FILTER; do
-                ASSET_FILES+=( $(echo "$FILE" | tr -d '\r') ) # Remove '\r' characters when reading .txt file from WSL
+                if [ -f "$FILE" ]; then
+                    ASSET_FILES+=( "$FILE" )
+                fi
+            done
+            for FILE in $PROJECT_SOURCE_DIR/$FILTER; do
+                if [ -f "$FILE" ]; then
+                    ASSET_FILES+=( "$FILE" )
+                fi
             done
         done
 

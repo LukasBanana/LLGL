@@ -36,8 +36,6 @@ See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
 #   include <emscripten/html5.h>
 #endif
 
-#define IMMEDIATE_SUBMIT_CMDBUFFER 0
-
 
 /*
  * Global helper functions
@@ -343,6 +341,7 @@ struct ExampleConfig
     bool            vsync           = true;
     bool            debugger        = false;
     long            flags           = 0;
+    bool            immediateSubmit = false;
 };
 
 static ExampleConfig g_Config;
@@ -360,6 +359,8 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.vsync = false;
     if (HasArgument("-d", argc, argv) || HasArgument("--debug", argc, argv))
         g_Config.debugger = true;
+    if (HasArgument("-i", argc, argv) || HasArgument("--icontext", argc, argv))
+        g_Config.immediateSubmit = true;
     if (HasArgument("-nvidia", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
     if (HasArgument("-amd", argc, argv))
@@ -533,9 +534,8 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     LLGL::CommandBufferDescriptor cmdBufferDesc;
     {
         cmdBufferDesc.debugName = "Commands";
-        #if IMMEDIATE_SUBMIT_CMDBUFFER
-        cmdBufferDesc.flags     = LLGL::CommandBufferFlags::ImmediateSubmit;
-        #endif
+        if (g_Config.immediateSubmit)
+            cmdBufferDesc.flags = LLGL::CommandBufferFlags::ImmediateSubmit;
     }
     commands = renderer->CreateCommandBuffer(cmdBufferDesc);
 

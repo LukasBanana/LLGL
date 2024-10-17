@@ -151,21 +151,19 @@ function(find_source_files OUTPUT_LIST FILTERS)
 endfunction()
 
 # Adds a (variadic) list of resource files to the output project files.
-# The resource files must be located in the shared assets folder,
+# The resource files must be located in either the shared assets folder,
 # i.e. either under "examples/Shared/Assets/".
 # Example:
 #   add_project_resource_files(MyProjectFiles "Models/ModelAssets-*.obj" "Textures/TextureAsset-1.jpg")
-function(add_project_resource_files OUTPUT_LIST)
+function(add_project_resource_files OUTPUT_LIST SRC_FOLDER)
     # Iterate over all input filenames and expand their paths depending on their file extensions
     set(ResourceFiles "")
     set(InputFilenames "${ARGN}")
     foreach(InputFile ${InputFilenames})
-        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga)")
-            file(GLOB TextureResourceFiles "${SHARED_ASSETS_DIR}/${InputFile}")
-            list(APPEND ResourceFiles "${TextureResourceFiles}")
-        elseif("${InputFile}" MATCHES ".+\\.(obj)")
-            file(GLOB ModelResourceFiles "${SHARED_ASSETS_DIR}/${InputFile}")
-            list(APPEND ResourceFiles "${ModelResourceFiles}")
+        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga|obj|txt)")
+            file(GLOB SharedResourceFiles "${SHARED_ASSETS_DIR}/${InputFile}")
+            file(GLOB ProjectResourceFiles "${SRC_FOLDER}/${InputFile}")
+            list(APPEND ResourceFiles "${SharedResourceFiles}" "${ProjectResourceFiles}")
         endif()
     endforeach()
     
@@ -215,7 +213,7 @@ function(find_project_source_files OUTPUT_LIST SRC_FILES)
             if(NOT "${AssetsListContents}" STREQUAL "")
                 string(REGEX REPLACE ";" "\\\\;" AssetsListContents "${AssetsListContents}")
                 string(REGEX REPLACE "\n" ";" AssetsListContents "${AssetsListContents}")
-                add_project_resource_files(OutputProjectFiles ${AssetsListContents})
+                add_project_resource_files(OutputProjectFiles "${SRC_FILES}" ${AssetsListContents})
             endif()
         endif()
     endif()

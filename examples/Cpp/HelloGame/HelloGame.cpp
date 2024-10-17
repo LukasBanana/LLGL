@@ -629,7 +629,7 @@ private:
             groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" }, { vertexFormat });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
         {
             sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" }, { vertexFormat });
             sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag" });
@@ -960,9 +960,9 @@ private:
 
             return LLGL::ColorRGBub
             {
-                ((color >> 16) & 0xFF),
-                ((color >>  8) & 0xFF),
-                ((color      ) & 0xFF)
+                static_cast<std::uint8_t>((color >> 16) & 0xFF),
+                static_cast<std::uint8_t>((color >>  8) & 0xFF),
+                static_cast<std::uint8_t>((color      ) & 0xFF)
             };
         };
 
@@ -1675,6 +1675,29 @@ private:
     }
 
 };
+
+// Clang/GCC need these declared here as well prior to C++17
+constexpr float  Example_HelloGame::levelTransitionSpeed   ;
+constexpr float  Example_HelloGame::levelDoneSpeed         ;
+constexpr float  Example_HelloGame::wallPosY               ;
+constexpr int    Example_HelloGame::inputStackSize         ;
+constexpr float  Example_HelloGame::playerColor[3]         ;
+constexpr float  Example_HelloGame::treeColorGradient[2][3];
+constexpr float  Example_HelloGame::treeAnimSpeed          ;
+constexpr float  Example_HelloGame::treeAnimRadius         ;
+constexpr int    Example_HelloGame::shadowMapSize          ;
+constexpr float  Example_HelloGame::timeOfDayChangeSpeed   ;
+
+constexpr float  Example_HelloGame::playerMoveSpeed        ;
+constexpr float  Example_HelloGame::playerFallAcceleration ;
+constexpr float  Example_HelloGame::playerJumpWait         ;
+constexpr float  Example_HelloGame::playerJumpDuration     ;
+constexpr float  Example_HelloGame::playerJumpHeight       ;
+constexpr int    Example_HelloGame::playerJumpBounces      ;
+constexpr float  Example_HelloGame::playerExplodeDuration  ;
+constexpr float  Example_HelloGame::playerDescendRotations ;
+constexpr float  Example_HelloGame::playerDescendHeight    ;
+constexpr float  Example_HelloGame::playerDescendDuration  ;
 
 LLGL_IMPLEMENT_EXAMPLE(Example_HelloGame);
 

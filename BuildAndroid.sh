@@ -168,6 +168,7 @@ BASE_OPTIONS=(
     -DLLGL_GL_ENABLE_OPENGLES=$GLES_VER
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
+    -DLLGL_VK_ENABLE_SPIRV_REFLECT=$ENABLE_VULKAN
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=OFF
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
@@ -284,8 +285,16 @@ generate_app_project()
         readarray -t ASSET_FILTERS < <(tr -d '\r' < "$ASSETS_LIST_FILE")
         ASSET_FILES=()
         for FILTER in ${ASSET_FILTERS[@]}; do
+            # Search for patterns in both the shared assets and current project folder
             for FILE in $ASSETS_SOURCE_DIR/$FILTER; do
-                ASSET_FILES+=( "$FILE" )
+                if [ -f "$FILE" ]; then
+                    ASSET_FILES+=( "$FILE" )
+                fi
+            done
+            for FILE in $PROJECT_SOURCE_DIR/$FILTER; do
+                if [ -f "$FILE" ]; then
+                    ASSET_FILES+=( "$FILE" )
+                fi
             done
         done
 

@@ -15,24 +15,24 @@ cbuffer Settings : register(b1)
 
 struct VIn
 {
-	float3 position : POSITION;
-	float3 normal   : NORMAL;
+    float3 position : POSITION;
+    float3 normal   : NORMAL;
     float2 texCoord : TEXCOORD;
 };
 
 struct VOut
 {
-	float4 position : SV_Position;
+    float4 position : SV_Position;
     float4 worldPos : WORLDPOS;
-	float4 normal   : NORMAL;
+    float4 normal   : NORMAL;
     float2 texCoord : TEXCOORD;
 };
 
 void VS(VIn inp, out VOut outp)
 {
     outp.worldPos   = mul(wMatrix, float4(inp.position, 1));
-	outp.position	= mul(vpMatrix, outp.worldPos);
-	outp.normal		= mul(wMatrix, float4(inp.normal, 0));
+    outp.position	= mul(vpMatrix, outp.worldPos);
+    outp.normal		= mul(wMatrix, float4(inp.normal, 0));
     outp.texCoord   = inp.texCoord;
 }
 
