@@ -13,6 +13,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <stdint.h>
+#include <cmath>
 
 /*
 Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
@@ -963,7 +964,7 @@ private:
         {
             const float jumpDamping = Gs::SmoothStep(1.0f - effects.playerJumpPhase);
             const float jumpPhase   = Gs::pi + effects.playerJumpPhase * Gs::pi * 2.0f * static_cast<float>(playerJumpBounces);
-            const float jumpHeight  = std::sinf(jumpPhase) * playerJumpHeight * jumpDamping;
+            const float jumpHeight  = std::sin(jumpPhase) * playerJumpHeight * jumpDamping;
             Gs::Translate(outMatrix, Gs::Vector3f{ 0, jumpHeight*0.5f, 0 });
             Gs::Scale(outMatrix, Gs::Vector3f{ 1, 1.0f + jumpHeight, 1 });
         }
@@ -997,7 +998,7 @@ private:
 
     void SetPlayerTransformBounce(InstanceMatrixType& outMatrix, const int (&gridPos)[2], int moveX, int moveZ, float posY, float transition)
     {
-        const float bounceTransition = std::abs(std::sinf(transition * Gs::pi * 2.0f)) * Gs::SmoothStep(1.0f - transition * 0.5f) * 0.2f;
+        const float bounceTransition = std::abs(std::sin(transition * Gs::pi * 2.0f)) * Gs::SmoothStep(1.0f - transition * 0.5f) * 0.2f;
         SetPlayerTransform(outMatrix, gridPos, moveX, moveZ, posY, bounceTransition);
     }
 
@@ -1006,7 +1007,7 @@ private:
         outMatrix.LoadIdentity();
 
         // Interpolate between start and end positions
-        const float phase       = std::powf(transition, 0.3f);
+        const float phase       = std::pow(transition, 0.3f);
         const float posYStart   = wallPosY + playerDescendHeight;
         const float posYEnd     = wallPosY;
         const float posY        = Gs::Lerp(posYStart, posYEnd, phase);
@@ -1639,7 +1640,7 @@ private:
             float maxWarpIntensity = (1.0f - effects.warpTime) * effects.warpMaxIntensity;
             if (maxWarpIntensity > 0.0f)
             {
-                scene.warpIntensity = std::sinf(effects.warpTime * Gs::pi * 2.0f * static_cast<float>(effects.warpBounces)) * maxWarpIntensity;
+                scene.warpIntensity = std::sin(effects.warpTime * Gs::pi * 2.0f * static_cast<float>(effects.warpBounces)) * maxWarpIntensity;
             }
             else
             {
@@ -1649,10 +1650,10 @@ private:
         }
 
         // Animate tree rotation
-        effects.treeBendTime = std::fmodf(effects.treeBendTime + dt / treeAnimSpeed, 1.0f);
+        effects.treeBendTime = std::fmod(effects.treeBendTime + dt / treeAnimSpeed, 1.0f);
         const float treeBendAngle = effects.treeBendTime * Gs::pi * 2.0f;
-        scene.bendDir.x = std::sinf(treeBendAngle) * treeAnimRadius;
-        scene.bendDir.z = std::cosf(treeBendAngle) * treeAnimRadius * 0.5f;
+        scene.bendDir.x = std::sin(treeBendAngle) * treeAnimRadius;
+        scene.bendDir.z = std::cos(treeBendAngle) * treeAnimRadius * 0.5f;
 
         // Animate player to get user's attention, so they know what block represents the player
         if (effects.playerJumpEnabled)
