@@ -18,8 +18,8 @@
         // web worker
         PACKAGE_PATH = encodeURIComponent(location.pathname.toString().substring(0, location.pathname.toString().lastIndexOf('/')) + '/');
       }
-      var PACKAGE_NAME = 'Example_Fonts.data';
-      var REMOTE_PACKAGE_BASE = 'Example_Fonts.data';
+      var PACKAGE_NAME = 'Example_HelloGame.data';
+      var REMOTE_PACKAGE_BASE = 'Example_HelloGame.data';
       if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
         Module['locateFile'] = Module['locateFilePackage'];
         err('warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)');
@@ -150,10 +150,10 @@ Module['FS_createPath']("/", "assets", true, true);
           var files = metadata['files'];
           for (var i = 0; i < files.length; ++i) {
             DataRequest.prototype.requests[files[i].filename].onload();
-          }          Module['removeRunDependency']('datafile_Example_Fonts.data');
+          }          Module['removeRunDependency']('datafile_Example_HelloGame.data');
 
       };
-      Module['addRunDependency']('datafile_Example_Fonts.data');
+      Module['addRunDependency']('datafile_Example_HelloGame.data');
 
       if (!Module.preloadResults) Module.preloadResults = {};
 
@@ -174,6 +174,6 @@ Module['FS_createPath']("/", "assets", true, true);
     }
 
     }
-    loadPackage({"files": [{"filename": "/assets/Black.atlas-23.map", "start": 0, "end": 2370}, {"filename": "/assets/Black.atlas-23.png", "start": 2370, "end": 26674}, {"filename": "/assets/Black.atlas-50.map", "start": 26674, "end": 29201}, {"filename": "/assets/Black.atlas-50.png", "start": 29201, "end": 89868}, {"filename": "/assets/Example.450core.frag", "start": 89868, "end": 90265}, {"filename": "/assets/Example.450core.vert", "start": 90265, "end": 90989}, {"filename": "/assets/Example.frag", "start": 90989, "end": 91267}, {"filename": "/assets/Example.vert", "start": 91267, "end": 91849}, {"filename": "/assets/FontAtlas_CourierNew_Bold_16.png", "start": 91849, "end": 96569}, {"filename": "/assets/FontAtlas_LucidaConsole_Bold_32.png", "start": 96569, "end": 108857}, {"filename": "/assets/Tuffy.atlas-12.map", "start": 108857, "end": 111080}, {"filename": "/assets/Tuffy.atlas-12.png", "start": 111080, "end": 121663}, {"filename": "/assets/Tuffy.atlas-23.map", "start": 121663, "end": 123992}, {"filename": "/assets/Tuffy.atlas-23.png", "start": 123992, "end": 143898}], "remote_package_size": 143898});
+    loadPackage({"files": [{"filename": "/assets/Grass.jpg", "start": 0, "end": 152754}, {"filename": "/assets/HelloGame.PSGround.300es.frag", "start": 152754, "end": 154951}, {"filename": "/assets/HelloGame.PSGround.450core.frag", "start": 154951, "end": 157783}, {"filename": "/assets/HelloGame.PSInstance.300es.frag", "start": 157783, "end": 160472}, {"filename": "/assets/HelloGame.PSInstance.450core.frag", "start": 160472, "end": 163564}, {"filename": "/assets/HelloGame.VSGround.300es.vert", "start": 163564, "end": 164331}, {"filename": "/assets/HelloGame.VSGround.450core.vert", "start": 164331, "end": 165198}, {"filename": "/assets/HelloGame.VSInstance.300es.vert", "start": 165198, "end": 167436}, {"filename": "/assets/HelloGame.VSInstance.450core.vert", "start": 167436, "end": 170061}, {"filename": "/assets/HelloGame.levels.txt", "start": 170061, "end": 171332}, {"filename": "/assets/HelloGame_Block.obj", "start": 171332, "end": 225208}, {"filename": "/assets/HelloGame_Ground.obj", "start": 225208, "end": 225544}, {"filename": "/assets/HelloGame_Player.obj", "start": 225544, "end": 251419}, {"filename": "/assets/HelloGame_Tree.obj", "start": 251419, "end": 258441}], "remote_package_size": 258441});
 
   })();
