@@ -138,25 +138,25 @@ static void GLGetSupportedFeatures(RenderingFeatures& features, GLint version)
     features.has3DTextures                  = true;             // GLES 2.0
     features.hasCubeTextures                = true;             // GLES 2.0
     features.hasArrayTextures               = true;             // GLES 2.0
-    features.hasCubeArrayTextures           = (version >= 320); // GLES 3.2
-    features.hasMultiSampleTextures         = (version >= 310); // GLES 3.1
+    features.hasCubeArrayTextures           = false;
+    features.hasMultiSampleTextures         = false;
     features.hasTextureViews                = false;
     features.hasTextureViewSwizzle          = false;
     features.hasBufferViews                 = (version >= 300); // GLES 3.0
     features.hasConstantBuffers             = (version >= 300); // GLES 3.0
-    features.hasStorageBuffers              = (version >= 300); // GLES 3.0
-    features.hasGeometryShaders             = (version >= 320); // GLES 3.2
-    features.hasTessellationShaders         = (version >= 320); // GLES 3.2
-    features.hasTessellatorStage            = (version >= 320); // GLES 3.2
-    features.hasComputeShaders              = (version >= 310); // GLES 3.1
+    features.hasStorageBuffers              = false;
+    features.hasGeometryShaders             = false;
+    features.hasTessellationShaders         = false;
+    features.hasTessellatorStage            = false;
+    features.hasComputeShaders              = false;
     features.hasInstancing                  = (version >= 300); // GLES 3.0
     features.hasOffsetInstancing            = false;
-    features.hasIndirectDrawing             = (version >= 310); // GLES 3.1
+    features.hasIndirectDrawing             = false;
     features.hasViewportArrays              = false;
     features.hasConservativeRasterization   = false;
     features.hasStreamOutputs               = (version >= 300); // GLES 3.0
     features.hasLogicOp                     = false;
-    features.hasPipelineCaching             = (version >= 300); // GLES 3.0
+    features.hasPipelineCaching             = false;
     features.hasPipelineStatistics          = false;
     features.hasRenderCondition             = false;
 }
