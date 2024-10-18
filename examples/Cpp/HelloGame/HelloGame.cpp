@@ -11,10 +11,24 @@
 #include <algorithm>
 #include <limits.h>
 #include <sstream>
+#include <stdio.h>
+#include <stdint.h>
+
+/*
+Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
+See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
+*/
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+#include <inttypes.h>
 
 
-// Enables cheats by allowing page up/down to select next or previous level
-#define ENABLE_CHEATS 1
+// Enables cheats by allowing page up/down to select next or previous level.
+#define ENABLE_CHEATS       1
+
+// Enables verbose logs about resource creation such as the instance buffer size.
+#define ENABLE_VERBOSE_LOGS 1
 
 
 /*
@@ -77,8 +91,6 @@ class Example_HelloGame : public ExampleBase
 
     LLGL::Buffer*           cbufferScene            = nullptr;
     LLGL::Buffer*           vertexBuffer            = nullptr;
-    LLGL::Buffer*           instanceBuffer          = nullptr;
-    std::uint32_t           instanceBufferCapacity  = 0; // Number of instances the instance buffer can hold
 
     LLGL::Texture*          groundColorMap          = nullptr;
     LLGL::Sampler*          groundColorMapSampler   = nullptr;
@@ -115,13 +127,19 @@ class Example_HelloGame : public ExampleBase
     }
     scene;
 
-    struct alignas(4) Uniforms
+    enum Unifom
+    {
+        Uniform_worldOffset = 0,
+        Uniform_bendIntensity,
+        Uniform_firstInstance
+    };
+
+    struct alignas(4) WorldTransform
     {
         float           worldOffset[3]  = { 0.0f, 0.0f, 0.0f };
         float           bendIntensity   = 0.0f;
-        std::uint32_t   firstInstance   = 0;
     }
-    uniforms;
+    worldTransform;
 
     struct Vertex
     {
@@ -457,6 +475,167 @@ class Example_HelloGame : public ExampleBase
         BlockedByTile,
     };
 
+    // Abstracts the segmentation of a large buffer of mesh instances into one or more segments.
+    // This is mainly required to split the instance buffer into smaller chunks for GLES and WebGL
+    // so they fit into a fixed size uniform buffer blocks.
+    class InstanceBuffer
+    {
+        static constexpr std::uint32_t  cbufferNumInstances = 64u;      // This must match MAX_NUM_INSTANCES in ESSL shaders
+
+        std::vector<LLGL::Buffer*>      segments;                       // Buffer segments
+        std::uint64_t                   sizePerSegment      = 0;        // Size (in bytes) per segment
+        std::uint32_t                   capacity            = 0;        // Number of instances the instance buffer can hold
+        std::uint64_t                   bufferLimit         = 0;
+        bool                            isCbuffer           = false;    // Use cbuffer when storage buffers are not available
+
+    public:
+
+        bool IsCbuffer() const
+        {
+            return isCbuffer;
+        }
+
+        void Init(const LLGL::RenderingCapabilities& caps)
+        {
+            // SSBOs are not supported in ESSL for instance, so when storage buffers are not supported,
+            // we use a uniform buffer (aka constant buffer) for instances
+            isCbuffer   = !caps.features.hasStorageBuffers;
+            bufferLimit = (isCbuffer ? caps.limits.maxConstantBufferSize : caps.limits.maxBufferSize);
+
+            #if ENABLE_VERBOSE_LOGS
+            if (isCbuffer)
+                LLGL::Log::Printf("Storage buffers not supported: Using constant buffers for instanced drawing\n");
+            #endif
+        }
+
+        void Resize(LLGL::RenderSystem& renderer, std::uint32_t numInstances)
+        {
+            // Check if the buffer must be resized
+            if (numInstances <= capacity)
+                return;
+
+            // When allocating instances as constant buffer, we have to allocate a minimum size.
+            // This minimum size is also the maximum number of instances per draw call,
+            // so we'll have to iterate through the buffer when more instances have to be drawn.
+            if (isCbuffer)
+                numInstances = std::max<std::uint32_t>(numInstances, cbufferNumInstances);
+
+            // Check if number of instances will exceed limit
+            std::string bufferName;
+            const std::uint64_t bufferSize = sizeof(Instance) * numInstances;
+
+            sizePerSegment = std::min<std::uint64_t>(bufferLimit, (isCbuffer ? sizeof(Instance) * cbufferNumInstances : bufferSize));
+            const std::uint64_t numSegments = (bufferSize + sizePerSegment - 1) / sizePerSegment;
+
+            segments.resize(static_cast<std::size_t>(numSegments));
+
+            for_range(i, segments.size())
+            {
+                // Release previous buffers
+                if (segments[i] != nullptr)
+                    renderer.Release(*segments[i]);
+
+                // Create instance buffer from mesh instance data
+                bufferName = "InstanceBuffer[" + std::to_string(i) + "]";
+                LLGL::BufferDescriptor instanceBufferDesc;
+                {
+                    instanceBufferDesc.debugName    = bufferName.c_str();
+                    instanceBufferDesc.size         = sizePerSegment;
+                    instanceBufferDesc.stride       = (isCbuffer ? 0 : sizeof(Instance));
+                    instanceBufferDesc.bindFlags    = (isCbuffer ? LLGL::BindFlags::ConstantBuffer : LLGL::BindFlags::Sampled);
+                }
+                segments[i] = renderer.CreateBuffer(instanceBufferDesc);
+            }
+
+            // Update capacity of how many instances this buffer can hold
+            capacity = static_cast<std::uint32_t>((sizePerSegment / sizeof(Instance)) * numSegments);
+
+            #if ENABLE_VERBOSE_LOGS
+            // Log new instance buffer size
+            const char* segmentsSuffix = (segments.size() == 1 ? "segment" : "segments");
+            if (bufferLimit < UINT32_MAX)
+            {
+                LLGL::Log::Printf(
+                    "Resized instance buffer: %s (%zu %s) for %u instances (limit is %s)\n",
+                    BytesToString(bufferSize).c_str(), segments.size(), segmentsSuffix, capacity, BytesToString(bufferLimit).c_str()
+                );
+            }
+            else
+            {
+                LLGL::Log::Printf(
+                    "Resized instance buffer: %s (%zu %s) for %u instances\n",
+                    BytesToString(bufferSize).c_str(), segments.size(), segmentsSuffix, capacity
+                );
+            }
+            #endif
+        }
+
+        void Write(LLGL::RenderSystem& renderer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
+        {
+            const char* byteAlignedData     = reinterpret_cast<const char*>(data);
+            const char* byteAlignedDataEnd  = byteAlignedData + dataSize;
+
+            while (dataSize > 0)
+            {
+                const std::uint64_t offsetEnd = ((offset + sizePerSegment) / sizePerSegment) * sizePerSegment;
+                const std::uint64_t batchDataSize = std::min<std::uint64_t>(dataSize, offsetEnd - offset);
+
+                renderer.WriteBuffer(*segments[offset / sizePerSegment], offset % sizePerSegment, byteAlignedData, batchDataSize);
+
+                byteAlignedData += batchDataSize;
+                offset += batchDataSize;
+                dataSize -= batchDataSize;
+            }
+        }
+
+        void Update(LLGL::CommandBuffer& cmdBuffer, std::uint64_t offset, const void* data, std::uint16_t dataSize)
+        {
+            const char* byteAlignedData     = reinterpret_cast<const char*>(data);
+            const char* byteAlignedDataEnd  = byteAlignedData + dataSize;
+
+            while (dataSize > 0)
+            {
+                const std::uint64_t offsetEnd = ((offset + sizePerSegment) / sizePerSegment) * sizePerSegment;
+                const std::uint16_t batchDataSize = static_cast<std::uint16_t>(std::min<std::uint64_t>(dataSize, offsetEnd - offset));
+
+                cmdBuffer.UpdateBuffer(*segments[offset / sizePerSegment], offset % sizePerSegment, byteAlignedData, batchDataSize);
+
+                byteAlignedData += batchDataSize;
+                offset += batchDataSize;
+                dataSize -= batchDataSize;
+            }
+        }
+
+        void DrawInstances(LLGL::CommandBuffer& cmdBuffer, std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
+        {
+            if (segments.empty())
+                return;
+
+            // Split draw call into batches of instances that can fit into the shader's cbuffer (MAX_NUM_INSTANCES in ESSL)
+            const std::uint32_t numInstancePerSegment = static_cast<std::uint32_t>(sizePerSegment/sizeof(Instance));
+            std::uint32_t instanceIndex = firstInstance;
+            const std::uint32_t endInstanceIndex = firstInstance + numInstances;
+            const std::uint32_t zeroIndex = 0;
+
+            while (instanceIndex < endInstanceIndex)
+            {
+                // Move to next index in strides of 'numInstancePerSegment',
+                // e.g. stride is 64 and we start at 60, then indices are 60, 64, 128, 192, 256, ...
+                const std::uint32_t nextInstanceIndex = std::min<std::uint32_t>(((instanceIndex + numInstancePerSegment) / numInstancePerSegment) * numInstancePerSegment, firstInstance + numInstances);
+                const std::uint32_t numInstancesPerBatch = nextInstanceIndex - instanceIndex;
+
+                cmdBuffer.SetResource(1, *segments[instanceIndex / numInstancePerSegment]);
+
+                const std::uint32_t instanceOffset = instanceIndex % numInstancePerSegment;
+                cmdBuffer.SetUniforms(Uniform_firstInstance, &instanceOffset, sizeof(instanceOffset));
+
+                cmdBuffer.DrawInstanced(numVertices, firstVertex, numInstancesPerBatch);
+
+                instanceIndex = nextInstanceIndex;
+            }
+        }
+    };
+
     std::vector<Level>  levels;
     int                 currentLevelIndex           = -1;
     Level*              currentLevel                = nullptr;
@@ -466,6 +645,7 @@ class Example_HelloGame : public ExampleBase
     float               levelTransition             = 0.0f; // Transitioning state between two levesl - in the range [0, 1]
     float               levelDistance               = 0.0f; // Distance between two levels (to transition between them)
     float               levelDoneTransition         = 0.0f; // Transition starting when the level is completed
+    InstanceBuffer      instanceBuffer;
 
     struct Gradient
     {
@@ -519,6 +699,9 @@ private:
 
     LLGL::VertexFormat CreateResources()
     {
+        // Initialize instance buffer
+        instanceBuffer.Init(renderer->GetRenderingCaps());
+
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.attributes =
@@ -597,26 +780,18 @@ private:
         return vertexFormat;
     }
 
-    void CreateInstanceBuffer(std::uint32_t numInstances)
+    static std::string BytesToString(std::uint64_t val)
     {
-        // Check if the buffer must be resized
-        if (numInstances <= instanceBufferCapacity)
-            return;
-
-        // Release previous buffers
-        if (instanceBuffer != nullptr)
-            renderer->Release(*instanceBuffer);
-
-        // Create instance buffer from mesh instance data
-        LLGL::BufferDescriptor instanceBufferDesc;
-        {
-            instanceBufferDesc.debugName    = "InstanceBuffer";
-            instanceBufferDesc.size         = sizeof(Instance) * numInstances;
-            instanceBufferDesc.stride       = sizeof(Instance);
-            instanceBufferDesc.bindFlags    = LLGL::BindFlags::Sampled;
-        }
-        instanceBuffer = renderer->CreateBuffer(instanceBufferDesc);
-        instanceBufferCapacity = numInstances;
+        char buf[128] = { '\0' };
+        if (val / 1024 / 1024 / 1024 > 0)
+            ::sprintf(buf, "%.2f GiB", static_cast<double>(val) / 1024.0 / 1024.0 / 1024.0);
+        else if (val / 1024 / 1024 > 0)
+            ::sprintf(buf, "%.2f MiB", static_cast<double>(val) / 1024.0 / 1024.0);
+        else if (val / 1024 > 0)
+            ::sprintf(buf, "%.2f KiB", static_cast<double>(val) / 1024.0);
+        else
+            ::sprintf(buf, "%" PRIu64 " Bytes", val);
+        return std::string(buf);
     }
 
     void CreateShaders(const LLGL::VertexFormat& vertexFormat)
@@ -629,13 +804,21 @@ private:
             groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "vs_5_0" }, { vertexFormat });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "ps_5_0" });
         }
-        else if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.450core.vert" }, { vertexFormat });
             sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.450core.frag" });
 
             groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert" }, { vertexFormat });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag" });
+        }
+        else if (Supported(LLGL::ShadingLanguage::ESSL))
+        {
+            sceneShaders.vs  = LoadShaderAndPatchClippingOrigin({ LLGL::ShaderType::Vertex,   "HelloGame.VSInstance.300es.vert" }, { vertexFormat });
+            sceneShaders.ps  = LoadShader                      ({ LLGL::ShaderType::Fragment, "HelloGame.PSInstance.300es.frag" });
+
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.300es.vert" }, { vertexFormat });
+            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.300es.frag" });
         }
         else if (Supported(LLGL::ShadingLanguage::SPIRV))
         {
@@ -667,12 +850,13 @@ private:
         scenePSOLayout[0] = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
-                "buffer(instances@2):vert,"
+                "%s(instances@2):vert,"
                 "texture(shadowMap@3):frag,"
                 "sampler(shadowMapSampler@%d):frag,"
-                "float3(worldOffset),"
-                "float(bendIntensity),"
-                "uint(firstInstance),",
+                "float3(worldOffset),"  // Uniform_worldOffset   (0)
+                "float(bendIntensity)," // Uniform_bendIntensity (1)
+                "uint(firstInstance),", // Uniform_firstInstance (2)
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
                 (needsUniqueBindingSlots ? 4 : 3)
             )
         );
@@ -697,10 +881,11 @@ private:
         scenePSOLayout[1] = renderer->CreatePipelineLayout(
             LLGL::Parse(
                 "cbuffer(Scene@1):vert,"
-                "buffer(instances@2):vert,"
+                "%s(instances@2):vert,"
                 "float3(worldOffset),"
                 "float(bendIntensity),"
-                "uint(firstInstance),"
+                "uint(firstInstance),",
+                (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer")
             )
         );
 
@@ -1112,13 +1297,13 @@ private:
             nextLevelInstanceOffset = static_cast<std::uint32_t>(currentLevel->meshInstances.size());
 
             // Update instance buffer from current and next level instance data plus one instance for the player model
-            CreateInstanceBuffer(1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size() + nextLevel->meshInstances.size()));
+            instanceBuffer.Resize(*renderer, 1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size() + nextLevel->meshInstances.size()));
 
             const std::uint64_t instanceBufferSize0 = sizeof(Instance) * currentLevel->meshInstances.size();
             const std::uint64_t instanceBufferSize1 = sizeof(Instance) * nextLevel   ->meshInstances.size();
 
-            renderer->WriteBuffer(*instanceBuffer, playerBufferSize                      , currentLevel->meshInstances.data(), instanceBufferSize0);
-            renderer->WriteBuffer(*instanceBuffer, playerBufferSize + instanceBufferSize0, nextLevel   ->meshInstances.data(), instanceBufferSize1);
+            instanceBuffer.Write(*renderer, playerBufferSize                      , currentLevel->meshInstances.data(), instanceBufferSize0);
+            instanceBuffer.Write(*renderer, playerBufferSize + instanceBufferSize0, nextLevel   ->meshInstances.data(), instanceBufferSize1);
         }
         else
         {
@@ -1129,8 +1314,8 @@ private:
             nextLevelInstanceOffset = 0;
 
             // Update instance buffer from current level instance data plus one instance for the player model
-            CreateInstanceBuffer(1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size()));
-            renderer->WriteBuffer(*instanceBuffer, playerBufferSize, currentLevel->meshInstances.data(), sizeof(Instance) * currentLevel->meshInstances.size());
+            instanceBuffer.Resize(*renderer, 1 + static_cast<std::uint32_t>(currentLevel->meshInstances.size()));
+            instanceBuffer.Write(*renderer, playerBufferSize, currentLevel->meshInstances.data(), sizeof(Instance) * currentLevel->meshInstances.size());
         }
 
         // Store index to current level to conveniently selecting next and previous levels
@@ -1508,28 +1693,26 @@ private:
 
     void RenderLevel(const Level& level, float worldOffsetX, std::uint32_t instanceOffset)
     {
-        uniforms.worldOffset[0] = worldOffsetX;
-        uniforms.worldOffset[1] = 0.0f;
-        uniforms.worldOffset[2] = 0.0f;
+        worldTransform.worldOffset[0] = worldOffsetX;
+        worldTransform.worldOffset[1] = 0.0f;
+        worldTransform.worldOffset[2] = 0.0f;
 
         // Draw all tiles (floor and walls)
-        uniforms.firstInstance = 1 + instanceOffset;
-        uniforms.bendIntensity = 0.0f;
-        commands->SetUniforms(0, &uniforms, sizeof(uniforms));
+        worldTransform.bendIntensity = 0.0f;
+        commands->SetUniforms(Uniform_worldOffset, &worldTransform, sizeof(worldTransform));
 
         const std::uint32_t numTiles = level.tileInstanceRange.Count();
-        commands->DrawInstanced(mdlBlock.numVertices, mdlBlock.firstVertex, numTiles);
+        instanceBuffer.DrawInstances(*commands, mdlBlock.numVertices, mdlBlock.firstVertex, numTiles, 1 + instanceOffset);
 
         // Draw decor (trees)
         const std::uint32_t numTrees = level.treeInstanceRange.Count();
         if (numTrees > 0)
         {
-            uniforms.firstInstance += numTiles;
-            uniforms.worldOffset[1] = -1.0f;
-            uniforms.bendIntensity = 0.5f;
-            commands->SetUniforms(0, &uniforms, sizeof(uniforms));
+            worldTransform.worldOffset[1] = -1.0f;
+            worldTransform.bendIntensity = 0.5f;
+            commands->SetUniforms(Uniform_worldOffset, &worldTransform, sizeof(worldTransform));
 
-            commands->DrawInstanced(mdlTree.numVertices, mdlTree.firstVertex, numTrees);
+            instanceBuffer.DrawInstances(*commands, mdlTree.numVertices, mdlTree.firstVertex, numTrees, 1 + instanceOffset + numTiles);
         }
     }
 
@@ -1539,7 +1722,6 @@ private:
 
         commands->SetPipelineState(*scenePSO[psoIndex]);
         commands->SetResource(0, *cbufferScene);
-        commands->SetResource(1, *instanceBuffer);
 
         if (!renderShadowMap)
         {
@@ -1574,15 +1756,14 @@ private:
             // Always position player at the next level if there is one
             if (nextLevel == nullptr)
             {
-                uniforms.worldOffset[0] = 0.0f;
-                uniforms.worldOffset[1] = 0.0f;
-                uniforms.worldOffset[2] = 0.0f;
+                worldTransform.worldOffset[0] = 0.0f;
+                worldTransform.worldOffset[2] = 0.0f;
             }
-            uniforms.firstInstance = 0;
-            uniforms.bendIntensity = 0.0f;
-            commands->SetUniforms(0, &uniforms, sizeof(uniforms));
+            worldTransform.worldOffset[1] = 0.0f;
+            worldTransform.bendIntensity = 0.0f;
+            commands->SetUniforms(Uniform_worldOffset, &worldTransform, sizeof(worldTransform));
 
-            commands->Draw(mdlPlayer.numVertices, mdlPlayer.firstVertex);
+            instanceBuffer.DrawInstances(*commands, mdlPlayer.numVertices, mdlPlayer.firstVertex, 1, 0);
         }
         commands->PopDebugGroup();
 
@@ -1613,7 +1794,8 @@ private:
         {
             // Bind common input assembly
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->UpdateBuffer(*instanceBuffer, 0, &player.instance, sizeof(player.instance));
+
+            instanceBuffer.Update(*commands, 0, &player.instance, sizeof(player.instance));
 
             // Update mesh instances in dirty range
             if (currentLevel != nullptr)
@@ -1624,8 +1806,8 @@ private:
                     // Update mesh instance buffer
                     const std::uint32_t firstInstanceToUpdate = (1 + nextLevelInstanceOffset + currentLevel->meshInstanceDirtyRange.begin);
 
-                    commands->UpdateBuffer(
-                        *instanceBuffer,
+                    instanceBuffer.Update(
+                        *commands,
                         sizeof(Instance) * firstInstanceToUpdate,
                         &(currentLevel->meshInstances[currentLevel->meshInstanceDirtyRange.begin]),
                         static_cast<std::uint16_t>(sizeof(Instance) * numInstancesToUpdate)
@@ -1698,6 +1880,8 @@ constexpr float  Example_HelloGame::playerExplodeDuration  ;
 constexpr float  Example_HelloGame::playerDescendRotations ;
 constexpr float  Example_HelloGame::playerDescendHeight    ;
 constexpr float  Example_HelloGame::playerDescendDuration  ;
+
+constexpr std::uint32_t  Example_HelloGame::InstanceBuffer::cbufferNumInstances;
 
 LLGL_IMPLEMENT_EXAMPLE(Example_HelloGame);
 

@@ -1,19 +1,15 @@
-// GLSL shader for HelloGame example
+#version 300 es
+
+// ESSL shader for HelloGame example
 // This file is part of the LLGL project
 
-#version 450 core
-
-#ifndef ENABLE_SPIRV
-#define ENABLE_SPIRV 0
+#ifndef MAX_NUM_INSTANCES
+#define MAX_NUM_INSTANCES 64
 #endif
 
-#if ENABLE_SPIRV
-#   define INSTANCE_ID gl_InstanceIndex
-#else
-#   define INSTANCE_ID gl_InstanceID
-#endif
+precision mediump float;
 
-layout(std140, binding = 1) uniform Scene
+layout(std140) uniform Scene
 {
     mat4    vpMatrix;
     mat4    vpShadowMatrix;
@@ -42,39 +38,23 @@ struct Instance
 
 // VERTEX SHADER INSTANCE
 
-layout(std430, binding = 2) readonly buffer instances
+layout(std140) uniform instances
 {
-    Instance instancesArray[];
+    Instance instancesArray[MAX_NUM_INSTANCES];
 };
 
-#if ENABLE_SPIRV
-layout(push_constant) uniform Globals
-{
-    vec3    worldOffset;
-    float   bendIntensity;
-    uint    firstInstance;
-};
-#else
 uniform vec3    worldOffset;
 uniform float   bendIntensity;
 uniform uint    firstInstance;
-#endif
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
 
-layout(location = 0) out vec3 vWorldPos;
-layout(location = 1) out vec3 vNormal;
-layout(location = 2) out vec2 vTexCoord;
-layout(location = 3) out vec4 vColor;
-
-#if ENABLE_SPIRV
-out gl_PerVertex
-{
-    vec4 gl_Position;
-};
-#endif
+out vec3 vWorldPos;
+out vec3 vNormal;
+out vec2 vTexCoord;
+out vec4 vColor;
 
 float WarpIntensityCurve(float d)
 {
@@ -107,7 +87,7 @@ mat4x3 UnpackRowMajor3x4Matrix(vec4 row0, vec4 row1, vec4 row2)
 
 void main()
 {
-    Instance inst = instancesArray[INSTANCE_ID + firstInstance];
+    Instance inst = instancesArray[uint(gl_InstanceID) + firstInstance];
     mat4x3 wMatrix = UnpackRowMajor3x4Matrix(inst.wMatrixRow0, inst.wMatrixRow1, inst.wMatrixRow2);
     vec4 modelPos = vec4(MeshAnimation(position), 1);
     vWorldPos   = WarpPosition((wMatrix * modelPos) + worldOffset);

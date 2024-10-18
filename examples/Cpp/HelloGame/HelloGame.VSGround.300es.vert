@@ -1,9 +1,11 @@
-// GLSL shader for HelloGame example
+#version 300 es
+
+// ESSL shader for HelloGame example
 // This file is part of the LLGL project
 
-#version 450 core
+precision mediump float;
 
-layout(std140, binding = 1) uniform Scene
+layout(std140) uniform Scene
 {
     mat4    vpMatrix;
     mat4    vpShadowMatrix;
@@ -24,18 +26,11 @@ layout(std140, binding = 1) uniform Scene
 
 // VERTEX SHADER GROUND
 
-#if ENABLE_SPIRV
-out gl_PerVertex
-{
-    vec4 gl_Position;
-};
-#endif
-
 layout(location = 0) in vec3 position;
 layout(location = 2) in vec2 texCoord;
 
-layout(location = 0) out vec2 vTexCoord;
-layout(location = 1) out vec3 vWorldPos;
+out vec2 vTexCoord;
+out vec3 vWorldPos;
 
 void main()
 {

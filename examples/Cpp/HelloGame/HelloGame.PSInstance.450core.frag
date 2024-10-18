@@ -3,11 +3,6 @@
 
 #version 450 core
 
-#if GL_ES
-precision mediump float;
-precision mediump sampler2DShadow;
-#endif
-
 #ifndef ENABLE_SPIRV
 #define ENABLE_SPIRV 0
 #endif

@@ -1,13 +1,12 @@
-// GLSL shader for HelloGame example
+#version 300 es
+
+// ESSL shader for HelloGame example
 // This file is part of the LLGL project
 
-#version 450 core
+precision mediump float;
+precision mediump sampler2DShadow;
 
-#ifndef ENABLE_SPIRV
-#define ENABLE_SPIRV 0
-#endif
-
-layout(std140, binding = 1) uniform Scene
+layout(std140) uniform Scene
 {
     mat4    vpMatrix;
     mat4    vpShadowMatrix;
@@ -26,22 +25,16 @@ layout(std140, binding = 1) uniform Scene
 };
 
 
-// PIXEL SHADER GROUND
+// PIXEL SHADER INSTANCE
 
-layout(location = 0) in vec2 vTexCoord;
-layout(location = 1) in vec3 vWorldPos;
+in vec3 vWorldPos;
+in vec3 vNormal;
+in vec2 vTexCoord;
+in vec4 vColor;
 
 layout(location = 0) out vec4 outColor;
 
-#if ENABLE_SPIRV
-layout(binding = 2) uniform texture2D colorMap;
-layout(binding = 3) uniform sampler colorMapSampler;
-layout(binding = 4) uniform texture2D shadowMap;
-layout(binding = 5) uniform samplerShadow shadowMapSampler;
-#else
-layout(binding = 2) uniform sampler2D colorMap;
-layout(binding = 4) uniform sampler2DShadow shadowMap;
-#endif
+uniform sampler2DShadow shadowMap;
 
 float SampleShadowMapOffset(vec3 worldPos, vec2 offset)
 {
@@ -49,17 +42,11 @@ float SampleShadowMapOffset(vec3 worldPos, vec2 offset)
     vec4 shadowPos = vpShadowMatrix * vec4(worldPos, 1);
     shadowPos /= shadowPos.w;
     shadowPos.xy = shadowPos.xy * vec2(0.5, -0.5) + 0.5 + offset * shadowSizeInv;
-    
-    #if !ENABLE_SPIRV
-    shadowPos.z = shadowPos.z * 0.5 + 0.5; // OpenGL NDC space adjustment
-    #endif
 
+    shadowPos.z = shadowPos.z * 0.5 + 0.5; // OpenGLES NDC space adjustment
+    
     // Sample shadow map
-    #if ENABLE_SPIRV
-    return texture(sampler2DShadow(shadowMap, shadowMapSampler), shadowPos.xyz);
-    #else
     return texture(shadowMap, shadowPos.xyz);
-    #endif
 }
 
 float SampleShadowMapPCF(vec2 screenPos, vec3 worldPos)
@@ -83,20 +70,26 @@ float SampleShadowMapPCF(vec2 screenPos, vec3 worldPos)
 
 void main()
 {
-    // Sample color map
-    vec4 albedo =
-    (
-        #if ENABLE_SPIRV
-        texture(sampler2D(colorMap, colorMapSampler), vTexCoord * groundScale)
-        #else
-        texture(colorMap, vTexCoord * groundScale)
-        #endif
-    ) * vec4(groundTint, 1);
+    // Get input color
+    vec4    albedo      = vColor;
+
+    // Diffuse lighting
+    vec3    lightVec    = -lightDir.xyz;
+    vec3    normal      = normalize(vNormal);
+    float   NdotL       = mix(0.2, 1.0, max(0.0, dot(normal, lightVec)));
+    vec3    diffuse     = albedo.rgb * NdotL;
+
+    // Specular lighting
+    vec3    viewDir     = normalize(viewPos - vWorldPos);
+    vec3    halfVec     = normalize(viewDir + lightVec);
+    float   NdotH       = dot(normal, halfVec);
+    vec3    specular    = vec3(pow(max(0.0, NdotH), shininess));
 
     // Apply shadow mapping
-    float shadow = mix(ambientItensity, 1.0, SampleShadowMapPCF(gl_FragCoord.xy, vWorldPos));
+    float   shadow      = mix(ambientItensity, 1.0, SampleShadowMapPCF(gl_FragCoord.xy, vWorldPos));
 
     // Set final output color
-    outColor = vec4(albedo.rgb * lightColor * shadow, albedo.a);
+    vec3    light       = lightColor * (diffuse + specular) * shadow;
+    outColor = vec4(light, albedo.a);
 }
 
