@@ -2,7 +2,6 @@
 <html lang="en-US">
 <head>
     <meta charset="utf-8">
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
     <title>LLGL - Animation</title>
     <style>
         canvas { 
@@ -14,6 +13,9 @@
             width: min(100%, 98vh * 4 / 3);
             aspect-ratio: 4 / 3;
         }
+        html, body {
+            overscroll-behavior-y: none;
+        }
     </style>
 </head>
 <body>
@@ -23,7 +25,7 @@
     </div>
 
     <!-- Define module to allow C++ code to access the canvas element -->
-    <script type="text/javascript">
+    <script>
         var Module = {
             print: function() {
                 var e = document.getElementById("output");
