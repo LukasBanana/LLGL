@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <cmath>
+#include <random>
 
 /*
 Make PRIX64 macro visible inside <inttypes.h>; Required on some hosts that predate C++11.
@@ -26,10 +27,10 @@ See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
 
 
 // Enables cheats by allowing page up/down to select next or previous level.
-#define ENABLE_CHEATS       1
+#define ENABLE_CHEATS       LLGL_DEBUG
 
 // Enables verbose logs about resource creation such as the instance buffer size.
-#define ENABLE_VERBOSE_LOGS 1
+#define ENABLE_VERBOSE_LOGS LLGL_DEBUG
 
 
 /*
@@ -52,6 +53,9 @@ class Example_HelloGame : public ExampleBase
     static constexpr int    shadowMapSize           = 512;
     static constexpr float  timeOfDayChangeSpeed    = 2.0f; // in seconds
     static constexpr float  pointerMoveScale        = 15.0f; // percentage of largest screen dimension to move the pointer for player movemnt
+    static constexpr float  jitterDelay             = 1.0f;
+    static constexpr float  jitterDuration          = 1.0f;
+    static constexpr float  jitterMaxAngle          = 15.0f;
 
     static constexpr float  playerMoveSpeed         = 0.25f; // in seconds
     static constexpr float  playerFallAcceleration  = 2.0f; // in units per seconds
@@ -59,11 +63,13 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  playerJumpDuration      = 1.0f; // in seconds
     static constexpr float  playerJumpHeight        = 0.7f;
     static constexpr int    playerJumpBounces       = 3;
-    static constexpr float  playerExplodeDuration   = 3.0f;
+    static constexpr float  playerFadeAwayDuration  = 3.0f;
     static constexpr float  playerDescendRotations  = 4.0f;
     static constexpr float  playerDescendHeight     = 6.0f;
     static constexpr float  playerDescendDuration   = 1.5f;
     static constexpr float  playerLeanBackSpeed     = 0.7f;
+    static constexpr float  playerExplodePow        = 0.5f;
+    static constexpr float  playerExplodeScale      = 15.0f;
 
     struct TimeOfDay
     {
@@ -108,6 +114,24 @@ class Example_HelloGame : public ExampleBase
     TriangleMesh            mdlBlock;
     TriangleMesh            mdlTree;
     TriangleMesh            mdlGround;
+
+    struct RandomNumberGenerator
+    {
+        RandomNumberGenerator() :
+            engine{ device() }
+        {
+        }
+
+        std::random_device                      device;
+        std::mt19937                            engine;
+        std::uniform_real_distribution<float>   dist;
+
+        float Next()
+        {
+            return dist(engine);
+        }
+    }
+    rng;
 
     using InstanceMatrixType = Gs::AffineMatrix4f;
 
@@ -319,6 +343,18 @@ class Example_HelloGame : public ExampleBase
             return (tile == nullptr || !tile->IsValid());
         }
 
+        // Returns true if a player at the specified grid position is completely blocked. This implies the level is lost.
+        bool IsPlayerBlocked(int x, int y) const
+        {
+            return
+            (
+                IsTileBlocked(x + 1, y) &&
+                IsTileBlocked(x - 1, y) &&
+                IsTileBlocked(x, y + 1) &&
+                IsTileBlocked(x, y - 1)
+            );
+        }
+
         // Returns true if all tiles have been activated.
         bool IsCompleted() const
         {
@@ -342,7 +378,7 @@ class Example_HelloGame : public ExampleBase
                     }
                     meshInstanceDirtyRange.Insert(tile->instanceIndex);
                     ++activatedTiles;
-                    return IsCompleted();
+                    return true;
                 }
             }
             return false;
@@ -435,11 +471,12 @@ class Example_HelloGame : public ExampleBase
         float       moveTransition              = 0.0f;
         bool        isDescending                = false;
         bool        isFalling                   = false;
-        bool        hasExploded                 = false;
-        float       explodeTime                 = 0.0f;
+        bool        hasFadedAway                = false;
+        float       fadeAwayTime                = 0.0f;
         float       descendPhase                = 0.0f;
         float       fallDepth                   = 0.0f;
         float       fallVelocity                = 0.0f;
+        bool        isExploding                 = false;
 
         void Move(int dirX, int dirZ)
         {
@@ -495,13 +532,17 @@ class Example_HelloGame : public ExampleBase
             moveTransition      = 0.0f;
             isDescending        = true;
             isFalling           = false;
-            hasExploded         = false;
-            explodeTime         = 0.0f;
+            hasFadedAway        = false;
+            fadeAwayTime        = 0.0f;
             descendPhase        = 0.0f;
             fallDepth           = 0.0f;
             fallVelocity        = 0.0f;
+            leanFactor          = 0.0f;
+            leanDir[0]          = 0;
+            leanDir[1]          = 0;
+            isExploding         = false;
 
-            // Reset player color
+            // Reset player color (initially transparent)
             instance.color[0]   = playerColor[0];
             instance.color[1]   = playerColor[1];
             instance.color[2]   = playerColor[2];
@@ -716,6 +757,10 @@ class Example_HelloGame : public ExampleBase
         float   playerJumpTime      = 0.0f; // Make the player jump to get the user's attention
         bool    playerJumpEnabled   = false;
         float   playerJumpPhase     = 0.0f; // [0..1]
+
+        bool    jitterEnabled       = false;
+        float   jitterTime          = 0.0f;
+        float   jitterRotation[3]   = {};
     }
     effects;
 
@@ -1433,6 +1478,12 @@ private:
         scene.warpScaleInv          = 1.0f / scale;
     }
 
+    void StartJitterEffect()
+    {
+        effects.jitterEnabled   = true;
+        effects.jitterTime      = 0.0f;
+    }
+
     void SetTargetLightPhase(float phase)
     {
         effects.lightPhaseChanged = true;
@@ -1456,130 +1507,125 @@ private:
         effects.playerJumpTime = 0.0f;
     }
 
+    void ControlPlayer()
+    {
+        // Move player via keyboard input
+        if (input.KeyDownRepeated(LLGL::Key::Left))
+            MovePlayer(-1, 0);
+        else if (input.KeyDownRepeated(LLGL::Key::Right))
+            MovePlayer(+1, 0);
+        else if (input.KeyDownRepeated(LLGL::Key::Up))
+            MovePlayer(0, +1);
+        else if (input.KeyDownRepeated(LLGL::Key::Down))
+            MovePlayer(0, -1);
+
+        // Move player alternatively via mouse or touch input
+        if (input.KeyDown(LLGL::Key::LButton))
+        {
+            pointerStartPos         = input.GetMousePosition();
+            pointerPlayerMovement   = true;
+        }
+        else if (input.KeyUp(LLGL::Key::LButton))
+        {
+            pointerPlayerMovement   = false;
+        }
+
+        if (pointerPlayerMovement)
+        {
+            const LLGL::Extent2D resolution = swapChain->GetResolution();
+            const float pointerVecScale = pointerMoveScale / std::max<std::uint32_t>(resolution.width, resolution.height);
+
+            const LLGL::Offset2D currentPointerPos  = input.GetMousePosition();
+            const LLGL::Offset2D pointerDiff        = currentPointerPos - pointerStartPos;
+
+            const Gs::Vector2f pointerVec
+            {
+                static_cast<float>(pointerDiff.x) * pointerVecScale,
+                static_cast<float>(pointerDiff.y) * pointerVecScale
+            };
+            const Gs::Vector2f leanVec
+            {
+                static_cast<float>(player.leanDir[0]),
+                static_cast<float>(-player.leanDir[1])
+            };
+
+            constexpr float leanMaxFactor   = 1.5f;
+            constexpr float leanMinFactor   = leanMaxFactor * 0.1f;
+            constexpr float leanAnimFactor  = 0.3f;
+
+            const float pointerLen = (player.IsLeaning() ? std::abs(Gs::Dot(pointerVec, leanVec)) : pointerVec.Length());
+
+            if (pointerLen >= leanMaxFactor)
+            {
+                // Move player into direction the player was leaning towards.
+                // For pointer movement, don't stack up movements to avoid unintended movements.
+                if (player.moveDirStack == 0)
+                    MovePlayer(player.leanDir[0], player.leanDir[1]);
+                pointerStartPos = currentPointerPos;
+            }
+            else if (pointerLen >= leanMinFactor)
+            {
+                // Lock leaning direction into place
+                if (!player.IsLeaning())
+                {
+                    if (std::abs(pointerVec.x) > std::abs(pointerVec.y))
+                    {
+                        // Move horizontally
+                        if (pointerVec.x > 0.0f)
+                            player.Lean(+1, 0);
+                        else
+                            player.Lean(-1, 0);
+                    }
+                    else
+                    {
+                        // Move vertically
+                        if (pointerVec.y > 0.0f)
+                            player.Lean(0, -1);
+                        else
+                            player.Lean(0, +1);
+                    }
+                }
+
+                // Compute leaning factor for animation
+                player.leanFactor = leanAnimFactor * ((pointerLen - leanMinFactor) / (leanMaxFactor - leanMinFactor));
+            }
+            else if (player.IsLeaning())
+            {
+                // Reset leaning direction
+                player.leanDir[0] = 0;
+                player.leanDir[1] = 0;
+                pointerStartPos = currentPointerPos;
+            }
+        }
+    }
+
+    void PollUserInput()
+    {
+        if (player.moveDirStack < inputStackSize && !player.isDescending && !player.isFalling && !player.isExploding)
+            ControlPlayer();
+
+        #if ENABLE_CHEATS
+
+        if (input.KeyDown(LLGL::Key::PageUp))
+            SelectLevel(currentLevelIndex + 1);
+        else if (input.KeyDown(LLGL::Key::PageDown))
+            SelectLevel(currentLevelIndex - 1);
+
+        if (input.KeyPressed(LLGL::Key::RButton))
+        {
+            const float delta = static_cast<float>(input.GetMouseMotion().x) * 0.01f;
+            SetLightPhase(effects.lightPhase + delta);
+            effects.lightPhaseChanged = false;
+        }
+            
+        #endif // /ENABLE_CHEATS
+    }
+
     void UpdateScene(float dt)
     {
         // Update user input, but not while transitioning
         if (nextLevel == nullptr)
-        {
-            if (player.moveDirStack < inputStackSize && !player.isDescending && !player.isFalling)
-            {
-                // Move player via keyboard input
-                if (input.KeyDownRepeated(LLGL::Key::Left))
-                    MovePlayer(-1, 0);
-                else if (input.KeyDownRepeated(LLGL::Key::Right))
-                    MovePlayer(+1, 0);
-                else if (input.KeyDownRepeated(LLGL::Key::Up))
-                    MovePlayer(0, +1);
-                else if (input.KeyDownRepeated(LLGL::Key::Down))
-                    MovePlayer(0, -1);
-
-                // Move player alternatively via mouse or touch input
-                if (input.KeyDown(LLGL::Key::LButton))
-                {
-                    pointerStartPos         = input.GetMousePosition();
-                    pointerPlayerMovement   = true;
-                }
-                else if (input.KeyUp(LLGL::Key::LButton))
-                {
-                    pointerPlayerMovement   = false;
-                }
-
-                if (pointerPlayerMovement)
-                {
-                    const LLGL::Extent2D resolution = swapChain->GetResolution();
-                    const float pointerVecScale = pointerMoveScale / std::max<std::uint32_t>(resolution.width, resolution.height);
-
-                    const LLGL::Offset2D currentPointerPos  = input.GetMousePosition();
-                    const LLGL::Offset2D pointerDiff        = currentPointerPos - pointerStartPos;
-
-                    const Gs::Vector2f pointerVec
-                    {
-                        static_cast<float>(pointerDiff.x) * pointerVecScale,
-                        static_cast<float>(pointerDiff.y) * pointerVecScale
-                    };
-                    const Gs::Vector2f leanVec
-                    {
-                        static_cast<float>(player.leanDir[0]),
-                        static_cast<float>(-player.leanDir[1])
-                    };
-
-                    constexpr float leanMaxFactor   = 1.5f;
-                    constexpr float leanMinFactor   = leanMaxFactor * 0.1f;
-                    constexpr float leanAnimFactor  = 0.3f;
-
-                    const float pointerLen = (player.IsLeaning() ? std::abs(Gs::Dot(pointerVec, leanVec)) : pointerVec.Length());
-
-                    if (pointerLen >= leanMaxFactor)
-                    {
-                        // Move player into direction the player was leaning towards
-                        MovePlayer(player.leanDir[0], player.leanDir[1]);
-                        pointerStartPos = currentPointerPos;
-                    }
-                    else if (pointerLen >= leanMinFactor)
-                    {
-                        // Lock leaning direction into place
-                        if (!player.IsLeaning())
-                        {
-                            if (std::abs(pointerVec.x) > std::abs(pointerVec.y))
-                            {
-                                // Move horizontally
-                                if (pointerVec.x > 0.0f)
-                                    player.Lean(+1, 0);
-                                else
-                                    player.Lean(-1, 0);
-                            }
-                            else
-                            {
-                                // Move vertically
-                                if (pointerVec.y > 0.0f)
-                                    player.Lean(0, -1);
-                                else
-                                    player.Lean(0, +1);
-                            }
-                        }
-
-                        // Compute leaning factor for animation
-                        player.leanFactor = leanAnimFactor * ((pointerLen - leanMinFactor) / (leanMaxFactor - leanMinFactor));
-                    }
-                    else if (player.IsLeaning())
-                    {
-                        // Reset leaning direction
-                        player.leanDir[0] = 0;
-                        player.leanDir[1] = 0;
-                        pointerStartPos = currentPointerPos;
-                    }
-                }
-                else if (player.IsLeaning())
-                {
-                    // Cancel leaning player
-                    if (player.leanFactor > 0.0f)
-                    {
-                        player.leanFactor -= dt / playerLeanBackSpeed;
-                    }
-                    else
-                    {
-                        player.leanDir[0] = 0;
-                        player.leanDir[1] = 0;
-                    }
-                }
-            }
-
-            #if ENABLE_CHEATS
-
-            if (input.KeyDown(LLGL::Key::PageUp))
-                SelectLevel(currentLevelIndex + 1);
-            else if (input.KeyDown(LLGL::Key::PageDown))
-                SelectLevel(currentLevelIndex - 1);
-
-            if (input.KeyPressed(LLGL::Key::RButton))
-            {
-                const float delta = static_cast<float>(input.GetMouseMotion().x) * 0.01f;
-                SetLightPhase(effects.lightPhase + delta);
-                effects.lightPhaseChanged = false;
-            }
-            
-            #endif // /ENABLE_CHEATS
-        }
+            PollUserInput();
 
         // Get information from current level
         if (currentLevel != nullptr)
@@ -1640,7 +1686,7 @@ private:
             player.moveTransition += (dt / playerMoveSpeed) * static_cast<float>(player.moveDirStack);
             if (player.moveTransition >= 1.0f)
             {
-                // Perform tile action
+                // Perform tile action (activate tile/ player fall/ win)
                 if (currentLevel != nullptr)
                 {
                     if (player.gridPos[0] != nextPosX ||
@@ -1653,7 +1699,11 @@ private:
                         }
                         else if (currentLevel->ActivateTile(nextPosX, nextPosY, playerColor))
                         {
-                            StartWarpEffect();
+                            // Finished level -> start warp effect
+                            if (currentLevel->IsCompleted())
+                                StartWarpEffect();
+                            else if (currentLevel->IsPlayerBlocked(nextPosX, nextPosY))
+                                StartJitterEffect();
                         }
                     }
                 }
@@ -1672,6 +1722,20 @@ private:
                 {
                     player.moveDirStack--;
                 }
+            }
+        }
+
+        if (!pointerPlayerMovement && player.IsLeaning())
+        {
+            // Cancel leaning player
+            if (player.leanFactor > 0.0f)
+            {
+                player.leanFactor -= dt / playerLeanBackSpeed;
+            }
+            else
+            {
+                player.leanDir[0] = 0;
+                player.leanDir[1] = 0;
             }
         }
 
@@ -1700,10 +1764,10 @@ private:
             const float playerPosY = wallPosY - player.fallDepth;
             SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, playerPosY, 0.0f);
 
-            if (player.hasExploded)
+            if (player.hasFadedAway)
             {
-                player.explodeTime += dt;
-                if (player.explodeTime > playerExplodeDuration)
+                player.fadeAwayTime += dt;
+                if (player.fadeAwayTime > playerFadeAwayDuration)
                 {
                     // Restart current level
                     SelectLevel(currentLevelIndex);
@@ -1714,7 +1778,7 @@ private:
                 if (playerPosY < -2.0f)
                 {
                     StartWarpEffect(2.0f, 4, 5.0f, 5.0f);
-                    player.hasExploded = true;
+                    player.hasFadedAway = true;
                 }
             }
         }
@@ -1774,6 +1838,50 @@ private:
         {
             // No player animation
             SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, wallPosY, 0.0f);
+        }
+
+        // Apply jitter effect when player lost the level
+        if (effects.jitterEnabled)
+        {
+            effects.jitterTime += dt;
+            if (effects.jitterTime > jitterDelay)
+            {
+                const float effectPhase = (effects.jitterTime - jitterDelay) / jitterDuration;
+                float explodePhase = 0.0f;
+
+                if (!player.isExploding)
+                {
+                    // Update jitter rotation with random numbers
+                    const float maxAngle = Gs::Deg2Rad(effectPhase * jitterMaxAngle);
+                    effects.jitterRotation[0] = rng.Next() * maxAngle;
+                    effects.jitterRotation[1] = rng.Next() * maxAngle;
+                    effects.jitterRotation[2] = rng.Next() * maxAngle;
+
+                    if (effectPhase >= 1.0f)
+                        player.isExploding = true;
+                }
+                else
+                {
+                    explodePhase = std::pow(effectPhase - 1.0f, playerExplodePow);
+                    if (effectPhase >= 2.0f)
+                    {
+                        // Restart current level and stop jitter effect
+                        effects.jitterEnabled = false;
+                        SelectLevel(currentLevelIndex);
+                    }
+                }
+
+                // Update player rotation with jitter effect
+                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 1, 0, 0 }, effects.jitterRotation[0]);
+                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 0, 1, 0 }, effects.jitterRotation[1]);
+                Gs::RotateFree(wMatrixPlayer, Gs::Vector3f{ 0, 0, 1 }, effects.jitterRotation[2]);
+
+                const float playerScale = 1.0f + explodePhase * playerExplodeScale;
+                Gs::Scale(wMatrixPlayer, Gs::Vector3f{ playerScale });
+
+                // Fade player away with explosion
+                player.instance.color[3] = std::max<float>(0.0f, 1.0f - explodePhase * 1.5f);
+            }
         }
 
         // Apply warp effect around player position
@@ -1862,6 +1970,23 @@ private:
 
     void RenderScene(bool renderShadowMap)
     {
+        // Draw ground floor last, to cover the rest of the framebuffer
+        if (!renderShadowMap)
+        {
+            commands->PushDebugGroup("Ground");
+            {
+                commands->SetPipelineState(*groundPSO);
+                commands->SetResource(0, *cbufferScene);
+                commands->SetResource(1, *groundColorMap);
+                commands->SetResource(2, *groundColorMapSampler);
+                commands->SetResource(3, *shadowMap);
+                commands->SetResource(4, *shadowMapSampler);
+                commands->Draw(mdlGround.numVertices, mdlGround.firstVertex);
+            }
+            commands->PopDebugGroup();
+        }
+
+        // Draw instanced meshes
         const int psoIndex = (renderShadowMap ? 1 : 0);
 
         commands->SetPipelineState(*scenePSO[psoIndex]);
@@ -1894,35 +2019,23 @@ private:
             }
         }
 
-        // Draw player mesh
-        commands->PushDebugGroup("Player");
+        // Don't render shadow of player when the player is exploding
+        if (!(renderShadowMap && player.isExploding))
         {
-            // Always position player at the next level if there is one
-            if (nextLevel == nullptr)
+            // Draw player mesh
+            commands->PushDebugGroup("Player");
             {
-                worldTransform.worldOffset[0] = 0.0f;
-                worldTransform.worldOffset[2] = 0.0f;
-            }
-            worldTransform.worldOffset[1] = 0.0f;
-            worldTransform.bendIntensity = 0.0f;
-            commands->SetUniforms(Uniform_worldOffset, &worldTransform, sizeof(worldTransform));
+                // Always position player at the next level if there is one
+                if (nextLevel == nullptr)
+                {
+                    worldTransform.worldOffset[0] = 0.0f;
+                    worldTransform.worldOffset[2] = 0.0f;
+                }
+                worldTransform.worldOffset[1] = 0.0f;
+                worldTransform.bendIntensity = 0.0f;
+                commands->SetUniforms(Uniform_worldOffset, &worldTransform, sizeof(worldTransform));
 
-            instanceBuffer.DrawInstances(*commands, mdlPlayer.numVertices, mdlPlayer.firstVertex, 1, 0);
-        }
-        commands->PopDebugGroup();
-
-        // Draw ground floor last, to cover the rest of the framebuffer
-        if (!renderShadowMap)
-        {
-            commands->PushDebugGroup("Ground");
-            {
-                commands->SetPipelineState(*groundPSO);
-                commands->SetResource(0, *cbufferScene);
-                commands->SetResource(1, *groundColorMap);
-                commands->SetResource(2, *groundColorMapSampler);
-                commands->SetResource(3, *shadowMap);
-                commands->SetResource(4, *shadowMapSampler);
-                commands->Draw(mdlGround.numVertices, mdlGround.firstVertex);
+                instanceBuffer.DrawInstances(*commands, mdlPlayer.numVertices, mdlPlayer.firstVertex, 1, 0);
             }
             commands->PopDebugGroup();
         }
@@ -2013,6 +2126,9 @@ constexpr float  Example_HelloGame::treeAnimSpeed          ;
 constexpr float  Example_HelloGame::treeAnimRadius         ;
 constexpr int    Example_HelloGame::shadowMapSize          ;
 constexpr float  Example_HelloGame::timeOfDayChangeSpeed   ;
+constexpr float  Example_HelloGame::jitterDelay            ;
+constexpr float  Example_HelloGame::jitterDuration         ;
+constexpr float  Example_HelloGame::jitterMaxAngle         ;
 
 constexpr float  Example_HelloGame::playerMoveSpeed        ;
 constexpr float  Example_HelloGame::playerFallAcceleration ;
@@ -2020,11 +2136,13 @@ constexpr float  Example_HelloGame::playerJumpWait         ;
 constexpr float  Example_HelloGame::playerJumpDuration     ;
 constexpr float  Example_HelloGame::playerJumpHeight       ;
 constexpr int    Example_HelloGame::playerJumpBounces      ;
-constexpr float  Example_HelloGame::playerExplodeDuration  ;
+constexpr float  Example_HelloGame::playerFadeAwayDuration ;
 constexpr float  Example_HelloGame::playerDescendRotations ;
 constexpr float  Example_HelloGame::playerDescendHeight    ;
 constexpr float  Example_HelloGame::playerDescendDuration  ;
 constexpr float  Example_HelloGame::playerLeanBackSpeed    ;
+constexpr float  Example_HelloGame::playerExplodePow       ;
+constexpr float  Example_HelloGame::playerExplodeScale     ;
 
 constexpr std::uint32_t  Example_HelloGame::InstanceBuffer::cbufferNumInstances;
 
