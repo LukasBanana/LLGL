@@ -281,14 +281,15 @@ class Input::CanvasEventListener final : public Canvas::EventListener
 
     private:
 
-        void OnTapGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t /*numTouches*/) override
+        void OnTapGesture(Canvas& /*sender*/, const Offset2D& position, std::uint32_t /*numTouches*/) override
         {
-            //TODO
+            data_.mousePosition = position;
         }
 
-        void OnPanGesture(Canvas& /*sender*/, const Offset2D& /*position*/, std::uint32_t numTouches, float dx, float dy, EventAction action) override
+        void OnPanGesture(Canvas& /*sender*/, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action) override
         {
             const bool interpretAsLButton = (numTouches == 1);
+            data_.mousePosition = position;
             const Key keyCode = (interpretAsLButton ? Key::LButton : Key::RButton);
             switch (action)
             {

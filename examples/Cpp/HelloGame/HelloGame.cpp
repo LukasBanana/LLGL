@@ -51,6 +51,7 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  treeAnimRadius          = 0.2f;
     static constexpr int    shadowMapSize           = 512;
     static constexpr float  timeOfDayChangeSpeed    = 2.0f; // in seconds
+    static constexpr float  pointerMoveScale        = 15.0f; // percentage of largest screen dimension to move the pointer for player movemnt
 
     static constexpr float  playerMoveSpeed         = 0.25f; // in seconds
     static constexpr float  playerFallAcceleration  = 2.0f; // in units per seconds
@@ -62,6 +63,7 @@ class Example_HelloGame : public ExampleBase
     static constexpr float  playerDescendRotations  = 4.0f;
     static constexpr float  playerDescendHeight     = 6.0f;
     static constexpr float  playerDescendDuration   = 1.5f;
+    static constexpr float  playerLeanBackSpeed     = 0.7f;
 
     struct TimeOfDay
     {
@@ -415,12 +417,21 @@ class Example_HelloGame : public ExampleBase
     }
     camera;
 
+    enum class Movement
+    {
+        Free,
+        BlockedByWall,
+        BlockedByTile,
+    };
+
     struct Player
     {
         Instance    instance                    = {};
         int         gridPos[2]                  = {};
-        int         moveDirStack                = 0;
-        int         moveDir[inputStackSize][2]  = {};
+        int         moveDirStack                = 0;        // Number of stack entries
+        int         moveDir[inputStackSize][2]  = {};       // Stack of directions the player is about to move
+        int         leanDir[2]                  = {};       // Direction player is leaning towards (before moving)
+        float       leanFactor                  = 0.0f;     // Interpolation factor [0, x] where x is ~0.2 when the player is leaning
         float       moveTransition              = 0.0f;
         bool        isDescending                = false;
         bool        isFalling                   = false;
@@ -430,7 +441,7 @@ class Example_HelloGame : public ExampleBase
         float       fallDepth                   = 0.0f;
         float       fallVelocity                = 0.0f;
 
-        void Move(int moveX, int moveZ)
+        void Move(int dirX, int dirZ)
         {
             if (moveDirStack < inputStackSize)
             {
@@ -439,10 +450,40 @@ class Example_HelloGame : public ExampleBase
                     moveDir[i][0] = moveDir[i - 1][0];
                     moveDir[i][1] = moveDir[i - 1][1];
                 }
-                moveDir[0][0] = moveX;
-                moveDir[0][1] = moveZ;
+                moveDir[0][0] = dirX;
+                moveDir[0][1] = dirZ;
                 ++moveDirStack;
             }
+            leanDir[0] = 0;
+            leanDir[1] = 0;
+        }
+
+        Movement GetMovability(const Level* level, int dirX, int dirZ) const
+        {
+            if (level != nullptr)
+            {
+                int nextPosX = gridPos[0] + dirX;
+                int nextPosZ = gridPos[1] + dirZ;
+                if (level->IsTileBlocked(nextPosX, nextPosZ))
+                {
+                    if (level->IsWall(nextPosX, nextPosZ))
+                        return Movement::BlockedByWall;
+                    else
+                        return Movement::BlockedByTile;
+                }
+            }
+            return Movement::Free;
+        }
+
+        void Lean(int dirX, int dirZ)
+        {
+            leanDir[0] = dirX;
+            leanDir[1] = dirZ;
+        }
+
+        bool IsLeaning() const
+        {
+            return (leanDir[0] != 0 || leanDir[1] != 0);
         }
 
         void Put(const int (&pos)[2])
@@ -468,13 +509,6 @@ class Example_HelloGame : public ExampleBase
         }
     }
     player;
-
-    enum class Movement
-    {
-        Free,
-        BlockedByWall,
-        BlockedByTile,
-    };
 
     // Abstracts the segmentation of a large buffer of mesh instances into one or more segments.
     // This is mainly required to split the instance buffer into smaller chunks for GLES and WebGL
@@ -647,6 +681,8 @@ class Example_HelloGame : public ExampleBase
     float               levelDistance               = 0.0f; // Distance between two levels (to transition between them)
     float               levelDoneTransition         = 0.0f; // Transition starting when the level is completed
     InstanceBuffer      instanceBuffer;
+    LLGL::Offset2D      pointerStartPos;                    // Start position for the pointer (mouse cursor or touch input)
+    bool                pointerPlayerMovement       = false;
 
     struct Gradient
     {
@@ -1427,6 +1463,7 @@ private:
         {
             if (player.moveDirStack < inputStackSize && !player.isDescending && !player.isFalling)
             {
+                // Move player via keyboard input
                 if (input.KeyDownRepeated(LLGL::Key::Left))
                     MovePlayer(-1, 0);
                 else if (input.KeyDownRepeated(LLGL::Key::Right))
@@ -1435,6 +1472,96 @@ private:
                     MovePlayer(0, +1);
                 else if (input.KeyDownRepeated(LLGL::Key::Down))
                     MovePlayer(0, -1);
+
+                // Move player alternatively via mouse or touch input
+                if (input.KeyDown(LLGL::Key::LButton))
+                {
+                    pointerStartPos         = input.GetMousePosition();
+                    pointerPlayerMovement   = true;
+                }
+                else if (input.KeyUp(LLGL::Key::LButton))
+                {
+                    pointerPlayerMovement   = false;
+                }
+
+                if (pointerPlayerMovement)
+                {
+                    const LLGL::Extent2D resolution = swapChain->GetResolution();
+                    const float pointerVecScale = pointerMoveScale / std::max<std::uint32_t>(resolution.width, resolution.height);
+
+                    const LLGL::Offset2D currentPointerPos  = input.GetMousePosition();
+                    const LLGL::Offset2D pointerDiff        = currentPointerPos - pointerStartPos;
+
+                    const Gs::Vector2f pointerVec
+                    {
+                        static_cast<float>(pointerDiff.x) * pointerVecScale,
+                        static_cast<float>(pointerDiff.y) * pointerVecScale
+                    };
+                    const Gs::Vector2f leanVec
+                    {
+                        static_cast<float>(player.leanDir[0]),
+                        static_cast<float>(-player.leanDir[1])
+                    };
+
+                    constexpr float leanMaxFactor   = 1.5f;
+                    constexpr float leanMinFactor   = leanMaxFactor * 0.1f;
+                    constexpr float leanAnimFactor  = 0.3f;
+
+                    const float pointerLen = (player.IsLeaning() ? std::abs(Gs::Dot(pointerVec, leanVec)) : pointerVec.Length());
+
+                    if (pointerLen >= leanMaxFactor)
+                    {
+                        // Move player into direction the player was leaning towards
+                        MovePlayer(player.leanDir[0], player.leanDir[1]);
+                        pointerStartPos = currentPointerPos;
+                    }
+                    else if (pointerLen >= leanMinFactor)
+                    {
+                        // Lock leaning direction into place
+                        if (!player.IsLeaning())
+                        {
+                            if (std::abs(pointerVec.x) > std::abs(pointerVec.y))
+                            {
+                                // Move horizontally
+                                if (pointerVec.x > 0.0f)
+                                    player.Lean(+1, 0);
+                                else
+                                    player.Lean(-1, 0);
+                            }
+                            else
+                            {
+                                // Move vertically
+                                if (pointerVec.y > 0.0f)
+                                    player.Lean(0, -1);
+                                else
+                                    player.Lean(0, +1);
+                            }
+                        }
+
+                        // Compute leaning factor for animation
+                        player.leanFactor = leanAnimFactor * ((pointerLen - leanMinFactor) / (leanMaxFactor - leanMinFactor));
+                    }
+                    else if (player.IsLeaning())
+                    {
+                        // Reset leaning direction
+                        player.leanDir[0] = 0;
+                        player.leanDir[1] = 0;
+                        pointerStartPos = currentPointerPos;
+                    }
+                }
+                else if (player.IsLeaning())
+                {
+                    // Cancel leaning player
+                    if (player.leanFactor > 0.0f)
+                    {
+                        player.leanFactor -= dt / playerLeanBackSpeed;
+                    }
+                    else
+                    {
+                        player.leanDir[0] = 0;
+                        player.leanDir[1] = 0;
+                    }
+                }
             }
 
             #if ENABLE_CHEATS
@@ -1444,10 +1571,11 @@ private:
             else if (input.KeyDown(LLGL::Key::PageDown))
                 SelectLevel(currentLevelIndex - 1);
 
-            if (input.KeyPressed(LLGL::Key::LButton))
+            if (input.KeyPressed(LLGL::Key::RButton))
             {
                 const float delta = static_cast<float>(input.GetMouseMotion().x) * 0.01f;
                 SetLightPhase(effects.lightPhase + delta);
+                effects.lightPhaseChanged = false;
             }
             
             #endif // /ENABLE_CHEATS
@@ -1500,15 +1628,13 @@ private:
             int nextPosX = player.gridPos[0] + player.moveDir[moveStackPos][0];
             int nextPosY = player.gridPos[1] + player.moveDir[moveStackPos][1];
 
-            if (currentLevel != nullptr)
+            // Block player from moving when hitting a wall or already activated tile
+            movement = player.GetMovability(currentLevel, player.moveDir[moveStackPos][0], player.moveDir[moveStackPos][1]);
+            if (movement != Movement::Free)
             {
-                if (currentLevel->IsTileBlocked(nextPosX, nextPosY))
-                {
-                    // Block player from moving when hitting a wall or already activated tile
-                    movement = (currentLevel->IsWall(nextPosX, nextPosY) ? Movement::BlockedByWall : Movement::BlockedByTile);
-                    nextPosX = player.gridPos[0];
-                    nextPosY = player.gridPos[1];
-                }
+                // Block player from moving when hitting a wall or already activated tile
+                nextPosX = player.gridPos[0];
+                nextPosY = player.gridPos[1];
             }
 
             player.moveTransition += (dt / playerMoveSpeed) * static_cast<float>(player.moveDirStack);
@@ -1625,6 +1751,23 @@ private:
             {
                 // Animate player turn over
                 SetPlayerTransform(wMatrixPlayer, player.gridPos, moveDirX, moveDirY, wallPosY, player.moveTransition);
+            }
+        }
+        else if (player.IsLeaning())
+        {
+            movement = player.GetMovability(currentLevel, player.leanDir[0], player.leanDir[1]);
+            if (movement != Movement::BlockedByWall)
+            {
+                // Animate player leaning into a direction before the player is moving
+                SetPlayerTransform(wMatrixPlayer, player.gridPos, player.leanDir[0], player.leanDir[1], wallPosY, player.leanFactor);
+
+                // When player movement is animated again, continue with transition where the leaning left of to have a smooth transition between leaning and moving
+                player.moveTransition = player.leanFactor;
+            }
+            else
+            {
+                // No player animation
+                SetPlayerTransform(wMatrixPlayer, player.gridPos, 0, 0, wallPosY, 0.0f);
             }
         }
         else
@@ -1881,6 +2024,7 @@ constexpr float  Example_HelloGame::playerExplodeDuration  ;
 constexpr float  Example_HelloGame::playerDescendRotations ;
 constexpr float  Example_HelloGame::playerDescendHeight    ;
 constexpr float  Example_HelloGame::playerDescendDuration  ;
+constexpr float  Example_HelloGame::playerLeanBackSpeed    ;
 
 constexpr std::uint32_t  Example_HelloGame::InstanceBuffer::cbufferNumInstances;
 
