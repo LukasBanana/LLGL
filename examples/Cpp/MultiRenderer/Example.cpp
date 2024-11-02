@@ -129,7 +129,8 @@ MyRenderer::MyRenderer(
 static std::string GetRendererModuleName(std::string rendererName)
 {
     // Remove white spaces from name
-    return std::regex_replace(rendererName, std::regex("\\s+"), "");
+    std::string name = std::regex_replace(rendererName, std::regex("\\s+"), "");
+    return (name.compare(0, 6, "OpenGL") == 0 ? "OpenGL" : name);
 }
 
 void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices, const LLGL::ArrayView<std::uint32_t>& indices)
