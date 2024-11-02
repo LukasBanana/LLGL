@@ -173,7 +173,7 @@ DEF_TEST( OffscreenC99 )
         vertShaderDesc.type                     = LLGLShaderTypeVertex;
         vertShaderDesc.sourceSize               = 0;
         vertShaderDesc.sourceType               = LLGLShaderSourceTypeCodeFile;
-        vertShaderDesc.flags                    = LLGLShaderCompilePatchClippingOrigin | LLGLShaderCompileDefaultLibrary;
+        vertShaderDesc.flags                    = LLGLShaderCompilePatchClippingOrigin;
         vertShaderDesc.vertex.numInputAttribs   = sizeof(vertAttribs)/sizeof(vertAttribs[0]);
         vertShaderDesc.vertex.inputAttribs      = vertAttribs;
 
@@ -213,7 +213,6 @@ DEF_TEST( OffscreenC99 )
         fragShaderDesc.type         = LLGLShaderTypeFragment;
         fragShaderDesc.sourceSize   = 0;
         fragShaderDesc.sourceType   = LLGLShaderSourceTypeCodeFile;
-        fragShaderDesc.flags        = LLGLShaderCompileDefaultLibrary;
 
         if (shadingLanguage == LLGLShadingLanguageGLSL)
         {
