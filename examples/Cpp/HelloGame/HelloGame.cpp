@@ -910,13 +910,14 @@ private:
             groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.VSGround.450core.vert.spv" }, { vertexFormat });
             groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.PSGround.450core.frag.spv" });
         }
-#if 0
         else if (Supported(LLGL::ShadingLanguage::Metal))
         {
-            sceneShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,     "HelloGame.metal", "VSInstance", "vs_5_0" }, { vertexFormat });
-            sceneShaders.ps = LoadShader({ LLGL::ShaderType::Fragment,   "HelloGame.metal", "PSInstance", "ps_5_0" });
+            sceneShaders.vs  = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSInstance", "1.1" }, { vertexFormat });
+            sceneShaders.ps  = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSInstance", "1.1" });
+
+            groundShaders.vs = LoadShader({ LLGL::ShaderType::Vertex,   "HelloGame.hlsl", "VSGround",   "1.1" }, { vertexFormat });
+            groundShaders.ps = LoadShader({ LLGL::ShaderType::Fragment, "HelloGame.hlsl", "PSGround",   "1.1" });
         }
-#endif
         else
         {
             throw std::runtime_error("No shaders provided for this backend");
