@@ -129,7 +129,7 @@ function(find_source_files OUTPUT_LIST FILTERS)
     elseif("${FILTERS}" STREQUAL "OBJC")
         set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm")
     elseif("${FILTERS}" STREQUAL "RES")
-        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag")
+        set(FILTERS "*.c;*.cpp;*.h;*.inl;*.m;*.mm;*.metal;*.vert;*.frag;*.tesc;*.tese")
     elseif("${FILTERS}" STREQUAL "INC")
         set(FILTERS "*.h;*.hpp;*.inl")
     endif()
@@ -160,7 +160,7 @@ function(add_project_resource_files OUTPUT_LIST SRC_FOLDER)
     set(ResourceFiles "")
     set(InputFilenames "${ARGN}")
     foreach(InputFile ${InputFilenames})
-        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga|obj|txt)")
+        if("${InputFile}" MATCHES ".+\\.(png|jpg|dds|tga|obj|txt|map|icns)")
             file(GLOB SharedResourceFiles "${SHARED_ASSETS_DIR}/${InputFile}")
             file(GLOB ProjectResourceFiles "${SRC_FOLDER}/${InputFile}")
             list(APPEND ResourceFiles "${SharedResourceFiles}" "${ProjectResourceFiles}")
@@ -304,7 +304,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
 
         # Filter resource files into "Resources" folder
         set(RES_FILES "${SRC_FILES}")
-        list(FILTER RES_FILES INCLUDE REGEX ".+\\.(obj|png|jpg|dds|tga|icns)")
+        list(FILTER RES_FILES INCLUDE REGEX ".+\\.(png|jpg|dds|tga|obj|txt|map|icns)")
         source_group("Resources" FILES ${RES_FILES})
 
         # Don't compile these resource types, just keep them in the project solution
@@ -312,7 +312,7 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
 
         # Filter shader files into "Shaders" folder
         set(SHADER_FILES "${SRC_FILES}")
-        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag)")
+        list(FILTER SHADER_FILES INCLUDE REGEX ".+\\.(metal|vert|frag|tesc|tese)")
         source_group("Shaders" FILES ${SHADER_FILES})
 
         # Set app icon for macOS and iOS

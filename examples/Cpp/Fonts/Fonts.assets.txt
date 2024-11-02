@@ -1,2 +1,4 @@
-Fonts/Tuffy.atlas-*
-Fonts/Black.atlas-*
+Fonts/Tuffy.atlas-*.png
+Fonts/Tuffy.atlas-*.map
+Fonts/Black.atlas-*.map
+Fonts/Black.atlas-*.png
