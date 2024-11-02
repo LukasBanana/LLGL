@@ -143,14 +143,20 @@ static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int 
     LLGL::Log::Printf("selected renderer: %s\n", rendererModule.c_str());
 }
 
-static constexpr const char* GetDefaultRendererModule()
+static bool IsModuleAvailable(const char* name)
+{
+    auto modules = LLGL::RenderSystem::FindModules();
+    return (std::find(modules.begin(), modules.end(), name) != modules.end());
+}
+
+static const char* GetDefaultRendererModule()
 {
     #if defined LLGL_OS_UWP
     return "Direct3D12";
     #elif defined LLGL_OS_WIN32
     return "Direct3D11";
     #elif defined LLGL_OS_MACOS
-    return "OpenGL"; //"Metal" //TODO: only pick OpenGL by default on older Mac systems
+    return (IsModuleAvailable("Metal") ? "Metal" : "OpenGL");
     #elif defined LLGL_OS_IOS
     return "Metal";
     #elif defined LLGL_OS_ANDROID

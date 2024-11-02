@@ -404,7 +404,7 @@ MTLSamplerAddressMode ToMTLSamplerAddressMode(const SamplerAddressMode addressMo
         case SamplerAddressMode::Border:        return MTLSamplerAddressModeClampToBorderColor;
         case SamplerAddressMode::MirrorOnce:    return MTLSamplerAddressModeMirrorClampToEdge;
         #else
-        case SamplerAddressMode::Border:        break;
+        case SamplerAddressMode::Border:        return MTLSamplerAddressModeClampToZero; // Workaround for iOS
         case SamplerAddressMode::MirrorOnce:    break;
         #endif // /LLGL_OS_IOS
     }
