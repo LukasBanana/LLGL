@@ -162,7 +162,7 @@ public:
         constexpr long vertStage    = LLGL::StageFlags::VertexStage;
         constexpr long fragStage    = LLGL::StageFlags::FragmentStage;
         const long tessEvalStage    = (IsMetal() ? LLGL::StageFlags::VertexStage : LLGL::StageFlags::TessEvaluationStage);
-        const long allStages        = fragStage | vertStage | (IsMetal() ? LLGL::StageFlags::ComputeStage | LLGL::StageFlags::VertexStage : LLGL::StageFlags::AllTessStages);
+        const long allStages        = fragStage | vertStage | (IsMetal() ? LLGL::StageFlags::ComputeStage : LLGL::StageFlags::AllTessStages);
 
         LLGL::PipelineLayoutDescriptor plDesc;
         {
