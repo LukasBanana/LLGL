@@ -93,7 +93,7 @@ void MacOSGLContext::MakeNSOpenGLContextCurrent(NSOpenGLContext* context)
 
 bool MacOSGLContext::SetSwapInterval(int interval)
 {
-    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14 && LLGL_GL3PLUS_SUPPORTED
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14 && !LLGL_GL_ENABLE_OPENGL2X
     [ctx_ setValues:&interval forParameter:NSOpenGLContextParameterSwapInterval];
     #else
     [ctx_ setValues:&interval forParameter:NSOpenGLCPSwapInterval];
@@ -101,7 +101,7 @@ bool MacOSGLContext::SetSwapInterval(int interval)
     return true;
 }
 
-#if LLGL_GL3PLUS_SUPPORTED
+#if !LLGL_GL_ENABLE_OPENGL2X
 
 static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfigurationOpenGL& profile)
 {
@@ -127,11 +127,11 @@ static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfi
     throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
 }
 
-#endif // /LLGL_GL3PLUS_SUPPORTED
+#endif // /!LLGL_GL_ENABLE_OPENGL2X
 
 bool MacOSGLContext::CreatePixelFormat(const GLPixelFormat& pixelFormat, const RendererConfigurationOpenGL& profile)
 {
-    #if LLGL_GL3PLUS_SUPPORTED
+    #if !LLGL_GL_ENABLE_OPENGL2X
     const NSOpenGLPixelFormatAttribute profileAttrib = TranslateNSOpenGLProfile(profile);
     #endif
 
@@ -142,7 +142,7 @@ bool MacOSGLContext::CreatePixelFormat(const GLPixelFormat& pixelFormat, const R
         {
             NSOpenGLPFAAccelerated,
             NSOpenGLPFADoubleBuffer,
-            #if LLGL_GL3PLUS_SUPPORTED
+            #if !LLGL_GL_ENABLE_OPENGL2X
             NSOpenGLPFAOpenGLProfile,   profileAttrib,
             #endif
             NSOpenGLPFADepthSize,       static_cast<NSOpenGLPixelFormatAttribute>(pixelFormat.depthBits),
