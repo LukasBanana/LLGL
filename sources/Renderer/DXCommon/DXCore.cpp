@@ -430,42 +430,75 @@ VideoAdapterInfo DXGetVideoAdapterInfo(IDXGIFactory* factory, long preferredAdap
     return VideoAdapterInfo{};
 }
 
+/*
+Converts the HLSL component mask to component count.
+One and two component shader attributes can be shared with other input/ouput registers as shown in the following example:
+  struct VertexIn {
+    float2 Pos : POSITION; // Components XY__
+    float2 TC  : TEXCOORD; // Components __ZW
+  };
+This function counts how many bits are in the input value and return it as the component count,
+assuming that components are always consequtive, i.e. XY_W for instance is not considered a valid component mask for shader attributes.
+*/
+static BYTE ComponentMaskToCount(BYTE v)
+{
+    switch (v)
+    {
+        case 0x01: // 0001
+        case 0x02: // 0010
+        case 0x04: // 0100
+        case 0x08: // 1000
+            return 1;
+        case 0x03: // 0011
+        case 0x06: // 0110
+        case 0x0C: // 1100
+            return 2;
+        case 0x07: // 0111
+        case 0x0E: // 1110
+            return 3;
+        case 0x0F: // 1111
+            return 4;
+        default:
+            return 0;
+    }
+}
+
 Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
 {
     switch (componentType)
     {
         case D3D_REGISTER_COMPONENT_UINT32:
         {
-            switch (componentMask)
+            switch (ComponentMaskToCount(componentMask))
             {
-                case 0x01: return Format::R32UInt;
-                case 0x03: return Format::RG32UInt;
-                case 0x07: return Format::RGB32UInt;
-                case 0x0F: return Format::RGBA32UInt;
+                case 1: return Format::R32UInt;
+                case 2: return Format::RG32UInt;
+                case 3: return Format::RGB32UInt;
+                case 4: return Format::RGBA32UInt;
             }
         }
         break;
 
         case D3D_REGISTER_COMPONENT_SINT32:
         {
-            switch (componentMask)
+            switch (ComponentMaskToCount(componentMask))
             {
-                case 0x01: return Format::R32SInt;
-                case 0x03: return Format::RG32SInt;
-                case 0x07: return Format::RGB32SInt;
-                case 0x0F: return Format::RGBA32SInt;
+                case 1: return Format::R32SInt;
+                case 2: return Format::RG32SInt;
+                case 3: return Format::RGB32SInt;
+                case 4: return Format::RGBA32SInt;
             }
         }
         break;
 
         case D3D_REGISTER_COMPONENT_FLOAT32:
         {
-            switch (componentMask)
+            switch (ComponentMaskToCount(componentMask))
             {
-                case 0x01: return Format::R32Float;
-                case 0x03: return Format::RG32Float;
-                case 0x07: return Format::RGB32Float;
-                case 0x0F: return Format::RGBA32Float;
+                case 1: return Format::R32Float;
+                case 2: return Format::RG32Float;
+                case 3: return Format::RGB32Float;
+                case 4: return Format::RGBA32Float;
             }
         }
         break;

@@ -414,7 +414,7 @@ static ShaderResourceReflection* FetchOrInsertResource(
 }
 
 // Converts a D3D12 signature parameter into a vertex attribute
-static void ConvertSignatureParamDescToVertexAttrib(VertexAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
+static void ConvertD3D12ParamDescToVertexAttrib(VertexAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
 {
     dst.name            = std::string(src.SemanticName);
     dst.format          = DXGetSignatureParameterType(src.ComponentType, src.Mask);
@@ -437,7 +437,7 @@ static HRESULT ReflectShaderVertexAttributes(
 
         /* Add vertex input attribute to output list */
         VertexAttribute vertexAttrib;
-        ConvertSignatureParamDescToVertexAttrib(vertexAttrib, paramDesc);
+        ConvertD3D12ParamDescToVertexAttrib(vertexAttrib, paramDesc);
         reflection.vertex.inputAttribs.push_back(vertexAttrib);
     }
 
@@ -451,7 +451,7 @@ static HRESULT ReflectShaderVertexAttributes(
 
         /* Add vertex output attribute to output list */
         VertexAttribute vertexAttrib;
-        ConvertSignatureParamDescToVertexAttrib(vertexAttrib, paramDesc);
+        ConvertD3D12ParamDescToVertexAttrib(vertexAttrib, paramDesc);
         reflection.vertex.outputAttribs.push_back(vertexAttrib);
     }
 
@@ -459,7 +459,7 @@ static HRESULT ReflectShaderVertexAttributes(
 }
 
 // Converts a D3D12 signature parameter into a fragment attribute
-static void ConvertSignatureParamDescToFragmentAttrib(FragmentAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
+static void ConvertD3D12ParamDescToFragmentAttrib(FragmentAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
 {
     dst.name        = std::string(src.SemanticName);
     dst.format      = DXGetSignatureParameterType(src.ComponentType, src.Mask);
@@ -482,7 +482,7 @@ static HRESULT ReflectShaderFragmentAttributes(
 
         /* Add fragment attribute to output list */
         FragmentAttribute fragmentAttrib;
-        ConvertSignatureParamDescToFragmentAttrib(fragmentAttrib, paramDesc);
+        ConvertD3D12ParamDescToFragmentAttrib(fragmentAttrib, paramDesc);
         reflection.fragment.outputAttribs.push_back(fragmentAttrib);
     }
 
