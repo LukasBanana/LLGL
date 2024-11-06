@@ -194,7 +194,7 @@ std::uint32_t D3D11ResourceHeap::WriteResourceViews(std::uint32_t firstDescripto
         /* Get SRV and UAV objects for textures and buffers */
         ID3D11ShaderResourceView* srv = nullptr;
         ID3D11UnorderedAccessView* uav = nullptr;
-        D3DSubresourceLocator subresourceLocator = {};
+        D3DSubresourceLocator subresourceLocator;
         SubresourceIndexContext subresourceContext;
 
         if (binding.type == D3DResourceType_SRV)
@@ -996,7 +996,7 @@ static D3D11SubresourceRange GetD3D11TextureSubresourceRange(D3D11Texture& textu
 
 ID3D11ShaderResourceView* D3D11ResourceHeap::GetOrCreateTextureSRV(D3D11Texture& textureD3D, const TextureViewDescriptor& textureViewDesc, D3DSubresourceLocator& outLocator)
 {
-    outLocator .locator = textureD3D.GetBindingLocator();
+    outLocator.locator  = textureD3D.GetBindingLocator();
     outLocator.range    = GetD3D11TextureSubresourceRange(textureD3D, textureViewDesc);
 
     if (IsTextureViewEnabled(textureViewDesc))

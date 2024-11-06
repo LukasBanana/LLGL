@@ -165,9 +165,9 @@ class D3D11ResourceHeap final : public ResourceHeap
         // Helper structure for SRV and UAV output.
         struct D3DSubresourceLocator
         {
-            std::size_t             index;      // Index into the subresource containers (subresourceSRVs_ and subresourceUAVs_).
-            D3D11BindingLocator*    locator;    // Binding table locator.
-            D3D11SubresourceRange   range;      // Binding table subresource range.
+            std::size_t             index   = -1;       // Index into the subresource containers (subresourceSRVs_ and subresourceUAVs_).
+            D3D11BindingLocator*    locator = nullptr;  // Binding table locator.
+            D3D11SubresourceRange   range   = {};       // Binding table subresource range.
         };
 
     private:
