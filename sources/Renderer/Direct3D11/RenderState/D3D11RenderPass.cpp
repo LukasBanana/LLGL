@@ -27,9 +27,9 @@ D3D11RenderPass::D3D11RenderPass(const RenderPassDescriptor& desc)
         clearFlagsDSV_ |= D3D11_CLEAR_STENCIL;
 
     /* If we don't care about storing depth/stencil values, append flag to only read those values */
-    if (desc.depthAttachment.storeOp == AttachmentStoreOp::Undefined)
+    if (desc.depthAttachment.storeOp == AttachmentStoreOp::Undefined && desc.depthAttachment.loadOp == AttachmentLoadOp::Load)
         attachmentFlagsDSV_ |= D3D11_DSV_READ_ONLY_DEPTH;
-    if (desc.stencilAttachment.storeOp == AttachmentStoreOp::Undefined)
+    if (desc.stencilAttachment.storeOp == AttachmentStoreOp::Undefined && desc.stencilAttachment.loadOp == AttachmentLoadOp::Load)
         attachmentFlagsDSV_ |= D3D11_DSV_READ_ONLY_STENCIL;
 }
 
