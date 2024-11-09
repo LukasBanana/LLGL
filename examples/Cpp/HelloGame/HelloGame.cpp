@@ -934,13 +934,13 @@ private:
             LLGL::Parse(
                 "cbuffer(Scene@1):vert:frag,"
                 "%s(instances@2):vert,"
-                "texture(shadowMap@3):frag,"
+                "texture(shadowMap@4):frag,"
                 "sampler(shadowMapSampler@%d):frag,"
                 "float3(worldOffset),"  // Uniform_worldOffset   (0)
                 "float(bendIntensity)," // Uniform_bendIntensity (1)
                 "uint(firstInstance),", // Uniform_firstInstance (2)
                 (instanceBuffer.IsCbuffer() ? "cbuffer" : "buffer"),
-                (needsUniqueBindingSlots ? 4 : 3)
+                (needsUniqueBindingSlots ? 5 : 4)
             )
         );
 

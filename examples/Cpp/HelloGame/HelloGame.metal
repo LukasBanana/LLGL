@@ -153,8 +153,8 @@ fragment float4 PSInstance(
     VertexOut           inp                 [[stage_in]],
     constant Scene&     scene               [[buffer(1)]],
     constant Globals&   globals             [[buffer(5)]],
-    depth2d<float>      shadowMap           [[texture(3)]],
-    sampler             shadowMapSampler    [[sampler(3)]])
+    depth2d<float>      shadowMap           [[texture(4)]],
+    sampler             shadowMapSampler    [[sampler(4)]])
 {
     // Get input color
     float4  albedo      = inp.color;

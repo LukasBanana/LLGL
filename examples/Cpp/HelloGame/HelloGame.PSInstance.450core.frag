@@ -36,10 +36,10 @@ layout(location = 3) in vec4 vColor;
 layout(location = 0) out vec4 outColor;
 
 #if ENABLE_SPIRV
-layout(binding = 3) uniform texture2D shadowMap;
-layout(binding = 4) uniform samplerShadow shadowMapSampler;
+layout(binding = 4) uniform texture2D shadowMap;
+layout(binding = 5) uniform samplerShadow shadowMapSampler;
 #else
-layout(binding = 3) uniform sampler2DShadow shadowMap;
+layout(binding = 4) uniform sampler2DShadow shadowMap;
 #endif
 
 float SampleShadowMapOffset(vec3 worldPos, vec2 offset)

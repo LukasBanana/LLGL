@@ -82,8 +82,8 @@ void VSInstance(VertexIn inp, uint instID : SV_InstanceID, out VertexOut outp)
 
 // PIXEL SHADER INSTANCE
 
-Texture2D shadowMap : register(t3);
-SamplerComparisonState shadowMapSampler : register(s3);
+Texture2D shadowMap : register(t4);
+SamplerComparisonState shadowMapSampler : register(s4);
 
 float SampleShadowMapOffset(float3 worldPos, float2 offset)
 {
