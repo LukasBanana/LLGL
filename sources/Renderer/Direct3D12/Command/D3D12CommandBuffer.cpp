@@ -949,12 +949,14 @@ void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uin
 void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     commandContext_.DrawIndirect(cmdSignatureFactory_->GetSignatureDrawIndirect(), 1, bufferD3D.GetNative(), offset);
 }
 
 void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     if likely(stride == sizeof(D3D12_DRAW_ARGUMENTS))
     {
         /* Encode indirect draw with pre-defined command stride */
@@ -974,14 +976,14 @@ void D3D12CommandBuffer::DrawIndirect(Buffer& buffer, std::uint64_t offset, std:
 void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    commandContext_.DrawIndirect(
-        cmdSignatureFactory_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset
-    );
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+    commandContext_.DrawIndirect(cmdSignatureFactory_->GetSignatureDrawIndexedIndirect(), 1, bufferD3D.GetNative(), offset);
 }
 
 void D3D12CommandBuffer::DrawIndexedIndirect(Buffer& buffer, std::uint64_t offset, std::uint32_t numCommands, std::uint32_t stride)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     if likely(stride == sizeof(D3D12_DRAW_INDEXED_ARGUMENTS))
     {
         /* Encode indirect draw with pre-defined command stride */
