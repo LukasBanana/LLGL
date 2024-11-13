@@ -80,6 +80,9 @@ static void CreateDefaultNSMenuBar()
         action:             @selector(terminate:)
         keyEquivalent:      @"q"
     ];
+
+    [appMenu release];
+    [menu release];
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification

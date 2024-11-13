@@ -218,6 +218,7 @@ void MTCommandContext::DispatchThreads1D(
     NSUInteger                      numThreads)
 {
     const NSUInteger maxLocalThreads = GetMaxLocalThreads(computePSO);
+    LLGL_ASSERT(maxLocalThreads > 0);
 
     if (@available(iOS 11.0, macOS 10.13, *))
     {

@@ -142,6 +142,7 @@ static MTLCompileOptions* ToMTLCompileOptions(const ShaderDescriptor& shaderDesc
             ];
         }
         [opt setPreprocessorMacros:preprocessorMacros];
+        [preprocessorMacros release];
     }
 
     return opt;
