@@ -678,14 +678,7 @@ void ExampleBase::MainLoop()
     }
 
     // Draw current frame
-    #ifdef LLGL_OS_MACOS
-    @autoreleasepool
-    {
-        DrawFrame();
-    }
-    #else
     DrawFrame();
-    #endif
 
     input.Reset();
 }

@@ -25,14 +25,6 @@
 
 /* Define MacOS version specific macros */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-#   define LLGL_MACOS_AUTORELEASEPOOL_OPEN  @autoreleasepool {
-#   define LLGL_MACOS_AUTORELEASEPOOL_CLOSE }
-#else
-#   define LLGL_MACOS_AUTORELEASEPOOL_OPEN  NSAutoreleasePool* autoreleasePool = [[NSAutoreleasePool alloc] init];
-#   define LLGL_MACOS_AUTORELEASEPOOL_CLOSE [autoreleasePool release];
-#endif // /MAC_OS_X_VERSION_10_7
-
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 
 #define LLGL_MACOS_NSWINDOWSTYLEMASK_BORDERLESS     ( NSWindowStyleMaskBorderless )

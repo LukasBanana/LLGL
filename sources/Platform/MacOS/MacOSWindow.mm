@@ -68,7 +68,7 @@ static bool IsFilteredNSEventType(NSEventType type)
 
 bool Surface::ProcessEvents()
 {
-    LLGL_MACOS_AUTORELEASEPOOL_OPEN
+    DrainAutoreleasePool();
 
     /* Process NSWindow events with latest event types */
     while (NSEvent* event = [NSApp nextEventMatchingMask:g_EventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES])
@@ -91,8 +91,6 @@ bool Surface::ProcessEvents()
         [NSApp sendEvent:event];
     }
 
-    LLGL_MACOS_AUTORELEASEPOOL_CLOSE
-
     return true;
 }
 
@@ -101,15 +99,12 @@ bool Surface::ProcessEvents()
  * Window class
  */
 
-static NSString* ToNSString(const UTF8String& s)
+static NSString* ToNewNSString(const UTF8String& s)
 {
-    return
-    [
-        [[NSString alloc]
-            initWithBytes:  s.c_str()
-            length:         sizeof(char)*s.size()
-            encoding:       NSUTF8StringEncoding
-        ] autorelease
+    return [[NSString alloc]
+        initWithBytes:  s.c_str()
+        length:         sizeof(char)*s.size()
+        encoding:       NSUTF8StringEncoding
     ];
 }
 
@@ -290,7 +285,9 @@ Extent2D MacOSWindow::GetSize(bool useClientArea) const
 
 void MacOSWindow::SetTitle(const UTF8String& title)
 {
-    [wnd_ setTitle:ToNSString(title.c_str())];
+    NSString* titleNS = ToNewNSString(title.c_str());
+    [wnd_ setTitle:titleNS];
+    [titleNS release];
 }
 
 UTF8String MacOSWindow::GetTitle() const
@@ -438,7 +435,10 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     /* Set initial window properties */
     [wnd setDelegate:wndDelegate_];
     [wnd setAcceptsMouseMovedEvents:YES];
-    [wnd setTitle:ToNSString(desc.title.c_str())];
+
+    NSString* titleNS = ToNewNSString(desc.title.c_str());
+    [wnd setTitle:titleNS];
+    [titleNS release];
 
     #if 0
     /* Set window collection behavior for resize events */

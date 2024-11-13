@@ -16,6 +16,9 @@ namespace LLGL
 // Allocates the NSApplicationDelegate if not already done.
 void LoadNSAppDelegate();
 
+// Releases the autorelease pool to drain all of its autoreleased objects and re-allocates the pool.
+void DrainAutoreleasePool();
+
 
 } // /namespace LLGL
 

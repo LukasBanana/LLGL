@@ -97,20 +97,29 @@ namespace LLGL
 {
 
 
-static bool g_appDelegateCreated = false;
+static bool                 g_appDelegateCreated    = false;
+static MacOSAppDelegate*    g_defaultAppDelegate    = nil;
+static NSAutoreleasePool*   g_autoreleasePool       = nil;
 
 static void AllocDefaultNSAppDelegate()
 {
     /* Initialize Cocoa framework */
-    [[NSAutoreleasePool alloc] init];
+    g_autoreleasePool = [[NSAutoreleasePool alloc] init];
     [NSApplication sharedApplication];
 
-    [NSApp setDelegate:(id<NSApplicationDelegate>)[
-        [MacOSAppDelegate alloc]
-        autorelease
-    ]];
+    g_defaultAppDelegate = [MacOSAppDelegate alloc];
+    [NSApp setDelegate:g_defaultAppDelegate];
 
     [NSApp finishLaunching];
+}
+
+void DrainAutoreleasePool()
+{
+    if (g_autoreleasePool != nil)
+    {
+        [g_autoreleasePool release];
+        g_autoreleasePool = [[NSAutoreleasePool alloc] init];
+    }
 }
 
 void LoadNSAppDelegate()
