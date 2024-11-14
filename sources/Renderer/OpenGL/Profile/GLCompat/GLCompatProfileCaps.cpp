@@ -33,7 +33,7 @@ static std::uint32_t GLGetUInt(GLenum param)
 static std::uint32_t GLGetUIntIndexed(GLenum param, GLuint index)
 {
     GLint attr = 0;
-    #if EXT_draw_buffers2
+    #if GL_EXT_draw_buffers2
     if (HasExtension(GLExt::EXT_draw_buffers2))
         glGetIntegeri_v(param, index, &attr);
     #endif
