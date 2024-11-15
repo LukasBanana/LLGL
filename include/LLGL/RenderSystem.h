@@ -266,11 +266,14 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new buffer array.
+
         \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
         \param[in] bufferArray Pointer to an array of Buffer object pointers. This must not be null.
+
         \remarks All buffers within this array must have the same binding flags.
         The buffers inside this array must persist as long as this buffer array is used,
         and the individual buffers are still required to read and write its data from and to the GPU.
+
         \throws std::invalid_argument If \c numBuffers is 0.
         \throws std::invalid_argument If \c bufferArray is null.
         \throws std::invalid_argument If any of the pointers in the array are null.
@@ -287,13 +290,19 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Updates the data of the specified buffer.
+
         \param[in] buffer Specifies the destination buffer whose data is to be updated.
         \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
         This offset plus the data block size (i.e. <code>offset + dataSize</code>) must be less than or equal to the size of the buffer.
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
         This must be less then or equal to the size of the buffer.
-        \remarks To update a small buffer (maximum of 65536 bytes) during encoding a command buffer, use CommandBuffer::UpdateBuffer.
+
+        \remarks This function, just like any other write operation from the RenderSystem, <b>should not</b> be interleaved with command buffer recording
+        in which these resources are used, unless they are carefully organized to not override their content during such command recordings.
+        This is because even an immediate context does not guarantee that any command is submitted to the GPU until the end of recording (i.e. CommandBuffer::End).
+        To update a small buffer (maximum of 65536 bytes) during command recording, use CommandBuffer::UpdateBuffer.
+
         \see ReadBuffer
         */
         virtual void WriteBuffer(Buffer& buffer, std::uint64_t offset, const void* data, std::uint64_t dataSize) = 0;
@@ -365,10 +374,18 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Updates the image data of the specified texture.
+
         \param[in] texture Specifies the texture whose data is to be updated.
         \param[in] textureRegion Specifies the region where the texture is to be updated. The field TextureRegion::numMipLevels \b must be 1.
         \param[in] srcImageView Specifies the source image view. Its \c data member must not be null!
-        \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
+
+        \remarks This function \b cannot be used with multi-sample textures, i.e. textures of type TextureType::Texture2DMS or TextureType::Texture2DMSArray.
+
+        \remarks This function, just like any other write operation from the RenderSystem, <b>should not</b> be interleaved with command buffer recording
+        in which these resources are used, unless they are carefully organized to not override their content during such command recordings.
+        This is because even an immediate context does not guarantee that any command is submitted to the GPU until the end of recording (i.e. CommandBuffer::End).
+        If texture data needs to be updated from the CPU during command recording, update a buffer via CommandBuffer::UpdateBuffer
+        and then copy that buffer region into the texture via CommandBuffer::CopyTextureFromBuffer.
         */
         virtual void WriteTexture(Texture& texture, const TextureRegion& textureRegion, const ImageView& srcImageView) = 0;
 
@@ -377,6 +394,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \param[in] texture Specifies the texture object to read from.
         \param[in] textureRegion Specifies the region where the texture data is to be read.
         \param[out] dstImageView Specifies the destination image view to write the texture data to.
+
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
         The Texture::GetDesc or Texture::GetMipExtent functions can be used to determine the texture dimensions.
         \code
@@ -397,9 +415,11 @@ class LLGL_EXPORT RenderSystem : public Interface
         // Read texture data from first MIP-map level (index 0)
         myRenderSystem->ReadTexture(*myTexture, 0, myImageView);
         \endcode
+
         \note The behavior is undefined if <code>dstImageView.data</code> points to an invalid buffer,
         or <code>dstImageView.data</code> points to a buffer that is smaller than specified by <code>dstImageView.dataSize</code>,
         or <code>dstImageView.dataSize</code> is less than the required size.
+
         \throws std::invalid_argument If <code>dstImageView.data</code> is null.
         \see Texture::GetDesc
         \see Texture::GetMipExtent
@@ -422,14 +442,17 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Creates a new resource heap.
+
         \param[in] resourceHeapDesc Specifies the descriptor for the resource heap.
         If the \c numResourceViews field is zero, the \c initialResourceViews parameter will determine the number of resources,
         it must \e not be empty and it \b must be a multiple of the number of bindings in the pipeline layout.
         \param[in] initialResourceViews Specifies an optional array of initial resource views.
         If this is non-null, the array pointed to must have enough elements to initialize the entire resource heap.
         Uninitialized resource views must be written with a call to WriteResourceHeap before the resource heap can be used in a command buffer.
+
         \remarks Resource heaps are used in combination with a pipeline layout.
         The pipeline layout determines to which binding points the resources are bound.
+
         \see CreatePipelineLayout
         \see CommandBuffer::SetResourceHeap
         \see WriteResourceHeap
@@ -442,15 +465,24 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Writes new resource view descriptors into the specified resource heap.
+
         \param[in] resourceHeap Specifies the resource heap that is to be updated.
         \param[in] firstDescriptor Zero-based index to the first descriptor that is to be updated.
         This must be less than the number of bindings in the resource heap's pipeline layout (PipelineLayout::GetNumHeapBindings)
         multiplied by the number of descriptor sets in the resource heap (ResourceHeap::GetNumDescriptorSets).
         \param[in] resourceViews Array of resource view descriptors.
         \remarks The type of a resource view, i.e. whether it's a buffer, texture, or sampler, must not be changed with this function.
+
+        \remarks This function, just like any other write operation from the RenderSystem, <b>should not</b> be interleaved with command buffer recording
+        in which these resources are used, unless they are carefully organized to not override their content during such command recordings.
+        This is because even an immediate context does not guarantee that any command is submitted to the GPU until the end of recording (i.e. CommandBuffer::End).
+        To swap out resources during command recording, use CommandBuffer::SetResource with individual bindings or write descriptors to unique sets within the heap.
+
         \return Number of resource views that have been updated by this call. Any resource view descriptor with a \c resource field that is null will be ignored silently.
+
         \see ResourceHeap::GetNumDescriptorSets
         \see PipelineLayout::GetNumHeapBindings
+        \see CommandBUffer::SetResourceHeap
         */
         virtual std::uint32_t WriteResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews) = 0;
 
