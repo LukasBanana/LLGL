@@ -22,10 +22,11 @@ The library is written mostly in C++11 with the addition of a C99, C# 6.0, and G
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
 - [LLGL Coding Conventions](docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
-- [Examples and Tutorials for C++](examples/Cpp)
-- [Examples for C99](examples/C99)
-- [Examples for C#](examples/CSharp)
-- [Examples for Go](examples/Go)
+- [C++ Examples and Tutorials](examples/Cpp)
+- [C99 Examples](examples/C99)
+- [C# Examples](examples/CSharp)
+- [Go Examples](examples/Go)
+- [WebGL Examples](https://lukasbanana.github.io/LLGL/docu/WebPage)
 
 
 ## Platform Support
