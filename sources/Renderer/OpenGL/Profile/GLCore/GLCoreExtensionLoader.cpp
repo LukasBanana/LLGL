@@ -86,7 +86,17 @@ bool LoadSwapIntervalProcs()
     #if defined(_WIN32)
     return LOAD_GLPROC_SIMPLE(wglSwapIntervalEXT);
     #elif defined(__linux__)
-    return LOAD_GLPROC_SIMPLE(glXSwapIntervalSGI);
+    if (glXSwapIntervalSGI  != nullptr ||
+        glXSwapIntervalMESA != nullptr ||
+        glXSwapIntervalEXT  != nullptr)
+    {
+        /* Extension already loaded */
+        return true;
+    }
+    const bool hasSwapIntervalSGI   = LOAD_GLPROC_SIMPLE(glXSwapIntervalSGI);
+    const bool hasSwapIntervalMESA  = LOAD_GLPROC_SIMPLE(glXSwapIntervalMESA);
+    const bool hasSwapIntervalEXT   = LOAD_GLPROC_SIMPLE(glXSwapIntervalEXT);
+    return (hasSwapIntervalSGI || hasSwapIntervalMESA || hasSwapIntervalEXT);
     #else
     return false;
     #endif

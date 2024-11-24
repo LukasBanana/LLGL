@@ -179,11 +179,34 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 
 bool LinuxGLContext::SetSwapInterval(int interval)
 {
-    /* Load GL extension "glXSwapIntervalSGI" to set v-sync interval */
-    if (glXSwapIntervalSGI || LoadSwapIntervalProcs())
+    /* Load GL extension "GLX_SGI/MESA/EXT_swap_control" to set v-sync interval */
+    LoadSwapIntervalProcs();
+
+    if (glXSwapIntervalMESA != nullptr)
+    {
+        /* Prefer MESA extension since SGI extension returns false for interval 0 */
+        return (glXSwapIntervalMESA(static_cast<unsigned int>(interval)) == 0);
+    }
+
+    if (glXSwapIntervalEXT != nullptr)
+    {
+        /* Can only assume this function succeeded as it doesn't return any status */
+        ::Display* display = glXGetCurrentDisplay();
+        ::GLXDrawable drawable = glXGetCurrentDrawable();
+        if (drawable)
+        {
+            glXSwapIntervalEXT(display, drawable, interval);
+            return true;
+        }
+    }
+
+    if (glXSwapIntervalSGI != nullptr)
+    {
+        /* Fallback to SGI extension. This is known to *not* support interval=0 */
         return (glXSwapIntervalSGI(interval) == 0);
-    else
-        return false;
+    }
+
+    return false;
 }
 
 void LinuxGLContext::CreateGLXContext(

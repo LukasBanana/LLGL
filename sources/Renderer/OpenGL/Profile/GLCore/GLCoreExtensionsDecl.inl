@@ -26,8 +26,14 @@ DECL_GLPROC(PFNWGLGETEXTENSIONSSTRINGARBPROC,                       wglGetExtens
 
 #elif defined(__linux__)
 
+// GLX_MESA_swap_control
+DECL_GLPROC(PFNGLXSWAPINTERVALMESAPROC,                             glXSwapIntervalMESA,                            int,            (unsigned int));
+
 // GLX_SGI_swap_control
 DECL_GLPROC(PFNGLXSWAPINTERVALSGIPROC,                              glXSwapIntervalSGI,                             int,            (int));
+
+// GLX_EXT_swap_control
+DECL_GLPROC(PFNGLXSWAPINTERVALEXTPROC,                              glXSwapIntervalEXT,                             void,           (::Display*, ::GLXDrawable, int));
 
 #endif
 
