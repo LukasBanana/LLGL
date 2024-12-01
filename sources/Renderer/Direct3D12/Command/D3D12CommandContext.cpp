@@ -396,9 +396,7 @@ void D3D12CommandContext::SetDescriptorHeapsOfOtherContext(const D3D12CommandCon
         SetDescriptorHeaps(other.stateCache_.numDescriptorHeaps, other.stateCache_.descriptorHeaps);
 }
 
-void D3D12CommandContext::PrepareStagingDescriptorHeaps(
-    const D3D12DescriptorHeapSetLayout& layout,
-    const D3D12RootParameterIndices&    indices)
+void D3D12CommandContext::SetStagingDescriptorHeaps(const D3D12DescriptorHeapSetLayout& layout, const D3D12RootParameterIndices& indices)
 {
     stagingDescriptorSetLayout_ = layout;
     stagingDescriptorIndices_   = indices;
@@ -422,6 +420,12 @@ void D3D12CommandContext::PrepareStagingDescriptorHeaps(
             stagingDescriptorSetLayout_.numSamplers
         );
     }
+}
+
+void D3D12CommandContext::GetStagingDescriptorHeaps(D3D12DescriptorHeapSetLayout& outLayout, D3D12RootParameterIndices& outIndices)
+{
+    outLayout   = stagingDescriptorSetLayout_;
+    outIndices  = stagingDescriptorIndices_;
 }
 
 void D3D12CommandContext::SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset)

@@ -746,7 +746,7 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
     if (boundPipelineLayout_ != nullptr)
     {
         /* Prepare staging descriptor heaps for bound pipeline layout */
-        commandContext_.PrepareStagingDescriptorHeaps(
+        commandContext_.SetStagingDescriptorHeaps(
             boundPipelineLayout_->GetDescriptorHeapSetLayout(),
             boundPipelineLayout_->GetRootParameterIndices()
         );
@@ -754,7 +754,7 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
     else
     {
         /* Reset staging descriptor layout to avoid undefined behavior in next Flush*StagingDescriptorTables() call */
-        commandContext_.PrepareStagingDescriptorHeaps({}, {});
+        commandContext_.SetStagingDescriptorHeaps({}, {});
     }
 }
 
@@ -1055,6 +1055,7 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t numWorkGroupsX, std::uint32_t nu
 void D3D12CommandBuffer::DispatchIndirect(Buffer& buffer, std::uint64_t offset)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    commandContext_.TransitionResource(bufferD3D.GetResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
     commandContext_.DispatchIndirect(cmdSignatureFactory_->GetSignatureDispatchIndirect(), 1, bufferD3D.GetNative(), offset);
 }
 

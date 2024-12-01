@@ -225,9 +225,13 @@ void D3D12Buffer::ClearSubresourceUInt(
         CreateIntermediateUAVDescriptorHeap(resource, format, formatStride);
 
     /* Get GPU and CPU descriptor handles for intermediate descriptor heap */
-    D3D12DescriptorHeapSetLayout layout;
-    layout.numHeapResourceViews = 1;
-    commandContext.PrepareStagingDescriptorHeaps(layout, {});
+    D3D12DescriptorHeapSetLayout oldLayout;
+    D3D12RootParameterIndices oldRootParamIndices;
+    commandContext.GetStagingDescriptorHeaps(oldLayout, oldRootParamIndices);
+
+    D3D12DescriptorHeapSetLayout newLayout;
+    newLayout.numHeapResourceViews = 1;
+    commandContext.SetStagingDescriptorHeaps(newLayout, {});
     //D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = uavIntermediateDescHeap_->GetGPUDescriptorHandleForHeapStart();
     D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle = uavIntermediateDescHeap_->GetCPUDescriptorHandleForHeapStart();
     D3D12_GPU_DESCRIPTOR_HANDLE gpuDescHandle = commandContext.CopyDescriptorsForStaging(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpuDescHandle, 0, 1);
@@ -278,6 +282,9 @@ void D3D12Buffer::ClearSubresourceUInt(
         }
         commandContext.TransitionResource(GetResource(), GetResource().usageState, true);
     }
+
+    /* Reset previous staging descriptor heaps */
+    commandContext.SetStagingDescriptorHeaps(oldLayout, oldRootParamIndices);
 }
 
 HRESULT D3D12Buffer::Map(

@@ -132,10 +132,8 @@ class D3D12CommandContext
 
         void SetDescriptorHeapsOfOtherContext(const D3D12CommandContext& other);
 
-        void PrepareStagingDescriptorHeaps(
-            const D3D12DescriptorHeapSetLayout& layout,
-            const D3D12RootParameterIndices&    indices
-        );
+        void SetStagingDescriptorHeaps(const D3D12DescriptorHeapSetLayout& layout, const D3D12RootParameterIndices& indices);
+        void GetStagingDescriptorHeaps(D3D12DescriptorHeapSetLayout& outLayout, D3D12RootParameterIndices& outIndices);
 
         void SetGraphicsConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
         void SetComputeConstant(UINT parameterIndex, D3D12Constant value, UINT offset);
