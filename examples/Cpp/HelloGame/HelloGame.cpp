@@ -1592,8 +1592,21 @@ private:
 
     void PollUserInput()
     {
-        if (player.moveDirStack < inputStackSize && !player.isDescending && !player.isFalling && !player.isExploding)
+        // User must not control the player when ...
+        if (player.moveDirStack < inputStackSize    && // Move stack is full
+            !player.isDescending                    && // Player is descending to being level
+            !player.isFalling                       && // Player is falling to death
+            !player.isExploding                     && // Player is exploding due to being locked in
+            !(currentLevel != nullptr &&               // Level is completed and about to transition to the next level
+              currentLevel->IsCompleted()))
+        {
             ControlPlayer();
+        }
+        else
+        {
+            // Make sure input sate is cleared when player cannot be controlled at the moment
+            pointerPlayerMovement = false;
+        }
 
         #if ENABLE_CHEATS
 
@@ -1716,7 +1729,7 @@ private:
             }
         }
 
-        if (!pointerPlayerMovement && player.IsLeaning())
+        if ((!pointerPlayerMovement && player.IsLeaning()))
         {
             // Cancel leaning player
             if (player.leanFactor > 0.0f)
