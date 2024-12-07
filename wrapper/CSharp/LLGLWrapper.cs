@@ -1139,7 +1139,7 @@ namespace LLGL
     {
         public AnsiString         DebugName { get; set; }          = null;
         public CommandBufferFlags Flags { get; set; }              = 0;
-        public int                NumNativeBuffers { get; set; }   = 2;
+        public int                NumNativeBuffers { get; set; }   = 0;
         public long               MinStagingPoolSize { get; set; } = (0xFFFF+1);
         public RenderPass         RenderPass { get; set; }         = null;
 
@@ -3478,7 +3478,7 @@ namespace LLGL
         {
             public byte*      debugName;          /* = null */
             public int        flags;              /* = 0 */
-            public int        numNativeBuffers;   /* = 2 */
+            public int        numNativeBuffers;   /* = 0 */
             public long       minStagingPoolSize; /* = (0xFFFF+1) */
             public RenderPass renderPass;         /* = null */
         }

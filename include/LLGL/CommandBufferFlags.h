@@ -284,15 +284,16 @@ struct CommandBufferDescriptor
     long                flags               = 0;
 
     /**
-    \brief Specifies the number of internal native command buffers. By default 2.
+    \brief Specifies the number of internal native command buffers. 0 specifies to let the backend decide how many native buffers to allocate. By default 0.
     \remarks This is only a hint to the framework, since not all rendering APIs support command buffers natively.
     For those that do, however, this member specifies how many native command buffers are to be allocated internally.
     These native command buffers are then switched everytime encoding begins with the CommandBuffer::Begin function.
     The benefit of having multiple native command buffers is that it reduces the time the GPU is idle
     because it waits for a command buffer to be completed before it can be reused.
+    For command buffers that are only recorded once and submitted multiple times, it makes sense to allocate only a single native command buffer.
     \see CommandBuffer::Begin
     */
-    std::uint32_t       numNativeBuffers    = 2;
+    std::uint32_t       numNativeBuffers    = 0;
 
     /**
     \brief Specifies the minimum size (in bytes) for the staging pool (if supported). By default 65536 (or <tt>0xFFFF + 1</tt>).

@@ -696,10 +696,6 @@ void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& c
         if ((commandBufferDesc.flags & CommandBufferFlags::Secondary) == 0)
             LLGL_DBG_WARN(WarningType::ImproperArgument, "render pass is ignored for primary command buffers at creation time");
     }
-
-    /* Validate number of native buffers */
-    if (commandBufferDesc.numNativeBuffers == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot create command buffer with zero native buffers");
 }
 
 void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut)

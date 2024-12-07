@@ -254,10 +254,7 @@ int example_init(const char* title)
     LLGLCommandBufferDescriptor cmdBufferDesc =
     {
         // Use immediate context to avoid redundant calls to llglSubmitCommandBuffer() in every example
-        .flags              = LLGLCommandBufferImmediateSubmit,
-
-        // Use two native command buffers; This is merely a hint to the backend (OpenGL for instance will ignore this)
-        .numNativeBuffers   = 2,
+        .flags = LLGLCommandBufferImmediateSubmit,
     };
     g_commandBuffer = llglCreateCommandBuffer(&cmdBufferDesc);
 

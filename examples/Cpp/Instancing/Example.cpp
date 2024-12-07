@@ -158,14 +158,14 @@ private:
         LLGL::VertexFormat vertexFormatPerVertex;
         vertexFormatPerVertex.attributes =
         {
-            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ 0,               /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
-            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ sizeof(float)*3, /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "position", LLGL::Format::RGB32Float, /*location:*/ 0, /*offset:*/ offsetof(Vertex, position), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
+            LLGL::VertexAttribute{ "texCoord", LLGL::Format::RG32Float,  /*location:*/ 1, /*offset:*/ offsetof(Vertex, texCoord), /*stride:*/ sizeof(Vertex), /*slot:*/ 0 },
         };
 
         LLGL::VertexFormat vertexFormatPerInstance;
         vertexFormatPerInstance.attributes =
         {
-            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  0,                                /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
+            LLGL::VertexAttribute{ "color",                         LLGL::Format::RGB32Float,  /*location:*/ 2, /*offset:*/  offsetof(Instance, color),        /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
             LLGL::VertexAttribute{ "arrayLayer",                    LLGL::Format::R32Float,    /*location:*/ 3, /*offset:*/  offsetof(Instance, arrayLayer),   /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
             LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 0, LLGL::Format::RGBA32Float, /*location:*/ 4, /*offset:*/  offsetof(Instance, wMatrix),      /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },
             LLGL::VertexAttribute{ "wMatrix", /*semanticIndex:*/ 1, LLGL::Format::RGBA32Float, /*location:*/ 5, /*offset:*/  offsetof(Instance, wMatrix) + 16, /*stride:*/ sizeof(Instance), /*slot:*/ 1, /*instanceDivisor:*/ 1 },

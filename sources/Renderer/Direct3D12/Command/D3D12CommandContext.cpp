@@ -15,6 +15,7 @@
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 #include <limits.h>
@@ -58,7 +59,8 @@ void D3D12CommandContext::Create(
     allocatorFence_.Create(device.GetNative());
 
     /* Determine number of command allocators */
-    numAllocators_ = std::max(1u, std::min(numAllocators, D3D12CommandContext::maxNumAllocators));
+    constexpr UINT numAllocatorsDefault = 2;
+    numAllocators_ = (numAllocators == 0 ? numAllocatorsDefault : Clamp<UINT>(numAllocators, 1u, D3D12CommandContext::maxNumAllocators));
 
     /* Create command allocators and descriptor heap pools */
     constexpr UINT64 minStagingChunkSize = 256;

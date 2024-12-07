@@ -946,7 +946,7 @@ type ClearValue struct {
 type CommandBufferDescriptor struct {
     DebugName          string      /* = "" */
     Flags              uint        /* = 0 */
-    NumNativeBuffers   uint32      /* = 2 */
+    NumNativeBuffers   uint32      /* = 0 */
     MinStagingPoolSize uint64      /* = (0xFFFF+1) */
     RenderPass         *RenderPass /* = nil */
 }

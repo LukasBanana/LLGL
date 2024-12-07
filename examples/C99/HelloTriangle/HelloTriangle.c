@@ -138,8 +138,7 @@ int main(int argc, char* argv[])
     // Create command buffer to submit subsequent graphics commands to the GPU
     LLGLCommandBufferDescriptor cmdBufferDesc =
     {
-        .flags              = LLGLCommandBufferImmediateSubmit,
-        .numNativeBuffers   = 2,
+        .flags = LLGLCommandBufferImmediateSubmit,
     };
     LLGLCommandBuffer cmdBuffer = llglCreateCommandBuffer(&cmdBufferDesc);
 

@@ -1004,7 +1004,7 @@ typedef struct LLGLCommandBufferDescriptor
 {
     const char*    debugName;          /* = NULL */
     long           flags;              /* = 0 */
-    uint32_t       numNativeBuffers;   /* = 2 */
+    uint32_t       numNativeBuffers;   /* = 0 */
     uint64_t       minStagingPoolSize; /* = (0xFFFF+1) */
     LLGLRenderPass renderPass;         /* = LLGL_NULL_OBJECT */
 }

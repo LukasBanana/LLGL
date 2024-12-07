@@ -787,7 +787,10 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
 
-        //! \see DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+        /**
+        \see DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+        \todo \c numInstances should be the second parameter to be consistent with DrawIndexedInstanced() function and with D3D API. This will inevitably be a breaking change.
+        */
         virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) = 0;
 
         /**
@@ -807,6 +810,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \see RenderingFeatures::hasInstancing
         \see RenderingFeatures::hasOffsetInstancing
+
+        \todo \c numInstances should be the second parameter to be consistent with DrawIndexedInstanced() function and with D3D API. This will inevitably be a breaking change.
         */
         virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance) = 0;
 

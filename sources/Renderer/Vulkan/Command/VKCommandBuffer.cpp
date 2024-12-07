@@ -25,6 +25,7 @@
 #include "../Buffer/VKBufferArray.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Constants.h>
 #include <LLGL/TypeInfo.h>
@@ -1387,10 +1388,11 @@ void VKCommandBuffer::AppendQueryPoolInFlight(VKQueryHeap* queryHeap)
 
 std::uint32_t VKCommandBuffer::GetNumVkCommandBuffers(const CommandBufferDescriptor& desc)
 {
-    if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
-        return 1u;
+    constexpr std::uint32_t numNativeBuffersDefault = 2;
+    if (desc.numNativeBuffers == 0)
+        return numNativeBuffersDefault;
     else
-        return std::max(1u, std::min(desc.numNativeBuffers, VKCommandBuffer::maxNumCommandBuffers));
+        return Clamp<std::uint32_t>(desc.numNativeBuffers, 1u, VKCommandBuffer::maxNumCommandBuffers);
 }
 
 

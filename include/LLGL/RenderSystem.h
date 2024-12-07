@@ -648,12 +648,11 @@ class LLGL_EXPORT RenderSystem : public Interface
         d3dDevice->Release();
         \endcode
 
-        \note Only supported with: Direct3D 12, Direct3D 11, Vulkan, Metal.
-
         \see Direct3D12::RenderSystemNativeHandle
         \see Direct3D11::RenderSystemNativeHandle
         \see Vulkan::RenderSystemNativeHandle
         \see Metal::RenderSystemNativeHandle
+        \see OpenGL::RenderSystemNativeHandle
         */
         virtual bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) = 0;
 
