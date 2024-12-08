@@ -61,7 +61,7 @@ float LerpColorWheel(float t, int component)
 int ExampleInit()
 {
     // Register standard output as log callback
-    llglRegisterLogCallbackStd();
+    llglRegisterLogCallbackStd(0);
 
     // Load render system module
     LLGLReport report = {};

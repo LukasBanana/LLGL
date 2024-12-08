@@ -871,6 +871,36 @@ typedef enum LLGLFormatFlags
 }
 LLGLFormatFlags;
 
+typedef enum LLGLStdOutFlags
+{
+    LLGLStdOutColored = (1 << 0),
+}
+LLGLStdOutFlags;
+
+typedef enum LLGLColorFlags
+{
+    LLGLColorDefault      = (1 << 0),
+    LLGLColorRed          = (1 << 1),
+    LLGLColorGreen        = (1 << 2),
+    LLGLColorBlue         = (1 << 3),
+    LLGLColorBright       = (1 << 4),
+    LLGLColorBold         = (1 << 5),
+    LLGLColorUnderline    = (1 << 6),
+    LLGLColorFullRGB      = (1 << 7),
+    LLGLColorYellow       = (LLGLColorRed | LLGLColorGreen),
+    LLGLColorPink         = (LLGLColorRed | LLGLColorBlue),
+    LLGLColorCyan         = (LLGLColorGreen | LLGLColorBlue),
+    LLGLColorGray         = (LLGLColorRed | LLGLColorGreen | LLGLColorBlue),
+    LLGLColorBrightRed    = (LLGLColorBright | LLGLColorRed),
+    LLGLColorBrightGreen  = (LLGLColorBright | LLGLColorGreen),
+    LLGLColorBrightBlue   = (LLGLColorBright | LLGLColorBlue),
+    LLGLColorBrightYellow = (LLGLColorBright | LLGLColorYellow),
+    LLGLColorBrightPink   = (LLGLColorBright | LLGLColorPink),
+    LLGLColorBrightCyan   = (LLGLColorBright | LLGLColorCyan),
+    LLGLColorWhite        = (LLGLColorBright | LLGLColorGray),
+}
+LLGLColorFlags;
+
 typedef enum LLGLBarrierFlags
 {
     LLGLBarrierStorageBuffer  = (1 << 0),
@@ -1043,6 +1073,13 @@ typedef struct LLGLDispatchIndirectArguments
     uint32_t numThreadGroups[3];
 }
 LLGLDispatchIndirectArguments;
+
+typedef struct LLGLColorCodes
+{
+    long textFlags;       /* = 0 */
+    long backgroundFlags; /* = 0 */
+}
+LLGLColorCodes;
 
 typedef struct LLGLBindingSlot
 {

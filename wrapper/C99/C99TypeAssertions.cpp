@@ -16,13 +16,14 @@
     static_assert(static_cast<long>(TYPE ## Flags::VALUE) == static_cast<long>(LLGL ## TYPE ## VALUE), "LLGL" #TYPE #VALUE " does not equal flags value of LLGL::" #TYPE "Flags::" #VALUE)
 
 #define LLGL_STATIC_ASSERT_SIZE(TYPE) \
-    static_assert(sizeof(LLGL::TYPE) == sizeof(LLGL ## TYPE), "LLGL" #TYPE " does not match size of LLGL::" #TYPE)
+    static_assert(sizeof(TYPE) == sizeof(LLGL ## TYPE), "LLGL" #TYPE " does not match size of LLGL::" #TYPE)
 
 #define LLGL_STATIC_ASSERT_OFFSET(TYPE, FIELD) \
-    static_assert(offsetof(LLGL::TYPE, FIELD) == offsetof(LLGL ## TYPE, FIELD), "LLGL" #TYPE "::" #FIELD " does not match offset of LLGL::" #TYPE "::" #FIELD)
+    static_assert(offsetof(TYPE, FIELD) == offsetof(LLGL ## TYPE, FIELD), "LLGL" #TYPE "::" #FIELD " does not match offset of LLGL::" #TYPE "::" #FIELD)
 
 
 using namespace LLGL;
+using namespace Log;
 
 // namespace LLGL {
 
@@ -721,6 +722,28 @@ LLGL_STATIC_ASSERT_FLAG(Misc, NoInitialData);
 LLGL_STATIC_ASSERT_FLAG(Misc, Append);
 LLGL_STATIC_ASSERT_FLAG(Misc, Counter);
 
+LLGL_STATIC_ASSERT_FLAG(StdOut, Colored);
+
+LLGL_STATIC_ASSERT_FLAG(Color, Default);
+LLGL_STATIC_ASSERT_FLAG(Color, Red);
+LLGL_STATIC_ASSERT_FLAG(Color, Green);
+LLGL_STATIC_ASSERT_FLAG(Color, Blue);
+LLGL_STATIC_ASSERT_FLAG(Color, Bright);
+LLGL_STATIC_ASSERT_FLAG(Color, Bold);
+LLGL_STATIC_ASSERT_FLAG(Color, Underline);
+LLGL_STATIC_ASSERT_FLAG(Color, FullRGB);
+LLGL_STATIC_ASSERT_FLAG(Color, Yellow);
+LLGL_STATIC_ASSERT_FLAG(Color, Pink);
+LLGL_STATIC_ASSERT_FLAG(Color, Cyan);
+LLGL_STATIC_ASSERT_FLAG(Color, Gray);
+LLGL_STATIC_ASSERT_FLAG(Color, BrightRed);
+LLGL_STATIC_ASSERT_FLAG(Color, BrightGreen);
+LLGL_STATIC_ASSERT_FLAG(Color, BrightBlue);
+LLGL_STATIC_ASSERT_FLAG(Color, BrightYellow);
+LLGL_STATIC_ASSERT_FLAG(Color, BrightPink);
+LLGL_STATIC_ASSERT_FLAG(Color, BrightCyan);
+LLGL_STATIC_ASSERT_FLAG(Color, White);
+
 
 /* ----- Structures ----- */
 
@@ -1121,6 +1144,10 @@ LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, annotation);
 LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, cpuTicksStart);
 LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, cpuTicksEnd);
 LLGL_STATIC_ASSERT_OFFSET(ProfileTimeRecord, elapsedTime);
+
+LLGL_STATIC_ASSERT_SIZE(ColorCodes);
+LLGL_STATIC_ASSERT_OFFSET(ColorCodes, textFlags);
+LLGL_STATIC_ASSERT_OFFSET(ColorCodes, backgroundFlags);
 
 
 // } /namespace LLGL

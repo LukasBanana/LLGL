@@ -194,7 +194,7 @@ void log_renderer_info()
 int example_init(const char* title)
 {
     // Register standard output as log callback
-    llglRegisterLogCallbackStd();
+    llglRegisterLogCallbackStd(0);
 
     // Load render system module
     LLGLReport report = llglAllocReport();

@@ -23,11 +23,25 @@ LLGL_C_EXPORT void llglLogPrintf(const char* format, ...)
     Log::Printf("%s", text.c_str());
 }
 
+LLGL_C_EXPORT void llglLogPrintfExt(const LLGLColorCodes* colors, const char* format, ...)
+{
+    std::string text;
+    LLGL_STRING_PRINTF(text, format);
+    Log::Printf(*reinterpret_cast<const Log::ColorCodes*>(colors), "%s", text.c_str());
+}
+
 LLGL_C_EXPORT void llglLogErrorf(const char* format, ...)
 {
     std::string text;
     LLGL_STRING_PRINTF(text, format);
     Log::Errorf("%s", text.c_str());
+}
+
+LLGL_C_EXPORT void llglLogErrorfExt(const LLGLColorCodes* colors, const char* format, ...)
+{
+    std::string text;
+    LLGL_STRING_PRINTF(text, format);
+    Log::Errorf(*reinterpret_cast<const Log::ColorCodes*>(colors), "%s", text.c_str());
 }
 
 LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallback(LLGL_PFN_ReportCallback callback, void* userData)
@@ -42,14 +56,26 @@ LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallback(LLGL_PFN_ReportCallback call
     );
 }
 
+LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallbackExt(LLGL_PFN_ReportCallbackExt callback, void* userData)
+{
+    LLGL_ASSERT_PTR(callback);
+    return Log::RegisterCallback(
+        [callback](Log::ReportType type, const char* text, void* userData, const Log::ColorCodes& colors) -> void
+        {
+            callback(static_cast<LLGLReportType>(type), text, userData, reinterpret_cast<const LLGLColorCodes*>(&colors));
+        },
+        userData
+    );
+}
+
 LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallbackReport(LLGLReport report)
 {
     return Log::RegisterCallbackReport(LLGL_REF(Report, report));
 }
 
-LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallbackStd()
+LLGL_C_EXPORT LLGLLogHandle llglRegisterLogCallbackStd(long stdOutFlags)
 {
-    return Log::RegisterCallbackStd();
+    return Log::RegisterCallbackStd(stdOutFlags);
 }
 
 LLGL_C_EXPORT void llglUnregisterLogCallback(LLGLLogHandle handle)

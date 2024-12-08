@@ -117,8 +117,9 @@ class LLGLMeta:
         'LLGLLogHandle'
     ]
     structFlags = {
+        'AttachmentClear': 'ClearFlags',
         'BlendTargetDescriptor': 'ColorMaskFlags',
-        'AttachmentClear': 'ClearFlags'
+        'ColorCodes': 'ColorFlags'
     }
     structFlagProperties = [
         'ColorMask'

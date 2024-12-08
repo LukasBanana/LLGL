@@ -828,6 +828,34 @@ const (
     FormatHasDepthStencil      = (FormatHasDepth | FormatHasStencil)
 )
 
+type StdOutFlags int
+const (
+    StdOutColored = (1 << 0)
+)
+
+type ColorFlags int
+const (
+    ColorDefault      = (1 << 0)
+    ColorRed          = (1 << 1)
+    ColorGreen        = (1 << 2)
+    ColorBlue         = (1 << 3)
+    ColorBright       = (1 << 4)
+    ColorBold         = (1 << 5)
+    ColorUnderline    = (1 << 6)
+    ColorFullRGB      = (1 << 7)
+    ColorYellow       = (ColorRed | ColorGreen)
+    ColorPink         = (ColorRed | ColorBlue)
+    ColorCyan         = (ColorGreen | ColorBlue)
+    ColorGray         = (ColorRed | ColorGreen | ColorBlue)
+    ColorBrightRed    = (ColorBright | ColorRed)
+    ColorBrightGreen  = (ColorBright | ColorGreen)
+    ColorBrightBlue   = (ColorBright | ColorBlue)
+    ColorBrightYellow = (ColorBright | ColorYellow)
+    ColorBrightPink   = (ColorBright | ColorPink)
+    ColorBrightCyan   = (ColorBright | ColorCyan)
+    ColorWhite        = (ColorBright | ColorGray)
+)
+
 type BarrierFlags int
 const (
     BarrierStorageBuffer  = (1 << 0)
@@ -975,6 +1003,11 @@ type DrawPatchIndirectArguments struct {
 
 type DispatchIndirectArguments struct {
     NumThreadGroups [3]uint32
+}
+
+type ColorCodes struct {
+    TextFlags       uint /* = 0 */
+    BackgroundFlags uint /* = 0 */
 }
 
 type BindingSlot struct {

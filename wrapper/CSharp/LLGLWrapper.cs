@@ -829,6 +829,36 @@ namespace LLGL
     }
 
     [Flags]
+    public enum StdOutFlags : int
+    {
+        Colored = (1 << 0),
+    }
+
+    [Flags]
+    public enum ColorFlags : int
+    {
+        Default      = (1 << 0),
+        Red          = (1 << 1),
+        Green        = (1 << 2),
+        Blue         = (1 << 3),
+        Bright       = (1 << 4),
+        Bold         = (1 << 5),
+        Underline    = (1 << 6),
+        FullRGB      = (1 << 7),
+        Yellow       = (Red | Green),
+        Pink         = (Red | Blue),
+        Cyan         = (Green | Blue),
+        Gray         = (Red | Green | Blue),
+        BrightRed    = (Bright | Red),
+        BrightGreen  = (Bright | Green),
+        BrightBlue   = (Bright | Blue),
+        BrightYellow = (Bright | Yellow),
+        BrightPink   = (Bright | Pink),
+        BrightCyan   = (Bright | Cyan),
+        White        = (Bright | Gray),
+    }
+
+    [Flags]
     public enum BarrierFlags : int
     {
         StorageBuffer  = (1 << 0),
@@ -1163,6 +1193,35 @@ namespace LLGL
                     }
                 }
                 return native;
+            }
+        }
+    }
+
+    public class ColorCodes
+    {
+        public ColorFlags TextFlags { get; set; }       = 0;
+        public ColorFlags BackgroundFlags { get; set; } = 0;
+
+        public ColorCodes() { }
+
+        internal ColorCodes(NativeLLGL.ColorCodes native)
+        {
+            Native = native;
+        }
+
+        internal NativeLLGL.ColorCodes Native
+        {
+            get
+            {
+                var native = new NativeLLGL.ColorCodes();
+                native.textFlags       = (int)TextFlags;
+                native.backgroundFlags = (int)BackgroundFlags;
+                return native;
+            }
+            set
+            {
+                TextFlags       = (ColorFlags)value.textFlags;
+                BackgroundFlags = (ColorFlags)value.backgroundFlags;
             }
         }
     }
@@ -3488,6 +3547,12 @@ namespace LLGL
             public fixed int numThreadGroups[3];
         }
 
+        public unsafe struct ColorCodes
+        {
+            public int textFlags;       /* = 0 */
+            public int backgroundFlags; /* = 0 */
+        }
+
         public unsafe struct DepthBiasDescriptor
         {
             public float constantFactor; /* = 0.0f */
@@ -4187,6 +4252,9 @@ namespace LLGL
         public unsafe delegate void ReportCallbackDelegate(ReportType type, [MarshalAs(UnmanagedType.LPStr)] string text, void* userData);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void ReportCallbackExtDelegate(ReportType type, [MarshalAs(UnmanagedType.LPStr)] string text, void* userData, ref ColorCodes colors);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public unsafe delegate void OnWindowQuitDelegate(Window sender, bool* veto);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -4535,11 +4603,14 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglRegisterLogCallback", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr RegisterLogCallback(IntPtr callback, void* userData);
 
+        [DllImport(DllName, EntryPoint="llglRegisterLogCallbackExt", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe IntPtr RegisterLogCallbackExt(IntPtr callback, void* userData);
+
         [DllImport(DllName, EntryPoint="llglRegisterLogCallbackReport", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe IntPtr RegisterLogCallbackReport(Report report);
 
         [DllImport(DllName, EntryPoint="llglRegisterLogCallbackStd", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe IntPtr RegisterLogCallbackStd();
+        public static extern unsafe IntPtr RegisterLogCallbackStd(int stdOutFlags);
 
         [DllImport(DllName, EntryPoint="llglUnregisterLogCallback", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void UnregisterLogCallback(IntPtr handle);
