@@ -58,9 +58,9 @@ static int FormatColorCodesVT100Base(char* outFormat, int formatSize, long color
             APPEND_FORMAT(
                 "\x1B[%d;2;%d;%d;%dm",
                 (baseCode + 8),
-                LLGL_LOG_GET_R(colorFlags),
-                LLGL_LOG_GET_G(colorFlags),
-                LLGL_LOG_GET_B(colorFlags)
+                static_cast<int>(LLGL_LOG_GET_R(colorFlags)),
+                static_cast<int>(LLGL_LOG_GET_G(colorFlags)),
+                static_cast<int>(LLGL_LOG_GET_B(colorFlags))
             );
         }
         else
