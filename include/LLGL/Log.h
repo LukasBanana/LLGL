@@ -56,6 +56,19 @@ enum class ReportType
 /* ----- Flags ----- */
 
 /**
+\brief Standard output flags enumeration.
+\see RegisterCallbackStd
+*/
+struct StdOutFlags
+{
+    enum
+    {
+        //! Enables color output. By default, no color is printed to the standard output.
+        Colored = (1 << 0),
+    };
+};
+
+/**
 \brief Enumeration of all log color code flags.
 \see ColorCodes::textFlags
 \see ColorCodes::backgroundFlags
@@ -256,13 +269,15 @@ LLGL_EXPORT LogHandle RegisterCallbackReport(Report& report);
 
 /**
 \brief Registers a new log callback to the standard output streams, i.e. \c stdout and \c stderr from <tt><stdio.h></tt>.
+\param[in] stdOutFlags Bitwise OR combination of standard output flags (StdOutFlags). Use this to enable colored output for instance.
 \returns Opaque handle to this log callback or null if this is called recursively, i.e. inside another log callback function.
 It can be used to unregister the callback.
 \remarks If there already is a registered handle for the standard output,
 this function only returns the previously registered handle that is associated with the standard output.
 \see SetReportCallback
+\see StdOutFlags
 */
-LLGL_EXPORT LogHandle RegisterCallbackStd();
+LLGL_EXPORT LogHandle RegisterCallbackStd(long stdOutFlags = 0);
 
 /**
 \brief Unregisters the specified handle from the log output.

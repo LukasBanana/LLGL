@@ -125,6 +125,7 @@ static void PrintHelpDocs()
         "%s"
         "\n"
         "OPTIONS:\n"
+        "  -c, --color ........................ Enable colored console output\n"
         "  -d, --debug [=OPT] ................. Enable debug layers (gpu, cpu, gpu+cpu)\n"
         "  -f, --fast ......................... Run fast test; skips certain configurations\n"
         "  -g, --greedy ....................... Keep running each test even after failure\n"
@@ -143,7 +144,13 @@ static void PrintHelpDocs()
 
 static int GuardedMain(int argc, char* argv[])
 {
-    Log::RegisterCallbackStd();
+    // Register standard output log and check if colored output is enabled
+    long stdOutFlags = 0;
+
+    if (HasProgramArgument(argc, argv, "-c") || HasProgramArgument(argc, argv, "--color"))
+        stdOutFlags |= LLGL::Log::StdOutFlags::Colored;
+
+    Log::RegisterCallbackStd(stdOutFlags);
 
     // If -h or --help is specified, only print help documentation and exit
     if (HasProgramArgument(argc, argv, "-h") || HasProgramArgument(argc, argv, "--help"))

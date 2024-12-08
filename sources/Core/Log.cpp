@@ -35,13 +35,13 @@ struct LogListener
     LogListener(const LogListener&) = default;
     LogListener& operator = (const LogListener&) = default;
 
-    inline LogListener(const ReportCallback& callback, void* userData) :
+    inline LogListener(const ReportCallback& callback, void* userData = nullptr) :
         callback { callback },
         userData { userData }
     {
     }
 
-    inline LogListener(const ReportCallbackExt& callback, void* userData) :
+    inline LogListener(const ReportCallbackExt& callback, void* userData = nullptr) :
         callbackExt { callback },
         userData    { userData }
     {
@@ -203,30 +203,38 @@ static void PrintToStandardOutput(ReportType type, const char* text)
     #endif
 }
 
-LLGL_EXPORT LogHandle RegisterCallbackStd()
+static void StandardOutputReportCallback(ReportType type, const char* text, void* /*userData*/)
+{
+    /* Print text to standard output without console state changes */
+    PrintToStandardOutput(type, text);
+}
+
+static void StandardOutputReportCallbackExt(ReportType type, const char* text, void* /*userData*/, const ColorCodes& colors)
+{
+    if (colors.textFlags != 0 || colors.backgroundFlags != 0)
+    {
+        /* Print text to standard output with temporarily changing colors */
+        ConsoleManip::ScopedConsoleColors scopedColors{ type, colors };
+        PrintToStandardOutput(type, text);
+    }
+    else
+    {
+        /* Print text to standard output without console state changes */
+        PrintToStandardOutput(type, text);
+    }
+}
+
+LLGL_EXPORT LogHandle RegisterCallbackStd(long stdOutFlags)
 {
     if (!g_logRecursionLock)
     {
         std::lock_guard<std::mutex> guard{ g_logState.lock };
         if (g_logState.listenerStd.get() == nullptr)
         {
-            g_logState.listenerStd = MakeUnique<LogListener>(
-                [](ReportType type, const char* text, void* /*userData*/, const ColorCodes& colors)
-                {
-                    if (colors.textFlags != 0 || colors.backgroundFlags != 0)
-                    {
-                        /* Print text to standard output with temporarily changing colors */
-                        ConsoleManip::ScopedConsoleColors scopedColors{ type, colors };
-                        PrintToStandardOutput(type, text);
-                    }
-                    else
-                    {
-                        /* Print text to standard output without console state changes */
-                        PrintToStandardOutput(type, text);
-                    }
-                },
-                nullptr
-            );
+            if ((stdOutFlags & StdOutFlags::Colored) != 0)
+                g_logState.listenerStd = MakeUnique<LogListener>(StandardOutputReportCallbackExt);
+            else
+                g_logState.listenerStd = MakeUnique<LogListener>(StandardOutputReportCallback);
         }
         return reinterpret_cast<LogHandle>(g_logState.listenerStd.get());
     }
