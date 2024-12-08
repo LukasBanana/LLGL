@@ -183,11 +183,11 @@ static int GuardedMain(int argc, char* argv[])
 
     // Print summary
     if (modulesWithFailedTests == 0)
-        Log::Printf(" ==> ALL MODULES PASSED\n");
+        Log::Printf(Log::ColorFlags::BrightGreen, " ==> ALL MODULES PASSED\n");
     else if (modulesWithFailedTests == 1)
-        Log::Printf(" ==> 1 MODULE FAILED\n");
+        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> 1 MODULE FAILED\n");
     else if (modulesWithFailedTests > 1)
-        Log::Printf(" ==> %u MODULES FAILED\n", modulesWithFailedTests);
+        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> %u MODULES FAILED\n", modulesWithFailedTests);
 
     #ifdef _WIN32
     system("pause");

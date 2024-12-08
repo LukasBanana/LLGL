@@ -14,6 +14,16 @@
 #include <functional>
 
 
+ //! Encodes the flags for full RGB console colors.
+#define LLGL_LOG_RGB(R, G, B)               \
+    (                                       \
+        LLGL::Log::ColorFlags::FullRGB |    \
+        (((R) & 0xFF) << 24) |              \
+        (((G) & 0xFF) << 16) |              \
+        (((B) & 0xFF) <<  8)                \
+    )
+
+
 namespace LLGL
 {
 
@@ -43,6 +53,124 @@ enum class ReportType
 };
 
 
+/* ----- Flags ----- */
+
+/**
+\brief Enumeration of all log color code flags.
+\see ColorCodes::textFlags
+\see ColorCodes::backgroundFlags
+*/
+struct ColorFlags
+{
+    enum
+    {
+        //! Resets the color codes to their default values.
+        Default         = (1 << 0),
+
+        //! Red color component in 4 bit color palette.
+        Red             = (1 << 1),
+
+        //! Green color component in 4 bit color palette.
+        Green           = (1 << 2),
+
+        //! Blue color component in 4 bit color palette.
+        Blue            = (1 << 3),
+
+        //! Makes the color brighter in 4 bit color palette.
+        Bright          = (1 << 4),
+
+        //! Applies bold/intensity to text for extended color palettes.
+        Bold            = (1 << 5),
+
+        //! Adds an underline to the text for extended color palettes.
+        Underline       = (1 << 6),
+
+        /**
+        \brief Uses fully RGB encoded color.
+        \remarks This should be used with the \c LLGL_LOG_RGB macro like in this example:
+        \code
+        // Print error with RGB color (red=200, green=50, blue=0)
+        LLGL::Log::Printf(LLGL_LOG_RGB(200, 50, 0), "error");
+        \encode
+        */
+        FullRGB         = (1 << 7),
+
+        //! Combined flags for yellow color (red and green).
+        Yellow          = (Red | Green),
+
+        //! Combined flags for pink color (red and blue).
+        Pink            = (Red | Blue),
+
+        //! Combined flags for cyan color (green and blue).
+        Cyan            = (Green | Blue),
+
+        //! Combined flags for gray color.
+        Gray            = (Red | Green | Blue),
+
+        //! Combined flags for bright red color.
+        BrightRed       = (Bright | Red),
+
+        //! Combined flags for bright green color.
+        BrightGreen     = (Bright | Green),
+
+        //! Combined flags for bright blue color.
+        BrightBlue      = (Bright | Blue),
+
+        //! Combined flags for bright yellow color (red and green).
+        BrightYellow    = (Bright | Yellow),
+
+        //! Combined flags for bright pink color (red and blue).
+        BrightPink      = (Bright | Pink),
+
+        //! Combined flags for bright cyan color (green and blue).
+        BrightCyan      = (Bright | Cyan),
+
+        //! Combined flags for white color.
+        White           = (Bright | Gray),
+    };
+};
+
+
+/* ----- Structures ----- */
+
+/**
+\brief Log color code structure.
+\see Printf(const ColorCodes&, const char*, ...)
+\see Errorf(const ColorCodes&, const char*, ...)
+*/
+struct ColorCodes
+{
+    ColorCodes() = default;
+    ColorCodes(const ColorCodes&) = default;
+    ColorCodes& operator = (const ColorCodes&) = default;
+
+    //! Initializes only the text flags.
+    inline ColorCodes(long textFlags) :
+        textFlags { textFlags }
+    {
+    }
+
+    //! Initializes both text and background flags.
+    inline ColorCodes(long textFlags, long backgroundFlags) :
+        textFlags       { textFlags       },
+        backgroundFlags { backgroundFlags }
+    {
+    }
+
+    /**
+    \brief Bitwise OR combination of font flags for console text.
+    \see Log::ColorFlags
+    */
+    long textFlags          = 0;
+
+    /**
+    \brief Bitwise OR combination of font flags for console background.
+    \see Log::ColorFlags
+    */
+    long backgroundFlags    = 0;
+};
+
+
 /* ----- Types ----- */
 
 /**
@@ -61,6 +189,7 @@ using LogHandle = void*;
 \see SetReportCallback
 */
 using ReportCallback = std::function<void(ReportType type, const char* text, void* userData)>;
+using ReportCallbackExt = std::function<void(ReportType type, const char* text, void* userData, const ColorCodes& colors)>;
 
 
 /* ----- Functions ----- */
@@ -74,12 +203,30 @@ using ReportCallback = std::function<void(ReportType type, const char* text, voi
 LLGL_EXPORT void Printf(const char* format, ...);
 
 /**
+\brief Prints a formatted message to the log with color codes.
+\param[in] format Specifies the formatted text. Same as \c ::printf.
+\param[in] colors Specifies color codes to highlight the printed text.
+\remarks If this is called recursively, i.e. inside another log callback function, this function has no effect.
+\see Report::Printf
+*/
+LLGL_EXPORT void Printf(const ColorCodes& colors, const char* format, ...);
+
+/**
 \brief Prints a formatted error message to the log.
 \param[in] format Specifies the formatted text. Same as \c ::printf.
 \remarks If this is called recursively, i.e. inside another log callback function, this function has no effect.
 \see Report::Errorf
 */
 LLGL_EXPORT void Errorf(const char* format, ...);
+
+/**
+\brief Prints a formatted error message to the log with color codes.
+\param[in] format Specifies the formatted text. Same as \c ::printf.
+\param[in] colors Specifies color codes to highlight the printed text.
+\remarks If this is called recursively, i.e. inside another log callback function, this function has no effect.
+\see Report::Errorf
+*/
+LLGL_EXPORT void Errorf(const ColorCodes& colors, const char* format, ...);
 
 /**
 \brief Registers a new log callback. No log callback is specified by default, in which case the reports are ignored.
@@ -93,6 +240,9 @@ Use RegisterCallbackStd to forward the reports to the standard C++ I/O streams.
 \see RegisterCallbackStd
 */
 LLGL_EXPORT LogHandle RegisterCallback(const ReportCallback& callback, void* userData = nullptr);
+
+//! \see RegisterCallback(const ReportCallback&, void*)
+LLGL_EXPORT LogHandle RegisterCallback(const ReportCallbackExt& callback, void* userData = nullptr);
 
 /**
 \brief Registers a new log callback that is forwarded to the specified Report.

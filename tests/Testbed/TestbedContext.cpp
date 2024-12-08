@@ -238,19 +238,37 @@ void TestbedContext::PrintSeparator()
     Log::Printf("%s\n", separatorLine.c_str());
 }
 
+static void PrintColoredResult(TestResult result, const char* prefix = " ", const char* suffix = "\n")
+{
+    if (prefix != nullptr)
+        Log::Printf("%s", prefix);
+
+    if (result == TestResult::Passed)
+        Log::Printf(Log::ColorFlags::BrightGreen, "[ %s ]", TestResultToStr(result));
+    else if (result == TestResult::Skipped)
+        Log::Printf(Log::ColorFlags::White, "[ %s ]", TestResultToStr(result));
+    else
+        Log::Printf(Log::ColorFlags::Red | Log::ColorFlags::Bold, "[ %s ]", TestResultToStr(result));
+
+    if (suffix != nullptr)
+        Log::Printf(suffix);
+}
+
 static void PrintTestResult(TestResult result, const char* name, bool highlighted = false)
 {
     if (highlighted)
     {
         // Print test result with highlighted frame
         TestbedContext::PrintSeparator();
-        Log::Printf("   Test %s: [ %s ]\n", name, TestResultToStr(result));
+        Log::Printf("   Test %s:", name);
+        PrintColoredResult(result);
         TestbedContext::PrintSeparator();
     }
     else
     {
         // Print test result as simple line
-        Log::Printf("Test %s: [ %s ]\n", name, TestResultToStr(result));
+        Log::Printf("Test %s:", name);
+        PrintColoredResult(result);
     }
     ::fflush(stdout);
 }
@@ -285,11 +303,11 @@ static void PrintTestSummary(unsigned failures)
 {
     // Print test results
     if (failures == 0)
-        Log::Printf(" ==> ALL TESTS PASSED\n");
+        Log::Printf(Log::ColorFlags::BrightGreen, " ==> ALL TESTS PASSED\n");
     else if (failures == 1)
-        Log::Printf(" ==> 1 TEST FAILED\n");
+        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> 1 TEST FAILED\n");
     else if (failures > 1)
-        Log::Printf(" ==> %u TESTS FAILED\n", failures);
+        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> %u TESTS FAILED\n", failures);
 }
 
 unsigned TestbedContext::RunAllTests()
@@ -297,7 +315,7 @@ unsigned TestbedContext::RunAllTests()
     // Loading failed if there are already failures
     if (failures > 0)
     {
-        Log::Printf(" ==> LOADING FAILED\n", failures);
+        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> LOADING FAILED\n", failures);
         return failures;
     }
 
@@ -1038,11 +1056,11 @@ bool TestbedContext::LoadTextures()
         {
             if (!opt.verbose)
                 PrintLoadingInfo();
-            Log::Printf(" [ %s ]:\n", TestResultToStr(TestResult::FailedErrors));
+            PrintColoredResult(TestResult::FailedErrors, " ", ":\n");
             return nullptr;
         }
         else if (opt.verbose)
-            Log::Printf(" [ Ok ]\n");
+            PrintColoredResult(TestResult::Passed);
 
         // Create texture
         ImageView imageView;
@@ -1323,7 +1341,7 @@ Shader* TestbedContext::LoadShaderFromFile(
     }
 
     if (opt.verbose)
-        Log::Printf(" [ Ok ]\n");
+        PrintColoredResult(TestResult::Passed);
 
     return shader;
 };
@@ -1348,7 +1366,7 @@ static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, cons
     );
 
     if (verbose)
-        Log::Printf(" [ Ok ]\n");
+        PrintColoredResult(TestResult::Passed);
 
     return (result != 0);
 }
@@ -1386,12 +1404,12 @@ static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const s
     {
         if (!verbose)
             PrintLoadImageInfo(filename);
-        Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        PrintColoredResult(TestResult::FailedErrors);
         return false;
     }
 
     if (verbose)
-        Log::Printf(" [ Ok ]\n");
+        PrintColoredResult(TestResult::Passed);
 
     return true;
 }
@@ -1424,12 +1442,12 @@ static bool LoadImage(Image& img, const std::string& filename, bool verbose = fa
     {
         if (!verbose)
             PrintLoadImageInfo(filename);
-        Log::Printf(" [ %s ]\n", TestResultToStr(TestResult::FailedErrors));
+        PrintColoredResult(TestResult::FailedErrors);
         return false;
     }
 
     if (verbose)
-        Log::Printf(" [ Ok ]\n");
+        PrintColoredResult(TestResult::Passed);
 
     return true;
 }

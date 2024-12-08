@@ -7,6 +7,7 @@
 
 #include <LLGL/Log.h>
 #include <LLGL/Platform/Platform.h>
+#include "../Platform/ConsoleManip.h"
 #include "CoreUtils.h"
 #include "StringUtils.h"
 #include "../Renderer/ContainerTypes.h"
@@ -34,19 +35,28 @@ struct LogListener
     LogListener(const LogListener&) = default;
     LogListener& operator = (const LogListener&) = default;
 
-    inline LogListener(ReportCallback callback, void* userData) :
+    inline LogListener(const ReportCallback& callback, void* userData) :
         callback { callback },
         userData { userData }
     {
     }
 
-    ReportCallback  callback = nullptr;
-    void*           userData = nullptr;
+    inline LogListener(const ReportCallbackExt& callback, void* userData) :
+        callbackExt { callback },
+        userData    { userData }
+    {
+    }
 
-    inline void Invoke(ReportType type, const char* text)
+    ReportCallback      callback    = nullptr;
+    ReportCallbackExt   callbackExt = nullptr;
+    void*               userData    = nullptr;
+
+    inline void Invoke(ReportType type, const char* text, const ColorCodes& colors)
     {
         if (callback != nullptr)
             callback(type, text, userData);
+        else if (callbackExt != nullptr)
+            callbackExt(type, text, userData, colors);
     }
 };
 
@@ -91,15 +101,15 @@ static thread_local TrivialLock g_logRecursionLock;
 
 /* ----- Functions ----- */
 
-static void PostReport(ReportType type, const char* text)
+static void PostReport(ReportType type, const char* text, const ColorCodes& colors = {})
 {
     std::lock_guard<std::mutex> guard{ g_logState.lock };
 
     if (LogListener* listenerStd = g_logState.listenerStd.get())
-        listenerStd->Invoke(type, text);
+        listenerStd->Invoke(type, text, colors);
 
     for (const auto& listener : g_logState.listeners)
-        listener->Invoke(type, text);
+        listener->Invoke(type, text, colors);
 }
 
 LLGL_EXPORT void Printf(const char* format, ...)
@@ -110,6 +120,17 @@ LLGL_EXPORT void Printf(const char* format, ...)
         std::string str;
         LLGL_STRING_PRINTF(str, format);
         PostReport(ReportType::Default, str.c_str());
+    }
+}
+
+LLGL_EXPORT void Printf(const ColorCodes& colors, const char* format, ...)
+{
+    if (!g_logRecursionLock)
+    {
+        std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
+        std::string str;
+        LLGL_STRING_PRINTF(str, format);
+        PostReport(ReportType::Default, str.c_str(), colors);
     }
 }
 
@@ -124,7 +145,19 @@ LLGL_EXPORT void Errorf(const char* format, ...)
     }
 }
 
-LLGL_EXPORT LogHandle RegisterCallback(const ReportCallback& callback, void* userData)
+LLGL_EXPORT void Errorf(const ColorCodes& colors, const char* format, ...)
+{
+    if (!g_logRecursionLock)
+    {
+        std::lock_guard<TrivialLock> guard{ g_logRecursionLock };
+        std::string str;
+        LLGL_STRING_PRINTF(str, format);
+        PostReport(ReportType::Error, str.c_str(), colors);
+    }
+}
+
+template <typename TCallback>
+static LogHandle RegisterCallbackInternal(const TCallback& callback, void* userData)
 {
     if (!g_logRecursionLock)
     {
@@ -132,6 +165,16 @@ LLGL_EXPORT LogHandle RegisterCallback(const ReportCallback& callback, void* use
         return reinterpret_cast<LogHandle>(g_logState.listeners.emplace<LogListener>(callback, userData));
     }
     return nullptr;
+}
+
+LLGL_EXPORT LogHandle RegisterCallback(const ReportCallback& callback, void* userData)
+{
+    return RegisterCallbackInternal<ReportCallback>(callback, userData);
+}
+
+LLGL_EXPORT LogHandle RegisterCallback(const ReportCallbackExt& callback, void* userData)
+{
+    return RegisterCallbackInternal<ReportCallbackExt>(callback, userData);
 }
 
 LLGL_EXPORT LogHandle RegisterCallbackReport(Report& report)
@@ -151,6 +194,15 @@ LLGL_EXPORT LogHandle RegisterCallbackReport(Report& report)
     );
 }
 
+static void PrintToStandardOutput(ReportType type, const char* text)
+{
+    #ifdef LLGL_OS_ANDROID
+    (void)__android_log_print((type == ReportType::Error ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO), "LLGL", "%s", text);
+    #else
+    ::fprintf((type == ReportType::Error ? stderr : stdout), "%s", text);
+    #endif
+}
+
 LLGL_EXPORT LogHandle RegisterCallbackStd()
 {
     if (!g_logRecursionLock)
@@ -159,13 +211,19 @@ LLGL_EXPORT LogHandle RegisterCallbackStd()
         if (g_logState.listenerStd.get() == nullptr)
         {
             g_logState.listenerStd = MakeUnique<LogListener>(
-                [](ReportType type, const char* text, void* /*userData*/)
+                [](ReportType type, const char* text, void* /*userData*/, const ColorCodes& colors)
                 {
-                    #ifdef LLGL_OS_ANDROID
-                    (void)__android_log_print((type == ReportType::Error ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO), "LLGL", "%s", text);
-                    #else
-                    ::fprintf((type == ReportType::Error ? stderr : stdout), "%s", text);
-                    #endif
+                    if (colors.textFlags != 0 || colors.backgroundFlags != 0)
+                    {
+                        /* Print text to standard output with temporarily changing colors */
+                        ConsoleManip::ScopedConsoleColors scopedColors{ type, colors };
+                        PrintToStandardOutput(type, text);
+                    }
+                    else
+                    {
+                        /* Print text to standard output without console state changes */
+                        PrintToStandardOutput(type, text);
+                    }
                 },
                 nullptr
             );
