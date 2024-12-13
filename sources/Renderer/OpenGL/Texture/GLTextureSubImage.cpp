@@ -9,7 +9,6 @@
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
 #include "../../../Core/Assertion.h"
-#include <array>
 #include <algorithm>
 
 

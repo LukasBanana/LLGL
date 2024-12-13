@@ -56,8 +56,8 @@ class Example_Animation : public ExampleBase
 
     std::vector<Ball>           balls;
 
-    const std::array<Gs::Vector2f, 15> gridPosFrames
-    {{
+    const Gs::Vector2f          gridPosFrames[15]
+    {
         Gs::Vector2f{  0.0f, -3.0f },
         Gs::Vector2f{ +1.0f, -3.0f },
         Gs::Vector2f{ +2.0f, -3.0f },
@@ -73,7 +73,7 @@ class Example_Animation : public ExampleBase
         Gs::Vector2f{ -3.0f, +2.0f },
         Gs::Vector2f{ -3.0f, +1.0f },
         Gs::Vector2f{ -3.0f,  0.0f }
-    }};
+    };
 
 public:
 
@@ -206,7 +206,7 @@ private:
             ball.frameInterpolator -= 1.0f;
             ball.frame++;
 
-            if (ball.frame + 1 >= gridPosFrames.size())
+            if (ball.frame + 1 >= sizeof(gridPosFrames)/sizeof(gridPosFrames[0]))
             {
                 ball.position   = GetGridPos(0);
                 ball.frame      = 0;

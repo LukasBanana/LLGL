@@ -6,14 +6,13 @@
  */
 
 #include "GLExtensionRegistry.h"
-#include <array>
 
 
 namespace LLGL
 {
 
 
-static std::array<bool, static_cast<std::size_t>(GLExt::Count)> g_registeredExtensions { { false } };
+static bool g_registeredExtensions[static_cast<std::size_t>(GLExt::Count)] = {};
 
 static void RegisterExtensionInternal(GLExt extension)
 {

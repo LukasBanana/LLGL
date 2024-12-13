@@ -15,7 +15,6 @@
 #include <LLGL/CommandBufferFlags.h>
 #include "../OpenGL.h"
 #include "../../../Core/Assertion.h"
-#include <array>
 #include <stack>
 #include <cstdint>
 

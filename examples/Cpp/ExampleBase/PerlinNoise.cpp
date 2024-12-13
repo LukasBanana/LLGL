@@ -195,9 +195,10 @@ void PerlinNoise::GeneratePermutations(std::uint32_t seed)
 
 void PerlinNoise::GenerateGradients()
 {
-    auto angleStep = Gs::pi * 2.0f / static_cast<float>(grads_.size());
+    constexpr std::size_t gradsSize = sizeof(grads_)/sizeof(grads_[0]);
+    auto angleStep = Gs::pi * 2.0f / static_cast<float>(gradsSize);
 
-    for (std::size_t i = 0; i < grads_.size(); ++i)
+    for (std::size_t i = 0; i < gradsSize; ++i)
     {
         auto a = static_cast<float>(i) * angleStep;
         grads_[i] = Gs::Vector3f{ std::cos(a), std::sin(a), std::sin(a)*std::cos(a) };

@@ -11,7 +11,6 @@
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/Assertion.h"
-#include <array>
 #include <algorithm>
 
 

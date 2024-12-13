@@ -13,7 +13,6 @@
 #include "../../../Core/Exception.h"
 #include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/Utils/ForRange.h>
-#include <array>
 #include <algorithm>
 
 
