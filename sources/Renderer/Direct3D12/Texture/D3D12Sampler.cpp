@@ -35,7 +35,7 @@ static void D3DConvertBaseSamplerDesc(TNativeSamplerDesc& outDesc, const Sampler
     outDesc.AddressW        = D3D12Types::Map(inDesc.addressModeW);
     outDesc.MipLODBias      = inDesc.mipMapLODBias;
     outDesc.MaxAnisotropy   = inDesc.maxAnisotropy;
-    outDesc.ComparisonFunc  = (inDesc.compareEnabled ? D3D12Types::Map(inDesc.compareOp) : D3D12_COMPARISON_FUNC_ALWAYS);
+    outDesc.ComparisonFunc  = (inDesc.compareEnabled ? D3D12Types::Map(inDesc.compareOp) : D3D12_COMPARISON_FUNC_NEVER);
 
     if (inDesc.mipMapEnabled)
     {
