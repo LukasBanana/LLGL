@@ -165,7 +165,7 @@ class GolangTranslator(Translator):
                 declStr = ''
 
                 # Write type specifier
-                if fieldType.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING] or (fieldType.baseType == StdType.CHAR and fieldType.isPointer):
+                if fieldType.typename in LLGLMeta.stringClasses or (fieldType.baseType == StdType.CHAR and fieldType.isPointer):
                     typeStr = 'string'
                 elif fieldType.isPointer and fieldType.baseType == StdType.VOID:
                     typeStr += 'unsafe.Pointer'

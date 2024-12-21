@@ -150,7 +150,7 @@ void GLPipelineLayout::BuildDynamicResourceBindings(const std::vector<BindingDes
     for (const BindingDescriptor& desc : bindingDescs)
     {
         bindings_.push_back(GLPipelineResourceBinding{ ToGLResourceType(desc), static_cast<GLuint>(desc.slot.index) });
-        resourceNames_.push_back(desc.name);
+        resourceNames_.push_back(desc.name.c_str());
     }
 }
 
@@ -167,7 +167,7 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
             sampler->SamplerParameters(desc.sampler);
             staticEmulatedSamplers_.push_back(std::move(sampler));
             staticSamplerSlots_.push_back(desc.slot.index);
-            resourceNames_.push_back(desc.name);
+            resourceNames_.push_back(desc.name.c_str());
         }
     }
     else
@@ -180,7 +180,7 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
             sampler->SamplerParameters(desc.sampler);
             staticSamplers_.push_back(std::move(sampler));
             staticSamplerSlots_.push_back(desc.slot.index);
-            resourceNames_.push_back(desc.name);
+            resourceNames_.push_back(desc.name.c_str());
         }
     }
 }

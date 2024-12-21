@@ -980,7 +980,7 @@ bool VKRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapabi
         /* Query rendering information from selected physical device and store Vulkan extension names */
         physicalDevice_.QueryRendererInfo(*outInfo);
         const std::vector<const char*>& extensions = physicalDevice_.GetExtensionNames();
-        outInfo->extensionNames = std::vector<std::string>(extensions.begin(), extensions.end());
+        outInfo->extensionNames = std::vector<UTF8String>(extensions.begin(), extensions.end());
     }
     if (outCaps != nullptr)
     {

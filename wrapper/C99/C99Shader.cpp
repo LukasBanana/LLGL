@@ -35,7 +35,7 @@ LLGL_C_EXPORT LLGLReport llglGetShaderReport(LLGLShader shader)
 
 static void ConvertBindingDesc(ShaderReflectionC99Wrapper& wrapper, LLGLBindingDescriptor& dst, const BindingDescriptor& src)
 {
-    wrapper.names.push_back(src.name);
+    wrapper.names.push_back(src.name.c_str());
     dst.name        = wrapper.names.back().c_str();
     dst.type        = static_cast<LLGLResourceType>(src.type);
     dst.bindFlags   = src.bindFlags;
@@ -53,7 +53,7 @@ static void ConvertShaderResourceReflection(ShaderReflectionC99Wrapper& wrapper,
 
 static void ConvertUniformDesc(ShaderReflectionC99Wrapper& wrapper, LLGLUniformDescriptor& dst, const UniformDescriptor& src)
 {
-    wrapper.names.push_back(src.name);
+    wrapper.names.push_back(src.name.c_str());
     dst.name        = wrapper.names.back().c_str();
     dst.type        = static_cast<LLGLUniformType>(src.type);
     dst.arraySize   = src.arraySize;

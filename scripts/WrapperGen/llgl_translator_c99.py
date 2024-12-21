@@ -196,7 +196,7 @@ class C99Translator(Translator):
                 if fieldType.isDynamicArray() and not fieldType.isPointerOrString():
                     typeStr += 'const '
 
-                if fieldType.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
+                if fieldType.typename in LLGLMeta.stringClasses:
                     typeStr += 'const char*'
                 elif fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.interfaces:
                     typeStr += 'LLGL' + fieldType.typename

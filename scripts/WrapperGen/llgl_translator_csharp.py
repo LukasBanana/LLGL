@@ -153,7 +153,7 @@ class CsharpTranslator(Translator):
                 nonlocal isInsideStruct
                 if typename.startswith(LLGLMeta.typePrefix):
                     return typename[len(LLGLMeta.typePrefix):]
-                elif typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]:
+                elif typename in LLGLMeta.stringClasses:
                     return 'byte*' if isInsideStruct else 'string'
                 else:
                     return typename

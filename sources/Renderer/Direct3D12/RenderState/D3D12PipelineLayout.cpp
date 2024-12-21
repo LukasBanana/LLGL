@@ -150,7 +150,7 @@ ComPtr<ID3D12RootSignature> D3D12PipelineLayout::CreateRootSignatureWith32BitCon
         D3D12_SHADER_VISIBILITY         visibility;
     };
 
-    auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const std::string& name) -> D3D12CbufferField
+    auto FindCbufferField = [&cbufferReflections, &cbufferStageFlags](const LLGL::StringView& name) -> D3D12CbufferField
     {
         for (const D3D12ConstantBufferReflection* cbuffer : cbufferReflections)
         {

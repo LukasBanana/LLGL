@@ -253,7 +253,7 @@ void GLPipelineState::BuildUniformLocation(
         return;
 
     /* Determine type of uniform */
-    auto it = nameToUniformMap.find(inUniform.name);
+    auto it = nameToUniformMap.find(inUniform.name.c_str());
     if (it == nameToUniformMap.end())
         return;
 

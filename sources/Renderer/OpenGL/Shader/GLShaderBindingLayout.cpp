@@ -138,7 +138,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
             {
                 /* Skip over next binding descriptors depending on array size, since this list has already been expanded */
                 const std::uint32_t clampedArraySize = std::max<std::uint32_t>(1u, binding.arraySize);
-                AppendUniformBinding(binding.name, binding.slot.index, clampedArraySize);
+                AppendUniformBinding(binding.name.c_str(), binding.slot.index, clampedArraySize);
                 i += clampedArraySize;
                 continue;
             }
@@ -180,7 +180,7 @@ void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pi
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Buffer && (binding.bindFlags & BindFlags::ConstantBuffer) != 0)
-                AppendUniformBlockBinding(binding.name, binding.slot.index);
+                AppendUniformBlockBinding(binding.name.c_str(), binding.slot.index);
         }
     }
 
@@ -205,7 +205,7 @@ void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& p
         if (!binding.name.empty())
         {
             if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0)
-                AppendShaderStorageBinding(binding.name, binding.slot.index);
+                AppendShaderStorageBinding(binding.name.c_str(), binding.slot.index);
         }
     }
 

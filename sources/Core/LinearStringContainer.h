@@ -10,8 +10,8 @@
 
 
 #include "StringUtils.h"
+#include <LLGL/Container/StringView.h>
 #include <vector>
-#include <string>
 #include <string.h>
 
 
@@ -48,13 +48,13 @@ class LinearStringContainerBase
         // Copy the specified string into this container and return its pointer.
         const T* CopyString(const T* str)
         {
-            return CopyStringPrimary(str,  StrLength(str));
+            return CopyStringPrimary(str, StrLength(str));
         }
 
         // Copy the specified string into this container and return its pointer.
-        const T* CopyString(const std::string& str)
+        const T* CopyString(const StringView& str)
         {
-            return CopyStringPrimary(str.c_str(), str.size());
+            return CopyStringPrimary(str.data(), str.size());
         }
 
         // Returns the pointer to the first character of the next string, where <ptr> specifies the pointer from the previous string in the container.

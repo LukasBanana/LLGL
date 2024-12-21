@@ -43,6 +43,15 @@
             </ArrayItems>
         </Expand>
     </Type>
+    <Type Name="LLGL::BasicStringLiteral&lt;*&gt;" Inheritable="false">
+        <DisplayString Condition="size_ == -1">{{reference}}</DisplayString>
+        <DisplayString>{{dynamic | size = {size_}}}</DisplayString>
+        <DisplayString>{data_,s}</DisplayString>
+        <Expand>
+            <Item Name="[length]" ExcludeView="simple">strlen(data_)</Item>
+            <Item Name="[c_str]" ExcludeView="simple">data_</Item>
+        </Expand>
+    </Type>
     <Type Name="LLGL::UTF8String" Inheritable="false">
         <DisplayString>{data_.data_,s}</DisplayString>
         <Expand>

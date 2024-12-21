@@ -15,6 +15,7 @@
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/Container/StringView.h>
+#include <LLGL/Container/StringLiteral.h>
 #include <vector>
 
 
@@ -192,19 +193,19 @@ struct BindingDescriptor
 
     //! Constructors with all attributes.
     inline BindingDescriptor(
-        const StringView&   name,
-        ResourceType        type,
-        long                bindFlags,
-        long                stageFlags,
-        const BindingSlot&  slot,
-        std::uint32_t       arraySize = 0)
+        const StringLiteral&    name,
+        ResourceType            type,
+        long                    bindFlags,
+        long                    stageFlags,
+        const BindingSlot&      slot,
+        std::uint32_t           arraySize = 0)
     :
-        name       { name.begin(), name.end() },
-        type       { type                     },
-        bindFlags  { bindFlags                },
-        stageFlags { stageFlags               },
-        slot       { slot                     },
-        arraySize  { arraySize                }
+        name       { name       },
+        type       { type       },
+        bindFlags  { bindFlags  },
+        stageFlags { stageFlags },
+        slot       { slot       },
+        arraySize  { arraySize  }
     {
     }
 
@@ -217,9 +218,8 @@ struct BindingDescriptor
     layout(binding = 1) uniform sampler2D mySampler;
     \endcode
     Otherwise, the name of the resource must be included in this binding descriptor, e.g. <code>"mySampler"</code>.
-    \todo Change to <code>const char*</code>
     */
-    std::string     name;
+    StringLiteral   name;
 
     //! Resource view type for this layout binding. By default ResourceType::Undefined.
     ResourceType    type        = ResourceType::Undefined;
@@ -277,15 +277,15 @@ struct StaticSamplerDescriptor
 
     //! Initializes the static sampler with a name, stage flags, binding slot, and sampler state.
     inline StaticSamplerDescriptor(
-        const StringView&           name,
+        const StringLiteral&        name,
         long                        stageFlags,
         const BindingSlot&          slot,
         const SamplerDescriptor&    sampler)
     :
-        name       { name.begin(), name.end() },
-        stageFlags { stageFlags               },
-        slot       { slot                     },
-        sampler    { sampler                  }
+        name       { name       },
+        stageFlags { stageFlags },
+        slot       { slot       },
+        sampler    { sampler    }
     {
     }
 
@@ -298,9 +298,8 @@ struct StaticSamplerDescriptor
     layout(binding = 1) uniform sampler2D mySampler;
     \endcode
     Otherwise, the name of the resource must be included in this binding descriptor, e.g. <code>"mySampler"</code>.
-    \todo Change to <code>const char*</code>
     */
-    std::string         name;
+    StringLiteral       name;
 
     /**
     \brief Specifies which shader stages can access this static sampler. By default 0.
@@ -335,22 +334,21 @@ struct UniformDescriptor
 
     //! Initializes the uniform descriptor with a name, type, and optional array size.
     inline UniformDescriptor(
-        const StringView&   name,
-        UniformType         type,
-        std::uint32_t       arraySize = 0)
+        const StringLiteral&    name,
+        UniformType             type,
+        std::uint32_t           arraySize = 0)
     :
-        name      { name.begin(), name.end() },
-        type      { type                     },
-        arraySize { arraySize                }
+        name      { name      },
+        type      { type      },
+        arraySize { arraySize }
     {
     }
 
     /**
     \brief Specifies the name of an individual shader uniform. This <b>must not</b> be empty.
     \remarks This describes the name of the constant itself and not its enclosing constant buffer.
-    \todo Change to <code>const char*</code>
     */
-    std::string     name;
+    StringLiteral   name;
 
     /**
     \brief Specifies the data type of the shader uniform. By default UniformType::Undefined.

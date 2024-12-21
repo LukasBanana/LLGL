@@ -28,10 +28,10 @@ namespace StaticModules
 std::vector<std::string> GetStaticModules();
 
 // Returns the renderer name of the specified module (module name "Direct3D11" may result in "Direct3D 11" for instance).
-const char* GetRendererName(const std::string& moduleName);
+const char* GetRendererName(const StringLiteral& moduleName);
 
 // Returns the renderer ID of the specified module.
-int GetRendererID(const std::string& moduleName);
+int GetRendererID(const StringLiteral& moduleName);
 
 // Allocates a new renderer system of the specified module. This is an owning raw pointer!
 RenderSystem* AllocRenderSystem(const RenderSystemDescriptor& renderSystemDesc);

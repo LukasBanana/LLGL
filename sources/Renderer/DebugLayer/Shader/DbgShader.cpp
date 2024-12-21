@@ -78,12 +78,12 @@ void DbgShader::CacheShaderReflection()
             if (vertexID_.empty())
             {
                 if (attr.systemValue == SystemValue::VertexID)
-                    vertexID_ = attr.name;
+                    vertexID_ = attr.name.c_str();
             }
             if (instanceID_.empty())
             {
                 if (attr.systemValue == SystemValue::InstanceID)
-                    instanceID_ = attr.name;
+                    instanceID_ = attr.name.c_str();
             }
             if (!vertexID_.empty() && !instanceID_.empty())
                 break;

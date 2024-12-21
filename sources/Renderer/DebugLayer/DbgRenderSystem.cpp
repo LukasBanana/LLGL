@@ -1440,7 +1440,7 @@ static std::string GetBindingDescLabel(const BindingDescriptor& bindingDesc)
     if (!bindingDesc.name.empty())
     {
         label += '\"';
-        label += bindingDesc.name;
+        label += bindingDesc.name.c_str();
         label += "\" ";
     }
     label += "at ";
@@ -2187,7 +2187,7 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
 
     std::vector<ShaderReflection> reflections;
 
-    auto FindResourceInPreviousReflectionsByName = [&reflections](const std::string& name) -> const ShaderResourceReflection*
+    auto FindResourceInPreviousReflectionsByName = [&reflections](const LLGL::StringLiteral& name) -> const ShaderResourceReflection*
     {
         for (const ShaderReflection& otherReflection : reflections)
         {

@@ -14,11 +14,11 @@ namespace LLGL
 
 
 VertexAttribute::VertexAttribute(
-    const StringView&   name,
-    const Format        format,
-    std::uint32_t       location,
-    std::uint32_t       instanceDivisor,
-    const SystemValue   systemValue)
+    const StringLiteral&    name,
+    const Format            format,
+    std::uint32_t           location,
+    std::uint32_t           instanceDivisor,
+    const SystemValue       systemValue)
 :
     name            { name            },
     format          { format          },
@@ -29,11 +29,11 @@ VertexAttribute::VertexAttribute(
 }
 
 VertexAttribute::VertexAttribute(
-    const StringView&   semanticName,
-    std::uint32_t       semanticIndex,
-    const Format        format,
-    std::uint32_t       location,
-    std::uint32_t       instanceDivisor)
+    const StringLiteral&    semanticName,
+    std::uint32_t           semanticIndex,
+    const Format            format,
+    std::uint32_t           location,
+    std::uint32_t           instanceDivisor)
 :
     name            { semanticName    },
     format          { format          },
@@ -44,27 +44,27 @@ VertexAttribute::VertexAttribute(
 }
 
 VertexAttribute::VertexAttribute(
-    const StringView&   name,
-    const Format        format,
-    std::uint32_t       location,
-    std::uint32_t       offset,
-    std::uint32_t       stride,
-    std::uint32_t       slot,
-    std::uint32_t       instanceDivisor)
+    const StringLiteral&    name,
+    const Format            format,
+    std::uint32_t           location,
+    std::uint32_t           offset,
+    std::uint32_t           stride,
+    std::uint32_t           slot,
+    std::uint32_t           instanceDivisor)
 :
     VertexAttribute { name, 0, format, location, offset, stride, slot, instanceDivisor }
 {
 }
 
 VertexAttribute::VertexAttribute(
-    const StringView&   semanticName,
-    std::uint32_t       semanticIndex,
-    const Format        format,
-    std::uint32_t       location,
-    std::uint32_t       offset,
-    std::uint32_t       stride,
-    std::uint32_t       slot,
-    std::uint32_t       instanceDivisor)
+    const StringLiteral&    semanticName,
+    std::uint32_t           semanticIndex,
+    const Format            format,
+    std::uint32_t           location,
+    std::uint32_t           offset,
+    std::uint32_t           stride,
+    std::uint32_t           slot,
+    std::uint32_t           instanceDivisor)
 :
     name            { semanticName    },
     format          { format          },

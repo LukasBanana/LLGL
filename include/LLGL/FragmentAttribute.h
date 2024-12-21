@@ -11,7 +11,7 @@
 
 #include <LLGL/Format.h>
 #include <LLGL/SystemValue.h>
-#include <LLGL/Container/StringView.h>
+#include <LLGL/Container/StringLiteral.h>
 #include <string>
 #include <cstdint>
 
@@ -35,23 +35,23 @@ struct FragmentAttribute
     FragmentAttribute& operator = (const FragmentAttribute&) = default;
 
     //! Constructor for minimal fragment attribute information.
-    inline FragmentAttribute(const StringView& name, std::uint32_t location = 0) :
-        name     { name.begin(), name.end() },
-        location { location                 }
+    inline FragmentAttribute(const StringLiteral& name, std::uint32_t location = 0) :
+        name     { name     },
+        location { location }
     {
     }
 
     //! Constructor to initialize all members.
     inline FragmentAttribute(
-        const StringView&   name,
-        const Format        format,
-        std::uint32_t       location    = 0,
-        const SystemValue   systemValue = SystemValue::Undefined)
+        const StringLiteral&    name,
+        const Format            format,
+        std::uint32_t           location    = 0,
+        const SystemValue       systemValue = SystemValue::Undefined)
     :
-        name        { name.begin(), name.end() },
-        format      { format                   },
-        location    { location                 },
-        systemValue { systemValue              }
+        name        { name        },
+        format      { format      },
+        location    { location    },
+        systemValue { systemValue }
     {
     }
 
@@ -60,7 +60,7 @@ struct FragmentAttribute
     \remarks Semantic names in HLSL may contain an index as suffix.
     However, this name must not contain an index suffix, because it will be added automatically.
     */
-    std::string     name;
+    StringLiteral   name;
 
     //! Fragment attribute format. By default Format::RGBA32Float.
     Format          format      = Format::RGBA32Float;

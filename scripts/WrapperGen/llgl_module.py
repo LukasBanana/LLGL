@@ -53,8 +53,11 @@ class LLGLAnnotation(Enum):
     ARRAY = 2
 
 class LLGLMeta:
-    UTF8STRING = 'UTF8String'
-    STRING = 'string'
+    stringClasses = [
+        'UTF8String',
+        'StringLiteral',
+        'string'
+    ]
     externals = [
         ConditionalType('android_app', '__ANDROID__', '<android_native_app_glue.h>')
     ]
@@ -203,7 +206,7 @@ class LLGLType:
 
     # Returns true if this type is a custom LLGL enum, flags, or struct declaration
     def isCustomType(self):
-        return self.baseType == StdType.STRUCT and not self.typename in ([LLGLMeta.UTF8STRING, LLGLMeta.STRING] + LLGLMeta.containers)
+        return self.baseType == StdType.STRUCT and not self.typename in (LLGLMeta.stringClasses + LLGLMeta.containers)
 
     # Returns true if this type is an LLGL interface type such as PipelineState
     def isInterface(self):
@@ -213,10 +216,10 @@ class LLGLType:
         return self.arraySize == LLGLType.DYNAMIC_ARRAY
 
     def isPointerOrString(self):
-        return self.isPointer or self.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING]
+        return self.isPointer or self.typename in LLGLMeta.stringClasses
 
     def isStringOfAnyKind(self):
-        return self.typename in [LLGLMeta.UTF8STRING, LLGLMeta.STRING] or (self.isPointer and self.baseType in [StdType.CHAR, StdType.WCHAR])
+        return self.typename in LLGLMeta.stringClasses or (self.isPointer and self.baseType in [StdType.CHAR, StdType.WCHAR])
 
     def getFixedBitsize(self):
         if self.baseType in [StdType.INT8, StdType.UINT8]:

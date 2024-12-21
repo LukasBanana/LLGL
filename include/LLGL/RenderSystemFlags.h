@@ -15,6 +15,9 @@
 #include <LLGL/Constants.h>
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Deprecated.h>
+#include <LLGL/Container/UTF8String.h>
+#include <LLGL/Container/StringLiteral.h>
+#include <LLGL/Container/DynamicVector.h>
 
 #include <LLGL/Platform/Platform.h>
 #if defined LLGL_OS_ANDROID
@@ -269,19 +272,19 @@ struct RendererID
 struct RendererInfo
 {
     //! Rendering API name and version (e.g. "OpenGL 4.6").
-    std::string                 rendererName;
+    UTF8String              rendererName;
 
     //! Renderer device name (e.g. "GeForce GTX 1070/PCIe/SSE2").
-    std::string                 deviceName;
+    UTF8String              deviceName;
 
     //! Vendor name of the renderer device (e.g. "NVIDIA Corporation").
-    std::string                 vendorName;
+    UTF8String              vendorName;
 
     //! Shading language version (e.g. "GLSL 4.50").
-    std::string                 shadingLanguageName;
+    UTF8String              shadingLanguageName;
 
     //! List of enabled renderer extensions (e.g. "GL_ARB_direct_state_access" or "VK_EXT_conditional_rendering").
-    std::vector<std::string>    extensionNames;
+    std::vector<UTF8String> extensionNames;
 
     /**
     \brief Arbitrary string used to identify invalidated pipeline caches.
@@ -291,7 +294,7 @@ struct RendererInfo
     \see RenderSystem::CreatePipelineCache
     \see RenderingFeatures::hasPipelineCaching
     */
-    std::vector<char>           pipelineCacheID;
+    std::vector<char>       pipelineCacheID;
 };
 
 /**
@@ -326,7 +329,7 @@ struct RenderSystemDescriptor
     translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
     If LLGL was built with the \c LLGL_BUILD_STATIC_LIB option, this member is ignored.
     */
-    std::string         moduleName;
+    StringLiteral       moduleName;
 
     /**
     \brief Render system flags. This can be a bitwise OR combination of RenderSystemFlags entries. By default 0.

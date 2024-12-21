@@ -575,7 +575,7 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
         if (parser.MatchIdent())
         {
             StringView tok = parser.Accept();
-            bindingDesc.name = std::string{ tok.begin(), tok.end() };
+            bindingDesc.name = tok;
             if (!parser.Accept("@"))
                 return ReturnWithParseError(parser, "expected '@' token after resource identifier: %s", bindingDesc.name);
         }

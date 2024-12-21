@@ -10,6 +10,7 @@
 
 #include "StaticModuleInterface.h"
 #include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Container/Strings.h>
 
 
 namespace LLGL
@@ -95,7 +96,7 @@ std::vector<std::string> GetStaticModules()
     };
 }
 
-const char* GetRendererName(const std::string& moduleName)
+const char* GetRendererName(const StringLiteral& moduleName)
 {
     #define LLGL_GET_RENDERER_NAME(MODULE)          \
         if (moduleName == MODULE::GetModuleName())  \
@@ -138,7 +139,7 @@ const char* GetRendererName(const std::string& moduleName)
     return nullptr;
 }
 
-int GetRendererID(const std::string& moduleName)
+int GetRendererID(const StringLiteral& moduleName)
 {
     #define LLGL_GET_RENDERER_ID(MODULE)            \
         if (moduleName == MODULE::GetModuleName())  \

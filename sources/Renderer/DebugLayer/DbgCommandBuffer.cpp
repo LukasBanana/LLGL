@@ -2344,7 +2344,7 @@ void DbgCommandBuffer::ValidateBindingTable()
             {
                 const BindingDescriptor& binding = layoutDesc.bindings[i];
                 const std::string bindingSetLabel = (binding.slot.set != 0 ? ", set " + std::to_string(binding.slot.set) : "");
-                const std::string bindingNameLabel = (!binding.name.empty() ? ", name '" + binding.name + '\'' : "");
+                const std::string bindingNameLabel = (!binding.name.empty() ? ", name '" + std::string(binding.name.c_str()) + '\'' : "");
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidState,
                     "missing descriptor [%zu] in pipeline state%s for binding (slot %u%s%s)",

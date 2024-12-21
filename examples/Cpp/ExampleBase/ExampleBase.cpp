@@ -579,7 +579,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     if (!info.extensionNames.empty())
     {
         LLGL::Log::Printf("extensions:\n");
-        for (const std::string& name : info.extensionNames)
+        for (const LLGL::UTF8String& name : info.extensionNames)
             LLGL::Log::Printf("  %s\n", name.c_str());
         LLGL::Log::Printf("\n");
     }

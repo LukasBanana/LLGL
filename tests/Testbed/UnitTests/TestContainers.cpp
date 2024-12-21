@@ -11,7 +11,7 @@
 #include <LLGL/Container/UTF8String.h>
 #include <LLGL/Container/Strings.h>
 #include <locale>
-#include <codecvt>
+#include <codecvt> //TODO: replace this as it's deprecated in C++17
 
 
 DEF_RITEST( ContainerDynamicArray )
@@ -316,6 +316,122 @@ DEF_RITEST( ContainerUTF8String )
         }
 
         sa6.clear();
+    }
+
+    return TestResult::Passed;
+}
+
+struct TestLinearAllocator
+{
+    char* allocate(std::size_t n, const void* hint = nullptr)
+    {
+        char* p = &(TestLinearAllocator::data[pos]);
+        TestLinearAllocator::pos += n;
+        TestLinearAllocator::counter += n;
+        return p;
+    }
+
+    void deallocate(char* p, std::size_t n)
+    {
+        // dummy
+    }
+
+    static std::size_t GetAndFlushCounter()
+    {
+        std::size_t n = TestLinearAllocator::counter;
+        TestLinearAllocator::counter = 0;
+        return n;
+    }
+
+    static constexpr std::size_t capacity = 1024;
+    static std::size_t counter;
+    static std::size_t pos;
+    static char data[capacity];
+};
+
+std::size_t TestLinearAllocator::counter = 0;
+std::size_t TestLinearAllocator::pos = 0;
+char TestLinearAllocator::data[capacity];
+
+DEF_RITEST( ContainerStringLiteral )
+{
+    // Test reference and dynamic string literals
+    {
+        StringLiteral l0 = "This is a string literal";
+        StringLiteral l1 = StringLiteral{ l0.c_str(), true };
+
+        if (l0 != l1)
+        {
+            Log::Errorf("Mismatch between reference and dynamic string literals: l0=\"%s\" and l1=\"%s\"\n", l0.c_str(), l1.c_str());
+            return TestResult::FailedMismatch;
+        }
+    }
+
+    // Test dynamic strings with custom allocator to track allocation size
+    {
+        using TestStringLiteral = BasicStringLiteral<char, std::char_traits<char>, TestLinearAllocator>;
+
+        TestStringLiteral l2 = "This is a reference string literal";
+        const std::size_t l2DynamicLen = TestLinearAllocator::GetAndFlushCounter();
+
+        TestStringLiteral l3 = StringView{ "This is a dynamic string literal" };
+        const std::size_t l3DynamicLen = TestLinearAllocator::GetAndFlushCounter();
+
+        const std::size_t commonSubstrLen = TestStringLiteral{ "This is a " }.size();
+        if (l2.compare(0, commonSubstrLen, l3, 0, commonSubstrLen) != 0)
+        {
+            Log::Errorf("Mismatch between reference and dynamic sub-string literals:\n -> l2 = \"%s\" and l3 = \"%s\"\n", l2.c_str(), l3.c_str());
+            return TestResult::FailedMismatch;
+        }
+
+        if (l2DynamicLen != 0)
+        {
+            Log::Errorf("Expected l2 string to be reference, but dynamic length is %zu\n", l2DynamicLen);
+            return TestResult::FailedMismatch;
+        }
+
+        if (l3DynamicLen != l3.size() + 1)
+        {
+            Log::Errorf("Expected l3 string to be dynamic with length %zu, but length is %zu\n", (l3.size() + 1), l3DynamicLen);
+            return TestResult::FailedMismatch;
+        }
+
+        // Use after copy
+        l2 = l3;
+        if (l2 != l3)
+        {
+            Log::Errorf("Expected l2 and l3 strings to be equal:\n -> l2 = \"%s\" and l3 = \"%s\"\n", l2.c_str(), l3.c_str());
+            return TestResult::FailedMismatch;
+        }
+
+        // Use after move
+        l2 = std::move(l3);
+        if (l2 == l3)
+        {
+            Log::Errorf("Expected l2 and l3 strings to be non-equal:\n -> l2 = \"%s\" and l3 = \"%s\"\n", l2.c_str(), l3.c_str());
+            return TestResult::FailedMismatch;
+        }
+
+        l2.clear();
+        l3.clear();
+    }
+
+    // Test string view to literal conversion
+    {
+        StringLiteral l4 = "This is a slightly longer string to test memory boundaries.";
+        StringLiteral l5 = StringView{ l4 };
+
+        if (l4 != l5)
+        {
+            Log::Errorf("Mismatch between reference and dynamic string literals: l4=\"%s\" and l5=\"%s\"\n", l4.c_str(), l5.c_str());
+            return TestResult::FailedMismatch;
+        }
+    }
+
+    // Test absence of ambiguity (Compile-time only test)
+    {
+        StringLiteral l6{ std::string("Test") };
+        StringLiteral l7{ l6 };
     }
 
     return TestResult::Passed;

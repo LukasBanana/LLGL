@@ -12,6 +12,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Container/Strings.h>
 #include <algorithm>
 #include <string.h>
 
@@ -28,7 +29,7 @@ D3D11ConstantsCache::D3D11ConstantsCache(
     /* Reflect all constant buffers from all shaders */
     std::vector<const D3D11ConstantBufferReflection*> cbufferReflections;
 
-    auto FindCbufferField = [&cbufferReflections](const std::string& name) -> std::pair<const D3D11ConstantBufferReflection*, const D3D11ConstantReflection*>
+    auto FindCbufferField = [&cbufferReflections](const LLGL::StringView& name) -> std::pair<const D3D11ConstantBufferReflection*, const D3D11ConstantReflection*>
     {
         for (const D3D11ConstantBufferReflection* cbuffer : cbufferReflections)
         {

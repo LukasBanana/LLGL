@@ -42,43 +42,43 @@ struct LLGL_EXPORT VertexAttribute
 
     //! Constructor for minimal vertex attribute information and system value semantics, e.g. \c SV_VertexID (HLSL) or \c gl_VertexID (GLSL).
     VertexAttribute(
-        const StringView&   name,
-        const Format        format,
-        std::uint32_t       location        = 0,
-        std::uint32_t       instanceDivisor = 0,
-        const SystemValue   systemValue     = SystemValue::Undefined
+        const StringLiteral&    name,
+        const Format            format,
+        std::uint32_t           location        = 0,
+        std::uint32_t           instanceDivisor = 0,
+        const SystemValue       systemValue     = SystemValue::Undefined
     );
 
     //! Constructor for basic vertex attribute information.
     VertexAttribute(
-        const StringView&   semanticName,
-        std::uint32_t       semanticIndex,
-        const Format        format,
-        std::uint32_t       location        = 0,
-        std::uint32_t       instanceDivisor = 0
+        const StringLiteral&    semanticName,
+        std::uint32_t           semanticIndex,
+        const Format            format,
+        std::uint32_t           location        = 0,
+        std::uint32_t           instanceDivisor = 0
     );
 
     //! Constructor for common vertex attribute information.
     VertexAttribute(
-        const StringView&   name,
-        const Format        format,
-        std::uint32_t       location,
-        std::uint32_t       offset,
-        std::uint32_t       stride,
-        std::uint32_t       slot            = 0,
-        std::uint32_t       instanceDivisor = 0
+        const StringLiteral&    name,
+        const Format            format,
+        std::uint32_t           location,
+        std::uint32_t           offset,
+        std::uint32_t           stride,
+        std::uint32_t           slot            = 0,
+        std::uint32_t           instanceDivisor = 0
     );
 
     //! Constructor for the most vertex attribute information, including semantic index.
     VertexAttribute(
-        const StringView&   semanticName,
-        std::uint32_t       semanticIndex,
-        const Format        format,
-        std::uint32_t       location,
-        std::uint32_t       offset,
-        std::uint32_t       stride,
-        std::uint32_t       slot            = 0,
-        std::uint32_t       instanceDivisor = 0
+        const StringLiteral&    semanticName,
+        std::uint32_t           semanticIndex,
+        const Format            format,
+        std::uint32_t           location,
+        std::uint32_t           offset,
+        std::uint32_t           stride,
+        std::uint32_t           slot            = 0,
+        std::uint32_t           instanceDivisor = 0
     );
 
     /**
@@ -90,7 +90,7 @@ struct LLGL_EXPORT VertexAttribute
     std::uint32_t GetSize() const;
 
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
-    UTF8String      name;
+    StringLiteral   name;
 
     /**
     \brief Vertex attribute format. By default Format::RGBA32Float.
