@@ -17,7 +17,7 @@ namespace LLGL
 
 /* ----- Device creation ----- */
 
-HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, IDXGIAdapter* adapter)
+HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool isDebugLayerEnabled, IDXGIAdapter* adapter)
 {
     HRESULT hr = S_OK;
 
@@ -30,10 +30,11 @@ HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureL
             /* Store selected feature level */
             featureLevel_ = level;
 
-            #ifdef LLGL_DEBUG
-            if (SUCCEEDED(device_.As(&infoQueue_)))
-                DenyLowSeverityWarnings();
-            #endif
+            if (isDebugLayerEnabled)
+            {
+                if (SUCCEEDED(device_.As(&infoQueue_)))
+                    DenyLowSeverityWarnings();
+            }
 
             break;
         }
@@ -81,10 +82,8 @@ HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice)
     device_ = sharedD3DDevice;
 
     /* Query info queue if debugging is enabled */
-    #ifdef LLGL_DEBUG
     if (SUCCEEDED(device_.As(&infoQueue_)))
         DenyLowSeverityWarnings();
-    #endif
 
     return S_OK;
 }
@@ -174,8 +173,6 @@ DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(std::size_t numFormats, con
  * ======= Private: =======
  */
 
-#ifdef LLGL_DEBUG
-
 void D3D12Device::DenyLowSeverityWarnings()
 {
     /*
@@ -202,8 +199,6 @@ void D3D12Device::DenyLowSeverityWarnings()
     }
     infoQueue_->PushStorageFilter(&filter);
 }
-
-#endif // /LLGL_DEBUG
 
 
 } // /namespace LLGL

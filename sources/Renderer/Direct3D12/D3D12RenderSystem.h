@@ -130,7 +130,7 @@ class D3D12RenderSystem final : public RenderSystem
         void CreateFactory(bool debugDevice = false);
         void QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& outPreferredAdatper);
 
-        HRESULT CreateDevice(IDXGIAdapter* preferredAdapter);
+        HRESULT CreateDevice(IDXGIAdapter* preferredAdapter, bool isDebugLayerEnabled);
         HRESULT QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle);
 
         // Returns the minor version of Direct3D 12.X.

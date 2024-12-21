@@ -41,8 +41,8 @@ namespace LLGL
 
 D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
-    const bool debugDevice = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0);
-    if (debugDevice)
+    const bool isDebugDevice = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0);
+    if (isDebugDevice)
         EnableDebugLayer();
 
     if (auto* customNativeHandle = GetRendererNativeHandle<Direct3D12::RenderSystemNativeHandle>(renderSystemDesc))
@@ -54,12 +54,12 @@ D3D12RenderSystem::D3D12RenderSystem(const RenderSystemDescriptor& renderSystemD
     else
     {
         /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
-        CreateFactory(debugDevice);
+        CreateFactory(isDebugDevice);
 
         ComPtr<IDXGIAdapter> preferredAdatper;
         QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
 
-        HRESULT hr = CreateDevice(preferredAdatper.Get());
+        HRESULT hr = CreateDevice(preferredAdatper.Get(), isDebugDevice);
         DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
 
@@ -519,7 +519,7 @@ void D3D12RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& out
     videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
 }
 
-HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter)
+HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter, bool isDebugLayerEnabled)
 {
     const D3D_FEATURE_LEVEL featureLevels[] =
     {
@@ -543,13 +543,13 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter)
     if (preferredAdapter != nullptr)
     {
         /* Try to create device with perferred adatper */
-        hr = device_.CreateDXDevice(featureLevels, preferredAdapter);
+        hr = device_.CreateDXDevice(featureLevels, isDebugLayerEnabled, preferredAdapter);
         if (SUCCEEDED(hr))
             return hr;
     }
 
     /* Try to create device with default adapter */
-    hr = device_.CreateDXDevice(featureLevels);
+    hr = device_.CreateDXDevice(featureLevels, isDebugLayerEnabled);
     if (SUCCEEDED(hr))
     {
         /* Update video adapter info with default adapter */
@@ -560,7 +560,7 @@ HRESULT D3D12RenderSystem::CreateDevice(IDXGIAdapter* preferredAdapter)
     /* Use software adapter as fallback */
     ComPtr<IDXGIAdapter> adapter;
     factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
-    return device_.CreateDXDevice(featureLevels, adapter.Get());
+    return device_.CreateDXDevice(featureLevels, isDebugLayerEnabled, adapter.Get());
 }
 
 HRESULT D3D12RenderSystem::QueryDXInterfacesFromNativeHandle(const Direct3D12::RenderSystemNativeHandle& nativeHandle)
