@@ -19,6 +19,7 @@ LLGL.trace.json
 tests/Output
 
 # Binary files for Go wrapper (libLLGL.dll, libLLGL.dll.a)
+*.exe
 *.dll
 *.dll.a
 

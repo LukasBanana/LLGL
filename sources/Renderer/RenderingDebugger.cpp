@@ -216,14 +216,16 @@ void RenderingDebugger::MergeProfiles(FrameProfile& dst, const FrameProfile& src
 void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
     UTF8String str = message.ToReportString();
-    Log::Errorf("error (%s): %s\n", ToString(type), str.c_str());
+    Log::Errorf(Log::ColorFlags::StdError, "error");
+    Log::Errorf(" (%s): %s\n", ToString(type), str.c_str());
     message.Block();
 }
 
 void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
     UTF8String str = message.ToReportString();
-    Log::Printf("warning (%s): %s\n", ToString(type), str.c_str());
+    Log::Printf(Log::ColorFlags::StdWarning, "warning");
+    Log::Printf(" (%s): %s\n", ToString(type), str.c_str());
     message.Block();
 }
 

@@ -248,7 +248,7 @@ static void PrintColoredResult(TestResult result, const char* prefix = " ", cons
     else if (result == TestResult::Skipped)
         Log::Printf(Log::ColorFlags::White, "[ %s ]", TestResultToStr(result));
     else
-        Log::Printf(Log::ColorFlags::Red | Log::ColorFlags::Bold, "[ %s ]", TestResultToStr(result));
+        Log::Printf(Log::ColorFlags::StdError, "[ %s ]", TestResultToStr(result));
 
     if (suffix != nullptr)
         Log::Printf(suffix);
@@ -305,9 +305,9 @@ static void PrintTestSummary(unsigned failures)
     if (failures == 0)
         Log::Printf(Log::ColorFlags::BrightGreen, " ==> ALL TESTS PASSED\n");
     else if (failures == 1)
-        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> 1 TEST FAILED\n");
+        Log::Errorf(Log::ColorFlags::StdError, " ==> 1 TEST FAILED\n");
     else if (failures > 1)
-        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> %u TESTS FAILED\n", failures);
+        Log::Errorf(Log::ColorFlags::StdError, " ==> %u TESTS FAILED\n", failures);
 }
 
 unsigned TestbedContext::RunAllTests()
@@ -315,7 +315,7 @@ unsigned TestbedContext::RunAllTests()
     // Loading failed if there are already failures
     if (failures > 0)
     {
-        Log::Errorf(Log::ColorFlags::Red | Log::ColorFlags::Bold, " ==> LOADING FAILED\n", failures);
+        Log::Errorf(Log::ColorFlags::StdError, " ==> LOADING FAILED\n", failures);
         return failures;
     }
 

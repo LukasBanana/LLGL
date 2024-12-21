@@ -140,6 +140,15 @@ struct ColorFlags
 
         //! Combined flags for white color.
         White           = (Bright | Gray),
+
+        //! Combined flags for standard error reports (bold and dark red).
+        StdError        = (Bold | Red),
+
+        //! Combined flags for standard warning reports (bold and bright yellow).
+        StdWarning      = (Bold | BrightYellow),
+
+        //! Combined flags for standard annotation reports (bold and bright pink).
+        StdAnnotation   = (Bold | BrightPink),
     };
 };
 

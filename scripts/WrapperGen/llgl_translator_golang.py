@@ -64,7 +64,7 @@ class GolangTranslator(Translator):
             def translateConstInit(struct, init):
                 structBaseIdent = struct.name + '::'
                 if init.startswith(structBaseIdent):
-                    return init[len(structBaseIdent):]
+                    return struct.name + init[len(structBaseIdent):]
                 else:
                     return init
 
