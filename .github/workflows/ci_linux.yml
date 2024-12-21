@@ -15,7 +15,7 @@ jobs:
         config: [Release, Debug]
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       README: ${{ github.workspace }}/README.txt
@@ -30,7 +30,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo wget -O /etc/apt/trusted.gpg.d/lunarg-signing-key-pub.asc http://packages.lunarg.com/lunarg-signing-key-pub.asc
-        sudo wget -O /etc/apt/sources.list.d/lunarg-vulkan-1.3.236-jammy.list https://packages.lunarg.com/vulkan/1.3.236/lunarg-vulkan-1.3.236-jammy.list
+        sudo wget -O /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
         sudo apt update
         sudo apt-get install libx11-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
 
