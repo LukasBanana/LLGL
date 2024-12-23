@@ -204,18 +204,16 @@ private:
         pipelineLayoutCbuffer = renderer->CreatePipelineLayout(LLGL::Parse("heap{ cbuffer(Settings@1):frag:vert }"));
 
         // Create pipeline layout for final scene rendering
-        if (IsOpenGL())
-        {
-            pipelineLayoutFinalPass = renderer->CreatePipelineLayout(
-                LLGL::Parse("heap{ cbuffer(Settings@1):frag:vert, texture(noiseTexture@2, depthRangeTexture@3):frag, sampler(2,3):frag }")
-            );
-        }
-        else
-        {
-            pipelineLayoutFinalPass = renderer->CreatePipelineLayout(
-                LLGL::Parse("heap{ cbuffer(Settings@1):frag:vert, texture(noiseTexture@2, depthRangeTexture@3):frag, sampler(linearSampler@4):frag }")
-            );
-        }
+        pipelineLayoutFinalPass = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(Settings@1):frag:vert,"
+                "  texture(noiseTexture@2, depthRangeTexture@3):frag, sampler(linearSampler@4):frag,"
+                "},"
+                "sampler<noiseTexture, linearSampler>(noiseTexture@2),"
+                "sampler<depthRangeTexture, linearSampler>(depthRangeTexture@3),"
+            )
+        );
     }
 
     void CreatePipelines()
@@ -294,10 +292,9 @@ private:
 
         // Create resource heap for scene rendering
         {
-            std::vector<LLGL::ResourceViewDescriptor> resourceViewsScene = { constantBuffer, noiseTexture, depthRangeTexture, linearSampler };
-            if (IsOpenGL())
-                resourceViewsScene.push_back(linearSampler);
-            resourceHeapFinalPass = renderer->CreateResourceHeap(pipelineLayoutFinalPass, resourceViewsScene);
+            resourceHeapFinalPass = renderer->CreateResourceHeap(
+                pipelineLayoutFinalPass, { constantBuffer, noiseTexture, depthRangeTexture, linearSampler }
+            );
         }
     }
 

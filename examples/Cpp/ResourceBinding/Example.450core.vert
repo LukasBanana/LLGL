@@ -2,7 +2,7 @@
 
 #version 450 core
 
-layout(std140, binding = 0) uniform Scene
+layout(std140, binding = 3) uniform Scene
 {
 	mat4 vpMatrix;
 };

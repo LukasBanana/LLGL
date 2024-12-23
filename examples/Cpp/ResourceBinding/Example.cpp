@@ -150,9 +150,6 @@ private:
         constexpr auto resBuffer    = LLGL::ResourceType::Buffer;
         constexpr auto resTexture   = LLGL::ResourceType::Texture;
 
-        const std::uint32_t slotSceneBuffer     = (IsMetal() ? 3u : 0u);
-        const std::uint32_t slotColorMapSampler = (IsOpenGL() ? 3u : 2u);
-
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             #if PSO_LAYOUT_FROM_STRING
@@ -160,16 +157,16 @@ private:
             // Declare PSO layout from string
             layoutDesc = LLGL::Parse(
                 "heap{"
-                "  cbuffer(Scene@%u):vert:frag,"                    // Heap resource binding for a constant buffer
+                "  cbuffer(Scene@3):vert:frag,"                     // Heap resource binding for a constant buffer
                 "  buffer(transforms@1):vert,"                      // Heap resource binding for a sampled buffer
                 "},"
                 "texture(colorMap@3):frag,"                         // Dynamic resource binding for a texture
-                "sampler(colorMapSampler@%u){ lod.bias=1 }:frag,"   // Static sampler with LOD bias 1
+                "sampler(colorMapSampler@2){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
+
+                "sampler<colorMap, colorMapSampler>(colorMap@3),"
+
                 "uint(instance),"                                   // Uniform for a uint type
                 "float3(lightVec),"                                 // Uniform for a float3/ vec3 type
-                ,
-                slotSceneBuffer,
-                slotColorMapSampler
             );
 
             #else
@@ -180,16 +177,20 @@ private:
             layoutDesc.debugName = "PipelineLayout";
             layoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, slotSceneBuffer },
+                LLGL::BindingDescriptor{ "Scene",       resBuffer,  LLGL::BindFlags::ConstantBuffer, vertStage | fragStage, 3 },
                 LLGL::BindingDescriptor{ "transforms",  resBuffer,  LLGL::BindFlags::Sampled,        vertStage,             1 },
             };
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor{ "colorMap",    resTexture, LLGL::BindFlags::Sampled,        fragStage,             3 },
+                LLGL::BindingDescriptor{ "colorMap",    resTexture, LLGL::BindFlags::Sampled,        fragStage,             4 },
             };
             layoutDesc.staticSamplers =
             {
-                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, slotColorMapSampler, colorMapSamplerDesc }
+                LLGL::StaticSamplerDescriptor{ "colorMapSampler", fragStage, 5, colorMapSamplerDesc }
+            };
+            layoutDesc.combinedTextureSamplers =
+            {
+                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "colorMapSampler", 4 }
             };
             layoutDesc.uniforms =
             {

@@ -21,8 +21,9 @@
 // Enables the resource heap. Otherwise, all resources are bound to the graphics pipeline individually.
 #define ENABLE_RESOURCE_HEAP        0
 
+//TODO: needs to be revised
 // Enables constant buffer view (CBV) ranges
-#define ENABLE_CBUFFER_RANGE        (ENABLE_RESOURCE_HEAP && 1)
+//#define ENABLE_CBUFFER_RANGE        (ENABLE_RESOURCE_HEAP && 0)
 
 
 class Example_RenderTarget : public ExampleBase
@@ -184,8 +185,6 @@ private:
 
     void CreatePipelines()
     {
-        bool combinedSampler = IsOpenGL();
-
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
@@ -195,12 +194,16 @@ private:
             layoutDesc.bindings =
             #endif
             {
-                LLGL::BindingDescriptor{ "Settings",        LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3                           },
-                LLGL::BindingDescriptor{ "colorMapSampler", LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1                           },
-                LLGL::BindingDescriptor{ "colorMap",        LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 (combinedSampler ? 1u : 2u) },
+                LLGL::BindingDescriptor{ "Settings",        LLGL::ResourceType::Buffer,   LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 3 },
+                LLGL::BindingDescriptor{ "colorMapSampler", LLGL::ResourceType::Sampler,  0,                               LLGL::StageFlags::FragmentStage,                                 1 },
+                LLGL::BindingDescriptor{ "colorMap",        LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 2 },
                 #if ENABLE_CUSTOM_MULTISAMPLING
-                LLGL::BindingDescriptor{ "colorMapMS",      LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 3                           },
+                LLGL::BindingDescriptor{ "colorMapMS",      LLGL::ResourceType::Texture,  LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 3 },
                 #endif
+            };
+            layoutDesc.combinedTextureSamplers =
+            {
+                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "colorMapSampler", 2 }
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

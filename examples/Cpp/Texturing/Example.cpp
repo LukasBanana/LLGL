@@ -92,15 +92,17 @@ public:
     void CreatePipelines()
     {
         // Create pipeline layout
-        const bool          hasCombinedSamplers = IsOpenGL();
-        const std::uint32_t samplerStateSlot    = (hasCombinedSamplers ? 2u : 3u);
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor{ "Scene",        LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   1                },
-                LLGL::BindingDescriptor{ "colorMap",     LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage, 2                },
-                LLGL::BindingDescriptor{ "samplerState", LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, samplerStateSlot },
+                LLGL::BindingDescriptor{ "Scene",        LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage,   1 },
+                LLGL::BindingDescriptor{ "colorMap",     LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage, 2 },
+                LLGL::BindingDescriptor{ "samplerState", LLGL::ResourceType::Sampler, 0,                               LLGL::StageFlags::FragmentStage, 3 },
+            };
+            layoutDesc.combinedTextureSamplers =
+            {
+                LLGL::CombinedTextureSamplerDescriptor{ "colorMap", "colorMap", "samplerState", 2 }
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

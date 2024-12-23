@@ -1,11 +1,11 @@
 // HLSL shader version 4.0 (for Direct3D 11/ 12)
 
-cbuffer Scene : register(b0)
+cbuffer Scene : register(b3)
 {
 	float4x4 vpMatrix;
 }
 
-cbuffer Model : register(b1)
+cbuffer Model : register(b2)
 {
 	float3   lightVec;
 	uint     instance;
@@ -48,8 +48,8 @@ void VSMain(VSInput inp, out VSOutput outp)
 
 // PIXEL SHADER
 
-Texture2D colorMap : register(t3);
-SamplerState colorMapSampler : register(s2);
+Texture2D colorMap : register(t4);
+SamplerState colorMapSampler : register(s5);
 
 float4 PSMain(VSOutput inp) : SV_Target
 {

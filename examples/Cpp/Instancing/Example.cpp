@@ -292,18 +292,16 @@ private:
         fragmentShader  = LoadStandardFragmentShader("PS");
 
         // Create pipeline layout
-        if (IsOpenGL())
-        {
-            pipelineLayout = renderer->CreatePipelineLayout(
-                LLGL::Parse("heap{cbuffer(0):vert:frag, texture(0):frag, sampler(0):frag}")
-            );
-        }
-        else
-        {
-            pipelineLayout = renderer->CreatePipelineLayout(
-                LLGL::Parse("heap{cbuffer(2):vert:frag, texture(3):frag, sampler(4):frag}")
-            );
-        }
+        pipelineLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(Settings@2):vert:frag,"
+                "  texture(tex@3):frag,"
+                "  sampler(texSampler@4):frag,"
+                "},"
+                "sampler<tex, texSampler>(tex@3)"
+            )
+        );
 
         // Create resource view heap
         const LLGL::ResourceViewDescriptor resourceViews[] =

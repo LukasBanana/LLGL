@@ -190,7 +190,7 @@ private:
         {
             shadowLayoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, (IsOpenGL() ? 0u : 1u) }
+                LLGL::BindingDescriptor{ "Settings", LLGL::ResourceType::Buffer, LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::VertexStage, 1 },
             };
         }
         pipelineLayoutShadowMap = renderer->CreatePipelineLayout(shadowLayoutDesc);
@@ -200,15 +200,16 @@ private:
         {
             sceneLayoutDesc.heapBindings =
             {
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, (IsOpenGL() ? 0u : 1u) },
-                LLGL::BindingDescriptor{ LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 (IsOpenGL() ? 0u : 2u) },
+                LLGL::BindingDescriptor{ "Settings",  LLGL::ResourceType::Buffer,  LLGL::BindFlags::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 1 },
+                LLGL::BindingDescriptor{ "shadowMap", LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        LLGL::StageFlags::FragmentStage,                                 2 },
             };
             sceneLayoutDesc.staticSamplers =
             {
-                LLGL::StaticSamplerDescriptor
-                {
-                    LLGL::StageFlags::FragmentStage, (IsOpenGL() ? 0u : 3u), shadowSamplerDesc
-                }
+                LLGL::StaticSamplerDescriptor{ "shadowMapSampler", LLGL::StageFlags::FragmentStage, 3, shadowSamplerDesc }
+            };
+            sceneLayoutDesc.combinedTextureSamplers =
+            {
+                LLGL::CombinedTextureSamplerDescriptor{ "shadowMap", "shadowMap", "shadowMapSampler", 2 }
             };
         }
         pipelineLayoutScene = renderer->CreatePipelineLayout(sceneLayoutDesc);

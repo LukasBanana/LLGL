@@ -175,6 +175,13 @@ public:
                 LLGL::BindingDescriptor{ "specularMap",   LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        fragStage,                 5 },
                 LLGL::BindingDescriptor{ "heightMap",     LLGL::ResourceType::Texture, LLGL::BindFlags::Sampled,        tessEvalStage,             6 },
             };
+            plDesc.combinedTextureSamplers =
+            {
+                LLGL::CombinedTextureSamplerDescriptor{ "colorMap",    "colorMap",    "linearSampler", 3 },
+                LLGL::CombinedTextureSamplerDescriptor{ "normalMap",   "normalMap",   "linearSampler", 4 },
+                LLGL::CombinedTextureSamplerDescriptor{ "specularMap", "specularMap", "linearSampler", 5 },
+                LLGL::CombinedTextureSamplerDescriptor{ "heightMap",   "heightMap",   "linearSampler", 6 },
+            };
         }
         pipelineLayout = renderer->CreatePipelineLayout(plDesc);
 

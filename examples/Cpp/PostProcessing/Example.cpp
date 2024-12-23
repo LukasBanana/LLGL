@@ -302,22 +302,33 @@ public:
     // The utility function <LLGL::Parse> is used here, to simplify the description of the pipeline layouts
     void CreatePipelineLayouts()
     {
-        bool combinedSampler = IsOpenGL();
-
         // Create pipeline layout for scene rendering
         layoutScene = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(SceneSettings@1):vert:frag}"));
 
         // Create pipeline layout for blur post-processor
-        if (combinedSampler)
-            layoutBlur = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(BlurSettings@2):frag, texture(glossMap@4):frag, sampler(4):frag}"));
-        else
-            layoutBlur = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(BlurSettings@2):frag, texture(glossMap@4):frag, sampler(6):frag}"));
+        layoutBlur = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(BlurSettings@2):frag,"
+                "  texture(glossMap@4):frag,"
+                "  sampler(glossMapSampler@6):frag,"
+                "},"
+                "sampler<glossMap, glossMapSampler>(glossMap@4)"
+            )
+        );
 
         // Create pipeline layout for final post-processor
-        if (combinedSampler)
-            layoutFinal = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(SceneSettings@1):frag, texture(colorMap@3,glossMap@4):frag, sampler(3,4):frag}"));
-        else
-            layoutFinal = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(SceneSettings@1):frag, texture(colorMap@3,glossMap@4):frag, sampler(5,6):frag}"));
+        layoutFinal = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(SceneSettings@1):frag,"
+                "  texture(colorMap@3,glossMap@4):frag,"
+                "  sampler(colorMapSampler@5,glossMapSampler@6):frag,"
+                "},"
+                "sampler<colorMap, colorMapSampler>(colorMap@3),"
+                "sampler<glossMap, glossMapSampler>(glossMap@4),"
+            )
+        );
     }
 
     void CreatePipelines()
