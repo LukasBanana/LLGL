@@ -25,11 +25,34 @@ namespace LLGL
 
 class GLStateManager;
 
+// GL resource binding for heap resources (part of a ResourceHeap).
+struct GLHeapResourceBinding
+{
+    std::string     name;
+
+    // Interface for BindingIterator<>
+    ResourceType    type        = ResourceType::Undefined;
+    long            bindFlags   = 0;
+    long            stageFlags  = 0;
+    // /Interface for BindingIterator<>
+
+    GLuint          slot        = 0;
+    std::uint32_t   arraySize   = 0;
+
+    // If non-zero, this binding refers to a combined texture-sampler and 'slot' is interpreted
+    // as index into the array of combined texture-samplers; see GLPipelineLayout::GetCombinedSamplerSlots().
+    std::uint32_t   combiners   = 0;
+};
+
 // GL resource binding for dynamic resources (*not* part of a ResourceHeap).
 struct GLPipelineResourceBinding
 {
     GLResourceType  type;
     GLuint          slot;
+
+    // If non-zero, this binding refers to a combined texture-sampler and 'slot' is interpreted
+    // as index into the array of combined texture-samplers; see GLPipelineLayout::GetCombinedSamplerSlots().
+    std::uint32_t   combiners;
 };
 
 class GLPipelineLayout final : public PipelineLayout
@@ -47,7 +70,7 @@ class GLPipelineLayout final : public PipelineLayout
         void BindStaticSamplers(GLStateManager& stateMngr) const;
 
         // Returns the copied list of heap binding descriptors.
-        inline const DynamicVector<BindingDescriptor>& GetHeapBindings() const
+        inline const std::vector<GLHeapResourceBinding>& GetHeapBindings() const
         {
             return heapBindings_;
         }
@@ -64,16 +87,22 @@ class GLPipelineLayout final : public PipelineLayout
             return staticSamplerSlots_;
         }
 
-        // Returns the list of dynamic resource names. Same list size as GetBindings().
-        inline ArrayView<std::string> GetBindingNames() const
+        // Returns the list of combined texture-sampler binding slots.
+        inline const std::vector<GLuint>& GetCombinedSamplerSlots() const
         {
-            return ArrayView<std::string>{ resourceNames_.data(), bindings_.size() };
+            return combinedSamplerSlots_;
         }
 
-        // Returns the list of static sampler names.
-        inline ArrayView<std::string> GetStaticSamplerNames() const
+        // Returns the list of dynamic resource names. Only used by GLShaderBindingLayout.
+        inline ArrayView<std::string> GetBindingNames() const
         {
-            return ArrayView<std::string>{ resourceNames_.data() + bindings_.size(), resourceNames_.size() - bindings_.size() };
+            return ArrayView<std::string>{ resourceNames_.data() + (resourceNames_.size() - bindings_.size()), bindings_.size() };
+        }
+
+        // Returns the list of combined texture-sampler names. Only used by GLShaderBindingLayout.
+        inline ArrayView<std::string> GetCombinedSamplerNames() const
+        {
+            return ArrayView<std::string>{ resourceNames_.data(), resourceNames_.size() - bindings_.size() };
         }
 
         // Returns the copied list of uniform descriptors.
@@ -96,20 +125,34 @@ class GLPipelineLayout final : public PipelineLayout
 
     private:
 
-        void BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs);
-        void BuildStaticSamplers(const std::vector<StaticSamplerDescriptor>& staticSamplerDescs);
+        void BuildHeapResourceBindings(const PipelineLayoutDescriptor& pipelineLayoutDesc);
+        void BuildDynamicResourceBindings(const PipelineLayoutDescriptor& pipelineLayoutDesc);
+        void BuildStaticSamplers(const PipelineLayoutDescriptor& pipelineLayoutDesc);
+        void BuildCombinedSamplerNames(const PipelineLayoutDescriptor& pipelineLayoutDesc);
+
+        // Allocates a new combined sampler slot if the input type and name matches the respective 'combinedTextureSamplers' entry.
+        bool BuildCombinedSamplerSlots(
+            const PipelineLayoutDescriptor& pipelineLayoutDesc,
+            ResourceType                    type,
+            const StringView&               name,
+            GLuint&                         outFirst,
+            std::uint32_t&                  outCount
+        );
+
+        std::uint32_t BuildCombinedStaticSamplerSlots(const PipelineLayoutDescriptor& pipelineLayoutDesc, const StringView& name);
 
     private:
 
         std::vector<std::string>                resourceNames_; // Dynamic resource and static sampler names; Used by GLShaderBindingLayout
-        DynamicVector<BindingDescriptor>        heapBindings_;
+        std::vector<GLHeapResourceBinding>      heapBindings_;
         std::vector<GLPipelineResourceBinding>  bindings_;
         std::vector<GLuint>                     staticSamplerSlots_;
-        std::vector<GLSamplerPtr>               staticSamplers_;
-        std::vector<GLEmulatedSamplerPtr>       staticEmulatedSamplers_;
+        std::vector<GLSamplerSPtr>              staticSamplers_;
+        std::vector<GLEmulatedSamplerSPtr>      staticEmulatedSamplers_;
         std::vector<UniformDescriptor>          uniforms_;
-        const GLbitfield                        barriers_           = 0;
-        const bool                              hasNamedBindings_   = false;
+        std::vector<GLuint>                     combinedSamplerSlots_;
+        const GLbitfield                        barriers_               = 0;
+        const bool                              hasNamedBindings_       = false;
 
 };
 

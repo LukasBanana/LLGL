@@ -14,6 +14,7 @@
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
+#include "../../BindingDescriptorIterator.h"
 #include "../../SegmentedBuffer.h"
 #include "../OpenGL.h"
 #include <functional>
@@ -25,8 +26,8 @@ namespace LLGL
 
 enum GLResourceType : std::uint32_t;
 class GLStateManager;
-class BindingDescriptorIterator;
 struct ResourceHeapDescriptor;
+struct GLHeapResourceBinding;
 
 /*
 This class emulates the behavior of a descriptor set like in Vulkan,
@@ -59,6 +60,7 @@ class GLResourceHeap final : public ResourceHeap
 
         using SegmentationSizeType  = std::uint8_t;
         using AllocSegmentFunc      = std::function<void(const GLResourceBinding* first, SegmentationSizeType count)>;
+        using GLHeapBindingIterator = BindingIterator<GLHeapResourceBinding>;
 
         // Describes the segments within the raw buffer (per descriptor set).
         struct BufferSegmentation
@@ -73,15 +75,16 @@ class GLResourceHeap final : public ResourceHeap
         // Binding-to-descriptor map location.
         struct BindingSegmentLocation
         {
-            std::uint32_t segmentOffset   : 24; // Byte offset to the first segment within a segment set.
-            std::uint32_t descriptorIndex :  8; // Index of the descriptor the binding maps to.
+            std::uint32_t isCombinedSampler      :  1;
+            std::uint32_t segmentOrBindingOffset : 23; // Byte offset to the first segment within a segment set.
+            std::uint32_t indexOrCount           :  8; // Index of the descriptor the binding maps to.
         };
 
         // GL resource binding slot with index to the input binding list
         struct GLResourceBinding
         {
-            GLuint      slot;   // GL pipeline binding slot
-            std::size_t index;  // Index to the input bindings list
+            GLuint      slot;       // GL pipeline binding slot
+            std::size_t mapIndex;   // Index to the input binding map
         };
 
     private:
@@ -91,13 +94,13 @@ class GLResourceHeap final : public ResourceHeap
         void FreeAllSegmentSetTextureViews(const char* heapPtr);
         void FreeAllSegmentsTextureViews();
 
-        void AllocSegmentsUBO(BindingDescriptorIterator& bindingIter);
-        void AllocSegmentsSSBO(BindingDescriptorIterator& bindingIter);
-        void AllocSegmentsTexture(BindingDescriptorIterator& bindingIter);
-        void AllocSegmentsImage(BindingDescriptorIterator& bindingIter);
-        void AllocSegmentsSampler(BindingDescriptorIterator& bindingIter);
-        void AllocSegmentsNativeSampler(BindingDescriptorIterator& bindingIter);
-        void AllocSegmentsEmulatedSampler(BindingDescriptorIterator& bindingIter);
+        void AllocSegmentsUBO(GLHeapBindingIterator& bindingIter);
+        void AllocSegmentsSSBO(GLHeapBindingIterator& bindingIter);
+        void AllocSegmentsTexture(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
+        void AllocSegmentsImage(GLHeapBindingIterator& bindingIter);
+        void AllocSegmentsSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
+        void AllocSegmentsNativeSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
+        void AllocSegmentsEmulatedSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
 
         void Alloc1PartSegment(
             GLResourceType              type,
@@ -123,8 +126,10 @@ class GLResourceHeap final : public ResourceHeap
             std::size_t                 payload2Stride
         );
 
-        void WriteBindingMappings(const GLResourceBinding* first, SegmentationSizeType count);
+        void WriteBindingMappings(const GLResourceBinding* bindings, SegmentationSizeType count);
         void CopyBindingMapping(const GLResourceBinding& dst, const GLResourceBinding& src);
+
+        void WriteResourceView(const ResourceViewDescriptor& desc, const BindingSegmentLocation& binding, std::uint32_t descriptorSet);
 
         void WriteResourceViewBuffer(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index, long anyBindFlags);
         void WriteResourceViewUBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
@@ -134,13 +139,14 @@ class GLResourceHeap final : public ResourceHeap
         void WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewEmulatedSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
 
-    private:
-
-        static std::vector<GLResourceBinding> FilterAndSortGLBindingSlots(
-            BindingDescriptorIterator&  bindingIter,
+        std::vector<GLResourceBinding> FilterAndSortGLBindingSlots(
+            GLHeapBindingIterator&      bindingIter,
             ResourceType                resourceType,
-            long                        resourceBindFlags
+            long                        resourceBindFlags,
+            const ArrayView<GLuint>&    combinedSamplerSlots = {}
         );
+
+    private:
 
         static SegmentationSizeType ConsolidateSegments(
             const ArrayView<GLResourceBinding>& bindingSlots,
@@ -149,9 +155,10 @@ class GLResourceHeap final : public ResourceHeap
 
     private:
 
-        SmallVector<BindingSegmentLocation> bindingMap_;    // Maps a binding index to a descriptor location.
+        SmallVector<BindingSegmentLocation> bindingMap_;            // Maps binding indices to descriptor locations; bindingMap_[numInputBindings_] starts implicit descriptors.
+        std::uint32_t                       numInputBindings_ = 0;  // Number of bindings written explicitly to a heap segment.
         BufferSegmentation                  segmentation_;
-        SegmentedBuffer                     heap_;          // Buffer with resource binding information and stride (in bytes) per descriptor set
+        SegmentedBuffer                     heap_;                  // Buffer with resource binding information and stride (in bytes) per descriptor set
 
 };
 

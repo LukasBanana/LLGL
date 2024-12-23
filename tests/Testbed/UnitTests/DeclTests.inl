@@ -78,6 +78,7 @@ DECL_TEST( ResourceBinding );
 DECL_TEST( ResourceArrays );
 DECL_TEST( StreamOutput );
 DECL_TEST( ResourceCopy );
+DECL_TEST( CombinedTexSamplers );
 
 // C99 tests
 DECL_TEST( OffscreenC99 );

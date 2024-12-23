@@ -59,7 +59,7 @@ class GLEmulatedSampler final : public Sampler
 
 };
 
-using GLEmulatedSamplerPtr = std::unique_ptr<GLEmulatedSampler>;
+using GLEmulatedSamplerSPtr = std::shared_ptr<GLEmulatedSampler>;
 
 
 } // /namespace LLGL

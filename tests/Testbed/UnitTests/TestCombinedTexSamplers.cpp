@@ -1,5 +1,5 @@
 /*
-* TestResourceArrays.cpp
+* TestCombinedTexSamplers.cpp
 *
 * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
 * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
@@ -12,17 +12,21 @@
 
 
 /*
-Renders some geometry (two rectangles into separate viewports) with more than one texture (only two textures right now).
-The test must ensure that the texture resources are bound as an array in the shader, e.g. "sampler2D myTextures[2];" in GLSL.
-Such resource arrays must be bound with a ResourceHeap as LLGL does not allow such arrays with individual descriptors.
+Render a scene with 3 textures and 2 sampler-states with 4 unique combinations:
+TexA + SamplerA, TexB + SamplerA, TexB + SamplerB, TexC + SamplerB.
+This requires the new array for combined texture-sampler since GLSL with OpenGL semantics does not support separate samplers.
 */
-DEF_TEST( ResourceArrays )
+DEF_TEST( CombinedTexSamplers )
 {
-    //TODO: temporarily disable this test for Metal as it's currently not supported
-    if (renderer->GetRendererID() == RendererID::Metal)
+    //TODO: not supported for Vulkan and Metal yet
+    if (renderer->GetRendererID() != RendererID::OpenGL &&
+        renderer->GetRendererID() != RendererID::Direct3D11 &&
+        renderer->GetRendererID() != RendererID::Direct3D12)
+    {
         return TestResult::Skipped;
+    }
 
-    if (shaders[VSResourceArrays] == nullptr || shaders[PSResourceArrays] == nullptr)
+    if (shaders[VSCombinedSamplers] == nullptr || shaders[PSCombinedSamplers] == nullptr)
     {
         Log::Errorf("Missing shaders for backend\n");
         return TestResult::FailedErrors;
@@ -31,12 +35,23 @@ DEF_TEST( ResourceArrays )
     // Create PSO layout
     PipelineLayout* psoLayout = renderer->CreatePipelineLayout(
         Parse(
-            "cbuffer(Scene@1):vert:frag,"           // Bind individual resource for scene constant buffer
+            // Heap resource bindings
             "heap{"
-            "  texture(colorMaps@2[2]):frag,"       // Declare a texture array with 2 elements
-            "  sampler(texSamplers@%u[2]):frag,"    // Declare a sampler array with 2 elements
-            "}",
-            (HasCombinedSamplers() ? 2 : 4)         // GL needs to bind the sampler at the same binding slots
+            "  texture(colorMapA@2):frag,"
+            "  texture(colorMapB@3):frag,"
+            "  sampler(texSamplerA@5):frag,"
+            "},"
+
+            // Dynamic resource bindings
+            "cbuffer(Scene@1):vert,"
+            "texture(colorMapC@4):frag,"
+            "sampler(texSamplerB@6):frag,"
+
+            // Combined texture-samplers
+            "sampler<colorMapA, texSamplerA>(colorMapA_texSamplerA@2),"
+            "sampler<colorMapB, texSamplerA>(colorMapB_texSamplerA@3),"
+            "sampler<colorMapB, texSamplerB>(colorMapB_texSamplerB@4),"
+            "sampler<colorMapC, texSamplerB>(colorMapC_texSamplerB@5),"
         )
     );
 
@@ -45,13 +60,13 @@ DEF_TEST( ResourceArrays )
     {
         psoDesc.pipelineLayout      = psoLayout;
         psoDesc.renderPass          = swapChain->GetRenderPass();
-        psoDesc.vertexShader        = shaders[VSResourceArrays];
-        psoDesc.fragmentShader      = shaders[PSResourceArrays];
+        psoDesc.vertexShader        = shaders[VSCombinedSamplers];
+        psoDesc.fragmentShader      = shaders[PSCombinedSamplers];
         psoDesc.depth.testEnabled   = true;
         psoDesc.depth.writeEnabled  = true;
         psoDesc.rasterizer.cullMode = CullMode::Back;
     }
-    CREATE_GRAPHICS_PSO(pso, psoDesc, "psoResourceArrays");
+    CREATE_GRAPHICS_PSO(pso, psoDesc, "psoCombinedSamplers");
 
     // Create resource heap and use samplers with no MIP-mapping (we don't want to test MIP-maps here)
     ResourceHeap* resHeap = renderer->CreateResourceHeap(
@@ -59,11 +74,11 @@ DEF_TEST( ResourceArrays )
         {
             // Left rectangle resources:
             textures[TexturePaintingA_NPOT], textures[TextureDetailMap],
-            samplers[SamplerLinearNoMips], samplers[SamplerNearestNoMips],
+            samplers[SamplerLinearNoMips], // No MIPs due to NPOT texture
 
             // Right rectangle resources:
             textures[TexturePaintingB], textures[TextureDetailMap],
-            samplers[SamplerLinearNoMips], samplers[SamplerLinearNoMips],
+            samplers[SamplerNearest],
         }
     );
 
@@ -103,11 +118,15 @@ DEF_TEST( ResourceArrays )
             // Draw left rectangle
             cmdBuffer->SetViewport(Viewport{ Offset2D{ 0, 0 }, halfResolution });
             cmdBuffer->SetResourceHeap(*resHeap, 0);
+            cmdBuffer->SetResource(1, *textures[TextureGrid10x10]); // colorMapC affects one combined samplers: "colorMapC_texSamplerB"
+            cmdBuffer->SetResource(2, *samplers[SamplerNearest]);   // texSamplerB affects two combined samplers: "colorMapB_texSamplerB", "colorMapC_texSamplerB"
             cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
             // Draw right rectangle
             cmdBuffer->SetViewport(Viewport{ Offset2D{ static_cast<std::int32_t>(halfResolution.width), 0 }, halfResolution });
             cmdBuffer->SetResourceHeap(*resHeap, 1);
+            cmdBuffer->SetResource(1, *textures[TextureGradient]);  // colorMapC affects one combined samplers: "colorMapC_texSamplerB"
+            cmdBuffer->SetResource(2, *samplers[SamplerLinear]);    // texSamplerB affects two combined samplers: "colorMapB_texSamplerB", "colorMapC_texSamplerB"
             cmdBuffer->DrawIndexed(mesh.numIndices, 0);
 
             // Capture framebuffer
@@ -118,12 +137,12 @@ DEF_TEST( ResourceArrays )
     cmdBuffer->End();
 
     // Evaluate readback result
-    SaveCapture(readbackTex, "ResourceArrays");
+    SaveCapture(readbackTex, "CombinedSamplers");
 
     constexpr int threshold = 3; // Tolerate a threshold of 3 color values
-    const DiffResult diff = DiffImages("ResourceArrays", threshold);
+    const DiffResult diff = DiffImages("CombinedSamplers", threshold);
 
-    TestResult result = diff.Evaluate("resource arrays");
+    TestResult result = diff.Evaluate("combined samplers");
 
     // Clear resources
     renderer->Release(*pso);

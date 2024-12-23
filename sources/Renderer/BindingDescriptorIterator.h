@@ -20,35 +20,68 @@ namespace LLGL
 {
 
 
-// Helper class to iterate over all resource views and their binding points of a certain type
-class LLGL_EXPORT BindingDescriptorIterator
+/*
+Helper class to iterate over all resource views and their binding points of a certain type.
+TBinding must have the following fields: type (ResourceType), bindFlags (long), stageFlags (long).
+*/
+template <typename TBinding>
+class LLGL_EXPORT BindingIterator
 {
 
     public:
 
-        BindingDescriptorIterator(const ArrayView<BindingDescriptor>& bindings);
+        BindingIterator(const ArrayView<TBinding>& bindings) :
+            bindings_ { bindings }
+        {
+        }
 
         // Resets the iteration for the specified binding parameters.
-        void Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest = 0, long stagesOfInterest = 0);
+        void Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest = 0, long stagesOfInterest = 0)
+        {
+            iterator_               = 0;
+            typeOfInterest_         = typeOfInterest;
+            bindFlagsOfInterest_    = bindFlagsOfInterest;
+            stagesOfInterest_       = stagesOfInterest;
+        }
 
         // Returns the next binding descriptor, or null if there are no descriptors with the active filter.
-        const BindingDescriptor* Next(std::size_t* outIndex = nullptr);
+        const TBinding* Next(std::size_t* outIndex = nullptr)
+        {
+            while (iterator_ < bindings_.size())
+            {
+                /* Search for resource type of interest */
+                std::size_t index = iterator_++;
+                const TBinding& binding = bindings_[index % bindings_.size()];
+                if ( binding.type == typeOfInterest_ &&
+                    ( bindFlagsOfInterest_ == 0 || (binding.bindFlags  & bindFlagsOfInterest_) != 0 ) &&
+                    ( stagesOfInterest_    == 0 || (binding.stageFlags & stagesOfInterest_   ) != 0 ) )
+                {
+                    /* Return binding descriptor and optional index */
+                    if (outIndex != nullptr)
+                        *outIndex = index;
+                    return (&binding);
+                }
+            }
+            return nullptr;
+        }
 
         // Returns the number of bindings this iterator refers to.
-        inline std::size_t GetCount() const
+        std::size_t GetCount() const
         {
             return bindings_.size();
         }
 
     private:
 
-        ArrayView<BindingDescriptor>    bindings_;
-        std::size_t                     iterator_               = 0;
-        ResourceType                    typeOfInterest_         = ResourceType::Undefined;
-        long                            bindFlagsOfInterest_    = ~0;
-        long                            stagesOfInterest_       = StageFlags::AllStages;
+        ArrayView<TBinding> bindings_;
+        std::size_t         iterator_               = 0;
+        ResourceType        typeOfInterest_         = ResourceType::Undefined;
+        long                bindFlagsOfInterest_    = ~0;
+        long                stagesOfInterest_       = StageFlags::AllStages;
 
 };
+
+using BindingDescriptorIterator = BindingIterator<BindingDescriptor>;
 
 
 // Returns the specified resource as Buffer and throws an excpetion if the type does not match or a null pointer is passed.

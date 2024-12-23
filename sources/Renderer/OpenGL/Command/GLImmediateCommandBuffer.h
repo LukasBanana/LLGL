@@ -40,6 +40,11 @@ class GLImmediateCommandBuffer final : public GLCommandBuffer
 
     private:
 
+        void BindResource(GLResourceType type, GLuint slot, Resource& resource);
+        void BindCombinedResource(GLResourceType type, const GLuint* slots, std::uint32_t numSlots, Resource& resource);
+
+    private:
+
         GLStateManager* stateMngr_ = nullptr;
 
 };

@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-// Internal enumeration for GL resource heap segments.
+// Internal enumeration for GL resource heap segments. This must fit into 3 bits (see GLResourceHeapSegment).
 enum GLResourceType : std::uint32_t
 {
     GLResourceType_Invalid = 0,

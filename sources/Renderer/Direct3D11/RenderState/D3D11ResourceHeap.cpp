@@ -15,7 +15,6 @@
 #include "../Texture/D3D11Texture.h"
 #include "../D3D11Types.h"
 #include "../../CheckedCast.h"
-#include "../../BindingDescriptorIterator.h"
 #include "../../ResourceUtils.h"
 #include "../../TextureUtils.h"
 #include "../../BufferUtils.h"

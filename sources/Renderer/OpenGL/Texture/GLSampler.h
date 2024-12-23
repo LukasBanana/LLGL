@@ -45,7 +45,7 @@ class GLSampler final : public Sampler
 
 };
 
-using GLSamplerPtr = std::unique_ptr<GLSampler>;
+using GLSamplerSPtr = std::shared_ptr<GLSampler>;
 
 
 } // /namespace LLGL

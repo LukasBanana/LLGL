@@ -61,14 +61,19 @@ static bool HasAnyNamedResourceBindings(const PipelineLayoutDescriptor& desc)
 }
 
 GLPipelineLayout::GLPipelineLayout(const PipelineLayoutDescriptor& desc) :
-    heapBindings_     { GetExpandedHeapDescriptors(desc.heapBindings) },
-    uniforms_         { desc.uniforms                                 },
-    barriers_         { ToMemoryBarrierBitfield(desc.barrierFlags)    },
-    hasNamedBindings_ { HasAnyNamedResourceBindings(desc)             }
+    uniforms_         { desc.uniforms                              },
+    barriers_         { ToMemoryBarrierBitfield(desc.barrierFlags) },
+    hasNamedBindings_ { HasAnyNamedResourceBindings(desc)          }
 {
     resourceNames_.reserve(desc.bindings.size() + desc.staticSamplers.size());
-    BuildDynamicResourceBindings(desc.bindings);
-    BuildStaticSamplers(desc.staticSamplers);
+
+    /* First build combined texture-samplers, so that the first N entries in the 'combinedSamplerSlots_' are reserved for the input descriptors */
+    BuildCombinedSamplerNames(desc);
+
+    /* Then build resource bindings as they have an explicit offset into the 'combinedSamplerSlots_' slot (if they refer to them) */
+    BuildHeapResourceBindings(desc);
+    BuildDynamicResourceBindings(desc);
+    BuildStaticSamplers(desc);
 }
 
 std::uint32_t GLPipelineLayout::GetNumHeapBindings() const
@@ -144,18 +149,57 @@ static GLResourceType ToGLResourceType(const BindingDescriptor& desc)
     return GLResourceType_Invalid;
 }
 
-void GLPipelineLayout::BuildDynamicResourceBindings(const std::vector<BindingDescriptor>& bindingDescs)
+void GLPipelineLayout::BuildHeapResourceBindings(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
-    bindings_.reserve(bindingDescs.size());
-    for (const BindingDescriptor& desc : bindingDescs)
+    auto expandedHeapBindings = GetExpandedHeapDescriptors(pipelineLayoutDesc.heapBindings);
+    heapBindings_.reserve(expandedHeapBindings.size());
+    for (const BindingDescriptor& desc : expandedHeapBindings)
     {
-        bindings_.push_back(GLPipelineResourceBinding{ ToGLResourceType(desc), static_cast<GLuint>(desc.slot.index) });
+        GLHeapResourceBinding newBinding;
+        {
+            newBinding.name         = desc.name.c_str();
+            newBinding.type         = desc.type;
+            newBinding.bindFlags    = desc.bindFlags;
+            newBinding.stageFlags   = desc.stageFlags;
+            newBinding.arraySize    = desc.arraySize;
+
+            /* Try to build slot for combined texture-sampler first */
+            if (!BuildCombinedSamplerSlots(pipelineLayoutDesc, desc.type, desc.name, newBinding.slot, newBinding.combiners))
+            {
+                /* Otherwise, use explicit binding slot */
+                newBinding.slot         = static_cast<GLuint>(desc.slot.index);
+                newBinding.combiners    = 0;
+            }
+        }
+        heapBindings_.push_back(std::move(newBinding));
+    }
+}
+
+void GLPipelineLayout::BuildDynamicResourceBindings(const PipelineLayoutDescriptor& pipelineLayoutDesc)
+{
+    bindings_.reserve(pipelineLayoutDesc.bindings.size());
+    for (const BindingDescriptor& desc : pipelineLayoutDesc.bindings)
+    {
+        GLPipelineResourceBinding newBinding;
+        {
+            newBinding.type = ToGLResourceType(desc);
+
+            /* Try to build slot for combined texture-sampler first */
+            if (!BuildCombinedSamplerSlots(pipelineLayoutDesc, desc.type, desc.name, newBinding.slot, newBinding.combiners))
+            {
+                /* Otherwise, use explicit binding slot */
+                newBinding.slot         = static_cast<GLuint>(desc.slot.index);
+                newBinding.combiners    = 0;
+            }
+        }
+        bindings_.push_back(newBinding);
         resourceNames_.push_back(desc.name.c_str());
     }
 }
 
-void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescriptor>& staticSamplerDescs)
+void GLPipelineLayout::BuildStaticSamplers(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
+    const std::vector<StaticSamplerDescriptor>& staticSamplerDescs = pipelineLayoutDesc.staticSamplers;
     staticSamplerSlots_.reserve(staticSamplerDescs.size());
     if (!HasNativeSamplers())
     {
@@ -163,11 +207,20 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
         for (const StaticSamplerDescriptor& desc : staticSamplerDescs)
         {
             /* Create emulated sampler and store slot and name separately */
-            GLEmulatedSamplerPtr sampler = MakeUnique<GLEmulatedSampler>();
+            GLEmulatedSamplerSPtr sampler = std::make_shared<GLEmulatedSampler>();
             sampler->SamplerParameters(desc.sampler);
-            staticEmulatedSamplers_.push_back(std::move(sampler));
-            staticSamplerSlots_.push_back(desc.slot.index);
-            resourceNames_.push_back(desc.name.c_str());
+
+            const std::uint32_t numCombinedSlots = BuildCombinedStaticSamplerSlots(pipelineLayoutDesc, desc.name);
+            if (numCombinedSlots > 0)
+            {
+                for_range(i, numCombinedSlots)
+                    staticEmulatedSamplers_.push_back(sampler);
+            }
+            else
+            {
+                staticEmulatedSamplers_.push_back(std::move(sampler));
+                staticSamplerSlots_.push_back(desc.slot.index);
+            }
         }
     }
     else
@@ -176,13 +229,87 @@ void GLPipelineLayout::BuildStaticSamplers(const std::vector<StaticSamplerDescri
         for (const StaticSamplerDescriptor& desc : staticSamplerDescs)
         {
             /* Create native sampler (GL 3.3+) and store slot and name separately */
-            GLSamplerPtr sampler = MakeUnique<GLSampler>();
+            GLSamplerSPtr sampler = std::make_shared<GLSampler>();
             sampler->SamplerParameters(desc.sampler);
-            staticSamplers_.push_back(std::move(sampler));
-            staticSamplerSlots_.push_back(desc.slot.index);
-            resourceNames_.push_back(desc.name.c_str());
+
+            const std::uint32_t numCombinedSlots = BuildCombinedStaticSamplerSlots(pipelineLayoutDesc, desc.name);
+            if (numCombinedSlots > 0)
+            {
+                for_range(i, numCombinedSlots)
+                    staticSamplers_.push_back(sampler);
+            }
+            else
+            {
+                staticSamplers_.push_back(std::move(sampler));
+                staticSamplerSlots_.push_back(desc.slot.index);
+            }
         }
     }
+}
+
+void GLPipelineLayout::BuildCombinedSamplerNames(const PipelineLayoutDescriptor& pipelineLayoutDesc)
+{
+    resourceNames_.reserve(pipelineLayoutDesc.combinedTextureSamplers.size());
+    combinedSamplerSlots_.reserve(pipelineLayoutDesc.combinedTextureSamplers.size());
+
+    for (const CombinedTextureSamplerDescriptor& desc : pipelineLayoutDesc.combinedTextureSamplers)
+    {
+        resourceNames_.push_back(desc.name.c_str());
+        combinedSamplerSlots_.push_back(desc.slot.index);
+    }
+}
+
+bool GLPipelineLayout::BuildCombinedSamplerSlots(
+    const PipelineLayoutDescriptor& pipelineLayoutDesc,
+    ResourceType                    type,
+    const StringView&               name,
+    GLuint&                         outFirst,
+    std::uint32_t&                  outCount)
+{
+    if (!pipelineLayoutDesc.combinedTextureSamplers.empty() && (type == ResourceType::Texture || type == ResourceType::Sampler))
+    {
+        std::size_t firstSlotIndex = combinedSamplerSlots_.size();
+
+        /* Find texture or sampler name in list of combined texture-samplers */
+        for (const CombinedTextureSamplerDescriptor& desc : pipelineLayoutDesc.combinedTextureSamplers)
+        {
+            if ((type == ResourceType::Texture && desc.textureName == name) ||
+                (type == ResourceType::Sampler && desc.samplerName == name))
+            {
+                combinedSamplerSlots_.push_back(desc.slot.index);
+            }
+        }
+
+        /* Return start index and number of slots if the list has grown */
+        const std::size_t numSlots = (combinedSamplerSlots_.size() - firstSlotIndex);
+        if (numSlots > 0)
+        {
+            outFirst = static_cast<GLuint>(firstSlotIndex);
+            outCount = static_cast<std::uint32_t>(numSlots);
+            return true;
+        }
+    }
+    return false;
+}
+
+std::uint32_t GLPipelineLayout::BuildCombinedStaticSamplerSlots(const PipelineLayoutDescriptor& pipelineLayoutDesc, const StringView& name)
+{
+    if (!pipelineLayoutDesc.combinedTextureSamplers.empty())
+    {
+        std::size_t firstSlotIndex = staticSamplerSlots_.size();
+
+        /* Find texture or sampler name in list of combined texture-samplers */
+        for (const CombinedTextureSamplerDescriptor& desc : pipelineLayoutDesc.combinedTextureSamplers)
+        {
+            if (desc.samplerName == name)
+                staticSamplerSlots_.push_back(desc.slot.index);
+        }
+
+        /* Return start index and number of slots if the list has grown */
+        const std::size_t numSlots = (staticSamplerSlots_.size() - firstSlotIndex);
+        return static_cast<std::uint32_t>(numSlots);
+    }
+    return 0;
 }
 
 

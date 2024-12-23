@@ -374,6 +374,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( ResourceArrays              );
     RUN_TEST( StreamOutput                );
     RUN_TEST( ResourceCopy                );
+    RUN_TEST( CombinedTexSamplers         );
 
     // Reset main renderer and run C99 tests
     // LLGL can't run the same render system in multiple instances (confused the context management in GL backend)
@@ -912,6 +913,8 @@ bool TestbedContext::LoadShaders()
         shaders[DSStreamOutputXfb]  = shaders[DSStreamOutput];
         shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Geometry,        "GSMain",  "gs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
         shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0");
+        shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -948,14 +951,16 @@ bool TestbedContext::LoadShaders()
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);
         if (IsShadingLanguageSupported(ShadingLanguage::GLSL_410))
         {
-            shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.vert",          ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.vert",      ShaderType::Vertex,          nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
             shaders[VSStreamOutputXfb]  = shaders[VSStreamOutput];
-            shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tesc",          ShaderType::TessControl);
-            shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tese",          ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[HSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tesc",      ShaderType::TessControl);
+            shaders[DSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.tese",      ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
             shaders[DSStreamOutputXfb]  = shaders[DSStreamOutput];
-            shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.410core.geom",          ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
-            shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.frag",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.410core.geom",      ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+            shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.410core.frag",      ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
         }
+        shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.330core.vert",      ShaderType::Vertex);
+        shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.330core.frag",      ShaderType::Fragment);
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::Metal))
     {

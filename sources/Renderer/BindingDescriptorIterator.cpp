@@ -19,44 +19,6 @@ namespace LLGL
 
 
 /*
- * BindingDescriptorIterator class
- */
-
-BindingDescriptorIterator::BindingDescriptorIterator(const ArrayView<BindingDescriptor>& bindings) :
-    bindings_ { bindings }
-{
-}
-
-void BindingDescriptorIterator::Reset(const ResourceType typeOfInterest, long bindFlagsOfInterest, long stagesOfInterest)
-{
-    iterator_               = 0;
-    typeOfInterest_         = typeOfInterest;
-    bindFlagsOfInterest_    = bindFlagsOfInterest;
-    stagesOfInterest_       = stagesOfInterest;
-}
-
-const BindingDescriptor* BindingDescriptorIterator::Next(std::size_t* outIndex)
-{
-    while (iterator_ < bindings_.size())
-    {
-        /* Search for resource type of interest */
-        auto index = iterator_++;
-        const auto& binding = bindings_[index % bindings_.size()];
-        if ( binding.type == typeOfInterest_ &&
-             ( bindFlagsOfInterest_ == 0 || (binding.bindFlags  & bindFlagsOfInterest_) != 0 ) &&
-             ( stagesOfInterest_    == 0 || (binding.stageFlags & stagesOfInterest_   ) != 0 ) )
-        {
-            /* Return binding descriptor and optional index */
-            if (outIndex != nullptr)
-                *outIndex = index;
-            return (&binding);
-        }
-    }
-    return nullptr;
-}
-
-
-/*
  * Global functions
  */
 

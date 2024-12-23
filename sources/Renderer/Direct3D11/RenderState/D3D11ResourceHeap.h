@@ -14,6 +14,7 @@
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include "D3D11BindingLocator.h"
+#include "../../BindingDescriptorIterator.h"
 #include "../../SegmentedBuffer.h"
 #include "../../DXCommon/DXManagedComPtrArray.h"
 #include <vector>
@@ -30,7 +31,6 @@ enum D3DResourceType : std::uint32_t;
 class D3D11Texture;
 class D3D11BufferWithRV;
 class D3D11BindingTable;
-class BindingDescriptorIterator;
 struct ResourceHeapDescriptor;
 struct TextureViewDescriptor;
 struct BufferViewDescriptor;

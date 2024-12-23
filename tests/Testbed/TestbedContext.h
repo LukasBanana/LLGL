@@ -155,6 +155,9 @@ class TestbedContext
             GSStreamOutputXfb,
             PSStreamOutput,
 
+            VSCombinedSamplers,
+            PSCombinedSamplers,
+
             ShaderCount,
         };
 
