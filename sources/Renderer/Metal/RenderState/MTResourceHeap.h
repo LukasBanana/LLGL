@@ -17,6 +17,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
 #include "../Shader/MTShaderStage.h"
+#include "../../BindingIterator.h"
 #include "../../SegmentedBuffer.h"
 #include <vector>
 #include <functional>
@@ -28,7 +29,6 @@ namespace LLGL
 
 enum MTResourceType : std::uint32_t;
 class MTTexture;
-class BindingDescriptorIterator;
 struct MTResourceBinding;
 struct ResourceHeapDescriptor;
 struct TextureViewDescriptor;

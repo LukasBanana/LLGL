@@ -139,8 +139,9 @@ DEF_TEST( CombinedTexSamplers )
     // Evaluate readback result
     SaveCapture(readbackTex, "CombinedSamplers");
 
-    constexpr int threshold = 3; // Tolerate a threshold of 3 color values
-    const DiffResult diff = DiffImages("CombinedSamplers", threshold);
+    constexpr int threshold = 12; // Tolerate a threshold of 12 color values
+    constexpr unsigned tolerance = 300; // Tolerate a rather high number of outliers due to differences in hardware samplers (even within the same backend)
+    const DiffResult diff = DiffImages("CombinedSamplers", threshold, tolerance);
 
     TestResult result = diff.Evaluate("combined samplers");
 

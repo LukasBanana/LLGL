@@ -148,30 +148,16 @@ private:
     void CreatePipelines()
     {
         // Create pipeline layout for skybox
-        if (IsOpenGL())
-        {
-            layoutSky = renderer->CreatePipelineLayout(
-                LLGL::Parse(
-                    "heap{"
-                    "cbuffer(Settings@1):frag:vert,"
-                    "sampler(skyBox@2):frag,"
-                    "texture(2):frag,"
-                    "}"
-                )
-            );
-        }
-        else
-        {
-            layoutSky = renderer->CreatePipelineLayout(
-                LLGL::Parse(
-                    "heap{"
-                    "cbuffer(1):frag:vert,"
-                    "sampler(2):frag,"
-                    "texture(3):frag,"
-                    "}"
-                )
-            );
-        }
+        layoutSky = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(Settings@1):frag:vert,"
+                "  sampler(smpl@2):frag,"
+                "  texture(skyBox@3):frag,"
+                "},"
+                "sampler<skyBox, smpl>(skyBox@3),"
+            )
+        );
 
         // Create graphics pipeline for skybox
         LLGL::GraphicsPipelineDescriptor pipelineDescSky;
@@ -186,30 +172,20 @@ private:
         pipelineSky = renderer->CreatePipelineState(pipelineDescSky);
 
         // Create pipeline layout for meshes
-        if (IsOpenGL())
-        {
-            layoutMeshes = renderer->CreatePipelineLayout(
-                LLGL::Parse(
-                    "heap{"
-                    "  cbuffer(Settings@1):frag:vert,"
-                    "  sampler(skyBox@2, colorMaps@3, normalMaps@4, roughnessMaps@5, metallicMaps@6):frag,"
-                    "  texture(2,3,4,5,6):frag,"
-                    "}"
-                )
-            );
-        }
-        else
-        {
-            layoutMeshes = renderer->CreatePipelineLayout(
-                LLGL::Parse(
-                    "heap{"
-                    "  cbuffer(1):frag:vert,"
-                    "  sampler(2):frag,"
-                    "  texture(3,4,5,6,7):frag,"
-                    "}"
-                )
-            );
-        }
+        layoutMeshes = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(Settings@1):frag:vert,"
+                "  sampler(smpl@2):frag,"
+                "  texture(skyBox@3, colorMaps@4, normalMaps@5, roughnessMaps@6, metallicMaps@7):frag,"
+                "},"
+                "sampler<skyBox, smpl>(skyBox@3),"
+                "sampler<colorMaps, smpl>(colorMaps@4),"
+                "sampler<normalMaps, smpl>(normalMaps@5),"
+                "sampler<roughnessMaps, smpl>(roughnessMaps@6),"
+                "sampler<metallicMaps, smpl>(metallicMaps@7),"
+            )
+        );
 
         // Create graphics pipeline for meshes
         LLGL::GraphicsPipelineDescriptor pipelineDescMeshes;
@@ -401,37 +377,16 @@ private:
         resourceHeapSkybox->SetDebugName("resourceHeapSkybox");
 
         // Create resource heap for meshes
-        std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes;
-        if (IsOpenGL())
+        std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes =
         {
-            resourceViewsMeshes =
-            {
-                constantBuffer,
-                linearSampler,
-                linearSampler,
-                linearSampler,
-                linearSampler,
-                linearSampler,
-                skyboxArray,
-                colorMapArray,
-                normalMapArray,
-                roughnessMapArray,
-                metallicMapArray,
-            };
-        }
-        else
-        {
-            resourceViewsMeshes =
-            {
-                constantBuffer,
-                linearSampler,
-                skyboxArray,
-                colorMapArray,
-                normalMapArray,
-                roughnessMapArray,
-                metallicMapArray,
-            };
-        }
+            constantBuffer,
+            linearSampler,
+            skyboxArray,
+            colorMapArray,
+            normalMapArray,
+            roughnessMapArray,
+            metallicMapArray,
+        };
         resourceHeapMeshes = renderer->CreateResourceHeap(layoutMeshes, resourceViewsMeshes);
         resourceHeapMeshes->SetDebugName("resourceHeapMeshes");
     }

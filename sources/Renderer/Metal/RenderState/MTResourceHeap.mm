@@ -13,7 +13,6 @@
 #include "../Texture/MTTexture.h"
 #include "../../TextureUtils.h"
 #include "../../CheckedCast.h"
-#include "../../BindingDescriptorIterator.h"
 #include "../../ResourceUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
