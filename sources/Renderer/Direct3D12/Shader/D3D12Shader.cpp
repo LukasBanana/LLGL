@@ -132,9 +132,9 @@ void D3D12Shader::ReserveVertexAttribs(const ShaderDescriptor& shaderDesc)
 {
     /* Reserve memory for the input element names */
     vertexAttribNames_.Clear();
-    for (const auto& attr : shaderDesc.vertex.inputAttribs)
+    for (const VertexAttribute& attr : shaderDesc.vertex.inputAttribs)
         vertexAttribNames_.Reserve(attr.name.size());
-    for (const auto& attr : shaderDesc.vertex.outputAttribs)
+    for (const VertexAttribute& attr : shaderDesc.vertex.outputAttribs)
         vertexAttribNames_.Reserve(attr.name.size());
 }
 

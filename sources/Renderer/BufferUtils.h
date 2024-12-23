@@ -26,7 +26,7 @@ If <format> is undefined, then 1 is returned for byte address buffers.
 */
 LLGL_EXPORT std::uint32_t GetStorageBufferStride(const BufferDescriptor& desc);
 
-// Returns the bitwise-OR combined binding flags of the specified array of buffers.
+// Returns the bitwise OR combined binding flags of the specified array of buffers.
 LLGL_EXPORT long GetCombinedBindFlags(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
 // Returns true if the buffer-view in the specified resource-view descriptor is enabled.

@@ -34,7 +34,7 @@
         </Expand>
     </Type>
     <Type Name="LLGL::BasicStringView&lt;*&gt;" Inheritable="false">
-        <DisplayString>{{length = {size_}}}</DisplayString>
+        <DisplayString>{data_,[size_]s}</DisplayString>
         <Expand>
             <Item Name="[length]" ExcludeView="simple">size_</Item>
             <ArrayItems>
@@ -44,12 +44,15 @@
         </Expand>
     </Type>
     <Type Name="LLGL::BasicStringLiteral&lt;*&gt;" Inheritable="false">
-        <DisplayString Condition="size_ == -1">{{reference}}</DisplayString>
-        <DisplayString>{{dynamic | size = {size_}}}</DisplayString>
         <DisplayString>{data_,s}</DisplayString>
         <Expand>
+            <Item Name="[reference]" ExcludeView="simple" Condition="size_ == -1">true</Item>
+            <Item Name="[reference]" ExcludeView="simple" Condition="size_ != -1">false</Item>
             <Item Name="[length]" ExcludeView="simple">strlen(data_)</Item>
-            <Item Name="[c_str]" ExcludeView="simple">data_</Item>
+            <ArrayItems>
+                <Size>strlen(data_)</Size>
+                <ValuePointer>data_</ValuePointer>
+            </ArrayItems>
         </Expand>
     </Type>
     <Type Name="LLGL::UTF8String" Inheritable="false">

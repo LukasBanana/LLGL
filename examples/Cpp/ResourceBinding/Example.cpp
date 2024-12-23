@@ -8,7 +8,7 @@
 #include <ExampleBase.h>
 
 // Enable this to declare PSO layout from a parsed string instead of explicitly declaring it
-#define PSO_LAYOUT_FROM_STRING
+#define PSO_LAYOUT_FROM_STRING 1
 
 
 class Example_ResourceBinding : public ExampleBase
@@ -155,7 +155,7 @@ private:
 
         LLGL::PipelineLayoutDescriptor layoutDesc;
         {
-            #ifdef PSO_LAYOUT_FROM_STRING
+            #if PSO_LAYOUT_FROM_STRING
 
             // Declare PSO layout from string
             layoutDesc = LLGL::Parse(
