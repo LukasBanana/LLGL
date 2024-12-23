@@ -1,12 +1,12 @@
 /*
- * BindingDescriptorIterator.h
+ * BindingIterator.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_BINDING_DESCRIPTOR_ITERATOR_H
-#define LLGL_BINDING_DESCRIPTOR_ITERATOR_H
+#ifndef LLGL_BINDING_ITERATOR_H
+#define LLGL_BINDING_ITERATOR_H
 
 
 #include <LLGL/Export.h>

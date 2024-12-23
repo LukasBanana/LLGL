@@ -1,11 +1,11 @@
 /*
- * BindingDescriptorIterator.cpp
+ * BindingIterator.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "BindingDescriptorIterator.h"
+#include "BindingIterator.h"
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>

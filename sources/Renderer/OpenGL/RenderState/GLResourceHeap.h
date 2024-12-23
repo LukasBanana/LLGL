@@ -14,7 +14,7 @@
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/SmallVector.h>
-#include "../../BindingDescriptorIterator.h"
+#include "../../BindingIterator.h"
 #include "../../SegmentedBuffer.h"
 #include "../OpenGL.h"
 #include <functional>

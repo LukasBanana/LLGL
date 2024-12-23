@@ -14,7 +14,7 @@
 #include <LLGL/ResourceFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include "D3D11BindingLocator.h"
-#include "../../BindingDescriptorIterator.h"
+#include "../../BindingIterator.h"
 #include "../../SegmentedBuffer.h"
 #include "../../DXCommon/DXManagedComPtrArray.h"
 #include <vector>
