@@ -668,6 +668,11 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
             if (!parser.Accept("]"))
                 return ReturnWithParseError(parser, "expected closing ']' after array size");
         }
+        else
+        {
+            /* Reset array size to ensure parser is not picking up the value from a previous entry */
+            bindingDesc.arraySize = 0;
+        }
 
         /* Add new binding point to output descriptor */
         intermediateBindings.push_back(bindingDesc);
@@ -831,8 +836,9 @@ static bool ParseLayoutSignatureBarrierFlag(Parser& parser, PipelineLayoutDescri
 static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor& outDesc, bool isHeap)
 {
     /* Check if resource type denotes a uniform binding */
-    const UniformType uniformType = StringToUniformType(parser.Token());
-    if (uniformType != UniformType::Undefined)
+    UniformDescriptor uniformDesc;
+    uniformDesc.type = StringToUniformType(parser.Token());
+    if (uniformDesc.type != UniformType::Undefined)
     {
         if (isHeap)
             return ReturnWithParseError(parser, "uniform bindings must not be declared inside a heap");
@@ -844,15 +850,11 @@ static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor
 
         while (parser.Feed() && !parser.Match(")"))
         {
-            UniformDescriptor uniformDesc;
-            uniformDesc.type = uniformType;
-
             /* Parse uniform name */
             if (!parser.MatchIdent())
                 return ReturnWithParseError(parser, "expected uniform name");
 
-            const StringView uniformName = parser.Accept();
-            uniformDesc.name = std::string{ uniformName.begin(), uniformName.end() };
+            uniformDesc.name = parser.Accept();
 
             /* Parse optional array size */
             if (parser.Accept("["))
@@ -861,6 +863,11 @@ static bool ParseLayoutSignatureBinding(Parser& parser, PipelineLayoutDescriptor
                     return false;
                 if (!parser.Accept("]"))
                     return ReturnWithParseError(parser, "expected close squared bracket ']' after array size");
+            }
+            else
+            {
+                /* Reset array size to ensure parser is not picking up the value from a previous entry */
+                uniformDesc.arraySize = 0;
             }
 
             /* Append current uniform descriptor to output layout */
