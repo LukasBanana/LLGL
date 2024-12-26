@@ -17,8 +17,8 @@ layout(location = 0) out vec4 fColor;
 
 // PIXEL SHADER
 
-layout(binding = 4) uniform sampler colorMapSampler;
-layout(binding = 5) uniform texture2D colorMap;
+layout(binding = 4) uniform texture2D colorMap;
+layout(binding = 5) uniform sampler colorMapSampler;
 
 void main()
 {

@@ -160,8 +160,8 @@ private:
                 "  cbuffer(Scene@3):vert:frag,"                     // Heap resource binding for a constant buffer
                 "  buffer(transforms@1):vert,"                      // Heap resource binding for a sampled buffer
                 "},"
-                "texture(colorMap@3):frag,"                         // Dynamic resource binding for a texture
-                "sampler(colorMapSampler@2){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
+                "texture(colorMap@4):frag,"                         // Dynamic resource binding for a texture
+                "sampler(colorMapSampler@5){ lod.bias=1 }:frag,"    // Static sampler with LOD bias 1
 
                 "sampler<colorMap, colorMapSampler>(colorMap@3),"
 

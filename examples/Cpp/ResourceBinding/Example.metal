@@ -60,8 +60,8 @@ vertex VSOutput VSMain(
 fragment float4 PSMain(
     VSOutput            inp             [[stage_in]],
     constant Model&     model           [[buffer(2)]],
-    texture2d<float>    colorMap        [[texture(3)]],
-    sampler             colorMapSampler [[sampler(2)]])
+    texture2d<float>    colorMap        [[texture(4)]],
+    sampler             colorMapSampler [[sampler(5)]])
 {
 	// Sample color map
 	float4 color = colorMap.sample(colorMapSampler, inp.texCoord);
