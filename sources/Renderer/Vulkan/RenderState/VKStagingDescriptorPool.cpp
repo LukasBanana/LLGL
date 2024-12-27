@@ -120,7 +120,7 @@ VkDescriptorSet VKStagingDescriptorPool::AllocateDescriptorSet(
         allocInfo.pSetLayouts           = &setLayout;
     }
     VkDescriptorSet descriptorSet;
-    auto result = vkAllocateDescriptorSets(device_, &allocInfo, &descriptorSet);
+    VkResult result = vkAllocateDescriptorSets(device_, &allocInfo, &descriptorSet);
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
     return descriptorSet;
 }

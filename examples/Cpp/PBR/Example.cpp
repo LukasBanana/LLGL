@@ -162,6 +162,7 @@ private:
         // Create graphics pipeline for skybox
         LLGL::GraphicsPipelineDescriptor pipelineDescSky;
         {
+            pipelineDescSky.debugName                       = "Sky.PSO";
             pipelineDescSky.vertexShader                    = shaderPipelineSky.vs;
             pipelineDescSky.fragmentShader                  = shaderPipelineSky.ps;
             pipelineDescSky.pipelineLayout                  = layoutSky;
@@ -190,6 +191,7 @@ private:
         // Create graphics pipeline for meshes
         LLGL::GraphicsPipelineDescriptor pipelineDescMeshes;
         {
+            pipelineDescMeshes.debugName                        = "Mesh.PSO";
             pipelineDescMeshes.vertexShader                     = shaderPipelineMeshes.vs;
             pipelineDescMeshes.fragmentShader                   = shaderPipelineMeshes.ps;
             pipelineDescMeshes.pipelineLayout                   = layoutMeshes;

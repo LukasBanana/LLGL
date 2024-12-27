@@ -70,7 +70,7 @@ VKQueryHeap::VKQueryHeap(VkDevice device, const QueryHeapDescriptor& desc, bool 
         createInfo.queryCount           = numQueries_;
         createInfo.pipelineStatistics   = GetPipelineStatisticsFlags(desc);
     }
-    auto result = vkCreateQueryPool(device, &createInfo, nullptr, queryPool_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateQueryPool(device, &createInfo, nullptr, queryPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan query pool");
 }
 

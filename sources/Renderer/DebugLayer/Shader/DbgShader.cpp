@@ -19,15 +19,7 @@ DbgShader::DbgShader(Shader& instance, const ShaderDescriptor& desc) :
     desc      { desc                 },
     label     { LLGL_DBG_LABEL(desc) }
 {
-    switch (GetType())
-    {
-        case ShaderType::Vertex:
-        case ShaderType::Fragment:
-            CacheShaderReflection();
-            break;
-        default:
-            break;
-    }
+    CacheShaderReflection();
 }
 
 void DbgShader::SetDebugName(const char* name)
@@ -73,24 +65,40 @@ void DbgShader::CacheShaderReflection()
     ShaderReflection reflect;
     if (instance.Reflect(reflect))
     {
-        for (const VertexAttribute& attr : reflect.vertex.inputAttribs)
+        switch (GetType())
         {
-            if (vertexID_.empty())
-            {
-                if (attr.systemValue == SystemValue::VertexID)
-                    vertexID_ = attr.name.c_str();
-            }
-            if (instanceID_.empty())
-            {
-                if (attr.systemValue == SystemValue::InstanceID)
-                    instanceID_ = attr.name.c_str();
-            }
-            if (!vertexID_.empty() && !instanceID_.empty())
+            case ShaderType::Vertex:
+            case ShaderType::Fragment:
+                CacheShaderReflectionResults(reflect);
+                break;
+
+            default:
                 break;
         }
-
-        hasAnyOutputAttribs_ = !(reflect.vertex.outputAttribs.empty() && reflect.fragment.outputAttribs.empty());
     }
+    else
+        hasReflectionFailed_ = true;
+}
+
+void DbgShader::CacheShaderReflectionResults(const ShaderReflection& reflect)
+{
+    for (const VertexAttribute& attr : reflect.vertex.inputAttribs)
+    {
+        if (vertexID_.empty())
+        {
+            if (attr.systemValue == SystemValue::VertexID)
+                vertexID_ = attr.name.c_str();
+        }
+        if (instanceID_.empty())
+        {
+            if (attr.systemValue == SystemValue::InstanceID)
+                instanceID_ = attr.name.c_str();
+        }
+        if (!vertexID_.empty() && !instanceID_.empty())
+            break;
+    }
+
+    hasAnyOutputAttribs_ = !(reflect.vertex.outputAttribs.empty() && reflect.fragment.outputAttribs.empty());
 }
 
 

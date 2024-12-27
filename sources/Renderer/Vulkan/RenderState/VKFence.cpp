@@ -22,7 +22,7 @@ VKFence::VKFence(VkDevice device) :
         createInfo.pNext = nullptr;
         createInfo.flags = 0;
     }
-    auto result = vkCreateFence(device, &createInfo, nullptr, fence_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateFence(device, &createInfo, nullptr, fence_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan fence");
 }
 

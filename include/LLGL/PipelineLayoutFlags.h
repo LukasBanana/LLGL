@@ -461,6 +461,9 @@ struct CombinedTextureSamplerDescriptor
 /**
 \brief Pipeline layout descriptor structure.
 \remarks Contains all layout bindings that will be used by graphics and compute pipelines.
+\note For Vulkan, LLGL \e should be built with \c LLGL_VK_ENABLE_SPIRV_REFLECT when PSO layouts
+contain a mix of heap- and dynamic bindings, i.e. \c heapBindings and \c bindings respectively.
+Otherwise, LLGL cannot perform code reflection to create shader permutations to match binding points with various shader combinations.
 \see RenderSystem::CreatePipelineLayout
 */
 struct PipelineLayoutDescriptor

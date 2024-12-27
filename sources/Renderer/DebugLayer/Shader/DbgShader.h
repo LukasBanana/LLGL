@@ -48,6 +48,12 @@ class DbgShader final : public Shader
             return hasAnyOutputAttribs_;
         }
 
+        // Returns true if the shader reflection has failed.
+        inline bool HasReflectionFailed() const
+        {
+            return hasReflectionFailed_;
+        }
+
     public:
 
         Shader&                 instance;
@@ -57,12 +63,14 @@ class DbgShader final : public Shader
     private:
 
         void CacheShaderReflection();
+        void CacheShaderReflectionResults(const ShaderReflection& reflect);
 
     private:
 
         std::string             vertexID_;
         std::string             instanceID_;
         bool                    hasAnyOutputAttribs_    = false;
+        bool                    hasReflectionFailed_    = false;
 
 };
 

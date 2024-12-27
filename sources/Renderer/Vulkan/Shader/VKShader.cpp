@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <set>
 
-#ifdef LLGL_ENABLE_SPIRV_REFLECT
+#if LLGL_VK_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SpirvReflect.h"
 #endif
 
@@ -171,7 +171,7 @@ static long ShaderTypeToStageFlags(const ShaderType type)
     }
 }
 
-#ifdef LLGL_ENABLE_SPIRV_REFLECT
+#if LLGL_VK_ENABLE_SPIRV_REFLECT
 
 static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t count)
 {
@@ -494,7 +494,7 @@ bool VKShader::ReflectPushConstants(
     return true;
 }
 
-#else // LLGL_ENABLE_SPIRV_REFLECT
+#else // LLGL_VK_ENABLE_SPIRV_REFLECT
 
 bool VKShader::Reflect(ShaderReflection& /*reflection*/) const
 {
@@ -513,7 +513,7 @@ bool VKShader::ReflectPushConstants(
     return false; // dummy
 }
 
-#endif // /LLGL_ENABLE_SPIRV_REFLECT
+#endif // /LLGL_VK_ENABLE_SPIRV_REFLECT
 
 
 /*

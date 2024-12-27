@@ -136,18 +136,16 @@ private:
     void CreatePipelineLayouts()
     {
         // Create pipeline layouts for shadow-map and scene rendering
-        if (IsOpenGL())
-        {
-            pipelineLayout = renderer->CreatePipelineLayout(
-                LLGL::Parse("heap{cbuffer(Settings@1):frag:vert, texture(colorMap@2):frag, sampler(2):frag}")
-            );
-        }
-        else
-        {
-            pipelineLayout = renderer->CreatePipelineLayout(
-                LLGL::Parse("heap{cbuffer(Settings@1):frag:vert, texture(colorMap@2):frag, sampler(linearSampler@3):frag}")
-            );
-        }
+        pipelineLayout = renderer->CreatePipelineLayout(
+            LLGL::Parse(
+                "heap{"
+                "  cbuffer(Settings@1):frag:vert,"
+                "  texture(colorMap@2):frag,"
+                "  sampler(linearSampler@3):frag,"
+                "},"
+                "sampler<colorMap, linearSampler>(colorMap@2)"
+            )
+        );
     }
 
     void CreatePipelines(const LLGL::VertexFormat& vertexFormat)

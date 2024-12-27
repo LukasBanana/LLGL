@@ -48,6 +48,8 @@ class DbgRenderSystem final : public RenderSystem
 
         void FlushProfile();
 
+        bool IsVulkan() const;
+
     private:
 
         #include <LLGL/Backend/RenderSystem.Internal.inl>

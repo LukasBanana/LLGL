@@ -171,7 +171,7 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayoutPermutation(
     const ArrayView<Shader*>&           shaders,
     std::vector<VkPushConstantRange>&   outUniformRanges) const
 {
-    #ifdef LLGL_ENABLE_SPIRV_REFLECT
+    #if LLGL_VK_ENABLE_SPIRV_REFLECT
     if (!uniformDescs_.empty())
     {
         std::vector<VkPushConstantRange> pushConstantRangesPerStage;
@@ -179,7 +179,7 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayoutPermutation(
         return CreateVkPipelineLayout(device, pushConstantRangesPerStage);
     }
     #else
-    LLGL_ASSERT(uniformDescs_.empty(), "uniform descriptors in Vulkan PSO layout but LLGL was not compiled with LLGL_ENABLE_SPIRV_REFLECT");
+    LLGL_ASSERT(uniformDescs_.empty(), "uniform descriptors in Vulkan PSO layout but LLGL was not compiled with LLGL_VK_ENABLE_SPIRV_REFLECT");
     #endif
     return {};
 }
@@ -192,7 +192,7 @@ bool VKPipelineLayout::GetBindingSlotsAssignment(
 {
     if (index < layoutTypeOrder_.Count())
     {
-        const auto& bindingTable = setBindingTables_[layoutTypeOrder_[index]];
+        const DescriptorSetBindingTable& bindingTable = setBindingTables_[layoutTypeOrder_[index]];
         dstSet  = bindingTable.dstSet;
         iter    = ConstFieldRangeIterator<BindingSlot>{ bindingTable.srcSlots.data(), bindingTable.srcSlots.size() };
         return true;
@@ -221,7 +221,7 @@ void VKPipelineLayout::CreateDefault(VkDevice device)
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     }
     VKPipelineLayout::defaultPipelineLayout_ = VKPtr<VkPipelineLayout>{ device, vkDestroyPipelineLayout };
-    auto result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, VKPipelineLayout::defaultPipelineLayout_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, VKPipelineLayout::defaultPipelineLayout_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
 }
 
@@ -296,7 +296,7 @@ void VKPipelineLayout::CreateVkDescriptorSetLayout(
         createInfo.bindingCount = static_cast<std::uint32_t>(setLayoutBindings.size());
         createInfo.pBindings    = setLayoutBindings.data();
     }
-    auto result = vkCreateDescriptorSetLayout(device, &createInfo, nullptr, setLayouts_[setLayoutType].ReleaseAndGetAddressOf());
+    VkResult result = vkCreateDescriptorSetLayout(device, &createInfo, nullptr, setLayouts_[setLayoutType].ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan descriptor set layout");
 }
 
@@ -356,11 +356,11 @@ void VKPipelineLayout::CreateImmutableSamplers(VkDevice device, const ArrayView<
 {
     /* Create all immutable Vulkan samplers */
     immutableSamplers_.reserve(staticSamplers.size());
-    for (const auto& staticSamplerDesc : staticSamplers)
+    for (const StaticSamplerDescriptor& staticSamplerDesc : staticSamplers)
         immutableSamplers_.push_back(VKSampler::CreateVkSampler(device, staticSamplerDesc.sampler));
 
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
-    const auto numBindings = staticSamplers.size();
+    const std::size_t numBindings = staticSamplers.size();
     std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
 
     for_range(i, numBindings)
@@ -399,7 +399,7 @@ VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayout(VkDevice device
         }
     }
     VKPtr<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
-    auto result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout.ReleaseAndGetAddressOf());
+    VkResult result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
     return pipelineLayout;
 }
@@ -409,7 +409,7 @@ void VKPipelineLayout::CreateDescriptorPool(VkDevice device)
     /* Accumulate descriptor pool sizes for all dynamic resources and immutable samplers */
     VKPoolSizeAccumulator poolSizeAccum;
 
-    for (const auto binding : bindings_)
+    for (const VKLayoutBinding& binding : bindings_)
         poolSizeAccum.Accumulate(binding.descriptorType);
 
     if (!immutableSamplers_.empty())
@@ -427,7 +427,7 @@ void VKPipelineLayout::CreateDescriptorPool(VkDevice device)
         poolCreateInfo.poolSizeCount    = poolSizeAccum.Size();
         poolCreateInfo.pPoolSizes       = poolSizeAccum.Data();
     }
-    auto result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool for static samplers");
 }
 
@@ -438,7 +438,7 @@ void VKPipelineLayout::CreateDescriptorCache(VkDevice device, VkDescriptorSetLay
     so accumulate pool sizes only for dynamiuc resources here
     */
     VKPoolSizeAccumulator poolSizeAccum;
-    for (const auto binding : bindings_)
+    for (const VKLayoutBinding& binding : bindings_)
         poolSizeAccum.Accumulate(binding.descriptorType);
     poolSizeAccum.Finalize();
 
@@ -457,7 +457,7 @@ void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSe
         allocInfo.descriptorSetCount    = 1;
         allocInfo.pSetLayouts           = &setLayout;
     }
-    auto result = vkAllocateDescriptorSets(device, &allocInfo, &staticDescriptorSet_);
+    VkResult result = vkAllocateDescriptorSets(device, &allocInfo, &staticDescriptorSet_);
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 

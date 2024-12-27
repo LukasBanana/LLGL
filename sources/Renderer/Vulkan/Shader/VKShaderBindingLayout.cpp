@@ -12,7 +12,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include <algorithm>
 
-#ifdef LLGL_ENABLE_SPIRV_REFLECT
+#if LLGL_VK_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SpirvReflect.h"
 #   include "../../SPIRV/SpirvModule.h"
 #endif
@@ -24,7 +24,7 @@ namespace LLGL
 
 bool VKShaderBindingLayout::BuildFromSpirvModule(const void* data, std::size_t size)
 {
-    #ifdef LLGL_ENABLE_SPIRV_REFLECT
+    #if LLGL_VK_ENABLE_SPIRV_REFLECT
 
     /* Reflect all SPIR-V binding points */
     std::vector<SpirvReflect::SpvBindingPoint> bindingPoints;

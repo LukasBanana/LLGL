@@ -48,6 +48,11 @@ void DbgRenderSystem::FlushProfile()
     profile_ = {};
 }
 
+bool DbgRenderSystem::IsVulkan() const
+{
+    return (GetRendererID() == RendererID::Vulkan);
+}
+
 /* ----- Swap-chain ----- */
 
 SwapChain* DbgRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
@@ -1943,6 +1948,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     SmallVector<DbgShader*, 5> shadersDbg;
 
+    bool hasShadersWithFailedReflection = false;
+
     for (ShaderTypePair pair : { ShaderTypePair{ pipelineStateDesc.vertexShader,         ShaderType::Vertex         },
                                  ShaderTypePair{ pipelineStateDesc.tessControlShader,    ShaderType::TessControl    },
                                  ShaderTypePair{ pipelineStateDesc.tessEvaluationShader, ShaderType::TessEvaluation },
@@ -1952,6 +1959,9 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
         if (Shader* shader = pair.shader)
         {
             auto* shaderDbg = LLGL_CAST(DbgShader*, shader);
+
+            if (shaderDbg->HasReflectionFailed())
+                hasShadersWithFailedReflection = true;
 
             const bool isSeparableShaders = ((shaderDbg->desc.flags & ShaderCompileFlags::SeparateShader) != 0);
             if (isSeparableShaders && !hasSeparableShaders)
@@ -1992,7 +2002,30 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
     ValidateBlendDescriptor(pipelineStateDesc.blend, hasFragmentShader, hasDualSourceBlend);
 
     if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))
+    {
         ValidatePipelineStateUniforms(*pipelineLayoutDbg, shadersDbg);
+
+        /* If shader reflection failed, report error if PSO layout requires it (Vulkan specific) */
+        if (hasShadersWithFailedReflection && IsVulkan())
+        {
+            if (!pipelineLayoutDbg->desc.bindings.empty() &&
+                !pipelineLayoutDbg->desc.heapBindings.empty())
+            {
+                const std::string psoLabel =
+                (
+                    pipelineStateDesc.debugName != nullptr && *pipelineStateDesc.debugName != '\0'
+                        ? " '" + std::string(pipelineStateDesc.debugName) + '\''
+                        : ""
+                );
+                LLGL_DBG_ERROR(
+                    ErrorType::UndefinedBehavior,
+                    "failed to reflect shader code in PSO%s with mix of heap- and individual bindings; "
+                    "perhaps LLGL was built without LLGL_VK_ENABLE_SPIRV_REFLECT",
+                    psoLabel.c_str()
+                );
+            }
+        }
+    }
 }
 
 void DbgRenderSystem::ValidateComputePipelineDesc(const ComputePipelineDescriptor& pipelineStateDesc)
