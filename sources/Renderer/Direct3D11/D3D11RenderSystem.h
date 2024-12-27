@@ -39,6 +39,11 @@
 #include "../ProxyPipelineCache.h"
 
 #include <dxgi.h>
+
+#if LLGL_DEBUG
+#include <dxgidebug.h>
+#endif
+
 #include "Direct3D11.h"
 
 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
@@ -58,6 +63,8 @@ struct RenderSystemNativeHandle;
 
 } // /namespace Direct3D11
 
+
+class Module;
 
 class D3D11RenderSystem final : public RenderSystem
 {
@@ -133,6 +140,22 @@ class D3D11RenderSystem final : public RenderSystem
         void NotifyBindingTablesOnRelease(D3D11BindingLocator* locator);
 
     private:
+
+        #if LLGL_DEBUG
+
+        struct LiveObjectReporter
+        {
+            LiveObjectReporter();
+            ~LiveObjectReporter();
+
+            std::unique_ptr<Module> debugModule;
+            ComPtr<IDXGIDebug>      debugDevice;
+        };
+
+        // Must be declared first, to ensure its destructor is called after all D3D objects are cleared.
+        std::unique_ptr<LiveObjectReporter>     liveObjectReporter_;
+
+        #endif
 
         /* ----- Common objects ----- */
 

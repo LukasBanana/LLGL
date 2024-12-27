@@ -18,6 +18,7 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/Assertion.h"
+#include "../../Platform/Module.h"
 #include <limits.h>
 
 #include "Command/D3D11PrimaryCommandBuffer.h"
@@ -64,6 +65,11 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
         HRESULT hr = CreateDevice(preferredAdatper.Get(), debugDevice);
         DXThrowIfFailed(hr, "failed to create D3D11 device");
     }
+
+    #if LLGL_DEBUG
+    if (debugDevice)
+        liveObjectReporter_ = std::unique_ptr<LiveObjectReporter>(new LiveObjectReporter());
+    #endif
 
     #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     /* Query tearing feature support */
@@ -1147,6 +1153,34 @@ void D3D11RenderSystem::NotifyBindingTablesOnRelease(D3D11BindingLocator* locato
             deferredStateMngr->GetBindingTable().NotifyResourceRelease(locator);
     }
 }
+
+
+#if LLGL_DEBUG
+
+/*
+ * LiveObjectReporter structure
+ */
+
+typedef HRESULT (WINAPI *DXGIGetDebugInterfacePfn)(REFIID riid, void** ppDebug);
+
+D3D11RenderSystem::LiveObjectReporter::LiveObjectReporter() :
+    debugModule { Module::Load("Dxgidebug.dll") }
+{
+    if (debugModule)
+    {
+        DXGIGetDebugInterfacePfn dxgiGetDebugInterface = reinterpret_cast<DXGIGetDebugInterfacePfn>(debugModule->LoadProcedure("DXGIGetDebugInterface"));
+        if (dxgiGetDebugInterface)
+            dxgiGetDebugInterface(IID_PPV_ARGS(&debugDevice));
+    }
+}
+
+D3D11RenderSystem::LiveObjectReporter::~LiveObjectReporter()
+{
+    if (debugDevice)
+        debugDevice->ReportLiveObjects(DXGI_DEBUG_D3D11, DXGI_DEBUG_RLO_ALL);
+}
+
+#endif // /LLGL_DEBUG
 
 
 } // /namespace LLGL
