@@ -135,11 +135,21 @@ void D3D11PrimaryCommandBuffer::ClearWithIntermediateUAV(ID3D11Buffer* buffer, U
     buffer->GetDesc(&bufferDesc);
     D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
     {
-        uavDesc.Format              = (bufferDesc.StructureByteStride > 0 ? DXGI_FORMAT_UNKNOWN : DXGI_FORMAT_R32_UINT); // Must be DXGI_FORMAT_UNKNOWN for structured buffers
-        uavDesc.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
-        uavDesc.Buffer.FirstElement = offset / sizeof(UINT);
-        uavDesc.Buffer.NumElements  = size / sizeof(UINT);
-        uavDesc.Buffer.Flags        = 0;
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+        if (bufferDesc.StructureByteStride > 0)
+        {
+            uavDesc.Format              = DXGI_FORMAT_UNKNOWN; // Must be DXGI_FORMAT_UNKNOWN for structured buffers
+            uavDesc.Buffer.FirstElement = offset / bufferDesc.StructureByteStride;
+            uavDesc.Buffer.NumElements  = size / bufferDesc.StructureByteStride;
+            uavDesc.Buffer.Flags        = 0;
+        }
+        else
+        {
+            uavDesc.Format              = DXGI_FORMAT_R32_UINT;
+            uavDesc.Buffer.FirstElement = offset / sizeof(UINT);
+            uavDesc.Buffer.NumElements  = size / sizeof(UINT);
+            uavDesc.Buffer.Flags        = 0;
+        }
     };
     ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
     HRESULT hr = device_->CreateUnorderedAccessView(buffer, &uavDesc, &intermediateUAV);
