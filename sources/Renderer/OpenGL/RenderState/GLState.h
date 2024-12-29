@@ -75,7 +75,7 @@ enum class GLStateExt
 enum class GLBufferTarget
 {
     ArrayBuffer = 0,            // GL_ARRAY_BUFFER
-    AtomicCounterBuffer,        // GL_ATOMIC_COUNTER_BUFFER
+    AtomicCounterBuffer,        // GL_ATOMIC_COUNTER_BUFFER (unused)
     CopyReadBuffer,             // GL_COPY_READ_BUFFER
     CopyWriteBuffer,            // GL_COPY_WRITE_BUFFER
     DispatchIndirectBuffer,     // GL_DISPATCH_INDIRECT_BUFFER
@@ -83,7 +83,7 @@ enum class GLBufferTarget
     ElementArrayBuffer,         // GL_ELEMENT_ARRAY_BUFFER
     PixelPackBuffer,            // GL_PIXEL_PACK_BUFFER
     PixelUnpackBuffer,          // GL_PIXEL_UNPACK_BUFFER
-    QueryBuffer,                // GL_QUERY_BUFFER
+    QueryBuffer,                // GL_QUERY_BUFFER (unused)
     ShaderStorageBuffer,        // GL_SHADER_STORAGE_BUFFER
     TextureBuffer,              // GL_TEXTURE_BUFFER
     TransformFeedbackBuffer,    // GL_TRANSFORM_FEEDBACK_BUFFER

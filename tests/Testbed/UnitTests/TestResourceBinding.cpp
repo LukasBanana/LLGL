@@ -326,12 +326,14 @@ DEF_TEST( ResourceBinding )
         if (this->opt.sanityCheck)
         {
             Log::Printf(
+                Log::ColorFlags::StdAnnotation,
                 "Intermediate expected results (Frame %u, %s):\n",
                 frame, dispatchName
             );
             for_range(i, 4)
             {
                 Log::Printf(
+                    Log::ColorFlags::StdAnnotation,
                     "  buffer%d [%d, %d, %d, %d]\n",
                     i, expectedResults.buffers[i][0], expectedResults.buffers[i][1], expectedResults.buffers[i][2], expectedResults.buffers[i][3]
                 );
@@ -339,6 +341,7 @@ DEF_TEST( ResourceBinding )
             for_range(i, 4)
             {
                 Log::Printf(
+                    Log::ColorFlags::StdAnnotation,
                     "  texture%d [%d, %d, %d, %d]\n",
                     i, expectedResults.textures[i][0], expectedResults.textures[i][1], expectedResults.textures[i][2], expectedResults.textures[i][3]
                 );

@@ -142,7 +142,8 @@ DEF_TEST( BufferToTextureCopy )
                 else if (opt.sanityCheck)
                 {
                     const std::string dataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
-                    Log::Errorf(
+                    Log::Printf(
+                        Log::ColorFlags::StdAnnotation,
                         "Sanity check for %s [MIP %u, Layer %u]:\n"
                         " -> Data: [%s]\n",
                         name, mip, layer, dataStr.c_str()

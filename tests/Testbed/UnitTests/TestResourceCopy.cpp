@@ -190,7 +190,7 @@ DEF_TEST( ResourceCopy )
         ModifyTextureContent(srcColor0);
 
     if (opt.sanityCheck)
-        Log::Printf("SrcColor0 result: [%02X %02X %02X %02X]\n", srcColor0.r, srcColor0.g, srcColor0.b, srcColor0.a);
+        Log::Printf(Log::ColorFlags::StdAnnotation, "SrcColor0 result: [%02X %02X %02X %02X]\n", srcColor0.r, srcColor0.g, srcColor0.b, srcColor0.a);
 
     if (srcColor0.r != expectedSrcColor0[frame].r ||
         srcColor0.g != expectedSrcColor0[frame].g ||

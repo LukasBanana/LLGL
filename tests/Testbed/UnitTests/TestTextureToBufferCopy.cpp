@@ -186,6 +186,7 @@ DEF_TEST( TextureToBufferCopy )
                     const std::string srcDataStr = TestbedContext::FormatByteArray(srcTexImage.data(), srcTexImage.size(), 4, formatAsFloats);
                     const std::string dstDataStr = TestbedContext::FormatByteArray(dstTexImage.data(), dstTexImage.size(), 4, formatAsFloats);
                     Log::Errorf(
+                        Log::ColorFlags::StdError,
                         "Mismatch between data of texture %s [MIP %u, Layer %u] and copy result:\n"
                         " -> Expected: [%s]\n"
                         " -> Actual:   [%s]\n",
@@ -197,6 +198,7 @@ DEF_TEST( TextureToBufferCopy )
                 {
                     const std::string dataStr = TestbedContext::FormatByteArray(srcTexImage.data(), srcTexImage.size(), 4, formatAsFloats);
                     Log::Printf(
+                        Log::ColorFlags::StdAnnotation,
                         "Sanity check for texture %s [MIP %u, Layer %u]:\n"
                         " -> Data: [%s]\n",
                         name, mip, layer, dataStr.c_str()

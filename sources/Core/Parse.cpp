@@ -1210,10 +1210,12 @@ static bool ParseCompareOp(Parser& parser, CompareOp& outValue)
         parser,
         {
             { "never",  CompareOp::NeverPass    },
-            { "ls",     CompareOp::Less         },
+            { "lt",     CompareOp::Less         },
+            { "ls",     CompareOp::Less         }, // deprecated
             { "eq",     CompareOp::Equal        },
             { "le",     CompareOp::LessEqual    },
-            { "gr",     CompareOp::Greater      },
+            { "gt",     CompareOp::Greater      },
+            { "gr",     CompareOp::Greater      }, // deprecated
             { "ne",     CompareOp::NotEqual     },
             { "ge",     CompareOp::GreaterEqual },
             { "always", CompareOp::AlwaysPass   },

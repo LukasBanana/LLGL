@@ -133,7 +133,7 @@ class LLGL_EXPORT Color<T, 3u>
         //! Returns the negation of this color.
         Color<T, 3> operator - () const
         {
-            return Color<T, 3>(-r, -g, -b);
+            return Color<T, 3>{ -r, -g, -b };
         }
 
         /**
@@ -167,7 +167,7 @@ class LLGL_EXPORT Color<T, 3u>
         //! Returns this RGB color as RGBA color.
         Color<T, 4> ToRGBA() const
         {
-            return Color<T, 4>(r, g, b);
+            return Color<T, 4>{ r, g, b };
         }
 
         /**
@@ -178,11 +178,12 @@ class LLGL_EXPORT Color<T, 3u>
         template <typename Dst>
         Color<Dst, 3> Cast() const
         {
-            return Color<Dst, 3>(
+            return Color<Dst, 3>
+            {
                 CastColorValue<Dst>(r),
                 CastColorValue<Dst>(g),
                 CastColorValue<Dst>(b)
-            );
+            };
         }
 
         //! Returns a pointer to the first element of this color.
@@ -196,6 +197,8 @@ class LLGL_EXPORT Color<T, 3u>
         {
             return &r;
         }
+
+    public:
 
         T r, g, b;
 

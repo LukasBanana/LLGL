@@ -229,13 +229,13 @@ static const GLenum g_textureLayersEnum[] =
  * Internal functions
  */
 
-static constexpr GLuint g_invalidGLId = UINT_MAX;
+static constexpr GLuint k_invalidGLID = UINT_MAX;
 
 static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObjectId)
 {
     /* Invalidate bound ID by setting it to maximum value */
     if (boundId == releasedObjectId)
-        boundId = g_invalidGLId;
+        boundId = k_invalidGLID;
 }
 
 
@@ -1114,7 +1114,7 @@ void GLStateManager::PopBoundBuffer()
 {
     const auto& state = bufferStack_.top();
     {
-        if (state.buffer != g_invalidGLId)
+        if (state.buffer != k_invalidGLID)
             BindBuffer(state.target, state.buffer);
     }
     bufferStack_.pop();
@@ -1207,7 +1207,7 @@ void GLStateManager::PopBoundFramebuffer()
 {
     const auto& state = framebufferStack_.top();
     {
-        if (state.framebuffer != g_invalidGLId)
+        if (state.framebuffer != k_invalidGLID)
             BindFramebuffer(state.target, state.framebuffer);
     }
     framebufferStack_.pop();
@@ -1252,7 +1252,7 @@ void GLStateManager::PopBoundRenderbuffer()
 {
     const auto& state = renderbufferStack_.top();
     {
-        if (state.renderbuffer != g_invalidGLId)
+        if (state.renderbuffer != k_invalidGLID)
             BindRenderbuffer(state.renderbuffer);
     }
     renderbufferStack_.pop();
@@ -1490,7 +1490,7 @@ void GLStateManager::PopBoundTexture()
 {
     const auto& state = textureState_.top();
     {
-        if (state.texture != g_invalidGLId)
+        if (state.texture != k_invalidGLID)
         {
             ActiveTexture(state.layer);
             BindTexture(state.target, state.texture);
@@ -1646,7 +1646,7 @@ void GLStateManager::PopBoundShaderProgram()
 {
     const auto& state = shaderProgramStack_.top();
     {
-        if (state.program != g_invalidGLId)
+        if (state.program != k_invalidGLID)
             BindShaderProgram(state.program);
     }
     shaderProgramStack_.pop();

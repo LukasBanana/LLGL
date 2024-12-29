@@ -169,7 +169,7 @@ class LLGL_EXPORT Color<T, 4u>
         //! Returns the negation of this color.
         Color<T, 4> operator - () const
         {
-            return Color<T, 4>(-r, -g, -b, -a);
+            return Color<T, 4>{ -r, -g, -b, -a };
         }
 
         /**
@@ -203,7 +203,7 @@ class LLGL_EXPORT Color<T, 4u>
         //! Returns this RGBA color as RGB color.
         Color<T, 3> ToRGB() const
         {
-            return Color<T, 3>(r, g, b);
+            return Color<T, 3>{ r, g, b };
         }
 
         /**
@@ -233,6 +233,8 @@ class LLGL_EXPORT Color<T, 4u>
         {
             return &r;
         }
+
+    public:
 
         T r, g, b, a;
 

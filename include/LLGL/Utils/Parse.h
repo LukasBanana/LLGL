@@ -171,10 +171,10 @@ class LLGL_EXPORT ParseContext
             - \c anisotropy maps to SamplerDescriptor::maxAnisotropy and the value must be an integral number.
             - \c compare maps to SamplerDescriptor::compareOp (also enables SamplerDescriptor::compareEnabled) and the accepted values are:
                 - \c never (CompareOp::NeverPass).
-                - \c ls (CompareOp::Less).
+                - \c lt (CompareOp::Less). \c ls is also accepted but \e deprecated.
                 - \c eq (CompareOp::Equal).
                 - \c le (CompareOp::LessEqual).
-                - \c gr (CompareOp::Greater).
+                - \c gt (CompareOp::Greater). \c gr is also accepted but \e deprecated.
                 - \c ne (CompareOp::NotEqual).
                 - \c ge (CompareOp::GreaterEqual).
                 - \c always (CompareOp::AlwaysPass).
@@ -346,7 +346,7 @@ LLGL_EXPORT ParseContext Parse(const char* format, ...);
 */
 inline LLGL_EXPORT ParseContext Parse(const StringView& s)
 {
-    return ParseContext{ UTF8String{ s } };
+    return ParseContext{ s };
 }
 
 /** @} */
