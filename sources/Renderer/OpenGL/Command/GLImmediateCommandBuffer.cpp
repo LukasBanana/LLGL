@@ -334,9 +334,9 @@ void GLImmediateCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format forma
 void GLImmediateCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
-    resourceHeapGL.Bind(*stateMngr_, descriptorSet);
+    resourceHeapGL.Bind(*stateMngr_, descriptorSet, GetBoundPipelineState()->GetBufferInterfaceMap());
     #if LLGL_GLEXT_MEMORY_BARRIERS
-    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); //TODO: find optimal bitmask from resource heap
     #endif
 }
 
@@ -360,7 +360,7 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
     else
     {
         /* Bind resource at explicit binding slot */
-        BindResource(binding.type, binding.slot, descriptor, resource);
+        BindResource(binding.type, binding.slot, binding.ssboIndex, resource);
     }
 }
 
@@ -384,8 +384,8 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, st
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
 
             /* Lookup whether this is an SSBO, sampler buffer, or image buffer in buffer interface map */
-            const GLShaderBufferInterfaceMap& bufferInterfaceMap = GetBoundPipelineState()->GetBufferInterfaceMap();
-            GLBufferInterface bufferInterface = bufferInterfaceMap.GetDynamicInterfaces()[descriptor];
+            const GLShaderBufferInterfaceMap* bufferInterfaceMap = GetBoundPipelineState()->GetBufferInterfaceMap();
+            GLBufferInterface bufferInterface = bufferInterfaceMap->GetDynamicInterfaces()[descriptor];
             switch (bufferInterface)
             {
                 case GLBufferInterface_SSBO:

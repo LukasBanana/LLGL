@@ -20,7 +20,7 @@ namespace LLGL
 
 class GLShaderPipeline;
 
-enum GLBufferInterface
+enum GLBufferInterface : char
 {
     GLBufferInterface_SSBO = 0, // buffer
     GLBufferInterface_Sampler,  // samplerBuffer, isamplerBuffer, usamplerBuffer

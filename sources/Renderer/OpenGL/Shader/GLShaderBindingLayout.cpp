@@ -75,10 +75,10 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, const GLShade
         /* Set interface bindings for SSBOs, sampler buffers, and image buffers */
         ArrayView<GLBufferInterface> bufferInterfaces = bufferInterfaceMap->GetInterfaces();
         LLGL_ASSERT(bufferInterfaces.size() == numShaderStorageBindings_);
-        for_range(i, numShaderStorageBindings_)
+        for (GLBufferInterface bufferInterface : bufferInterfaces)
         {
             const NamedResourceBinding& resource = bindings_[resourceIndex++];
-            switch (bufferInterfaces[i])
+            switch (bufferInterface)
             {
                 case GLBufferInterface_SSBO:
                 {

@@ -84,9 +84,9 @@ class GLPipelineState : public PipelineState
         }
 
         // Returns the interface map for SSBOs, sampler buffers, and image buffers.
-        inline const GLShaderBufferInterfaceMap& GetBufferInterfaceMap() const
+        inline const GLShaderBufferInterfaceMap* GetBufferInterfaceMap() const
         {
-            return bufferInterfaceMap_;
+            return &bufferInterfaceMap_;
         }
 
         // Returns the GL bitfield of the memory barriers the pipeline layout of this PSO was created with. See GLPipelineLayout::GetBarriersBitfield().

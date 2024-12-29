@@ -153,6 +153,7 @@ void GLPipelineLayout::BuildHeapResourceBindings(const PipelineLayoutDescriptor&
 {
     auto expandedHeapBindings = GetExpandedHeapDescriptors(pipelineLayoutDesc.heapBindings);
     heapBindings_.reserve(expandedHeapBindings.size());
+
     for (const BindingDescriptor& desc : expandedHeapBindings)
     {
         GLHeapResourceBinding newBinding;
@@ -164,12 +165,13 @@ void GLPipelineLayout::BuildHeapResourceBindings(const PipelineLayoutDescriptor&
             newBinding.arraySize    = desc.arraySize;
 
             /* Try to build slot for combined texture-sampler first */
-            if (!BuildCombinedSamplerSlots(pipelineLayoutDesc, desc.type, desc.name, newBinding.slot, newBinding.combiners))
+            std::uint32_t combiners = 0;
+            if (!BuildCombinedSamplerSlots(pipelineLayoutDesc, desc.type, desc.name, newBinding.slot, combiners))
             {
                 /* Otherwise, use explicit binding slot */
-                newBinding.slot         = static_cast<GLuint>(desc.slot.index);
-                newBinding.combiners    = 0;
+                newBinding.slot = static_cast<GLuint>(desc.slot.index);
             }
+            newBinding.combiners = combiners;
         }
         heapBindings_.push_back(std::move(newBinding));
     }
@@ -178,6 +180,8 @@ void GLPipelineLayout::BuildHeapResourceBindings(const PipelineLayoutDescriptor&
 void GLPipelineLayout::BuildDynamicResourceBindings(const PipelineLayoutDescriptor& pipelineLayoutDesc)
 {
     bindings_.reserve(pipelineLayoutDesc.bindings.size());
+    std::uint32_t ssboCounter = 0;
+
     for (const BindingDescriptor& desc : pipelineLayoutDesc.bindings)
     {
         GLPipelineResourceBinding newBinding;
@@ -185,12 +189,19 @@ void GLPipelineLayout::BuildDynamicResourceBindings(const PipelineLayoutDescript
             newBinding.type = ToGLResourceType(desc);
 
             /* Try to build slot for combined texture-sampler first */
-            if (!BuildCombinedSamplerSlots(pipelineLayoutDesc, desc.type, desc.name, newBinding.slot, newBinding.combiners))
+            std::uint32_t combiners = 0;
+            if (!BuildCombinedSamplerSlots(pipelineLayoutDesc, desc.type, desc.name, newBinding.slot, combiners))
             {
                 /* Otherwise, use explicit binding slot */
-                newBinding.slot         = static_cast<GLuint>(desc.slot.index);
-                newBinding.combiners    = 0;
+                newBinding.slot = static_cast<GLuint>(desc.slot.index);
             }
+            newBinding.combiners = combiners;
+
+            /* Store index to storage buffer  */
+            if (newBinding.IsSSBO())
+                newBinding.ssboIndex = ssboCounter++;
+            else
+                newBinding.ssboIndex = ~0u;
         }
         bindings_.push_back(newBinding);
         resourceNames_.push_back(desc.name.c_str());

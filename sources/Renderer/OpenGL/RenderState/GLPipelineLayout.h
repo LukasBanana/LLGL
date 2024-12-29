@@ -57,7 +57,10 @@ struct GLPipelineResourceBinding
 
     // If non-zero, this binding refers to a combined texture-sampler and 'slot' is interpreted
     // as index into the array of combined texture-samplers; see GLPipelineLayout::GetCombinedSamplerSlots().
-    std::uint32_t   combiners;
+    std::uint32_t   combiners : 16;
+
+    // Zero-based index for all dynamic storage buffers within the PSO layout.
+    std::uint32_t   ssboIndex : 16;
 
     inline bool IsSSBO() const
     {

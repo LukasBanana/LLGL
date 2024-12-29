@@ -369,10 +369,13 @@ void GLDeferredCommandBuffer::SetIndexBuffer(Buffer& buffer, const Format format
 void GLDeferredCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t descriptorSet)
 {
     auto cmd = AllocCommand<GLCmdBindResourceHeap>(GLOpcodeBindResourceHeap);
-    cmd->resourceHeap   = LLGL_CAST(GLResourceHeap*, &resourceHeap);
-    cmd->descriptorSet  = descriptorSet;
+    {
+        cmd->resourceHeap       = LLGL_CAST(GLResourceHeap*, &resourceHeap);
+        cmd->descriptorSet      = descriptorSet;
+        cmd->bufferInterfaceMap = GetBoundPipelineState()->GetBufferInterfaceMap();
+    }
     #if LLGL_GLEXT_MEMORY_BARRIERS
-    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); //TODO: find optimal bitmask from resource heap
     #endif
 }
 
@@ -396,7 +399,7 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
     else
     {
         /* Bind resource at explicit binding slot */
-        BindResource(binding.type, binding.slot, descriptor, resource);
+        BindResource(binding.type, binding.slot, binding.ssboIndex, resource);
     }
 }
 
@@ -420,8 +423,8 @@ void GLDeferredCommandBuffer::BindResource(GLResourceType type, GLuint slot, std
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
 
             /* Lookup whether this is an SSBO, sampler buffer, or image buffer in buffer interface map */
-            const GLShaderBufferInterfaceMap& bufferInterfaceMap = GetBoundPipelineState()->GetBufferInterfaceMap();
-            GLBufferInterface bufferInterface = bufferInterfaceMap.GetDynamicInterfaces()[descriptor];
+            const GLShaderBufferInterfaceMap* bufferInterfaceMap = GetBoundPipelineState()->GetBufferInterfaceMap();
+            GLBufferInterface bufferInterface = bufferInterfaceMap->GetDynamicInterfaces()[descriptor];
             switch (bufferInterface)
             {
                 case GLBufferInterface_SSBO:

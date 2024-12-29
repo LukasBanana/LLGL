@@ -26,6 +26,7 @@ namespace LLGL
 
 enum GLResourceType : std::uint32_t;
 class GLStateManager;
+class GLShaderBufferInterfaceMap;
 struct ResourceHeapDescriptor;
 struct GLHeapResourceBinding;
 
@@ -52,7 +53,7 @@ class GLResourceHeap final : public ResourceHeap
         std::uint32_t WriteResourceViews(std::uint32_t firstDescriptor, const ArrayView<ResourceViewDescriptor>& resourceViews);
 
         // Binds this resource heap with the specified GL state manager.
-        void Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet);
+        void Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr);
 
     private:
 
@@ -80,7 +81,7 @@ class GLResourceHeap final : public ResourceHeap
             std::uint32_t indexOrCount           :  8; // Index of the descriptor the binding maps to.
         };
 
-        // GL resource binding slot with index to the input binding list
+        // GL resource binding slot with index to the input binding list.
         struct GLResourceBinding
         {
             GLuint      slot;       // GL pipeline binding slot
@@ -95,7 +96,7 @@ class GLResourceHeap final : public ResourceHeap
         void FreeAllSegmentsTextureViews();
 
         void AllocSegmentsUBO(GLHeapBindingIterator& bindingIter);
-        void AllocSegmentsSSBO(GLHeapBindingIterator& bindingIter);
+        void AllocSegmentsBuffer(GLHeapBindingIterator& bindingIter);
         void AllocSegmentsTexture(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
         void AllocSegmentsImage(GLHeapBindingIterator& bindingIter);
         void AllocSegmentsSampler(GLHeapBindingIterator& bindingIter, const ArrayView<GLuint>& combinedSamplerSlots);
@@ -126,14 +127,23 @@ class GLResourceHeap final : public ResourceHeap
             std::size_t                 payload2Stride
         );
 
+        void Alloc4PartSegment(
+            GLResourceType              type,
+            const GLResourceBinding*    first,
+            SegmentationSizeType        count,
+            std::size_t                 payload0Stride,
+            std::size_t                 payload1Stride,
+            std::size_t                 payload2Stride,
+            std::size_t                 payload3Stride
+        );
+
         void WriteBindingMappings(const GLResourceBinding* bindings, SegmentationSizeType count);
         void CopyBindingMapping(const GLResourceBinding& dst, const GLResourceBinding& src);
 
         void WriteResourceView(const ResourceViewDescriptor& desc, const BindingSegmentLocation& binding, std::uint32_t descriptorSet);
 
-        void WriteResourceViewBuffer(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index, long anyBindFlags);
         void WriteResourceViewUBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
-        void WriteResourceViewSSBO(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
+        void WriteResourceViewBuffer(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewTexture(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewImage(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
         void WriteResourceViewSampler(const ResourceViewDescriptor& desc, char* heapPtr, std::uint32_t index);
