@@ -356,6 +356,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( MipMaps                     );
     RUN_TEST( PipelineCaching             );
     RUN_TEST( ShaderErrors                );
+    RUN_TEST( SamplerBuffer               );
 
     // Run all rendering tests
     RUN_TEST( DepthBuffer                 );
@@ -377,7 +378,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CombinedTexSamplers         );
 
     // Reset main renderer and run C99 tests
-    // LLGL can't run the same render system in multiple instances (confused the context management in GL backend)
+    // LLGL can't run the same render system in multiple instances (confuses the context managemenr in GL backend)
     renderer.reset();
     RUN_C99_TEST( OffscreenC99 );
 
@@ -758,6 +759,37 @@ TestResult TestbedContext::CreateGraphicsPSO(
     return result;
 }
 
+TestResult TestbedContext::CreateComputePSO(
+    const LLGL::ComputePipelineDescriptor& desc,
+    const char*                             name,
+    LLGL::PipelineState**                   output)
+{
+    TestResult result = TestResult::Passed;
+
+    // Create compute PSO
+    PipelineState* pso = renderer->CreatePipelineState(desc);
+
+    // Check for PSO compilation errors
+    if (const Report* report = pso->GetReport())
+    {
+        if (report->HasErrors())
+        {
+            if (name == nullptr)
+                name = (desc.debugName != nullptr ? desc.debugName : "<unnamed>");
+            Log::Errorf("Error while compiling compute PSO \"%s\":\n%s", name, report->GetText());
+            result = TestResult::FailedErrors;
+        }
+    }
+
+    // Return PSO to output or delete right away if no longer needed
+    if (output != nullptr)
+        *output = pso;
+    else
+        renderer->Release(*pso);
+
+    return result;
+}
+
 bool TestbedContext::HasCombinedSamplers() const
 {
     return (renderer->GetRendererID() == RendererID::OpenGL);
@@ -915,6 +947,7 @@ bool TestbedContext::LoadShaders()
         shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Fragment,        "PSMain",  "ps_5_0", nullptr, VertFmtColored, VertFmtColoredSO);
         shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
+        shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.hlsl",         ShaderType::Compute,         "CSMain",  "cs_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -946,6 +979,7 @@ bool TestbedContext::LoadShaders()
             shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.vert",   ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
             shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag",   ShaderType::Fragment);
             shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp",   ShaderType::Compute);
+            shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp",     ShaderType::Compute);
         }
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);

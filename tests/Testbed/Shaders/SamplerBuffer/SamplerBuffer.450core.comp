@@ -1,0 +1,36 @@
+// Cross compiled with SPIRV-Cross from SamplerBuffer.hlsl
+// DO NOT EDIT
+
+#version 450
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct Entry
+{
+    int a;
+    int b;
+};
+
+layout(binding = 4, std140) uniform type_Config
+{
+    ivec3 multipliers;
+} Config;
+
+layout(binding = 2, std430) readonly buffer type_StructuredBuffer_Entry
+{
+    Entry _m0[];
+} inStructBuffer;
+
+layout(binding = 3, std430) buffer type_RWStructuredBuffer_Entry
+{
+    Entry _m0[];
+} outStructBuffer;
+
+layout(binding = 0) uniform isamplerBuffer inTypedBuffer;
+layout(binding = 1, r32i) uniform writeonly iimageBuffer outTypedBuffer;
+
+void main()
+{
+    imageStore(outTypedBuffer, int(gl_GlobalInvocationID.x), ivec4(texelFetch(inTypedBuffer, int(gl_GlobalInvocationID.x)).x * Config.multipliers.x));
+    outStructBuffer._m0[gl_GlobalInvocationID.x] = Entry(inStructBuffer._m0[gl_GlobalInvocationID.x].a * Config.multipliers.y, inStructBuffer._m0[gl_GlobalInvocationID.x].b * Config.multipliers.z);
+}
+

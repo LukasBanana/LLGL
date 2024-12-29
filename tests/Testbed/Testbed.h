@@ -42,7 +42,7 @@ using namespace LLGL;
             return result;                                              \
     }
 
-#define CREATE_BUFFER(OBJ, DESC, NAME, INITIAL)                         \
+#define CREATE_BUFFER(OBJ, DESC, NAME, INITIAL) \
     CREATE_BUFFER_COND(true, OBJ, DESC, NAME, INITIAL)
 
 #define CREATE_TEXTURE_COND(COND, OBJ, DESC, NAME, INITIAL)             \
@@ -55,7 +55,7 @@ using namespace LLGL;
             return result;                                              \
     }
 
-#define CREATE_TEXTURE(OBJ, DESC, NAME, INITIAL)                        \
+#define CREATE_TEXTURE(OBJ, DESC, NAME, INITIAL) \
     CREATE_TEXTURE_COND(true, OBJ, DESC, NAME, INITIAL)
 
 #define CREATE_RENDER_TARGET(OBJ, DESC, NAME)                       \
@@ -74,10 +74,22 @@ using namespace LLGL;
             return result;                                          \
     }
 
-#define CREATE_GRAPHICS_PSO(OBJ, DESC, NAME)                        \
-    LLGL_MAYBE_UNUSED PipelineState* OBJ = nullptr;                 \
-    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;                \
+#define CREATE_GRAPHICS_PSO(OBJ, DESC, NAME)            \
+    LLGL_MAYBE_UNUSED PipelineState* OBJ = nullptr;     \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;    \
     CREATE_GRAPHICS_PSO_EXT(OBJ, DESC, NAME)
+
+#define CREATE_COMPUTE_PSO_EXT(OBJ, DESC, NAME)                 \
+    {                                                           \
+        TestResult result = CreateComputePSO(DESC, NAME, &OBJ); \
+        if (result != TestResult::Passed)                       \
+            return result;                                      \
+    }
+
+#define CREATE_COMPUTE_PSO(OBJ, DESC, NAME)             \
+    LLGL_MAYBE_UNUSED PipelineState* OBJ = nullptr;     \
+    LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;    \
+    CREATE_COMPUTE_PSO_EXT(OBJ, DESC, NAME)
 
 
 #endif

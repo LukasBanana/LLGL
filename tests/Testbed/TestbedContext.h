@@ -81,6 +81,12 @@ class TestbedContext
             LLGL::PipelineState**                   output
         );
 
+        TestResult CreateComputePSO(
+            const LLGL::ComputePipelineDescriptor&  desc,
+            const char*                             name,
+            LLGL::PipelineState**                   output
+        );
+
         // Returns true if the current renderer requires combined texture samplers (OpenGL only).
         bool HasCombinedSamplers() const;
 
@@ -157,6 +163,8 @@ class TestbedContext
 
             VSCombinedSamplers,
             PSCombinedSamplers,
+
+            CSSamplerBuffer,
 
             ShaderCount,
         };
