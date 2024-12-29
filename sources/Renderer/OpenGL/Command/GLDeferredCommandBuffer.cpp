@@ -409,6 +409,10 @@ void GLDeferredCommandBuffer::BindResource(GLResourceType type, GLuint slot, std
     switch (type)
     {
         case GLResourceType_Invalid:
+        case GLResourceType_End:
+        {
+            // ignore
+        }
         break;
 
         case GLResourceType_UBO:

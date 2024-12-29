@@ -201,7 +201,7 @@ void GLPipelineLayout::BuildDynamicResourceBindings(const PipelineLayoutDescript
             if (newBinding.IsSSBO())
                 newBinding.ssboIndex = ssboCounter++;
             else
-                newBinding.ssboIndex = ~0u;
+                newBinding.ssboIndex = 0xFFFF;
         }
         bindings_.push_back(newBinding);
         resourceNames_.push_back(desc.name.c_str());

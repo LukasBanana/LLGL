@@ -904,17 +904,21 @@ void GLShaderProgram::QueryTexBufferNames(GLuint program, std::set<std::string>&
         /* Map sampler buffer and image buffer names to output sets */
         switch (type)
         {
+            #if defined(GL_SAMPLER_BUFFER) && defined(GL_INT_SAMPLER_BUFFER) && defined(GL_UNSIGNED_INT_SAMPLER_BUFFER)
             case GL_SAMPLER_BUFFER:
             case GL_INT_SAMPLER_BUFFER:
             case GL_UNSIGNED_INT_SAMPLER_BUFFER:
                 samplerBufferNames.insert(std::move(uniformName));
                 break;
+            #endif
 
+            #if defined(GL_IMAGE_BUFFER) && defined(GL_INT_IMAGE_BUFFER) && defined(GL_UNSIGNED_INT_IMAGE_BUFFER)
             case GL_IMAGE_BUFFER:
             case GL_INT_IMAGE_BUFFER:
             case GL_UNSIGNED_INT_IMAGE_BUFFER:
                 imageBufferNames.insert(std::move(uniformName));
                 break;
+            #endif
 
             default:
                 break;

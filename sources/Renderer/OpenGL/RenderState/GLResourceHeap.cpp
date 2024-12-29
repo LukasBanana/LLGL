@@ -104,7 +104,7 @@ struct GLTexBuffer
 static constexpr GLenum k_maxGLInternalFormatValue = ((1u << k_heapSegmentInternalFormatBits) - 1);
 
 #define LLGL_ASSERT_GLINTERNALFORMAT_VALUE(VALUE) \
-    static_assert((VALUE) <= k_maxGLInternalFormatValue, "Value of " ## #VALUE ## " is exceeding bitsize for internal format in GLResourceHeap segments")
+    static_assert((VALUE) <= k_maxGLInternalFormatValue, "Value of " #VALUE " is exceeding bitsize for internal format in GLResourceHeap segments")
 
 LLGL_ASSERT_GLINTERNALFORMAT_VALUE(GL_R32F);
 LLGL_ASSERT_GLINTERNALFORMAT_VALUE(GL_R32I);
@@ -776,6 +776,7 @@ void GLResourceHeap::WriteResourceView(const ResourceViewDescriptor& desc, const
     switch (segment->type)
     {
         case GLResourceType_Invalid:
+        case GLResourceType_End:
             /* Ignore */
             break;
         case GLResourceType_UBO:

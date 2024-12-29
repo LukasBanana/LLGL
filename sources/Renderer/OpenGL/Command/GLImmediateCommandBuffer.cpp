@@ -370,6 +370,10 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, st
     switch (type)
     {
         case GLResourceType_Invalid:
+        case GLResourceType_End:
+        {
+            // ignore
+        }
         break;
 
         case GLResourceType_UBO:
