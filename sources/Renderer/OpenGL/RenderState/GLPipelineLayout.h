@@ -42,6 +42,11 @@ struct GLHeapResourceBinding
     // If non-zero, this binding refers to a combined texture-sampler and 'slot' is interpreted
     // as index into the array of combined texture-samplers; see GLPipelineLayout::GetCombinedSamplerSlots().
     std::uint32_t   combiners   = 0;
+
+    inline bool IsSSBO() const
+    {
+        return (type == ResourceType::Buffer && (bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0);
+    }
 };
 
 // GL resource binding for dynamic resources (*not* part of a ResourceHeap).
@@ -53,6 +58,11 @@ struct GLPipelineResourceBinding
     // If non-zero, this binding refers to a combined texture-sampler and 'slot' is interpreted
     // as index into the array of combined texture-samplers; see GLPipelineLayout::GetCombinedSamplerSlots().
     std::uint32_t   combiners;
+
+    inline bool IsSSBO() const
+    {
+        return (type == GLResourceType_Buffer);
+    }
 };
 
 class GLPipelineLayout final : public PipelineLayout

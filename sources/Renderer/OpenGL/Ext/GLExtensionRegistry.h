@@ -69,6 +69,8 @@ enum class GLExt
     ARB_shader_storage_buffer_object,   // GL 4.2
     ARB_sync,
     ARB_tessellation_shader,            // GL 3.2
+    ARB_texture_buffer_object,          // GL 3.1
+    ARB_texture_buffer_range,           // GL 4.3
     ARB_texture_compression,
     ARB_texture_cube_map,               // no procedures
     ARB_texture_cube_map_array,         // no procedures

@@ -51,6 +51,11 @@ class GLBuffer : public Buffer
         // Returns the specified buffer parameters; null pointers are ignored.
         void GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) const;
 
+        // Creates the proxy texture for a sampler buffer (GL_TEXTURE_BUFFER).
+        // If texture buffers are not supported, this function has no effect.
+        // No error is reported, since platforms without sampler buffer support cannot make use of them in shaders anyway.
+        void CreateTexBuffer(GLenum internalFormat);
+
         // Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
@@ -78,11 +83,26 @@ class GLBuffer : public Buffer
             return indexType16Bits_;
         }
 
+        // Returns the hardware texture ID if this buffer represents a sampler or image buffer. Otherwise, returns 0.
+        // This texture gets its data from the buffer and can be accessed in GLSL via a 'samplerBuffer' type.
+        inline GLuint GetTexID() const
+        {
+            return texID_;
+        }
+
+        // Returns the internal GL format of the proxy texture when this buffer represents a sampler or image buffer.
+        inline GLenum GetTexGLInternalFormat() const
+        {
+            return texInternalFormat_;
+        }
+
     private:
 
         GLuint          id_                 = 0;
         GLBufferTarget  target_             = GLBufferTarget::ArrayBuffer;
         bool            indexType16Bits_    = false;
+        GLuint          texID_              = 0; // Used for sampler and image buffers
+        GLenum          texInternalFormat_  = 0; // Used for sampler and image buffers
 
 };
 

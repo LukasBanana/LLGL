@@ -6,8 +6,10 @@
  */
 
 #include "GLShaderBindingLayout.h"
+#include "GLShaderBufferInterfaceMap.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
+#include "../RenderState/GLPipelineLayout.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/MacroUtils.h"
 #include <LLGL/Utils/ForRange.h>
@@ -25,8 +27,9 @@ GLShaderBindingLayout::GLShaderBindingLayout(const GLPipelineLayout& pipelineLay
     BuildShaderStorageBindings(pipelineLayout);
 }
 
-void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManager* stateMngr) const
+void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, const GLShaderBufferInterfaceMap* bufferInterfaceMap, GLStateManager* stateMngr) const
 {
+    bool isShaderProgramStored = false;
     std::size_t resourceIndex = 0;
 
     /* Set uniform bindings */
@@ -36,45 +39,23 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
         for_range(i, numUniformBindings_)
         {
             const NamedResourceBinding& resource = bindings_[resourceIndex++];
-            GLint location = glGetUniformLocation(program, resource.name.c_str());
-            if (location != GL_INVALID_INDEX)
-            {
-                for_range(j, resource.size)
-                    glProgramUniform1i(program, location + j, static_cast<GLint>(resource.slot + j));
-            }
+            GLShaderBindingLayout::GLSetProgramUniformBinding(program, resource);
         }
     }
     else
     #endif
-    if (stateMngr != nullptr)
     {
-        stateMngr->PushBoundShaderProgram();
-        stateMngr->BindShaderProgram(program);
+        if (stateMngr != nullptr)
         {
-            for_range(i, numUniformBindings_)
-            {
-                const NamedResourceBinding& resource = bindings_[resourceIndex++];
-                GLint location = glGetUniformLocation(program, resource.name.c_str());
-                if (location != GL_INVALID_INDEX)
-                {
-                    for_range(j, resource.size)
-                        glUniform1i(location + j, static_cast<GLint>(resource.slot + j));
-                }
-            }
+            stateMngr->PushBoundShaderProgram();
+            stateMngr->BindShaderProgram(program);
+            isShaderProgramStored = true;
         }
-        stateMngr->PopBoundShaderProgram();
-    }
-    else
-    {
+
         for_range(i, numUniformBindings_)
         {
             const NamedResourceBinding& resource = bindings_[resourceIndex++];
-            GLint location = glGetUniformLocation(program, resource.name.c_str());
-            if (location != GL_INVALID_INDEX)
-            {
-                for_range(j, resource.size)
-                    glUniform1i(location + j, static_cast<GLint>(resource.slot + j));
-            }
+            GLShaderBindingLayout::GLSetUniformBinding(program, resource);
         }
     }
 
@@ -89,21 +70,71 @@ void GLShaderBindingLayout::UniformAndBlockBinding(GLuint program, GLStateManage
     }
     #endif // /LLGL_GLEXT_UNIFORM_BUFFER_OBJECT
 
-    /* Set shader-storage bindings (not supported in GLES) */
-    #if LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && LLGL_OPENGL
-    for_range(i, numShaderStorageBindings_)
+    if (bufferInterfaceMap != nullptr && !bufferInterfaceMap->HasSSBOEntriesOnly())
     {
-        const NamedResourceBinding& resource = bindings_[resourceIndex++];
-        GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
-        if (blockIndex != GL_INVALID_INDEX)
-            glShaderStorageBlockBinding(program, blockIndex, resource.slot);
+        /* Set interface bindings for SSBOs, sampler buffers, and image buffers */
+        ArrayView<GLBufferInterface> bufferInterfaces = bufferInterfaceMap->GetInterfaces();
+        LLGL_ASSERT(bufferInterfaces.size() == numShaderStorageBindings_);
+        for_range(i, numShaderStorageBindings_)
+        {
+            const NamedResourceBinding& resource = bindings_[resourceIndex++];
+            switch (bufferInterfaces[i])
+            {
+                case GLBufferInterface_SSBO:
+                {
+                    /* Set shader-storage binding (not supported in GLES) */
+                    #if LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && LLGL_OPENGL
+                    GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
+                    if (blockIndex != GL_INVALID_INDEX)
+                        glShaderStorageBlockBinding(program, blockIndex, resource.slot);
+                    #endif
+                }
+                break;
+
+                case GLBufferInterface_Sampler:
+                case GLBufferInterface_Image:
+                {
+                    #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+                    if (HasExtension(GLExt::ARB_separate_shader_objects))
+                    {
+                        GLShaderBindingLayout::GLSetProgramUniformBinding(program, resource);
+                    }
+                    else
+                    #endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+                    {
+                        GLShaderBindingLayout::GLSetUniformBinding(program, resource);
+                    }
+                }
+                break;
+            }
+        }
     }
-    #endif
+    else
+    {
+        /* Set shader-storage bindings (not supported in GLES) */
+        #if LLGL_GLEXT_SHADER_STORAGE_BUFFER_OBJECT && LLGL_OPENGL
+        for_range(i, numShaderStorageBindings_)
+        {
+            const NamedResourceBinding& resource = bindings_[resourceIndex++];
+            GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, resource.name.c_str());
+            if (blockIndex != GL_INVALID_INDEX)
+                glShaderStorageBlockBinding(program, blockIndex, resource.slot);
+        }
+        #endif
+    }
+
+    if (isShaderProgramStored)
+        stateMngr->PopBoundShaderProgram();
 }
 
 bool GLShaderBindingLayout::HasBindings() const
 {
     return ((numUniformBindings_ | numUniformBlockBindings_ | numShaderStorageBindings_) != 0);
+}
+
+bool GLShaderBindingLayout::HasShaderStorageBindings() const
+{
+    return (numShaderStorageBindings_ != 0);
 }
 
 int GLShaderBindingLayout::CompareSWO(const GLShaderBindingLayout& lhs, const GLShaderBindingLayout& rhs)
@@ -204,23 +235,17 @@ void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& p
     /* Gather all shader-storage bindings from heap resource descriptors */
     for (const GLHeapResourceBinding& binding : pipelineLayout.GetHeapBindings())
     {
-        if (!binding.name.empty())
-        {
-            if (binding.type == ResourceType::Buffer && (binding.bindFlags & (BindFlags::Storage | BindFlags::Sampled)) != 0)
-                AppendShaderStorageBinding(binding.name.c_str(), binding.slot);
-        }
+        if (!binding.name.empty() && binding.IsSSBO())
+            AppendShaderStorageBinding(binding.name.c_str(), binding.slot);
     }
 
     /* Gather all shader-storage bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetBindings().size())
     {
+        const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
         const std::string& name = pipelineLayout.GetBindingNames()[i];
-        if (!name.empty())
-        {
-            const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
-            if (binding.type == GLResourceType_SSBO)
-                AppendShaderStorageBinding(name, binding.slot);
-        }
+        if (!name.empty() && binding.IsSSBO())
+            AppendShaderStorageBinding(name, binding.slot);
     }
 }
 
@@ -240,6 +265,30 @@ void GLShaderBindingLayout::AppendShaderStorageBinding(const std::string& name, 
 {
     bindings_.push_back({ name, slot, 1u });
     ++numShaderStorageBindings_;
+}
+
+#if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+
+void GLShaderBindingLayout::GLSetProgramUniformBinding(GLuint program, const NamedResourceBinding& resource)
+{
+    GLint location = glGetUniformLocation(program, resource.name.c_str());
+    if (location != GL_INVALID_INDEX)
+    {
+        for_range(j, resource.size)
+            glProgramUniform1i(program, location + j, static_cast<GLint>(resource.slot + j));
+    }
+}
+
+#endif // /LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+
+void GLShaderBindingLayout::GLSetUniformBinding(GLuint program, const NamedResourceBinding& resource)
+{
+    GLint location = glGetUniformLocation(program, resource.name.c_str());
+    if (location != GL_INVALID_INDEX)
+    {
+        for_range(j, resource.size)
+            glUniform1i(location + j, static_cast<GLint>(resource.slot + j));
+    }
 }
 
 

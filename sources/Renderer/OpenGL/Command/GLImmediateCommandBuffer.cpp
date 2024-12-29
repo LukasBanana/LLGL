@@ -360,12 +360,12 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
     else
     {
         /* Bind resource at explicit binding slot */
-        BindResource(binding.type, binding.slot, resource);
+        BindResource(binding.type, binding.slot, descriptor, resource);
     }
 }
 
 // private
-void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, Resource& resource)
+void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, std::uint32_t descriptor, Resource& resource)
 {
     switch (type)
     {
@@ -379,14 +379,43 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, Re
         }
         break;
 
-        case GLResourceType_SSBO:
+        case GLResourceType_Buffer:
         {
             auto& bufferGL = LLGL_CAST(GLBuffer&, resource);
-            stateMngr_->BindBufferBase(GLBufferTarget::ShaderStorageBuffer, slot, bufferGL.GetID());
-            #if LLGL_GLEXT_MEMORY_BARRIERS
-            if ((bufferGL.GetBindFlags() & BindFlags::Storage) != 0)
-                InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT);
-            #endif
+
+            /* Lookup whether this is an SSBO, sampler buffer, or image buffer in buffer interface map */
+            const GLShaderBufferInterfaceMap& bufferInterfaceMap = GetBoundPipelineState()->GetBufferInterfaceMap();
+            GLBufferInterface bufferInterface = bufferInterfaceMap.GetDynamicInterfaces()[descriptor];
+            switch (bufferInterface)
+            {
+                case GLBufferInterface_SSBO:
+                {
+                    stateMngr_->BindBufferBase(GLBufferTarget::ShaderStorageBuffer, slot, bufferGL.GetID());
+                    #if LLGL_GLEXT_MEMORY_BARRIERS
+                    InvalidateMemoryBarriersForStorageResource(bufferGL.GetBindFlags(), GL_SHADER_STORAGE_BARRIER_BIT);
+                    #endif
+                }
+                break;
+
+                case GLBufferInterface_Sampler:
+                {
+                    stateMngr_->ActiveTexture(slot);
+                    stateMngr_->BindTexture(GLTextureTarget::TextureBuffer, bufferGL.GetTexID());
+                    #if LLGL_GLEXT_MEMORY_BARRIERS
+                    InvalidateMemoryBarriersForStorageResource(bufferGL.GetBindFlags(), GL_TEXTURE_FETCH_BARRIER_BIT);
+                    #endif
+                }
+                break;
+
+                case GLBufferInterface_Image:
+                {
+                    stateMngr_->BindImageTexture(slot, 0, bufferGL.GetTexGLInternalFormat(), bufferGL.GetTexID());
+                    #if LLGL_GLEXT_MEMORY_BARRIERS
+                    InvalidateMemoryBarriersForStorageResource(bufferGL.GetBindFlags(), GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                    #endif
+                }
+                break;
+            }
         }
         break;
 
@@ -396,8 +425,7 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, Re
             stateMngr_->ActiveTexture(slot);
             stateMngr_->BindGLTexture(textureGL);
             #if LLGL_GLEXT_MEMORY_BARRIERS
-            if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
-                InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            InvalidateMemoryBarriersForStorageResource(textureGL.GetBindFlags(), GL_TEXTURE_FETCH_BARRIER_BIT);
             #endif
         }
         break;
@@ -407,8 +435,7 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, Re
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
             stateMngr_->BindImageTexture(slot, 0, textureGL.GetGLInternalFormat(), textureGL.GetID());
             #if LLGL_GLEXT_MEMORY_BARRIERS
-            if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
-                InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            InvalidateMemoryBarriersForStorageResource(textureGL.GetBindFlags(), GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
             #endif
         }
         break;

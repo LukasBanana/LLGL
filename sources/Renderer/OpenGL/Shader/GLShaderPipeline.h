@@ -12,6 +12,8 @@
 #include "GLShader.h"
 #include "GLPipelineSignature.h"
 #include <memory>
+#include <string>
+#include <set>
 
 
 namespace LLGL
@@ -20,6 +22,7 @@ namespace LLGL
 
 class GLShaderPipeline;
 class GLShaderBindingLayout;
+class GLShaderBufferInterfaceMap;
 class GLStateManager;
 class Report;
 
@@ -37,10 +40,13 @@ class GLShaderPipeline
         virtual void Bind(GLStateManager& stateMngr) = 0;
 
         // Binds the resource names to their respective binding slots for this pipeline.
-        virtual void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) = 0;
+        virtual void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr) = 0;
 
         // Resets the output report with the shader info logs.
         virtual void QueryInfoLogs(Report& report) = 0;
+
+        // Returns the set of all texture buffer names (samplerBuffer/imageBuffer) in the entire shader pipeline.
+        virtual void QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const = 0;
 
         // Returns the native pipeline ID. Can be either from glCreateProgramPipelines or glCreateProgram.
         inline GLuint GetID() const

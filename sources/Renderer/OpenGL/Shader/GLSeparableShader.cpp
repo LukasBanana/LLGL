@@ -52,13 +52,13 @@ bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
     return true;
 }
 
-void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
+void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap)
 {
     if (bindingLayout_ != &bindingLayout)
     {
-        bindingLayout.UniformAndBlockBinding(GetID());
+        bindingLayout.UniformAndBlockBinding(GetID(), bufferInterfaceMap);
         if (GLuint id = GetID(PermutationFlippedYPosition))
-            bindingLayout.UniformAndBlockBinding(id);
+            bindingLayout.UniformAndBlockBinding(id, bufferInterfaceMap);
         bindingLayout_ = &bindingLayout;
     }
 }
@@ -146,7 +146,7 @@ bool GLSeparableShader::Reflect(ShaderReflection& reflection) const
     return false; // dummy
 }
 
-void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
+void GLSeparableShader::BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap)
 {
     // dummy
 }

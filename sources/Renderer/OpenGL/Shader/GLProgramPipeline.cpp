@@ -8,6 +8,7 @@
 #include "GLProgramPipeline.h"
 #include "GLShaderBindingLayout.h"
 #include "GLSeparableShader.h"
+#include "GLShaderProgram.h"
 #include "../Ext/GLExtensions.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../RenderState/GLStateManager.h"
@@ -83,10 +84,10 @@ void GLProgramPipeline::Bind(GLStateManager& stateMngr)
     stateMngr.BindProgramPipeline(GetID());
 }
 
-void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
+void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap)
 {
     for_range(i, static_cast<std::size_t>(GetSignature().GetNumShaders()))
-        separableShaders_[i]->BindResourceSlots(bindingLayout);
+        separableShaders_[i]->BindResourceSlots(bindingLayout, bufferInterfaceMap);
 }
 
 void GLProgramPipeline::QueryInfoLogs(Report& report)
@@ -98,6 +99,14 @@ void GLProgramPipeline::QueryInfoLogs(Report& report)
         separableShaders_[i]->QueryInfoLog(log, hasErrors);
 
     report.Reset(std::move(log), hasErrors);
+}
+
+void GLProgramPipeline::QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const
+{
+    outSamplerBufferNames.clear();
+    outImageBufferNames.clear();
+    for_range(i, GetSignature().GetNumShaders())
+        GLShaderProgram::QueryTexBufferNames(separableShaders_[i]->GetID(), outSamplerBufferNames, outImageBufferNames);
 }
 
 
@@ -152,7 +161,7 @@ void GLProgramPipeline::Bind(GLStateManager& stateMngr)
     // dummy
 }
 
-void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLayout)
+void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap)
 {
     // dummy
 }

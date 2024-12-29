@@ -70,6 +70,12 @@ enum GLResourceFlags : std::uint32_t
 };
 
 static constexpr std::uint32_t k_heapSegmentSizeBits = 28;
+static constexpr std::uint32_t k_heapSegmentTypeBits = (32 - 1 - k_heapSegmentSizeBits);
+
+static_assert(
+    (GLResourceType_End - 1) < (1u << k_heapSegmentTypeBits),
+    "Too many entries in enum GLResourceType; Or reduce number of bits for GL resource heap segments 'k_heapSegmentSizeBits'"
+);
 
 // Resource view heap (RVH) segment structure with up to three dynamic sub-buffers.
 struct alignas(sizeof(std::uintptr_t)) GLResourceHeapSegment
@@ -423,7 +429,7 @@ void GLResourceHeap::AllocSegmentsSSBO(GLHeapBindingIterator& bindingIter)
     /* Build all resource segments for type <GLResourceHeap3PartSegment> */
     segmentation_.numStorageBufferSegments = GLResourceHeap::ConsolidateSegments(
         bindingSlots,
-        BIND_SEGMENT_ALLOCATOR(GLResourceHeap::Alloc3PartSegment, GLResourceType_SSBO, sizeof(GLuint), sizeof(GLintptr), sizeof(GLsizeiptr))
+        BIND_SEGMENT_ALLOCATOR(GLResourceHeap::Alloc3PartSegment, GLResourceType_Buffer, sizeof(GLuint), sizeof(GLintptr), sizeof(GLsizeiptr))
     );
 }
 
@@ -641,7 +647,7 @@ void GLResourceHeap::WriteResourceView(const ResourceViewDescriptor& desc, const
         case GLResourceType_UBO:
             WriteResourceViewUBO(desc, heapPtr, binding.indexOrCount);
             break;
-        case GLResourceType_SSBO:
+        case GLResourceType_Buffer:
             WriteResourceViewSSBO(desc, heapPtr, binding.indexOrCount);
             break;
         case GLResourceType_Texture:

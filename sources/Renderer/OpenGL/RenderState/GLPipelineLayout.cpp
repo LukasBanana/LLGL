@@ -126,7 +126,7 @@ static GLResourceType ToGLResourceType(const BindingDescriptor& desc)
             if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
                 return GLResourceType_UBO;
             if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-                return GLResourceType_SSBO;
+                return GLResourceType_Buffer;
             break;
 
         case ResourceType::Texture:

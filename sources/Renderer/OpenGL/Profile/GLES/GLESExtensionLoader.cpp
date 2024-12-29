@@ -309,8 +309,10 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 
     if (version >= 320)
     {
-        ENABLE_GLEXT(ARB_tessellation_shader);
         ENABLE_GLEXT(ARB_copy_image);
+        ENABLE_GLEXT(ARB_tessellation_shader);
+        ENABLE_GLEXT(ARB_texture_buffer_object);
+        ENABLE_GLEXT(ARB_texture_buffer_range);
     }
 
     #undef ENABLE_GLEXT

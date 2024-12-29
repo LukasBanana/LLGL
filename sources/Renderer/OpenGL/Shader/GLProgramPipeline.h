@@ -33,8 +33,9 @@ class GLProgramPipeline final : public GLShaderPipeline
         ~GLProgramPipeline();
 
         void Bind(GLStateManager& stateMngr) override;
-        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr) override;
         void QueryInfoLogs(Report& report) override;
+        void QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const override;
 
     private:
 
@@ -61,7 +62,7 @@ class GLProgramPipeline final : public GLShaderPipeline
         );
 
         void Bind(GLStateManager& stateMngr) override;
-        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr) override;
         void QueryInfoLogs(Report& report) override;
 
 };

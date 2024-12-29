@@ -66,13 +66,14 @@ class GLDeferredCommandBuffer final : public GLCommandBuffer
 
     private:
 
-        void BindResource(GLResourceType type, GLuint slot, Resource& resource);
+        void BindResource(GLResourceType type, GLuint slot, std::uint32_t descriptor, Resource& resource);
         void BindCombinedResource(GLResourceType type, const GLuint* slots, std::uint32_t numSlots, Resource& resource);
 
         void BindBufferBase(const GLBufferTarget bufferTarget, const GLBuffer& bufferGL, std::uint32_t slot);
         void BindBuffersBase(const GLBufferTarget bufferTarget, std::uint32_t first, std::uint32_t count, const Buffer *const *const buffers);
         void BindTexture(GLTexture& textureGL, std::uint32_t slot);
-        void BindImageTexture(const GLTexture& textureGL, std::uint32_t slot);
+        void BindTextureNative(GLuint texID, GLTextureTarget target, std::uint32_t slot);
+        void BindImageTexture(GLuint texID, GLenum internalFormat, std::uint32_t slot);
         void BindSampler(const GLSampler& samplerGL, std::uint32_t slot);
         void BindEmulatedSampler(const GLEmulatedSampler& emulatedSamplerGL, std::uint32_t slot);
 

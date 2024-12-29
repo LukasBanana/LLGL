@@ -199,6 +199,14 @@
 #   define LLGL_GLEXT_SHADER_OBJECTS_40 1
 #endif
 
+#if GL_ARB_texture_buffer_object
+#   define LLGL_GLEXT_TEXTURE_BUFFER_OBJECT 1
+#endif
+
+#if GL_ARB_texture_buffer_range
+#   define LLGL_GLEXT_TEXTURE_BUFFER_RANGE 1
+#endif
+
 #endif // !LLGL_GL_ENABLE_OPENGL2X
 
 // WebGL does not support independent stencil face values, even though glStencilFuncSeparate() is provided.

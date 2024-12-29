@@ -70,6 +70,12 @@ void GLCommandBuffer::InvalidateMemoryBarriers(GLbitfield barriers)
     renderState_.dirtyBarriers |= (renderState_.activeBarriers & barriers);
 }
 
+void GLCommandBuffer::InvalidateMemoryBarriersForStorageResource(long resourceBindFlags, GLbitfield barriers)
+{
+    if ((resourceBindFlags & BindFlags::Storage) != 0)
+        InvalidateMemoryBarriers(barriers);
+}
+
 LLGL_NODISCARD
 GLbitfield GLCommandBuffer::FlushAndGetMemoryBarriers()
 {

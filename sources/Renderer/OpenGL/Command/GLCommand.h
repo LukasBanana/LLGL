@@ -423,6 +423,13 @@ struct GLCmdBindTexture
     GLTexture*  texture;
 };
 
+struct GLCmdBindTextureNative
+{
+    GLuint              slot;
+    GLuint              id;
+    GLTextureTarget     target;
+};
+
 struct GLCmdBindImageTexture
 {
     GLuint  unit;

@@ -58,8 +58,19 @@ GLPipelineState::GLPipelineState(
         if (pipelineLayout_->HasNamedBindings())
         {
             shaderBindingLayout_ = GLStatePool::Get().CreateShaderBindingLayout(*pipelineLayout_);
-            if (!shaderBindingLayout_->HasBindings())
+            if (shaderBindingLayout_->HasBindings())
+            {
+                if (shaderBindingLayout_->HasShaderStorageBindings())
+                {
+                    /* Build map to distinguish resources between SSBOs, sampler buffers, and image buffers */
+                    bufferInterfaceMap_.BuildMap(*pipelineLayout_, *GetShaderPipeline());
+                }
+            }
+            else
+            {
+                /* If no bindings were created after all, release the binding layout immediately */
                 GLStatePool::Get().ReleaseShaderBindingLayout(std::move(shaderBindingLayout_));
+            }
         }
 
         /* Build uniform table */
@@ -103,7 +114,7 @@ void GLPipelineState::Bind(GLStateManager& stateMngr)
 
     /* Update resource slots in shader program (if necessary) */
     if (shaderBindingLayout_)
-        shaderPipeline->BindResourceSlots(*shaderBindingLayout_);
+        shaderPipeline->BindResourceSlots(*shaderBindingLayout_, &bufferInterfaceMap_);
 
     /* Bind static samplers */
     if (pipelineLayout_ != nullptr)

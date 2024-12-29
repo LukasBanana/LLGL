@@ -165,6 +165,13 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const v
     if ((bufferDesc.bindFlags & BindFlags::IndexBuffer) != 0 && bufferDesc.format != Format::Undefined)
         bufferGL->SetIndexType(bufferDesc.format);
 
+    /* If this buffer could be used a 'samplerBuffer' in GLSL, create its proxy texture */
+    if ((bufferDesc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0 && bufferDesc.format != Format::Undefined)
+    {
+        GLenum internalFormat = GLTypes::Map(bufferDesc.format);
+        bufferGL->CreateTexBuffer(internalFormat);
+    }
+
     return bufferGL;
 }
 

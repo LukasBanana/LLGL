@@ -62,6 +62,10 @@ GLBuffer::~GLBuffer()
 {
     glDeleteBuffers(1, &id_);
     GLStateManager::Get().NotifyBufferRelease(*this);
+
+    /* Delete texture if this was a texture-buffer and notify state manager */
+    if (texID_ != 0)
+        GLStateManager::Get().DeleteTexture(texID_, GLTextureTarget::TextureBuffer);
 }
 
 void GLBuffer::SetDebugName(const char* name)
@@ -360,6 +364,33 @@ void GLBuffer::GetBufferParams(GLint* size, GLint* usage, GLint* storageFlags) c
         }
         GLStateManager::Get().PopBoundBuffer();
     }
+}
+
+void GLBuffer::CreateTexBuffer(GLenum internalFormat)
+{
+    #if LLGL_GLEXT_TEXTURE_BUFFER_OBJECT
+
+    LLGL_ASSERT(GetTexID() == 0, "tex-buffer must not be created more than once");
+
+    /* Create texture buffer and bind to this buffer */
+    #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glCreateTextures(GL_TEXTURE_BUFFER, 1, &texID_);
+        glTextureBuffer(texID_, internalFormat, id_);
+    }
+    else
+    #endif
+    {
+        glGenTextures(1, &texID_);
+        GLStateManager::Get().BindTexture(GLTextureTarget::TextureBuffer, texID_);
+        glTexBuffer(GL_TEXTURE_BUFFER, internalFormat, id_);
+    }
+
+    /* Store internal GL format */
+    texInternalFormat_ = internalFormat;
+
+    #endif // /LLGL_GLEXT_TEXTURE_BUFFER_OBJECT
 }
 
 void GLBuffer::SetIndexType(const Format format)

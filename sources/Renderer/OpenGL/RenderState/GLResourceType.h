@@ -16,17 +16,19 @@ namespace LLGL
 {
 
 
-// Internal enumeration for GL resource heap segments. This must fit into 3 bits (see GLResourceHeapSegment).
+// Internal enumeration for GL resource heap segments. See GLResourceHeapSegment.
 enum GLResourceType : std::uint32_t
 {
     GLResourceType_Invalid = 0,
 
     GLResourceType_UBO,
-    GLResourceType_SSBO,
+    GLResourceType_Buffer, // Generic buffer, either SSBO, sampler buffer, or image buffer
     GLResourceType_Texture,
     GLResourceType_Image,
     GLResourceType_Sampler,
     GLResourceType_EmulatedSampler,
+
+    GLResourceType_End, // Used for compile-time assertions only
 };
 
 

@@ -13,6 +13,7 @@
 #include "../Shader/GLShaderBindingLayout.h"
 #include "../Shader/GLShaderPipeline.h"
 #include "../Shader/GLShader.h"
+#include "../Shader/GLShaderBufferInterfaceMap.h"
 #include <LLGL/Report.h>
 #include <LLGL/PipelineState.h>
 #include <LLGL/RenderSystemFlags.h>
@@ -82,6 +83,12 @@ class GLPipelineState : public PipelineState
             return uniformMap_;
         }
 
+        // Returns the interface map for SSBOs, sampler buffers, and image buffers.
+        inline const GLShaderBufferInterfaceMap& GetBufferInterfaceMap() const
+        {
+            return bufferInterfaceMap_;
+        }
+
         // Returns the GL bitfield of the memory barriers the pipeline layout of this PSO was created with. See GLPipelineLayout::GetBarriersBitfield().
         inline GLbitfield GetBarriersBitfield() const
         {
@@ -126,11 +133,12 @@ class GLPipelineState : public PipelineState
     private:
 
         const bool                      isGraphicsPSO_                                  = false;
+        GLbitfield                      barriers_                                       = 0;
         const GLPipelineLayout*         pipelineLayout_                                 = nullptr;
         GLShaderPipelineSPtr            shaderPipelines_[GLShader::PermutationCount];
         GLShaderBindingLayoutSPtr       shaderBindingLayout_;
+        GLShaderBufferInterfaceMap      bufferInterfaceMap_;
         std::vector<GLUniformLocation>  uniformMap_;
-        GLbitfield                      barriers_                                       = 0;
         Report                          report_;
 
 };

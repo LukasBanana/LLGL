@@ -12,6 +12,8 @@
 #include <LLGL/ShaderReflection.h>
 #include "GLShaderPipeline.h"
 #include "GLShaderUniform.h"
+#include <string>
+#include <set>
 
 
 namespace LLGL
@@ -28,8 +30,9 @@ class GLShaderProgram final : public GLShaderPipeline
     public:
 
         void Bind(GLStateManager& stateMngr) override;
-        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout) override;
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr) override;
         void QueryInfoLogs(Report& report) override;
+        void QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const override;
 
     public:
 
@@ -63,6 +66,9 @@ class GLShaderProgram final : public GLShaderPipeline
 
         // Queries the shader reflection for the specified program.
         static void QueryReflection(GLuint program, GLenum shaderStage, ShaderReflection& reflection);
+
+        // Queries all texture buffer names of the specified program and inserts them into the set.
+        static void QueryTexBufferNames(GLuint program, std::set<std::string>& samplerBufferNames, std::set<std::string>& imageBufferNames);
 
     private:
 

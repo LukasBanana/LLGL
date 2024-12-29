@@ -795,6 +795,18 @@ static bool DECL_LOADGLEXT_PROC(ARB_get_texture_sub_image)
     return true;
 }
 
+static bool DECL_LOADGLEXT_PROC(ARB_texture_buffer_object)
+{
+    LOAD_GLPROC( glTexBuffer );
+    return true;
+}
+
+static bool DECL_LOADGLEXT_PROC(ARB_texture_buffer_range)
+{
+    LOAD_GLPROC( glTexBufferRange );
+    return true;
+}
+
 static bool DECL_LOADGLEXT_PROC(ARB_direct_state_access)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -1045,6 +1057,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     ENABLE_GLEXT( EXT_texture3D                    );
     ENABLE_GLEXT( EXT_copy_texture                 );
     ENABLE_GLEXT( ARB_clear_texture                );
+    ENABLE_GLEXT( ARB_texture_buffer_object        );
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
     ENABLE_GLEXT( ARB_sampler_objects              );
@@ -1161,6 +1174,8 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
     LOAD_GLEXT( EXT_texture3D                    );
     LOAD_GLEXT( EXT_copy_texture                 );
     LOAD_GLEXT( ARB_clear_texture                );
+    LOAD_GLEXT( ARB_texture_buffer_object        );
+    LOAD_GLEXT( ARB_texture_buffer_range         );
     LOAD_GLEXT( ARB_texture_compression          );
     LOAD_GLEXT( ARB_texture_multisample          );
     LOAD_GLEXT( ARB_texture_view                 );

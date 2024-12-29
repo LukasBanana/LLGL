@@ -29,6 +29,7 @@ struct GLShaderAttribute
 // Callback interface for shader source patching.
 using ShaderSourceCallback = std::function<void(const char* source)>;
 
+// Base class for GLLegacyShader and GLSeparableShader.
 class GLShader : public Shader
 {
 

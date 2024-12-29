@@ -77,6 +77,7 @@ enum GLOpcode : std::uint8_t
     GLOpcodeDispatchCompute,
     GLOpcodeDispatchComputeIndirect,
     GLOpcodeBindTexture,
+    GLOpcodeBindTextureNative,
     GLOpcodeBindImageTexture,
     GLOpcodeBindSampler,
     GLOpcodeBindEmulatedSampler,

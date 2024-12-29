@@ -23,6 +23,7 @@ namespace LLGL
 
 class GLShaderBindingLayout;
 class GLStateManager;
+class GLShaderBufferInterfaceMap;
 
 using GLShaderBindingLayoutSPtr = std::shared_ptr<GLShaderBindingLayout>;
 
@@ -39,10 +40,13 @@ class GLShaderBindingLayout
         GLShaderBindingLayout(const GLPipelineLayout& pipelineLayout);
 
         // Binds the resource slots to the specified GL shader program. Provides optional state manager if specified program is not currently bound, i.e. glUseProgram.
-        void UniformAndBlockBinding(GLuint program, GLStateManager* stateMngr = nullptr) const;
+        void UniformAndBlockBinding(GLuint program, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr, GLStateManager* stateMngr = nullptr) const;
 
         // Returns true if this layout has at least one binding slot.
         bool HasBindings() const;
+
+        // Returns true if this layout has at least one shader storage binding slot.
+        bool HasShaderStorageBindings() const;
 
     public:
 
@@ -67,6 +71,14 @@ class GLShaderBindingLayout
         void AppendUniformBinding(const std::string& name, std::uint32_t slot, std::uint32_t size = 1u);
         void AppendUniformBlockBinding(const std::string& name, std::uint32_t slot);
         void AppendShaderStorageBinding(const std::string& name, std::uint32_t slot);
+
+    private:
+
+        #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
+        static void GLSetProgramUniformBinding(GLuint program, const NamedResourceBinding& resource);
+        #endif
+
+        static void GLSetUniformBinding(GLuint program, const NamedResourceBinding& resource);
 
     private:
 

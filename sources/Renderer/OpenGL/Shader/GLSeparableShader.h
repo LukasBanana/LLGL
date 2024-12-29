@@ -19,6 +19,7 @@ namespace LLGL
 
 class GLLegacyShader;
 class GLShaderBindingLayout;
+class GLShaderBufferInterfaceMap;
 
 #if LLGL_GLEXT_SEPARATE_SHADER_OBJECTS
 
@@ -37,7 +38,7 @@ class GLSeparableShader final : public GLShader
         ~GLSeparableShader();
 
         // Binds the resource names to their respective binding slots for this separable shader. Also implemented in GLShaderProgram.
-        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout);
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr);
 
         // Queries the program info log and appends it to the output text.
         void QueryInfoLog(std::string& text, bool& hasErrors);
@@ -66,7 +67,7 @@ class GLSeparableShader final : public GLShader
 
         GLSeparableShader(const ShaderDescriptor& desc);
 
-        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout);
+        void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr);
         void QueryInfoLog(std::string& text, bool& hasErrors);
 
 };
