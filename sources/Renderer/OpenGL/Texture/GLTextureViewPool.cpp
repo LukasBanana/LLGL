@@ -238,7 +238,9 @@ static GLTextureTarget UncompressGLTextureTarget(std::uint32_t type)
 
 void GLTextureViewPool::DeleteGLTextureView(GLTextureView& texView)
 {
+    /* Delete GL texture and reset ID to ensure it's cleaned up in FlushReusableTextureViews() */
     GLStateManager::Get().DeleteTexture(texView.texID, UncompressGLTextureTarget(texView.view.type));
+    texView.texID = 0;
 }
 
 void GLTextureViewPool::RetainSharedGLTextureView(GLTextureView& texView, GLuint texID)
