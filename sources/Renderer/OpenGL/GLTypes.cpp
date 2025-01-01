@@ -101,8 +101,8 @@ GLenum MapOrZero(const Format format)
         case Format::R16SInt:           return GL_R16I;
         case Format::R16Float:          return GL_R16F;
 
-        case Format::R32UInt:           return GL_R32I;
-        case Format::R32SInt:           return GL_R32UI;
+        case Format::R32UInt:           return GL_R32UI;
+        case Format::R32SInt:           return GL_R32I;
         case Format::R32Float:          return GL_R32F;
 
         case Format::R64Float:          return 0;
