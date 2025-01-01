@@ -403,8 +403,7 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, st
 
                 case GLBufferInterface_Sampler:
                 {
-                    stateMngr_->ActiveTexture(slot);
-                    stateMngr_->BindTexture(GLTextureTarget::TextureBuffer, bufferGL.GetTexID());
+                    stateMngr_->BindTexture(slot, GLTextureTarget::TextureBuffer, bufferGL.GetTexID());
                     #if LLGL_GLEXT_MEMORY_BARRIERS
                     InvalidateMemoryBarriersForStorageResource(bufferGL.GetBindFlags(), GL_TEXTURE_FETCH_BARRIER_BIT);
                     #endif
@@ -426,8 +425,7 @@ void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, st
         case GLResourceType_Texture:
         {
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
-            stateMngr_->ActiveTexture(slot);
-            stateMngr_->BindGLTexture(textureGL);
+            stateMngr_->BindGLTexture(slot, textureGL);
             #if LLGL_GLEXT_MEMORY_BARRIERS
             InvalidateMemoryBarriersForStorageResource(textureGL.GetBindFlags(), GL_TEXTURE_FETCH_BARRIER_BIT);
             #endif
@@ -469,10 +467,7 @@ void GLImmediateCommandBuffer::BindCombinedResource(GLResourceType type, const G
         {
             auto& textureGL = LLGL_CAST(GLTexture&, resource);
             for_range(i, numSlots)
-            {
-                stateMngr_->ActiveTexture(slots[i]);
-                stateMngr_->BindGLTexture(textureGL);
-            }
+                stateMngr_->BindGLTexture(slots[i], textureGL);
             #if LLGL_GLEXT_MEMORY_BARRIERS
             if ((textureGL.GetBindFlags() & BindFlags::Storage) != 0)
                 InvalidateMemoryBarriers(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

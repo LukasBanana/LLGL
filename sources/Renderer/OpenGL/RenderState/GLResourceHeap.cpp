@@ -299,8 +299,7 @@ static std::size_t BindStorageBuffersSegment(
                 case GLBufferInterface_Sampler:
                 {
                     auto* texBuffers = reinterpret_cast<const GLTexBuffer*>(heapPtr + segment->data3Offset);
-                    stateMngr.ActiveTexture(segment->first + i);
-                    stateMngr.BindTexture(GLTextureTarget::TextureBuffer, texBuffers[i].texID);
+                    stateMngr.BindTexture(segment->first + i, GLTextureTarget::TextureBuffer, texBuffers[i].texID);
                 }
                 break;
 

@@ -38,7 +38,7 @@ GLTextureViewPool& GLTextureViewPool::Get()
 void GLTextureViewPool::Clear()
 {
     /* Delete all texture view GL objects and clear container */
-    for (const auto& texView : textureViews_)
+    for (const GLTextureView& texView : textureViews_)
     {
         if (texView.texID != 0)
             glDeleteTextures(1, &(texView.texID));
@@ -63,7 +63,7 @@ GLuint GLTextureViewPool::CreateTextureView(GLuint sourceTexID, const TextureVie
 
     /* Try to find texture view with same parameters */
     std::size_t insertionIndex = 0;
-    auto* sharedTexView = FindInSortedArray<GLTextureView>(
+    GLTextureView* sharedTexView = FindInSortedArray<GLTextureView>(
         textureViews_.data(),
         textureViews_.size(),
         [&texView](const GLTextureView& rhs)
@@ -185,7 +185,7 @@ static GLuint GenGLTextureView(GLuint sourceTexID, const TextureViewDescriptor& 
         );
 
         /* Initialize texture swizzle */
-        const auto target = GLStateManager::GetTextureTarget(textureViewDesc.type);
+        const GLTextureTarget target = GLStateManager::GetTextureTarget(textureViewDesc.type);
         if (restoreBoundTexture)
         {
             /* Initialize texture view with swizzle parameters and store/restore bound texture slot */

@@ -378,7 +378,7 @@ static void InitializeGLTextureSwizzleWithFormat(
         return;
 
     /* Map swizzle parameters according for permutation format */
-    const auto target = GLTypes::Map(type);
+    const GLenum target = GLTypes::Map(type);
     switch (swizzleFormat)
     {
         case GLSwizzleFormat::RGBA:
