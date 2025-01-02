@@ -39,9 +39,9 @@ static GLbitfield ToMemoryBarrierBitfield(long barrierFlags)
     if (HasExtension(GLExt::ARB_shader_image_load_store))
     {
         if ((barrierFlags & BarrierFlags::StorageBuffer) != 0)
-            barriers |= GL_SHADER_STORAGE_BARRIER_BIT;
+            barriers |= GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT;
         if ((barrierFlags & BarrierFlags::StorageTexture) != 0)
-            barriers |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+            barriers |= GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
     }
 
     #endif // /LLGL_GLEXT_MEMORY_BARRIERS

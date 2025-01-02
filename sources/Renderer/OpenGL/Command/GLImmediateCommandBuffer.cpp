@@ -336,7 +336,7 @@ void GLImmediateCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     resourceHeapGL.Bind(*stateMngr_, descriptorSet, GetBoundPipelineState()->GetBufferInterfaceMap());
     #if LLGL_GLEXT_MEMORY_BARRIERS
-    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); //TODO: find optimal bitmask from resource heap
+    InvalidateMemoryBarriers(GL_SHADER_STORAGE_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT); //TODO: find optimal bitmask from resource heap
     #endif
 }
 

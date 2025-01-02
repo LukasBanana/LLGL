@@ -104,6 +104,9 @@ std::shared_ptr<GLContext> GLContextManager::MakeContextWithPixelFormat(const GL
     const bool abortOnFailure   = !profile_.suppressFailedExtensions;
     LoadSupportedOpenGLExtensions(hasGLCoreProfile, abortOnFailure);
 
+    /* Disable all extensions that are unsupported due to incompatible configurations */
+    DisableIncompatibleExtensions();
+
     /* Initialize state manager for new GL context */
     GLStateManager& stateMngr = context->GetStateManager();
     stateMngr.DetermineExtensionsAndLimits();

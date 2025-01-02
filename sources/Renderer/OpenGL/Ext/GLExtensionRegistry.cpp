@@ -14,9 +14,9 @@ namespace LLGL
 
 static bool g_registeredExtensions[static_cast<std::size_t>(GLExt::Count)] = {};
 
-static void RegisterExtensionInternal(GLExt extension)
+static void RegisterExtensionInternal(GLExt extension, bool enabled = true)
 {
-    g_registeredExtensions[static_cast<std::size_t>(extension)] = true;
+    g_registeredExtensions[static_cast<std::size_t>(extension)] = enabled;
 }
 
 void RegisterExtension(GLExt extension)
@@ -34,6 +34,25 @@ void RegisterExtension(GLExt extension)
     #else // LLGL_GL_ENABLE_OPENGL2X
     RegisterExtensionInternal(extension);
     #endif // /LLGL_GL_ENABLE_OPENGL2X
+}
+
+void DisableIncompatibleExtensions()
+{
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* The following extensions must be supported with DSA. Otherwise, something is misconfigured and it has to be disabled */
+        for (GLExt ext : {
+                GLExt::ARB_texture_storage,
+                GLExt::ARB_texture_storage_multisample,
+            })
+        {
+            if (!HasExtension(ext))
+            {
+                RegisterExtensionInternal(GLExt::ARB_direct_state_access, false);
+                break;
+            }
+        }
+    }
 }
 
 bool HasExtension(const GLExt extension)

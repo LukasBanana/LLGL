@@ -441,7 +441,7 @@ void GLResourceHeap::Bind(GLStateManager& stateMngr, std::uint32_t descriptorSet
 
 void GLResourceHeap::AllocTextureView(GLuint& texViewID, GLuint sourceTexID, const TextureViewDescriptor& textureViewDesc)
 {
-    /* Release previous texture view before creating a new one in case we're about to create the same texture view */
+    /* Release previous texture view *after* creating a new one in case we're about to create the same texture view */
     const GLuint oldTexViewID = texViewID;
     texViewID = GLTextureViewPool::Get().CreateTextureView(sourceTexID, textureViewDesc);
     if (oldTexViewID != 0)
