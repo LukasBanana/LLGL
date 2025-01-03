@@ -806,7 +806,7 @@ void D3D12RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
 
 void D3D12RenderSystem::ExecuteCommandListAndSync()
 {
-    commandContext_->FinishAndSync(*commandQueue_);
+    commandQueue_->FinishAndSubmitCommandContext(*commandContext_, true);
 }
 
 void D3D12RenderSystem::UpdateBufferAndSync(

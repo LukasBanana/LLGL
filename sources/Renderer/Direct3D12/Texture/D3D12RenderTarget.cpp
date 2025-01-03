@@ -85,7 +85,7 @@ void D3D12RenderTarget::TransitionToOutputMerger(D3D12CommandContext& commandCon
     if (depthStencil_ != nullptr)
         commandContext.TransitionResource(*depthStencil_, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-    commandContext.FlushResourceBarrieres();
+    commandContext.FlushResourceBarriers();
 }
 
 void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
@@ -105,14 +105,14 @@ void D3D12RenderTarget::ResolveSubresources(D3D12CommandContext& commandContext)
     }
     else
     {
-        for (auto& resource : colorBuffers_)
+        for (D3D12Resource* resource : colorBuffers_)
             commandContext.TransitionResource(*resource, resource->usageState);
     }
 
     if (depthStencil_ != nullptr)
         commandContext.TransitionResource(*depthStencil_, depthStencil_->usageState);
 
-    commandContext.FlushResourceBarrieres();
+    commandContext.FlushResourceBarriers();
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderTarget::GetCPUDescriptorHandleForRTV() const

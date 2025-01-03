@@ -39,14 +39,12 @@ class SwapChain;
 
 \remarks This is the main interface to encode graphics, compute, and blit commands to be submitted to the GPU.
 All states that can be changed with a setter function are not persistent across several encoding sections.
-Before any command can be encoded, the command buffer must be set into encode mode, which is done by the CommandBuffer::Begin function.
+Before any command can be encoded, the command buffer must be put into recording mode via the CommandBuffer::Begin function.
+And before the command buffer can be submitted to the command queue, it must be put out of recording mode via the CommandBuffer::End function.
 
-\remarks In a multi-threaded environment, all blit commands (e.g. CommandBuffer::UpdateBuffer, CommandBuffer::CopyBuffer etc.) <b>must not</b> be called simultaneously
-with the same source and/or destination resources even if their ranges do not collide.
-Depending on the backend, those resources might be transitioned into different states during those commands.
-The same applies to CommandBuffer::BeginRenderPass where the specified RenderTarget might be transitioned into rendering state.
-Binding resources (CommandBuffer::SetResource, CommandBuffer::SetResourceHeap) as well as vertex (CommandBuffer::SetVertexBuffer) and
-index streams (CommandBuffer::SetIndexBuffer) can be performed in a multi-threaded fashion with either the same or separate resources.
+\remarks In a multi-threaded environment, buffer and texture resources <b>must not</b> be encoded in more than one command buffer at a time.
+They can be used in more than one command buffer, but they cannot be encoded in parallel.
+That is because some backends might modify internal data of the resources to quickly organize them in caches.
 
 \see RenderSystem::CreateCommandBuffer
 */

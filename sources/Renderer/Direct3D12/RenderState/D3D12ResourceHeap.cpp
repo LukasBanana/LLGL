@@ -212,7 +212,8 @@ void D3D12ResourceHeap::TransitionResources(D3D12CommandContext& context, std::u
     /* Transition all D3D resources in the specified descriptor set; Only heap 0 for CBV/SRV/UAV */
     for_range(i, numDescriptorsPerSet_[0])
     {
-        const UINT descriptorHeap0Index = descriptorSet * numDescriptorsPerSet_[0] + i;
+        const D3D12DescriptorHeapLocation& descriptorLocation = descriptorMap_[i];
+        const UINT descriptorHeap0Index = descriptorSet * numDescriptorsPerSet_[0] + descriptorLocation.index;
         LLGL_ASSERT(descriptorHeap0Index < resources_.size());
         if (D3D12Resource* resource = resources_[descriptorHeap0Index])
             context.TransitionResource(*resource, descriptorMap_[i].state);

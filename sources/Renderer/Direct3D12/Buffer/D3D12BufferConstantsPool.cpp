@@ -7,7 +7,7 @@
 
 #include "D3D12BufferConstantsPool.h"
 #include "D3D12StagingBufferPool.h"
-#include "../Command/D3D12CommandContext.h"
+#include "../Command/D3D12CommandQueue.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12Resource.h"
 #include "../../DXCommon/DXCore.h"
@@ -112,7 +112,7 @@ void D3D12BufferConstantsPool::CreateImmutableBuffer(
 
     /* Initialize buffer with registered constants */
     stagingBufferPool.WriteImmediate(commandContext, resource_, 0, data.data(), bufferSize);
-    commandContext.FinishAndSync(commandQueue);
+    commandQueue.FinishAndSubmitCommandContext(commandContext, true);
 }
 
 

@@ -7,6 +7,7 @@
 
 #include "D3D12StagingBufferPool.h"
 #include "../Command/D3D12CommandContext.h"
+#include "../Command/D3D12CommandQueue.h"
 #include "../D3D12Resource.h"
 #include "../../../Core/CoreUtils.h"
 #include <algorithm>
@@ -51,12 +52,13 @@ HRESULT D3D12StagingBufferPool::WriteStaged(
 
     /* Write data to current chunk */
     HRESULT hr;
+    const D3D12_RESOURCE_STATES oldResourceState = dstBuffer.currentState;
     commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
         D3D12StagingBuffer& chunk = chunks_[chunkIdx_];
         hr = chunk.WriteAndIncrementOffset(commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
     }
-    commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
+    commandContext.TransitionResource(dstBuffer, oldResourceState);
     return hr;
 }
 
@@ -70,11 +72,12 @@ HRESULT D3D12StagingBufferPool::WriteImmediate(
 {
     /* Write data to global upload buffer and copy region to destination buffer */
     HRESULT hr;
+    const D3D12_RESOURCE_STATES oldResourceState = dstBuffer.currentState;
     commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
     {
         hr = GetUploadBufferAndGrow(dataSize, alignment).Write(commandContext.GetCommandList(), dstBuffer.Get(), dstOffset, data, dataSize);
     }
-    commandContext.TransitionResource(dstBuffer, dstBuffer.usageState, true);
+    commandContext.TransitionResource(dstBuffer, oldResourceState);
     return hr;
 }
 
@@ -90,12 +93,13 @@ HRESULT D3D12StagingBufferPool::ReadSubresourceRegion(
     D3D12StagingBuffer& readbackBuffer = GetReadbackBufferAndGrow(dataSize, alignment);
 
     /* Copy source buffer region to readback buffer and flush command list */
+    const D3D12_RESOURCE_STATES oldResourceState = srcBuffer.currentState;
     commandContext.TransitionResource(srcBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
     {
         commandContext.GetCommandList()->CopyBufferRegion(readbackBuffer.GetNative(), 0, srcBuffer.Get(), srcOffset, dataSize);
     }
-    commandContext.TransitionResource(srcBuffer, srcBuffer.usageState, true);
-    commandContext.FinishAndSync(commandQueue);
+    commandContext.TransitionResource(srcBuffer, oldResourceState);
+    commandQueue.FinishAndSubmitCommandContext(commandContext, true);
 
     /* Map readback buffer to CPU memory space */
     char* mappedData = nullptr;

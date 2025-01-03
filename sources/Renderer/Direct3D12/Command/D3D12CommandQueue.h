@@ -45,6 +45,10 @@ class D3D12CommandQueue final : public CommandQueue
         // Submits the specified fence with a custom value.
         void SignalFence(ID3D12Fence* fence, UINT64 value);
 
+        // Executes the command context and encodes resource transitions if the context has cached barriers.
+        void SubmitCommandContext(D3D12CommandContext& commandContext);
+        void FinishAndSubmitCommandContext(D3D12CommandContext& commandContext, bool syncWithGPU = false);
+
         // Executes the specified command lists.
         void ExecuteCommandLists(UINT numCommandsLists, ID3D12CommandList* const* commandLists);
         void ExecuteCommandList(ID3D12CommandList* commandList);

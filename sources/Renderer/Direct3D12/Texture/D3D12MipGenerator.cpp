@@ -234,7 +234,6 @@ void D3D12MipGenerator::GenerateMips1D(
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
     D3D12Resource& resource = texture.GetResource();
 
-    const D3D12_RESOURCE_STATES oldResourceState = texture.GetResource().currentState;
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
@@ -290,8 +289,6 @@ void D3D12MipGenerator::GenerateMips1D(
 
         mipLevel += numMips;
     }
-
-    commandContext.TransitionResource(resource, oldResourceState, true);
 }
 
 void D3D12MipGenerator::GenerateMips2D(
@@ -305,7 +302,6 @@ void D3D12MipGenerator::GenerateMips2D(
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
     D3D12Resource& resource = texture.GetResource();
 
-    const D3D12_RESOURCE_STATES oldResourceState = resource.currentState;
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
@@ -364,8 +360,6 @@ void D3D12MipGenerator::GenerateMips2D(
 
         mipLevel += numMips;
     }
-
-    commandContext.TransitionResource(resource, oldResourceState, true);
 }
 
 void D3D12MipGenerator::GenerateMips3D(
@@ -379,7 +373,6 @@ void D3D12MipGenerator::GenerateMips3D(
     ID3D12GraphicsCommandList* commandList = commandContext.GetCommandList();
     D3D12Resource& resource = texture.GetResource();
 
-    const D3D12_RESOURCE_STATES oldResourceState = texture.GetResource().currentState;
     commandContext.TransitionResource(resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
 
     /* Set root signature and descriptor heap */
@@ -440,8 +433,6 @@ void D3D12MipGenerator::GenerateMips3D(
 
         mipLevel += numMips;
     }
-
-    commandContext.TransitionResource(resource, oldResourceState, true);
 }
 
 

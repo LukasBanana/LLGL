@@ -6,6 +6,7 @@
  */
 
 #include "D3D12SubresourceContext.h"
+#include "Command/D3D12CommandQueue.h"
 #include "../../Core/Assertion.h"
 #include "../DXCommon/DXCore.h"
 #include "D3DX12/d3dx12.h"
@@ -23,7 +24,7 @@ D3D12SubresourceContext::D3D12SubresourceContext(D3D12CommandContext& commandCon
 
 D3D12SubresourceContext::~D3D12SubresourceContext()
 {
-    commandContext_.FinishAndSync(commandQueue_);
+    commandQueue_.FinishAndSubmitCommandContext(commandContext_, true);
 }
 
 ID3D12Resource* D3D12SubresourceContext::CreateUploadBuffer(UINT64 size)

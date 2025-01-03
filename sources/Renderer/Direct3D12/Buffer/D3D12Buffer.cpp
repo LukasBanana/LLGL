@@ -10,6 +10,7 @@
 #include "../D3D12Types.h"
 #include "../D3D12ObjectUtils.h"
 #include "../Command/D3D12CommandContext.h"
+#include "../Command/D3D12CommandQueue.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../BufferUtils.h"
 #include "../../../Core/Assertion.h"
@@ -239,6 +240,9 @@ void D3D12Buffer::ClearSubresourceUInt(
     if (useIntermediateBuffer)
     {
         /* Clear intermediate buffer with UAV */
+        const D3D12_RESOURCE_STATES oldIntermediateBufferState = uavIntermediateBuffer_.currentState;
+        commandContext.TransitionResource(uavIntermediateBuffer_, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+
         ClearSubresourceWithUAV(
             commandList,
             uavIntermediateBuffer_.Get(),
@@ -254,33 +258,28 @@ void D3D12Buffer::ClearSubresourceUInt(
         /* Copy intermediate buffer into destination buffer */
         commandContext.TransitionResource(uavIntermediateBuffer_, D3D12_RESOURCE_STATE_COPY_SOURCE);
         commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COPY_DEST, true);
-        {
-            if (fillSize == GetBufferSize())
-                commandList->CopyResource(GetNative(), uavIntermediateBuffer_.Get());
-            else
-                commandList->CopyBufferRegion(GetNative(), offset, uavIntermediateBuffer_.Get(), offset, fillSize);
-        }
-        commandContext.TransitionResource(uavIntermediateBuffer_, uavIntermediateBuffer_.usageState);
-        commandContext.TransitionResource(GetResource(), GetResource().usageState, true);
+
+        if (fillSize == GetBufferSize())
+            commandList->CopyResource(GetNative(), uavIntermediateBuffer_.Get());
+        else
+            commandList->CopyBufferRegion(GetNative(), offset, uavIntermediateBuffer_.Get(), offset, fillSize);
     }
     else
     {
         /* Clear destination buffer directly with intermediate UAV */
-        commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_COMMON, true);
-        {
-            ClearSubresourceWithUAV(
-                commandList,
-                GetNative(),
-                GetBufferSize(),
-                gpuDescHandle,
-                cpuDescHandle,
-                offset,
-                fillSize,
-                formatStride,
-                values
-            );
-        }
-        commandContext.TransitionResource(GetResource(), GetResource().usageState, true);
+        commandContext.TransitionResource(GetResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true);
+
+        ClearSubresourceWithUAV(
+            commandList,
+            GetNative(),
+            GetBufferSize(),
+            gpuDescHandle,
+            cpuDescHandle,
+            offset,
+            fillSize,
+            formatStride,
+            values
+        );
     }
 
     /* Reset previous staging descriptor heaps */
@@ -304,17 +303,16 @@ HRESULT D3D12Buffer::Map(
         {
             /* Copy content from GPU host memory to CPU memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
-            {
-                commandContext.GetCommandList()->CopyBufferRegion(
-                    cpuAccessBuffer_.Get(),
-                    range.Begin,
-                    GetNative(),
-                    range.Begin,
-                    range.End - range.Begin
-                );
-            }
-            commandContext.TransitionResource(resource_, resource_.usageState, true);
-            commandContext.FinishAndSync(commandQueue);
+
+            commandContext.GetCommandList()->CopyBufferRegion(
+                cpuAccessBuffer_.Get(),
+                range.Begin,
+                GetNative(),
+                range.Begin,
+                range.End - range.Begin
+            );
+
+            commandQueue.FinishAndSubmitCommandContext(commandContext, true);
 
             /* Map with read range */
             return cpuAccessBuffer_.Get()->Map(0, &range, mappedData);
@@ -342,17 +340,16 @@ void D3D12Buffer::Unmap(
 
             /* Copy content from CPU memory to GPU host memory */
             commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
-            {
-                commandContext.GetCommandList()->CopyBufferRegion(
-                    GetNative(),
-                    mappedRange_.Begin,
-                    cpuAccessBuffer_.Get(),
-                    mappedRange_.Begin,
-                    mappedRange_.End - mappedRange_.Begin
-                );
-            }
-            commandContext.TransitionResource(resource_, resource_.usageState, true);
-            commandContext.FinishAndSync(commandQueue);
+
+            commandContext.GetCommandList()->CopyBufferRegion(
+                GetNative(),
+                mappedRange_.Begin,
+                cpuAccessBuffer_.Get(),
+                mappedRange_.Begin,
+                mappedRange_.End - mappedRange_.Begin
+            );
+
+            commandQueue.FinishAndSubmitCommandContext(commandContext, true);
         }
         else
         {
@@ -378,24 +375,26 @@ static D3D12_RESOURCE_FLAGS GetD3DResourceFlags(const BufferDescriptor& desc)
     return static_cast<D3D12_RESOURCE_FLAGS>(flags);
 }
 
-//TODO: transition sources before binding
 static D3D12_RESOURCE_STATES GetD3DUsageState(long bindFlags)
 {
     D3D12_RESOURCE_STATES flagsD3D = D3D12_RESOURCE_STATE_COMMON;
 
     if ((bindFlags & (BindFlags::VertexBuffer | BindFlags::ConstantBuffer)) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    else if ((bindFlags & BindFlags::IndexBuffer) != 0)
+    if ((bindFlags & BindFlags::IndexBuffer) != 0)
         flagsD3D |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
-    else if ((bindFlags & BindFlags::Storage) != 0)
-        flagsD3D |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-    else if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
-        flagsD3D |= D3D12_RESOURCE_STATE_STREAM_OUT;
-    else if ((bindFlags & BindFlags::IndirectBuffer) != 0)
-        flagsD3D |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
 
-    //if ((bindFlags & BindFlags::Sampled) != 0)
-    //    flagsD3D |= (D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    if (flagsD3D == 0)
+    {
+        if ((bindFlags & BindFlags::Storage) != 0)
+            flagsD3D |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        else if ((bindFlags & BindFlags::StreamOutputBuffer) != 0)
+            flagsD3D |= D3D12_RESOURCE_STATE_STREAM_OUT;
+        else if ((bindFlags & BindFlags::IndirectBuffer) != 0)
+            flagsD3D |= D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+        else if ((bindFlags & BindFlags::Sampled) != 0)
+            flagsD3D |= (D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    }
 
     return flagsD3D;
 }

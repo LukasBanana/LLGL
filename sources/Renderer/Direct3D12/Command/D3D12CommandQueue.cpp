@@ -43,7 +43,7 @@ void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
     /* Execute command list */
     auto& commandBufferD3D = LLGL_CAST(D3D12CommandBuffer&, commandBuffer);
     if (!commandBufferD3D.IsImmediateCmdBuffer())
-        commandBufferD3D.GetCommandContext().ExecuteAndSignal(*this);
+        SubmitCommandContext(commandBufferD3D.GetCommandContext());
 }
 
 /* ----- Queries ----- */
@@ -61,7 +61,7 @@ bool D3D12CommandQueue::QueryResult(
     if (queryHeapD3D.InsideDirtyRange(firstQuery, numQueries))
     {
         queryHeapD3D.FlushDirtyRange(commandContext_.GetCommandList());
-        commandContext_.FinishAndSync(*this);
+        FinishAndSubmitCommandContext(commandContext_, true);
     }
 
     /* Map query result buffer to CPU local memory */
@@ -129,6 +129,33 @@ void D3D12CommandQueue::SignalFence(ID3D12Fence* fence, UINT64 value)
     HRESULT hr = native_->Signal(fence, value);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
     busy_ = true;
+}
+
+void D3D12CommandQueue::SubmitCommandContext(D3D12CommandContext& commandContext)
+{
+    /* If resource transitions where cached, execute them now to ensure the resource are in the correct state at the beginning and end of the command list */
+    if (commandContext.HasCachedResourceStates())
+    {
+        D3D12CommandContext& cmdQueueContext = GetContext();
+        cmdQueueContext.ExecuteResourceTransitions(commandContext);
+        FinishAndSubmitCommandContext(cmdQueueContext);
+    }
+
+    /* Execute command list on queue and signal */
+    ExecuteCommandList(commandContext.GetCommandList());
+    commandContext.Signal(*this);
+}
+
+void D3D12CommandQueue::FinishAndSubmitCommandContext(D3D12CommandContext& commandContext, bool syncWithGPU)
+{
+    /* Close command list and execute, then reset command allocator for next encoding */
+    commandContext.Close();
+    SubmitCommandContext(commandContext);
+    commandContext.Reset(*this);
+
+    /* Sync CPU/GPU */
+    if (syncWithGPU)
+        WaitIdle();
 }
 
 void D3D12CommandQueue::ExecuteCommandLists(UINT numCommandsLists, ID3D12CommandList* const* commandLists)

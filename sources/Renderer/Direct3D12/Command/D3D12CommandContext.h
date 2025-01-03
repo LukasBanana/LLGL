@@ -44,6 +44,19 @@ struct D3D12Constant
     UINT bits32;
 };
 
+struct D3D12ResourceTransition
+{
+    D3D12Resource*          resource;
+    D3D12_RESOURCE_STATES   newState;
+};
+
+struct D3D12ResourceTransitionExt
+{
+    D3D12Resource*          resource;
+    D3D12_RESOURCE_STATES   beginState; // The state a resource is expected to be in at the beginning of the command list
+    D3D12_RESOURCE_STATES   endState;   // The state a resource will be in at the end of the command list
+};
+
 class D3D12CommandContext
 {
 
@@ -59,20 +72,19 @@ class D3D12CommandContext
             D3D12_COMMAND_LIST_TYPE commandListType         = D3D12_COMMAND_LIST_TYPE_DIRECT,
             UINT                    numAllocators           = ~0u,
             UINT64                  initialStagingChunkSize = (0xFFFF + 1),
-            bool                    initialClose            = false
+            bool                    initialClose            = false,
+            bool                    cacheResourceStates     = false
         );
 
         void Close();
-        void Execute(D3D12CommandQueue& commandQueue);
-        void ExecuteAndSignal(D3D12CommandQueue& commandQueue);
         void Signal(D3D12CommandQueue& commandQueue);
         void Reset(D3D12CommandQueue& commandQueue);
 
         // Executes a deferred command list bundle from another command context.
         void ExecuteBundle(D3D12CommandContext& otherContext);
 
-        // Calls Close, Execute, and Reset with the internal command queue and allocator.
-        void FinishAndSync(D3D12CommandQueue& commandQueue);
+        // Executes the resource transitions cached by another context.
+        void ExecuteResourceTransitions(const D3D12CommandContext& otherContext);
 
         // Returns the command list of this context.
         inline ID3D12GraphicsCommandList* GetCommandList() const
@@ -89,10 +101,9 @@ class D3D12CommandContext
 
         // Transition and cache a resource state.
         void TransitionResource(D3D12Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate = false);
-        void TransitionGenericResource(Resource& resource, D3D12_RESOURCE_STATES newState, bool flushImmediate = false);
 
         // Flush all accumulated resource barriers.
-        void FlushResourceBarrieres();
+        void FlushResourceBarriers();
 
         void ResolveSubresource(
             D3D12Resource&  dstResource,
@@ -211,6 +222,12 @@ class D3D12CommandContext
             return stateCache_.pipelineState;
         }
 
+        // Returns true if this command context has any cached resource states.
+        inline bool HasCachedResourceStates() const
+        {
+            return !cachedResourceStates_.empty();
+        }
+
     private:
 
         static constexpr UINT maxNumAllocators          = 3;
@@ -252,6 +269,11 @@ class D3D12CommandContext
 
         // Returns the next resource barrier and flushes previous barriers if the cache is full.
         D3D12_RESOURCE_BARRIER& NextResourceBarrier();
+        D3D12_RESOURCE_BARRIER* FindSubresourceTransitionBarrier(ID3D12Resource* resource, UINT subresource);
+
+        void TransitionResourceInternal(D3D12Resource& resource, D3D12_RESOURCE_STATES newState);
+
+        void CacheResourceState(D3D12Resource* resource, D3D12_RESOURCE_STATES state, bool& outIsBeginState);
 
         // Switches to the next command allocator and resets it.
         void NextCommandAllocator(D3D12CommandQueue& commandQueue);
@@ -271,30 +293,33 @@ class D3D12CommandContext
 
     private:
 
-        ID3D12Device*                       device_                                     = nullptr;
+        ID3D12Device*                           device_                                     = nullptr;
 
-        ComPtr<ID3D12CommandAllocator>      commandAllocators_[maxNumAllocators];
-        UINT                                currentAllocatorIndex_                      = 0;
-        UINT                                numAllocators_                              = maxNumAllocators;
+        ComPtr<ID3D12CommandAllocator>          commandAllocators_[maxNumAllocators];
+        UINT                                    currentAllocatorIndex_                      = 0;
+        UINT                                    numAllocators_                              = maxNumAllocators;
 
-        UINT64                              allocatorFenceValues_[maxNumAllocators]     = {};
-        bool                                allocatorFenceValueDirty_[maxNumAllocators] = {};
-        D3D12NativeFence                    allocatorFence_;
+        UINT64                                  allocatorFenceValues_[maxNumAllocators]     = {};
+        bool                                    allocatorFenceValueDirty_[maxNumAllocators] = {};
+        D3D12NativeFence                        allocatorFence_;
 
-        ComPtr<ID3D12GraphicsCommandList>   commandList_;
+        ComPtr<ID3D12GraphicsCommandList>       commandList_;
 
-        D3D12_RESOURCE_BARRIER              resourceBarriers_[maxNumResourceBarrieres];
-        UINT                                numResourceBarriers_                        = 0;
+        D3D12_RESOURCE_BARRIER                  resourceBarriers_[maxNumResourceBarrieres];
+        UINT                                    numResourceBarriers_                        = 0;
 
-        D3D12StagingDescriptorHeapPool      stagingDescriptorPools_[maxNumAllocators][maxNumDescriptorHeaps];
-        D3D12DescriptorHeapSetLayout        stagingDescriptorSetLayout_;
-        D3D12RootParameterIndices           stagingDescriptorIndices_;
-        D3D12DescriptorCache                descriptorCaches_[maxNumAllocators];
+        bool                                    doCacheResourceStates_                      = false;
+        std::vector<D3D12ResourceTransitionExt> cachedResourceStates_; // Last recorded resource states for multi-submit command buffers
 
-        D3D12StagingBufferPool              stagingBufferPools_[maxNumAllocators];
-        D3D12IntermediateBufferPool         intermediateBufferPools_[maxNumAllocators];
+        D3D12StagingDescriptorHeapPool          stagingDescriptorPools_[maxNumAllocators][maxNumDescriptorHeaps];
+        D3D12DescriptorHeapSetLayout            stagingDescriptorSetLayout_;
+        D3D12RootParameterIndices               stagingDescriptorIndices_;
+        D3D12DescriptorCache                    descriptorCaches_[maxNumAllocators];
 
-        StateCache                          stateCache_;
+        D3D12StagingBufferPool                  stagingBufferPools_[maxNumAllocators];
+        D3D12IntermediateBufferPool             intermediateBufferPools_[maxNumAllocators];
+
+        StateCache                              stateCache_;
 
 };
 

@@ -52,8 +52,10 @@ struct D3D12Resource
     }
 
     ComPtr<ID3D12Resource>  native;
-    D3D12_RESOURCE_STATES   usageState      = D3D12_RESOURCE_STATE_COMMON; //TODO: remove usage state
-    D3D12_RESOURCE_STATES   currentState    = D3D12_RESOURCE_STATE_COMMON;
+
+    D3D12_RESOURCE_STATES   usageState      = D3D12_RESOURCE_STATE_COMMON;  // Resource state combinations for common use.
+    D3D12_RESOURCE_STATES   currentState    = D3D12_RESOURCE_STATE_COMMON;  // Current resource state.
+    UINT                    cacheIndex      = 0;                            // Multi-purpose cache index to quickly find resource in active barrier queue.
 };
 
 
