@@ -133,7 +133,7 @@ void D3D12CommandQueue::SignalFence(ID3D12Fence* fence, UINT64 value)
 
 void D3D12CommandQueue::SubmitCommandContext(D3D12CommandContext& commandContext)
 {
-    /* If resource transitions where cached, execute them now to ensure the resource are in the correct state at the beginning and end of the command list */
+    /* If resource transitions where cached, execute them now to ensure the resources are in the correct state at the beginning and end of the command list */
     if (commandContext.HasCachedResourceStates())
     {
         D3D12CommandContext& cmdQueueContext = GetContext();

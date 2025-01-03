@@ -87,6 +87,15 @@ class D3D12MipGenerator
             const TextureSubresource&   subresource
         );
 
+        void TransitionSourceMipLevel(
+            D3D12CommandContext&        commandContext,
+            D3D12Texture&               texture,
+            D3D12_RESOURCE_STATES       newState,
+            D3D12_RESOURCE_STATES       oldState,
+            UINT                        mipLevel,
+            const TextureSubresource&   subresource
+        );
+
     private:
 
         ID3D12Device*               device_             = nullptr;
