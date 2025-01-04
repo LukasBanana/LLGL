@@ -100,6 +100,13 @@ void D3D12CommandContext::Close()
     /* Close native command list */
     HRESULT hr = commandList_->Close();
     DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Reset resource states if this context had to cache them */
+    if (doCacheResourceStates_)
+    {
+        for (const D3D12ResourceTransitionExt& resourceState : cachedResourceStates_)
+            resourceState.resource->currentState = resourceState.initialState;
+    }
 }
 
 void D3D12CommandContext::Signal(D3D12CommandQueue& commandQueue)
@@ -685,7 +692,7 @@ void D3D12CommandContext::CacheResourceState(D3D12Resource* resource, D3D12_RESO
     {
         /* Append new cache entry and initialize both begin and end states */
         resource->cacheIndex = static_cast<UINT>(cachedResourceStates_.size());
-        cachedResourceStates_.push_back({ resource, state, state });
+        cachedResourceStates_.push_back({ resource, resource->currentState, state, state });
         outIsBeginState = true;
     }
 }

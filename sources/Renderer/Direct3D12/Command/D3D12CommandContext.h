@@ -53,8 +53,9 @@ struct D3D12ResourceTransition
 struct D3D12ResourceTransitionExt
 {
     D3D12Resource*          resource;
-    D3D12_RESOURCE_STATES   beginState; // The state a resource is expected to be in at the beginning of the command list
-    D3D12_RESOURCE_STATES   endState;   // The state a resource will be in at the end of the command list
+    D3D12_RESOURCE_STATES   initialState;   // The state a resource was initially in when the command list was recorded (must be reset at end)
+    D3D12_RESOURCE_STATES   beginState;     // The state a resource is expected to be in at the beginning of the command list
+    D3D12_RESOURCE_STATES   endState;       // The state a resource will be in at the end of the command list
 };
 
 class D3D12CommandContext
