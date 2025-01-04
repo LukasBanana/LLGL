@@ -66,8 +66,7 @@ void D3D12CommandContext::Create(
     allocatorFence_.Create(device.GetNative());
 
     /* Determine number of command allocators */
-    constexpr UINT numAllocatorsDefault = 3;
-    numAllocators_ = (numAllocators == 0 ? numAllocatorsDefault : Clamp<UINT>(numAllocators, 1u, D3D12CommandContext::maxNumAllocators));
+    numAllocators_ = Clamp<UINT>(numAllocators, 1u, D3D12CommandContext::maxNumAllocators);
 
     /* Create command allocators and descriptor heap pools */
     constexpr UINT64 minStagingChunkSize = 256;

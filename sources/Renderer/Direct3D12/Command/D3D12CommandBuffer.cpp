@@ -1122,6 +1122,20 @@ static D3D12_COMMAND_LIST_TYPE GetD3DCommandListType(const CommandBufferDescript
         return D3D12_COMMAND_LIST_TYPE_DIRECT;
 }
 
+static UINT GetNumCommandAllocators(const CommandBufferDescriptor& desc)
+{
+    constexpr UINT numAllocatorsDefault = 3;
+    if (desc.numNativeBuffers == 0)
+    {
+        /* Return default number of allocators and only 1 for multi-submit command buffers as it's expected they won't be encoded more than once */
+        if ((desc.flags & CommandBufferFlags::MultiSubmit) != 0)
+            return 1;
+        else
+            return numAllocatorsDefault;
+    }
+    return desc.numNativeBuffers;
+}
+
 void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, const CommandBufferDescriptor& desc)
 {
     auto& device = renderSystem.GetDevice();
@@ -1129,7 +1143,7 @@ void D3D12CommandBuffer::CreateCommandContext(D3D12RenderSystem& renderSystem, c
     /* Create command context and store reference to command list */
     const bool initialClose         = true;
     const bool cacheResourceStates  = ((desc.flags & (CommandBufferFlags::ImmediateSubmit | CommandBufferFlags::Secondary)) == 0);
-    commandContext_.Create(device, GetD3DCommandListType(desc), desc.numNativeBuffers, desc.minStagingPoolSize, initialClose, cacheResourceStates);
+    commandContext_.Create(device, GetD3DCommandListType(desc), GetNumCommandAllocators(desc), desc.minStagingPoolSize, initialClose, cacheResourceStates);
 
     /* Store increment size for descriptor heaps */
     rtvDescSize_ = device.GetNative()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -1417,7 +1431,7 @@ void D3D12CommandBuffer::SubmitTransitionResource(Resource& resource, D3D12_RESO
             if ((newState & (D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)) != 0 &&
                 IsDepthOrStencilFormat(textureD3D.GetBaseFormat()))
             {
-                /* Depth-stencil textures must be transitioned into DEPTH_READ state instead of SHADER_RESOURCE state */
+                /* Depth-stencil SRVs must also be transitioned into DEPTH_READ state */
                 SubmitTransitionResource(textureD3D.GetResource(), newState | D3D12_RESOURCE_STATE_DEPTH_READ);
             }
             else
