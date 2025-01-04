@@ -45,10 +45,6 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
     /* Create native buffer resource */
     CreateGpuBuffer(device, desc);
 
-    /* Create CPU access buffer pool */
-    if (desc.cpuAccessFlags != 0)
-        cpuAccessPool_ = MakeUnique<D3D12StagingBufferPool>(device, 0);
-
     /* Create sub-resource views */
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
         CreateVertexBufferView(desc);
@@ -290,63 +286,57 @@ static bool HasWriteAccess(const CPUAccess access)
 HRESULT D3D12Buffer::Map(
     D3D12CommandContext&    commandContext,
     D3D12CommandQueue&      commandQueue,
+    D3D12StagingBufferPool& stagingBufferPool,
     const D3D12_RANGE&      range,
     void**                  mappedData,
     const CPUAccess         access)
 {
-    if (cpuAccessPool_.get() != nullptr && mappedData != nullptr)
+    /* Store mapped state */
+    mappedRange_        = range;
+    mappedCPUaccess_    = access;
+
+    if (access == CPUAccess::ReadWrite)
     {
-        /* Store mapped state */
-        mappedRange_        = range;
-        mappedCPUaccess_    = access;
+        /* First map write access buffer */
+        SIZE_T rangeSize = range.End - range.Begin;
+        mappedBufferTicket_ = stagingBufferPool.MapUploadBuffer(rangeSize, mappedData);
+        if (FAILED(mappedBufferTicket_.hr))
+            return mappedBufferTicket_.hr;
+        if (*mappedData == nullptr)
+            return E_FAIL;
 
-        if (access == CPUAccess::ReadWrite)
-        {
-            /* First map write access buffer */
-            SIZE_T rangeSize = range.End - range.Begin;
-            HRESULT hr = cpuAccessPool_->MapUploadBuffer(rangeSize, mappedData);
-            if (FAILED(hr))
-                return hr;
-            if (*mappedData == nullptr)
-                return E_FAIL;
+        /* Now map feedback buffer and copy its content into the upload buffer */
+        void* mappedFeedbackData = nullptr;
+        auto readTicket = stagingBufferPool.MapFeedbackBuffer(commandContext, commandQueue, resource_, range, &mappedFeedbackData);
+        if (FAILED(readTicket.hr))
+            return readTicket.hr;
 
-            /* Now map feedback buffer and copy its content into the upload buffer */
-            void* mappedFeedbackData = nullptr;
-            hr = cpuAccessPool_->MapFeedbackBuffer(commandContext, commandQueue, resource_, range, &mappedFeedbackData);
-            if (FAILED(hr))
-                return hr;
-
-            ::memcpy(*mappedData, mappedFeedbackData, rangeSize);
-            cpuAccessPool_->UnmapFeedbackBuffer();
-
-            return S_OK;
-        }
-        else if (access == CPUAccess::ReadOnly)
-        {
-            /* Map feedback buffer */
-            return cpuAccessPool_->MapFeedbackBuffer(commandContext, commandQueue, resource_, range, mappedData);
-        }
-        else
-        {
-            /* Map upload buffer */
-            SIZE_T rangeSize = range.End - range.Begin;
-            return cpuAccessPool_->MapUploadBuffer(rangeSize, mappedData);
-        }
+        ::memcpy(*mappedData, mappedFeedbackData, rangeSize);
+        stagingBufferPool.UnmapFeedbackBuffer(readTicket);
     }
-    return E_FAIL;
+    else if (access == CPUAccess::ReadOnly)
+    {
+        /* Map feedback buffer */
+        mappedBufferTicket_ = stagingBufferPool.MapFeedbackBuffer(commandContext, commandQueue, resource_, range, mappedData);
+    }
+    else
+    {
+        /* Map upload buffer */
+        SIZE_T rangeSize = range.End - range.Begin;
+        mappedBufferTicket_ = stagingBufferPool.MapUploadBuffer(rangeSize, mappedData);
+    }
+    return mappedBufferTicket_.hr;
 }
 
 void D3D12Buffer::Unmap(
     D3D12CommandContext&    commandContext,
-    D3D12CommandQueue&      commandQueue)
+    D3D12CommandQueue&      commandQueue,
+    D3D12StagingBufferPool& stagingBufferPool)
 {
-    if (cpuAccessPool_.get() != nullptr)
-    {
-        if (HasWriteAccess(mappedCPUaccess_))
-            cpuAccessPool_->UnmapUploadBuffer(commandContext, commandQueue, resource_, mappedRange_);
-        else
-            cpuAccessPool_->UnmapFeedbackBuffer();
-    }
+    if (HasWriteAccess(mappedCPUaccess_))
+        stagingBufferPool.UnmapUploadBuffer(commandContext, commandQueue, resource_, mappedRange_, mappedBufferTicket_);
+    else
+        stagingBufferPool.UnmapFeedbackBuffer(mappedBufferTicket_);
 }
 
 

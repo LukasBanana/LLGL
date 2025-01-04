@@ -188,7 +188,7 @@ void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::
 void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.Unmap(*commandContext_, *commandQueue_);
+    bufferD3D.Unmap(*commandContext_, *commandQueue_, stagingBufferPool_);
 }
 
 /* ----- Textures ----- */
@@ -825,7 +825,7 @@ void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess 
     void* mappedData = nullptr;
     const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(offset + length) };
 
-    if (SUCCEEDED(bufferD3D.Map(*commandContext_, *commandQueue_, range, &mappedData, access)))
+    if (SUCCEEDED(bufferD3D.Map(*commandContext_, *commandQueue_, stagingBufferPool_, range, &mappedData, access)))
         return mappedData;
 
     return nullptr;

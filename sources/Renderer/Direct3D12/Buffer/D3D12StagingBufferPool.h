@@ -10,8 +10,8 @@
 
 
 #include "D3D12StagingBuffer.h"
+#include "D3D12CPUAccessBuffer.h"
 #include <LLGL/RenderSystemFlags.h>
-#include <d3d12.h>
 #include <vector>
 
 
@@ -25,6 +25,20 @@ class D3D12CommandQueue;
 
 class D3D12StagingBufferPool
 {
+
+    public:
+
+        class MapBufferTicket
+        {
+
+                friend class D3D12StagingBufferPool;
+                D3D12CPUAccessBuffer* cpuAccessBuffer = nullptr;
+
+            public:
+
+                HRESULT hr = S_OK;
+
+        };
 
     public:
 
@@ -67,24 +81,27 @@ class D3D12StagingBufferPool
             UINT64                  alignment   = 256u
         );
 
-        HRESULT MapFeedbackBuffer(
+        MapBufferTicket MapFeedbackBuffer(
             D3D12CommandContext&    commandContext,
             D3D12CommandQueue&      commandQueue,
             D3D12Resource&          srcBuffer,
             const D3D12_RANGE&      readRange,
             void**                  mappedData
         );
-        void UnmapFeedbackBuffer();
 
-        HRESULT MapUploadBuffer(
+        void UnmapFeedbackBuffer(MapBufferTicket ticket);
+
+        MapBufferTicket MapUploadBuffer(
             SIZE_T                  size,
             void**                  mappedData
         );
+
         void UnmapUploadBuffer(
             D3D12CommandContext&    commandContext,
             D3D12CommandQueue&      commandQueue,
             D3D12Resource&          dstBuffer,
-            const D3D12_RANGE&      writtenRange
+            const D3D12_RANGE&      writtenRange,
+            MapBufferTicket         ticket
         );
 
     private:
@@ -92,27 +109,20 @@ class D3D12StagingBufferPool
         // Allocates a new chunk with the specified minimal size.
         void AllocChunk(UINT64 minChunkSize);
 
-        // Resizes the specified staging buffer, but only grows its size.
-        void ResizeBuffer(
-            D3D12StagingBuffer& stagingBuffer,
-            D3D12_HEAP_TYPE     heapType,
-            UINT64              size,
-            UINT64              alignment
-        );
-
-        D3D12StagingBuffer& GetUploadBufferAndGrow(UINT64 size, UINT64 alignment = 8);
-        D3D12StagingBuffer& GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment = 8);
+        // Returns the first available CPU access buffer or creates a new one.
+        D3D12CPUAccessBuffer& GetOrCreateCPUAccessBuffer(long cpuAccessFlags);
 
     private:
 
-        ID3D12Device*                   device_             = nullptr;
+        ID3D12Device*                       device_                     = nullptr;
 
-        std::vector<D3D12StagingBuffer> chunks_;
-        std::size_t                     chunkIdx_           = 0;
-        UINT64                          chunkSize_          = 0;
+        std::vector<D3D12StagingBuffer>     chunks_;
+        std::size_t                         chunkIdx_                   = 0;
+        UINT64                              chunkSize_                  = 0;
 
-        D3D12StagingBuffer              globalUploadBuffer_;
-        D3D12StagingBuffer              globalReadbackBuffer_;
+        std::vector<D3D12CPUAccessBuffer>   cpuAccessBuffers_;
+        std::size_t                         numReadMappedCPUBuffers_    = 0;
+        std::size_t                         numWriteMappedCPUBuffers_   = 0;
 
 };
 
