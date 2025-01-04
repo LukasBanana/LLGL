@@ -11,7 +11,9 @@
 
 #include <LLGL/Buffer.h>
 #include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Container/DynamicArray.h>
 #include "../D3D12Resource.h"
+#include "D3D12StagingBufferPool.h"
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
 
@@ -150,7 +152,6 @@ class D3D12Buffer : public Buffer
     private:
 
         void CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc);
-        void CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlags);
 
         void CreateIntermediateUAVDescriptorHeap(ID3D12Resource* resource, DXGI_FORMAT format, UINT formatStride);
         void CreateIntermediateUAVBuffer();
@@ -205,7 +206,6 @@ class D3D12Buffer : public Buffer
     private:
 
         D3D12Resource                   resource_;
-        D3D12Resource                   cpuAccessBuffer_; // D3D12_HEAP_TYPE_UPLOAD or D3D12_HEAP_TYPE_READBACK
 
         ComPtr<ID3D12DescriptorHeap>    uavIntermediateDescHeap_;
         D3D12Resource                   uavIntermediateBuffer_;
@@ -220,8 +220,9 @@ class D3D12Buffer : public Buffer
         D3D12_INDEX_BUFFER_VIEW         indexBufferView_            = {};
         D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_               = {};
 
-        D3D12_RANGE                     mappedRange_                = {};
-        CPUAccess                       mappedCPUaccess_            = CPUAccess::ReadOnly;
+        D3D12_RANGE                             mappedRange_                = {};
+        CPUAccess                               mappedCPUaccess_            = CPUAccess::ReadOnly;
+        std::unique_ptr<D3D12StagingBufferPool> cpuAccessPool_;
 
 };
 

@@ -119,6 +119,74 @@ HRESULT D3D12StagingBufferPool::ReadSubresourceRegion(
     return S_OK;
 }
 
+HRESULT D3D12StagingBufferPool::MapFeedbackBuffer(
+    D3D12CommandContext&    commandContext,
+    D3D12CommandQueue&      commandQueue,
+    D3D12Resource&          srcBuffer,
+    const D3D12_RANGE&      readRange,
+    void**                  mappedData)
+{
+    /* Copy content from GPU host memory to CPU memory */
+    UINT64 numBytes = readRange.End - readRange.Begin;
+    D3D12StagingBuffer& readbackBuffer = GetReadbackBufferAndGrow(numBytes);
+
+    commandContext.TransitionResource(srcBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+
+    commandContext.GetCommandList()->CopyBufferRegion(
+        readbackBuffer.GetNative(),
+        0,
+        srcBuffer.Get(),
+        readRange.Begin,
+        numBytes
+    );
+
+    commandQueue.FinishAndSubmitCommandContext(commandContext, true);
+
+    /* Map with read range */
+    const D3D12_RANGE cpuAccessRange{ 0, static_cast<SIZE_T>(numBytes) };
+    return readbackBuffer.GetNative()->Map(0, &cpuAccessRange, mappedData);
+}
+
+void D3D12StagingBufferPool::UnmapFeedbackBuffer()
+{
+    /* Unmap without written range */
+    const D3D12_RANGE nullRange{ 0, 0 };
+    globalReadbackBuffer_.GetNative()->Unmap(0, &nullRange);
+}
+
+HRESULT D3D12StagingBufferPool::MapUploadBuffer(
+    SIZE_T                  size,
+    void**                  mappedData)
+{
+    /* Map without read range */
+    D3D12StagingBuffer& uploadBuffer = GetUploadBufferAndGrow(size);
+    const D3D12_RANGE nullRange{ 0, 0, };
+    return uploadBuffer.GetNative()->Map(0, &nullRange, mappedData);
+}
+
+void D3D12StagingBufferPool::UnmapUploadBuffer(
+    D3D12CommandContext&    commandContext,
+    D3D12CommandQueue&      commandQueue,
+    D3D12Resource&          dstBuffer,
+    const D3D12_RANGE&      writtenRange)
+{
+    /* Unmap with written range */
+    globalUploadBuffer_.GetNative()->Unmap(0, &writtenRange);
+
+    /* Copy content from CPU memory to GPU host memory */
+    commandContext.TransitionResource(dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST, true);
+
+    commandContext.GetCommandList()->CopyBufferRegion(
+        dstBuffer.Get(),
+        writtenRange.Begin,
+        globalUploadBuffer_.GetNative(),
+        0,
+        writtenRange.End - writtenRange.Begin
+    );
+
+    commandQueue.FinishAndSubmitCommandContext(commandContext, true);
+}
+
 
 /*
  * ======= Private: =======

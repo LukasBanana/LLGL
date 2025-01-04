@@ -10,6 +10,7 @@
 
 
 #include "D3D12StagingBuffer.h"
+#include <LLGL/RenderSystemFlags.h>
 #include <d3d12.h>
 #include <vector>
 
@@ -66,6 +67,26 @@ class D3D12StagingBufferPool
             UINT64                  alignment   = 256u
         );
 
+        HRESULT MapFeedbackBuffer(
+            D3D12CommandContext&    commandContext,
+            D3D12CommandQueue&      commandQueue,
+            D3D12Resource&          srcBuffer,
+            const D3D12_RANGE&      readRange,
+            void**                  mappedData
+        );
+        void UnmapFeedbackBuffer();
+
+        HRESULT MapUploadBuffer(
+            SIZE_T                  size,
+            void**                  mappedData
+        );
+        void UnmapUploadBuffer(
+            D3D12CommandContext&    commandContext,
+            D3D12CommandQueue&      commandQueue,
+            D3D12Resource&          dstBuffer,
+            const D3D12_RANGE&      writtenRange
+        );
+
     private:
 
         // Allocates a new chunk with the specified minimal size.
@@ -79,8 +100,8 @@ class D3D12StagingBufferPool
             UINT64              alignment
         );
 
-        D3D12StagingBuffer& GetUploadBufferAndGrow(UINT64 size, UINT64 alignment);
-        D3D12StagingBuffer& GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment);
+        D3D12StagingBuffer& GetUploadBufferAndGrow(UINT64 size, UINT64 alignment = 8);
+        D3D12StagingBuffer& GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment = 8);
 
     private:
 

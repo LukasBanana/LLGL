@@ -6,6 +6,7 @@
  */
 
 #include "D3D12Buffer.h"
+#include "D3D12StagingBufferPool.h"
 #include "../D3DX12/d3dx12.h"
 #include "../D3D12Types.h"
 #include "../D3D12ObjectUtils.h"
@@ -44,9 +45,9 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
     /* Create native buffer resource */
     CreateGpuBuffer(device, desc);
 
-    /* Create CPU access buffer */
+    /* Create CPU access buffer pool */
     if (desc.cpuAccessFlags != 0)
-        CreateCpuAccessBuffer(device, desc.cpuAccessFlags);
+        cpuAccessPool_ = MakeUnique<D3D12StagingBufferPool>(device, 0);
 
     /* Create sub-resource views */
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
@@ -190,16 +191,6 @@ void D3D12Buffer::CreateUnorderedAccessViewPrimary(
     device->CreateUnorderedAccessView(GetNative(), nullptr, &uavDesc, cpuDescHandle);
 }
 
-static bool HasReadAccess(const CPUAccess access)
-{
-    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
-}
-
-static bool HasWriteAccess(const CPUAccess access)
-{
-    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
-}
-
 void D3D12Buffer::ClearSubresourceUInt(
     D3D12CommandContext&    commandContext,
     DXGI_FORMAT             format,
@@ -286,6 +277,16 @@ void D3D12Buffer::ClearSubresourceUInt(
     commandContext.SetStagingDescriptorHeaps(oldLayout, oldRootParamIndices);
 }
 
+static bool HasReadAccess(const CPUAccess access)
+{
+    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
+}
+
+static bool HasWriteAccess(const CPUAccess access)
+{
+    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
+}
+
 HRESULT D3D12Buffer::Map(
     D3D12CommandContext&    commandContext,
     D3D12CommandQueue&      commandQueue,
@@ -293,35 +294,43 @@ HRESULT D3D12Buffer::Map(
     void**                  mappedData,
     const CPUAccess         access)
 {
-    if (cpuAccessBuffer_.Get() != nullptr)
+    if (cpuAccessPool_.get() != nullptr && mappedData != nullptr)
     {
         /* Store mapped state */
         mappedRange_        = range;
         mappedCPUaccess_    = access;
 
-        if (HasReadAccess(access))
+        if (access == CPUAccess::ReadWrite)
         {
-            /* Copy content from GPU host memory to CPU memory */
-            commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_SOURCE, true);
+            /* First map write access buffer */
+            SIZE_T rangeSize = range.End - range.Begin;
+            HRESULT hr = cpuAccessPool_->MapUploadBuffer(rangeSize, mappedData);
+            if (FAILED(hr))
+                return hr;
+            if (*mappedData == nullptr)
+                return E_FAIL;
 
-            commandContext.GetCommandList()->CopyBufferRegion(
-                cpuAccessBuffer_.Get(),
-                range.Begin,
-                GetNative(),
-                range.Begin,
-                range.End - range.Begin
-            );
+            /* Now map feedback buffer and copy its content into the upload buffer */
+            void* mappedFeedbackData = nullptr;
+            hr = cpuAccessPool_->MapFeedbackBuffer(commandContext, commandQueue, resource_, range, &mappedFeedbackData);
+            if (FAILED(hr))
+                return hr;
 
-            commandQueue.FinishAndSubmitCommandContext(commandContext, true);
+            ::memcpy(*mappedData, mappedFeedbackData, rangeSize);
+            cpuAccessPool_->UnmapFeedbackBuffer();
 
-            /* Map with read range */
-            return cpuAccessBuffer_.Get()->Map(0, &range, mappedData);
+            return S_OK;
+        }
+        else if (access == CPUAccess::ReadOnly)
+        {
+            /* Map feedback buffer */
+            return cpuAccessPool_->MapFeedbackBuffer(commandContext, commandQueue, resource_, range, mappedData);
         }
         else
         {
-            /* Map without read range */
-            const D3D12_RANGE nullRange{ 0, 0, };
-            return cpuAccessBuffer_.Get()->Map(0, &nullRange, mappedData);
+            /* Map upload buffer */
+            SIZE_T rangeSize = range.End - range.Begin;
+            return cpuAccessPool_->MapUploadBuffer(rangeSize, mappedData);
         }
     }
     return E_FAIL;
@@ -331,32 +340,12 @@ void D3D12Buffer::Unmap(
     D3D12CommandContext&    commandContext,
     D3D12CommandQueue&      commandQueue)
 {
-    if (cpuAccessBuffer_.Get() != nullptr)
+    if (cpuAccessPool_.get() != nullptr)
     {
         if (HasWriteAccess(mappedCPUaccess_))
-        {
-            /* Unmap with written range */
-            cpuAccessBuffer_.Get()->Unmap(0, &mappedRange_);
-
-            /* Copy content from CPU memory to GPU host memory */
-            commandContext.TransitionResource(resource_, D3D12_RESOURCE_STATE_COPY_DEST, true);
-
-            commandContext.GetCommandList()->CopyBufferRegion(
-                GetNative(),
-                mappedRange_.Begin,
-                cpuAccessBuffer_.Get(),
-                mappedRange_.Begin,
-                mappedRange_.End - mappedRange_.Begin
-            );
-
-            commandQueue.FinishAndSubmitCommandContext(commandContext, true);
-        }
+            cpuAccessPool_->UnmapUploadBuffer(commandContext, commandQueue, resource_, mappedRange_);
         else
-        {
-            /* Unmap without written range */
-            const D3D12_RANGE nullRange{ 0, 0 };
-            cpuAccessBuffer_.Get()->Unmap(0, &nullRange);
-        }
+            cpuAccessPool_->UnmapFeedbackBuffer();
     }
 }
 
@@ -430,38 +419,6 @@ void D3D12Buffer::CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& 
         IID_PPV_ARGS(resource_.native.ReleaseAndGetAddressOf())
     );
     DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 hardware buffer");
-}
-
-void D3D12Buffer::CreateCpuAccessBuffer(ID3D12Device* device, long cpuAccessFlags)
-{
-    /* Determine heap type and resource state */
-    D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_UPLOAD;
-
-    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
-    {
-        /* Use upload heap for write and read/write CPU access buffers */
-        heapType = D3D12_HEAP_TYPE_UPLOAD;
-        cpuAccessBuffer_.SetInitialState(D3D12_RESOURCE_STATE_GENERIC_READ);
-    }
-    else
-    {
-        /* Use readback heap for read-only CPU access buffers */
-        heapType = D3D12_HEAP_TYPE_READBACK;
-        cpuAccessBuffer_.SetInitialState(D3D12_RESOURCE_STATE_COPY_DEST);
-    }
-
-    /* Create CPU access buffer */
-    const CD3DX12_HEAP_PROPERTIES heapProperties{ heapType };
-    const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(GetInternalBufferSize());
-    HRESULT hr = device->CreateCommittedResource(
-        &heapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &bufferDesc,
-        cpuAccessBuffer_.currentState,
-        nullptr,
-        IID_PPV_ARGS(cpuAccessBuffer_.native.ReleaseAndGetAddressOf())
-    );
-    DXThrowIfCreateFailed(hr, "ID3D12Resource", "for D3D12 CPU access buffer");
 }
 
 /*
