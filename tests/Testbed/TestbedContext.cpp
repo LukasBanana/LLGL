@@ -364,7 +364,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( SceneUpdate                 );
     RUN_TEST( BlendStates                 );
     RUN_TEST( DualSourceBlending          );
-    RUN_TEST( CommandBufferMultiThreading );
+    //RUN_TEST( CommandBufferMultiThreading ); //TODO: this must be rewritten as CommandBuffer constraints are violated in this test
     RUN_TEST( CommandBufferSecondary      );
     RUN_TEST( TriangleStripCutOff         );
     RUN_TEST( TextureViews                );
