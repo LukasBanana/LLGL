@@ -128,6 +128,7 @@ class D3D12SwapChain final : public SwapChain
         bool                            hasDebugName_                           = false;
         bool                            tearingSupported_                       = false;
         bool                            windowedMode_                           = false;
+        bool                            isPresentationDirty_                    = false; // Has the back buffer been resized before it was presented again?
 
 };
 

@@ -119,7 +119,16 @@ void D3D12SwapChain::Present()
     const bool tearingEnabled   = (tearingSupported_ && windowedMode_ && syncInterval_ == 0);
     const UINT presentFlags     = (tearingEnabled ? DXGI_PRESENT_ALLOW_TEARING : 0u);
 
-    HRESULT hr = swapChainDXGI_->Present(syncInterval_, presentFlags);
+    HRESULT hr = S_OK;
+    if (isPresentationDirty_)
+    {
+        /* Don't perform vsync when the back buffer has been resized to allow a smooth window resizing */
+        isPresentationDirty_ = false;
+        hr = swapChainDXGI_->Present(0, presentFlags);
+    }
+    else
+        hr = swapChainDXGI_->Present(syncInterval_, presentFlags);
+
     DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 
     /* Advance frame counter */
@@ -349,6 +358,10 @@ HRESULT D3D12SwapChain::CopySubresourceRegion(
 bool D3D12SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     CreateResolutionDependentResources(resolution);
+
+    /* Mark presentation as dirty to avoid vsync on the next presentation; This allows a smooth window resizing like in other backends */
+    isPresentationDirty_ = true;
+
     return true;
 }
 

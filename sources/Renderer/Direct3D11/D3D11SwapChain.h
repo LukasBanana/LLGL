@@ -108,6 +108,7 @@ class D3D11SwapChain final : public SwapChain
         bool                            swapEffectFlip_         = false; // DXGI swap effect is DXGI_SWAP_EFFECT_FLIP_*
         bool                            tearingSupported_       = false;
         bool                            windowedMode_           = false;
+        bool                            isPresentationDirty_    = false; // Has the back buffer been resized before it was presented again?
 
 };
 

@@ -88,7 +88,18 @@ void D3D11SwapChain::Present()
 {
     const bool tearingEnabled   = (tearingSupported_ && windowedMode_ && swapChainInterval_ == 0);
     const UINT presentFlags     = (tearingEnabled ? DXGI_PRESENT_ALLOW_TEARING : 0u);
-    swapChain_->Present(swapChainInterval_, presentFlags);
+
+    HRESULT hr = S_OK;
+    if (isPresentationDirty_)
+    {
+        /* Don't perform vsync when the back buffer has been resized to allow a smooth window resizing */
+        isPresentationDirty_ = false;
+        hr = swapChain_->Present(0, presentFlags);
+    }
+    else
+        hr = swapChain_->Present(swapChainInterval_, presentFlags);
+
+    DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 }
 
 std::uint32_t D3D11SwapChain::GetCurrentSwapIndex() const
@@ -279,6 +290,9 @@ bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
     HRESULT hr = swapChain_->ResizeBuffers(0, resolution.width, resolution.height, DXGI_FORMAT_UNKNOWN, desc.Flags);
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
 
+    /* Mark presentation as dirty to avoid vsync on the next presentation; This allows a smooth window resizing like in other backends */
+    isPresentationDirty_ = true;
+
     /* Update windowed mode */
     windowedMode_ = !DXGetFullscreenState(swapChain_.Get());
 
@@ -400,6 +414,7 @@ void D3D11SwapChain::CreateDXGISwapChain1(IDXGIFactory2* factory2, const NativeH
         swapChainDesc.SampleDesc.Quality    = 0;
         swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount           = swapBuffers;
+        swapChainDesc.Scaling               = DXGI_SCALING_NONE; // Default is DXGI_SCALING_STRETCH, but other backends don't stretch on resize either
         swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD; // FLIP effect requires BufferCount >= 2 && SampleDesc.Count == 1
         swapChainDesc.Flags                 = (tearingSupported_ ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u);
     }
