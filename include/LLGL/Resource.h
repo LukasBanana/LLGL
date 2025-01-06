@@ -64,10 +64,11 @@ class LLGL_EXPORT Resource : public RenderSystemChild
         #include <LLGL/Backend/Direct3D12/NativeHandle.h>
         //...
         LLGL::Direct3D12::ResourceNativeHandle d3dNativeHandle;
-        myRenderer->GetNativeHandle(&d3dNativeHandle, sizeof(d3dNativeHandle));
-        ID3D12Resource* d3dResource = d3dNativeHandle.resource;
-        ...
-        d3dResource->Release();
+        if (myResource->GetNativeHandle(&d3dNativeHandle, sizeof(d3dNativeHandle))) {
+            ID3D12Resource* d3dResource = d3dNativeHandle.resource;
+            ...
+            d3dResource->Release();
+        }
         \endcode
 
         \see Direct3D12::ResourceNativeHandle

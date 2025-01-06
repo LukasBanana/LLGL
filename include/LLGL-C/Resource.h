@@ -14,6 +14,7 @@
 
 
 LLGL_C_EXPORT LLGLResourceType llglGetResourceType(LLGLResource resource);
+LLGL_C_EXPORT bool llglGetResourceNativeHandle(LLGLResource resource, void* nativeHandle, size_t nativeHandleSize);
 
 
 #endif

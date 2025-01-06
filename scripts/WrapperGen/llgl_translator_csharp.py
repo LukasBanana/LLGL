@@ -75,6 +75,7 @@ class CsharpTranslator(Translator):
             'BufferDescriptor': CsharpProperties(getter = True, setter = True),
             'BufferViewDescriptor': CsharpProperties(getter = True),
             'ColorCodes': CsharpProperties(getter = True, setter = True),
+            'CombinedTextureSamplerDescriptor': CsharpProperties(getter = True, setter = True),
             'CommandBufferDescriptor': CsharpProperties(getter = True),
             'ComputePipelineDescriptor': CsharpProperties(getter = True),
             'ComputeShaderAttributes': CsharpProperties(getter = True, setter = True, fullCtor = True),

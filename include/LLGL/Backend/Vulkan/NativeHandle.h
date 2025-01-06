@@ -87,38 +87,44 @@ enum class ResourceNativeType
 */
 struct ResourceNativeHandle
 {
+    struct NativeBuffer
+    {
+        VkBuffer buffer;    //!< Native Vulkan VkBuffer object.
+    };
+
+    struct NativeImage
+    {
+        VkImage                 image;              //!< Primary Vulkan image stored as native VkImage type.
+        VkImageLayout           imageLayout;        //!< Current image layout. This depends on resource transitioning.
+        VkFormat                format;             //!< Native Vulkan image format.
+        VkExtent3D              extent;             //!< Native Vulkan image extent. Does \e not include array layers.
+        std::uint32_t           numMipLevels;       //!< Number of MIP-map levels.
+        std::uint32_t           numArrayLayers;     //!< Number of array layers.
+        VkSampleCountFlagBits   sampleCountBits;    //!< Sample count bitmask for multi-sampled textures.
+        VkImageUsageFlags       imageUsageFlags;    //!< Image usag flags the texture was created with.
+    };
+
+    struct NativeSampler
+    {
+        VkSampler sampler;  //!< Native Vulkan VkSampler object.
+    };
+
     /**
     \brief Specifies the native resource type.
     \remarks This allows to distinguish a resource between native Vulkan types.
     */
-    ResourceNativeType type;
+    ResourceNativeType  type;
 
     union
     {
-        struct Buffer
-        {
-            VkBuffer buffer;    //!< Native Vulkan VkBuffer object.
-        }
-        buffer;
+        //! Buffer specific attriubtes.
+        NativeBuffer    buffer;
 
-        struct Texture
-        {
-            VkImage                 image;              //!< Primary Vulkan image stored as native VkImage type.
-            VkImageLayout           imageLayout;        //!< Current image layout. This depends on resource transitioning.
-            VkFormat                format;             //!< Native Vulkan image format.
-            VkExtent3D              extent;             //!< Native Vulkan image extent. Does \e not include array layers.
-            std::uint32_t           numMipLevels;       //!< Number of MIP-map levels.
-            std::uint32_t           numArrayLayers;     //!< Number of array layers.
-            VkSampleCountFlagBits   sampleCountBits;    //!< Sample count bitmask for multi-sampled textures.
-            VkImageUsageFlags       imageUsageFlags;    //!< Image usag flags the texture was created with.
-        }
-        image;
+        //! Texture specific attriubtes.
+        NativeImage     image;
 
-        struct Sampler
-        {
-            VkSampler sampler;  //!< Native Vulkan VkSampler object.
-        }
-        sampler;
+        //! Sampler specific attriubtes.
+        NativeSampler   sampler;
     };
 };
 

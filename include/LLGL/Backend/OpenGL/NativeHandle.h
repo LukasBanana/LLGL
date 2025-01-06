@@ -15,7 +15,12 @@
 #   include <GL/GL.h>
 #   include <LLGL/Backend/OpenGL/Win32/Win32NativeHandle.h>
 #elif defined(LLGL_OS_MACOS)
-#   include <OpenGL/gl.h>
+#   include <AvailabilityMacros.h>
+#   if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+#       include <OpenGL/gl3.h>
+#   else
+#       include <OpenGL/gl.h>
+#   endif
 #   include <LLGL/Backend/OpenGL/MacOS/MacOSNativeHandle.h>
 #elif defined(LLGL_OS_LINUX)
 #   include <GL/gl.h>
@@ -102,6 +107,33 @@ enum class ResourceNativeType
 */
 struct ResourceNativeHandle
 {
+    struct NativeBuffer
+    {
+        /**
+        \brief Secondary identifier for a texture buffer. 0 if unused.
+        \remarks This refers to an OpenGL texture for the \c GL_TEXTURE_BUFFER target.
+        Its data is pointing to the buffer specified by the primary resource identifier.
+        */
+        GLuint textureId;
+    };
+
+    struct NativeTexture
+    {
+        /**
+        \brief Specifies the texture extent of the texture.
+        \remarks This is provided because OpenGLES does not support to query the texture dimensions as Desktop OpenGL does.
+        So LLGL stores it at texture creation time.
+        */
+        GLint extent[3];
+
+        /**
+        \brief Specifies the texture sample count for multi-sampled textures.
+        \remarks This is provided because OpenGLES does not support to query the texture dimensions as Desktop OpenGL does.
+        So LLGL stores it at texture creation time.
+        */
+        GLint samples;
+    };
+
     /**
     \brief Specifies the native resource type.
     \remarks This allows to distinguish a resource between mutable and immutable types.
@@ -118,34 +150,11 @@ struct ResourceNativeHandle
 
     union
     {
-        struct Buffer
-        {
-            /**
-            \brief Secondary identifier for a texture buffer. 0 if unused.
-            \remarks This refers to an OpenGL texture for the \c GL_TEXTURE_BUFFER target.
-            Its data is pointing to the buffer specified by the primary resource identifier.
-            */
-            GLuint textureId;
-        }
-        buffer;
+        //! Buffer specific attributes.
+        NativeBuffer    buffer;
 
-        struct Texture
-        {
-            /**
-            \brief Specifies the texture extent of the texture.
-            \remarks This is provided because OpenGLES does not support to query the texture dimensions as Desktop OpenGL does.
-            So LLGL stores it at texture creation time.
-            */
-            GLint extent[3];
-
-            /**
-            \brief Specifies the texture sample count for multi-sampled textures.
-            \remarks This is provided because OpenGLES does not support to query the texture dimensions as Desktop OpenGL does.
-            So LLGL stores it at texture creation time.
-            */
-            GLint samples;
-        }
-        texture;
+        //! Texture specific attributes.
+        NativeTexture   texture;
     };
 };
 

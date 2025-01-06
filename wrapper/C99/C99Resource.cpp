@@ -20,6 +20,11 @@ LLGL_C_EXPORT LLGLResourceType llglGetResourceType(LLGLResource resource)
     return static_cast<LLGLResourceType>(LLGL_PTR(Resource, resource)->GetResourceType());
 }
 
+LLGL_C_EXPORT bool llglGetResourceNativeHandle(LLGLResource resource, void* nativeHandle, size_t nativeHandleSize)
+{
+    return LLGL_PTR(Resource, resource)->GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
 
 // } /namespace LLGL
 

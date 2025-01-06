@@ -1416,6 +1416,15 @@ typedef struct LLGLUniformDescriptor
 }
 LLGLUniformDescriptor;
 
+typedef struct LLGLCombinedTextureSamplerDescriptor
+{
+    const char*     name;
+    const char*     textureName;
+    const char*     samplerName;
+    LLGLBindingSlot slot;
+}
+LLGLCombinedTextureSamplerDescriptor;
+
 typedef struct LLGLDepthDescriptor
 {
     bool          testEnabled;  /* = false */
@@ -1743,16 +1752,18 @@ LLGLTextureViewDescriptor;
 
 typedef struct LLGLPipelineLayoutDescriptor
 {
-    const char*                        debugName;         /* = NULL */
-    size_t                             numHeapBindings;   /* = 0 */
-    const LLGLBindingDescriptor*       heapBindings;      /* = NULL */
-    size_t                             numBindings;       /* = 0 */
-    const LLGLBindingDescriptor*       bindings;          /* = NULL */
-    size_t                             numStaticSamplers; /* = 0 */
-    const LLGLStaticSamplerDescriptor* staticSamplers;    /* = NULL */
-    size_t                             numUniforms;       /* = 0 */
-    const LLGLUniformDescriptor*       uniforms;          /* = NULL */
-    long                               barrierFlags;      /* = 0 */
+    const char*                                 debugName;                  /* = NULL */
+    size_t                                      numHeapBindings;            /* = 0 */
+    const LLGLBindingDescriptor*                heapBindings;               /* = NULL */
+    size_t                                      numBindings;                /* = 0 */
+    const LLGLBindingDescriptor*                bindings;                   /* = NULL */
+    size_t                                      numStaticSamplers;          /* = 0 */
+    const LLGLStaticSamplerDescriptor*          staticSamplers;             /* = NULL */
+    size_t                                      numUniforms;                /* = 0 */
+    const LLGLUniformDescriptor*                uniforms;                   /* = NULL */
+    size_t                                      numCombinedTextureSamplers; /* = 0 */
+    const LLGLCombinedTextureSamplerDescriptor* combinedTextureSamplers;    /* = NULL */
+    long                                        barrierFlags;               /* = 0 */
 }
 LLGLPipelineLayoutDescriptor;
 

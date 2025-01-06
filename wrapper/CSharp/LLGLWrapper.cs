@@ -1857,6 +1857,56 @@ namespace LLGL
         }
     }
 
+    public class CombinedTextureSamplerDescriptor
+    {
+        public AnsiString  Name { get; set; }
+        public AnsiString  TextureName { get; set; }
+        public AnsiString  SamplerName { get; set; }
+        public BindingSlot Slot { get; set; }        = new BindingSlot();
+
+        public CombinedTextureSamplerDescriptor() { }
+
+        internal CombinedTextureSamplerDescriptor(NativeLLGL.CombinedTextureSamplerDescriptor native)
+        {
+            Native = native;
+        }
+
+        internal NativeLLGL.CombinedTextureSamplerDescriptor Native
+        {
+            get
+            {
+                var native = new NativeLLGL.CombinedTextureSamplerDescriptor();
+                unsafe
+                {
+                    fixed (byte* namePtr = Name.Ascii)
+                    {
+                        native.name = namePtr;
+                    }
+                    fixed (byte* textureNamePtr = TextureName.Ascii)
+                    {
+                        native.textureName = textureNamePtr;
+                    }
+                    fixed (byte* samplerNamePtr = SamplerName.Ascii)
+                    {
+                        native.samplerName = samplerNamePtr;
+                    }
+                    native.slot        = Slot;
+                }
+                return native;
+            }
+            set
+            {
+                unsafe
+                {
+                    Name        = Marshal.PtrToStringAnsi((IntPtr)value.name);
+                    TextureName = Marshal.PtrToStringAnsi((IntPtr)value.textureName);
+                    SamplerName = Marshal.PtrToStringAnsi((IntPtr)value.samplerName);
+                    Slot        = value.slot;
+                }
+            }
+        }
+    }
+
     public class DepthDescriptor
     {
         public bool      TestEnabled { get; set; }  = false;
@@ -2884,7 +2934,7 @@ namespace LLGL
 
     public class PipelineLayoutDescriptor
     {
-        public AnsiString                DebugName { get; set; }      = null;
+        public AnsiString                         DebugName { get; set; }               = null;
         private BindingDescriptor[] heapBindings;
         private NativeLLGL.BindingDescriptor[] heapBindingsNative;
         public BindingDescriptor[] HeapBindings
@@ -3001,7 +3051,36 @@ namespace LLGL
                 }
             }
         }
-        public BarrierFlags              BarrierFlags { get; set; }   = 0;
+        private CombinedTextureSamplerDescriptor[] combinedTextureSamplers;
+        private NativeLLGL.CombinedTextureSamplerDescriptor[] combinedTextureSamplersNative;
+        public CombinedTextureSamplerDescriptor[] CombinedTextureSamplers
+        {
+            get
+            {
+                return combinedTextureSamplers;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    combinedTextureSamplers = value;
+                    combinedTextureSamplersNative = new NativeLLGL.CombinedTextureSamplerDescriptor[combinedTextureSamplers.Length];
+                    for (int combinedTextureSamplersIndex = 0; combinedTextureSamplersIndex < combinedTextureSamplers.Length; ++combinedTextureSamplersIndex)
+                    {
+                        if (combinedTextureSamplers[combinedTextureSamplersIndex] != null)
+                        {
+                            combinedTextureSamplersNative[combinedTextureSamplersIndex] = combinedTextureSamplers[combinedTextureSamplersIndex].Native;
+                        }
+                    }
+                }
+                else
+                {
+                    combinedTextureSamplers = null;
+                    combinedTextureSamplersNative = null;
+                }
+            }
+        }
+        public BarrierFlags                       BarrierFlags { get; set; }            = 0;
 
         internal NativeLLGL.PipelineLayoutDescriptor Native
         {
@@ -3046,7 +3125,15 @@ namespace LLGL
                             native.uniforms = uniformsPtr;
                         }
                     }
-                    native.barrierFlags   = (int)BarrierFlags;
+                    if (combinedTextureSamplers != null)
+                    {
+                        native.numCombinedTextureSamplers = (IntPtr)combinedTextureSamplers.Length;
+                        fixed (NativeLLGL.CombinedTextureSamplerDescriptor* combinedTextureSamplersPtr = combinedTextureSamplersNative)
+                        {
+                            native.combinedTextureSamplers = combinedTextureSamplersPtr;
+                        }
+                    }
+                    native.barrierFlags            = (int)BarrierFlags;
                 }
                 return native;
             }
@@ -3827,6 +3914,14 @@ namespace LLGL
             public int         arraySize; /* = 0 */
         }
 
+        public unsafe struct CombinedTextureSamplerDescriptor
+        {
+            public byte*       name;
+            public byte*       textureName;
+            public byte*       samplerName;
+            public BindingSlot slot;
+        }
+
         public unsafe struct DepthDescriptor
         {
             [MarshalAs(UnmanagedType.I1)]
@@ -4147,16 +4242,18 @@ namespace LLGL
 
         public unsafe struct PipelineLayoutDescriptor
         {
-            public byte*                    debugName;         /* = null */
-            public IntPtr                   numHeapBindings;
-            public BindingDescriptor*       heapBindings;
-            public IntPtr                   numBindings;
-            public BindingDescriptor*       bindings;
-            public IntPtr                   numStaticSamplers;
-            public StaticSamplerDescriptor* staticSamplers;
-            public IntPtr                   numUniforms;
-            public UniformDescriptor*       uniforms;
-            public int                      barrierFlags;      /* = 0 */
+            public byte*                             debugName;                  /* = null */
+            public IntPtr                            numHeapBindings;
+            public BindingDescriptor*                heapBindings;
+            public IntPtr                            numBindings;
+            public BindingDescriptor*                bindings;
+            public IntPtr                            numStaticSamplers;
+            public StaticSamplerDescriptor*          staticSamplers;
+            public IntPtr                            numUniforms;
+            public UniformDescriptor*                uniforms;
+            public IntPtr                            numCombinedTextureSamplers;
+            public CombinedTextureSamplerDescriptor* combinedTextureSamplers;
+            public int                               barrierFlags;               /* = 0 */
         }
 
         public unsafe struct GraphicsPipelineDescriptor
@@ -4865,6 +4962,10 @@ namespace LLGL
 
         [DllImport(DllName, EntryPoint="llglGetResourceType", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe ResourceType GetResourceType(Resource resource);
+
+        [DllImport(DllName, EntryPoint="llglGetResourceNativeHandle", CallingConvention=CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern unsafe bool GetResourceNativeHandle(Resource resource, void* nativeHandle, IntPtr nativeHandleSize);
 
         [DllImport(DllName, EntryPoint="llglGetResourceHeapNumDescriptorSets", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe int GetResourceHeapNumDescriptorSets(ResourceHeap resourceHeap);

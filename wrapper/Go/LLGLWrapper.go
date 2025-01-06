@@ -1285,6 +1285,13 @@ type UniformDescriptor struct {
     ArraySize uint32      /* = 0 */
 }
 
+type CombinedTextureSamplerDescriptor struct {
+    Name        string
+    TextureName string
+    SamplerName string
+    Slot        BindingSlot
+}
+
 type DepthDescriptor struct {
     TestEnabled  bool      /* = false */
     WriteEnabled bool      /* = false */
@@ -1541,12 +1548,13 @@ type TextureViewDescriptor struct {
 }
 
 type PipelineLayoutDescriptor struct {
-    DebugName      string                    /* = "" */
-    HeapBindings   []BindingDescriptor       /* = nil */
-    Bindings       []BindingDescriptor       /* = nil */
-    StaticSamplers []StaticSamplerDescriptor /* = nil */
-    Uniforms       []UniformDescriptor       /* = nil */
-    BarrierFlags   uint                      /* = 0 */
+    DebugName               string                             /* = "" */
+    HeapBindings            []BindingDescriptor                /* = nil */
+    Bindings                []BindingDescriptor                /* = nil */
+    StaticSamplers          []StaticSamplerDescriptor          /* = nil */
+    Uniforms                []UniformDescriptor                /* = nil */
+    CombinedTextureSamplers []CombinedTextureSamplerDescriptor /* = nil */
+    BarrierFlags            uint                               /* = 0 */
 }
 
 type GraphicsPipelineDescriptor struct {
