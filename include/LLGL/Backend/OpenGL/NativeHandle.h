@@ -29,7 +29,9 @@
 #   include <LLGL/Backend/OpenGL/Linux/LinuxNativeHandle.h>
 #elif defined(LLGL_OS_IOS)
 #   include <OpenGLES/ES3/gl.h>
-#   include <LLGL/Backend/OpenGL/IOS/IOSNativeHandle.h>
+#   ifdef __OBJC__
+#       include <LLGL/Backend/OpenGL/IOS/IOSNativeHandle.h>
+#   endif
 #elif defined(LLGL_OS_ANDROID)
 #   include <GLES3/gl3.h>
 #   include <LLGL/Backend/OpenGL/Android/AndroidNativeHandle.h>
