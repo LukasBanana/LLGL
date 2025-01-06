@@ -24,6 +24,15 @@ set(
     ${FilesTestbedUnitTests}
 )
 
+if(APPLE)
+    # Compile certain C++ files as objective-C++ to include Obj-C specific headers such as <Cocoa/Cocoa.h>
+    set(
+        FilesCppAsObjC
+        "${TEST_PROJECTS_DIR}/Testbed/UnitTests/TestNativeHandle.cpp"
+    )
+    set_source_files_properties("${FilesCppAsObjC}" PROPERTIES COMPILE_FLAGS "-x objective-c++")
+endif()
+
 
 # === Source group folders ===
 
