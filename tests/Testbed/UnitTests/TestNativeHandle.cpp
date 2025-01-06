@@ -5,7 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "Testbed.h"
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/TypeNames.h>
@@ -44,6 +43,9 @@
 #else
 #   define LLGL_TEST_NATIVEHANDLE_GL 0
 #endif
+
+// Include last in this test to avoid 'using namespace LLGL' to avoid ambiguities between LLGL::Window and X11's ::Window types.
+#include "Testbed.h"
 
 
 /*
