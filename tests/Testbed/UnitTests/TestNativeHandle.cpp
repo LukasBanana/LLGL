@@ -5,6 +5,10 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#define TESTBED_DISABLE_USING_NAMESPACE_LLGL 1
+#include "Testbed.h"
+#undef TESTBED_DISABLE_USING_NAMESPACE_LLGL
+
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/TypeNames.h>
@@ -44,9 +48,6 @@
 #   define LLGL_TEST_NATIVEHANDLE_GL 0
 #endif
 
-// Include last in this test to avoid 'using namespace LLGL' to avoid ambiguities between LLGL::Window and X11's ::Window types.
-#include "Testbed.h"
-
 
 /*
 Print information and match descriptors of native resource handles.
@@ -55,6 +56,8 @@ e.g. D3D11_RESOURCE_DIMENSION_BUFFER is expected for a buffer resource with Dire
 */
 DEF_TEST( NativeHandle )
 {
+    using namespace LLGL;
+
     TestResult result = TestResult::Passed;
 
     // Create buffer resources

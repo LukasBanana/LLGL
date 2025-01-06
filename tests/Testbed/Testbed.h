@@ -15,7 +15,9 @@
 #include <chrono>
 #include <inttypes.h>
 
+#if !TESTBED_DISABLE_USING_NAMESPACE_LLGL
 using namespace LLGL;
+#endif
 
 
 #if __cplusplus >= 201703L
