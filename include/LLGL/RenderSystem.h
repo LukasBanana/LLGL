@@ -624,7 +624,7 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         \param[out] nativeHandle Raw pointer to the backend specific structure to store the native handle.
         Optain the respective structure from <code>#include <LLGL/Backend/BACKEND/NativeHandle.h></code>
-        where \c BACKEND must be either \c Direct3D12, \c Direct3D11, \c Metal, or \c Vulkan.
+        where \c BACKEND must be either \c Direct3D12, \c Direct3D11, \c Vulkan, \c Metal, or \c OpenGL.
         OpenGL does not have a native handle as it uses the current platform specific GL context.
 
         \param[in] nativeHandleSize Specifies the size (in bytes) of the native handle structure for robustness.

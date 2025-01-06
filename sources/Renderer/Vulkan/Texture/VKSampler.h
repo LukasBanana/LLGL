@@ -23,6 +23,10 @@ class VKSampler final : public Sampler
 
     public:
 
+        #include <LLGL/Backend/Sampler.inl>
+
+    public:
+
         VKSampler(VkDevice device, const SamplerDescriptor& desc);
 
         // Returns the Vulkan sampler object.

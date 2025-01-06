@@ -13,6 +13,8 @@
 #include "../../DXCommon/DXTypes.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Direct3D11/NativeHandle.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Report.h>
 
@@ -47,6 +49,17 @@ D3D11Texture::D3D11Texture(ID3D11Device* device, const TextureDescriptor& desc) 
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+}
+
+bool D3D11Texture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D11::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleD3D->deviceChild = native_.Get();
+        nativeHandleD3D->deviceChild->AddRef();
+        return true;
+    }
+    return false;
 }
 
 void D3D11Texture::SetDebugName(const char* name)

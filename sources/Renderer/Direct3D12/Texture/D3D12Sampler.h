@@ -23,6 +23,10 @@ class D3D12Sampler final : public Sampler
 
     public:
 
+        #include <LLGL/Backend/Sampler.inl>
+
+    public:
+
         D3D12Sampler(const SamplerDescriptor& desc);
 
         void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);

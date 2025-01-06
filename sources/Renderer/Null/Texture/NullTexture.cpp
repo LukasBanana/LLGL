@@ -49,6 +49,11 @@ void NullTexture::SetDebugName(const char* name)
         label_.clear();
 }
 
+bool NullTexture::GetNativeHandle(void* /*nativeHandle*/, std::size_t /*nativeHandleSize*/)
+{
+    return false; // dummy
+}
+
 TextureDescriptor NullTexture::GetDesc() const
 {
     return desc;

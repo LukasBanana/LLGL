@@ -11,6 +11,7 @@
 #include "../Command/VKCommandContext.h"
 #include "../../TextureUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Vulkan/NativeHandle.h>
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include <algorithm>
@@ -43,6 +44,24 @@ VKTexture::VKTexture(
     /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
     image_.AllocateMemoryRegion(deviceMemoryMngr);
+}
+
+bool VKTexture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleVK = GetTypedNativeHandle<Vulkan::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleVK->type                    = Vulkan::ResourceNativeType::Image;
+        nativeHandleVK->image.image             = GetVkImage();
+        nativeHandleVK->image.imageLayout       = GetVkImageLayout();
+        nativeHandleVK->image.format            = GetVkFormat();
+        nativeHandleVK->image.extent            = GetVkExtent();
+        nativeHandleVK->image.numMipLevels      = GetNumMipLevels();
+        nativeHandleVK->image.numArrayLayers    = GetNumArrayLayers();
+        nativeHandleVK->image.sampleCountBits   = GetSampleCountBits();
+        nativeHandleVK->image.imageUsageFlags   = GetUsageFlags();
+        return true;
+    }
+    return false;
 }
 
 Extent3D VKTexture::GetMipExtent(std::uint32_t mipLevel) const

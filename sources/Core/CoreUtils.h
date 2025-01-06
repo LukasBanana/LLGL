@@ -243,6 +243,16 @@ const T& Clamp(const T& x, const T& minimum, const T& maximum)
     return std::max<T>(minimum, std::min<T>(x, maximum));
 }
 
+// Casts the input raw pointer to the typed pointer if the input size matches.
+template <typename T>
+T* GetTypedNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(T))
+        return reinterpret_cast<T*>(nativeHandle);
+    else
+        return nullptr;
+}
+
 
 } // /namespace LLGL
 

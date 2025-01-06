@@ -24,6 +24,10 @@ class GLEmulatedSampler final : public Sampler
 
     public:
 
+        #include <LLGL/Backend/Sampler.inl>
+
+    public:
+
         // Converts and stores the sampler descriptor to GL states.
         void SamplerParameters(const SamplerDescriptor& desc);
 

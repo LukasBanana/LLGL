@@ -7,6 +7,8 @@
 
 #include "MTBuffer.h"
 #include "../../ResourceUtils.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Metal/NativeHandle.h>
 #include <string.h>
 
 
@@ -47,6 +49,18 @@ MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const voi
 MTBuffer::~MTBuffer()
 {
     [native_ release];
+}
+
+bool MTBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleMT = GetTypedNativeHandle<Metal::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleMT->type    = Metal::ResourceNativeType::Buffer;
+        nativeHandleMT->buffer  = GetNative();
+        [nativeHandleMT->buffer retain];
+        return true;
+    }
+    return false;
 }
 
 BufferDescriptor MTBuffer::GetDesc() const

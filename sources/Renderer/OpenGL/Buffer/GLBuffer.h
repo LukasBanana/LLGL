@@ -25,9 +25,11 @@ class GLBuffer : public Buffer
 
     public:
 
-        void SetDebugName(const char* name) override final;
+        #include <LLGL/Backend/Buffer.inl>
 
-        BufferDescriptor GetDesc() const override;
+    public:
+
+        void SetDebugName(const char* name) override final;
 
     public:
 

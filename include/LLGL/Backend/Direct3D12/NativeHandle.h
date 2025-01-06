@@ -39,10 +39,76 @@ struct RenderSystemNativeHandle
     ID3D12Device*   device;
 };
 
+/**
+\brief Native handle structure for the Direct3D 12 command buffer.
+\see CommandBuffer::GetNativeHandle
+*/
 struct CommandBufferNativeHandle
 {
     //! COM pointer to the native Direct3D command list.
     ID3D12GraphicsCommandList* commandList;
+};
+
+/**
+\brief Native Direct3D 12 resource type enumeration.
+\see ResourceNativeHandle::type
+*/
+enum class ResourceNativeType
+{
+    /**
+    \brief Native Direct3D resource type for buffers and textures.
+    \see ResourceNativeHandle::resource
+    */
+    Resource,
+
+    /**
+    \brief Sampler-state descriptor.
+    \see ResourceNativeHandle::samplerDesc
+    */
+    SamplerDescriptor,
+};
+
+/**
+\brief Native handle structure for a Direct3D 12 resource.
+\see Resource::GetNativeHandle
+*/
+struct ResourceNativeHandle
+{
+    /**
+    \brief Specifies the native resource type.
+    \remarks This allows to distinguish a resource between native resources and sampler-state descriptors.
+    */
+    ResourceNativeType type;
+
+    union
+    {
+        /**
+        \brief COM pointer to the native Direct3D resource.
+        \remarks Here is an example how to distinguish this pointer between buffers and textures:
+        \code
+        LLGL::Direct3D12::ResourceNativeHandle myResourceNativeHandle;
+        if (myResource->GetNativeHandle(&myResourceNativeHandle, sizeof(myResourceNativeHandle))) {
+            if (myResourceNativeHandle.type == LLGL::Direct3D12::ResourceNativeType::Resource) {
+                D3D12_RESOURCE_DESC d3dResourceDesc = myResourceNativeHandle.resource->GetDesc();
+                switch (d3dResourceDesc.Dimension) {
+                    case D3D12_RESOURCE_DIMENSION_BUFFER:
+                        ...
+                    case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
+                        ...
+                }
+                myResourceNativeHandle.resource->Release(); // Release after use
+            }
+        }
+        \endcode
+        */
+        ID3D12Resource*     resource;
+
+        /**
+        \brief Native sampler-state descriptor.
+        \remarks Direct3D12 
+        */
+        D3D12_SAMPLER_DESC  samplerDesc;
+    };
 };
 
 

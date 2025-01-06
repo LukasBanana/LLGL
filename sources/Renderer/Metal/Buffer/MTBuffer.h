@@ -24,7 +24,7 @@ class MTBuffer final : public Buffer
 
     public:
 
-        BufferDescriptor GetDesc() const override;
+        #include <LLGL/Backend/Buffer.inl>
 
     public:
 

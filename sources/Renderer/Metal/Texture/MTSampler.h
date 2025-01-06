@@ -23,6 +23,10 @@ class MTSampler final : public Sampler
 
     public:
 
+        #include <LLGL/Backend/Sampler.inl>
+
+    public:
+
         MTSampler(id<MTLDevice> device, const SamplerDescriptor& desc);
         ~MTSampler();
     

@@ -12,6 +12,7 @@
 #include "../GLTypes.h"
 #include "../Ext/GLExtensionRegistry.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <memory>
 
 
@@ -66,6 +67,27 @@ GLBuffer::~GLBuffer()
     /* Delete texture if this was a texture-buffer and notify state manager */
     if (texID_ != 0)
         GLStateManager::Get().DeleteTexture(texID_, GLTextureTarget::TextureBuffer);
+}
+
+bool GLBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleGL = GetTypedNativeHandle<OpenGL::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+        if (HasExtension(GLExt::ARB_direct_state_access))
+        {
+            nativeHandleGL->type = OpenGL::ResourceNativeType::ImmutableBuffer;
+        }
+        else
+        #endif
+        {
+            nativeHandleGL->type = OpenGL::ResourceNativeType::Buffer;
+        }
+        nativeHandleGL->id                  = GetID();
+        nativeHandleGL->buffer.textureId    = GetTexID();
+        return true;
+    }
+    return false;
 }
 
 void GLBuffer::SetDebugName(const char* name)

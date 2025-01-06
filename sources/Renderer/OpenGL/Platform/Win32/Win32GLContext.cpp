@@ -163,9 +163,8 @@ int Win32GLContext::GetSamples() const
 
 bool Win32GLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) const
 {
-    if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
+    if (auto* nativeHandleGL = GetTypedNativeHandle<OpenGL::RenderSystemNativeHandle>(nativeHandle, nativeHandleSize))
     {
-        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleGL->context = hGLRC_;
         return true;
     }

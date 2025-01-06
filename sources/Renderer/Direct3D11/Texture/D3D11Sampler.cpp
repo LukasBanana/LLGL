@@ -9,6 +9,8 @@
 #include "../D3D11Types.h"
 #include "../D3D11ObjectUtils.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Direct3D11/NativeHandle.h>
 
 
 namespace LLGL
@@ -24,6 +26,17 @@ D3D11Sampler::D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc)
     DXThrowIfCreateFailed(hr, "ID3D11SamplerState");
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+}
+
+bool D3D11Sampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D11::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleD3D->deviceChild = native_.Get();
+        nativeHandleD3D->deviceChild->AddRef();
+        return true;
+    }
+    return false;
 }
 
 void D3D11Sampler::SetDebugName(const char* name)

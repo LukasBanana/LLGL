@@ -33,6 +33,10 @@ struct RenderSystemNativeHandle
     ID3D11DeviceContext*    deviceContext;
 };
 
+/**
+\brief Native handle structure for the Direct3D 11 command buffer.
+\see CommandBuffer::GetNativeHandle
+*/
 struct CommandBufferNativeHandle
 {
     /**
@@ -41,6 +45,46 @@ struct CommandBufferNativeHandle
     \see RenderSystemNativeHandle::deviceContext
     */
     ID3D11DeviceContext* deviceContext;
+};
+
+/**
+\brief Native handle structure for a Direct3D 11 resource.
+\see Resource::GetNativeHandle
+*/
+struct ResourceNativeHandle
+{
+    /**
+    \brief COM pointer to the native Direct3D device child.
+    \remarks Use the \c IUnknown::QueryInterface function to determine what type this refers to:
+    \code
+    LLGL::Direct3D11::ResourceNativeHandle myResourceNativeHandle;
+    if (myResource->GetNativeHandle(&myResourceNativeHandle, sizeof(myResourceNativeHandle))) {
+        // Check for buffers and textures
+        ID3D11Resource* d3dResource = nullptr;
+        if (myResourceNativeHandle.deviceChild->QueryInterface(IID_PPV_ARGS(&d3dResource)) == S_OK) {
+            D3D11_RESOURCE_DIMENSION d3dResourceDimension = D3D11_RESOURCE_DIMENSION_UNKNOWN;
+            d3dResource->GetType(&d3dResourceDimension);
+            switch (d3dResourceDimension) {
+                case D3D11_RESOURCE_DIMENSION_BUFFER:
+                    ...
+                case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+                    ...
+            }
+            d3dResource->Release(); // Release after QueryInterface()
+        }
+
+        // Check for sampler-states
+        ID3D11SamplerState* d3dSamplerState = nullptr;
+        if (myResourceNativeHandle.deviceChild->QueryInterface(IID_PPV_ARGS(&d3dSamplerState)) == S_OK) {
+            ...
+            d3dSamplerState->Release(); // Release after QueryInterface()
+        }
+
+        myResourceNativeHandle.deviceChild->Release(); // Release after LLGL's GetNativeHandle()
+    }
+    \endcode
+    */
+    ID3D11DeviceChild* deviceChild;
 };
 
 

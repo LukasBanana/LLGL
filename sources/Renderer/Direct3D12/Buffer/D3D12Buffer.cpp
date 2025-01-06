@@ -16,6 +16,7 @@
 #include "../../BufferUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Direct3D12/NativeHandle.h>
 #include <stdexcept>
 
 
@@ -55,6 +56,18 @@ D3D12Buffer::D3D12Buffer(ID3D12Device* device, const BufferDescriptor& desc) :
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+}
+
+bool D3D12Buffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D12::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleD3D->type       = Direct3D12::ResourceNativeType::SamplerDescriptor;
+        nativeHandleD3D->resource   = resource_.Get();
+        nativeHandleD3D->resource->AddRef();
+        return true;
+    }
+    return false;
 }
 
 void D3D12Buffer::SetDebugName(const char* name)

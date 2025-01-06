@@ -12,7 +12,9 @@
 #include "../Ext/VKExtensions.h"
 #include "../Ext/VKExtensionRegistry.h"
 #include "../../ResourceUtils.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Exception.h"
+#include <LLGL/Backend/Vulkan/NativeHandle.h>
 
 
 namespace LLGL
@@ -109,6 +111,17 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
         createInfo.pQueueFamilyIndices      = nullptr;
     }
     bufferObj_.CreateVkBuffer(device, createInfo);
+}
+
+bool VKBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleVK = GetTypedNativeHandle<Vulkan::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleVK->type            = Vulkan::ResourceNativeType::Buffer;
+        nativeHandleVK->buffer.buffer   = GetVkBuffer();
+        return true;
+    }
+    return false;
 }
 
 BufferDescriptor VKBuffer::GetDesc() const

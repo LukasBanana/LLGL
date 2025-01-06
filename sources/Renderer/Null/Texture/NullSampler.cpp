@@ -27,6 +27,11 @@ void NullSampler::SetDebugName(const char* name)
         label_.clear();
 }
 
+bool NullSampler::GetNativeHandle(void* /*nativeHandle*/, std::size_t /*nativeHandleSize*/)
+{
+    return false; // dummy
+}
+
 
 } // /namespace LLGL
 

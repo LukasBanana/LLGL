@@ -46,6 +46,11 @@ DbgTexture::~DbgTexture()
     #endif
 }
 
+bool DbgTexture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return instance.GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
 void DbgTexture::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);

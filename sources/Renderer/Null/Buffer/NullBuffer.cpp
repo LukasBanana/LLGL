@@ -46,6 +46,11 @@ void NullBuffer::SetDebugName(const char* name)
         label_.clear();
 }
 
+bool NullBuffer::GetNativeHandle(void* /*nativeHandle*/, std::size_t /*nativeHandleSize*/)
+{
+    return false; // dummy
+}
+
 BufferDescriptor NullBuffer::GetDesc() const
 {
     return desc;

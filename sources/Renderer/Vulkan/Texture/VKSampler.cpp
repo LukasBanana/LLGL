@@ -9,6 +9,8 @@
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../ResourceUtils.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Vulkan/NativeHandle.h>
 
 
 namespace LLGL
@@ -18,6 +20,17 @@ namespace LLGL
 VKSampler::VKSampler(VkDevice device, const SamplerDescriptor& desc) :
     sampler_ { VKSampler::CreateVkSampler(device, desc) }
 {
+}
+
+bool VKSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleVK = GetTypedNativeHandle<Vulkan::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleVK->type            = Vulkan::ResourceNativeType::Sampler;
+        nativeHandleVK->sampler.sampler = GetVkSampler();
+        return true;
+    }
+    return false;
 }
 
 static VkFilter GetVkFilter(const SamplerFilter filter)

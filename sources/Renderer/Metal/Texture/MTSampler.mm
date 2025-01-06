@@ -8,8 +8,10 @@
 #include "MTSampler.h"
 #include "../MTTypes.h"
 #include "../../ResourceUtils.h"
-#include <algorithm>
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Metal/NativeHandle.h>
 #include <LLGL/Platform/Platform.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -24,6 +26,18 @@ MTSampler::MTSampler(id<MTLDevice> device, const SamplerDescriptor& desc) :
 MTSampler::~MTSampler()
 {
     [native_ release];
+}
+
+bool MTSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleMT = GetTypedNativeHandle<Metal::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleMT->type            = Metal::ResourceNativeType::SamplerState;
+        nativeHandleMT->samplerState    = GetNative();
+        [nativeHandleMT->samplerState retain];
+        return true;
+    }
+    return false;
 }
 
 #ifndef LLGL_OS_IOS

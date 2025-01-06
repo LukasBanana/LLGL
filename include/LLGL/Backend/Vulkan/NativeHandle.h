@@ -47,9 +47,79 @@ struct RenderSystemNativeHandle
     std::uint32_t       queuePresentFamily;
 };
 
+/**
+\brief Native handle structure for the Vulkan command buffer.
+\see CommandBuffer::GetNativeHandle
+*/
 struct CommandBufferNativeHandle
 {
     VkCommandBuffer commandBuffer;
+};
+
+/**
+\brief Native Vulkan resource type enumeration.
+\see ResourceNativeHandle::type
+*/
+enum class ResourceNativeType
+{
+    /**
+    \brief Native Vulkan VkBuffer type.
+    \see ResourceNativeHandle::buffer
+    */
+    Buffer,
+
+    /**
+    \brief Native Vulkan VkImage type.
+    \see ResourceNativeHandle::texture
+    */
+    Image,
+
+    /**
+    \brief Native Vulkan VkSampler type.
+    \see ResourceNativeHandle::sampler
+    */
+    Sampler,
+};
+
+/**
+\brief Native handle structure for a Vulkan resource.
+\see Resource::GetNativeHandle
+*/
+struct ResourceNativeHandle
+{
+    /**
+    \brief Specifies the native resource type.
+    \remarks This allows to distinguish a resource between native Vulkan types.
+    */
+    ResourceNativeType type;
+
+    union
+    {
+        struct Buffer
+        {
+            VkBuffer buffer;    //!< Native Vulkan VkBuffer object.
+        }
+        buffer;
+
+        struct Texture
+        {
+            VkImage                 image;              //!< Primary Vulkan image stored as native VkImage type.
+            VkImageLayout           imageLayout;        //!< Current image layout. This depends on resource transitioning.
+            VkFormat                format;             //!< Native Vulkan image format.
+            VkExtent3D              extent;             //!< Native Vulkan image extent. Does \e not include array layers.
+            std::uint32_t           numMipLevels;       //!< Number of MIP-map levels.
+            std::uint32_t           numArrayLayers;     //!< Number of array layers.
+            VkSampleCountFlagBits   sampleCountBits;    //!< Sample count bitmask for multi-sampled textures.
+            VkImageUsageFlags       imageUsageFlags;    //!< Image usag flags the texture was created with.
+        }
+        image;
+
+        struct Sampler
+        {
+            VkSampler sampler;  //!< Native Vulkan VkSampler object.
+        }
+        sampler;
+    };
 };
 
 

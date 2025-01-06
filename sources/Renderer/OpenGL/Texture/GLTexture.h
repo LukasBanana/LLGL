@@ -143,6 +143,7 @@ class GLTexture final : public Texture
         void AllocTextureStorage(const TextureDescriptor& textureDesc, const ImageView* initialImage);
         void AllocRenderbufferStorage(const TextureDescriptor& textureDesc);
 
+        void GetParams(GLint* extent, GLint* samples) const;
         void GetTextureParams(GLint* extent, GLint* samples) const;
         void GetRenderbufferParams(GLint* extent, GLint* samples) const;
 

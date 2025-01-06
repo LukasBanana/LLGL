@@ -340,6 +340,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CommandBufferEncode         );
 
     // Run all resource tests
+    RUN_TEST( NativeHandle                );
     RUN_TEST( BufferWriteAndRead          );
     RUN_TEST( BufferMap                   );
     RUN_TEST( BufferFill                  );

@@ -11,8 +11,9 @@
 #include "../D3D11ObjectUtils.h"
 #include "../../ResourceUtils.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/Direct3D11/NativeHandle.h>
 
 
 namespace LLGL
@@ -36,6 +37,17 @@ D3D11Buffer::D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, con
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);
+}
+
+bool D3D11Buffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D11::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleD3D->deviceChild = buffer_.Get();
+        nativeHandleD3D->deviceChild->AddRef();
+        return true;
+    }
+    return false;
 }
 
 void D3D11Buffer::SetDebugName(const char* name)

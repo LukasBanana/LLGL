@@ -23,6 +23,7 @@
 #include "../../../Core/Exception.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 
 
 namespace LLGL
@@ -140,6 +141,36 @@ GLTexture::~GLTexture()
     }
 }
 
+bool GLTexture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleGL = GetTypedNativeHandle<OpenGL::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+        if (HasExtension(GLExt::ARB_direct_state_access))
+        {
+            if (IsRenderbuffer())
+                nativeHandleGL->type = OpenGL::ResourceNativeType::ImmutableRenderbuffer;
+            else
+                nativeHandleGL->type = OpenGL::ResourceNativeType::ImmutableTexture;
+        }
+        else
+        #endif
+        {
+            if (IsRenderbuffer())
+                nativeHandleGL->type = OpenGL::ResourceNativeType::Renderbuffer;
+            else
+                nativeHandleGL->type = OpenGL::ResourceNativeType::Texture;
+        }
+
+        /* Return texture ID and query resource dimensions */
+        nativeHandleGL->id = GetID();
+        GetParams(nativeHandleGL->texture.extent, &(nativeHandleGL->texture.samples));
+
+        return true;
+    }
+    return false;
+}
+
 void GLTexture::SetDebugName(const char* name)
 {
     if (IsRenderbuffer())
@@ -207,10 +238,7 @@ TextureDescriptor GLTexture::GetDesc() const
 
     /* Query hardware texture format and size */
     GLint extent[3] = {}, samples = 1;
-    if (IsRenderbuffer())
-        GetRenderbufferParams(extent, &samples);
-    else
-        GetTextureParams(extent, &samples);
+    GetParams(extent, &samples);
 
     /* Initial value of GL_TEXTURE_SAMPLES is 0, so clamp to [1, inf+) to be uniform with all backends */
     texDesc.samples = static_cast<std::uint32_t>(std::max(1, samples));
@@ -1281,6 +1309,14 @@ void GLTexture::AllocRenderbufferStorage(const TextureDescriptor& textureDesc)
 
     /* Store internal GL format */
     internalFormat_ = GLGetRenderbufferInternalFormat(*this);
+}
+
+void GLTexture::GetParams(GLint* extent, GLint* samples) const
+{
+    if (IsRenderbuffer())
+        GetRenderbufferParams(extent, samples);
+    else
+        GetTextureParams(extent, samples);
 }
 
 void GLTexture::GetTextureParams(GLint* extent, GLint* samples) const

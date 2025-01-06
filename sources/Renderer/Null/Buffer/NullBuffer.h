@@ -23,9 +23,11 @@ class NullBuffer final : public Buffer
 
     public:
 
-        void SetDebugName(const char* name) override;
+        #include <LLGL/Backend/Buffer.inl>
 
-        BufferDescriptor GetDesc() const override;
+    public:
+
+        void SetDebugName(const char* name) override;
 
     public:
 

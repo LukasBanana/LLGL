@@ -29,6 +29,11 @@ DbgBuffer::DbgBuffer(Buffer& instance, const BufferDescriptor& desc) :
 {
 }
 
+bool DbgBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return instance.GetNativeHandle(nativeHandle, nativeHandleSize);
+}
+
 void DbgBuffer::SetDebugName(const char* name)
 {
     DbgSetObjectName(*this, name);

@@ -11,6 +11,8 @@
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../../Core/Exception.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 
 
 namespace LLGL
@@ -30,6 +32,17 @@ GLSampler::~GLSampler()
 {
     glDeleteSamplers(1, &id_);
     GLStateManager::Get().NotifySamplerRelease(id_);
+}
+
+bool GLSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleGL = GetTypedNativeHandle<OpenGL::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleGL->type    = OpenGL::ResourceNativeType::Sampler;
+        nativeHandleGL->id      = GetID();
+        return true;
+    }
+    return false;
 }
 
 void GLSampler::SetDebugName(const char* name)
@@ -91,6 +104,11 @@ GLSampler::GLSampler(const char* debugName)
 GLSampler::~GLSampler()
 {
     // dummy
+}
+
+bool GLSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    return false; // dummy
 }
 
 void GLSampler::SetDebugName(const char* name)

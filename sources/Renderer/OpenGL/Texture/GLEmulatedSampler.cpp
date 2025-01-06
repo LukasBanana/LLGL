@@ -9,12 +9,25 @@
 #include "../GLTypes.h"
 #include "../Ext/GLExtensions.h"
 #include "../../../Core/MacroUtils.h"
+#include "../../../Core/CoreUtils.h"
+#include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <algorithm>
 
 
 namespace LLGL
 {
 
+
+bool GLEmulatedSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (auto* nativeHandleGL = GetTypedNativeHandle<OpenGL::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
+    {
+        nativeHandleGL->type    = OpenGL::ResourceNativeType::EmulatedSampler;
+        nativeHandleGL->id      = 0;
+        return true;
+    }
+    return false;
+}
 
 static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
 {
