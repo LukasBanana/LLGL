@@ -46,9 +46,10 @@ bool D3D12Texture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleS
 {
     if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D12::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
     {
-        nativeHandleD3D->type       = Direct3D12::ResourceNativeType::SamplerDescriptor;
-        nativeHandleD3D->resource   = resource_.Get();
-        nativeHandleD3D->resource->AddRef();
+        nativeHandleD3D->type                   = Direct3D12::ResourceNativeType::SamplerDescriptor;
+        nativeHandleD3D->resource.resource      = resource_.Get();
+        nativeHandleD3D->resource.resourceState = resource_.currentState;
+        nativeHandleD3D->resource.resource->AddRef();
         return true;
     }
     return false;

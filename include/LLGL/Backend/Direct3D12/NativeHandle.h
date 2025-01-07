@@ -74,13 +74,7 @@ enum class ResourceNativeType
 */
 struct ResourceNativeHandle
 {
-    /**
-    \brief Specifies the native resource type.
-    \remarks This allows to distinguish a resource between native resources and sampler-state descriptors.
-    */
-    ResourceNativeType type;
-
-    union
+    struct NativeResource
     {
         /**
         \brief COM pointer to the native Direct3D resource.
@@ -101,13 +95,38 @@ struct ResourceNativeHandle
         }
         \endcode
         */
-        ID3D12Resource*     resource;
+        ID3D12Resource*         resource;
 
         /**
-        \brief Native sampler-state descriptor.
-        \remarks Direct3D12 
+        \brief Bitmask of resource states this resource is currently in.
+        \remarks If the resource is transitioned into a different state after it has been retrieved via Resource::GetNativeHandle,
+        it must be transitioned back into exactly this state before LLGL can use it again.
         */
-        D3D12_SAMPLER_DESC  samplerDesc;
+        D3D12_RESOURCE_STATES   resourceState;
+    };
+
+    struct NativeSamplerDescriptor
+    {
+        /**
+        \brief Native sampler-state descriptor.
+        \remarks Direct3D12 native sampler descriptor.
+        */
+        D3D12_SAMPLER_DESC      samplerDesc;
+    };
+
+    /**
+    \brief Specifies the native resource type.
+    \remarks This allows to distinguish a resource between native resources and sampler-state descriptors.
+    */
+    ResourceNativeType type;
+
+    union
+    {
+        //! Native Direct3D 12 resource.
+        NativeResource          resource;
+
+        //! Native Direct3D 12 sampler descriptor.
+        NativeSamplerDescriptor samplerDesc;
     };
 };
 

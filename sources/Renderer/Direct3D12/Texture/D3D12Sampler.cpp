@@ -26,8 +26,8 @@ bool D3D12Sampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleS
 {
     if (auto* nativeHandleD3D = GetTypedNativeHandle<Direct3D12::ResourceNativeHandle>(nativeHandle, nativeHandleSize))
     {
-        nativeHandleD3D->type           = Direct3D12::ResourceNativeType::SamplerDescriptor;
-        nativeHandleD3D->samplerDesc    = nativeDesc_;
+        nativeHandleD3D->type                       = Direct3D12::ResourceNativeType::SamplerDescriptor;
+        nativeHandleD3D->samplerDesc.samplerDesc    = nativeDesc_;
         return true;
     }
     return false;
