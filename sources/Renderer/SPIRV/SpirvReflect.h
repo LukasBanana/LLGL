@@ -96,6 +96,7 @@ class SpirvReflect
             std::uint32_t               size        = 0;                    // Size (in bytes) of this type, or 0 if this is an OpTypeVoid type.
             bool                        sign        = false;                // Specifies whether or not this is a signed type (only for OpTypeInt).
             std::vector<const SpvType*> fieldTypes;                         // List of types of each record field.
+            std::vector<const char*>    fieldNames;                         // List of names for each record field.
         };
 
         // SPIRV-V scalar constants.
@@ -162,6 +163,9 @@ class SpirvReflect
         // Parse all instructions in the specified SPIR-V module.
         SpirvResult Reflect(const SpirvModuleView& module);
 
+        // Returns the SPIR-V structure type for push constants or null if there is no push_constant block.
+        const SpvType* GetPushConstantStructType() const;
+
     public:
 
         // Returns the container that maps a SPIR-V ID to its type definition.
@@ -190,11 +194,20 @@ class SpirvReflect
 
     private:
 
+        struct SpvMemberNames
+        {
+            std::vector<const char*> names;
+        };
+
+    private:
+
         using Instr = SpirvInstruction;
 
         SpirvResult ParseInstruction(const SpirvInstruction& instr);
 
         SpirvResult OpName(const Instr& instr);
+
+        SpirvResult OpMemberName(const Instr& instr);
 
         SpirvResult OpDecorate(const Instr& instr);
         void OpDecorateBinding(const Instr& instr, spv::Id id);
@@ -226,13 +239,15 @@ class SpirvReflect
 
     private:
 
-        std::uint32_t                   idBound_    = 0;
-        SpirvNameDecorations            names_;
+        std::uint32_t                       idBound_            = 0;
+        SpirvNameDecorations                names_;
 
-        std::map<spv::Id, SpvType>      types_;
-        std::map<spv::Id, SpvConstant>  constants_;
-        std::map<spv::Id, SpvUniform>   uniforms_;
-        std::map<spv::Id, SpvVarying>   varyings_;
+        std::map<spv::Id, SpvType>          types_;
+        std::map<spv::Id, SpvConstant>      constants_;
+        std::map<spv::Id, SpvUniform>       uniforms_;
+        std::map<spv::Id, SpvVarying>       varyings_;
+        std::map<spv::Id, SpvMemberNames>   memberNames_;
+        spv::Id                             pushConstantTypeId_ = 0;
 
 };
 

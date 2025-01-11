@@ -10,6 +10,7 @@
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
 #include <string>
+#include <LLGL/Utils/ForRange.h>
 
 
 namespace LLGL
@@ -46,6 +47,18 @@ SpirvResult SpirvReflect::Reflect(const SpirvModuleView& module)
     }
 
     return SpirvResult::NoError;
+}
+
+const SpirvReflect::SpvType* SpirvReflect::GetPushConstantStructType() const
+{
+    if (pushConstantTypeId_ != 0)
+    {
+        /* Find push constant pointer type and deference to its struct type */
+        auto it = types_.find(pushConstantTypeId_);
+        if (it != types_.end())
+            return it->second.Deref();
+    }
+    return nullptr;
 }
 
 static void ParseSpvExecutionMode(const SpirvInstruction& instr, SpirvReflect::SpvExecutionMode& outExecutionMode)
@@ -318,6 +331,8 @@ SpirvResult SpirvReflect::ParseInstruction(const SpirvInstruction& instr)
     {
         case spv::Op::OpName:
             return OpName(instr);
+        case spv::Op::OpMemberName:
+            return OpMemberName(instr);
         case spv::Op::OpDecorate:
             return OpDecorate(instr);
         case spv::Op::OpTypeVoid:
@@ -352,6 +367,17 @@ SpirvResult SpirvReflect::OpName(const Instr& instr)
         return SpirvResult::IdOutOfBounds;
 
     names_.Set(id, instr.GetString(1));
+    return SpirvResult::NoError;
+}
+
+SpirvResult SpirvReflect::OpMemberName(const Instr& instr)
+{
+    SpvMemberNames& memberNames = memberNames_[instr.type];
+    const std::uint32_t memberIndex = instr.GetUInt32(0);
+    if (memberNames.names.size() <= memberIndex)
+        memberNames.names.resize(memberIndex + 1);
+
+    memberNames.names[memberIndex] = instr.GetString(1);
     return SpirvResult::NoError;
 }
 
@@ -423,7 +449,6 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
     {
         case spv::StorageClassUniform:
         case spv::StorageClassUniformConstant:
-        //case spv::StorageClass::PushConstant:
         {
             auto& var = uniforms_[instr.result];
             {
@@ -437,6 +462,12 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
                 else
                     var.size = var.type->size;
             }
+        }
+        break;
+
+        case spv::StorageClassPushConstant:
+        {
+            pushConstantTypeId_ = instr.type;
         }
         break;
 
@@ -612,13 +643,26 @@ static void AccumulateSizeInVectorBoundary(std::uint32_t& size, std::uint32_t al
 
 void SpirvReflect::OpTypeStruct(const Instr& instr, SpvType& type)
 {
-    type.fieldTypes.reserve(instr.numOperands);
-    for (std::uint32_t i = 0; i < instr.numOperands; ++i)
+    type.fieldTypes.resize(instr.numOperands);
+    for_range(i, instr.numOperands)
     {
-        auto fieldType = FindType(instr.GetUInt32(i));
-        type.fieldTypes.push_back(fieldType);
+        const SpvType* fieldType = FindType(instr.GetUInt32(i));
+        type.fieldTypes[i] = fieldType;
         AccumulateSizeInVectorBoundary(type.size, 16, fieldType->size);
     }
+
+    /* Also append field names */
+    auto memberNamesIt = memberNames_.find(type.result);
+    if (memberNamesIt != memberNames_.end())
+    {
+        if (instr.numOperands == memberNamesIt->second.names.size())
+        {
+            type.fieldNames.resize(instr.numOperands);
+            for_range(i, instr.numOperands)
+                type.fieldNames[i] = memberNamesIt->second.names[i];
+        }
+    }
+
     type.size = GetAlignedSize(type.size, 16u);
 }
 

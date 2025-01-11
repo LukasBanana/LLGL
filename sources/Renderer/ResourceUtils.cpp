@@ -81,6 +81,156 @@ LLGL_EXPORT DynamicVector<BindingDescriptor> GetExpandedHeapDescriptors(const Ar
     return expandedBindingDescs;
 }
 
+LLGL_EXPORT UniformType MakeUniformMatrixType(UniformType baseType, std::uint32_t elements)
+{
+    switch (baseType)
+    {
+        case UniformType::Float1:
+            switch (elements)
+            {
+                case 1: return UniformType::Float1;
+                case 2: return UniformType::Float2;
+                case 3: return UniformType::Float3;
+                case 4: return UniformType::Float4;
+            }
+            break;
+
+        case UniformType::Float2:
+            switch (elements)
+            {
+                case 1: return UniformType::Float2;
+                case 2: return UniformType::Float2x2;
+                case 3: return UniformType::Float2x3;
+                case 4: return UniformType::Float2x4;
+            }
+            break;
+
+        case UniformType::Float3:
+            switch (elements)
+            {
+                case 1: return UniformType::Float3;
+                case 2: return UniformType::Float3x2;
+                case 3: return UniformType::Float3x3;
+                case 4: return UniformType::Float3x4;
+            }
+            break;
+
+        case UniformType::Float4:
+            switch (elements)
+            {
+                case 1: return UniformType::Float4;
+                case 2: return UniformType::Float4x2;
+                case 3: return UniformType::Float4x3;
+                case 4: return UniformType::Float4x4;
+            }
+            break;
+
+        case UniformType::Double1:
+            switch (elements)
+            {
+                case 1: return UniformType::Double1;
+                case 2: return UniformType::Double2;
+                case 3: return UniformType::Double3;
+                case 4: return UniformType::Double4;
+            }
+            break;
+
+        case UniformType::Double2:
+            switch (elements)
+            {
+                case 1: return UniformType::Double2;
+                case 2: return UniformType::Double2x2;
+                case 3: return UniformType::Double2x3;
+                case 4: return UniformType::Double2x4;
+            }
+            break;
+
+        case UniformType::Double3:
+            switch (elements)
+            {
+                case 1: return UniformType::Double3;
+                case 2: return UniformType::Double3x2;
+                case 3: return UniformType::Double3x3;
+                case 4: return UniformType::Double3x4;
+            }
+            break;
+
+        case UniformType::Double4:
+            switch (elements)
+            {
+                case 1: return UniformType::Double4;
+                case 2: return UniformType::Double4x2;
+                case 3: return UniformType::Double4x3;
+                case 4: return UniformType::Double4x4;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return UniformType::Undefined;
+}
+
+LLGL_EXPORT UniformType MakeUniformVectorType(UniformType baseType, std::uint32_t elements)
+{
+    switch (baseType)
+    {
+        case UniformType::Float1:
+            switch (elements)
+            {
+                case 1: return UniformType::Float1;
+                case 2: return UniformType::Float2;
+                case 3: return UniformType::Float3;
+                case 4: return UniformType::Float4;
+            }
+            break;
+
+        case UniformType::Double1:
+            switch (elements)
+            {
+                case 1: return UniformType::Double1;
+                case 2: return UniformType::Double2;
+                case 3: return UniformType::Double3;
+                case 4: return UniformType::Double4;
+            }
+            break;
+
+        case UniformType::Int1:
+            switch (elements)
+            {
+                case 1: return UniformType::Int1;
+                case 2: return UniformType::Int2;
+                case 3: return UniformType::Int3;
+                case 4: return UniformType::Int4;
+            }
+            break;
+
+        case UniformType::UInt1:
+            switch (elements)
+            {
+                case 1: return UniformType::UInt1;
+                case 2: return UniformType::UInt2;
+                case 3: return UniformType::UInt3;
+                case 4: return UniformType::UInt4;
+            }
+            break;
+
+        case UniformType::Bool1:
+            switch (elements)
+            {
+                case 1: return UniformType::Bool1;
+                case 2: return UniformType::Bool2;
+                case 3: return UniformType::Bool3;
+                case 4: return UniformType::Bool4;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return UniformType::Undefined;
+}
+
 
 } // /namespace LLGL
 

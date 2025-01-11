@@ -2232,13 +2232,21 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
         return nullptr;
     };
 
+    std::set<std::string> reflectedUniformNames;
+    const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
+
     for (DbgShader* shader : shaders)
     {
         /* Reflect shader code */
         ShaderReflection reflection;
-        if (!shader->instance.Reflect(reflection))
+        if (shader->instance.Reflect(reflection))
         {
-            const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
+            /* Insert reflected uniform names to match against names for all stages */
+            for (const UniformDescriptor& unfiromDesc : reflection.uniforms)
+                reflectedUniformNames.insert(unfiromDesc.name.c_str());
+        }
+        else
+        {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
                 "failed to reflect shader code in PSO%s with uniform descriptors%s",
@@ -2289,6 +2297,21 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
 
         /* Append new reflection to list for comparison with other shaders */
         reflections.push_back(std::move(reflection));
+    }
+
+    /* Ensure all requested uniforms are included in the code reflection */
+    for (const UniformDescriptor& uniformDesc : pipelineLayout.desc.uniforms)
+    {
+        if (reflectedUniformNames.find(uniformDesc.name.c_str()) == reflectedUniformNames.end())
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "uniform descriptor '%s' was not found in shader code reflection in PSO%s%s",
+                uniformDesc.name.c_str(),
+                psoLabel.c_str(),
+                (IsVulkan() ? "; perhaps LLGL was built without LLGL_VK_ENABLE_SPIRV_REFLECT" : "")
+            );
+        }
     }
 }
 

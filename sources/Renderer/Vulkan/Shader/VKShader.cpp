@@ -9,6 +9,7 @@
 #include "VKShaderModulePool.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
+#include "../../ResourceUtils.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/StringUtils.h"
 #include "../../../Core/ReportUtils.h"
@@ -380,6 +381,38 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
     return &(reflection.resources.back());
 }
 
+static UniformType ReflectUniformType(const SpirvReflect::SpvType* type)
+{
+    if (type != nullptr)
+    {
+        switch (type->opcode)
+        {
+            case spv::OpTypeArray:
+                /* Just dereference type since array elements are handled outside this function */
+                return ReflectUniformType(type->baseType);
+
+            case spv::OpTypeMatrix:
+                return MakeUniformMatrixType(ReflectUniformType(type->baseType), type->elements);
+
+            case spv::OpTypeVector:
+                return MakeUniformVectorType(ReflectUniformType(type->baseType), type->elements);
+
+            case spv::OpTypeFloat:
+                return (type->size == 2 ? UniformType::Double1 : UniformType::Float1);
+
+            case spv::OpTypeInt:
+                return (type->sign ? UniformType::Int1 : UniformType::UInt1);
+
+            case spv::OpTypeBool:
+                return UniformType::Bool1;
+
+            default:
+                break;
+        }
+    }
+    return UniformType::Undefined;
+}
+
 bool VKShader::Reflect(ShaderReflection& reflection) const
 {
     /* Parse shader module */
@@ -437,7 +470,26 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     }
 
     /* Gather push constants */
-    //TODO
+    if (const SpirvReflect::SpvType* pushConstantType = spvReflect.GetPushConstantStructType())
+    {
+        reflection.uniforms.reserve(reflection.uniforms.size() + pushConstantType->fieldTypes.size());
+        if (pushConstantType->fieldTypes.size() == pushConstantType->fieldNames.size())
+        {
+            for_range(i, pushConstantType->fieldTypes.size())
+            {
+                const SpirvReflect::SpvType* fieldType = pushConstantType->fieldTypes[i];
+                const char* fieldName = pushConstantType->fieldNames[i];
+
+                UniformDescriptor uniformDesc;
+                {
+                    uniformDesc.name        = fieldName;
+                    uniformDesc.type        = ReflectUniformType(fieldType);
+                    uniformDesc.arraySize   = (fieldType->opcode == spv::OpTypeArray ? fieldType->elements : 0);
+                }
+                reflection.uniforms.push_back(uniformDesc);
+            }
+        }
+    }
 
     return true;
 }

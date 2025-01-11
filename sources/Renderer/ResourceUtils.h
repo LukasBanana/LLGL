@@ -75,6 +75,12 @@ LLGL_EXPORT StaticSamplerBorderColor GetStaticSamplerBorderColor(const float (&c
 // Returns a list of expanded heap-binding descriptors, i.e. all array resources have been flattened.
 LLGL_EXPORT DynamicVector<BindingDescriptor> GetExpandedHeapDescriptors(const ArrayView<BindingDescriptor>& bindingDescs);
 
+// Returns a uniform matrix type with the specified base vector type and number of elements.
+LLGL_EXPORT UniformType MakeUniformMatrixType(UniformType baseType, std::uint32_t elements);
+
+// Returns a uniform vector type with the specified base scalar type and number of elements.
+LLGL_EXPORT UniformType MakeUniformVectorType(UniformType baseType, std::uint32_t elements);
+
 
 } // /namespace LLGL
 
