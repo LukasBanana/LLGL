@@ -20,7 +20,7 @@ namespace LLGL
 static std::uint32_t GetNumPipelineLayoutBindings(const PipelineLayout* pipelineLayout)
 {
     auto pipelineLayoutNull = LLGL_CAST(const NullPipelineLayout*, pipelineLayout);
-    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutNull->desc.bindings.size()));
+    return std::max(1u, static_cast<std::uint32_t>(pipelineLayoutNull->desc.heapBindings.size()));
 }
 
 NullResourceHeap::NullResourceHeap(const ResourceHeapDescriptor& desc, const ArrayView<ResourceViewDescriptor>& initialResourceViews) :

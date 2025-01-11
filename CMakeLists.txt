@@ -446,14 +446,14 @@ endif()
 
 if(APPLE)
     option(LLGL_MACOS_ENABLE_COREVIDEO "Enable CoreVideo framework (for refresh rate of built-in displays)" ON)
-    option(LLGL_BUILD_RENDERER_METAL "Include Metal renderer project (experimental)" OFF)
+    option(LLGL_BUILD_RENDERER_METAL "Include Metal renderer project" ON)
 elseif(NOT LLGL_UWP_PLATFORM)
     option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
 endif()
 
 if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
-    option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project (experimental)" OFF)
+    option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
 endif()
 
 option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
