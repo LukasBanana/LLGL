@@ -2003,7 +2003,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
 
     if (const DbgPipelineLayout* pipelineLayoutDbg = DbgGetWrapper<DbgPipelineLayout>(pipelineStateDesc.pipelineLayout))
     {
-        ValidatePipelineStateUniforms(*pipelineLayoutDbg, shadersDbg);
+        ValidatePipelineStateUniforms(*pipelineLayoutDbg, shadersDbg, pipelineStateDesc.debugName);
 
         /* If shader reflection failed, report error if PSO layout requires it (Vulkan specific) */
         if (hasShadersWithFailedReflection && IsVulkan())
@@ -2011,12 +2011,8 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
             if (!pipelineLayoutDbg->desc.bindings.empty() &&
                 !pipelineLayoutDbg->desc.heapBindings.empty())
             {
-                const std::string psoLabel =
-                (
-                    pipelineStateDesc.debugName != nullptr && *pipelineStateDesc.debugName != '\0'
-                        ? " '" + std::string(pipelineStateDesc.debugName) + '\''
-                        : ""
-                );
+                const char* psoDebugName = pipelineStateDesc.debugName;
+                const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
                 LLGL_DBG_ERROR(
                     ErrorType::UndefinedBehavior,
                     "failed to reflect shader code in PSO%s with mix of heap- and individual bindings; "
@@ -2209,7 +2205,7 @@ static ShaderType StageFlagsToShaderType(long stageFlags)
     }
 }
 
-void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pipelineLayout, const ArrayView<DbgShader*>& shaders)
+void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pipelineLayout, const ArrayView<DbgShader*>& shaders, const char* psoDebugName)
 {
     /*
     Warn if any uniform is in a cbuffer that has different binding slots across multiple shader stages,
@@ -2240,7 +2236,17 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
     {
         /* Reflect shader code */
         ShaderReflection reflection;
-        shader->instance.Reflect(reflection);
+        if (!shader->instance.Reflect(reflection))
+        {
+            const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidState,
+                "failed to reflect shader code in PSO%s with uniform descriptors%s",
+                psoLabel.c_str(),
+                (IsVulkan() ? "; perhaps LLGL was built without LLGL_VK_ENABLE_SPIRV_REFLECT" : "")
+            );
+            continue;
+        }
 
         /* Check mismatch between shader resources */
         if (!reflections.empty())
