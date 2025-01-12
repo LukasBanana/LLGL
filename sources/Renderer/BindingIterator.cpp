@@ -55,9 +55,11 @@ static void ErrResourceTypeMismatch(ResourceType expectedType, ResourceType actu
 [[noreturn]]
 static void ErrBindFlagsMismatch(ResourceType resourceType, long expectedBindFlags, long actualBindFlags)
 {
+    const std::string expectedBindFlagsStr = IntToHex(expectedBindFlags);
+    const std::string actualBindFlagsStr = IntToHex(actualBindFlags);
     LLGL_TRAP(
         "binding flags mismatch of resource object (LLGL::ResourceType::%s) used as binding point: expected %s, but got %s",
-        ResourceTypeToString(resourceType), IntToHex(expectedBindFlags), IntToHex(actualBindFlags)
+        ResourceTypeToString(resourceType), expectedBindFlagsStr.c_str(), actualBindFlagsStr.c_str()
     );
 }
 

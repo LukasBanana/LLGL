@@ -963,7 +963,7 @@ void GLResourceHeap::WriteResourceViewImage(const ResourceViewDescriptor& desc, 
     bool isAnyTextureViewRemoved = false;
 
     /* Get texture resource and its size parameter */
-    auto* textureGL = LLGL_CAST(GLTexture*, GetAsExpectedTexture(desc.resource, BindFlags::Sampled));
+    auto* textureGL = LLGL_CAST(GLTexture*, GetAsExpectedTexture(desc.resource, (BindFlags::Sampled | BindFlags::Storage)));
 
     if (IsTextureViewEnabled(desc.textureView))
     {

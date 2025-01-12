@@ -217,7 +217,7 @@ static void BuildTransformFeedbackVaryingsEXT(GLuint program, std::size_t numVar
     #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 
-#ifdef GL_NV_transform_feedback
+#if GL_NV_transform_feedback
 
 static void BuildTransformFeedbackVaryingsNV(GLuint program, std::size_t numVaryings, const char* const* varyings)
 {
@@ -230,12 +230,14 @@ static void BuildTransformFeedbackVaryingsNV(GLuint program, std::size_t numVary
 
     for_range(i, numVaryings)
     {
-        /* Get varying location by its name */
+        /*
+        Get varying location by its name.
+        Silently ignore invalid names since the EXT extension doesn't report errors either
+        and NV extension fails on gl_Position input.
+        */
         GLint location = glGetVaryingLocationNV(program, varyings[i]);
         if (location >= 0)
             varyingLocations.push_back(location);
-        else
-            LLGL_TRAP("stream-output attribute \"%s\" does not specify an active varying in GL shader program (ID=%u)", varyings[i], program);
     }
 
     glTransformFeedbackVaryingsNV(
@@ -263,7 +265,7 @@ void GLShaderProgram::LinkProgramWithTransformFeedbackVaryings(GLuint program, s
             return;
         }
 
-        #ifdef GL_NV_transform_feedback
+        #if GL_NV_transform_feedback
         /* For GL_NV_transform_feedback (Vendor specific) the varyings must be specified AFTER linking */
         if (HasExtension(GLExt::NV_transform_feedback))
         {
@@ -548,7 +550,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
             #endif
         }
     }
-    #ifdef GL_NV_transform_feedback
+    #if GL_NV_transform_feedback
     else if (HasExtension(GLExt::NV_transform_feedback))
     {
         /* Query active varyings */
