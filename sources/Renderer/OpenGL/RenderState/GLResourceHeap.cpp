@@ -557,7 +557,7 @@ void GLResourceHeap::AllocSegmentsImage(GLHeapBindingIterator& bindingIter)
     /* Build all resource segments for type <GLResourceHeapSegment> */
     segmentation_.numImageTextureSegments = GLResourceHeap::ConsolidateSegments(
         bindingSlots,
-        BIND_SEGMENT_ALLOCATOR(GLResourceHeap::Alloc2PartSegment, GLResourceType_Image, sizeof(GLuint), sizeof(GLenum))
+        BIND_SEGMENT_ALLOCATOR(GLResourceHeap::Alloc3PartSegment, GLResourceType_Image, sizeof(GLuint), sizeof(GLenum), sizeof(GLuint))
     );
 }
 
