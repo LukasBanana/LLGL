@@ -35,7 +35,7 @@ namespace DXTypes
     LLGL_TRAP("failed to map LLGL::%s to %s Direct3D parameter", #TYPE, #DXTYPE)
 
 #define LLGL_TRAP_DX_UNMAP(TYPE, DXTYPE, DXVALUE) \
-    LLGL_TRAP("failed to unmap LLGL::%s from %s Direct3D parameter (0x%08X)", #TYPE, static_cast<int>(DXVALUE))
+    LLGL_TRAP("failed to unmap LLGL::%s from %s Direct3D parameter (0x%08X)", #TYPE, static_cast<unsigned>(DXVALUE))
 
 #define LLGL_TRAP_DX_PARAM_UNSUPPORTED(PARAM, REQUIREMENT) \
     LLGL_TRAP("parameter '%s' requires %s", PARAM, REQUIREMENT)

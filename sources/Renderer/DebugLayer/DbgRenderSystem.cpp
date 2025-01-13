@@ -742,7 +742,7 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
             if (const char* formatName = ToString(bufferDesc.format))
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::%s", formatName);
             else
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: %s", IntToHex(static_cast<std::uint32_t>(bufferDesc.format)));
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x%08X", static_cast<unsigned>(bufferDesc.format));
         }
 
         /* Validate buffer size for specified index format, unless it's also used for as vertex buffer  */
@@ -1568,7 +1568,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidArgument,
                     "%s uses unknown system-value (0x%08X)",
-                    attribLabel.c_str(), static_cast<int>(attrib.systemValue)
+                    attribLabel.c_str(), static_cast<unsigned>(attrib.systemValue)
                 );
             }
         }

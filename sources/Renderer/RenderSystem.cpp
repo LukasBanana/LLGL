@@ -268,7 +268,8 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& bufferDesc, std::u
 
     LLGL_ASSERT(
         ((bufferDesc.bindFlags & (~validBindFlags)) == 0),
-        "buffer descriptor with invalid binding flags 0x%08X", bufferDesc.bindFlags
+        "buffer descriptor with invalid binding flags 0x%08X",
+        static_cast<unsigned>(bufferDesc.bindFlags)
     );
 }
 

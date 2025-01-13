@@ -124,7 +124,7 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
                 break;
 
             default:
-                LLGL_TRAP("invalid descriptor type in Vulkan descriptor set: %s", IntToHex(static_cast<std::uint32_t>(binding.descriptorType)));
+                LLGL_TRAP("invalid descriptor type in Vulkan descriptor set: 0x%08X", static_cast<unsigned>(binding.descriptorType));
                 break;
         }
 
