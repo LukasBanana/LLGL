@@ -35,23 +35,23 @@ struct FragmentAttribute
     FragmentAttribute& operator = (const FragmentAttribute&) = default;
 
     //! Constructor for minimal fragment attribute information.
-    inline FragmentAttribute(StringLiteral name, std::uint32_t location = 0) :
-        name     { std::move(name) },
-        location { location        }
+    inline FragmentAttribute(const StringLiteral& name, std::uint32_t location = 0) :
+        name     { name     },
+        location { location }
     {
     }
 
     //! Constructor to initialize all members.
     inline FragmentAttribute(
-        StringLiteral        name,
-        const Format         format,
-        std::uint32_t        location    = 0,
-        const SystemValue    systemValue = SystemValue::Undefined)
+        const StringLiteral&    name,
+        const Format            format,
+        std::uint32_t           location    = 0,
+        const SystemValue       systemValue = SystemValue::Undefined)
     :
-        name        { std::move(name) },
-        format      { format          },
-        location    { location        },
-        systemValue { systemValue     }
+        name        { name        },
+        format      { format      },
+        location    { location    },
+        systemValue { systemValue }
     {
     }
 

@@ -42,43 +42,43 @@ struct LLGL_EXPORT VertexAttribute
 
     //! Constructor for minimal vertex attribute information and system value semantics, e.g. \c SV_VertexID (HLSL) or \c gl_VertexID (GLSL).
     VertexAttribute(
-        StringLiteral       name,
-        const Format        format,
-        std::uint32_t       location        = 0,
-        std::uint32_t       instanceDivisor = 0,
-        const SystemValue   systemValue     = SystemValue::Undefined
+        const StringLiteral&    name,
+        const Format            format,
+        std::uint32_t           location        = 0,
+        std::uint32_t           instanceDivisor = 0,
+        const SystemValue       systemValue     = SystemValue::Undefined
     );
 
     //! Constructor for basic vertex attribute information.
     VertexAttribute(
-        StringLiteral   semanticName,
-        std::uint32_t   semanticIndex,
-        const Format    format,
-        std::uint32_t   location        = 0,
-        std::uint32_t   instanceDivisor = 0
+        const StringLiteral&    semanticName,
+        std::uint32_t           semanticIndex,
+        const Format            format,
+        std::uint32_t           location        = 0,
+        std::uint32_t           instanceDivisor = 0
     );
 
     //! Constructor for common vertex attribute information.
     VertexAttribute(
-        StringLiteral    name,
-        const Format     format,
-        std::uint32_t    location,
-        std::uint32_t    offset,
-        std::uint32_t    stride,
-        std::uint32_t    slot            = 0,
-        std::uint32_t    instanceDivisor = 0
+        const StringLiteral&    name,
+        const Format            format,
+        std::uint32_t           location,
+        std::uint32_t           offset,
+        std::uint32_t           stride,
+        std::uint32_t           slot            = 0,
+        std::uint32_t           instanceDivisor = 0
     );
 
     //! Constructor for the most vertex attribute information, including semantic index.
     VertexAttribute(
-        StringLiteral    semanticName,
-        std::uint32_t    semanticIndex,
-        const Format     format,
-        std::uint32_t    location,
-        std::uint32_t    offset,
-        std::uint32_t    stride,
-        std::uint32_t    slot            = 0,
-        std::uint32_t    instanceDivisor = 0
+        const StringLiteral&    semanticName,
+        std::uint32_t           semanticIndex,
+        const Format            format,
+        std::uint32_t           location,
+        std::uint32_t           offset,
+        std::uint32_t           stride,
+        std::uint32_t           slot            = 0,
+        std::uint32_t           instanceDivisor = 0
     );
 
     /**

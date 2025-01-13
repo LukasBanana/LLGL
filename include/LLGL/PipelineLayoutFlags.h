@@ -194,19 +194,19 @@ struct BindingDescriptor
 
     //! Constructors with all attributes.
     inline BindingDescriptor(
-        StringLiteral         name,
-        ResourceType          type,
-        long                  bindFlags,
-        long                  stageFlags,
-        const BindingSlot&    slot,
-        std::uint32_t         arraySize = 0)
+        const StringLiteral&    name,
+        ResourceType            type,
+        long                    bindFlags,
+        long                    stageFlags,
+        const BindingSlot&      slot,
+        std::uint32_t           arraySize = 0)
     :
-        name       { std::move(name) },
-        type       { type            },
-        bindFlags  { bindFlags       },
-        stageFlags { stageFlags      },
-        slot       { slot            },
-        arraySize  { arraySize       }
+        name       { name       },
+        type       { type       },
+        bindFlags  { bindFlags  },
+        stageFlags { stageFlags },
+        slot       { slot       },
+        arraySize  { arraySize  }
     {
     }
 
@@ -278,15 +278,15 @@ struct StaticSamplerDescriptor
 
     //! Initializes the static sampler with a name, stage flags, binding slot, and sampler state.
     inline StaticSamplerDescriptor(
-        StringLiteral               name,
+        const StringLiteral&        name,
         long                        stageFlags,
         const BindingSlot&          slot,
         const SamplerDescriptor&    sampler)
     :
-        name       { std::move(name) },
-        stageFlags { stageFlags      },
-        slot       { slot            },
-        sampler    { sampler         }
+        name       { name       },
+        stageFlags { stageFlags },
+        slot       { slot       },
+        sampler    { sampler    }
     {
     }
 
@@ -335,13 +335,13 @@ struct UniformDescriptor
 
     //! Initializes the uniform descriptor with a name, type, and optional array size.
     inline UniformDescriptor(
-        StringLiteral    name,
-        UniformType      type,
-        std::uint32_t    arraySize = 0)
+        const StringLiteral&    name,
+        UniformType             type,
+        std::uint32_t           arraySize = 0)
     :
-        name      { std::move(name) },
-        type      { type            },
-        arraySize { arraySize       }
+        name      { name      },
+        type      { type      },
+        arraySize { arraySize }
     {
     }
 
