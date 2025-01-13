@@ -170,7 +170,7 @@ class LLGL_EXPORT SmallVector
         }
 
         //! Takes the ownership of dynamically allocated elements from the \c other vector or copies all elements if the dynamic allocation is not used yet.
-        SmallVector(SmallVector&& other) :
+        SmallVector(SmallVector&& other) noexcept :
             SmallVector {}
         {
             operator = (std::forward<SmallVector&&>(other));
@@ -593,7 +593,7 @@ class LLGL_EXPORT SmallVector
             return *this;
         }
 
-        SmallVector& operator = (SmallVector&& rhs)
+        SmallVector& operator = (SmallVector&& rhs) noexcept
         {
             if (&rhs != this)
             {

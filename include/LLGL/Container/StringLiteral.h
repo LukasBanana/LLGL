@@ -76,7 +76,7 @@ class LLGL_EXPORT BasicStringLiteral
         }
 
         //! Moves ownership from the input string literal to the newly constructed string literal.
-        BasicStringLiteral(BasicStringLiteral&& rhs) :
+        BasicStringLiteral(BasicStringLiteral&& rhs) noexcept :
             data_ { rhs.data_ },
             size_ { rhs.size_ }
         {
@@ -96,7 +96,7 @@ class LLGL_EXPORT BasicStringLiteral
             return *this;
         }
 
-        BasicStringLiteral& operator = (BasicStringLiteral&& rhs)
+        BasicStringLiteral& operator = (BasicStringLiteral&& rhs) noexcept
         {
             clear();
             data_ = rhs.data_;

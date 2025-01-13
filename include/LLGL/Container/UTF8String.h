@@ -52,7 +52,7 @@ class LLGL_EXPORT UTF8String
         UTF8String(const UTF8String& rhs);
 
         //! Takes the ownership of the specified UTF-8 string.
-        UTF8String(UTF8String&& rhs);
+        UTF8String(UTF8String&& rhs) noexcept;
 
         //! Initializes the UTF-8 string with a copy of the specified string view.
         UTF8String(const StringView& str);
@@ -191,7 +191,7 @@ class LLGL_EXPORT UTF8String
     public:
 
         UTF8String& operator = (const UTF8String& rhs);
-        UTF8String& operator = (UTF8String&& rhs);
+        UTF8String& operator = (UTF8String&& rhs) noexcept;
 
         UTF8String& operator += (const UTF8String& rhs);
         UTF8String& operator += (const StringView& rhs);

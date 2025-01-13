@@ -70,7 +70,7 @@ Image& Image::operator = (const Image& rhs)
     return *this;
 }
 
-Image& Image::operator = (Image&& rhs)
+Image& Image::operator = (Image&& rhs) noexcept
 {
     Reset(rhs.GetExtent(), rhs.GetFormat(), rhs.GetDataType(), std::move(rhs.data_));
     rhs.ResetAttributes();

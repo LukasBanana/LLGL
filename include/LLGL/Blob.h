@@ -38,7 +38,7 @@ class LLGL_EXPORT Blob : public NonCopyable
         Blob(Blob&& rhs) noexcept;
 
         //! Move operator.
-        Blob& operator = (Blob&& rhs);
+        Blob& operator = (Blob&& rhs) noexcept;
 
         /**
         \brief Constructs the blob with a copy of the specified data or a weak reference to the data.
