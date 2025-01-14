@@ -17,6 +17,7 @@
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <vector>
+#include <utility>
 
 
 namespace LLGL
