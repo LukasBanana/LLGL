@@ -17,6 +17,7 @@
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Container/StringLiteral.h>
 #include <vector>
+#include <utility>
 
 
 namespace LLGL
@@ -194,19 +195,19 @@ struct BindingDescriptor
 
     //! Constructors with all attributes.
     inline BindingDescriptor(
-        const StringLiteral&    name,
-        ResourceType            type,
-        long                    bindFlags,
-        long                    stageFlags,
-        const BindingSlot&      slot,
-        std::uint32_t           arraySize = 0)
+        StringLiteral         name,
+        ResourceType          type,
+        long                  bindFlags,
+        long                  stageFlags,
+        const BindingSlot&    slot,
+        std::uint32_t         arraySize = 0)
     :
-        name       { name       },
-        type       { type       },
-        bindFlags  { bindFlags  },
-        stageFlags { stageFlags },
-        slot       { slot       },
-        arraySize  { arraySize  }
+        name       { std::move(name) },
+        type       { type            },
+        bindFlags  { bindFlags       },
+        stageFlags { stageFlags      },
+        slot       { slot            },
+        arraySize  { arraySize       }
     {
     }
 
@@ -278,15 +279,15 @@ struct StaticSamplerDescriptor
 
     //! Initializes the static sampler with a name, stage flags, binding slot, and sampler state.
     inline StaticSamplerDescriptor(
-        const StringLiteral&        name,
+        StringLiteral               name,
         long                        stageFlags,
         const BindingSlot&          slot,
         const SamplerDescriptor&    sampler)
     :
-        name       { name       },
-        stageFlags { stageFlags },
-        slot       { slot       },
-        sampler    { sampler    }
+        name       { std::move(name) },
+        stageFlags { stageFlags      },
+        slot       { slot            },
+        sampler    { sampler         }
     {
     }
 
@@ -335,13 +336,13 @@ struct UniformDescriptor
 
     //! Initializes the uniform descriptor with a name, type, and optional array size.
     inline UniformDescriptor(
-        const StringLiteral&    name,
-        UniformType             type,
-        std::uint32_t           arraySize = 0)
+        StringLiteral    name,
+        UniformType      type,
+        std::uint32_t    arraySize = 0)
     :
-        name      { name      },
-        type      { type      },
-        arraySize { arraySize }
+        name      { std::move(name) },
+        type      { type            },
+        arraySize { arraySize       }
     {
     }
 
