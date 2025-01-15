@@ -96,7 +96,7 @@ class LLGL_EXPORT BasicStringLiteral
             return *this;
         }
 
-        BasicStringLiteral& operator = (BasicStringLiteral&& rhs) noexcept
+        BasicStringLiteral& operator = (BasicStringLiteral&& rhs)
         {
             clear();
             data_ = rhs.data_;

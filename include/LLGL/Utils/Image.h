@@ -73,7 +73,7 @@ class LLGL_EXPORT Image
         Image& operator = (const Image& rhs);
 
         //! Move operator which takes the ownership of the image buffer.
-        Image& operator = (Image&& rhs) noexcept;
+        Image& operator = (Image&& rhs);
 
         /* ----- Storage ----- */
 

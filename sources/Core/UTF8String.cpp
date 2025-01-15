@@ -176,7 +176,7 @@ UTF8String::UTF8String(const UTF8String& rhs) :
 {
 }
 
-UTF8String::UTF8String(UTF8String&& rhs) noexcept :
+UTF8String::UTF8String(UTF8String&& rhs) :
     data_ { std::move(rhs.data_) }
 {
     rhs.clear();
