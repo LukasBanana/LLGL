@@ -14,6 +14,7 @@
 #include <LLGL/Container/StringLiteral.h>
 #include <string>
 #include <cstdint>
+#include <utility>
 
 
 namespace LLGL
