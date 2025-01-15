@@ -208,7 +208,7 @@ UTF8String& UTF8String::operator = (const UTF8String& rhs)
     return *this;
 }
 
-UTF8String& UTF8String::operator = (UTF8String&& rhs) noexcept
+UTF8String& UTF8String::operator = (UTF8String&& rhs)
 {
     data_ = std::move(rhs.data_);
     rhs.clear();
