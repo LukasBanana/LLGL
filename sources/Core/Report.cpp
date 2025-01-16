@@ -141,7 +141,7 @@ Report& Report::operator = (const Report& rhs)
     return *this;
 }
 
-Report& Report::operator = (Report&& rhs)
+Report& Report::operator = (Report&& rhs) noexcept
 {
     if (this != &rhs)
     {

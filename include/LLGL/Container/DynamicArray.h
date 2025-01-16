@@ -360,7 +360,7 @@ class LLGL_EXPORT DynamicArray
             return *this;
         }
 
-        DynamicArray& operator = (DynamicArray&& rhs)
+        DynamicArray& operator = (DynamicArray&& rhs) noexcept(std::is_nothrow_destructible<T>::value)
         {
             if (&rhs != this)
             {

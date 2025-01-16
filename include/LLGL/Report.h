@@ -103,7 +103,7 @@ class LLGL_EXPORT Report final
         Report& operator = (const Report& rhs);
 
         //! Move operator.
-        Report& operator = (Report&& rhs);
+        Report& operator = (Report&& rhs) noexcept;
 
         //! Returns true if this report has a non-empty text or is marked as having errors.
         operator bool () const;
