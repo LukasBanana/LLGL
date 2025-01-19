@@ -168,7 +168,7 @@ std::string GLShaderProgram::GetGLProgramLog(GLuint program)
         glGetProgramInfoLog(program, infoLogLength, &charsWritten, infoLog.data());
 
         /* Convert byte buffer to string */
-        return std::string(infoLog.data());
+        return std::string(infoLog.data(), static_cast<std::size_t>(charsWritten));
     }
 
     return "";
@@ -433,7 +433,7 @@ static SystemValue FindSystemValue(const StringView& name)
 // Internal struct for QueryVertexAttributes function
 struct GLReflectVertexAttribute
 {
-    std::string     name;
+    StringLiteral   name;
     Format          format;
     std::uint32_t   semanticIndex;
     std::uint32_t   location;
@@ -461,11 +461,11 @@ static void GLQueryVertexAttributes(GLuint program, ShaderReflection& reflection
         glGetActiveAttrib(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
         /* Convert attribute information */
-        auto name = std::string(attribName.data());
+        auto name = StringView(attribName.data(), static_cast<std::size_t>(nameLength));
         auto attr = UnmapAttribType(type);
 
         /* Get attribute location */
-        auto location = static_cast<std::uint32_t>(glGetAttribLocation(program, name.c_str()));
+        auto location = static_cast<std::uint32_t>(glGetAttribLocation(program, attribName.data()));
 
         /* Insert vertex attribute into list */
         for_range(semanticIndex, attr.rows)
@@ -537,7 +537,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
             glGetTransformFeedbackVarying(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
             /* Convert attribute information */
-            soAttrib.name       = std::string(attribName.data());
+            soAttrib.name       = StringView(attribName.data(), static_cast<std::size_t>(nameLength));
             soAttrib.location   = i;
             //auto attr = UnmapAttribType(type);
 
@@ -570,7 +570,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
             glGetActiveVaryingNV(program, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
             /* Convert attribute information */
-            soAttrib.name       = std::string(attribName.data());
+            soAttrib.name       = StringView(attribName.data(), static_cast<std::size_t>(nameLength));
             soAttrib.location   = i;
             //auto attr = UnmapAttribType(type);
 
@@ -700,7 +700,7 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
             /* Query uniform block name */
             GLsizei nameLength = 0;
             glGetActiveUniformBlockName(program, i, maxNameLength, &nameLength, blockName.data());
-            resource.binding.name = std::string(blockName.data());
+            resource.binding.name = StringView(blockName.data(), static_cast<std::size_t>(nameLength));
 
             /* Query uniform block size */
             GLint blockSize = 0;
@@ -744,7 +744,7 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
             /* Query shader storage block name */
             GLsizei nameLength = 0;
             glGetProgramResourceName(program, GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
-            resource.binding.name = std::string(blockName.data());
+            resource.binding.name = StringView(blockName.data(), static_cast<std::size_t>(nameLength));
 
             #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
             /* Query resource view properties */
@@ -791,7 +791,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
             ShaderResourceReflection resource;
             {
                 /* Initialize name, type, and binding flags for resource view */
-                resource.binding.name = std::string(uniformName.data());
+                resource.binding.name = StringView(uniformName.data(), static_cast<std::size_t>(nameLength));
                 resource.binding.type = ResourceType::Texture;
 
                 if (uniformType == UniformType::Image)
@@ -847,7 +847,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
             /* Append default uniform */
             UniformDescriptor uniform;
             {
-                uniform.name        = std::string(uniformName.data());
+                uniform.name        = StringView(uniformName.data(), static_cast<std::size_t>(nameLength));
                 uniform.type        = uniformType;
                 uniform.arraySize   = static_cast<std::uint32_t>(size);
             }
@@ -901,7 +901,7 @@ void GLShaderProgram::QueryTexBufferNames(GLuint program, std::set<std::string>&
         GLint size = 0;
         GLenum type = 0;
         glGetActiveUniform(program, i, maxNameLength, &nameLength, &size, &type, blockName.data());
-        std::string uniformName(blockName.data());
+        std::string uniformName(blockName.data(), static_cast<std::size_t>(nameLength));
 
         /* Map sampler buffer and image buffer names to output sets */
         switch (type)
