@@ -422,6 +422,7 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     RUN_TEST( ContainerSmallVector );
     RUN_TEST( ContainerUTF8String );
     RUN_TEST( ContainerStringLiteral );
+    RUN_TEST( ContainerStringOperators );
     RUN_TEST( ParseUtil );
     RUN_TEST( ImageConversions );
 

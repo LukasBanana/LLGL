@@ -58,144 +58,105 @@ inline UTF8String operator + (const TChar* lhs, const UTF8String& rhs)
     return result;
 }
 
-//! Returns true if the two strings are equal.
-inline bool operator == (const UTF8String& lhs, const UTF8String& rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
+#define LLGL_DEFINE_STRING_COMPARE_OPERATORS(OP, OP_REV)            \
+    inline bool operator OP (                                       \
+        const UTF8String& lhs,                                      \
+        const UTF8String& rhs)                                      \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits>                      \
+    inline bool operator OP (                                       \
+        const UTF8String&                       lhs,                \
+        const BasicStringView<TChar, Traits>&   rhs)                \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar>                                       \
+    inline bool operator OP (                                       \
+        const UTF8String&   lhs,                                    \
+        const TChar*        rhs)                                    \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits>                      \
+    inline bool operator OP (                                       \
+        const BasicStringView<TChar, Traits>& lhs,                  \
+        const BasicStringView<TChar, Traits>& rhs)                  \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits>                      \
+    inline bool operator OP (                                       \
+        const BasicStringView<TChar, Traits>&   lhs,                \
+        const UTF8String&                       rhs)                \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits>                      \
+    inline bool operator OP (                                       \
+        const BasicStringView<TChar, Traits>&   lhs,                \
+        const TChar*                            rhs)                \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar>                                       \
+    inline bool operator OP (                                       \
+        const TChar*        lhs,                                    \
+        const UTF8String&   rhs)                                    \
+    {                                                               \
+        /* Flip compare operands */                                 \
+        return (rhs.compare(lhs) OP_REV 0);                         \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits>                      \
+    inline bool operator OP (                                       \
+        const TChar*                            lhs,                \
+        const BasicStringView<TChar, Traits>&   rhs)                \
+    {                                                               \
+        /* Flip compare operands */                                 \
+        return (rhs.compare(lhs) OP_REV 0);                         \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits, typename Allocator>  \
+    inline bool operator OP (                                       \
+        const BasicStringLiteral<TChar, Traits, Allocator>& lhs,    \
+        const BasicStringLiteral<TChar, Traits, Allocator>& rhs)    \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits, typename Allocator>  \
+    inline bool operator OP (                                       \
+        const BasicStringLiteral<TChar, Traits, Allocator>& lhs,    \
+        const TChar*                                        rhs)    \
+    {                                                               \
+        return (lhs.compare(rhs) OP 0);                             \
+    }                                                               \
+                                                                    \
+    template <typename TChar, typename Traits, typename Allocator>  \
+    inline bool operator OP (                                       \
+        const TChar*                                        lhs,    \
+        const BasicStringLiteral<TChar, Traits, Allocator>& rhs)    \
+    {                                                               \
+        /* Flip compare operands */                                 \
+        return (rhs.compare(lhs) OP_REV 0);                         \
+    }
 
-template <typename TChar, typename Traits>
-inline bool operator == (const UTF8String& lhs, const BasicStringView<TChar, Traits>& rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
+LLGL_DEFINE_STRING_COMPARE_OPERATORS( ==, == );
+LLGL_DEFINE_STRING_COMPARE_OPERATORS( !=, != );
+LLGL_DEFINE_STRING_COMPARE_OPERATORS( < , >  );
+LLGL_DEFINE_STRING_COMPARE_OPERATORS( <=, >= );
+LLGL_DEFINE_STRING_COMPARE_OPERATORS( > , <  );
+LLGL_DEFINE_STRING_COMPARE_OPERATORS( >=, <= );
 
-template <typename TChar>
-inline bool operator == (const UTF8String& lhs, const TChar* rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator == (const BasicStringView<TChar, Traits>& lhs, const BasicStringView<TChar, Traits>& rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator == (const BasicStringView<TChar, Traits>& lhs, const UTF8String& rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator == (const BasicStringView<TChar, Traits>& lhs, const TChar* rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
-
-template <typename TChar>
-inline bool operator == (const TChar* lhs, const UTF8String& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) == 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator == (const TChar* lhs, const BasicStringView<TChar, Traits>& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) == 0);
-}
-
-template <typename TChar, typename Traits, typename Allocator>
-inline bool operator == (const BasicStringLiteral<TChar, Traits, Allocator>& lhs, const BasicStringLiteral<TChar, Traits, Allocator>& rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
-
-template <typename TChar, typename Traits, typename Allocator>
-inline bool operator == (const BasicStringLiteral<TChar, Traits, Allocator>& lhs, const TChar* rhs)
-{
-    return (lhs.compare(rhs) == 0);
-}
-
-template <typename TChar, typename Traits, typename Allocator>
-inline bool operator == (const TChar* lhs, const BasicStringLiteral<TChar, Traits, Allocator>& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) == 0);
-}
-
-//! Returns true if the two strings are not equal.
-inline bool operator != (const UTF8String& lhs, const UTF8String& rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator != (const UTF8String& lhs, const BasicStringView<TChar, Traits>& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) != 0);
-}
-
-template <typename TChar>
-inline bool operator != (const UTF8String& lhs, const TChar* rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator != (const BasicStringView<TChar, Traits>& lhs, const BasicStringView<TChar, Traits>& rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator != (const BasicStringView<TChar, Traits>& lhs, const UTF8String& rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator != (const BasicStringView<TChar, Traits>& lhs, const TChar* rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar>
-inline bool operator != (const TChar* lhs, const UTF8String& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) != 0);
-}
-
-template <typename TChar, typename Traits>
-inline bool operator != (const TChar* lhs, const BasicStringView<TChar, Traits>& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) != 0);
-}
-
-template <typename TChar, typename Traits, typename Allocator>
-inline bool operator != (const BasicStringLiteral<TChar, Traits, Allocator>& lhs, const BasicStringLiteral<TChar, Traits, Allocator>& rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar, typename Traits, typename Allocator>
-inline bool operator != (const BasicStringLiteral<TChar, Traits, Allocator>& lhs, const TChar* rhs)
-{
-    return (lhs.compare(rhs) != 0);
-}
-
-template <typename TChar, typename Traits, typename Allocator>
-inline bool operator != (const TChar* lhs, const BasicStringLiteral<TChar, Traits, Allocator>& rhs)
-{
-    /* Flip compare operators */
-    return (rhs.compare(lhs) != 0);
-}
+#undef LLGL_DEFINE_STRING_COMPARE_OPERATORS
 
 
 } // /namespace LLGL

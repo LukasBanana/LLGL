@@ -8,10 +8,14 @@
 #include "Testbed.h"
 #include <LLGL/Container/DynamicArray.h>
 #include <LLGL/Container/SmallVector.h>
-#include <LLGL/Container/UTF8String.h>
 #include <LLGL/Container/Strings.h>
+#include <LLGL/Utils/ForRange.h>
 #include <locale>
 #include <codecvt> //TODO: replace this as it's deprecated in C++17
+#include <string>
+#include <vector>
+#include <initializer_list>
+#include <algorithm>
 
 
 DEF_RITEST( ContainerDynamicArray )
@@ -433,6 +437,108 @@ DEF_RITEST( ContainerStringLiteral )
         StringLiteral l6{ std::string("Test") };
         StringLiteral l7{ l6 };
     }
+
+    return TestResult::Passed;
+}
+
+// Fills a list of STL strings and LLGL's own strings with the same entries.
+// Then sorts them with std::sort() and ensures that both lists are ordered equally.
+template <typename T>
+TestResult TestStringSort(const std::initializer_list<const char*> inStrings, bool sanityCheck, const char* llglStringTypeName)
+{
+    // Fill both STL and LLGL string containers
+    std::vector<std::string> stdStrings;
+    DynamicVector<T> llglStrings;
+
+    stdStrings.reserve(inStrings.size());
+    llglStrings.reserve(inStrings.size());
+
+    for (const char* s : inStrings)
+    {
+        stdStrings.push_back(s);
+        llglStrings.push_back(s);
+    }
+
+    // Sort both containers
+    std::sort(stdStrings.begin(), stdStrings.end());
+    std::sort(llglStrings.begin(), llglStrings.end());
+
+    // Ensure both containers are equally sorted
+    if (stdStrings.size() != llglStrings.size())
+    {
+        Log::Errorf(
+            "Mismatch between STL string container size (%zu) and LLGL string container size (%zu)\n",
+            stdStrings.size(), llglStrings.size()
+        );
+        return TestResult::FailedMismatch;
+    }
+
+    auto PrintStringChart = [&stdStrings, &llglStrings, llglStringTypeName](bool printAsErrors) -> void
+    {
+        constexpr std::size_t chartColumnDist = 20; // Distance between beginning of "STL strings:" and "LLGL strings:"
+        const char* caption =
+        (
+            "std::string         %s\n"
+            "-----------         %s\n"
+        );
+        const std::string llglStringTypeUnderline(::strlen(llglStringTypeName), '-');
+
+        if (printAsErrors)
+            Log::Errorf(caption, llglStringTypeName, llglStringTypeUnderline.c_str());
+        else
+            Log::Printf(Log::ColorFlags::StdAnnotation, caption, llglStringTypeName, llglStringTypeUnderline.c_str());
+
+        for_range(i, stdStrings.size())
+        {
+            const std::string lhs{ stdStrings[i].data(), stdStrings[i].size() };
+            const std::string rhs{ llglStrings[i].data(), llglStrings[i].size() };
+            const std::string spaces(lhs.size() < chartColumnDist ? chartColumnDist - lhs.size() : 1, ' ');
+
+            if (printAsErrors)
+                Log::Errorf("%s%s%s\n", lhs.c_str(), spaces.c_str(), rhs.c_str());
+            else
+                Log::Printf(Log::ColorFlags::StdAnnotation, "%s%s%s\n", lhs.c_str(), spaces.c_str(), rhs.c_str());
+        }
+
+        Log::Printf("\n");
+    };
+
+    for_range(i, stdStrings.size())
+    {
+        if (stdStrings[i].size() != llglStrings[i].size() ||
+            ::strncmp(stdStrings[i].data(), llglStrings[i].data(), stdStrings[i].size()) != 0)
+        {
+            // Print list side by side
+            Log::Errorf("Mismatch between order of sorted STL string container and LLGL string container:\n");
+            PrintStringChart(true);
+            return TestResult::FailedMismatch;
+        }
+    }
+
+    // Print sorted list for sanity check
+    if (sanityCheck)
+        PrintStringChart(false);
+
+    return TestResult::Passed;
+}
+
+DEF_RITEST( ContainerStringOperators )
+{
+    std::initializer_list<const char*> inStrings
+    {
+        "Hello", "World", "!", "This", "string", "must", "be", "properly", "sorted", ".", "5", "4", "3", "2", "1", "Go!"
+    };
+
+    #define TEST_STRING_OPERATORS(TYPE)                                                     \
+        {                                                                                   \
+            TestResult result = TestStringSort<TYPE>(inStrings, opt.sanityCheck, #TYPE);    \
+            if (result != TestResult::Passed)                                               \
+                return result;                                                              \
+        }
+
+    TEST_STRING_OPERATORS(LLGL::UTF8String);
+    TEST_STRING_OPERATORS(LLGL::StringView);
+    TEST_STRING_OPERATORS(LLGL::StringLiteral);
 
     return TestResult::Passed;
 }

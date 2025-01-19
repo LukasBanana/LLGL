@@ -22,6 +22,7 @@ DECL_RITEST( ContainerDynamicArray );
 DECL_RITEST( ContainerSmallVector );
 DECL_RITEST( ContainerUTF8String );
 DECL_RITEST( ContainerStringLiteral );
+DECL_RITEST( ContainerStringOperators );
 DECL_RITEST( ParseUtil );
 DECL_RITEST( ImageConversions );
 
