@@ -75,7 +75,7 @@ std::string GLLegacyShader::GetGLShaderLog(GLuint shader)
         glGetShaderInfoLog(shader, infoLogLength, &charsWritten, infoLog.data());
 
         /* Convert byte buffer to string */
-        return std::string(infoLog.data());
+        return std::string(infoLog.data(), charsWritten);
     }
 
     return "";
