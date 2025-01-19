@@ -44,10 +44,10 @@ struct FragmentAttribute
 
     //! Constructor to initialize all members.
     inline FragmentAttribute(
-        StringLiteral        name,
-        const Format         format,
-        std::uint32_t        location    = 0,
-        const SystemValue    systemValue = SystemValue::Undefined)
+        StringLiteral       name,
+        const Format        format,
+        std::uint32_t       location    = 0,
+        const SystemValue   systemValue = SystemValue::Undefined)
     :
         name        { std::move(name) },
         format      { format          },

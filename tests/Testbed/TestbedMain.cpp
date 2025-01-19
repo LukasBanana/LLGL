@@ -11,7 +11,7 @@
 #include <exception>
 #include <stdio.h>
 
-#ifdef _WIN32
+#if _WIN32
 #   include <Windows.h>
 #endif
 
@@ -151,6 +151,15 @@ static int GuardedMain(int argc, char* argv[])
         stdOutFlags |= LLGL::Log::StdOutFlags::Colored;
 
     Log::RegisterCallbackStd(stdOutFlags);
+
+    #if _WIN32
+    Log::RegisterCallback(
+        [](Log::ReportType type, const char* text, void* userData) -> void
+        {
+            ::OutputDebugStringA(text);
+        }
+    );
+    #endif
 
     // If -h or --help is specified, only print help documentation and exit
     if (HasProgramArgument(argc, argv, "-h") || HasProgramArgument(argc, argv, "--help"))

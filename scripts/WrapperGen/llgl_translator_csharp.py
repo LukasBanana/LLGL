@@ -158,9 +158,11 @@ class CsharpTranslator(Translator):
                     return 'byte*' if isInsideStruct else 'string'
                 else:
                     return typename
+                
+            sanitizedTypename = sanitizeTypename(fieldType.typename)
 
             if fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.interfaces:
-                decl.type = sanitizeTypename(fieldType.typename)
+                decl.type = sanitizedTypename
             elif fieldType.baseType == StdType.STRUCT and fieldType.typename in LLGLMeta.handles:
                 decl.type = 'IntPtr' # Translate any handle to generic pointer type
             else:
@@ -168,7 +170,7 @@ class CsharpTranslator(Translator):
                 if isInsideStruct:
                     if not noFixedScope and fieldType.arraySize > 0 and builtin:
                         decl.type += 'fixed '
-                    decl.type += builtin if builtin else sanitizeTypename(fieldType.typename)
+                    decl.type += builtin if builtin else sanitizedTypename
                     if fieldType.isPointer or fieldType.arraySize == LLGLType.DYNAMIC_ARRAY:
                         decl.type += '*'
                     elif fieldType.arraySize > 0:
@@ -179,10 +181,13 @@ class CsharpTranslator(Translator):
                         else:
                             decl.marshal = '<unroll>'
                 else:
-                    decl.type += builtin if builtin else sanitizeTypename(fieldType.typename)
+                    decl.type += builtin if builtin else sanitizedTypename
                     if fieldType.isPointer or fieldType.arraySize > 0:
-                        if LLGLAnnotation.NULLABLE in field.annotations or LLGLAnnotation.ARRAY in field.annotations:
-                            decl.type += '*'
+                        if (LLGLAnnotation.NULLABLE in field.annotations or
+                            LLGLAnnotation.ARRAY in field.annotations or
+                            sanitizedTypename in LLGLMeta.interfaces # Interfaces must never be passed as ref, so pointers are considered arrays of interfaces
+                            ):
+                                decl.type += '*'
                         elif fieldType.baseType == StdType.STRUCT:
                             if noRefTypes:
                                 decl.type += '*'

@@ -483,6 +483,14 @@ static void ConvertUniformDesc(UniformDescriptor& dst, const LLGLUniformDescript
     dst.arraySize  = src.arraySize;
 }
 
+static void ConvertCombinedTextureSamplerDesc(CombinedTextureSamplerDescriptor& dst, const LLGLCombinedTextureSamplerDescriptor& src)
+{
+    dst.name        = src.name;
+    dst.textureName = src.textureName;
+    dst.samplerName = src.samplerName;
+    dst.slot        = { src.slot.index, src.slot.set };
+}
+
 static void ConvertPipelineLayoutDesc(PipelineLayoutDescriptor& dst, const LLGLPipelineLayoutDescriptor& src)
 {
     dst.debugName = src.debugName;
@@ -502,6 +510,10 @@ static void ConvertPipelineLayoutDesc(PipelineLayoutDescriptor& dst, const LLGLP
     dst.uniforms.resize(src.numUniforms);
     for_range(i, src.numUniforms)
         ConvertUniformDesc(dst.uniforms[i], src.uniforms[i]);
+
+    dst.combinedTextureSamplers.resize(src.numCombinedTextureSamplers);
+    for_range(i, src.numCombinedTextureSamplers)
+        ConvertCombinedTextureSamplerDesc(dst.combinedTextureSamplers[i], src.combinedTextureSamplers[i]);
 
     dst.barrierFlags = src.barrierFlags;
 }

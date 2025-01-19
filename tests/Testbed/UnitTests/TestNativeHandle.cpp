@@ -133,13 +133,17 @@ DEF_TEST( NativeHandle )
     // Test resource with native handles
     const int rendererID = renderer->GetRendererID();
 
-    #define GET_NATIVE_HANDLE(BACKEND, RES)                                             \
-        BACKEND::ResourceNativeHandle RES ## _handle;                                   \
-        if (!(RES)->GetNativeHandle(&(RES ## _handle), sizeof(RES ## _handle)))         \
-        {                                                                               \
-            Log::Errorf("LLGL::Resource::GetNativeHandle() failed for \"%s\"\n", #RES); \
-            result = TestResult::FailedMismatch;                                        \
-        }                                                                               \
+    #define GET_NATIVE_HANDLE(BACKEND, RES)                                     \
+        BACKEND::ResourceNativeHandle RES ## _handle;                           \
+        if (!(RES)->GetNativeHandle(&(RES ## _handle), sizeof(RES ## _handle))) \
+        {                                                                       \
+            Log::Errorf(                                                        \
+                Log::ColorFlags::StdError,                                      \
+                "LLGL::Resource::GetNativeHandle() failed for \"%s\"\n",        \
+                #RES                                                            \
+            );                                                                  \
+            result = TestResult::FailedMismatch;                                \
+        }                                                                       \
         else
 
     #if LLGL_TEST_NATIVEHANDLE_D3D
@@ -149,6 +153,7 @@ DEF_TEST( NativeHandle )
         auto FailedToQueryInterface = [&result](const char* interfaceName, const char* objName, HRESULT hr) -> void
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "LLGL::Resource::GetNativeHandle() did not provide the COM interface '%s' for \"%s\" (Error=0x%08X)\n",
                 interfaceName, objName, static_cast<int>(hr)
             );
@@ -160,6 +165,7 @@ DEF_TEST( NativeHandle )
             HRESULT hr_ ## OBJ = S_OK;                                                                                      \
             if (!(OBJ ## _handle).deviceChild)                                                                              \
             {                                                                                                               \
+                Log::ColorFlags::StdError,                                                                                  \
                 Log::Errorf("LLGL::Resource::GetNativeHandle() returned null pointer for \"%s\"\n", #OBJ);                  \
                 result = TestResult::FailedMismatch;                                                                        \
             }                                                                                                               \
@@ -187,6 +193,7 @@ DEF_TEST( NativeHandle )
                 if (d3dBufferDesc.ByteWidth < inDesc.size)
                 {
                     Log::Errorf(
+                        Log::ColorFlags::StdError,
                         "Mismatch between internal size (D3D11_BUFFER_DESC.ByteWidth = %u) of native resource \"%s\" and requested size (%u bytes)\n",
                         d3dBufferDesc.ByteWidth, inDesc.debugName, static_cast<std::uint32_t>(inDesc.size)
                     );
@@ -197,6 +204,7 @@ DEF_TEST( NativeHandle )
                 if (d3dBufferDesc.StructureByteStride != inDesc.stride)
                 {
                     Log::Errorf(
+                        Log::ColorFlags::StdError,
                         "Mismatch between internal stride (D3D11_BUFFER_DESC.StructureByteStride = %u) of native resource \"%s\" and requested stride (%u bytes)\n",
                         d3dBufferDesc.StructureByteStride, inDesc.debugName, inDesc.stride
                     );
@@ -252,6 +260,7 @@ DEF_TEST( NativeHandle )
             if (!texDimensionsMatch)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal resource dimension (D3D11_RESOURCE_DIMENSION = 0x%02X)"
                     " of native resource \"%s\" and requested type (%s)",
                     static_cast<int>(d3dResourceDimension),
@@ -291,6 +300,7 @@ DEF_TEST( NativeHandle )
                                 d3dTex1DDesc.MipLevels != numMips)
                             {
                                 Log::Errorf(
+                                    Log::ColorFlags::StdError,
                                     "Mismatch between internal extent (D3D11_TEXTURE1D_DESC.Width = %u, .ArraySize = %u, .MipLevels = %u)"
                                     " of native resource \"%s\" and requested extent (%u, %u)\n",
                                     static_cast<std::uint32_t>(d3dTex1DDesc.Width),
@@ -342,6 +352,7 @@ DEF_TEST( NativeHandle )
                                 d3dTex2DDesc.MipLevels != numMips)
                             {
                                 Log::Errorf(
+                                    Log::ColorFlags::StdError,
                                     "Mismatch between internal extent (D3D11_TEXTURE2D_DESC.Width = %u, .Height = %u, .ArraySize = %u, .MipLevels = %u)"
                                     " of native resource \"%s\" and requested extent (%u, %u, %u, %u)\n",
                                     static_cast<std::uint32_t>(d3dTex2DDesc.Width),
@@ -395,6 +406,7 @@ DEF_TEST( NativeHandle )
                                 d3dTex3DDesc.MipLevels != numMips)
                             {
                                 Log::Errorf(
+                                    Log::ColorFlags::StdError,
                                     "Mismatch between internal extent (D3D11_TEXTURE3D_DESC.Width = %u, .Height = %u, .Depth = %u, .MipLevels = %u)"
                                     " of native resource \"%s\" and requested extent (%u, %u, %u, %u)\n",
                                     static_cast<std::uint32_t>(d3dTex3DDesc.Width),
@@ -486,7 +498,11 @@ DEF_TEST( NativeHandle )
 
             if (!matchDescs)
             {
-                Log::Errorf("Mismatch between native sampler \"%s\" and requested descriptor\n", inDesc.debugName);
+                Log::Errorf(
+                    Log::ColorFlags::StdError,
+                    "Mismatch between native sampler \"%s\" and requested descriptor\n",
+                    inDesc.debugName
+                );
                 result = TestResult::FailedMismatch;
             }
         };
@@ -519,12 +535,17 @@ DEF_TEST( NativeHandle )
             HRESULT hr_ ## OBJ = S_OK;                                                                                              \
             if (!(OBJ ## _handle).resource.resource)                                                                                \
             {                                                                                                                       \
-                Log::Errorf("LLGL::Resource::GetNativeHandle() returned null pointer for \"%s\"\n", #OBJ);                          \
+                Log::Errorf(                                                                                                        \
+                    Log::ColorFlags::StdError,                                                                                      \
+                    "LLGL::Resource::GetNativeHandle() returned null pointer for \"%s\"\n",                                         \
+                    #OBJ                                                                                                            \
+                );                                                                                                                  \
                 result = TestResult::FailedMismatch;                                                                                \
             }                                                                                                                       \
             else if ( ( hr_ ## OBJ = (OBJ ## _handle).resource.resource->QueryInterface(IID_PPV_ARGS(&(OBJ ## _d3d))) ) != S_OK )   \
             {                                                                                                                       \
                 Log::Errorf(                                                                                                        \
+                    Log::ColorFlags::StdError,                                                                                      \
                     "LLGL::Resource::GetNativeHandle() did not provide the COM interface '%s' for \"%s\" (Error=0x%08X)\n",         \
                     #INTERFACE, #OBJ, static_cast<int>(hr_ ## OBJ)                                                                  \
                 );                                                                                                                  \
@@ -549,6 +570,7 @@ DEF_TEST( NativeHandle )
             if (d3dResourceDesc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal source type (%d) and expected buffer type (%d) for native resource \"%s\"\n",
                     d3dResourceDesc.Dimension, D3D12_RESOURCE_DIMENSION_BUFFER, inDesc.debugName
                 );
@@ -559,6 +581,7 @@ DEF_TEST( NativeHandle )
             if (d3dResourceDesc.Width < inDesc.size)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal size (D3D12_RESOURCE_DESC.Width = %u) of native resource \"%s\" and requested size (%u bytes)\n",
                     static_cast<std::uint32_t>(d3dResourceDesc.Width), inDesc.debugName, static_cast<std::uint32_t>(inDesc.size)
                 );
@@ -632,6 +655,7 @@ DEF_TEST( NativeHandle )
             if (!texDimensionsMatch)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal source type (%d) and expected texture type (%s) for native resource \"%s\"\n",
                     d3dResourceDesc.Dimension, ToString(inDesc.type), inDesc.debugName
                 );
@@ -644,6 +668,7 @@ DEF_TEST( NativeHandle )
                 d3dResourceDesc.DepthOrArraySize != texDepth)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal extent (D3D12_RESOURCE_DESC.Width = %u, .Height = %u, .DepthOrArraySize = %u)"
                     " of native resource \"%s\" and requested extent (%u, %u, %u)\n",
                     static_cast<std::uint32_t>(d3dResourceDesc.Width),
@@ -716,7 +741,11 @@ DEF_TEST( NativeHandle )
 
             if (!matchDescs)
             {
-                Log::Errorf("Mismatch between native sampler \"%s\" and requested descriptor\n", inDesc.debugName);
+                Log::Errorf(
+                    Log::ColorFlags::StdError,
+                    "Mismatch between native sampler \"%s\" and requested descriptor\n",
+                    inDesc.debugName
+                );
                 result = TestResult::FailedMismatch;
             }
         };
@@ -800,7 +829,11 @@ DEF_TEST( NativeHandle )
         {
             if (inGLHandle.id == 0)
             {
-                Log::Errorf("Internal GL object must not be zero for native resource \"%s\"\n", debugName);
+                Log::Errorf(
+                    Log::ColorFlags::StdError,
+                    "Internal GL object must not be zero for native resource \"%s\"\n",
+                    debugName
+                );
                 result = TestResult::FailedMismatch;
             }
         };
@@ -813,6 +846,7 @@ DEF_TEST( NativeHandle )
                 inGLHandle.type != OpenGL::ResourceNativeType::ImmutableBuffer)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal GL type (0x%02X) for native resource \"%s\" and requested type (LLGL::ResourceType::Buffer)\n",
                     static_cast<int>(inGLHandle.type), inDesc.debugName
                 );
@@ -859,6 +893,7 @@ DEF_TEST( NativeHandle )
                 inGLHandle.type != OpenGL::ResourceNativeType::ImmutableRenderbuffer)
             {
                 Log::Errorf(
+                    Log::ColorFlags::StdError,
                     "Mismatch between internal GL type (0x%02X) for native resource \"%s\" and requested type (%s)\n",
                     static_cast<int>(inGLHandle.type), inDesc.debugName, ToString(inDesc.type)
                 );
@@ -873,6 +908,7 @@ DEF_TEST( NativeHandle )
                     inGLHandle.texture.extent[2] != static_cast<GLint>(texExtent.depth ))
                 {
                     Log::Errorf(
+                        Log::ColorFlags::StdError,
                         "Mismatch between internal GL texture dimension (%d, %d, %d) for native resource \"%s\" and requested extent (%u, %u, %u)\n",
                         inGLHandle.texture.extent[0],
                         inGLHandle.texture.extent[1],

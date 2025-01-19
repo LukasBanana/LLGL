@@ -970,7 +970,7 @@ void GLStateManager::BindBuffersRange(GLBufferTarget target, GLuint first, GLsiz
         /* Bind each individual buffer, and store last bound buffer */
         contextState_.boundBuffers[targetIdx] = buffers[count - 1];
 
-        #ifdef GL_NV_transform_feedback
+        #if GL_NV_transform_feedback
         if (HasExtension(GLExt::NV_transform_feedback))
         {
             for_range(i, count)

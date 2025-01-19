@@ -45,27 +45,27 @@ VertexAttribute::VertexAttribute(
 }
 
 VertexAttribute::VertexAttribute(
-    StringLiteral    name,
-    const Format     format,
-    std::uint32_t    location,
-    std::uint32_t    offset,
-    std::uint32_t    stride,
-    std::uint32_t    slot,
-    std::uint32_t    instanceDivisor)
+    StringLiteral   name,
+    const Format    format,
+    std::uint32_t   location,
+    std::uint32_t   offset,
+    std::uint32_t   stride,
+    std::uint32_t   slot,
+    std::uint32_t   instanceDivisor)
 :
     VertexAttribute { std::move(name), 0, format, location, offset, stride, slot, instanceDivisor }
 {
 }
 
 VertexAttribute::VertexAttribute(
-    StringLiteral    semanticName,
-    std::uint32_t    semanticIndex,
-    const Format     format,
-    std::uint32_t    location,
-    std::uint32_t    offset,
-    std::uint32_t    stride,
-    std::uint32_t    slot,
-    std::uint32_t    instanceDivisor)
+    StringLiteral   semanticName,
+    std::uint32_t   semanticIndex,
+    const Format    format,
+    std::uint32_t   location,
+    std::uint32_t   offset,
+    std::uint32_t   stride,
+    std::uint32_t   slot,
+    std::uint32_t   instanceDivisor)
 :
     name            { std::move(semanticName) },
     format          { format                  },
