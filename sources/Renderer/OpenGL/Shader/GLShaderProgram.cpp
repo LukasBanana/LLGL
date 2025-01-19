@@ -482,7 +482,7 @@ static void GLQueryVertexAttributes(GLuint program, ShaderReflection& reflection
                 return true;
             if (lhs.location > rhs.location)
                 return false;
-            return lhs.name < rhs.name;
+            return (lhs.name < rhs.name);
         }
     );
 
