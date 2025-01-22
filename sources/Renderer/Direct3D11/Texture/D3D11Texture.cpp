@@ -278,7 +278,7 @@ HRESULT D3D11Texture::UpdateSubresource(
         dstBox.back   - dstBox.front
     };
 
-    const SubresourceCPUMappingLayout dataLayout = CalcSubresourceCPUMappingLayout(format, extent, numArrayLayers, imageView.format, imageView.dataType);
+    const SubresourceCPUMappingLayout dataLayout = CalcSubresourceCPUMappingLayout(format, extent, numArrayLayers, imageView.format, imageView.dataType, imageView.stride);
 
     if (imageView.dataSize < dataLayout.imageSize)
     {

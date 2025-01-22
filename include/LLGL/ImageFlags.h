@@ -61,6 +61,10 @@ struct ImageView
 
     //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
     std::size_t dataSize    = 0;
+
+    //! Specifies the size of one row of the image data.
+    //! When this is zero then the width of the texture region is used.
+    std::uint32_t stride = 0;
 };
 
 /**

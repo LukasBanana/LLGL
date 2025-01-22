@@ -255,6 +255,9 @@ void GLTextureSubImage(
     GLenum                  internalFormat)
 {
     #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, imageView.stride);
+
     switch (type)
     {
         case TextureType::Texture1D:
@@ -288,6 +291,9 @@ void GLTextureSubImage(
         default:
             break;
     }
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
     #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
 }
 

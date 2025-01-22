@@ -64,7 +64,8 @@ LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     const Extent3D&     extent,
     std::uint32_t       numArrayLayers,
     const ImageFormat   imageFormat,
-    const DataType      imageDataType
+    const DataType      imageDataType,
+    uint32_t            srcDataStride = 0
 );
 
 // Calculates the required sizes and strides for a subresource when mapped between GPU and CPU.
@@ -72,9 +73,10 @@ inline SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     const Format            format,
     const TextureRegion&    textureRegion,
     const ImageFormat       imageFormat,
-    const DataType          imageDataType)
+    const DataType          imageDataType,
+    uint32_t                srcDataStride = 0)
 {
-    return CalcSubresourceCPUMappingLayout(format, textureRegion.extent, textureRegion.subresource.numArrayLayers, imageFormat, imageDataType);
+    return CalcSubresourceCPUMappingLayout(format, textureRegion.extent, textureRegion.subresource.numArrayLayers, imageFormat, imageDataType, srcDataStride);
 }
 
 // Calculates the subresource footprint for a tightly packed texture object. This is the default implementation of Texture::GetSubresourceFootprint().

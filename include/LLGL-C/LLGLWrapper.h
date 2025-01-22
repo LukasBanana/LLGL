@@ -1385,6 +1385,7 @@ typedef struct LLGLImageView
     LLGLDataType    dataType; /* = LLGLDataTypeUInt8 */
     const void*     data;     /* = NULL */
     size_t          dataSize; /* = 0 */
+    uint32_t        stride;   /* = 0 */
 }
 LLGLImageView;
 

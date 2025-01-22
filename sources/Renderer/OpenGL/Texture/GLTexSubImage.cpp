@@ -428,6 +428,8 @@ bool GLTexSubImage(
     if (IsCompressedFormat(imageView.format) && !HasExtension(GLExt::ARB_texture_compression))
         return false;
 
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, imageView.stride);
+
     switch (type)
     {
         #ifdef LLGL_OPENGL
@@ -467,6 +469,8 @@ bool GLTexSubImage(
         default:
             return false;
     }
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
     return true;
 }
