@@ -83,8 +83,11 @@ class VKRenderSystem final : public RenderSystem
 
         VKDeviceBuffer CreateTextureStagingBufferAndInitialize(
             const VkBufferCreateInfo&   createInfo,
-            const ImageView&            srcImageView,
-            const Extent3D&             extent
+            const Extent3D&             extent,
+            const void*                 data,
+            VkDeviceSize                dataSize,
+            std::uint32_t               srcRowStride,
+            std::uint32_t               bpp
         );
 
         VkCommandBuffer AllocCommandBuffer(bool begin = true);

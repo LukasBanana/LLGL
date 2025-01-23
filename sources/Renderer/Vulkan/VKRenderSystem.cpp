@@ -439,6 +439,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth * subresource.numArrayLayers;
     const void*                 imageData       = nullptr;
     const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
+    const std::uint32_t         bytesPerPixel   = GetMemoryFootprint(format, 1);
 
     /* Check if image data must be converted */
     DynamicByteArray intermediateData;
@@ -478,7 +479,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(bufferDesc.cpuAccessFlags)
     );
 
-    VKDeviceBuffer stagingBuffer = CreateTextureStagingBufferAndInitialize(stagingCreateInfo, srcImageView, extent);
+    VKDeviceBuffer stagingBuffer = CreateTextureStagingBufferAndInitialize(stagingCreateInfo, extent, imageData, imageDataSize, srcImageView.rowStride, bytesPerPixel);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     VkCommandBuffer cmdBuffer = AllocCommandBuffer();
@@ -964,14 +965,14 @@ VKDeviceBuffer VKRenderSystem::CreateStagingBufferAndInitialize(
 
 VKDeviceBuffer VKRenderSystem::CreateTextureStagingBufferAndInitialize(
     const VkBufferCreateInfo&   createInfo,
-    const ImageView&            srcImageView,
-    const Extent3D&             extent)
+    const Extent3D&             extent,
+    const void*                 data,
+    VkDeviceSize                dataSize,
+    std::uint32_t               srcRowStride,
+    std::uint32_t               bpp)
 {
     /* Allocate staging buffer */
     VKDeviceBuffer stagingBuffer = CreateStagingBuffer(createInfo);
-
-    const void* data = srcImageView.data;
-    const std::size_t dataSize = srcImageView.dataSize;
 
     /* Copy initial data to buffer memory */
     if (data != nullptr && dataSize > 0)
@@ -982,11 +983,10 @@ VKDeviceBuffer VKRenderSystem::CreateTextureStagingBufferAndInitialize(
             VKDeviceMemory* deviceMemory = region->GetParentChunk();
             if (void* memory = deviceMemory->Map(device_, region->GetOffset(), dataSize))
             {
-                const std::uint32_t bpp = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
                 const char* src = static_cast<const char*>(data);
                 char* dst = static_cast<char*>(memory);
-                
-                BitBlit(extent, bpp, dst, extent.width, extent.width * extent.height, src, srcImageView.rowStride, srcImageView.rowStride * extent.height);
+
+                BitBlit(extent, bpp, dst, extent.width, extent.width * extent.height, src, srcRowStride, srcRowStride * extent.height);
 
                 deviceMemory->Unmap(device_);
             }
