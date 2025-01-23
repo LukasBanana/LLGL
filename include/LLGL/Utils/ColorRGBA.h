@@ -9,6 +9,7 @@
 #define LLGL_COLOR_RGBA_H
 
 
+#include <LLGL/Throw.h>
 #include <LLGL/Utils/Color.h>
 
 
@@ -179,10 +180,8 @@ class LLGL_EXPORT Color<T, 4u>
         */
         T& operator [] (std::size_t component)
         {
-            #ifdef LLGL_DEBUG
-            if (component >= Color<T, 4>::components)
-                throw std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
-            #endif
+            LLGL_THROW_IF((component >= Color<T, 4>::components), std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)"));
+
             return *((&r) + component);
         }
 
@@ -193,10 +192,8 @@ class LLGL_EXPORT Color<T, 4u>
         */
         const T& operator [] (std::size_t component) const
         {
-            #ifdef LLGL_DEBUG
-            if (component >= Color<T, 4>::components)
-                throw std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
-            #endif
+            LLGL_THROW_IF((component >= Color<T, 4>::components), std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)"));
+
             return *((&r) + component);
         }
 

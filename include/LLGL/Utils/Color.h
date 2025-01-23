@@ -9,6 +9,7 @@
 #define LLGL_COLOR_H
 
 
+#include <LLGL/Throw.h>
 #include <LLGL/Export.h>
 #include <LLGL/Tags.h>
 #include <algorithm>
@@ -200,10 +201,8 @@ class LLGL_EXPORT Color
         */
         T& operator [] (std::size_t component)
         {
-            #ifdef LLGL_DEBUG
-            if (component >= N)
-                throw std::out_of_range("color component index out of range");
-            #endif
+            LLGL_THROW_IF(component >= N, std::out_of_range("color component index out of range"));
+            
             return v_[component];
         }
 
@@ -214,10 +213,8 @@ class LLGL_EXPORT Color
         */
         const T& operator [] (std::size_t component) const
         {
-            #ifdef LLGL_DEBUG
-            if (component >= N)
-                throw std::out_of_range("color component index out of range");
-            #endif
+            LLGL_THROW_IF(component >= N, std::out_of_range("color component index out of range"));
+            
             return v_[component];
         }
 

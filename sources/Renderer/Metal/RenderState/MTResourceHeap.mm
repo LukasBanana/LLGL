@@ -90,7 +90,7 @@ MTResourceHeap::MTResourceHeap(
     /* Get pipeline layout object */
     auto pipelineLayoutMT = LLGL_CAST(MTPipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutMT)
-        throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
+        LLGL_THROW(std::invalid_argument("failed to create resource heap due to missing pipeline layout"));
 
     /* Validate binding descriptors */
     const auto& bindings            = pipelineLayoutMT->GetHeapBindings();

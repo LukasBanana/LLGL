@@ -57,8 +57,7 @@ static void* g_retainedLibGL = nullptr;
 LinuxSharedX11Display::LinuxSharedX11Display() :
     native_ { XOpenDisplay(nullptr) }
 {
-    if (!native_)
-        throw std::runtime_error("failed to open connection to X server");
+    LLGL_THROW_IF(!native_, std::runtime_error("failed to open connection to X server"));
 }
 
 LinuxSharedX11Display::~LinuxSharedX11Display()

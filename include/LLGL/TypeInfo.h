@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Interface.h>
+#include <LLGL/Throw.h>
 
 
 namespace LLGL
@@ -97,8 +98,8 @@ const LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(mySurface);
 template <typename T>
 inline const T& CastTo(const Interface& obj)
 {
-    if (!IsInstanceOf<T>(obj))
-        throw std::bad_cast();
+    LLGL_THROW_IF(!IsInstanceOf<T>(obj), std::bad_cast());
+
     return static_cast<const T&>(obj);
 }
 
@@ -117,8 +118,8 @@ LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window&>(mySurface);
 template <typename T>
 inline T& CastTo(Interface& obj)
 {
-    if (!IsInstanceOf<T>(obj))
-        throw std::bad_cast();
+    LLGL_THROW_IF(!IsInstanceOf<T>(obj), std::bad_cast());
+
     return static_cast<T&>(obj);
 }
 

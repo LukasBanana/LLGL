@@ -48,8 +48,10 @@ MacOSGLContext::MacOSGLContext(
     Surface&                            surface,
     MacOSGLContext*                     sharedContext)
 {
-    if (!CreatePixelFormat(pixelFormat, profile))
-        throw std::runtime_error("failed to find suitable OpenGL pixel format");
+    LLGL_THROW_IF(
+        !CreatePixelFormat(pixelFormat, profile),
+        std::runtime_error("failed to find suitable OpenGL pixel format")
+    );
 
     CreateNSGLContext(sharedContext);
 }
@@ -124,7 +126,8 @@ static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfi
             return NSOpenGLProfileVersion3_2Core;
         }
     }
-    throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
+    
+    LLGL_THROW(std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)"));
 }
 
 #endif // /!LLGL_GL_ENABLE_OPENGL2X
@@ -176,8 +179,8 @@ void MacOSGLContext::CreateNSGLContext(MacOSGLContext* sharedContext)
 
     /* Create new NS-OpenGL context */
     ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
-    if (!ctx_)
-        throw std::runtime_error("failed to create NSOpenGLContext");
+
+    LLGL_THROW_IF(!ctx, std::runtime_error("failed to create NSOpenGLContext"));
 
     /* Make new context current */
     MacOSGLContext::MakeNSOpenGLContextCurrent(ctx_);
