@@ -973,7 +973,8 @@ VKDeviceBuffer VKRenderSystem::CreateTextureStagingBufferAndInitialize(
     const std::size_t dataSize = srcImageView.dataSize;
 
     /* Copy initial data to buffer memory */
-    if (data != nullptr && dataSize > 0) {
+    if (data != nullptr && dataSize > 0)
+    {
         if (VKDeviceMemoryRegion* region = stagingBuffer.GetMemoryRegion())
         {
             /* Map buffer memory to host memory */
