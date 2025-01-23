@@ -1,7 +1,11 @@
 #ifndef LLGL_THROW_H
 #define LLGL_THROW_H
 
-#if defined(LLGL_DEBUG) || defined(LLGL_ENABLE_EXCEPTIONS)
+#if __EXCEPTIONS || __cpp_exceptions
+    #define LLGL_COMPILER_EXCEPTIONS_ENABLED
+#endif
+
+#if (defined(LLGL_DEBUG) || defined(LLGL_ENABLE_EXCEPTIONS)) && defined(LLGL_COMPILER_EXCEPTIONS_ENABLED)
     #define LLGL_THROW(exception) throw (exception)
     #define LLGL_THROW_IF(condition, exception) if (condition) { LLGL_THROW(exception); }
 #else
