@@ -866,33 +866,37 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
 {
     if (!IsRenderbuffer())
     {
-        #if LLGL_GLEXT_DIRECT_STATE_ACCESS
-        if (HasExtension(GLExt::ARB_direct_state_access))
+        GLStateManager::Get().SetPixelStoreUnpack(srcImageView.rowStride, region.extent.height, 1);
         {
-            /* Transfer image data directly to GL texture */
-            GLTextureSubImage(GetID(), GetType(), region, srcImageView, GetGLInternalFormat());
-        }
-        else
-        #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
-        {
-            const GLTextureTarget target = GLStateManager::GetTextureTarget(GetType());
-            if (restoreBoundTexture)
+            #if LLGL_GLEXT_DIRECT_STATE_ACCESS
+            if (HasExtension(GLExt::ARB_direct_state_access))
             {
-                /* Bind texture and transfer image data to GL texture, then restore previously bound texture with state manager */
-                GLStateManager::Get().PushBoundTexture(target);
+                /* Transfer image data directly to GL texture */
+                GLTextureSubImage(GetID(), GetType(), region, srcImageView, GetGLInternalFormat());
+            }
+            else
+            #endif // /LLGL_GLEXT_DIRECT_STATE_ACCESS
+            {
+                const GLTextureTarget target = GLStateManager::GetTextureTarget(GetType());
+                if (restoreBoundTexture)
                 {
+                    /* Bind texture and transfer image data to GL texture, then restore previously bound texture with state manager */
+                    GLStateManager::Get().PushBoundTexture(target);
+                    {
+                        GLStateManager::Get().BindTexture(target, GetID());
+                        GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
+                    }
+                    GLStateManager::Get().PopBoundTexture();
+                }
+                else
+                {
+                    /* Bind texture and transfer image data to GL texture */
                     GLStateManager::Get().BindTexture(target, GetID());
                     GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
                 }
-                GLStateManager::Get().PopBoundTexture();
-            }
-            else
-            {
-                /* Bind texture and transfer image data to GL texture */
-                GLStateManager::Get().BindTexture(target, GetID());
-                GLTexSubImage(GetType(), region, srcImageView, GetGLInternalFormat());
             }
         }
+        GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
     }
 }
 
@@ -1269,7 +1273,11 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
 
     /* Build texture storage and upload image dataa */
     //GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
-    GLTexImage(textureDesc, initialImage);
+    GLStateManager::Get().SetPixelStoreUnpack(initialImage->rowStride, textureDesc.extent.height, 1);
+    {
+        GLTexImage(textureDesc, initialImage);
+    }
+    GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
 
     /* Store internal GL format. Only desktop OpenGL can query the actual internal format. For GLES 3.0 and WebGL 2.0 we have to rely on the input format. */
     #if LLGL_OPENGL || GL_ES_VERSION_3_1
