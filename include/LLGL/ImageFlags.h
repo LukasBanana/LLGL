@@ -42,11 +42,12 @@ struct ImageView
     ImageView(const ImageView&) = default;
 
     //! Constructor to initialize all attributes.
-    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
+    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0) :
+        format    { format    },
+        dataType  { dataType  },
+        data      { data      },
+        dataSize  { dataSize  },
+        rowStride { rowStride }
     {
     }
 
