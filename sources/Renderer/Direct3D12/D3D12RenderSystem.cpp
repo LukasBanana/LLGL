@@ -851,7 +851,7 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
 
     const Extent3D                      srcExtent   = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
-    const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageView.format, imageView.dataType, imageView.stride);
+    const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageView.format, imageView.dataType, imageView.rowStride);
 
     if (imageView.dataSize < dataLayout.imageSize)
     {

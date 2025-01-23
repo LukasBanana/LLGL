@@ -256,7 +256,7 @@ void GLTextureSubImage(
 {
     #if LLGL_GLEXT_DIRECT_STATE_ACCESS
 
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, imageView.stride);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, imageView.rowStride);
 
     switch (type)
     {

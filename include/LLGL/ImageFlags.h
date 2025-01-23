@@ -64,7 +64,7 @@ struct ImageView
 
     //! Specifies the size of one row of the image data.
     //! When this is zero then the width of the texture region is used.
-    std::uint32_t stride = 0;
+    std::uint32_t rowStride = 0;
 };
 
 /**

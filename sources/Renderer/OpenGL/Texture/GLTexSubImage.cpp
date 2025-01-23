@@ -428,7 +428,7 @@ bool GLTexSubImage(
     if (IsCompressedFormat(imageView.format) && !HasExtension(GLExt::ARB_texture_compression))
         return false;
 
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, imageView.stride);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, imageView.rowStride);
 
     switch (type)
     {
