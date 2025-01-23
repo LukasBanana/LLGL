@@ -14,6 +14,7 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
+#include <LLGL/Throw.h>
 
 
 namespace LLGL
