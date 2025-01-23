@@ -1269,15 +1269,12 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
         intermediateImageView = *initialImage;
         intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
         initialImage = &intermediateImageView;
+        GLStateManager::Get().SetPixelStoreUnpack(initialImage->rowStride, textureDesc.extent.height, 1);
     }
 
     /* Build texture storage and upload image dataa */
     //GLStateManager::Get().BindBuffer(GLBufferTarget::PIXEL_UNPACK_BUFFER, 0);
-    GLStateManager::Get().SetPixelStoreUnpack(initialImage->rowStride, textureDesc.extent.height, 1);
-    {
-        GLTexImage(textureDesc, initialImage);
-    }
-    GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
+    GLTexImage(textureDesc, initialImage);
 
     /* Store internal GL format. Only desktop OpenGL can query the actual internal format. For GLES 3.0 and WebGL 2.0 we have to rely on the input format. */
     #if LLGL_OPENGL || GL_ES_VERSION_3_1
@@ -1299,9 +1296,13 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
     #endif
 
-    /* Generate MIP-maps if enabled */
-    if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))
-        GLMipGenerator::Get().GenerateMips(textureDesc.type);
+    if (initialImage != nullptr) {
+        GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
+
+        /* Generate MIP-maps if enabled */
+        if (MustGenerateMipsOnCreate(textureDesc))
+            GLMipGenerator::Get().GenerateMips(textureDesc.type);
+    }
 }
 
 void GLTexture::AllocRenderbufferStorage(const TextureDescriptor& textureDesc)
