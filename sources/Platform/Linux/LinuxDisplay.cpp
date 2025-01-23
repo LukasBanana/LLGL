@@ -5,6 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include <LLGL/Throw.h>
 #include "LinuxDisplay.h"
 #include "../../Core/CoreUtils.h"
 #include <X11/extensions/Xrandr.h>

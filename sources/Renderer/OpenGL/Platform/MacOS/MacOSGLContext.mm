@@ -180,7 +180,7 @@ void MacOSGLContext::CreateNSGLContext(MacOSGLContext* sharedContext)
     /* Create new NS-OpenGL context */
     ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
 
-    LLGL_THROW_IF(!ctx, std::runtime_error("failed to create NSOpenGLContext"));
+    LLGL_THROW_IF(!ctx_, std::runtime_error("failed to create NSOpenGLContext"));
 
     /* Make new context current */
     MacOSGLContext::MakeNSOpenGLContextCurrent(ctx_);
