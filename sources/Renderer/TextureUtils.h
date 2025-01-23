@@ -65,7 +65,7 @@ LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     std::uint32_t       numArrayLayers,
     const ImageFormat   imageFormat,
     const DataType      imageDataType,
-    uint32_t            srcDataStride = 0
+    std::uint32_t       srcDataStride = 0
 );
 
 // Calculates the required sizes and strides for a subresource when mapped between GPU and CPU.
@@ -74,7 +74,7 @@ inline SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     const TextureRegion&    textureRegion,
     const ImageFormat       imageFormat,
     const DataType          imageDataType,
-    uint32_t                srcDataStride = 0)
+    std::uint32_t           srcDataStride = 0)
 {
     return CalcSubresourceCPUMappingLayout(format, textureRegion.extent, textureRegion.subresource.numArrayLayers, imageFormat, imageDataType, srcDataStride);
 }

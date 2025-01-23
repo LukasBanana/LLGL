@@ -97,8 +97,7 @@ LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     std::uint32_t       numArrayLayers,
     const ImageFormat   imageFormat,
     const DataType      imageDataType,
-    std::uint32_t       srcRowStride
-    )
+    std::uint32_t       srcRowStride)
 {
     SubresourceCPUMappingLayout layout;
     {
