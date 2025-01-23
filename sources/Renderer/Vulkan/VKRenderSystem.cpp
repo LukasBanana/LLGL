@@ -16,6 +16,7 @@
 #include "../CheckedCast.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Vendor.h"
+#include "../../Core/ImageUtils.h"
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "VKInitializers.h"
@@ -981,17 +982,11 @@ VKDeviceBuffer VKRenderSystem::CreateTextureStagingBufferAndInitialize(
             VKDeviceMemory* deviceMemory = region->GetParentChunk();
             if (void* memory = deviceMemory->Map(device_, region->GetOffset(), dataSize))
             {
-                if (srcImageView.stride > 0) {
-                    const std::uint32_t stride = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, srcImageView.stride);
-                    const std::size_t width = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, extent.width);
-
-                    for (std::uint32_t row = 0; row < extent.height; ++row) {
-                        ::memcpy(static_cast<std::uint8_t*>(memory) + row * width, static_cast<const std::uint8_t*>(data) + row * stride, width);
-                    }
-                } else {
-                    /* Copy input data to buffer memory */
-                    ::memcpy(memory, data, static_cast<std::size_t>(dataSize));
-                }
+                const std::uint32_t bpp = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+                const char* src = static_cast<const char*>(data);
+                char* dst = static_cast<char*>(memory);
+                
+                BitBlit(extent, bpp, dst, extent.width, extent.width * extent.height, src, srcImageView.rowStride, srcImageView.rowStride * extent.height);
 
                 deviceMemory->Unmap(device_);
             }
