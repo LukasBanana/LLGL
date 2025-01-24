@@ -8,7 +8,7 @@
 #ifndef LLGL_THROW_H
 #define LLGL_THROW_H
 
-#if __EXCEPTIONS || __cpp_exceptions
+#if __EXCEPTIONS || __cpp_exceptions == 199711
     #define LLGL_COMPILER_EXCEPTIONS_ENABLED
 #endif
 
