@@ -16,6 +16,8 @@
     #define LLGL_THROW(EXCEPTION) throw (EXCEPTION)
     #define LLGL_THROW_IF(CONDITION, EXCEPTION) if (CONDITION) { LLGL_THROW(EXCEPTION); }
 #else
+    #include <cstdlib>
+
     #define LLGL_THROW(EXCEPTION) std::abort()
     #define LLGL_THROW_IF(CONDITION, EXCEPTION)
 #endif
