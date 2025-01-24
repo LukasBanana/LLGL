@@ -13,11 +13,11 @@
 #endif
 
 #if (defined(LLGL_DEBUG) || defined(LLGL_ENABLE_EXCEPTIONS)) && defined(LLGL_COMPILER_EXCEPTIONS_ENABLED)
-    #define LLGL_THROW(exception) throw (exception)
-    #define LLGL_THROW_IF(condition, exception) if (condition) { LLGL_THROW(exception); }
+    #define LLGL_THROW(EXCEPTION) throw (EXCEPTION)
+    #define LLGL_THROW_IF(CONDITION, EXCEPTION) if (CONDITION) { LLGL_THROW(EXCEPTION); }
 #else
-    #define LLGL_THROW(exception) std::abort()
-    #define LLGL_THROW_IF(condition, exception)
+    #define LLGL_THROW(EXCEPTION) std::abort()
+    #define LLGL_THROW_IF(CONDITION, EXCEPTION)
 #endif
 
 #endif
