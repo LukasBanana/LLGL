@@ -21,6 +21,7 @@
 
     #define LLGL_THROW(EXCEPTION) std::abort()
     #define LLGL_THROW_IF(CONDITION, EXCEPTION)
+    #define LLGL_VERIFY_OR_THROW(CONDITION, EXCEPTION)
 #endif
 
 #endif
