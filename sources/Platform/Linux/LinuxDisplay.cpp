@@ -5,7 +5,6 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include <LLGL/Throw.h>
 #include "LinuxDisplay.h"
 #include "../../Core/CoreUtils.h"
 #include <X11/extensions/Xrandr.h>
@@ -58,7 +57,7 @@ static void* g_retainedLibGL = nullptr;
 LinuxSharedX11Display::LinuxSharedX11Display() :
     native_ { XOpenDisplay(nullptr) }
 {
-    LLGL_THROW_IF(!native_, std::runtime_error("failed to open connection to X server"));
+    LLGL_ASSERT(native_, "failed to open connection to X server");
 }
 
 LinuxSharedX11Display::~LinuxSharedX11Display()

@@ -8,13 +8,14 @@
 #include "MacOSGLContext.h"
 #include "../../../../Platform/MacOS/MacOSWindow.h"
 #include "../../../../Core/CoreUtils.h"
+#include "../../../../Core/Assertion.h"
+#include "../../../../Core/Exception.h"
 #include "../../../CheckedCast.h"
 #include "../../../StaticAssertions.h"
 #include "../../../TextureUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 #include <LLGL/Log.h>
-#include <LLGL/Throw.h>
 
 
 namespace LLGL
@@ -49,10 +50,7 @@ MacOSGLContext::MacOSGLContext(
     Surface&                            surface,
     MacOSGLContext*                     sharedContext)
 {
-    LLGL_THROW_IF(
-        !CreatePixelFormat(pixelFormat, profile),
-        std::runtime_error("failed to find suitable OpenGL pixel format")
-    );
+    LLGL_ASSERT(CreatePixelFormat(pixelFormat, profile), "failed to find suitable OpenGL pixel format");
 
     CreateNSGLContext(sharedContext);
 }
@@ -128,7 +126,7 @@ static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const RendererConfi
         }
     }
     
-    LLGL_THROW(std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)"));
+    LLGL_TRAP("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
 }
 
 #endif // /!LLGL_GL_ENABLE_OPENGL2X
@@ -181,7 +179,7 @@ void MacOSGLContext::CreateNSGLContext(MacOSGLContext* sharedContext)
     /* Create new NS-OpenGL context */
     ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
 
-    LLGL_THROW_IF(!ctx_, std::runtime_error("failed to create NSOpenGLContext"));
+    LLGL_ASSERT(ctx_, "failed to create NSOpenGLContext")
 
     /* Make new context current */
     MacOSGLContext::MakeNSOpenGLContextCurrent(ctx_);
