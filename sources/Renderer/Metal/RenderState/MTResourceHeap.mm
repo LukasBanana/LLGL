@@ -18,6 +18,7 @@
 #include "../../../Core/Assertion.h"
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Throw.h>
 
 
 namespace LLGL
@@ -89,8 +90,8 @@ MTResourceHeap::MTResourceHeap(
 {
     /* Get pipeline layout object */
     auto pipelineLayoutMT = LLGL_CAST(MTPipelineLayout*, desc.pipelineLayout);
-    if (!pipelineLayoutMT)
-        LLGL_THROW(std::invalid_argument("failed to create resource heap due to missing pipeline layout"));
+    
+    LLGL_THROW_IF(!pipelineLayoutMT, std::invalid_argument("failed to create resource heap due to missing pipeline layout"));
 
     /* Validate binding descriptors */
     const auto& bindings            = pipelineLayoutMT->GetHeapBindings();
