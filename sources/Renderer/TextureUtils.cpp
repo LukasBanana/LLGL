@@ -72,13 +72,12 @@ static void CalcSubresourceLayoutPrimary(
     SubresourceLayout&  outLayout,
     const Format        format,
     const Extent3D&     extent,
-    std::uint32_t       numArrayLayers,
-    std::uint32_t       srcDataStride = 0)
+    std::uint32_t       numArrayLayers)
 {
     const FormatAttributes& formatAttribs = GetFormatAttribs(format);
     if (formatAttribs.blockWidth > 0 && formatAttribs.blockHeight > 0)
     {
-        outLayout.rowStride         = ((srcDataStride > 0 ? srcDataStride : extent.width) * formatAttribs.bitSize) / formatAttribs.blockWidth / 8;
+        outLayout.rowStride         = (extent.width * formatAttribs.bitSize) / formatAttribs.blockWidth / 8;
         outLayout.layerStride       = (extent.height * outLayout.rowStride) / formatAttribs.blockHeight;
         outLayout.subresourceSize   = extent.depth * outLayout.layerStride * std::max(1u, numArrayLayers);
     }
@@ -96,12 +95,11 @@ LLGL_EXPORT SubresourceCPUMappingLayout CalcSubresourceCPUMappingLayout(
     const Extent3D&     extent,
     std::uint32_t       numArrayLayers,
     const ImageFormat   imageFormat,
-    const DataType      imageDataType,
-    std::uint32_t       srcRowStride)
+    const DataType      imageDataType)
 {
     SubresourceCPUMappingLayout layout;
     {
-        CalcSubresourceLayoutPrimary(layout, format, extent, numArrayLayers, srcRowStride);
+        CalcSubresourceLayoutPrimary(layout, format, extent, numArrayLayers);
         layout.numTexelsPerLayer    = extent.width * extent.height * extent.depth;
         layout.numTexelsTotal       = layout.numTexelsPerLayer * numArrayLayers;
         layout.imageSize            = GetMemoryFootprint(imageFormat, imageDataType, layout.numTexelsTotal);

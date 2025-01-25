@@ -66,7 +66,7 @@ struct ImageView
     /**
      \brief Specifies the size of one row of the image data.
      \remarks When this is zero then the width of the texture region is used.
-     \note Only supported with: Direct3D 12, Direct3D 11, Vulkan, OpenGL.
+     \note Only supported with: Vulkan, OpenGL.
     */
     std::uint32_t rowStride = 0;
 };
