@@ -360,7 +360,7 @@ LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)
     return 0;
 }
 
-LLGL_EXPORT bool IsIntDataType(const DataType dataType)
+LLGL_EXPORT bool IsSIntDataType(const DataType dataType)
 {
     return (dataType == DataType::Int8 || dataType == DataType::Int16 || dataType == DataType::Int32);
 }

@@ -614,13 +614,20 @@ LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType);
 \brief Determines if the argument refers to a signed integer data type.
 \return True if the specified data type equals one of the following enumeration entries: DataType::Int8, DataType::Int16, DataType::Int32.
 */
-LLGL_EXPORT bool IsIntDataType(const DataType dataType);
+LLGL_EXPORT bool IsSIntDataType(const DataType dataType);
 
 /**
 \brief Determines if the argument refers to an unsigned integer data type.
 \return True if the specified data type equals one of the following enumeration entries: DataType::UInt8, DataType::UInt16, DataType::UInt32.
 */
 LLGL_EXPORT bool IsUIntDataType(const DataType dataType);
+
+//! \deprecated Since 0.04b; Use IsSIntDataType() instead.
+LLGL_DEPRECATED("LLGL::IsIntDataType() is deprecated since 0.04b; Use IsSIntDataType() instead.", "IsSIntDataType")
+inline bool IsIntDataType(const DataType dataType)
+{
+    return IsSIntDataType(dataType);
+}
 
 /**
 \brief Determines if the argument refers to a floating-pointer data type.

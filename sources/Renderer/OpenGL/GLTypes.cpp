@@ -1036,8 +1036,8 @@ Format UnmapFormat(const GLenum internalFormat)
         case GL_R16I:                                   return Format::R16SInt;
         case GL_R16F:                                   return Format::R16Float;
 
-        case GL_R32I:                                   return Format::R32UInt;
-        case GL_R32UI:                                  return Format::R32SInt;
+        case GL_R32UI:                                  return Format::R32UInt;
+        case GL_R32I:                                   return Format::R32SInt;
         case GL_R32F:                                   return Format::R32Float;
 
         /* --- RG color formats --- */

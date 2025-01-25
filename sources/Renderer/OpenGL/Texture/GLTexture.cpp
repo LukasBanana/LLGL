@@ -30,6 +30,12 @@ namespace LLGL
 {
 
 
+//TODO: replace this with a public 'IsIntDataType()' function once the deprecated version has been removed in the next release version.
+static bool IsSIntOrUIntDataType(DataType dataType)
+{
+    return (IsSIntDataType(dataType) || IsUIntDataType(dataType));
+}
+
 // Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
 static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 {
@@ -919,7 +925,7 @@ static void GLGetTextureSubImage(
         static_cast<GLsizei>(extent.width),
         static_cast<GLsizei>(extent.height),
         static_cast<GLsizei>(extent.depth),
-        GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+        GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
         GLTypes::Map(dstImageView.dataType),
         static_cast<GLsizei>(dstImageView.dataSize),
         dstImageView.data
@@ -1003,7 +1009,7 @@ static void GLGetTexImage(
                 glGetTexImage(
                     cubeFaceTargetGL,
                     mipLevel,
-                    GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+                    GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
                     GLTypes::Map(dstImageView.dataType),
                     dstImageData
                 );
@@ -1015,7 +1021,7 @@ static void GLGetTexImage(
             glGetTexImage(
                 targetGL,
                 mipLevel,
-                GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
                 GLTypes::Map(dstImageView.dataType),
                 dstImageView.data
             );
@@ -1095,7 +1101,7 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 stagingTextureID,
                 0,
-                GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
                 GLTypes::Map(dstImageView.dataType),
                 static_cast<GLsizei>(dstImageView.dataSize),
                 dstImageView.data
@@ -1122,7 +1128,7 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 srcTextureID,
                 mipLevel,
-                GLTypes::Map(dstImageView.format, IsIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
                 GLTypes::Map(dstImageView.dataType),
                 static_cast<GLsizei>(dstImageView.dataSize),
                 dstImageView.data
