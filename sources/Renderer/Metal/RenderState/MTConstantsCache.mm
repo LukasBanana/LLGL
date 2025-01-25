@@ -51,7 +51,7 @@ void MTConstantsCache::Reset()
 
 void MTConstantsCache::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    for (const char* bytes = reinterpret_cast<const char*>(data); first < constantsMap_.size() && dataSize > 0; ++first)
+    for (const char* bytes = static_cast<const char*>(data); first < constantsMap_.size() && dataSize > 0; ++first)
     {
         /* Early exit even ignoring the dirty bits since out-of-bounds is undefined behavior */
         const ConstantLocation& constant = constantsMap_[first];

@@ -25,7 +25,7 @@ const T* GetRendererConfiguration(const RenderSystemDescriptor& renderSystemDesc
     if (renderSystemDesc.rendererConfig != nullptr && renderSystemDesc.rendererConfigSize > 0)
     {
         if (renderSystemDesc.rendererConfigSize == sizeof(T))
-            return reinterpret_cast<const T*>(renderSystemDesc.rendererConfig);
+            return static_cast<const T*>(renderSystemDesc.rendererConfig);
         else
             LLGL_TRAP("invalid renderer configuration structure");
     }
@@ -53,7 +53,7 @@ const T* GetRendererNativeHandle(const RenderSystemDescriptor& renderSystemDesc)
     return GetRendererNativeHandle<T>(
         ArrayView<char>
         {
-            reinterpret_cast<const char*>(renderSystemDesc.nativeHandle),
+            static_cast<const char*>(renderSystemDesc.nativeHandle),
             renderSystemDesc.nativeHandleSize
         }
     );

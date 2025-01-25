@@ -203,7 +203,7 @@ BOOL DXBoolean(bool value)
 template <typename Cont>
 Cont GetBlobDataTmpl(ID3DBlob* blob)
 {
-    auto data = reinterpret_cast<const char*>(blob->GetBufferPointer());
+    auto data = static_cast<const char*>(blob->GetBufferPointer());
     auto size = static_cast<std::size_t>(blob->GetBufferSize());
 
     Cont container;

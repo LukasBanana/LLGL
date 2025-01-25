@@ -840,7 +840,7 @@ void VKCommandBuffer::SetStencilReference(std::uint32_t reference, const Stencil
 void VKCommandBuffer::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
     if (boundPipelineState_ != nullptr)
-        boundPipelineState_->PushConstants(commandBuffer_, first, reinterpret_cast<const char*>(data), dataSize);
+        boundPipelineState_->PushConstants(commandBuffer_, first, static_cast<const char*>(data), dataSize);
 }
 
 /* ----- Queries ----- */
@@ -1141,7 +1141,7 @@ bool VKCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHand
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Vulkan::CommandBufferNativeHandle))
     {
-        auto* nativeHandleVK = reinterpret_cast<Vulkan::CommandBufferNativeHandle*>(nativeHandle);
+        auto* nativeHandleVK = static_cast<Vulkan::CommandBufferNativeHandle*>(nativeHandle);
         nativeHandleVK->commandBuffer = commandBuffer_;
         return true;
     }

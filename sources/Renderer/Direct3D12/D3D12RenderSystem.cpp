@@ -260,7 +260,7 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     HRESULT hr = readbackBuffer->Map(0, nullptr, &mappedData);
     DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
 
-    const char* srcData = reinterpret_cast<const char*>(mappedData);
+    const char* srcData = static_cast<const char*>(mappedData);
     ImageView intermediateSrcView{ formatAttribs.format, formatAttribs.dataType, srcData, layerStride };
 
     if (isStencilOnlyFormat)
@@ -280,8 +280,8 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         RenderSystem::CopyTextureImageData(intermediateDstView, intermediateSrcView, numTexelsPerLayer, extent.width, rowStride);
 
         /* Move destination image pointer to next layer */
-        intermediateDstView.data = reinterpret_cast<char*>(intermediateDstView.data) + layerSize;
-        intermediateSrcView.data = reinterpret_cast<const char*>(intermediateSrcView.data) + layerStride;
+        intermediateDstView.data = static_cast<char*>(intermediateDstView.data) + layerSize;
+        intermediateSrcView.data = static_cast<const char*>(intermediateSrcView.data) + layerStride;
     }
 
     /* Unmap buffer */
@@ -436,7 +436,7 @@ bool D3D12RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D12::RenderSystemNativeHandle))
     {
-        auto* nativeHandleD3D = reinterpret_cast<Direct3D12::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleD3D = static_cast<Direct3D12::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleD3D->factory = factory_.Get();
         nativeHandleD3D->factory->AddRef();
         nativeHandleD3D->device = device_.GetNative();
@@ -457,7 +457,7 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(
     std::size_t                     nativeWindowHandleSize)
 {
     LLGL_ASSERT(nativeWindowHandleSize == sizeof(NativeHandle));
-    auto* nativeWindowHandlePtr = reinterpret_cast<const NativeHandle*>(nativeWindowHandle);
+    auto* nativeWindowHandlePtr = static_cast<const NativeHandle*>(nativeWindowHandle);
 
     ComPtr<IDXGISwapChain1> swapChain;
 

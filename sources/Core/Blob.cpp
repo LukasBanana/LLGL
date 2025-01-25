@@ -48,7 +48,7 @@ struct InternalStringBlob final : Blob::Pimpl
 struct InternalVectorBlob final : Blob::Pimpl
 {
     InternalVectorBlob(const void* data, std::size_t size) :
-        container { reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data) + size }
+        container { static_cast<const char*>(data), static_cast<const char*>(data) + size }
     {
     }
 

@@ -152,7 +152,7 @@ VkResult VKCommandQueue::GetQueryResults(
     if (queryHeapVK.GetType() == QueryType::TimeElapsed || stride != sizeof(std::uint64_t))
     {
         /* Query results individually */
-        auto dataByteAligned = reinterpret_cast<std::uint8_t*>(data);
+        auto dataByteAligned = static_cast<std::uint8_t*>(data);
 
         for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
         {
@@ -225,12 +225,12 @@ VkResult VKCommandQueue::GetQuerySingleResult(
             const auto elapsedTime = (timestamps[1] - timestamps[0]);
             if (stride == sizeof(std::uint64_t))
             {
-                auto dst = reinterpret_cast<std::uint64_t*>(data);
+                auto dst = static_cast<std::uint64_t*>(data);
                 dst[0] = elapsedTime;
             }
             else
             {
-                auto dst = reinterpret_cast<std::uint32_t*>(data);
+                auto dst = static_cast<std::uint32_t*>(data);
                 dst[0] = static_cast<std::uint32_t>(elapsedTime);
             }
         }

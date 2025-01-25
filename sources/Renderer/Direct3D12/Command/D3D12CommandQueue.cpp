@@ -75,19 +75,19 @@ bool D3D12CommandQueue::QueryResult(
     if (dataSize == numQueries * sizeof(std::uint32_t))
     {
         /* Query 64-bit values and convert them to 32-bit values */
-        QueryResultUInt32(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<std::uint32_t*>(data));
+        QueryResultUInt32(queryType, mappedData, firstQuery, numQueries, static_cast<std::uint32_t*>(data));
         result = true;
     }
     else if (dataSize == numQueries * sizeof(std::uint64_t))
     {
         /* Query 64-bit values and copy them directly to output */
-        QueryResultUInt64(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<std::uint64_t*>(data));
+        QueryResultUInt64(queryType, mappedData, firstQuery, numQueries, static_cast<std::uint64_t*>(data));
         result = true;
     }
     else if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
     {
         /* Query pipeline statistics and copy them directly to output (if structs are compatible) */
-        result = QueryResultPipelineStatistics(queryType, mappedData, firstQuery, numQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
+        result = QueryResultPipelineStatistics(queryType, mappedData, firstQuery, numQueries, static_cast<QueryPipelineStatistics*>(data));
     }
 
     queryHeapD3D.Unmap();
@@ -202,7 +202,7 @@ void D3D12CommandQueue::QueryResultSingleUInt64(
         case QueryType::TimeElapsed:
         {
             /* Compute difference between start and end timestamps for each output entry */
-            auto* mappedDataUInt64 = reinterpret_cast<const std::uint64_t*>(mappedData);
+            auto* mappedDataUInt64 = static_cast<const std::uint64_t*>(mappedData);
             const auto startTimestamp   = mappedDataUInt64[query*2    ];
             const auto endTimestamp     = mappedDataUInt64[query*2 + 1];
             const auto deltaTime        = (endTimestamp - startTimestamp);
@@ -219,14 +219,14 @@ void D3D12CommandQueue::QueryResultSingleUInt64(
 
         case QueryType::StreamOutPrimitivesWritten:
         {
-            auto* mappedDataSOStats = reinterpret_cast<const D3D12_QUERY_DATA_SO_STATISTICS*>(mappedData);
+            auto* mappedDataSOStats = static_cast<const D3D12_QUERY_DATA_SO_STATISTICS*>(mappedData);
             data = mappedDataSOStats[query].NumPrimitivesWritten;
         }
         break;
 
         case QueryType::StreamOutOverflow:
         {
-            auto* mappedDataSOStats = reinterpret_cast<const D3D12_QUERY_DATA_SO_STATISTICS*>(mappedData);
+            auto* mappedDataSOStats = static_cast<const D3D12_QUERY_DATA_SO_STATISTICS*>(mappedData);
             data = (mappedDataSOStats[query].NumPrimitivesWritten != mappedDataSOStats[query].PrimitivesStorageNeeded ? 1 : 0);
         }
         break;
@@ -234,7 +234,7 @@ void D3D12CommandQueue::QueryResultSingleUInt64(
         default:
         {
             /* Copy mapped data to output data */
-            auto* mappedDataUInt64 = reinterpret_cast<const std::uint64_t*>(mappedData);
+            auto* mappedDataUInt64 = static_cast<const std::uint64_t*>(mappedData);
             data = mappedDataUInt64[query];
         }
         break;
@@ -278,7 +278,7 @@ void D3D12CommandQueue::QueryResultUInt64(
         default:
         {
             /* Copy mapped data to output data */
-            auto* mappedDataUInt64 = reinterpret_cast<const std::uint64_t*>(mappedData);
+            auto* mappedDataUInt64 = static_cast<const std::uint64_t*>(mappedData);
             ::memcpy(data, &(mappedDataUInt64[firstQuery]), numQueries * sizeof(std::uint64_t));
         }
         break;
@@ -320,7 +320,7 @@ bool D3D12CommandQueue::QueryResultPipelineStatistics(
     if (IsQueryPipelineStatsD3DCompatible())
     {
         /* Use output storage directly when structure is compatible with D3D */
-        auto mappedDataStats = reinterpret_cast<const D3D12_QUERY_DATA_PIPELINE_STATISTICS*>(mappedData);
+        auto mappedDataStats = static_cast<const D3D12_QUERY_DATA_PIPELINE_STATISTICS*>(mappedData);
         ::memcpy(data, &(mappedDataStats[firstQuery]), numQueries * sizeof(QueryPipelineStatistics));
     }
     else
@@ -328,7 +328,7 @@ bool D3D12CommandQueue::QueryResultPipelineStatistics(
         for (std::uint32_t query = firstQuery; query < firstQuery + numQueries; ++query)
         {
             /* Copy current query data to output */
-            const auto mappedDataStats = reinterpret_cast<const D3D12_QUERY_DATA_PIPELINE_STATISTICS*>(mappedData) + query;
+            const auto mappedDataStats = static_cast<const D3D12_QUERY_DATA_PIPELINE_STATISTICS*>(mappedData) + query;
             data->inputAssemblyVertices             = mappedDataStats->IAVertices;
             data->inputAssemblyPrimitives           = mappedDataStats->IAPrimitives;
             data->vertexShaderInvocations           = mappedDataStats->VSInvocations;

@@ -49,7 +49,7 @@ bool WasmCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSiz
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        auto* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->canvas = canvas_;
         return true;
     }
@@ -113,7 +113,7 @@ UTF8String WasmCanvas::GetTitle() const
 
 const char* WasmCanvas::OnBeforeUnloadCallback(int eventType, const void* /*reserved*/, void* userData)
 {
-	WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
+	WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
     canvas->PostDestroy();
 	return nullptr; // no string to be displayed to the user
 }
@@ -127,7 +127,7 @@ EM_BOOL WasmCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEven
         emscripten_get_canvas_element_size("#canvas", &w, &h);
 
         /* Send resize event to event listeners */
-        WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
+        WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
         const Extent2D clientAreaSize
         {
             static_cast<std::uint32_t>(w),
@@ -141,7 +141,7 @@ EM_BOOL WasmCanvas::OnCanvasResizeCallback(int eventType, const EmscriptenUiEven
 
 EM_BOOL WasmCanvas::OnKeyCallback(int eventType, const EmscriptenKeyboardEvent* event, void* userData)
 {
-    WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
+    WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
 
     Key key = MapEmscriptenKeyCode(event->code);
 
@@ -177,7 +177,7 @@ static EventAction EmscriptenMouseEventToAction(int eventType)
 
 EM_BOOL WasmCanvas::OnMouseCallback(int eventType, const EmscriptenMouseEvent* event, void* userData)
 {
-    WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
+    WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
 
     switch (eventType)
     {
@@ -246,7 +246,7 @@ static EventAction EmscriptenTouchEventToAction(int eventType)
 
 EM_BOOL WasmCanvas::OnTouchCallback(int eventType, const EmscriptenTouchEvent* event, void* userData)
 {
-    WasmCanvas* canvas = reinterpret_cast<WasmCanvas*>(userData);
+    WasmCanvas* canvas = static_cast<WasmCanvas*>(userData);
 
     const Offset2D position
     {

@@ -64,7 +64,7 @@ bool IOSGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleS
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
-        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleGL->context = context_;
         return true;
     }

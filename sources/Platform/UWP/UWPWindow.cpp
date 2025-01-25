@@ -57,7 +57,7 @@ bool UWPWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle) && window_ != nullptr)
     {
-        auto* nativeHandlePtr = reinterpret_cast<NativeHandle*>(nativeHandle);
+        auto* nativeHandlePtr = static_cast<NativeHandle*>(nativeHandle);
         nativeHandlePtr->window = winrt::get_unknown(window_);
         return true;
     }

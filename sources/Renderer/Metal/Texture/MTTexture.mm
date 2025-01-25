@@ -223,7 +223,7 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const ImageView&
     }
 
     /* Replace region of native texture with source image data */
-    auto byteAlignedData = reinterpret_cast<const std::int8_t*>(imageData);
+    auto byteAlignedData = static_cast<const std::int8_t*>(imageData);
 
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
@@ -347,7 +347,7 @@ void MTTexture::ReadRegionFromSharedMemory(
     }
     else
     {
-        char* dstImageData = reinterpret_cast<char*>(dstImageView.data);
+        char* dstImageData = static_cast<char*>(dstImageView.data);
 
         for_range(arrayLayer, subresource.numArrayLayers)
         {

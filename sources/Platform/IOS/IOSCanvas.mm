@@ -205,7 +205,7 @@ bool IOSCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        NativeHandle* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        NativeHandle* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->view = wnd_;
         return true;
     }

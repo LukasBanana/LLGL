@@ -717,7 +717,7 @@ static void GLTexImageCube(const TextureDescriptor& desc, const ImageView* image
     if (imageView != nullptr)
     {
         /* Setup texture image cube-faces from descriptor */
-        const char* imageFace       = reinterpret_cast<const char*>(imageView->data);
+        const char* imageFace       = static_cast<const char*>(imageView->data);
         std::size_t imageFaceStride = GetMemoryFootprint(imageView->format, imageView->dataType, desc.extent.width * desc.extent.height);
 
         if (IsCompressedFormat(desc.format))

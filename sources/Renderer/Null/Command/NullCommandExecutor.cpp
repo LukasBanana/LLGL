@@ -32,13 +32,13 @@ static std::size_t ExecuteNullCommand(const NullOpcode opcode, const void* pc)
     {
         case NullOpcodeBufferWrite:
         {
-            auto cmd = reinterpret_cast<const NullCmdBufferWrite*>(pc);
+            auto cmd = static_cast<const NullCmdBufferWrite*>(pc);
             cmd->buffer->Write(cmd->offset, cmd + 1, cmd->size);
             return (sizeof(*cmd) + cmd->size);
         }
         case NullOpcodeCopySubresource:
         {
-            auto cmd = reinterpret_cast<const NullCmdCopySubresource*>(pc);
+            auto cmd = static_cast<const NullCmdCopySubresource*>(pc);
             auto* dst = cmd->dstResource;
             auto* src = cmd->srcResource;
             if (dst->GetResourceType() == ResourceType::Buffer)
@@ -62,7 +62,7 @@ static std::size_t ExecuteNullCommand(const NullOpcode opcode, const void* pc)
         }
         case NullOpcodeGenerateMips:
         {
-            auto cmd = reinterpret_cast<const NullCmdGenerateMips*>(pc);
+            auto cmd = static_cast<const NullCmdGenerateMips*>(pc);
             const TextureSubresource subresource{ cmd->baseArrayLayer, cmd->numArrayLayers, cmd->baseMipLevel, cmd->numMipLevels };
             cmd->texture->GenerateMips(&subresource);
             return sizeof(*cmd);
@@ -70,19 +70,19 @@ static std::size_t ExecuteNullCommand(const NullOpcode opcode, const void* pc)
         //TODO...
         case NullOpcodeDraw:
         {
-            auto cmd = reinterpret_cast<const NullCmdDraw*>(pc);
+            auto cmd = static_cast<const NullCmdDraw*>(pc);
             //TODO
             return (sizeof(*cmd) + cmd->numVertexBuffers * sizeof(const NullBuffer*));
         }
         case NullOpcodeDrawIndexed:
         {
-            auto cmd = reinterpret_cast<const NullCmdDrawIndexed*>(pc);
+            auto cmd = static_cast<const NullCmdDrawIndexed*>(pc);
             //TODO
             return (sizeof(*cmd) + cmd->numVertexBuffers * sizeof(const NullBuffer*));
         }
         case NullOpcodePushDebugGroup:
         {
-            auto cmd = reinterpret_cast<const NullCmdPushDebugGroup*>(pc);
+            auto cmd = static_cast<const NullCmdPushDebugGroup*>(pc);
             //TODO
             return (sizeof(*cmd) + cmd->length + 1);
         }

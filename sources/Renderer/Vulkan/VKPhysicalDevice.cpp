@@ -452,7 +452,7 @@ void VKPhysicalDevice::QueryDeviceFeatures()
         currentDesc->pNext = descPtr;
 
         /* Write structure type and store next descriptor */
-        auto baseDescPtr = reinterpret_cast<VKBaseStructureInfo*>(descPtr);
+        auto baseDescPtr = static_cast<VKBaseStructureInfo*>(descPtr);
         {
             baseDescPtr->sType = type;
         }

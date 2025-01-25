@@ -182,7 +182,7 @@ LLGL_EXPORT LogHandle RegisterCallbackReport(Report& report)
     return RegisterCallback(
         [](ReportType type, const char* text, void* userData)
         {
-            if (auto* report = reinterpret_cast<Report*>(userData))
+            if (auto* report = static_cast<Report*>(userData))
             {
                 if (type == ReportType::Error)
                     report->Errorf("%s", text);
@@ -249,7 +249,7 @@ LLGL_EXPORT void UnregisterCallback(LogHandle handle)
         if (handle == reinterpret_cast<LogHandle>(g_logState.listenerStd.get()))
             g_logState.listenerStd.reset();
         else
-            g_logState.listeners.erase(reinterpret_cast<LogListener*>(handle));
+            g_logState.listeners.erase(static_cast<LogListener*>(handle));
     }
 }
 

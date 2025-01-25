@@ -248,7 +248,7 @@ template <typename T>
 T* GetTypedNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(T))
-        return reinterpret_cast<T*>(nativeHandle);
+        return static_cast<T*>(nativeHandle);
     else
         return nullptr;
 }

@@ -63,7 +63,7 @@ LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc, int rend
 {
     if (renderSystemDesc != nullptr && static_cast<std::size_t>(renderSystemDescSize) == sizeof(LLGL::RenderSystemDescriptor))
     {
-        auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+        auto desc = static_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
         return LLGL::ModuleDirect3D12::AllocRenderSystem(desc);
     }
     return nullptr;

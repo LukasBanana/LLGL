@@ -51,7 +51,7 @@ LinuxX11Context::LinuxX11Context() :
 
 void LinuxX11Context::Save(::Display* display, XID id, void* userData)
 {
-    XSaveContext(display, id, LinuxX11Context::Get().ctx_, reinterpret_cast<XPointer>(userData));
+    XSaveContext(display, id, LinuxX11Context::Get().ctx_, static_cast<XPointer>(userData));
 }
 
 void* LinuxX11Context::Find(::Display* display, XID id)
@@ -90,7 +90,7 @@ bool Surface::ProcessEvents()
         XNextEvent(display, &event);
         if (void* userData = LinuxX11Context::Find(display, event.xany.window))
         {
-            LinuxWindow* wnd = reinterpret_cast<LinuxWindow*>(userData);
+            LinuxWindow* wnd = static_cast<LinuxWindow*>(userData);
             wnd->ProcessEvent(event);
         }
     }
@@ -146,7 +146,7 @@ bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        auto* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->display = display_;
         handle->window  = wnd_;
         handle->visual  = visual_;
@@ -279,7 +279,7 @@ void LinuxWindow::ProcessEvent(XEvent& event)
 void LinuxWindow::OpenX11Window()
 {
     /* Get native context handle */
-    const NativeHandle* nativeHandle = reinterpret_cast<const NativeHandle*>(desc_.windowContext);
+    const NativeHandle* nativeHandle = static_cast<const NativeHandle*>(desc_.windowContext);
     if (nativeHandle != nullptr)
     {
         /* Get X11 display from context handle */

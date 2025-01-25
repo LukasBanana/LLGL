@@ -64,7 +64,7 @@ int ExampleInit()
     llglRegisterLogCallbackStd(0);
 
     // Load render system module
-    LLGLReport report = {};
+    LLGLReport report = {0};
     if (llglLoadRenderSystemExt(&(g_config.rendererDesc), report) == 0)
     {
         llglLogErrorf("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
@@ -72,7 +72,7 @@ int ExampleInit()
     }
 
     // Print information about the selected renderer
-    LLGLRendererInfo info = {};
+    LLGLRendererInfo info = {0};
     llglGetRendererInfo(&info);
     printf(
         "Renderer:         %s\n"
