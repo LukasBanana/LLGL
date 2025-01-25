@@ -14,6 +14,7 @@ Screenshot.*
 Capture.*
 *.Results.png
 LLGL.trace.json
+default.metallib
 
 # Output files from individual tests (Testbed is handled separately)
 tests/Output
