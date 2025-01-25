@@ -201,7 +201,7 @@ class LLGL_EXPORT Color
         */
         T& operator [] (std::size_t component)
         {
-            LLGL_THROW_IF(component >= N, std::out_of_range("color component index out of range"));
+            LLGL_VERIFY_OR_THROW(component < N, std::out_of_range("color component index out of range"));
             
             return v_[component];
         }
@@ -213,7 +213,7 @@ class LLGL_EXPORT Color
         */
         const T& operator [] (std::size_t component) const
         {
-            LLGL_THROW_IF(component >= N, std::out_of_range("color component index out of range"));
+            LLGL_VERIFY_OR_THROW(component < N, std::out_of_range("color component index out of range"));
             
             return v_[component];
         }

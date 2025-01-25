@@ -180,7 +180,7 @@ class LLGL_EXPORT Color<T, 4u>
         */
         T& operator [] (std::size_t component)
         {
-            LLGL_THROW_IF((component >= Color<T, 4>::components), std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)"));
+            LLGL_VERIFY_OR_THROW((component < Color<T, 4>::components), std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)"));
 
             return *((&r) + component);
         }
@@ -192,7 +192,7 @@ class LLGL_EXPORT Color<T, 4u>
         */
         const T& operator [] (std::size_t component) const
         {
-            LLGL_THROW_IF((component >= Color<T, 4>::components), std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)"));
+            LLGL_VERIFY_OR_THROW((component < Color<T, 4>::components), std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)"));
 
             return *((&r) + component);
         }
