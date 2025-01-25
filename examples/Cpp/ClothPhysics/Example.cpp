@@ -432,10 +432,12 @@ public:
         computeResourceHeap = renderer->CreateResourceHeap(resourceHeapDesc, resourceViewsCompute);
 
         // Create compute pipeline
+        const char* psoDebugNames[3] = { "CSForces.PSO", "CSStretchConstraints.PSO", "CSRelaxation.PSO" };
         for (int i = 0; i < 3; ++i)
         {
             LLGL::ComputePipelineDescriptor pipelineDesc;
             {
+                pipelineDesc.debugName      = psoDebugNames[i];
                 pipelineDesc.pipelineLayout = computeLayout;
                 pipelineDesc.computeShader  = computeShaders[i];
             }
@@ -496,6 +498,7 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.debugName                      = "Scene.PSO";
             pipelineDesc.pipelineLayout                 = graphicsLayout;
             pipelineDesc.vertexShader                   = graphicsShaderPipeline.vs;
             pipelineDesc.fragmentShader                 = graphicsShaderPipeline.ps;

@@ -656,7 +656,7 @@ class Example_HelloGame : public ExampleBase
                 const std::uint64_t offsetEnd = ((offset + sizePerSegment) / sizePerSegment) * sizePerSegment;
                 const std::uint64_t batchDataSize = std::min<std::uint64_t>(dataSize, offsetEnd - offset);
 
-                renderer.WriteBuffer(*segments[offset / sizePerSegment], offset % sizePerSegment, byteAlignedData, batchDataSize);
+                renderer.WriteBuffer(*segments[static_cast<std::size_t>(offset / sizePerSegment)], offset % sizePerSegment, byteAlignedData, batchDataSize);
 
                 byteAlignedData += batchDataSize;
                 offset += batchDataSize;
@@ -674,7 +674,7 @@ class Example_HelloGame : public ExampleBase
                 const std::uint64_t offsetEnd = ((offset + sizePerSegment) / sizePerSegment) * sizePerSegment;
                 const std::uint16_t batchDataSize = static_cast<std::uint16_t>(std::min<std::uint64_t>(dataSize, offsetEnd - offset));
 
-                cmdBuffer.UpdateBuffer(*segments[offset / sizePerSegment], offset % sizePerSegment, byteAlignedData, batchDataSize);
+                cmdBuffer.UpdateBuffer(*segments[static_cast<std::size_t>(offset / sizePerSegment)], offset % sizePerSegment, byteAlignedData, batchDataSize);
 
                 byteAlignedData += batchDataSize;
                 offset += batchDataSize;

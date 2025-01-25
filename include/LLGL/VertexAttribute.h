@@ -60,25 +60,25 @@ struct LLGL_EXPORT VertexAttribute
 
     //! Constructor for common vertex attribute information.
     VertexAttribute(
-        StringLiteral    name,
-        const Format     format,
-        std::uint32_t    location,
-        std::uint32_t    offset,
-        std::uint32_t    stride,
-        std::uint32_t    slot            = 0,
-        std::uint32_t    instanceDivisor = 0
+        StringLiteral   name,
+        const Format    format,
+        std::uint32_t   location,
+        std::uint32_t   offset,
+        std::uint32_t   stride,
+        std::uint32_t   slot            = 0,
+        std::uint32_t   instanceDivisor = 0
     );
 
     //! Constructor for the most vertex attribute information, including semantic index.
     VertexAttribute(
-        StringLiteral    semanticName,
-        std::uint32_t    semanticIndex,
-        const Format     format,
-        std::uint32_t    location,
-        std::uint32_t    offset,
-        std::uint32_t    stride,
-        std::uint32_t    slot            = 0,
-        std::uint32_t    instanceDivisor = 0
+        StringLiteral   semanticName,
+        std::uint32_t   semanticIndex,
+        const Format    format,
+        std::uint32_t   location,
+        std::uint32_t   offset,
+        std::uint32_t   stride,
+        std::uint32_t   slot            = 0,
+        std::uint32_t   instanceDivisor = 0
     );
 
     /**

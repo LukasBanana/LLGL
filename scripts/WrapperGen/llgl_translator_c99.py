@@ -63,7 +63,7 @@ class C99Translator(Translator):
         includeHeaders = translateIncludes(doc.typeDeps)
         if len(includeHeaders[0]) > 0 or len(includeHeaders[1]) > 0:
             for headers in includeHeaders:
-                for inc in headers:
+                for inc in sorted(headers):
                     self.statement(f'#include {inc}')
 
             for external in LLGLMeta.externals:

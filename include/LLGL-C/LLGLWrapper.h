@@ -11,9 +11,9 @@
 #define LLGL_C99_LLGLWRAPPER_H
 
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <LLGL-C/Types.h>
 
 #if __ANDROID__
