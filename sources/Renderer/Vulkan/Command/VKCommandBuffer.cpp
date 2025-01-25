@@ -580,6 +580,15 @@ void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
     }
 }
 
+void VKCommandBuffer::ResourceBarrier(
+    std::uint32_t       numBuffers,
+    Buffer* const *     buffers,
+    std::uint32_t       numTextures,
+    Texture* const *    textures)
+{
+    //TODO
+}
+
 /* ----- Render Passes ----- */
 
 void VKCommandBuffer::BeginRenderPass(

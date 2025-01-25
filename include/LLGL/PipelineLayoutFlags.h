@@ -195,12 +195,12 @@ struct BindingDescriptor
 
     //! Constructors with all attributes.
     inline BindingDescriptor(
-        StringLiteral         name,
-        ResourceType          type,
-        long                  bindFlags,
-        long                  stageFlags,
-        const BindingSlot&    slot,
-        std::uint32_t         arraySize = 0)
+        StringLiteral       name,
+        ResourceType        type,
+        long                bindFlags,
+        long                stageFlags,
+        const BindingSlot&  slot,
+        std::uint32_t       arraySize = 0)
     :
         name       { std::move(name) },
         type       { type            },
@@ -336,9 +336,9 @@ struct UniformDescriptor
 
     //! Initializes the uniform descriptor with a name, type, and optional array size.
     inline UniformDescriptor(
-        StringLiteral    name,
-        UniformType      type,
-        std::uint32_t    arraySize = 0)
+        StringLiteral   name,
+        UniformType     type,
+        std::uint32_t   arraySize = 0)
     :
         name      { std::move(name) },
         type      { type            },
@@ -530,9 +530,11 @@ struct PipelineLayoutDescriptor
 
     /**
     \brief Specifies optional resource barrier flags. By default 0.
-    \remarks If the barrier flags are non-zero, they will be applied before any resource are bound to the graphics/compute pipeline.
+    \remarks If the barrier flags are non-zero, they will be applied to all affected resources before each draw and compute command.
     This should be used when a resource is bound to the pipeline that was previously written to.
+    A more fine-grained alternative is to explicitly insert barriers via the CommandBuffer::ResourceBarier command.
     \see BarrierFlags
+    \see CommandBuffer::ResourceBarier
     */
     long                                            barrierFlags            = 0;
 };

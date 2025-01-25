@@ -343,6 +343,18 @@ static int GetDescriptorTypeShift(D3D12_DESCRIPTOR_RANGE_TYPE type)
     return (type == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER ? 1 : 0);
 }
 
+static bool MatchBindingWithBarrierFlags(const BindingDescriptor& bindingDesc, long barrierFlags)
+{
+    if ((bindingDesc.bindFlags & BindFlags::Storage) != 0)
+    {
+        if (bindingDesc.type == ResourceType::Buffer)
+            return ((barrierFlags & BarrierFlags::StorageBuffer) != 0);
+        if (bindingDesc.type == ResourceType::Texture)
+            return ((barrierFlags & BarrierFlags::StorageTexture) != 0);
+    }
+    return false;
+}
+
 void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
     D3D12RootSignature&             rootSignature,
     D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
@@ -373,7 +385,10 @@ void D3D12PipelineLayout::BuildHeapRootParameterTableEntry(
     outLocation.state = GetD3D12BindingResourceState(bindingDesc);
 
     /* Cache binding flags in the same order root parameters are build */
-    descriptorHeapLayout_.GetDescriptorLocation(descRangeType, outLocation);
+    if (MatchBindingWithBarrierFlags(bindingDesc, GetBarrierFlags()))
+        descriptorHeapLayout_.GetDescriptorLocation(descRangeType, outLocation, numUAVBarriers_++);
+    else
+        descriptorHeapLayout_.GetDescriptorLocation(descRangeType, outLocation);
 }
 
 static bool CanResourceHaveRootParameter(const ResourceType resourceType, long bindFlags)
@@ -458,7 +473,10 @@ void D3D12PipelineLayout::BuildRootParameterTableEntry(
     outLocation.state = GetD3D12BindingResourceState(bindingDesc);
 
     /* Cache binding flags in the same order root parameters are build */
-    descriptorLayout_.GetDescriptorLocation(descRangeType, outLocation);
+    if (MatchBindingWithBarrierFlags(bindingDesc, GetBarrierFlags()))
+        descriptorLayout_.GetDescriptorLocation(descRangeType, outLocation, numUAVBarriers_++);
+    else
+        descriptorLayout_.GetDescriptorLocation(descRangeType, outLocation);
 }
 
 void D3D12PipelineLayout::BuildRootParameters(
@@ -525,18 +543,20 @@ void D3D12PipelineLayout::BuildStaticSamplers(
  * D3D12RootSignatureLayout struct
  */
 
-void D3D12RootSignatureLayout::GetDescriptorLocation(D3D12_DESCRIPTOR_RANGE_TYPE descRangeType, D3D12DescriptorHeapLocation& outLocation) const
+void D3D12RootSignatureLayout::GetDescriptorLocation(D3D12_DESCRIPTOR_RANGE_TYPE descRangeType, D3D12DescriptorHeapLocation& outLocation, UINT uavBarrierSlot) const
 {
     outLocation.type = descRangeType;
     if (descRangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
     {
-        outLocation.heap    = 1;
-        outLocation.index   = SumSamplers();
+        outLocation.heap            = 1;
+        outLocation.descriptorIndex = SumSamplers();
+        outLocation.uavBarrierIndex = ~0u;
     }
     else
     {
-        outLocation.heap    = 0;
-        outLocation.index   = SumResourceViews();
+        outLocation.heap            = 0;
+        outLocation.descriptorIndex = SumResourceViews();
+        outLocation.uavBarrierIndex = uavBarrierSlot;
     }
 }
 

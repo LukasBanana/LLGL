@@ -249,7 +249,7 @@ DEF_TEST( CommandBufferMultiThreading )
         Log::Printf("Thread exit order:  [%s] %s (Submission: %.4f ms)\n", frameNo.c_str(), exitOrder.c_str(), submissionTime);
     }
 
-    if (frame < numFrames)
+    if (frame + 1 < numFrames)
         return TestResult::Continue;
 
     avgEncodingTime /= numFrames;

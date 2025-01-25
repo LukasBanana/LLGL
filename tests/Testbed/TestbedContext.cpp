@@ -21,33 +21,7 @@
 
 static constexpr const char* g_defaultOutputDir = "Output/";
 
-// Returns true of the specified list of (generic) arguments contains the search string
-static bool HasArgument(int argc, char* argv[], const char* search, const char** value = nullptr)
-{
-    const std::size_t searchLen = ::strlen(search);
-    for (int i = 0; i < argc; ++i)
-    {
-        if (value != nullptr)
-        {
-            if (::strcmp(argv[i], search) == 0)
-            {
-                *value = "";
-                return true;
-            }
-            if (::strncmp(argv[i], search, searchLen) == 0 && argv[i][searchLen] == '=')
-            {
-                *value = argv[i] + searchLen + 1;
-                return true;
-            }
-        }
-        else
-        {
-            if (::strcmp(argv[i], search) == 0)
-                return true;
-        }
-    }
-    return false;
-}
+bool HasProgramArgument(int argc, char* argv[], const char* search, const char** outValue = nullptr);
 
 static std::string FindOutputDir(int argc, char* argv[])
 {
@@ -126,13 +100,13 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
 {
     // Check for debug options
     const char* debugValue              = "";
-    const bool  isDebugMode             = (HasArgument(argc, argv, "-d", &debugValue) || HasArgument(argc, argv, "--debug", &debugValue));
+    const bool  isDebugMode             = (HasProgramArgument(argc, argv, "-d", &debugValue) || HasProgramArgument(argc, argv, "--debug", &debugValue));
     const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
     const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
     const bool  isGpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "gpu") == 0);
-    const bool  preferAMD               = HasArgument(argc, argv, "--amd");
-    const bool  preferIntel             = HasArgument(argc, argv, "--intel");
-    const bool  preferNVIDIA            = HasArgument(argc, argv, "--nvidia");
+    const bool  preferAMD               = HasProgramArgument(argc, argv, "--amd");
+    const bool  preferIntel             = HasProgramArgument(argc, argv, "--intel");
+    const bool  preferNVIDIA            = HasProgramArgument(argc, argv, "--nvidia");
 
     // Configure render system
     RendererConfigurationOpenGL cfgGL;
@@ -358,6 +332,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( PipelineCaching             );
     RUN_TEST( ShaderErrors                );
     RUN_TEST( SamplerBuffer               );
+    RUN_TEST( BarrierReadAfterWrite       );
 
     // Run all rendering tests
     RUN_TEST( DepthBuffer                 );
@@ -860,12 +835,12 @@ TestbedContext::Options TestbedContext::ParseOptions(int argc, char* argv[])
 {
     Options opt;
     opt.outputDir       = GetSanitizedOutputDir(argc, argv);
-    opt.verbose         = (HasArgument(argc, argv, "-v") || HasArgument(argc, argv, "--verbose"));
-    opt.pedantic        = (HasArgument(argc, argv, "-p") || HasArgument(argc, argv, "--pedantic"));
-    opt.greedy          = (HasArgument(argc, argv, "-g") || HasArgument(argc, argv, "--greedy"));
-    opt.sanityCheck     = (HasArgument(argc, argv, "-s") || HasArgument(argc, argv, "--sanity-check"));
-    opt.showTiming      = (HasArgument(argc, argv, "-t") || HasArgument(argc, argv, "--timing"));
-    opt.fastTest        = (HasArgument(argc, argv, "-f") || HasArgument(argc, argv, "--fast"));
+    opt.verbose         = (HasProgramArgument(argc, argv, "-v") || HasProgramArgument(argc, argv, "--verbose"));
+    opt.pedantic        = (HasProgramArgument(argc, argv, "-p") || HasProgramArgument(argc, argv, "--pedantic"));
+    opt.greedy          = (HasProgramArgument(argc, argv, "-g") || HasProgramArgument(argc, argv, "--greedy"));
+    opt.sanityCheck     = (HasProgramArgument(argc, argv, "-s") || HasProgramArgument(argc, argv, "--sanity-check"));
+    opt.showTiming      = (HasProgramArgument(argc, argv, "-t") || HasProgramArgument(argc, argv, "--timing"));
+    opt.fastTest        = (HasProgramArgument(argc, argv, "-f") || HasProgramArgument(argc, argv, "--fast"));
     opt.resolution      = { g_testbedWinSize[0], g_testbedWinSize[1] };
     opt.selectedTests   = FindSelectedTests(argc, argv);
     return opt;
@@ -950,6 +925,7 @@ bool TestbedContext::LoadShaders()
         shaders[VSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSCombinedSamplers] = LoadShaderFromFile("CombinedSamplers.hlsl",      ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.hlsl",         ShaderType::Compute,         "CSMain",  "cs_5_0");
+        shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.hlsl",        ShaderType::Compute,         "CSMain",  "cs_5_0");
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::GLSL))
     {
@@ -982,6 +958,7 @@ bool TestbedContext::LoadShaders()
             shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.frag",   ShaderType::Fragment);
             shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.450core.comp",   ShaderType::Compute);
             shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp",     ShaderType::Compute);
+            shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.450core.comp",    ShaderType::Compute);
         }
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.330core.vert",           ShaderType::Vertex,   nullptr, nullptr, nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.330core.frag",           ShaderType::Fragment);
@@ -1048,6 +1025,8 @@ bool TestbedContext::LoadShaders()
         shaders[DSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.tese.xfb.spv",      ShaderType::TessEvaluation,  nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
         shaders[GSStreamOutputXfb]  = LoadShaderFromFile("StreamOutput.450core.geom.xfb.spv",      ShaderType::Geometry,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
         shaders[PSStreamOutput]     = LoadShaderFromFile("StreamOutput.450core.frag.spv",          ShaderType::Fragment,        nullptr, nullptr, nullptr, VertFmtColored, VertFmtColoredSO);
+        shaders[CSSamplerBuffer]    = LoadShaderFromFile("SamplerBuffer.450core.comp.spv",         ShaderType::Compute);
+        shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.450core.comp.spv",        ShaderType::Compute);
     }
     else
     {

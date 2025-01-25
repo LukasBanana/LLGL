@@ -166,6 +166,8 @@ class TestbedContext
 
             CSSamplerBuffer,
 
+            CSReadAfterWrite,
+
             ShaderCount,
         };
 

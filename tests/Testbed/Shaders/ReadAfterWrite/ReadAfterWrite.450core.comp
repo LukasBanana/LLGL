@@ -1,0 +1,46 @@
+// Cross compiled with SPIRV-Cross from ReadAfterWrite.hlsl
+// DO NOT EDIT
+
+#version 450
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+#ifndef ENABLE_SPIRV
+#define ENABLE_SPIRV 0
+#endif
+
+struct Entry
+{
+    uint a;
+    uint b;
+};
+
+layout(binding = 1, std430) buffer type_RWStructuredBuffer_Entry
+{
+    Entry _m0[];
+} buf2;
+
+#if ENABLE_SPIRV
+layout(push_constant) uniform Globals
+{
+    uint readPos;
+    uint writePos;
+};
+#else
+uniform uint readPos;
+uniform uint writePos;
+#endif
+
+layout(binding = 0, r32ui) uniform uimageBuffer buf1;
+layout(binding = 2, r32ui) uniform uimage1D tex1;
+layout(binding = 3, rg32ui) uniform uimage2D tex2;
+
+void main()
+{
+    uint _38 = readPos + gl_GlobalInvocationID.x;
+    uint _44 = writePos + gl_GlobalInvocationID.x;
+    imageStore(buf1, int(_44), uvec4(imageLoad(buf1, int(_38)).x));
+    buf2._m0[_44] = buf2._m0[_38];
+    imageStore(tex1, int(_44), uvec4(imageLoad(tex1, int(_38)).x));
+    imageStore(tex2, ivec2(uvec2(_44, 0u)), imageLoad(tex2, ivec2(uvec2(_38, 0u))).xy.xyyy);
+}
+

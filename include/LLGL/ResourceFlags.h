@@ -114,6 +114,8 @@ struct BindFlags
         \brief The resource can be used to bind a buffer or texture for unordered read/write access.
         \remarks This can be used for Buffer resources (e.g. \c buffer in GLSL, or \c RWStructuredBuffer in HLSL) and
         Texture resources (e.g. \c image2D in GLSL, or \c RWTexture2D in HLSL).
+        \see CommandBuffer::ResourceBarrier
+        \see PipelineLayoutDescriptor::barrierFlags
         */
         Storage                 = (1 << 6),
 

@@ -793,6 +793,15 @@ void D3D11PrimaryCommandBuffer::SetResource(std::uint32_t descriptor, Resource& 
     (void)context_.SetResource(descriptor, resource);
 }
 
+void D3D11PrimaryCommandBuffer::ResourceBarrier(
+    std::uint32_t       /*numBuffers*/,
+    Buffer* const *     /*buffers*/,
+    std::uint32_t       /*numTextures*/,
+    Texture* const *    /*textures*/)
+{
+    // dummy
+}
+
 /* ----- Render Passes ----- */
 
 void D3D11PrimaryCommandBuffer::BeginRenderPass(

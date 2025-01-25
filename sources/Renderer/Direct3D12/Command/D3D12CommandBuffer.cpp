@@ -619,7 +619,7 @@ void D3D12CommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32
 
     /* Insert resource barriers for the specified descriptor set */
     resourceHeapD3D.TransitionResources(commandContext_, descriptorSet);
-    resourceHeapD3D.InsertUAVBarriers(GetNative(), descriptorSet);
+    resourceHeapD3D.InsertUAVBarriers(commandContext_, descriptorSet);
 }
 
 /*
@@ -645,6 +645,8 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     if (!(descriptor < boundPipelineLayout_->GetNumBindings()))
         return /*E_INVALIDARG*/;
 
+    const D3D12DescriptorHeapLocation& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
+
     const D3D12DescriptorLocation& rootParameterLocation = boundPipelineLayout_->GetRootParameterMap()[descriptor];
     if (rootParameterLocation.type != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
     {
@@ -665,9 +667,35 @@ void D3D12CommandBuffer::SetResource(std::uint32_t descriptor, Resource& resourc
     else
     {
         /* Transition resource into target state and bind resource with staging descriptor heap */
-        const D3D12DescriptorHeapLocation& descriptorLocation = boundPipelineLayout_->GetDescriptorMap()[descriptor];
         SubmitTransitionResource(resource, descriptorLocation.state);
-        commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation.index, descriptorLocation.type);
+        commandContext_.EmplaceDescriptorForStaging(resource, descriptorLocation);
+    }
+
+    commandContext_.SetResourceUAVBarrier(resource, descriptorLocation);
+}
+
+void D3D12CommandBuffer::ResourceBarrier(
+    std::uint32_t       numBuffers,
+    Buffer* const *     buffers,
+    std::uint32_t       numTextures,
+    Texture* const *    textures)
+{
+    for_range(i, numBuffers)
+    {
+        if (buffers[i] != nullptr)
+        {
+            auto* bufferD3D = LLGL_CAST(D3D12Buffer*, buffers[i]);
+            commandContext_.UAVBarrier(bufferD3D->GetResource().Get());
+        }
+    }
+
+    for_range(i, numTextures)
+    {
+        if (textures[i] != nullptr)
+        {
+            auto* textureD3D = LLGL_CAST(D3D12Texture*, textures[i]);
+            commandContext_.UAVBarrier(textureD3D->GetResource().Get());
+        }
     }
 }
 
@@ -758,11 +786,13 @@ void D3D12CommandBuffer::SetPipelineState(PipelineState& pipelineState)
             boundPipelineLayout_->GetDescriptorHeapSetLayout(),
             boundPipelineLayout_->GetRootParameterIndices()
         );
+        commandContext_.ResetUAVBarriers(boundPipelineLayout_->GetNumUAVBarriers());
     }
     else
     {
         /* Reset staging descriptor layout to avoid undefined behavior in next Flush*StagingDescriptorTables() call */
         commandContext_.SetStagingDescriptorHeaps({}, {});
+        commandContext_.ResetUAVBarriers(0);
     }
 }
 

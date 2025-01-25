@@ -169,6 +169,69 @@ namespace LLGL
             NativeLLGL.SetResource(descriptor, resource.NativeBase);
         }
 
+        public void ResourceBarrier(Buffer[] buffers, Texture[] textures)
+        {
+            if (buffers.Length > 0 && textures.Length > 0)
+            {
+                var nativeBuffers = new NativeLLGL.Buffer[buffers.Length];
+                var nativeTextures = new NativeLLGL.Texture[textures.Length];
+
+                for (int i = 0; i < buffers.Length; ++i)
+                {
+                    nativeBuffers[i] = buffers[i].Native;
+                }
+                for (int i = 0; i < textures.Length; ++i)
+                {
+                    nativeTextures[i] = textures[i].Native;
+                }
+
+                unsafe
+                {
+                    fixed (NativeLLGL.Buffer* nativeBuffersPtr = nativeBuffers)
+                    {
+                        fixed (NativeLLGL.Texture* nativeTexturesPtr = nativeTextures)
+                        {
+                            NativeLLGL.ResourceBarrier(nativeBuffers.Length, nativeBuffersPtr, nativeTextures.Length, nativeTexturesPtr);
+                        }
+                    }
+                }
+            }
+            else if (buffers.Length > 0)
+            {
+                var nativeBuffers = new NativeLLGL.Buffer[buffers.Length];
+
+                for (int i = 0; i < buffers.Length; ++i)
+                {
+                    nativeBuffers[i] = buffers[i].Native;
+                }
+
+                unsafe
+                {
+                    fixed (NativeLLGL.Buffer* nativeBuffersPtr = nativeBuffers)
+                    {
+                        NativeLLGL.ResourceBarrier(nativeBuffers.Length, nativeBuffersPtr, 0, null);
+                    }
+                }
+            }
+            else if (textures.Length > 0)
+            {
+                var nativeTextures = new NativeLLGL.Texture[textures.Length];
+
+                for (int i = 0; i < textures.Length; ++i)
+                {
+                    nativeTextures[i] = textures[i].Native;
+                }
+
+                unsafe
+                {
+                    fixed (NativeLLGL.Texture* nativeTexturesPtr = nativeTextures)
+                    {
+                        NativeLLGL.ResourceBarrier(0, null, nativeTextures.Length, nativeTexturesPtr);
+                    }
+                }
+            }
+        }
+
         [Obsolete("LLGL.CommandBuffer.ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")]
         public void ResetResourceSlots(ResourceType resourceType, int firstSlot, int numSlots, BindFlags bindFlags, StageFlags stageFlags)
         {

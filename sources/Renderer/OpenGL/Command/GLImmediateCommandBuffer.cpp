@@ -364,6 +364,17 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
     }
 }
 
+void GLImmediateCommandBuffer::ResourceBarrier(
+    std::uint32_t       numBuffers,
+    Buffer* const *     buffers,
+    std::uint32_t       numTextures,
+    Texture* const *    textures)
+{
+    #if LLGL_GLEXT_MEMORY_BARRIERS
+    InvalidateMemoryBarriersForResources(numBuffers, buffers, numTextures, textures);
+    #endif
+}
+
 // private
 void GLImmediateCommandBuffer::BindResource(GLResourceType type, GLuint slot, std::uint32_t descriptor, Resource& resource)
 {

@@ -65,6 +65,7 @@ DECL_TEST( PipelineCaching );
 DECL_TEST( ShaderErrors );
 DECL_TEST( SamplerBuffer );
 DECL_TEST( NativeHandle );
+DECL_TEST( BarrierReadAfterWrite );
 
 // Rendering tests
 DECL_TEST( DepthBuffer );

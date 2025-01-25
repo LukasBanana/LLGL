@@ -17,6 +17,13 @@ virtual void SetResource(
     LLGL::Resource&             resource
 ) override final;
 
+virtual void ResourceBarrier(
+    std::uint32_t               numBuffers,
+    LLGL::Buffer* const *       buffers,
+    std::uint32_t               numTextures,
+    LLGL::Texture* const *      textures
+) override final;
+
 
 
 // ================================================================================

@@ -685,6 +685,66 @@ void DbgCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
     }
 }
 
+void DbgCommandBuffer::ResourceBarrier(
+    std::uint32_t       numBuffers,
+    Buffer* const *     buffers,
+    std::uint32_t       numTextures,
+    Texture* const *    textures)
+{
+    SmallVector<Buffer*> bufferInstances;
+    SmallVector<Texture*> textureInstances;
+
+    bufferInstances.resize(numBuffers);
+    textureInstances.resize(numTextures);
+
+    if (LLGL_DBG_SOURCE())
+    {
+        /* Gather resource instances and validate their binding flags */
+        for_range(i, numBuffers)
+        {
+            if (buffers[i] != nullptr)
+            {
+                DbgBuffer* bufferDbg = LLGL_CAST(DbgBuffer*, buffers[i]);
+                ValidateMemoryBarrierResourceFlags(ResourceType::Buffer, bufferDbg->GetBindFlags(), bufferDbg->label, i);
+                bufferInstances[i] = &(bufferDbg->instance);
+            }
+        }
+
+        for_range(i, numTextures)
+        {
+            if (textures[i] != nullptr)
+            {
+                DbgTexture* textureDbg = LLGL_CAST(DbgTexture*, textures[i]);
+                ValidateMemoryBarrierResourceFlags(ResourceType::Texture, textureDbg->GetBindFlags(), textureDbg->label, i);
+                textureInstances[i] = &(textureDbg->instance);
+            }
+        }
+    }
+    else
+    {
+        /* Only gather resource instances */
+        for_range(i, numBuffers)
+        {
+            if (buffers[i] != nullptr)
+            {
+                DbgBuffer* bufferDbg = LLGL_CAST(DbgBuffer*, buffers[i]);
+                bufferInstances[i] = &(bufferDbg->instance);
+            }
+        }
+
+        for_range(i, numTextures)
+        {
+            if (textures[i] != nullptr)
+            {
+                DbgTexture* textureDbg = LLGL_CAST(DbgTexture*, textures[i]);
+                textureInstances[i] = &(textureDbg->instance);
+            }
+        }
+    }
+
+    LLGL_DBG_COMMAND( "ResourceBarrier", instance.ResourceBarrier(numBuffers, bufferInstances.data(), numTextures, textureInstances.data()) );
+}
+
 /* ----- Render Passes ----- */
 
 void DbgCommandBuffer::BeginRenderPass(
@@ -2026,7 +2086,7 @@ void DbgCommandBuffer::ValidateIndexType(const Format format)
         if (const char* formatName = ToString(format))
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid index buffer format: LLGL::Format::%s", formatName);
         else
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: %s", IntToHex(static_cast<std::uint32_t>(format)));
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "unknown index buffer format: 0x%08X", static_cast<unsigned>(format));
     }
 }
 
@@ -2062,6 +2122,19 @@ void DbgCommandBuffer::ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, 
                 layerStride, rowStride
             );
         }
+    }
+}
+
+void DbgCommandBuffer::ValidateMemoryBarrierResourceFlags(ResourceType resourceType, long bindFlags, const std::string& label, std::uint32_t resourceIndex)
+{
+    if ((bindFlags & BindFlags::Storage) == 0)
+    {
+        const std::string labelStr = (label.empty() ? "" : " '" + label + '\'');
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "memory barrier for buffer resource [%u]%s without binding flag LLGL::BindFlags::Storage",
+            resourceIndex, labelStr.c_str()
+        );
     }
 }
 

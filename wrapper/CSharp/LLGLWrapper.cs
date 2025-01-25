@@ -4530,6 +4530,9 @@ namespace LLGL
         [DllImport(DllName, EntryPoint="llglSetResource", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void SetResource(int descriptor, Resource resource);
 
+        [DllImport(DllName, EntryPoint="llglResourceBarrier", CallingConvention=CallingConvention.Cdecl)]
+        public static extern unsafe void ResourceBarrier(int numBuffers, Buffer* buffers, int numTextures, Texture* textures);
+
         [DllImport(DllName, EntryPoint="llglResetResourceSlots", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void ResetResourceSlots(ResourceType resourceType, int firstSlot, int numSlots, int bindFlags, int stageFlags);
 

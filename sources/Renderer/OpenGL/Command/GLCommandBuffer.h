@@ -52,6 +52,12 @@ class GLCommandBuffer : public CommandBuffer
         // Invalidates the specified memory barrier bits.
         void InvalidateMemoryBarriers(GLbitfield barriers);
         void InvalidateMemoryBarriersForStorageResource(long resourceBindFlags, GLbitfield barriers);
+        void InvalidateMemoryBarriersForResources(
+            std::uint32_t       numBuffers,
+            Buffer* const *     buffers,
+            std::uint32_t       numTextures,
+            Texture* const *    textures
+        );
 
         // Flush any invalidated memory barriers().
         LLGL_NODISCARD

@@ -30,9 +30,10 @@ class D3D12RootSignature;
 // Resource view descriptor to root parameter table mapping structure (for D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE).
 struct D3D12DescriptorHeapLocation
 {
-    D3D12_DESCRIPTOR_RANGE_TYPE type;
-    UINT                        heap  :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
-    UINT                        index : 31; // Descriptor index within its descriptor heap
+    D3D12_DESCRIPTOR_RANGE_TYPE type            :  4;
+    UINT                        heap            :  1; // Descriptor heap index (0 = SBC/SRV/UAV, 1 = Sampler)
+    UINT                        uavBarrierIndex : 13;
+    UINT                        descriptorIndex : 14; // Descriptor index within its descriptor heap
     D3D12_RESOURCE_STATES       state;      // Target resource state
 };
 
@@ -63,7 +64,7 @@ struct D3D12RootSignatureLayout
     UINT numSamplers    = 0;
 
     // Returns the current descriptor location for the specified descriptor range type.
-    void GetDescriptorLocation(D3D12_DESCRIPTOR_RANGE_TYPE descRangeType, D3D12DescriptorHeapLocation& outLocation) const;
+    void GetDescriptorLocation(D3D12_DESCRIPTOR_RANGE_TYPE descRangeType, D3D12DescriptorHeapLocation& outLocation, UINT uavBarrierSlot = ~0u) const;
 
     // Returns the sum of all CBV and SRV subresource views.
     inline UINT SumCBVsAndSRVs() const
@@ -205,6 +206,12 @@ class D3D12PipelineLayout final : public PipelineLayout
             return barrierFlags_;
         }
 
+        // Returns the total number of implicit UAV barriers required for this PSO layout.
+        inline UINT GetNumUAVBarriers() const
+        {
+            return numUAVBarriers_;
+        }
+
     private:
 
         void BuildRootSignature(
@@ -288,6 +295,7 @@ class D3D12PipelineLayout final : public PipelineLayout
         std::vector<UniformDescriptor>              uniforms_;
 
         long                                        barrierFlags_           = 0;
+        UINT                                        numUAVBarriers_         = 0;
 
 };
 

@@ -37,6 +37,7 @@ LLGL_C_EXPORT void llglSetIndexBuffer(LLGLBuffer buffer);
 LLGL_C_EXPORT void llglSetIndexBufferExt(LLGLBuffer buffer, LLGLFormat format, uint64_t offset);
 LLGL_C_EXPORT void llglSetResourceHeap(LLGLResourceHeap resourceHeap, uint32_t descriptorSet);
 LLGL_C_EXPORT void llglSetResource(uint32_t descriptor, LLGLResource resource);
+LLGL_C_EXPORT void llglResourceBarrier(uint32_t numBuffers, const LLGLBuffer* buffers, uint32_t numTextures, const LLGLTexture* textures);
 //LLGL_DEPRECATED("llglResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")
 LLGL_C_EXPORT void llglResetResourceSlots(LLGLResourceType resourceType, uint32_t firstSlot, uint32_t numSlots, long bindFlags, long stageFlags);
 LLGL_C_EXPORT void llglBeginRenderPass(LLGLRenderTarget renderTarget);

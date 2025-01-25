@@ -164,11 +164,11 @@ class D3D12CommandContext
             UINT                        numDescriptors
         );
 
-        void EmplaceDescriptorForStaging(
-            Resource&                   resource,
-            UINT                        location,
-            D3D12_DESCRIPTOR_RANGE_TYPE descRangeType
-        );
+        void EmplaceDescriptorForStaging(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation);
+
+        void ResetUAVBarriers(UINT numUAVBarriers);
+        void SetResourceUAVBarrier(ID3D12Resource* resource, UINT uavBarrierSlot);
+        void SetResourceUAVBarrier(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation);
 
         void DrawInstanced(
             UINT vertexCountPerInstance,
@@ -227,6 +227,12 @@ class D3D12CommandContext
         inline bool HasCachedResourceStates() const
         {
             return !cachedResourceStates_.empty();
+        }
+
+        // Returns true if the current PSO has implicit UAV barriers.
+        inline bool HasUAVBarriersInPSO() const
+        {
+            return (numUAVBarriers_ > 0);
         }
 
     private:
@@ -308,6 +314,9 @@ class D3D12CommandContext
 
         D3D12_RESOURCE_BARRIER                  resourceBarriers_[maxNumResourceBarrieres];
         UINT                                    numResourceBarriers_                        = 0;
+
+        std::vector<D3D12_RESOURCE_BARRIER>     uavBarriers_;
+        UINT                                    numUAVBarriers_                             = 0;
 
         bool                                    doCacheResourceStates_                      = false;
         std::vector<D3D12ResourceTransitionExt> cachedResourceStates_; // Last recorded resource states for multi-submit command buffers

@@ -538,6 +538,17 @@ void GLDeferredCommandBuffer::BindCombinedResource(GLResourceType type, const GL
     }
 }
 
+void GLDeferredCommandBuffer::ResourceBarrier(
+    std::uint32_t       numBuffers,
+    Buffer* const *     buffers,
+    std::uint32_t       numTextures,
+    Texture* const *    textures)
+{
+    #if LLGL_GLEXT_MEMORY_BARRIERS
+    InvalidateMemoryBarriersForResources(numBuffers, buffers, numTextures, textures);
+    #endif
+}
+
 /* ----- Render Passes ----- */
 
 void GLDeferredCommandBuffer::BeginRenderPass(

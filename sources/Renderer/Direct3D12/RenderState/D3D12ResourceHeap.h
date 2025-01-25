@@ -55,7 +55,7 @@ class D3D12ResourceHeap final : public ResourceHeap
         void TransitionResources(D3D12CommandContext& context, std::uint32_t descriptorSet);
 
         // Inserts the resource barriers for the specified descritpor set into the command list.
-        void InsertUAVBarriers(ID3D12GraphicsCommandList* commandList, std::uint32_t descriptorSet);
+        void InsertUAVBarriers(D3D12CommandContext& context, std::uint32_t descriptorSet);
 
         // Returns the CPU descriptor handle for heap start of the specified descriptor set.
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForHeapStart(D3D12_DESCRIPTOR_HEAP_TYPE heapType, std::uint32_t descriptorSet) const;
@@ -90,22 +90,18 @@ class D3D12ResourceHeap final : public ResourceHeap
         void ExchangeUAVResource(
             const D3D12DescriptorHeapLocation&  descriptorLocation,
             std::uint32_t                       descriptorSet,
-            Resource&                           resource,
-            std::uint32_t                       (&setRange)[2]
+            Resource&                           resource
         );
 
         void EmplaceD3DUAVResource(
             const D3D12DescriptorHeapLocation&  descriptorLocation,
             std::uint32_t                       descriptorSet,
-            ID3D12Resource*                     resource,
-            std::uint32_t                       (&setRange)[2]
+            ID3D12Resource*                     resource
         );
-
-        void UpdateBarriers(std::uint32_t descriptorSet);
 
         inline bool HasUAVBarriers() const
         {
-            return (barrierStride_ > 0);
+            return (uavResourceSetStride_ > 0);
         }
 
     private:
@@ -123,8 +119,6 @@ class D3D12ResourceHeap final : public ResourceHeap
         std::vector<ID3D12Resource*>                uavResourceHeap_;                   // Heap of UAV resources that require a barrier
         UINT                                        uavResourceSetStride_       = 0;    // Number of (potential) UAV resources per descriptor set
         UINT                                        uavResourceIndexOffset_     = 0;    // Subtracted offset for 'D3D12DescriptorHeapLocation::index'
-        std::vector<char>                           barriers_;                          // Packed buffer for dyanmic struct { UINT N; D3D12_RESOURCE_BARRIER[N]; }
-        UINT                                        barrierStride_              = 0;
 
 };
 

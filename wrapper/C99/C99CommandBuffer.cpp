@@ -134,6 +134,40 @@ LLGL_C_EXPORT void llglSetResource(uint32_t descriptor, LLGLResource resource)
     g_CurrentCmdBuf->SetResource(descriptor, LLGL_REF(Resource, resource));
 }
 
+LLGL_C_EXPORT void llglResourceBarrier(uint32_t numBuffers, const LLGLBuffer* buffers, uint32_t numTextures, const LLGLTexture* textures)
+{
+    constexpr uint32_t maxStaticArray = 64;
+    Buffer* internalBuffers[maxStaticArray];
+    Texture* internalTextures[maxStaticArray];
+    if (numBuffers <= maxStaticArray && numTextures <= maxStaticArray)
+    {
+        for_range(i, numBuffers)
+            internalBuffers[i] = LLGL_PTR(Buffer, buffers[i]);
+        for_range(i, numTextures)
+            internalTextures[i] = LLGL_PTR(Texture, textures[i]);
+        g_CurrentCmdBuf->ResourceBarrier(numBuffers, internalBuffers, numTextures, internalTextures);
+    }
+    else
+    {
+        while (numBuffers > 0 || numTextures > 0)
+        {
+            const uint32_t numBuffersPerBatch = std::min<uint32_t>(numBuffers, maxStaticArray);
+            for_range(i, numBuffersPerBatch)
+                internalBuffers[i] = LLGL_PTR(Buffer, buffers[i]);
+
+            const uint32_t numTexturesPerBatch = std::min<uint32_t>(numTextures, maxStaticArray);
+            for_range(i, numTexturesPerBatch)
+                internalTextures[i] = LLGL_PTR(Texture, textures[i]);
+
+            g_CurrentCmdBuf->ResourceBarrier(numBuffersPerBatch, internalBuffers, numTexturesPerBatch, internalTextures);
+
+            numBuffers -= numBuffersPerBatch;
+            buffers += numBuffersPerBatch;
+            textures += numTexturesPerBatch;
+        }
+    }
+}
+
 LLGL_C_EXPORT void llglResetResourceSlots(LLGLResourceType resourceType, uint32_t firstSlot, uint32_t numSlots, long bindFlags, long stageFlags)
 {
     // deprecated

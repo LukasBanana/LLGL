@@ -458,6 +458,51 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetResource(std::uint32_t descriptor, Resource& resource) = 0;
 
+        /**
+        \brief Inserts a resource memory barrier for the specified resources.
+
+        \param[in] numBuffers Specifies the number of buffer resources.
+        \param[in] buffers Array to the buffer resources. This must be a valid pointer to an array of \c numBuffers Buffer objects.
+        Null pointers within this array are silently ignored. Each resource that is non-null must have been created with the binding flag BindFlags::Storage.
+        \param[in] numTextures Specifies the number of texture resources.
+        \param[in] textures Array to the texture resources. This must be a valid pointer to an array of \c numTexture Texture objects.
+        Null pointers within this array are silently ignored. Each resource that is non-null must have been created with the binding flag BindFlags::Storage.
+
+        \remarks Explicit memory barriers are an alternative to pipeline layout barrier flags and can be used to fine-tune barriers
+        when draw, compute, or blit commands potentially access memory that was written to by previous shader innvocations.
+        They are not necessary if memory access between shader invocations is guaranteed to not overlap.
+        For example, one invocation writes the first half of a buffer and another invocation writes the second half.
+
+        \remarks Here is a code example how to use them:
+        \code
+        // Read 32 values from storageBufferA and write results to storageBufferB
+        cmdBuffer->SetResource(0, *storageBufferA);
+        cmdBuffer->SetResource(1, *storageBufferB);
+        cmdBuffer->Dispatch(32, 1, 1);
+
+        // Ensure all writes to storageBufferB are complete before next wave of compute kernels
+        cmdBuffer->ResourceBarrier(1, &storageBufferB, 0, nullptr);
+
+        // Now read previous results from storageBufferB and write new results to storageBufferA
+        // With the resource barrier, it is guaranteed that all results are available before
+        // any compute kernel will read from that buffer.
+        cmdBuffer->SetResource(0, *storageBufferB);
+        cmdBuffer->SetResource(1, *storageBufferA);
+        cmdBuffer->Dispatch(32, 1, 1);
+        \endcode
+
+        \see PipelineLayoutDescriptor::barrierFlags
+
+        \note Only supported with: Direct3D 12, Direct3D 11, OpenGL.
+        \todo Added support for Vulkan and Metal.
+        */
+        virtual void ResourceBarrier(
+            std::uint32_t       numBuffers,
+            Buffer* const *     buffers,
+            std::uint32_t       numTextures,
+            Texture* const *    textures
+        ) = 0;
+
         //! \deprecated Since 0.04b; No need to reset resource slots manually anymore!
         LLGL_DEPRECATED("CommandBuffer::ResetResourceSlots is deprecated since 0.04b; No need to reset resource slots manually anymore!")
         virtual void ResetResourceSlots(
@@ -494,7 +539,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         \param[in] swapBufferIndex Optional index into what swap-chain buffer the render pass is meant to be rendered.
         If this is equal to \c LLGL_CURRENT_SWAP_INDEX, the current buffer in the swap-chain is used.
-        Otherwise, this should be the current value returned by SwapChain::GetCurrentSwapIndex.
+        Otherwise, this should be the current value returned from SwapChain::GetCurrentSwapIndex
+        by the time this command buffer is submitted to the command queue.
         This parameter is ignored for regular render targets, i.e. if \c renderTarget is \e not a SwapChain.
 
         \remarks This function starts a new render pass section and must be ended with the \c EndRenderPass function.

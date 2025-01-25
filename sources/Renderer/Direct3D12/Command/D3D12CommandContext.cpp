@@ -299,8 +299,35 @@ void D3D12CommandContext::FlushResourceBarriers()
 {
     if (numResourceBarriers_ > 0)
     {
-        commandList_->ResourceBarrier(numResourceBarriers_, resourceBarriers_);
+        if (numUAVBarriers_ > 0)
+        {
+            /*
+            Merge UAV and transition barriers if possible since ResourceBarrier() command is expensive; From the D3D12 API docu:
+            "Transitions should be batched together into a single API call when possible, as a performance optimization."
+            */
+            if (numResourceBarriers_ + numUAVBarriers_ <= maxNumResourceBarrieres)
+            {
+                ::memcpy(&(resourceBarriers_[numResourceBarriers_]), uavBarriers_.data(), numUAVBarriers_ * sizeof(D3D12_RESOURCE_BARRIER));
+                commandList_->ResourceBarrier(numResourceBarriers_ + numUAVBarriers_, resourceBarriers_);
+            }
+            else
+            {
+                uavBarriers_.resize(numResourceBarriers_ + numUAVBarriers_);
+                ::memcpy(&(uavBarriers_[numUAVBarriers_]), resourceBarriers_, numResourceBarriers_ * sizeof(D3D12_RESOURCE_BARRIER));
+                commandList_->ResourceBarrier(numResourceBarriers_ + numUAVBarriers_, uavBarriers_.data());
+            }
+        }
+        else
+            commandList_->ResourceBarrier(numResourceBarriers_, resourceBarriers_);
+
+        /* Reset intermediate barriers */
         numResourceBarriers_ = 0;
+    }
+    else
+    {
+        /* Submit UAV barriers */
+        if (numUAVBarriers_ > 0)
+            commandList_->ResourceBarrier(numUAVBarriers_, uavBarriers_.data());
     }
 }
 
@@ -567,12 +594,47 @@ D3D12_GPU_DESCRIPTOR_HANDLE D3D12CommandContext::CopyDescriptorsForStaging(
     return descriptorHeapPool.CopyDescriptors(srcDescHandle, firstDescriptor, numDescriptors);
 }
 
-void D3D12CommandContext::EmplaceDescriptorForStaging(
-    Resource&                   resource,
-    UINT                        location,
-    D3D12_DESCRIPTOR_RANGE_TYPE descRangeType)
+void D3D12CommandContext::EmplaceDescriptorForStaging(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation)
 {
-    descriptorCaches_[currentAllocatorIndex_].EmplaceDescriptor(resource, location, descRangeType);
+    descriptorCaches_[currentAllocatorIndex_].EmplaceDescriptor(resource, descriptorLocation.descriptorIndex, descriptorLocation.type);
+}
+
+void D3D12CommandContext::ResetUAVBarriers(UINT numUAVBarriers)
+{
+    if (uavBarriers_.size() < numUAVBarriers)
+    {
+        D3D12_RESOURCE_BARRIER initialBarrier;
+        {
+            initialBarrier.Type             = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+            initialBarrier.Flags            = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            initialBarrier.UAV.pResource    = nullptr;
+        }
+        uavBarriers_.resize(numUAVBarriers, initialBarrier);
+    }
+    numUAVBarriers_ = numUAVBarriers;
+}
+
+void D3D12CommandContext::SetResourceUAVBarrier(ID3D12Resource* resource, UINT uavBarrierSlot)
+{
+    uavBarriers_[uavBarrierSlot].UAV.pResource = resource;
+}
+
+void D3D12CommandContext::SetResourceUAVBarrier(Resource& resource, const D3D12DescriptorHeapLocation& descriptorLocation)
+{
+    if (descriptorLocation.uavBarrierIndex < numUAVBarriers_)
+    {
+        const ResourceType resourceType = resource.GetResourceType();
+        if (resourceType == ResourceType::Buffer)
+        {
+            auto& bufferD3D = LLGL_CAST(D3D12Buffer&, resource);
+            SetResourceUAVBarrier(bufferD3D.GetNative(), descriptorLocation.uavBarrierIndex);
+        }
+        else if (resourceType == ResourceType::Texture)
+        {
+            auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
+            SetResourceUAVBarrier(textureD3D.GetNative(), descriptorLocation.uavBarrierIndex);
+        }
+    }
 }
 
 void D3D12CommandContext::DrawInstanced(
@@ -656,6 +718,8 @@ void D3D12CommandContext::ClearCache()
 
     /* Clear cached resource states */
     cachedResourceStates_.clear();
+
+    numUAVBarriers_ = 0;
 }
 
 D3D12_RESOURCE_BARRIER& D3D12CommandContext::NextResourceBarrier()

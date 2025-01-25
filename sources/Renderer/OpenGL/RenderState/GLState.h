@@ -156,7 +156,7 @@ struct GLRenderState
     const GLPipelineLayout* boundPipelineLayout     = nullptr;
     const GLPipelineState*  boundPipelineState      = nullptr;
     GLBufferWithXFB*        boundBufferWithFxb      = nullptr;
-    GLbitfield              activeBarriers          = 0;
+    GLbitfield              implicitBarriers        = 0;
     GLbitfield              dirtyBarriers           = 0;
 };
 

@@ -312,6 +312,15 @@ void NullCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource
     //todo
 }
 
+void NullCommandBuffer::ResourceBarrier(
+    std::uint32_t       /*numBuffers*/,
+    Buffer* const *     /*buffers*/,
+    std::uint32_t       /*numTextures*/,
+    Texture* const *    /*textures*/)
+{
+    // dummy
+}
+
 /* ----- Render Passes ----- */
 
 void NullCommandBuffer::BeginRenderPass(
