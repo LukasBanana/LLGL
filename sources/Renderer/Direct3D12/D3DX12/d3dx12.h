@@ -1304,8 +1304,8 @@ inline void MemcpySubresource(
 {
     for (UINT z = 0; z < NumSlices; ++z)
     {
-        BYTE* pDestSlice = static_cast<BYTE*>(pDest->pData) + pDest->SlicePitch * z;
-        const BYTE* pSrcSlice = static_cast<const BYTE*>(pSrc->pData) + pSrc->SlicePitch * z;
+        BYTE* pDestSlice = reinterpret_cast<BYTE*>(pDest->pData) + pDest->SlicePitch * z;
+        const BYTE* pSrcSlice = reinterpret_cast<const BYTE*>(pSrc->pData) + pSrc->SlicePitch * z;
         for (UINT y = 0; y < NumRows; ++y)
         {
             memcpy(pDestSlice + pDest->RowPitch * y,
