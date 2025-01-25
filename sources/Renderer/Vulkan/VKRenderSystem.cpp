@@ -10,6 +10,7 @@
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
 #include "Ext/VKExtensionRegistry.h"
+#include "LLGL/Format.h"
 #include "Memory/VKDeviceMemory.h"
 #include "../RenderSystemUtils.h"
 #include "../TextureUtils.h"
@@ -479,7 +480,9 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(bufferDesc.cpuAccessFlags)
     );
 
-    VKDeviceBuffer stagingBuffer = CreateTextureStagingBufferAndInitialize(stagingCreateInfo, extent, imageData, imageDataSize, srcImageView.rowStride, bytesPerPixel);
+    VKDeviceBuffer stagingBuffer = IsCompressedFormat(format)
+        ? CreateStagingBuffer(stagingCreateInfo)
+        : CreateTextureStagingBufferAndInitialize(stagingCreateInfo, extent, imageData, imageDataSize, srcImageView.rowStride, bytesPerPixel);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     VkCommandBuffer cmdBuffer = AllocCommandBuffer();
