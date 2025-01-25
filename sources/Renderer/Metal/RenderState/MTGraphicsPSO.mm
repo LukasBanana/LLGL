@@ -15,10 +15,10 @@
 #include "../../CheckedCast.h"
 #include "../../PipelineStateUtils.h"
 #include "../../../Core/ByteBufferIterator.h"
+#include "../../../Core/Assertion.h"
 #include <LLGL/PipelineStateFlags.h>
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
-#include <LLGL/Throw.h>
 #include <TargetConditionals.h>
 #include <string.h>
 
@@ -194,16 +194,16 @@ static const MTShader* GetVertexOrPostTessVertexShader(const GraphicsPipelineDes
     {
         vertexShaderMT = LLGL_CAST(const MTShader*, desc.tessEvaluationShader);
 
-        LLGL_THROW_IF(
-            vertexShaderMT == nullptr || !vertexShaderMT->IsPostTessellationVertex(),
-            std::invalid_argument("cannot create Metal tessellation pipeline without post-tessellation vertex shader (in 'tessEvaluationShader')")
+        LLGL_ASSERT(
+            vertexShaderMT != nullptr && vertexShaderMT->IsPostTessellationVertex(),
+            "cannot create Metal tessellation pipeline without post-tessellation vertex shader (in 'tessEvaluationShader')"
         );
     }
     else
     {
         vertexShaderMT = LLGL_CAST(const MTShader*, desc.vertexShader);
 
-        LLGL_THROW_IF(vertexShaderMT == nullptr, std::invalid_argument("cannot create Metal pipeline without vertex shader"));
+        LLGL_ASSERT(vertexShaderMT != nullptr, "cannot create Metal pipeline without vertex shader");
     }
     return vertexShaderMT;
 }
@@ -238,7 +238,7 @@ bool MTGraphicsPSO::CreateRenderPipelineState(
     else if (defaultRenderPass != nullptr)
         renderPassMT = defaultRenderPass;
     else
-        LLGL_THROW(std::invalid_argument("cannot create graphics pipeline without render pass"));
+        LLGL_TRAP("cannot create graphics pipeline without render pass");
 
     /* Create render pipeline state */
     MTLRenderPipelineDescriptor* psoDesc = [[MTLRenderPipelineDescriptor alloc] init];
@@ -301,7 +301,7 @@ bool MTGraphicsPSO::CreateRenderPipelineState(
                 MTThrowIfCreateFailed(error, "MTLComputePipelineState");
         }
         else
-            LLGL_THROW(std::invalid_argument("cannot create Metal tessellation pipeline without tessellation compute shader"));
+            LLGL_TRAP("cannot create Metal tessellation pipeline without tessellation compute shader");
     }
 
     return true;
