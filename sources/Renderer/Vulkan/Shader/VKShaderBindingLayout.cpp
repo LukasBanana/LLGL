@@ -175,7 +175,7 @@ std::uint32_t VKShaderBindingLayout::AssignBindingSlots(
 
 void VKShaderBindingLayout::UpdateSpirvModule(void* data, std::size_t size)
 {
-    auto* words = reinterpret_cast<std::uint32_t*>(data);
+    auto* words = static_cast<std::uint32_t*>(data);
     const std::size_t numWords = size/4;
 
     for (const ModuleBinding& binding : bindings_)

@@ -704,7 +704,7 @@ bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Vulkan::RenderSystemNativeHandle))
     {
-        auto* nativeHandleVK = reinterpret_cast<Vulkan::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleVK = static_cast<Vulkan::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleVK->instance        = instance_.Get();
         nativeHandleVK->physicalDevice  = physicalDevice_.GetVkPhysicalDevice();
         nativeHandleVK->device          = device_.GetVkDevice();

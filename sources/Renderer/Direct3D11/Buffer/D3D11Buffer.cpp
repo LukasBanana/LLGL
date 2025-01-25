@@ -100,7 +100,7 @@ void D3D11Buffer::WriteSubresource(ID3D11DeviceContext* context, const void* dat
             D3D11_MAPPED_SUBRESOURCE mappedSubresource;
             if (SUCCEEDED(context->Map(GetNative(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource)))
             {
-                ::memcpy(reinterpret_cast<char*>(mappedSubresource.pData) + offset, data, dataSize);
+                ::memcpy(static_cast<char*>(mappedSubresource.pData) + offset, data, dataSize);
                 context->Unmap(GetNative(), 0);
             }
         }
@@ -314,7 +314,7 @@ void D3D11Buffer::ReadFromStagingBuffer(
     if (SUCCEEDED(context->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedSubresource)))
     {
         /* Copy mapped memory to output data */
-        const char* mappedSubresourceWithOffset = reinterpret_cast<const char*>(mappedSubresource.pData) + stagingBufferOffset;
+        const char* mappedSubresourceWithOffset = static_cast<const char*>(mappedSubresource.pData) + stagingBufferOffset;
         ::memcpy(data, mappedSubresourceWithOffset, dataSize);
         context->Unmap(stagingBuffer, 0);
     }

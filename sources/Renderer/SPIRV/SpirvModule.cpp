@@ -36,7 +36,7 @@ SpirvModule::SpirvModule(std::vector<value_type>&& data) :
 }
 
 SpirvModule::SpirvModule(const void* data, size_type size) :
-    words_ { reinterpret_cast<const value_type*>(data), reinterpret_cast<const value_type*>(data) + size/sizeof(value_type) }
+    words_ { static_cast<const value_type*>(data), static_cast<const value_type*>(data) + size/sizeof(value_type) }
 {
 }
 

@@ -323,8 +323,8 @@ static void CopyRowAlignedData(void* dstData, std::size_t dstSize, std::size_t d
     LLGL_ASSERT(dstStride > 0);
     LLGL_ASSERT(dstStride <= srcStride, "dstStride (%u) is not less than or equal to srcStride (%u)", dstStride, srcStride);
 
-    auto dst = reinterpret_cast<char*>(dstData);
-    auto src = reinterpret_cast<const char*>(srcData);
+    auto dst = static_cast<char*>(dstData);
+    auto src = static_cast<const char*>(srcData);
 
     for (char* dstEnd = dst + dstSize; dst < dstEnd; dst += dstStride, src += srcStride)
         ::memcpy(dst, src, dstStride);

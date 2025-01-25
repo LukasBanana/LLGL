@@ -28,103 +28,103 @@ static std::size_t ExecuteD3D11Command(const D3D11Opcode opcode, const void* pc,
     {
         case D3D11OpcodeSetVertexBuffer:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetVertexBuffer*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetVertexBuffer*>(pc);
             context.SetVertexBuffer(*(cmd->buffer));
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetVertexBufferArray:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetVertexBufferArray*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetVertexBufferArray*>(pc);
             context.SetVertexBufferArray(*(cmd->bufferArray));
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetIndexBuffer:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetIndexBuffer*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetIndexBuffer*>(pc);
             context.SetIndexBuffer(*(cmd->buffer), cmd->format, cmd->offset);
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetPipelineState:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetPipelineState*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetPipelineState*>(pc);
             context.SetPipelineState(cmd->pipelineState);
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetResourceHeap:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetResourceHeap*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetResourceHeap*>(pc);
             context.SetResourceHeap(*(cmd->resourceHeap), cmd->descriptorSet);
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetResource:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetResource*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetResource*>(pc);
             context.SetResource(cmd->descriptor, *(cmd->resource));
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetBlendFactor:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetBlendFactor*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetBlendFactor*>(pc);
             context.GetStateManager().SetBlendFactor(cmd->color);
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetStencilRef:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetStencilRef*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetStencilRef*>(pc);
             context.GetStateManager().SetStencilRef(cmd->stencilRef);
             return sizeof(*cmd);
         }
         case D3D11OpcodeSetUniforms:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdSetUniforms*>(pc);
+            auto cmd = static_cast<const D3D11CmdSetUniforms*>(pc);
             context.SetUniforms(cmd->first, cmd + 1, cmd->dataSize);
             return (sizeof(*cmd) + cmd->dataSize);
         }
         case D3D11OpcodeDraw:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDraw*>(pc);
+            auto cmd = static_cast<const D3D11CmdDraw*>(pc);
             context.Draw(cmd->vertexCount, cmd->startVertexLocation);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawIndexed:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawIndexed*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawIndexed*>(pc);
             context.DrawIndexed(cmd->indexCount, cmd->startIndexLocation, cmd->baseVertexLocation);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawInstanced:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawInstanced*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawInstanced*>(pc);
             context.DrawInstanced(cmd->vertexCountPerInstance, cmd->instanceCount, cmd->startVertexLocation, cmd->startInstanceLocation);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawIndexedInstanced:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawIndexedInstanced*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawIndexedInstanced*>(pc);
             context.DrawIndexedInstanced(cmd->indexCountPerInstance, cmd->instanceCount, cmd->startIndexLocation, cmd->baseVertexLocation, cmd->startInstanceLocation);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawInstancedIndirect:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
             context.DrawInstancedIndirect(cmd->bufferForArgs, cmd->alignedByteOffsetForArgs);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawInstancedIndirectN:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
             context.DrawInstancedIndirectN(cmd->bufferForArgs, cmd->alignedByteOffsetForArgs, cmd->numCommands, cmd->stride);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawIndexedInstancedIndirect:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
             context.DrawIndexedInstancedIndirect(cmd->bufferForArgs, cmd->alignedByteOffsetForArgs);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDrawIndexedInstancedIndirectN:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
+            auto cmd = static_cast<const D3D11CmdDrawInstancedIndirect*>(pc);
             context.DrawIndexedInstancedIndirectN(cmd->bufferForArgs, cmd->alignedByteOffsetForArgs, cmd->numCommands, cmd->stride);
             return sizeof(*cmd);
         }
@@ -135,13 +135,13 @@ static std::size_t ExecuteD3D11Command(const D3D11Opcode opcode, const void* pc,
         }
         case D3D11OpcodeDispatch:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDispatch*>(pc);
+            auto cmd = static_cast<const D3D11CmdDispatch*>(pc);
             context.Dispatch(cmd->threadGroupCountX, cmd->threadGroupCountY, cmd->threadGroupCountZ);
             return sizeof(*cmd);
         }
         case D3D11OpcodeDispatchIndirect:
         {
-            auto cmd = reinterpret_cast<const D3D11CmdDispatchIndirect*>(pc);
+            auto cmd = static_cast<const D3D11CmdDispatchIndirect*>(pc);
             context.DispatchIndirect(cmd->bufferForArgs, cmd->alignedByteOffsetForArgs);
             return sizeof(*cmd);
         }

@@ -169,7 +169,7 @@ bool MacOSWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        NativeHandle* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        NativeHandle* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->responder = wnd_;
         return true;
     }

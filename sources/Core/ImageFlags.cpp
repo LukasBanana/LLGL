@@ -764,7 +764,7 @@ LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
     {
         case Format::BC1UNorm:
         case Format::BC1UNorm_sRGB:
-            return DecompressBC1ToRGBA8UNorm(extent, reinterpret_cast<const char*>(srcImageView.data), srcImageView.dataSize, threadCount);
+            return DecompressBC1ToRGBA8UNorm(extent, static_cast<const char*>(srcImageView.data), srcImageView.dataSize, threadCount);
         default:
             return nullptr;
     }
@@ -838,10 +838,10 @@ LLGL_EXPORT void CopyImageBufferRegion(
     BitBlit(
         extent,
         bpp,
-        (reinterpret_cast<char*>(dstImageView.data) + dstPos),
+        (static_cast<char*>(dstImageView.data) + dstPos),
         dstRowStride * bpp,
         dstLayerStride * bpp,
-        (reinterpret_cast<const char*>(srcImageView.data) + srcPos),
+        (static_cast<const char*>(srcImageView.data) + srcPos),
         srcRowStride * bpp,
         srcLayerStride * bpp
     );

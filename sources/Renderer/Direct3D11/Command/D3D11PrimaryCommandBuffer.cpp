@@ -1062,7 +1062,7 @@ bool D3D11PrimaryCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t 
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D11::CommandBufferNativeHandle))
     {
-        auto* nativeHandleD3D = reinterpret_cast<Direct3D11::CommandBufferNativeHandle*>(nativeHandle);
+        auto* nativeHandleD3D = static_cast<Direct3D11::CommandBufferNativeHandle*>(nativeHandle);
         nativeHandleD3D->deviceContext = GetNative();
         nativeHandleD3D->deviceContext->AddRef();
         return true;

@@ -327,7 +327,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Mut
             /* Get destination image parameters */
             const std::uint32_t dstRowStride    = bpp * extent.width;
             const std::uint32_t dstDepthStride  = dstRowStride * extent.height;
-            char*               dst             = reinterpret_cast<char*>(imageView.data);
+            char*               dst             = static_cast<char*>(imageView.data);
 
             /* Blit region into destination image */
             BitBlit(
@@ -343,7 +343,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Mut
 
             BitBlit(
                 extent, bpp,
-                reinterpret_cast<char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride(),
+                static_cast<char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride(),
                 src, srcRowStride, srcDepthStride
             );
 
@@ -374,7 +374,7 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Im
             /* Get source image parameters */
             const std::uint32_t srcRowStride    = bpp * extent.width;
             const std::uint32_t srcDepthStride  = srcRowStride * extent.height;
-            const char*         src             = reinterpret_cast<const char*>(imageView.data);
+            const char*         src             = static_cast<const char*>(imageView.data);
 
             /* Blit source image into region */
             BitBlit(
@@ -396,7 +396,7 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Im
             BitBlit(
                 extent, bpp,
                 dst, dstRowStride, dstDepthStride,
-                reinterpret_cast<const char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride()
+                static_cast<const char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride()
             );
         }
     }

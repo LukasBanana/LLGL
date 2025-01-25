@@ -155,11 +155,11 @@ bool GLCommandQueue::QueryResult(
     if (AreQueryResultsAvailable(queryHeapGL, firstGroupQuery, numGroupQueries))
     {
         if (dataSize == numQueries * sizeof(std::uint32_t))
-            QueryResultUInt32(queryHeapGL, firstGroupQuery, numGroupQueries, reinterpret_cast<std::uint32_t*>(data));
+            QueryResultUInt32(queryHeapGL, firstGroupQuery, numGroupQueries, static_cast<std::uint32_t*>(data));
         else if (dataSize == numQueries * sizeof(std::uint64_t))
-            QueryResultUInt64(queryHeapGL, firstGroupQuery, numGroupQueries, reinterpret_cast<std::uint64_t*>(data));
+            QueryResultUInt64(queryHeapGL, firstGroupQuery, numGroupQueries, static_cast<std::uint64_t*>(data));
         else if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
-            QueryResultPipelineStatistics(queryHeapGL, firstGroupQuery, numGroupQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
+            QueryResultPipelineStatistics(queryHeapGL, firstGroupQuery, numGroupQueries, static_cast<QueryPipelineStatistics*>(data));
         else
             return false;
         return true;

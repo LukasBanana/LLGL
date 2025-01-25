@@ -628,7 +628,7 @@ static void GLReadPixelsFromTexture(
     const GLenum formatGL   = GLTypes::Map(dstImageView.format);
     const GLenum dataTypeGL = GLTypes::Map(dstImageView.dataType);
 
-    char* dstImageData = reinterpret_cast<char*>(dstImageView.data);
+    char* dstImageData = static_cast<char*>(dstImageView.data);
 
     /* Create temporary FBO for source texture to read from GL_READ_FRAMEBUFFER in read pixel operator */
     GLFramebuffer readFBO;
@@ -982,7 +982,7 @@ static void GLGetTexImage(
         }
 
         /* Copy stencil values into output buffer */
-        std::uint8_t* dst = reinterpret_cast<std::uint8_t*>(dstImageView.data);
+        std::uint8_t* dst = static_cast<std::uint8_t*>(dstImageView.data);
         for_range(i, numTexels)
             dst[i] = intermediateDSData[i].stencil;
 
@@ -998,7 +998,7 @@ static void GLGetTexImage(
         {
             /* Only glGetTextureImage() accepts the generic GL_TEXTURE_CUBE_MAP target, so query each cube face individually when using glTexImage() */
             const std::size_t cubeFacePixelStride = dstImageView.dataSize / 6; //TODO: calculate required stride independently of input 'dataSize'
-            char* dstImageData = reinterpret_cast<char*>(dstImageView.data);
+            char* dstImageData = static_cast<char*>(dstImageView.data);
             for_range(cubeFaceIndex, 6)
             {
                 GLenum cubeFaceTargetGL = GLTypes::ToTextureCubeMap(cubeFaceIndex);

@@ -63,7 +63,7 @@ bool WasmGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
-        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleGL->context = webGLContextHandle_;
         return true;
     }

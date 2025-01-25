@@ -273,7 +273,7 @@ static void UpdateD3DTextureSubresource(
         );
 
         /* Move to next buffer region */
-        subresourceData.pData = (reinterpret_cast<const char*>(subresourceData.pData) + subresourceData.SlicePitch);
+        subresourceData.pData = (static_cast<const char*>(subresourceData.pData) + subresourceData.SlicePitch);
         srcBufferOffset += srcBufferSubresourceSize;
     }
 }

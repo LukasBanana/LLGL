@@ -74,7 +74,7 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
     (
         desc.windowContext != nullptr &&
         desc.windowContextSize == sizeof(NativeHandle) &&
-        reinterpret_cast<const NativeHandle*>(desc.windowContext)->window != 0
+        static_cast<const NativeHandle*>(desc.windowContext)->window != 0
     );
 
     if (hasWindowContext)
@@ -161,7 +161,7 @@ bool Win32Window::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        auto* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->window = wnd_;
         return true;
     }
@@ -378,7 +378,7 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
 static HWND GetNativeWin32ParentWindow(const void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
-        return reinterpret_cast<const NativeHandle*>(nativeHandle)->window;
+        return static_cast<const NativeHandle*>(nativeHandle)->window;
     else
         return nullptr;
 }

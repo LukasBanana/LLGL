@@ -36,13 +36,13 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
     {
         case MTOpcodeExecute:
         {
-            auto* cmd = reinterpret_cast<const MTCmdExecute*>(pc);
+            auto* cmd = static_cast<const MTCmdExecute*>(pc);
             ExecuteMTMultiSubmitCommandBuffer(*(cmd->commandBuffer), context);
             return sizeof(*cmd);
         }
         case MTOpcodeCopyBuffer:
         {
-            auto* cmd = reinterpret_cast<const MTCmdCopyBuffer*>(pc);
+            auto* cmd = static_cast<const MTCmdCopyBuffer*>(pc);
             id<MTLBlitCommandEncoder> blitEncoder = context.BindBlitEncoder();
             [blitEncoder
                 copyFromBuffer:     cmd->sourceBuffer
@@ -55,7 +55,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeCopyBufferFromTexture:
         {
-            auto* cmd = reinterpret_cast<const MTCmdCopyBufferFromTexture*>(pc);
+            auto* cmd = static_cast<const MTCmdCopyBufferFromTexture*>(pc);
             id<MTLBlitCommandEncoder> blitEncoder = context.BindBlitEncoder();
             for_range(arrayLayer, cmd->layerCount)
             {
@@ -75,7 +75,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeCopyTexture:
         {
-            auto* cmd = reinterpret_cast<const MTCmdCopyTexture*>(pc);
+            auto* cmd = static_cast<const MTCmdCopyTexture*>(pc);
             id<MTLBlitCommandEncoder> blitEncoder = context.BindBlitEncoder();
             [blitEncoder
                 copyFromTexture:    cmd->sourceTexture
@@ -92,7 +92,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeCopyTextureFromBuffer:
         {
-            auto* cmd = reinterpret_cast<const MTCmdCopyTextureFromBuffer*>(pc);
+            auto* cmd = static_cast<const MTCmdCopyTextureFromBuffer*>(pc);
             id<MTLBlitCommandEncoder> blitEncoder = context.BindBlitEncoder();
             for_range(arrayLayer, cmd->layerCount)
             {
@@ -112,7 +112,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeCopyTextureFromFramebuffer:
         {
-            auto* cmd = reinterpret_cast<const MTCmdCopyTextureFromFramebuffer*>(pc);
+            auto* cmd = static_cast<const MTCmdCopyTextureFromFramebuffer*>(pc);
 
             /* Get source texture from current drawable */
             id<MTLTexture> drawableTexture = [[context.GetCurrentDrawableView() currentDrawable] texture];
@@ -145,56 +145,56 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeGenerateMipmaps:
         {
-            auto* cmd = reinterpret_cast<const MTCmdGenerateMipmaps*>(pc);
+            auto* cmd = static_cast<const MTCmdGenerateMipmaps*>(pc);
             id<MTLBlitCommandEncoder> blitEncoder = context.BindBlitEncoder();
             [blitEncoder generateMipmapsForTexture:cmd->texture];
             return sizeof(*cmd);
         }
         case MTOpcodeSetGraphicsPSO:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetGraphicsPSO*>(pc);
+            auto* cmd = static_cast<const MTCmdSetGraphicsPSO*>(pc);
             context.SetGraphicsPSO(cmd->graphicsPSO);
             return sizeof(*cmd);
         }
         case MTOpcodeSetComputePSO:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetComputePSO*>(pc);
+            auto* cmd = static_cast<const MTCmdSetComputePSO*>(pc);
             context.SetComputePSO(cmd->computePSO);
             return sizeof(*cmd);
         }
         case MTOpcodeSetViewports:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetViewports*>(pc);
+            auto* cmd = static_cast<const MTCmdSetViewports*>(pc);
             context.SetViewports(reinterpret_cast<const Viewport*>(cmd + 1), cmd->count);
             return (sizeof(*cmd) + sizeof(Viewport)*cmd->count);
         }
         case MTOpcodeSetScissorRects:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetScissorRects*>(pc);
+            auto* cmd = static_cast<const MTCmdSetScissorRects*>(pc);
             context.SetScissorRects(reinterpret_cast<const Scissor*>(cmd + 1), cmd->count);
             return (sizeof(*cmd) + sizeof(Scissor)*cmd->count);
         }
         case MTOpcodeSetBlendColor:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetBlendColor*>(pc);
+            auto* cmd = static_cast<const MTCmdSetBlendColor*>(pc);
             context.SetBlendColor(cmd->blendColor);
             return sizeof(*cmd);
         }
         case MTOpcodeSetStencilRef:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetStencilRef*>(pc);
+            auto* cmd = static_cast<const MTCmdSetStencilRef*>(pc);
             context.SetStencilRef(cmd->ref, cmd->face);
             return sizeof(*cmd);
         }
         case MTOpcodeSetUniforms:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetUniforms*>(pc);
+            auto* cmd = static_cast<const MTCmdSetUniforms*>(pc);
             context.SetUniforms(cmd->first, cmd + 1, cmd->dataSize);
             return (sizeof(*cmd) + cmd->dataSize);
         }
         case MTOpcodeSetVertexBuffers:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetVertexBuffers*>(pc);
+            auto* cmd = static_cast<const MTCmdSetVertexBuffers*>(pc);
             auto* bufferIds = reinterpret_cast<const id<MTLBuffer>*>(cmd + 1);
             auto* bufferOffsets = reinterpret_cast<const NSUInteger*>(bufferIds + cmd->count);
             context.SetVertexBuffers(bufferIds, bufferOffsets, cmd->count);
@@ -202,13 +202,13 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeSetIndexBuffer:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetIndexBuffer*>(pc);
+            auto* cmd = static_cast<const MTCmdSetIndexBuffer*>(pc);
             context.SetIndexStream(cmd->buffer, cmd->offset, cmd->indexType16Bits);
             return sizeof(*cmd);
         }
         case MTOpcodeSetResourceHeap:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetResourceHeap*>(pc);
+            auto* cmd = static_cast<const MTCmdSetResourceHeap*>(pc);
             if (MTPipelineState* boundPipelineState = context.GetBoundPipelineState())
             {
                 if (boundPipelineState->IsGraphicsPSO())
@@ -226,13 +226,13 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeSetResource:
         {
-            auto* cmd = reinterpret_cast<const MTCmdSetResource*>(pc);
+            auto* cmd = static_cast<const MTCmdSetResource*>(pc);
             context.SetResource(cmd->descriptor, *(cmd->resource));
             return sizeof(*cmd);
         }
         case MTOpcodeBeginRenderPass:
         {
-            auto* cmd = reinterpret_cast<const MTCmdBeginRenderPass*>(pc);
+            auto* cmd = static_cast<const MTCmdBeginRenderPass*>(pc);
             auto* clearValues = reinterpret_cast<const ClearValue*>(cmd + 1);
             context.BeginRenderPass(cmd->renderTarget, cmd->renderPass, cmd->numClearValues, clearValues);
             return (sizeof(*cmd) + sizeof(ClearValue)*cmd->numClearValues);
@@ -244,7 +244,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeClearRenderPass:
         {
-            auto* cmd = reinterpret_cast<const MTCmdClearRenderPass*>(pc);
+            auto* cmd = static_cast<const MTCmdClearRenderPass*>(pc);
 
             /* Make new render pass descriptor with current clear values */
             MTLRenderPassDescriptor* renderPassDesc = context.CopyRenderPassDesc();
@@ -283,7 +283,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeDraw:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDraw*>(pc);
+            auto* cmd = static_cast<const MTCmdDraw*>(pc);
             const NSUInteger numPatchControlPoints = context.GetNumPatchControlPoints();
             if (numPatchControlPoints > 0)
             {
@@ -339,7 +339,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeDrawIndexed:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDrawIndexed*>(pc);
+            auto* cmd = static_cast<const MTCmdDrawIndexed*>(pc);
             const NSUInteger numPatchControlPoints = context.GetNumPatchControlPoints();
             if (numPatchControlPoints > 0)
             {
@@ -404,7 +404,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeDispatchThreadgroups:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDispatchThreads*>(pc);
+            auto* cmd = static_cast<const MTCmdDispatchThreads*>(pc);
             id<MTLComputeCommandEncoder> computeEncoder = context.FlushAndGetComputeEncoder();
             [computeEncoder
                 dispatchThreadgroups:   cmd->threadgroups
@@ -414,7 +414,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodeDispatchThreadgroupsIndirect:
         {
-            auto* cmd = reinterpret_cast<const MTCmdDispatchThreadsIndirect*>(pc);
+            auto* cmd = static_cast<const MTCmdDispatchThreadsIndirect*>(pc);
             id<MTLComputeCommandEncoder> computeEncoder = context.FlushAndGetComputeEncoder();
             [computeEncoder
                 dispatchThreadgroupsWithIndirectBuffer: cmd->indirectBuffer
@@ -425,7 +425,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodePushDebugGroup:
         {
-            auto* cmd = reinterpret_cast<const MTCmdPushDebugGroup*>(pc);
+            auto* cmd = static_cast<const MTCmdPushDebugGroup*>(pc);
             #ifdef LLGL_GLEXT_DEBUG
             [context.GetCommandBuffer() pushDebugGroup:[NSString stringWithUTF8String:reinterpret_cast<const char*>(cmd + 1)]];
             #endif
@@ -440,7 +440,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodePresentDrawables:
         {
-            auto* cmd = reinterpret_cast<const MTCmdPresentDrawables*>(pc);
+            auto* cmd = static_cast<const MTCmdPresentDrawables*>(pc);
             auto* views = reinterpret_cast<MTKView* const*>(cmd + 1);
             for_range(i, cmd->count)
                 [context.GetCommandBuffer() presentDrawable:views[i].currentDrawable];

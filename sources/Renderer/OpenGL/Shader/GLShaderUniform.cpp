@@ -208,7 +208,7 @@ void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* d
         case UniformType::Float2:
         case UniformType::Float3:
         case UniformType::Float4:
-            GLSetUniformFloat(type, location, count, reinterpret_cast<const GLfloat*>(data));
+            GLSetUniformFloat(type, location, count, static_cast<const GLfloat*>(data));
             break;
 
         case UniformType::Double1:
@@ -216,7 +216,7 @@ void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* d
         case UniformType::Double3:
         case UniformType::Double4:
             #ifdef LLGL_OPENGL
-            GLSetUniformDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
+            GLSetUniformDouble(type, location, count, static_cast<const GLdouble*>(data));
             #endif
             break;
 
@@ -224,28 +224,28 @@ void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* d
         case UniformType::Int2:
         case UniformType::Int3:
         case UniformType::Int4:
-            GLSetUniformInt(type, location, count, reinterpret_cast<const GLint*>(data));
+            GLSetUniformInt(type, location, count, static_cast<const GLint*>(data));
             break;
 
         case UniformType::UInt1:
         case UniformType::UInt2:
         case UniformType::UInt3:
         case UniformType::UInt4:
-            GLSetUniformUInt(type, location, count, reinterpret_cast<const GLuint*>(data));
+            GLSetUniformUInt(type, location, count, static_cast<const GLuint*>(data));
             break;
 
         case UniformType::Bool1:
         case UniformType::Bool2:
         case UniformType::Bool3:
         case UniformType::Bool4:
-            GLSetUniformInt(type, location, count, reinterpret_cast<const GLint*>(data));
+            GLSetUniformInt(type, location, count, static_cast<const GLint*>(data));
             break;
 
         /* ----- Matrices ----- */
         case UniformType::Float2x2:
         case UniformType::Float3x3:
         case UniformType::Float4x4:
-            GLSetUniformFloat(type, location, count, reinterpret_cast<const GLfloat*>(data));
+            GLSetUniformFloat(type, location, count, static_cast<const GLfloat*>(data));
             break;
 
         case UniformType::Float2x3:
@@ -254,7 +254,7 @@ void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* d
         case UniformType::Float3x4:
         case UniformType::Float4x2:
         case UniformType::Float4x3:
-            GLSetUniformFloatNxM(type, location, count, reinterpret_cast<const GLfloat*>(data));
+            GLSetUniformFloatNxM(type, location, count, static_cast<const GLfloat*>(data));
             break;
 
         case UniformType::Double2x2:
@@ -267,7 +267,7 @@ void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* d
         case UniformType::Double4x3:
         case UniformType::Double4x4:
             #ifdef LLGL_OPENGL
-            GLSetUniformDouble(type, location, count, reinterpret_cast<const GLdouble*>(data));
+            GLSetUniformDouble(type, location, count, static_cast<const GLdouble*>(data));
             #endif
             break;
 
@@ -275,7 +275,7 @@ void GLSetUniform(UniformType type, GLint location, GLsizei count, const void* d
         case UniformType::Sampler:
         case UniformType::Image:
         case UniformType::AtomicCounter:
-            GLSetUniformInt(type, location, count, reinterpret_cast<const GLint*>(data));
+            GLSetUniformInt(type, location, count, static_cast<const GLint*>(data));
             break;
     }
 }

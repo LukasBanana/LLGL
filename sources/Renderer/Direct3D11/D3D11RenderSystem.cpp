@@ -353,7 +353,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         context_->Unmap(texCopy.Get(), subresource);
 
         /* Move destination image pointer to next layer */
-        intermediateDstView.data = reinterpret_cast<char*>(intermediateDstView.data) + bytesWritten;
+        intermediateDstView.data = static_cast<char*>(intermediateDstView.data) + bytesWritten;
     }
 }
 
@@ -533,7 +533,7 @@ bool D3D11RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Direct3D11::RenderSystemNativeHandle))
     {
-        auto* nativeHandleD3D = reinterpret_cast<Direct3D11::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleD3D = static_cast<Direct3D11::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleD3D->device = device_.Get();
         nativeHandleD3D->device->AddRef();
         nativeHandleD3D->deviceContext = context_.Get();

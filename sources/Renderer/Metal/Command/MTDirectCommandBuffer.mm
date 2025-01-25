@@ -1038,7 +1038,7 @@ void MTDirectCommandBuffer::DoNativeCommand(const void* nativeCommand, std::size
 {
     if (nativeCommand != nullptr && nativeCommandSize == sizeof(Metal::NativeCommand))
     {
-        const auto* nativeCommandMT = reinterpret_cast<const Metal::NativeCommand*>(nativeCommand);
+        const auto* nativeCommandMT = static_cast<const Metal::NativeCommand*>(nativeCommand);
         ExecuteNativeMTCommand(*nativeCommandMT, context_);
     }
 }
@@ -1047,7 +1047,7 @@ bool MTDirectCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nati
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Metal::CommandBufferNativeHandle))
     {
-        auto* nativeHandleMT = reinterpret_cast<Metal::CommandBufferNativeHandle*>(nativeHandle);
+        auto* nativeHandleMT = static_cast<Metal::CommandBufferNativeHandle*>(nativeHandle);
         nativeHandleMT->commandBuffer = cmdBuffer_;
         [nativeHandleMT->commandBuffer retain];
         return true;

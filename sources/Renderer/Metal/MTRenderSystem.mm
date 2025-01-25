@@ -334,7 +334,7 @@ bool MTRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Metal::RenderSystemNativeHandle))
     {
-        auto* nativeHandleMT = reinterpret_cast<Metal::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleMT = static_cast<Metal::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleMT->device = device_;
         [nativeHandleMT->device retain];
         return true;

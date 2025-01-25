@@ -74,7 +74,7 @@ bool AndroidCanvas::GetNativeHandle(void* nativeHandle, std::size_t nativeHandle
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
-        auto* handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+        auto* handle = static_cast<NativeHandle*>(nativeHandle);
         handle->window = window_;
         return true;
     }

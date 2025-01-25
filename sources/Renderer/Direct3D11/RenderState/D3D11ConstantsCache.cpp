@@ -105,7 +105,7 @@ D3D11ConstantsCache::D3D11ConstantsCache(
 
 HRESULT D3D11ConstantsCache::SetUniforms(std::uint32_t first, const void* data, std::uint16_t dataSize)
 {
-    for (auto* dataByteAligned = reinterpret_cast<const char*>(data); dataSize > 0; ++first)
+    for (auto* dataByteAligned = static_cast<const char*>(data); dataSize > 0; ++first)
     {
         if (first >= constantsMap_.size())
             return E_INVALIDARG;

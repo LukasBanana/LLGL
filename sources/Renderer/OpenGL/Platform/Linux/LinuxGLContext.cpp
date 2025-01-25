@@ -99,7 +99,7 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
-        auto* nativeHandleGL = reinterpret_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
+        auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
         nativeHandleGL->context = glc_;
         return true;
     }

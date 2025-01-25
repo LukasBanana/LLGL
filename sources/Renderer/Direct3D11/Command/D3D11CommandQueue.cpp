@@ -53,11 +53,11 @@ bool D3D11CommandQueue::QueryResult(QueryHeap& queryHeap, std::uint32_t firstQue
 {
     auto& queryHeapD3D = LLGL_CAST(D3D11QueryHeap&, queryHeap);
     if (dataSize == numQueries * sizeof(std::uint32_t))
-        return QueryResultUInt32(queryHeapD3D, firstQuery, numQueries, reinterpret_cast<std::uint32_t*>(data));
+        return QueryResultUInt32(queryHeapD3D, firstQuery, numQueries, static_cast<std::uint32_t*>(data));
     if (dataSize == numQueries * sizeof(std::uint64_t))
-        return QueryResultUInt64(queryHeapD3D, firstQuery, numQueries, reinterpret_cast<std::uint64_t*>(data));
+        return QueryResultUInt64(queryHeapD3D, firstQuery, numQueries, static_cast<std::uint64_t*>(data));
     if (dataSize == numQueries * sizeof(QueryPipelineStatistics))
-        return QueryResultPipelineStatistics(queryHeapD3D, firstQuery, numQueries, reinterpret_cast<QueryPipelineStatistics*>(data));
+        return QueryResultPipelineStatistics(queryHeapD3D, firstQuery, numQueries, static_cast<QueryPipelineStatistics*>(data));
     return false;
 }
 

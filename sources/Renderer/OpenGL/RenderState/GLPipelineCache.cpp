@@ -35,7 +35,7 @@ LLGL_PACK_STRUCT;
 
 GLPipelineCache::GLPipelineCache(const Blob& initialBlob)
 {
-    if (const GLPipelineCacheHeader* header = reinterpret_cast<const GLPipelineCacheHeader*>(initialBlob.GetData()))
+    if (const GLPipelineCacheHeader* header = static_cast<const GLPipelineCacheHeader*>(initialBlob.GetData()))
     {
         InitializeEntry(GLShader::PermutationDefault, header + 1);
         if (header->permutationOffsets[0] > 0)
@@ -165,7 +165,7 @@ bool GLPipelineCache::GetProgramBinary(GLShader::Permutation permutation, GLuint
 
 void GLPipelineCache::InitializeEntry(GLShader::Permutation permutation, const void* data)
 {
-    const GLPipelineCacheEntry* srcEntry    = reinterpret_cast<const GLPipelineCacheEntry*>(data);
+    const GLPipelineCacheEntry* srcEntry    = static_cast<const GLPipelineCacheEntry*>(data);
     const char*                 bytes       = reinterpret_cast<const char*>(srcEntry + 1);
 
     CacheEntry& dstEntry = entries_[permutation];

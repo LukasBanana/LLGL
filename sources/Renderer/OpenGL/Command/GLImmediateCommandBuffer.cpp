@@ -587,7 +587,7 @@ void GLImmediateCommandBuffer::SetUniforms(std::uint32_t first, const void* data
     const std::uint32_t dataSizeInWords = dataSize / 4;
     const auto& uniformMap = boundPipelineState->GetUniformMap();
 
-    for (auto words = reinterpret_cast<const std::uint32_t*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
+    for (auto words = static_cast<const std::uint32_t*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
     {
         if (first >= uniformMap.size())
             return /*GL_INVALID_INDEX*/;
@@ -989,7 +989,7 @@ void GLImmediateCommandBuffer::DoNativeCommand(const void* nativeCommand, std::s
 {
     if (nativeCommand != nullptr && nativeCommandSize == sizeof(OpenGL::NativeCommand))
     {
-        const auto* nativeCommandGL = reinterpret_cast<const OpenGL::NativeCommand*>(nativeCommand);
+        const auto* nativeCommandGL = static_cast<const OpenGL::NativeCommand*>(nativeCommand);
         ExecuteNativeGLCommand(*nativeCommandGL, *stateMngr_);
     }
 }
