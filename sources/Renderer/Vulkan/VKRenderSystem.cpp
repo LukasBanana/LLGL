@@ -481,7 +481,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     );
 
     VKDeviceBuffer stagingBuffer = IsCompressedFormat(format)
-        ? CreateStagingBuffer(stagingCreateInfo)
+        ? CreateStagingBufferAndInitialize(stagingCreateInfo, imageData, imageDataSize)
         : CreateTextureStagingBufferAndInitialize(stagingCreateInfo, extent, imageData, imageDataSize, srcImageView.rowStride, bytesPerPixel);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
