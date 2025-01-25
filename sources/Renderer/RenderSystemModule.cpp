@@ -76,20 +76,20 @@ RenderSystemModulePtr RenderSystemModule::Load(const char* name, Report* outRepo
     std::string             moduleFilename = Module::GetModuleFilename(name);
     std::unique_ptr<Module> module;
 
-    #if LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_EXCEPTIONS_SUPPORTED
 
     Report moduleReport;
     module = Module::Load(moduleFilename.c_str(), &moduleReport);
     if (!module)
         TrapReport(__FUNCTION__, moduleReport);
 
-    #else // LLGL_ENABLE_EXCEPTIONS
+    #else // LLGL_EXCEPTIONS_SUPPORTED
 
     module = Module::Load(moduleFilename.c_str(), outReport);
     if (!module)
         return nullptr;
 
-    #endif // /LLGL_ENABLE_EXCEPTIONS
+    #endif // /LLGL_EXCEPTIONS_SUPPORTED
 
     /* Allocate new module wrapper */
     return RenderSystemModulePtr{ new RenderSystemModule{ name, std::move(moduleFilename), std::move(module) } };

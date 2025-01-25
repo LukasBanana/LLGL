@@ -11,13 +11,21 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
+#include <LLGL/Trap.h>
 #include <string>
 #include <cstddef>
 #include "MacroUtils.h"
 
 
+// Only support exceptions if enabled and the compiler supports it, too.
+#if LLGL_ENABLE_EXCEPTIONS && (__EXCEPTIONS || __cpp_exceptions == 199711)
+#   define LLGL_EXCEPTIONS_SUPPORTED 1
+#else
+#   define LLGL_EXCEPTIONS_SUPPORTED 0
+#endif
+
 #define LLGL_TRAP(FORMAT, ...) \
-    LLGL::Trap(__FUNCTION__, (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
+    LLGL::Trap(LLGL::Exception::RuntimeError, __FUNCTION__, (FORMAT) LLGL_VA_ARGS(__VA_ARGS__))
 
 #define LLGL_TRAP_NOT_IMPLEMENTED(...) \
     LLGL::TrapNotImplemented(__FUNCTION__ LLGL_VA_ARGS(__VA_ARGS__))
@@ -34,10 +42,6 @@ namespace LLGL
 
 
 class Report;
-
-// Primary function to trap execution from an unrecoverable state. This might either throw an exception, abort execution, or break the debugger.
-[[noreturn]]
-LLGL_EXPORT void Trap(const char* origin, const char* format, ...);
 
 // Traps program execution with the message that the specified assertion that failed.
 [[noreturn]]

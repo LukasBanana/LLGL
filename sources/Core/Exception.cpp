@@ -35,7 +35,7 @@ static void AddOptionalOrigin(std::string& s, const char* origin)
 }
 
 [[noreturn]]
-LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
+LLGL_EXPORT void Trap(Exception exception, const char* origin, const char* format, ...)
 {
     /* Build full report string */
     std::string report;
@@ -43,14 +43,20 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
 
     LLGL_STRING_PRINTF(report, format);
 
-    #if LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_EXCEPTIONS_SUPPORTED
 
     /* Throw exception with report and optional origin */
-    throw std::runtime_error(report);
+    switch (exception)
+    {
+        case RuntimeError:      throw std::runtime_error(report);
+        case OutOfRange:        throw std::out_of_range(report);
+        case BadCast:           throw std::bad_cast();
+        case InvalidArgument:   throw std::invalid_argument(report);
+    }
 
-    #else // LLGL_ENABLE_EXCEPTIONS
+    #endif // /LLGL_EXCEPTIONS_SUPPORTED
 
-    #   ifdef LLGL_DEBUG
+    #ifdef LLGL_DEBUG
 
     /* Print debug report */
     report = DebugStackTrace().c_str() + report;
@@ -60,26 +66,22 @@ LLGL_EXPORT void Trap(const char* origin, const char* format, ...)
     /* Break execution if there's a debugger attached */
     LLGL_DEBUG_BREAK();
 
-    #   else // LLGL_DEBUG
+    #endif // /LLGL_DEBUG
 
-    #       ifdef LLGL_OS_ANDROID
+    #ifdef LLGL_OS_ANDROID
 
     /* Print report to Android specific error log */
     (void)__android_log_print(ANDROID_LOG_ERROR, "LLGL", "%s\n", report.c_str());
 
-    #       else
+    #else
 
     /* Print report to standard error output */
     ::fprintf(stderr, "%s\n", report.c_str());
 
-    #       endif
-
-    #   endif // /LLGL_DEBUG
+    #endif // /LLGL_OS_ANDROID
 
     /* Abort execution as LLGL is trapped in an unrecoverable state */
     ::abort();
-
-    #endif // /LLGL_ENABLE_EXCEPTIONS
 }
 
 [[noreturn]]
@@ -91,69 +93,69 @@ LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const
         LLGL_STRING_PRINTF(detailsStr, details);
 
         if (!detailsStr.empty())
-            Trap(origin, "assertion failed: '%s'; %s", expr, detailsStr.c_str());
+            Trap(Exception::RuntimeError, origin, "assertion failed: '%s'; %s", expr, detailsStr.c_str());
         else
-            Trap(origin, "assertion failed: '%s'", expr);
+            Trap(Exception::RuntimeError, origin, "assertion failed: '%s'", expr);
     }
     else
-        Trap(origin, "assertion failed: '%s'", expr);
+        Trap(Exception::RuntimeError, origin, "assertion failed: '%s'", expr);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapFeatureNotSupported(const char* origin, const char* featureName)
 {
-    Trap(origin, "%s not supported", featureName);
+    Trap(Exception::RuntimeError, origin, "%s not supported", featureName);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapRenderingFeatureNotSupported(const char* origin, const char* featureName)
 {
-    Trap(origin, "LLGL::RenderingFeatures::%s not supported", featureName);
+    Trap(Exception::RuntimeError, origin, "LLGL::RenderingFeatures::%s not supported", featureName);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapGLExtensionNotSupported(const char* origin, const char* extensionName, const char* useCase)
 {
     if (useCase != nullptr && *useCase != '\0')
-        Trap(origin, "OpenGL extension '%s' not supported; required for %s", extensionName, useCase);
+        Trap(Exception::RuntimeError, origin, "OpenGL extension '%s' not supported; required for %s", extensionName, useCase);
     else
-        Trap(origin, "OpenGL extension '%s' not supported", extensionName);
+        Trap(Exception::RuntimeError, origin, "OpenGL extension '%s' not supported", extensionName);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapVKExtensionNotSupported(const char* origin, const char* extensionName, const char* useCase)
 {
     if (useCase != nullptr && *useCase != '\0')
-        Trap(origin, "Vulkan extension '%s' not supported; required for %s", extensionName, useCase);
+        Trap(Exception::RuntimeError, origin, "Vulkan extension '%s' not supported; required for %s", extensionName, useCase);
     else
-        Trap(origin, "Vulkan extension '%s' not supported", extensionName);
+        Trap(Exception::RuntimeError, origin, "Vulkan extension '%s' not supported", extensionName);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapNotImplemented(const char* origin, const char* useCase)
 {
     if (useCase != nullptr && *useCase != '\0')
-        Trap(origin, "not implemented yet: %s", useCase);
+        Trap(Exception::RuntimeError, origin, "not implemented yet: %s", useCase);
     else
-        Trap(origin, "not implemented yet");
+        Trap(Exception::RuntimeError, origin, "not implemented yet");
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapNullPointer(const char* origin, const char* expr)
 {
-    Trap(origin, "expression '%s' must not be null", expr);
+    Trap(Exception::RuntimeError, origin, "expression '%s' must not be null", expr);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapParamExceededUpperBound(const char* origin, const char* paramName, int value, int upperBound)
 {
-    Trap(origin, "parameter '%s = %d' out of half-open range [0, %d)", paramName, value, upperBound);
+    Trap(Exception::RuntimeError, origin, "parameter '%s = %d' out of half-open range [0, %d)", paramName, value, upperBound);
 }
 
 [[noreturn]]
 LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramName, int value, int maximum)
 {
-    Trap(origin, "parameter '%s = %d' out of range [0, %d]", paramName, value, maximum);
+    Trap(Exception::RuntimeError, origin, "parameter '%s = %d' out of range [0, %d]", paramName, value, maximum);
 }
 
 [[noreturn]]
@@ -162,18 +164,18 @@ LLGL_EXPORT void TrapReport(const char* origin, const Report& report)
     std::string text = report.GetText();
     for (std::size_t n = text.size(); n > 0 && (text[n - 1] == '\n' || text[n - 1] == '\r'); --n)
         text.pop_back();
-    Trap(origin, "%s", text.c_str());
+    Trap(Exception::RuntimeError, origin, "%s", text.c_str());
 }
 
 LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, ...)
 {
-    #if LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_EXCEPTIONS_SUPPORTED
 
     std::string errorStr;
     LLGL_STRING_PRINTF(errorStr, format);
     throw std::runtime_error(errorStr);
 
-    #else // LLGL_ENABLE_EXCEPTIONS
+    #else // LLGL_EXCEPTIONS_SUPPORTED
 
     if (report != nullptr)
     {
@@ -184,7 +186,7 @@ LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, .
 
     return nullptr;
 
-    #endif // /LLGL_ENABLE_EXCEPTIONS
+    #endif // /LLGL_EXCEPTIONS_SUPPORTED
 }
 
 

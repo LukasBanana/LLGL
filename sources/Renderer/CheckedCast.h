@@ -12,7 +12,7 @@
 #include "../Platform/Debug.h"
 
 #if LLGL_ENABLE_CHECKED_CAST
-#   if LLGL_ENABLE_EXCEPTIONS
+#   if LLGL_EXCEPTIONS_SUPPORTED
 #       include <typeinfo>
 #   else
 #       include <LLGL/TypeInfo.h>
@@ -30,7 +30,7 @@ namespace LLGL
 template <typename TDst, typename TSrc>
 inline TDst& ObjectCast(TSrc& obj)
 {
-    #if LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_EXCEPTIONS_SUPPORTED
 
     try
     {
@@ -42,11 +42,11 @@ inline TDst& ObjectCast(TSrc& obj)
         throw;
     }
 
-    #else // LLGL_ENABLE_EXCEPTIONS
+    #else // LLGL_EXCEPTIONS_SUPPORTED
 
     return dynamic_cast<TDst&>(obj);
 
-    #endif // /LLGL_ENABLE_EXCEPTIONS
+    #endif // /LLGL_EXCEPTIONS_SUPPORTED
 }
 
 template <typename TDst, typename TSrc>
@@ -55,7 +55,7 @@ inline TDst ObjectCast(TSrc* obj)
     if (obj == nullptr)
         return nullptr;
 
-    #if LLGL_ENABLE_EXCEPTIONS
+    #if LLGL_EXCEPTIONS_SUPPORTED
 
     try
     {
@@ -70,13 +70,13 @@ inline TDst ObjectCast(TSrc* obj)
         throw;
     }
 
-    #else // LLGL_ENABLE_EXCEPTIONS
+    #else // LLGL_EXCEPTIONS_SUPPORTED
 
     TDst objInstance = dynamic_cast<TDst>(obj);
     LLGL_ASSERT(objInstance != nullptr);
     return objInstance;
 
-    #endif // /LLGL_ENABLE_EXCEPTIONS
+    #endif // /LLGL_EXCEPTIONS_SUPPORTED
 }
 
 #else // LLGL_ENABLE_CHECKED_CAST

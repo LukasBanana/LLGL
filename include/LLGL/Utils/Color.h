@@ -9,9 +9,9 @@
 #define LLGL_COLOR_H
 
 
-#include <LLGL/Throw.h>
 #include <LLGL/Export.h>
 #include <LLGL/Tags.h>
+#include <LLGL/Trap.h>
 #include <algorithm>
 #include <type_traits>
 #include <cstdint>
@@ -201,8 +201,7 @@ class LLGL_EXPORT Color
         */
         T& operator [] (std::size_t component)
         {
-            LLGL_VERIFY_OR_THROW(component < N, std::out_of_range("color component index out of range"));
-            
+            LLGL_VERIFY(component < N, OutOfRange);
             return v_[component];
         }
 
@@ -213,8 +212,7 @@ class LLGL_EXPORT Color
         */
         const T& operator [] (std::size_t component) const
         {
-            LLGL_VERIFY_OR_THROW(component < N, std::out_of_range("color component index out of range"));
-            
+            LLGL_VERIFY(component < N, OutOfRange);
             return v_[component];
         }
 
