@@ -11,6 +11,9 @@
 
 #import <Metal/Metal.h>
 
+#include "../Shader/MTShader.h"
+#include <memory>
+
 
 namespace LLGL
 {
@@ -54,9 +57,10 @@ class MTBuiltinPSOFactory
 
     private:
 
-        static const std::size_t g_numComputePSOs = static_cast<std::size_t>(MTBuiltinComputePSO::Num);
+        static constexpr std::size_t k_numComputePSOs = static_cast<std::size_t>(MTBuiltinComputePSO::Num);
 
-        id<MTLComputePipelineState> builtinComputePSOs_[g_numComputePSOs];
+        id<MTLComputePipelineState> builtinComputePSOs_[k_numComputePSOs];
+        std::unique_ptr<MTShader>   builtinComputeShaders_[k_numComputePSOs];
 
 };
 

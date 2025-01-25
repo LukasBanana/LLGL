@@ -14,7 +14,7 @@ struct Entry
     uint b;
 };
 
-layout(binding = 1, std430) buffer type_RWStructuredBuffer_Entry
+layout(binding = 2, std430) buffer type_RWStructuredBuffer_Entry
 {
     Entry _m0[];
 } buf2;
@@ -30,9 +30,9 @@ uniform uint readPos;
 uniform uint writePos;
 #endif
 
-layout(binding = 0, r32ui) uniform uimageBuffer buf1;
-layout(binding = 2, r32ui) uniform uimage1D tex1;
-layout(binding = 3, rg32ui) uniform uimage2D tex2;
+layout(binding = 1, r32ui) uniform uimageBuffer buf1;
+layout(binding = 3, r32ui) uniform uimage1D tex1;
+layout(binding = 4, rg32ui) uniform uimage2D tex2;
 
 void main()
 {

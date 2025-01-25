@@ -995,6 +995,10 @@ bool TestbedContext::LoadShaders()
 //      shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.metal",      ShaderType::Compute,  "CSMain",  "1.1");
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Vertex,   "VSMain",  "1.1", nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.metal",          ShaderType::Fragment, "PSMain",  "1.1");
+        if (IsShadingLanguageSupported(ShadingLanguage::Metal_1_2))
+        {
+            shaders[CSReadAfterWrite]   = LoadShaderFromFile("ReadAfterWrite.metal",   ShaderType::Compute,  "CSMain",  "1.2"); // access::read_write requires Metal 1.2
+        }
     }
     else if (IsShadingLanguageSupported(ShadingLanguage::SPIRV))
     {

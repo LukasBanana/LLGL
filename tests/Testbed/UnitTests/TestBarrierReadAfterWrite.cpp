@@ -16,18 +16,25 @@ The test must validate that the correct memory barriers are inserted between the
 */
 DEF_TEST( BarrierReadAfterWrite )
 {
-    //TODO: not supported for Vulkan and Metal yet
-    if (renderer->GetRendererID() != RendererID::OpenGL &&
-        renderer->GetRendererID() != RendererID::Direct3D11 &&
-        renderer->GetRendererID() != RendererID::Direct3D12)
+    //TODO: not supported for Vulkan yet
+    if (renderer->GetRendererID() == RendererID::Vulkan)
     {
         return TestResult::Skipped;
     }
 
     if (shaders[CSReadAfterWrite] == nullptr)
     {
-        Log::Errorf("Missing shaders for backend\n");
-        return TestResult::FailedErrors;
+        if (renderer->GetRendererID() == RendererID::Metal)
+        {
+            if (opt.verbose)
+                Log::Printf("Read/write texture access not supported for this Metal device\n");
+            return TestResult::Skipped;
+        }
+        else
+        {
+            Log::Errorf("Missing shaders for backend\n");
+            return TestResult::FailedErrors;
+        }
     }
 
     constexpr unsigned      numFrames       = 2;
@@ -87,10 +94,10 @@ DEF_TEST( BarrierReadAfterWrite )
 
     // Create compute PSO
     PipelineLayoutDescriptor psoLayoutDesc = Parse(
-        "rwbuffer(buf1@0):comp,"
-        "rwbuffer(buf2@1):comp,"
-        "rwtexture(tex1@2):comp,"
-        "rwtexture(tex2@3):comp,"
+        "rwbuffer(buf1@1):comp,"
+        "rwbuffer(buf2@2):comp,"
+        "rwtexture(tex1@3):comp,"
+        "rwtexture(tex2@4):comp,"
         "uint(readPos),"
         "uint(writePos),"
     );

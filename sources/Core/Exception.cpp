@@ -48,10 +48,10 @@ LLGL_EXPORT void Trap(Exception exception, const char* origin, const char* forma
     /* Throw exception with report and optional origin */
     switch (exception)
     {
-        case RuntimeError:      throw std::runtime_error(report);
-        case OutOfRange:        throw std::out_of_range(report);
-        case BadCast:           throw std::bad_cast();
-        case InvalidArgument:   throw std::invalid_argument(report);
+        case Exception::RuntimeError:       throw std::runtime_error(report);
+        case Exception::OutOfRange:         throw std::out_of_range(report);
+        case Exception::BadCast:            throw std::bad_cast();
+        case Exception::InvalidArgument:    throw std::invalid_argument(report);
     }
 
     #endif // /LLGL_EXCEPTIONS_SUPPORTED

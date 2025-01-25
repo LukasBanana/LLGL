@@ -6,9 +6,9 @@
  */
 
 #include "MTBuiltinPSOFactory.h"
-#include "../Shader/MTShader.h"
 #include "../Shader/Builtin/MTBuiltin.h"
 #include "../MTCore.h"
+#include "../../../Core/CoreUtils.h"
 #include "../../../Core/Exception.h"
 #include <LLGL/Report.h>
 
@@ -31,7 +31,7 @@ void MTBuiltinPSOFactory::CreateBuiltinPSOs(id<MTLDevice> device)
 id<MTLComputePipelineState> MTBuiltinPSOFactory::GetComputePSO(const MTBuiltinComputePSO builtin) const
 {
     const auto idx = static_cast<std::size_t>(builtin);
-    if (idx < g_numComputePSOs)
+    if (idx < k_numComputePSOs)
         return builtinComputePSOs_[idx];
     else
         return nil;
@@ -58,10 +58,10 @@ void MTBuiltinPSOFactory::LoadBuiltinComputePSO(
         shaderDesc.entryPoint   = "CS";
         shaderDesc.profile      = "1.1";
     }
-    MTShader cs{ device, shaderDesc };
+    std::unique_ptr<MTShader> cs = MakeUnique<MTShader>(device, shaderDesc);
 
     /* We cannot recover from a faulty built-in shader */
-    if (const Report* report = cs.GetReport())
+    if (const Report* report = cs->GetReport())
     {
         if (report->HasErrors())
             LLGL_TRAP("%s", report->GetText());
@@ -70,9 +70,12 @@ void MTBuiltinPSOFactory::LoadBuiltinComputePSO(
     /* Create native compute pipeline state */
     const std::size_t idx = static_cast<std::size_t>(builtin);
     NSError* error = nullptr;
-    builtinComputePSOs_[idx] = [device newComputePipelineStateWithFunction:cs.GetNative() error:&error];
+    builtinComputePSOs_[idx] = [device newComputePipelineStateWithFunction:cs->GetNative() error:&error];
     if (!builtinComputePSOs_[idx])
         MTThrowIfCreateFailed(error, "MTLComputePipelineState");
+
+    /* Keep shader in memory as we still need the MTLLibrary and MTLFunction objects */
+    builtinComputeShaders_[idx] = std::move(cs);
 }
 
 

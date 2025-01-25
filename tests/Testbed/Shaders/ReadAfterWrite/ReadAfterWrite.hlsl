@@ -5,17 +5,17 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-RWBuffer<uint> buf1 : register(u0);
+RWBuffer<uint> buf1 : register(u1);
 
 struct Entry
 {
     uint a, b;
 };
 
-RWStructuredBuffer<Entry> buf2 : register(u1);
+RWStructuredBuffer<Entry> buf2 : register(u2);
 
-RWTexture1D<uint> tex1 : register(u2);
-RWTexture2D<uint2> tex2 : register(u3);
+RWTexture1D<uint> tex1 : register(u3);
+RWTexture2D<uint2> tex2 : register(u4);
 
 uint readPos;
 uint writePos;

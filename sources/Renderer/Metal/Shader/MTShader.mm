@@ -375,6 +375,9 @@ static void ReflectShaderArgument(MTLArgument* arg, ShaderReflection& reflection
 
 bool MTShader::ReflectComputePipeline(ShaderReflection& reflection) const
 {
+    if (GetNative() == nil)
+        return false;
+
     /* Create temporary compute pipeline state to retrieve shader reflection */
     MTLAutoreleasedComputePipelineReflection psoReflect = nullptr;
     MTLPipelineOption opt = (MTLPipelineOptionArgumentInfo | MTLPipelineOptionBufferTypeInfo);

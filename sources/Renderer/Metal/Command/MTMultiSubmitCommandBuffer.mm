@@ -451,7 +451,7 @@ void MTMultiSubmitCommandBuffer::ResourceBarrier(
     std::uint32_t       /*numTextures*/,
     Texture* const *    /*textures*/)
 {
-    //TODO
+    // dummy
 }
 
 /* ----- Render Passes ----- */
