@@ -17,7 +17,7 @@
 #else
     #include <cstdlib>
 
-    #define LLGL_VERIFY_OR_THROW(CONDITION, EXCEPTION) std::abort()
+    #define LLGL_VERIFY_OR_THROW(CONDITION, EXCEPTION) if (!(CONDITION)) { std::abort(); }
 #endif
 
 #endif
