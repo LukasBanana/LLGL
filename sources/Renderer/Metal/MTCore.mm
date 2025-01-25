@@ -25,7 +25,7 @@ void MTThrowIfFailed(NSError* error, const char* info)
         NSString* errorMsg = [error localizedDescription];
         s += [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
 
-        LLGL_TRAP(s.c_str());
+        LLGL_TRAP("%s", s.c_str());
     }
 }
 
