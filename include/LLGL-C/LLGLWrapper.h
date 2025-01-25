@@ -11,9 +11,9 @@
 #define LLGL_C99_LLGLWRAPPER_H
 
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <LLGL-C/Types.h>
 
 #if __ANDROID__
@@ -1381,10 +1381,11 @@ LLGLFragmentAttribute;
 
 typedef struct LLGLImageView
 {
-    LLGLImageFormat format;   /* = LLGLImageFormatRGBA */
-    LLGLDataType    dataType; /* = LLGLDataTypeUInt8 */
-    const void*     data;     /* = NULL */
-    size_t          dataSize; /* = 0 */
+    LLGLImageFormat format;    /* = LLGLImageFormatRGBA */
+    LLGLDataType    dataType;  /* = LLGLDataTypeUInt8 */
+    const void*     data;      /* = NULL */
+    size_t          dataSize;  /* = 0 */
+    uint32_t        rowStride; /* = 0 */
 }
 LLGLImageView;
 

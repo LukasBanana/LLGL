@@ -42,11 +42,12 @@ struct ImageView
     ImageView(const ImageView&) = default;
 
     //! Constructor to initialize all attributes.
-    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
+    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0) :
+        format    { format    },
+        dataType  { dataType  },
+        data      { data      },
+        dataSize  { dataSize  },
+        rowStride { rowStride }
     {
     }
 
@@ -61,6 +62,13 @@ struct ImageView
 
     //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
     std::size_t dataSize    = 0;
+
+    /**
+     \brief Specifies the size of one row of the image data.
+     \remarks When this is zero then the width of the texture region is used.
+     \note Only supported with: Vulkan, OpenGL.
+    */
+    std::uint32_t rowStride = 0;
 };
 
 /**
