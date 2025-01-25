@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     LLGLSwapChain swapChain = llglCreateSwapChain(&swapChainDesc);
 
     // Print information about the selected renderer
-    LLGLRendererInfo info = {0};
+    LLGLRendererInfo info = {};
     llglGetRendererInfo(&info);
     printf(
         "Renderer:         %s\n"
