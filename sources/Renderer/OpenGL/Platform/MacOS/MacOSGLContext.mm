@@ -50,7 +50,8 @@ MacOSGLContext::MacOSGLContext(
     Surface&                            surface,
     MacOSGLContext*                     sharedContext)
 {
-    LLGL_ASSERT(CreatePixelFormat(pixelFormat, profile), "failed to find suitable OpenGL pixel format");
+    if (!CreatePixelFormat(pixelFormat, profile))
+        LLGL_TRAP("failed to find suitable OpenGL pixel format");
 
     CreateNSGLContext(sharedContext);
 }
