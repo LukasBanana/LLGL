@@ -30,12 +30,6 @@ namespace LLGL
 {
 
 
-//TODO: replace this with a public 'IsIntDataType()' function once the deprecated version has been removed in the next release version.
-static bool IsSIntOrUIntDataType(DataType dataType)
-{
-    return (IsSIntDataType(dataType) || IsUIntDataType(dataType));
-}
-
 // Returns true if a GL renderbuffer is sufficient for a texture with the specified bind flags
 static bool IsRenderbufferSufficient(const TextureDescriptor& desc)
 {
@@ -910,10 +904,11 @@ static void GLGetTextureSubImage(
     const MutableImageView&     dstImageView)
 {
     /* Translate source region into actual texture dimensions */
-    const auto type         = textureGL.GetType();
-    const auto offset       = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
-    const auto extent       = CalcTextureExtent(type, region.extent, region.subresource.numArrayLayers);
-    const auto mipLevel     = static_cast<GLint>(region.subresource.baseMipLevel);
+    const auto type             = textureGL.GetType();
+    const auto offset           = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
+    const auto extent           = CalcTextureExtent(type, region.extent, region.subresource.numArrayLayers);
+    const auto mipLevel         = static_cast<GLint>(region.subresource.baseMipLevel);
+    const bool isIntegerFormat  = IsIntegerFormat(textureGL.GetFormat());
 
     /* Get image data from texture region with native GL command */
     glGetTextureSubImage(
@@ -925,7 +920,7 @@ static void GLGetTextureSubImage(
         static_cast<GLsizei>(extent.width),
         static_cast<GLsizei>(extent.height),
         static_cast<GLsizei>(extent.depth),
-        GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
+        GLTypes::Map(dstImageView.format, isIntegerFormat),
         GLTypes::Map(dstImageView.dataType),
         static_cast<GLsizei>(dstImageView.dataSize),
         dstImageView.data
@@ -946,6 +941,7 @@ static void GLGetTexImage(
     std::size_t             numTexels)
 {
     const GLenum targetGL = GLStateManager::ToGLTextureTarget(target);
+    const bool isIntegerFormat = IsIntegerFormat(GLTypes::UnmapFormat(internalFormat));
 
     GLStateManager::Get().BindTexture(target, textureID);
 
@@ -1009,7 +1005,7 @@ static void GLGetTexImage(
                 glGetTexImage(
                     cubeFaceTargetGL,
                     mipLevel,
-                    GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
+                    GLTypes::Map(dstImageView.format, isIntegerFormat),
                     GLTypes::Map(dstImageView.dataType),
                     dstImageData
                 );
@@ -1021,7 +1017,7 @@ static void GLGetTexImage(
             glGetTexImage(
                 targetGL,
                 mipLevel,
-                GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.format, isIntegerFormat),
                 GLTypes::Map(dstImageView.dataType),
                 dstImageView.data
             );
@@ -1038,6 +1034,7 @@ static void GLGetTextureImage(
 {
     /* Get texture type and texture unit target */
     const TextureType type = textureGL.GetType();
+    const bool isIntegerFormat = IsIntegerFormat(textureGL.GetFormat());
 
     /* Translate source region into actual texture dimensions */
     const Offset3D offset = CalcTextureOffset(type, region.offset, region.subresource.baseArrayLayer);
@@ -1101,7 +1098,7 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 stagingTextureID,
                 0,
-                GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.format, isIntegerFormat),
                 GLTypes::Map(dstImageView.dataType),
                 static_cast<GLsizei>(dstImageView.dataSize),
                 dstImageView.data
@@ -1128,7 +1125,7 @@ static void GLGetTextureImage(
             glGetTextureImage(
                 srcTextureID,
                 mipLevel,
-                GLTypes::Map(dstImageView.format, IsSIntOrUIntDataType(dstImageView.dataType)),
+                GLTypes::Map(dstImageView.format, isIntegerFormat),
                 GLTypes::Map(dstImageView.dataType),
                 static_cast<GLsizei>(dstImageView.dataSize),
                 dstImageView.data
