@@ -165,13 +165,13 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         case MTOpcodeSetViewports:
         {
             auto* cmd = static_cast<const MTCmdSetViewports*>(pc);
-            context.SetViewports(static_cast<const Viewport*>(cmd + 1), cmd->count);
+            context.SetViewports(reinterpret_cast<const Viewport*>(cmd + 1), cmd->count);
             return (sizeof(*cmd) + sizeof(Viewport)*cmd->count);
         }
         case MTOpcodeSetScissorRects:
         {
             auto* cmd = static_cast<const MTCmdSetScissorRects*>(pc);
-            context.SetScissorRects(static_cast<const Scissor*>(cmd + 1), cmd->count);
+            context.SetScissorRects(reinterpret_cast<const Scissor*>(cmd + 1), cmd->count);
             return (sizeof(*cmd) + sizeof(Scissor)*cmd->count);
         }
         case MTOpcodeSetBlendColor:
@@ -440,7 +440,7 @@ static std::size_t ExecuteMTCommand(const MTOpcode opcode, const void* pc, MTCom
         }
         case MTOpcodePresentDrawables:
         {
-            auto* cmd = reinterpret_cast<const MTCmdPresentDrawables*>(pc);
+            auto* cmd = static_cast<const MTCmdPresentDrawables*>(pc);
             auto* views = reinterpret_cast<MTKView* const*>(cmd + 1);
             for_range(i, cmd->count)
                 [context.GetCommandBuffer() presentDrawable:views[i].currentDrawable];
