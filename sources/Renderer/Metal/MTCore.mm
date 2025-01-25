@@ -5,6 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include "../../Core/Exception.h"
 #include "MTCore.h"
 #include <string>
 #include <stdexcept>
@@ -23,8 +24,8 @@ void MTThrowIfFailed(NSError* error, const char* info)
         
         NSString* errorMsg = [error localizedDescription];
         s += [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
-        
-        throw std::runtime_error(s);
+
+        LLGL_TRAP("%s", s.c_str());
     }
 }
 
