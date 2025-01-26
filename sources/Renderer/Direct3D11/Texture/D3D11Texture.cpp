@@ -14,7 +14,7 @@
 #include "../../TextureUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
-#include "LLGL/Format.h"
+#include <LLGL/Format.h>
 #include <LLGL/Backend/Direct3D11/NativeHandle.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Report.h>
@@ -297,15 +297,15 @@ HRESULT D3D11Texture::UpdateSubresource(
     const char* srcData = static_cast<const char*>(imageView.data);
     LLGL_ASSERT_PTR(srcData);
 
-    const std::uint32_t srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
-          std::size_t   srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : extent.width) * srcBytesPerPixel;
-          std::size_t   srcLayerStride        = (extent.height * srcRowStride);
+    const std::size_t   srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
+          std::uint32_t srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : extent.width) * srcBytesPerPixel;
+          std::uint32_t srcLayerStride        = (extent.height * srcRowStride);
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
-        const std::size_t dstRowStride   = extent.width * srcBytesPerPixel;
-        const std::size_t dstLayerStride = extent.height * dstRowStride;
+        const std::uint32_t dstRowStride   = extent.width * srcBytesPerPixel;
+        const std::uint32_t dstLayerStride = extent.height * dstRowStride;
 
         if (srcRowStride != dstRowStride)
         {

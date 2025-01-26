@@ -9,7 +9,6 @@
 #define LLGL_IMAGE_FLAGS_H
 
 
-#include "LLGL/Types.h"
 #include <LLGL/Export.h>
 #include <LLGL/Format.h>
 #include <LLGL/Tags.h>

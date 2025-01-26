@@ -851,7 +851,6 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     const Format            format          = textureD3D.GetFormat();
     const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
 
-    const Extent3D                      srcExtent   = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
     const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageView.format, imageView.dataType);
 
     if (imageView.dataSize < dataLayout.imageSize)
@@ -868,15 +867,15 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     DynamicByteArray intermediateData;
     const void* srcData = imageView.data;
 
-    const std::uint32_t srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
-          std::size_t   srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : srcExtent.width) * srcBytesPerPixel;
-          std::size_t   srcLayerStride        = (srcExtent.height * srcRowStride);
+    const std::size_t   srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
+          std::uint32_t srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : region.extent.width) * srcBytesPerPixel;
+          std::uint32_t srcLayerStride        = (region.extent.height * srcRowStride);
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
-        const std::size_t dstRowStride   = srcExtent.width * srcBytesPerPixel;
-        const std::size_t dstLayerStride = srcExtent.height * dstRowStride;
+        const std::uint32_t dstRowStride   = region.extent.width * srcBytesPerPixel;
+        const std::uint32_t dstLayerStride = region.extent.height * dstRowStride;
 
         if (srcRowStride != dstRowStride)
         {
@@ -903,7 +902,8 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
         subresourceData.SlicePitch  = srcLayerStride;
     }
 
-    const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == mipExtent);
+    const Extent3D srcExtent    = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
+    const bool     isFullRegion = (region.offset == Offset3D{} && srcExtent == mipExtent);
     if (isFullRegion)
         textureD3D.UpdateSubresource(subresourceContext, subresourceData, region.subresource);
     else
