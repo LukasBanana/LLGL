@@ -21,6 +21,7 @@
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
 #include <limits.h>
 
+#include "LLGL/Container/DynamicArray.h"
 #include "Shader/D3D12BuiltinShaderFactory.h"
 
 #include "Buffer/D3D12Buffer.h"
@@ -867,12 +868,30 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     DynamicByteArray intermediateData;
     const void* srcData = imageView.data;
 
+    const std::uint32_t srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
+          std::size_t   srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : srcExtent.width) * srcBytesPerPixel;
+          std::size_t   srcLayerStride        = (srcExtent.height * srcRowStride);
+
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
+        const std::size_t dstRowStride   = srcExtent.width * srcBytesPerPixel;
+        const std::size_t dstLayerStride = srcExtent.height * dstRowStride;
+
+        if (srcRowStride != dstRowStride)
+        {
+            intermediateData = DynamicByteArray{ imageView.dataSize, UninitializeTag{} };
+            CopyRowAlignedData(intermediateData.get(), imageView.dataSize, dstRowStride, srcData, srcRowStride);
+            srcData = intermediateData.get();
+        }
+
+        const ImageView srcImageView{ imageView.format, imageView.dataType, srcData, imageView.dataSize, imageView.rowStride };
+
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+        intermediateData    = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
+        srcRowStride        = dataLayout.rowStride;
+        srcLayerStride      = dataLayout.layerStride;
         LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }
 
@@ -880,8 +899,8 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     D3D12_SUBRESOURCE_DATA subresourceData;
     {
         subresourceData.pData       = srcData;
-        subresourceData.RowPitch    = dataLayout.rowStride;
-        subresourceData.SlicePitch  = dataLayout.layerStride;
+        subresourceData.RowPitch    = srcRowStride;
+        subresourceData.SlicePitch  = srcLayerStride;
     }
 
     const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == mipExtent);

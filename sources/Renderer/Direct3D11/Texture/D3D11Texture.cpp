@@ -14,6 +14,7 @@
 #include "../../TextureUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
+#include "LLGL/Format.h"
 #include <LLGL/Backend/Direct3D11/NativeHandle.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Report.h>
@@ -296,12 +297,30 @@ HRESULT D3D11Texture::UpdateSubresource(
     const char* srcData = static_cast<const char*>(imageView.data);
     LLGL_ASSERT_PTR(srcData);
 
+    const std::uint32_t srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
+          std::size_t   srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : extent.width) * srcBytesPerPixel;
+          std::size_t   srcLayerStride        = (extent.height * srcRowStride);
+
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
+        const std::size_t dstRowStride   = extent.width * srcBytesPerPixel;
+        const std::size_t dstLayerStride = extent.height * dstRowStride;
+
+        if (srcRowStride != dstRowStride)
+        {
+            intermediateData = DynamicByteArray{ imageView.dataSize, UninitializeTag{} };
+            CopyRowAlignedData(intermediateData.get(), imageView.dataSize, dstRowStride, srcData, srcRowStride);
+            srcData = intermediateData.get();
+        }
+
+        const ImageView srcImageView{ imageView.format, imageView.dataType, srcData, imageView.dataSize, imageView.rowStride };
+
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+        intermediateData    = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
+        srcRowStride        = dataLayout.rowStride;
+        srcLayerStride      = dataLayout.layerStride;
         LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }
 
@@ -314,10 +333,10 @@ HRESULT D3D11Texture::UpdateSubresource(
             dstSubresource,
             &dstBox,
             srcData,
-            dataLayout.rowStride,
-            dataLayout.layerStride
+            srcRowStride,
+            srcLayerStride
         );
-        srcData += dataLayout.layerStride;
+        srcData += srcLayerStride;
     }
 
     return S_OK;

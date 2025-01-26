@@ -110,6 +110,8 @@ inline bool IsTextureViewEnabled(const TextureViewDescriptor& textureViewDesc)
     );
 }
 
+LLGL_EXPORT void CopyRowAlignedData(void* dstData, std::size_t dstSize, std::size_t dstStride, const void* srcData, std::size_t srcStride);
+
 
 } // /namespace LLGL
 

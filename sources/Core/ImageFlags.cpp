@@ -18,6 +18,7 @@
 #include "../Core/Threading.h"
 #include "Float16Compressor.h"
 #include "BCDecompressor.h"
+#include "LLGL/Types.h"
 #include <LLGL/Utils/ForRange.h>
 
 

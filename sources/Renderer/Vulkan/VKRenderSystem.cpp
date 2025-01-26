@@ -302,19 +302,45 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     /* Determine size of image for staging buffer */
     const std::uint32_t imageSize       = NumMipTexels(textureDesc, 0);
     const std::size_t   initialDataSize = GetMemoryFootprint(textureDesc.format, imageSize);
+    const std::size_t   bytesPerPixel   = GetMemoryFootprint(textureDesc.format, 1);
+    const auto&         formatAttribs   = GetFormatAttribs(textureDesc.format);
 
     /* Set up initial image data */
     const void* initialData = nullptr;
     DynamicByteArray intermediateData;
 
+    std::size_t srcRowStride = textureDesc.extent.width * bytesPerPixel;
+
     if (initialImage != nullptr)
     {
+        const ImageView& srcImageView = *initialImage;
+        const Extent3D&  extent       = textureDesc.extent;
+
+        const void* srcData = initialImage->data;
+
+        const std::uint32_t srcBytesPerPixel = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+        srcRowStride = (srcImageView.rowStride > 0 ? srcImageView.rowStride : extent.width) * srcBytesPerPixel;
+
         /* Check if image data must be converted */
-        const auto& formatAttribs = GetFormatAttribs(textureDesc.format);
-        if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
+        if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
+            (formatAttribs.format != srcImageView.format || formatAttribs.dataType != srcImageView.dataType))
         {
+            const std::size_t dstRowStride   = extent.width * srcBytesPerPixel;
+            const std::size_t dstLayerStride = extent.height * dstRowStride;
+            const void*       srcData        = srcImageView.data;
+
+            if (srcRowStride != dstRowStride)
+            {
+                intermediateData = DynamicByteArray{ srcImageView.dataSize, UninitializeTag{} };
+                CopyRowAlignedData(intermediateData.get(), srcImageView.dataSize, dstRowStride, srcData, srcRowStride);
+                srcData = intermediateData.get();
+            }
+
+            const ImageView imageView{ srcImageView.format, srcImageView.dataType, srcData, srcImageView.dataSize, srcImageView.rowStride };
+
             /* Convert image format (will be null if no conversion is necessary) */
-            intermediateData = ConvertImageBuffer(*initialImage, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+            intermediateData = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+            srcRowStride = extent.width * bytesPerPixel;
         }
 
         if (intermediateData)
@@ -362,7 +388,9 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT
         );
 
-        VKDeviceBuffer stagingBuffer = CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize);
+        VKDeviceBuffer stagingBuffer = ((formatAttribs.flags & FormatFlags::IsCompressed) == 0)
+            ? CreateStagingBufferAndInitialize(stagingCreateInfo, initialData, initialDataSize)
+            : CreateTextureStagingBufferAndInitialize(stagingCreateInfo, textureDesc.extent, initialData, initialDataSize, srcRowStride, bytesPerPixel);
 
         /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
         VkCommandBuffer cmdBuffer = AllocCommandBuffer();
@@ -445,11 +473,29 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     /* Check if image data must be converted */
     DynamicByteArray intermediateData;
 
+    const std::uint32_t srcBytesPerPixel      = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+          std::size_t   srcRowStride          = (srcImageView.rowStride > 0 ? srcImageView.rowStride : extent.width) * srcBytesPerPixel;
+
     const auto& formatAttribs = GetFormatAttribs(format);
-    if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
+    if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
+        (formatAttribs.format != srcImageView.format || formatAttribs.dataType != srcImageView.dataType))
     {
+        const std::size_t dstRowStride   = extent.width * srcBytesPerPixel;
+        const std::size_t dstLayerStride = extent.height * dstRowStride;
+        const void*       srcData        = srcImageView.data;
+
+        if (srcRowStride != dstRowStride)
+        {
+            intermediateData = DynamicByteArray{ srcImageView.dataSize, UninitializeTag{} };
+            CopyRowAlignedData(intermediateData.get(), srcImageView.dataSize, dstRowStride, srcData, srcRowStride);
+            srcData = intermediateData.get();
+        }
+
+        const ImageView imageView{ srcImageView.format, srcImageView.dataType, srcData, srcImageView.dataSize, srcImageView.rowStride };
+
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+        intermediateData = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+        srcRowStride = extent.width * bytesPerPixel;
     }
 
     if (intermediateData)
@@ -482,7 +528,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 
     VKDeviceBuffer stagingBuffer = IsCompressedFormat(format)
         ? CreateStagingBufferAndInitialize(stagingCreateInfo, imageData, imageDataSize)
-        : CreateTextureStagingBufferAndInitialize(stagingCreateInfo, extent, imageData, imageDataSize, srcImageView.rowStride, bytesPerPixel);
+        : CreateTextureStagingBufferAndInitialize(stagingCreateInfo, extent, imageData, imageDataSize, srcRowStride, bytesPerPixel);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     VkCommandBuffer cmdBuffer = AllocCommandBuffer();
@@ -989,7 +1035,7 @@ VKDeviceBuffer VKRenderSystem::CreateTextureStagingBufferAndInitialize(
                 const char* src = static_cast<const char*>(data);
                 char* dst = static_cast<char*>(memory);
 
-                BitBlit(extent, bpp, dst, extent.width, extent.width * extent.height, src, srcRowStride, srcRowStride * extent.height);
+                BitBlit(extent, bpp, dst, extent.width * bpp, extent.width * extent.height * bpp, src, srcRowStride, srcRowStride * extent.height);
 
                 deviceMemory->Unmap(device_);
             }
