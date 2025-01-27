@@ -526,6 +526,10 @@ static void ConvertImageBufferFormatWorker(
     VariantConstBuffer  srcBuffer = srcImageView.data;
     VariantBuffer       dstBuffer = dstImageView.data;
 
+    const std::size_t y = begin / extent.width;
+    srcBuffer.int8 += y * srcRowPadding;
+    dstBuffer.int8 += y * dstRowPadding;
+
     if (IsDepthOrStencilFormat(srcImageView.format))
     {
         /* Initialize default depth-stencil value (0, 0) */
@@ -534,7 +538,7 @@ static void ConvertImageBufferFormatWorker(
         for_subrange(i, begin, end)
         {
             /* Apply source and destination stride when passing an edge */
-            if (i > 0 && i % extent.width == 0)
+            if (i > begin && i % extent.width == 0)
             {
                 srcBuffer.int8 += srcRowPadding;
                 dstBuffer.int8 += dstRowPadding;
@@ -557,24 +561,20 @@ static void ConvertImageBufferFormatWorker(
         SetVariantMinMax(srcImageView.dataType, colorValue.b, true);
         SetVariantMinMax(srcImageView.dataType, colorValue.a, false);
 
-        for_subrange(k, begin, end)
+        for_subrange(i, begin, end)
         {
-            const size_t rowStride = GetImageRowStride(srcImageView, extent);
-            const size_t y = k / extent.width;
-            const size_t i = k % extent.width;
-
             /* Apply source and destination stride when passing an edge */
-            if (k > 0 && i == 0)
+            if (i > begin && i % extent.width == 0)
             {
-                // srcBuffer.int8 += srcRowPadding;
+                srcBuffer.int8 += srcRowPadding;
                 dstBuffer.int8 += dstRowPadding;
             }
 
             /* Read RGBA variant from source buffer */
-            ReadRGBAFormattedVariant(srcImageView.format, srcImageView.dataType, srcBuffer.int8 + y * rowStride, i, colorValue);
+            ReadRGBAFormattedVariant(srcImageView.format, srcImageView.dataType, srcBuffer, i, colorValue);
 
             /* Write RGBA variant to destination buffer */
-            WriteRGBAFormattedVariant(dstImageView.format, dstImageView.dataType, dstBuffer, k, colorValue);
+            WriteRGBAFormattedVariant(dstImageView.format, dstImageView.dataType, dstBuffer, i, colorValue);
         }
     }
 }
