@@ -26,51 +26,7 @@ namespace LLGL
 
 
 /* ----- Structures ----- */
-
-/**
-\brief Image view structure used as source when writing the image data to a hardware texture.
-\remarks This kind of image is mainly used to fill a MIP-map within a hardware texture by reading from a source image.
-The counterpart for reading a MIP-map from a hardware texture by writing to a destination image is the MutableImageView structure.
-\see MutableImageView
-\see ConvertImageBuffer
-\see RenderSystem::CreateTexture
-\see RenderSystem::WriteTexture
-*/
-struct ImageView
-{
-    ImageView() = default;
-    ImageView(const ImageView&) = default;
-
-    //! Constructor to initialize all attributes.
-    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0) :
-        format    { format    },
-        dataType  { dataType  },
-        data      { data      },
-        dataSize  { dataSize  },
-        rowStride { rowStride }
-    {
-    }
-
-    //! Specifies the image format. By default ImageFormat::RGBA.
-    ImageFormat format      = ImageFormat::RGBA;
-
-    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
-    DataType    dataType    = DataType::UInt8;
-
-    //! Read-only pointer to the image data.
-    const void* data        = nullptr;
-
-    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
-    std::size_t dataSize    = 0;
-
-    /**
-     \brief Specifies the size of one row of the image data.
-     \remarks When this is zero then the width of the texture region is used.
-     \note Only supported with: Vulkan, OpenGL.
-    */
-    std::uint32_t rowStride = 0;
-};
-
+    
 /**
 \brief Mutable image view structure used as destination when reading the image data from a hardware texture.
 \remarks This kind of image is mainly used to fill the image data of a hardware texture.
@@ -103,6 +59,57 @@ struct MutableImageView
 
     //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
     std::size_t dataSize    = 0;
+};
+
+/**
+\brief Image view structure used as source when writing the image data to a hardware texture.
+\remarks This kind of image is mainly used to fill a MIP-map within a hardware texture by reading from a source image.
+The counterpart for reading a MIP-map from a hardware texture by writing to a destination image is the MutableImageView structure.
+\see MutableImageView
+\see ConvertImageBuffer
+\see RenderSystem::CreateTexture
+\see RenderSystem::WriteTexture
+*/
+struct ImageView
+{
+    ImageView() = default;
+    ImageView(const ImageView&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0) :
+        format    { format    },
+        dataType  { dataType  },
+        data      { data      },
+        dataSize  { dataSize  },
+        rowStride { rowStride }
+    {
+    }
+
+    //! Explicitly constructs the immutable image view from a mutable image view, effectively downgrading its mutability.
+    explicit inline ImageView(const MutableImageView& rhs) :
+        ImageView{ rhs.format, rhs.dataType, rhs.data, rhs.dataSize }
+    {
+    }
+
+    //! Specifies the image format. By default ImageFormat::RGBA.
+    ImageFormat     format      = ImageFormat::RGBA;
+
+    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
+    DataType        dataType    = DataType::UInt8;
+
+    //! Read-only pointer to the image data.
+    const void*     data        = nullptr;
+
+    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    std::size_t     dataSize    = 0;
+
+    /**
+    \brief Specifies the stride (in bytes) between two rows of the image data.
+    \remarks If this is zero, each image layer is considerd tightly packed
+    and the stride is implied by the width of the image multiplied by the pixel format size (see Format).
+    \note Only supported with: Vulkan, OpenGL.
+    */
+    std::uint32_t   rowStride   = 0;
 };
 
 struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use LLGL::ImageView instead!", "ImageView") SrcImageDescriptor
@@ -196,11 +203,12 @@ struct LLGL_DEPRECATED("LLGL::DstImageDescriptor is deprecated since 0.04b; Use 
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
 \param[in] srcImageView Specifies the source image view.
 \param[out] dstImageView Specifies the destination image view.
+\param[in] extent Specifies the extent of the image. This is required 
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return True if any conversion was necessary. Otherwise, no conversion was necessary and the destination buffer is not modified!
-\note Compressed images and depth-stencil images cannot be converted.
+\note Compressed images and depth-stencil images cannot be converted with this function.
 \throw std::invalid_argument If a compressed image format is specified either as source or destination.
 \throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
 \throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
@@ -213,6 +221,19 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 LLGL_EXPORT bool ConvertImageBuffer(
     const ImageView&        srcImageView,
     const MutableImageView& dstImageView,
+    const Extent3D&         extent,
+    unsigned                threadCount = 0
+);
+
+/**
+\brief Converts the image format and data type of the source image (only uncompressed color formats).
+\remarks Same as the primary version of ConvertImageBuffer where the \c extent parameter is implied as 1-dimensional size.
+This must only be used for tightly packed image buffer, i.e. with a row stride of zero.
+\see ConvertImageBuffer(const ImageView&, const MutableImageView&, const Extent3D&, unsigned)
+*/
+LLGL_EXPORT bool ConvertImageBuffer(
+    const ImageView&        srcImageView,
+    const MutableImageView& dstImageView,
     unsigned                threadCount = 0
 );
 
@@ -221,6 +242,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
 \param[in] srcImageView Specifies the source image view.
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination image data type.
+\param[in] extent Specifies the extent of the image. This is required 
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
@@ -233,6 +255,20 @@ This can be casted to the respective target data type (e.g. <code>unsigned char<
 \throw std::invalid_argument If the source buffer is a null pointer.
 \see LLGL_MAX_THREAD_COUNT
 \see GetMemoryFootprint
+*/
+LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
+    const ImageView&    srcImageView,
+    ImageFormat         dstFormat,
+    DataType            dstDataType,
+    const Extent3D&     extent,
+    unsigned            threadCount = 0
+);
+
+/**
+\brief Converts the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
+\remarks Same as the primary version of ConvertImageBuffer where the \c extent parameter is implied as 1-dimensional size.
+This must only be used for tightly packed image buffer, i.e. with a row stride of zero.
+\see ConvertImageBuffer(const ImageView&, ImageFormat, DataType, const Extent3D&, unsigned)
 */
 LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     const ImageView&    srcImageView,

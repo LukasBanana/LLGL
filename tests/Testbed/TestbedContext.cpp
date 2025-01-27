@@ -400,6 +400,7 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     RUN_TEST( ContainerStringOperators );
     RUN_TEST( ParseUtil );
     RUN_TEST( ImageConversions );
+    RUN_TEST( ImageStrides );
 
     #undef RUN_TEST
 

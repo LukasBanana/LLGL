@@ -440,7 +440,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
     const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth * subresource.numArrayLayers;
     const void*                 imageData       = nullptr;
     const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
-    const std::uint32_t         bytesPerPixel   = GetMemoryFootprint(format, 1);
+    const std::uint32_t         bytesPerPixel   = static_cast<std::uint32_t>(GetMemoryFootprint(format, 1));
 
     /* Check if image data must be converted */
     DynamicByteArray intermediateData;

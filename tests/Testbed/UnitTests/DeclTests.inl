@@ -25,6 +25,7 @@ DECL_RITEST( ContainerStringLiteral );
 DECL_RITEST( ContainerStringOperators );
 DECL_RITEST( ParseUtil );
 DECL_RITEST( ImageConversions );
+DECL_RITEST( ImageStrides );
 
 #undef DECL_RITEST
 
