@@ -557,20 +557,24 @@ static void ConvertImageBufferFormatWorker(
         SetVariantMinMax(srcImageView.dataType, colorValue.b, true);
         SetVariantMinMax(srcImageView.dataType, colorValue.a, false);
 
-        for_subrange(i, begin, end)
+        for_subrange(k, begin, end)
         {
+            const size_t rowStride = GetImageRowStride(srcImageView, extent);
+            const size_t y = k / extent.width;
+            const size_t i = k % extent.width;
+
             /* Apply source and destination stride when passing an edge */
-            if (i > 0 && i % extent.width == 0)
+            if (k > 0 && i == 0)
             {
-                srcBuffer.int8 += srcRowPadding;
+                // srcBuffer.int8 += srcRowPadding;
                 dstBuffer.int8 += dstRowPadding;
             }
 
             /* Read RGBA variant from source buffer */
-            ReadRGBAFormattedVariant(srcImageView.format, srcImageView.dataType, srcBuffer, i, colorValue);
+            ReadRGBAFormattedVariant(srcImageView.format, srcImageView.dataType, srcBuffer.int8 + y * rowStride, i, colorValue);
 
             /* Write RGBA variant to destination buffer */
-            WriteRGBAFormattedVariant(dstImageView.format, dstImageView.dataType, dstBuffer, i, colorValue);
+            WriteRGBAFormattedVariant(dstImageView.format, dstImageView.dataType, dstBuffer, k, colorValue);
         }
     }
 }
