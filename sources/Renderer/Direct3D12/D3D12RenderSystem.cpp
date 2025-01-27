@@ -867,27 +867,14 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     DynamicByteArray intermediateData;
     const void* srcData = imageView.data;
 
-    const std::size_t   srcBytesPerPixel      = GetMemoryFootprint(imageView.format, imageView.dataType, 1);
-          std::uint32_t srcRowStride          = (imageView.rowStride > 0 ? imageView.rowStride : region.extent.width) * srcBytesPerPixel;
-          std::uint32_t srcLayerStride        = (region.extent.height * srcRowStride);
+    std::uint32_t srcRowStride      = imageView.rowStride > 0 ? imageView.rowStride                        : dataLayout.rowStride;
+    std::uint32_t srcLayerStride    = imageView.rowStride > 0 ? imageView.rowStride * region.extent.height : dataLayout.layerStride;
 
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
-        const std::uint32_t dstRowStride   = region.extent.width * srcBytesPerPixel;
-        const std::uint32_t dstLayerStride = region.extent.height * dstRowStride;
-
-        if (srcRowStride != dstRowStride)
-        {
-            intermediateData = DynamicByteArray{ imageView.dataSize, UninitializeTag{} };
-            CopyRowAlignedData(intermediateData.get(), imageView.dataSize, dstRowStride, srcData, srcRowStride);
-            srcData = intermediateData.get();
-        }
-
-        const ImageView srcImageView{ imageView.format, imageView.dataType, srcData, imageView.dataSize, imageView.rowStride };
-
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, region.extent, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
         srcRowStride        = dataLayout.rowStride;
         srcLayerStride      = dataLayout.layerStride;

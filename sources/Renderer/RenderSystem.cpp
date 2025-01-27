@@ -317,6 +317,20 @@ void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t require
     );
 }
 
+static void CopyRowAlignedData(void* dstData, std::size_t dstSize, std::size_t dstStride, const void* srcData, std::size_t srcStride)
+{
+    LLGL_ASSERT_PTR(dstData);
+    LLGL_ASSERT_PTR(srcData);
+    LLGL_ASSERT(dstStride > 0);
+    LLGL_ASSERT(dstStride <= srcStride, "dstStride (%u) is not less than or equal to srcStride (%u)", dstStride, srcStride);
+
+    auto dst = static_cast<char*>(dstData);
+    auto src = static_cast<const char*>(srcData);
+
+    for (char* dstEnd = dst + dstSize; dst < dstEnd; dst += dstStride, src += srcStride)
+        ::memcpy(dst, src, dstStride);
+}
+
 std::size_t RenderSystem::CopyTextureImageData(
     const MutableImageView& dstImageView,
     const ImageView&        srcImageView,
