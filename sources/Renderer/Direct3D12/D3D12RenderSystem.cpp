@@ -19,6 +19,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
+#include <LLGL/Container/DynamicArray.h>
 #include <limits.h>
 
 #include "Shader/D3D12BuiltinShaderFactory.h"
@@ -850,7 +851,6 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     const Format            format          = textureD3D.GetFormat();
     const FormatAttributes& formatAttribs   = GetFormatAttribs(format);
 
-    const Extent3D                      srcExtent   = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
     const SubresourceCPUMappingLayout   dataLayout  = CalcSubresourceCPUMappingLayout(format, region.extent, subresource.numArrayLayers, imageView.format, imageView.dataType);
 
     if (imageView.dataSize < dataLayout.imageSize)
@@ -867,12 +867,17 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     DynamicByteArray intermediateData;
     const void* srcData = imageView.data;
 
+    std::uint32_t srcRowStride      = imageView.rowStride > 0 ? imageView.rowStride                        : dataLayout.rowStride;
+    std::uint32_t srcLayerStride    = imageView.rowStride > 0 ? imageView.rowStride * region.extent.height : dataLayout.layerStride;
+
     if ((formatAttribs.flags & FormatFlags::IsCompressed) == 0 &&
         (formatAttribs.format != imageView.format || formatAttribs.dataType != imageView.dataType))
     {
         /* Convert image data (e.g. from RGB to RGBA), and redirect initial data to new buffer */
-        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, LLGL_MAX_THREAD_COUNT);
+        intermediateData    = ConvertImageBuffer(imageView, formatAttribs.format, formatAttribs.dataType, region.extent, LLGL_MAX_THREAD_COUNT);
         srcData             = intermediateData.get();
+        srcRowStride        = dataLayout.rowStride;
+        srcLayerStride      = dataLayout.layerStride;
         LLGL_ASSERT(intermediateData.size() == dataLayout.subresourceSize);
     }
 
@@ -880,11 +885,12 @@ HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(
     D3D12_SUBRESOURCE_DATA subresourceData;
     {
         subresourceData.pData       = srcData;
-        subresourceData.RowPitch    = dataLayout.rowStride;
-        subresourceData.SlicePitch  = dataLayout.layerStride;
+        subresourceData.RowPitch    = srcRowStride;
+        subresourceData.SlicePitch  = srcLayerStride;
     }
 
-    const bool isFullRegion = (region.offset == Offset3D{} && srcExtent == mipExtent);
+    const Extent3D srcExtent    = CalcTextureExtent(textureD3D.GetType(), region.extent, subresource.numArrayLayers);
+    const bool     isFullRegion = (region.offset == Offset3D{} && srcExtent == mipExtent);
     if (isFullRegion)
         textureD3D.UpdateSubresource(subresourceContext, subresourceData, region.subresource);
     else

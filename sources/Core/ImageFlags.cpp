@@ -211,13 +211,20 @@ static void ConvertImageBufferDataTypeWorker(
     const std::uint32_t numComponents       = ImageFormatSize(srcImageView.format);
     const std::uint32_t numComponentsPerRow = extent.width*numComponents;
 
+    const std::size_t begin = idxBegin * numComponents;
+    const std::size_t end   = idxEnd * numComponents;
+
     VariantConstBuffer  srcBuffer = srcImageView.data;
     VariantBuffer       dstBuffer = dstImageView.data;
 
-    for_subrange(i, idxBegin*numComponents, idxEnd*numComponents)
+    const std::size_t y = idxBegin / extent.width;
+    srcBuffer.int8 += y * srcRowPadding;
+    dstBuffer.int8 += y * dstRowPadding;
+
+    for_subrange(i, begin, end)
     {
         /* Apply source and destination stride when passing an edge */
-        if (i > 0 && i % numComponentsPerRow == 0)
+        if (i > begin && i % numComponentsPerRow == 0)
         {
             srcBuffer.int8 += srcRowPadding;
             dstBuffer.int8 += dstRowPadding;
@@ -526,6 +533,10 @@ static void ConvertImageBufferFormatWorker(
     VariantConstBuffer  srcBuffer = srcImageView.data;
     VariantBuffer       dstBuffer = dstImageView.data;
 
+    const std::size_t y = begin / extent.width;
+    srcBuffer.int8 += y * srcRowPadding;
+    dstBuffer.int8 += y * dstRowPadding;
+
     if (IsDepthOrStencilFormat(srcImageView.format))
     {
         /* Initialize default depth-stencil value (0, 0) */
@@ -534,7 +545,7 @@ static void ConvertImageBufferFormatWorker(
         for_subrange(i, begin, end)
         {
             /* Apply source and destination stride when passing an edge */
-            if (i > 0 && i % extent.width == 0)
+            if (i > begin && i % extent.width == 0)
             {
                 srcBuffer.int8 += srcRowPadding;
                 dstBuffer.int8 += dstRowPadding;
@@ -560,7 +571,7 @@ static void ConvertImageBufferFormatWorker(
         for_subrange(i, begin, end)
         {
             /* Apply source and destination stride when passing an edge */
-            if (i > 0 && i % extent.width == 0)
+            if (i > begin && i % extent.width == 0)
             {
                 srcBuffer.int8 += srcRowPadding;
                 dstBuffer.int8 += dstRowPadding;
