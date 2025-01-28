@@ -749,8 +749,19 @@ LLGL_EXPORT bool ConvertImageBuffer(
     const MutableImageView& dstImageView,
     unsigned                threadCount)
 {
-    LLGL_ASSERT(srcImageView.rowStride == 0, "parameter 'srcImageView.rowStride' must be zero for this version of ConvertImageBuffer()");
-    const Extent3D extent1D{ static_cast<std::uint32_t>(srcImageView.dataSize / GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1)), 1u, 1u };
+    LLGL_ASSERT(
+        srcImageView.rowStride == 0,
+        "parameter 'srcImageView.rowStride' must be zero for this version of ConvertImageBuffer()"
+    );
+
+    const std::size_t bpp = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+    LLGL_ASSERT(
+        bpp > 0,
+        "cannot determine bytes per pixel format image format (%d) and data type (%d)",
+        static_cast<int>(srcImageView.format), static_cast<int>(srcImageView.dataType)
+    );
+
+    const Extent3D extent1D{ static_cast<std::uint32_t>(srcImageView.dataSize / bpp), 1u, 1u };
     return ConvertImageBuffer(srcImageView, dstImageView, extent1D, threadCount);
 }
 
@@ -861,6 +872,8 @@ LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
     const Extent2D&     extent,
     unsigned            threadCount)
 {
+    LLGL_ASSERT(srcImageView.rowStride == 0, "row stride not supported for compressed formats");
+
     if (threadCount == LLGL_MAX_THREAD_COUNT)
         threadCount = std::thread::hardware_concurrency();
 

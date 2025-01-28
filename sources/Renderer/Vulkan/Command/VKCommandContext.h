@@ -98,7 +98,9 @@ class VKCommandContext
             VkFormat                    format,
             const VkOffset3D&           offset,
             const VkExtent3D&           extent,
-            const TextureSubresource&   subresource
+            const TextureSubresource&   subresource,
+            std::uint32_t               rowLength       = 0,
+            std::uint32_t               imageHeight     = 0
         );
 
         void CopyBufferToImage(

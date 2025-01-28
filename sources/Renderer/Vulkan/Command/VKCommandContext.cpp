@@ -246,13 +246,15 @@ void VKCommandContext::CopyBufferToImage(
     VkFormat                    format,
     const VkOffset3D&           offset,
     const VkExtent3D&           extent,
-    const TextureSubresource&   subresource)
+    const TextureSubresource&   subresource,
+    std::uint32_t               rowLength,
+    std::uint32_t               imageHeight)
 {
     VkBufferImageCopy region;
     {
         region.bufferOffset                     = 0;
-        region.bufferRowLength                  = 0;
-        region.bufferImageHeight                = 0;
+        region.bufferRowLength                  = rowLength;
+        region.bufferImageHeight                = imageHeight;
         region.imageSubresource.aspectMask      = VKImageUtils::GetInclusiveVkImageAspect(format);
         region.imageSubresource.mipLevel        = subresource.baseMipLevel;
         region.imageSubresource.baseArrayLayer  = subresource.baseArrayLayer;
