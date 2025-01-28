@@ -178,7 +178,6 @@ LLGL_EXPORT int CompareCompressedTexViewSWO(const CompressedTexView& lhs, const 
 }
 
 
-
 } // /namespace LLGL
 
 

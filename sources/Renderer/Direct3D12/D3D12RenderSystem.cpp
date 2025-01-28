@@ -19,9 +19,9 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
+#include <LLGL/Container/DynamicArray.h>
 #include <limits.h>
 
-#include "LLGL/Container/DynamicArray.h"
 #include "Shader/D3D12BuiltinShaderFactory.h"
 
 #include "Buffer/D3D12Buffer.h"

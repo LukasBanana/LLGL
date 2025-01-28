@@ -26,7 +26,6 @@
 #include <unordered_map>
 
 #include "../Core/PrintfUtils.h"
-#include "TextureUtils.h"
 
 #ifdef LLGL_ENABLE_DEBUG_LAYER
 #   include "DebugLayer/DbgRenderSystem.h"

@@ -111,7 +111,6 @@ inline bool IsTextureViewEnabled(const TextureViewDescriptor& textureViewDesc)
 }
 
 
-
 } // /namespace LLGL
 
 
