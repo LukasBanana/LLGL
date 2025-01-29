@@ -867,7 +867,8 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
 {
     if (!IsRenderbuffer())
     {
-        const std::uint32_t srcRowStride = srcImageView.rowStride / GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+        const std::uint32_t bytesPerPixel = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+        const std::uint32_t srcRowStride = bytesPerPixel > 0 ? srcImageView.rowStride / bytesPerPixel : 0;
 
         GLStateManager::Get().SetPixelStoreUnpack(srcRowStride, region.extent.height, 1);
         {
@@ -1276,7 +1277,8 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
         intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
         initialImage = &intermediateImageView;
 
-        const std::uint32_t srcRowStride = initialImage->rowStride / GetMemoryFootprint(initialImage->format, initialImage->dataType, 1);
+        const std::uint32_t bytesPerPixel = GetMemoryFootprint(initialImage->format, initialImage->dataType, 1);
+        const std::uint32_t srcRowStride = bytesPerPixel > 0 ? initialImage->rowStride / bytesPerPixel : 0;
         GLStateManager::Get().SetPixelStoreUnpack(srcRowStride, textureDesc.extent.height, 1);
     }
 
