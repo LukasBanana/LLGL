@@ -22,6 +22,7 @@
 #include "../../TextureUtils.h"
 #include "../../../Core/Exception.h"
 #include "../../../Core/CoreUtils.h"
+#include <LLGL/Format.h>
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Backend/OpenGL/NativeHandle.h>
 
@@ -866,7 +867,10 @@ void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& sr
 {
     if (!IsRenderbuffer())
     {
-        GLStateManager::Get().SetPixelStoreUnpack(srcImageView.rowStride, region.extent.height, 1);
+        const std::uint32_t bytesPerPixel = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+        const std::uint32_t srcRowStride = bytesPerPixel > 0 ? srcImageView.rowStride / bytesPerPixel : 0;
+
+        GLStateManager::Get().SetPixelStoreUnpack(srcRowStride, region.extent.height, 1);
         {
             #if LLGL_GLEXT_DIRECT_STATE_ACCESS
             if (HasExtension(GLExt::ARB_direct_state_access))
@@ -1272,7 +1276,10 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
         intermediateImageView = *initialImage;
         intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
         initialImage = &intermediateImageView;
-        GLStateManager::Get().SetPixelStoreUnpack(initialImage->rowStride, textureDesc.extent.height, 1);
+
+        const std::uint32_t bytesPerPixel = GetMemoryFootprint(initialImage->format, initialImage->dataType, 1);
+        const std::uint32_t srcRowStride = bytesPerPixel > 0 ? initialImage->rowStride / bytesPerPixel : 0;
+        GLStateManager::Get().SetPixelStoreUnpack(srcRowStride, textureDesc.extent.height, 1);
     }
 
     /* Build texture storage and upload image dataa */
