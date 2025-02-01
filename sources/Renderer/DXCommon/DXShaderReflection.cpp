@@ -6,6 +6,7 @@
  */
 
 #include "DXShaderReflection.h"
+#include <d3dcommon.h>
 
 
 namespace LLGL
@@ -64,12 +65,11 @@ UniformType MapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type)
 {
     switch (type)
     {
-        case D3D_SVT_BOOL:      return UniformType::Bool1;
-        case D3D_SVT_FLOAT:     /*pass*/
-        case D3D_SVT_FLOAT16:   return UniformType::Float1;
-        case D3D_SVT_INT:       return UniformType::Int1;
-        case D3D_SVT_UINT:      return UniformType::UInt1;
-        default:                return UniformType::Undefined;
+        case D3D_SVT_BOOL:  return UniformType::Bool1;
+        case D3D_SVT_FLOAT: return UniformType::Float1;
+        case D3D_SVT_INT:   return UniformType::Int1;
+        case D3D_SVT_UINT:  return UniformType::UInt1;
+        default:            return UniformType::Undefined;
     }
 }
 
@@ -77,12 +77,11 @@ UniformType MapD3DShaderVectorTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, U
 {
     switch (type)
     {
-        case D3D_SVT_BOOL:      return MakeUniformVectorType(UniformType::Bool1, elements);
-        case D3D_SVT_FLOAT:     /*pass*/
-        case D3D_SVT_FLOAT16:   return MakeUniformVectorType(UniformType::Float1, elements);
-        case D3D_SVT_INT:       return MakeUniformVectorType(UniformType::Int1, elements);
-        case D3D_SVT_UINT:      return MakeUniformVectorType(UniformType::UInt1, elements);
-        default:                return UniformType::Undefined;
+        case D3D_SVT_BOOL:  return MakeUniformVectorType(UniformType::Bool1, elements);
+        case D3D_SVT_FLOAT: return MakeUniformVectorType(UniformType::Float1, elements);
+        case D3D_SVT_INT:   return MakeUniformVectorType(UniformType::Int1, elements);
+        case D3D_SVT_UINT:  return MakeUniformVectorType(UniformType::UInt1, elements);
+        default:            return UniformType::Undefined;
     }
 }
 
@@ -90,9 +89,8 @@ UniformType MapD3DShaderMatrixTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, U
 {
     switch (type)
     {
-        case D3D_SVT_FLOAT:     /*pass*/
-        case D3D_SVT_FLOAT16:   return MakeUniformMatrixType(UniformType::Float2x2, rows, cols);
-        default:                return UniformType::Undefined;
+        case D3D_SVT_FLOAT: return MakeUniformMatrixType(UniformType::Float2x2, rows, cols);
+        default:            return UniformType::Undefined;
     }
 }
 
