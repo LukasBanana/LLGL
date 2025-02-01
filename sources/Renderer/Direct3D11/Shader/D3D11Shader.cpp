@@ -145,8 +145,8 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
     /* Get parameters from shader descriptor */
     const char* entry   = shaderDesc.entryPoint;
     const char* target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
-    auto        defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);
-    auto        flags   = shaderDesc.flags;
+    auto*       defines = reinterpret_cast<const D3D_SHADER_MACRO*>(shaderDesc.defines);
+    long        flags   = shaderDesc.flags;
 
     /* Compile shader code */
     ComPtr<ID3DBlob> errors;
@@ -435,7 +435,7 @@ static void ReflectShaderResourceGeneric(
     const StorageBufferType             storageBufferType   = StorageBufferType::Undefined)
 {
     /* Initialize resource view descriptor for a generic resource (texture, sampler, storage buffer etc.) */
-    auto resource = FetchOrInsertResource(reflection, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
+    ShaderResourceReflection* resource = FetchOrInsertResource(reflection, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
     {
         resource->binding.bindFlags     |= bindFlags;
         resource->binding.stageFlags    |= stageFlags;
@@ -449,6 +449,74 @@ static void ReflectShaderResourceGeneric(
     }
 }
 
+static UniformType MakeUniformVectorType(UniformType baseType, UINT elements)
+{
+    if (elements >= 1 && elements <= 4)
+        return static_cast<UniformType>(static_cast<int>(baseType) + (elements - 1));
+    else
+        return UniformType::Undefined;
+}
+
+static UniformType MakeUniformMatrixType(UniformType baseType, UINT rows, UINT cols)
+{
+    if (rows < 2 || cols < 2)
+    {
+        if (baseType == UniformType::Float2x2)
+            return MakeUniformVectorType(UniformType::Float1, std::max<int>(rows, cols));
+    }
+    else if (rows <= 4 && cols <= 4)
+        return static_cast<UniformType>(static_cast<int>(baseType) + (rows - 2)*3 + (cols - 2));
+    return UniformType::Undefined;
+}
+
+static UniformType MapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type)
+{
+    switch (type)
+    {
+        case D3D_SVT_BOOL:      return UniformType::Bool1;
+        case D3D_SVT_FLOAT:     /*pass*/
+        case D3D_SVT_FLOAT16:   return UniformType::Float1;
+        case D3D_SVT_INT:       return UniformType::Int1;
+        case D3D_SVT_UINT:      return UniformType::UInt1;
+        default:                return UniformType::Undefined;
+    }
+}
+
+static UniformType MapD3DShaderVectorTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT elements)
+{
+    switch (type)
+    {
+        case D3D_SVT_BOOL:      return MakeUniformVectorType(UniformType::Bool1, elements);
+        case D3D_SVT_FLOAT:     /*pass*/
+        case D3D_SVT_FLOAT16:   return MakeUniformVectorType(UniformType::Float1, elements);
+        case D3D_SVT_INT:       return MakeUniformVectorType(UniformType::Int1, elements);
+        case D3D_SVT_UINT:      return MakeUniformVectorType(UniformType::UInt1, elements);
+        default:                return UniformType::Undefined;
+    }
+}
+
+static UniformType MapD3DShaderMatrixTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT rows, UINT cols)
+{
+    switch (type)
+    {
+        case D3D_SVT_FLOAT:     /*pass*/
+        case D3D_SVT_FLOAT16:   return MakeUniformMatrixType(UniformType::Float2x2, rows, cols);
+        default:                return UniformType::Undefined;
+    }
+}
+
+static UniformType MapD3DShaderTypeToUniformType(const D3D11_SHADER_TYPE_DESC& desc)
+{
+    switch (desc.Class)
+    {
+        case D3D_SVC_SCALAR:            return MapD3DShaderScalarTypeToUniformType(desc.Type);
+        case D3D_SVC_VECTOR:            return MapD3DShaderVectorTypeToUniformType(desc.Type, std::max<UINT>(desc.Rows, desc.Columns)); // Works for row- and column-major vectors
+        case D3D_SVC_MATRIX_ROWS:       return MapD3DShaderMatrixTypeToUniformType(desc.Type, desc.Rows, desc.Columns);
+        case D3D_SVC_MATRIX_COLUMNS:    return MapD3DShaderMatrixTypeToUniformType(desc.Type, desc.Columns, desc.Rows);
+        default:                        return UniformType::Undefined;
+    }
+}
+
 static HRESULT ReflectShaderConstantBuffer(
     ID3D11ShaderReflection*             reflectionObject,
     ShaderReflection&                   reflection,
@@ -457,40 +525,69 @@ static HRESULT ReflectShaderConstantBuffer(
     long                                stageFlags,
     UINT&                               cbufferIdx)
 {
-    /* Initialize resource view descriptor for constant buffer */
-    auto resource = FetchOrInsertResource(reflection, inputBindDesc.Name, ResourceType::Buffer, inputBindDesc.BindPoint);
-    {
-        resource->binding.bindFlags     |= BindFlags::ConstantBuffer;
-        resource->binding.stageFlags    |= stageFlags;
-        resource->binding.arraySize     = inputBindDesc.BindCount;
-    }
-
     /* Determine constant buffer size */
-    if (cbufferIdx < shaderDesc.ConstantBuffers)
+    if (!(cbufferIdx < shaderDesc.ConstantBuffers))
+        return E_BOUNDS;
+
+    ID3D11ShaderReflectionConstantBuffer* cbufferReflection = reflectionObject->GetConstantBufferByIndex(cbufferIdx++);
+    if (cbufferReflection == nullptr)
+        return E_POINTER;
+
+    D3D11_SHADER_BUFFER_DESC shaderBufferDesc;
+    HRESULT hr = cbufferReflection->GetDesc(&shaderBufferDesc);
+    if (FAILED(hr))
+        return hr;
+
+    if (shaderBufferDesc.Type != D3D_CT_CBUFFER)
+        return E_INVALIDARG;
+
+    if (::strcmp(shaderBufferDesc.Name, "$Globals") == 0)
     {
-        auto cbufferReflection = reflectionObject->GetConstantBufferByIndex(cbufferIdx++);
-
-        D3D11_SHADER_BUFFER_DESC shaderBufferDesc;
-        HRESULT hr = cbufferReflection->GetDesc(&shaderBufferDesc);
-        if (FAILED(hr))
-            return hr;
-        DXThrowIfFailed(hr, "failed to retrieve D3D11 shader buffer descriptor");
-
-        if (shaderBufferDesc.Type == D3D_CT_CBUFFER)
+        /* Interpret fields as uniforms for $Globals cbuffer */
+        for_range(i, shaderBufferDesc.Variables)
         {
-            /* Store constant buffer size in output descriptor */
-            resource->constantBufferSize = shaderBufferDesc.Size;
-        }
-        else
-        {
-            /* Type mismatch in descriptors */
-            return E_FAIL;
+            ID3D11ShaderReflectionVariable* varReflection = cbufferReflection->GetVariableByIndex(i);
+            if (varReflection == nullptr)
+                return E_POINTER;
+
+            D3D11_SHADER_VARIABLE_DESC varDesc;
+            hr = varReflection->GetDesc(&varDesc);
+            if (FAILED(hr))
+                return hr;
+
+            if ((varDesc.uFlags & D3D_SVF_USED) != 0)
+            {
+                /* Translate D3D shader variable type */
+                ID3D11ShaderReflectionType* typeReflection = varReflection->GetType();
+                if (typeReflection == nullptr)
+                    return E_POINTER;
+
+                D3D11_SHADER_TYPE_DESC typeDesc;
+                hr = typeReflection->GetDesc(&typeDesc);
+                if (FAILED(hr))
+                    return hr;
+
+                /* Add new uniform descriptor to reflection output */
+                UniformDescriptor uniformDesc;
+                {
+                    uniformDesc.name        = std::string(varDesc.Name); // Make copy of string, since reflection object will be released
+                    uniformDesc.type        = MapD3DShaderTypeToUniformType(typeDesc);
+                    uniformDesc.arraySize   = typeDesc.Elements;
+                }
+                reflection.uniforms.push_back(uniformDesc);
+            }
         }
     }
     else
     {
-        /* Resource index mismatch in descriptor */
-        return E_FAIL;
+        /* Initialize resource view descriptor for constant buffer */
+        ShaderResourceReflection* resource = FetchOrInsertResource(reflection, inputBindDesc.Name, ResourceType::Buffer, inputBindDesc.BindPoint);
+        {
+            resource->binding.bindFlags     |= BindFlags::ConstantBuffer;
+            resource->binding.stageFlags    |= stageFlags;
+            resource->binding.arraySize     = inputBindDesc.BindCount;
+            resource->constantBufferSize    = shaderBufferDesc.Size;
+        }
     }
 
     return S_OK;
@@ -647,7 +744,7 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
         if (inputBindDesc.Type == D3D_SIT_CBUFFER)
         {
             /* Get constant buffer reflection */
-            auto* cbufferReflection = reflectionObject->GetConstantBufferByName(inputBindDesc.Name);
+            ID3D11ShaderReflectionConstantBuffer* cbufferReflection = reflectionObject->GetConstantBufferByName(inputBindDesc.Name);
             if (cbufferReflection == nullptr)
                 return E_POINTER;
 
@@ -661,7 +758,7 @@ HRESULT D3D11Shader::ReflectConstantBuffers(std::vector<D3D11ConstantBufferRefle
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {
                 /* Get constant field reflection */
-                auto* fieldReflection = cbufferReflection->GetVariableByIndex(fieldIndex);
+                ID3D11ShaderReflectionVariable* fieldReflection = cbufferReflection->GetVariableByIndex(fieldIndex);
                 if (fieldReflection == nullptr)
                     return E_POINTER;
 
