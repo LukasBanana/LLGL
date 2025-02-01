@@ -863,14 +863,25 @@ void GLTexture::CopyImageFromBuffer(
     GLStateManager::Get().BindBuffer(GLBufferTarget::PixelUnpackBuffer, 0);
 }
 
+static GLuint GetGLRowLengthOrZero(const ImageView& imageView)
+{
+    if (imageView.rowStride > 0)
+    {
+        /* Divide row stride by bytes-per-pixel; This will be zero for compressed formats! */
+        const std::uint32_t bytesPerPixel = static_cast<std::uint32_t>(GetMemoryFootprint(imageView.format, imageView.dataType, 1));
+        if (bytesPerPixel > 0)
+            return static_cast<GLuint>(imageView.rowStride / bytesPerPixel);
+    }
+    return 0;
+}
+
 void GLTexture::TextureSubImage(const TextureRegion& region, const ImageView& srcImageView, bool restoreBoundTexture)
 {
     if (!IsRenderbuffer())
     {
-        const std::uint32_t bytesPerPixel = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
-        const std::uint32_t srcRowStride = bytesPerPixel > 0 ? srcImageView.rowStride / bytesPerPixel : 0;
+        const GLuint srcRowLength = GetGLRowLengthOrZero(srcImageView);
 
-        GLStateManager::Get().SetPixelStoreUnpack(srcRowStride, region.extent.height, 1);
+        GLStateManager::Get().SetPixelStoreUnpack(srcRowLength, region.extent.height, 1);
         {
             #if LLGL_GLEXT_DIRECT_STATE_ACCESS
             if (HasExtension(GLExt::ARB_direct_state_access))
@@ -1277,9 +1288,8 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
         intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
         initialImage = &intermediateImageView;
 
-        const std::uint32_t bytesPerPixel = GetMemoryFootprint(initialImage->format, initialImage->dataType, 1);
-        const std::uint32_t srcRowStride = bytesPerPixel > 0 ? initialImage->rowStride / bytesPerPixel : 0;
-        GLStateManager::Get().SetPixelStoreUnpack(srcRowStride, textureDesc.extent.height, 1);
+        const GLuint srcRowLength = GetGLRowLengthOrZero(*initialImage);
+        GLStateManager::Get().SetPixelStoreUnpack(srcRowLength, textureDesc.extent.height, 1);
     }
 
     /* Build texture storage and upload image dataa */
@@ -1306,7 +1316,8 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     InitializeGLTextureSwizzleWithFormat(GetType(), swizzleFormat_, {}, true);
     #endif
 
-    if (initialImage != nullptr) {
+    if (initialImage != nullptr)
+    {
         GLStateManager::Get().SetPixelStoreUnpack(0, 0, 1);
 
         /* Generate MIP-maps if enabled */
