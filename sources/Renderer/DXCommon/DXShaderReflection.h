@@ -141,21 +141,21 @@ void DXReflectShaderResourceGeneric(
     }
 }
 
-UniformType MakeUniformVectorType(UniformType baseType, UINT elements);
-UniformType MakeUniformMatrixType(UniformType baseType, UINT rows, UINT cols);
-UniformType MapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type);
-UniformType MapD3DShaderVectorTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT elements);
-UniformType MapD3DShaderMatrixTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT rows, UINT cols);
+UniformType DXMakeUniformVectorType(UniformType baseType, UINT elements);
+UniformType DXMakeUniformMatrixType(UniformType baseType, UINT rows, UINT cols);
+UniformType DXMapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type);
+UniformType DXMapD3DShaderVectorTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT elements);
+UniformType DXMapD3DShaderMatrixTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT rows, UINT cols);
 
 template <typename TShaderTypeDesc>
-UniformType MapD3DShaderTypeToUniformType(const TShaderTypeDesc& desc)
+UniformType DXMapD3DShaderTypeToUniformType(const TShaderTypeDesc& desc)
 {
     switch (desc.Class)
     {
-        case D3D_SVC_SCALAR:            return MapD3DShaderScalarTypeToUniformType(desc.Type);
-        case D3D_SVC_VECTOR:            return MapD3DShaderVectorTypeToUniformType(desc.Type, std::max<UINT>(desc.Rows, desc.Columns)); // Works for row- and column-major vectors
-        case D3D_SVC_MATRIX_ROWS:       return MapD3DShaderMatrixTypeToUniformType(desc.Type, desc.Rows, desc.Columns);
-        case D3D_SVC_MATRIX_COLUMNS:    return MapD3DShaderMatrixTypeToUniformType(desc.Type, desc.Columns, desc.Rows);
+        case D3D_SVC_SCALAR:            return DXMapD3DShaderScalarTypeToUniformType(desc.Type);
+        case D3D_SVC_VECTOR:            return DXMapD3DShaderVectorTypeToUniformType(desc.Type, std::max<UINT>(desc.Rows, desc.Columns)); // Works for row- and column-major vectors
+        case D3D_SVC_MATRIX_ROWS:       return DXMapD3DShaderMatrixTypeToUniformType(desc.Type, desc.Rows, desc.Columns);
+        case D3D_SVC_MATRIX_COLUMNS:    return DXMapD3DShaderMatrixTypeToUniformType(desc.Type, desc.Columns, desc.Rows);
         default:                        return UniformType::Undefined;
     }
 }
@@ -223,7 +223,7 @@ HRESULT DXReflectShaderConstantBuffer(
                 UniformDescriptor uniformDesc;
                 {
                     uniformDesc.name        = std::string(varDesc.Name); // Make copy of string, since reflection object will be released
-                    uniformDesc.type        = MapD3DShaderTypeToUniformType(typeDesc);
+                    uniformDesc.type        = DXMapD3DShaderTypeToUniformType(typeDesc);
                     uniformDesc.arraySize   = typeDesc.Elements;
                 }
                 outReflection.uniforms.push_back(uniformDesc);

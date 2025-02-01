@@ -41,7 +41,8 @@ ShaderResourceReflection* FetchOrInsertResource(
     return ref;
 }
 
-UniformType MakeUniformVectorType(UniformType baseType, UINT elements)
+//TODO: merge with LLGL::MakeUniformVectorType()
+UniformType DXMakeUniformVectorType(UniformType baseType, UINT elements)
 {
     if (elements >= 1 && elements <= 4)
         return static_cast<UniformType>(static_cast<int>(baseType) + (elements - 1));
@@ -49,19 +50,20 @@ UniformType MakeUniformVectorType(UniformType baseType, UINT elements)
         return UniformType::Undefined;
 }
 
-UniformType MakeUniformMatrixType(UniformType baseType, UINT rows, UINT cols)
+//TODO: merge with LLGL::MakeUniformMatrixType()
+UniformType DXMakeUniformMatrixType(UniformType baseType, UINT rows, UINT cols)
 {
     if (rows < 2 || cols < 2)
     {
         if (baseType == UniformType::Float2x2)
-            return MakeUniformVectorType(UniformType::Float1, std::max<int>(rows, cols));
+            return DXMakeUniformVectorType(UniformType::Float1, std::max<int>(rows, cols));
     }
     else if (rows <= 4 && cols <= 4)
         return static_cast<UniformType>(static_cast<int>(baseType) + (rows - 2)*3 + (cols - 2));
     return UniformType::Undefined;
 }
 
-UniformType MapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type)
+UniformType DXMapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type)
 {
     switch (type)
     {
@@ -73,23 +75,23 @@ UniformType MapD3DShaderScalarTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type)
     }
 }
 
-UniformType MapD3DShaderVectorTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT elements)
+UniformType DXMapD3DShaderVectorTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT elements)
 {
     switch (type)
     {
-        case D3D_SVT_BOOL:  return MakeUniformVectorType(UniformType::Bool1, elements);
-        case D3D_SVT_FLOAT: return MakeUniformVectorType(UniformType::Float1, elements);
-        case D3D_SVT_INT:   return MakeUniformVectorType(UniformType::Int1, elements);
-        case D3D_SVT_UINT:  return MakeUniformVectorType(UniformType::UInt1, elements);
+        case D3D_SVT_BOOL:  return DXMakeUniformVectorType(UniformType::Bool1, elements);
+        case D3D_SVT_FLOAT: return DXMakeUniformVectorType(UniformType::Float1, elements);
+        case D3D_SVT_INT:   return DXMakeUniformVectorType(UniformType::Int1, elements);
+        case D3D_SVT_UINT:  return DXMakeUniformVectorType(UniformType::UInt1, elements);
         default:            return UniformType::Undefined;
     }
 }
 
-UniformType MapD3DShaderMatrixTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT rows, UINT cols)
+UniformType DXMapD3DShaderMatrixTypeToUniformType(D3D_SHADER_VARIABLE_TYPE type, UINT rows, UINT cols)
 {
     switch (type)
     {
-        case D3D_SVT_FLOAT: return MakeUniformMatrixType(UniformType::Float2x2, rows, cols);
+        case D3D_SVT_FLOAT: return DXMakeUniformMatrixType(UniformType::Float2x2, rows, cols);
         default:            return UniformType::Undefined;
     }
 }
