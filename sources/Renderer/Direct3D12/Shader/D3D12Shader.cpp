@@ -8,8 +8,7 @@
 #include "D3D12Shader.h"
 #include "../D3D12RenderSystem.h"
 #include "../D3D12Types.h"
-#include "../../DXCommon/DXCore.h"
-#include "../../DXCommon/DXTypes.h"
+#include "../../DXCommon/DXShaderReflection.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/ReportUtils.h"
 #include "../../../Core/Exception.h"
@@ -196,7 +195,7 @@ void D3D12Shader::BuildStreamOutput(UINT numVertexAttribs, const VertexAttribute
     soDeclEntries_.resize(numVertexAttribs);
     for_range(i, numVertexAttribs)
     {
-        const auto& attr = vertexAttribs[i];
+        const VertexAttribute& attr = vertexAttribs[i];
 
         /* Convert vertex attribute to stream-output entry */
         ConvertSODeclEntry(soDeclEntries_[i], attr, vertexAttribNames_);
@@ -379,258 +378,6 @@ bool D3D12Shader::LoadBinary(const ShaderDescriptor& shaderDesc)
     return (byteCode_.Get() != nullptr && byteCode_->GetBufferSize() > 0);
 }
 
-/*
-NOTE:
-Most of this code for shader reflection is 1:1 copied from the D3D11 renderer.
-However, all descriptors have the "D3D12" prefix, so a generalization (without macros) is tricky.
-*/
-
-static ShaderResourceReflection* FetchOrInsertResource(
-    ShaderReflection&   reflection,
-    const char*         name,
-    const ResourceType  type,
-    std::uint32_t       slot)
-{
-    /* Fetch resource from list */
-    for (auto& resource : reflection.resources)
-    {
-        if (resource.binding.type == type &&
-            resource.binding.slot == slot &&
-            resource.binding.name.compare(name) == 0)
-        {
-            return (&resource);
-        }
-    }
-
-    /* Allocate new resource and initialize parameters */
-    reflection.resources.resize(reflection.resources.size() + 1);
-    auto ref = &(reflection.resources.back());
-    {
-        ref->binding.name = std::string(name);
-        ref->binding.type = type;
-        ref->binding.slot = slot;
-    }
-    return ref;
-}
-
-// Converts a D3D12 signature parameter into a vertex attribute
-static void ConvertD3D12ParamDescToVertexAttrib(VertexAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
-{
-    dst.name            = std::string(src.SemanticName);
-    dst.format          = DXGetSignatureParameterType(src.ComponentType, src.Mask);
-    dst.semanticIndex   = src.SemanticIndex;
-    dst.systemValue     = DXTypes::Unmap(src.SystemValueType);
-}
-
-static HRESULT ReflectShaderVertexAttributes(
-    ID3D12ShaderReflection*     reflectionObject,
-    const D3D12_SHADER_DESC&    shaderDesc,
-    ShaderReflection&           reflection)
-{
-    for_range(i, shaderDesc.InputParameters)
-    {
-        /* Get signature parameter descriptor */
-        D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
-        HRESULT hr = reflectionObject->GetInputParameterDesc(i, &paramDesc);
-        if (FAILED(hr))
-            return hr;
-
-        /* Add vertex input attribute to output list */
-        VertexAttribute vertexAttrib;
-        ConvertD3D12ParamDescToVertexAttrib(vertexAttrib, paramDesc);
-        reflection.vertex.inputAttribs.push_back(vertexAttrib);
-    }
-
-    for_range(i, shaderDesc.OutputParameters)
-    {
-        /* Get signature parameter descriptor */
-        D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
-        HRESULT hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
-        if (FAILED(hr))
-            return hr;
-
-        /* Add vertex output attribute to output list */
-        VertexAttribute vertexAttrib;
-        ConvertD3D12ParamDescToVertexAttrib(vertexAttrib, paramDesc);
-        reflection.vertex.outputAttribs.push_back(vertexAttrib);
-    }
-
-    return S_OK;
-}
-
-// Converts a D3D12 signature parameter into a fragment attribute
-static void ConvertD3D12ParamDescToFragmentAttrib(FragmentAttribute& dst, const D3D12_SIGNATURE_PARAMETER_DESC& src)
-{
-    dst.name        = std::string(src.SemanticName);
-    dst.format      = DXGetSignatureParameterType(src.ComponentType, src.Mask);
-    dst.location    = src.SemanticIndex;
-    dst.systemValue = DXTypes::Unmap(src.SystemValueType);
-}
-
-static HRESULT ReflectShaderFragmentAttributes(
-    ID3D12ShaderReflection*     reflectionObject,
-    const D3D12_SHADER_DESC&    shaderDesc,
-    ShaderReflection&           reflection)
-{
-    for_range(i, shaderDesc.OutputParameters)
-    {
-        /* Get signature parameter descriptor */
-        D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
-        HRESULT hr = reflectionObject->GetOutputParameterDesc(i, &paramDesc);
-        if (FAILED(hr))
-            return hr;
-
-        /* Add fragment attribute to output list */
-        FragmentAttribute fragmentAttrib;
-        ConvertD3D12ParamDescToFragmentAttrib(fragmentAttrib, paramDesc);
-        reflection.fragment.outputAttribs.push_back(fragmentAttrib);
-    }
-
-    return S_OK;
-}
-
-static void ReflectShaderResourceGeneric(
-    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
-    ShaderReflection&                   reflection,
-    const ResourceType                  resourceType,
-    long                                bindFlags,
-    long                                stageFlags,
-    const StorageBufferType             storageBufferType   = StorageBufferType::Undefined)
-{
-    /* Initialize resource view descriptor for a generic resource (texture, sampler, storage buffer etc.) */
-    ShaderResourceReflection* resource = FetchOrInsertResource(reflection, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
-
-    resource->binding.bindFlags     |= bindFlags;
-    resource->binding.stageFlags    |= stageFlags;
-    resource->binding.arraySize     = inputBindDesc.BindCount;
-
-    /* Take storage buffer type or unmap from input type */
-    if (storageBufferType != StorageBufferType::Undefined)
-        resource->storageBufferType = storageBufferType;
-    else
-        resource->storageBufferType = DXTypes::Unmap(inputBindDesc.Type);
-}
-
-static HRESULT ReflectShaderConstantBuffer(
-    ID3D12ShaderReflection*             reflectionObject,
-    ShaderReflection&                   reflection,
-    const D3D12_SHADER_DESC&            shaderDesc,
-    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
-    long                                stageFlags,
-    UINT&                               cbufferIdx)
-{
-    /* Initialize resource view descriptor for constant buffer */
-    ShaderResourceReflection* resource = FetchOrInsertResource(reflection, inputBindDesc.Name, ResourceType::Buffer, inputBindDesc.BindPoint);
-
-    resource->binding.bindFlags     |= BindFlags::ConstantBuffer;
-    resource->binding.stageFlags    |= stageFlags;
-    resource->binding.arraySize     = inputBindDesc.BindCount;
-
-    /* Determine constant buffer size */
-    if (cbufferIdx < shaderDesc.ConstantBuffers)
-    {
-        ID3D12ShaderReflectionConstantBuffer* cbufferReflection = reflectionObject->GetConstantBufferByIndex(cbufferIdx++);
-
-        D3D12_SHADER_BUFFER_DESC shaderBufferDesc;
-        HRESULT hr = cbufferReflection->GetDesc(&shaderBufferDesc);
-        if (FAILED(hr))
-            return hr;
-
-        if (shaderBufferDesc.Type == D3D_CT_CBUFFER)
-        {
-            /* Store constant buffer size in output descriptor */
-            resource->constantBufferSize = shaderBufferDesc.Size;
-
-            #if 0//UNUSED
-            for_range(varIdx, shaderBufferDesc.Variables)
-            {
-                auto varReflection = cbufferReflection->GetVariableByIndex(varIdx);
-
-                D3D12_SHADER_VARIABLE_DESC shaderVarDesc;
-                hr = varReflection->GetDesc(&shaderVarDesc);
-                if (FAILED(hr))
-                    return hr;
-
-                //TODO
-            }
-            #endif
-        }
-        else
-        {
-            /* Type mismatch in descriptors */
-            return E_FAIL;
-        }
-    }
-    else
-    {
-        /* Resource index mismatch in descriptor */
-        return E_FAIL;
-    }
-
-    return S_OK;
-}
-
-static HRESULT ReflectShaderInputBindings(
-    ID3D12ShaderReflection*     reflectionObject,
-    const D3D12_SHADER_DESC&    shaderDesc,
-    long                        stageFlags,
-    ShaderReflection&           reflection)
-{
-    HRESULT hr = S_OK;
-    UINT cbufferIdx = 0;
-
-    for_range(i, shaderDesc.BoundResources)
-    {
-        /* Get shader input resource descriptor */
-        D3D12_SHADER_INPUT_BIND_DESC inputBindDesc;
-        HRESULT hr = reflectionObject->GetResourceBindingDesc(i, &inputBindDesc);
-        if (FAILED(hr))
-            return hr;
-
-        /* Reflect shader resource view */
-        switch (inputBindDesc.Type)
-        {
-            case D3D_SIT_CBUFFER:
-                hr = ReflectShaderConstantBuffer(reflectionObject, reflection, shaderDesc, inputBindDesc, stageFlags, cbufferIdx);
-                break;
-
-            case D3D_SIT_TBUFFER:
-            case D3D_SIT_TEXTURE:
-                if (inputBindDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
-                    ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Buffer, BindFlags::Sampled, stageFlags, StorageBufferType::TypedBuffer);
-                else
-                    ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Texture, BindFlags::Sampled, stageFlags);
-                break;
-
-            case D3D_SIT_SAMPLER:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, ResourceType::Sampler, 0, stageFlags);
-                break;
-
-            case D3D_SIT_STRUCTURED:
-            case D3D_SIT_BYTEADDRESS:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, DXTypes::Unmap(inputBindDesc.Dimension), BindFlags::Sampled, stageFlags);
-                break;
-
-            case D3D_SIT_UAV_RWTYPED:
-            case D3D_SIT_UAV_RWSTRUCTURED:
-            case D3D_SIT_UAV_RWBYTEADDRESS:
-            case D3D_SIT_UAV_APPEND_STRUCTURED:
-            case D3D_SIT_UAV_CONSUME_STRUCTURED:
-            case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-                ReflectShaderResourceGeneric(inputBindDesc, reflection, DXTypes::Unmap(inputBindDesc.Dimension), BindFlags::Storage, stageFlags);
-                break;
-
-            default:
-                break;
-        }
-
-        if (FAILED(hr))
-            return hr;
-    }
-
-    return S_OK;
-}
-
 // Reflects D3D12 shader bytecode from either DXBC or DXIL code.
 static HRESULT ReflectD3D12ShaderBytecode(ID3DBlob* byteCode, ComPtr<ID3D12ShaderReflection>& outReflection)
 {
@@ -673,20 +420,22 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     if (GetType() == ShaderType::Vertex)
     {
         /* Get input parameter descriptors */
-        hr = ReflectShaderVertexAttributes(reflectionObject.Get(), shaderDesc, reflection);
+        hr = DXReflectShaderVertexAttributes<D3D12_SIGNATURE_PARAMETER_DESC>(reflection, reflectionObject.Get(), shaderDesc);
         if (FAILED(hr))
             return hr;
     }
     else if (GetType() == ShaderType::Fragment)
     {
         /* Get output parameter descriptors */
-        hr = ReflectShaderFragmentAttributes(reflectionObject.Get(), shaderDesc, reflection);
+        hr = DXReflectShaderFragmentAttributes<D3D12_SIGNATURE_PARAMETER_DESC>(reflection, reflectionObject.Get(), shaderDesc);
         if (FAILED(hr))
             return hr;
     }
 
     /* Get input bindings */
-    hr = ReflectShaderInputBindings(reflectionObject.Get(), shaderDesc, GetStageFlags(GetType()), reflection);
+    hr = DXReflectShaderInputBindings<D3D12_SHADER_BUFFER_DESC, D3D12_SHADER_VARIABLE_DESC, D3D12_SHADER_TYPE_DESC, D3D12_SHADER_INPUT_BIND_DESC>(
+        reflection, reflectionObject.Get(), shaderDesc, GetStageFlags(GetType())
+    );
     if (FAILED(hr))
         return hr;
 
@@ -747,7 +496,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {
                 /* Get constant field reflection */
-                auto* fieldReflection = cbufferReflection->GetVariableByIndex(fieldIndex);
+                ID3D12ShaderReflectionVariable* fieldReflection = cbufferReflection->GetVariableByIndex(fieldIndex);
                 if (fieldReflection == nullptr)
                     return E_POINTER;
 
