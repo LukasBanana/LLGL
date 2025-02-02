@@ -1282,11 +1282,15 @@ void GLTexture::AllocTextureStorage(const TextureDescriptor& textureDesc, const 
     /* Convert initial image data for texture swizzle formats */
     ImageView intermediateImageView;
 
-    if (initialImage != nullptr && GetSwizzleFormat() == GLSwizzleFormat::BGRA)
+    if (initialImage != nullptr)
     {
-        intermediateImageView = *initialImage;
-        intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
-        initialImage = &intermediateImageView;
+        /* Re-map image format if texture format must be emulated with component swizzling */
+        if (GetSwizzleFormat() == GLSwizzleFormat::BGRA)
+        {
+            intermediateImageView = *initialImage;
+            intermediateImageView.format = MapSwizzleImageFormat(initialImage->format);
+            initialImage = &intermediateImageView;
+        }
 
         const GLuint srcRowLength = GetGLRowLengthOrZero(*initialImage);
         GLStateManager::Get().SetPixelStoreUnpack(srcRowLength, textureDesc.extent.height, 1);
