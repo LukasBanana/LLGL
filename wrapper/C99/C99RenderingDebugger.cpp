@@ -7,6 +7,7 @@
 
 #include <LLGL/RenderingDebugger.h>
 #include <LLGL-C/RenderingDebugger.h>
+#include <LLGL/Utils/ForRange.h>
 #include "C99Internal.h"
 #include <cstring>
 
@@ -36,11 +37,20 @@ LLGL_C_EXPORT bool llglGetDebuggerTimeRecording(LLGLRenderingDebugger debugger)
     return LLGL_PTR(RenderingDebugger, debugger)->GetTimeRecording();
 }
 
+static void ConvertC99ProfileTimeRecord(LLGLProfileTimeRecord& dst, const ProfileTimeRecord& src)
+{
+    dst.annotation      = src.annotation.c_str();
+    dst.cpuTicksStart   = src.cpuTicksStart;
+    dst.cpuTicksEnd     = src.cpuTicksEnd;
+    dst.elapsedTime     = src.elapsedTime;
+}
+
 LLGL_C_EXPORT void llglFlushDebuggerProfile(LLGLRenderingDebugger debugger, LLGLFrameProfile* outFrameProfile)
 {
     LLGL_ASSERT_PTR(outFrameProfile);
 
     static thread_local FrameProfile internalFrameProfile;
+    static thread_local std::vector<LLGLProfileTimeRecord> internalProfileTimeRecords;
     LLGL_PTR(RenderingDebugger, debugger)->FlushProfile(&internalFrameProfile);
 
     static_assert(
@@ -55,12 +65,12 @@ LLGL_C_EXPORT void llglFlushDebuggerProfile(LLGLRenderingDebugger debugger, LLGL
     );
     std::memcpy(&(outFrameProfile->commandBufferRecord), &(internalFrameProfile.commandBufferRecord), sizeof(LLGLProfileCommandBufferRecord));
 
-    static_assert(
-        sizeof(LLGLProfileTimeRecord) == sizeof(ProfileTimeRecord),
-        "LLGLProfileTimeRecord and LLGL::ProfileTimeRecord expected to be the same size"
-    );
-    outFrameProfile->numTimeRecords = internalFrameProfile.timeRecords.size();
-    outFrameProfile->timeRecords = reinterpret_cast<const LLGLProfileTimeRecord*>(internalFrameProfile.timeRecords.data());
+    internalProfileTimeRecords.resize(internalFrameProfile.timeRecords.size());
+    for_range(i, internalFrameProfile.timeRecords.size())
+        ConvertC99ProfileTimeRecord(internalProfileTimeRecords[i], internalFrameProfile.timeRecords[i]);
+
+    outFrameProfile->numTimeRecords = internalProfileTimeRecords.size();
+    outFrameProfile->timeRecords = internalProfileTimeRecords.data();
 }
 
 

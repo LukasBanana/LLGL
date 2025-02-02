@@ -34,7 +34,7 @@ class DbgQueryTimerPool
         void Reset();
 
         // Starts measuring the time with the specified annotation.
-        void Start(const char* annotation);
+        void Start(StringLiteral annotation);
 
         // Stops measing the time and stores the current record.
         void Stop();

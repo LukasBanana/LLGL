@@ -647,7 +647,7 @@ void ExampleBase::MainLoop()
             );
             const double invTicksFreqMS = 1000.0 / LLGL::Timer::Frequency();
             for (const LLGL::ProfileTimeRecord& rec : frameProfile.timeRecords)
-                LLGL::Log::Printf("%s: GPU time: %" PRIu64 " ns\n", rec.annotation, rec.elapsedTime);
+                LLGL::Log::Printf("%s: GPU time: %" PRIu64 " ns\n", rec.annotation.c_str(), rec.elapsedTime);
 
             debuggerObj_->SetTimeRecording(false);
             showTimeRecords_ = false;

@@ -12,6 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Deprecated.h>
 #include <LLGL/Container/DynamicVector.h>
+#include <LLGL/Container/StringLiteral.h>
 #include <cstdint>
 
 
@@ -49,7 +50,7 @@ enum class WarningType
 struct ProfileTimeRecord
 {
     //! Time record annotation, e.g. function name that was recorded from the CommandBuffer.
-    const char*     annotation      = "";
+    StringLiteral   annotation;
 
     /**
     \brief CPU ticks at the beginning of the command.

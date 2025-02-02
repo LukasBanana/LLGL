@@ -56,14 +56,14 @@ void DbgQueryTimerPool::Reset()
     cpuTicksBase_       = Timer::Tick();
 }
 
-void DbgQueryTimerPool::Start(const char* annotation)
+void DbgQueryTimerPool::Start(StringLiteral annotation)
 {
     pendingRecordStack_.push(records_.size());
 
     /* Store annotation only first */
     ProfileTimeRecord record;
     {
-        record.annotation       = annotation;
+        record.annotation       = std::move(annotation);
         record.cpuTicksStart    = Timer::Tick() - cpuTicksBase_;
     }
     records_.push_back(record);

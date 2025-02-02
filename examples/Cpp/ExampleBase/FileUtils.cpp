@@ -201,7 +201,7 @@ std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile)
         s += ", ";
 
         s += "\"ph\": \"X\", \"name\": \"";
-        s += rec.annotation;
+        s += rec.annotation.c_str();
         s += "\", ";
 
         s += "\"args\": { \"Elapsed GPU Time\": ";
