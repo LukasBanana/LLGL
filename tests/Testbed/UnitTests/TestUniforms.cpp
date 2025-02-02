@@ -106,8 +106,6 @@ DEF_TEST( Uniforms )
     constexpr unsigned numFrames = 10;
     const float rotation = static_cast<float>(frame) * 90.0f / static_cast<float>(numFrames - 1);
 
-    constexpr float bgColor[4] = { 0.2f, 0.2f, 0.4f, 1.0f };
-
     // Render scene
     Texture* readbackTex = nullptr;
 
@@ -125,7 +123,7 @@ DEF_TEST( Uniforms )
         cmdBuffer->BeginRenderPass(*swapChain);
         {
             // Draw scene
-            cmdBuffer->Clear(ClearFlags::ColorDepth, ClearValue{ bgColor });
+            cmdBuffer->Clear(ClearFlags::ColorDepth, bgColorDarkBlue);
             cmdBuffer->SetViewport(opt.resolution);
             cmdBuffer->SetResource(0, *sceneCbuffer);
 

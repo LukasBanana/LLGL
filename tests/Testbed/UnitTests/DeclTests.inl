@@ -76,6 +76,7 @@ DECL_TEST( BlendStates );
 DECL_TEST( DualSourceBlending );
 DECL_TEST( TriangleStripCutOff );
 DECL_TEST( TextureViews );
+DECL_TEST( TextureStrides );
 DECL_TEST( Uniforms );
 DECL_TEST( ShadowMapping );
 DECL_TEST( ViewportAndScissor );

@@ -310,6 +310,8 @@ class TestbedContext
 
         const std::string               moduleName;
         const Options                   opt;
+        const LLGL::ClearValue          bgColorDarkBlue         = { 0.2f, 0.2f, 0.4f, 1.0f };
+        const LLGL::ClearValue          bgColorLightBlue        = { 127.0f/255.0f, 127.0f/255.0f, 1.0f, 1.0f };
 
         unsigned                        failures                = 0;
 

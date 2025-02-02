@@ -31,7 +31,7 @@ DEF_RITEST( ImageConversions )
 
     auto TestConversion = [&](const std::string& filename, unsigned threadCount, double& outTime) -> TestResult
     {
-        Image img = TestbedContext::LoadImageFromFile(imagePath + filename);
+        Image img = TestbedContext::LoadImageFromFile(imagePath + filename, opt.verbose);
 
         const Image imgCopy = img;
 

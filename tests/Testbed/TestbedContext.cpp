@@ -344,6 +344,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CommandBufferSecondary      );
     RUN_TEST( TriangleStripCutOff         );
     RUN_TEST( TextureViews                );
+    RUN_TEST( TextureStrides              );
     RUN_TEST( Uniforms                    );
     RUN_TEST( ShadowMapping               );
     RUN_TEST( ViewportAndScissor          );
@@ -1050,14 +1051,10 @@ void TestbedContext::CreatePipelineLayouts()
 
     layouts[PipelineTextured] = renderer->CreatePipelineLayout(
         Parse(
-            HasCombinedSamplers()
-                ?   "cbuffer(Scene@1):vert:frag,"
-                    "texture(colorMap@2):frag,"
-                    "sampler(2):frag,"
-                :
-                    "cbuffer(Scene@1):vert:frag,"
-                    "texture(colorMap@2):frag,"
-                    "sampler(linearSampler@3):frag,"
+            "cbuffer(Scene@1):vert:frag,"
+            "texture(colorMap@2):frag,"
+            "sampler(linearSampler@3):frag,"
+            "sampler<colorMap, linearSampler>(colorMap@2),"
         )
     );
 }
