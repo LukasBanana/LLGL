@@ -141,7 +141,7 @@ class LLGL_EXPORT Color
         \brief Explicitly uninitialized constructor. All attributes are uninitialized!
         \remarks Only use this constructor when you want to allocate a large amount of color elements that are being initialized later.
         */
-        Color(UninitializeTag)
+        explicit Color(UninitializeTag)
         {
             // do nothing
         }

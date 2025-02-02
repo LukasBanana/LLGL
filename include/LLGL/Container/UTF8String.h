@@ -73,6 +73,12 @@ class LLGL_EXPORT UTF8String
         {
         }
 
+        /**
+        \brief Initializes the UTF-8 string by moving the ownership of the internal data container.
+        \param[in] data The input data must already be in UTF-8 format. This constructor does not perform any checks on this input container!
+        */
+        explicit UTF8String(SmallVector<char>&& data);
+
     public:
 
         inline bool empty() const noexcept
@@ -217,6 +223,16 @@ class LLGL_EXPORT UTF8String
         {
             return StringView{ data(), size() };
         }
+
+    public:
+
+        /**
+        \brief Prints a formatted UTF-8 string with a variable number of arguments.
+        \remarks This follows the same formatting syntax as \c std::printf.
+        \see Report::Printf
+        \see Log::Printf
+        */
+        static UTF8String Printf(const char* format, ...);
 
     private:
 

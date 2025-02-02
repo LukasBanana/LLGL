@@ -8,6 +8,8 @@
 #include <LLGL/Container/UTF8String.h>
 #include <algorithm>
 #include <iterator>
+#include <stdarg.h>
+#include <stdio.h>
 #include "Exception.h"
 #include "Assertion.h"
 
@@ -202,6 +204,11 @@ UTF8String::UTF8String(const wchar_t* str) :
 {
 }
 
+UTF8String::UTF8String(SmallVector<char>&& data) :
+    data_ { std::move(data) }
+{
+}
+
 UTF8String& UTF8String::operator = (const UTF8String& rhs)
 {
     data_ = rhs.data_;
@@ -340,6 +347,29 @@ UTF8String& UTF8String::append(const char* first, const char* last)
 SmallVector<wchar_t> UTF8String::to_utf16() const
 {
     return ConvertToUTF16WCharArray(StringView{ c_str(), size() });
+}
+
+UTF8String UTF8String::Printf(const char* format, ...)
+{
+    SmallVector<char> data;
+
+    va_list args1, args2;
+    va_start(args1, format);
+    va_copy(args2, args1);
+    {
+        const int len = ::vsnprintf(nullptr, 0, format, args1);
+        if (len > 0)
+        {
+            /* Construct the internal string container and let vsnprintf() write the NUL-terminator */
+            const std::size_t formatLen = static_cast<std::size_t>(len);
+            data.resize(formatLen + 1);
+            ::vsnprintf(data.data(), data.size(), format, args2);
+        }
+    }
+    va_end(args2);
+    va_end(args1);
+
+    return UTF8String{ std::move(data) };
 }
 
 
