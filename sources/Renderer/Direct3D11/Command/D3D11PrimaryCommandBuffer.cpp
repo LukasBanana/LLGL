@@ -96,7 +96,8 @@ void D3D11PrimaryCommandBuffer::UpdateBuffer(
     std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
-    dstBufferD3D.WriteSubresource(GetNative(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset));
+    const bool needsCommandListEmulation = context_.GetStateManager().NeedsCommandListEmulation();
+    dstBufferD3D.WriteSubresource(GetNative(), data, static_cast<UINT>(dataSize), static_cast<UINT>(dstOffset), needsCommandListEmulation);
 }
 
 void D3D11PrimaryCommandBuffer::CopyBuffer(

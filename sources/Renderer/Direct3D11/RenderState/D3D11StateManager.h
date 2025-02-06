@@ -110,6 +110,17 @@ class D3D11StateManager
             return bindingTable_;
         }
 
+        // Returns whether the device context this state manager operates on needs command list emulation.
+        // This is true if the D3D device does not natively support command lists.
+        inline bool NeedsCommandListEmulation() const
+        {
+            #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+            return needsCommandListEmulation_;
+            #else
+            return true;
+            #endif
+        }
+
     private:
 
         struct D3DInputAssemblyState

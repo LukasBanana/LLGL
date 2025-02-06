@@ -34,7 +34,7 @@ class D3D11Buffer : public Buffer
 
         D3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
-        void WriteSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
+        void WriteSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset, bool needsCommandListEmulation);
         void ReadSubresource(ID3D11DeviceContext* context, void* data, UINT dataSize, UINT offset);
 
         void* Map(ID3D11DeviceContext* context, const CPUAccess access, UINT offset, UINT length);
