@@ -8,6 +8,7 @@
 #include "MTFeatureSet.h"
 #include "MTDevice.h"
 #include "OSXAvailability.h"
+#include <LLGL/ShaderFlags.h>
 #include <AvailabilityMacros.h>
 #include <initializer_list>
 #include <algorithm>

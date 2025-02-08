@@ -71,6 +71,8 @@ jobs:
       with:
         name: LLGL-Win64-Test_Report
         path: |
+          tests/Testbed/Output/Direct3D11/*.png
+          tests/Testbed/Output/Direct3D11/Report.txt
           tests/Testbed/Output/Direct3D12/*.png
           tests/Testbed/Output/Direct3D12/Report.txt
 
