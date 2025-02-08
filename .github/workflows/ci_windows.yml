@@ -2,7 +2,7 @@ name: MS Windows
 
 on:
   push:
-    branches: [ "master", "dev-d3d11-cis" ]
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
