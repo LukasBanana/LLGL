@@ -72,7 +72,7 @@ void D3D11BuiltinShaderFactory::LoadBuiltinShader(
     ID3D11Device*               device,
     const D3D11BuiltinShader    builtin,
     const BYTE*                 shaderBytecode,
-    size_t                      shaderBytecodeSize)
+    std::size_t                 shaderBytecodeSize)
 {
     if (ComPtr<ID3DBlob> blob = DXCreateBlob(shaderBytecode, shaderBytecodeSize))
     {

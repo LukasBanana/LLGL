@@ -216,21 +216,21 @@ void D3D11PrimaryCommandBuffer::CopyBufferFromTexture(
     /* Check if offsets are out of bounds or destination extent is zero */
     const auto& srcOffset = srcRegion.offset;
     if (srcOffset.x < 0 || srcOffset.y < 0 || srcOffset.z < 0)
-        return;
+        return; // E_BOUNDS
 
     if (dstOffset > UINT32_MAX)
-        return;
+        return; // E_BOUNDS
 
     const auto& srcExtent = srcRegion.extent;
     if (srcExtent.width == 0 || srcExtent.height == 0 || srcExtent.depth == 0)
-        return;
+        return; // E_INVALIDARG
 
     const UINT dstOffsetU32 = static_cast<UINT>(dstOffset);
 
     /* Get destination texture attributes */
     const auto& formatAttribs = GetFormatAttribs(srcTextureD3D.GetFormat());
     if ((formatAttribs.flags & (FormatFlags::IsCompressed | FormatFlags::IsPacked)) != 0 || formatAttribs.components == 0)
-        return;
+        return; // E_INVALIDARG
 
     /* An intermediate texture copy is required if the destination texture's format is not unsigned integer or it is normalized */
     const bool useIntermediateTexture =
@@ -251,8 +251,8 @@ void D3D11PrimaryCommandBuffer::CopyBufferFromTexture(
     const std::uint32_t copySize = (layerStride * srcExtent.depth);
 
     /* Create intermediate SRV for source texture (RWTexture1D/2D/3D) */
-    const auto& subresource = srcRegion.subresource;
-    const auto textureArrayType = ToArrayTextureType(srcTextureD3D.GetType());
+    const TextureSubresource& subresource = srcRegion.subresource;
+    const TextureType textureArrayType = ToArrayTextureType(srcTextureD3D.GetType());
 
     ComPtr<ID3D11Resource> intermediateTexture;
     ComPtr<ID3D11ShaderResourceView> intermediateSRV;
@@ -284,15 +284,17 @@ void D3D11PrimaryCommandBuffer::CopyBufferFromTexture(
         for_range(i, subresource.numArrayLayers)
         {
             const UINT arrayLayer = subresource.baseArrayLayer + i;
+            const UINT dstSubresource = D3D11CalcSubresource(0, i, 1);
+            const UINT srcSubresource = D3D11CalcSubresource(mipLevel, arrayLayer, srcTextureD3D.GetNumMipLevels());
             GetNative()->CopySubresourceRegion(
-                intermediateTexture.Get(),                                                      // pDstResource
-                D3D11CalcSubresource(0, i, 1),                                                  // DstSubresource
-                0,                                                                              // DstX
-                0,                                                                              // DstY
-                0,                                                                              // DstZ
-                srcTextureD3D.GetNative(),                                                      // pSrcResource
-                D3D11CalcSubresource(mipLevel, arrayLayer, srcTextureD3D.GetNumMipLevels()),    // SrcSubresource
-                &srcBox                                                                         // pSrcBox
+                intermediateTexture.Get(),  // pDstResource
+                dstSubresource,             // DstSubresource
+                0,                          // DstX
+                0,                          // DstY
+                0,                          // DstZ
+                srcTextureD3D.GetNative(),  // pSrcResource
+                srcSubresource,             // SrcSubresource
+                &srcBox                     // pSrcBox
             );
         }
     }
@@ -506,21 +508,21 @@ void D3D11PrimaryCommandBuffer::CopyTextureFromBuffer(
     /* Check if offsets are out of bounds or destination extent is zero */
     const auto& dstOffset = dstRegion.offset;
     if (dstOffset.x < 0 || dstOffset.y < 0 || dstOffset.z < 0)
-        return;
+        return; // E_BOUNDS
 
     if (srcOffset > UINT32_MAX)
-        return;
+        return; // E_BOUNDS
 
     const auto& dstExtent = dstRegion.extent;
     if (dstExtent.width == 0 || dstExtent.height == 0 || dstExtent.depth == 0)
-        return;
+        return; // E_INVALIDARG
 
     const UINT srcOffsetU32 = static_cast<UINT>(srcOffset);
 
     /* Get destination texture attributes */
     const auto& formatAttribs = GetFormatAttribs(dstTextureD3D.GetFormat());
     if ((formatAttribs.flags & (FormatFlags::IsCompressed | FormatFlags::IsPacked)) != 0 || formatAttribs.components == 0)
-        return;
+        return; // E_INVALIDARG
 
     /* An intermediate texture copy is required if the destination texture's format is not unsigned integer or it is normalized */
     const bool useIntermediateTexture =
@@ -538,11 +540,11 @@ void D3D11PrimaryCommandBuffer::CopyTextureFromBuffer(
             layerStride = (dstExtent.height * rowStride);
     }
 
-    const std::uint32_t copySize = (layerStride * dstExtent.depth);
+    const std::uint32_t copySize = layerStride * dstExtent.depth;
 
     /* Create intermediate UAV for destination texture (RWTexture1D/2D/3D) */
-    const auto& subresource = dstRegion.subresource;
-    const auto textureArrayType = ToArrayTextureType(dstTextureD3D.GetType());
+    const TextureSubresource& subresource = dstRegion.subresource;
+    const TextureType textureArrayType = ToArrayTextureType(dstTextureD3D.GetType());
 
     ComPtr<ID3D11Resource> intermediateTexture;
     ComPtr<ID3D11UnorderedAccessView> intermediateUAV;
@@ -656,18 +658,19 @@ void D3D11PrimaryCommandBuffer::CopyTextureFromBuffer(
         const UINT      mipLevel    = subresource.baseMipLevel;
         const D3D11_BOX srcBox      = { 0, 0, 0, dstExtent.width, dstExtent.height, dstExtent.depth };
 
-        for_range(i, subresource.numArrayLayers)
+        for_range(layer, subresource.numArrayLayers)
         {
-            const UINT arrayLayer = subresource.baseArrayLayer + i;
+            const UINT dstSubresource = D3D11CalcSubresource(mipLevel, subresource.baseArrayLayer + layer, dstTextureD3D.GetNumMipLevels());
+            const UINT srcSubresource = D3D11CalcSubresource(0, layer, 1);
             GetNative()->CopySubresourceRegion(
-                dstTextureD3D.GetNative(),                                                      // pDstResource
-                D3D11CalcSubresource(mipLevel, arrayLayer, dstTextureD3D.GetNumMipLevels()),    // DstSubresource
-                static_cast<UINT>(dstOffset.x),                                                 // DstX
-                static_cast<UINT>(dstOffset.y),                                                 // DstY
-                static_cast<UINT>(dstOffset.z),                                                 // DstZ
-                intermediateTexture.Get(),                                                      // pSrcResource
-                D3D11CalcSubresource(0, i, 1),                                                  // SrcSubresource
-                &srcBox                                                                         // pSrcBox
+                dstTextureD3D.GetNative(),      // pDstResource
+                dstSubresource,                 // DstSubresource
+                static_cast<UINT>(dstOffset.x), // DstX
+                static_cast<UINT>(dstOffset.y), // DstY
+                static_cast<UINT>(dstOffset.z), // DstZ
+                intermediateTexture.Get(),      // pSrcResource
+                srcSubresource,                 // SrcSubresource
+                &srcBox                         // pSrcBox
             );
         }
     }
@@ -1113,8 +1116,12 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
 {
     LLGL_ASSERT_PTR(bufferOutput);
 
-    /* Align size to R32 format size */
-    size = GetAlignedSize(size, 4u);
+    /*
+    Align size to R32 format size.
+    This is also clamped to 16 bytes to workaround an issue with the "CopyTextureFromBuffer" built-in compute shader.
+    The WARP renderer crashes when this buffer is only 4 bytes in size, but the D3D debug layer does not report any invalid arguments.
+    */
+    size = std::max<UINT>(16u, GetAlignedSize(size, 4u));
 
     /* Determine binding flags depending on resource-view output */
     UINT bindFlags = 0;
@@ -1149,7 +1156,8 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
                 srvDesc.BufferEx.NumElements    = size / 4;
                 srvDesc.BufferEx.Flags          = D3D11_BUFFEREX_SRV_FLAG_RAW;
             }
-            device->CreateShaderResourceView(resource, &srvDesc, srvOutput);
+            HRESULT hr = device->CreateShaderResourceView(resource, &srvDesc, srvOutput);
+            DXThrowIfCreateFailed(hr, "ID3D11ShaderResourceView", "for ByteAddressBuffer");
         }
 
         /* Create optional unordered-access-view (UAV) */
@@ -1163,7 +1171,8 @@ void D3D11PrimaryCommandBuffer::CreateByteAddressBufferR32Typeless(
                 uavDesc.Buffer.NumElements  = size / 4;
                 uavDesc.Buffer.Flags        = D3D11_BUFFER_UAV_FLAG_RAW;
             }
-            device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
+            HRESULT hr = device->CreateUnorderedAccessView(resource, &uavDesc, uavOutput);
+            DXThrowIfCreateFailed(hr, "ID3D11UnorderedAccessView", "for RWByteAddressBuffer");
         }
     }
 }
