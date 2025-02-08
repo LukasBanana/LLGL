@@ -131,6 +131,12 @@ DEF_TEST( TextureToBufferCopy )
         {
             for_range(layer, srcTexDesc.arrayLayers)
             {
+                if (opt.verbose)
+                {
+                    Log::Printf("Copy texture \"%s\" (mip: %u, layer: %u) to buffer\n", name, mip, layer);
+                    ::fflush(stdout);
+                }
+
                 // Determine texture region to copy buffer from
                 TextureRegion srcRegion;
                 {
