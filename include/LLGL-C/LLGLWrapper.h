@@ -925,10 +925,11 @@ LLGLColorMaskFlags;
 
 typedef enum LLGLRenderSystemFlags
 {
-    LLGLRenderSystemDebugDevice  = (1 << 0),
-    LLGLRenderSystemPreferNVIDIA = (1 << 1),
-    LLGLRenderSystemPreferAMD    = (1 << 2),
-    LLGLRenderSystemPreferIntel  = (1 << 3),
+    LLGLRenderSystemDebugDevice    = (1 << 0),
+    LLGLRenderSystemPreferNVIDIA   = (1 << 1),
+    LLGLRenderSystemPreferAMD      = (1 << 2),
+    LLGLRenderSystemPreferIntel    = (1 << 3),
+    LLGLRenderSystemSoftwareDevice = (1 << 4),
 }
 LLGLRenderSystemFlags;
 
@@ -1145,7 +1146,7 @@ LLGLQueryPipelineStatistics;
 
 typedef struct LLGLProfileTimeRecord
 {
-    const char* annotation;    /* = "" */
+    const char* annotation;
     uint64_t    cpuTicksStart; /* = 0 */
     uint64_t    cpuTicksEnd;   /* = 0 */
     uint64_t    elapsedTime;   /* = 0 */
@@ -1266,6 +1267,7 @@ typedef struct LLGLRenderingLimits
     uint32_t maxDepthBufferSamples;            /* = 0 */
     uint32_t maxStencilBufferSamples;          /* = 0 */
     uint32_t maxNoAttachmentSamples;           /* = 0 */
+    long     storageResourceStageFlags;        /* = 0 */
 }
 LLGLRenderingLimits;
 
@@ -1379,6 +1381,15 @@ typedef struct LLGLFragmentAttribute
 }
 LLGLFragmentAttribute;
 
+typedef struct LLGLMutableImageView
+{
+    LLGLImageFormat format;   /* = LLGLImageFormatRGBA */
+    LLGLDataType    dataType; /* = LLGLDataTypeUInt8 */
+    void*           data;     /* = NULL */
+    size_t          dataSize; /* = 0 */
+}
+LLGLMutableImageView;
+
 typedef struct LLGLImageView
 {
     LLGLImageFormat format;    /* = LLGLImageFormatRGBA */
@@ -1388,15 +1399,6 @@ typedef struct LLGLImageView
     uint32_t        rowStride; /* = 0 */
 }
 LLGLImageView;
-
-typedef struct LLGLMutableImageView
-{
-    LLGLImageFormat format;   /* = LLGLImageFormatRGBA */
-    LLGLDataType    dataType; /* = LLGLDataTypeUInt8 */
-    void*           data;     /* = NULL */
-    size_t          dataSize; /* = 0 */
-}
-LLGLMutableImageView;
 
 typedef struct LLGLBindingDescriptor
 {

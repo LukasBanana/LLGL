@@ -916,9 +916,12 @@ bool TestbedContext::LoadShaders()
         shaders[PSShadowedScene]    = LoadShaderFromFile("ShadowMapping.hlsl",         ShaderType::Fragment,        "PScene",  "ps_5_0");
         shaders[VSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Vertex,          "VSMain",  "vs_5_0");
         shaders[PSResourceArrays]   = LoadShaderFromFile("ResourceArrays.hlsl",        ShaderType::Fragment,        "PSMain",  "ps_5_0");
-        shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
-        shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Fragment,        "PSMain",  "ps_5_0");
-        shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",       ShaderType::Compute,         "CSMain",  "cs_5_0");
+        if ((caps.limits.storageResourceStageFlags & StageFlags::VertexStage) != 0)
+        {
+            shaders[VSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
+            shaders[PSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Fragment,        "PSMain",  "ps_5_0");
+            shaders[CSResourceBinding]  = LoadShaderFromFile("ResourceBinding.hlsl",   ShaderType::Compute,         "CSMain",  "cs_5_0");
+        }
         shaders[VSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtEmpty);
         shaders[PSClear]            = LoadShaderFromFile("ClearScreen.hlsl",           ShaderType::Fragment,        "PSMain",  "ps_5_0");
         shaders[VSStreamOutput]     = LoadShaderFromFile("StreamOutput.hlsl",          ShaderType::Vertex,          "VSMain",  "vs_5_0", nullptr, VertFmtColored, VertFmtColoredSO);

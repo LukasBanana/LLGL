@@ -329,6 +329,9 @@ static void GLGetFeatureLimits(const RenderingFeatures& features, RenderingLimit
         /* Use maximum number of samples for color buffers as fallbacks for empty render-targets */
         limits.maxNoAttachmentSamples = limits.maxColorAttachments;
     }
+
+    /* SSBOs are either supported in all shader stages or none */
+    limits.storageResourceStageFlags = (HasExtension(GLExt::ARB_shader_storage_buffer_object) ? StageFlags::AllStages : 0);
 }
 
 static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits)

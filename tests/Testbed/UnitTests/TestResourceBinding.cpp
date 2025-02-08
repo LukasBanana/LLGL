@@ -42,6 +42,10 @@ DEF_TEST( ResourceBinding )
     }
     #endif
 
+    // This shader writes to a UAV in the vertex shader
+    if ((caps.limits.storageResourceStageFlags & StageFlags::VertexStage) == 0)
+        return TestResult::Skipped;
+
     enum PSOList
     {
         GraphicsPSO = 0,

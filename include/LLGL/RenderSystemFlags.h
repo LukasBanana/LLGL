@@ -854,6 +854,13 @@ struct RenderingLimits
     \see RenderTargetDescriptor::samples
     */
     std::uint32_t   maxNoAttachmentSamples              = 0;
+
+    /**
+    \brief Specifies the shader stages in which storage buffers and textures (aka UAVs/ SSBOs) can be used.
+    \remarks If storage resources are not supported at all, this is zero.
+    \see RenderingFeatures::hasStorageBuffers
+    */
+    long            storageResourceStageFlags           = 0;
 };
 
 /**

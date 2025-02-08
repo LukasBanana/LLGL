@@ -883,10 +883,11 @@ namespace LLGL
     [Flags]
     public enum RenderSystemFlags : int
     {
-        DebugDevice  = (1 << 0),
-        PreferNVIDIA = (1 << 1),
-        PreferAMD    = (1 << 2),
-        PreferIntel  = (1 << 3),
+        DebugDevice    = (1 << 0),
+        PreferNVIDIA   = (1 << 1),
+        PreferAMD      = (1 << 2),
+        PreferIntel    = (1 << 3),
+        SoftwareDevice = (1 << 4),
     }
 
     [Flags]
@@ -1281,7 +1282,7 @@ namespace LLGL
 
     public class ProfileTimeRecord
     {
-        public AnsiString Annotation { get; set; }    = "";
+        public AnsiString Annotation { get; set; }
         public long       CPUTicksStart { get; set; } = 0;
         public long       CPUTicksEnd { get; set; }   = 0;
         public long       ElapsedTime { get; set; }   = 0;
@@ -1523,6 +1524,7 @@ namespace LLGL
         public int     MaxDepthBufferSamples { get; set; }         = 0;
         public int     MaxStencilBufferSamples { get; set; }       = 0;
         public int     MaxNoAttachmentSamples { get; set; }        = 0;
+        public int     StorageResourceStageFlags { get; set; }     = 0;
 
         public RenderingLimits() { }
 
@@ -1567,6 +1569,7 @@ namespace LLGL
                     MaxDepthBufferSamples            = value.maxDepthBufferSamples;
                     MaxStencilBufferSamples          = value.maxStencilBufferSamples;
                     MaxNoAttachmentSamples           = value.maxNoAttachmentSamples;
+                    StorageResourceStageFlags        = value.storageResourceStageFlags;
                 }
             }
         }
@@ -3659,7 +3662,7 @@ namespace LLGL
 
         public unsafe struct ProfileTimeRecord
         {
-            public byte* annotation;    /* = "" */
+            public byte* annotation;
             public long  cpuTicksStart; /* = 0 */
             public long  cpuTicksEnd;   /* = 0 */
             public long  elapsedTime;   /* = 0 */
@@ -3806,6 +3809,7 @@ namespace LLGL
             public int         maxDepthBufferSamples;            /* = 0 */
             public int         maxStencilBufferSamples;          /* = 0 */
             public int         maxNoAttachmentSamples;           /* = 0 */
+            public int         storageResourceStageFlags;        /* = 0 */
         }
 
         public unsafe struct ResourceHeapDescriptor
@@ -3881,6 +3885,14 @@ namespace LLGL
             public SystemValue systemValue; /* = SystemValue.Undefined */
         }
 
+        public unsafe struct MutableImageView
+        {
+            public ImageFormat format;   /* = ImageFormat.RGBA */
+            public DataType    dataType; /* = DataType.UInt8 */
+            public void*       data;     /* = null */
+            public IntPtr      dataSize; /* = 0 */
+        }
+
         public unsafe struct ImageView
         {
             public ImageFormat format;    /* = ImageFormat.RGBA */
@@ -3888,14 +3900,6 @@ namespace LLGL
             public void*       data;      /* = null */
             public IntPtr      dataSize;  /* = 0 */
             public int         rowStride; /* = 0 */
-        }
-
-        public unsafe struct MutableImageView
-        {
-            public ImageFormat format;   /* = ImageFormat.RGBA */
-            public DataType    dataType; /* = DataType.UInt8 */
-            public void*       data;     /* = null */
-            public IntPtr      dataSize; /* = 0 */
         }
 
         public unsafe struct BindingDescriptor

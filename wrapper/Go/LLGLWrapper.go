@@ -878,10 +878,11 @@ const (
 
 type RenderSystemFlags int
 const (
-    RenderSystemDebugDevice  = (1 << 0)
-    RenderSystemPreferNVIDIA = (1 << 1)
-    RenderSystemPreferAMD    = (1 << 2)
-    RenderSystemPreferIntel  = (1 << 3)
+    RenderSystemDebugDevice    = (1 << 0)
+    RenderSystemPreferNVIDIA   = (1 << 1)
+    RenderSystemPreferAMD      = (1 << 2)
+    RenderSystemPreferIntel    = (1 << 3)
+    RenderSystemSoftwareDevice = (1 << 4)
 )
 
 type BindFlags int
@@ -1061,7 +1062,7 @@ type QueryPipelineStatistics struct {
 }
 
 type ProfileTimeRecord struct {
-    Annotation    string /* = "" */
+    Annotation    string
     CPUTicksStart uint64 /* = 0 */
     CPUTicksEnd   uint64 /* = 0 */
     ElapsedTime   uint64 /* = 0 */
@@ -1170,6 +1171,7 @@ type RenderingLimits struct {
     MaxDepthBufferSamples         uint32     /* = 0 */
     MaxStencilBufferSamples       uint32     /* = 0 */
     MaxNoAttachmentSamples        uint32     /* = 0 */
+    StorageResourceStageFlags     uint       /* = 0 */
 }
 
 type ResourceHeapDescriptor struct {
@@ -1256,19 +1258,19 @@ type FragmentAttribute struct {
     SystemValue SystemValue /* = SystemValueUndefined */
 }
 
+type MutableImageView struct {
+    Format   ImageFormat    /* = ImageFormatRGBA */
+    DataType DataType       /* = DataTypeUInt8 */
+    Data     unsafe.Pointer /* = nil */
+    DataSize uintptr        /* = 0 */
+}
+
 type ImageView struct {
     Format    ImageFormat    /* = ImageFormatRGBA */
     DataType  DataType       /* = DataTypeUInt8 */
     Data      unsafe.Pointer /* = nil */
     DataSize  uintptr        /* = 0 */
     RowStride uint32         /* = 0 */
-}
-
-type MutableImageView struct {
-    Format   ImageFormat    /* = ImageFormatRGBA */
-    DataType DataType       /* = DataTypeUInt8 */
-    Data     unsafe.Pointer /* = nil */
-    DataSize uintptr        /* = 0 */
 }
 
 type BindingDescriptor struct {

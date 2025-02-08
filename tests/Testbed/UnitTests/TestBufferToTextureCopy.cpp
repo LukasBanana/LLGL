@@ -103,6 +103,12 @@ DEF_TEST( BufferToTextureCopy )
         {
             for_range(layer, layers)
             {
+                if (opt.verbose)
+                {
+                    Log::Printf("Copy buffer \"%s\" to texture (mip: %u, layer: %u)\n", name, mip, layer);
+                    ::fflush(stdout);
+                }
+
                 // Determine texture region to copy buffer to and from
                 TextureRegion texRegion;
                 {
@@ -114,9 +120,14 @@ DEF_TEST( BufferToTextureCopy )
                 // Copy source buffer to texture and back to destination buffer
                 cmdBuffer->Begin();
                 {
-                    cmdBuffer->FillBuffer(*dstBuf, 0, FLIP_ENDIAN(0xDEADBEEF), srcBufSize);
-                    cmdBuffer->CopyTextureFromBuffer(*tex, texRegion, *srcBuf, 0);
-                    cmdBuffer->CopyBufferFromTexture(*dstBuf, 0, *tex, texRegion);
+                    const std::string debugGroup = std::string(name) + " (mip: " + std::to_string(mip) + ", layer: " + std::to_string(layer) + ")";
+                    cmdBuffer->PushDebugGroup(debugGroup.c_str());
+                    {
+                        cmdBuffer->FillBuffer(*dstBuf, 0, FLIP_ENDIAN(0xDEADBEEF), srcBufSize);
+                        cmdBuffer->CopyTextureFromBuffer(*tex, texRegion, *srcBuf, 0);
+                        cmdBuffer->CopyBufferFromTexture(*dstBuf, 0, *tex, texRegion);
+                    }
+                    cmdBuffer->PopDebugGroup();
                 }
                 cmdBuffer->End();
 

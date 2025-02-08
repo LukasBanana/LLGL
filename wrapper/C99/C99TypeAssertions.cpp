@@ -980,6 +980,7 @@ LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxColorBufferSamples);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxDepthBufferSamples);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxStencilBufferSamples);
 LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, maxNoAttachmentSamples);
+LLGL_STATIC_ASSERT_OFFSET(RenderingLimits, storageResourceStageFlags);
 
 LLGL_STATIC_ASSERT_SIZE(ImageView);
 LLGL_STATIC_ASSERT_OFFSET(ImageView, format);

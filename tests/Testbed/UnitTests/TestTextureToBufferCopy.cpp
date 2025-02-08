@@ -158,11 +158,11 @@ DEF_TEST( TextureToBufferCopy )
                 {
                     const std::string debugGroup = std::string(name) + " (mip: " + std::to_string(mip) + ", layer: " + std::to_string(layer) + ")";
                     cmdBuffer->PushDebugGroup(debugGroup.c_str());
-
-                    cmdBuffer->FillBuffer(*buf, 0, FLIP_ENDIAN(0xDEADBEEF), bufDesc.size);
-                    cmdBuffer->CopyBufferFromTexture(*buf, 0, *srcTex, srcRegion);
-                    cmdBuffer->CopyTextureFromBuffer(*dstTex, dstRegion, *buf, 0);
-
+                    {
+                        cmdBuffer->FillBuffer(*buf, 0, FLIP_ENDIAN(0xDEADBEEF), bufDesc.size);
+                        cmdBuffer->CopyBufferFromTexture(*buf, 0, *srcTex, srcRegion);
+                        cmdBuffer->CopyTextureFromBuffer(*dstTex, dstRegion, *buf, 0);
+                    }
                     cmdBuffer->PopDebugGroup();
                 }
                 cmdBuffer->End();

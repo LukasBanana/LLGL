@@ -893,6 +893,13 @@ static std::uint32_t GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
     else                                        return 1;
 }
 
+static long GetStorageResourceStageFlags(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_1) return StageFlags::AllStages; // UAVs not supported in non-pixel/compute stages before feature level 11.1
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return StageFlags::FragmentStage | StageFlags::ComputeStage;
+    else                                        return 0;
+}
+
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
 void D3D11RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
 {
@@ -918,7 +925,7 @@ void D3D11RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.features.hasTextureViewSwizzle             = false; // not supported by D3D11
     caps.features.hasBufferViews                    = true;
     caps.features.hasConstantBuffers                = true;
-    caps.features.hasStorageBuffers                 = true;
+    caps.features.hasStorageBuffers                 = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasGeometryShaders                = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.features.hasTessellationShaders            = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
     caps.features.hasTessellatorStage               = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
@@ -964,6 +971,7 @@ void D3D11RenderSystem::QueryRenderingCaps(RenderingCapabilities& caps)
     caps.limits.maxDepthBufferSamples               = FindSuitableSampleDesc(device_.Get(), DXGI_FORMAT_D32_FLOAT).Count;
     caps.limits.maxStencilBufferSamples             = FindSuitableSampleDesc(device_.Get(), DXGI_FORMAT_D32_FLOAT_S8X24_UINT).Count;
     caps.limits.maxNoAttachmentSamples              = D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT;
+    caps.limits.storageResourceStageFlags           = GetStorageResourceStageFlags(featureLevel);
 }
 
 int D3D11RenderSystem::GetMinorVersion() const

@@ -193,6 +193,8 @@ void LoadFeatureSetCaps(id<MTLDevice> device, MTLFeatureSet fset, RenderingCapab
     caps.limits.maxDepthBufferSamples       = static_cast<std::uint32_t>(maxSamples);
     caps.limits.maxStencilBufferSamples     = static_cast<std::uint32_t>(maxSamples);
     caps.limits.maxNoAttachmentSamples      = static_cast<std::uint32_t>(maxSamples);
+
+    caps.limits.storageResourceStageFlags   = StageFlags::AllStages;
 }
 
 
