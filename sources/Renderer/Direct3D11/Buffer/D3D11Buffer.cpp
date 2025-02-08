@@ -127,7 +127,7 @@ void D3D11Buffer::WriteSubresource(ID3D11DeviceContext* context, const void* dat
         {
             /* Update subresource region of buffer */
             const D3D11_BOX dstBox{ offset, 0, 0, offset + dataSize, 1, 1 };
-            if (offset != 0 && needsCommandListEmulation && context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED)
+            if (offset != 0 && context->GetType() == D3D11_DEVICE_CONTEXT_DEFERRED)
             {
                 #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
                 ComPtr<ID3D11DeviceContext1> context1;
@@ -138,6 +138,7 @@ void D3D11Buffer::WriteSubresource(ID3D11DeviceContext* context, const void* dat
                 }
                 else
                 #endif
+                if (needsCommandListEmulation)
                 {
                     /*
                     Update subresource region of buffer with adjusted source pointer to workaround limitation of emulated command lists.
@@ -146,6 +147,8 @@ void D3D11Buffer::WriteSubresource(ID3D11DeviceContext* context, const void* dat
                     const char* dataWithOffset = static_cast<const char*>(data) - offset;
                     context->UpdateSubresource(GetNative(), 0, &dstBox, dataWithOffset, 0, 0);
                 }
+                else
+                    context->UpdateSubresource(GetNative(), 0, &dstBox, data, 0, 0);
             }
             else
                 context->UpdateSubresource(GetNative(), 0, &dstBox, data, 0, 0);

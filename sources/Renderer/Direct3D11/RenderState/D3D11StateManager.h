@@ -114,11 +114,7 @@ class D3D11StateManager
         // This is true if the D3D device does not natively support command lists.
         inline bool NeedsCommandListEmulation() const
         {
-            #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
             return needsCommandListEmulation_;
-            #else
-            return true;
-            #endif
         }
 
     private:
@@ -155,8 +151,9 @@ class D3D11StateManager
 
         #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         ComPtr<ID3D11DeviceContext1>    context1_;
-        const bool                      needsCommandListEmulation_  = false;
         #endif
+
+        const bool                      needsCommandListEmulation_  = false;
 
         D3D11StagingBufferPool          stagingCbufferPool_;
 

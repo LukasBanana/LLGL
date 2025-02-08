@@ -18,8 +18,6 @@ namespace LLGL
 {
 
 
-#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
-
 /*
 Returns true if the D3D runtime supports command lists natively.
 Otherwise, they will be emulated by the D3D runtime and all *SetConstantBuffers1() functions need a workaround as described here:
@@ -32,8 +30,6 @@ static bool D3DSupportsDriverCommandLists(ID3D11Device* device)
     return (SUCCEEDED(hr) && threadingCaps.DriverCommandLists != FALSE);
 }
 
-#endif
-
 /*
 Note:
   Maximum size for D3D11 cbuffer is 'D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 4 * sizeof(float)'
@@ -43,9 +39,7 @@ static constexpr UINT g_cbufferChunkSize = 4096u;
 
 D3D11StateManager::D3D11StateManager(ID3D11Device* device, const ComPtr<ID3D11DeviceContext>& context) :
     context_                   { context                                },
-    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     needsCommandListEmulation_ { !D3DSupportsDriverCommandLists(device) },
-    #endif
     stagingCbufferPool_
     {
         device,
