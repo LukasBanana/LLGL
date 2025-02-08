@@ -50,8 +50,9 @@ DEF_TEST( MipMaps )
           For future improvements, these backends could provide MIP-map generation via image-blit functionality to compute a perfect reduction filter (i.e. no undersampling).
           This could be enabled via a new MiscFlags entry, for example: MiscFlags::HighQualityMipFilter.
         */
-        const bool isNpotTexture = !IsPowerOfTwoExtent(texDesc.extent);
-        const int diffThreshold = (isNpotTexture ? 170 : 10);
+        const bool      isNpotTexture = !IsPowerOfTwoExtent(texDesc.extent);
+        const int       diffThreshold = (isNpotTexture ? 170 : 10);
+        const unsigned  diffTolerance = (isNpotTexture ? 20 : 0);
 
         for_subrange(mip, 1, texDesc.mipLevels)
         {
@@ -79,7 +80,7 @@ DEF_TEST( MipMaps )
             const std::string mipName = name + "_Mip" + std::to_string(mip);
             SaveColorImage(mipData, Extent2D{ mipExtent.width, mipExtent.height }, mipName);
 
-            const DiffResult diff = DiffImages(mipName, diffThreshold);
+            const DiffResult diff = DiffImages(mipName, diffThreshold, diffTolerance);
 
             TestResult intermediateResult = diff.Evaluate(mipName.c_str());
             if (intermediateResult != TestResult::Passed)
