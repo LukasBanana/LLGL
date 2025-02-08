@@ -101,6 +101,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     // Check for debug options
     const char* debugValue              = "";
     const bool  isDebugMode             = (HasProgramArgument(argc, argv, "-d", &debugValue) || HasProgramArgument(argc, argv, "--debug", &debugValue));
+    const bool  isRefMode               = HasProgramArgument(argc, argv, "--ref");
     const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
     const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
     const bool  isGpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "gpu") == 0);
@@ -122,6 +123,9 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
             if (isCpuDebugMode)
                 rendererDesc.debugger = &debugger;
         }
+
+        if (isRefMode)
+            rendererDesc.flags |= RenderSystemFlags::SoftwareDevice;
 
         if (preferAMD)
             rendererDesc.flags |= RenderSystemFlags::PreferAMD;

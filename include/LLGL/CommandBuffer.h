@@ -99,9 +99,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] data Raw pointer to the data with which the buffer is to be updated. This <b>must not</b> be null!
 
         \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
-        This is limited to 2^16 = 65536 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
+        This is limited to 2^16 - 1 = 65,535 bytes, because it may be written to the command buffer itself before it is copied to the destination buffer (depending on the backend).
 
-        \remarks To update buffers larger than 65536 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
+        \remarks To update buffers larger than 65,535 bytes, use RenderSystem::WriteBuffer or RenderSystem::MapBuffer.
         For performance reasons, it is recommended to encode this command outside of a render pass.
         Otherwise, render pass interruptions might be inserted by LLGL.
         */
