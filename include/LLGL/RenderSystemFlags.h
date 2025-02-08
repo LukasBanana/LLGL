@@ -224,6 +224,12 @@ struct RenderSystemFlags
 
         //! \see PreferNVIDIA
         PreferIntel     = (1 << 3),
+
+        /**
+        \brief Specifies that a software device is requested such as "Microsoft Basic Render Driver" as a reference device for Direct3D.
+        \remarks This can be used for debugging or if the hardware does not support the respective API.
+        */
+        SoftwareDevice  = (1 << 4),
     };
 };
 

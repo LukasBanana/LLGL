@@ -34,6 +34,9 @@ void D3D11SetObjectNameIndexed(ID3D11DeviceChild* obj, const char* name, std::ui
 // Returns the debug name of the specified D3D device child.
 std::string D3D11GetObjectName(ID3D11DeviceChild* obj);
 
+// Traps the runtime if 'hr' is not S_OK.
+void D3D11ThrowIfFailed(HRESULT hr, const char* info, ID3D11DeviceChild* obj = nullptr);
+
 // Casts the source ComPtr to its destination type and has no effect if the source object is null.
 template <typename TDst>
 void D3D11CastShader(ComPtr<TDst>& dst, const ComPtr<ID3D11DeviceChild>& src, ShaderType type, const char* psoDebugName, Report& report)

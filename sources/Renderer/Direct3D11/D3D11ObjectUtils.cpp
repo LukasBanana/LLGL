@@ -7,6 +7,7 @@
 
 #include <initguid.h> // Comes first to define GUIDs
 #include "D3D11ObjectUtils.h"
+#include "../DXCommon/DXCore.h"
 #include <string>
 #include <cstring>
 
@@ -69,6 +70,20 @@ std::string D3D11GetObjectName(ID3D11DeviceChild* obj)
         return name;
     }
     return "";
+}
+
+void D3D11ThrowIfFailed(HRESULT hr, const char* info, ID3D11DeviceChild* obj)
+{
+    if (FAILED(hr))
+    {
+        if (obj != nullptr)
+        {
+            const std::string infoExt = std::string(info) + " \"" + D3D11GetObjectName(obj) + "\"";
+            DXThrowIfFailed(hr, infoExt.c_str());
+        }
+        else
+            DXThrowIfFailed(hr, info);
+    }
 }
 
 
