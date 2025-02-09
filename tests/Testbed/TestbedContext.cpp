@@ -142,7 +142,9 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
             rendererDesc.rendererConfigSize = sizeof(cfgGL);
         }
     }
-    if ((renderer = RenderSystem::Load(rendererDesc)) != nullptr)
+
+    Report report;
+    if ((renderer = RenderSystem::Load(rendererDesc, &report)) != nullptr)
     {
         // Create swap chain
         SwapChainDescriptor swapChainDesc;
@@ -180,6 +182,11 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
             ++failures;
         CreateSamplerStates();
         LoadDefaultProjectionMatrix();
+    }
+    else
+    {
+        // Log error report
+        Log::Errorf(Log::ColorFlags::StdError, "%s", report.GetText());
     }
 }
 

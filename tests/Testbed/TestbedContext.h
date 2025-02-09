@@ -45,6 +45,12 @@ class TestbedContext
         // Runs all tests and returns the number of failed ones. If all succeeded, the return value is 0.
         unsigned RunAllTests();
 
+        // Returns true if this context has a valid renderer.
+        inline bool IsValid() const
+        {
+            return (renderer.get() != nullptr);
+        }
+
     public:
 
         static unsigned RunRendererIndependentTests(int argc, char* argv[]);

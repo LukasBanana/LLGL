@@ -35,8 +35,12 @@ static unsigned RunTestbedForRenderer(const char* moduleName, int version, int a
         Log::Printf("Run Testbed: %s (%d)\n", moduleName, version);
     else
         Log::Printf("Run Testbed: %s\n", moduleName);
+
     TestbedContext::PrintSeparator();
     TestbedContext context{ moduleName, version, argc, argv };
+    if (!context.IsValid())
+        return 1;
+
     unsigned failures = context.RunAllTests();
     TestbedContext::PrintSeparator();
     Log::Printf("\n");
