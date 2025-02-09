@@ -367,12 +367,14 @@ void ExampleBase::ParseProgramArgs(int argc, char* argv[])
         g_Config.debugger = true;
     if (HasArgument("-i", argc, argv) || HasArgument("--icontext", argc, argv))
         g_Config.immediateSubmit = true;
-    if (HasArgument("-nvidia", argc, argv))
+    if (HasArgument("--nvidia", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferNVIDIA;
-    if (HasArgument("-amd", argc, argv))
+    if (HasArgument("--amd", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferAMD;
-    if (HasArgument("-intel", argc, argv))
+    if (HasArgument("--intel", argc, argv))
         g_Config.flags |= LLGL::RenderSystemFlags::PreferIntel;
+    if (HasArgument("--ref", argc, argv))
+        g_Config.flags |= LLGL::RenderSystemFlags::SoftwareDevice;
 }
 
 #if defined LLGL_OS_ANDROID
