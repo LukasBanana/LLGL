@@ -238,7 +238,7 @@ static void ConvertImageBufferDataTypeWorker(
     }
 }
 
-static void ConvertImageBufferDataType(
+static std::size_t ConvertImageBufferDataType(
     const ImageView&        srcImageView,
     const MutableImageView& dstImageView,
     const Extent3D&         extent,
@@ -270,6 +270,8 @@ static void ConvertImageBufferDataType(
         numPixels,
         threadCount
     );
+
+    return requiredDstBufferSize;
 }
 
 static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
@@ -586,7 +588,7 @@ static void ConvertImageBufferFormatWorker(
     }
 }
 
-static void ConvertImageBufferFormat(
+static std::size_t ConvertImageBufferFormat(
     const ImageView&        srcImageView,
     const MutableImageView& dstImageView,
     const Extent3D&         extent,
@@ -618,6 +620,8 @@ static void ConvertImageBufferFormat(
         numPixels,
         threadCount
     );
+
+    return requiredDstBufferSize;
 }
 
 static void ValidateSourceImageView(const ImageView& imageView)
@@ -652,19 +656,13 @@ static void ValidateImageConversionParams(
 
 /* ----- Public functions ----- */
 
-LLGL_EXPORT bool ConvertImageBuffer(
+LLGL_EXPORT std::size_t ConvertImageBuffer(
     const ImageView&        srcImageView,
     const MutableImageView& dstImageView,
     const Extent3D&         extent,
-    unsigned                threadCount)
+    unsigned                threadCount,
+    bool                    copyUnchangedImage)
 {
-    if (srcImageView.format    == dstImageView.format   &&
-        srcImageView.dataType  == dstImageView.dataType &&
-        srcImageView.rowStride == 0)
-    {
-        return false;
-    }
-
     /* Validate input parameters */
     ValidateSourceImageView(srcImageView);
     ValidateDestinationImageView(dstImageView);
@@ -676,7 +674,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     if (IsDepthOrStencilFormat(srcImageView.format))
     {
         /* Convert depth-stencil image format */
-        ConvertImageBufferFormat(srcImageView, dstImageView, extent, threadCount);
+        return ConvertImageBufferFormat(srcImageView, dstImageView, extent, threadCount);
     }
     else if (srcImageView.dataType != dstImageView.dataType && srcImageView.format != dstImageView.format)
     {
@@ -705,21 +703,17 @@ LLGL_EXPORT bool ConvertImageBuffer(
         };
 
         /* Convert image format */
-        ConvertImageBufferFormat(intermediateSrcImageView, dstImageView, extent, threadCount);
-
-        return true;
+        return ConvertImageBufferFormat(intermediateSrcImageView, dstImageView, extent, threadCount);
     }
     else if (srcImageView.dataType != dstImageView.dataType)
     {
         /* Convert image data type */
-        ConvertImageBufferDataType(srcImageView, dstImageView, extent, threadCount);
-        return true;
+        return ConvertImageBufferDataType(srcImageView, dstImageView, extent, threadCount);
     }
     else if (srcImageView.format != dstImageView.format)
     {
         /* Convert image format */
-        ConvertImageBufferFormat(srcImageView, dstImageView, extent, threadCount);
-        return true;
+        return ConvertImageBufferFormat(srcImageView, dstImageView, extent, threadCount);
     }
     else if (srcImageView.rowStride != 0)
     {
@@ -737,17 +731,30 @@ LLGL_EXPORT bool ConvertImageBuffer(
                 srcImageView.rowStride,
                 0
             );
-            return true;
+            const std::size_t numPixels = (extent.width * extent.height * extent.depth);
+            return (numPixels * bpp);
         }
     }
 
-    return false;
+    /* Copy data directly into destination buffer if no conversion was necessary */
+    if (copyUnchangedImage)
+    {
+        const std::size_t numPixels = (extent.width * extent.height * extent.depth);
+        const std::size_t requiredImageSize = GetMemoryFootprint(dstImageView.format, dstImageView.dataType, numPixels);
+        LLGL_ASSERT(dstImageView.dataSize >= requiredImageSize);
+        LLGL_ASSERT(srcImageView.dataSize >= requiredImageSize);
+        ::memcpy(dstImageView.data, srcImageView.data, requiredImageSize);
+        return requiredImageSize;
+    }
+
+    return 0;
 }
 
-LLGL_EXPORT bool ConvertImageBuffer(
+LLGL_EXPORT std::size_t ConvertImageBuffer(
     const ImageView&        srcImageView,
     const MutableImageView& dstImageView,
-    unsigned                threadCount)
+    unsigned                threadCount,
+    bool                    copyUnchangedImage)
 {
     LLGL_ASSERT(
         srcImageView.rowStride == 0,
@@ -762,7 +769,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
     );
 
     const Extent3D extent1D{ static_cast<std::uint32_t>(srcImageView.dataSize / bpp), 1u, 1u };
-    return ConvertImageBuffer(srcImageView, dstImageView, extent1D, threadCount);
+    return ConvertImageBuffer(srcImageView, dstImageView, extent1D, threadCount, copyUnchangedImage);
 }
 
 LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
@@ -772,69 +779,28 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     const Extent3D&     extent,
     unsigned            threadCount)
 {
-    if (srcImageView.format == dstFormat && srcImageView.dataType == dstDataType)
+    if (srcImageView.format    == dstFormat   &&
+        srcImageView.dataType  == dstDataType &&
+        srcImageView.rowStride == 0)
+    {
         return nullptr;
+    }
 
     /* Validate input parameters */
     ValidateSourceImageView(srcImageView);
     ValidateImageConversionParams(srcImageView, dstFormat, dstDataType);
-
-    if (threadCount == LLGL_MAX_THREAD_COUNT)
-        threadCount = std::thread::hardware_concurrency();
 
     /* Initialize destination image descriptor */
     const std::size_t numPixels     = extent.width * extent.height * extent.depth;
     const std::size_t dstImageSize  = GetMemoryFootprint(dstFormat, dstDataType, numPixels);
 
     DynamicByteArray dstImage{ dstImageSize, UninitializeTag{} };
-
     const MutableImageView dstImageView{ dstFormat, dstDataType, dstImage.get(), dstImageSize };
 
-    if (IsDepthOrStencilFormat(srcImageView.format))
-    {
-        /* Convert depth-stencil image format */
-        ConvertImageBufferFormat(srcImageView, dstImageView, extent, threadCount);
-    }
-    else if (srcImageView.dataType != dstDataType && srcImageView.format != dstFormat)
-    {
-        /* Convert image data type with intermediate buffer that is tightly packed */
-        const std::size_t   intermediateBufferSize  = GetMemoryFootprint(srcImageView.format, dstDataType, numPixels);
-        DynamicByteArray    intermediateBuffer      = DynamicByteArray{ intermediateBufferSize, UninitializeTag{} };
+    if (ConvertImageBuffer(srcImageView, dstImageView, extent, threadCount) > 0)
+        return dstImage;
 
-        const MutableImageView intermediateDstImageView
-        {
-            srcImageView.format,
-            dstDataType,
-            intermediateBuffer.get(),
-            intermediateBufferSize,
-        };
-
-        ConvertImageBufferDataType(srcImageView, intermediateDstImageView, extent, threadCount);
-
-        /* Set new source buffer and source data type */
-        const ImageView intermediateSrcImageView
-        {
-            srcImageView.format,
-            dstDataType,
-            intermediateBuffer.get(),
-            intermediateBufferSize
-        };
-
-        /* Convert image format */
-        ConvertImageBufferFormat(intermediateSrcImageView, dstImageView, extent, threadCount);
-    }
-    else if (srcImageView.dataType != dstDataType)
-    {
-        /* Convert image data type */
-        ConvertImageBufferDataType(srcImageView, dstImageView, extent, threadCount);
-    }
-    else if (srcImageView.format != dstFormat)
-    {
-        /* Convert image format */
-        ConvertImageBufferFormat(srcImageView, dstImageView, extent, threadCount);
-    }
-
-    return dstImage;
+    return nullptr;
 }
 
 LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
@@ -933,8 +899,10 @@ LLGL_EXPORT void CopyImageBufferRegion(
     ValidateSourceImageView(srcImageView);
     ValidateDestinationImageView(dstImageView);
 
-    if (srcImageView.format != dstImageView.format || srcImageView.dataType != dstImageView.dataType)
-        LLGL_TRAP("cannot copy image buffer region with source and destination images having different format or data type");
+    LLGL_ASSERT(
+        srcImageView.format == dstImageView.format && srcImageView.dataType == dstImageView.dataType,
+        "LLGL::CopyImageBufferRegion() only supports source and destination buffers of equal format and type"
+    );
 
     const std::uint32_t bpp = static_cast<std::uint32_t>(GetMemoryFootprint(dstImageView.format, dstImageView.dataType, 1));
 
@@ -942,15 +910,19 @@ LLGL_EXPORT void CopyImageBufferRegion(
     const std::size_t dstPos    = GetFlattenedImageBufferPos(dstOffset.x, dstOffset.y, dstOffset.z, dstRowStride, dstLayerStride, bpp);
     const std::size_t dstPosEnd = GetFlattenedImageBufferPosEnd(dstOffset, extent, dstRowStride, dstLayerStride, bpp);
 
-    if (dstPosEnd > dstImageView.dataSize)
-        LLGL_TRAP("destination image buffer region out of range");
+    LLGL_ASSERT(
+        dstImageView.dataSize >= dstPosEnd,
+        "destination image buffer size is too small for copy operation"
+    );
 
     /* Validate source image boundaries */
     const std::size_t srcPos    = GetFlattenedImageBufferPos(srcOffset.x, srcOffset.y, srcOffset.z, srcRowStride, srcLayerStride, bpp);
     const std::size_t srcPosEnd = GetFlattenedImageBufferPosEnd(srcOffset, extent, srcRowStride, srcLayerStride, bpp);
 
-    if (srcPosEnd > srcImageView.dataSize)
-        LLGL_TRAP("source image buffer region out of range");
+    LLGL_ASSERT(
+        srcImageView.dataSize >= srcPosEnd,
+        "source image buffer size is too small for copy operation"
+    );
 
     /* Copy image buffer region */
     BitBlit(

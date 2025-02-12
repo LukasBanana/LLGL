@@ -255,14 +255,13 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     const Format            format              = textureD3D.GetFormat();
     const FormatAttributes& formatAttribs       = GetFormatAttribs(format);
     const Extent3D          extent              = CalcTextureExtent(textureD3D.GetType(), textureRegion.extent);
-    const std::uint32_t     numTexelsPerLayer   = extent.width * extent.height * extent.depth;
 
     void* mappedData = nullptr;
     HRESULT hr = readbackBuffer->Map(0, nullptr, &mappedData);
     DXThrowIfFailed(hr, "failed to map D3D12 texture copy resource");
 
     const char* srcData = static_cast<const char*>(mappedData);
-    ImageView intermediateSrcView{ formatAttribs.format, formatAttribs.dataType, srcData, layerStride };
+    ImageView intermediateSrcView{ formatAttribs.format, formatAttribs.dataType, srcData, layerStride, rowStride };
 
     if (isStencilOnlyFormat)
     {
@@ -278,7 +277,7 @@ void D3D12RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
     for_range(arrayLayer, textureRegion.subresource.numArrayLayers)
     {
         /* Copy CPU accessible buffer to output data */
-        RenderSystem::CopyTextureImageData(intermediateDstView, intermediateSrcView, numTexelsPerLayer, extent.width, rowStride);
+        ConvertImageBuffer(intermediateSrcView, intermediateDstView, extent, LLGL_MAX_THREAD_COUNT, true);
 
         /* Move destination image pointer to next layer */
         intermediateDstView.data = static_cast<char*>(intermediateDstView.data) + layerSize;

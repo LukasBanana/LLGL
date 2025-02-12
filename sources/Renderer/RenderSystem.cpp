@@ -316,20 +316,6 @@ void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t require
     );
 }
 
-static void CopyRowAlignedData(void* dstData, std::size_t dstSize, std::size_t dstStride, const void* srcData, std::size_t srcStride)
-{
-    LLGL_ASSERT_PTR(dstData);
-    LLGL_ASSERT_PTR(srcData);
-    LLGL_ASSERT(dstStride > 0);
-    LLGL_ASSERT(dstStride <= srcStride, "dstStride (%u) is not less than or equal to srcStride (%u)", dstStride, srcStride);
-
-    auto dst = static_cast<char*>(dstData);
-    auto src = static_cast<const char*>(srcData);
-
-    for (char* dstEnd = dst + dstSize; dst < dstEnd; dst += dstStride, src += srcStride)
-        ::memcpy(dst, src, dstStride);
-}
-
 std::size_t RenderSystem::CopyTextureImageData(
     const MutableImageView& dstImageView,
     const ImageView&        srcImageView,
@@ -337,55 +323,13 @@ std::size_t RenderSystem::CopyTextureImageData(
     std::uint32_t           numTexelsInRow,
     std::uint32_t           rowStride)
 {
-    /* Check if image buffer must be converted */
-    const std::size_t unpaddedImageSize = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, numTexels);
-    const std::size_t unpaddedStride    = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, numTexelsInRow);
-
-    if (srcImageView.format != dstImageView.format || srcImageView.dataType != dstImageView.dataType)
+    if (numTexelsInRow > 0)
     {
-        /* Check if padding must be removed */
-        const void* data = srcImageView.data;
-
-        DynamicByteArray unpaddedData;
-        if (rowStride != 0 && unpaddedStride != rowStride)
-        {
-            unpaddedData = DynamicByteArray{ unpaddedImageSize, UninitializeTag{} };
-            CopyRowAlignedData(unpaddedData.get(), unpaddedImageSize, unpaddedStride, data, rowStride);
-            data = unpaddedData.get();
-        }
-
-        /* Determine destination image size */
-        const std::size_t dstImageSize = GetMemoryFootprint(dstImageView.format, dstImageView.dataType, numTexels);
-
-        /* Validate input size */
-        RenderSystem::AssertImageDataSize(dstImageView.dataSize, dstImageSize);
-
-        /* Convert mapped data into requested format */
-        DynamicByteArray formattedData = ConvertImageBuffer(
-            ImageView{ srcImageView.format, srcImageView.dataType, data, unpaddedImageSize },
-            dstImageView.format,
-            dstImageView.dataType,
-            LLGL_MAX_THREAD_COUNT
-        );
-
-        /* Copy temporary data into output buffer */
-        ::memcpy(dstImageView.data, formattedData.get(), dstImageSize);
-
-        return dstImageSize;
+        const Extent3D extent{ numTexelsInRow, numTexels/numTexelsInRow, 1 };
+        const ImageView srcImageViewWithCustomStride{ srcImageView.format, srcImageView.dataType, srcImageView.data, srcImageView.dataSize, rowStride };
+        return ConvertImageBuffer(srcImageViewWithCustomStride, dstImageView, extent, LLGL_MAX_THREAD_COUNT, true);
     }
-    else
-    {
-        /* Validate input size */
-        RenderSystem::AssertImageDataSize(dstImageView.dataSize, unpaddedImageSize);
-
-        /* Copy mapped data directly into the output buffer */
-        if (rowStride != 0 && unpaddedStride != rowStride)
-            CopyRowAlignedData(dstImageView.data, unpaddedImageSize, unpaddedStride, srcImageView.data, rowStride);
-        else
-            ::memcpy(dstImageView.data, srcImageView.data, unpaddedImageSize);
-
-        return unpaddedImageSize;
-    }
+    return 0;
 }
 
 

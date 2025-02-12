@@ -191,15 +191,15 @@ class LLGL_EXPORT RenderSystem : public Interface
 
         /**
         \brief Returns basic renderer information.
-        \remarks This is not a constant member function because the first call will invoke the query,
-        while subsequent calls with return the cached information.
+        \remarks This is not a constant member function because the first call invokes the query,
+        while subsequent calls return the cached information.
         */
         const RendererInfo& GetRendererInfo();
 
         /**
         \brief Returns the rendering capabilities.
-        \remarks This is not a constant member function because the first call will invoke the query,
-        while subsequent calls with return the cached information.
+        \remarks This is not a constant member function because the first call invokes the query,
+        while subsequent calls return the cached information.
         */
         const RenderingCapabilities& GetRenderingCaps();
 
@@ -672,11 +672,11 @@ class LLGL_EXPORT RenderSystem : public Interface
         void Errorf(const char* format, ...);
 
         //! \deprecated Since 0.04b; Implement QueryRendererDetails() instead!
-        LLGL_DEPRECATED("RenderSystem::SetRendererInfo is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
+        LLGL_DEPRECATED("RenderSystem::SetRendererInfo() is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
         void SetRendererInfo(const RendererInfo& info);
 
         //! \deprecated Since 0.04b; Implement QueryRendererDetails() instead!
-        LLGL_DEPRECATED("RenderSystem::SetRendererInfo is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
+        LLGL_DEPRECATED("RenderSystem::SetRendererInfo() is deprecated since 0.04b; Implement QueryRendererDetails() instead!")
         void SetRenderingCaps(const RenderingCapabilities& caps);
 
     protected:
@@ -701,15 +701,10 @@ class LLGL_EXPORT RenderSystem : public Interface
         //! Validates the specified shader descriptor.
         static void AssertCreateShader(const ShaderDescriptor& shaderDesc);
 
-        //! Validates the specified image data size against the required size (in bytes).
+        LLGL_DEPRECATED("RenderSystem::AssertImageDataSize() is deprecated since 0.04b; Use LLGL_VERIFY() macro instead!")
         static void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* useCase = nullptr);
 
-        /**
-        \brief Copies the specified source image to the destination image.
-        \remarks This function also performs image conversion if there is a mismatch between source and destination format.
-        \returns The number of bytes that have been written into the destination image buffer.
-        \see ConvertImageBuffer
-        */
+        LLGL_DEPRECATED("RenderSystem::CopyTextureImageData() is deprecated since 0.04b; Use ConvertOrCopyImageBuffer() instead!")
         static std::size_t CopyTextureImageData(
             const MutableImageView& dstImageView,
             const ImageView&        srcImageView,

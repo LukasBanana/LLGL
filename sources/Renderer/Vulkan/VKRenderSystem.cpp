@@ -349,21 +349,15 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
         if (intermediateData)
         {
-            /*
-            Validate that source image data was large enough so conversion is valid,
-            then use temporary image buffer as source for initial data
-            */
+            /* Validate that source image data was large enough so conversion is valid, then use temporary image as source for initial data */
             const std::size_t srcImageDataSize = GetMemoryFootprint(initialImage->format, initialImage->dataType, imageSize);
-            RenderSystem::AssertImageDataSize(initialImage->dataSize, srcImageDataSize);
+            LLGL_ASSERT(initialImage->dataSize >= srcImageDataSize);
             initialData = intermediateData.get();
         }
         else
         {
-            /*
-            Validate that image data is large enough,
-            then use input data as source for initial data
-            */
-            RenderSystem::AssertImageDataSize(initialImage->dataSize, initialDataSize);
+            /* Validate that image data is large enough, then use input data as source for initial data */
+            LLGL_ASSERT(initialImage->dataSize >= initialDataSize);
             initialData = initialImage->data;
         }
     }
@@ -497,21 +491,15 @@ void VKRenderSystem::WriteTexture(Texture& texture, const TextureRegion& texture
 
     if (intermediateData)
     {
-        /*
-        Validate that source image data was large enough so conversion is valid,
-        then use temporary image buffer as source for initial data
-        */
+        /* Validate that source image data was large enough so conversion is valid, then use temporary buffer as source for initial data */
         const std::size_t srcImageDataSize = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, imageSize);
-        RenderSystem::AssertImageDataSize(srcImageView.dataSize, srcImageDataSize);
+        LLGL_ASSERT(srcImageView.dataSize >= srcImageDataSize);
         imageData = intermediateData.get();
     }
     else
     {
-        /*
-        Validate that image data is large enough,
-        then use input data as source for initial data
-        */
-        RenderSystem::AssertImageDataSize(srcImageView.dataSize, static_cast<std::size_t>(imageDataSize));
+        /* Validate that image data is large enough, then use input data as source for initial data */
+        LLGL_ASSERT(srcImageView.dataSize >= static_cast<std::size_t>(imageDataSize));
         imageData = srcImageView.data;
     }
 
@@ -565,8 +553,8 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     const FormatAttributes&     formatAttribs   = GetFormatAttribs(format);
 
     VkImage                     image           = textureVK.GetVkImage();
-    const std::uint32_t         imageSize       = extent.width * extent.height * extent.depth;
-    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageSize));
+    const std::size_t           imageNumTexels  = extent.width * extent.height * extent.depth;
+    const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageNumTexels));
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
@@ -601,7 +589,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
         {
             /* Copy data to buffer object */
             const ImageView srcImageView{ formatAttribs.format, formatAttribs.dataType, memory, static_cast<std::size_t>(imageDataSize) };
-            RenderSystem::CopyTextureImageData(dstImageView, srcImageView, imageSize, extent.width);
+            ConvertImageBuffer(srcImageView, dstImageView, extent, LLGL_MAX_THREAD_COUNT, true);
             deviceMemory->Unmap(device_);
         }
     }

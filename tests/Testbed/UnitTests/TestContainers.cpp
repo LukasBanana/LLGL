@@ -362,7 +362,7 @@ DEF_RITEST( ContainerStringLiteral )
     // Test reference and dynamic string literals
     {
         StringLiteral l0 = "This is a string literal";
-        StringLiteral l1 = StringLiteral{ l0.c_str(), true };
+        StringLiteral l1 = StringLiteral{ l0.c_str(), CopyTag{} };
 
         if (l0 != l1)
         {

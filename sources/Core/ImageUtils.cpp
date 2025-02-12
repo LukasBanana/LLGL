@@ -6,6 +6,7 @@
  */
 
 #include "ImageUtils.h"
+#include "Assertion.h"
 #include <LLGL/Types.h>
 #include <LLGL/Utils/ForRange.h>
 #include <cstdint>
@@ -34,8 +35,20 @@ LLGL_EXPORT void BitBlit(
     dstRowStride = std::max(dstRowStride, rowLength);
     srcRowStride = std::max(srcRowStride, rowLength);
 
-    dstLayerStride = std::max(dstLayerStride, layerLength);
-    srcLayerStride = std::max(srcLayerStride, layerLength);
+    const std::uint32_t dstLayerLength = dstRowStride * extent.height;
+    const std::uint32_t srcLayerLength = srcRowStride * extent.height;
+
+    LLGL_ASSERT(
+        dstLayerStride == 0 || dstLayerStride >= dstLayerLength,
+        "'dstLayerStride' must be 0 or at least %u, but %u was specified", dstLayerLength, dstLayerStride
+    );
+    LLGL_ASSERT(
+        srcLayerStride == 0 || srcLayerStride >= srcLayerLength,
+        "'srcLayerStride' must be 0 or at least %u, but %u was specified", srcLayerLength, srcLayerStride
+    );
+
+    dstLayerStride = std::max(dstLayerLength, std::max(dstLayerStride, layerLength));
+    srcLayerStride = std::max(srcLayerLength, std::max(srcLayerStride, layerLength));
 
     if (srcRowStride == dstRowStride && rowLength == dstRowStride)
     {

@@ -349,8 +349,15 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
         D3D11ThrowIfFailed(hr, "failed to map D3D11 texture copy resource", textureD3D.GetNative());
 
         /* Copy host visible resource to CPU accessible resource */
-        const ImageView intermediateSrcView{ formatAttribs.format, formatAttribs.dataType, mappedSubresource.pData, mappedSubresource.DepthPitch };
-        const std::size_t bytesWritten = RenderSystem::CopyTextureImageData(intermediateDstView, intermediateSrcView, numTexelsPerLayer, extent.width, mappedSubresource.RowPitch);
+        const ImageView intermediateSrcView
+        {
+            formatAttribs.format,
+            formatAttribs.dataType,
+            mappedSubresource.pData,
+            mappedSubresource.DepthPitch,
+            mappedSubresource.RowPitch
+        };
+        const std::size_t bytesWritten = ConvertImageBuffer(intermediateSrcView, intermediateDstView, extent, LLGL_MAX_THREAD_COUNT, true);
 
         /* Unmap resource */
         context_->Unmap(texCopy.Get(), subresource);
