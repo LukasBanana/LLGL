@@ -741,8 +741,16 @@ LLGL_EXPORT std::size_t ConvertImageBuffer(
     {
         const std::size_t numPixels = (extent.width * extent.height * extent.depth);
         const std::size_t requiredImageSize = GetMemoryFootprint(dstImageView.format, dstImageView.dataType, numPixels);
-        LLGL_ASSERT(dstImageView.dataSize >= requiredImageSize);
-        LLGL_ASSERT(srcImageView.dataSize >= requiredImageSize);
+        LLGL_ASSERT(
+            dstImageView.dataSize >= requiredImageSize,
+            "dstImageView.dataSize must be at least %zu, but %zu was specified",
+            requiredImageSize, dstImageView.dataSize
+        );
+        LLGL_ASSERT(
+            srcImageView.dataSize >= requiredImageSize,
+            "srcImageView.dataSize must be at least %zu, but %zu was specified",
+            requiredImageSize, srcImageView.dataSize
+        );
         ::memcpy(dstImageView.data, srcImageView.data, requiredImageSize);
         return requiredImageSize;
     }

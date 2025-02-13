@@ -354,7 +354,7 @@ void D3D11RenderSystem::ReadTexture(Texture& texture, const TextureRegion& textu
             formatAttribs.format,
             formatAttribs.dataType,
             mappedSubresource.pData,
-            mappedSubresource.DepthPitch,
+            mappedSubresource.DepthPitch * extent.depth,
             mappedSubresource.RowPitch
         };
         const std::size_t bytesWritten = ConvertImageBuffer(intermediateSrcView, intermediateDstView, extent, LLGL_MAX_THREAD_COUNT, true);
