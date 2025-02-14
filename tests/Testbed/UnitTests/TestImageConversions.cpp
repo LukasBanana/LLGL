@@ -138,7 +138,7 @@ DEF_RITEST( ImageConversions )
             {                                                                                                       \
                 const unsigned maxThreads = std::max(3u, std::thread::hardware_concurrency());                      \
                 Log::Printf(                                                                                        \
-                    "Conversions for '%s': 1 Thread (%.4f ms), 2 Threads (%.4f ms), %u Threads (%.4f ms):\n",       \
+                    "Conversions for '%s': 1 Thread (%.4f ms), 2 Threads (%.4f ms), Max [%u] Threads (%.4f ms):\n", \
                     (FILENAME), totalTimes[0] * 1000.0, totalTimes[1] * 1000.0, maxThreads, totalTimes[2] * 1000.0  \
                 );                                                                                                  \
             }                                                                                                       \

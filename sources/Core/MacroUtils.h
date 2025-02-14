@@ -10,12 +10,16 @@
 
 
 #define LLGL_COMPARE_SEPARATE_MEMBERS_SWO(LHS, RHS) \
-    if ((LHS) < (RHS)) { return -1; }               \
-    if ((LHS) > (RHS)) { return +1; }
+    {                                               \
+        if ((LHS) < (RHS)) { return -1; }           \
+        if ((LHS) > (RHS)) { return +1; }           \
+    }
 
 #define LLGL_COMPARE_SEPARATE_BOOL_MEMBER_SWO(LHS, RHS) \
-    if (!(LHS) &&  (RHS)) { return -1; }      \
-    if ( (LHS) && !(RHS)) { return +1; }
+    {                                                   \
+        if (!(LHS) &&  (RHS)) { return -1; }            \
+        if ( (LHS) && !(RHS)) { return +1; }            \
+    }
 
 #define LLGL_COMPARE_MEMBER_SWO(MEMBER) \
     LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.MEMBER, rhs.MEMBER)

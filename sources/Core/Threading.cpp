@@ -45,16 +45,45 @@ static void DoConcurrentRangeInWorkerContainer(
         workers[i].join();
 }
 
+static unsigned Log2Uint(unsigned n)
+{
+    unsigned nLog2 = 0;
+    while (n >>= 1)
+        ++nLog2;
+    return nLog2;
+}
+
+static unsigned ClampThreadCount(unsigned threadCount, std::size_t workSize, unsigned threadMinWorkSize)
+{
+    if (workSize > threadMinWorkSize)
+    {
+        if (threadCount == LLGL_MAX_THREAD_COUNT)
+        {
+            /* Compute number of threads automatically logarithmically to the workload */
+            threadCount = Log2Uint(static_cast<unsigned>(workSize / threadMinWorkSize));
+
+            /*
+            Clamp to maximum number of threads support by the CPU.
+            If this value is undefined or not comutable, the return value of the STL function is 0.
+            */
+            const unsigned maxThreadCount = std::thread::hardware_concurrency();
+            if (maxThreadCount > 0)
+                threadCount = std::min(threadCount, maxThreadCount);
+        }
+
+        /* Clamp final number of threads by the minimum workload per thread */
+        return std::min(threadCount, static_cast<unsigned>(workSize / threadMinWorkSize));
+    }
+    return 0;
+}
+
 LLGL_EXPORT void DoConcurrentRange(
     const std::function<void(std::size_t begin, std::size_t end)>&  task,
     std::size_t                                                     count,
     unsigned                                                        threadCount,
     unsigned                                                        threadMinWorkSize)
 {
-    if (threadCount == LLGL_MAX_THREAD_COUNT)
-        threadCount = std::thread::hardware_concurrency();
-
-    threadCount = std::min(threadCount, static_cast<unsigned>(count / threadMinWorkSize));
+    threadCount = ClampThreadCount(threadCount, count, threadMinWorkSize);
 
     if (threadCount <= 1)
     {
