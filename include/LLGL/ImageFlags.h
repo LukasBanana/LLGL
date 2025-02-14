@@ -76,12 +76,13 @@ struct ImageView
     ImageView(const ImageView&) = default;
 
     //! Constructor to initialize all attributes.
-    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0) :
-        format    { format    },
-        dataType  { dataType  },
-        data      { data      },
-        dataSize  { dataSize  },
-        rowStride { rowStride }
+    inline ImageView(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize, std::uint32_t rowStride = 0, std::uint32_t layerStride = 0) :
+        format      { format      },
+        dataType    { dataType    },
+        data        { data        },
+        dataSize    { dataSize    },
+        rowStride   { rowStride   },
+        layerStride { layerStride }
     {
     }
 
@@ -105,11 +106,20 @@ struct ImageView
 
     /**
     \brief Specifies the stride (in bytes) between two rows of the image data.
-    \remarks If this is zero, each image layer is considerd tightly packed
+    \remarks If this is zero, each image row is considered tightly packed
     and the stride is implied by the width of the image multiplied by the pixel format size (see Format).
-    \note Only supported with: Vulkan, OpenGL.
+    \note Only supported with: Vulkan, OpenGL, Direct3D 11, Direct3D 12.
     */
     std::uint32_t   rowStride   = 0;
+
+    /**
+    \brief Specifies the stride (in bytes) between two array layers or volume slices of the image data.
+    \remarks If this is zero, each image layer is considered tightly packed
+    and the stride is implied by the row stride (implicit or explicit) times the height of the image multiplied by the pixel format size (see Format).
+    If this is non-zero, it must be a multiple of \c rowStride.
+    \note Only supported with image conversion functions.
+    */
+    std::uint32_t   layerStride = 0;
 };
 
 struct LLGL_DEPRECATED("LLGL::SrcImageDescriptor is deprecated since 0.04b; Use LLGL::ImageView instead!", "ImageView") SrcImageDescriptor

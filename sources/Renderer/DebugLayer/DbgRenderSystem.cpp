@@ -272,7 +272,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const TextureRegion& textur
     if (LLGL_DBG_SOURCE())
     {
         ValidateTextureRegion(textureDbg, textureRegion);
-        ValidateImageDataSize(textureDbg, textureRegion, srcImageView.format, srcImageView.dataType, srcImageView.dataSize);
+        ValidateImageView(srcImageView, textureDbg.desc, &textureRegion);
     }
 
     instance_->WriteTexture(textureDbg.instance, textureRegion, srcImageView);
@@ -287,7 +287,7 @@ void DbgRenderSystem::ReadTexture(Texture& texture, const TextureRegion& texture
     if (LLGL_DBG_SOURCE())
     {
         ValidateTextureRegion(textureDbg, textureRegion);
-        ValidateImageDataSize(textureDbg, textureRegion, dstImageView.format, dstImageView.dataType, dstImageView.dataSize);
+        ValidateImageView(ImageView{ dstImageView }, textureDbg.desc, &textureRegion);
     }
 
     instance_->ReadTexture(textureDbg.instance, textureRegion, dstImageView);
@@ -761,12 +761,24 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std
         /* Validate pack alginemnt of 16 bytes */
         static const std::uint64_t packAlignment = 16;
         if (bufferDesc.size % packAlignment != 0)
-            LLGL_DBG_WARN(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
+        {
+            LLGL_DBG_WARN(
+                WarningType::ImproperArgument,
+                "constant buffer size (%" PRIu64 ") is out of pack alignment (%" PRIu64 ")",
+                bufferDesc.size, packAlignment
+            );
+        }
     }
 
     /* Validate buffer stride */
     if (bufferDesc.stride > 0 && bufferDesc.size % bufferDesc.stride != 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer stride is greater than zero, but size is not a multiple of stride");
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "buffer stride (%u) is non-zero, but buffer size (%" PRIu64 ") is not a multiple of stride",
+            bufferDesc.stride, bufferDesc.size
+        );
+    }
 
     if (formatSizeOut)
         *formatSizeOut = formatSize;
@@ -945,6 +957,9 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
     ValidateArrayTextureLayers(textureDesc.type, textureDesc.arrayLayers);
     ValidateBindFlags(textureDesc.bindFlags);
     ValidateMiscFlags(textureDesc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
+
+    if (initialImage != nullptr)
+        ValidateImageView(*initialImage, textureDesc);
 
     /* Check if MIP-map generation is requested  */
     if ((textureDesc.miscFlags & MiscFlags::GenerateMips) != 0)
@@ -1137,34 +1152,67 @@ void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t baseMipLevel, std::uin
     }
 }
 
+static std::uint32_t GetTextureSubresourceNumTexels(const TextureDescriptor& textureDesc, const TextureRegion* textureRegion)
+{
+    if (textureRegion != nullptr)
+    {
+        const TextureSubresource&   subresource     = textureRegion->subresource;
+        const TextureSubresource    baseSubresource = TextureSubresource{ 0, subresource.numArrayLayers, 0, subresource.numMipLevels };
+        return NumMipTexels(textureDesc.type, textureRegion->extent, baseSubresource);
+    }
+    return NumMipTexels(textureDesc, 0);
+}
+
 //TODO: also support compressed formats in validation
-void DbgRenderSystem::ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize)
+void DbgRenderSystem::ValidateImageView(const ImageView& imageView, const TextureDescriptor& textureDesc, const TextureRegion* textureRegion)
 {
     /* Validate output data size */
-    const auto&         subresource         = textureRegion.subresource;
-    const auto          baseSubresource     = TextureSubresource{ 0, subresource.numArrayLayers, 0, subresource.numMipLevels };
-    const auto          numTexels           = NumMipTexels(textureDbg.desc.type, textureRegion.extent, baseSubresource);
-    const std::size_t   requiredDataSize    = GetMemoryFootprint(imageFormat, dataType, numTexels);
+    const std::uint32_t numTexels           = GetTextureSubresourceNumTexels(textureDesc, textureRegion);
+    const std::size_t   requiredDataSize    = GetMemoryFootprint(imageView.format, imageView.dataType, numTexels);
 
     /* Ignore compressed formats */
     if (requiredDataSize != 0)
     {
-        if (dataSize < requiredDataSize)
+        if (imageView.dataSize < requiredDataSize)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "image data size too small for texture: %zu %s specified but required is %zu %s",
-                dataSize, ToByteLabel(dataSize), requiredDataSize, ToByteLabel(requiredDataSize)
+                imageView.dataSize, ToByteLabel(imageView.dataSize), requiredDataSize, ToByteLabel(requiredDataSize)
             );
         }
-        else if (dataSize > requiredDataSize)
+        else if (imageView.dataSize > requiredDataSize)
         {
             LLGL_DBG_WARN(
                 WarningType::ImproperArgument,
                 "image data size larger than expected for texture: %zu %s specified but required is %zu %s",
-                dataSize, ToByteLabel(dataSize), requiredDataSize, ToByteLabel(requiredDataSize)
+                imageView.dataSize, ToByteLabel(imageView.dataSize), requiredDataSize, ToByteLabel(requiredDataSize)
             );
         }
+    }
+
+    /* Validate row and layer stride */
+    if (imageView.rowStride != 0)
+    {
+        if (imageView.layerStride != 0)
+        {
+            if (imageView.layerStride % imageView.rowStride != 0)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "image layer-stride (%u) is not a multiple of row-stride (%u)",
+                    imageView.layerStride, imageView.rowStride
+                );
+            }
+        }
+    }
+    else if (imageView.layerStride != 0)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "image layuer-stride (%u) is non-zero, but row-stride is zero",
+            imageView.layerStride
+        );
     }
 }
 

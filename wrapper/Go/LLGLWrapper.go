@@ -1266,11 +1266,12 @@ type MutableImageView struct {
 }
 
 type ImageView struct {
-    Format    ImageFormat    /* = ImageFormatRGBA */
-    DataType  DataType       /* = DataTypeUInt8 */
-    Data      unsafe.Pointer /* = nil */
-    DataSize  uintptr        /* = 0 */
-    RowStride uint32         /* = 0 */
+    Format      ImageFormat    /* = ImageFormatRGBA */
+    DataType    DataType       /* = DataTypeUInt8 */
+    Data        unsafe.Pointer /* = nil */
+    DataSize    uintptr        /* = 0 */
+    RowStride   uint32         /* = 0 */
+    LayerStride uint32         /* = 0 */
 }
 
 type BindingDescriptor struct {

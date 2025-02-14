@@ -87,7 +87,7 @@ class DbgRenderSystem final : public RenderSystem
         void ValidateTextureRegion(const DbgTexture& textureDbg, const TextureRegion& textureRegion);
         void ValidateTextureView(const DbgTexture& sharedTextureDbg, const TextureViewDescriptor& textureViewDesc);
         void ValidateTextureViewType(const TextureType sharedTextureType, const TextureType textureViewType, const std::initializer_list<TextureType>& validTypes);
-        void ValidateImageDataSize(const DbgTexture& textureDbg, const TextureRegion& textureRegion, ImageFormat imageFormat, DataType dataType, std::size_t dataSize);
+        void ValidateImageView(const ImageView& imageView, const TextureDescriptor& textureDesc, const TextureRegion* textureRegion = nullptr);
 
         void ValidateAttachmentDesc(const AttachmentDescriptor& attachmentDesc, std::uint32_t colorTarget, bool isResolveAttachment, bool isDepthStencilAttachment);
 

@@ -1392,11 +1392,12 @@ LLGLMutableImageView;
 
 typedef struct LLGLImageView
 {
-    LLGLImageFormat format;    /* = LLGLImageFormatRGBA */
-    LLGLDataType    dataType;  /* = LLGLDataTypeUInt8 */
-    const void*     data;      /* = NULL */
-    size_t          dataSize;  /* = 0 */
-    uint32_t        rowStride; /* = 0 */
+    LLGLImageFormat format;      /* = LLGLImageFormatRGBA */
+    LLGLDataType    dataType;    /* = LLGLDataTypeUInt8 */
+    const void*     data;        /* = NULL */
+    size_t          dataSize;    /* = 0 */
+    uint32_t        rowStride;   /* = 0 */
+    uint32_t        layerStride; /* = 0 */
 }
 LLGLImageView;
 

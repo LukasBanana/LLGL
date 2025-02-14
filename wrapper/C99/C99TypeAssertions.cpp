@@ -987,6 +987,8 @@ LLGL_STATIC_ASSERT_OFFSET(ImageView, format);
 LLGL_STATIC_ASSERT_OFFSET(ImageView, dataType);
 LLGL_STATIC_ASSERT_OFFSET(ImageView, data);
 LLGL_STATIC_ASSERT_OFFSET(ImageView, dataSize);
+LLGL_STATIC_ASSERT_OFFSET(ImageView, rowStride);
+LLGL_STATIC_ASSERT_OFFSET(ImageView, layerStride);
 
 LLGL_STATIC_ASSERT_SIZE(MutableImageView);
 LLGL_STATIC_ASSERT_OFFSET(MutableImageView, format);

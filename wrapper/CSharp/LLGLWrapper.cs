@@ -3895,11 +3895,12 @@ namespace LLGL
 
         public unsafe struct ImageView
         {
-            public ImageFormat format;    /* = ImageFormat.RGBA */
-            public DataType    dataType;  /* = DataType.UInt8 */
-            public void*       data;      /* = null */
-            public IntPtr      dataSize;  /* = 0 */
-            public int         rowStride; /* = 0 */
+            public ImageFormat format;      /* = ImageFormat.RGBA */
+            public DataType    dataType;    /* = DataType.UInt8 */
+            public void*       data;        /* = null */
+            public IntPtr      dataSize;    /* = 0 */
+            public int         rowStride;   /* = 0 */
+            public int         layerStride; /* = 0 */
         }
 
         public unsafe struct BindingDescriptor

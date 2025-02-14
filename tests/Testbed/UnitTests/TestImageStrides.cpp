@@ -20,21 +20,25 @@ DEF_RITEST( ImageStrides )
     const ArrayView<ColorRGBAub> testsetColors = Testset::GetColorsRgbaUb8();
 
     // Initialize source image with row padding
-    const Extent3D imageExtent{ 4, 4, 1 };
-    const std::uint32_t numPixelsPerRow = 10;
+    const Extent3D imageExtent{ 4, 4, 4 };
+    const std::uint32_t numPixelsPerRow     = 10;
+    const std::uint32_t numPixelsPerLayer   = numPixelsPerRow*6;
 
     std::vector<LLGL::ColorRGBAub> srcData, expectedData;
-    srcData.resize(numPixelsPerRow * imageExtent.height * imageExtent.depth);
+    srcData.resize(numPixelsPerLayer * imageExtent.depth);
     expectedData.resize(imageExtent.width * imageExtent.height * imageExtent.depth);
     {
-        for_range(y, imageExtent.height)
+        for_range(z, imageExtent.depth)
         {
-            for_range(x, imageExtent.width)
+            for_range(y, imageExtent.height)
             {
-                const std::uint32_t i = y * imageExtent.width + x;
-                const std::uint32_t j = y * numPixelsPerRow + x;
-                srcData[j] = testsetColors[i % testsetColors.size()];
-                expectedData[i] = srcData[j].ToRGB().ToRGBA(); // Clear alpha channel;
+                for_range(x, imageExtent.width)
+                {
+                    const std::uint32_t i = (z * imageExtent.height + y) * imageExtent.width + x;
+                    const std::uint32_t j = z * numPixelsPerLayer + y * numPixelsPerRow + x;
+                    srcData[j] = testsetColors[i % testsetColors.size()];
+                    expectedData[i] = srcData[j].ToRGB().ToRGBA(); // Clear alpha channel;
+                }
             }
         }
     }
@@ -43,8 +47,22 @@ DEF_RITEST( ImageStrides )
     dstData.resize(imageExtent.width * imageExtent.height * imageExtent.depth);
 
     // Convert image with padding
-    ImageView srcImg{ ImageFormat::RGBA, DataType::UInt8, srcData.data(), srcData.size()*sizeof(srcData[0]), numPixelsPerRow*sizeof(srcData[0]) };
-    MutableImageView dstImg{ ImageFormat::RGB, DataType::Float32, dstData.data(), dstData.size()*sizeof(dstData[0]) };
+    const ImageView srcImg
+    {
+        /*format:*/         ImageFormat::RGBA,
+        /*dataType:*/       DataType::UInt8,
+        /*data:*/           srcData.data(),
+        /*dataSize:*/       srcData.size()*sizeof(srcData[0]),
+        /*rowStride:*/      numPixelsPerRow*sizeof(srcData[0]),
+        /*layerStride:*/    numPixelsPerLayer*sizeof(srcData[0])
+    };
+    const MutableImageView dstImg
+    {
+        /*format:*/     ImageFormat::RGB,
+        /*dataType:*/   DataType::Float32,
+        /*data:*/       dstData.data(),
+        /*dataSize:*/   dstData.size()*sizeof(dstData[0])
+    };
 
     ConvertImageBuffer(srcImg, dstImg, imageExtent);
 
@@ -87,25 +105,28 @@ DEF_RITEST( ImageStrides )
     }
 
     // Compare image with expected values
-    for_range(y, imageExtent.height)
+    for_range(z, imageExtent.depth)
     {
-        for_range(x, imageExtent.width)
+        for_range(y, imageExtent.height)
         {
-            const std::uint32_t i = y * imageExtent.width + x;
-            const ColorRGBub srcCol = testsetColors[i % testsetColors.size()].ToRGB();
-            const ColorRGBub dstCol = dstData[i].Cast<std::uint8_t>();
-            if (srcCol != dstCol)
+            for_range(x, imageExtent.width)
             {
-                const std::string srcColStr = FormatByteArray(srcCol.Ptr(), sizeof(srcCol));
-                const std::string dstColStr = FormatByteArray(dstCol.Ptr(), sizeof(srcCol));
-                Log::Errorf(
-                    Log::ColorFlags::StdError,
-                    "Mismatch between converted image and padded input image at (%u,%u):\n"
-                    " -> Expected: [%s]\n"
-                    " -> Actual:   [%s]\n",
-                    x, y, srcColStr.c_str(), dstColStr.c_str()
-                );
-                return TestResult::FailedMismatch;
+                const std::uint32_t i = (z * imageExtent.height + y) * imageExtent.width + x;
+                const ColorRGBub srcCol = testsetColors[i % testsetColors.size()].ToRGB();
+                const ColorRGBub dstCol = dstData[i].Cast<std::uint8_t>();
+                if (srcCol != dstCol)
+                {
+                    const std::string srcColStr = FormatByteArray(srcCol.Ptr(), sizeof(srcCol));
+                    const std::string dstColStr = FormatByteArray(dstCol.Ptr(), sizeof(srcCol));
+                    Log::Errorf(
+                        Log::ColorFlags::StdError,
+                        "Mismatch between converted image and padded input image at (%u,%u):\n"
+                        " -> Expected: [%s]\n"
+                        " -> Actual:   [%s]\n",
+                        x, y, srcColStr.c_str(), dstColStr.c_str()
+                    );
+                    return TestResult::FailedMismatch;
+                }
             }
         }
     }
