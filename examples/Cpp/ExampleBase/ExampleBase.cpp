@@ -156,7 +156,7 @@ static const char* GetDefaultRendererModule()
     #elif defined LLGL_OS_WIN32
     return "Direct3D11";
     #elif defined LLGL_OS_MACOS
-    return (IsModuleAvailable("Metal") ? "Metal" : "OpenGL");
+    return "Metal";
     #elif defined LLGL_OS_IOS
     return "Metal";
     #elif defined LLGL_OS_ANDROID
@@ -168,11 +168,17 @@ static const char* GetDefaultRendererModule()
     #endif
 }
 
+static std::string GetPreferredRendererModule()
+{
+    auto modules = LLGL::RenderSystem::FindModules();
+    return (modules.empty() ? "Null" : modules.front());
+}
+
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
     // Set report callback to standard output
     LLGL::Log::RegisterCallbackStd();
-    std::string rendererModule = GetDefaultRendererModule();
+    std::string rendererModule = GetPreferredRendererModule();
     GetSelectedRendererModuleOrDefault(rendererModule, argc, argv);
     return rendererModule;
 }

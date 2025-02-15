@@ -35,15 +35,12 @@ RenderSystemModule::RenderSystemModule(
 
 std::vector<std::string> RenderSystemModule::FindModules()
 {
-    /* Iterate over all known modules and return those that are available on the current platform */
+    /* Iterate over all known modules (preferred modules first) and return those that are available on the current platform */
     constexpr const char* knownModules[] =
     {
-        "Null",
-
-        #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
-        "OpenGLES3",
-        #else
-        "OpenGL",
+        #if defined(LLGL_OS_WIN32) || defined(LLGL_OS_UWP)
+        "Direct3D12",
+        "Direct3D11",
         #endif
 
         #if defined(LLGL_OS_MACOS) || defined(LLGL_OS_IOS)
@@ -52,10 +49,13 @@ std::vector<std::string> RenderSystemModule::FindModules()
         "Vulkan",
         #endif
 
-        #if defined(LLGL_OS_WIN32) || defined(LLGL_OS_UWP)
-        "Direct3D11",
-        "Direct3D12",
+        #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
+        "OpenGLES3",
+        #else
+        "OpenGL",
         #endif
+
+        "Null",
     };
 
     std::vector<std::string> moduleNames;
