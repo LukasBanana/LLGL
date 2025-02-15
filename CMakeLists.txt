@@ -227,6 +227,7 @@ function(set_llgl_module_properties MODULE_NAME)
             DEBUG_POSTFIX               "D"
             FOLDER                      "LLGL"
             RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
+            LIBRARY_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
     )
 endfunction()
 
