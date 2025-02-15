@@ -880,7 +880,9 @@ LLGL_EXPORT DynamicByteArray ConvertImageBuffer(
     unsigned            threadCount)
 {
     LLGL_ASSERT(srcImageView.rowStride == 0, "parameter 'srcImageView.rowStride' must be zero for this version of ConvertImageBuffer()");
-    const Extent3D extent1D{ static_cast<std::uint32_t>(srcImageView.dataSize / GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1)), 1u, 1u };
+    const std::size_t bytesPerPixel = GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1);
+    LLGL_ASSERT(bytesPerPixel > 0, "image format and data type not suitable for byte size per pixel");
+    const Extent3D extent1D{ static_cast<std::uint32_t>(srcImageView.dataSize / bytesPerPixel), 1u, 1u };
     return ConvertImageBuffer(srcImageView, dstFormat, dstDataType, extent1D, threadCount);
 }
 

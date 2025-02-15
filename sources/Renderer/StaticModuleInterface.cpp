@@ -69,8 +69,17 @@ std::vector<std::string> GetStaticModules()
 {
     return
     {
-        #if LLGL_BUILD_RENDERER_NULL
-        ModuleNull::GetModuleName(),
+        #if LLGL_BUILD_RENDERER_DIRECT3D12
+        ModuleDirect3D12::GetModuleName(),
+        #endif
+        #if LLGL_BUILD_RENDERER_DIRECT3D11
+        ModuleDirect3D11::GetModuleName(),
+        #endif
+        #if LLGL_BUILD_RENDERER_VULKAN
+        ModuleVulkan::GetModuleName(),
+        #endif
+        #if LLGL_BUILD_RENDERER_METAL
+        ModuleMetal::GetModuleName(),
         #endif
         #if LLGL_BUILD_RENDERER_OPENGL
         ModuleOpenGL::GetModuleName(),
@@ -81,17 +90,8 @@ std::vector<std::string> GetStaticModules()
         #if LLGL_BUILD_RENDERER_WEBGL
         ModuleWebGL::GetModuleName(),
         #endif
-        #if LLGL_BUILD_RENDERER_VULKAN
-        ModuleVulkan::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_METAL
-        ModuleMetal::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_DIRECT3D11
-        ModuleDirect3D11::GetModuleName(),
-        #endif
-        #if LLGL_BUILD_RENDERER_DIRECT3D12
-        ModuleDirect3D12::GetModuleName(),
+        #if LLGL_BUILD_RENDERER_NULL
+        ModuleNull::GetModuleName(),
         #endif
     };
 }

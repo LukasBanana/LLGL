@@ -217,7 +217,8 @@ struct LLGL_DEPRECATED("LLGL::DstImageDescriptor is deprecated since 0.04b; Use 
 \param[in] extent Specifies the extent of the image. This is required 
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
-the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
+the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
+Note that this does not guarantee the maximum number of threads the system supports if the workload does not demand it. By default 0.
 \param[in] copyUnchangedImage Specifies whether to copy the source buffer into the destination buffer if no conversion was necessary. By default false.
 
 \return Number of bytes that have been written to the destination buffer.
@@ -247,7 +248,7 @@ LLGL_EXPORT std::size_t ConvertImageBuffer(
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
 \remarks Same as the primary version of ConvertImageBuffer where the \c extent parameter is implied as 1-dimensional size.
 This must only be used for tightly packed image buffer, i.e. with a row stride of zero.
-\see ConvertImageBuffer(const ImageView&, const MutableImageView&, const Extent3D&, unsigned)
+\see ConvertImageBuffer(const ImageView&, const MutableImageView&, const Extent3D&, unsigned, bool)
 */
 LLGL_EXPORT std::size_t ConvertImageBuffer(
     const ImageView&        srcImageView,
@@ -265,7 +266,8 @@ LLGL_EXPORT std::size_t ConvertImageBuffer(
 \param[in] extent Specifies the extent of the image. This is required 
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
-the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
+the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
+Note that this does not guarantee the maximum number of threads the system supports if the workload does not demand it. By default 0.
 
 \return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. <code>unsigned char</code>, <code>int</code>, <code>float</code> etc.).
@@ -315,7 +317,8 @@ LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
 \param[in] extent Specifies the image extent. This is required as most compression formats work in block sizes.
 \param[in] threadCount Specifies the number of threads to use for decompression.
 If this is less than 2, no multi-threading is used. If this is equal to \c LLGL_MAX_THREAD_COUNT,
-the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
+the number of threads will be determined by the workload and the available CPU cores the system supports (e.g. 4 on a quad-core processor).
+Note that this does not guarantee the maximum number of threads the system supports if the workload does not demand it. By default 0.
 \return Byte buffer with the decompressed image data or null if the compression format is not supported for decompression.
 */
 LLGL_EXPORT DynamicByteArray DecompressImageBufferToRGBA8UNorm(
