@@ -214,7 +214,7 @@ void MTTexture::WriteRegion(const TextureRegion& textureRegion, const ImageView&
     if (formatAttribs.bitSize > 0 && (formatAttribs.flags & FormatFlags::IsCompressed) == 0)
     {
         /* Convert image format (will be null if no conversion is necessary) */
-        intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, /*cfg.threadCount*/0);
+        intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, textureRegion.extent, LLGL_MAX_THREAD_COUNT);
         if (intermediateData)
         {
             /* User converted temporary buffer as image source */
@@ -318,13 +318,20 @@ void MTTexture::ReadRegionFromSharedMemory(
     const SubresourceCPUMappingLayout&  layout,
     const MutableImageView&             dstImageView)
 {
-    if (formatAttribs.format != dstImageView.format || formatAttribs.dataType != dstImageView.dataType)
+    char* dstImageData = static_cast<char*>(dstImageView.data);
+    std::size_t dstImageDataSize = dstImageView.dataSize;
+    const std::size_t dstImageLayerStride = GetMemoryFootprint(dstImageView.format, dstImageView.dataType, layout.numTexelsPerLayer);
+
+    if (formatAttribs.format   != dstImageView.format   ||
+        formatAttribs.dataType != dstImageView.dataType)
     {
         /* Generate intermediate buffer for conversion */
         DynamicByteArray intermediateData = DynamicByteArray{ layout.subresourceSize, UninitializeTag{} };
 
         for_range(arrayLayer, subresource.numArrayLayers)
         {
+            LLGL_ASSERT(dstImageDataSize >= dstImageLayerStride);
+
             /* Copy bytes into intermediate data, then convert its format */
             [native_
                 getBytes:       intermediateData.get()
@@ -336,22 +343,22 @@ void MTTexture::ReadRegionFromSharedMemory(
             ];
 
             /* Convert intermediate data into requested format */
-            DynamicByteArray formattedData = ConvertImageBuffer(
-                ImageView{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), layout.subresourceSize },
-                dstImageView.format, dstImageView.dataType, /*GetConfiguration().threadCount*/0
-            );
+            const ImageView intermediateImageView{ formatAttribs.format, formatAttribs.dataType, intermediateData.get(), layout.subresourceSize };
+            const MutableImageView dstImageLayerView{ dstImageView.format, dstImageView.dataType, dstImageData, dstImageDataSize };
 
-            /* Copy temporary data into output buffer */
-            ::memcpy(dstImageView.data, formattedData.get(), dstImageView.dataSize);
+            ConvertImageBuffer(intermediateImageView, dstImageLayerView, LLGL_MAX_THREAD_COUNT, true);
+
+            dstImageData += dstImageLayerStride;
+            dstImageDataSize -= dstImageLayerStride;
         }
     }
     else
     {
-        char* dstImageData = static_cast<char*>(dstImageView.data);
-
         for_range(arrayLayer, subresource.numArrayLayers)
         {
             /* Copy bytes into intermediate data, then convert its format */
+            LLGL_ASSERT(dstImageDataSize >= layout.layerStride);
+
             [native_
                 getBytes:       dstImageData
                 bytesPerRow:    layout.rowStride
@@ -360,7 +367,9 @@ void MTTexture::ReadRegionFromSharedMemory(
                 mipmapLevel:    subresource.baseMipLevel
                 slice:          subresource.baseArrayLayer + arrayLayer
             ];
+
             dstImageData += layout.layerStride;
+            dstImageDataSize -= layout.layerStride;
         }
     }
 }
@@ -418,18 +427,13 @@ static void CopyIntermediateBufferToImageBuffer(
     DataType                srcDataType,
     const MutableImageView& dstImageView)
 {
-    if (srcImageFormat != dstImageView.format || srcDataType != dstImageView.dataType)
-    {
-        ConvertImageBuffer(
-            ImageView{ srcImageFormat, srcDataType, srcBuffer.GetBytes(), srcBufferSize },
-            dstImageView
-        );
-    }
-    else
-    {
-        /* Copy bytes from intermediate shared buffer into output CPU buffer */
-        ::memcpy(dstImageView.data, srcBuffer.GetBytes(), dstImageView.dataSize);
-    }
+    /* Convert or copy intermediate shared buffer into output CPU buffer */
+    ConvertImageBuffer(
+        ImageView{ srcImageFormat, srcDataType, srcBuffer.GetBytes(), srcBufferSize },
+        dstImageView,
+        LLGL_MAX_THREAD_COUNT,
+        true
+    );
 }
 
 void MTTexture::ReadRegionFromPrivateMemory(
