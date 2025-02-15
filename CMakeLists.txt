@@ -76,7 +76,7 @@ endif()
 
 # === Build path ===
 
-set(LLGL_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
+set(LLGL_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/build" CACHE PATH "Override binary output directory")
 
 set( EXTERNAL_MODULE_DIR            "${PROJECT_SOURCE_DIR}/cmake"                   )
 set( PROJECT_INCLUDE_DIR            "${PROJECT_SOURCE_DIR}/include"                 )
