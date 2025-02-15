@@ -76,9 +76,7 @@ endif()
 
 # === Build path ===
 
-set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
-set(EXECUTABLE_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
-set(LIBRARY_OUTPUT_PATH ${OUTPUT_DIR} CACHE PATH "Build directory" FORCE)
+set(LLGL_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 
 set( EXTERNAL_MODULE_DIR            "${PROJECT_SOURCE_DIR}/cmake"                   )
 set( PROJECT_INCLUDE_DIR            "${PROJECT_SOURCE_DIR}/include"                 )
@@ -225,9 +223,10 @@ endfunction()
 function(set_llgl_module_properties MODULE_NAME)
     set_target_properties(
         ${MODULE_NAME} PROPERTIES
-            LINKER_LANGUAGE CXX
-            DEBUG_POSTFIX   "D"
-            FOLDER          "LLGL"
+            LINKER_LANGUAGE             CXX
+            DEBUG_POSTFIX               "D"
+            FOLDER                      "LLGL"
+            RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
     )
 endfunction()
 
@@ -348,14 +347,21 @@ function(add_llgl_example_project PROJECT_NAME LINKER_LANG SRC_FILES LIB_FILES)
         target_link_libraries(${PROJECT_NAME} ${LIB_FILES})
     endif()
 
+    # Configure base properties for example project
+    set_target_properties(
+        ${PROJECT_NAME} PROPERTIES
+            DEBUG_POSTFIX               "D"
+            RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
+    )
+
     # Configure linker settings
     if(LLGL_ANDROID_PLATFORM)
         # When linking the libExample*.so library for Android, we link with C++ semantics.
         # Otherwise, the libc++_shared.so library will be unintentionally included,
         # since the static dependencies like libLLGL.so must be build with C++, regardingless of the example project's language
-        set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+        set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
     else()
-        set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG} DEBUG_POSTFIX "D")
+        set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE ${LINKER_LANG})
     endif()
     
     # Configure working directory and project solution folder
