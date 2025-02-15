@@ -41,8 +41,10 @@ list_examples()
     for DIR in "${EXAMPLE_DIRS[@]}"; do
         if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
             # Include example if its source and binary files exist
-            if [ -f "examples/Cpp/$DIR/Example.cpp" ] && [ -f "$BUILD_DIR/Example_${DIR}.app/Contents/MacOS/Example_${DIR}" ]; then
-                echo "$DIR"
+            if [ -f "examples/Cpp/$DIR/Example.cpp" ] || [ -f "examples/Cpp/$DIR/$DIR.cpp" ]; then
+                if [ -f "$BUILD_DIR/Example_${DIR}.app/Contents/MacOS/Example_${DIR}" ]; then
+                    echo "$DIR"
+                fi
             fi
         fi
     done

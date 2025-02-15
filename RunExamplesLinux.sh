@@ -42,13 +42,15 @@ fi
 
 list_examples()
 {
-    EXCLUDED=(MultiRenderer MultiThreading PBR ComputeShader)
+    EXCLUDED=(MultiRenderer) # List any examples that are specifically excluded on Linux
     EXAMPLE_DIRS=($(ls examples/Cpp))
     for DIR in "${EXAMPLE_DIRS[@]}"; do
         if ! echo "${EXCLUDED[@]}}" | grep -qw "$DIR"; then
             # Include example if its source and binary files exist
-            if [ -f "examples/Cpp/$DIR/Example.cpp" ] && [ -f "$BUILD_DIR/Example_$DIR" -o -f "$BUILD_DIR/Example_${DIR}D" ]; then
-                echo "$DIR"
+            if [ -f "examples/Cpp/$DIR/Example.cpp" ] || [ -f "examples/Cpp/$DIR/$DIR.cpp" ]; then
+                if [ -f "$BUILD_DIR/Example_$DIR" ] || [ -f "$BUILD_DIR/Example_${DIR}D" ]; then
+                    echo "$DIR"
+                fi
             fi
         fi
     done
