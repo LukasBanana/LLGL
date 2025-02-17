@@ -23,6 +23,7 @@
 #include "VKInitializers.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "RenderState/VKComputePSO.h"
+#include "RenderState/VKPipelineLayoutPermutationPool.h"
 #include "Shader/VKShaderModulePool.h"
 #include "../../Platform/Debug.h"
 #include <LLGL/ImageFlags.h>
@@ -96,6 +97,7 @@ VKRenderSystem::~VKRenderSystem()
 {
     device_.WaitIdle();
     VKShaderModulePool::Get().Clear();
+    VKPipelineLayoutPermutationPool::Get().Clear();
     VKPipelineLayout::ReleaseDefault();
 }
 
@@ -346,21 +348,30 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             srcLayerStride  = std::max<std::uint32_t>(srcImageView.layerStride, srcDefaultLayerStride);
 
             /* Check if amount of padding memory is small enough to justify a larger GPU buffer upload */
-            bool rowStrideNeedsConversion = (srcImageView.rowStride != 0 && srcImageView.rowStride != extent.width * srcBytesPerPixel);
-            if (rowStrideNeedsConversion)
+            bool needsStrideConversion =
+            (
+                (srcImageView.rowStride   != 0 && srcImageView.rowStride   != srcDefaultRowStride) ||
+                (srcImageView.layerStride != 0 && srcImageView.layerStride != srcDefaultLayerStride)
+            );
+            if (needsStrideConversion)
             {
                 const std::size_t dataSizeWithPadding = srcImageView.dataSize / srcBytesPerPixel * bytesPerPixel;
+                const bool isPaddingLessThan50Percent = (dataSizeWithPadding < initialDataSize + initialDataSize/2);
 
-                const bool isPaddingLessThan50Percent   = (dataSizeWithPadding < initialDataSize + initialDataSize/2);
-                const bool isRowStridePixelSizeAligned  = (srcImageView.rowStride % bytesPerPixel == 0);
+                const bool isStridePixelSizeAligned =
+                (
+                    srcImageView.rowStride > 0 &&
+                    srcImageView.rowStride % bytesPerPixel == 0 &&
+                    srcImageView.layerStride % srcImageView.rowStride == 0
+                );
 
-                if (isRowStridePixelSizeAligned && isPaddingLessThan50Percent)
-                    rowStrideNeedsConversion = false;
+                if (isStridePixelSizeAligned && isPaddingLessThan50Percent)
+                    needsStrideConversion = false;
             }
 
-            if (srcImageView.format != formatAttribs.format ||
+            if (srcImageView.format   != formatAttribs.format   ||
                 srcImageView.dataType != formatAttribs.dataType ||
-                rowStrideNeedsConversion)
+                needsStrideConversion)
             {
                 /* Convert image format (will be null if no conversion is necessary) */
                 intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, extent, LLGL_MAX_THREAD_COUNT);

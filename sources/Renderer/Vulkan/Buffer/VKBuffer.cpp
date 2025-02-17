@@ -27,17 +27,37 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 {
     VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
+    /* Vertex buffer usage */
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
         flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+    /* Index buffer usage */
     if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
         flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+
+    /* Constant buffer usage */
     if ((desc.bindFlags & BindFlags::ConstantBuffer) != 0)
         flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
+    /* Sampeld or storage buffer usage */
     if ((desc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0)
-        flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    {
+        if (desc.format != Format::Undefined)
+        {
+            if ((desc.bindFlags & BindFlags::Sampled) != 0)
+                flags |= VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+            if ((desc.bindFlags & BindFlags::Storage) != 0)
+                flags |= VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT;
+        }
+        if (desc.stride > 0)
+            flags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    }
+
+    /* Indirect argument buffer usage */
     if ((desc.bindFlags & BindFlags::IndirectBuffer) != 0)
         flags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 
+    /* Stream-output buffer usage */
     if ((desc.bindFlags & BindFlags::StreamOutputBuffer) != 0)
     {
         if (HasExtension(VKExt::EXT_transform_feedback))
@@ -93,13 +113,16 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
     Buffer            { desc.bindFlags                         },
     bufferObj_        { device                                 },
     bufferObjStaging_ { device                                 },
+    bufferView_       { device, vkDestroyBufferView            },
     size_             { desc.size                              },
     accessFlags_      { GetBufferVkAccessFlags(desc.bindFlags) },
+    format_           { VKTypes::Map(desc.format)              },
     stride_           { GetVKBufferStride(desc)                }
 {
     if ((desc.bindFlags & BindFlags::IndexBuffer) != 0)
         indexType_ = VKTypes::ToVkIndexType(desc.format);
 
+    /* Create native Vulkan buffer object */
     VkBufferCreateInfo createInfo;
     {
         createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -112,6 +135,28 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
         createInfo.pQueueFamilyIndices      = nullptr;
     }
     bufferObj_.CreateVkBuffer(device, createInfo);
+}
+
+bool VKBuffer::CreateBufferView(VkDevice device, VKPtr<VkBufferView>& outBufferView, VkDeviceSize offset, VkDeviceSize length)
+{
+    /* Create a buffer view if a typed-buffer with valid format is created */
+    if (format_ != VK_FORMAT_UNDEFINED)
+    {
+        VkBufferViewCreateInfo viewCreateInfo = {};
+        {
+            viewCreateInfo.sType    = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
+            viewCreateInfo.pNext    = nullptr;
+            viewCreateInfo.flags    = 0;
+            viewCreateInfo.buffer   = bufferObj_.GetVkBuffer();
+            viewCreateInfo.format   = format_;
+            viewCreateInfo.offset   = offset;
+            viewCreateInfo.range    = length;
+        }
+        VkResult result = vkCreateBufferView(device, &viewCreateInfo, nullptr, outBufferView.ReleaseAndGetAddressOf());
+        VKThrowIfFailed(result, "failed to create Vulkan buffer view");
+        return true;
+    }
+    return false;
 }
 
 bool VKBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
@@ -142,6 +187,8 @@ BufferDescriptor VKBuffer::GetDesc() const
 void VKBuffer::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
     bufferObj_.BindMemoryRegion(device, memoryRegion);
+    if (bufferView_.Get() == VK_NULL_HANDLE)
+        CreateBufferView(device, bufferView_);
 }
 
 void VKBuffer::TakeStagingBuffer(VKDeviceBuffer&& deviceBuffer)

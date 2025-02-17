@@ -33,13 +33,18 @@ SpirvResult SpirvReflect::Reflect(const SpirvModuleView& module)
     names_.Reset(header.idBound);
 
     /* Parse each SPIR-V instruction in the module */
-    for (const SpirvInstruction& instr : module)
+    for (auto it = module.begin(); it != module.end(); ++it)
     {
-        if (instr.opcode == spv::Op::OpFunction)
+        const SpirvInstruction instr = *it;
+
+        if (instr.opcode == spv::OpFunction)
         {
             /* No more declarations and decorations after first OpFunction instruction */
             break;
         }
+
+        /* Cache word offset to current instruction */
+        instrWordOffset_ = module.WordOffset(it);
 
         result = ParseInstruction(instr);
         if (result != SpirvResult::NoError)
@@ -63,7 +68,7 @@ const SpirvReflect::SpvType* SpirvReflect::GetPushConstantStructType() const
 
 static void ParseSpvExecutionMode(const SpirvInstruction& instr, SpirvReflect::SpvExecutionMode& outExecutionMode)
 {
-    auto mode = static_cast<spv::ExecutionMode>(instr.GetUInt32(1));
+    const auto mode = static_cast<spv::ExecutionMode>(instr.GetUInt32(1));
     switch (mode)
     {
         case spv::ExecutionModeEarlyFragmentTests:
@@ -106,7 +111,7 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
 
     for (const SpirvInstruction& instr : module)
     {
-        if (instr.opcode == spv::Op::OpExecutionMode)
+        if (instr.opcode == spv::OpExecutionMode)
         {
             ParseSpvExecutionMode(instr, outExecutionMode);
             firstModeParsed = true;
@@ -125,17 +130,17 @@ static spv::Id FindGlobalPushConstantVariableType(const SpirvModuleView& module)
 {
     for (const SpirvInstruction& instr : module)
     {
-        if (instr.opcode == spv::Op::OpVariable)
+        if (instr.opcode == spv::OpVariable)
         {
             /* OpVariable ResultType ResultId StorageClass[0] (Initializer[1]) */
-            auto storage = static_cast<spv::StorageClass>(instr.GetUInt32(0));
+            const auto storage = static_cast<spv::StorageClass>(instr.GetUInt32(0));
             if (storage == spv::StorageClassPushConstant)
             {
                 /* Return variable type; Must be OpTypePointer for push constants */
                 return instr.type;
             }
         }
-        else if (instr.opcode == spv::Op::OpFunction)
+        else if (instr.opcode == spv::OpFunction)
         {
             /* No more declarations and decorations after first OpFunction instruction */
             break;
@@ -148,7 +153,7 @@ static spv::Id FindPointerTypeSubtype(const SpirvModuleView& module, spv::Id poi
 {
     for (const SpirvInstruction& instr : module)
     {
-        if (instr.opcode == spv::Op::OpTypePointer)
+        if (instr.opcode == spv::OpTypePointer)
         {
             if (instr.result == pointerTypeId)
             {
@@ -156,7 +161,7 @@ static spv::Id FindPointerTypeSubtype(const SpirvModuleView& module, spv::Id poi
                 return instr.GetUInt32(1);
             }
         }
-        else if (instr.opcode == spv::Op::OpFunction)
+        else if (instr.opcode == spv::OpFunction)
         {
             /* No more declarations and decorations after first OpFunction instruction */
             break;
@@ -193,7 +198,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
     /* Now parse SPIR-V module for block name, its member names, and member offsets */
     for (const SpirvInstruction& instr : module)
     {
-        if (instr.opcode == spv::Op::OpFunction)
+        if (instr.opcode == spv::OpFunction)
         {
             /* No more declarations and decorations after first OpFunction instruction */
             break;
@@ -201,7 +206,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
 
         switch (instr.opcode)
         {
-            case spv::Op::OpName:
+            case spv::OpName:
                 /* OpName Target[0] Name[1] */
                 if (instr.numOperands < 2)
                     return SpirvResult::OperandOutOfBounds;
@@ -209,7 +214,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
                     outBlock.name = instr.GetString(1);
                 break;
 
-            case spv::Op::OpMemberName:
+            case spv::OpMemberName:
                 /* OpMemberName TypeId Member[0] Name[1] */
                 if (instr.numOperands < 2)
                     return SpirvResult::OperandOutOfBounds;
@@ -217,7 +222,7 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
                     GetOrMakeBlockField(instr.GetUInt32(0)).name = instr.GetString(1);
                 break;
 
-            case spv::Op::OpMemberDecorate:
+            case spv::OpMemberDecorate:
                 /* OpMemberDecorate Target[0] Member[1] Decoration[2] (Values[3+]) */
                 if (instr.numOperands < 3)
                     return SpirvResult::OperandOutOfBounds;
@@ -241,85 +246,6 @@ SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflec
     return SpirvResult::NoError;
 }
 
-static SpirvReflect::SpvBindingPoint* FindOrInsertBindingPoint(std::vector<SpirvReflect::SpvBindingPoint>& bindingPoints, spv::Id varId)
-{
-    /* Try to find binding point for specified variable ID */
-    std::size_t insertionPos = 0;
-    auto* bindingPoint = FindInSortedArray<SpirvReflect::SpvBindingPoint>(
-        bindingPoints.data(), bindingPoints.size(),
-        [varId](const SpirvReflect::SpvBindingPoint& entry) -> int
-        {
-            return (static_cast<int>(varId) - static_cast<int>(entry.id));
-        },
-        &insertionPos
-    );
-    if (bindingPoint == nullptr)
-    {
-        /* Insert new binding point */
-        bindingPoints.insert(bindingPoints.begin() + insertionPos, SpirvReflect::SpvBindingPoint{});
-        bindingPoint = &(bindingPoints[insertionPos]);
-    }
-    return bindingPoint;
-}
-
-SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector<SpirvReflect::SpvBindingPoint>& outBindingPoints)
-{
-    /* Parse SPIR-V header */
-    SpirvHeader header;
-    SpirvResult result = module.ReadHeader(header);
-    if (result != SpirvResult::NoError)
-        return result;
-
-    /* Now parse SPIR-V module for binding and descriptor set decorations */
-    const auto estimatedNumBindingPoints = header.idBound / 16u;
-
-    outBindingPoints.clear();
-    outBindingPoints.reserve(estimatedNumBindingPoints);
-
-    for (auto it = module.begin(); it != module.end(); ++it)
-    {
-        SpirvInstruction instr = it.Get();
-
-        if (instr.opcode == spv::Op::OpFunction)
-        {
-            /* No more declarations and decorations after first OpFunction instruction */
-            break;
-        }
-
-        if (instr.opcode == spv::Op::OpDecorate)
-        {
-            /* OpDecorate Target[0] Decoration[1] Value[2] */
-            if (instr.numOperands < 2)
-                return SpirvResult::OperandOutOfBounds;
-            const spv::Id varId = instr.GetUInt32(0);
-
-            /* Add entry for either binding or descriptor set */
-            const auto decoration = static_cast<spv::Decoration>(instr.GetUInt32(1));
-            if (decoration == spv::DecorationDescriptorSet ||
-                decoration == spv::DecorationBinding)
-            {
-                if (instr.numOperands < 3)
-                    return SpirvResult::OperandOutOfBounds;
-
-                auto* binding = FindOrInsertBindingPoint(outBindingPoints, varId);
-                binding->id = varId;
-                if (decoration == spv::DecorationDescriptorSet)
-                {
-                    binding->set                = instr.GetUInt32(2);
-                    binding->setWordOffset      = module.WordOffset(it) + 3;
-                }
-                else
-                {
-                    binding->binding            = instr.GetUInt32(2);
-                    binding->bindingWordOffset  = module.WordOffset(it) + 3;
-                }
-            }
-        }
-    }
-
-    return SpirvResult::NoError;
-}
-
 
 /*
  * ======= Private: =======
@@ -329,31 +255,33 @@ SpirvResult SpirvReflect::ParseInstruction(const SpirvInstruction& instr)
 {
     switch (instr.opcode)
     {
-        case spv::Op::OpName:
+        case spv::OpName:
             return OpName(instr);
-        case spv::Op::OpMemberName:
+        case spv::OpMemberName:
             return OpMemberName(instr);
-        case spv::Op::OpDecorate:
+        case spv::OpDecorate:
             return OpDecorate(instr);
-        case spv::Op::OpTypeVoid:
-        case spv::Op::OpTypeBool:
-        case spv::Op::OpTypeInt:
-        case spv::Op::OpTypeFloat:
-        case spv::Op::OpTypeVector:
-        case spv::Op::OpTypeMatrix:
-        case spv::Op::OpTypeImage:
-        case spv::Op::OpTypeSampler:
-        case spv::Op::OpTypeSampledImage:
-        case spv::Op::OpTypeArray:
-        case spv::Op::OpTypeRuntimeArray:
-        case spv::Op::OpTypeStruct:
-        case spv::Op::OpTypeOpaque:
-        case spv::Op::OpTypePointer:
-        case spv::Op::OpTypeFunction:
+        case spv::OpMemberDecorate:
+            return OpMemberDecorate(instr);
+        case spv::OpTypeVoid:
+        case spv::OpTypeBool:
+        case spv::OpTypeInt:
+        case spv::OpTypeFloat:
+        case spv::OpTypeVector:
+        case spv::OpTypeMatrix:
+        case spv::OpTypeImage:
+        case spv::OpTypeSampler:
+        case spv::OpTypeSampledImage:
+        case spv::OpTypeArray:
+        case spv::OpTypeRuntimeArray:
+        case spv::OpTypeStruct:
+        case spv::OpTypeOpaque:
+        case spv::OpTypePointer:
+        case spv::OpTypeFunction:
             return OpType(instr);
-        case spv::Op::OpVariable:
+        case spv::OpVariable:
             return OpVariable(instr);
-        case spv::Op::OpConstant:
+        case spv::OpConstant:
             return OpConstant(instr);
         default:
             return SpirvResult::NoError;
@@ -393,11 +321,20 @@ SpirvResult SpirvReflect::OpDecorate(const Instr& instr)
         case spv::DecorationBinding:
             OpDecorateBinding(instr, id);
             break;
+        case spv::DecorationDescriptorSet:
+            OpDecorateDescriptorSet(instr, id);
+            break;
         case spv::DecorationLocation:
             OpDecorateLocation(instr, id);
             break;
         case spv::DecorationBuiltIn:
             OpDecorateBuiltin(instr, id);
+            break;
+        case spv::DecorationBlock: // std140
+            OpDecorateBlock(instr, id);
+            break;
+        case spv::DecorationBufferBlock: // std430
+            OpDecorateBufferBlock(instr, id);
             break;
         default:
             break;
@@ -407,29 +344,56 @@ SpirvResult SpirvReflect::OpDecorate(const Instr& instr)
 
 void SpirvReflect::OpDecorateBinding(const Instr& instr, spv::Id id)
 {
-    auto& variable = uniforms_[id];
-    {
-        variable.name       = names_[id];
-        variable.binding    = instr.GetUInt32(2);
-    }
+    uniforms_[id].binding           = instr.GetUInt32(2);
+    uniforms_[id].bindingWordOffset = instrWordOffset_ + 3;
+}
+
+void SpirvReflect::OpDecorateDescriptorSet(const Instr& instr, spv::Id id)
+{
+    uniforms_[id].set           = instr.GetUInt32(2);
+    uniforms_[id].setWordOffset = instrWordOffset_ + 3;
 }
 
 void SpirvReflect::OpDecorateLocation(const Instr& instr, spv::Id id)
 {
-    auto& variable = varyings_[id];
-    {
-        variable.name       = names_[id];
-        variable.location   = instr.GetUInt32(2);
-    }
+    varyings_[id].location = instr.GetUInt32(2);
 }
 
 void SpirvReflect::OpDecorateBuiltin(const Instr& instr, spv::Id id)
 {
-    auto& variable = varyings_[id];
+    varyings_[id].builtin = static_cast<spv::BuiltIn>(instr.GetUInt32(2));
+}
+
+void SpirvReflect::OpDecorateBlock(const Instr& instr, spv::Id id)
+{
+    types_[id].storage = spv::StorageClassUniform;
+}
+
+void SpirvReflect::OpDecorateBufferBlock(const Instr& instr, spv::Id id)
+{
+    types_[id].storage = spv::StorageClassStorageBuffer;
+}
+
+SpirvResult SpirvReflect::OpMemberDecorate(const Instr& instr)
+{
+    SpvDecorationCollection& decorationCollection = decorations_[instr.GetUInt32(0)];
+    SpvMemberDecoration decoration;
     {
-        variable.name       = names_[id];
-        variable.builtin    = static_cast<spv::BuiltIn>(instr.GetUInt32(2));
+        decoration.member   = instr.GetUInt32(1);
+        decoration.value    = static_cast<spv::Decoration>(instr.GetUInt32(2));
+
+        switch (decoration.value)
+        {
+            case spv::DecorationOffset:
+                decoration.literals[0] = instr.GetUInt32(3);
+                break;
+
+            default:
+                break;
+        }
     }
+    decorationCollection.memberDecorations.push_back(decoration);
+    return SpirvResult::NoError;
 }
 
 /*
@@ -453,7 +417,8 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
             auto& var = uniforms_[instr.result];
             {
                 var.type = FindType(instr.type);
-                if (auto structType = var.type->Deref(spv::Op::OpTypeStruct))
+                var.name = names_.Get(instr.result);
+                if (auto structType = var.type->Deref(spv::OpTypeStruct))
                 {
                     if (var.name == nullptr || *var.name == '\0')
                         var.name = structType->name;
@@ -475,6 +440,7 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
         {
             auto& var = varyings_[instr.result];
             {
+                var.name    = names_.Get(instr.result);
                 var.type    = FindType(instr.type);
                 var.input   = true;
             }
@@ -485,6 +451,7 @@ SpirvResult SpirvReflect::OpVariable(const Instr& instr)
         {
             auto& var = varyings_[instr.result];
             {
+                var.name    = names_.Get(instr.result);
                 var.type    = FindType(instr.type);
                 var.input   = false;
             }
@@ -504,14 +471,14 @@ SpirvResult SpirvReflect::OpConstant(const Instr& instr)
     {
         val.type = FindType(instr.type);
 
-        if (val.type->opcode == spv::Op::OpTypeInt)
+        if (val.type->opcode == spv::OpTypeInt)
         {
             if (val.type->size == 2 || val.type->size == 4)
                 val.u32 = instr.GetUInt32(0);
             else if (val.type->size == 8)
                 val.u64 = instr.GetUInt64(0);
         }
-        else if (val.type->opcode == spv::Op::OpTypeFloat)
+        else if (val.type->opcode == spv::OpTypeFloat)
         {
             if (val.type->size == 2)
                 val.f32 = instr.GetFloat16(0);
@@ -534,12 +501,12 @@ SpirvResult SpirvReflect::OpType(const Instr& instr)
     {
         type.opcode = instr.opcode;
         type.result = instr.result;
-        type.name   = names_[instr.result];
+        type.name   = names_.Get(instr.result);
     }
 
     /* Parse respective OpType* instruction */
     #define LLGL_OPTYPE_CASE_HANDLER(NAME)  \
-        case spv::Op::NAME:                 \
+        case spv::NAME:                     \
             NAME(instr, type);              \
             break
 
@@ -606,17 +573,19 @@ void SpirvReflect::OpTypeMatrix(const Instr& instr, SpvType& type)
 
 void SpirvReflect::OpTypeImage(const Instr& instr, SpvType& type)
 {
-    //todo
+    type.dimension      = static_cast<spv::Dim>(instr.GetUInt32(1));
+    type.imageFormat    = static_cast<spv::ImageFormat>(instr.GetUInt32(6));
+    type.readonly       = (instr.GetUInt32(5) == 1); // From SPIR-V spec. "1 indicates an image compatible with sampling operations"
 }
 
 void SpirvReflect::OpTypeSampler(const Instr& instr, SpvType& type)
 {
-    //todo
+    // dummy
 }
 
 void SpirvReflect::OpTypeSampledImage(const Instr& instr, SpvType& type)
 {
-    //todo
+    type.baseType = FindType(instr.GetUInt32(0));
 }
 
 void SpirvReflect::OpTypeArray(const Instr& instr, SpvType& type)
@@ -628,7 +597,7 @@ void SpirvReflect::OpTypeArray(const Instr& instr, SpvType& type)
 
 void SpirvReflect::OpTypeRuntimeArray(const Instr& instr, SpvType& type)
 {
-    //todo
+    type.baseType = FindType(instr.GetUInt32(0));
 }
 
 static void AccumulateSizeInVectorBoundary(std::uint32_t& size, std::uint32_t alignment, std::uint32_t appendix)
@@ -643,11 +612,11 @@ static void AccumulateSizeInVectorBoundary(std::uint32_t& size, std::uint32_t al
 
 void SpirvReflect::OpTypeStruct(const Instr& instr, SpvType& type)
 {
-    type.fieldTypes.resize(instr.numOperands);
+    type.fields.resize(instr.numOperands);
     for_range(i, instr.numOperands)
     {
         const SpvType* fieldType = FindType(instr.GetUInt32(i));
-        type.fieldTypes[i] = fieldType;
+        type.fields[i].type = fieldType;
         AccumulateSizeInVectorBoundary(type.size, 16, fieldType->size);
     }
 
@@ -657,18 +626,37 @@ void SpirvReflect::OpTypeStruct(const Instr& instr, SpvType& type)
     {
         if (instr.numOperands == memberNamesIt->second.names.size())
         {
-            type.fieldNames.resize(instr.numOperands);
             for_range(i, instr.numOperands)
-                type.fieldNames[i] = memberNamesIt->second.names[i];
+                type.fields[i].name = memberNamesIt->second.names[i];
         }
     }
 
     type.size = GetAlignedSize(type.size, 16u);
+
+    /* Apply member decorations */
+    auto decorationIt = decorations_.find(type.result);
+    if (decorationIt != decorations_.end())
+    {
+        for (const SpvMemberDecoration& decoration : decorationIt->second.memberDecorations)
+        {
+            LLGL_ASSERT(decoration.member < type.fields.size(), "OpMemberDecoration member index out of bounds for structure (%%%u)", type.result);
+            switch (decoration.value)
+            {
+                case spv::DecorationNonWritable:
+                    type.fields[decoration.member].readonly = true;
+                    break;
+
+                case spv::DecorationOffset:
+                    type.fields[decoration.member].offset = decoration.literals[0];
+                    break;
+            }
+        }
+    }
 }
 
 void SpirvReflect::OpTypeOpaque(const Instr& instr, SpvType& type)
 {
-    //todo
+    // dummy
 }
 
 void SpirvReflect::OpTypePointer(const Instr& instr, SpvType& type)
@@ -679,7 +667,7 @@ void SpirvReflect::OpTypePointer(const Instr& instr, SpvType& type)
 
 void SpirvReflect::OpTypeFunction(const Instr& instr, SpvType& type)
 {
-    //todo
+    // dummy
 }
 
 const SpirvReflect::SpvType* SpirvReflect::FindType(spv::Id id) const
@@ -705,7 +693,7 @@ const SpirvReflect::SpvType* SpirvReflect::SpvType::Deref() const
 {
     auto type = this;
 
-    while (type->opcode == spv::Op::OpTypePointer)
+    while (type->opcode == spv::OpTypePointer)
     {
         if (type->baseType != nullptr)
             type = type->baseType;

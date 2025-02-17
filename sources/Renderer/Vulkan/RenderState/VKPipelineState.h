@@ -11,6 +11,8 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/Container/ArrayView.h>
+#include "VKPipelineLayout.h"
+#include "VKPipelineLayoutPermutation.h"
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
 #include <vector>
@@ -72,6 +74,9 @@ class VKPipelineState : public PipelineState
             return pipelineLayout_;
         }
 
+        // Returns the binding table and descriptor cache of this PSO's layout permutation.
+        bool GetBindingTableAndDescriptorCache(const VKLayoutBindingTable*& outBindingTable, VKDescriptorCache*& outDescriptorCache) const;
+
     protected:
 
         // Releases the native PSO and returns its address.
@@ -106,7 +111,7 @@ class VKPipelineState : public PipelineState
     private:
 
         VKPtr<VkPipeline>                   pipeline_;
-        VKPtr<VkPipelineLayout>             pipelineLayoutPerm_;
+        VKPipelineLayoutPermutationSPtr     pipelineLayoutPerm_;
         const VKPipelineLayout*             pipelineLayout_     = nullptr;
         VkPipelineBindPoint                 bindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
         std::vector<VkPushConstantRange>    uniformRanges_;     // Push constant ranges; One range for each uniform descriptor. See UniformDescriptor.

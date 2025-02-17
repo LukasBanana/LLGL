@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include "VKPipelineLayoutPermutation.h"
 #include "VKDescriptorCache.h"
 #include "../Shader/VKShader.h"
 #include "../Vulkan.h"
@@ -23,17 +24,8 @@ namespace LLGL
 {
 
 
-class VKDescriptorCache;
-class VKPoolSizeAccumulator;
-
-struct VKLayoutBinding
-{
-    std::uint32_t       dstBinding;
-    std::uint32_t       dstArrayElement;
-    long                stageFlags;
-    VkDescriptorType    descriptorType;
-};
-
+// Implementation of the PipelineLayout interface for the Vulkan backend.
+// This class acts as a template for permutations of pipeline layouts rather than wrapping the native VkPipelineLayout directly (see VKPipelineLayoutPermutation).
 class VKPipelineLayout final : public PipelineLayout
 {
 
@@ -46,11 +38,14 @@ class VKPipelineLayout final : public PipelineLayout
         VKPipelineLayout(VkDevice device, const PipelineLayoutDescriptor& desc);
         ~VKPipelineLayout();
 
+        // Returns true if this pipeline layout can have permutations, i.e. if this layout contains uniforms or non-uniform buffers.
+        bool CanHaveLayoutPermutations() const;
+
         /*
         Creates a permutation of this pipeline layout for the specified shaders with push constants.
         If this pipeline layout does not have any push constants (i.e. uniform descriptors), no permutation is created and the return value is VK_NULL_HANDLE.
         */
-        VKPtr<VkPipelineLayout> CreateVkPipelineLayoutPermutation(
+        VKPipelineLayoutPermutationSPtr CreatePermutation(
             VkDevice                            device,
             const ArrayView<Shader*>&           shaders,
             std::vector<VkPushConstantRange>&   outUniformRanges
@@ -104,16 +99,10 @@ class VKPipelineLayout final : public PipelineLayout
             return staticDescriptorSet_;
         }
 
-        // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
-        inline const std::vector<VKLayoutBinding>& GetLayoutHeapBindings() const
+        // Returns the binding table for this pipeline layout.
+        inline const VKLayoutBindingTable& GetBindingTable() const
         {
-            return heapBindings_;
-        }
-
-        // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
-        inline const std::vector<VKLayoutBinding>& GetLayoutDynamicBindings() const
-        {
-            return bindings_;
+            return bindingTable_;
         }
 
         // Returns the descriptor cache for dynamic resources or null if there is none.
@@ -122,16 +111,16 @@ class VKPipelineLayout final : public PipelineLayout
             return descriptorCache_.get();
         }
 
-        // Returns true if this instance provides permutations for the native Vulkan pipeline layout.
-        inline bool HasVkPipelineLayoutPermutations() const
-        {
-            return !uniformDescs_.empty();
-        }
-
         // Returns the barrier flags this pipeline layout was created with. See PipelineLayoutDescriptor::barrierFlags.
         inline long GetBarrierFlags() const
         {
             return barrierFlags_;
+        }
+
+        // Returns true if this PSO layout has at least one non-uniform buffer binding.
+        inline bool HasNonUniformBuffers() const
+        {
+            return ((flags_ & PSOLayoutFlag_HasNonUniformBuffers) != 0);
         }
 
     public:
@@ -157,6 +146,14 @@ class VKPipelineLayout final : public PipelineLayout
             SetLayoutType_Num,
         };
 
+        enum PSOLayoutFlags
+        {
+            // Has at least one non-uniform buffer binding i.e. SSBO or texel buffer.
+            // Such bindings must be dynamically resolved to either an SSBO buffer or texel buffer
+            // since the LLGL interface does not differentiate between them.
+            PSOLayoutFlag_HasNonUniformBuffers = (1 << 0),
+        };
+
         // Container for binding slots that must be re-assigned to a new descriptor set in the SPIR-V shader modules.
         struct DescriptorSetBindingTable
         {
@@ -173,10 +170,11 @@ class VKPipelineLayout final : public PipelineLayout
         );
 
         void CreateBindingSetLayout(
-            VkDevice                                device,
-            const std::vector<BindingDescriptor>&   inBindings,
-            std::vector<VKLayoutBinding>&           outBindings,
-            SetLayoutType                           setLayoutType
+            VkDevice                                    device,
+            const std::vector<BindingDescriptor>&       inBindings,
+            std::vector<VKLayoutBinding>&               outBindings,
+            std::vector<VkDescriptorSetLayoutBinding>&  outSetLayoutBindings,
+            SetLayoutType                               setLayoutType
         );
 
         void CreateImmutableSamplers(
@@ -208,23 +206,26 @@ class VKPipelineLayout final : public PipelineLayout
 
     private:
 
-        static VKPtr<VkPipelineLayout>      defaultPipelineLayout_;
+        static VKPtr<VkPipelineLayout>              defaultPipelineLayout_;
 
-        VKPtr<VkPipelineLayout>             pipelineLayout_;
-        VKPtr<VkDescriptorSetLayout>        setLayouts_[SetLayoutType_Num];
-        DescriptorSetBindingTable           setBindingTables_[SetLayoutType_Num];
-        PackedPermutation3                  layoutTypeOrder_;
+        VKPtr<VkPipelineLayout>                     pipelineLayout_;
+        VKPtr<VkDescriptorSetLayout>                setLayouts_[SetLayoutType_Num];
+        DescriptorSetBindingTable                   setBindingTables_[SetLayoutType_Num];
+        PackedPermutation3                          layoutTypeOrder_;
 
-        VKPtr<VkDescriptorPool>             descriptorPool_;
-        std::unique_ptr<VKDescriptorCache>  descriptorCache_;
-        VkDescriptorSet                     staticDescriptorSet_                    = VK_NULL_HANDLE;
+        VKPtr<VkDescriptorPool>                     descriptorPool_;
+        std::unique_ptr<VKDescriptorCache>          descriptorCache_;
+        VkDescriptorSet                             staticDescriptorSet_                    = VK_NULL_HANDLE;
 
-        std::vector<VKLayoutBinding>        heapBindings_;
-        std::vector<VKLayoutBinding>        bindings_;
-        std::vector<VKPtr<VkSampler>>       immutableSamplers_;
-        std::vector<UniformDescriptor>      uniformDescs_;
+        VKLayoutBindingTable                        bindingTable_;
+        std::vector<VKPtr<VkSampler>>               immutableSamplers_;
+        std::vector<UniformDescriptor>              uniformDescs_;
 
-        long                                barrierFlags_                           = 0;
+        std::vector<VkDescriptorSetLayoutBinding>   setLayoutHeapBindings_;
+        std::vector<VkDescriptorSetLayoutBinding>   setLayoutDynamicBindings_;
+
+        long                                        barrierFlags_   : 2; // BarrierFlags
+        long                                        flags_          : 1; // PSOLayoutFlags
 
 };
 

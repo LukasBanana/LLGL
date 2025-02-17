@@ -71,15 +71,10 @@ class VKResourceHeap final : public ResourceHeap
 
         static constexpr std::uint32_t invalidViewIndex = 0xFFFF;
 
-        //TODO: merge with or inherit from VKLayoutBinding
-        struct VKDescriptorBinding
+        struct VKLayoutHeapBinding : VKLayoutBinding
         {
-            std::uint32_t           dstBinding;
-            std::uint32_t           dstArrayElement;
-            VkDescriptorType        descriptorType;
-            VkPipelineStageFlags    stageFlags;
-            std::uint32_t           imageViewIndex  : 16; // Index (per descriptor set) to the intermediate VkImageView or 0xFFFF if unused.
-            std::uint32_t           bufferViewIndex : 16; // Index (per descriptor set) to the intermediate VkBufferView or 0xFFFF if unused.
+            std::uint32_t imageViewIndex  : 16; // Index (per descriptor set) to the intermediate VkImageView or 0xFFFF if unused.
+            std::uint32_t bufferViewIndex : 16; // Index (per descriptor set) to the intermediate VkBufferView or 0xFFFF if unused.
         };
 
         struct VKDescriptorBarrierWriter
@@ -89,8 +84,8 @@ class VKResourceHeap final : public ResourceHeap
 
     private:
 
-        void ConvertLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
-        void ConvertLayoutBinding(VKDescriptorBinding& dst, const VKLayoutBinding& src);
+        void ConvertAllLayoutBindings(const ArrayView<VKLayoutBinding>& layoutBindings);
+        void ConvertLayoutBinding(VKLayoutHeapBinding& dst, const VKLayoutBinding& src);
 
         void CreateDescriptorPool(VkDevice device, std::uint32_t numDescriptorSets);
 
@@ -103,7 +98,7 @@ class VKResourceHeap final : public ResourceHeap
         void FillWriteDescriptorWithSampler(
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
-            const VKDescriptorBinding&      binding,
+            const VKLayoutHeapBinding&      binding,
             VKDescriptorSetWriter&          setWriter
         );
 
@@ -111,7 +106,7 @@ class VKResourceHeap final : public ResourceHeap
             VkDevice                        device,
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
-            const VKDescriptorBinding&      binding,
+            const VKLayoutHeapBinding&      binding,
             VKDescriptorSetWriter&          setWriter
         );
 
@@ -119,12 +114,12 @@ class VKResourceHeap final : public ResourceHeap
             VkDevice                        device,
             const ResourceViewDescriptor&   desc,
             std::uint32_t                   descriptorSet,
-            const VKDescriptorBinding&      binding,
+            const VKLayoutHeapBinding&      binding,
             VKDescriptorSetWriter&          setWriter,
             VKDescriptorBarrierWriter&      barrierWriter
         );
 
-        bool ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* resource, const VKDescriptorBinding& binding);
+        bool ExchangeBufferBarrier(std::uint32_t descriptorSet, Buffer* resource, const VKLayoutHeapBinding& binding);
         bool EmplaceBarrier(std::uint32_t descriptorSet, std::uint32_t slot, Resource* resource, VkPipelineStageFlags stageFlags);
         bool RemoveBarrier(std::uint32_t descriptorSet, std::uint32_t slot);
 
@@ -140,7 +135,7 @@ class VKResourceHeap final : public ResourceHeap
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
         std::vector<VkDescriptorSet>        descriptorSets_;
-        SmallVector<VKDescriptorBinding>    bindings_;
+        SmallVector<VKLayoutHeapBinding>    bindings_;
 
         std::vector<VKPtr<VkImageView>>     imageViews_;
       //std::vector<VKPtr<VkBufferView>>    bufferViews_;

@@ -470,6 +470,18 @@ VkColorComponentFlags ToVkColorComponentFlags(std::uint8_t colorMask)
     return bitmask;
 }
 
+VkPipelineStageFlags ToVkStageFlags(long stageFlags)
+{
+    VkPipelineStageFlags bitmask = 0;
+    if ((stageFlags & StageFlags::VertexStage        ) != 0) { bitmask |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;                  }
+    if ((stageFlags & StageFlags::TessControlStage   ) != 0) { bitmask |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;    }
+    if ((stageFlags & StageFlags::TessEvaluationStage) != 0) { bitmask |= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT; }
+    if ((stageFlags & StageFlags::GeometryStage      ) != 0) { bitmask |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;                }
+    if ((stageFlags & StageFlags::FragmentStage      ) != 0) { bitmask |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;                }
+    if ((stageFlags & StageFlags::ComputeStage       ) != 0) { bitmask |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;                 }
+    return bitmask;
+}
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

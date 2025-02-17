@@ -84,6 +84,19 @@ class VKShader final : public Shader
             return shaderModule_;
         }
 
+        // Returns true if this shader's binding layout contains any binding point of the specified descriptor type.
+        inline bool HasAnyDescriptorOfType(VkDescriptorType type) const
+        {
+            return bindingLayout_.HasAnyDescriptorOfType(type);
+        }
+
+        // Returns the descriptor type for the specified binding slot.
+        // If this shader binding layout does not have such a binding slot, the return value is VK_DESCRIPTOR_TYPE_MAX_ENUM.
+        inline VkDescriptorType GetDescriptorTypeForBinding(const BindingSlot& slot) const
+        {
+            return bindingLayout_.GetDescriptorTypeForBinding(slot);
+        }
+
     private:
 
         // Note: "Success" is a reserved macro by X11 lib.

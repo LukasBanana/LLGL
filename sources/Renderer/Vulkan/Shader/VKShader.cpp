@@ -176,7 +176,7 @@ static long ShaderTypeToStageFlags(const ShaderType type)
 
 static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t count)
 {
-    if (type->opcode == spv::Op::OpTypeFloat)
+    if (type->opcode == spv::OpTypeFloat)
     {
         if (type->size == 2)
         {
@@ -209,7 +209,7 @@ static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint
             }
         }
     }
-    else if (type->opcode == spv::Op::OpTypeInt)
+    else if (type->opcode == spv::OpTypeInt)
     {
         if (type->sign)
         {
@@ -243,23 +243,23 @@ static Format SpvTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t* 
 
     if (type != nullptr)
     {
-        if (type->opcode == spv::Op::OpTypePointer)
+        if (type->opcode == spv::OpTypePointer)
         {
             /* Dereference pointer type */
             return SpvTypeToFormat(type->baseType, count);
         }
-        else if (type->opcode == spv::Op::OpTypeFloat || type->opcode == spv::Op::OpTypeInt)
+        else if (type->opcode == spv::OpTypeFloat || type->opcode == spv::OpTypeInt)
         {
             /* Return format as scalar type */
             return SpvVectorTypeToFormat(type, 1);
         }
-        else if (type->opcode == spv::Op::OpTypeVector)
+        else if (type->opcode == spv::OpTypeVector)
         {
             /* Return format as vector type */
             if (type->baseType)
                 return SpvVectorTypeToFormat(type->baseType, type->elements);
         }
-        else if (type->opcode == spv::Op::OpTypeMatrix)
+        else if (type->opcode == spv::OpTypeMatrix)
         {
             /* Return format as vector and return number of vectors */
             if (count != nullptr)
@@ -313,26 +313,26 @@ static const SpirvReflect::SpvType* ReflectSpvBinding(BindingDescriptor& binding
         {
             switch (derefType->opcode)
             {
-                case spv::Op::OpTypeArray:
+                case spv::OpTypeArray:
                     /* Multiply array in case of multiple interleaved arrays, e.g. MultiArray[4][3] is equivalent to LinearArray[4*3] */
                     binding.arraySize = (derefType->elements == 0 ? derefType->elements : binding.arraySize * derefType->elements);
                     return ReflectSpvBinding(binding, derefType->baseType);
 
-                case spv::Op::OpTypeImage:
+                case spv::OpTypeImage:
                     binding.type       = ResourceType::Texture;
                     binding.bindFlags  |= BindFlags::Sampled;
                     return derefType;
 
-                case spv::Op::OpTypeSampler:
+                case spv::OpTypeSampler:
                     binding.type       = ResourceType::Sampler;
                     return derefType;
 
-                case spv::Op::OpTypeSampledImage:
+                case spv::OpTypeSampledImage:
                     binding.type       = ResourceType::Texture;
                     binding.bindFlags  |= (BindFlags::Sampled | BindFlags::CombinedSampler);
                     return derefType;
 
-                case spv::Op::OpTypeStruct:
+                case spv::OpTypeStruct:
                     binding.type       = ResourceType::Buffer;
                     binding.bindFlags  |= BindFlags::ConstantBuffer;
                     return derefType;
@@ -362,7 +362,7 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
 
         if (const SpirvReflect::SpvType* varType = var.type)
         {
-            //if (varType->opcode == spv::Op::OpTypeArray)
+            //if (varType->opcode == spv::OpTypeArray)
             //    resource.binding.arraySize = varType->elements;
 
             if (varType->storage == spv::StorageClassUniform ||
@@ -370,7 +370,7 @@ static ShaderResourceReflection* FindOrAppendShaderResource(ShaderReflection& re
             {
                 if (const SpirvReflect::SpvType* derefType = ReflectSpvBinding(resource.binding, varType))
                 {
-                    if (derefType->opcode == spv::Op::OpTypeStruct)
+                    if (derefType->opcode == spv::OpTypeStruct)
                         resource.constantBufferSize = var.size;
                 }
             }
@@ -472,22 +472,20 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     /* Gather push constants */
     if (const SpirvReflect::SpvType* pushConstantType = spvReflect.GetPushConstantStructType())
     {
-        reflection.uniforms.reserve(reflection.uniforms.size() + pushConstantType->fieldTypes.size());
-        if (pushConstantType->fieldTypes.size() == pushConstantType->fieldNames.size())
+        const auto& fields = pushConstantType->fields;
+        reflection.uniforms.reserve(reflection.uniforms.size() + fields.size());
+        for_range(i, fields.size())
         {
-            for_range(i, pushConstantType->fieldTypes.size())
-            {
-                const SpirvReflect::SpvType* fieldType = pushConstantType->fieldTypes[i];
-                const char* fieldName = pushConstantType->fieldNames[i];
+            const SpirvReflect::SpvType* fieldType = fields[i].type;
+            const char* fieldName = fields[i].name;
 
-                UniformDescriptor uniformDesc;
-                {
-                    uniformDesc.name        = fieldName;
-                    uniformDesc.type        = ReflectUniformType(fieldType);
-                    uniformDesc.arraySize   = (fieldType->opcode == spv::OpTypeArray ? fieldType->elements : 0);
-                }
-                reflection.uniforms.push_back(uniformDesc);
+            UniformDescriptor uniformDesc;
+            {
+                uniformDesc.name        = fieldName;
+                uniformDesc.type        = ReflectUniformType(fieldType);
+                uniformDesc.arraySize   = (fieldType->opcode == spv::OpTypeArray ? fieldType->elements : 0);
             }
+            reflection.uniforms.push_back(uniformDesc);
         }
     }
 

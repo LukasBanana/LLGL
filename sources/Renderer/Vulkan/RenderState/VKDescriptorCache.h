@@ -10,7 +10,6 @@
 
 
 #include "../Vulkan.h"
-#include "VKPipelineLayout.h"
 #include "VKDescriptorSetWriter.h"
 #include <LLGL/Container/SmallVector.h>
 #include <LLGL/Container/ArrayView.h>
@@ -21,6 +20,7 @@ namespace LLGL
 {
 
 
+class Resource;
 class VKBuffer;
 class VKTexture;
 class VKSampler;
@@ -70,6 +70,7 @@ class VKDescriptorCache
 
         VkDescriptorBufferInfo* NextBufferInfoOrUpdateCache(VKDescriptorSetWriter& setWriter);
         VkDescriptorImageInfo* NextImageInfoOrUpdateCache(VKDescriptorSetWriter& setWriter);
+        VkBufferView* NextBufferViewOrUpdateCache(VKDescriptorSetWriter& setWriter);
 
         void EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter);
         void EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter);

@@ -28,8 +28,8 @@ VKPipelineState::VKPipelineState(
     if (pipelineLayout != nullptr)
     {
         pipelineLayout_ = LLGL_CAST(const VKPipelineLayout*, pipelineLayout);
-        if (pipelineLayout_->GetNumUniforms() > 0)
-            pipelineLayoutPerm_ = pipelineLayout_->CreateVkPipelineLayoutPermutation(device, shaders, uniformRanges_);
+        if (pipelineLayout_->CanHaveLayoutPermutations())
+            pipelineLayoutPerm_ = pipelineLayout_->CreatePermutation(device, shaders, uniformRanges_);
     }
 }
 
@@ -140,6 +140,23 @@ void VKPipelineState::PushConstants(VkCommandBuffer commandBuffer, std::uint32_t
     FlushPushConstants();
 }
 
+bool VKPipelineState::GetBindingTableAndDescriptorCache(const VKLayoutBindingTable*& outBindingTable, VKDescriptorCache*& outDescriptorCache) const
+{
+    if (pipelineLayoutPerm_.get() != nullptr)
+    {
+        outBindingTable     = &(pipelineLayoutPerm_->GetBindingTable());
+        outDescriptorCache  = pipelineLayoutPerm_->GetDescriptorCache();
+        return true;
+    }
+    if (pipelineLayout_ != nullptr)
+    {
+        outBindingTable     = &(pipelineLayout_->GetBindingTable());
+        outDescriptorCache  = pipelineLayout_->GetDescriptorCache();
+        return true;
+    }
+    return false;
+}
+
 
 /*
  * ======= Protected: =======
@@ -152,8 +169,8 @@ VkPipeline* VKPipelineState::ReleaseAndGetAddressOfVkPipeline()
 
 VkPipelineLayout VKPipelineState::GetVkPipelineLayout() const
 {
-    if (pipelineLayoutPerm_.Get() != VK_NULL_HANDLE)
-        return pipelineLayoutPerm_.Get();
+    if (pipelineLayoutPerm_.get())
+        return pipelineLayoutPerm_->GetVkPipelineLayout();
     if (pipelineLayout_ != nullptr)
         return pipelineLayout_->GetVkPipelineLayout();
     return VKPipelineLayout::GetDefault();

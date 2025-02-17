@@ -19,7 +19,8 @@ VKDescriptorSetWriter::VKDescriptorSetWriter(
     std::uint32_t numReservedCopies)
 :
     bufferInfos_ { numResourceViewsMax },
-    imageInfos_  { numResourceViewsMax }
+    imageInfos_  { numResourceViewsMax },
+    bufferViews_ { numResourceViewsMax }
 {
     writes_.reserve(numReservedWrites);
     copies_.reserve(numReservedCopies);
@@ -29,8 +30,10 @@ void VKDescriptorSetWriter::Reset()
 {
     writes_.clear();
     copies_.clear();
+
     numBufferInfos_ = 0;
-    numImageInfos_ = 0;
+    numImageInfos_  = 0;
+    numBufferViews_ = 0;
 }
 
 void VKDescriptorSetWriter::Reset(
@@ -42,12 +45,18 @@ void VKDescriptorSetWriter::Reset(
         bufferInfos_.resize(numResourceViewsMax);
     if (imageInfos_.size() < numResourceViewsMax)
         imageInfos_.resize(numResourceViewsMax);
+    if (bufferViews_.size() < numResourceViewsMax)
+        bufferViews_.resize(numResourceViewsMax);
+
     writes_.clear();
     copies_.clear();
+
     writes_.reserve(numReservedWrites);
     copies_.reserve(numReservedCopies);
+
     numBufferInfos_ = 0;
-    numImageInfos_ = 0;
+    numImageInfos_  = 0;
+    numBufferViews_ = 0;
 }
 
 VkDescriptorBufferInfo* VKDescriptorSetWriter::NextBufferInfo()
@@ -62,6 +71,14 @@ VkDescriptorImageInfo* VKDescriptorSetWriter::NextImageInfo()
 {
     if (numImageInfos_ < imageInfos_.size())
         return &(imageInfos_[numImageInfos_++]);
+    else
+        return nullptr;
+}
+
+VkBufferView* VKDescriptorSetWriter::NextBufferView()
+{
+    if (numBufferViews_ < bufferViews_.size())
+        return &(bufferViews_[numBufferViews_++]);
     else
         return nullptr;
 }

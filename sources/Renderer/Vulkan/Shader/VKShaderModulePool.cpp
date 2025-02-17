@@ -38,7 +38,7 @@ VkShaderModule VKShaderModulePool::GetOrCreateVkShaderModulePermutation(VKShader
         permutations_.size(),
         [shaderPtr, pipelineLayoutPtr](const ShaderModulePermutation& entry) -> int
         {
-            LLGL_COMPARE_SEPARATE_MEMBERS_SWO(pipelineLayoutPtr, entry.pipelineLayout);
+            LLGL_COMPARE_SEPARATE_MEMBERS_SWO(pipelineLayoutPtr, entry.pipelineLayout); // Must be the first key element; See NotifyReleasePipelineLayout().
             LLGL_COMPARE_SEPARATE_MEMBERS_SWO(shaderPtr, entry.shader);
             return 0;
         },

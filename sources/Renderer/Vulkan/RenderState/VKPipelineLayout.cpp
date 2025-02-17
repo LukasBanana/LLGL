@@ -6,6 +6,7 @@
  */
 
 #include "VKPipelineLayout.h"
+#include "VKPipelineLayoutPermutationPool.h"
 #include "VKPoolSizeAccumulator.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
@@ -34,13 +35,14 @@ VKPipelineLayout::VKPipelineLayout(VkDevice device, const PipelineLayoutDescript
                       { device, vkDestroyDescriptorSetLayout } },
     descriptorPool_ { device, vkDestroyDescriptorPool          },
     uniformDescs_   { desc.uniforms                            },
-    barrierFlags_   { desc.barrierFlags                        }
+    barrierFlags_   { desc.barrierFlags                        },
+    flags_          { 0                                        }
 {
     /* Create Vulkan descriptor set layouts */
     if (!desc.heapBindings.empty())
-        CreateBindingSetLayout(device, desc.heapBindings, heapBindings_, SetLayoutType_HeapBindings);
+        CreateBindingSetLayout(device, desc.heapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_, SetLayoutType_HeapBindings);
     if (!desc.bindings.empty())
-        CreateBindingSetLayout(device, desc.bindings, bindings_, SetLayoutType_DynamicBindings);
+        CreateBindingSetLayout(device, desc.bindings, bindingTable_.dynamicBindings, setLayoutDynamicBindings_, SetLayoutType_DynamicBindings);
     if (!desc.staticSamplers.empty())
         CreateImmutableSamplers(device, desc.staticSamplers);
 
@@ -67,12 +69,12 @@ VKPipelineLayout::~VKPipelineLayout()
 
 std::uint32_t VKPipelineLayout::GetNumHeapBindings() const
 {
-    return static_cast<std::uint32_t>(heapBindings_.size());
+    return static_cast<std::uint32_t>(bindingTable_.heapBindings.size());
 }
 
 std::uint32_t VKPipelineLayout::GetNumBindings() const
 {
-    return static_cast<std::uint32_t>(bindings_.size());
+    return static_cast<std::uint32_t>(bindingTable_.dynamicBindings.size());
 }
 
 std::uint32_t VKPipelineLayout::GetNumStaticSamplers() const
@@ -167,22 +169,99 @@ static void BuildPushConstantRanges(
     );
 }
 
-VKPtr<VkPipelineLayout> VKPipelineLayout::CreateVkPipelineLayoutPermutation(
+#if LLGL_VK_ENABLE_SPIRV_REFLECT
+
+// Returns true if any of the specified shaders has at least one texel buffer,
+// i.e. of type VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER or VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER.
+static bool HasAnyShaderWithTexelBuffers(const ArrayView<Shader*>& shaders)
+{
+    for (Shader* shader : shaders)
+    {
+        auto* shaderVK = LLGL_CAST(VKShader*, shader);
+        if (shaderVK->HasAnyDescriptorOfType(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER) ||
+            shaderVK->HasAnyDescriptorOfType(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+#endif // /LLGL_VK_ENABLE_SPIRV_REFLECT
+
+bool VKPipelineLayout::CanHaveLayoutPermutations() const
+{
+    return (!uniformDescs_.empty() || HasNonUniformBuffers());
+}
+
+VKPipelineLayoutPermutationSPtr VKPipelineLayout::CreatePermutation(
     VkDevice                            device,
     const ArrayView<Shader*>&           shaders,
     std::vector<VkPushConstantRange>&   outUniformRanges) const
 {
     #if LLGL_VK_ENABLE_SPIRV_REFLECT
-    if (!uniformDescs_.empty())
+
+    VKLayoutPermutationParameters permutationParams;
+
+    /*
+    Only check all shaders for any texel buffers if this PSO layout is known to contain non-uniform buffers.
+    Otherwise, the search for texel buffers is irrelevant since the PSO layout must not have such bindings in the first place.
+    */
+    const bool hasTexelBuffers = (HasNonUniformBuffers() && HasAnyShaderWithTexelBuffers(shaders));
+
+    if (!uniformDescs_.empty() || hasTexelBuffers)
     {
-        std::vector<VkPushConstantRange> pushConstantRangesPerStage;
-        BuildPushConstantRanges(shaders, uniformDescs_, pushConstantRangesPerStage, outUniformRanges);
-        return CreateVkPipelineLayout(device, pushConstantRangesPerStage);
+        permutationParams.setLayoutHeapBindings     = setLayoutHeapBindings_;
+        permutationParams.setLayoutDynamicBindings  = setLayoutDynamicBindings_;
     }
-    #else
-    LLGL_ASSERT(uniformDescs_.empty(), "uniform descriptors in Vulkan PSO layout but LLGL was not compiled with LLGL_VK_ENABLE_SPIRV_REFLECT");
-    #endif
-    return {};
+
+    if (hasTexelBuffers)
+    {
+        /* Create permutation of set-layout bindings */
+        auto GetDescriptorTypeForBinding = [&shaders](const BindingSlot& slot) -> VkDescriptorType
+        {
+            for (Shader* shader : shaders)
+            {
+                auto* shaderVK = LLGL_CAST(VKShader*, shader);
+                VkDescriptorType descriptorType = shaderVK->GetDescriptorTypeForBinding(slot);
+                if (descriptorType != VK_DESCRIPTOR_TYPE_MAX_ENUM)
+                    return descriptorType;
+            }
+            return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+        };
+
+        auto UpdateSetLayoutDescriptorTypes = [&GetDescriptorTypeForBinding](
+            const std::vector<BindingSlot>&             inBindingSlots,
+            std::vector<VkDescriptorSetLayoutBinding>&  setLayoutBindings) -> void
+        {
+            LLGL_ASSERT(inBindingSlots.size() == setLayoutBindings.size());
+            for_range(i, inBindingSlots.size())
+                setLayoutBindings[i].descriptorType = GetDescriptorTypeForBinding(inBindingSlots[i]);
+        };
+
+        UpdateSetLayoutDescriptorTypes(setBindingTables_[SetLayoutType_HeapBindings].srcSlots, permutationParams.setLayoutHeapBindings);
+        UpdateSetLayoutDescriptorTypes(setBindingTables_[SetLayoutType_DynamicBindings].srcSlots, permutationParams.setLayoutDynamicBindings);
+    }
+
+    if (!uniformDescs_.empty())
+        BuildPushConstantRanges(shaders, uniformDescs_, permutationParams.pushConstantRanges, outUniformRanges);
+
+    if (!permutationParams.pushConstantRanges.empty() || hasTexelBuffers)
+    {
+        permutationParams.numImmutableSamplers = static_cast<std::uint32_t>(immutableSamplers_.size());
+
+        return VKPipelineLayoutPermutationPool::Get().CreatePermutation(
+            device, this, setLayouts_[SetLayoutType_ImmutableSamplers].Get(), permutationParams
+        );
+    }
+
+    #else // LLGL_VK_ENABLE_SPIRV_REFLECT
+
+    LLGL_ASSERT(uniformDescs_.empty(), "uniform descriptors in Vulkan PSO layout, but LLGL was not built with LLGL_VK_ENABLE_SPIRV_REFLECT");
+
+    #endif // /LLGL_VK_ENABLE_SPIRV_REFLECT
+
+    return nullptr;
 }
 
 //private
@@ -310,34 +389,46 @@ static void ConvertBindingDesc(VkDescriptorSetLayoutBinding& dst, const BindingD
     dst.pImmutableSamplers  = nullptr;
 }
 
+static bool IsNonUniformBufferBinding(const BindingDescriptor& bindingDesc)
+{
+    return (bindingDesc.type == ResourceType::Buffer && (bindingDesc.bindFlags & (BindFlags::Sampled | BindFlags::Storage)) != 0);
+}
+
 void VKPipelineLayout::CreateBindingSetLayout(
-    VkDevice                                device,
-    const std::vector<BindingDescriptor>&   inBindings,
-    std::vector<VKLayoutBinding>&           outBindings,
-    SetLayoutType                           setLayoutType)
+    VkDevice                                    device,
+    const std::vector<BindingDescriptor>&       inBindings,
+    std::vector<VKLayoutBinding>&               outBindings,
+    std::vector<VkDescriptorSetLayoutBinding>&  outSetLayoutBindings,
+    SetLayoutType                               setLayoutType)
 {
     /* Convert heap bindings to native descriptor set layout bindings and create Vulkan descriptor set layout */
     const std::size_t numBindings = inBindings.size();
-    std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings(numBindings);
+    outSetLayoutBindings.resize(numBindings);
 
     for_range(i, numBindings)
-        ConvertBindingDesc(setLayoutBindings[i], inBindings[i]);
+    {
+        ConvertBindingDesc(outSetLayoutBindings[i], inBindings[i]);
 
-    CreateVkDescriptorSetLayout(device, setLayoutType, setLayoutBindings);
+        if (IsNonUniformBufferBinding(inBindings[i]))
+            flags_ |= PSOLayoutFlag_HasNonUniformBuffers;
+    }
+
+    CreateVkDescriptorSetLayout(device, setLayoutType, outSetLayoutBindings);
 
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
     outBindings.reserve(numBindings);
     for_range(i, numBindings)
     {
-        for_range(arrayElement, setLayoutBindings[i].descriptorCount)
+        for_range(arrayElement, outSetLayoutBindings[i].descriptorCount)
         {
             outBindings.push_back(
                 VKLayoutBinding
                 {
                     /*dstBinding:*/         inBindings[i].slot.index,
                     /*dstArrayElement:*/    arrayElement,
-                    /*stageFlags:*/         inBindings[i].stageFlags,
-                    /*descriptorType:*/     setLayoutBindings[i].descriptorType
+                    /*descriptorType:*/     outSetLayoutBindings[i].descriptorType,
+                    /*stageFlags:*/         VKTypes::ToVkStageFlags(inBindings[i].stageFlags),
+                    /*bindFlags:*/          inBindings[i].bindFlags
                 }
             );
         }
@@ -410,7 +501,7 @@ void VKPipelineLayout::CreateDescriptorPool(VkDevice device)
     /* Accumulate descriptor pool sizes for all dynamic resources and immutable samplers */
     VKPoolSizeAccumulator poolSizeAccum;
 
-    for (const VKLayoutBinding& binding : bindings_)
+    for (const VKLayoutBinding& binding : bindingTable_.dynamicBindings)
         poolSizeAccum.Accumulate(binding.descriptorType);
 
     if (!immutableSamplers_.empty())
@@ -439,12 +530,14 @@ void VKPipelineLayout::CreateDescriptorCache(VkDevice device, VkDescriptorSetLay
     so accumulate pool sizes only for dynamiuc resources here
     */
     VKPoolSizeAccumulator poolSizeAccum;
-    for (const VKLayoutBinding& binding : bindings_)
+    for (const VKLayoutBinding& binding : bindingTable_.dynamicBindings)
         poolSizeAccum.Accumulate(binding.descriptorType);
     poolSizeAccum.Finalize();
 
     /* Allocate unique descriptor cache */
-    descriptorCache_ = MakeUnique<VKDescriptorCache>(device, descriptorPool_, setLayout, poolSizeAccum.Size(), poolSizeAccum.Data(), bindings_);
+    descriptorCache_ = MakeUnique<VKDescriptorCache>(
+        device, descriptorPool_, setLayout, poolSizeAccum.Size(), poolSizeAccum.Data(), bindingTable_.dynamicBindings
+    );
 }
 
 void VKPipelineLayout::CreateStaticDescriptorSet(VkDevice device, VkDescriptorSetLayout setLayout)
