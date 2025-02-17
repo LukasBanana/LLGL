@@ -18,6 +18,7 @@
 #include "../Buffer/VKStagingBufferPool.h"
 #include "../RenderState/VKStagingDescriptorSetPool.h"
 #include "../RenderState/VKDescriptorCache.h"
+#include "../RenderState/VKPipelineLayout.h"
 #include <vector>
 
 
@@ -196,7 +197,7 @@ class VKCommandBuffer final : public CommandBuffer
         bool                            scissorEnabled_                                 = false;
         bool                            hasDynamicScissorRect_                          = false;
         VkPipelineBindPoint             pipelineBindPoint_                              = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-        const VKPipelineLayout*         boundPipelineLayout_                            = nullptr;
+        const VKLayoutBindingTable*     boundBindingTable_                              = nullptr;
         VKPipelineState*                boundPipelineState_                             = nullptr;
 
         std::uint32_t                   maxDrawIndirectCount_                           = 0;

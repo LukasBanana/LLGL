@@ -80,6 +80,16 @@ class SpirvReflect
             std::uint32_t   localSizeZ          = 0;
         };
 
+        struct SpvType;
+
+        struct SpvRecordField
+        {
+            const SpvType*  type        = nullptr;
+            const char*     name        = nullptr;
+            bool            readonly    = false;
+            std::uint32_t   offset      = 0;
+        };
+
         // General purpose structure for all SPIR-V module types.
         struct SpvType
         {
@@ -87,16 +97,25 @@ class SpirvReflect
             const SpvType* Deref(const spv::Op opcodeType) const;
             bool RefersToType(const spv::Op opcodeType) const;
 
-            spv::Op                     opcode      = spv::OpMax;           // Opcode for this type (e.g. spv::Op::OpTypeFloat).
+            spv::Op                     opcode      = spv::OpMax;           // Opcode for this type (e.g. spv::OpTypeFloat).
             spv::Id                     result      = 0;                    // Result ID of this type.
             spv::StorageClass           storage     = spv::StorageClassMax; // Storage class of this type. By default spv::StorageClass::Max.
             const char*                 name        = nullptr;              // Name of this type (only for structures).
             const SpvType*              baseType    = nullptr;              // Reference to the base type, or null if there is no base type.
+
+            // Struct/vector/array
             std::uint32_t               elements    = 0;                    // Number of elements for the base type, or 0 if there is no base type.
             std::uint32_t               size        = 0;                    // Size (in bytes) of this type, or 0 if this is an OpTypeVoid type.
+
+            // Image
+            spv::Dim                    dimension   = spv::DimMax;          // Resource dimensionality.
+            spv::ImageFormat            imageFormat = spv::ImageFormatMax;  // Format of an image type.
+
+            // Struct
+            std::vector<SpvRecordField> fields;                             // List of struct fields
+
             bool                        sign        = false;                // Specifies whether or not this is a signed type (only for OpTypeInt).
-            std::vector<const SpvType*> fieldTypes;                         // List of types of each record field.
-            std::vector<const char*>    fieldNames;                         // List of names for each record field.
+            bool                        readonly    = false;                // Specifies whether this type was marked with the 'readonly'-specifier.
         };
 
         // SPIRV-V scalar constants.
@@ -105,23 +124,25 @@ class SpirvReflect
             const SpvType*      type    = nullptr;
             union
             {
-                float           f32;
-                double          f64;
+                std::uint64_t   u64     = 0;
                 std::uint32_t   u32;
-                std::uint64_t   u64;
-                std::int32_t    i32;
                 std::int64_t    i64;
+                std::int32_t    i32;
+                double          f64;
+                float           f32;
             };
         };
 
         // Global uniform objects.
         struct SpvUniform
         {
-            const char*     name    = nullptr;
-            const SpvType*  type    = nullptr;
-            std::uint32_t   set     = 0;        // Descriptor set
-            std::uint32_t   binding = 0;        // Binding point
-            std::uint32_t   size    = 0;        // Size (in bytes) of the uniform.
+            const char*     name                = nullptr;
+            const SpvType*  type                = nullptr;
+            std::uint32_t   set                 = 0;        // Descriptor set
+            std::uint32_t   setWordOffset       = 0;        // Word offset within the SPIR-V module of the descriptor set.
+            std::uint32_t   binding             = 0;        // Binding point
+            std::uint32_t   bindingWordOffset   = 0;        // Word offset within the SPIR-V module of the binding point.
+            std::uint32_t   size                = 0;        // Size (in bytes) of the uniform.
         };
 
         // Module varyings, i.e. either input or output attributes.
@@ -146,16 +167,6 @@ class SpirvReflect
         {
             const char*                 name    = nullptr;
             std::vector<SpvBlockField>  fields;
-        };
-
-        // Binding point including descriptor set.
-        struct SpvBindingPoint
-        {
-            spv::Id         id                  = 0; // Resource ID.
-            std::uint32_t   set                 = 0; // Descriptor set
-            std::uint32_t   setWordOffset       = 0; // Word offset within the SPIR-V module of the descriptor set.
-            std::uint32_t   binding             = 0; // Binding point
-            std::uint32_t   bindingWordOffset   = 0; // Word offset within the SPIR-V module of the binding point.
         };
 
     public:
@@ -199,6 +210,18 @@ class SpirvReflect
             std::vector<const char*> names;
         };
 
+        struct SpvMemberDecoration
+        {
+            std::uint32_t   member      = 0;                    // Zero-based index to the member which is meant to be decorated.
+            spv::Decoration value       = spv::DecorationMax;   // Value to decorate the member with.
+            std::uint32_t   literals[1] = {};
+        };
+
+        struct SpvDecorationCollection
+        {
+            std::vector<SpvMemberDecoration> memberDecorations;
+        };
+
     private:
 
         using Instr = SpirvInstruction;
@@ -211,8 +234,13 @@ class SpirvReflect
 
         SpirvResult OpDecorate(const Instr& instr);
         void OpDecorateBinding(const Instr& instr, spv::Id id);
+        void OpDecorateDescriptorSet(const Instr& instr, spv::Id id);
         void OpDecorateLocation(const Instr& instr, spv::Id id);
         void OpDecorateBuiltin(const Instr& instr, spv::Id id);
+        void OpDecorateBlock(const Instr& instr, spv::Id id);
+        void OpDecorateBufferBlock(const Instr& instr, spv::Id id);
+
+        SpirvResult OpMemberDecorate(const Instr& instr);
 
         SpirvResult OpVariable(const Instr& instr);
         SpirvResult OpConstant(const Instr& instr);
@@ -239,15 +267,18 @@ class SpirvReflect
 
     private:
 
-        std::uint32_t                       idBound_            = 0;
-        SpirvNameDecorations                names_;
+        std::uint32_t                               idBound_            = 0;
+        SpirvNameDecorations                        names_;
 
-        std::map<spv::Id, SpvType>          types_;
-        std::map<spv::Id, SpvConstant>      constants_;
-        std::map<spv::Id, SpvUniform>       uniforms_;
-        std::map<spv::Id, SpvVarying>       varyings_;
-        std::map<spv::Id, SpvMemberNames>   memberNames_;
-        spv::Id                             pushConstantTypeId_ = 0;
+        std::map<spv::Id, SpvType>                  types_;
+        std::map<spv::Id, SpvConstant>              constants_;
+        std::map<spv::Id, SpvUniform>               uniforms_;
+        std::map<spv::Id, SpvVarying>               varyings_;
+        std::map<spv::Id, SpvMemberNames>           memberNames_;
+        std::map<spv::Id, SpvDecorationCollection>  decorations_;
+        spv::Id                                     pushConstantTypeId_ = 0;
+
+        std::uint32_t                               instrWordOffset_    = 0; // Word offset of current instruction
 
 };
 
@@ -257,9 +288,6 @@ SpirvResult SpirvReflectExecutionMode(const SpirvModuleView& module, SpirvReflec
 
 // Reflect the specified SPIR-V module only for push constants.
 SpirvResult SpirvReflectPushConstants(const SpirvModuleView& module, SpirvReflect::SpvBlock& outBlock);
-
-// Reflect the specified SPIR-V module only for binding points (including their descriptor sets).
-SpirvResult SpirvReflectBindingPoints(const SpirvModuleView& module, std::vector<SpirvReflect::SpvBindingPoint>& outBindingPoints);
 
 
 } // /namespace LLGL

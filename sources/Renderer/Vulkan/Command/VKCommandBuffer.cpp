@@ -585,9 +585,9 @@ void VKCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap, std::uint32_t 
 
 void VKCommandBuffer::SetResource(std::uint32_t descriptor, Resource& resource)
 {
-    if (boundPipelineLayout_ != nullptr && descriptor < boundPipelineLayout_->GetLayoutDynamicBindings().size())
+    if (boundBindingTable_ != nullptr && descriptor < boundBindingTable_->dynamicBindings.size())
     {
-        const VKLayoutBinding& binding = boundPipelineLayout_->GetLayoutDynamicBindings()[descriptor];
+        const VKLayoutBinding& binding = boundBindingTable_->dynamicBindings[descriptor];
         descriptorCache_->EmplaceDescriptor(resource, binding, descriptorSetWriter_);
     }
 }
@@ -832,12 +832,9 @@ void VKCommandBuffer::SetPipelineState(PipelineState& pipelineState)
 
     /* Keep reference to bound piepline layout (can be null) */
     boundPipelineState_     = &pipelineStateVK;
-    boundPipelineLayout_    = pipelineStateVK.GetPipelineLayout();
 
-    /* Reset descriptor cache for dynamic resources */
-    if (boundPipelineLayout_ != nullptr)
+    if (pipelineStateVK.GetBindingTableAndDescriptorCache(boundBindingTable_, descriptorCache_))
     {
-        descriptorCache_ = boundPipelineLayout_->GetDescriptorCache();
         if (descriptorCache_ != nullptr)
         {
             descriptorCache_->Reset();
@@ -1387,10 +1384,10 @@ void VKCommandBuffer::AcquireNextBuffer()
 
 void VKCommandBuffer::ResetBindingStates()
 {
-    boundSwapChain_         = nullptr;
-    boundPipelineLayout_    = nullptr;
-    boundPipelineState_     = nullptr;
-    descriptorCache_        = nullptr;
+    boundSwapChain_     = nullptr;
+    boundBindingTable_  = nullptr;
+    boundPipelineState_ = nullptr;
+    descriptorCache_    = nullptr;
 }
 
 #if 0

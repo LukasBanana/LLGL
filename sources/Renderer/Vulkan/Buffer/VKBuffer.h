@@ -44,6 +44,9 @@ class VKBuffer : public Buffer
         // Returns the offset to the transform-feedback counter within this buffer or 0 if there is no such counter.
         VkDeviceSize GetXfbCounterOffset() const;
 
+        // Creates a VkBufferView for this buffer. If this buffer was not created with a valid format, the return value is false.
+        bool CreateBufferView(VkDevice device, VKPtr<VkBufferView>& outBufferView, VkDeviceSize offset = 0, VkDeviceSize length = VK_WHOLE_SIZE);
+
         // Returns the device buffer object.
         inline VKDeviceBuffer& GetDeviceBuffer()
         {
@@ -104,18 +107,27 @@ class VKBuffer : public Buffer
             return stride_;
         }
 
+        // Returns a pointer to the VkBufferView object or null if there is none.
+        inline VkBufferView GetBufferView() const
+        {
+            return bufferView_.Get();
+        }
+
     private:
 
-        VKDeviceBuffer  bufferObj_;
-        VKDeviceBuffer  bufferObjStaging_;
+        VKDeviceBuffer      bufferObj_;
+        VKDeviceBuffer      bufferObjStaging_;
 
-        VkDeviceSize    size_                   = 0;
-        VkDeviceSize    mappedWriteRange_[2]    = { 0, 0 };
+        VKPtr<VkBufferView> bufferView_;
 
-        VkIndexType     indexType_              = VK_INDEX_TYPE_MAX_ENUM;
+        VkDeviceSize        size_                   = 0;
+        VkDeviceSize        mappedWriteRange_[2]    = { 0, 0 };
 
-        VkAccessFlags   accessFlags_            = 0;
-        std::uint32_t   stride_                 = 0;
+        VkIndexType         indexType_              = VK_INDEX_TYPE_MAX_ENUM;
+
+        VkAccessFlags       accessFlags_            = 0;
+        VkFormat            format_                 = VK_FORMAT_UNDEFINED;
+        std::uint32_t       stride_                 = 0;
 
 };
 
