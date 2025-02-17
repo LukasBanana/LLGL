@@ -226,8 +226,9 @@ function(set_llgl_module_properties MODULE_NAME)
             LINKER_LANGUAGE             CXX
             DEBUG_POSTFIX               "D"
             FOLDER                      "LLGL"
-            RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
+            ARCHIVE_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
             LIBRARY_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
+            RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
     )
 endfunction()
 
