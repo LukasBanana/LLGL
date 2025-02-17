@@ -23,6 +23,7 @@
 #include "VKInitializers.h"
 #include "RenderState/VKPredicateQueryHeap.h"
 #include "RenderState/VKComputePSO.h"
+#include "RenderState/VKPipelineLayoutPermutationPool.h"
 #include "Shader/VKShaderModulePool.h"
 #include "../../Platform/Debug.h"
 #include <LLGL/ImageFlags.h>
@@ -84,6 +85,7 @@ VKRenderSystem::~VKRenderSystem()
 {
     device_.WaitIdle();
     VKShaderModulePool::Get().Clear();
+    VKPipelineLayoutPermutationPool::Get().Clear();
     VKPipelineLayout::ReleaseDefault();
 }
 
@@ -312,7 +314,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     const void* initialData = nullptr;
     DynamicByteArray intermediateData;
 
-    std::uint32_t srcRowStride = extent.width * bytesPerPixel;
+    std::uint32_t srcRowStride      = extent.width * bytesPerPixel;
+    std::uint32_t srcLayerStride    = extent.height * srcRowStride;
 
     if (initialImage != nullptr)
     {
@@ -321,29 +324,44 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         /* Check if image data must be converted */
         if (!isCompressed)
         {
-            const std::uint32_t srcBytesPerPixel = static_cast<std::uint32_t>(GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1));
-            srcRowStride = (srcImageView.rowStride > 0 ? srcImageView.rowStride : extent.width * srcBytesPerPixel);
+            const std::uint32_t srcBytesPerPixel        = static_cast<std::uint32_t>(GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1));
+            const std::uint32_t srcDefaultRowStride     = (extent.width  * srcBytesPerPixel);
+            const std::uint32_t srcDefaultLayerStride   = (extent.height * srcDefaultRowStride);
+
+            srcRowStride    = std::max<std::uint32_t>(srcImageView.rowStride, srcDefaultRowStride);
+            srcLayerStride  = std::max<std::uint32_t>(srcImageView.layerStride, srcDefaultLayerStride);
 
             /* Check if amount of padding memory is small enough to justify a larger GPU buffer upload */
-            bool rowStrideNeedsConversion = (srcImageView.rowStride != 0 && srcImageView.rowStride != extent.width * srcBytesPerPixel);
-            if (rowStrideNeedsConversion)
+            bool needsStrideConversion =
+            (
+                (srcImageView.rowStride   != 0 && srcImageView.rowStride   != srcDefaultRowStride) ||
+                (srcImageView.layerStride != 0 && srcImageView.layerStride != srcDefaultLayerStride)
+            );
+            if (needsStrideConversion)
             {
                 const std::size_t dataSizeWithPadding = srcImageView.dataSize / srcBytesPerPixel * bytesPerPixel;
+                const bool isPaddingLessThan50Percent = (dataSizeWithPadding < initialDataSize + initialDataSize/2);
 
-                const bool isPaddingLessThan50Percent   = (dataSizeWithPadding < initialDataSize + initialDataSize/2);
-                const bool isRowStridePixelSizeAligned  = (srcImageView.rowStride % bytesPerPixel == 0);
+                const bool isStridePixelSizeAligned =
+                (
+                    srcImageView.rowStride > 0 &&
+                    srcImageView.rowStride % bytesPerPixel == 0 &&
+                    srcImageView.layerStride % srcImageView.rowStride == 0
+                );
 
-                if (isRowStridePixelSizeAligned && isPaddingLessThan50Percent)
-                    rowStrideNeedsConversion = false;
+                if (isStridePixelSizeAligned && isPaddingLessThan50Percent)
+                    needsStrideConversion = false;
             }
 
-            if (srcImageView.format != formatAttribs.format ||
+            if (srcImageView.format   != formatAttribs.format   ||
                 srcImageView.dataType != formatAttribs.dataType ||
-                rowStrideNeedsConversion)
+                needsStrideConversion)
             {
                 /* Convert image format (will be null if no conversion is necessary) */
                 intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, extent, LLGL_MAX_THREAD_COUNT);
-                srcRowStride = extent.width * bytesPerPixel;
+
+                srcRowStride    = extent.width * bytesPerPixel;
+                srcLayerStride  = extent.height * bytesPerPixel;
             }
         }
 
@@ -401,7 +419,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             textureVK->TransitionImageLayout(context_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, true);
 
             /* Determine row length (in pixels) for image upload with padding */
-            const std::uint32_t rowLength = (bytesPerPixel > 0 ? srcRowStride / bytesPerPixel : 0);
+            const std::uint32_t rowLength   = (bytesPerPixel > 0 ? srcRowStride   / bytesPerPixel : 0);
+            const std::uint32_t imageHeight = (bytesPerPixel > 0 ? srcLayerStride / bytesPerPixel : 0);
 
             context_.CopyBufferToImage(
                 stagingBuffer.GetVkBuffer(),
@@ -410,7 +429,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 VkOffset3D{ 0, 0, 0 },
                 textureVK->GetVkExtent(),
                 subresource,
-                rowLength
+                rowLength,
+                imageHeight
             );
 
             textureVK->TransitionImageLayout(context_, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);
