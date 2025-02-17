@@ -110,7 +110,7 @@ std::uint32_t SpirvInstruction::FindStringEndOperand(std::uint32_t operand) cons
         for (int i = 0; i < 4; ++i)
         {
             /* Check if current byte is zero */
-            if ((word & 0xff) == 0)
+            if ((word & 0xFF) == 0)
                 return operand + 1;
 
             /* Shift word to check next byte */

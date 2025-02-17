@@ -56,6 +56,7 @@ VkOffset3D              ToVkOffset(const Offset3D& offset);
 VkExtent3D              ToVkExtent(const Extent3D& extent);
 VkComponentSwizzle      ToVkComponentSwizzle(const TextureSwizzle swizzle);
 VkColorComponentFlags   ToVkColorComponentFlags(std::uint8_t colorMask);
+VkPipelineStageFlags    ToVkStageFlags(long stageFlags);
 
 Format Unmap( const VkFormat format );
 

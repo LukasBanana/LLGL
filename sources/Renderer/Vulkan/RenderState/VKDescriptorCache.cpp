@@ -6,6 +6,7 @@
  */
 
 #include "VKDescriptorCache.h"
+#include "VKPipelineLayoutPermutation.h"
 #include "VKStagingDescriptorSetPool.h"
 #include "../VKCore.h"
 #include "../Buffer/VKBuffer.h"
@@ -125,7 +126,7 @@ VkDescriptorSet VKDescriptorCache::FlushDescriptorSet(VKStagingDescriptorSetPool
 
 VkDescriptorBufferInfo* VKDescriptorCache::NextBufferInfoOrUpdateCache(VKDescriptorSetWriter& setWriter)
 {
-    auto info = setWriter.NextBufferInfo();
+    VkDescriptorBufferInfo* info = setWriter.NextBufferInfo();
     if (info == nullptr)
     {
         /* Flush descriptor set update */
@@ -138,7 +139,7 @@ VkDescriptorBufferInfo* VKDescriptorCache::NextBufferInfoOrUpdateCache(VKDescrip
 
 VkDescriptorImageInfo* VKDescriptorCache::NextImageInfoOrUpdateCache(VKDescriptorSetWriter& setWriter)
 {
-    auto info = setWriter.NextImageInfo();
+    VkDescriptorImageInfo* info = setWriter.NextImageInfo();
     if (info == nullptr)
     {
         /* Flush descriptor set update */
@@ -149,15 +150,43 @@ VkDescriptorImageInfo* VKDescriptorCache::NextImageInfoOrUpdateCache(VKDescripto
     return info;
 }
 
+VkBufferView* VKDescriptorCache::NextBufferViewOrUpdateCache(VKDescriptorSetWriter& setWriter)
+{
+    VkBufferView* view = setWriter.NextBufferView();
+    if (view == nullptr)
+    {
+        /* Flush descriptor set update */
+        setWriter.UpdateDescriptorSets(device_);
+        setWriter.Reset();
+        return setWriter.NextBufferView();
+    }
+    return view;
+}
+
 void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
-    auto bufferInfo = NextBufferInfoOrUpdateCache(setWriter);
+    VkBufferView* bufferView = nullptr;
+    VkDescriptorBufferInfo* bufferInfo = nullptr;
+
+    if (binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER ||
+        binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER)
     {
-        bufferInfo->buffer  = bufferVK.GetVkBuffer();
-        bufferInfo->offset  = 0;
-        bufferInfo->range   = VK_WHOLE_SIZE;
+        bufferView = NextBufferViewOrUpdateCache(setWriter);
+        {
+            *bufferView = bufferVK.GetBufferView();
+        }
     }
-    auto writeDesc = setWriter.NextWriteDescriptor();
+    else
+    {
+        bufferInfo = NextBufferInfoOrUpdateCache(setWriter);
+        {
+            bufferInfo->buffer  = bufferVK.GetVkBuffer();
+            bufferInfo->offset  = 0;
+            bufferInfo->range   = VK_WHOLE_SIZE;
+        }
+    }
+
+    VkWriteDescriptorSet* writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
@@ -166,7 +195,7 @@ void VKDescriptorCache::EmplaceBufferDescriptor(VKBuffer& bufferVK, const VKLayo
         writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = nullptr;
         writeDesc->pBufferInfo      = bufferInfo;
-        writeDesc->pTexelBufferView = nullptr;
+        writeDesc->pTexelBufferView = bufferView;
     }
 }
 
@@ -186,13 +215,13 @@ static VkImageLayout GetShaderReadOptimalImageLayout(VkDescriptorType descriptor
 
 void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
-    auto imageInfo = NextImageInfoOrUpdateCache(setWriter);
+    VkDescriptorImageInfo* imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler       = VK_NULL_HANDLE;
         imageInfo->imageView     = textureVK.GetVkImageView();
         imageInfo->imageLayout   = GetShaderReadOptimalImageLayout(binding.descriptorType, textureVK.GetFormat());
     }
-    auto writeDesc = setWriter.NextWriteDescriptor();
+    VkWriteDescriptorSet* writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
@@ -207,13 +236,13 @@ void VKDescriptorCache::EmplaceTextureDescriptor(VKTexture& textureVK, const VKL
 
 void VKDescriptorCache::EmplaceSamplerDescriptor(VKSampler& samplerVK, const VKLayoutBinding& binding, VKDescriptorSetWriter& setWriter)
 {
-    auto imageInfo = NextImageInfoOrUpdateCache(setWriter);
+    VkDescriptorImageInfo* imageInfo = NextImageInfoOrUpdateCache(setWriter);
     {
         imageInfo->sampler          = samplerVK.GetVkSampler();
         imageInfo->imageView        = VK_NULL_HANDLE;
         imageInfo->imageLayout      = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    auto writeDesc = setWriter.NextWriteDescriptor();
+    VkWriteDescriptorSet* writeDesc = setWriter.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSet_;
         writeDesc->dstBinding       = binding.dstBinding;
@@ -257,10 +286,10 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
     }
 
     /* Iterate over all bindings and create a new copy descriptor whenever the type changes */
-    VkDescriptorType groupDescType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
-    long groupStageFlags = 0;
-    std::uint32_t firstBinding = 0;
-    std::uint32_t numBindings = 0;
+    VkDescriptorType        groupDescType   = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+    VkPipelineStageFlags    groupStageFlags = VK_PIPELINE_STAGE_NONE;
+    std::uint32_t           firstBinding    = 0;
+    std::uint32_t           numBindings     = 0;
 
     auto FlushBindingsToCopyDesc = [this, &numBindings, &firstBinding]() -> void
     {
@@ -285,8 +314,8 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
 
     auto StartNewBindingGroup = [&firstBinding, &groupDescType, &groupStageFlags](const VKLayoutBinding& binding) -> void
     {
-        firstBinding = binding.dstBinding;
-        groupDescType = binding.descriptorType;
+        firstBinding    = binding.dstBinding;
+        groupDescType   = binding.descriptorType;
         groupStageFlags = binding.stageFlags;
     };
 
@@ -297,8 +326,8 @@ void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings
             /* Initialize first group of consecutive bindings */
             StartNewBindingGroup(binding);
         }
-        else if (groupDescType != binding.descriptorType            ||
-                 groupStageFlags != binding.stageFlags              ||
+        else if (groupDescType      != binding.descriptorType       ||
+                 groupStageFlags    != binding.stageFlags           ||
                  binding.dstBinding != firstBinding + numBindings)
         {
             /*

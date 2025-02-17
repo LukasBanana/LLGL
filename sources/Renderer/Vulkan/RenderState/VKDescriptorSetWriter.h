@@ -41,6 +41,7 @@ class VKDescriptorSetWriter
 
         VkDescriptorBufferInfo* NextBufferInfo();
         VkDescriptorImageInfo* NextImageInfo();
+        VkBufferView* NextBufferView();
 
         VkWriteDescriptorSet* NextWriteDescriptor();
         VkCopyDescriptorSet* NextCopyDescriptor();
@@ -79,6 +80,9 @@ class VKDescriptorSetWriter
 
         std::vector<VkDescriptorImageInfo>  imageInfos_;
         std::uint32_t                       numImageInfos_      = 0;
+
+        std::vector<VkBufferView>           bufferViews_;
+        std::uint32_t                       numBufferViews_     = 0;
 
         std::vector<VkWriteDescriptorSet>   writes_;
         std::vector<VkCopyDescriptorSet>    copies_;
