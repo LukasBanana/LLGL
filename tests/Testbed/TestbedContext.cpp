@@ -366,7 +366,7 @@ unsigned TestbedContext::RunAllTests()
     RUN_TEST( CombinedTexSamplers         );
 
     // Reset main renderer and run C99 tests
-    // LLGL can't run the same render system in multiple instances (confuses the context managemenr in GL backend)
+    // LLGL can't run the same render system in multiple instances (confuses the context management in GL backend)
     renderer.reset();
     RUN_C99_TEST( OffscreenC99 );
 

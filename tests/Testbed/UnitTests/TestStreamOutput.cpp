@@ -354,6 +354,7 @@ DEF_TEST( StreamOutput )
         if (actualNumPrimitives != expectedNumPrimitives)
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between number of written stream-output primitives (0x%08X) in frame [%u] and expected value (0x%08X)\n",
                 actualNumPrimitives, frame, expectedNumPrimitives
             );
@@ -372,6 +373,7 @@ DEF_TEST( StreamOutput )
         if (actualPrimitiveOverflow != expectedPrimitiveOverflow)
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between stream-output primitive overflow flag (0x%08X) in frame [%u] and expected value (0x%08X)\n",
                 actualPrimitiveOverflow, frame, expectedPrimitiveOverflow
             );

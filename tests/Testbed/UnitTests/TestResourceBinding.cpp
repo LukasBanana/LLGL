@@ -671,6 +671,7 @@ DEF_TEST( ResourceBinding )
         if (!VectorsEqual(readbackValue, expectedResults.buffers[i]))
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between buffer %d (Frame %u) [%d, %d, %d, %d] and expected value [%d, %d, %d, %d]\n",
                 i, frame,
                 readbackValue[0], readbackValue[1], readbackValue[2], readbackValue[3],
@@ -699,6 +700,7 @@ DEF_TEST( ResourceBinding )
         if (!VectorsEqual(readbackValue, expectedResults.textures[i]))
         {
             Log::Errorf(
+                Log::ColorFlags::StdError,
                 "Mismatch between texture %d (Frame %u) [%d, %d, %d, %d] and expected value [%d, %d, %d, %d]\n",
                 i, frame,
                 readbackValue[0], readbackValue[1], readbackValue[2], readbackValue[3],
