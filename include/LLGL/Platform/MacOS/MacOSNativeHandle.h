@@ -9,7 +9,9 @@
 #define LLGL_MACOS_NATIVE_HANDLE_H
 
 
+#ifdef __OBJC__
 #include <Cocoa/Cocoa.h>
+#endif
 
 
 namespace LLGL
@@ -18,7 +20,7 @@ namespace LLGL
 
 /**
 \brief MacOS native handle structure.
-\see Window::GetNativeHandle
+\see Surface::GetNativeHandle
 \see WindowDescriptor::windowContext
 */
 struct NativeHandle
@@ -30,7 +32,11 @@ struct NativeHandle
     - \b Subview if it points to an \c NSView, in which case the respective \c MTKView (Metal) or \c GLKView (OpenGL) will be \e added as a subview.
     \see WindowDescriptor::windowContext
     */
+    #ifdef __OBJC__
     NSResponder* responder;
+    #else
+    void* responder;
+    #endif
 };
 
 
