@@ -21,9 +21,7 @@
 #   else
 #       include <OpenGL/gl.h>
 #   endif
-#   ifdef __OBJC__
-#       include <LLGL/Backend/OpenGL/MacOS/MacOSNativeHandle.h>
-#   endif
+#   include <LLGL/Backend/OpenGL/MacOS/MacOSNativeHandle.h>
 #elif defined(LLGL_OS_LINUX)
 #   include <GL/gl.h>
 #   include <LLGL/Backend/OpenGL/Linux/LinuxNativeHandle.h>

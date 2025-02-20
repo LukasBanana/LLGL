@@ -8,8 +8,9 @@
 #ifndef LLGL_OPENGL_MACOS_NATIVE_HANDLE_H
 #define LLGL_OPENGL_MACOS_NATIVE_HANDLE_H
 
-
+#ifdef __OBJC__
 #include <Cocoa/Cocoa.h>
+#endif
 
 
 namespace LLGL
@@ -26,7 +27,11 @@ namespace OpenGL
 */
 struct RenderSystemNativeHandle
 {
+#ifdef __OBJC__
     NSOpenGLContext* context;
+#else
+    void* context;
+#endif
 };
 
 
