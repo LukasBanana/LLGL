@@ -306,17 +306,6 @@ VkImageLayout VKTexture::TransitionImageLayout(
     if (flushBarrier)
         context.FlushBarriers();
     return oldLayout;
-    // CRITICAL ISSUE Possible: This function doesn't update any internal state to track the new layout.
-    // Without tracking the layout internally, subsequent calls to GetVkImageLayout() may return incorrect information.
-    // This can lead to synchronization errors, validation layer errors, and potential crashes.
-    // Consider adding:
-    // if (flushBarrier) {
-    //     context.FlushBarriers();
-    //     currentLayout_ = newLayout;  // Only update layout when barriers are flushed
-    // } else {
-    //     pendingLayout_ = newLayout;  // Otherwise track that there's a pending transition
-    //     hasPendingTransition_ = true;
-    // }
 }
 
 VkImageLayout VKTexture::TransitionImageLayout(
