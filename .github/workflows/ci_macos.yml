@@ -2,7 +2,7 @@ name: Apple macOS
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
@@ -53,7 +53,7 @@ jobs:
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v4
-      if: matrix.lib == 'Static' && matrix.config == 'Release'
+      if: ${{ always() && matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release' }}
       with:
         name: LLGL-macOS-${{ matrix.config }}-x86_64
         path: |
