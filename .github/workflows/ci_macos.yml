@@ -10,6 +10,7 @@ jobs:
   build_macos:
     strategy:
       matrix:
+        ext: [Full, Limited]
         lib: [Shared, Static]
         config: [Release, Debug]
       fail-fast: false
@@ -18,12 +19,17 @@ jobs:
 
     env:
       README: ${{ github.workspace }}/README.txt
+      EXT_FULL: ${{ matrix.ext == 'Full' && 'ON' || 'OFF' }}
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
+    
+    - name: Install dependencies
+      run: >
+        brew install vulkan-tools
 
     - name: Configure CMake
       run: >
@@ -32,6 +38,7 @@ jobs:
         -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
         -DLLGL_BUILD_RENDERER_OPENGL=ON
         -DLLGL_BUILD_RENDERER_METAL=ON
+        -DLLGL_BUILD_RENDERER_VULKAN=${{ env.EXT_FULL }}
         -DLLGL_BUILD_EXAMPLES=ON
         -DLLGL_BUILD_TESTS=ON
         -DLLGL_BUILD_WRAPPER_C99=ON
@@ -46,7 +53,7 @@ jobs:
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v4
-      if: matrix.lib == 'Static' && matrix.config == 'Release'
+      if: ${{ matrix.ext == 'Full' && matrix.lib == 'Static' && matrix.config == 'Release' }}
       with:
         name: LLGL-macOS-${{ matrix.config }}-x86_64
         path: |

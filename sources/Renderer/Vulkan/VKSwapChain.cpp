@@ -393,6 +393,18 @@ void VKSwapChain::CreateGpuSurface()
     VkResult result = vkCreateAndroidSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Android surface for Vulkan swap-chain");
 
+    #elif defined LLGL_OS_MACOS
+
+    VkMacOSSurfaceCreateInfoMVK createInfo;
+    {
+        createInfo.sType    = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+        createInfo.pNext    = nullptr;
+        createInfo.flags    = 0;
+        createInfo.pView    = nativeHandle.responder;
+    }
+    VkResult result = vkCreateMacOSSurfaceMVK(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Macos surface for Vulkan swap-chain");
+
     #else
 
     #error Platform not supported for Vulkan backend
