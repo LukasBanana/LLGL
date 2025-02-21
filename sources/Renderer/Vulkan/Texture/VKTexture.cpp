@@ -237,7 +237,7 @@ void VKTexture::CreateImageView(
     VkImageSubresourceRange subresourceRange;
     {
         subresourceRange.aspectMask     = VKImageUtils::GetExclusiveVkImageAspect(viewVkFormat); //TODO: allow stencil-component to be selected
-        subresourceRange.baseMipLevel   = textureViewDesc.subresource.baseMipLevel,
+        subresourceRange.baseMipLevel   = textureViewDesc.subresource.baseMipLevel;
         subresourceRange.levelCount     = textureViewDesc.subresource.numMipLevels;
         subresourceRange.baseArrayLayer = textureViewDesc.subresource.baseArrayLayer;
         subresourceRange.layerCount     = textureViewDesc.subresource.numArrayLayers;
