@@ -29,7 +29,7 @@ jobs:
     
     - name: Install dependencies
       run: >
-        brew install vulkan-sdk
+        brew install vulkan-tools
 
     - name: Configure CMake
       run: >
