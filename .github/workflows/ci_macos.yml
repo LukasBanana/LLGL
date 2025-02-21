@@ -53,7 +53,7 @@ jobs:
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v4
-      if: ${{ always() && matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release' }}
+      if: ${{ matrix.ext == 'Full' && matrix.lib == 'Shared' && matrix.config == 'Release' }}
       with:
         name: LLGL-macOS-${{ matrix.config }}-x86_64
         path: |
