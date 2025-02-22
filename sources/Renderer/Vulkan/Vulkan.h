@@ -17,8 +17,8 @@
 #   define VK_USE_PLATFORM_XLIB_KHR
 #elif defined LLGL_OS_ANDROID
 #   define VK_USE_PLATFORM_ANDROID_KHR
-#elif defined LLGL_OS_MACOS
-#   define VK_USE_PLATFORM_MACOS_MVK
+#elif defined LLGL_OS_MACOS || defined LLGL_OS_IOS
+#   define VK_USE_PLATFORM_METAL_EXT
 #else
 #   error unsupported platform for Vulkan
 #endif

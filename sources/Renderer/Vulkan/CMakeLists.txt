@@ -53,7 +53,12 @@ set(
 )
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
-    set(FilesVK ${FilesVK} ${FilesRendererSPIRV})
+    list(APPEND FilesVK ${FilesRendererSPIRV})
+endif()
+
+if(APPLE)
+    find_source_files(FilesRendererVKPlatform OBJC "${PROJECT_SOURCE_DIR}/Platform/Apple")
+    list(APPEND FilesVK ${FilesRendererVKPlatform})
 endif()
 
 
@@ -66,6 +71,7 @@ source_group("Vulkan\\Buffer"       FILES ${FilesRendererVKBuffer})
 source_group("Vulkan\\Command"      FILES ${FilesRendererVKCommand})
 source_group("Vulkan\\Ext"          FILES ${FilesRendererVKExt})
 source_group("Vulkan\\Memory"       FILES ${FilesRendererVKMemory})
+source_group("Vulkan\\Platform"     FILES ${FilesRendererVKPlatform})
 source_group("Vulkan\\RenderState"  FILES ${FilesRendererVKRenderState})
 source_group("Vulkan\\Shader"       FILES ${FilesRendererVKShader})
 source_group("Vulkan\\Texture"      FILES ${FilesRendererVKTexture})
@@ -96,6 +102,10 @@ if(LLGL_BUILD_RENDERER_VULKAN)
             add_llgl_module(LLGL_Vulkan LLGL_BUILD_RENDERER_VULKAN "${FilesVK}")
             
             target_link_libraries(LLGL_Vulkan LLGL ${Vulkan_LIBRARY})
+
+            if(APPLE)
+                target_link_libraries(LLGL_Vulkan LLGL "-framework QuartzCore")
+            endif()
         else()
             message(FATAL_ERROR "LLGL_BUILD_RENDERER_VULKAN failed: missing Vulkan libraries")
         endif()

@@ -455,7 +455,9 @@ endif()
 if(APPLE)
     option(LLGL_MACOS_ENABLE_COREVIDEO "Enable CoreVideo framework (for refresh rate of built-in displays)" ON)
     option(LLGL_BUILD_RENDERER_METAL "Include Metal renderer project" ON)
-elseif(NOT LLGL_UWP_PLATFORM)
+endif()
+
+if(NOT LLGL_UWP_PLATFORM)
     option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
 endif()
 

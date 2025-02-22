@@ -5,6 +5,7 @@ OUTPUT_DIR="$SOURCE_DIR/build_macos"
 CLEAR_CACHE=0
 ENABLE_NULL="OFF"
 ENABLE_METAL="ON"
+ENABLE_VULKAN="OFF"
 ENABLE_OPENGL="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
@@ -37,6 +38,7 @@ print_help()
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
     echo "  --gl ...................... Include OpenGL renderer"
+    echo "  --vk ...................... Include Vulkan renderer (requires MoltenVK)"
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
     echo "  --no-wrapper .............. Exclude C99 wrapper"
@@ -68,6 +70,8 @@ for ARG in "$@"; do
         ENABLE_NULL="ON"
     elif [ "$ARG" = "--gl" ]; then
         ENABLE_OPENGL="ON"
+    elif [ "$ARG" = "--vk" ]; then
+        ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--no-examples" ]; then
         ENABLE_EXAMPLES="OFF"
     elif [ "$ARG" = "--no-tests" ]; then
@@ -95,6 +99,7 @@ if [ $LEGACY -ne 0 ]; then
     # Legacy mode only supports GL2.x
     ENABLE_OPENGL="ON"
     ENABLE_METAL="OFF"
+    ENABLE_VULKAN="OFF"
 
     PREFERRED_CLANG_VERSIONS=(15 14 13 12 11 16 17)
     KNOWN_BAD_VERSIONS=(16 17)
@@ -180,6 +185,7 @@ fi
 OPTIONS=(
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_OPENGL=$ENABLE_OPENGL
+    -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
     -DLLGL_BUILD_RENDERER_METAL=$ENABLE_METAL
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS

@@ -27,7 +27,8 @@ jobs:
       with:
         submodules: recursive
     
-    - name: Install dependencies
+    - name: Install Dependencies
+      if: matrix.ext == 'Full'
       run: >
         brew install vulkan-tools
 
@@ -53,7 +54,7 @@ jobs:
 
     - name: Upload Binaries
       uses: actions/upload-artifact@v4
-      if: ${{ matrix.ext == 'Full' && matrix.lib == 'Static' && matrix.config == 'Release' }}
+      if: matrix.ext == 'Full' && matrix.lib == 'Static' && matrix.config == 'Release'
       with:
         name: LLGL-macOS-${{ matrix.config }}-x86_64
         path: |

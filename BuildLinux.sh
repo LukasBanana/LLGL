@@ -42,7 +42,7 @@ fi
     echo "  -v, --verbose ............. Print additional information"
     echo "  --legacy .................. Use GL2.x legacy mode"
     echo "  --null .................... Include Null renderer"
-    echo "  --vulkan .................. Include Vulkan renderer"
+    echo "  --vk ...................... Include Vulkan renderer"
 if [ $PLATFORM_MSYS -eq 1 ]; then
     echo "  --d3d11 ................... Include D3D11 renderer (MSYS only) "
     echo "  --d3d12 ................... Include D3D12 renderer (MSYS only) "
@@ -80,7 +80,7 @@ for ARG in "$@"; do
         ENABLE_GL2X="ON"
     elif [ "$ARG" = "--null" ]; then
         ENABLE_NULL="ON"
-    elif [ "$ARG" = "--vulkan" ]; then
+    elif [ "$ARG" = "--vk" ] || [ "$ARG" = "--vulkan" ]; then # Accept '--vulkan' for backward compatibility
         ENABLE_VULKAN="ON"
     elif [ "$ARG" = "--d3d11" ]; then
         if [ $PLATFORM_MSYS -eq 1 ]; then

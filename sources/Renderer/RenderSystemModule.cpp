@@ -45,7 +45,9 @@ std::vector<std::string> RenderSystemModule::FindModules()
 
         #if defined(LLGL_OS_MACOS) || defined(LLGL_OS_IOS)
         "Metal",
-        #else
+        #endif
+
+        #if defined(LLGL_OS_WIN32) || defined(LLGL_OS_LINUX) || defined(LLGL_OS_MACOS) || defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
         "Vulkan",
         #endif
 

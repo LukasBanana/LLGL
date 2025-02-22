@@ -4,6 +4,7 @@ SOURCE_DIR="$(dirname $0)"
 OUTPUT_DIR="$SOURCE_DIR/build_ios"
 CLEAR_CACHE=0
 ENABLE_NULL="OFF"
+ENABLE_VULKAN="OFF"
 ENABLE_GLES3="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="OFF"
@@ -30,6 +31,7 @@ print_help()
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
     echo "  --gles .................... Include OpenGL ES 3 renderer"
+    echo "  --vk ...................... Include Vulkan renderer (requires MoltenVK)"
     echo "  --no-examples ............. Exclude example projects"
     echo "NOTES:"
     echo "  Default output directory is 'build_ios'"
@@ -61,6 +63,8 @@ for ARG in "$@"; do
             ENABLE_NULL="ON"
         elif [ "$ARG" = "--gles" ]; then
             ENABLE_GLES3="ON"
+        elif [ "$ARG" = "--vk" ]; then
+            ENABLE_VULKAN="ON"
         elif [ "$ARG" = "--no-examples" ]; then
             ENABLE_EXAMPLES="OFF"
         else
@@ -114,6 +118,7 @@ OPTIONS=(
     -DCMAKE_IOS_INSTALL_COMBINED=ON
     -DLLGL_BUILD_RENDERER_NULL=$ENABLE_NULL
     -DLLGL_BUILD_RENDERER_OPENGLES3=$ENABLE_GLES3
+    -DLLGL_BUILD_RENDERER_VULKAN=$ENABLE_VULKAN
     -DLLGL_BUILD_RENDERER_METAL=ON
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
