@@ -57,7 +57,7 @@ struct BufferDescriptor
     std::uint32_t               stride          = 0;
 
     /**
-    \brief Optioanl hardware buffer format. By default Format::Undefined.
+    \brief Optional hardware buffer format. By default Format::Undefined.
     \remarks This is used for index buffers, typed buffers (e.g. \c Buffer<uint4> and \c RWBuffer<float4> in HLSL), and byte address buffers (i.e. \c ByteAddressBuffer and \c RWByteAddressBuffer in HLSL).
     \remarks This field is ignored if the binding flags do not contain at least one of the following bits: BindFlags::IndexBuffer, BindFlags::Sampled, or BindFlags::Storage.
     \remarks If the BindFlags::IndexBuffer bit is set, this must be either Format::R16UInt, Format::R32UInt, or Format::Undefined.

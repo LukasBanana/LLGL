@@ -8,6 +8,7 @@
 #ifndef LLGL_METAL_NATIVE_HANDLE_H
 #define LLGL_METAL_NATIVE_HANDLE_H
 
+
 #ifdef __OBJC__
 #import <Metal/Metal.h>
 #endif
@@ -28,9 +29,9 @@ namespace Metal
 struct RenderSystemNativeHandle
 {
 #ifdef __OBJC__
-    id<MTLDevice> device;
+    id<MTLDevice>   device;
 #else
-    void* device;
+    void*           device;
 #endif
 };
 
@@ -41,9 +42,9 @@ struct RenderSystemNativeHandle
 struct CommandBufferNativeHandle
 {
 #ifdef __OBJC__
-    id<MTLCommandBuffer> commandBuffer;
+    id<MTLCommandBuffer>    commandBuffer;
 #else
-    void* commandBuffer;
+    void*                   commandBuffer;
 #endif
 };
 
@@ -97,13 +98,13 @@ struct ResourceNativeHandle
         id<MTLSamplerState> samplerState;
 #else
         //! Specifies the native Metal MTLBuffer object.
-        void* buffer;
+        void*               buffer;
 
         //! Specifies the native Metal MTLTexture object.
-        void* texture;
+        void*               texture;
 
         //! Specifies the native Metal MTLSamplerState object.
-        void* samplerState;
+        void*               samplerState;
 #endif
     };
 };

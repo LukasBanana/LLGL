@@ -32,11 +32,11 @@ struct NativeHandle
     - \b Subview if it points to an \c NSView, in which case the respective \c MTKView (Metal) or \c GLKView (OpenGL) will be \e added as a subview.
     \see WindowDescriptor::windowContext
     */
-    #ifdef __OBJC__
-    NSResponder* responder;
-    #else
-    void* responder;
-    #endif
+#ifdef __OBJC__
+    NSResponder*    responder;
+#else
+    void*           responder;
+#endif
 };
 
 
