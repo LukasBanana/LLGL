@@ -144,7 +144,7 @@ class LLGL_EXPORT Color<T, 3u>
         */
         T& operator [] (std::size_t component)
         {   
-            LLGL_VERIFY((component < Color<T, 3>::components), OutOfRange);
+            LLGL_VERIFY_EXT(OutOfRange, (component < Color<T, 3>::components));
             return *((&r) + component);
         }
 
@@ -155,7 +155,7 @@ class LLGL_EXPORT Color<T, 3u>
         */
         const T& operator [] (std::size_t component) const
         {
-            LLGL_VERIFY((component < Color<T, 3>::components), OutOfRange);
+            LLGL_VERIFY_EXT(OutOfRange, (component < Color<T, 3>::components));
             return *((&r) + component);
         }
 

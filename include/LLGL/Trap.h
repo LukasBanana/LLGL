@@ -17,11 +17,15 @@
 \remarks LLGL only throws exceptions if it was built with \c LLGL_ENABLE_EXCEPTIONS.
 \see LLGL::Trap
 */
-#define LLGL_VERIFY(CONDITION, EXCEPTION)                                                           \
+#define LLGL_VERIFY_EXT(EXCEPTION, CONDITION)                                                       \
     if (!(CONDITION))                                                                               \
     {                                                                                               \
         LLGL::Trap(LLGL::Exception::EXCEPTION, __FUNCTION__, "assertion failed: %s", #CONDITION);   \
     }
+
+//! Shortcut for LLGL_VERIFY_EXT(RuntimeError, CONDITION).
+#define LLGL_VERIFY(CONDITION) \
+    LLGL_VERIFY_EXT(RuntimeError, CONDITION)
 
 
 namespace LLGL

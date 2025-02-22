@@ -201,7 +201,7 @@ class LLGL_EXPORT Color
         */
         T& operator [] (std::size_t component)
         {
-            LLGL_VERIFY(component < N, OutOfRange);
+            LLGL_VERIFY_EXT(OutOfRange, component < N);
             return v_[component];
         }
 
@@ -212,7 +212,7 @@ class LLGL_EXPORT Color
         */
         const T& operator [] (std::size_t component) const
         {
-            LLGL_VERIFY(component < N, OutOfRange);
+            LLGL_VERIFY_EXT(OutOfRange, component < N);
             return v_[component];
         }
 

@@ -98,7 +98,7 @@ const LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window>(mySurface);
 template <typename T>
 inline const T& CastTo(const Interface& obj)
 {
-    LLGL_VERIFY(IsInstanceOf<T>(obj), BadCast);
+    LLGL_VERIFY_EXT(BadCast, IsInstanceOf<T>(obj));
     return static_cast<const T&>(obj);
 }
 
@@ -117,7 +117,7 @@ LLGL::Window& myWindow = LLGL::CastTo<LLGL::Window&>(mySurface);
 template <typename T>
 inline T& CastTo(Interface& obj)
 {
-    LLGL_VERIFY(IsInstanceOf<T>(obj), BadCast);
+    LLGL_VERIFY_EXT(BadCast, IsInstanceOf<T>(obj));
     return static_cast<T&>(obj);
 }
 
