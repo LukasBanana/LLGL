@@ -441,6 +441,8 @@ bool D3D12RenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
         nativeHandleD3D->factory->AddRef();
         nativeHandleD3D->device = device_.GetNative();
         nativeHandleD3D->device->AddRef();
+        nativeHandleD3D->commandQueue = commandQueue_->GetNative();
+        nativeHandleD3D->commandQueue->AddRef();
         return true;
     }
     return false;

@@ -33,10 +33,13 @@ struct RenderSystemNativeHandle
     For LLGL to retrieve the adapter information, this factory must be of type \c IDXGIFactory4.
     \see https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_4/nf-dxgi1_4-idxgifactory4-enumadapterbyluid#remarks
     */
-    IDXGIFactory4*  factory;
+    IDXGIFactory4*      factory;
 
     //! COM pointer to the native Direct3D device.
-    ID3D12Device*   device;
+    ID3D12Device*       device;
+
+    //! COM pointer to the native Direct3D command queue.
+    ID3D12CommandQueue* commandQueue;
 };
 
 /**
