@@ -212,6 +212,16 @@ MTLRenderPassDescriptor* MTCommandContext::CopyRenderPassDesc()
     return (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
 }
 
+MTLRenderPassDescriptor* MTCommandContext::RetainRenderPassDescOrNull()
+{
+    if (contextState_.isInsideRenderPass && renderPassDesc_ != nullptr)
+    {
+        [renderPassDesc_ retain];
+        return renderPassDesc_;
+    }
+    return nullptr;
+}
+
 void MTCommandContext::DispatchThreads1D(
     id<MTLComputeCommandEncoder>    computeEncoder,
     id<MTLComputePipelineState>     computePSO,

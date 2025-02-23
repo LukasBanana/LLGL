@@ -87,6 +87,9 @@ class MTCommandContext
         // Returns a copy of the current render pass descriptor or null if there is none.
         MTLRenderPassDescriptor* CopyRenderPassDesc();
 
+        // Returns a retained pointer to the current render pass descriptor or null if the context is outside a render pass.
+        MTLRenderPassDescriptor* RetainRenderPassDescOrNull();
+
         // Dispatches the specified amount of local threads in as large threadgroups as possible.
         void DispatchThreads1D(
             id<MTLComputeCommandEncoder>    computeEncoder,

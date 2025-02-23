@@ -1057,8 +1057,29 @@ bool MTDirectCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nati
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(Metal::CommandBufferNativeHandle))
     {
         auto* nativeHandleMT = static_cast<Metal::CommandBufferNativeHandle*>(nativeHandle);
+
         nativeHandleMT->commandBuffer = cmdBuffer_;
         [nativeHandleMT->commandBuffer retain];
+
+        if (context_.GetRenderEncoder() != nil)
+        {
+            nativeHandleMT->commandEncoder = context_.GetRenderEncoder();
+            [nativeHandleMT->commandEncoder retain];
+        }
+        else if (context_.GetComputeEncoder() != nil)
+        {
+            nativeHandleMT->commandEncoder = context_.GetComputeEncoder();
+            [nativeHandleMT->commandEncoder retain];
+        }
+        else if (context_.GetBlitEncoder() != nil)
+        {
+            nativeHandleMT->commandEncoder = context_.GetBlitEncoder();
+            [nativeHandleMT->commandEncoder retain];
+        }
+        else
+            nativeHandleMT->commandEncoder = nil;
+
+        nativeHandleMT->renderPassDesc = context_.RetainRenderPassDescOrNull();
         return true;
     }
     return false;

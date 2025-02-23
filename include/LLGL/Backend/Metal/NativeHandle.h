@@ -28,11 +28,11 @@ namespace Metal
 */
 struct RenderSystemNativeHandle
 {
-#ifdef __OBJC__
+    #ifdef __OBJC__
     id<MTLDevice>   device;
-#else
+    #else
     void*           device;
-#endif
+    #endif
 };
 
 /**
@@ -41,11 +41,37 @@ struct RenderSystemNativeHandle
 */
 struct CommandBufferNativeHandle
 {
-#ifdef __OBJC__
-    id<MTLCommandBuffer>    commandBuffer;
-#else
-    void*                   commandBuffer;
-#endif
+    /**
+    \brief Specifies the native MTLCommandBuffer that is currently used.
+    \remarks This command buffer is invalidated after each command recording.
+    */
+    #ifdef __OBJC__
+    id<MTLCommandBuffer>        commandBuffer;
+    #else
+    void*                       commandBuffer;
+    #endif
+
+    /**
+    \brief Specifies the native MTLCommandEncoder that is currently bound for command encoding.
+    \remarks This should be cast to the respective subtype, such as MTLRenderCommandEncoder
+    if CommandBuffer::GetNativeHandle is called inside a render-pass for instance.
+    If no command encoder is currently bound, this field is null.
+    */
+    #ifdef __OBJC__
+    id<MTLCommandEncoder>       commandEncoder;
+    #else
+    void*                       commandEncoder;
+    #endif
+
+    /**
+    \brief Specifies the native MTLRenderPassDescriptor that is currently used.
+    \remarks If CommandBuffer::GetNativeHandle was called outside a render pass, this field will be null.
+    */
+    #ifdef __OBJC__
+    MTLRenderPassDescriptor*    renderPassDesc;
+    #else
+    void*                       renderPassDesc;
+    #endif
 };
 
 /**
@@ -87,25 +113,26 @@ struct ResourceNativeHandle
     
     union
     {
-#ifdef __OBJC__
         //! Specifies the native Metal MTLBuffer object.
+        #ifdef __OBJC__
         id<MTLBuffer>       buffer;
-
-        //! Specifies the native Metal MTLTexture object.
-        id<MTLTexture>      texture;
-
-        //! Specifies the native Metal MTLSamplerState object.
-        id<MTLSamplerState> samplerState;
-#else
-        //! Specifies the native Metal MTLBuffer object.
+        #else
         void*               buffer;
+        #endif
 
         //! Specifies the native Metal MTLTexture object.
+        #ifdef __OBJC__
+        id<MTLTexture>      texture;
+        #else
         void*               texture;
+        #endif
 
         //! Specifies the native Metal MTLSamplerState object.
+        #ifdef __OBJC__
+        id<MTLSamplerState> samplerState;
+        #else
         void*               samplerState;
-#endif
+        #endif
     };
 };
 

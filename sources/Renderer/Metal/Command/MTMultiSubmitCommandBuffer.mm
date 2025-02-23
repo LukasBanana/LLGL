@@ -920,7 +920,7 @@ void MTMultiSubmitCommandBuffer::DoNativeCommand(const void* nativeCommand, std:
 
 bool MTMultiSubmitCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
-    return (nativeHandle == nullptr || nativeHandleSize == 0);
+    return false; // dummy - command is only allowed in immediate command buffer
 }
 
 
