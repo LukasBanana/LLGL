@@ -417,16 +417,7 @@ void DbgCommandBuffer::CopyTextureFromFramebuffer(
         AssertInsideRenderPass();
         ValidateBindTextureFlags(dstTextureDbg, BindFlags::CopyDst);
         ValidateTextureRegion(dstTextureDbg, dstRegion);
-        if (dstRegion.subresource.numArrayLayers > 1)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with number of array layers greater than 1");
-        if (dstRegion.extent.depth != 1)
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot copy texture from framebuffer with a depth extent of %u", dstRegion.extent.depth);
-        if (bindings_.swapChain != nullptr)
-            bindings_.swapChain->NotifyFramebufferUsed();
-        else
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "copy texture from framebuffer is only supported for SwapChain framebuffers");
-        if (DbgRenderTarget* renderTargetDbg = bindings_.renderTarget)
-            ValidateRenderTargetRange(*renderTargetDbg, srcOffset, Extent2D{ dstRegion.extent.width, dstRegion.extent.height });
+        ValidateTextureRegionForFramebuffer(dstRegion, srcOffset);
     }
 
     LLGL_DBG_COMMAND_EXT(
@@ -2165,18 +2156,12 @@ void DbgCommandBuffer::ValidateBindTextureFlags(DbgTexture& textureDbg, long bin
 void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const TextureRegion& region)
 {
     /* Validate MIP-map range */
-    if (region.subresource.numMipLevels == 0)
+    if (region.subresource.numMipLevels != 1)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid texture region with MIP-map count of 0"
-        );
-    }
-    else if (region.subresource.numMipLevels > 1)
-    {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "invalid texture region with MIP-map count greater than 1"
+            "invalid MIP-map count for texture region: expected 1, but %u was specified",
+            region.subresource.numMipLevels
         );
     }
     else if (region.subresource.baseMipLevel + region.subresource.numMipLevels > textureDbg.mipLevels)
@@ -2255,6 +2240,51 @@ void DbgCommandBuffer::ValidateTextureRegion(DbgTexture& textureDbg, const Textu
             );
         }
     }
+}
+
+void DbgCommandBuffer::ValidateTextureRegionForFramebuffer(const TextureRegion& region, const Offset2D& offset)
+{
+    if (region.subresource.numArrayLayers != 1)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot copy texture from framebuffer with number of array layers: expected 1, but %u was specified",
+            region.subresource.numArrayLayers
+        );
+    }
+    if (region.extent.depth != 1)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "cannot copy texture from framebuffer with a depth extent: expected 1, but %u was specified",
+            region.extent.depth
+        );
+    }
+
+    if (bindings_.swapChain != nullptr)
+    {
+        bindings_.swapChain->NotifyFramebufferUsed();
+        const Extent2D framebufferExtent = bindings_.swapChain->GetResolution();
+
+        if (offset.x < 0 ||
+            offset.y < 0 ||
+            region.extent.width  + static_cast<std::uint32_t>(offset.x) > framebufferExtent.width ||
+            region.extent.height + static_cast<std::uint32_t>(offset.y) > framebufferExtent.height)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::UndefinedBehavior,
+                "copy texture from framebuffer outside of bounds is undefined behavior: framebuffer=(%u x %u), region=(left=%d, top=%d, right=%d, bottom=%d)",
+                framebufferExtent.width, framebufferExtent.height, offset.x, offset.y,
+                static_cast<std::int32_t>(region.extent.width) + offset.x,
+                static_cast<std::int32_t>(region.extent.height) + offset.y
+            );
+        }
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "copy texture from framebuffer is only supported for SwapChain framebuffers");
+
+    if (DbgRenderTarget* renderTargetDbg = bindings_.renderTarget)
+        ValidateRenderTargetRange(*renderTargetDbg, offset, Extent2D{ region.extent.width, region.extent.height });
 }
 
 void DbgCommandBuffer::ValidateIndexType(const Format format)
@@ -2489,8 +2519,8 @@ const BindingDescriptor* DbgCommandBuffer::GetAndValidateResourceDescFromPipelin
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "invalid resource type in pipeline for descriptor[%u]: %s specified but expected %s",
-            descriptor, ToString(resource.GetResourceType()), ToString(bindingDesc->type)
+            "invalid resource type in pipeline for descriptor[%u]: expected %s, but %s was specified",
+            descriptor, ToString(bindingDesc->type), ToString(resource.GetResourceType())
         );
         return nullptr;
     }
