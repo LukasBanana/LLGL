@@ -749,6 +749,8 @@ bool VKRenderSystem::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
         nativeHandleVK->instance        = instance_.Get();
         nativeHandleVK->physicalDevice  = physicalDevice_.GetVkPhysicalDevice();
         nativeHandleVK->device          = device_.GetVkDevice();
+        nativeHandleVK->queue           = device_.GetVkQueue();
+        nativeHandleVK->queueFamily     = device_.GetQueueFamilyIndices().graphicsFamily;
         return true;
     }
     return false;

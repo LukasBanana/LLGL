@@ -56,7 +56,7 @@ class LLGL_EXPORT RenderingDebugger
         */
         void SetTimeRecording(bool enabled);
 
-        //! \retrun Returns whether time recording is enabled.
+        //! Returns whether time recording is enabled.
         bool GetTimeRecording() const;
 
         /**
