@@ -45,7 +45,7 @@ NullSwapChain::NullSwapChain(
     colorFormat_        { ChooseColorFormat(desc.colorBits)                          },
     depthStencilFormat_ { ChooseDepthStencilFormat(desc.depthBits, desc.stencilBits) }
 {
-    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
     if (desc.debugName != nullptr)
         SetDebugName(desc.debugName);

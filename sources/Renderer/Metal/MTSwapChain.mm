@@ -59,7 +59,7 @@ MTSwapChain::MTSwapChain(
     renderPass_ { device, desc }
 {
     /* Initialize surface for MetalKit view */
-    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
     /* Allocate and initialize MetalKit view */
     view_ = AllocMTKViewAndInitWithSurface(device, GetSurface());

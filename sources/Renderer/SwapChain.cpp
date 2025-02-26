@@ -144,11 +144,36 @@ Surface& SwapChain::GetSurface() const
  * ======= Protected: =======
  */
 
+static long GetSwapChainSurfaceFlags(bool fullscreen, bool resizable)
+{
+    long flags = 0;
+
+    #ifdef LLGL_MOBILE_PLATFORM
+
+    if (fullscreen)
+        flags |= CanvasFlags::Borderless;
+
+    #else
+
+    flags |= WindowFlags::DisableSizeScaling | WindowFlags::DisableClearOnResize;
+
+    if (fullscreen)
+        flags |= WindowFlags::Borderless;
+    else
+        flags |= WindowFlags::Centered;
+
+    if (resizable)
+        flags |= WindowFlags::Resizable;
+
+    #endif
+
+    return flags;
+}
+
 void SwapChain::SetOrCreateSurface(
     const std::shared_ptr<Surface>& surface,
     const UTF8String&               title,
-    const Extent2D&                 size,
-    bool                            fullscreen,
+    const SwapChainDescriptor&      swapChainDesc,
     const void*                     windowContext,
     std::size_t                     windowContextSize)
 {
@@ -165,7 +190,7 @@ void SwapChain::SetOrCreateSurface(
         CanvasDescriptor canvasDesc;
         {
             canvasDesc.title = title;
-            canvasDesc.flags = (fullscreen ? CanvasFlags::Borderless : 0);
+            canvasDesc.flags = GetSwapChainSurfaceFlags(swapChainDesc.fullscreen, swapChainDesc.resizable);
         }
         pimpl_->surface = Canvas::Create(canvasDesc);
 
@@ -175,8 +200,8 @@ void SwapChain::SetOrCreateSurface(
         WindowDescriptor windowDesc;
         {
             windowDesc.title                = title;
-            windowDesc.size                 = size;
-            windowDesc.flags                = WindowFlags::DisableSizeScaling | (fullscreen ? WindowFlags::Borderless : WindowFlags::Centered);
+            windowDesc.size                 = swapChainDesc.resolution;
+            windowDesc.flags                = GetSwapChainSurfaceFlags(swapChainDesc.fullscreen, swapChainDesc.resizable);
             windowDesc.windowContext        = windowContext;
             windowDesc.windowContextSize    = windowContextSize;
         }
@@ -189,7 +214,7 @@ void SwapChain::SetOrCreateSurface(
     pimpl_->resolution = pimpl_->surface->GetContentSize();
 
     /* Switch to fullscreen mode before storing new video mode */
-    if (fullscreen)
+    if (swapChainDesc.fullscreen)
         SetDisplayFullscreenMode(pimpl_->resolution);
 }
 

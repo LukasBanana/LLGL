@@ -61,12 +61,12 @@ GLSwapChain::GLSwapChain(
     /* Set up surface for the swap-chain and pass native context handle */
     NativeHandle windowContext = {};
     ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
-    SetOrCreateSurface(surface, UTF8String{}, desc.resolution, desc.fullscreen, &windowContext, sizeof(windowContext));
+    SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
 
     #else
 
     /* Setup surface for the swap-chain */
-    SetOrCreateSurface(surface, UTF8String{}, desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, UTF8String{}, desc);
 
     #endif
 

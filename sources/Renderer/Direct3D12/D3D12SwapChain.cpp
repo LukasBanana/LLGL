@@ -47,7 +47,7 @@ D3D12SwapChain::D3D12SwapChain(
     commandQueue_ = LLGL_CAST(D3D12CommandQueue*, renderSystem_.GetCommandQueue());
 
     /* Setup surface for the swap-chain */
-    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(renderSystem.GetRendererInfo()), desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(renderSystem.GetRendererInfo()), desc);
 
     /* Create device resources and window dependent resource */
     CreateDescriptorHeaps(renderSystem.GetDevice(), desc.samples);

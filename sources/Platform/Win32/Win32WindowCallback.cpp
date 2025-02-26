@@ -354,7 +354,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             if (Win32Window* window = GetWindowFromUserData(wnd))
             {
                 if (window->SkipMsgERASEBKGND())
-                    return 0;
+                    return 1;
             }
         }
         break;

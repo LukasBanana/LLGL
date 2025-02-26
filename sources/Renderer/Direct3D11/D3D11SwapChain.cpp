@@ -35,7 +35,7 @@ D3D11SwapChain::D3D11SwapChain(
     depthBufferLocator_  { ResourceType::Texture, BindFlags::DepthStencilAttachment   }
 {
     /* Setup surface for the swap-chain */
-    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(renderSystem.GetRendererInfo()), desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(renderSystem.GetRendererInfo()), desc);
 
     /* Create D3D objects */
     CreateSwapChain(factory, GetResolution(), desc.samples, desc.swapBuffers);

@@ -115,8 +115,19 @@ struct SwapChainDescriptor
     */
     std::uint32_t   swapBuffers     = 2;
 
-    //! Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    /**
+    \brief Specifies whether to create the swap-chain initially in fullscreen mode or windowed mode otherwise.
+    \see SwapChain::ResizeBuffers
+    \see ResizeBuffersFlags::FullscreenMode
+    */
     bool            fullscreen      = false;
+
+    /**
+    \brief Specifies whether to create the default surface for the swap-chain with the resizable attribute.
+    \remarks If a custom surface is specified, this field is ignored.
+    \see WindowFlags::Resizable
+    */
+    bool            resizable       = false;
 };
 
 

@@ -148,7 +148,8 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 Win32Window::Win32Window(const WindowDescriptor& desc) :
-    wnd_ { CreateWindowHandle(desc) }
+    wnd_   { CreateWindowHandle(desc) },
+    flags_ { desc.flags               }
 {
 }
 
@@ -368,6 +369,9 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
             flags
         );
     }
+
+    /* Store new flags */
+    flags_ = desc.flags;
 }
 
 

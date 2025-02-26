@@ -214,9 +214,7 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
         If this is null, a new surface is created for this swap-chain.
         \param[in] title Specifies the surface title. This is only used if \c surface is null.
-        \param[in] size Specifies the surface content size. This is only used if \c surface is null.
-        Otherwise, the size is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
-        \param[in] fullscreen Specifies whether to put the surface into fullscreen mode.
+        \param[in] swapChainDesc Specifies the swap-chain descriptor. Ues the resolution for the surface content size, fullscreen, and resiable flags.
         \param[in] windowContext Optional pointer to a NativeHandle structure. This is only used for desktop platforms.
         \param[in] windowContextSize Size (in bytes) of the native handle \c windowContext points to. This must be equal to \c sizeof(LLGL::NativeHandle).
         \see WindowDescriptor::windowContext
@@ -226,8 +224,7 @@ class LLGL_EXPORT SwapChain : public RenderTarget
         void SetOrCreateSurface(
             const std::shared_ptr<Surface>& surface,
             const UTF8String&               title,
-            const Extent2D&                 size,
-            bool                            fullscreen,
+            const SwapChainDescriptor&      swapChainDesc,
             const void*                     windowContext       = nullptr,
             std::size_t                     windowContextSize   = 0
         );

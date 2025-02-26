@@ -537,6 +537,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
         #else
         swapChainDesc.samples       = std::min<std::uint32_t>(g_Config.samples, renderer->GetRenderingCaps().limits.maxColorBufferSamples);
         #endif
+        swapChainDesc.resizable     = true;
     }
     swapChain = renderer->CreateSwapChain(swapChainDesc);
 
@@ -609,11 +610,6 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
 
     auto rendererName = renderer->GetName();
     window.SetTitle(title + " ( " + rendererName + " )");
-
-    // Change window descriptor to allow resizing
-    LLGL::WindowDescriptor wndDesc = window.GetDesc();
-    wndDesc.flags |= LLGL::WindowFlags::Resizable | LLGL::WindowFlags::DisableClearOnResize;
-    window.SetDesc(wndDesc);
 
     // Add window resize listener
     window.AddEventListener(std::make_shared<WindowEventHandler>(*this, swapChain, projection));

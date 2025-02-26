@@ -79,7 +79,7 @@ VKSwapChain::VKSwapChain(
                                NullVkFence(device_),
                                NullVkFence(device_)            }
 {
-    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc.resolution, desc.fullscreen);
+    SetOrCreateSurface(surface, SwapChain::BuildDefaultSurfaceTitle(rendererInfo), desc);
 
     CreatePresentSemaphoresAndFences();
     CreateGpuSurface();
