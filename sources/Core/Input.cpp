@@ -101,6 +101,7 @@ struct Input::Pimpl
 
     Offset2D        mousePosition;
     float           motionVector[2]         = { 0.0f, 0.0f };
+    Surface*        firstMotionResponder    = nullptr;
 
     int             wheelMotion             = 0;
     unsigned        anyKeyCount             = 0;
@@ -118,6 +119,7 @@ struct Input::Pimpl
         wheelMotion = 0;
         motionVector[0] = ZeroIntegralPart(motionVector[0]);
         motionVector[1] = ZeroIntegralPart(motionVector[1]);
+        firstMotionResponder = nullptr;
 
         keyDownTracker.Reset(keyDown);
         keyDownRepeatedTracker.Reset(keyDownRepeated);
@@ -180,10 +182,14 @@ struct Input::Pimpl
         keyPressed[idx] = false;
     }
 
-    void OnMotion(float dx, float dy)
+    void OnMotion(Surface* sender, float dx, float dy)
     {
-        motionVector[0] += dx;
-        motionVector[1] += dy;
+        if (firstMotionResponder == nullptr || firstMotionResponder == sender)
+        {
+            motionVector[0] += dx;
+            motionVector[1] += dy;
+            firstMotionResponder = sender;
+        }
     }
 };
 
@@ -247,9 +253,9 @@ class Input::WindowEventListener final : public Window::EventListener
             data_.mousePosition = position;
         }
 
-        void OnGlobalMotion(Window& /*sender*/, const Offset2D& motion) override
+        void OnGlobalMotion(Window& sender, const Offset2D& motion) override
         {
-            data_.OnMotion(static_cast<float>(motion.x), static_cast<float>(motion.y));
+            data_.OnMotion(&sender, static_cast<float>(motion.x), static_cast<float>(motion.y));
         }
 
         void OnLostFocus(Window& /*sender*/) override
@@ -286,7 +292,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
             data_.mousePosition = position;
         }
 
-        void OnPanGesture(Canvas& /*sender*/, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action) override
+        void OnPanGesture(Canvas& sender, const Offset2D& position, std::uint32_t numTouches, float dx, float dy, EventAction action) override
         {
             const bool interpretAsLButton = (numTouches == 1);
             data_.mousePosition = position;
@@ -298,7 +304,7 @@ class Input::CanvasEventListener final : public Canvas::EventListener
                     break;
 
                 case EventAction::Changed:
-                    data_.OnMotion(dx, dy);
+                    data_.OnMotion(&sender, dx, dy);
                     break;
 
                 case EventAction::Ended:

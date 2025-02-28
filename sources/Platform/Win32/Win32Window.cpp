@@ -374,6 +374,11 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
     flags_ = desc.flags;
 }
 
+Win32Window* Win32Window::GetFromUserData(HWND wnd)
+{
+    return reinterpret_cast<Win32Window*>(GetWindowLongPtr(wnd, GWLP_USERDATA));
+}
+
 
 /*
  * ======= Private: =======

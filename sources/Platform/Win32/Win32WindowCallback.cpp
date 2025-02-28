@@ -7,6 +7,7 @@
 
 #include "Win32WindowCallback.h"
 #include "Win32Window.h"
+#include "Win32RawInputRegistry.h"
 #include "MapKey.h"
 #include <atomic>
 
@@ -17,21 +18,7 @@ namespace LLGL
 {
 
 
-#ifndef HID_USAGE_PAGE_GENERIC
-#   define HID_USAGE_PAGE_GENERIC   ((USHORT)0x01)
-#endif
-
-#ifndef HID_USAGE_GENERIC_MOUSE
-#   define HID_USAGE_GENERIC_MOUSE  ((USHORT)0x02)
-#endif
-
-
 static constexpr UINT_PTR g_win32UpdateTimerID = 1;
-
-static Win32Window* GetWindowFromUserData(HWND wnd)
-{
-    return reinterpret_cast<Win32Window*>(GetWindowLongPtr(wnd, GWLP_USERDATA));
-}
 
 static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 {
@@ -45,7 +32,7 @@ static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bool /*isSysKey*/)
 {
     /* Get window object from window handle */
-    if (Win32Window* window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = Win32Window::GetFromUserData(wnd))
     {
         /* Extract key code */
         const DWORD keyCodeSys      = static_cast<DWORD>(wParam);
@@ -99,7 +86,7 @@ static void ReleaseMouseCapture()
 static void CaptureMouseButton(HWND wnd, Key keyCode, bool isDoubleClick = false)
 {
     /* Get window object from window handle */
-    if (Win32Window* window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = Win32Window::GetFromUserData(wnd))
     {
         /* Post key events and capture mouse */
         window->PostKeyDown(keyCode);
@@ -115,7 +102,7 @@ static void CaptureMouseButton(HWND wnd, Key keyCode, bool isDoubleClick = false
 static void ReleaseMouseButton(HWND wnd, Key keyCode)
 {
     /* Get window object from window handle */
-    if (Win32Window* window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = Win32Window::GetFromUserData(wnd))
     {
         /* Post key event and release mouse capture */
         window->PostKeyUp(keyCode);
@@ -134,7 +121,7 @@ static void ReleaseMouseButton(HWND wnd, Key keyCode)
 static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
 {
     /* Get window object from window handle */
-    if (Win32Window* window = GetWindowFromUserData(wnd))
+    if (Win32Window* window = Win32Window::GetFromUserData(wnd))
     {
         /* Extract mouse position from event parameter */
         int x = GET_X_LPARAM(lParam);
@@ -142,35 +129,6 @@ static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
 
         /* Post local mouse motion event */
         window->PostLocalMotion({ x, y });
-    }
-}
-
-static void PostGlobalMouseMotion(HWND wnd, LPARAM lParam)
-{
-    /* Get window object from window handle */
-    if (Win32Window* window = GetWindowFromUserData(wnd))
-    {
-        RAWINPUT raw;
-        UINT rawSize = sizeof(raw);
-
-        GetRawInputData(
-            reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT,
-            &raw, &rawSize, sizeof(RAWINPUTHEADER)
-        );
-
-        if (raw.header.dwType == RIM_TYPEMOUSE)
-        {
-            const RAWMOUSE& mouse = raw.data.mouse;
-
-            if (mouse.usFlags == MOUSE_MOVE_RELATIVE)
-            {
-                /* Post global mouse motion event */
-                int dx = mouse.lLastX;
-                int dy = mouse.lLastY;
-
-                window->PostGlobalMotion({ dx, dy });
-            }
-        }
     }
 }
 
@@ -185,22 +143,20 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_CREATE:
         {
-            /* Register raw input device to capture high-resolution mouse motion events */
-            RAWINPUTDEVICE device;
+            Win32RawInputRegistry::Get().Register(wnd);
+        }
+        break;
 
-            device.usUsagePage  = HID_USAGE_PAGE_GENERIC;
-            device.usUsage      = HID_USAGE_GENERIC_MOUSE;
-            device.dwFlags      = RIDEV_INPUTSINK;
-            device.hwndTarget   = wnd;
-
-            RegisterRawInputDevices(&device, 1, sizeof(device));
+        case WM_DESTROY:
+        {
+            Win32RawInputRegistry::Get().Unregister(wnd);
         }
         break;
 
         case WM_SIZE:
         {
             /* Post resize event to window */
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
             {
                 WORD width = LOWORD(lParam);
                 WORD height = HIWORD(lParam);
@@ -212,14 +168,14 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_CLOSE:
         {
             /* Post close event to window */
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 window->PostQuit();
         }
         break;
 
         case WM_SETFOCUS:
         {
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 window->PostGetFocus();
         }
         break;
@@ -227,7 +183,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_KILLFOCUS:
         {
             ReleaseMouseCapture();
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 window->PostLostFocus();
         }
         break;
@@ -260,7 +216,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_CHAR:
         {
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 window->PostChar(static_cast<wchar_t>(wParam));
         }
         return 0;
@@ -329,7 +285,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_MOUSEWHEEL:
         {
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 window->PostWheelMotion(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
         }
         return 0;
@@ -342,7 +298,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_INPUT:
         {
-            PostGlobalMouseMotion(wnd, lParam);
+            Win32RawInputRegistry::Get().Post(lParam);
         }
         return 0;
 
@@ -351,7 +307,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_ERASEBKGND:
         {
             /* Do not erase background to avoid flickering when user resizes the window */
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
             {
                 if (window->SkipMsgERASEBKGND())
                     return 1;
@@ -362,7 +318,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_ENTERSIZEMOVE:
         {
             /* Start timer to receive updates during moving and resizing the window */
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 SetTimer(wnd, g_win32UpdateTimerID, USER_TIMER_MINIMUM, nullptr);
         }
         break;
@@ -370,7 +326,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_EXITSIZEMOVE:
         {
             /* Stop previously started timer */
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
                 KillTimer(wnd, g_win32UpdateTimerID);
         }
         break;
@@ -378,7 +334,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_TIMER:
         {
             /* Post update so client can redraw the window during moving/resizing a window */
-            if (Win32Window* window = GetWindowFromUserData(wnd))
+            if (Win32Window* window = Win32Window::GetFromUserData(wnd))
             {
                 const UINT_PTR timerID = static_cast<UINT_PTR>(wParam);
                 if (timerID == g_win32UpdateTimerID)

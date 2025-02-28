@@ -35,6 +35,10 @@ class Win32Window final : public Window
             return ((flags_ & WindowFlags::DisableClearOnResize) != 0);
         }
 
+    public:
+
+        static Win32Window* GetFromUserData(HWND wnd);
+
     private:
 
         HWND CreateWindowHandle(const WindowDescriptor& desc);

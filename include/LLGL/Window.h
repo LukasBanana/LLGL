@@ -74,10 +74,20 @@ class LLGL_EXPORT Window : public Surface
                 //! Sent when the mouse wheel has been moved on the sender window.
                 virtual void OnWheelMotion(Window& sender, int motion);
 
-                //! Sent when the mouse has been moved on the sender window.
+                /**
+                \brief Sent when the mouse has been moved on the sender window.
+                \param[in] sender Window which sent this event.
+                \param[in] position Mouse positon relative to the window's client area.
+                */
                 virtual void OnLocalMotion(Window& sender, const Offset2D& position);
 
-                //! Sent when the global mouse position has changed. This is a raw input and independent of the screen resolution.
+                /**
+                \brief Sent when any mouse motion was detected.
+                \remarks This is a raw input and independent of the screen resolution.
+                \param[in] sender Window which sent this event.
+                It is also a global event, i.e. each event listener receives the same message and is independent of the sender.
+                \param[in] motion Relative motion vector of the mouse.
+                */
                 virtual void OnGlobalMotion(Window& sender, const Offset2D& motion);
 
                 //! Sent when the window has been resized.
