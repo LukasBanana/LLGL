@@ -233,20 +233,23 @@ bool Display::SetCursorPosition(const Offset2D& position)
 
 Offset2D Display::GetCursorPosition()
 {
-    /*
-    Return 'hot spot' of current system cursor as primary cursor position.
-    This will return a value whether the cursor is hidden or visible.
-    */
-    if (NSCursor* cursor = [NSCursor currentSystemCursor])
+    /* Get visible screen size (without dock and menu bar) */
+    NSScreen* screen = [NSScreen mainScreen];
+
+    NSSize frameSize = [screen frame].size;
+    NSRect visibleFrame = [screen visibleFrame];
+
+    /* Calculate menu bar height */
+    CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
+
+    /* Return mouse position in LLGL's coordinate system */
+    NSPoint mousePosition = [NSEvent mouseLocation];
+
+    return Offset2D
     {
-        NSPoint hotSpot = [cursor hotSpot];
-        return Offset2D
-        {
-            static_cast<std::int32_t>(hotSpot.x),
-            static_cast<std::int32_t>(hotSpot.y)
-        };
-    }
-    return { 0, 0 };
+        static_cast<std::int32_t>(mousePosition.x),
+        static_cast<std::int32_t>(frameSize.height - menuBarHeight - mousePosition.y)
+    };
 }
 
 

@@ -76,10 +76,10 @@ bool Surface::ProcessEvents()
         if (NSWindow* wnd = [event window])
         {
             /* Process this event for the respective MacOSWindow if its delegate is of type MacOSWindowDelegate */
-            MacOSWindowDelegate* wndDelegate = [wnd delegate];
+            id<NSWindowDelegate> wndDelegate = [wnd delegate];
             if ([wndDelegate isKindOfClass:[MacOSWindowDelegate class]])
             {
-                MacOSWindow* platformWindow = [wndDelegate windowInstance];
+                MacOSWindow* platformWindow = [(MacOSWindowDelegate*)wndDelegate windowInstance];
                 platformWindow->ProcessEvent(event);
             }
         }
