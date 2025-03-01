@@ -140,7 +140,7 @@ bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
             if (*fullscreen)
             {
                 windowDesc.flags |= WindowFlags::Borderless;
-                windowDesc.position     = { 0, 0 };
+                windowDesc.position = { 0, 0 };
             }
             else
             {
@@ -157,14 +157,14 @@ bool Window::AdaptForVideoMode(Extent2D* resolution, bool* fullscreen)
 
 Display* Window::FindResidentDisplay() const
 {
-    const auto winPos   = GetPosition();
-    const auto winSize  = GetSize();
-    const auto winArea  = static_cast<int>(winSize.width * winSize.height);
+    const Offset2D  winPos  = GetPosition();
+    const Extent2D  winSize = GetSize();
+    const int       winArea = static_cast<int>(winSize.width * winSize.height);
 
-    for (auto displayList = Display::GetList(); auto display = *displayList; ++displayList)
+    for (auto displayList = Display::GetList(); Display* display = *displayList; ++displayList)
     {
-        auto offset = display->GetOffset();
-        auto extent = display->GetDisplayMode().resolution;
+        Offset2D offset = display->GetOffset();
+        Extent2D extent = display->GetDisplayMode().resolution;
 
         int scrX = static_cast<int>(extent.width);
         int scrY = static_cast<int>(extent.height);

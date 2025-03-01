@@ -309,8 +309,10 @@ private:
                     case ViewModes::MixedSolidAndWireframe:
                     {
                         const LLGL::Extent2D halfResolution{ resolution.width/2, resolution.height };
+
                         commands->SetScissor(LLGL::Scissor{ LLGL::Offset2D{}, halfResolution });
                         DrawTessellatedModel(false);
+
                         commands->SetScissor(LLGL::Scissor{ LLGL::Offset2D{ static_cast<std::int32_t>(resolution.width/2), 0 }, halfResolution });
                         DrawTessellatedModel(true);
                     }

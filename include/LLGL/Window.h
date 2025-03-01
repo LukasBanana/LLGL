@@ -54,8 +54,9 @@ class LLGL_EXPORT Window : public Surface
                 \brief Sent when the window is about to quit.
                 \param[in] sender Specifies the sender of this event.
                 \param[out] veto Specifies whether to cancel the quit event.
-                If set to true, the call to \c PostQuit does not change the state \c sender, only the event listeners get informed.
+                If set to true, the call to \c PostQuit does not change the state of \c sender, only the event listeners get informed.
                 If no event listener sets this parameter to true, \c sender is set into the 'Quit' state.
+                \see Window::HasQuit
                 */
                 virtual void OnQuit(Window& sender, bool& veto);
 
@@ -84,8 +85,9 @@ class LLGL_EXPORT Window : public Surface
                 /**
                 \brief Sent when any mouse motion was detected.
                 \remarks This is a raw input and independent of the screen resolution.
-                \param[in] sender Window which sent this event.
                 It is also a global event, i.e. each event listener receives the same message and is independent of the sender.
+                The utility class LLGL::Input, for example, only responds to the first sender to receive this event.
+                \param[in] sender Window which sent this event.
                 \param[in] motion Relative motion vector of the mouse.
                 */
                 virtual void OnGlobalMotion(Window& sender, const Offset2D& motion);

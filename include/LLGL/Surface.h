@@ -78,7 +78,7 @@ class LLGL_EXPORT Surface : public Interface
         virtual bool AdaptForVideoMode(Extent2D* resolution, bool* fullscreen) = 0;
 
         /**
-        \brief Returns the Display interface where this surface is resident in.
+        \brief Returns the Display interface in which this surface is resident.
         \remarks A surface is considered resident in a display if more than the half of its client area is visible in that display.
         \return Pointer to the Display in which this surface is resident or null if this surface is not resident in any display.
         */
