@@ -266,6 +266,15 @@ static UINT GetD3DBufferSize(const BufferDescriptor& desc)
         return size;
 }
 
+static UINT GetD3DBufferStride(const BufferDescriptor& desc)
+{
+    if (!desc.vertexAttribs.empty())
+        return desc.vertexAttribs.front().stride;
+    if (desc.stride > 0)
+        return desc.stride;
+    return (GetFormatAttribs(desc.format).bitSize / 8);
+}
+
 void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Initialize native buffer descriptor */
@@ -300,7 +309,7 @@ void D3D11Buffer::CreateGpuBuffer(ID3D11Device* device, const BufferDescriptor& 
 
     /* Store buffer creation attributes */
     size_   = descD3D.ByteWidth;
-    stride_ = (desc.vertexAttribs.empty() ? 0 : desc.vertexAttribs.front().stride);
+    stride_ = GetD3DBufferStride(desc);
     format_ = DXTypes::ToDXGIFormat(desc.format);
     usage_  = descD3D.Usage;
 }
