@@ -47,8 +47,8 @@ namespace LLGL
 
 D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemDesc)
 {
-    const bool debugDevice      = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice   ) != 0);
-    const bool softwareDevice   = ((renderSystemDesc.flags & RenderSystemFlags::SoftwareDevice) != 0);
+    const bool isDebugDevice    = ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice   ) != 0);
+    const bool isSoftwareDevice = ((renderSystemDesc.flags & RenderSystemFlags::SoftwareDevice) != 0);
 
     if (auto* customNativeHandle = GetRendererNativeHandle<Direct3D11::RenderSystemNativeHandle>(renderSystemDesc))
     {
@@ -64,13 +64,13 @@ D3D11RenderSystem::D3D11RenderSystem(const RenderSystemDescriptor& renderSystemD
         ComPtr<IDXGIAdapter> preferredAdatper;
         QueryVideoAdapters(renderSystemDesc.flags, preferredAdatper);
 
-        HRESULT hr = CreateDevice(preferredAdatper.Get(), debugDevice, softwareDevice);
+        HRESULT hr = CreateDevice(preferredAdatper.Get(), isDebugDevice, isSoftwareDevice);
         DXThrowIfFailed(hr, "failed to create D3D11 device");
         QueryDXDeviceVersion();
     }
 
     #if LLGL_DEBUG
-    if (debugDevice)
+    if (isDebugDevice)
         liveObjectReporter_ = std::unique_ptr<LiveObjectReporter>(new LiveObjectReporter());
     #endif
 
@@ -651,7 +651,7 @@ void D3D11RenderSystem::QueryVideoAdapters(long flags, ComPtr<IDXGIAdapter>& out
     videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get(), flags, outPreferredAdatper.ReleaseAndGetAddressOf());
 }
 
-HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice, bool softwareDevice)
+HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool isDebugDevice, bool isSoftwareDevice)
 {
     /* Find list of feature levels to select from, and statically determine maximal feature level */
     const D3D_FEATURE_LEVEL featureLevels[] =
@@ -669,16 +669,16 @@ HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice,
 
     HRESULT hr = S_OK;
 
-    if (debugDevice)
+    if (isDebugDevice)
     {
         /* Try to create device with debug layer (only supported if Windows 8.1 SDK is installed) */
-        hr = CreateDeviceWithFlags(adapter, featureLevels, softwareDevice, D3D11_CREATE_DEVICE_DEBUG);
+        hr = CreateDeviceWithFlags(adapter, featureLevels, isSoftwareDevice, D3D11_CREATE_DEVICE_DEBUG);
         if (SUCCEEDED(hr))
             return hr;
     }
 
     /* Create device without debug layer */
-    hr = CreateDeviceWithFlags(adapter, featureLevels, softwareDevice);
+    hr = CreateDeviceWithFlags(adapter, featureLevels, isSoftwareDevice);
     if (SUCCEEDED(hr))
         return hr;
 
@@ -687,20 +687,20 @@ HRESULT D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter, bool debugDevice,
     {
         /* Update video adapter info with default adapter */
         videoAdatperInfo_ = DXGetVideoAdapterInfo(factory_.Get());
-        hr = CreateDeviceWithFlags(nullptr, featureLevels, softwareDevice);
+        hr = CreateDeviceWithFlags(nullptr, featureLevels, isSoftwareDevice);
         if (SUCCEEDED(hr))
             return hr;
 
-        if (softwareDevice)
+        if (isSoftwareDevice)
             hr = CreateDeviceWithFlags(nullptr, featureLevels);
     }
 
     return hr;
 }
 
-HRESULT D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool softwareDevice, UINT flags)
+HRESULT D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool isSoftwareDevice, UINT flags)
 {
-    if (softwareDevice)
+    if (isSoftwareDevice)
     {
         /* If a software device is explicitly requested, don't attempt to create other devices */
         HRESULT hr = CreateDeviceWithFlagsAndDriverType(adapter, D3D_DRIVER_TYPE_REFERENCE, featureLevels, flags);

@@ -56,7 +56,7 @@ class DbgRenderSystem final : public RenderSystem
 
     private:
 
-        void ValidateBindFlags(long flags);
+        void ValidateBindFlags(long flags, Format format = Format::Undefined, ResourceType resourceType = ResourceType::Undefined);
         void ValidateCPUAccessFlags(long flags, long validFlags, const char* contextDesc = nullptr);
         void ValidateMiscFlags(long flags, long validFlags, const char* contextDesc = nullptr);
         void ValidateResourceCPUAccess(long cpuAccessFlags, const CPUAccess access, const char* resourceTypeName);

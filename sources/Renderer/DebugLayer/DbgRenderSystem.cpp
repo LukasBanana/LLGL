@@ -579,7 +579,7 @@ bool DbgRenderSystem::QueryRendererDetails(RendererInfo* outInfo, RenderingCapab
     return true;
 }
 
-void DbgRenderSystem::ValidateBindFlags(long flags)
+void DbgRenderSystem::ValidateBindFlags(long flags, Format format, ResourceType resourceType)
 {
     constexpr long bufferOnlyFlags =
     (
@@ -621,13 +621,39 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
         LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown bind flags specified");
 
     /* Validate combination of flags */
-    if ((flags & bufferOnlyFlags) != 0 && (flags & textureOnlyFlags) != 0)
+    if (resourceType != ResourceType::Undefined)
+    {
+        if ((flags & bufferOnlyFlags) != 0)
+        {
+            if (resourceType != ResourceType::Buffer)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use buffer-only bind flags for %s source type",
+                    ToString(resourceType)
+                );
+            }
+        }
+        if ((flags & textureOnlyFlags) != 0)
+        {
+            if (resourceType != ResourceType::Texture)
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use texture-only bind flags for %s source type",
+                    ToString(resourceType)
+                );
+            }
+        }
+    }
+    else if ((flags & bufferOnlyFlags) != 0 && (flags & textureOnlyFlags) != 0)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "cannot combine binding flags that are exclusive for buffers and textures"
         );
     }
+
     if ((flags & BindFlags::ColorAttachment) != 0 && (flags & BindFlags::DepthStencilAttachment) != 0)
     {
         LLGL_DBG_ERROR(
@@ -635,6 +661,32 @@ void DbgRenderSystem::ValidateBindFlags(long flags)
             "resources cannot have color attachment and depth-stencil attachment binding flags at the same time"
         );
     }
+    else if (format != Format::Undefined && resourceType == ResourceType::Texture)
+    {
+        if ((flags & BindFlags::ColorAttachment) != 0)
+        {
+            if (!IsColorFormat(format))
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use bind flag LLGL::BindFlags::ColorAttachment for texture with non-color format (%s)",
+                    ToString(format)
+                );
+            }
+        }
+        else if ((flags & BindFlags::DepthStencilAttachment) != 0)
+        {
+            if (!IsDepthOrStencilFormat(format))
+            {
+                LLGL_DBG_ERROR(
+                    ErrorType::InvalidArgument,
+                    "cannot use bind flag LLGL::BindFlags::DepthStencilAttachment for texture with non-depth-stencil format (%s)",
+                    ToString(format)
+                );
+            }
+        }
+    }
+
     if ((flags & BindFlags::ConstantBuffer) != 0 && (flags & cbufferExcludedFlags) != 0)
     {
         LLGL_DBG_ERROR(
@@ -706,7 +758,7 @@ void DbgRenderSystem::ValidateCommandBufferDesc(const CommandBufferDescriptor& c
 void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& bufferDesc, std::uint32_t* formatSizeOut)
 {
     /* Validate flags */
-    ValidateBindFlags(bufferDesc.bindFlags);
+    ValidateBindFlags(bufferDesc.bindFlags, bufferDesc.format, ResourceType::Buffer);
     ValidateCPUAccessFlags(bufferDesc.cpuAccessFlags, CPUAccessFlags::ReadWrite, "buffer");
     ValidateMiscFlags(bufferDesc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::NoInitialData), "buffer");
 
@@ -955,7 +1007,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& textureDesc, 
     ValidateTextureFormatSupported(textureDesc.format);
     ValidateTextureDescMipLevels(textureDesc);
     ValidateArrayTextureLayers(textureDesc.type, textureDesc.arrayLayers);
-    ValidateBindFlags(textureDesc.bindFlags);
+    ValidateBindFlags(textureDesc.bindFlags, textureDesc.format, ResourceType::Texture);
     ValidateMiscFlags(textureDesc.miscFlags, (MiscFlags::DynamicUsage | MiscFlags::FixedSamples | MiscFlags::GenerateMips | MiscFlags::NoInitialData), "texture");
 
     if (initialImage != nullptr)

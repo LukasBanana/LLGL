@@ -878,11 +878,12 @@ const (
 
 type RenderSystemFlags int
 const (
-    RenderSystemDebugDevice    = (1 << 0)
-    RenderSystemPreferNVIDIA   = (1 << 1)
-    RenderSystemPreferAMD      = (1 << 2)
-    RenderSystemPreferIntel    = (1 << 3)
-    RenderSystemSoftwareDevice = (1 << 4)
+    RenderSystemDebugDevice       = (1 << 0)
+    RenderSystemPreferNVIDIA      = (1 << 1)
+    RenderSystemPreferAMD         = (1 << 2)
+    RenderSystemPreferIntel       = (1 << 3)
+    RenderSystemSoftwareDevice    = (1 << 4)
+    RenderSystemDebugBreakOnError = (1 << 5)
 )
 
 type BindFlags int
@@ -1420,6 +1421,7 @@ type SwapChainDescriptor struct {
     Samples     uint32   /* = 1 */
     SwapBuffers uint32   /* = 2 */
     Fullscreen  bool     /* = false */
+    Resizable   bool     /* = false */
 }
 
 type TextureSwizzleRGBA struct {

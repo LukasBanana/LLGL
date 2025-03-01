@@ -64,6 +64,13 @@ class GLRenderSystem final : public RenderSystem
         GLRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~GLRenderSystem();
 
+    public:
+
+        inline bool IsBreakOnErrorEnabled() const
+        {
+            return isBreakOnErrorEnabled_;
+        }
+
     private:
 
         #include <LLGL/Backend/RenderSystem.Internal.inl>
@@ -88,7 +95,8 @@ class GLRenderSystem final : public RenderSystem
 
         GLContextManager                        contextMngr_;
         GLCommandQueue                          commandQueue_;
-        bool                                    debugContext_   = false;
+        bool                                    debugContext_           = false;
+        bool                                    isBreakOnErrorEnabled_  = false;
 
         HWObjectContainer<GLSwapChain>          swapChains_;
         HWObjectContainer<GLCommandBuffer>      commandBuffers_;

@@ -141,6 +141,9 @@ RenderSystemPtr RenderSystem::Load(const RenderSystemDescriptor& renderSystemDes
                 #if LLGL_ENABLE_DEBUG_LAYER
 
                 /* Create debug layer render system */
+                if ((renderSystemDesc.flags & RenderSystemFlags::DebugBreakOnError) != 0)
+                    renderSystemDesc.debugger->SetBreakOnError(true);
+
                 renderSystem = RenderSystemPtr{ new DbgRenderSystem{ std::move(renderSystem), renderSystemDesc.debugger } };
 
                 #else

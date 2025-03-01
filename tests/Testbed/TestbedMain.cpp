@@ -18,7 +18,7 @@
 
 using namespace LLGL;
 
-static const char* k_knownSingleCharArgs = "cdfghpstv";
+static const char* k_knownSingleCharArgs = "bcdfghpstv";
 
 static unsigned RunRendererIndependentTests(int argc, char* argv[])
 {

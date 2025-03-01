@@ -34,8 +34,8 @@ LLGL_EXPORT bool operator != (const DisplayMode& lhs, const DisplayMode& rhs)
 
 LLGL_EXPORT bool CompareSWO(const DisplayMode& lhs, const DisplayMode& rhs)
 {
-    const auto lhsNumPixels = lhs.resolution.width * lhs.resolution.height;
-    const auto rhsNumPixels = rhs.resolution.width * rhs.resolution.height;
+    const std::uint32_t lhsNumPixels = lhs.resolution.width * lhs.resolution.height;
+    const std::uint32_t rhsNumPixels = rhs.resolution.width * rhs.resolution.height;
 
     if (lhsNumPixels < rhsNumPixels)
         return true;
@@ -53,7 +53,7 @@ static std::uint32_t ComputeGCD(std::uint32_t a, std::uint32_t b)
 {
     while (b != 0)
     {
-        auto r = a % b;
+        const std::uint32_t r = a % b;
         a = b;
         b = r;
     }
@@ -62,8 +62,8 @@ static std::uint32_t ComputeGCD(std::uint32_t a, std::uint32_t b)
 
 LLGL_EXPORT Extent2D GetExtentRatio(const Extent2D& extent)
 {
-    auto gcd = ComputeGCD(extent.width, extent.height);
-    return { extent.width / gcd, extent.height / gcd };
+    const std::uint32_t gcd = ComputeGCD(extent.width, extent.height);
+    return Extent2D{ extent.width / gcd, extent.height / gcd };
 }
 
 

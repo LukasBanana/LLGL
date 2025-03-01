@@ -47,6 +47,9 @@ LLGL_EXPORT void DebugPrintf(const char* format, ...);
 // Returns a string containing the callstack. The formatting is platform dependent but each line always ends with a newline character '\n'.
 LLGL_EXPORT UTF8String DebugStackTrace(unsigned firstStackFrame = 0, unsigned maxNumStackFrames = 64);
 
+// Breaks the debugger due to an error detected by the debug validation layers.
+LLGL_EXPORT void DebugBreakOnError();
+
 
 } // /namespace LLGL
 

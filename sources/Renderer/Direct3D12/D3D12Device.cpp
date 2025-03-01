@@ -8,6 +8,9 @@
 #include "D3D12Device.h"
 #include "../DXCommon/DXCore.h"
 #include "../../Core/MacroUtils.h"
+#include "../../Core/Exception.h"
+#include "../../Platform/Debug.h"
+#include <LLGL/Platform/Platform.h>
 #include <LLGL/Utils/ForRange.h>
 
 
@@ -17,7 +20,7 @@ namespace LLGL
 
 /* ----- Device creation ----- */
 
-HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool isDebugLayerEnabled, IDXGIAdapter* adapter)
+HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, long flags, IDXGIAdapter* adapter)
 {
     HRESULT hr = S_OK;
 
@@ -30,11 +33,8 @@ HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureL
             /* Store selected feature level */
             featureLevel_ = level;
 
-            if (isDebugLayerEnabled)
-            {
-                if (SUCCEEDED(device_.As(&infoQueue_)))
-                    DenyLowSeverityWarnings();
-            }
+            if ((flags & RenderSystemFlags::DebugDevice) != 0)
+                QueryInfoQueueInterface((flags & RenderSystemFlags::DebugBreakOnError) != 0);
 
             break;
         }
@@ -43,7 +43,7 @@ HRESULT D3D12Device::CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureL
     return hr;
 }
 
-HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice)
+HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice, long flags)
 {
     if (sharedD3DDevice == nullptr)
         return E_INVALIDARG;
@@ -82,8 +82,8 @@ HRESULT D3D12Device::ShareDXDevice(ID3D12Device* sharedD3DDevice)
     device_ = sharedD3DDevice;
 
     /* Query info queue if debugging is enabled */
-    if (SUCCEEDED(device_.As(&infoQueue_)))
-        DenyLowSeverityWarnings();
+    if ((flags & RenderSystemFlags::DebugDevice) != 0)
+        QueryInfoQueueInterface((flags & RenderSystemFlags::DebugBreakOnError) != 0);
 
     return S_OK;
 }
@@ -172,6 +172,40 @@ DXGI_SAMPLE_DESC D3D12Device::FindSuitableSampleDesc(std::size_t numFormats, con
 /*
  * ======= Private: =======
  */
+
+static void LLGL_API_STDCALL D3D12DebugMessageCallback(D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR description, void* /*userData*/)
+{
+    if (severity == D3D12_MESSAGE_SEVERITY_ERROR)
+    {
+        DebugPrintf(
+            "D3D12 debug validation [D3D12_MESSAGE_SEVERITY_ERROR]: %s (ID=%d)",
+            description, static_cast<int>(id)
+        );
+
+        DebugBreakOnError();
+    }
+}
+
+void D3D12Device::QueryInfoQueueInterface(bool isBreakOnErrorEnabled)
+{
+    if (SUCCEEDED(device_.As(&infoQueue_)))
+    {
+        DenyLowSeverityWarnings();
+
+        #if LLGL_D3D12_ENABLE_FEATURELEVEL >= 1
+        if (isBreakOnErrorEnabled)
+        {
+            /* Register callback in info queue that breaks the debugger when an error is detected */
+            ComPtr<ID3D12InfoQueue1> infoQueue1;
+            if (SUCCEEDED(infoQueue_.As(&infoQueue1)))
+            {
+                DWORD callbackCookie = 0;
+                (void)infoQueue1->RegisterMessageCallback(D3D12DebugMessageCallback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, this, &callbackCookie);
+            }
+        }
+        #endif
+    }
+}
 
 void D3D12Device::DenyLowSeverityWarnings()
 {

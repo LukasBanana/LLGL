@@ -101,6 +101,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
     // Check for debug options
     const char* debugValue              = "";
     const bool  isDebugMode             = (HasProgramArgument(argc, argv, "-d", &debugValue) || HasProgramArgument(argc, argv, "--debug", &debugValue));
+    const bool  isBreakOnError          = (HasProgramArgument(argc, argv, "-b") || HasProgramArgument(argc, argv, "--break"));
     const bool  isRefMode               = HasProgramArgument(argc, argv, "--ref");
     const bool  isCpuAndGpuDebugMode    = (*debugValue == '\0' || ::strcmp(debugValue, "gpu+cpu") == 0 || ::strcmp(debugValue, "cpu+gpu") == 0);
     const bool  isCpuDebugMode          = (isCpuAndGpuDebugMode || ::strcmp(debugValue, "cpu") == 0);
@@ -119,7 +120,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
         if (isDebugMode)
         {
             if (isGpuDebugMode)
-                rendererDesc.flags = RenderSystemFlags::DebugDevice;
+                rendererDesc.flags |= RenderSystemFlags::DebugDevice;
             if (isCpuDebugMode)
                 rendererDesc.debugger = &debugger;
         }
@@ -133,6 +134,9 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
             rendererDesc.flags |= RenderSystemFlags::PreferIntel;
         if (preferNVIDIA)
             rendererDesc.flags |= RenderSystemFlags::PreferNVIDIA;
+
+        if (isBreakOnError)
+            rendererDesc.flags |= RenderSystemFlags::DebugBreakOnError;
 
         if (::strcmp(moduleName, "OpenGL") == 0)
         {

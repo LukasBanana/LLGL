@@ -450,7 +450,7 @@ DECL_GLPROC(PFNGLSTENCILOPSEPARATEPROC,                             glStencilOpS
 //NOTE: "KHR" suffix is required for OpenGL ES
 DECL_GLPROC(PFNGLDEBUGMESSAGECONTROLPROC,                           glDebugMessageControl,                          void,           (GLenum, GLenum, GLenum, GLsizei, const GLuint*, GLboolean));
 DECL_GLPROC(PFNGLDEBUGMESSAGEINSERTPROC,                            glDebugMessageInsert,                           void,           (GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*));
-DECL_GLPROC(PFNGLDEBUGMESSAGECALLBACKPROC,                          glDebugMessageCallback,                         void,           (GLDEBUGPROC,                                                     const void*));
+DECL_GLPROC(PFNGLDEBUGMESSAGECALLBACKPROC,                          glDebugMessageCallback,                         void,           (GLDEBUGPROC, const void*));
 DECL_GLPROC(PFNGLGETDEBUGMESSAGELOGPROC,                            glGetDebugMessageLog,                           GLuint,         (GLuint, GLsizei, GLenum*, GLenum*, GLuint*, GLenum*, GLsizei*, GLchar*));
 //DECL_GLPROC(PFNGLGETPOINTERVPROC,                                   glGetPointerv,                                  void,           (GLenum, GLvoid**)); // only glGetPointervEXT version???
 DECL_GLPROC(PFNGLPUSHDEBUGGROUPPROC,                                glPushDebugGroup,                               void,           (GLenum, GLuint, GLsizei, const GLchar*));

@@ -35,9 +35,21 @@ namespace LLGL
 {
 
 
+static bool IsDebugLayerEnabled(long flags)
+{
+    return ((flags & RenderSystemFlags::DebugDevice) != 0);
+}
+
+static bool IsDebugBreakOnErrorEnabled(long flags)
+{
+    constexpr long requiredFlags = (RenderSystemFlags::DebugDevice | RenderSystemFlags::DebugBreakOnError);
+    return ((flags & requiredFlags) == requiredFlags);
+}
+
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    instance_          { vkDestroyInstance                                                },
-    debugLayerEnabled_ { ((renderSystemDesc.flags & RenderSystemFlags::DebugDevice) != 0) }
+    instance_              { vkDestroyInstance                                        },
+    isDebugLayerEnabled_   { LLGL::IsDebugLayerEnabled(renderSystemDesc.flags)        },
+    isBreakOnErrorEnabled_ { LLGL::IsDebugBreakOnErrorEnabled(renderSystemDesc.flags) }
 {
     /* Extract optional renderer configuartion */
     auto* rendererConfigVK = GetRendererConfiguration<RendererConfigurationVulkan>(renderSystemDesc);
@@ -49,7 +61,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     {
         /* Store weak references to native handles */
         instance_ = VKPtr<VkInstance>{ customNativeHandle->instance };
-        if (debugLayerEnabled_)
+        if (isDebugLayerEnabled_)
             CreateDebugReportCallback();
         VKLoadInstanceExtensions(instance_);
         if (!PickPhysicalDevice(preferredDeviceFlags, customNativeHandle->physicalDevice))
@@ -60,7 +72,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     {
         /* Create Vulkan instance and device objects */
         CreateInstance(rendererConfigVK);
-        if (debugLayerEnabled_)
+        if (isDebugLayerEnabled_)
             CreateDebugReportCallback();
         VKLoadInstanceExtensions(instance_);
         if (!PickPhysicalDevice(preferredDeviceFlags))
@@ -792,7 +804,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
         (
             extSupport == VKExtSupport::Required ||
             extSupport == VKExtSupport::Optional ||
-            (this->debugLayerEnabled_ && extSupport == VKExtSupport::DebugOnly)
+            (this->isDebugLayerEnabled_ && extSupport == VKExtSupport::DebugOnly)
         );
     };
 
@@ -849,7 +861,7 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
     VkValidationFeaturesEXT validationFeatures = {};
 
     /* Enable GPU-assisted validation if debug layer is enabled and Vulkan 1.1 or later is supported */
-    if (debugLayerEnabled_ && instanceVersion >= VK_API_VERSION_1_1)
+    if (isDebugLayerEnabled_ && instanceVersion >= VK_API_VERSION_1_1)
     {
         validationFeatures.sType                            = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
         validationFeatures.enabledValidationFeatureCount    = LLGL_ARRAY_LENGTH(validationFeaturesEnabled);
@@ -867,14 +879,22 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
 static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     VkDebugReportFlagsEXT       flags,
     VkDebugReportObjectTypeEXT  objectType,
-    uint64_t                    object,
-    size_t                      location,
-    int32_t                     messageCode,
+    std::uint64_t               object,
+    std::size_t                 location,
+    std::int32_t                messageCode,
     const char*                 layerPrefix,
     const char*                 message,
     void*                       userData)
 {
     DebugPuts(message);
+
+    if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0)
+    {
+        VKRenderSystem* renderSystemVK = static_cast<VKRenderSystem*>(userData);
+        if (renderSystemVK->IsBreakOnErrorEnabled())
+            DebugBreakOnError();
+    }
+
     return VK_FALSE;
 }
 
@@ -919,7 +939,7 @@ void VKRenderSystem::CreateDebugReportCallback()
         createInfo.pNext        = nullptr;
         createInfo.flags        = flags;
         createInfo.pfnCallback  = VKDebugCallback;
-        createInfo.pUserData    = reinterpret_cast<void*>(this);
+        createInfo.pUserData    = this;
     }
     debugReportCallback_ = VKPtr<VkDebugReportCallbackEXT>{ instance_, DestroyDebugReportCallbackEXT };
     auto result = CreateDebugReportCallbackEXT(instance_, &createInfo, nullptr, debugReportCallback_.ReleaseAndGetAddressOf());
@@ -969,7 +989,7 @@ bool VKRenderSystem::IsLayerRequired(const char* name, const RendererConfigurati
         }
     }
 
-    if (debugLayerEnabled_)
+    if (isDebugLayerEnabled_)
     {
         if (::strcmp(name, VK_LAYER_KHRONOS_VALIDATION_NAME) == 0)
             return true;

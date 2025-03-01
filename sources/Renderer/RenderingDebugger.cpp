@@ -10,6 +10,7 @@
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Container/Strings.h>
 #include "../Core/StringUtils.h"
+#include "../Platform/Debug.h"
 #include <map>
 
 
@@ -41,9 +42,10 @@ struct RenderingDebugger::Pimpl
     UTF8StringMap<Message>  errors;
     UTF8StringMap<Message>  warnings;
     FrameProfile            frameProfile;
-    const char*             source          = "";
-    const char*             groupName       = "";
-    bool                    isTimeRecording = false;
+    const char*             source                  = "";
+    const char*             groupName               = "";
+    bool                    isTimeRecording         = false;
+    bool                    isBreakOnErrorEnabled   = false;
 };
 
 
@@ -75,6 +77,16 @@ void RenderingDebugger::SetTimeRecording(bool enabled)
 bool RenderingDebugger::GetTimeRecording() const
 {
     return pimpl_->isTimeRecording;
+}
+
+void RenderingDebugger::SetBreakOnError(bool enable)
+{
+    pimpl_->isBreakOnErrorEnabled = enable;
+}
+
+bool RenderingDebugger::GetBreakOnError() const
+{
+    return pimpl_->isBreakOnErrorEnabled;
 }
 
 void RenderingDebugger::Errorf(const ErrorType type, const char* format, ...)
@@ -219,6 +231,9 @@ void RenderingDebugger::OnError(ErrorType type, Message& message)
     Log::Errorf(Log::ColorFlags::StdError, "error");
     Log::Errorf(" (%s): %s\n", ToString(type), str.c_str());
     message.Block();
+
+    if (GetBreakOnError())
+        DebugBreakOnError();
 }
 
 void RenderingDebugger::OnWarning(WarningType type, Message& message)

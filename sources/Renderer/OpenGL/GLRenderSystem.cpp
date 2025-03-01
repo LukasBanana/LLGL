@@ -609,10 +609,15 @@ void GLRenderSystem::RegisterNewGLContext(GLContext& /*context*/, const GLPixelF
 
 #if LLGL_GLEXT_DEBUG
 
+static bool IsGLDebugLayerError(GLenum type)
+{
+    return (type == GL_DEBUG_TYPE_ERROR || type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR);
+}
+
 #ifdef LLGL_OPENGL
-void APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
+void APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userData)
 #else
-void GL_APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* /*userParam*/)
+void GL_APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userData)
 #endif
 {
     /* Forward callback to log */
@@ -620,6 +625,13 @@ void GL_APIENTRY GLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum s
         "glDebugMessageCallback (%s, %s, %s): %s",
         GLDebugSourceToStr(source), GLDebugTypeToStr(type), GLDebugSeverityToStr(severity), message
     );
+
+    if (IsGLDebugLayerError(type))
+    {
+        const GLRenderSystem* renderSystemGL = static_cast<const GLRenderSystem*>(userData);
+        if (renderSystemGL->IsBreakOnErrorEnabled())
+            DebugBreakOnError();
+    }
 }
 
 #endif // /LLGL_GLEXT_DEBUG
@@ -640,7 +652,7 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
             /* Enable GL debug message callback */
             GLStateManager::Get().Enable(GLState::DebugOutput);
             GLStateManager::Get().Enable(GLState::DebugOutputSynchronous);
-            glDebugMessageCallback(GLDebugCallback, nullptr);
+            glDebugMessageCallback(GLDebugCallback, this);
 
             /* Filter out spam from debug callback */
             static constexpr GLDebugMessageMetaData debugMessageMetaData[] =
@@ -649,7 +661,7 @@ void GLRenderSystem::EnableDebugCallback(bool enable)
                 { GL_DEBUG_SOURCE_APPLICATION, GL_DONT_CARE,        GL_DONT_CARE                   },
             };
 
-            for (const auto& metaData : debugMessageMetaData)
+            for (const GLDebugMessageMetaData& metaData : debugMessageMetaData)
                 glDebugMessageControl(metaData.source, metaData.type, metaData.severity, 0, nullptr, GL_FALSE);
         }
         else

@@ -925,11 +925,12 @@ LLGLColorMaskFlags;
 
 typedef enum LLGLRenderSystemFlags
 {
-    LLGLRenderSystemDebugDevice    = (1 << 0),
-    LLGLRenderSystemPreferNVIDIA   = (1 << 1),
-    LLGLRenderSystemPreferAMD      = (1 << 2),
-    LLGLRenderSystemPreferIntel    = (1 << 3),
-    LLGLRenderSystemSoftwareDevice = (1 << 4),
+    LLGLRenderSystemDebugDevice       = (1 << 0),
+    LLGLRenderSystemPreferNVIDIA      = (1 << 1),
+    LLGLRenderSystemPreferAMD         = (1 << 2),
+    LLGLRenderSystemPreferIntel       = (1 << 3),
+    LLGLRenderSystemSoftwareDevice    = (1 << 4),
+    LLGLRenderSystemDebugBreakOnError = (1 << 5),
 }
 LLGLRenderSystemFlags;
 
@@ -1586,6 +1587,7 @@ typedef struct LLGLSwapChainDescriptor
     uint32_t     samples;     /* = 1 */
     uint32_t     swapBuffers; /* = 2 */
     bool         fullscreen;  /* = false */
+    bool         resizable;   /* = false */
 }
 LLGLSwapChainDescriptor;
 

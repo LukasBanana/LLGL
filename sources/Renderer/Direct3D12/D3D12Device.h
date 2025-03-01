@@ -27,9 +27,9 @@ class D3D12Device
 
         /* ----- Device creation ----- */
 
-        HRESULT CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, bool isDebugLayerEnabled, IDXGIAdapter* adapter = nullptr);
+        HRESULT CreateDXDevice(const ArrayView<D3D_FEATURE_LEVEL>& featureLevels, long flags = 0, IDXGIAdapter* adapter = nullptr);
 
-        HRESULT ShareDXDevice(ID3D12Device* sharedD3DDevice);
+        HRESULT ShareDXDevice(ID3D12Device* sharedD3DDevice, long flags = 0);
 
         ComPtr<ID3D12CommandQueue> CreateDXCommandQueue(D3D12_COMMAND_LIST_TYPE type);
         ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
@@ -66,6 +66,7 @@ class D3D12Device
 
     private:
 
+        void QueryInfoQueueInterface(bool isBreakOnErrorEnabled);
         void DenyLowSeverityWarnings();
 
     private:

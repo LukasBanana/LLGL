@@ -883,11 +883,12 @@ namespace LLGL
     [Flags]
     public enum RenderSystemFlags : int
     {
-        DebugDevice    = (1 << 0),
-        PreferNVIDIA   = (1 << 1),
-        PreferAMD      = (1 << 2),
-        PreferIntel    = (1 << 3),
-        SoftwareDevice = (1 << 4),
+        DebugDevice       = (1 << 0),
+        PreferNVIDIA      = (1 << 1),
+        PreferAMD         = (1 << 2),
+        PreferIntel       = (1 << 3),
+        SoftwareDevice    = (1 << 4),
+        DebugBreakOnError = (1 << 5),
     }
 
     [Flags]
@@ -2330,7 +2331,7 @@ namespace LLGL
     {
         public SwapChainDescriptor() { }
 
-        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false)
+        public SwapChainDescriptor(string debugName = null, Extent2D resolution = new Extent2D(), int colorBits = 32, int depthBits = 24, int stencilBits = 8, int samples = 1, int swapBuffers = 2, bool fullscreen = false, bool resizable = false)
         {
             DebugName   = debugName;
             Resolution  = resolution;
@@ -2340,6 +2341,7 @@ namespace LLGL
             Samples     = samples;
             SwapBuffers = swapBuffers;
             Fullscreen  = fullscreen;
+            Resizable   = resizable;
         }
 
         public AnsiString DebugName { get; set; }   = null;
@@ -2350,6 +2352,7 @@ namespace LLGL
         public int        Samples { get; set; }     = 1;
         public int        SwapBuffers { get; set; } = 2;
         public bool       Fullscreen { get; set; }  = false;
+        public bool       Resizable { get; set; }   = false;
 
         internal NativeLLGL.SwapChainDescriptor Native
         {
@@ -2369,6 +2372,7 @@ namespace LLGL
                     native.samples     = Samples;
                     native.swapBuffers = SwapBuffers;
                     native.fullscreen  = Fullscreen;
+                    native.resizable   = Resizable;
                 }
                 return native;
             }
@@ -4084,6 +4088,8 @@ namespace LLGL
             public int      swapBuffers; /* = 2 */
             [MarshalAs(UnmanagedType.I1)]
             public bool     fullscreen;  /* = false */
+            [MarshalAs(UnmanagedType.I1)]
+            public bool     resizable;   /* = false */
         }
 
         public unsafe struct TextureDescriptor

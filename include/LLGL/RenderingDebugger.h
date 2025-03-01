@@ -51,13 +51,31 @@ class LLGL_EXPORT RenderingDebugger
         void SetDebugGroup(const char* name);
 
         /**
-        \brief Enables or disbales time recording.
+        \brief Enables or disbales time recording. By default disabled.
         \see FrameProfile::timeRecords
         */
         void SetTimeRecording(bool enabled);
 
-        //! Returns whether time recording is enabled.
+        /**
+        \brief Returns whether time recording is enabled.
+        \see SetTimeRecording
+        */
         bool GetTimeRecording() const;
+
+        /**
+        \brief Enables or disables the flag to break the debugger when errors are reported. By default disabled.
+        \remarks The render system enables this if it was created with the RenderSystemFlags::DebugBreakOnError flag.
+        If this is enabled, the debugger (if present) will break on each OnError call.
+        \see RenderSystemFlags::DebugBreakOnError
+        \see OnError
+        */
+        void SetBreakOnError(bool enable);
+
+        /**
+        \brief Returns whether the flag to break the debugger when errors are reported is enabled.
+        \see SetBreakOnError
+        */
+        bool GetBreakOnError() const;
 
         /**
         \brief Posts an error message.

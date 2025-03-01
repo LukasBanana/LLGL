@@ -60,6 +60,13 @@ class VKRenderSystem final : public RenderSystem
         VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~VKRenderSystem();
 
+    public:
+
+        inline bool IsBreakOnErrorEnabled() const
+        {
+            return isBreakOnErrorEnabled_;
+        }
+
     private:
 
         #include <LLGL/Backend/RenderSystem.Internal.inl>
@@ -103,7 +110,8 @@ class VKRenderSystem final : public RenderSystem
         VKDevice                                device_;
         VKCommandContext                        context_;
 
-        bool                                    debugLayerEnabled_      = false;
+        bool                                    isDebugLayerEnabled_    = false;
+        bool                                    isBreakOnErrorEnabled_  = false;
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
         std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
