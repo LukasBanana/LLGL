@@ -25,7 +25,7 @@ static constexpr VkDeviceSize k_xfbCounterSize = sizeof(std::uint32_t);
 
 static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
 {
-    VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    VkBufferUsageFlags flags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     if ((desc.bindFlags & BindFlags::VertexBuffer) != 0)
         flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
@@ -54,8 +54,9 @@ static VkBufferUsageFlags GetVkBufferUsageFlags(const BufferDescriptor& desc)
         }
     }
 
-    if ((desc.cpuAccessFlags & CPUAccessFlags::Read) != 0 || (desc.bindFlags & BindFlags::CopySrc) != 0)
-        flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    /* Miscellaneous usage flags */
+//  if ((desc.cpuAccessFlags & CPUAccessFlags::Read) != 0 || (desc.bindFlags & BindFlags::CopySrc) != 0)
+//      flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
     return flags;
 }

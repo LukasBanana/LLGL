@@ -429,11 +429,11 @@ static VkSampleCountFlagBits GetVkImageSampleCountFlags(const TextureDescriptor&
 
 static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
 {
-    VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable TRANSFER_SRC_BIT image usage when MIP-maps are enabled, CPU read access or copy source binding is requested */
-    if (IsMipMappedTexture(desc) || (desc.cpuAccessFlags & CPUAccessFlags::Read) || (desc.bindFlags & BindFlags::CopySrc) != 0)
-        usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+//  if (IsMipMappedTexture(desc) || (desc.cpuAccessFlags & CPUAccessFlags::Read) || (desc.bindFlags & BindFlags::CopySrc) != 0)
+//      usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */
     if ((desc.bindFlags & BindFlags::ColorAttachment) != 0)
