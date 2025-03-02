@@ -20,6 +20,7 @@ This image should look identical to the "Offscreen.png" image.
 #include <ExampleBase.h>
 #include <stdio.h> // printf()
 #include <stdlib.h> // malloc()/free()
+#include <string.h> // memset()
 #include <math.h> // sinf()/cosf()
 
 #define FRAME_WIDTH             512
@@ -64,7 +65,9 @@ int ExampleInit()
     llglRegisterLogCallbackStd(0);
 
     // Load render system module
-    LLGLReport report = {};
+    LLGLReport report;
+    memset(&report, 0, sizeof(report));
+
     if (llglLoadRenderSystemExt(&(g_config.rendererDesc), report) == 0)
     {
         llglLogErrorf("Failed to load render system: %s\n", g_config.rendererDesc.moduleName);
@@ -72,7 +75,8 @@ int ExampleInit()
     }
 
     // Print information about the selected renderer
-    LLGLRendererInfo info = {};
+    LLGLRendererInfo info;
+    memset(&info, 0, sizeof(info));
     llglGetRendererInfo(&info);
     printf(
         "Renderer:         %s\n"

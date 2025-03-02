@@ -7,6 +7,7 @@
 
 #include <LLGL-C/LLGL.h>
 #include <stdio.h>
+#include <string.h>
 
 
 #define ENABLE_MULTISAMPLING 1
@@ -35,7 +36,8 @@ int main(int argc, char* argv[])
     LLGLSwapChain swapChain = llglCreateSwapChain(&swapChainDesc);
 
     // Print information about the selected renderer
-    LLGLRendererInfo info = {};
+    LLGLRendererInfo info;
+    memset(&info, 0, sizeof(info));
     llglGetRendererInfo(&info);
     printf(
         "Renderer:         %s\n"
