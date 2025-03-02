@@ -109,51 +109,52 @@ static void BuildPushConstantRanges(
     outStageRanges.resize(shaders.size());
     pushConstantBlockRanges.resize(shaders.size());
 
-    for_range(i, shaders.size())
+    for_range(shaderIndex, shaders.size())
     {
-        outStageRanges[i].stageFlags = VKTypes::Map(shaders[i]->GetType());
+        outStageRanges[shaderIndex].stageFlags = VKTypes::Map(shaders[shaderIndex]->GetType());
 
-        pushConstantBlockRanges[i].offset = ~0u;
+        pushConstantBlockRanges[shaderIndex].offset = ~0u;
 
-        LLGL_ASSERT(uniformRanges[i].size() == outUniformRanges.size());
-        for_range(j, outUniformRanges.size())
+        LLGL_ASSERT(uniformRanges[shaderIndex].size() == outUniformRanges.size());
+        for_range(uniformIndex, outUniformRanges.size())
         {
-            outUniformRanges[j].stageFlags |= outStageRanges[i].stageFlags;
-
             //TODO: shader permutations must be generated if uniforms have different offsets between stages
-            const std::uint32_t stageUniformOffset = uniformRanges[i][j].offset;
+            const std::uint32_t stageUniformOffset = uniformRanges[shaderIndex][uniformIndex].offset;
             if (stageUniformOffset != 0)
             {
-                if (!(outUniformRanges[j].offset == 0 || outUniformRanges[j].offset == stageUniformOffset))
+                if (!(outUniformRanges[uniformIndex].offset == 0 || outUniformRanges[uniformIndex].offset == stageUniformOffset))
                 {
                     LLGL_TRAP(
                         "cannot handle different push constant offsets between shader stages for uniform '%s'; got %u and %u",
-                        uniformDescs[j].name.c_str(), outUniformRanges[j].offset, stageUniformOffset
+                        uniformDescs[uniformIndex].name.c_str(), outUniformRanges[uniformIndex].offset, stageUniformOffset
                     );
                 }
-                outUniformRanges[j].offset = stageUniformOffset;
+                outUniformRanges[uniformIndex].offset = stageUniformOffset;
             }
 
-            const std::uint32_t stageUniformSize = uniformRanges[i][j].size;
+            const std::uint32_t stageUniformSize = uniformRanges[shaderIndex][uniformIndex].size;
             if (stageUniformSize != 0)
             {
-                if (!(outUniformRanges[j].size == 0 || outUniformRanges[j].size == stageUniformSize))
+                /* Add current shader stage flag to merged flags only if this push constant range is assigned, i.e. its size is non-zero */
+                outUniformRanges[uniformIndex].stageFlags |= outStageRanges[shaderIndex].stageFlags;
+
+                if (!(outUniformRanges[uniformIndex].size == 0 || outUniformRanges[uniformIndex].size == stageUniformSize))
                 {
                     LLGL_TRAP(
                         "cannot handle different push constant sizes between shader stages for uniform '%s'; got %u and %u",
-                        uniformDescs[j].name.c_str(), outUniformRanges[j].size, stageUniformSize
+                        uniformDescs[uniformIndex].name.c_str(), outUniformRanges[uniformIndex].size, stageUniformSize
                     );
                 }
-                outUniformRanges[j].size = stageUniformSize;
-            }
+                outUniformRanges[uniformIndex].size = stageUniformSize;
 
-            /* Use offset and size as start and end pointers and resolve size after all elements are inserted into the range */
-            pushConstantBlockRanges[i].offset   = std::min(outUniformRanges[j].offset, pushConstantBlockRanges[i].offset);
-            pushConstantBlockRanges[i].size     = std::max(outUniformRanges[j].offset + outUniformRanges[j].size, pushConstantBlockRanges[i].size);
+                /* Use offset and size as start and end pointers and resolve size after all elements are inserted into the range */
+                pushConstantBlockRanges[shaderIndex].offset   = std::min(outUniformRanges[uniformIndex].offset, pushConstantBlockRanges[shaderIndex].offset);
+                pushConstantBlockRanges[shaderIndex].size     = std::max(outUniformRanges[uniformIndex].offset + outUniformRanges[uniformIndex].size, pushConstantBlockRanges[shaderIndex].size);
+            }
         }
 
-        outStageRanges[i].offset    = pushConstantBlockRanges[i].offset;
-        outStageRanges[i].size      = pushConstantBlockRanges[i].size;
+        outStageRanges[shaderIndex].offset  = pushConstantBlockRanges[shaderIndex].offset;
+        outStageRanges[shaderIndex].size    = pushConstantBlockRanges[shaderIndex].size;
     }
 
     /* Remove empty stage ranges */
