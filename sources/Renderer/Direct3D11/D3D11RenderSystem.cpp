@@ -233,7 +233,8 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     auto* textureD3D = textures_.emplace<D3D11Texture>(device_.Get(), textureDesc);
 
     /* Initialize texture data with or without initial image data */
-    InitializeGpuTexture(*textureD3D, textureDesc, initialImage);
+    if (!IsMultiSampleTexture(textureDesc.type))
+        InitializeGpuTexture(*textureD3D, textureDesc, initialImage);
 
     /* Generate MIP-maps if enabled */
     if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))

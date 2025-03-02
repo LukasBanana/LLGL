@@ -198,7 +198,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 {
     auto* textureD3D = textures_.emplace<D3D12Texture>(device_.GetNative(), textureDesc);
 
-    if (initialImage != nullptr)
+    if (initialImage != nullptr && !IsMultiSampleTexture(textureDesc.type))
     {
         /* Update base MIP-map */
         TextureRegion region;

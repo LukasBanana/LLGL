@@ -324,7 +324,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     const void* initialData = nullptr;
     DynamicByteArray intermediateData;
 
-    std::uint32_t srcRowStride = extent.width * bytesPerPixel;
+    std::uint32_t srcRowStride      = textureDesc.extent.width * bytesPerPixel;
+    std::uint32_t srcLayerStride    = textureDesc.extent.height * srcRowStride;
 
     if (initialImage != nullptr)
     {
@@ -333,8 +334,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         /* Check if image data must be converted */
         if (!isCompressed)
         {
-            const std::uint32_t srcBytesPerPixel = static_cast<std::uint32_t>(GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1));
-            srcRowStride = (srcImageView.rowStride > 0 ? srcImageView.rowStride : extent.width * srcBytesPerPixel);
+            const std::uint32_t srcBytesPerPixel        = static_cast<std::uint32_t>(GetMemoryFootprint(srcImageView.format, srcImageView.dataType, 1));
+            const std::uint32_t srcDefaultRowStride     = (textureDesc.extent.width  * srcBytesPerPixel);
+            const std::uint32_t srcDefaultLayerStride   = (textureDesc.extent.height * srcDefaultRowStride);
+
+            srcRowStride    = std::max<std::uint32_t>(srcImageView.rowStride, srcDefaultRowStride);
+            srcLayerStride  = std::max<std::uint32_t>(srcImageView.layerStride, srcDefaultLayerStride);
 
             /* Check if amount of padding memory is small enough to justify a larger GPU buffer upload */
             bool rowStrideNeedsConversion = (srcImageView.rowStride != 0 && srcImageView.rowStride != extent.width * srcBytesPerPixel);
@@ -355,7 +360,9 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             {
                 /* Convert image format (will be null if no conversion is necessary) */
                 intermediateData = ConvertImageBuffer(srcImageView, formatAttribs.format, formatAttribs.dataType, extent, LLGL_MAX_THREAD_COUNT);
-                srcRowStride = extent.width * bytesPerPixel;
+
+                srcRowStride    = textureDesc.extent.width * bytesPerPixel;
+                srcLayerStride  = textureDesc.extent.height * srcRowStride;
             }
         }
 
@@ -388,7 +395,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     /* Create device texture */
     VKTexture* textureVK = textures_.emplace<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
 
-    if (initialData != nullptr)
+    if (initialData != nullptr && !IsMultiSampleTexture(textureDesc.type))
     {
         /* Create staging buffer */
         VkBufferCreateInfo stagingCreateInfo;
@@ -413,7 +420,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             textureVK->TransitionImageLayout(context_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, true);
 
             /* Determine row length (in pixels) for image upload with padding */
-            const std::uint32_t rowLength = (bytesPerPixel > 0 ? srcRowStride / bytesPerPixel : 0);
+            const std::uint32_t rowLength   = (bytesPerPixel > 0 ? srcRowStride / bytesPerPixel : 0);
+            const std::uint32_t imageHeight = (srcRowStride > 0 ? srcLayerStride / srcRowStride : 0);
 
             context_.CopyBufferToImage(
                 stagingBuffer.GetVkBuffer(),
@@ -422,7 +430,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 VkOffset3D{ 0, 0, 0 },
                 textureVK->GetVkExtent(),
                 subresource,
-                rowLength
+                rowLength,
+                imageHeight
             );
 
             textureVK->TransitionImageLayout(context_, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);

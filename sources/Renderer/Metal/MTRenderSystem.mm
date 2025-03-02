@@ -148,7 +148,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 {
     auto* textureMT = textures_.emplace<MTTexture>(device_, textureDesc);
 
-    if (initialImage != nullptr)
+    if (initialImage != nullptr && !IsMultiSampleTexture(textureDesc.type))
     {
         textureMT->WriteRegion(
             //TextureRegion{ Offset3D{ 0, 0, 0 }, textureMT->GetMipExtent(0) },
