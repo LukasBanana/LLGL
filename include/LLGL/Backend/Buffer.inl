@@ -10,8 +10,18 @@ virtual LLGL::BufferDescriptor GetDesc(
 ) const override final;
 
 virtual bool GetNativeHandle(
-    void*       nativeHandle,
-    std::size_t nativeHandleSize
+    void*           nativeHandle,
+    std::size_t     nativeHandleSize
+) override final;
+
+virtual void* Map(
+    LLGL::CPUAccess access,
+    std::uint64_t   offset,
+    std::uint64_t   length
+) override final;
+
+virtual void Unmap(
+    void
 ) override final;
 
 

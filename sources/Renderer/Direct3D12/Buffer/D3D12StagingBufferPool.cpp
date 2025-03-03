@@ -91,7 +91,7 @@ HRESULT D3D12StagingBufferPool::ReadSubresourceRegion(
     UINT64                  dataSize,
     UINT64                  alignment)
 {
-    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Read);
+    D3D12CPUAccessStagingBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Read);
     return cpuAccessBuffer.ReadSubresourceRegion(
         commandContext,
         commandQueue,
@@ -111,7 +111,7 @@ D3D12StagingBufferPool::MapBufferTicket D3D12StagingBufferPool::MapFeedbackBuffe
     void**                  mappedData)
 {
     MapBufferTicket ticket;
-    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Read);
+    D3D12CPUAccessStagingBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Read);
     HRESULT hr = cpuAccessBuffer.MapFeedbackBuffer(commandContext, commandQueue, srcBuffer, readRange, mappedData);
     if (SUCCEEDED(hr))
     {
@@ -124,7 +124,7 @@ D3D12StagingBufferPool::MapBufferTicket D3D12StagingBufferPool::MapFeedbackBuffe
 
 void D3D12StagingBufferPool::UnmapFeedbackBuffer(MapBufferTicket ticket)
 {
-    if (D3D12CPUAccessBuffer* cpuAccessBuffer = ticket.cpuAccessBuffer)
+    if (D3D12CPUAccessStagingBuffer* cpuAccessBuffer = ticket.cpuAccessBuffer)
     {
         cpuAccessBuffer->UnmapFeedbackBuffer();
         --numReadMappedCPUBuffers_;
@@ -136,7 +136,7 @@ D3D12StagingBufferPool::MapBufferTicket D3D12StagingBufferPool::MapUploadBuffer(
     void**                  mappedData)
 {
     MapBufferTicket ticket;
-    D3D12CPUAccessBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Write);
+    D3D12CPUAccessStagingBuffer& cpuAccessBuffer = GetOrCreateCPUAccessBuffer(CPUAccessFlags::Write);
     HRESULT hr = cpuAccessBuffer.MapUploadBuffer(size, mappedData);
     if (SUCCEEDED(hr))
     {
@@ -154,7 +154,7 @@ void D3D12StagingBufferPool::UnmapUploadBuffer(
     const D3D12_RANGE&      writtenRange,
     MapBufferTicket         ticket)
 {
-    if (D3D12CPUAccessBuffer* cpuAccessBuffer = ticket.cpuAccessBuffer)
+    if (D3D12CPUAccessStagingBuffer* cpuAccessBuffer = ticket.cpuAccessBuffer)
     {
         cpuAccessBuffer->UnmapUploadBuffer(commandContext, commandQueue, dstBuffer, writtenRange);
         --numWriteMappedCPUBuffers_;
@@ -172,13 +172,13 @@ void D3D12StagingBufferPool::AllocChunk(UINT64 minChunkSize)
     chunkIdx_ = chunks_.size() - 1;
 }
 
-D3D12CPUAccessBuffer& D3D12StagingBufferPool::GetOrCreateCPUAccessBuffer(long cpuAccessFlags)
+D3D12CPUAccessStagingBuffer& D3D12StagingBufferPool::GetOrCreateCPUAccessBuffer(long cpuAccessFlags)
 {
     if (((cpuAccessFlags & CPUAccessFlags::Read ) == 0 || numReadMappedCPUBuffers_  < cpuAccessBuffers_.size()) &&
         ((cpuAccessFlags & CPUAccessFlags::Write) == 0 || numWriteMappedCPUBuffers_ < cpuAccessBuffers_.size()))
     {
         /* Try to find available CPU access buffer */
-        for (D3D12CPUAccessBuffer& cpuAccessBuffer : cpuAccessBuffers_)
+        for (D3D12CPUAccessStagingBuffer& cpuAccessBuffer : cpuAccessBuffers_)
         {
             if ((cpuAccessBuffer.GetCurrentCPUAccessFlags() & cpuAccessFlags) == 0)
                 return cpuAccessBuffer;

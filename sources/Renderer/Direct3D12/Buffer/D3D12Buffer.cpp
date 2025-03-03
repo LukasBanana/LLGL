@@ -17,7 +17,6 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
-#include <stdexcept>
 
 
 namespace LLGL
@@ -80,7 +79,7 @@ BufferDescriptor D3D12Buffer::GetDesc() const
 {
     /* Get native resource descriptor and convert */
     D3D12_RESOURCE_DESC nativeDesc;
-    nativeDesc = GetResource().native->GetDesc();
+    nativeDesc = resource_.native->GetDesc();
 
     BufferDescriptor bufferDesc;
     bufferDesc.size             = nativeDesc.Width;
@@ -91,6 +90,16 @@ BufferDescriptor D3D12Buffer::GetDesc() const
     #endif
 
     return bufferDesc;
+}
+
+void* D3D12Buffer::Map(CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    return nullptr; // dummy
+}
+
+void D3D12Buffer::Unmap()
+{
+    // dummy
 }
 
 void D3D12Buffer::CreateConstantBufferView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescHandle)
@@ -287,70 +296,14 @@ void D3D12Buffer::ClearSubresourceUInt(
     commandContext.SetStagingDescriptorHeaps(oldLayout, oldRootParamIndices);
 }
 
-static bool HasReadAccess(const CPUAccess access)
+bool D3D12Buffer::HasCPUAccess() const
 {
-    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
+    return false;
 }
 
-static bool HasWriteAccess(const CPUAccess access)
+D3D12Resource& D3D12Buffer::GetResourceForState(D3D12_RESOURCE_STATES state)
 {
-    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
-}
-
-HRESULT D3D12Buffer::Map(
-    D3D12CommandContext&    commandContext,
-    D3D12CommandQueue&      commandQueue,
-    D3D12StagingBufferPool& stagingBufferPool,
-    const D3D12_RANGE&      range,
-    void**                  mappedData,
-    const CPUAccess         access)
-{
-    /* Store mapped state */
-    mappedRange_        = range;
-    mappedCPUaccess_    = access;
-
-    if (access == CPUAccess::ReadWrite)
-    {
-        /* First map write access buffer */
-        SIZE_T rangeSize = range.End - range.Begin;
-        mappedBufferTicket_ = stagingBufferPool.MapUploadBuffer(rangeSize, mappedData);
-        if (FAILED(mappedBufferTicket_.hr))
-            return mappedBufferTicket_.hr;
-        if (*mappedData == nullptr)
-            return E_FAIL;
-
-        /* Now map feedback buffer and copy its content into the upload buffer */
-        void* mappedFeedbackData = nullptr;
-        auto readTicket = stagingBufferPool.MapFeedbackBuffer(commandContext, commandQueue, resource_, range, &mappedFeedbackData);
-        if (FAILED(readTicket.hr))
-            return readTicket.hr;
-
-        ::memcpy(*mappedData, mappedFeedbackData, rangeSize);
-        stagingBufferPool.UnmapFeedbackBuffer(readTicket);
-    }
-    else if (access == CPUAccess::ReadOnly)
-    {
-        /* Map feedback buffer */
-        mappedBufferTicket_ = stagingBufferPool.MapFeedbackBuffer(commandContext, commandQueue, resource_, range, mappedData);
-    }
-    else
-    {
-        /* Map upload buffer */
-        SIZE_T rangeSize = range.End - range.Begin;
-        mappedBufferTicket_ = stagingBufferPool.MapUploadBuffer(rangeSize, mappedData);
-    }
-    return mappedBufferTicket_.hr;
-}
-
-void D3D12Buffer::Unmap(
-    D3D12CommandContext&    commandContext,
-    D3D12CommandQueue&      commandQueue,
-    D3D12StagingBufferPool& stagingBufferPool)
-{
-    if (HasWriteAccess(mappedCPUaccess_))
-        stagingBufferPool.UnmapUploadBuffer(commandContext, commandQueue, resource_, mappedRange_, mappedBufferTicket_);
-    else
-        stagingBufferPool.UnmapFeedbackBuffer(mappedBufferTicket_);
+    return resource_;
 }
 
 

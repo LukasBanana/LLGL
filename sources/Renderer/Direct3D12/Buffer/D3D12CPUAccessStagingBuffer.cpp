@@ -1,11 +1,11 @@
 /*
- * D3D12CPUAccessBuffer.cpp
+ * D3D12CPUAccessStagingBuffer.cpp
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "D3D12CPUAccessBuffer.h"
+#include "D3D12CPUAccessStagingBuffer.h"
 #include "../Command/D3D12CommandContext.h"
 #include "../Command/D3D12CommandQueue.h"
 #include "../D3D12Resource.h"
@@ -17,29 +17,29 @@ namespace LLGL
 {
 
 
-D3D12CPUAccessBuffer::D3D12CPUAccessBuffer(ID3D12Device* device) :
+D3D12CPUAccessStagingBuffer::D3D12CPUAccessStagingBuffer(ID3D12Device* device) :
     device_ { device }
 {
 }
 
-void D3D12CPUAccessBuffer::InitializeDevice(ID3D12Device* device)
+void D3D12CPUAccessStagingBuffer::InitializeDevice(ID3D12Device* device)
 {
     device_ = device;
 }
 
-D3D12StagingBuffer& D3D12CPUAccessBuffer::GetUploadBufferAndGrow(UINT64 size, UINT64 alignment)
+D3D12StagingBuffer& D3D12CPUAccessStagingBuffer::GetUploadBufferAndGrow(UINT64 size, UINT64 alignment)
 {
     ResizeBuffer(globalUploadBuffer_, D3D12_HEAP_TYPE_UPLOAD, size, alignment);
     return globalUploadBuffer_;
 }
 
-D3D12StagingBuffer& D3D12CPUAccessBuffer::GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment)
+D3D12StagingBuffer& D3D12CPUAccessStagingBuffer::GetReadbackBufferAndGrow(UINT64 size, UINT64 alignment)
 {
     ResizeBuffer(globalReadbackBuffer_, D3D12_HEAP_TYPE_READBACK, size, alignment);
     return globalReadbackBuffer_;
 }
 
-HRESULT D3D12CPUAccessBuffer::ReadSubresourceRegion(
+HRESULT D3D12CPUAccessStagingBuffer::ReadSubresourceRegion(
     D3D12CommandContext&    commandContext,
     D3D12CommandQueue&      commandQueue,
     D3D12Resource&          srcBuffer,
@@ -77,7 +77,7 @@ HRESULT D3D12CPUAccessBuffer::ReadSubresourceRegion(
     return S_OK;
 }
 
-HRESULT D3D12CPUAccessBuffer::MapFeedbackBuffer(
+HRESULT D3D12CPUAccessStagingBuffer::MapFeedbackBuffer(
     D3D12CommandContext&    commandContext,
     D3D12CommandQueue&      commandQueue,
     D3D12Resource&          srcBuffer,
@@ -110,7 +110,7 @@ HRESULT D3D12CPUAccessBuffer::MapFeedbackBuffer(
     return hr;
 }
 
-void D3D12CPUAccessBuffer::UnmapFeedbackBuffer()
+void D3D12CPUAccessStagingBuffer::UnmapFeedbackBuffer()
 {
     /* Unmap without written range */
     const D3D12_RANGE nullRange{ 0, 0 };
@@ -118,7 +118,7 @@ void D3D12CPUAccessBuffer::UnmapFeedbackBuffer()
     currentCPUAccessFlags_ &= ~CPUAccessFlags::Read;
 }
 
-HRESULT D3D12CPUAccessBuffer::MapUploadBuffer(
+HRESULT D3D12CPUAccessStagingBuffer::MapUploadBuffer(
     SIZE_T                  size,
     void**                  mappedData)
 {
@@ -133,7 +133,7 @@ HRESULT D3D12CPUAccessBuffer::MapUploadBuffer(
     return hr;
 }
 
-void D3D12CPUAccessBuffer::UnmapUploadBuffer(
+void D3D12CPUAccessStagingBuffer::UnmapUploadBuffer(
     D3D12CommandContext&    commandContext,
     D3D12CommandQueue&      commandQueue,
     D3D12Resource&          dstBuffer,
@@ -162,7 +162,7 @@ void D3D12CPUAccessBuffer::UnmapUploadBuffer(
  * ======= Private: =======
  */
 
-void D3D12CPUAccessBuffer::ResizeBuffer(
+void D3D12CPUAccessStagingBuffer::ResizeBuffer(
     D3D12StagingBuffer& stagingBuffer,
     D3D12_HEAP_TYPE     heapType,
     UINT64              size,

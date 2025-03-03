@@ -25,6 +25,7 @@
 #include "Shader/D3D12BuiltinShaderFactory.h"
 
 #include "Buffer/D3D12Buffer.h"
+#include "Buffer/D3D12BufferWithCPUAccess.h"
 #include "Buffer/D3D12BufferArray.h"
 #include "Buffer/D3D12BufferConstantsPool.h"
 
@@ -134,10 +135,19 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
+//private
+D3D12Buffer* D3D12RenderSystem::CreateBufferInternal(const BufferDescriptor& bufferDesc)
+{
+    if ((bufferDesc.cpuAccessFlags & CPUAccessFlags::ReadWrite) != 0)
+        return buffers_.emplace<D3D12BufferWithCPUAccess>(device_.GetNative(), bufferDesc);
+    else
+        return buffers_.emplace<D3D12Buffer>(device_.GetNative(), bufferDesc);
+}
+
 Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
 {
     RenderSystem::AssertCreateBuffer(bufferDesc, ULLONG_MAX);
-    D3D12Buffer* bufferD3D = buffers_.emplace<D3D12Buffer>(device_.GetNative(), bufferDesc);
+    D3D12Buffer* bufferD3D = CreateBufferInternal(bufferDesc);
     if (initialData != nullptr)
         UpdateBufferAndSync(*bufferD3D, 0, initialData, bufferDesc.size, bufferD3D->GetAlignment());
     return bufferD3D;
@@ -170,26 +180,9 @@ void D3D12RenderSystem::WriteBuffer(Buffer& buffer, std::uint64_t offset, const 
 void D3D12RenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize)
 {
     auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, *commandQueue_, bufferD3D.GetResource(), offset, data, dataSize);
+    D3D12Resource& srcResource = bufferD3D.GetResourceForState(D3D12_RESOURCE_STATE_COPY_SOURCE);
+    stagingBufferPool_.ReadSubresourceRegion(*commandContext_, *commandQueue_, srcResource, offset, data, dataSize);
     /* No ExecuteCommandListAndSync() here as it has already been flushed by the staging buffer pool */
-}
-
-void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
-{
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    return MapBufferRange(bufferD3D, access, 0, bufferD3D.GetBufferSize());
-}
-
-void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
-{
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    return MapBufferRange(bufferD3D, access, offset, length);
-}
-
-void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
-{
-    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
-    bufferD3D.Unmap(*commandContext_, *commandQueue_, stagingBufferPool_);
 }
 
 /* ----- Textures ----- */
@@ -827,18 +820,18 @@ void D3D12RenderSystem::UpdateBufferAndSync(
     std::uint64_t   alignment)
 {
     stagingBufferPool_.WriteImmediate(*commandContext_, bufferD3D.GetResource(), offset, data, dataSize, alignment);
+
+    if (bufferD3D.HasCPUAccess())
+    {
+        D3D12BufferWithCPUAccess& bufferWithCPUAccessD3D = LLGL_CAST(D3D12BufferWithCPUAccess&, bufferD3D);
+
+        D3D12Resource& dstResource = bufferWithCPUAccessD3D.GetResourceForState(D3D12_RESOURCE_STATE_COPY_DEST);
+        D3D12Resource& srcResource = bufferWithCPUAccessD3D.GetResource();
+
+        commandContext_->CopyBufferRegion(dstResource, offset, srcResource, offset, dataSize);
+    }
+
     ExecuteCommandListAndSync();
-}
-
-void* D3D12RenderSystem::MapBufferRange(D3D12Buffer& bufferD3D, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
-{
-    void* mappedData = nullptr;
-    const D3D12_RANGE range{ static_cast<SIZE_T>(offset), static_cast<SIZE_T>(offset + length) };
-
-    if (SUCCEEDED(bufferD3D.Map(*commandContext_, *commandQueue_, stagingBufferPool_, range, &mappedData, access)))
-        return mappedData;
-
-    return nullptr;
 }
 
 HRESULT D3D12RenderSystem::UpdateTextureSubresourceFromImage(

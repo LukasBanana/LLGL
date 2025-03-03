@@ -1,12 +1,12 @@
 /*
- * D3D12CPUAccessBuffer.h
+ * D3D12CPUAccessStagingBuffer.h
  *
  * Copyright (c) 2015 Lukas Hermanns. All rights reserved.
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#ifndef LLGL_D3D12_CPU_ACCESS_BUFFER_H
-#define LLGL_D3D12_CPU_ACCESS_BUFFER_H
+#ifndef LLGL_D3D12_CPU_ACCCESS_STAGING_BUFFER_H
+#define LLGL_D3D12_CPU_ACCCESS_STAGING_BUFFER_H
 
 
 #include "D3D12StagingBuffer.h"
@@ -21,13 +21,13 @@ struct D3D12Resource;
 class D3D12CommandContext;
 class D3D12CommandQueue;
 
-class D3D12CPUAccessBuffer
+class D3D12CPUAccessStagingBuffer
 {
 
     public:
 
-        D3D12CPUAccessBuffer() = default;
-        D3D12CPUAccessBuffer(ID3D12Device* device);
+        D3D12CPUAccessStagingBuffer() = default;
+        D3D12CPUAccessStagingBuffer(ID3D12Device* device);
 
         // Initializes the device object and chunk size.
         void InitializeDevice(ID3D12Device* device);

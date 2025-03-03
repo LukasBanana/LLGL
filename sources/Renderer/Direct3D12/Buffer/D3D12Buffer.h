@@ -31,11 +31,13 @@ class D3D12Buffer : public Buffer
 
     public:
 
-        #include <LLGL/Backend/Buffer.inl>
-
-    public:
-
         void SetDebugName(const char* name) override;
+
+        LLGL::BufferDescriptor GetDesc() const override final;
+        bool GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize) override final;
+
+        void* Map(CPUAccess access, std::uint64_t offset, std::uint64_t length) override;
+        void Unmap() override;
 
     public:
 
@@ -64,31 +66,8 @@ class D3D12Buffer : public Buffer
             const UINT              (&values)[4]
         );
 
-        // Maps the buffer content to CPU memory space.
-        HRESULT Map(
-            D3D12CommandContext&    commandContext,
-            D3D12CommandQueue&      commandQueue,
-            D3D12StagingBufferPool& stagingBufferPool,
-            const D3D12_RANGE&      range,
-            void**                  mappedData,
-            CPUAccess               access
-        );
-
-        // Unmaps the buffer content from CPU memory space.
-        void Unmap(
-            D3D12CommandContext&    commandContext,
-            D3D12CommandQueue&      commandQueue,
-            D3D12StagingBufferPool& stagingBufferPool
-        );
-
         // Returns the resource wrapper.
         inline D3D12Resource& GetResource()
-        {
-            return resource_;
-        }
-
-        // Returns the constant resource wrapper.
-        inline const D3D12Resource& GetResource() const
         {
             return resource_;
         }
@@ -153,6 +132,11 @@ class D3D12Buffer : public Buffer
             return format_;
         }
 
+    public:
+
+        virtual bool HasCPUAccess() const;
+        virtual D3D12Resource& GetResourceForState(D3D12_RESOURCE_STATES state);
+
     private:
 
         void CreateGpuBuffer(ID3D12Device* device, const BufferDescriptor& desc);
@@ -209,24 +193,20 @@ class D3D12Buffer : public Buffer
 
     private:
 
-        D3D12Resource                           resource_;
+        D3D12Resource                   resource_;
 
-        ComPtr<ID3D12DescriptorHeap>            uavIntermediateDescHeap_;
-        D3D12Resource                           uavIntermediateBuffer_;
+        ComPtr<ID3D12DescriptorHeap>    uavIntermediateDescHeap_;
+        D3D12Resource                   uavIntermediateBuffer_;
 
-        UINT64                                  bufferSize_                 = 0;
-        UINT64                                  internalSize_               = 0;
-        UINT                                    alignment_                  = 1;
-        UINT                                    stride_                     = 1;
-        DXGI_FORMAT                             format_                     = DXGI_FORMAT_UNKNOWN;
+        UINT64                          bufferSize_                 = 0;
+        UINT64                          internalSize_               = 0;
+        UINT                            alignment_                  = 1;
+        UINT                            stride_                     = 1;
+        DXGI_FORMAT                     format_                     = DXGI_FORMAT_UNKNOWN;
 
-        D3D12_VERTEX_BUFFER_VIEW                vertexBufferView_           = {};
-        D3D12_INDEX_BUFFER_VIEW                 indexBufferView_            = {};
-        D3D12_STREAM_OUTPUT_BUFFER_VIEW         soBufferView_               = {};
-
-        D3D12_RANGE                             mappedRange_                = {};
-        CPUAccess                               mappedCPUaccess_            = CPUAccess::ReadOnly;
-        D3D12StagingBufferPool::MapBufferTicket mappedBufferTicket_;
+        D3D12_VERTEX_BUFFER_VIEW        vertexBufferView_           = {};
+        D3D12_INDEX_BUFFER_VIEW         indexBufferView_            = {};
+        D3D12_STREAM_OUTPUT_BUFFER_VIEW soBufferView_               = {};
 
 };
 

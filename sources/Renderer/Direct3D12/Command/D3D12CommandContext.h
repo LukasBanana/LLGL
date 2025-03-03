@@ -132,6 +132,14 @@ class D3D12CommandContext
             UINT64          dataSize
         );
 
+        void CopyBufferRegion(
+            D3D12Resource&  dstResource,
+            UINT64          dstOffset,
+            D3D12Resource&  srcResource,
+            UINT64          srcOffset,
+            UINT64          size
+        );
+
         ID3D12Resource* AllocIntermediateBuffer(UINT64 size, UINT alignment = 256u);
 
         void SetGraphicsRootSignature(ID3D12RootSignature* rootSignature);

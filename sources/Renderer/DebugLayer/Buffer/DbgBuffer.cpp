@@ -44,7 +44,19 @@ BufferDescriptor DbgBuffer::GetDesc() const
     return instance.GetDesc();
 }
 
-void DbgBuffer::OnMap(const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+void* DbgBuffer::Map(CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    OnMap(access, offset, length);
+    return instance.Map(access, offset, length);
+}
+
+void DbgBuffer::Unmap()
+{
+    OnUnmap();
+    instance.Unmap();
+}
+
+void DbgBuffer::OnMap(CPUAccess access, std::uint64_t offset, std::uint64_t length)
 {
     mappedAccess_   = access;
     mappedRange_[0] = std::min(offset, desc.size);

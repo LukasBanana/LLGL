@@ -405,6 +405,26 @@ void D3D12CommandContext::UpdateSubresource(
     stagingBufferPools_[currentAllocatorIndex_].WriteStaged(*this, dstResource, dstOffset, data, dataSize);
 }
 
+void D3D12CommandContext::CopyBufferRegion(
+    D3D12Resource&  dstResource,
+    UINT64          dstOffset,
+    D3D12Resource&  srcResource,
+    UINT64          srcOffset,
+    UINT64          size)
+{
+    const D3D12_RESOURCE_STATES oldDstBufferState = dstResource.currentState;
+    const D3D12_RESOURCE_STATES oldSrcBufferState = srcResource.currentState;
+
+    TransitionResource(dstResource, D3D12_RESOURCE_STATE_COPY_DEST);
+    TransitionResource(srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    {
+        FlushResourceBarriers();
+        GetCommandList()->CopyBufferRegion(dstResource.Get(), dstOffset, srcResource.Get(), srcOffset, size);
+    }
+    TransitionResource(dstResource, oldDstBufferState);
+    TransitionResource(srcResource, oldSrcBufferState);
+}
+
 ID3D12Resource* D3D12CommandContext::AllocIntermediateBuffer(UINT64 size, UINT alignment)
 {
     return intermediateBufferPools_[currentAllocatorIndex_].AllocBuffer(size, alignment);

@@ -107,7 +107,8 @@ void D3D12CommandBuffer::UpdateBuffer(
     std::uint16_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
-    commandContext_.UpdateSubresource(dstBufferD3D.GetResource(), dstOffset, data, dataSize);
+    D3D12Resource& dstResource = dstBufferD3D.GetResourceForState(D3D12_RESOURCE_STATE_COPY_DEST);
+    commandContext_.UpdateSubresource(dstResource, dstOffset, data, dataSize);
 }
 
 void D3D12CommandBuffer::CopyBuffer(
@@ -120,17 +121,10 @@ void D3D12CommandBuffer::CopyBuffer(
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     auto& srcBufferD3D = LLGL_CAST(D3D12Buffer&, srcBuffer);
 
-    const D3D12_RESOURCE_STATES oldDstBufferState = dstBufferD3D.GetResource().currentState;
-    const D3D12_RESOURCE_STATES oldSrcBufferState = srcBufferD3D.GetResource().currentState;
+    D3D12Resource& dstResource = dstBufferD3D.GetResourceForState(D3D12_RESOURCE_STATE_COPY_DEST);
+    D3D12Resource& srcResource = srcBufferD3D.GetResourceForState(D3D12_RESOURCE_STATE_COPY_SOURCE);
 
-    commandContext_.TransitionResource(dstBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_DEST);
-    commandContext_.TransitionResource(srcBufferD3D.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-    {
-        commandContext_.FlushResourceBarriers();
-        GetNative()->CopyBufferRegion(dstBufferD3D.GetNative(), dstOffset, srcBufferD3D.GetNative(), srcOffset, size);
-    }
-    commandContext_.TransitionResource(dstBufferD3D.GetResource(), oldDstBufferState);
-    commandContext_.TransitionResource(srcBufferD3D.GetResource(), oldSrcBufferState);
+    commandContext_.CopyBufferRegion(dstResource, dstOffset, srcResource, srcOffset, size);
 }
 
 void D3D12CommandBuffer::CopyBufferFromTexture(

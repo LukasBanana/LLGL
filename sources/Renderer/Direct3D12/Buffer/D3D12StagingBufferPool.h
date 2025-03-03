@@ -10,7 +10,7 @@
 
 
 #include "D3D12StagingBuffer.h"
-#include "D3D12CPUAccessBuffer.h"
+#include "D3D12CPUAccessStagingBuffer.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <vector>
 
@@ -32,7 +32,7 @@ class D3D12StagingBufferPool
         {
 
                 friend class D3D12StagingBufferPool;
-                D3D12CPUAccessBuffer* cpuAccessBuffer = nullptr;
+                D3D12CPUAccessStagingBuffer* cpuAccessBuffer = nullptr;
 
             public:
 
@@ -110,19 +110,19 @@ class D3D12StagingBufferPool
         void AllocChunk(UINT64 minChunkSize);
 
         // Returns the first available CPU access buffer or creates a new one.
-        D3D12CPUAccessBuffer& GetOrCreateCPUAccessBuffer(long cpuAccessFlags);
+        D3D12CPUAccessStagingBuffer& GetOrCreateCPUAccessBuffer(long cpuAccessFlags);
 
     private:
 
-        ID3D12Device*                       device_                     = nullptr;
+        ID3D12Device*                               device_                     = nullptr;
 
-        std::vector<D3D12StagingBuffer>     chunks_;
-        std::size_t                         chunkIdx_                   = 0;
-        UINT64                              chunkSize_                  = 0;
+        std::vector<D3D12StagingBuffer>             chunks_;
+        std::size_t                                 chunkIdx_                   = 0;
+        UINT64                                      chunkSize_                  = 0;
 
-        std::vector<D3D12CPUAccessBuffer>   cpuAccessBuffers_;
-        std::size_t                         numReadMappedCPUBuffers_    = 0;
-        std::size_t                         numWriteMappedCPUBuffers_   = 0;
+        std::vector<D3D12CPUAccessStagingBuffer>    cpuAccessBuffers_;
+        std::size_t                                 numReadMappedCPUBuffers_    = 0;
+        std::size_t                                 numWriteMappedCPUBuffers_   = 0;
 
 };
 

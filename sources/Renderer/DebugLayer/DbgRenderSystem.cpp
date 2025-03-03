@@ -198,6 +198,8 @@ void DbgRenderSystem::ReadBuffer(Buffer& buffer, std::uint64_t offset, void* dat
     profile_.commandQueueRecord.bufferReads++;
 }
 
+#if 0 //TODO: REMOVE
+
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
@@ -250,6 +252,8 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
     bufferDbg.OnUnmap();
 }
+
+#endif //TODO
 
 /* ----- Textures ----- */
 

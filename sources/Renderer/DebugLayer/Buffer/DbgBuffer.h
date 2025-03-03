@@ -35,7 +35,7 @@ class DbgBuffer final : public Buffer
 
         DbgBuffer(Buffer& instance, const BufferDescriptor& desc);
 
-        void OnMap(const CPUAccess access, std::uint64_t offset, std::uint64_t length);
+        void OnMap(CPUAccess access, std::uint64_t offset, std::uint64_t length);
         void OnUnmap();
 
         // Returns true if this buffer is currently mapped into CPU memory space.

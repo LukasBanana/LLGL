@@ -317,44 +317,17 @@ class LLGL_EXPORT RenderSystem : public Interface
         */
         virtual void ReadBuffer(Buffer& buffer, std::uint64_t offset, void* data, std::uint64_t dataSize) = 0;
 
-        /**
-        \brief Maps the specified buffer from GPU to CPU memory space.
-        \param[in] buffer Specifies the buffer which is to be mapped. Depending on the CPU access type (see \c access parameter),
-        this buffer must have been created with the corresponding CPU access flag, i.e. CPUAccessFlags::Read and/or CPUAccessFlags::Write.
-        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
-        \return Raw pointer to the mapped memory block in CPU memory space or null if the operation failed.
-        \remarks Memory that is written back from CPU to GPU becomes visible in the GPU after a corresponding UnmapBuffer operation.
-        \see UnmapBuffer
-        */
-        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access) = 0;
+        //! \deprecated Since 0.04b; Use Buffer::Map() instead!
+        LLGL_DEPRECATED("RenderSystem::MapBuffer() is deprecated since 0.04b; Use Buffer::Map() instead!")
+        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access);
 
-        /**
-        \brief Maps the specified buffer range from GPU to CPU memory space.
-        \param[in] buffer Specifies the buffer which is to be mapped. Depending on the CPU access type (see \c access parameter),
-        this buffer must have been created with the corresponding CPU access flag, i.e. CPUAccessFlags::Read and/or CPUAccessFlags::Write.
-        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
-        \param[in] offset Specifies the memory offset (in bytes) from the GPU buffer.
-        \param[in] length Specifies the length of the memory block (in bytes) that is to be mapped.
-        \return Raw pointer to the mapped memory block in CPU memory space or null if the operation failed.
-        \remarks Memory that is written back from CPU to GPU becomes visible in the GPU after a corresponding UnmapBuffer operation.
-        \see UnmapBuffer
-        */
-        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length) = 0;
+        //! \deprecated Since 0.04b; Use Buffer::Map() instead!
+        LLGL_DEPRECATED("RenderSystem::MapBuffer() is deprecated since 0.04b; Use Buffer::Map() instead!")
+        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length);
 
-        /**
-        \brief Unmaps the specified buffer.
-        \remarks This must be called on a buffer that was previously mapped into CPU memory space.
-        The following example illustrates how to map and unmap a buffer from GPU into CPU memory space:
-        \code
-        if (void* data = myRenderer->MapBuffer(*myBuffer, LLGL::CPUAccess::Write))
-        {
-            // Write to 'data' ...
-            myRenderer->UnmapBuffer(*myBuffer);
-        }
-        \endcode
-        \see MapBuffer
-        */
-        virtual void UnmapBuffer(Buffer& buffer) = 0;
+        //! \deprecated Since 0.04b; Use Buffer::Map() instead!
+        LLGL_DEPRECATED("RenderSystem::UnmapBuffer() is deprecated since 0.04b; Use Buffer::Unmap() instead!")
+        virtual void UnmapBuffer(Buffer& buffer);
 
         /* ----- Textures ----- */
 

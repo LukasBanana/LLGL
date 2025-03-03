@@ -219,6 +219,26 @@ const Report* RenderSystem::GetReport() const
     return (pimpl_->report ? &(pimpl_->report) : nullptr);
 }
 
+LLGL_DEPRECATED_IGNORE_PUSH()
+
+void* RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
+{
+    return buffer.Map(access, 0, buffer.GetDesc().size);
+}
+
+void* RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access, std::uint64_t offset, std::uint64_t length)
+{
+    return buffer.Map(access, offset, length);
+}
+
+void RenderSystem::UnmapBuffer(Buffer& buffer)
+{
+    buffer.Unmap();
+}
+
+LLGL_DEPRECATED_IGNORE_POP()
+
+
 
 /*
  * ======= Protected: =======

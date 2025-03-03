@@ -39,22 +39,6 @@ virtual void ReadBuffer(
     std::uint64_t                   dataSize
 ) override final;
 
-virtual void* MapBuffer(
-    LLGL::Buffer&                   buffer,
-    const LLGL::CPUAccess           access
-) override final;
-
-virtual void* MapBuffer(
-    LLGL::Buffer&                   buffer,
-    const LLGL::CPUAccess           access,
-    std::uint64_t                   offset,
-    std::uint64_t                   length
-) override final;
-
-virtual void UnmapBuffer(
-    LLGL::Buffer&                   buffer
-) override final;
-
 
 
 // ================================================================================
