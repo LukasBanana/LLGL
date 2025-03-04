@@ -31,8 +31,8 @@ void D3D12StagingBufferPool::InitializeDevice(ID3D12Device* device, UINT64 chunk
 
 void D3D12StagingBufferPool::Reset()
 {
-    for (D3D12StagingBuffer& chunk : chunks_)
-        chunk.Reset();
+    if (chunkIdx_ < chunks_.size())
+        chunks_[chunkIdx_].Reset();
     chunkIdx_ = 0;
 }
 
@@ -45,7 +45,10 @@ HRESULT D3D12StagingBufferPool::WriteStaged(
 {
     /* Find a chunk that fits the requested data size or allocate a new chunk */
     while (chunkIdx_ < chunks_.size() && !chunks_[chunkIdx_].Capacity(dataSize))
+    {
+        chunks_[chunkIdx_].Reset();
         ++chunkIdx_;
+    }
 
     if (chunkIdx_ == chunks_.size())
         AllocChunk(dataSize);

@@ -21,8 +21,8 @@ MTStagingBufferPool::MTStagingBufferPool(id<MTLDevice> device, NSUInteger chunkS
 
 void MTStagingBufferPool::Reset()
 {
-    for (auto& chunk : chunks_)
-        chunk.Reset();
+    if (chunkIdx_ < chunks_.size())
+        chunks_[chunkIdx_].Reset();
     chunkIdx_ = 0;
 }
 
@@ -32,15 +32,15 @@ void MTStagingBufferPool::Write(
     id<MTLBuffer>&  srcBuffer,
     NSUInteger&     srcOffset)
 {
-    /* Check if a new chunk must be allocated */
+    /* Find a chunk that fits the requested data size or allocate a new chunk */
+    while (chunkIdx_ < chunks_.size() && !chunks_[chunkIdx_].Capacity(dataSize))
+    {
+        chunks_[chunkIdx_].Reset();
+        ++chunkIdx_;
+    }
+
     if (chunkIdx_ == chunks_.size())
         AllocChunk(dataSize);
-    else if (!chunks_[chunkIdx_].Capacity(dataSize))
-    {
-        ++chunkIdx_;
-        if (chunkIdx_ == chunks_.size())
-            AllocChunk(dataSize);
-    }
 
     /* Write data to current chunk */
     auto& chunk = chunks_[chunkIdx_];

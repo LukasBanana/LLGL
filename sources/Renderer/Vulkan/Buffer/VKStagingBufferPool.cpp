@@ -31,8 +31,8 @@ void VKStagingBufferPool::InitializeDevice(VKDeviceMemoryManager* deviceMemoryMn
 
 void VKStagingBufferPool::Reset()
 {
-    for (VKStagingBuffer& chunk : chunks_)
-        chunk.Reset();
+    if (chunkIdx_ < chunks_.size())
+        chunks_[chunkIdx_].Reset();
     chunkIdx_ = 0;
 }
 
@@ -45,7 +45,10 @@ VkResult VKStagingBufferPool::WriteStaged(
 {
     /* Find a chunk that fits the requested data size or allocate a new chunk */
     while (chunkIdx_ < chunks_.size() && !chunks_[chunkIdx_].Capacity(dataSize))
+    {
+        chunks_[chunkIdx_].Reset();
         ++chunkIdx_;
+    }
 
     if (chunkIdx_ == chunks_.size())
         AllocChunk(dataSize);
