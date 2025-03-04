@@ -1,4 +1,15 @@
-version: 0.03.{build}
+version: 0.04.{build}
+
+branches:
+  only:
+    - master
+
+pull_requests:
+  do_not_increment_build_number: true
+
+configuration:
+  - Debug
+  - Release
 
 environment:
   matrix:
@@ -6,99 +17,46 @@ environment:
       GENERATOR: "Visual Studio 14 2015"
       ARCH: "Win32"
       STATIC_LIB: OFF
-      CONFIG: Debug
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 14 2015"
       ARCH: "Win32"
       STATIC_LIB: ON
-      CONFIG: Debug
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 14 2015"
-      ARCH: "Win32"
-      STATIC_LIB: OFF
-      CONFIG: Release
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 14 2015"
-      ARCH: "Win32"
-      STATIC_LIB: ON
-      CONFIG: Release
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 14 2015"
       ARCH: "x64"
       STATIC_LIB: OFF
-      CONFIG: Debug
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 14 2015"
       ARCH: "x64"
       STATIC_LIB: ON
-      CONFIG: Debug
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 14 2015"
-      ARCH: "x64"
-      STATIC_LIB: OFF
-      CONFIG: Release
-
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 14 2015"
-      ARCH: "x64"
-      STATIC_LIB: ON
-      CONFIG: Release
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017"
       ARCH: "Win32"
       STATIC_LIB: OFF
-      CONFIG: Debug
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017"
       ARCH: "Win32"
       STATIC_LIB: ON
-      CONFIG: Debug
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 15 2017"
-      ARCH: "Win32"
-      STATIC_LIB: OFF
-      CONFIG: Release
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 15 2017"
-      ARCH: "Win32"
-      STATIC_LIB: ON
-      CONFIG: Release
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017"
       ARCH: "x64"
       STATIC_LIB: OFF
-      CONFIG: Debug
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: "Visual Studio 15 2017"
       ARCH: "x64"
       STATIC_LIB: ON
-      CONFIG: Debug
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 15 2017"
-      ARCH: "x64"
-      STATIC_LIB: OFF
-      CONFIG: Release
 
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: "Visual Studio 15 2017"
-      ARCH: "x64"
-      STATIC_LIB: ON
-      CONFIG: Release
-
-build_script:
-  - git clone https://github.com/LukasBanana/GaussianLib.git
-  - cmake -G "%GENERATOR%" -A "%ARCH%" -DLLGL_BUILD_STATIC_LIB=%STATIC_LIB% -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B builds
-  - cmake --build builds --config "%CONFIG%"
+for:
+  -
+    build_script:
+      - git clone https://github.com/LukasBanana/GaussianLib.git
+      - cmake -G "%GENERATOR%" -A "%ARCH%" -DLLGL_BUILD_STATIC_LIB=%STATIC_LIB% -DLLGL_BUILD_EXAMPLES=ON -DLLGL_BUILD_TESTS=ON -DLLGL_BUILD_RENDERER_OPENGL=ON -DLLGL_BUILD_RENDERER_DIRECT3D11=ON -DLLGL_BUILD_RENDERER_DIRECT3D12=ON -DGaussLib_INCLUDE_DIR:STRING="GaussianLib/include" -S . -B builds
+      - cmake --build builds --config "%CONFIGURATION%"
+    
