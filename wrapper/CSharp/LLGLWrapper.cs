@@ -4485,7 +4485,7 @@ namespace LLGL
         public static extern unsafe void Execute(CommandBuffer secondaryCommandBuffer);
 
         [DllImport(DllName, EntryPoint="llglUpdateBuffer", CallingConvention=CallingConvention.Cdecl)]
-        public static extern unsafe void UpdateBuffer(Buffer dstBuffer, long dstOffset, void* data, short dataSize);
+        public static extern unsafe void UpdateBuffer(Buffer dstBuffer, long dstOffset, void* data, long dataSize);
 
         [DllImport(DllName, EntryPoint="llglCopyBuffer", CallingConvention=CallingConvention.Cdecl)]
         public static extern unsafe void CopyBuffer(Buffer dstBuffer, long dstOffset, Buffer srcBuffer, long srcOffset, long size);

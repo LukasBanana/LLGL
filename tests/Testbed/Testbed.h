@@ -93,6 +93,13 @@ using namespace LLGL;
     LLGL_MAYBE_UNUSED const char* OBJ##_Name = NAME;    \
     CREATE_COMPUTE_PSO_EXT(OBJ, DESC, NAME)
 
+#define SAFE_RELEASE(OBJ)           \
+    if (OBJ != nullptr)             \
+    {                               \
+        renderer->Release(*OBJ);    \
+        OBJ = nullptr;              \
+    }
+
 
 #endif
 

@@ -19,7 +19,7 @@ type CommandBuffer interface {
 	Begin()
 	End()
 	Execute(secondaryCommandBuffer CommandBuffer)
-	UpdateBuffer(dstBuffer Buffer, dstOffset uint64, data unsafe.Pointer, dataSize uint16)
+	UpdateBuffer(dstBuffer Buffer, dstOffset uint64, data unsafe.Pointer, dataSize uint64)
 	CopyBuffer(dstBuffer Buffer, dstOffset uint64, srcBuffer Buffer, srcOffset uint64, size uint64)
 	CopyBufferFromTexture(dstBuffer Buffer, dstOffset uint64, srcTexture Texture, srcRegion TextureRegion, rowStride uint32, layerStride uint32)
 	FillBuffer(dstBuffer Buffer, dstOffset uint64, value uint32, fillSize uint64)
@@ -93,8 +93,8 @@ func (self commandBufferImpl) Execute(secondaryCommandBuffer CommandBuffer) {
 	C.llglExecute(secondaryCommandBuffer.(commandBufferImpl).native)
 }
 
-func (self commandBufferImpl) UpdateBuffer(dstBuffer Buffer, dstOffset uint64, data unsafe.Pointer, dataSize uint16) {
-	C.llglUpdateBuffer(dstBuffer.(bufferImpl).native, C.uint64_t(dstOffset), data, C.uint16_t(dataSize))
+func (self commandBufferImpl) UpdateBuffer(dstBuffer Buffer, dstOffset uint64, data unsafe.Pointer, dataSize uint64) {
+	C.llglUpdateBuffer(dstBuffer.(bufferImpl).native, C.uint64_t(dstOffset), data, C.uint64_t(dataSize))
 }
 
 func (self commandBufferImpl) CopyBuffer(dstBuffer Buffer, dstOffset uint64, srcBuffer Buffer, srcOffset uint64, size uint64) {

@@ -93,7 +93,7 @@ void D3D11PrimaryCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     const void*     data,
-    std::uint16_t   dataSize)
+    std::uint64_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D11Buffer&, dstBuffer);
     const bool needsCommandListEmulation = context_.GetStateManager().NeedsCommandListEmulation();

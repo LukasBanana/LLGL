@@ -104,7 +104,7 @@ void D3D12CommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     const void*     data,
-    std::uint16_t   dataSize)
+    std::uint64_t   dataSize)
 {
     auto& dstBufferD3D = LLGL_CAST(D3D12Buffer&, dstBuffer);
     commandContext_.UpdateSubresource(dstBufferD3D.GetResource(), dstOffset, data, dataSize);

@@ -11,6 +11,7 @@
 
 #include <vulkan/vulkan.h>
 #include <cstdint>
+#include <memory>
 
 
 namespace LLGL
@@ -81,6 +82,8 @@ class VKDeviceMemoryRegion
         std::uint32_t   memoryTypeIndex_    = 0;
 
 };
+
+using VKDeviceMemoryRegionPtr = std::unique_ptr<VKDeviceMemoryRegion>;
 
 
 } // /namespace LLGL

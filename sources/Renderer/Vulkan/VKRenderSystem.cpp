@@ -103,7 +103,9 @@ VKRenderSystem::~VKRenderSystem()
 
 SwapChain* VKRenderSystem::CreateSwapChain(const SwapChainDescriptor& swapChainDesc, const std::shared_ptr<Surface>& surface)
 {
-    return swapChains_.emplace<VKSwapChain>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface, GetRendererInfo());
+    return swapChains_.emplace<VKSwapChain>(
+        instance_, physicalDevice_, device_, *deviceMemoryMngr_, swapChainDesc, surface, GetRendererInfo()
+    );
 }
 
 void VKRenderSystem::Release(SwapChain& swapChain)
@@ -122,7 +124,9 @@ CommandQueue* VKRenderSystem::GetCommandQueue()
 
 CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& commandBufferDesc)
 {
-    return commandBuffers_.emplace<VKCommandBuffer>(physicalDevice_, device_, device_.GetVkQueue(), device_.GetQueueFamilyIndices(), commandBufferDesc);
+    return commandBuffers_.emplace<VKCommandBuffer>(
+        physicalDevice_, device_, device_.GetVkQueue(), *deviceMemoryMngr_, device_.GetQueueFamilyIndices(), commandBufferDesc
+    );
 }
 
 void VKRenderSystem::Release(CommandBuffer& commandBuffer)

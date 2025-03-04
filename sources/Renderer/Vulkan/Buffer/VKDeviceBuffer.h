@@ -13,7 +13,6 @@
 #include "../Memory/VKDeviceMemoryRegion.h"
 #include "../VKPtr.h"
 
-#include <stdexcept>
 
 namespace LLGL
 {

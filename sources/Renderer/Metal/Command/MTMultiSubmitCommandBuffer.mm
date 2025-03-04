@@ -87,7 +87,7 @@ void MTMultiSubmitCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     const void*     data,
-    std::uint16_t   dataSize)
+    std::uint64_t   dataSize)
 {
     auto& dstBufferMT = LLGL_CAST(MTBuffer&, dstBuffer);
 

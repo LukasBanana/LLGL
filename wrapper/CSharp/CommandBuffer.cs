@@ -57,7 +57,7 @@ namespace LLGL
             {
                 fixed (void* dataPtr = data)
                 {
-                    NativeLLGL.UpdateBuffer(dstBuffer.Native, dstOffset, dataPtr, (short)data.Length);
+                    NativeLLGL.UpdateBuffer(dstBuffer.Native, dstOffset, dataPtr, data.Length);
                 }
             }
         }

@@ -46,6 +46,7 @@ DEF_TEST( BufferMap )
         if (result != 0)
         {
             Log::Errorf(
+                LLGL::Log::ColorFlags::StdError,
                 "Mismatch between data of CPU mapped buffer 1 [0x%08X, 0x%08X, 0x%08X, 0x%08X] and initial data [0x%08X, 0x%08X, 0x%08X, 0x%08X]\n",
                 buf1DataU32[0], buf1DataU32[1], buf1DataU32[2], buf1DataU32[3],
                 buf1Initial[0], buf1Initial[1], buf1Initial[2], buf1Initial[3]
@@ -55,7 +56,7 @@ DEF_TEST( BufferMap )
     }
     else
     {
-        Log::Errorf("Failed to map buffer 1 into CPU memory space for reading\n");
+        Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to map buffer 1 into CPU memory space for reading\n");
         return TestResult::FailedErrors;
     }
 
@@ -73,6 +74,7 @@ DEF_TEST( BufferMap )
         if (::memcmp(buf2DataFeedback, buf1Initial, sizeof(buf1Initial)) != 0)
         {
             Log::Errorf(
+                LLGL::Log::ColorFlags::StdError,
                 "Mismatch between data of buffer 2 feedback data [0x%08X, 0x%08X, 0x%08X, 0x%08X] and initial data [0x%08X, 0x%08X, 0x%08X, 0x%08X]\n",
                 buf2DataFeedback[0], buf2DataFeedback[1], buf2DataFeedback[2], buf2DataFeedback[3],
                 buf1Initial[0], buf1Initial[1], buf1Initial[2], buf1Initial[3]
@@ -82,7 +84,7 @@ DEF_TEST( BufferMap )
     }
     else
     {
-        Log::Errorf("Failed to map buffer 2 into CPU memory space for writing (WriteOnly)\n");
+        Log::Errorf(LLGL::Log::ColorFlags::StdError, "Failed to map buffer 2 into CPU memory space for writing (WriteOnly)\n");
         return TestResult::FailedErrors;
     }
 
@@ -97,7 +99,11 @@ DEF_TEST( BufferMap )
         }
         else
         {
-            Log::Errorf("Failed to map buffer 3 (offset = %" PRIu64 ") into CPU memory space for writing (WriteOnly)\n", buf3Off);
+            Log::Errorf(
+                LLGL::Log::ColorFlags::StdError,
+                "Failed to map buffer 3 (offset = %" PRIu64 ") into CPU memory space for writing (WriteOnly)\n",
+                buf3Off
+            );
             return TestResult::FailedErrors;
         }
     }
@@ -114,6 +120,7 @@ DEF_TEST( BufferMap )
             if (result != 0)
             {
                 Log::Errorf(
+                    LLGL::Log::ColorFlags::StdError,
                     "Mismatch between data of buffer 3 (offset = %" PRIu64 ") [0x%08X, 0x%08X, 0x%08X, 0x%08X] and initial data [0x%08X, 0x%08X, 0x%08X, 0x%08X]\n",
                     buf3Off,
                     buf3DataU32[0], buf3DataU32[1], buf3DataU32[2], buf3DataU32[3],
@@ -124,7 +131,11 @@ DEF_TEST( BufferMap )
         }
         else
         {
-            Log::Errorf("Failed to map buffer 3 (offset = %" PRIu64 ") into CPU memory space for reading (ReadOnly)\n", buf3Off);
+            Log::Errorf(
+                LLGL::Log::ColorFlags::StdError,
+                "Failed to map buffer 3 (offset = %" PRIu64 ") into CPU memory space for reading (ReadOnly)\n",
+                buf3Off
+            );
             return TestResult::FailedErrors;
         }
     }

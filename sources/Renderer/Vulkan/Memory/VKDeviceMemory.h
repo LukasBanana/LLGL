@@ -98,13 +98,13 @@ class VKDeviceMemory
         VkDeviceSize GetNextOffset() const;
 
         // Makes a new device memory block.
-        std::unique_ptr<VKDeviceMemoryRegion> MakeUniqueBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
+        VKDeviceMemoryRegionPtr MakeUniqueBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
 
         // Allocates a new block.
         VKDeviceMemoryRegion* AllocAndAppendBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
 
         // Inserts the specified region into the main block list by insertion-sort.
-        VKDeviceMemoryRegion* InsertBlock(std::unique_ptr<VKDeviceMemoryRegion>&& region);
+        VKDeviceMemoryRegion* InsertBlock(VKDeviceMemoryRegionPtr&& region);
 
         // Tries to find a fragmented block that can be reused.
         VKDeviceMemoryRegion* FindReusableBlock(VkDeviceSize alignedSize, VkDeviceSize alignment);
@@ -113,13 +113,13 @@ class VKDeviceMemory
         void UpdateMaxFragmentedBlockSize();
 
         // Inserts the specified region into the fragmented block list by insertion-sort.
-        void InsertBlockToFragmentsSorted(std::unique_ptr<VKDeviceMemoryRegion>&& region);
+        void InsertBlockToFragmentsSorted(VKDeviceMemoryRegionPtr&& region);
 
         // Inserts the specified region into the fragmented block list at the specified position and merges it with surrounding blocks if possible.
-        void InsertBlockToFragmentsAt(std::unique_ptr<VKDeviceMemoryRegion>&& region, std::size_t position);
+        void InsertBlockToFragmentsAt(VKDeviceMemoryRegionPtr&& region, std::size_t position);
 
         // Pops the last block off the fragments blocks and returns it.
-        std::unique_ptr<VKDeviceMemoryRegion> PopBackFragmentedBlock();
+        VKDeviceMemoryRegionPtr PopBackFragmentedBlock();
 
         // Merges the two fragmented blocks and records the maximal fragmented block size.
         bool MergeFragmentedBlockWith(VKDeviceMemoryRegion& region, VKDeviceMemoryRegion& appendixRegion);
@@ -135,15 +135,15 @@ class VKDeviceMemory
 
     private:
 
-        VKPtr<VkDeviceMemory>                               deviceMemory_;
-        VkDeviceSize                                        size_                   = 0;
-        std::uint32_t                                       memoryTypeIndex_        = 0;
+        VKPtr<VkDeviceMemory>                   deviceMemory_;
+        VkDeviceSize                            size_                   = 0;
+        std::uint32_t                           memoryTypeIndex_        = 0;
 
-        VkDeviceSize                                        maxNewBlockSize_        = 0;
-        std::vector<std::unique_ptr<VKDeviceMemoryRegion>>  blocks_;
+        VkDeviceSize                            maxNewBlockSize_        = 0;
+        std::vector<VKDeviceMemoryRegionPtr>    blocks_;
 
-        VkDeviceSize                                        maxFragmentedBlockSize_ = 0;
-        std::vector<std::unique_ptr<VKDeviceMemoryRegion>>  fragmentedBlocks_;
+        VkDeviceSize                            maxFragmentedBlockSize_ = 0;
+        std::vector<VKDeviceMemoryRegionPtr>    fragmentedBlocks_;
 
 };
 

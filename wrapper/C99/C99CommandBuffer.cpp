@@ -39,7 +39,7 @@ LLGL_C_EXPORT void llglExecute(LLGLCommandBuffer secondaryCommandBuffer)
     g_CurrentCmdBuf->Execute(LLGL_REF(CommandBuffer, secondaryCommandBuffer));
 }
 
-LLGL_C_EXPORT void llglUpdateBuffer(LLGLBuffer dstBuffer, uint64_t dstOffset, const void* data, uint16_t dataSize)
+LLGL_C_EXPORT void llglUpdateBuffer(LLGLBuffer dstBuffer, uint64_t dstOffset, const void* data, uint64_t dataSize)
 {
     g_CurrentCmdBuf->UpdateBuffer(LLGL_REF(Buffer, dstBuffer), dstOffset, data, dataSize);
 }

@@ -53,7 +53,7 @@ void D3D11SecondaryCommandBuffer::UpdateBuffer(
     Buffer&         /*dstBuffer*/,
     std::uint64_t   /*dstOffset*/,
     const void*     /*data*/,
-    std::uint16_t   /*dataSize*/)
+    std::uint64_t   /*dataSize*/)
 {
     // dummy - command not allowed in secondary command buffer
 }

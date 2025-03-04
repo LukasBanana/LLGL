@@ -228,7 +228,7 @@ void DbgCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     const void*     data,
-    std::uint16_t   dataSize)
+    std::uint64_t   dataSize)
 {
     auto& dstBufferDbg = LLGL_DBG_CAST(DbgBuffer&, dstBuffer);
 

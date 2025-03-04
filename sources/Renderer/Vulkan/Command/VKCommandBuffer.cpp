@@ -53,6 +53,7 @@ VKCommandBuffer::VKCommandBuffer(
     const VKPhysicalDevice&         physicalDevice,
     VkDevice                        device,
     VkQueue                         commandQueue,
+    VKDeviceMemoryManager&          deviceMemoryMngr,
     const VKQueueFamilyIndices&     queueFamilyIndices,
     const CommandBufferDescriptor&  desc)
 :
@@ -95,6 +96,7 @@ VKCommandBuffer::VKCommandBuffer(
     CreateVkCommandPool(queueFamilyIndices.graphicsFamily);
     CreateVkCommandBuffers();
     CreateVkRecordingFences();
+    CreateStagingBufferPools(deviceMemoryMngr, static_cast<VkDeviceSize>(desc.minStagingPoolSize));
 }
 
 VKCommandBuffer::~VKCommandBuffer()
@@ -192,23 +194,33 @@ void VKCommandBuffer::UpdateBuffer(
     Buffer&         dstBuffer,
     std::uint64_t   dstOffset,
     const void*     data,
-    std::uint16_t   dataSize)
+    std::uint64_t   dataSize)
 {
     auto& dstBufferVK = LLGL_CAST(VKBuffer&, dstBuffer);
 
     const VkDeviceSize size     = static_cast<VkDeviceSize>(dataSize);
     const VkDeviceSize offset   = static_cast<VkDeviceSize>(dstOffset);
 
+    constexpr VkDeviceSize k_limitForCmdUpdateBuffer = (1u << 16);
+
     if (IsInsideRenderPass())
     {
         PauseRenderPass();
-        vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
-        BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
+        {
+            if (size > k_limitForCmdUpdateBuffer)
+                stagingBufferPools_[commandBufferIndex_].WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
+            else
+                vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+            BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
+        }
         ResumeRenderPass();
     }
     else
     {
-        vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
+        if (size > k_limitForCmdUpdateBuffer)
+            stagingBufferPools_[commandBufferIndex_].WriteStaged(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, data, size);
+        else
+            vkCmdUpdateBuffer(commandBuffer_, dstBufferVK.GetVkBuffer(), offset, size, data);
         BufferPipelineBarrier(dstBufferVK.GetVkBuffer(), offset, size, VK_ACCESS_TRANSFER_WRITE_BIT, dstBufferVK.GetAccessFlags());
     }
 }
@@ -1209,6 +1221,16 @@ void VKCommandBuffer::CreateVkRecordingFences()
     }
 }
 
+void VKCommandBuffer::CreateStagingBufferPools(VKDeviceMemoryManager& deviceMemoryMngr, VkDeviceSize minStagingPoolSize)
+{
+    /* Create command allocators and descriptor heap pools */
+    constexpr VkDeviceSize minStagingChunkSize = 256;
+    minStagingPoolSize = std::max(minStagingChunkSize, minStagingPoolSize);
+
+    for_range(i, numCommandBuffers_)
+        stagingBufferPools_[i].InitializeDevice(&deviceMemoryMngr, minStagingPoolSize);
+}
+
 void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments)
 {
     if (numAttachments > 0)
@@ -1359,6 +1381,8 @@ void VKCommandBuffer::AcquireNextBuffer()
     descriptorSetPool_  = &(descriptorSetPoolArray_[commandBufferIndex_]);
     descriptorSetPool_->Reset();
     context_.Reset(commandBuffer_);
+
+    stagingBufferPools_[commandBufferIndex_].Reset();
 }
 
 void VKCommandBuffer::ResetBindingStates()

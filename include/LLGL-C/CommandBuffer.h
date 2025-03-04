@@ -18,7 +18,7 @@
 LLGL_C_EXPORT void llglBegin(LLGLCommandBuffer commandBuffer);
 LLGL_C_EXPORT void llglEnd();
 LLGL_C_EXPORT void llglExecute(LLGLCommandBuffer secondaryCommandBuffer);
-LLGL_C_EXPORT void llglUpdateBuffer(LLGLBuffer dstBuffer, uint64_t dstOffset, const void* data, uint16_t dataSize);
+LLGL_C_EXPORT void llglUpdateBuffer(LLGLBuffer dstBuffer, uint64_t dstOffset, const void* data, uint64_t dataSize);
 LLGL_C_EXPORT void llglCopyBuffer(LLGLBuffer dstBuffer, uint64_t dstOffset, LLGLBuffer srcBuffer, uint64_t srcOffset, uint64_t size);
 LLGL_C_EXPORT void llglCopyBufferFromTexture(LLGLBuffer dstBuffer, uint64_t dstOffset, LLGLTexture srcTexture, const LLGLTextureRegion* srcRegion, uint32_t rowStride, uint32_t layerStride);
 LLGL_C_EXPORT void llglFillBuffer(LLGLBuffer dstBuffer, uint64_t dstOffset, uint32_t value, uint64_t fillSize);

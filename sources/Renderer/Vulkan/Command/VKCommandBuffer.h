@@ -14,6 +14,8 @@
 #include "../VKPtr.h"
 #include "../VKCore.h"
 #include "VKCommandContext.h"
+#include "../Memory/VKDeviceMemoryManager.h"
+#include "../Buffer/VKStagingBufferPool.h"
 #include "../RenderState/VKStagingDescriptorSetPool.h"
 #include "../RenderState/VKDescriptorCache.h"
 #include <vector>
@@ -43,6 +45,7 @@ class VKCommandBuffer final : public CommandBuffer
             const VKPhysicalDevice&         physicalDevice,
             VkDevice                        device,
             VkQueue                         commandQueue,
+            VKDeviceMemoryManager&          deviceMemoryMngr,
             const VKQueueFamilyIndices&     queueFamilyIndices,
             const CommandBufferDescriptor&  desc
         );
@@ -88,6 +91,7 @@ class VKCommandBuffer final : public CommandBuffer
         void CreateVkCommandPool(std::uint32_t queueFamilyIndex);
         void CreateVkCommandBuffers();
         void CreateVkRecordingFences();
+        void CreateStagingBufferPools(VKDeviceMemoryManager& deviceMemoryMngr, VkDeviceSize minStagingPoolSize);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
@@ -167,6 +171,8 @@ class VKCommandBuffer final : public CommandBuffer
         std::uint32_t                   numCommandBuffers_                              = 2;
 
         VKCommandContext                context_;
+
+        VKStagingBufferPool             stagingBufferPools_[maxNumCommandBuffers];
 
         RecordState                     recordState_                                    = RecordState::Undefined;
 
