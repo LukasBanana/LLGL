@@ -277,6 +277,10 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         sourceName      = shaderDesc.debugName;
     }
 
+    /* If 'sourceSize' is 0, the source length is determined from the NUL-terminated source string */
+    if (sourceLength == 0 && sourceCode != nullptr)
+        sourceLength = std::strlen(sourceCode);
+
     /* Get parameters from shader descriptor */
     const char*             entry   = shaderDesc.entryPoint;
     const char*             target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
@@ -341,7 +345,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
     else
     #endif // /LLGL_D3D12_ENABLE_DXCOMPILER
     {
-        /* Compile shader yo DXBC with FXC */
+        /* Compile shader to DXBC with FXC */
         hr = D3DCompile(
             sourceCode,
             sourceLength,

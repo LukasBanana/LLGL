@@ -664,7 +664,7 @@ class Example_HelloGame : public ExampleBase
             }
         }
 
-        void Update(LLGL::CommandBuffer& cmdBuffer, std::uint64_t offset, const void* data, std::uint16_t dataSize)
+        void Update(LLGL::CommandBuffer& cmdBuffer, std::uint64_t offset, const void* data, std::uint64_t dataSize)
         {
             const char* byteAlignedData     = reinterpret_cast<const char*>(data);
             const char* byteAlignedDataEnd  = byteAlignedData + dataSize;
@@ -672,7 +672,7 @@ class Example_HelloGame : public ExampleBase
             while (dataSize > 0)
             {
                 const std::uint64_t offsetEnd = ((offset + sizePerSegment) / sizePerSegment) * sizePerSegment;
-                const std::uint16_t batchDataSize = static_cast<std::uint16_t>(std::min<std::uint64_t>(dataSize, offsetEnd - offset));
+                const std::uint64_t batchDataSize = std::min<std::uint64_t>(dataSize, offsetEnd - offset);
 
                 cmdBuffer.UpdateBuffer(*segments[static_cast<std::size_t>(offset / sizePerSegment)], offset % sizePerSegment, byteAlignedData, batchDataSize);
 

@@ -141,6 +141,10 @@ bool D3D11Shader::CompileSource(ID3D11Device* device, const ShaderDescriptor& sh
         sourceName      = shaderDesc.debugName;
     }
 
+    /* If 'sourceSize' is 0, the source length is determined from the NUL-terminated source string */
+    if (sourceLength == 0 && sourceCode != nullptr)
+        sourceLength = std::strlen(sourceCode);
+
     /* Get parameters from shader descriptor */
     const char* entry   = shaderDesc.entryPoint;
     const char* target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
