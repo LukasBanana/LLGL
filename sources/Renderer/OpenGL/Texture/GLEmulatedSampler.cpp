@@ -29,14 +29,6 @@ bool GLEmulatedSampler::GetNativeHandle(void* nativeHandle, std::size_t nativeHa
     return false;
 }
 
-static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
-{
-    if (desc.mipMapEnabled)
-        return GLTypes::Map(desc.minFilter, desc.mipMapFilter);
-    else
-        return GLTypes::Map(desc.minFilter);
-}
-
 #if LLGL_SAMPLER_BORDER_COLOR
 
 static bool IsGLTextureWrapUsingBorder(GLenum mode)
@@ -55,7 +47,7 @@ void GLEmulatedSampler::SamplerParameters(const SamplerDescriptor& desc)
     wrapR_              = GLTypes::Map(desc.addressModeW);
 
     /* Store filter states */
-    minFilter_          = GetGLSamplerMinFilter(desc);
+    minFilter_          = GLTypes::ToSamplerMinFilter(desc);
     magFilter_          = GLTypes::Map(desc.magFilter);
     #if LLGL_OPENGL
     maxAnisotropy_      = static_cast<float>(desc.maxAnisotropy);

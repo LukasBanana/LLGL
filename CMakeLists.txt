@@ -11,6 +11,70 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project(LLGL)
 
+
+# === Options ===
+
+if(APPLE)
+    set(CMAKE_MACOSX_RPATH 1)
+endif()
+
+if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+    set(LLGL_BUILD_64BIT 1)
+else()
+    set(LLGL_BUILD_64BIT 0)
+endif()
+
+option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
+option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
+option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
+
+option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
+
+option(LLGL_BUILD_STATIC_LIB "Build LLGL as static library" OFF)
+option(LLGL_BUILD_TESTS "Include test projects" OFF)
+option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
+
+option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
+
+if(NOT LLGL_UWP_PLATFORM)
+    if(EMSCRIPTEN)
+        option(LLGL_BUILD_RENDERER_WEBGL "Include WebGL renderer project" ON)
+        option(LLGL_ENABLE_EMSCRIPTEN_PTHREADS "Build for Wasm platform with pthreads (USE_PTHREADS). This limits browser availability!" OFF)
+    elseif(LLGL_MOBILE_PLATFORM)
+        option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
+    else()
+        option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
+    endif()
+endif()
+
+if(APPLE)
+    option(LLGL_MACOS_ENABLE_COREVIDEO "Enable CoreVideo framework (for refresh rate of built-in displays)" ON)
+    option(LLGL_BUILD_RENDERER_METAL "Include Metal renderer project" ON)
+endif()
+
+if(NOT LLGL_UWP_PLATFORM)
+    option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
+endif()
+
+if(WIN32)
+    option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
+    option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
+endif()
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16")
+    option(LLGL_UNITY_BUILD "Build LLGL modules as unity builds in batches. This can speedup compilation time." OFF)
+endif()
+
+option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
+option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C# (requires LLGL_BUILD_WRAPPER_C99)" OFF)
+
+if(NOT LLGL_BUILD_WRAPPER_C99)
+    if(LLGL_BUILD_WRAPPER_CSHARP)
+        message(SEND_ERROR "LLGL_BUILD_WRAPPER_CSHARP is enabled but not LLGL_BUILD_WRAPPER_C99; The C# wrapper depends on the C99 wrapper!")
+    endif()
+endif()
+
+
 # === Target platforms ===
 
 if("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64")
@@ -230,6 +294,16 @@ function(set_llgl_module_properties MODULE_NAME)
             LIBRARY_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
             RUNTIME_OUTPUT_DIRECTORY    "${LLGL_OUTPUT_DIR}"
     )
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16")
+        if(LLGL_UNITY_BUILD)
+            set_target_properties(
+                ${MODULE_NAME} PROPERTIES
+                    UNITY_BUILD             ON
+                    UNITY_BUILD_MODE        BATCH
+                    UNITY_BUILD_BATCH_SIZE  32
+            )
+        endif()
+    endif()
 endfunction()
 
 function(append_global_property PROP_NAME OUTPUT_LIST NEW_ITEM)
@@ -417,63 +491,7 @@ set(SUMMARY_TARGET_ARCH "Unknown")
 set(SUMMARY_FLAGS "")
 
 
-# === Options ===
-
-if(APPLE)
-    set(CMAKE_MACOSX_RPATH 1)
-endif()
-
-if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-    set(LLGL_BUILD_64BIT 1)
-else()
-    set(LLGL_BUILD_64BIT 0)
-endif()
-
-option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
-option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
-option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
-
-option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
-
-option(LLGL_BUILD_STATIC_LIB "Build LLGL as static library" OFF)
-option(LLGL_BUILD_TESTS "Include test projects" OFF)
-option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
-
-option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
-
-if(NOT LLGL_UWP_PLATFORM)
-    if(EMSCRIPTEN)
-        option(LLGL_BUILD_RENDERER_WEBGL "Include WebGL renderer project" ON)
-        option(LLGL_ENABLE_EMSCRIPTEN_PTHREADS "Build for Wasm platform with pthreads (USE_PTHREADS). This limits browser availability!" OFF)
-    elseif(LLGL_MOBILE_PLATFORM)
-        option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGLES 3 renderer project" ON)
-    else()
-        option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
-    endif()
-endif()
-
-if(APPLE)
-    option(LLGL_MACOS_ENABLE_COREVIDEO "Enable CoreVideo framework (for refresh rate of built-in displays)" ON)
-    option(LLGL_BUILD_RENDERER_METAL "Include Metal renderer project" ON)
-endif()
-
-if(NOT LLGL_UWP_PLATFORM)
-    option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
-endif()
-
-if(WIN32)
-    option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
-    option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
-endif()
-
-option(LLGL_BUILD_WRAPPER_C99 "Include wrapper for C99" OFF)
-option(LLGL_BUILD_WRAPPER_CSHARP "Include wrapper for C# (requires LLGL_BUILD_WRAPPER_C99)" OFF)
-
-if(NOT LLGL_BUILD_WRAPPER_C99)
-    if(LLGL_BUILD_WRAPPER_CSHARP)
-        message(SEND_ERROR "LLGL_BUILD_WRAPPER_CSHARP is enabled but not LLGL_BUILD_WRAPPER_C99; The C# wrapper depends on the C99 wrapper!")
-    endif()
-endif()
+# === Definitions ===
 
 if(LLGL_ENABLE_CHECKED_CAST)
     ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
@@ -497,6 +515,10 @@ endif()
 
 if(LLGL_MACOS_ENABLE_COREVIDEO)
     ADD_DEFINE(LLGL_MACOS_ENABLE_COREVIDEO)
+endif()
+
+if(LLGL_UNITY_BUILD)
+    ADD_DEFINE(LLGL_UNITY_BUILD)
 endif()
 
 if(LLGL_WASM_PLATFORM)

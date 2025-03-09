@@ -14,6 +14,7 @@
 #include "../Command/D3D12CommandQueue.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../BufferUtils.h"
+#include "../../ResourceUtils.h"
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Backend/Direct3D12/NativeHandle.h>
@@ -285,16 +286,6 @@ void D3D12Buffer::ClearSubresourceUInt(
 
     /* Reset previous staging descriptor heaps */
     commandContext.SetStagingDescriptorHeaps(oldLayout, oldRootParamIndices);
-}
-
-static bool HasReadAccess(const CPUAccess access)
-{
-    return (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite);
-}
-
-static bool HasWriteAccess(const CPUAccess access)
-{
-    return (access >= CPUAccess::WriteOnly && access <= CPUAccess::ReadWrite);
 }
 
 HRESULT D3D12Buffer::Map(

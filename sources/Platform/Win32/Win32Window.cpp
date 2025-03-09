@@ -52,7 +52,7 @@ static void SetWin32UserData(HWND wnd, void* userData)
 }
 
 // Queries window rectangular area by the specified client area size and window style.
-static RECT GetClientArea(LONG width, LONG height, DWORD style)
+static RECT GetWin32ClientArea(LONG width, LONG height, DWORD style)
 {
     RECT rc;
     {
@@ -66,7 +66,7 @@ static RECT GetClientArea(LONG width, LONG height, DWORD style)
 }
 
 // Determines the Win32 window style for the specified descriptor.
-static DWORD GetWindowStyle(const WindowDescriptor& desc)
+static DWORD GetWin32WindowStyle(const WindowDescriptor& desc)
 {
     DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS); // Both required for OpenGL
 
@@ -111,9 +111,9 @@ static Win32FrameAndStyle GetWin32FrameAndStyleFromDesc(const WindowDescriptor& 
     Win32FrameAndStyle frame;
 
     /* Get window style and client area */
-    frame.style = GetWindowStyle(desc);
+    frame.style = GetWin32WindowStyle(desc);
 
-    auto rc = GetClientArea(
+    auto rc = GetWin32ClientArea(
         static_cast<LONG>(desc.size.width),
         static_cast<LONG>(desc.size.height),
         frame.style
@@ -194,7 +194,7 @@ void Win32Window::SetSize(const Extent2D& size, bool useClientArea)
 
     if (useClientArea)
     {
-        auto rc = GetClientArea(
+        RECT rc = GetWin32ClientArea(
             static_cast<LONG>(size.width),
             static_cast<LONG>(size.height),
             GetWindowLong(wnd_, GWL_STYLE)
@@ -311,7 +311,7 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
     const bool isResizable  = ((oldStyle & WS_SIZEBOX) != 0);
 
     /* Setup new window flags */
-    DWORD newStyle = GetWindowStyle(desc);
+    DWORD newStyle = GetWin32WindowStyle(desc);
 
     if ((oldStyle & WS_MAXIMIZE) != 0)
         newStyle |= WS_MAXIMIZE;

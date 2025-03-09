@@ -735,6 +735,14 @@ GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology)
     LLGL_TRAP_GL_MAP(PrimitiveTopology, primitiveTopology);
 }
 
+GLenum ToSamplerMinFilter(const SamplerDescriptor& desc)
+{
+    if (desc.mipMapEnabled)
+        return Map(desc.minFilter, desc.mipMapFilter);
+    else
+        return Map(desc.minFilter);
+}
+
 
 /* ----- Unmap functions ----- */
 

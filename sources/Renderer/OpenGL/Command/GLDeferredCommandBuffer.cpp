@@ -1233,6 +1233,9 @@ TCommand* GLDeferredCommandBuffer::AllocCommand(const GLOpcode opcode, std::size
 }
 
 
+#undef LLGL_FLUSH_MEMORY_BARRIERS
+
+
 } // /namespace LLGL
 
 

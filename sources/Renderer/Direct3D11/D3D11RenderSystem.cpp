@@ -1203,8 +1203,10 @@ D3D11RenderSystem::LiveObjectReporter::LiveObjectReporter() :
 
 D3D11RenderSystem::LiveObjectReporter::~LiveObjectReporter()
 {
+    #if !LLGL_UNITY_BUILD
     if (debugDevice)
         debugDevice->ReportLiveObjects(DXGI_DEBUG_D3D11, DXGI_DEBUG_RLO_ALL);
+    #endif
 }
 
 #endif // /LLGL_DEBUG

@@ -9,6 +9,8 @@
 #define LLGL_WIN32_LEAN_AND_MEAN_H
 
 
+#if !LLGL_UNITY_BUILD
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -170,6 +172,8 @@
 #ifndef NOMCX
 #define NOMCX
 #endif
+
+#endif // !LLGL_UNITY_BUILD
 
 
 #endif

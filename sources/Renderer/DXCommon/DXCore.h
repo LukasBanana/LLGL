@@ -84,6 +84,9 @@ DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits);
 // Returns true if the specified DXGI swap-chain is in fullscreen mode.
 bool DXGetFullscreenState(IDXGISwapChain* swapChain);
 
+// Returns the GUID for the D3D debug object name interface.
+GUID DXGetD3DDebugObjectNameGUID();
+
 
 } // /namespace LLGL
 

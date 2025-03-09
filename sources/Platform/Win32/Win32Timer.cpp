@@ -24,7 +24,9 @@ namespace Timer
 Specifies whether to enable the adjustment for unexpected leaps in the Win32 performance counter.
 This is caused by unexpected data across the PCI to ISA bridge, aka south bridge. See Microsoft KB274323.
 */
+#ifndef LLGL_LEAP_FORWARD_ADJUSTMENT
 #define LLGL_LEAP_FORWARD_ADJUSTMENT 1
+#endif
 
 static LONGLONG GetPerformanceFrequencyQuadPart()
 {

@@ -71,6 +71,9 @@ GLenum ToDrawMode(const PrimitiveTopology primitiveTopology);
 // Returns the <primitiveMode> enum for glBeginTransformFeedback* commands.
 GLenum ToPrimitiveMode(const PrimitiveTopology primitiveTopology);
 
+// Returns the GL sampler filter depending on 'desc.mipMapEnabled'.
+GLenum ToSamplerMinFilter(const SamplerDescriptor& desc);
+
 UniformType UnmapUniformType( const GLenum uniformType    );
 Format      UnmapFormat     ( const GLenum internalFormat );
 DataType    UnmapDataType   ( const GLenum type           );

@@ -5,6 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include <initguid.h> // Comes first to define GUIDs
 #include "DXCore.h"
 #include "ComPtr.h"
 #include "../../Core/Assertion.h"
@@ -535,6 +536,11 @@ bool DXGetFullscreenState(IDXGISwapChain* swapChain)
     HRESULT hr = swapChain->GetFullscreenState(&fullscreenState, nullptr);
     DXThrowIfFailed(hr, "failed to get fullscreen state");
     return (fullscreenState != FALSE);
+}
+
+GUID DXGetD3DDebugObjectNameGUID()
+{
+    return WKPDID_D3DDebugObjectName;
 }
 
 

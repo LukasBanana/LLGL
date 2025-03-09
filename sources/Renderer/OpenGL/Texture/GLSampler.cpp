@@ -50,14 +50,6 @@ void GLSampler::SetDebugName(const char* name)
     GLSetObjectLabel(GL_SAMPLER, GetID(), name);
 }
 
-static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
-{
-    if (desc.mipMapEnabled)
-        return GLTypes::Map(desc.minFilter, desc.mipMapFilter);
-    else
-        return GLTypes::Map(desc.minFilter);
-}
-
 void GLSampler::SamplerParameters(const SamplerDescriptor& desc)
 {
     /* Set texture coordinate wrap modes */
@@ -66,7 +58,7 @@ void GLSampler::SamplerParameters(const SamplerDescriptor& desc)
     glSamplerParameteri(id_, GL_TEXTURE_WRAP_R, GLTypes::Map(desc.addressModeW));
 
     /* Set filter states */
-    glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, GetGLSamplerMinFilter(desc));
+    glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, GLTypes::ToSamplerMinFilter(desc));
     glSamplerParameteri(id_, GL_TEXTURE_MAG_FILTER, GLTypes::Map(desc.magFilter));
     #ifdef LLGL_OPENGL
     glSamplerParameterf(id_, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<float>(desc.maxAnisotropy));

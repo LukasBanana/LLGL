@@ -1016,6 +1016,9 @@ bool GLImmediateCommandBuffer::IsImmediateCmdBuffer() const
 }
 
 
+#undef LLGL_FLUSH_MEMORY_BARRIERS
+
+
 } // /namespace LLGL
 
 
