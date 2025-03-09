@@ -5,6 +5,7 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#include <initguid.h> // Comes first to define GUIDs
 #include "D3D11RenderSystem.h"
 #include "D3D11Types.h"
 #include "D3D11ResourceFlags.h"

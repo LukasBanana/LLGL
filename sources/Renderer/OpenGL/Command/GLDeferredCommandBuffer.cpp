@@ -94,12 +94,13 @@ void GLDeferredCommandBuffer::UpdateBuffer(
     const void*     data,
     std::uint64_t   dataSize)
 {
-    auto cmd = AllocCommand<GLCmdBufferSubData>(GLOpcodeBufferSubData, dataSize);
+    const std::size_t dataSizeSz = static_cast<std::size_t>(dataSize);
+    auto cmd = AllocCommand<GLCmdBufferSubData>(GLOpcodeBufferSubData, dataSizeSz);
     {
         cmd->buffer = LLGL_CAST(GLBuffer*, &dstBuffer);
         cmd->offset = static_cast<GLintptr>(dstOffset);
         cmd->size   = static_cast<GLsizeiptr>(dataSize);
-        ::memcpy(cmd + 1, data, dataSize);
+        ::memcpy(cmd + 1, data, dataSizeSz);
     }
 }
 

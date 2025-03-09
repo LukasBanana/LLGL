@@ -96,7 +96,7 @@ DEF_TEST( BufferUpdate )
     CREATE_BUFFER(buf4Large, buf4LargeDesc, "buf4Large", nullptr);
 
     std::vector<std::uint32_t> buf4LargeData;
-    buf4LargeData.resize(buf4LargeDesc.size / sizeof(std::uint32_t), 0xF000BAAA); // Initialize with test value
+    buf4LargeData.resize(static_cast<std::size_t>(buf4LargeDesc.size) / sizeof(std::uint32_t), 0xF000BAAA); // Initialize with test value
 
     cmdBuffer->Begin();
     {
