@@ -71,11 +71,13 @@ void VKStagingDescriptorSetPool::AllocateDescriptorPool()
     const std::uint32_t descriptorPoolSize = GetDescriptorPoolCapacity(capacityLevel_);
     const VkDescriptorPoolSize poolSizes[] =
     {
-        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER,        descriptorPoolSize },
-        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,  descriptorPoolSize },
-        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,  descriptorPoolSize },
-        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorPoolSize },
-        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLER,              descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,        descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,        descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,       descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,       descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, descriptorPoolSize },
+        VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, descriptorPoolSize },
     };
     const std::uint32_t setCapacity = GetDescriptorSetCapacity(capacityLevel_);
     descriptorPools_.emplace_back(device_);

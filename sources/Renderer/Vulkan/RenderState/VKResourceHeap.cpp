@@ -120,6 +120,8 @@ std::uint32_t VKResourceHeap::WriteResourceViews(
 
             case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
             case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+            case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
                 FillWriteDescriptorWithBufferRange(device, desc, descriptorSet, binding, setWriter, barrierWriter);
                 break;
 
@@ -326,7 +328,7 @@ void VKResourceHeap::FillWriteDescriptorWithImageView(
 }
 
 void VKResourceHeap::FillWriteDescriptorWithBufferRange(
-    VkDevice                        /*device*/,
+    VkDevice                        device,
     const ResourceViewDescriptor&   desc,
     std::uint32_t                   descriptorSet,
     const VKLayoutHeapBinding&      binding,
@@ -343,20 +345,21 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
         writeDesc->dstArrayElement  = binding.dstArrayElement;
         writeDesc->descriptorCount  = 1;
         writeDesc->pImageInfo       = nullptr;
+        writeDesc->descriptorType   = binding.descriptorType;
 
-#if 0 //TODO: when a texel buffer is used, the set-layout must be updated as well.
-        if (bufferVK->GetBufferView() != VK_NULL_HANDLE)
+        if (binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER ||
+            binding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER)
         {
-            writeDesc->descriptorType   = ((binding.bindFlags & BindFlags::Storage) != 0 ? VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER);
+            //TODO: when a texel buffer is used, the set-layout must be updated as well.
+            const std::size_t bufferViewIndex = descriptorSet * numBufferViewsPerSet_ + binding.bufferViewIndex;
             VkBufferView* bufferViewInfo = setWriter.NextBufferView();
             {
-                *bufferViewInfo = bufferVK->GetBufferView();
+                *bufferViewInfo = GetOrCreateBufferView(device, *bufferVK, desc, bufferViewIndex);
             }
             writeDesc->pBufferInfo      = nullptr;
             writeDesc->pTexelBufferView = bufferViewInfo;
         }
         else
-#endif
         {
             /* Initialize buffer information */
             VkDescriptorBufferInfo* bufferInfo = setWriter.NextBufferInfo();
@@ -373,7 +376,6 @@ void VKResourceHeap::FillWriteDescriptorWithBufferRange(
                     bufferInfo->range   = desc.bufferView.size;
                 }
             }
-            writeDesc->descriptorType   = binding.descriptorType;
             writeDesc->pBufferInfo      = bufferInfo;
             writeDesc->pTexelBufferView = nullptr;
         }
@@ -454,8 +456,44 @@ VkImageView VKResourceHeap::GetOrCreateImageView(
         if (imageViewIndex < imageViews_.size() && imageViews_[imageViewIndex])
             imageViews_[imageViewIndex].Release();
 
-        /* Returns the standard image view */
+        /* Return the standard image view */
         return textureVK.GetVkImageView();
+    }
+}
+
+VkBufferView VKResourceHeap::GetOrCreateBufferView(
+    VkDevice                        device,
+    VKBuffer&                       bufferVK,
+    const ResourceViewDescriptor&   desc,
+    std::size_t                     bufferViewIndex)
+{
+    if (IsBufferViewEnabled(desc.bufferView))
+    {
+        /* Creates a new buffer view for the specified subresource descriptor */
+        VKPtr<VkBufferView> bufferView{ device, vkDestroyBufferView };
+        bufferVK.CreateBufferView(device, bufferView, static_cast<VkDeviceSize>(desc.bufferView.offset), static_cast<VkDeviceSize>(desc.bufferView.size));
+
+        /* Remove previous buffer view entry */
+        if (bufferViewIndex < bufferViews_.size() && bufferViews_[bufferViewIndex])
+            bufferViews_[bufferViewIndex].Release();
+
+        /* Increase buffer view container for new entry */
+        if (bufferViewIndex >= bufferViews_.size())
+            bufferViews_.resize(bufferViewIndex + 1);
+
+        /* Emplace new buffer view entry */
+        bufferViews_[bufferViewIndex] = std::move(bufferView);
+        return bufferViews_[bufferViewIndex].Get();
+    }
+    else
+    {
+        /* Remove previous buffer view entry */
+        if (bufferViewIndex < bufferViews_.size() && bufferViews_[bufferViewIndex])
+            bufferViews_[bufferViewIndex].Release();
+
+        /* Return the standard buffer view */
+        LLGL_ASSERT(bufferVK.GetBufferView());
+        return bufferVK.GetBufferView();
     }
 }
 

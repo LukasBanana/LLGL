@@ -131,6 +131,14 @@ class VKResourceHeap final : public ResourceHeap
             std::size_t                     imageViewIndex
         );
 
+        // Returns the buffer view for the specified buffer or creates one if the buffer-view is enabled.
+        VkBufferView GetOrCreateBufferView(
+            VkDevice                        device,
+            VKBuffer&                       bufferVK,
+            const ResourceViewDescriptor&   desc,
+            std::size_t                     bufferViewIndex
+        );
+
     private:
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
@@ -138,7 +146,7 @@ class VKResourceHeap final : public ResourceHeap
         SmallVector<VKLayoutHeapBinding>    bindings_;
 
         std::vector<VKPtr<VkImageView>>     imageViews_;
-      //std::vector<VKPtr<VkBufferView>>    bufferViews_;
+        std::vector<VKPtr<VkBufferView>>    bufferViews_;
         std::uint32_t                       numImageViewsPerSet_    = 0;
         std::uint32_t                       numBufferViewsPerSet_   = 0;
 
