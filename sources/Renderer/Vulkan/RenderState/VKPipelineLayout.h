@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include "VKDescriptorSetLayout.h"
 #include "VKPipelineLayoutPermutation.h"
 #include "VKDescriptorCache.h"
 #include "../Shader/VKShader.h"
@@ -66,13 +67,13 @@ class VKPipelineLayout final : public PipelineLayout
         // Returns the native VkDescriptorSetLayout object for heap bindings.
         inline VkDescriptorSetLayout GetSetLayoutForHeapBindings() const
         {
-            return setLayouts_[SetLayoutType_HeapBindings].Get();
+            return setLayoutHeapBindings_.GetVkDescriptorSetLayout();
         }
 
         // Returns the native VkDescriptorSetLayout object for dynamic bindings.
         inline VkDescriptorSetLayout GetSetLayoutForDynamicBindings() const
         {
-            return setLayouts_[SetLayoutType_DynamicBindings].Get();
+            return setLayoutDynamicBindings_.GetVkDescriptorSetLayout();
         }
 
         // Returns the descriptor set binding point for dynamic resource bindings.
@@ -163,18 +164,11 @@ class VKPipelineLayout final : public PipelineLayout
 
     private:
 
-        void CreateVkDescriptorSetLayout(
-            VkDevice                                        device,
-            SetLayoutType                                   setLayoutType,
-            const ArrayView<VkDescriptorSetLayoutBinding>&  setLayoutBindings
-        );
-
-        void CreateBindingSetLayout(
-            VkDevice                                    device,
-            const std::vector<BindingDescriptor>&       inBindings,
-            std::vector<VKLayoutBinding>&               outBindings,
-            std::vector<VkDescriptorSetLayoutBinding>&  outSetLayoutBindings,
-            SetLayoutType                               setLayoutType
+        void CreateDescriptorSetLayout(
+            VkDevice                                device,
+            const std::vector<BindingDescriptor>&   inBindings,
+            std::vector<VKLayoutBinding>&           outBindings,
+            VKDescriptorSetLayout&                  outDescriptorSetLayout
         );
 
         void CreateImmutableSamplers(
@@ -206,26 +200,27 @@ class VKPipelineLayout final : public PipelineLayout
 
     private:
 
-        static VKPtr<VkPipelineLayout>              defaultPipelineLayout_;
+        static VKPtr<VkPipelineLayout>      defaultPipelineLayout_;
 
-        VKPtr<VkPipelineLayout>                     pipelineLayout_;
-        VKPtr<VkDescriptorSetLayout>                setLayouts_[SetLayoutType_Num];
-        DescriptorSetBindingTable                   setBindingTables_[SetLayoutType_Num];
-        PackedPermutation3                          layoutTypeOrder_;
+        VKPtr<VkPipelineLayout>             pipelineLayout_;
 
-        VKPtr<VkDescriptorPool>                     descriptorPool_;
-        std::unique_ptr<VKDescriptorCache>          descriptorCache_;
-        VkDescriptorSet                             staticDescriptorSet_                    = VK_NULL_HANDLE;
+        VKDescriptorSetLayout               setLayoutHeapBindings_;
+        VKDescriptorSetLayout               setLayoutDynamicBindings_;
+        VKPtr<VkDescriptorSetLayout>        setLayoutImmutableSamplers_;
 
-        VKLayoutBindingTable                        bindingTable_;
-        std::vector<VKPtr<VkSampler>>               immutableSamplers_;
-        std::vector<UniformDescriptor>              uniformDescs_;
+        DescriptorSetBindingTable           setBindingTables_[SetLayoutType_Num];
+        PackedPermutation3                  layoutTypeOrder_;
 
-        std::vector<VkDescriptorSetLayoutBinding>   setLayoutHeapBindings_;
-        std::vector<VkDescriptorSetLayoutBinding>   setLayoutDynamicBindings_;
+        VKPtr<VkDescriptorPool>             descriptorPool_;
+        std::unique_ptr<VKDescriptorCache>  descriptorCache_;
+        VkDescriptorSet                     staticDescriptorSet_                    = VK_NULL_HANDLE;
 
-        long                                        barrierFlags_   : 2; // BarrierFlags
-        long                                        flags_          : 1; // PSOLayoutFlags
+        VKLayoutBindingTable                bindingTable_;
+        std::vector<VKPtr<VkSampler>>       immutableSamplers_;
+        std::vector<UniformDescriptor>      uniformDescs_;
+
+        long                                barrierFlags_   : 2; // BarrierFlags
+        long                                flags_          : 1; // PSOLayoutFlags
 
 };
 

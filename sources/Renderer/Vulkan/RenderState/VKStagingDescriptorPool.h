@@ -51,8 +51,8 @@ class VKStagingDescriptorPool
         // Returns true if this pool can allocate another descriptor set with the specified sizes.
         bool Capacity(std::uint32_t numSizes, const VkDescriptorPoolSize* sizes) const;
 
-        // Copies the specified source descriptors into the native D3D descriptor heap.
-        // Returns VK_NULL_HANDLE if the specified descriptor set cannot fit into the remaining space of this descriptor pool.
+        // Allocates a new descriptor set with the specified set layout.
+        // Traps execution if the pool ran out of its capacity. Use Capacity() to check its capacity first.
         VkDescriptorSet AllocateDescriptorSet(
             VkDescriptorSetLayout       setLayout,
             std::uint32_t               numSizes,

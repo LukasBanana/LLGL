@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include "VKDescriptorSetLayout.h"
 #include "VKDescriptorCache.h"
 #include "../Shader/VKShader.h"
 #include "../Vulkan.h"
@@ -26,15 +27,6 @@ namespace LLGL
 class VKPoolSizeAccumulator;
 class VKPipelineLayout;
 
-struct VKLayoutBinding
-{
-    std::uint32_t           dstBinding;
-    std::uint32_t           dstArrayElement;
-    VkDescriptorType        descriptorType;
-    VkPipelineStageFlags    stageFlags;
-    long                    bindFlags;
-};
-
 struct VKLayoutBindingTable
 {
     std::vector<VKLayoutBinding> heapBindings;
@@ -47,8 +39,6 @@ struct VKLayoutPermutationParameters
     std::vector<VkDescriptorSetLayoutBinding>   setLayoutDynamicBindings;
     std::vector<VkPushConstantRange>            pushConstantRanges;
     std::uint32_t                               numImmutableSamplers = 0;
-
-    static int CompareSWO(const VKLayoutPermutationParameters& lhs, const VKLayoutPermutationParameters& rhs);
 };
 
 class VKPipelineLayoutPermutation
@@ -78,13 +68,13 @@ class VKPipelineLayoutPermutation
         // Returns the native VkDescriptorSetLayout object for heap bindings.
         inline VkDescriptorSetLayout GetSetLayoutForHeapBindings() const
         {
-            return setLayoutHeapBindings_.Get();
+            return setLayoutHeapBindings_.GetVkDescriptorSetLayout();
         }
 
         // Returns the native VkDescriptorSetLayout object for dynamic bindings.
         inline VkDescriptorSetLayout GetSetLayoutForDynamicBindings() const
         {
-            return setLayoutDynamicBindings_.Get();
+            return setLayoutDynamicBindings_.GetVkDescriptorSetLayout();
         }
 
         // Returns the binding table for this pipeline layout.
@@ -99,32 +89,20 @@ class VKPipelineLayoutPermutation
             return descriptorCache_.get();
         }
 
-        // Returns the permutation parameters this layout was created with.
-        inline const VKLayoutPermutationParameters& GetPermutationParams() const
-        {
-            return permutationParams_;
-        }
+    public:
+
+        static int CompareSWO(const VKPipelineLayoutPermutation& lhs, const VKLayoutPermutationParameters& rhs);
 
     private:
 
-        void CreateVkDescriptorSetLayout(
-            VkDevice                                        device,
-            const ArrayView<VkDescriptorSetLayoutBinding>&  setLayoutBindings,
-            VKPtr<VkDescriptorSetLayout>&                   outSetLayout
-        );
-
         void CreateBindingSetLayout(
-            VkDevice                                            device,
-            const std::vector<VkDescriptorSetLayoutBinding>&    setLayoutBindings,
-            std::vector<VKLayoutBinding>&                       outBindings,
-            VKPtr<VkDescriptorSetLayout>&                       outSetLayout
+            VkDevice                                    device,
+            std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
+            std::vector<VKLayoutBinding>&               outBindings,
+            VKDescriptorSetLayout&                      outSetLayout
         );
 
-        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(
-            VkDevice                                device,
-            VkDescriptorSetLayout                   setLayoutImmutableSamplers,
-            const ArrayView<VkPushConstantRange>&   pushConstantRanges
-        ) const;
+        VKPtr<VkPipelineLayout> CreateVkPipelineLayout(VkDevice device, VkDescriptorSetLayout setLayoutImmutableSamplers) const;
 
         void CreateDescriptorPool(VkDevice device, std::uint32_t numImmutableSamplers);
         void CreateDescriptorCache(VkDevice device, VkDescriptorSetLayout setLayout);
@@ -134,14 +112,15 @@ class VKPipelineLayoutPermutation
         const VKPipelineLayout*             owner_                      = nullptr;
 
         VKPtr<VkPipelineLayout>             pipelineLayout_;
-        VKPtr<VkDescriptorSetLayout>        setLayoutHeapBindings_;
-        VKPtr<VkDescriptorSetLayout>        setLayoutDynamicBindings_;
+        VKDescriptorSetLayout               setLayoutHeapBindings_;
+        VKDescriptorSetLayout               setLayoutDynamicBindings_;
 
         VKPtr<VkDescriptorPool>             descriptorPool_;
         std::unique_ptr<VKDescriptorCache>  descriptorCache_;
 
         VKLayoutBindingTable                bindingTable_;
-        VKLayoutPermutationParameters       permutationParams_;
+        std::vector<VkPushConstantRange>    pushConstantRanges_;
+        std::uint32_t                       numImmutableSamplers_       = 0;
 
 };
 
