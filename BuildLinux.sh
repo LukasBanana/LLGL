@@ -12,6 +12,7 @@ ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 ENABLE_GL2X="OFF"
 BUILD_TYPE="Release"
+UNITY_BUILD="OFF"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
 VERBOSE=0
@@ -39,6 +40,7 @@ fi
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -S, --skip-validation ..... Skip check for missing packages (X11, OpenGL etc.)"
+    echo "  -u, --unity-build ......... Batches up to 32 source files in a unity build"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --legacy .................. Use GL2.x legacy mode"
     echo "  --null .................... Include Null renderer"
@@ -76,6 +78,8 @@ for ARG in "$@"; do
         VERBOSE=1
     elif [ "$ARG" = "-S" ] || [ "$ARG" = "--skip-validation" ]; then
         SKIP_VALIDATION=1
+    elif [ "$ARG" = "-u" ] || [ "$ARG" = "--unity-build" ]; then
+        UNITY_BUILD="ON"
     elif [ "$ARG" = "--legacy" ]; then
         ENABLE_GL2X="ON"
     elif [ "$ARG" = "--null" ]; then
@@ -157,6 +161,7 @@ OPTIONS=(
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
+    -DLLGL_UNITY_BUILD=$UNITY_BUILD
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
     -B "$OUTPUT_DIR"

@@ -7,6 +7,7 @@ ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 ENABLE_PTHREADS="OFF"
 BUILD_TYPE="Release"
+UNITY_BUILD="OFF"
 PROJECT_ONLY=0
 VERBOSE=0
 GENERATOR="CodeBlocks - Unix Makefiles"
@@ -21,6 +22,7 @@ print_help()
     echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -d, --debug ............... Configure Debug build (default is Release)"
     echo "  -p, --project-only [=G] ... Build project with CMake generator (default is CodeBlocks)"
+    echo "  -u, --unity-build ......... Batches up to 32 source files in a unity build"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --no-examples ............. Exclude example projects"
     echo "  --no-tests ................ Exclude test projects"
@@ -46,6 +48,8 @@ for ARG in "$@"; do
     elif [[ "$ARG" == --project-only=* ]]; then
         PROJECT_ONLY=1
         GENERATOR="${ARG:15}"
+    elif [ "$ARG" = "-u" ] || [ "$ARG" = "--unity-build" ]; then
+        UNITY_BUILD="ON"
     elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
         VERBOSE=1
     elif [ "$ARG" = "--null" ]; then
@@ -136,6 +140,7 @@ OPTIONS=(
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DLLGL_BUILD_STATIC_LIB=ON
     -DLLGL_ENABLE_EMSCRIPTEN_PTHREADS=$ENABLE_PTHREADS
+    -DLLGL_UNITY_BUILD=$UNITY_BUILD
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
     -B "$OUTPUT_DIR"

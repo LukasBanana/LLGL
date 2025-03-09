@@ -1,0 +1,63 @@
+name: Unity Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  unity_build:
+    strategy:
+      matrix:
+        platform: [Windows, Mac, Linux]
+        lib: [Shared, Static]
+        config: [Release, Debug]
+      fail-fast: true
+
+    runs-on: |
+      ${{ matrix.platform == 'Windows' }} => windows-latest
+      ${{ matrix.platform == 'Mac' }} => macos-latest
+      ${{ matrix.platform == 'Linux' }} => ubuntu-24.04
+
+    env:
+      WITH_GL: 'ON'
+      WITH_D3D: ${{ matrix.platform == 'Windows' && 'ON' || 'OFF' }}
+      WITH_MTL: ${{ matrix.platform == 'Mac' && 'ON' || 'OFF' }}
+      WITH_VK: ${{ matrix.platform == 'Linux' && 'ON' || 'OFF' }}
+      WITH_CSHARP: ${{ matrix.platform == 'Windows' && 'ON' || 'OFF' }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      if: matrix.platform == 'Linux'
+      run: |
+        sudo wget -O /etc/apt/trusted.gpg.d/lunarg-signing-key-pub.asc http://packages.lunarg.com/lunarg-signing-key-pub.asc
+        sudo wget -O /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
+        sudo apt update
+        sudo apt-get install libx11-dev libxrandr-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev vulkan-sdk vulkan-tools
+
+    - name: Configure CMake
+      run: >
+        cmake -S . -B ${{ github.workspace }}/${{ matrix.platform }}
+        -DLLGL_BUILD_STATIC_LIB=${{ matrix.lib == 'Static' && 'ON' || 'OFF' }}
+        -DLLGL_BUILD_RENDERER_OPENGL=${{ env.WITH_GL }}
+        -DLLGL_BUILD_RENDERER_DIRECT3D11=${{ env.WITH_D3D }}
+        -DLLGL_BUILD_RENDERER_DIRECT3D12=${{ env.WITH_D3D }}
+        -DLLGL_BUILD_RENDERER_METAL=${{ env.WITH_MTL }}
+        -DLLGL_BUILD_RENDERER_VULKAN=${{ env.WITH_VK }}
+        -DLLGL_BUILD_EXAMPLES=ON
+        -DLLGL_BUILD_TESTS=ON
+        -DLLGL_BUILD_WRAPPER_C99=ON
+        -DLLGL_BUILD_WRAPPER_CSHARP=${{ env.WITH_CSHARP }}
+        -DLLGL_UNITY_BUILD=ON
+        -DLLGL_VK_ENABLE_SPIRV_REFLECT=${{ env.WITH_VK }}
+
+    - name: Build
+      run: |
+        cmake --build ${{ github.workspace }}/${{ matrix.platform }} --config ${{ matrix.config }}
+

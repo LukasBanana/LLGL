@@ -9,6 +9,7 @@ ENABLE_GLES3="OFF"
 ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="OFF"
 BUILD_TYPE="Release"
+UNITY_BUILD="OFF"
 DEPLOYMENT_TARGET="11.0"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
@@ -28,6 +29,7 @@ print_help()
     echo "  -p, --project-only ........ Build project solution only (no compilation)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
     echo "  -t, --target T ............ Sets deployment target to T (default is 11.0)"
+    echo "  -u, --unity-build ......... Batches up to 32 source files in a unity build"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
     echo "  --gles .................... Include OpenGL ES 3 renderer"
@@ -57,6 +59,8 @@ for ARG in "$@"; do
             STATIC_LIB="ON"
         elif [ "$ARG" = "-t" ] || [ "$ARG" = "--target" ]; then
             READ_TARGET=1
+        elif [ "$ARG" = "-u" ] || [ "$ARG" = "--unity-build" ]; then
+            UNITY_BUILD="ON"
         elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
             VERBOSE=1
         elif [ "$ARG" = "--null" ]; then
@@ -123,6 +127,7 @@ OPTIONS=(
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
     -DLLGL_BUILD_EXAMPLES=$ENABLE_EXAMPLES
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
+    -DLLGL_UNITY_BUILD=$UNITY_BUILD
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
     -B "$OUTPUT_DIR"

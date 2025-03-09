@@ -11,6 +11,7 @@ ENABLE_EXAMPLES="ON"
 ENABLE_TESTS="ON"
 ENABLE_WRAPPER_C99="ON"
 BUILD_TYPE="Release"
+UNITY_BUILD="OFF"
 PROJECT_ONLY=0
 STATIC_LIB="OFF"
 VERBOSE=0
@@ -35,6 +36,7 @@ print_help()
     echo "  -h, --help ................ Print this help documentation and exit"
     echo "  -p, --project-only ........ Build project solution only (no compilation)"
     echo "  -s, --static-lib .......... Build static lib (default is shared lib)"
+    echo "  -u, --unity-build ......... Batches up to 32 source files in a unity build"
     echo "  -v, --verbose ............. Print additional information"
     echo "  --null .................... Include Null renderer"
     echo "  --gl ...................... Include OpenGL renderer"
@@ -64,6 +66,8 @@ for ARG in "$@"; do
         PROJECT_ONLY=1
     elif [ "$ARG" = "-s" ] || [ "$ARG" = "--static-lib" ]; then
         STATIC_LIB="ON"
+    elif [ "$ARG" = "-u" ] || [ "$ARG" = "--unity-build" ]; then
+        UNITY_BUILD="ON"
     elif [ "$ARG" = "-v" ] || [ "$ARG" = "--verbose" ]; then
         VERBOSE=1
     elif [ "$ARG" = "--null" ]; then
@@ -191,6 +195,7 @@ OPTIONS=(
     -DLLGL_BUILD_TESTS=$ENABLE_TESTS
     -DLLGL_BUILD_STATIC_LIB=$STATIC_LIB
     -DLLGL_BUILD_WRAPPER_C99=$ENABLE_WRAPPER_C99
+    -DLLGL_UNITY_BUILD=$UNITY_BUILD
     -DGaussLib_INCLUDE_DIR:STRING="$GAUSSIAN_LIB_DIR"
     -S "$SOURCE_DIR"
     -B "$OUTPUT_DIR"
