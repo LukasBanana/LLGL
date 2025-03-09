@@ -67,16 +67,22 @@ set INPUT_FN=^
     %CINCLUDE%\Window.h
 
 REM Generate wrapper for C99, C#, Go
-call :Generate .\LLGLWrapper.h -c99
-call :Generate .\LLGLWrapper.cs -csharp -fn
-call :Generate .\LLGLWrapper.go -golang
+call :Generate ..\include\LLGL-C\LLGLWrapper.h -c99
+call :Generate ..\wrapper\CSharp\LLGLWrapper.cs -csharp -fn
+call :Generate ..\wrapper\Go\LLGLWrapper.go -golang
 
 exit /B 0
 
 :Generate
 set OUTPUT=%~1
+set OUTPUT_DIR=%~p1
 set LANGUAGE=%~2
 set FUNCTIONS=%~3
+
+if not exist %OUTPUT_DIR% (
+	echo Cannot write output file "%OUTPUT%", because directory does not exist
+	exit /B 1
+)
 
 REM Generate wrapper
 if "%FUNCTIONS%"=="" (
