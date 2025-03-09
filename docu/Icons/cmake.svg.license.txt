@@ -1,0 +1,5 @@
+License:
+    Logo License (https://www.svgrepo.com/page/licensing/#Logo)
+
+Weblink:
+    https://www.svgrepo.com/svg/305873/cmake
