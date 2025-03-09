@@ -39,7 +39,7 @@ VKPipelineLayoutPermutationSPtr VKPipelineLayoutPermutationPool::CreatePermutati
         [owner, &permutationParams](const VKPipelineLayoutPermutationSPtr& entry) -> int
         {
             LLGL_COMPARE_SEPARATE_MEMBERS_SWO(owner, entry->GetOwner());
-            return VKLayoutPermutationParameters::CompareSWO(permutationParams, entry->GetPermutationParams());
+            return VKPipelineLayoutPermutation::CompareSWO(*entry, permutationParams);
         },
         &position
     );

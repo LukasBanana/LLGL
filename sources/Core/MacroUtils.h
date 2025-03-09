@@ -21,6 +21,13 @@
         if ( (LHS) && !(RHS)) { return +1; }            \
     }
 
+#define LLGL_COMPARE_SEPARATE_FUNC_SWO(FUNC, LHS, RHS)  \
+    {                                                   \
+        int cmp = FUNC((LHS), (RHS));                   \
+        if (cmp != 0)                                   \
+            return cmp;                                 \
+    }
+
 #define LLGL_COMPARE_MEMBER_SWO(MEMBER) \
     LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.MEMBER, rhs.MEMBER)
 
