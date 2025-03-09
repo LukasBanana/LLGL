@@ -4,6 +4,8 @@
 
 ## Overview
 
+*NOTE: This tutorial might be outdated. Please find a newer example of how to integrate ImGui into your LLGL application at [LLGL-Example-ImGui](https://github.com/LukasBanana/LLGL-Example-ImGui).*
+
 "Dear ImGui", from now on simply "ImGui", is a popular C++ library to render UI elements and handle their user events with minimal dependencies and setup.
 ImGui rendering directly, or "immediate" rather, into the current device context, which means it will interact directly with the underlying rendering API.
 While this is against the philosophy of an ecapsulated abstraction layer, i.e. a library that hides all the low-level details,
