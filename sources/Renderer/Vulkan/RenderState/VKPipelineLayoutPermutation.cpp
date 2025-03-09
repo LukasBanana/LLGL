@@ -26,14 +26,34 @@ namespace LLGL
 {
 
 
-static int CompareSetLayoutBindingSWO(const VkDescriptorSetLayoutBinding& lhs, const VkDescriptorSetLayoutBinding& rhs)
+VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
+    VkDevice                                device,
+    const VKPipelineLayout*                 owner,
+    VkDescriptorSetLayout                   setLayoutImmutableSamplers,
+    const VKLayoutPermutationParameters&    permutationParams)
+:
+    owner_                    { owner                                  },
+    pipelineLayout_           { device, vkDestroyPipelineLayout        },
+    setLayoutHeapBindings_    { device                                 },
+    setLayoutDynamicBindings_ { device                                 },
+    descriptorPool_           { device, vkDestroyDescriptorPool        },
+    pushConstantRanges_       { permutationParams.pushConstantRanges   },
+    numImmutableSamplers_     { permutationParams.numImmutableSamplers }
 {
-    LLGL_COMPARE_MEMBER_SWO( binding            );
-    LLGL_COMPARE_MEMBER_SWO( descriptorType     );
-    LLGL_COMPARE_MEMBER_SWO( descriptorCount    );
-    LLGL_COMPARE_MEMBER_SWO( stageFlags         );
-  //LLGL_COMPARE_MEMBER_SWO( pImmutableSamplers );
-    return 0;
+    /* Create Vulkan descriptor set layouts */
+    if (!permutationParams.setLayoutHeapBindings.empty())
+        CreateBindingSetLayout(device, permutationParams.setLayoutHeapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_);
+    if (!permutationParams.setLayoutDynamicBindings.empty())
+        CreateBindingSetLayout(device, permutationParams.setLayoutDynamicBindings, bindingTable_.dynamicBindings, setLayoutDynamicBindings_);
+
+    /* Create descriptor pool for dynamic descriptors and immutable samplers */
+    if (!bindingTable_.dynamicBindings.empty() || numImmutableSamplers_ > 0)
+        CreateDescriptorPool(device, numImmutableSamplers_);
+    if (!bindingTable_.dynamicBindings.empty())
+        CreateDescriptorCache(device, setLayoutDynamicBindings_.GetVkDescriptorSetLayout());
+
+    /* Create native Vulkan pipeline layout */
+    pipelineLayout_ = CreateVkPipelineLayout(device, setLayoutImmutableSamplers);
 }
 
 static int ComparePushConstantRangeSWO(const VkPushConstantRange& lhs, const VkPushConstantRange& rhs)
@@ -44,63 +64,18 @@ static int ComparePushConstantRangeSWO(const VkPushConstantRange& lhs, const VkP
     return 0;
 }
 
-int VKLayoutPermutationParameters::CompareSWO(const VKLayoutPermutationParameters& lhs, const VKLayoutPermutationParameters& rhs)
+int VKPipelineLayoutPermutation::CompareSWO(const VKPipelineLayoutPermutation& lhs, const VKLayoutPermutationParameters& rhs)
 {
-    LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.setLayoutHeapBindings.size(), rhs.setLayoutHeapBindings.size());
-    LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.setLayoutDynamicBindings.size(), rhs.setLayoutDynamicBindings.size());
-    LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.pushConstantRanges.size(), rhs.pushConstantRanges.size());
-    LLGL_COMPARE_MEMBER_SWO(numImmutableSamplers);
+    LLGL_COMPARE_SEPARATE_FUNC_SWO(VKDescriptorSetLayout::CompareSWO, lhs.setLayoutHeapBindings_, rhs.setLayoutHeapBindings);
+    LLGL_COMPARE_SEPARATE_FUNC_SWO(VKDescriptorSetLayout::CompareSWO, lhs.setLayoutDynamicBindings_, rhs.setLayoutDynamicBindings);
 
-    for_range(i, lhs.setLayoutHeapBindings.size())
-    {
-        int cmp = CompareSetLayoutBindingSWO(lhs.setLayoutHeapBindings[i], rhs.setLayoutHeapBindings[i]);
-        if (cmp != 0)
-            return cmp;
-    }
+    LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.pushConstantRanges_.size(), rhs.pushConstantRanges.size());
+    LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.numImmutableSamplers_, rhs.numImmutableSamplers);
 
-    for_range(i, lhs.setLayoutDynamicBindings.size())
-    {
-        int cmp = CompareSetLayoutBindingSWO(lhs.setLayoutDynamicBindings[i], rhs.setLayoutDynamicBindings[i]);
-        if (cmp != 0)
-            return cmp;
-    }
-
-    for_range(i, lhs.pushConstantRanges.size())
-    {
-        int cmp = ComparePushConstantRangeSWO(lhs.pushConstantRanges[i], rhs.pushConstantRanges[i]);
-        if (cmp != 0)
-            return cmp;
-    }
+    for_range(i, lhs.pushConstantRanges_.size())
+        LLGL_COMPARE_SEPARATE_FUNC_SWO(ComparePushConstantRangeSWO, lhs.pushConstantRanges_[i], rhs.pushConstantRanges[i]);
 
     return 0;
-}
-
-VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
-    VkDevice                                device,
-    const VKPipelineLayout*                 owner,
-    VkDescriptorSetLayout                   setLayoutImmutableSamplers,
-    const VKLayoutPermutationParameters&    permutationParams)
-:
-    owner_                    { owner                                },
-    pipelineLayout_           { device, vkDestroyPipelineLayout      },
-    setLayoutHeapBindings_    { device, vkDestroyDescriptorSetLayout },
-    setLayoutDynamicBindings_ { device, vkDestroyDescriptorSetLayout },
-    descriptorPool_           { device, vkDestroyDescriptorPool      }
-{
-    /* Create Vulkan descriptor set layouts */
-    if (!permutationParams.setLayoutHeapBindings.empty())
-        CreateBindingSetLayout(device, permutationParams.setLayoutHeapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_);
-    if (!permutationParams.setLayoutDynamicBindings.empty())
-        CreateBindingSetLayout(device, permutationParams.setLayoutDynamicBindings, bindingTable_.dynamicBindings, setLayoutDynamicBindings_);
-
-    /* Create descriptor pool for dynamic descriptors and immutable samplers */
-    if (!bindingTable_.dynamicBindings.empty() || permutationParams.numImmutableSamplers > 0)
-        CreateDescriptorPool(device, permutationParams.numImmutableSamplers);
-    if (!bindingTable_.dynamicBindings.empty())
-        CreateDescriptorCache(device, setLayoutDynamicBindings_.Get());
-
-    /* Create native Vulkan pipeline layout */
-    pipelineLayout_ = CreateVkPipelineLayout(device, setLayoutImmutableSamplers, permutationParams.pushConstantRanges);
 }
 
 
@@ -108,63 +83,25 @@ VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
  * ======= Private: =======
  */
 
-void VKPipelineLayoutPermutation::CreateVkDescriptorSetLayout(
-    VkDevice                                        device,
-    const ArrayView<VkDescriptorSetLayoutBinding>&  setLayoutBindings,
-    VKPtr<VkDescriptorSetLayout>&                   outSetLayout)
-{
-    VkDescriptorSetLayoutCreateInfo createInfo;
-    {
-        createInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        createInfo.pNext        = nullptr;
-        createInfo.flags        = 0;
-        createInfo.bindingCount = static_cast<std::uint32_t>(setLayoutBindings.size());
-        createInfo.pBindings    = setLayoutBindings.data();
-    }
-    VkResult result = vkCreateDescriptorSetLayout(device, &createInfo, nullptr, outSetLayout.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan descriptor set layout");
-}
-
 void VKPipelineLayoutPermutation::CreateBindingSetLayout(
-    VkDevice                                            device,
-    const std::vector<VkDescriptorSetLayoutBinding>&    setLayoutBindings,
-    std::vector<VKLayoutBinding>&                       outBindings,
-    VKPtr<VkDescriptorSetLayout>&                       outSetLayout)
+    VkDevice                                    device,
+    std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
+    std::vector<VKLayoutBinding>&               outBindings,
+    VKDescriptorSetLayout&                      outSetLayout)
 {
-    const std::size_t numBindings = setLayoutBindings.size();
-    CreateVkDescriptorSetLayout(device, setLayoutBindings, outSetLayout);
-
-    /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
-    outBindings.reserve(numBindings);
-    for_range(i, numBindings)
-    {
-        for_range(arrayElement, setLayoutBindings[i].descriptorCount)
-        {
-            outBindings.push_back(
-                VKLayoutBinding
-                {
-                    /*dstBinding:*/         setLayoutBindings[i].binding,
-                    /*dstArrayElement:*/    arrayElement,
-                    /*descriptorType:*/     setLayoutBindings[i].descriptorType,
-                    /*stageFlags:*/         setLayoutBindings[i].stageFlags
-                }
-            );
-        }
-    }
+    outSetLayout.Initialize(device, std::move(setLayoutBindings));
+    outSetLayout.GetLayoutBindings(outBindings);
 }
 
-VKPtr<VkPipelineLayout> VKPipelineLayoutPermutation::CreateVkPipelineLayout(
-    VkDevice                                device,
-    VkDescriptorSetLayout                   setLayoutImmutableSamplers,
-    const ArrayView<VkPushConstantRange>&   pushConstantRanges) const
+VKPtr<VkPipelineLayout> VKPipelineLayoutPermutation::CreateVkPipelineLayout(VkDevice device, VkDescriptorSetLayout setLayoutImmutableSamplers) const
 {
     /* Gather array of up to 3 set layouts */
     SmallVector<VkDescriptorSetLayout, 3> setLayoutsVK;
 
-    if (setLayoutHeapBindings_.Get() != VK_NULL_HANDLE)
-        setLayoutsVK.push_back(setLayoutHeapBindings_.Get());
-    if (setLayoutDynamicBindings_.Get() != VK_NULL_HANDLE)
-        setLayoutsVK.push_back(setLayoutDynamicBindings_.Get());
+    if (setLayoutHeapBindings_.GetVkDescriptorSetLayout() != VK_NULL_HANDLE)
+        setLayoutsVK.push_back(setLayoutHeapBindings_.GetVkDescriptorSetLayout());
+    if (setLayoutDynamicBindings_.GetVkDescriptorSetLayout() != VK_NULL_HANDLE)
+        setLayoutsVK.push_back(setLayoutDynamicBindings_.GetVkDescriptorSetLayout());
     if (setLayoutImmutableSamplers != VK_NULL_HANDLE)
         setLayoutsVK.push_back(setLayoutImmutableSamplers);
 
@@ -176,15 +113,15 @@ VKPtr<VkPipelineLayout> VKPipelineLayoutPermutation::CreateVkPipelineLayout(
         layoutCreateInfo.flags                      = 0;
         layoutCreateInfo.setLayoutCount             = static_cast<std::uint32_t>(setLayoutsVK.size());
         layoutCreateInfo.pSetLayouts                = setLayoutsVK.data();
-        if (pushConstantRanges.empty())
+        if (pushConstantRanges_.empty())
         {
             layoutCreateInfo.pushConstantRangeCount = 0;
             layoutCreateInfo.pPushConstantRanges    = nullptr;
         }
         else
         {
-            layoutCreateInfo.pushConstantRangeCount = static_cast<std::uint32_t>(pushConstantRanges.size());
-            layoutCreateInfo.pPushConstantRanges    = pushConstantRanges.data();
+            layoutCreateInfo.pushConstantRangeCount = static_cast<std::uint32_t>(pushConstantRanges_.size());
+            layoutCreateInfo.pPushConstantRanges    = pushConstantRanges_.data();
         }
     }
     VKPtr<VkPipelineLayout> pipelineLayout{ device, vkDestroyPipelineLayout };
