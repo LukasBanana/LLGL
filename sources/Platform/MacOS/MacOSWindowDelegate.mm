@@ -23,7 +23,7 @@
     return self;
 }
 
-- (LLGL::MacOSWindow*) windowInstance
+- (LLGL::MacOSWindow* _Nonnull)windowInstance
 {
     return window_;
 }
@@ -33,27 +33,27 @@
     return fullscreenMode_;
 }
 
-- (void)windowWillClose:(id)sender
+- (void)windowWillClose:(NSNotification* _Nonnull)notification
 {
     window_->PostQuit();
 }
 
-- (void)windowDidBecomeKey:(NSNotification *)notification
+- (void)windowDidBecomeKey:(NSNotification* _Nonnull)notification
 {
     window_->PostGetFocus();
 }
 
-- (void)windowDidResignKey:(NSNotification *)notification
+- (void)windowDidResignKey:(NSNotification* _Nonnull)notification
 {
     window_->PostLostFocus();
 }
 
-- (void)windowDidResize:(NSNotification*)notification
+- (void)windowDidResize:(NSNotification* _Nonnull)notification
 {
     window_->PostResize(window_->GetContentSize());
 }
 
-- (NSApplicationPresentationOptions)window:(NSWindow*)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
+- (NSApplicationPresentationOptions)window:(NSWindow* _Nonnull)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
     return
         #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
@@ -64,7 +64,7 @@
         NSApplicationPresentationAutoHideDock;
 }
 
-- (void)windowWillEnterFullScreen:(NSNotification*)notification
+- (void)windowWillEnterFullScreen:(NSNotification* _Nonnull)notification
 {
     fullscreenMode_ = YES;
     [[NSApplication sharedApplication] setPresentationOptions:
@@ -77,12 +77,12 @@
     ];
 }
 
-- (void)windowDidEnterFullScreen:(NSNotification*)notification
+- (void)windowDidEnterFullScreen:(NSNotification* _Nonnull)notification
 {
     window_->PostResize(window_->GetContentSize());
 }
 
-- (void)windowDidExitFullScreen:(NSNotification*)notification
+- (void)windowDidExitFullScreen:(NSNotification* _Nonnull)notification
 {
     [NSApp setPresentationOptions:NSApplicationPresentationDefault];
     fullscreenMode_ = NO;

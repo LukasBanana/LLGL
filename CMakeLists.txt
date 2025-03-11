@@ -9,7 +9,20 @@
 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-project(LLGL)
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16")
+    # For CMake 3.16+ specify languages at top-level project to enable unity build option.
+    # This is required for unity builds only so that the correct compiler will be selected
+    # for the respective batches of mixed language source files.
+    if(APPLE)
+        project(LLGL LANGUAGES C CXX OBJC OBJCXX)
+    elseif(WIN32)
+        project(LLGL LANGUAGES C CXX CSharp)
+    else()
+        project(LLGL LANGUAGES C CXX)
+    endif()
+else()
+    project(LLGL)
+endif()
 
 
 # === Target platforms ===
