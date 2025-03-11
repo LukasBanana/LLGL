@@ -291,7 +291,7 @@ GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int
     if (major < 3)
     {
         /* Don't try to create a core profile when GL version is below 3.0 */
-        Log::Errorf("cannot create OpenGL core profile with GL version %d.%d", major, minor);
+        Log::Errorf("cannot create OpenGL core profile with GL version %d.%d\n", major, minor);
         return nullptr;
     }
 
@@ -345,7 +345,7 @@ GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int
     }
 
     /* Context creation failed */
-    Log::Errorf("failed to create OpenGL core profile");
+    Log::Errorf("failed to create OpenGL core profile\n");
 
     return nullptr;
 }

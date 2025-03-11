@@ -8,7 +8,7 @@
 #include <ExampleBase.h>
 #include <regex>
 
-//#include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Platform/NativeHandle.h>
 
 #define MIXED_BG_COLORS 0
 
@@ -90,9 +90,8 @@ MyRenderer::MyRenderer(
     renderer   { renderer   }
 {
     // Get native handle (HWND for Win32) from main window
-    //LLGL::NativeHandle mainWindowHandle;
-    std::uintptr_t mainWindowHandle[1];
-    mainWindow.GetNativeHandle(mainWindowHandle, sizeof(mainWindowHandle));
+    LLGL::NativeHandle mainWindowHandle;
+    mainWindow.GetNativeHandle(&mainWindowHandle, sizeof(mainWindowHandle));
 
     // Create sub window for swap-chain
     LLGL::WindowDescriptor windowDesc;
@@ -100,7 +99,7 @@ MyRenderer::MyRenderer(
         windowDesc.position             = subWindowOffset;
         windowDesc.size                 = subWindowSize;
         windowDesc.flags                = (LLGL::WindowFlags::Visible | LLGL::WindowFlags::Borderless);
-        windowDesc.windowContext        = mainWindowHandle;
+        windowDesc.windowContext        = &mainWindowHandle;
         windowDesc.windowContextSize    = sizeof(mainWindowHandle);
     }
     subWindow = LLGL::Window::Create(windowDesc);

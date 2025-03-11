@@ -136,7 +136,7 @@ bool Display::SetCursorPosition(const Offset2D& position)
 {
     LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedX11Display::GetShared();
     ::Display* dpy = sharedX11Display->GetNative();
-    Window rootWnd = DefaultRootWindow(dpy);
+    ::Window rootWnd = DefaultRootWindow(dpy);
     XWarpPointer(
         /*display*/     dpy,
         /*src_w*/       None,
@@ -156,8 +156,8 @@ Offset2D Display::GetCursorPosition()
 {
     LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedX11Display::GetShared();
     ::Display* dpy = sharedX11Display->GetNative();
-    Window rootWnd = DefaultRootWindow(dpy);
-    Window rootWndReturn, childWndReturn;
+    ::Window rootWnd = DefaultRootWindow(dpy);
+    ::Window rootWndReturn, childWndReturn;
     unsigned int mask;
     Offset2D rootPosition = { 0, 0 };
     Offset2D childPosition = { 0, 0 };
