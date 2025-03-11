@@ -174,60 +174,14 @@ bool Display::IsCursorShown()
     return g_cursorVisible;
 }
 
-// Singleton for the custom NSCursor.
-class MacOSCustomNSCursor
-{
-
-    public:
-
-        ~MacOSCustomNSCursor();
-
-        static void SetHotSpot(const NSPoint& hotSpot);
-
-    private:
-
-        MacOSCustomNSCursor() = default;
-
-        void MakeNewNSCursor(NSImage* image, NSPoint hotSpot);
-
-    private:
-
-        NSCursor* cursor_ = nullptr;
-
-};
-
-MacOSCustomNSCursor::~MacOSCustomNSCursor()
-{
-    if (cursor_ != nullptr)
-        [cursor_ release];
-}
-
-void MacOSCustomNSCursor::SetHotSpot(const NSPoint &hotSpot)
-{
-    static MacOSCustomNSCursor instance;
-    if (NSCursor* oldCursor = [NSCursor currentSystemCursor])
-        instance.MakeNewNSCursor([oldCursor image], hotSpot);
-}
-
-void MacOSCustomNSCursor::MakeNewNSCursor(NSImage* image, NSPoint hotSpot)
-{
-    if (cursor_ != nullptr)
-        [cursor_ release];
-    cursor_ = [[NSCursor alloc] initWithImage:image hotSpot:hotSpot];
-    [cursor_ set];
-}
-
 bool Display::SetCursorPosition(const Offset2D& position)
 {
     /*
-    NSCursor API doesn't allow to change the cursor position,
-    so we create a new cursor at the requested location and make it the new cursor.
+    Put mouse at new location without generating a mouse event.
+    This function defines the origin (0, 0) at the top-left corner.
     */
-    NSPoint newHotSpot = NSMakePoint(
-        static_cast<CGFloat>(position.x),
-        static_cast<CGFloat>(position.y)
-    );
-    MacOSCustomNSCursor::SetHotSpot(newHotSpot);
+    CGPoint cursorPos = CGPointMake(static_cast<CGFloat>(position.x), static_cast<CGFloat>(position.y));
+    CGWarpMouseCursorPosition(cursorPos);
     return true;
 }
 
@@ -235,20 +189,19 @@ Offset2D Display::GetCursorPosition()
 {
     /* Get visible screen size (without dock and menu bar) */
     NSScreen* screen = [NSScreen mainScreen];
-
     NSSize frameSize = [screen frame].size;
-    NSRect visibleFrame = [screen visibleFrame];
 
-    /* Calculate menu bar height */
-    CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
-
-    /* Return mouse position in LLGL's coordinate system */
+    /*
+    Return mouse position in LLGL's coordinate system.
+    This function defines the origin (0, 0) at the top-bottom corner,
+    so convert it to LLGL's origin in the top-left corner.
+    */
     NSPoint mousePosition = [NSEvent mouseLocation];
 
     return Offset2D
     {
         static_cast<std::int32_t>(mousePosition.x),
-        static_cast<std::int32_t>(frameSize.height - menuBarHeight - mousePosition.y)
+        static_cast<std::int32_t>(frameSize.height - mousePosition.y)
     };
 }
 
