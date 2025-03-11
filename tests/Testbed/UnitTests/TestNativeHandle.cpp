@@ -13,7 +13,7 @@
 #include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/TypeNames.h>
 
-#if LLGL_BUILD_STATIC_LIB
+#if LLGL_BUILD_STATIC_LIB && !LLGL_UNITY_BUILD
 
 // Test D3D11 and D3D12 on Windows only
 #if defined(LLGL_OS_WIN32)
@@ -966,7 +966,7 @@ DEF_TEST( NativeHandle )
     return result;
 }
 
-#else // LLGL_BUILD_STATIC_LIB
+#else // LLGL_BUILD_STATIC_LIB && !LLGL_UNITY_BUILD
 
 DEF_TEST( NativeHandle )
 {
@@ -975,5 +975,5 @@ DEF_TEST( NativeHandle )
     return TestResult::Skipped;
 }
 
-#endif // /LLGL_BUILD_STATIC_LIB
+#endif // /LLGL_BUILD_STATIC_LIB && !LLGL_UNITY_BUILD
 

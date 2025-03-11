@@ -33,6 +33,8 @@ enum class TestResult
     FailedErrors,       // Test failed due to interface errors.
 };
 
+bool HasProgramArgument(int argc, char* argv[], const char* search, const char** outValue = nullptr);
+
 class TestbedContext
 {
 
