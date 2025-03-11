@@ -832,7 +832,6 @@ void VKRenderSystem::CreateInstance(const RendererConfigurationVulkan* config)
 #ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
         if (strcmp(prop.extensionName, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) == 0)
             instanceInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-            extensionNames.push_back(prop.extensionName);
 #endif
     }
 

@@ -80,6 +80,9 @@ static bool IsVulkanInstanceExtOptional(const StringView& name)
     return
     (
         name == VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+        || name == VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+#endif
     );
 }
 
