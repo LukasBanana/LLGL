@@ -1061,9 +1061,9 @@ bool MTDirectCommandBuffer::GetNativeHandle(void* nativeHandle, std::size_t nati
         nativeHandleMT->commandBuffer = cmdBuffer_;
         [nativeHandleMT->commandBuffer retain];
 
-        if (context_.GetRenderEncoder() != nil)
+        if (context_.IsInsideRenderPass())
         {
-            nativeHandleMT->commandEncoder = context_.GetRenderEncoder();
+            nativeHandleMT->commandEncoder = context_.BindRenderEncoder();
             [nativeHandleMT->commandEncoder retain];
         }
         else if (context_.GetComputeEncoder() != nil)
