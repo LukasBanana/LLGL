@@ -19,25 +19,25 @@ static bool g_VKRegisteredExtensions[static_cast<std::size_t>(VKExt::Count)] = {
 
 static const char* g_VKOptionalExtensions[] =
 {
-    #ifdef VK_KHR_sampler_mirror_clamp_to_edge
+    #if VK_KHR_sampler_mirror_clamp_to_edge
     VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME,
     #endif
-    #ifdef VK_KHR_get_physical_device_properties2
+    #if VK_KHR_get_physical_device_properties2
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     #endif
-    #ifdef VK_EXT_debug_marker
+    #if VK_EXT_debug_marker
     VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
     #endif
-    #ifdef VK_EXT_conditional_rendering
+    #if VK_EXT_conditional_rendering
     VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME,
     #endif
-    #ifdef VK_EXT_conservative_rasterization
+    #if VK_EXT_conservative_rasterization
     VK_EXT_CONSERVATIVE_RASTERIZATION_EXTENSION_NAME,
     #endif
-    #ifdef VK_EXT_transform_feedback
+    #if VK_EXT_transform_feedback
     VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME,
     #endif
-    #ifdef VK_EXT_nested_command_buffer
+    #if VK_EXT_nested_command_buffer
     VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME,
     #endif
     nullptr,
@@ -79,10 +79,13 @@ static bool IsVulkanInstanceExtOptional(const StringView& name)
 {
     return
     (
-        name == VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
-#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+        false
+        #if VK_KHR_get_physical_device_properties2
+        || name == VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+        #endif
+        #if VK_KHR_portability_enumeration
         || name == VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-#endif
+        #endif
     );
 }
 
@@ -90,7 +93,10 @@ static bool IsVulkanInstanceExtDebugOnly(const StringView& name)
 {
     return
     (
-        name == VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+        false
+        #if VK_EXT_debug_report
+        || name == VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+        #endif
     );
 }
 
