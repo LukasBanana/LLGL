@@ -63,10 +63,8 @@ public:
         // Check if constant buffers and tessellation shaders are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
 
-        if (!renderCaps.features.hasConstantBuffers)
-            throw std::runtime_error("constant buffers are not supported by this renderer");
-        if (!renderCaps.features.hasTessellatorStage)
-            throw std::runtime_error("tessellation is not supported by this renderer");
+        LLGL_VERIFY(renderCaps.features.hasConstantBuffers);
+        LLGL_VERIFY(renderCaps.features.hasTessellatorStage);
 
         // Limit initial tessellation factor
         maxTessFactor = static_cast<float>(renderCaps.limits.maxTessFactor);

@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
             if (const LLGL::Report* report = p->GetReport())
             {
                 if (report->HasErrors())
-                    throw std::runtime_error(report->GetText());
+                    LLGL_THROW_RUNTIME_ERROR(report->GetText());
             }
         }
 

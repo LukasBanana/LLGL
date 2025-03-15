@@ -58,8 +58,7 @@ public:
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
 
-        if (!renderCaps.features.hasComputeShaders)
-            throw std::runtime_error("compute shaders are not supported by this renderer");
+        LLGL_VERIFY(renderCaps.features.hasComputeShaders);
 
         // Create all graphics objects
         CreateBuffers();
@@ -164,7 +163,7 @@ public:
         else if (Supported(LLGL::ShadingLanguage::Metal))
             computeShader = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CS", "1.1" });
         else
-            throw std::runtime_error("shaders not available for selected renderer in this example");
+            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
@@ -216,7 +215,7 @@ public:
             graphicsFragmentShader  = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1" });
         }
         else
-            throw std::runtime_error("shaders not available for selected renderer in this example");
+            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
 
         // Create compute pipeline layout
         graphicsLayout = renderer->CreatePipelineLayout(

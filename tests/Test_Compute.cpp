@@ -7,6 +7,7 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/Parse.h>
+#include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
 #include <vector>
 
@@ -52,8 +53,7 @@ int main()
 
         // Quit if compute shaders are not supported
         const auto& renderCaps = renderer->GetRenderingCaps();
-        if (!renderCaps.features.hasComputeShaders)
-            throw std::runtime_error("compute shaders are not supported by renderer");
+        LLGL_VERIFY(renderCaps.features.hasComputeShaders);
 
         // Create storage buffer
         static const unsigned int vecSize = 128;
@@ -92,7 +92,7 @@ int main()
         if (auto report = pipeline->GetReport())
         {
             if (report->HasErrors())
-                throw std::runtime_error(report->GetText());
+                LLGL_THROW_RUNTIME_ERROR(report->GetText());
         }
 
         // Set resources

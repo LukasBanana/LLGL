@@ -125,7 +125,7 @@ private:
             vsStencil = LoadShader({ LLGL::ShaderType::Vertex, "Example.metal", "VStencil", "1.1" }, { vertexFormat });
         }
         else
-            throw std::runtime_error("shaders not supported for active renderer");
+            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
     }
 
     void CreatePipelineLayouts()

@@ -8,6 +8,7 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/VertexFormat.h>
 #include <LLGL/Timer.h>
+#include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
 
 
@@ -22,7 +23,7 @@
         {                                                                                                       \
             HRESULT hr = (EXPR);                                                                                \
             if (FAILED(hr))                                                                                     \
-                throw std::runtime_error(#EXPR " failed; HRESULT = " + std::to_string(static_cast<int>(hr)));   \
+                LLGL_THROW_RUNTIME_ERROR(#EXPR " failed; HRESULT = " + std::to_string(static_cast<int>(hr)));   \
         }
 #   define SAFE_RELEASE(OBJ)    \
         if (OBJ != nullptr)     \

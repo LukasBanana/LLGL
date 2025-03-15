@@ -12,6 +12,7 @@
 #include <limits>
 #include <sstream>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Trap.h>
 
 
 /*
@@ -30,7 +31,7 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
     // Read obj file
     std::vector<char> fileContent = ReadAsset(filename);
     if (fileContent.empty())
-        throw std::runtime_error("failed to load model from file: \"" + filename + "\"");
+        LLGL_THROW_RUNTIME_ERROR("failed to load model from file: \"%s\"", filename.c_str());
 
     // Initialize triangle mesh
     TriangleMesh mesh;

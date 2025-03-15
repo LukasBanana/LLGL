@@ -7,6 +7,7 @@
 
 #include <ExampleBase.h>
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Trap.h>
 #include "FileUtils.h"
 #include <algorithm>
 #include <limits.h>
@@ -920,7 +921,7 @@ private:
         }
         else
         {
-            throw std::runtime_error("No shaders provided for this backend");
+            LLGL_THROW_RUNTIME_ERROR("No shaders provided for this backend");
         }
     }
 

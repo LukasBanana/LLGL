@@ -192,7 +192,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
         fragShaderDesc = LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Example.metal", "PS", "1.1");
     }
     else
-        throw std::runtime_error("shaders not supported for active renderer");
+        LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
 
     vertShaderDesc.vertex.inputAttribs = vertexFormat.attributes;
 

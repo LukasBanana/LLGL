@@ -48,8 +48,8 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
 
     if (modules.empty())
     {
-        /* No modules available -> throw error */
-        throw std::runtime_error("no renderer modules available on target platform");
+        /* No modules available */
+        LLGL_THROW_RUNTIME_ERROR("no renderer modules available on target platform");
     }
     else if (modules.size() == 1)
     {
@@ -489,7 +489,7 @@ ExampleBase::ExampleBase(const LLGL::UTF8String& title)
     if (android_app* app = ExampleBase::androidApp_)
         rendererDesc.androidApp = app;
     else
-        throw std::invalid_argument("'android_app' state was not specified");
+        LLGL_THROW_INVALID_ARGUMENT("'android_app' state was not specified");
 
     if (rendererDesc.moduleName == "OpenGLES3")
     {

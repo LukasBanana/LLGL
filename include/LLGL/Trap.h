@@ -12,6 +12,22 @@
 #include <LLGL/Export.h>
 
 
+//! Shortcut to throw a runtime error exception.
+#define LLGL_THROW_RUNTIME_ERROR(...) \
+    LLGL::Trap(LLGL::Exception::RuntimeError, __FUNCTION__, __VA_ARGS__)
+
+//! Shortcut to throw an out of range exception.
+#define LLGL_THROW_OUT_OF_RANGE(...) \
+    LLGL::Trap(LLGL::Exception::OutOfRange, __FUNCTION__, __VA_ARGS__)
+
+//! Shortcut to throw a bad cast exception.
+#define LLGL_THROW_BAD_CAST(...) \
+    LLGL::Trap(LLGL::Exception::BadCast, __FUNCTION__, __VA_ARGS__)
+
+//! Shortcut to throw an invalid argument exception.
+#define LLGL_THROW_INVALID_ARGUMENT(...) \
+    LLGL::Trap(LLGL::Exception::InvalidArgument, __FUNCTION__, __VA_ARGS__)
+
 /**
 \brief Helper macro to trap execution when the condition fails.
 \remarks LLGL only throws exceptions if it was built with \c LLGL_ENABLE_EXCEPTIONS.

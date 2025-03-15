@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <LLGL/Log.h>
+#include <LLGL/Trap.h>
 
 
 static const std::uint32_t ddsMagicNumber = 0x20534444; // 'DDS '
@@ -217,8 +218,7 @@ bool DDSImageReader::LoadFromFile(const std::string& filename)
         // Print error with FourCC as string
         char fourCC[5] = {};
         ::memcpy(fourCC, &(header.format.fourCC), sizeof(header.format.fourCC));
-
-        throw std::runtime_error("DDS image has unsupported FourCC value: " + std::string(fourCC));
+        LLGL_THROW_RUNTIME_ERROR("DDS image has unsupported FourCC value: %s", fourCC);
     }
 
     // Read image buffer

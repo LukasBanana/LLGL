@@ -129,7 +129,7 @@ private:
             fsScene = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PScene", "1.1" });
         }
         else
-            throw std::runtime_error("shaders not supported for active renderer");
+            LLGL_THROW_RUNTIME_ERROR("shaders not supported for active renderer");
     }
 
     void CreateShadowMap()

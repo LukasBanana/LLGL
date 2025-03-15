@@ -8,6 +8,7 @@
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/Parse.h>
 #include <LLGL/Utils/VertexFormat.h>
+#include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
 #include <memory>
 #include <string>
@@ -315,7 +316,7 @@ int main()
         if (auto report = pipeline.GetReport())
         {
             if (report->HasErrors())
-                throw std::runtime_error(report->GetText());
+                LLGL_THROW_RUNTIME_ERROR(report->GetText());
         }
 
         // Create sampler

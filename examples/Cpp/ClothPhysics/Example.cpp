@@ -118,8 +118,7 @@ public:
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
 
-        if (!renderCaps.features.hasComputeShaders)
-            throw std::runtime_error("compute shaders are not supported by this renderer");
+        LLGL_VERIFY(renderCaps.features.hasComputeShaders);
 
         // Create all graphics objects
         CreateBuffers();
@@ -386,7 +385,7 @@ public:
             computeShaders[2] = LoadShader({ LLGL::ShaderType::Compute, "Example.metal", "CSRelaxation",         "2.0" });
         }
         else
-            throw std::runtime_error("shaders not available for selected renderer in this example");
+            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
 
         // Create compute pipeline layout
         computeLayout = renderer->CreatePipelineLayout(
@@ -474,7 +473,7 @@ public:
             graphicsShaderPipeline.ps = LoadShader({ LLGL::ShaderType::Fragment, "Example.metal", "PS", "2.0" }, {}, g_shaderMacros);
         }
         else
-            throw std::runtime_error("shaders not available for selected renderer in this example");
+            LLGL_THROW_RUNTIME_ERROR("shaders not available for selected renderer in this example");
 
         // Create graphics pipeline layout
         #ifdef ENABLE_STORAGE_TEXTURES
