@@ -13,6 +13,7 @@
 #include "../VKPtr.h"
 #include <LLGL/Container/ArrayView.h>
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL

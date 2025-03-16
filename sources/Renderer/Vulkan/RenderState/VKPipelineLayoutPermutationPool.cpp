@@ -61,9 +61,9 @@ void VKPipelineLayoutPermutationPool::ReleasePermutation(VKPipelineLayoutPermuta
     {
         RemoveFromListIf(
             permutations_,
-            [permutation = layoutPermutation.get()](const VKPipelineLayoutPermutationSPtr& entry) -> bool
+            [&layoutPermutation](const VKPipelineLayoutPermutationSPtr& entry) -> bool
             {
-                return (entry.get() == permutation);
+                return (entry.get() == layoutPermutation.get());
             }
         );
         layoutPermutation.reset();
