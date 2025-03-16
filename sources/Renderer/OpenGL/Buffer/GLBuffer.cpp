@@ -410,7 +410,8 @@ void GLBuffer::CreateTexBuffer(GLenum internalFormat)
     }
 
     /* Store internal GL format */
-    texInternalFormat_ = internalFormat;
+    texInternalFormat_  = internalFormat;
+    target_             = GLBufferTarget::TextureBuffer;
 
     #endif // /LLGL_GLEXT_TEXTURE_BUFFER_OBJECT
 }

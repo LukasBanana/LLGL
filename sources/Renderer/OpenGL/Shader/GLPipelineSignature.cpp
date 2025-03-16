@@ -68,7 +68,7 @@ GLPipelineSignature::GLPipelineSignature(std::size_t numShaders, const Shader* c
 // Returns true if the specified array of shaders contains a separable shader
 static bool HasSeparableShaders(std::size_t numShaders, const Shader* const* shaders)
 {
-    return (numShaders > 0 && LLGL_CAST(const GLShader*, shaders[0])->IsSeparable());
+    return (numShaders > 0 && shaders[0] != nullptr && LLGL_CAST(const GLShader*, shaders[0])->IsSeparable());
 }
 
 void GLPipelineSignature::Build(std::size_t numShaders, const Shader* const* shaders, GLShader::Permutation permutation)
