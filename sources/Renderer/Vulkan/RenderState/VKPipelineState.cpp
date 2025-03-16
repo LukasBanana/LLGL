@@ -7,6 +7,7 @@
 
 #include "VKPipelineState.h"
 #include "VKPipelineLayout.h"
+#include "VKPipelineLayoutPermutationPool.h"
 #include "../Shader/VKShader.h"
 #include "../Shader/VKShaderModulePool.h"
 #include "../../CheckedCast.h"
@@ -31,6 +32,11 @@ VKPipelineState::VKPipelineState(
         if (pipelineLayout_->CanHaveLayoutPermutations())
             pipelineLayoutPerm_ = pipelineLayout_->CreatePermutation(device, shaders, uniformRanges_);
     }
+}
+
+VKPipelineState::~VKPipelineState()
+{
+    VKPipelineLayoutPermutationPool::Get().ReleasePermutation(std::move(pipelineLayoutPerm_));
 }
 
 const Report* VKPipelineState::GetReport() const

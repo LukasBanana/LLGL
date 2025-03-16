@@ -40,6 +40,8 @@ class VKPipelineState : public PipelineState
             const PipelineLayout*       pipelineLayout = nullptr
         );
 
+        ~VKPipelineState();
+
         const Report* GetReport() const override;
 
     public:

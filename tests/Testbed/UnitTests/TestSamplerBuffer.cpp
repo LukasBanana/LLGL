@@ -17,13 +17,9 @@ E.g. use binding flags BindFlags::Sampled and let LLGL determine how to bind to 
 */
 DEF_TEST( SamplerBuffer )
 {
-    //TODO: not supported for Vulkan and Metal yet
-    if (renderer->GetRendererID() != RendererID::OpenGL &&
-        renderer->GetRendererID() != RendererID::Direct3D11 &&
-        renderer->GetRendererID() != RendererID::Direct3D12)
-    {
+    //TODO: not supported for Metal yet
+    if (renderer->GetRendererID() == RendererID::Metal)
         return TestResult::Skipped;
-    }
 
     if (shaders[CSSamplerBuffer] == nullptr)
     {
@@ -44,8 +40,8 @@ DEF_TEST( SamplerBuffer )
             psoLayout = renderer->CreatePipelineLayout(
                 Parse(
                     "cbuffer(Config@4):comp,"
-                    "buffer(inTypedBuffer@0):comp,"
-                    "rwbuffer(outTypedBuffer@1):comp,"
+                    "tbuffer(inTypedBuffer@0):comp,"
+                    "rwtbuffer(outTypedBuffer@1):comp,"
                     "buffer(inStructBuffer@2):comp,"
                     "rwbuffer(outStructBuffer@3):comp,"
                 )
@@ -56,9 +52,9 @@ DEF_TEST( SamplerBuffer )
             psoLayout = renderer->CreatePipelineLayout(
                 Parse(
                     "cbuffer(Config@4):comp,"
-                    "buffer(inTypedBuffer@0):comp,"
+                    "tbuffer(inTypedBuffer@0):comp,"
                     "heap{"
-                    "  rwbuffer(outTypedBuffer@1):comp,"
+                    "  rwtbuffer(outTypedBuffer@1):comp,"
                     "  buffer(inStructBuffer@2):comp,"
                     "},"
                     "rwbuffer(outStructBuffer@3):comp,"
@@ -71,8 +67,8 @@ DEF_TEST( SamplerBuffer )
                 Parse(
                     "heap{"
                     "  cbuffer(Config@4):comp,"
-                    "  buffer(inTypedBuffer@0):comp,"
-                    "  rwbuffer(outTypedBuffer@1):comp,"
+                    "  tbuffer(inTypedBuffer@0):comp,"
+                    "  rwtbuffer(outTypedBuffer@1):comp,"
                     "  buffer(inStructBuffer@2):comp,"
                     "  rwbuffer(outStructBuffer@3):comp,"
                     "},"
@@ -233,13 +229,13 @@ DEF_TEST( SamplerBuffer )
     }
 
     // Clear resources
-    renderer->Release(*inTypedBuffer);
-    renderer->Release(*inStructBuffer);
-    renderer->Release(*outTypedBuffer);
-    renderer->Release(*outStructBuffer);
-    renderer->Release(*configBuffer);
-    renderer->Release(*pso);
-    renderer->Release(*psoLayout);
+    SAFE_RELEASE(inTypedBuffer);
+    SAFE_RELEASE(inStructBuffer);
+    SAFE_RELEASE(outTypedBuffer);
+    SAFE_RELEASE(outStructBuffer);
+    SAFE_RELEASE(configBuffer);
+    SAFE_RELEASE(pso);
+    SAFE_RELEASE(psoLayout);
 
     if (frame + 1 < numFrames)
         return TestResult::Continue;

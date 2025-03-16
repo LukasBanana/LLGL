@@ -82,6 +82,8 @@ class LLGL_EXPORT ParseContext
             - \c cbuffer for constant buffers (i.e. ResourceType::Buffer and BindFlags::ConstantBuffer).
             - \c buffer for sampled buffers (i.e. ResourceType::Buffer and BindFlags::Sampled).
             - \c rwbuffer for read/write storage buffers (i.e. ResourceType::Buffer and BindFlags::Storage).
+            - \c tbuffer for sampled texel buffers (i.e. ResourceType::Buffer, BindFlags::Sampled, and BindFlags::TexelBuffer).
+            - \c rwtbuffer for read/write storage texel buffers (i.e. ResourceType::Buffer, BindFlags::Storage, and BindFlags::TexelBuffer).
             - \c texture for textures (i.e. ResourceType::Texture and BindFlags::Sampled).
             - \c rwtexture for read/write textures (i.e. ResourceType::Texture and BindFlags::Storage).
             - \c sampler for sampler states (i.e. ResourceType::Sampler).

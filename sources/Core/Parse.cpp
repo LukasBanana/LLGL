@@ -387,12 +387,14 @@ static bool ParseLayoutSignatureResourceType(Parser& parser, ResourceType& outTy
 
     constexpr ResourceTypeIdent acceptedResources[] =
     {
-        { "cbuffer",   ResourceType::Buffer,  BindFlags::ConstantBuffer },
-        { "buffer",    ResourceType::Buffer,  BindFlags::Sampled        },
-        { "rwbuffer",  ResourceType::Buffer,  BindFlags::Storage        },
-        { "texture",   ResourceType::Texture, BindFlags::Sampled        },
-        { "rwtexture", ResourceType::Texture, BindFlags::Storage        },
-        { "sampler",   ResourceType::Sampler, 0                         },
+        { "cbuffer",   ResourceType::Buffer,  BindFlags::ConstantBuffer                   },
+        { "buffer",    ResourceType::Buffer,  BindFlags::Sampled                          },
+        { "rwbuffer",  ResourceType::Buffer,  BindFlags::Storage                          },
+        { "tbuffer",   ResourceType::Buffer,  BindFlags::Sampled | BindFlags::TexelBuffer },
+        { "rwtbuffer", ResourceType::Buffer,  BindFlags::Storage | BindFlags::TexelBuffer },
+        { "texture",   ResourceType::Texture, BindFlags::Sampled                          },
+        { "rwtexture", ResourceType::Texture, BindFlags::Storage                          },
+        { "sampler",   ResourceType::Sampler, 0                                           },
     };
 
     for (const ResourceTypeIdent& resource : acceptedResources)

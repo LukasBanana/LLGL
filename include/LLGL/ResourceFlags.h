@@ -163,6 +163,16 @@ struct BindFlags
         \see CommandBuffer::FillBuffer
         */
         CopyDst                 = (1 << 11),
+
+        /**
+        \brief Specifies a resource is bound as texel buffer.
+        \remarks This is only used by the Vulkan backend at the moment to workaround the restriction
+        that resource heaps need to know their exact descriptor types at creation time.
+        \see PipelineLayoutDescriptor::heapBindings
+        \note Only required for: Vulkan
+        \todo This is a workaround for the Vulkan backend and should eventually be removed.
+        */
+        TexelBuffer             = (1 << 12),
     };
 };
 

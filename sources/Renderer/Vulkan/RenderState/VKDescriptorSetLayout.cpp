@@ -9,6 +9,9 @@
 #include "../VKCore.h"
 #include "../../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
+#include <LLGL/Constants.h>
+#include <algorithm>
+#include <cstring>
 
 
 namespace LLGL
@@ -51,6 +54,7 @@ void VKDescriptorSetLayout::GetLayoutBindings(std::vector<VKLayoutBinding>& outB
 void VKDescriptorSetLayout::Initialize(VkDevice device, std::vector<VkDescriptorSetLayoutBinding>&& setLayoutBindings)
 {
     setLayoutBindings_ = std::move(setLayoutBindings);
+    SanitizeBindingSlots();
     CreateVkDescriptorSetLayout(device);
 }
 
@@ -123,6 +127,90 @@ int VKDescriptorSetLayout::CompareSWO(const VKDescriptorSetLayout& lhs, const st
 /*
  * ======= Private: ======
  */
+
+void VKDescriptorSetLayout::SanitizeBindingSlots()
+{
+    if (setLayoutBindings_.size() <= 1)
+        return;
+
+    /* Find range of binding slots */
+    std::uint32_t minBindingSlot = LLGL_INVALID_SLOT;
+    std::uint32_t maxBindingSlot = 0u;
+
+    for (const VkDescriptorSetLayoutBinding& binding : setLayoutBindings_)
+    {
+        minBindingSlot = std::min<std::uint32_t>(minBindingSlot, binding.binding);
+        maxBindingSlot = std::max<std::uint32_t>(maxBindingSlot, binding.binding);
+    }
+
+    /* Use fixed size array of slots if the maximum binding slot is not too high */
+    constexpr std::uint32_t maxSlotsOnStack = 128;
+    bool slotsOnStack[maxSlotsOnStack];
+
+    const std::size_t highestSlot = maxBindingSlot + setLayoutBindings_.size() + 1;
+
+    if (highestSlot < maxSlotsOnStack)
+    {
+        std::memset(slotsOnStack, 0, sizeof(bool)*highestSlot);
+
+        auto FindFreeSlotOnStack = [&slotsOnStack, highestSlot]() -> std::uint32_t
+        {
+            for_range(slot, static_cast<std::uint32_t>(highestSlot))
+            {
+                if (!slotsOnStack[slot])
+                    return slot;
+            }
+            return LLGL_INVALID_SLOT;
+        };
+
+        for (VkDescriptorSetLayoutBinding& binding : setLayoutBindings_)
+        {
+            /* If slot is already taken, find a new available slot */
+            if (slotsOnStack[binding.binding])
+            {
+                const std::uint32_t slot = FindFreeSlotOnStack();
+                LLGL_ASSERT(slot < highestSlot, "failed to assign binding slot automatically");
+                binding.binding = slot;
+            }
+
+            /* Mark slot as occupied by current binding */
+            slotsOnStack[binding.binding] = true;
+        }
+    }
+    else
+    {
+        auto IsSlotTakenInBindings = [this](std::size_t last, std::uint32_t slot) -> bool
+        {
+            for_range(i, last)
+            {
+                if (slot == setLayoutBindings_[i].binding)
+                    return true;
+            }
+            return false;
+        };
+
+        auto FindFreeSlotInBindings = [this](std::size_t last) -> std::uint32_t
+        {
+            std::uint32_t slot = 0;
+            for_range(i, last)
+            {
+                if (slot == setLayoutBindings_[i].binding)
+                    ++slot;
+                else
+                    break;
+            }
+            return slot;
+        };
+
+        for_range(i, setLayoutBindings_.size())
+        {
+            /* If slot is already taken, find a new available slot */
+            VkDescriptorSetLayoutBinding& binding = setLayoutBindings_[i];
+            if (IsSlotTakenInBindings(i, binding.binding))
+                binding.binding = FindFreeSlotInBindings(i);
+        }
+    }
+}
 
 void VKDescriptorSetLayout::CreateVkDescriptorSetLayout(VkDevice device)
 {

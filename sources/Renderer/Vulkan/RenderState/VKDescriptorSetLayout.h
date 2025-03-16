@@ -74,6 +74,9 @@ class VKDescriptorSetLayout
 
     private:
 
+        // Modifies binding slots that overlap with others since Vulkan needs to have unique binding slots within the same descriptor set.
+        void SanitizeBindingSlots();
+
         void CreateVkDescriptorSetLayout(VkDevice device);
 
     private:
