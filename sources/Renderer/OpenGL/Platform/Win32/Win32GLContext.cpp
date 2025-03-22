@@ -201,7 +201,7 @@ void Win32GLContext::CreateProxyContext(Surface& surface, const OpenGL::RenderSy
 
     /* Get the surface's Win32 device context and choose pixel format */
     hDC_ = GetWin32DeviceContext(surface);
-    SelectPixelFormat(hDC_);
+    InitializePixelFormat(hDC_);
 
     /* Store custom native handle */
     hGLRC_ = nativeHandle.context;
@@ -245,7 +245,7 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
         HWND proxyWnd = CreateProxyWindow();
         LLGL_ASSERT(proxyWnd != nullptr);
         HDC proxyDC = GetDC(proxyWnd);
-        SelectPixelFormat(proxyDC);
+        InitializePixelFormat(proxyDC);
         HGLRC proxyGLRC = CreateStandardWGLContext(proxyDC);
         if (!SelectMultisampledPixelFormat(proxyDC))
             ErrorMultisampleContextFailed();
@@ -261,7 +261,7 @@ void Win32GLContext::CreateWGLContext(Surface& surface, Win32GLContext* sharedCo
         CopyPixelFormat(*sharedContext);
 
     /* First setup device context and choose pixel format */
-    SelectPixelFormat(hDC_);
+    InitializePixelFormat(hDC_);
 
     /* Create standard render context first */
     hGLRC_ = CreateStandardWGLContext(hDC_);
@@ -439,18 +439,39 @@ static void GetWGLPixelFormatDesc(const GLPixelFormat& inDesc, PIXELFORMATDESCRI
     outDesc.dwDamageMask    = 0;
 }
 
+bool Win32GLContext::InitializePixelFormat(HDC hDC)
+{
+    if (SelectPixelFormat(hDC))
+    {
+        DeducePixelFormatFromDC(hDC);
+        return true;
+    }
+    return false;
+}
+
 bool Win32GLContext::SelectPixelFormat(HDC hDC)
 {
+    const bool isMultisampleFormatRequested = (formatDesc_.samples > 1 && pixelFormatsMSCount_ > 0);
+
+    /*
+    Accept existing pixel format if the device context already has one,
+    since Windows doesn't allow to set the pixel format for any device context more than once.
+    */
+    const int oldPixelFormat = ::GetPixelFormat(hDC);
+    if (oldPixelFormat != 0)
+    {
+        pixelFormat_ = oldPixelFormat;
+        return true;
+    }
+
     /* Setup pixel format attributes */
     PIXELFORMATDESCRIPTOR formatDesc;
     GetWGLPixelFormatDesc(formatDesc_, formatDesc);
 
     /* Try to find suitable pixel format */
-    const bool isMultisampleFormatRequested = (formatDesc_.samples > 1 && pixelFormatsMSCount_ > 0);
+    UINT pixelFormatMSIndex = 0;
 
-    bool wasStandardFormatUsed = false;
-
-    for (UINT pixelFormatMSIndex = 0;;)
+    do
     {
         if (isMultisampleFormatRequested && pixelFormatMSIndex < pixelFormatsMSCount_)
         {
@@ -458,62 +479,53 @@ bool Win32GLContext::SelectPixelFormat(HDC hDC)
             pixelFormat_ = pixelFormatsMS_[pixelFormatMSIndex++];
         }
 
+        bool wasStandardFormatSelected = false;
+
         if (!pixelFormat_)
         {
+            if (isMultisampleFormatRequested)
+                break;
+
             /* Choose standard pixel format */
             pixelFormat_ = ::ChoosePixelFormat(hDC, &formatDesc);
+            if (!pixelFormat_)
+                LLGL_TRAP("failed to select pixel format");
 
-            if (isMultisampleFormatRequested)
-            {
-                ErrorMultisampleContextFailed();
-                return false;
-            }
-
-            wasStandardFormatUsed = true;
-
-            /* Deduce color and depth-stencil formats by pixel format descriptor */
-            PIXELFORMATDESCRIPTOR selectedFormatDesc;
-            ::DescribePixelFormat(hDC, pixelFormat_, sizeof(selectedFormatDesc), &selectedFormatDesc);
-            DeduceColorFormat(
-                selectedFormatDesc.cRedBits,
-                selectedFormatDesc.cRedShift,
-                selectedFormatDesc.cGreenBits,
-                selectedFormatDesc.cGreenShift,
-                selectedFormatDesc.cBlueBits,
-                selectedFormatDesc.cBlueShift,
-                selectedFormatDesc.cAlphaBits,
-                selectedFormatDesc.cAlphaShift
-            );
-            DeduceDepthStencilFormat(
-                selectedFormatDesc.cDepthBits,
-                selectedFormatDesc.cStencilBits
-            );
+            wasStandardFormatSelected = true;
         }
-
-        /* Check for errors */
-        if (!pixelFormat_)
-            LLGL_TRAP("failed to select pixel format");
 
         /* Set pixel format */
-        const BOOL wasFormatSelected = ::SetPixelFormat(hDC, pixelFormat_, &formatDesc);
-        if (!wasFormatSelected)
-        {
-            if (wasStandardFormatUsed)
-                LLGL_TRAP("failed to set default pixel format");
-            if (pixelFormatMSIndex == pixelFormatsMSCount_)
-            {
-                ErrorMultisampleContextFailed();
-                return false;
-            }
-        }
-        else
-        {
-            /* Format was selected -> quit with success */
-            break;
-        }
-    }
+        if (::SetPixelFormat(hDC, pixelFormat_, &formatDesc))
+            return true;
 
-    return true;
+        if (wasStandardFormatSelected)
+            LLGL_TRAP("failed to set default pixel format");
+    }
+    while (pixelFormatMSIndex < pixelFormatsMSCount_);
+
+    ErrorMultisampleContextFailed();
+    return false;
+}
+
+void Win32GLContext::DeducePixelFormatFromDC(HDC hDC)
+{
+    /* Deduce color and depth-stencil formats by pixel format descriptor */
+    PIXELFORMATDESCRIPTOR selectedFormatDesc;
+    ::DescribePixelFormat(hDC, pixelFormat_, sizeof(selectedFormatDesc), &selectedFormatDesc);
+    DeduceColorFormat(
+        selectedFormatDesc.cRedBits,
+        selectedFormatDesc.cRedShift,
+        selectedFormatDesc.cGreenBits,
+        selectedFormatDesc.cGreenShift,
+        selectedFormatDesc.cBlueBits,
+        selectedFormatDesc.cBlueShift,
+        selectedFormatDesc.cAlphaBits,
+        selectedFormatDesc.cAlphaShift
+    );
+    DeduceDepthStencilFormat(
+        selectedFormatDesc.cDepthBits,
+        selectedFormatDesc.cStencilBits
+    );
 }
 
 bool Win32GLContext::SelectMultisampledPixelFormat(HDC hDC)

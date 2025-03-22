@@ -48,7 +48,7 @@ Win32GLSwapChainContext::Win32GLSwapChainContext(Win32GLContext& context, Surfac
 
     /* Select pixel format for device context if the GL context was originally created with a different surface */
     if (context.GetDCHandle() != hDC_)
-        context.SelectPixelFormat(hDC_);
+        context.InitializePixelFormat(hDC_);
 }
 
 bool Win32GLSwapChainContext::HasDrawable() const

@@ -42,7 +42,7 @@ class Win32GLContext final : public GLContext
     public:
 
         // Select the pixel format for the specified surface to make it compatible with this GL context.
-        bool SelectPixelFormat(HDC hDC);
+        bool InitializePixelFormat(HDC hDC);
 
         // Returns the OpenGL render context handle.
         inline HGLRC GetGLRCHandle() const
@@ -69,6 +69,8 @@ class Win32GLContext final : public GLContext
         HGLRC CreateStandardWGLContext(HDC hDC);
         HGLRC CreateExplicitWGLContext(HDC hDC, Win32GLContext* sharedContext = nullptr);
 
+        bool SelectPixelFormat(HDC hDC);
+        void DeducePixelFormatFromDC(HDC hDC);
         bool SelectMultisampledPixelFormat(HDC hDC);
         void CopyPixelFormat(Win32GLContext& sourceContext);
 
