@@ -40,6 +40,9 @@ static const char* g_VKOptionalExtensions[] =
     #if VK_EXT_nested_command_buffer
     VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME,
     #endif
+    #if VK_KHR_imageless_framebuffer
+    VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME,
+    #endif
     nullptr,
 };
 

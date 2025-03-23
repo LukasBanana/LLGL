@@ -50,6 +50,15 @@ DEF_TEST( CommandBufferEncode )
         cmdBuf.Begin();
         {
             cmdBuf.SetPipelineState(*pso);
+
+            /*
+            FIXME:
+                This is a Vulkan workaround because secondary command buffers don't inherit any state as opposed to D3D12's bundles.
+                Vulkan backend likely needs a second command buffer implementation like D3D11SecondaryCommandBuffer
+                to determine at the end of command recording whether it can be encoded as a native secondary command buffer or an emulated one.
+            */
+            cmdBuf.SetViewport(swapChain->GetResolution());
+
             cmdBuf.SetVertexBuffer(*this->meshBuffer);
             cmdBuf.SetUniforms(0, clearValue.color, sizeof(clearValue.color));
             cmdBuf.Draw(3, 0);

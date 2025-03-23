@@ -82,8 +82,15 @@ void VKCommandContext::BufferMemoryBarrier(
     }
 
     /* Initialize pipeline state flags */
-    srcStageMask_ |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    dstStageMask_ |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    if ((srcAccessMask & (VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT)) != 0)
+        srcStageMask_ |= VK_PIPELINE_STAGE_TRANSFER_BIT;
+    else
+        srcStageMask_ |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+    if ((dstAccessMask & (VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT)) != 0)
+        dstStageMask_ |= VK_PIPELINE_STAGE_TRANSFER_BIT;
+    else
+        dstStageMask_ |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
     if (flushImmediately)
         FlushBarriers();
@@ -103,6 +110,8 @@ void VKCommandContext::ImageMemoryBarrier(
     /* Initialize image memory barrier descriptor */
     VkImageMemoryBarrier& barrier = imageBarriers_[numImageBarriers_++];
     {
+        barrier.srcAccessMask                   = 0;
+        barrier.dstAccessMask                   = 0;
         barrier.oldLayout                       = oldLayout;
         barrier.newLayout                       = newLayout;
         barrier.image                           = image;
@@ -117,24 +126,35 @@ void VKCommandContext::ImageMemoryBarrier(
     VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
     VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    switch (oldLayout)
     {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        case VK_IMAGE_LAYOUT_UNDEFINED:
+            barrier.srcAccessMask = 0;
+            srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            break;
+
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            break;
+
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            break;
     }
-    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+
+    switch (newLayout)
     {
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-        dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    }
-    else
-    {
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = 0;
+        case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            break;
+
+        case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            break;
     }
 
     srcStageMask_ |= srcStageMask;
@@ -189,6 +209,9 @@ void VKCommandContext::CopyTexture(
     VKTexture&          dstTexture,
     const VkImageCopy&  region)
 {
+    VkImageLayout oldSrcTextureLayout = srcTexture.TransitionImageLayout(*this, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    VkImageLayout oldDstTextureLayout = dstTexture.TransitionImageLayout(*this, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, true);
+
     vkCmdCopyImage(
         commandBuffer_,
         srcTexture.GetVkImage(),
@@ -198,6 +221,9 @@ void VKCommandContext::CopyTexture(
         1,
         &region
     );
+
+    srcTexture.TransitionImageLayout(*this, oldSrcTextureLayout);
+    dstTexture.TransitionImageLayout(*this, oldDstTextureLayout, true);
 }
 
 void VKCommandContext::CopyImage(

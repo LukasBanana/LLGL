@@ -138,12 +138,9 @@ void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
-static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long cpuAccessFlags)
+static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long /*cpuAccessFlags*/)
 {
-    if ((cpuAccessFlags & CPUAccessFlags::Write) != 0)
-        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    else
-        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 }
 
 Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& bufferDesc, const void* initialData)
@@ -449,7 +446,9 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
                 imageHeight
             );
 
-            textureVK->TransitionImageLayout(context_, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);
+            /* Prepare image layout to be in its optimal state initially */
+            if ((textureVK->GetUsageFlags() & VK_IMAGE_USAGE_SAMPLED_BIT) != 0)
+                textureVK->TransitionImageLayout(context_, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, true);
 
             /* Generate MIP-maps if enabled */
             if (initialImage != nullptr && MustGenerateMipsOnCreate(textureDesc))

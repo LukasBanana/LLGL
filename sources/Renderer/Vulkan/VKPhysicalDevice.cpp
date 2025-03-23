@@ -447,7 +447,7 @@ void VKPhysicalDevice::QueryDeviceFeatures()
 
     VKBaseStructureInfo* currentDesc = nullptr;
 
-    auto ChainDescriptor = [&currentDesc](void* descPtr, VkStructureType type)
+    auto AppendFeaturesDesc = [&currentDesc](void* descPtr, VkStructureType type) -> void
     {
         /* Chain next descriptor into previous one */
         currentDesc->pNext = descPtr;
@@ -464,12 +464,18 @@ void VKPhysicalDevice::QueryDeviceFeatures()
     currentDesc = reinterpret_cast<VKBaseStructureInfo*>(&features_);
 
     #if VK_EXT_nested_command_buffer
-    ChainDescriptor(&featuresNestedCmdBuffers_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
+    if (SupportsExtension(VK_EXT_NESTED_COMMAND_BUFFER_EXTENSION_NAME))
+        AppendFeaturesDesc(&nestedCmdBufferFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NESTED_COMMAND_BUFFER_FEATURES_EXT);
     #endif
 
     #if VK_EXT_transform_feedback
     if (SupportsExtension(VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME))
-        ChainDescriptor(&transformFeedbackFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
+        AppendFeaturesDesc(&transformFeedbackFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT);
+    #endif
+
+    #if VK_KHR_imageless_framebuffer
+    if (SupportsExtension(VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME))
+        AppendFeaturesDesc(&imagelessFramebufferFeatures_, VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR);
     #endif
 
     vkGetPhysicalDeviceFeatures2(physicalDevice_, &features_);

@@ -164,7 +164,7 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
 
     auto IsSupported = [&supportedExtensions](const char* extName) -> bool
     {
-        for (auto extension : supportedExtensions)
+        for (const char* extension : supportedExtensions)
         {
             if (std::strcmp(extName, extension) == 0)
                 return true;
@@ -203,6 +203,7 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
 
     ENABLE_VKEXT( EXT_conservative_rasterization );
     ENABLE_VKEXT( EXT_nested_command_buffer      );
+    ENABLE_VKEXT( KHR_imageless_framebuffer      );
 
     #undef LOAD_VKEXT
 

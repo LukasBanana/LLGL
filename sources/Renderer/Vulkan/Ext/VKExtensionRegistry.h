@@ -23,6 +23,7 @@ enum class VKExt
     /* Khronos extensions */
     KHR_maintenance1,
     KHR_get_physical_device_properties2,
+    KHR_imageless_framebuffer,
 
     /* Multivendor extensions */
     EXT_debug_marker,

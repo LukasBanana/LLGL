@@ -7,10 +7,12 @@
 
 #include "VKRenderTarget.h"
 #include "VKTexture.h"
+#include "../Ext/VKExtensionRegistry.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../../CheckedCast.h"
 #include "../../RenderTargetUtils.h"
 #include "../../../Core/CoreUtils.h"
+#include "../../../Core/Assertion.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include <vector>
@@ -307,13 +309,47 @@ void VKRenderTarget::CreateFramebuffer(
         }
     }
 
+    #if VK_KHR_imageless_framebuffer
+
+    /* Create meta-data for render-targets with no attachments */
+    VkFramebufferAttachmentsCreateInfoKHR attachmentsCreateInfo = {};
+    if (HasExtension(VKExt::KHR_imageless_framebuffer))
+    {
+        attachmentsCreateInfo.sType                     = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO_KHR;
+        attachmentsCreateInfo.pNext                     = nullptr;
+        attachmentsCreateInfo.attachmentImageInfoCount  = 0;
+        attachmentsCreateInfo.pAttachmentImageInfos     = nullptr;
+    }
+
+    #endif // /VK_KHR_imageless_framebuffer
+
     /* Create framebuffer object */
     const Extent2D resolution = GetResolution();
     VkFramebufferCreateInfo createInfo;
     {
-        createInfo.sType            = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        createInfo.pNext            = nullptr;
-        createInfo.flags            = (attachmentCount == 0 ? VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT : 0);
+        createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+
+        if (attachmentCount == 0)
+        {
+            #if VK_KHR_imageless_framebuffer
+            if (HasExtension(VKExt::KHR_imageless_framebuffer))
+            {
+                createInfo.pNext = &attachmentsCreateInfo;
+                createInfo.flags = VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT;
+            }
+            else
+            #endif // /VK_KHR_imageless_framebuffer
+            {
+                //TODO: create dummy image
+                LLGL_TRAP_FEATURE_NOT_SUPPORTED("VK_KHR_imageless_framebuffer");
+            }
+        }
+        else
+        {
+            createInfo.pNext = nullptr;
+            createInfo.flags = 0;
+        }
+
         createInfo.renderPass       = renderPass_->GetVkRenderPass();
         createInfo.attachmentCount  = attachmentCount;
         createInfo.pAttachments     = attachmentImageViews;

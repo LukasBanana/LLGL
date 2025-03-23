@@ -277,7 +277,7 @@ void VKCommandBuffer::CopyBufferFromTexture(
     }
 
     //TODO: context must detect if barriers are incompatible
-    context_.BufferMemoryBarrier(dstBufferVK.GetVkBuffer(), 0, VK_WHOLE_SIZE, VK_ACCESS_TRANSFER_WRITE_BIT, true);
+    context_.BufferMemoryBarrier(dstBufferVK.GetVkBuffer(), 0, VK_WHOLE_SIZE, VK_ACCESS_NONE, VK_ACCESS_TRANSFER_WRITE_BIT);
     VkImageLayout oldLayout = srcTextureVK.TransitionImageLayout(context_, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, true);
 
     if (IsInsideRenderPass())
@@ -384,7 +384,7 @@ void VKCommandBuffer::CopyTextureFromBuffer(
     }
 
     //TODO: context must detect if barriers are incompatible
-    context_.BufferMemoryBarrier(srcBufferVK.GetVkBuffer(), 0, VK_WHOLE_SIZE, VK_ACCESS_TRANSFER_READ_BIT, true);
+    context_.BufferMemoryBarrier(srcBufferVK.GetVkBuffer(), 0, VK_WHOLE_SIZE, VK_ACCESS_NONE, VK_ACCESS_TRANSFER_READ_BIT);
     VkImageLayout oldLayout = dstTextureVK.TransitionImageLayout(context_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, true);
 
     if (IsInsideRenderPass())
