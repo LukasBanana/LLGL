@@ -57,7 +57,8 @@ DEF_TEST( CommandBufferEncode )
                 Vulkan backend likely needs a second command buffer implementation like D3D11SecondaryCommandBuffer
                 to determine at the end of command recording whether it can be encoded as a native secondary command buffer or an emulated one.
             */
-            cmdBuf.SetViewport(swapChain->GetResolution());
+            if (renderer->GetRendererID() == LLGL::RendererID::Vulkan)
+                cmdBuf.SetViewport(swapChain->GetResolution());
 
             cmdBuf.SetVertexBuffer(*this->meshBuffer);
             cmdBuf.SetUniforms(0, clearValue.color, sizeof(clearValue.color));
