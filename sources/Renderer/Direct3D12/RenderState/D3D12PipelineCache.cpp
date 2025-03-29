@@ -13,7 +13,7 @@ namespace LLGL
 
 
 D3D12PipelineCache::D3D12PipelineCache(const Blob& initialBlob) :
-    initialBlob_ { initialBlob ? Blob::CreateCopy(initialBlob.GetData(), initialBlob.GetSize()) : Blob{} }
+    initialBlob_ { initialBlob ? Blob::CreateWeakRef(initialBlob.GetData(), initialBlob.GetSize()) : Blob{} }
 {
 }
 
