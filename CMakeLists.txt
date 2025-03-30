@@ -15,7 +15,7 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16")
     # for the respective batches of mixed language source files.
     if(APPLE)
         project(LLGL LANGUAGES C CXX OBJC OBJCXX)
-    elseif(WIN32)
+    elseif(MSVC)
         project(LLGL LANGUAGES C CXX CSharp)
     else()
         project(LLGL LANGUAGES C CXX)
