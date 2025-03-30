@@ -586,8 +586,6 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
     const Extent3D              extent          = CalcTextureExtent(textureVK.GetType(), textureRegion.extent, subresource.numArrayLayers);
     const Format                format          = VKTypes::Unmap(textureVK.GetVkFormat());
     const FormatAttributes&     formatAttribs   = GetFormatAttribs(format);
-
-    VkImage                     image           = textureVK.GetVkImage();
     const std::size_t           imageNumTexels  = extent.width * extent.height * extent.depth;
     const VkDeviceSize          imageDataSize   = static_cast<VkDeviceSize>(GetMemoryFootprint(format, imageNumTexels));
 
@@ -603,7 +601,7 @@ void VKRenderSystem::ReadTexture(Texture& texture, const TextureRegion& textureR
 
         /* Use input offset and extent (instead of transient dimensions) because copy operation takes subresource parameters into account */
         context_.CopyImageToBuffer(
-            image,
+            textureVK.GetVkImage(),
             stagingBuffer.GetVkBuffer(),
             textureVK.GetVkFormat(),
             VkOffset3D{ textureRegion.offset.x, textureRegion.offset.y, textureRegion.offset.z },

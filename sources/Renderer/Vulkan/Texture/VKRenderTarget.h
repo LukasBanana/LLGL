@@ -23,6 +23,7 @@ namespace LLGL
 
 
 class VKTexture;
+class VKCommandContext;
 
 class VKRenderTarget final : public RenderTarget
 {
@@ -43,6 +44,9 @@ class VKRenderTarget final : public RenderTarget
 
         // Returns true if this render target has multi-sampling enabled.
         bool HasMultiSampling() const;
+
+        // Transitions the image layouts for all texture attachments that are specified in this render-target's render-pass.
+        void OverrideImageLayoutsForRenderPass();
 
         // Returns the Vulkan framebuffer object.
         inline VkFramebuffer GetVkFramebuffer() const
@@ -82,7 +86,7 @@ class VKRenderTarget final : public RenderTarget
 
         VkImageView CreateAttachmentImageView(
             VkDevice                    device,
-            VKTexture&                  textureVK,
+            VKTexture*                  textureVK,
             Format                      format,
             const AttachmentDescriptor& attachmentDesc
         );
@@ -98,6 +102,37 @@ class VKRenderTarget final : public RenderTarget
 
     private:
 
+        struct AttachmentView
+        {
+            inline AttachmentView(VkDevice device) :
+                imageView { device, vkDestroyImageView }
+            {
+            }
+
+            inline AttachmentView(AttachmentView&& rhs) noexcept :
+                texture   { rhs.texture              },
+                layout    { rhs.layout               },
+                imageView { std::move(rhs.imageView) }
+            {
+            }
+
+            inline AttachmentView(VKTexture* texture, VkImageLayout layout, VKPtr<VkImageView>&& imageView) :
+                texture   { texture              },
+                layout    { layout               },
+                imageView { std::move(imageView) }
+            {
+            }
+
+            AttachmentView(const AttachmentView&) = delete;
+            AttachmentView& operator = (const AttachmentView&) = delete;
+
+            VKTexture*          texture     = nullptr;
+            VkImageLayout       layout      = VK_IMAGE_LAYOUT_UNDEFINED;
+            VKPtr<VkImageView>  imageView;
+        };
+
+    private:
+
         using VKColorBufferPtr = std::unique_ptr<VKColorBuffer>;
 
         Extent2D                        resolution_;
@@ -107,7 +142,7 @@ class VKRenderTarget final : public RenderTarget
         VKRenderPass                    defaultRenderPass_;
         VKRenderPass                    secondaryRenderPass_;
 
-        std::vector<VKPtr<VkImageView>> imageViews_;
+        std::vector<AttachmentView>     attachmentViews_;
 
         VKDepthStencilBuffer            depthStencilBuffer_;
         Format                          depthStencilFormat_     = Format::Undefined;    // Format either from internal depth-stencil buffer or attachmed texture.

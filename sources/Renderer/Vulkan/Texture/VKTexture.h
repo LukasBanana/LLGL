@@ -143,6 +143,13 @@ class VKTexture final : public Texture
             return image_.GetMemoryRegion();
         }
 
+        // Overrides the image layout. This is not called a setter to indicate that this should only be called
+        // by classes that need to override this value, such as VKRenderTarget.
+        inline void OverrideVkImageLayout(VkImageLayout layout)
+        {
+            image_.OverrideVkImageLayout(layout);
+        }
+
     private:
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);

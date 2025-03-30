@@ -89,6 +89,19 @@ DEF_TEST( CommandBufferSecondary )
     {
         innerCmdBuffer->SetIndexBuffer(*meshBuffer, Format::R32UInt, mesh.indexBufferOffset);
         innerCmdBuffer->SetPipelineState(*pso);
+
+        /*
+        FIXME:
+        This is a Vulkan workaround because secondary command buffers don't inherit any state as opposed to D3D12's bundles.
+        Vulkan backend likely needs a second command buffer implementation like D3D11SecondaryCommandBuffer
+        to determine at the end of command recording whether it can be encoded as a native secondary command buffer or an emulated one.
+        */
+        if (renderer->GetRendererID() == LLGL::RendererID::Vulkan)
+        {
+            innerCmdBuffer->SetViewport(swapChain->GetResolution());
+            innerCmdBuffer->SetVertexBuffer(*meshBuffer);
+        }
+
         innerCmdBuffer->SetResource(0, *sceneBuffer);
         innerCmdBuffer->DrawIndexed(mesh.numIndices, 0);
     };

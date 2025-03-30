@@ -639,6 +639,8 @@ void VKCommandBuffer::BeginRenderPass(
         framebufferRenderArea_.extent   = renderTargetVK.GetVkExtent();
         numColorAttachments_            = renderTargetVK.GetNumColorAttachments();
         hasDepthStencilAttachment_      = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+
+        renderTargetVK.OverrideImageLayoutsForRenderPass();
     }
 
     hasDynamicScissorRect_ = false;

@@ -7,6 +7,7 @@
 
 #include "VKRenderTarget.h"
 #include "VKTexture.h"
+#include "../Command/VKCommandContext.h"
 #include "../Ext/VKExtensionRegistry.h"
 #include "../Memory/VKDeviceMemoryManager.h"
 #include "../../CheckedCast.h"
@@ -85,6 +86,12 @@ const RenderPass* VKRenderTarget::GetRenderPass() const
 bool VKRenderTarget::HasMultiSampling() const
 {
     return (sampleCountBits_ > VK_SAMPLE_COUNT_1_BIT);
+}
+
+void VKRenderTarget::OverrideImageLayoutsForRenderPass()
+{
+    for (const AttachmentView& attachmentView : attachmentViews_)
+        attachmentView.texture->OverrideVkImageLayout(attachmentView.layout);
 }
 
 
@@ -204,21 +211,22 @@ void VKRenderTarget::CreateSecondaryRenderPass(VkDevice device, const RenderTarg
 
 VkImageView VKRenderTarget::CreateAttachmentImageView(
     VkDevice                    device,
-    VKTexture&                  textureVK,
+    VKTexture*                  textureVK,
     Format                      format,
     const AttachmentDescriptor& attachmentDesc)
 {
     /* Validate texture resolution to render target (to validate correlation between attachments) */
-    ValidateMipResolution(textureVK, attachmentDesc.mipLevel);
+    ValidateMipResolution(*textureVK, attachmentDesc.mipLevel);
 
     /* Create new image view for MIP-level and array layer specified in attachment descriptor */
+    const VkImageLayout renderPassImageLayout = (IsDepthOrStencilFormat(format) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     VKPtr<VkImageView> imageView{ device, vkDestroyImageView };
     {
-        textureVK.CreateImageView(device, TextureSubresource{ attachmentDesc.arrayLayer, attachmentDesc.mipLevel }, format, imageView);
+        textureVK->CreateImageView(device, TextureSubresource{ attachmentDesc.arrayLayer, attachmentDesc.mipLevel }, format, imageView);
     }
-    imageViews_.emplace_back(std::move(imageView));
+    attachmentViews_.emplace_back(textureVK, renderPassImageLayout, std::move(imageView));
 
-    return imageViews_.back().Get();
+    return attachmentViews_.back().imageView.Get();
 }
 
 VkImageView VKRenderTarget::CreateColorBuffer(VKDeviceMemoryManager& deviceMemoryMngr, Format format)
@@ -252,7 +260,7 @@ void VKRenderTarget::CreateFramebuffer(
     const std::uint32_t numTargetAttachments    = (hasDepthStencil ? numColorAttachments_ + 1 : numColorAttachments_);
     const std::uint32_t numResolveAttachments   = NumActiveResolveAttachments(desc);
 
-    imageViews_.reserve(numTargetAttachments + numResolveAttachments);
+    attachmentViews_.reserve(numTargetAttachments + numResolveAttachments);
 
     VkImageView attachmentImageViews[LLGL_MAX_NUM_COLOR_ATTACHMENTS * 2 + 1];
 
@@ -262,7 +270,7 @@ void VKRenderTarget::CreateFramebuffer(
         if (Texture* texture = colorAttachment.texture)
         {
             /* Use attachment texture for color buffer view */
-            auto& textureVK = LLGL_CAST(VKTexture&, *texture);
+            auto* textureVK = LLGL_CAST(VKTexture*, texture);
             const Format colorFormat = GetAttachmentFormat(colorAttachment);
             attachmentImageViews[i] = CreateAttachmentImageView(device, textureVK, colorFormat, colorAttachment);
         }
@@ -281,7 +289,7 @@ void VKRenderTarget::CreateFramebuffer(
         if (Texture* texture = depthStencilAttachment.texture)
         {
             /* Use attachment texture for depth-stencil view */
-            auto& textureVK = LLGL_CAST(VKTexture&, *texture);
+            auto* textureVK = LLGL_CAST(VKTexture*, texture);
             attachmentImageViews[numColorAttachments_] = CreateAttachmentImageView(device, textureVK, depthStencilFormat_, depthStencilAttachment);
         }
         else
@@ -302,7 +310,7 @@ void VKRenderTarget::CreateFramebuffer(
             if (Texture* texture = resolveAttachment.texture)
             {
                 /* Use attachment texture for color buffer view */
-                auto& textureVK = LLGL_CAST(VKTexture&, *texture);
+                auto* textureVK = LLGL_CAST(VKTexture*, texture);
                 const Format colorFormat = GetAttachmentFormat(resolveAttachment);
                 attachmentImageViews[attachmentCount++] = CreateAttachmentImageView(device, textureVK, colorFormat, resolveAttachment);
             }

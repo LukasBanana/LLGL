@@ -100,6 +100,13 @@ class VKDeviceImage
             return memoryRequirements_;
         }
 
+        // Overrides the image layout. This is not called a setter to indicate that this should only be called
+        // by classes that need to override this value, such as VKRenderTarget.
+        inline void OverrideVkImageLayout(VkImageLayout layout)
+        {
+            layout_ = layout;
+        }
+
     private:
 
         VKPtr<VkImage>          image_;

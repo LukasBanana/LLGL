@@ -27,7 +27,7 @@ LLGL_EXPORT Format GetAttachmentFormat(const AttachmentDescriptor& attachmentDes
 {
     if (attachmentDesc.format != Format::Undefined)
         return attachmentDesc.format;
-    if (auto texture = attachmentDesc.texture)
+    if (Texture* texture = attachmentDesc.texture)
         return texture->GetFormat();
     return Format::Undefined;
 }

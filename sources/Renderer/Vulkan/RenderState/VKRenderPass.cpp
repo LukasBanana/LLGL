@@ -182,6 +182,8 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     VkAttachmentReference resolveAttachmentsRefs[LLGL_MAX_NUM_COLOR_ATTACHMENTS];
     VkAttachmentReference depthStencilAttachmentRef;
 
+    SmallVector<VkAttachmentDescription, LLGL_MAX_NUM_ATTACHMENTS + LLGL_MAX_NUM_COLOR_ATTACHMENTS> sanitizedAttachmentDescs;
+
     /* Store sample count bits and number of color attachments (required for default blend states in VKGraphicsPipeline) */
     sampleCountBits_        = sampleCountBits;
     numColorAttachments_    = static_cast<std::uint8_t>(numColorAttachments);
@@ -196,6 +198,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
             clearValuesMask_ |= (0x1ull << i);
             numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i + 1));
         }
+        sanitizedAttachmentDescs.push_back(attachmentDescs[i]);
     }
 
     /* Initialize attachment reference */
@@ -228,6 +231,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
             {
                 resolveAttachmentsRefs[i].attachment    = resolveAttachmentIndex++;
                 resolveAttachmentsRefs[i].layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                sanitizedAttachmentDescs.push_back(attachmentDescs[numAttachments + i]);
             }
         }
     }
@@ -265,8 +269,8 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         createInfo.sType            = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
-        createInfo.attachmentCount  = (hasMultiSampling ? numAttachments + numColorAttachments : numAttachments);
-        createInfo.pAttachments     = attachmentDescs;
+        createInfo.attachmentCount  = static_cast<std::uint32_t>(sanitizedAttachmentDescs.size());
+        createInfo.pAttachments     = sanitizedAttachmentDescs.data();
         createInfo.subpassCount     = 1;
         createInfo.pSubpasses       = (&subpassDesc);
         createInfo.dependencyCount  = 1;
