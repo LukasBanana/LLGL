@@ -115,9 +115,9 @@ struct InternalUnmanagedBlob final : Blob::Pimpl
 static Blob::Pimpl* MakeInternalBlob(const void* data, std::size_t size, bool isWeakRef)
 {
     if (isWeakRef)
-        return new InternalVectorBlob{ data, size };
-    else
         return new InternalUnmanagedBlob{ data, size };
+    else
+        return new InternalVectorBlob{ data, size };
 }
 
 static Blob::Pimpl* MakeInternalBlob(DynamicByteArray&& cont)
