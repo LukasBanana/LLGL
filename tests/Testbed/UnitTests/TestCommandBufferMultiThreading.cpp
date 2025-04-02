@@ -29,14 +29,14 @@ class ThreadOrderInfo
             threadIDList_ += std::to_string(threadID);
         }
 
-        std::string Flush()
+        string Flush()
         {
             return std::move(threadIDList_);
         }
 
     private:
 
-        std::string threadIDList_;
+        string threadIDList_;
         std::mutex  threadIDListMutex_;
 
 };
@@ -242,10 +242,10 @@ DEF_TEST( CommandBufferMultiThreading )
     // Print threading order info
     if (opt.showTiming)
     {
-        const std::string frameNo = (frame < 10 ? "Frame  " : "Frame ") + std::to_string(frame);
-        std::string enterOrder = threadEnterOrder.Flush();
+        const string frameNo = (frame < 10 ? "Frame  " : "Frame ") + std::to_string(frame);
+        string enterOrder = threadEnterOrder.Flush();
         Log::Printf("Thread enter order: [%s] %s (Encoding:   %.4f ms)\n", frameNo.c_str(), enterOrder.c_str(), encodingTime);
-        std::string exitOrder = threadExitOrder.Flush();
+        string exitOrder = threadExitOrder.Flush();
         Log::Printf("Thread exit order:  [%s] %s (Submission: %.4f ms)\n", frameNo.c_str(), exitOrder.c_str(), submissionTime);
     }
 
@@ -259,7 +259,7 @@ DEF_TEST( CommandBufferMultiThreading )
         Log::Printf("Average timing: Encoding ( %.4f ms ), Submission ( %.4f ms )\n", avgEncodingTime, avgSubmissionTime);
 
     // Read result from render target textures
-    std::vector<ColorRGBub> outputImage;
+    vector<ColorRGBub> outputImage;
     outputImage.resize(texSize.width * texSize.height);
 
     MutableImageView dstImageView;
@@ -281,7 +281,7 @@ DEF_TEST( CommandBufferMultiThreading )
 
         renderer->ReadTexture(*outputTextures[i], texRegion, dstImageView);
 
-        const std::string outputImageName = "MultiThreading_Worker" + std::to_string(i);
+        const string outputImageName = "MultiThreading_Worker" + std::to_string(i);
         SaveColorImage(outputImage, texSize, outputImageName);
 
         const DiffResult diff = DiffImages(outputImageName, diffThreshold);

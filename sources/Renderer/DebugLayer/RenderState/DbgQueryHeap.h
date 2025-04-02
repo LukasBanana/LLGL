@@ -10,8 +10,8 @@
 
 
 #include <LLGL/QueryHeap.h>
-#include <vector>
-#include <string>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL
@@ -42,8 +42,8 @@ class DbgQueryHeap final : public QueryHeap
 
         QueryHeap&                  instance;
         const QueryHeapDescriptor   desc;
-        std::string                 label;
-        std::vector<State>          states;
+        string                      label;
+        vector<State>               states;
 
 };
 

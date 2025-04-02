@@ -258,7 +258,7 @@ DEF_TEST( ResourceCopy )
     cmdBuffer->End();
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "ResourceCopy_Frame" + std::to_string(frame);
+    const string colorBufferName = "ResourceCopy_Frame" + std::to_string(frame);
 
     SaveCapture(readbackTex, colorBufferName);
 

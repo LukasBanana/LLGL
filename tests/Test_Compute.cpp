@@ -9,12 +9,12 @@
 #include <LLGL/Utils/Parse.h>
 #include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 // Fill an array list of 4D-vectors for testing purposes
-static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)
+static vector<Gs::Vector4f> GetTestVector(std::size_t size)
 {
-    std::vector<Gs::Vector4f> vec(size);
+    vector<Gs::Vector4f> vec(size);
 
     for (unsigned int i = 0; i < size; ++i)
     {

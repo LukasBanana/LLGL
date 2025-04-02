@@ -11,7 +11,7 @@
 
 #include "StringUtils.h"
 #include <LLGL/Container/StringView.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <string.h>
 
 
@@ -115,7 +115,7 @@ class LinearStringContainerBase
 
     private:
 
-        std::vector<T>  data_;
+        vector<T>  data_;
         std::size_t     reserved_   = 0;
         std::size_t     offset_     = 0;
 

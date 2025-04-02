@@ -34,7 +34,7 @@ ShaderResourceReflection* FetchOrInsertResource(
     outReflection.resources.resize(outReflection.resources.size() + 1);
     ShaderResourceReflection* ref = &(outReflection.resources.back());
     {
-        ref->binding.name = std::string(name);
+        ref->binding.name = string(name);
         ref->binding.type = type;
         ref->binding.slot = slot;
     }

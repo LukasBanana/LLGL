@@ -11,8 +11,8 @@
 #include "C99EventListenerContainer.h"
 #include "../sources/Core/CoreUtils.h"
 #include "../sources/Core/Exception.h"
-#include <vector>
-#include <string>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 #include <string.h>
 
 
@@ -83,7 +83,7 @@ using CanvasEventListenerContainer = EventListenerContainer<InternalCanvasEventL
 
 #undef LLGL_CALLBACK_WRAPPER
 
-static std::vector<std::unique_ptr<Canvas>> g_Canvases;
+static vector<std::unique_ptr<Canvas>> g_Canvases;
 static CanvasEventListenerContainer         g_CanvasEventListenerContainer;
 
 static void ConvertCanvasDesc(CanvasDescriptor& dst, const LLGLCanvasDescriptor& src)

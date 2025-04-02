@@ -76,7 +76,7 @@ DEF_TEST( TriangleStripCutOff )
     for_range(i, numFormats)
     {
         psoDesc.indexFormat = indexFormats[i];
-        const std::string psoName = "Test.StripCutOff.Format(" + std::string(ToString(indexFormats[i])) + ")";
+        const string psoName = "Test.StripCutOff.Format(" + string(ToString(indexFormats[i])) + ")";
         CREATE_GRAPHICS_PSO_EXT(pso[i], psoDesc, psoName.c_str());
     }
 
@@ -124,7 +124,7 @@ DEF_TEST( TriangleStripCutOff )
     // Diff color buffer for undefined and fixed index formats
     bool diffFailed = false;
 
-    const std::string colorBuffer0Name = "TriangleStrip_UndefinedFormat";
+    const string colorBuffer0Name = "TriangleStrip_UndefinedFormat";
     SaveCapture(readbackTex[0], colorBuffer0Name);
     const DiffResult diff0 = DiffImages(colorBuffer0Name);
 
@@ -132,7 +132,7 @@ DEF_TEST( TriangleStripCutOff )
     if (result0 != TestResult::Passed)
         diffFailed = true;
 
-    const std::string colorBuffer1Name = "TriangleStrip_FixedFormat";
+    const string colorBuffer1Name = "TriangleStrip_FixedFormat";
     SaveCapture(readbackTex[1], colorBuffer1Name);
     const DiffResult diff1 = DiffImages(colorBuffer1Name);
 

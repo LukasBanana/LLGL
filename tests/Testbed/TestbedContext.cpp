@@ -77,7 +77,7 @@ bool HasProgramArgument(int argc, char* argv[], const char* search, const char**
     return false;
 }
 
-static std::string FindOutputDir(int argc, char* argv[])
+static string FindOutputDir(int argc, char* argv[])
 {
     for (int i = 0; i < argc; ++i)
     {
@@ -87,9 +87,9 @@ static std::string FindOutputDir(int argc, char* argv[])
     return k_defaultOutputDir;
 }
 
-static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
+static vector<string> FindSelectedTests(int argc, char* argv[])
 {
-    std::vector<std::string> selection;
+    vector<string> selection;
 
     // Gather all selected tests
     for (int i = 0; i < argc; ++i)
@@ -99,7 +99,7 @@ static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
             const char* curr = argv[i] + 5;
             while (const char* next = ::strchr(curr, ','))
             {
-                selection.push_back(std::string(curr, next));
+                selection.push_back(string(curr, next));
                 curr = next + 1;
             }
             if (*curr != '\0')
@@ -114,7 +114,7 @@ static std::vector<std::string> FindSelectedTests(int argc, char* argv[])
     return selection;
 }
 
-static std::string SanitizePath(std::string path)
+static string SanitizePath(string path)
 {
     for (char& chr : path)
     {
@@ -126,7 +126,7 @@ static std::string SanitizePath(std::string path)
     return path;
 }
 
-static std::string GetSanitizedOutputDir(int argc, char* argv[])
+static string GetSanitizedOutputDir(int argc, char* argv[])
 {
     return SanitizePath(FindOutputDir(argc, argv));
 }
@@ -251,7 +251,7 @@ TestbedContext::TestbedContext(const char* moduleName, int version, int argc, ch
 TestbedContext::~TestbedContext()
 {
     // Write output report file if specified
-    const std::string reportFilename = opt.outputDir + moduleName + "/Report.txt";
+    const string reportFilename = opt.outputDir + moduleName + "/Report.txt";
     std::ofstream reportFile{ reportFilename };
     if (reportFile.good())
         reportFile.write(report_.GetText(), ::strlen(report_.GetText()));
@@ -275,9 +275,9 @@ static const char* TestResultToStr(TestResult result)
 
 void TestbedContext::PrintSeparator()
 {
-    constexpr char              separatorChar   = '=';
-    constexpr std::size_t       separatorLen    = 80;
-    static const std::string    separatorLine(separatorLen, separatorChar);
+    constexpr char         separatorChar   = '=';
+    constexpr std::size_t  separatorLen    = 80;
+    static const string    separatorLine(separatorLen, separatorChar);
     Log::Printf("%s\n", separatorLine.c_str());
 }
 
@@ -316,11 +316,11 @@ static void PrintTestResult(TestResult result, const char* name, bool highlighte
     ::fflush(stdout);
 }
 
-static void PrintUnknownTests(const std::vector<std::string>& selectedTests, const std::vector<const char*>& knownTests)
+static void PrintUnknownTests(const vector<string>& selectedTests, const vector<const char*>& knownTests)
 {
     // Gather unknown test names
-    std::vector<std::string> unknownTests;
-    for (const std::string& name : selectedTests)
+    vector<string> unknownTests;
+    for (const string& name : selectedTests)
     {
         if (std::find_if(knownTests.begin(), knownTests.end(), [&name](const char* s) -> bool { return (name == s); }) == knownTests.end())
             unknownTests.push_back(name);
@@ -329,8 +329,8 @@ static void PrintUnknownTests(const std::vector<std::string>& selectedTests, con
     // Print unknown test names
     if (!unknownTests.empty())
     {
-        std::string unknownTestsStr;
-        for (const std::string& name : unknownTests)
+        string unknownTestsStr;
+        for (const string& name : unknownTests)
         {
             if (!unknownTestsStr.empty())
                 unknownTestsStr += ", ";
@@ -445,7 +445,7 @@ unsigned TestbedContext::RunRendererIndependentTests(int argc, char* argv[])
     // Check if there were any unknown tests selected
     if (!opt.selectedTests.empty())
     {
-        std::vector<const char*> knownTests;
+        vector<const char*> knownTests;
         #define GATHER_KNOWN_TESTS
         #include "UnitTests/DeclTests.inl"
         #undef GATHER_KNOWN_TESTS
@@ -848,9 +848,9 @@ bool TestbedContext::HasUniqueBindingSlots() const
     return (renderer->GetRendererID() == RendererID::Vulkan);
 }
 
-static std::string FormatCharArray(const unsigned char* data, std::size_t count, std::size_t bytesPerGroup, std::size_t maxWidth)
+static string FormatCharArray(const unsigned char* data, std::size_t count, std::size_t bytesPerGroup, std::size_t maxWidth)
 {
-    std::string s;
+    string s;
     s.reserve(count * 3);
 
     char formatted[3] = {};
@@ -875,9 +875,9 @@ static std::string FormatCharArray(const unsigned char* data, std::size_t count,
     return s;
 }
 
-static std::string FormatFloatArray(const float* data, std::size_t count, std::size_t maxWidth)
+static string FormatFloatArray(const float* data, std::size_t count, std::size_t maxWidth)
 {
-    std::string s;
+    string s;
     s.reserve(count * 5);
 
     char formatted[16] = {};
@@ -917,7 +917,7 @@ TestbedContext::Options TestbedContext::ParseOptions(int argc, char* argv[])
     return opt;
 }
 
-std::string TestbedContext::FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup, bool formatAsFloats)
+string TestbedContext::FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup, bool formatAsFloats)
 {
     constexpr std::size_t maxWidth = 80;
     if (formatAsFloats)
@@ -1133,7 +1133,7 @@ void TestbedContext::CreatePipelineLayouts()
 
 bool TestbedContext::LoadTextures()
 {
-    auto LoadTextureFromFile = [this](const char* name, const std::string& filename) -> Texture*
+    auto LoadTextureFromFile = [this](const char* name, const string& filename) -> Texture*
     {
         auto PrintLoadingInfo = [&filename]()
         {
@@ -1180,7 +1180,7 @@ bool TestbedContext::LoadTextures()
         return tex;
     };
 
-    const std::string texturePath = "../Media/Textures/";
+    const string texturePath = "../Media/Textures/";
 
     textures[TextureGrid10x10]      = LoadTextureFromFile("Grid10x10", texturePath + "Grid10x10.png");
     textures[TextureGradient]       = LoadTextureFromFile("Gradient", texturePath + "Gradient.png");
@@ -1330,7 +1330,7 @@ void TestbedContext::CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTr
     scene.FinalizeMesh(outMesh);
 }
 
-void TestbedContext::ConvertToColoredVertexList(const IndexedTriangleMeshBuffer& scene, std::vector<ColoredVertex>& outVertices, const LLGL::ColorRGBAf& color)
+void TestbedContext::ConvertToColoredVertexList(const IndexedTriangleMeshBuffer& scene, vector<ColoredVertex>& outVertices, const LLGL::ColorRGBAf& color)
 {
     outVertices.reserve(scene.indices.size());
 
@@ -1369,7 +1369,7 @@ void TestbedContext::CreateConstantBuffers()
 }
 
 Shader* TestbedContext::LoadShaderFromFile(
-    const std::string&  filename,
+    const string&  filename,
     ShaderType          type,
     const char*         entry,
     const char*         profile,
@@ -1377,7 +1377,7 @@ Shader* TestbedContext::LoadShaderFromFile(
     VertFmt             vertFmt,
     VertFmt             vertOutFmt)
 {
-    auto StringEndsWith = [](const std::string& str, const std::string& suffix) -> bool
+    auto StringEndsWith = [](const string& str, const string& suffix) -> bool
     {
         return (str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix.c_str()) == 0);
     };
@@ -1393,12 +1393,12 @@ Shader* TestbedContext::LoadShaderFromFile(
         PrintLoadingInfo();
 
     // Resolve file path
-    const std::string shaderRootDir = "Shaders/";
+    const string shaderRootDir = "Shaders/";
 
-    std::string filePath = shaderRootDir;
+    string filePath = shaderRootDir;
 
-    std::string::size_type filePartEnd = filename.find('.');
-    filePath += (filePartEnd != std::string::npos ? filename.substr(0, filePartEnd) : filename);
+    string::size_type filePartEnd = filename.find('.');
+    filePath += (filePartEnd != string::npos ? filename.substr(0, filePartEnd) : filename);
     filePath += '/';
     filePath += filename;
 
@@ -1441,7 +1441,7 @@ Shader* TestbedContext::LoadShaderFromFile(
     return shader;
 };
 
-static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, const std::string& filename, bool verbose)
+static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, const string& filename, bool verbose)
 {
     auto PrintInfo = [&filename]
     {
@@ -1466,22 +1466,22 @@ static bool SaveImage(const void* pixels, int comp, const Extent2D& extent, cons
     return (result != 0);
 }
 
-static bool SaveImage(const std::vector<ColorRGBub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+static bool SaveImage(const vector<ColorRGBub>& pixels, const Extent2D& extent, const string& filename, bool verbose = false)
 {
     return SaveImage(pixels.data(), 3, extent, filename, verbose);
 }
 
-static bool SaveImage(const std::vector<ColorRGBAub>& pixels, const Extent2D& extent, const std::string& filename, bool verbose = false)
+static bool SaveImage(const vector<ColorRGBAub>& pixels, const Extent2D& extent, const string& filename, bool verbose = false)
 {
     return SaveImage(pixels.data(), 4, extent, filename, verbose);
 }
 
-void PrintLoadImageInfo(const std::string& filename)
+void PrintLoadImageInfo(const string& filename)
 {
     Log::Printf("Load PNG image: %s", filename.c_str());
 };
 
-static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const std::string& filename, bool verbose = false)
+static bool LoadImage(vector<ColorRGBub>& pixels, Extent2D& extent, const string& filename, bool verbose = false)
 {
     if (verbose)
         PrintLoadImageInfo(filename);
@@ -1509,7 +1509,7 @@ static bool LoadImage(std::vector<ColorRGBub>& pixels, Extent2D& extent, const s
     return true;
 }
 
-static bool LoadImage(Image& img, const std::string& filename, bool verbose = false)
+static bool LoadImage(Image& img, const string& filename, bool verbose = false)
 {
     if (verbose)
         PrintLoadImageInfo(filename);
@@ -1547,14 +1547,14 @@ static bool LoadImage(Image& img, const std::string& filename, bool verbose = fa
     return true;
 }
 
-Image TestbedContext::LoadImageFromFile(const std::string& filename, bool verbose)
+Image TestbedContext::LoadImageFromFile(const string& filename, bool verbose)
 {
     Image img;
     LoadImage(img, filename, verbose);
     return img;
 }
 
-void TestbedContext::SaveImageToFile(const LLGL::Image& img, const std::string& filename, bool verbose)
+void TestbedContext::SaveImageToFile(const LLGL::Image& img, const string& filename, bool verbose)
 {
     SaveImage(
         img.GetData(),
@@ -1576,20 +1576,20 @@ bool TestbedContext::IsRGBA8ubInThreshold(const std::uint8_t lhs[4], const std::
     );
 }
 
-void TestbedContext::SaveColorImage(const std::vector<ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name)
+void TestbedContext::SaveColorImage(const vector<ColorRGBub>& image, const LLGL::Extent2D& extent, const string& name)
 {
-    const std::string path = opt.outputDir + moduleName + "/";
+    const string path = opt.outputDir + moduleName + "/";
     SaveImage(image, extent, path + name + ".Result.png", opt.verbose);
 }
 
-void TestbedContext::SaveDepthImage(const std::vector<float>& image, const Extent2D& extent, const std::string& filename)
+void TestbedContext::SaveDepthImage(const vector<float>& image, const Extent2D& extent, const string& filename)
 {
     SaveDepthImage(image, extent, filename, 0.1f, 100.0f);
 }
 
-void TestbedContext::SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane)
+void TestbedContext::SaveDepthImage(const vector<float>& image, const LLGL::Extent2D& extent, const string& name, float nearPlane, float farPlane)
 {
-    std::vector<ColorRGBub> colors;
+    vector<ColorRGBub> colors;
     colors.resize(image.size());
 
     const bool remapDepthValues     = true;
@@ -1625,19 +1625,19 @@ void TestbedContext::SaveDepthImage(const std::vector<float>& image, const LLGL:
         colors[i] = ColorRGBub{ color };
     }
 
-    const std::string path = opt.outputDir + moduleName + "/";
+    const string path = opt.outputDir + moduleName + "/";
     SaveImage(colors, extent, path + name + ".Result.png", opt.verbose);
 }
 
-void TestbedContext::SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name)
+void TestbedContext::SaveStencilImage(const vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const string& name)
 {
-    std::vector<ColorRGBub> colors;
+    vector<ColorRGBub> colors;
     colors.resize(image.size());
 
     for (std::size_t i = 0; i < image.size(); ++i)
         colors[i] = ColorRGBub{ image[i] };
 
-    const std::string path = opt.outputDir + moduleName + "/";
+    const string path = opt.outputDir + moduleName + "/";
     SaveImage(colors, extent, path + name + ".Result.png", opt.verbose);
 }
 
@@ -1663,7 +1663,7 @@ LLGL::Texture* TestbedContext::CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer
     return capture;
 }
 
-void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly)
+void TestbedContext::SaveCapture(LLGL::Texture* capture, const string& name, bool writeStencilOnly)
 {
     if (capture != nullptr)
     {
@@ -1676,7 +1676,7 @@ void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name
             if (writeStencilOnly)
             {
                 // Readback framebuffer stencil indices
-                std::vector<std::uint8_t> stencilData;
+                vector<std::uint8_t> stencilData;
                 stencilData.resize(extent.width * extent.height);
 
                 MutableImageView dstImageView;
@@ -1693,7 +1693,7 @@ void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name
             else
             {
                 // Readback framebuffer depth components
-                std::vector<float> depthData;
+                vector<float> depthData;
                 depthData.resize(extent.width * extent.height);
 
                 MutableImageView dstImageView;
@@ -1711,7 +1711,7 @@ void TestbedContext::SaveCapture(LLGL::Texture* capture, const std::string& name
         else
         {
             // Readback framebuffer color
-            std::vector<ColorRGBub> colorData;
+            vector<ColorRGBub> colorData;
             colorData.resize(extent.width * extent.height);
 
             MutableImageView dstImageView;
@@ -1746,16 +1746,16 @@ static ColorRGBub GetHeatMapColor(int diff, int scale = 1)
     return ColorRGBub{ heapMapLUT[diff*3], heapMapLUT[diff*3+1], heapMapLUT[diff*3+2] };
 }
 
-TestbedContext::DiffResult TestbedContext::DiffImages(const std::string& name, int threshold, unsigned tolerance, int scale)
+TestbedContext::DiffResult TestbedContext::DiffImages(const string& name, int threshold, unsigned tolerance, int scale)
 {
     // Load input images and validate they have the same dimensions
-    std::vector<ColorRGBub> pixelsA, pixelsB;
-    std::vector<ColorRGBAub> pixelsDiff;
+    vector<ColorRGBub> pixelsA, pixelsB;
+    vector<ColorRGBAub> pixelsDiff;
     Extent2D extentA, extentB;
 
-    const std::string resultPath    = opt.outputDir + moduleName + "/";
-    const std::string refPath       = "Reference/";
-    const std::string diffPath      = opt.outputDir + moduleName + "/";
+    const string resultPath    = opt.outputDir + moduleName + "/";
+    const string refPath       = "Reference/";
+    const string diffPath      = opt.outputDir + moduleName + "/";
 
     if (!LoadImage(pixelsA, extentA, refPath + name + ".Ref.png", opt.verbose))
         return DiffErrorLoadRefFailed;
@@ -1906,15 +1906,15 @@ void TestbedContext::Histogram::Print(unsigned rows) const
 
     const unsigned minCount = std::max(1u, maxCount / rows);
 
-    const std::string minCountStr = std::to_string(minCount);
-    const std::string maxCountStr = std::to_string(maxCount);
-    const std::string blankCountStr = std::string(maxCountStr.size(), ' ');
+    const string minCountStr = std::to_string(minCount);
+    const string maxCountStr = std::to_string(maxCount);
+    const string blankCountStr = string(maxCountStr.size(), ' ');
 
     const char* indent = "  ";
-    const std::string caption = "Histogram:";
+    const string caption = "Histogram:";
     const std::size_t captionPos = (caption.size() < rangeSize ? rangeSize - caption.size() : 0)/2;
 
-    Log::Printf("%s%s%s\n", indent, std::string(captionPos + blankCountStr.size() + 3, ' ').c_str(), caption.c_str());
+    Log::Printf("%s%s%s\n", indent, string(captionPos + blankCountStr.size() + 3, ' ').c_str(), caption.c_str());
 
     // Print each row of histogram
     for_range(y, rows)
@@ -1924,7 +1924,7 @@ void TestbedContext::Histogram::Print(unsigned rows) const
         if (y == 0)
             Log::Printf("%s | ", maxCountStr.c_str());
         else if (y + 1 == rows)
-            Log::Printf("%s%s | ", std::string(maxCountStr.size() - minCountStr.size(), ' ').c_str(), minCountStr.c_str());
+            Log::Printf("%s%s | ", string(maxCountStr.size() - minCountStr.size(), ' ').c_str(), minCountStr.c_str());
         else
             Log::Printf("%s | ", blankCountStr.c_str());
 
@@ -1946,8 +1946,8 @@ void TestbedContext::Histogram::Print(unsigned rows) const
 
     // Print diff ranges
     static_assert(rangeSize > 3, "Histogram::rangeSize must be greater than 3");
-    Log::Printf("%s%s --%s\n", indent, blankCountStr.c_str(), std::string(rangeSize, '-').c_str());
-    Log::Printf("%s%s   1%sFF\n", indent, blankCountStr.c_str(), std::string(rangeSize - 3, ' ').c_str());
+    Log::Printf("%s%s --%s\n", indent, blankCountStr.c_str(), string(rangeSize, '-').c_str());
+    Log::Printf("%s%s   1%sFF\n", indent, blankCountStr.c_str(), string(rangeSize - 3, ' ').c_str());
 }
 
 

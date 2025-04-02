@@ -11,7 +11,7 @@
 
 #include <LLGL/RenderPass.h>
 #include <LLGL/RenderPassFlags.h>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL
@@ -35,7 +35,7 @@ class NullRenderPass final : public RenderPass
 
     private:
 
-        std::string label_;
+        string label_;
 
 };
 

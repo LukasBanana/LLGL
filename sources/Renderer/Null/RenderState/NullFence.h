@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Fence.h>
-#include <string>
+#include <LLGL/Container/String.h>
 #include <atomic>
 #include <cstdint>
 
@@ -36,8 +36,8 @@ class NullFence final : public Fence
 
     private:
 
-        std::string             label_;
-        std::atomic_uint64_t    signal_;
+        string                label_;
+        std::atomic_uint64_t  signal_;
 
 };
 

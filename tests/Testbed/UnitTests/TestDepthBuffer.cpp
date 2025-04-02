@@ -123,7 +123,7 @@ DEF_TEST( DepthBuffer )
     const float deltaDepthValue = std::abs(readbackDepthValue - expectedDepthValue);
 
     // Match entire depth and create delta heat map
-    std::vector<float> readbackDepthBuffer;
+    vector<float> readbackDepthBuffer;
     readbackDepthBuffer.resize(texDesc.extent.width * texDesc.extent.height, -1.0f);
     {
         dstImageView.format     = ImageFormat::Depth;

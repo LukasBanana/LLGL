@@ -13,7 +13,7 @@
 #include "GLCommandOpcode.h"
 #include "../../VirtualCommandBuffer.h"
 #include <memory>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL

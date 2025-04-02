@@ -182,7 +182,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
     /* Gather all uniform bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetBindingNames().size())
     {
-        const std::string& name = pipelineLayout.GetBindingNames()[i];
+        const string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty())
         {
             const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
@@ -199,7 +199,7 @@ void GLShaderBindingLayout::BuildUniformBindings(const GLPipelineLayout& pipelin
     /* Append all uniform bindings for combined texture-samplers */
     for_range(i, pipelineLayout.GetCombinedSamplerNames().size())
     {
-        const std::string& name = pipelineLayout.GetCombinedSamplerNames()[i];
+        const string& name = pipelineLayout.GetCombinedSamplerNames()[i];
         if (!name.empty())
             AppendUniformBinding(name, pipelineLayout.GetCombinedSamplerSlots()[i]);
     }
@@ -220,7 +220,7 @@ void GLShaderBindingLayout::BuildUniformBlockBindings(const GLPipelineLayout& pi
     /* Gather all uniform-block bindings from dynamic resource descriptors */
     for_range(i, pipelineLayout.GetBindings().size())
     {
-        const std::string& name = pipelineLayout.GetBindingNames()[i];
+        const string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty())
         {
             const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
@@ -243,25 +243,25 @@ void GLShaderBindingLayout::BuildShaderStorageBindings(const GLPipelineLayout& p
     for_range(i, pipelineLayout.GetBindings().size())
     {
         const GLPipelineResourceBinding& binding = pipelineLayout.GetBindings()[i];
-        const std::string& name = pipelineLayout.GetBindingNames()[i];
+        const string& name = pipelineLayout.GetBindingNames()[i];
         if (!name.empty() && binding.IsSSBO())
             AppendShaderStorageBinding(name, binding.slot);
     }
 }
 
-void GLShaderBindingLayout::AppendUniformBinding(const std::string& name, std::uint32_t slot, std::uint32_t size)
+void GLShaderBindingLayout::AppendUniformBinding(const string& name, std::uint32_t slot, std::uint32_t size)
 {
     bindings_.push_back({ name, slot, size });
     ++numUniformBindings_;
 }
 
-void GLShaderBindingLayout::AppendUniformBlockBinding(const std::string& name, std::uint32_t slot)
+void GLShaderBindingLayout::AppendUniformBlockBinding(const string& name, std::uint32_t slot)
 {
     bindings_.push_back({ name, slot, 1u });
     ++numUniformBlockBindings_;
 }
 
-void GLShaderBindingLayout::AppendShaderStorageBinding(const std::string& name, std::uint32_t slot)
+void GLShaderBindingLayout::AppendShaderStorageBinding(const string& name, std::uint32_t slot)
 {
     bindings_.push_back({ name, slot, 1u });
     ++numShaderStorageBindings_;

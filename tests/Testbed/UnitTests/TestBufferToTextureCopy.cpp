@@ -71,7 +71,7 @@ DEF_TEST( BufferToTextureCopy )
         }
 
         // Create texture to copy from source buffer and to destination buffer
-        const std::string texName = std::string("interm.") + name;
+        const string texName = string("interm.") + name;
         TextureDescriptor texDesc;
         {
             texDesc.type        = type;
@@ -85,7 +85,7 @@ DEF_TEST( BufferToTextureCopy )
 
         // Create destination buffer to read back image data
         const char* nameWithoutTexPrefix = (::strncmp(name, "tex", 3) == 0 ? name + 3 : name);
-        const std::string dstBufName = std::string("dst.buf") + nameWithoutTexPrefix;
+        const string dstBufName = string("dst.buf") + nameWithoutTexPrefix;
         BufferDescriptor dstBufDesc;
         {
             dstBufDesc.size         = srcBufSize;
@@ -96,7 +96,7 @@ DEF_TEST( BufferToTextureCopy )
         // Run test through all MIP-maps and array layers (should not be more than 2 each)
         const std::uint32_t texDims = NumTextureDimensions(type);
 
-        std::vector<char> srcData, dstData;
+        vector<char> srcData, dstData;
         const bool formatAsFloats = IsFloatFormat(format);
 
         for_range(mip, mips)
@@ -120,7 +120,7 @@ DEF_TEST( BufferToTextureCopy )
                 // Copy source buffer to texture and back to destination buffer
                 cmdBuffer->Begin();
                 {
-                    const std::string debugGroup = std::string(name) + " (mip: " + std::to_string(mip) + ", layer: " + std::to_string(layer) + ")";
+                    const string debugGroup = string(name) + " (mip: " + std::to_string(mip) + ", layer: " + std::to_string(layer) + ")";
                     cmdBuffer->PushDebugGroup(debugGroup.c_str());
                     {
                         cmdBuffer->FillBuffer(*dstBuf, 0, FLIP_ENDIAN(0xDEADBEEF), srcBufSize);
@@ -140,8 +140,8 @@ DEF_TEST( BufferToTextureCopy )
 
                 if (::memcmp(srcData.data(), dstData.data(), srcBufSize) != 0)
                 {
-                    const std::string srcDataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
-                    const std::string dstDataStr = TestbedContext::FormatByteArray(dstData.data(), dstData.size(), 4, formatAsFloats);
+                    const string srcDataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
+                    const string dstDataStr = TestbedContext::FormatByteArray(dstData.data(), dstData.size(), 4, formatAsFloats);
                     Log::Errorf(
                         "Mismatch between data of texture %s [MIP %u, Layer %u] and copy result:\n"
                         " -> Expected: [%s]\n"
@@ -152,7 +152,7 @@ DEF_TEST( BufferToTextureCopy )
                 }
                 else if (opt.sanityCheck)
                 {
-                    const std::string dataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
+                    const string dataStr = TestbedContext::FormatByteArray(srcData.data(), srcData.size(), 4, formatAsFloats);
                     Log::Printf(
                         Log::ColorFlags::StdAnnotation,
                         "Sanity check for %s [MIP %u, Layer %u]:\n"

@@ -11,7 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <Gauss/Vector3.h>
 
 
@@ -32,7 +32,7 @@ class PerlinNoise
 
         // Generates a perlin noise pattern into the output buffer.
         void GenerateBuffer(
-            std::vector<float>& buffer,
+            vector<float>& buffer,
             std::uint32_t       width,
             std::uint32_t       height,
             std::uint32_t       depth,
@@ -43,7 +43,7 @@ class PerlinNoise
 
         // Generates a perlin noise pattern into the output buffer.
         void GenerateBuffer(
-            std::vector<std::uint8_t>&  buffer,
+            vector<std::uint8_t>&  buffer,
             std::uint32_t               width,
             std::uint32_t               height,
             std::uint32_t               depth,

@@ -24,7 +24,7 @@ DEF_RITEST( ImageStrides )
     const std::uint32_t numPixelsPerRow     = 10;
     const std::uint32_t numPixelsPerLayer   = numPixelsPerRow*6;
 
-    std::vector<LLGL::ColorRGBAub> srcData, expectedData;
+    vector<LLGL::ColorRGBAub> srcData, expectedData;
     srcData.resize(numPixelsPerLayer * imageExtent.depth);
     expectedData.resize(imageExtent.width * imageExtent.height * imageExtent.depth);
     {
@@ -43,7 +43,7 @@ DEF_RITEST( ImageStrides )
         }
     }
 
-    std::vector<LLGL::ColorRGBf> dstData;
+    vector<LLGL::ColorRGBf> dstData;
     dstData.resize(imageExtent.width * imageExtent.height * imageExtent.depth);
 
     // Convert image with padding
@@ -82,8 +82,8 @@ DEF_RITEST( ImageStrides )
 
     if (::memcmp(dstImgRGBA8ub.data(), expectedData.data(), expectedSize) != 0)
     {
-        const std::string expectedDataStr = TestbedContext::FormatByteArray(expectedData.data(), expectedSize, 4);
-        const std::string actualDataStr = TestbedContext::FormatByteArray(dstImgRGBA8ub.data(), dstImgRGBA8ub.size(), 4);
+        const string expectedDataStr = TestbedContext::FormatByteArray(expectedData.data(), expectedSize, 4);
+        const string actualDataStr = TestbedContext::FormatByteArray(dstImgRGBA8ub.data(), dstImgRGBA8ub.size(), 4);
         Log::Errorf(
             Log::ColorFlags::StdError,
             "Mismatch between converted image data and padded input image:\n"
@@ -95,7 +95,7 @@ DEF_RITEST( ImageStrides )
     }
     else if (opt.sanityCheck)
     {
-        const std::string actualDataStr = TestbedContext::FormatByteArray(dstImgRGBA8ub.data(), dstImgRGBA8ub.size(), 4);
+        const string actualDataStr = TestbedContext::FormatByteArray(dstImgRGBA8ub.data(), dstImgRGBA8ub.size(), 4);
         Log::Printf(
             Log::ColorFlags::StdAnnotation,
             "Sanity check for converted image data from padded input image:\n"
@@ -116,8 +116,8 @@ DEF_RITEST( ImageStrides )
                 const ColorRGBub dstCol = dstData[i].Cast<std::uint8_t>();
                 if (srcCol != dstCol)
                 {
-                    const std::string srcColStr = FormatByteArray(srcCol.Ptr(), sizeof(srcCol));
-                    const std::string dstColStr = FormatByteArray(dstCol.Ptr(), sizeof(srcCol));
+                    const string srcColStr = FormatByteArray(srcCol.Ptr(), sizeof(srcCol));
+                    const string dstColStr = FormatByteArray(dstCol.Ptr(), sizeof(srcCol));
                     Log::Errorf(
                         Log::ColorFlags::StdError,
                         "Mismatch between converted image and padded input image at (%u,%u):\n"

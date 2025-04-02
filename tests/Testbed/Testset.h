@@ -12,7 +12,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Utils/ColorRGBA.h>
 #include <LLGL/Utils/ColorRGB.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 // Shifts the bits of the specified 32-bit integer to flip little-endian to big-endian and wise verse.
@@ -35,8 +35,8 @@ LLGL::ArrayView<LLGL::ColorRGBf> GetColorsRgbF4();
 LLGL::ArrayView<LLGL::ColorRGBf> GetColorsRgbF8();
 LLGL::ArrayView<float> GetColorsRgF8();
 
-std::vector<LLGL::ColorRGBAub> GenerateColorsRgbaUb(std::size_t count);
-std::vector<float> GenerateFloats(std::size_t count);
+vector<LLGL::ColorRGBAub> GenerateColorsRgbaUb(std::size_t count);
+vector<float> GenerateFloats(std::size_t count);
 
 
 } // /namespace Testset

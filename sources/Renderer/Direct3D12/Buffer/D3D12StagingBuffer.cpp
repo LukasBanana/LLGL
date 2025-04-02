@@ -9,7 +9,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/CoreUtils.h"
 #include "../D3DX12/d3dx12.h"
-#include <string.h>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL

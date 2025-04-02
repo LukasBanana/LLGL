@@ -6,7 +6,7 @@
  */
 
 #include "TestbedContext.h"
-#include <string>
+#include <LLGL/Container/String.h>
 #include <regex>
 #include <exception>
 #include <stdio.h>
@@ -47,7 +47,7 @@ static unsigned RunTestbedForRenderer(const char* moduleName, int version, int a
 
 struct ModuleAndVersion
 {
-    std::string name;
+    string name;
     int         version;
 
     ModuleAndVersion(const char* name, int version = 0) :
@@ -56,14 +56,14 @@ struct ModuleAndVersion
     {
     }
 
-    ModuleAndVersion(const std::string& name, int version = 0) :
+    ModuleAndVersion(const string& name, int version = 0) :
         name    { name    },
         version { version }
     {
     }
 };
 
-static ModuleAndVersion GetRendererModule(const std::string& name)
+static ModuleAndVersion GetRendererModule(const string& name)
 {
     if (name == "gl" || name == "opengl")
         return "OpenGL";
@@ -88,13 +88,13 @@ static void PrintHelpDocs()
 {
     // Find available modules
     auto availableModules = RenderSystem::FindModules();
-    std::string availableModulesStr;
+    string availableModulesStr;
 
     auto ListModuleIfAvailable = [&availableModules, &availableModulesStr](const char* name, const char* docu) -> void
     {
         auto it = std::find_if(
             availableModules.begin(), availableModules.end(),
-            [name](const std::string& entry) -> bool
+            [name](const string& entry) -> bool
             {
                 return (entry.compare(name) == 0);
             }
@@ -165,7 +165,7 @@ static int GuardedMain(int argc, char* argv[])
     }
 
     // Gather all explicitly specified module names
-    std::vector<ModuleAndVersion> enabledModules;
+    vector<ModuleAndVersion> enabledModules;
     for (int i = 1; i < argc; ++i)
     {
         if (argv[i][0] != '-')
@@ -174,9 +174,9 @@ static int GuardedMain(int argc, char* argv[])
 
     if (enabledModules.empty())
     {
-        std::vector<std::string> availableModules = RenderSystem::FindModules();
+        vector<string> availableModules = RenderSystem::FindModules();
         enabledModules.reserve(availableModules.size());
-        for (const std::string& module : availableModules)
+        for (const string& module : availableModules)
             enabledModules.push_back(module);
     }
 

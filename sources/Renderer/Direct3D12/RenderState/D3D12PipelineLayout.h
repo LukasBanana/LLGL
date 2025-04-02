@@ -17,7 +17,7 @@
 #include "../../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <memory>
-#include <map>
+#include <LLGL/Container/Map.h>
 
 
 namespace LLGL
@@ -134,7 +134,7 @@ class D3D12PipelineLayout final : public PipelineLayout
         */
         ComPtr<ID3D12RootSignature> CreateRootSignatureWith32BitConstants(
             const ArrayView<D3D12Shader*>&          shaders,
-            std::vector<D3D12RootConstantLocation>& outRootConstantMap
+            vector<D3D12RootConstantLocation>& outRootConstantMap
         ) const;
 
         // Returns the layout of the set of descriptor heaps.
@@ -292,7 +292,7 @@ class D3D12PipelineLayout final : public PipelineLayout
         D3D12RootParameterIndices                   rootParameterIndices_;
         long                                        convolutedStageFlags_   = 0;
 
-        std::vector<UniformDescriptor>              uniforms_;
+        vector<UniformDescriptor>              uniforms_;
 
         long                                        barrierFlags_           = 0;
         UINT                                        numUAVBarriers_         = 0;

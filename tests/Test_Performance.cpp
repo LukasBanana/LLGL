@@ -7,7 +7,7 @@
 
 #include <LLGL/LLGL.h>
 #include <LLGL/Utils/Image.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <functional>
 
 
@@ -64,7 +64,7 @@ class PerformanceTest
         LLGL::CommandBuffer*        commands        = nullptr;
 
         LLGL::QueryHeap*            timerQuery      = nullptr;
-        std::vector<LLGL::Texture*> textures;
+        vector<LLGL::Texture*> textures;
 
         TestConfig                  config;
 
@@ -108,7 +108,7 @@ class PerformanceTest
             LLGL::Log::Printf("\n");
         }
 
-        void MeasureTime(const std::string& title, const std::function<void()>& callback)
+        void MeasureTime(const string& title, const std::function<void()>& callback)
         {
             // Measure time with query
             commands->Begin();
@@ -154,7 +154,7 @@ class PerformanceTest
 
     public:
 
-        void Load(const std::string& rendererModule, const TestConfig& testConfig)
+        void Load(const string& rendererModule, const TestConfig& testConfig)
         {
             // Store test configuration
             config = testConfig;
@@ -211,7 +211,7 @@ int main(int argc, char* argv[])
 {
     LLGL::Log::RegisterCallbackStd();
 
-    std::string rendererModule = "OpenGL";
+    string rendererModule = "OpenGL";
 
     TestConfig testConfig;
     testConfig.numTextures  = 2;

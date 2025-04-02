@@ -37,7 +37,7 @@
 #include "../RenderState/GLQueryHeap.h"
 
 #include <algorithm>
-#include <string.h>
+#include <LLGL/Container/String.h>
 
 #include <LLGL/Backend/OpenGL/NativeCommand.h>
 

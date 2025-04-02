@@ -12,7 +12,7 @@
 #include "D3D12StagingBuffer.h"
 #include "D3D12CPUAccessBuffer.h"
 #include <LLGL/RenderSystemFlags.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -116,11 +116,11 @@ class D3D12StagingBufferPool
 
         ID3D12Device*                       device_                     = nullptr;
 
-        std::vector<D3D12StagingBuffer>     chunks_;
+        vector<D3D12StagingBuffer>     chunks_;
         std::size_t                         chunkIdx_                   = 0;
         UINT64                              chunkSize_                  = 0;
 
-        std::vector<D3D12CPUAccessBuffer>   cpuAccessBuffers_;
+        vector<D3D12CPUAccessBuffer>   cpuAccessBuffers_;
         std::size_t                         numReadMappedCPUBuffers_    = 0;
         std::size_t                         numWriteMappedCPUBuffers_   = 0;
 

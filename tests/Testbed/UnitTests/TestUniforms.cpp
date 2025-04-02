@@ -165,7 +165,7 @@ DEF_TEST( Uniforms )
     cmdBuffer->End();
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "Uniforms_Frame" + std::to_string(frame);
+    const string colorBufferName = "Uniforms_Frame" + std::to_string(frame);
 
     SaveCapture(readbackTex, colorBufferName);
 

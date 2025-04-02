@@ -14,7 +14,7 @@ DEF_TEST( TextureWriteAndRead )
 {
     const ArrayView<ColorRGBAub> colorsRgbaUb4 = Testset::GetColorsRgbaUb4();
 
-    static std::vector<ColorRGBAub> colorsRgbaUb16 = Testset::GenerateColorsRgbaUb(16);
+    static vector<ColorRGBAub> colorsRgbaUb16 = Testset::GenerateColorsRgbaUb(16);
 
     auto CreateTextureAndTestImageData = [this](const char* name, const TextureDescriptor& texDesc, const TextureRegion& region, const void* data, std::size_t dataSize) -> TestResult
     {
@@ -35,7 +35,7 @@ DEF_TEST( TextureWriteAndRead )
         renderer->WriteTexture(*tex, region, srcImage);
 
         // Read texture data
-        std::vector<char> outputData;
+        vector<char> outputData;
         outputData.resize(dataSize, char(0xFF));
 
         MutableImageView dstImage;
@@ -53,8 +53,8 @@ DEF_TEST( TextureWriteAndRead )
         // Match input with output texture data
         if (::memcmp(data, outputData.data(), dataSize) != 0)
         {
-            const std::string inputDataStr = TestbedContext::FormatByteArray(data, dataSize, 4);
-            const std::string outputDataStr = TestbedContext::FormatByteArray(outputData.data(), dataSize, 4);
+            const string inputDataStr = TestbedContext::FormatByteArray(data, dataSize, 4);
+            const string outputDataStr = TestbedContext::FormatByteArray(outputData.data(), dataSize, 4);
             Log::Errorf(
                 "Mismatch between data of texture %s and initial data:\n"
                 " -> Expected: [%s]\n"

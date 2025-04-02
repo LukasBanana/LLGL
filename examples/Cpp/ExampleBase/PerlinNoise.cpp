@@ -99,7 +99,7 @@ float PerlinNoise::Noise(float x, float y, float z, std::uint32_t frequency, std
 }
 
 void PerlinNoise::GenerateBuffer(
-    std::vector<float>& buffer,
+    vector<float>& buffer,
     std::uint32_t       width,
     std::uint32_t       height,
     std::uint32_t       depth,
@@ -136,7 +136,7 @@ void PerlinNoise::GenerateBuffer(
 }
 
 void PerlinNoise::GenerateBuffer(
-    std::vector<std::uint8_t>&  buffer,
+    vector<std::uint8_t>&  buffer,
     std::uint32_t               width,
     std::uint32_t               height,
     std::uint32_t               depth,

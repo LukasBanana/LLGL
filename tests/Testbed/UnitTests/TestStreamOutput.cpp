@@ -53,7 +53,7 @@ DEF_TEST( StreamOutput )
     static QueryHeap* queryHeaps[2];
 
     static std::uint32_t numInitialVertices;
-    static std::vector<ColoredVertex> cubeVertices;
+    static vector<ColoredVertex> cubeVertices;
 
     constexpr std::uint32_t maxSOVertices = 20000;
     constexpr int numVertPreTransforms = 3;
@@ -101,7 +101,7 @@ DEF_TEST( StreamOutput )
         // Create vertex input buffer
         for_range(i, 2)
         {
-            const std::string vertBufName = "SOVertexBuffer[" + std::to_string(i) + "]";
+            const string vertBufName = "SOVertexBuffer[" + std::to_string(i) + "]";
             BufferDescriptor vertBufDesc;
             {
                 vertBufDesc.debugName       = vertBufName.c_str();
@@ -386,7 +386,7 @@ DEF_TEST( StreamOutput )
         result = TestResult::FailedErrors;
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "StreamOutput_Frame" + std::to_string(frame);
+    const string colorBufferName = "StreamOutput_Frame" + std::to_string(frame);
 
     SaveCapture(readbackTex, colorBufferName);
 

@@ -84,7 +84,7 @@ namespace LLGL
 #define LLGL_DBG_ASSERT_REF(OBJ) \
     LLGL_ASSERT(&OBJ != nullptr, #OBJ " reference must not be null")
 
-static const char* GetLabelOrDefault(const std::string& label, const char* defaultLabel)
+static const char* GetLabelOrDefault(const string& label, const char* defaultLabel)
 {
     return (!label.empty() ? label.c_str() : defaultLabel);
 }
@@ -1590,7 +1590,7 @@ void DbgCommandBuffer::ValidateSubmit()
     {
         if (pair.swapChain->GetCurrentSwapIndex() != pair.frame)
         {
-            const std::string labelStr = (pair.swapChain->label.empty() ? "" : " ['" + pair.swapChain->label + "']");
+            const string labelStr = (pair.swapChain->label.empty() ? "" : " ['" + pair.swapChain->label + "']");
             LLGL_DBG_ERROR(
                 ErrorType::InvalidState,
                 "command buffer submitted with swap-chain%s back-buffer [%" PRIu64 "] while swap-chain has current back buffer [%u]",
@@ -1861,7 +1861,7 @@ void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
                 auto numPatchVertices = static_cast<std::uint32_t>(topology_) - static_cast<std::uint32_t>(PrimitiveTopology::Patches1) + 1;
                 if (numVertices % numPatchVertices != 0)
                 {
-                    const std::string topologyLabel = "patches" + std::to_string(numPatchVertices);
+                    const string topologyLabel = "patches" + std::to_string(numPatchVertices);
                     WarnImproperVertices(topologyLabel.c_str(), (numVertices % numPatchVertices));
                 }
             }
@@ -2041,7 +2041,7 @@ void DbgCommandBuffer::ValidateDescriptorSetIndex(std::uint32_t setIndex, std::u
 {
     if (setIndex >= setUpperBound)
     {
-        std::string resHeapLabel;
+        string resHeapLabel;
         if (resourceHeapName != nullptr && *resourceHeapName != '\0')
         {
             resHeapLabel += " for resource heap \"";
@@ -2077,9 +2077,9 @@ static const char* BindFlagToString(long bindFlag)
     }
 }
 
-static std::string BindFlagsToStringList(long bindFlags)
+static string BindFlagsToStringList(long bindFlags)
 {
-    std::string s;
+    string s;
 
     for (long i = 0; i < sizeof(bindFlags)*8; ++i)
     {
@@ -2114,7 +2114,7 @@ void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, lon
 
     if (invalidFlags != 0)
     {
-        const std::string invalidFlagsLabel = BindFlagsToStringList(invalidFlags);
+        const string invalidFlagsLabel = BindFlagsToStringList(invalidFlags);
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "cannot bind %s with the following bind flags: %s",
@@ -2124,7 +2124,7 @@ void DbgCommandBuffer::ValidateBindFlags(long resourceFlags, long bindFlags, lon
 
     if (missingFlags != 0)
     {
-        const std::string missingFlagsLabel = BindFlagsToStringList(missingFlags);
+        const string missingFlagsLabel = BindFlagsToStringList(missingFlags);
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "%s was not created with the the following bind flags: %s",
@@ -2333,11 +2333,11 @@ void DbgCommandBuffer::ValidateTextureBufferCopyStrides(DbgTexture& textureDbg, 
     }
 }
 
-void DbgCommandBuffer::ValidateMemoryBarrierResourceFlags(ResourceType resourceType, long bindFlags, const std::string& label, std::uint32_t resourceIndex)
+void DbgCommandBuffer::ValidateMemoryBarrierResourceFlags(ResourceType resourceType, long bindFlags, const string& label, std::uint32_t resourceIndex)
 {
     if ((bindFlags & BindFlags::Storage) == 0)
     {
-        const std::string labelStr = (label.empty() ? "" : " '" + label + '\'');
+        const string labelStr = (label.empty() ? "" : " '" + label + '\'');
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "memory barrier for buffer resource [%u]%s without binding flag LLGL::BindFlags::Storage",
@@ -2358,7 +2358,7 @@ void DbgCommandBuffer::ValidateBufferRange(DbgBuffer& bufferDbg, std::uint64_t o
 {
     if (offset + size > bufferDbg.desc.size)
     {
-        const std::string bufferLabel = (bufferDbg.label.empty() ? "" : " for \"" + bufferDbg.label + "\"");
+        const string bufferLabel = (bufferDbg.label.empty() ? "" : " for \"" + bufferDbg.label + "\"");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "%s out of bounds%s: %" PRIu64 " specified but limit is %" PRIu64,
@@ -2617,15 +2617,15 @@ void DbgCommandBuffer::ValidateBindingTable()
 {
     auto ValidateBindingTableWithLayout = [this](const DbgPipelineState& pso, const BindingTable& table, const PipelineLayoutDescriptor& layoutDesc)
     {
-        const std::string psoLabel = (!pso.label.empty() ? " \'" + pso.label + '\'' : "");
+        const string psoLabel = (!pso.label.empty() ? " \'" + pso.label + '\'' : "");
         LLGL_ASSERT(table.resources.size() == layoutDesc.bindings.size());
         for_range(i, table.resources.size())
         {
             if (table.resources[i] == nullptr)
             {
                 const BindingDescriptor& binding = layoutDesc.bindings[i];
-                const std::string bindingSetLabel = (binding.slot.set != 0 ? ", set " + std::to_string(binding.slot.set) : "");
-                const std::string bindingNameLabel = (!binding.name.empty() ? ", name '" + std::string(binding.name.c_str()) + '\'' : "");
+                const string bindingSetLabel = (binding.slot.set != 0 ? ", set " + std::to_string(binding.slot.set) : "");
+                const string bindingNameLabel = (!binding.name.empty() ? ", name '" + string(binding.name.c_str()) + '\'' : "");
                 LLGL_DBG_ERROR(
                     ErrorType::InvalidState,
                     "missing descriptor [%zu] in pipeline state%s for binding (slot %u%s%s)",
@@ -2652,7 +2652,7 @@ void DbgCommandBuffer::ValidateBlendStates()
             /* If fragment discard is disabled and there is any fragment shader output, this configuration might have been unintentional */
             if (!pso->graphicsDesc.rasterizer.discardEnabled && bindings_.anyFragmentOutput)
             {
-                const std::string psoLabel = (!pso->label.empty() ? " \'" + pso->label + '\'' : "");
+                const string psoLabel = (!pso->label.empty() ? " \'" + pso->label + '\'' : "");
                 LLGL_DBG_WARN(
                     WarningType::PointlessOperation,
                     "drawing to output merger with pipeline state%s [blend.sampleMask=0] might be unintentional",

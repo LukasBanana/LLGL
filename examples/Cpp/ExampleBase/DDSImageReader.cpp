@@ -133,7 +133,7 @@ T ReadValue(std::istream& stream)
     return value;
 }
 
-bool DDSImageReader::LoadFromFile(const std::string& filename)
+bool DDSImageReader::LoadFromFile(const string& filename)
 {
     // Open file for reading
     AssetReader reader = ReadAsset(filename);

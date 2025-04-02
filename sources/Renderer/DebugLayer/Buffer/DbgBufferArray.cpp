@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-DbgBufferArray::DbgBufferArray(BufferArray& instance, long bindFlags, std::vector<DbgBuffer*>&& buffers) :
+DbgBufferArray::DbgBufferArray(BufferArray& instance, long bindFlags, vector<DbgBuffer*>&& buffers) :
     BufferArray { bindFlags          },
     instance    { instance           },
     buffers     { std::move(buffers) }

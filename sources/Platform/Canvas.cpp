@@ -7,7 +7,7 @@
 
 #include <LLGL/Canvas.h>
 #include "../Core/CoreUtils.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -16,7 +16,7 @@ namespace LLGL
 
 struct Canvas::Pimpl
 {
-    std::vector<std::shared_ptr<EventListener>> eventListeners;
+    vector<std::shared_ptr<EventListener>> eventListeners;
     void*                                       userData        = nullptr;
 };
 

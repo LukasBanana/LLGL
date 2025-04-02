@@ -18,7 +18,7 @@ namespace LLGL
 
 RenderSystemModule::RenderSystemModule(
     const char*                 name,
-    std::string&&               filename,
+    string&&                    filename,
     std::unique_ptr<Module>&&   module)
 :
     name_     { name                },
@@ -33,7 +33,7 @@ RenderSystemModule::RenderSystemModule(
     freeProc_       = reinterpret_cast< PFN_RENDERSYSTEM_FREE       >(module_->LoadProcedure("LLGL_RenderSystem_Free"      ));
 }
 
-std::vector<std::string> RenderSystemModule::FindModules()
+vector<string> RenderSystemModule::FindModules()
 {
     /* Iterate over all known modules (preferred modules first) and return those that are available on the current platform */
     constexpr const char* knownModules[] =
@@ -60,11 +60,11 @@ std::vector<std::string> RenderSystemModule::FindModules()
         "Null",
     };
 
-    std::vector<std::string> moduleNames;
+    vector<string> moduleNames;
 
     for (const char* name : knownModules)
     {
-        std::string moduleFilename = Module::GetModuleFilename(name);
+        string moduleFilename = Module::GetModuleFilename(name);
         if (Module::IsAvailable(moduleFilename.c_str()))
             moduleNames.push_back(name);
     }
@@ -75,7 +75,7 @@ std::vector<std::string> RenderSystemModule::FindModules()
 RenderSystemModulePtr RenderSystemModule::Load(const char* name, Report* outReport)
 {
     /* Load render system module */
-    std::string             moduleFilename = Module::GetModuleFilename(name);
+    string                  moduleFilename = Module::GetModuleFilename(name);
     std::unique_ptr<Module> module;
 
     #if LLGL_EXCEPTIONS_SUPPORTED

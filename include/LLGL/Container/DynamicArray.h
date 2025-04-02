@@ -125,7 +125,7 @@ class LLGL_EXPORT DynamicArray
             return size_;
         }
 
-        //! Convenience function to be partially compatible with \c std::vector<T>. Equivalent to \c size().
+        //! Convenience function to be partially compatible with \c vector<T>. Equivalent to \c size().
         size_type capacity() const noexcept
         {
             return size();

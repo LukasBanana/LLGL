@@ -18,28 +18,28 @@ using namespace LLGL;
 
 LLGL_C_EXPORT void llglLogPrintf(const char* format, ...)
 {
-    std::string text;
+    string text;
     LLGL_STRING_PRINTF(text, format);
     Log::Printf("%s", text.c_str());
 }
 
 LLGL_C_EXPORT void llglLogPrintfExt(const LLGLColorCodes* colors, const char* format, ...)
 {
-    std::string text;
+    string text;
     LLGL_STRING_PRINTF(text, format);
     Log::Printf(*reinterpret_cast<const Log::ColorCodes*>(colors), "%s", text.c_str());
 }
 
 LLGL_C_EXPORT void llglLogErrorf(const char* format, ...)
 {
-    std::string text;
+    string text;
     LLGL_STRING_PRINTF(text, format);
     Log::Errorf("%s", text.c_str());
 }
 
 LLGL_C_EXPORT void llglLogErrorfExt(const LLGLColorCodes* colors, const char* format, ...)
 {
-    std::string text;
+    string text;
     LLGL_STRING_PRINTF(text, format);
     Log::Errorf(*reinterpret_cast<const Log::ColorCodes*>(colors), "%s", text.c_str());
 }

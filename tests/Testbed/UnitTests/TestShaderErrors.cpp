@@ -8,7 +8,7 @@
 #include "Testbed.h"
 #include <LLGL/Utils/TypeNames.h>
 #include <LLGL/Utils/Parse.h>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 /*
@@ -19,7 +19,7 @@ DEF_TEST( ShaderErrors )
 {
     TestResult result = TestResult::Passed;
 
-    auto LoadShaderFile = [this, &result](const std::string& filename, ShaderType type, const char* entry, const char* profile, bool isFileBinary) -> Shader*
+    auto LoadShaderFile = [this, &result](const string& filename, ShaderType type, const char* entry, const char* profile, bool isFileBinary) -> Shader*
     {
         ShaderDescriptor shaderDesc;
         {
@@ -40,7 +40,7 @@ DEF_TEST( ShaderErrors )
 
     auto LoadShader = [this, &IsShadingLanguageSupported, &LoadShaderFile, &result](const char* name, ShaderType type, bool expectErrors) -> Shader*
     {
-        auto ShaderTypeToGlslExt = [](ShaderType type) -> std::string
+        auto ShaderTypeToGlslExt = [](ShaderType type) -> string
         {
             switch (type)
             {
@@ -73,9 +73,9 @@ DEF_TEST( ShaderErrors )
             }
         };
 
-        const std::string shaderPath = "Shaders/SemanticErrors/";
+        const string shaderPath = "Shaders/SemanticErrors/";
 
-        std::string shaderFilename = name;
+        string shaderFilename = name;
         Shader* shader = nullptr;
 
         if (IsShadingLanguageSupported(ShadingLanguage::HLSL))

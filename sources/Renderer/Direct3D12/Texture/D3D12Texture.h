@@ -11,7 +11,7 @@
 
 #include <LLGL/Texture.h>
 #include "../D3D12Resource.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL

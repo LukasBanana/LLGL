@@ -44,9 +44,9 @@
 #include <LLGL/Texture.h>
 #include <LLGL/TextureFlags.h>
 
-#include <string>
+#include <LLGL/Container/String.h>
 #include <memory>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -138,7 +138,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         \brief Returns the list of all available render system modules for the current platform.
         \remarks For example, on Win32 this might be <code>{ "Direct3D12", "Direct3D11", "OpenGL" }</code>, but on MacOS it might be <code>{ "Metal", "OpenGL" }</code>.
         */
-        static std::vector<std::string> FindModules();
+        static vector<string> FindModules();
 
         /**
         \brief Loads a new render system from the specified module.
@@ -402,7 +402,7 @@ class LLGL_EXPORT RenderSystem : public Interface
         auto myTextureExtent = myTexture->GetMipExtent(0);
 
         // Allocate image buffer with elements in all dimensions
-        std::vector<std::uint8_t> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth * 4);
+        vector<std::uint8_t> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth * 4);
 
         // Initialize destination image descriptor
         const MutableImageView myImageView {

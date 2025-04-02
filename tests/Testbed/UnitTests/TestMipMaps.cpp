@@ -38,7 +38,7 @@ DEF_TEST( MipMaps )
 {
     TestResult result = TestResult::Passed;
 
-    auto ReadMipMaps = [this](Texture* tex, const std::string& name) -> TestResult
+    auto ReadMipMaps = [this](Texture* tex, const string& name) -> TestResult
     {
         TestResult result = TestResult::Passed;
 
@@ -62,7 +62,7 @@ DEF_TEST( MipMaps )
             // Read current MIP-map from input texture
             const Extent3D mipExtent = tex->GetMipExtent(mip);
 
-            std::vector<ColorRGBub> mipData;
+            vector<ColorRGBub> mipData;
             mipData.resize(mipExtent.width * mipExtent.height);
 
             const TextureRegion texRegion{ TextureSubresource{ 0, mip }, Offset3D{}, mipExtent };
@@ -77,7 +77,7 @@ DEF_TEST( MipMaps )
             renderer->ReadTexture(*tex, texRegion, dstImageView);
 
             // Save result and diff against reference
-            const std::string mipName = name + "_Mip" + std::to_string(mip);
+            const string mipName = name + "_Mip" + std::to_string(mip);
             SaveColorImage(mipData, Extent2D{ mipExtent.width, mipExtent.height }, mipName);
 
             const DiffResult diff = DiffImages(mipName, diffThreshold, diffTolerance);

@@ -105,7 +105,7 @@ LLGL_C_EXPORT void llglGetDisplayMode(LLGLDisplay display, LLGLDisplayMode* outD
 
 LLGL_C_EXPORT size_t llglGetSupportedDisplayModes(LLGLDisplay display, size_t maxNumDisplayModes, LLGLDisplayMode* outDisplayModes)
 {
-    std::vector<DisplayMode> internalDisplayModes = LLGL_PTR(Display, display)->GetSupportedDisplayModes();
+    vector<DisplayMode> internalDisplayModes = LLGL_PTR(Display, display)->GetSupportedDisplayModes();
     if (outDisplayModes != nullptr)
     {
         maxNumDisplayModes = std::min(maxNumDisplayModes, internalDisplayModes.size());

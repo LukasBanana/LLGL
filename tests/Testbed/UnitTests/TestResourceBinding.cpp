@@ -110,12 +110,12 @@ DEF_TEST( ResourceBinding )
         for_range(i, 4)
         {
             SAFE_RELEASE(buffers[i]);
-            const std::string bufName = "RWBuffer<int4>[" + std::to_string(i) + "]";
+            const string bufName = "RWBuffer<int4>[" + std::to_string(i) + "]";
             bufDesc.debugName = bufName.c_str();
             buffers[i] = renderer->CreateBuffer(bufDesc);
 
             SAFE_RELEASE(textures[i]);
-            const std::string texName = "RWTexture1D<int4>[" + std::to_string(i) + "]";
+            const string texName = "RWTexture1D<int4>[" + std::to_string(i) + "]";
             texDesc.debugName = texName.c_str();
             textures[i] = renderer->CreateTexture(texDesc);
         }

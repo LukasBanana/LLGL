@@ -37,7 +37,7 @@
 #include "../RenderState/GLQueryHeap.h"
 
 #include <algorithm>
-#include <string.h>
+#include <LLGL/Container/String.h>
 #include <cstring> // std::strlen
 
 
@@ -394,7 +394,7 @@ void GLDeferredCommandBuffer::SetResource(std::uint32_t descriptor, Resource& re
     if (binding.combiners > 0)
     {
         /* Bind resource at one or more slots for combined texture-samplers */
-        const std::vector<GLuint>& combinedSamplerSlots = pipelineLayoutGL->GetCombinedSamplerSlots();
+        const vector<GLuint>& combinedSamplerSlots = pipelineLayoutGL->GetCombinedSamplerSlots();
         BindCombinedResource(binding.type, &(combinedSamplerSlots[binding.slot]), binding.combiners, resource);
     }
     else

@@ -13,7 +13,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/CoreUtils.h"
 #include "../../../Core/Assertion.h"
-#include <string.h>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL

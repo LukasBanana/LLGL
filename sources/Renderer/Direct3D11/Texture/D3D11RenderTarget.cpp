@@ -82,7 +82,7 @@ void D3D11RenderTarget::SetDebugName(const char* name)
         /* Set label for each RTV */
         for_range(i, renderTargetHandles_.GetNumRenderTargetViews())
         {
-            const std::string subscript = ".RTV[" + std::to_string(i) + "]";
+            const string subscript = ".RTV[" + std::to_string(i) + "]";
             D3D11SetObjectNameSubscript(renderTargetHandles_.GetRenderTargetViews()[i], name, subscript.c_str());
         }
 
@@ -93,7 +93,7 @@ void D3D11RenderTarget::SetDebugName(const char* name)
         /* Set lable for each internal texture */
         for_range(i, internalTextures_.size())
         {
-            const std::string subscript = ".Tex2D[" + std::to_string(i) + "]";
+            const string subscript = ".Tex2D[" + std::to_string(i) + "]";
             D3D11SetObjectNameSubscript(internalTextures_[i].Get(), name, subscript.c_str());
         }
     }

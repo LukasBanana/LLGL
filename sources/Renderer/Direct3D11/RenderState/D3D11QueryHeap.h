@@ -12,7 +12,7 @@
 #include <LLGL/QueryHeap.h>
 #include "../../DXCommon/ComPtr.h"
 #include <d3d11.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -85,7 +85,7 @@ class D3D11QueryHeap final : public QueryHeap
 
         D3D11_QUERY                     nativeType_     = D3D11_QUERY_EVENT;
         std::uint32_t                   groupSize_      = 1;
-        std::vector<D3D11NativeQuery>   nativeQueries_;
+        vector<D3D11NativeQuery>   nativeQueries_;
 
 };
 

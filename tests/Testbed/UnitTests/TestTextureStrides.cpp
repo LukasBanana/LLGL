@@ -55,7 +55,7 @@ DEF_TEST( TextureStrides )
     }
 
     // Create primary texture and two with different stride/offset
-    const std::string imagePath = "../Media/Textures/";
+    const string imagePath = "../Media/Textures/";
     Image image = TestbedContext::LoadImageFromFile(imagePath + "Grid10x10.png", opt.verbose);
 
     ImageView imageViewA;
@@ -154,7 +154,7 @@ DEF_TEST( TextureStrides )
     cmdBuffer->End();
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "TextureStrides_Frame" + std::to_string(frame);
+    const string colorBufferName = "TextureStrides_Frame" + std::to_string(frame);
 
     SaveCapture(readbackTex, colorBufferName);
 

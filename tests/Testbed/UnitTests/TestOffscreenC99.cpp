@@ -123,7 +123,7 @@ DEF_TEST( OffscreenC99 )
         LLGLVertexAttribute{ "color",    LLGLFormatRGBA8UNorm, 1, 0, LLGLSystemValueUndefined, 0, offsetof(UnprojectedVertex, color),    sizeof(UnprojectedVertex) },
     };
 
-    std::vector<UnprojectedVertex> vertices;
+    vector<UnprojectedVertex> vertices;
     vertices.resize(16);
 
     const std::uint8_t colorPalette[8][3] =
@@ -298,7 +298,7 @@ DEF_TEST( OffscreenC99 )
     // Read texture result
     static_assert(sizeof(LLGL::ColorRGBub) == 3, "LLGL::ColorRGBAub must have a size of 4 bytes for OffscreenC99 test");
 
-    std::vector<LLGL::ColorRGBub> pixels;
+    vector<LLGL::ColorRGBub> pixels;
     pixels.resize(tex0Desc.extent.width * tex0Desc.extent.height * tex0Desc.extent.depth);
 
     LLGLMutableImageView dstImgView = {};
@@ -318,7 +318,7 @@ DEF_TEST( OffscreenC99 )
     llglReadTexture(tex0, &tex0Region, &dstImgView);
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "OffscreenC99";
+    const string colorBufferName = "OffscreenC99";
 
     SaveColorImage(pixels, Extent2D{ tex0Desc.extent.width, tex0Desc.extent.height }, colorBufferName);
 

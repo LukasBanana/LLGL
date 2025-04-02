@@ -24,10 +24,10 @@ static bool IsCharAnySeparator(char c)
 
 LLGL_EXPORT UTF8String Sanitize(const UTF8String& path)
 {
-    std::string s(path.begin(), path.end());
+    string s(path.begin(), path.end());
 
     /* Sanitize separators and remove redundant upper-level directory entries */
-    auto JoinSubPaths = [](std::string& s, std::size_t off) -> std::size_t
+    auto JoinSubPaths = [](string& s, std::size_t off) -> std::size_t
     {
         /* Find start of previous path */
         for (std::size_t i = off; i-- > 0;)

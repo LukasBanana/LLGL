@@ -112,7 +112,7 @@ void DbgSwapChain::NotifyNextRenderPass(RenderingDebugger* debugger, const Rende
         auto* renderPassDbg = LLGL_CAST(const DbgRenderPass*, renderPass);
         if (!(renderPassDbg != nullptr && renderPassDbg->AnySwapChainAttachmentsLoaded(*this)))
         {
-            const std::string swapChainLabel = (!label.empty() ? "swap-chain \"" + label + "\"" : "swap-chain");
+            const string swapChainLabel = (!label.empty() ? "swap-chain \"" + label + "\"" : "swap-chain");
             debugger->Warningf(
                 WarningType::PointlessOperation,
                 "%s has not been read or presented since last render pass, but new render pass does not load its previous content",

@@ -78,7 +78,7 @@ class GLPipelineState : public PipelineState
         }
 
         // Returns the list of uniforms that maps from index of 'PipelineLayoutDescriptor::uniforms[]' to GL uniform location.
-        inline const std::vector<GLUniformLocation>& GetUniformMap() const
+        inline const vector<GLUniformLocation>& GetUniformMap() const
         {
             return uniformMap_;
         }
@@ -112,12 +112,12 @@ class GLPipelineState : public PipelineState
         };
 
         // Maps a name to its active GL uniform.
-        using GLNameToUniformMap = std::unordered_map<std::string, GLActiveUniform>;
+        using GLNameToUniformMap = std::unordered_map<string, GLActiveUniform>;
 
     private:
 
         // Builds the index-to-uniform map.
-        void BuildUniformMap(GLShader::Permutation permutation, const std::vector<UniformDescriptor>& uniforms);
+        void BuildUniformMap(GLShader::Permutation permutation, const vector<UniformDescriptor>& uniforms);
 
         // Builds the container that maps a name to the index of its active GL uniform.
         void BuildNameToActiveUniformMap(GLuint program, GLNameToUniformMap& outNameToUniformMap);
@@ -138,7 +138,7 @@ class GLPipelineState : public PipelineState
         GLShaderPipelineSPtr            shaderPipelines_[GLShader::PermutationCount];
         GLShaderBindingLayoutSPtr       shaderBindingLayout_;
         GLShaderBufferInterfaceMap      bufferInterfaceMap_;
-        std::vector<GLUniformLocation>  uniformMap_;
+        vector<GLUniformLocation>  uniformMap_;
         Report                          report_;
 
 };

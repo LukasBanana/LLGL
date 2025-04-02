@@ -179,15 +179,15 @@ DEF_TEST( BarrierReadAfterWrite )
     // Read back results
     TestResult result = TestResult::Passed;
 
-    std::vector<std::uint32_t> expectedResults;
+    vector<std::uint32_t> expectedResults;
     expectedResults.resize((numIterations + 1)*(sizeof(Entry)/sizeof(std::uint32_t)), propagateValue);
 
     auto ValidatePropagatedValues = [this, &result, &expectedResults, frame](const char* name, const void* data, std::size_t dataSize) -> void
     {
         if (::memcmp(expectedResults.data(), data, dataSize) != 0)
         {
-            const std::string expectedValuesStr = FormatByteArray(expectedResults.data(), dataSize);
-            const std::string actualValuesStr = FormatByteArray(data, dataSize);
+            const string expectedValuesStr = FormatByteArray(expectedResults.data(), dataSize);
+            const string actualValuesStr = FormatByteArray(data, dataSize);
             Log::Errorf(
                 Log::ColorFlags::StdError,
                 "Mismatch between propagated values in %s and expected values [frame %u]:\n"
@@ -199,7 +199,7 @@ DEF_TEST( BarrierReadAfterWrite )
         }
         else if (opt.sanityCheck)
         {
-            const std::string actualValuesStr = FormatByteArray(data, dataSize);
+            const string actualValuesStr = FormatByteArray(data, dataSize);
             Log::Printf(
                 Log::ColorFlags::StdAnnotation,
                 "Propagated values in %s as expected [frame %u]:\n%s\n",
@@ -209,13 +209,13 @@ DEF_TEST( BarrierReadAfterWrite )
     };
 
     // Evaluate buffer results
-    std::vector<std::uint32_t> buf1Results;
+    vector<std::uint32_t> buf1Results;
     buf1Results.resize(numIterations + 1);
     const std::size_t buf1ResultsSize = buf1Results.size() * sizeof(buf1Results[0]);
     renderer->ReadBuffer(*buf1, 0, buf1Results.data(), buf1ResultsSize);
     ValidatePropagatedValues(buf1_Name, buf1Results.data(), buf1ResultsSize);
 
-    std::vector<Entry> buf2Results;
+    vector<Entry> buf2Results;
     buf2Results.resize(numIterations + 1);
     const std::size_t buf2ResultsSize = buf2Results.size() * sizeof(buf2Results[0]);
     renderer->ReadBuffer(*buf2, 0, buf2Results.data(), buf2ResultsSize);
@@ -224,7 +224,7 @@ DEF_TEST( BarrierReadAfterWrite )
     // Evaluate texture results
     const TextureRegion readbackTexRegion{ Offset3D{}, Extent3D{ numIterations + 1, 1, 1 } };
 
-    std::vector<std::uint32_t> tex1Results;
+    vector<std::uint32_t> tex1Results;
     tex1Results.resize(numIterations + 1);
     MutableImageView tex1ResultsView;
     {
@@ -236,7 +236,7 @@ DEF_TEST( BarrierReadAfterWrite )
     renderer->ReadTexture(*tex1, readbackTexRegion, tex1ResultsView);
     ValidatePropagatedValues(tex1_Name, tex1Results.data(), tex1ResultsView.dataSize);
 
-    std::vector<Entry> tex2Results;
+    vector<Entry> tex2Results;
     tex2Results.resize(numIterations + 1);
     MutableImageView tex2ResultsView;
     {

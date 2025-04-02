@@ -62,7 +62,7 @@ class Example_RenderTarget : public ExampleBase
 
     #if ENABLE_CBUFFER_RANGE
     std::uint64_t           cbufferAlignment        = 0;
-    std::vector<char>       cbufferData;
+    vector<char>       cbufferData;
     #endif
 
     #if ENABLE_CUSTOM_MULTISAMPLING

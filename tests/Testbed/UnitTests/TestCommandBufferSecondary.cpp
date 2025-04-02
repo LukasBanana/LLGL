@@ -169,7 +169,7 @@ DEF_TEST( CommandBufferSecondary )
     cmdBuffer->End();
 
     // Read result from readback texture
-    std::vector<ColorRGBub> readbackImage;
+    vector<ColorRGBub> readbackImage;
     readbackImage.resize(resolution.width * resolution.height);
 
     MutableImageView dstImageView;
@@ -181,7 +181,7 @@ DEF_TEST( CommandBufferSecondary )
     }
     renderer->ReadTexture(*readbackTex, texRegion, dstImageView);
 
-    const std::string readbackImageName = "SecondaryCommandBuffer";
+    const string readbackImageName = "SecondaryCommandBuffer";
     SaveColorImage(readbackImage, resolution, readbackImageName);
 
     // Ignore single pixel differences because GL implementation of CIS server might produce slightyl different rasterization

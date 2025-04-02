@@ -16,7 +16,7 @@
 #include <LLGL/Utils/Image.h>
 #include <Gauss/Matrix.h>
 #include <Gauss/Vector4.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <functional>
 #include <initializer_list>
 
@@ -214,7 +214,7 @@ class TestbedContext
 
         struct Options
         {
-            std::string                 outputDir;
+            string                      outputDir;
             bool                        verbose     = false;
             bool                        pedantic    = false; // Ignore thresholds, always compare strictly against reference values
             bool                        greedy      = false; // Continue testing on failure
@@ -222,7 +222,7 @@ class TestbedContext
             bool                        showTiming  = false;
             bool                        fastTest    = false; // Skip slow buffer/texture creations to speed up test run
             LLGL::Extent2D              resolution;
-            std::vector<std::string>    selectedTests;
+            vector<string>              selectedTests;
 
             bool ContainsTest(const char* name) const;
         };
@@ -255,8 +255,8 @@ class TestbedContext
 
         struct IndexedTriangleMeshBuffer
         {
-            std::vector<StandardVertex> vertices;
-            std::vector<std::uint32_t>  indices;
+            vector<StandardVertex> vertices;
+            vector<std::uint32_t>  indices;
             std::uint32_t               firstVertex = 0;
             std::uint32_t               firstIndex  = 0;
 
@@ -316,7 +316,7 @@ class TestbedContext
 
     protected:
 
-        const std::string               moduleName;
+        const string                    moduleName;
         const Options                   opt;
         const LLGL::ClearValue          bgColorDarkBlue         = { 0.2f, 0.2f, 0.4f, 1.0f };
         const LLGL::ClearValue          bgColorLightBlue        = { 127.0f/255.0f, 127.0f/255.0f, 1.0f, 1.0f };
@@ -350,12 +350,12 @@ class TestbedContext
 
         static Options ParseOptions(int argc, char* argv[]);
 
-        static std::string FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup = 1, bool formatAsFloats = false);
+        static string FormatByteArray(const void* data, std::size_t size, std::size_t bytesPerGroup = 1, bool formatAsFloats = false);
 
         static double ToMillisecs(std::uint64_t t0, std::uint64_t t1);
 
-        static LLGL::Image LoadImageFromFile(const std::string& filename, bool verbose = false);
-        static void SaveImageToFile(const LLGL::Image& img, const std::string& filename, bool verbose = false);
+        static LLGL::Image LoadImageFromFile(const string& filename, bool verbose = false);
+        static void SaveImageToFile(const LLGL::Image& img, const string& filename, bool verbose = false);
 
         static bool IsRGBA8ubInThreshold(const std::uint8_t lhs[4], const std::uint8_t rhs[4], int threshold = 1);
 
@@ -375,12 +375,12 @@ class TestbedContext
         void CreateModelCube(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
         void CreateModelRect(IndexedTriangleMeshBuffer& scene, IndexedTriangleMesh& outMesh);
 
-        void ConvertToColoredVertexList(const IndexedTriangleMeshBuffer& scene, std::vector<ColoredVertex>& outVertices, const LLGL::ColorRGBAf& color = {});
+        void ConvertToColoredVertexList(const IndexedTriangleMeshBuffer& scene, vector<ColoredVertex>& outVertices, const LLGL::ColorRGBAf& color = {});
 
         void CreateConstantBuffers();
 
         LLGL::Shader* LoadShaderFromFile(
-            const std::string&          filename,
+            const string&               filename,
             LLGL::ShaderType            type,
             const char*                 entry       = nullptr,
             const char*                 profile     = nullptr,
@@ -389,16 +389,16 @@ class TestbedContext
             VertFmt                     vertOutFmt  = VertFmtCount
         );
 
-        void SaveColorImage(const std::vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const std::string& name);
-        void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name);
-        void SaveDepthImage(const std::vector<float>& image, const LLGL::Extent2D& extent, const std::string& name, float nearPlane, float farPlane);
-        void SaveStencilImage(const std::vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const std::string& name);
+        void SaveColorImage(const vector<LLGL::ColorRGBub>& image, const LLGL::Extent2D& extent, const string& name);
+        void SaveDepthImage(const vector<float>& image, const LLGL::Extent2D& extent, const string& name);
+        void SaveDepthImage(const vector<float>& image, const LLGL::Extent2D& extent, const string& name, float nearPlane, float farPlane);
+        void SaveStencilImage(const vector<std::uint8_t>& image, const LLGL::Extent2D& extent, const string& name);
 
         LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& cmdBuffer, LLGL::Format format, const LLGL::Extent2D& extent);
-        void SaveCapture(LLGL::Texture* capture, const std::string& name, bool writeStencilOnly = false);
+        void SaveCapture(LLGL::Texture* capture, const string& name, bool writeStencilOnly = false);
 
         // Creates a heat-map image from the two input filenames and returns the highest difference pixel value. A negative value indicates an error.
-        DiffResult DiffImages(const std::string& name, int threshold = 1, unsigned tolerance = 0, int scale = 1);
+        DiffResult DiffImages(const string& name, int threshold = 1, unsigned tolerance = 0, int scale = 1);
 
         void RecordTestResult(TestResult result, const char* name);
 

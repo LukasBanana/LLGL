@@ -7,7 +7,7 @@
 
 #include <LLGL/LLGL.h>
 #include <memory>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 static void printWindowSize(LLGL::Window& wnd)
@@ -63,7 +63,7 @@ int main()
             auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
             window->SetTitle(
-                std::string(windowDesc.title.c_str()) + " ( " + std::string(renderer->GetName()) + " )"
+                string(windowDesc.title.c_str()) + " ( " + string(renderer->GetName()) + " )"
             );
         }
         catch (const std::exception& e)

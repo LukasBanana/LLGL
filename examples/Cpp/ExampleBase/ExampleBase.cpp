@@ -41,10 +41,10 @@ See https://www.gnu.org/software/gnulib/manual/html_node/inttypes_002eh.html
  * Global helper functions
  */
 
-static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
+static string GetRendererModuleFromUserSelection(int argc, char* argv[])
 {
     /* Find available modules */
-    std::vector<std::string> modules = LLGL::RenderSystem::FindModules();
+    vector<string> modules = LLGL::RenderSystem::FindModules();
 
     if (modules.empty())
     {
@@ -58,7 +58,7 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
     }
 
     /* Let user select a renderer */
-    std::string rendererModule;
+    string rendererModule;
 
     while (rendererModule.empty())
     {
@@ -66,14 +66,14 @@ static std::string GetRendererModuleFromUserSelection(int argc, char* argv[])
         LLGL::Log::Printf("select renderer:\n");
 
         int i = 0;
-        for (const std::string& mod : modules)
+        for (const string& mod : modules)
             LLGL::Log::Printf(" %d.) %s\n", ++i, mod.c_str());
 
         /* Wait for user input */
         char selectionBuffer[256] = {};
         (void)::fgets(selectionBuffer, sizeof(selectionBuffer), stdin);
 
-        std::string selectionStr = selectionBuffer;
+        string selectionStr = selectionBuffer;
         selectionStr = selectionStr.substr(0, selectionStr.find_first_not_of("0123456789"));
         if (!selectionStr.empty())
         {
@@ -119,7 +119,7 @@ static const char* GetRendererModuleFromCommandArgs(int argc, char* argv[])
     return nullptr;
 }
 
-static void GetSelectedRendererModuleOrDefault(std::string& rendererModule, int argc, char* argv[])
+static void GetSelectedRendererModuleOrDefault(string& rendererModule, int argc, char* argv[])
 {
     /* Get renderer module name from command line argument */
     if (const char* specificModule = GetRendererModuleFromCommandArgs(argc, argv))
@@ -168,17 +168,17 @@ static const char* GetDefaultRendererModule()
     #endif
 }
 
-static std::string GetPreferredRendererModule()
+static string GetPreferredRendererModule()
 {
     auto modules = LLGL::RenderSystem::FindModules();
     return (modules.empty() ? "Null" : modules.front());
 }
 
-std::string GetSelectedRendererModule(int argc, char* argv[])
+string GetSelectedRendererModule(int argc, char* argv[])
 {
     // Set report callback to standard output
     LLGL::Log::RegisterCallbackStd();
-    std::string rendererModule = GetPreferredRendererModule();
+    string rendererModule = GetPreferredRendererModule();
     GetSelectedRendererModuleOrDefault(rendererModule, argc, argv);
     return rendererModule;
 }
@@ -248,7 +248,7 @@ static bool ParseSamples(std::uint32_t& samples, int argc, char* argv[])
 
 ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
     LLGL::ShaderType    type,
-    const std::string&  filename)
+    const string&  filename)
 :
     type     { type     },
     filename { filename }
@@ -257,9 +257,9 @@ ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
 
 ExampleBase::ShaderDescWrapper::ShaderDescWrapper(
     LLGL::ShaderType    type,
-    const std::string&  filename,
-    const std::string&  entryPoint,
-    const std::string&  profile)
+    const string&  filename,
+    const string&  entryPoint,
+    const string&  profile)
 :
     type       { type       },
     filename   { filename   },
@@ -347,7 +347,7 @@ void ExampleBase::CanvasEventHandler::OnResize(LLGL::Canvas& /*sender*/, const L
 
 struct ExampleConfig
 {
-    std::string     rendererModule  = GetDefaultRendererModule();
+    string          rendererModule  = GetDefaultRendererModule();
     LLGL::Extent2D  windowSize      = { 800, 600 };
     std::uint32_t   samples         = 8;
     bool            vsync           = true;
@@ -692,20 +692,20 @@ LLGL::Shader* ExampleBase::LoadShaderInternal(
     const ShaderDescWrapper&                    shaderDesc,
     const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
     const LLGL::VertexFormat&                   streamOutputFormat,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+    const vector<LLGL::FragmentAttribute>& fragmentAttribs,
     const LLGL::ShaderMacro*                    defines,
     bool                                        patchClippingOrigin)
 {
     LLGL::Log::Printf("load shader: %s\n", shaderDesc.filename.c_str());
 
     #ifdef LLGL_OS_WASM
-    const std::string filename = "assets/" + shaderDesc.filename;
+    const string filename = "assets/" + shaderDesc.filename;
     #else
-    const std::string filename = shaderDesc.filename;
+    const string filename = shaderDesc.filename;
     #endif
 
-    std::vector<LLGL::Shader*>          shaders;
-    std::vector<LLGL::VertexAttribute>  vertexInputAttribs;
+    vector<LLGL::Shader*>          shaders;
+    vector<LLGL::VertexAttribute>  vertexInputAttribs;
 
     // Store vertex input attributes
     for (const auto& vtxFmt : vertexFormats)
@@ -789,7 +789,7 @@ LLGL::Shader* ExampleBase::LoadShader(
 
 LLGL::Shader* ExampleBase::LoadShader(
     const ShaderDescWrapper&                    shaderDesc,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+    const vector<LLGL::FragmentAttribute>& fragmentAttribs,
     const LLGL::ShaderMacro*                    defines)
 {
     return LoadShaderInternal(shaderDesc, {}, {}, fragmentAttribs, defines, /*patchClippingOrigin:*/ false);
@@ -823,7 +823,7 @@ LLGL::Shader* ExampleBase::LoadStandardVertexShader(
 
 LLGL::Shader* ExampleBase::LoadStandardFragmentShader(
     const char*                                 entryPoint,
-    const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+    const vector<LLGL::FragmentAttribute>& fragmentAttribs,
     const LLGL::ShaderMacro*                    defines)
 {
     if (Supported(LLGL::ShadingLanguage::GLSL) || Supported(LLGL::ShadingLanguage::ESSL))
@@ -852,7 +852,7 @@ LLGL::Shader* ExampleBase::LoadStandardComputeShader(
     return nullptr;
 }
 
-ShaderPipeline ExampleBase::LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats)
+ShaderPipeline ExampleBase::LoadStandardShaderPipeline(const vector<LLGL::VertexFormat>& vertexFormats)
 {
     ShaderPipeline shaderPipeline;
     {
@@ -883,7 +883,7 @@ bool ExampleBase::ReportPSOErrors(const LLGL::PipelineState* pso)
     return false;
 }
 
-LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename, long bindFlags, LLGL::Format format)
+LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const string& filename, long bindFlags, LLGL::Format format)
 {
     LLGL::Log::Printf("load texture: %s\n", filename.c_str());
 
@@ -902,7 +902,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
     return tex;
 }
 
-bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
+bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const string& filename, std::uint32_t mipLevel)
 {
     LLGL::Log::Printf("save texture: %s\n", filename.c_str());
 
@@ -910,7 +910,7 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
     const LLGL::Extent3D texSize = texture.GetMipExtent(mipLevel);
 
     // Read texture image data
-    std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width * texSize.height);
+    vector<LLGL::ColorRGBAub> imageBuffer(texSize.width * texSize.height);
     renderSys.ReadTexture(
         texture,
         LLGL::TextureRegion
@@ -947,12 +947,12 @@ bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& textu
     return true;
 }
 
-LLGL::Texture* ExampleBase::LoadTexture(const std::string& filename, long bindFlags, LLGL::Format format)
+LLGL::Texture* ExampleBase::LoadTexture(const string& filename, long bindFlags, LLGL::Format format)
 {
     return LoadTextureWithRenderer(*renderer, filename, bindFlags, format);
 }
 
-bool ExampleBase::SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
+bool ExampleBase::SaveTexture(LLGL::Texture& texture, const string& filename, std::uint32_t mipLevel)
 {
     return SaveTextureWithRenderer(*renderer, texture, filename, mipLevel);
 }
@@ -1067,7 +1067,7 @@ bool ExampleBase::Supported(const LLGL::ShadingLanguage shadingLanguage) const
     return (std::find(languages.begin(), languages.end(), shadingLanguage) != languages.end());
 }
 
-const std::string& ExampleBase::GetModuleName()
+const string& ExampleBase::GetModuleName()
 {
     return g_Config.rendererModule;
 }

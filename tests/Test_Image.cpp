@@ -15,7 +15,7 @@
 #include <stb/stb_image_write.h>
 
 
-LLGL::Image LoadImage(const std::string& filename, const LLGL::ImageFormat format = LLGL::ImageFormat::RGB)
+LLGL::Image LoadImage(const string& filename, const LLGL::ImageFormat format = LLGL::ImageFormat::RGB)
 {
     int requiredComp = static_cast<int>(LLGL::ImageFormatSize(format));
 
@@ -36,7 +36,7 @@ LLGL::Image LoadImage(const std::string& filename, const LLGL::ImageFormat forma
     return img;
 }
 
-void SaveImagePNG(const LLGL::Image& img, const std::string& filename, std::uint32_t slice = 0)
+void SaveImagePNG(const LLGL::Image& img, const string& filename, std::uint32_t slice = 0)
 {
     int         w       = static_cast<int>(img.GetExtent().width);
     int         h       = static_cast<int>(img.GetExtent().height);
