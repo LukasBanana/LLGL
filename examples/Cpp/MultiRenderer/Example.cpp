@@ -125,10 +125,10 @@ MyRenderer::MyRenderer(
     swapChain->SetVsyncInterval(1);
 }
 
-static std::string GetRendererModuleName(std::string rendererName)
+static string GetRendererModuleName(string rendererName)
 {
     // Remove white spaces from name
-    std::string name = std::regex_replace(rendererName, std::regex("\\s+"), "");
+    string name = std::regex_replace(rendererName, std::regex("\\s+"), "");
     return (name.compare(0, 6, "OpenGL") == 0 ? "OpenGL" : name);
 }
 
@@ -156,7 +156,7 @@ void MyRenderer::CreateResources(const LLGL::ArrayView<TexturedVertex>& vertices
     constantBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(Matrices)));
 
     // Create textures
-    const std::string rendererName = GetRendererModuleName(renderer->GetName());
+    const string rendererName = GetRendererModuleName(renderer->GetName());
     texture = LoadTextureWithRenderer(*renderer, "Logo_" + rendererName + ".png");
 
     // Create samplers
@@ -387,7 +387,7 @@ int main(int argc, char* argv[])
         };
 
         // Set window title with all renderer names
-        std::string rendererNames;
+        string rendererNames;
         for (LLGL::RenderSystem* sys : rendererRefs)
         {
             if (!rendererNames.empty())
@@ -395,7 +395,7 @@ int main(int argc, char* argv[])
             rendererNames += sys->GetName();
         }
 
-        mainWindow->SetTitle(std::string(mainWindowDesc.title) + " ( " + rendererNames + " )");
+        mainWindow->SetTitle(string(mainWindowDesc.title) + " ( " + rendererNames + " )");
         mainWindow->Show();
 
         // Create resources

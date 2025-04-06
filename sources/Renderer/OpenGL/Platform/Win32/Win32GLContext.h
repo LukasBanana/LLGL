@@ -13,7 +13,7 @@
 #include "../../OpenGL.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Platform/NativeHandle.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL

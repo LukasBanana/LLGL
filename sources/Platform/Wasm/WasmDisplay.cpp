@@ -110,7 +110,7 @@ DisplayMode WasmDisplay::GetDisplayMode() const
     return displayMode;
 }
 
-std::vector<DisplayMode> WasmDisplay::GetSupportedDisplayModes() const
+vector<DisplayMode> WasmDisplay::GetSupportedDisplayModes() const
 {
     return { GetDisplayMode() };
 }

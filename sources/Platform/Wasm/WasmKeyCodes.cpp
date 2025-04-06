@@ -6,7 +6,7 @@
  */
 
 #include "WasmKeyCodes.h"
-#include <map>
+#include <LLGL/Container/Map.h>
 #include <emscripten.h>
 #include <emscripten/key_codes.h>
 
@@ -17,7 +17,7 @@ namespace LLGL
 
 #define KEYPAIR(KEYSYM, KEY) { KEYSYM, Key::KEY }
 
-static std::map<int, Key> GenerateEmscriptenKeyCodeMap()
+static map<int, Key> GenerateEmscriptenKeyCodeMap()
 {
     return
     {
@@ -182,7 +182,7 @@ static std::map<int, Key> GenerateEmscriptenKeyCodeMap()
     };
 };
 
-static std::map<int, Key> g_emscriptenWindowKeyCodeMap = GenerateEmscriptenKeyCodeMap();
+static map<int, Key> g_emscriptenWindowKeyCodeMap = GenerateEmscriptenKeyCodeMap();
 
 #undef KEYPAIR
 

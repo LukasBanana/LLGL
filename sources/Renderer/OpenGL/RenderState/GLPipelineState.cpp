@@ -127,7 +127,7 @@ void GLPipelineState::Bind(GLStateManager& stateMngr)
  */
 
 //TODO: support separate shaders; each separable shader needs its own set of uniform locations
-void GLPipelineState::BuildUniformMap(GLShader::Permutation permutation, const std::vector<UniformDescriptor>& uniforms)
+void GLPipelineState::BuildUniformMap(GLShader::Permutation permutation, const vector<UniformDescriptor>& uniforms)
 {
     if (shaderPipelines_[permutation].get() != nullptr && !uniforms.empty())
     {
@@ -150,11 +150,11 @@ Arrays of uniforms are reflected with a subscript for the first entry,
 e.g. "uniform inputTextures[2];" yields the active uniform name "inputTextures[0]".
 This functions removes the subscript, effecitvely returning "inputTextures" for this example.
 */
-static std::string GetActiveUniformNameAsIdent(const GLchar* uniformName)
+static string GetActiveUniformNameAsIdent(const GLchar* uniformName)
 {
-    std::string ident{ uniformName };
+    string ident{ uniformName };
     const std::size_t subscriptStartPos = ident.find('[');
-    if (subscriptStartPos != std::string::npos)
+    if (subscriptStartPos != string::npos)
         return ident.substr(0, subscriptStartPos);
     return ident;
 }
@@ -174,7 +174,7 @@ void GLPipelineState::BuildNameToActiveUniformMap(GLuint program, GLNameToUnifor
         return;
 
     /* Reserve memory to iterate over all active GL uniforms */
-    std::vector<GLchar> uniformName;
+    vector<GLchar> uniformName;
     uniformName.resize(maxUniformNameLength, '\0');
 
     outNameToUniformMap.reserve(static_cast<std::size_t>(numActiveUniforms));
@@ -184,7 +184,7 @@ void GLPipelineState::BuildNameToActiveUniformMap(GLuint program, GLNameToUnifor
     {
         GLActiveUniform uniform = {};
         glGetActiveUniform(program, i, static_cast<GLsizei>(uniformName.size()), nullptr, &uniform.size, &uniform.type, &uniformName[0]);
-        const std::string uniformIdent = GetActiveUniformNameAsIdent(uniformName.data());
+        const string uniformIdent = GetActiveUniformNameAsIdent(uniformName.data());
         outNameToUniformMap[uniformIdent] = uniform;
     }
 }

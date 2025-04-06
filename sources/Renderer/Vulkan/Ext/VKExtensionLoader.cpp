@@ -158,7 +158,7 @@ bool VKLoadInstanceExtensions(VkInstance instance)
     return true;
 }
 
-bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions)
+bool VKLoadDeviceExtensions(VkDevice device, const vector<const char*>& supportedExtensions)
 {
     constexpr bool abortOnFailure = true;
 

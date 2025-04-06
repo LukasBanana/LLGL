@@ -9,8 +9,8 @@
 #define LLGL_GL_SHADER_BINDING_LAYOUT_H
 
 
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 #include <memory>
 #include "../RenderState/GLPipelineLayout.h"
@@ -57,7 +57,7 @@ class GLShaderBindingLayout
 
         struct NamedResourceBinding
         {
-            std::string     name;
+            string     name;
             std::uint32_t   slot;
             std::uint32_t   size; // Number of array elements
         };
@@ -68,9 +68,9 @@ class GLShaderBindingLayout
         void BuildUniformBlockBindings(const GLPipelineLayout& pipelineLayout);
         void BuildShaderStorageBindings(const GLPipelineLayout& pipelineLayout);
 
-        void AppendUniformBinding(const std::string& name, std::uint32_t slot, std::uint32_t size = 1u);
-        void AppendUniformBlockBinding(const std::string& name, std::uint32_t slot);
-        void AppendShaderStorageBinding(const std::string& name, std::uint32_t slot);
+        void AppendUniformBinding(const string& name, std::uint32_t slot, std::uint32_t size = 1u);
+        void AppendUniformBlockBinding(const string& name, std::uint32_t slot);
+        void AppendShaderStorageBinding(const string& name, std::uint32_t slot);
 
     private:
 
@@ -82,10 +82,10 @@ class GLShaderBindingLayout
 
     private:
 
-        std::uint8_t                        numUniformBindings_         = 0;
-        std::uint8_t                        numUniformBlockBindings_    = 0;
-        std::uint8_t                        numShaderStorageBindings_   = 0;
-        std::vector<NamedResourceBinding>   bindings_;
+        std::uint8_t                    numUniformBindings_         = 0;
+        std::uint8_t                    numUniformBlockBindings_    = 0;
+        std::uint8_t                    numShaderStorageBindings_   = 0;
+        vector<NamedResourceBinding>    bindings_;
 
 };
 

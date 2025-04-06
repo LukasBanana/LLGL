@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderSystemFlags.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -21,7 +21,7 @@ namespace LLGL
 void GLQueryRenderingCaps(RenderingCapabilities& caps);
 
 // Queries a string used to identify invalidated pipeline caches. This includes the shader binary format.
-void GLQueryPipelineCacheID(std::vector<char>& cacheID);
+void GLQueryPipelineCacheID(vector<char>& cacheID);
 
 
 } // /namespace LLGL

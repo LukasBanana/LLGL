@@ -18,9 +18,9 @@
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <random>
-#include <map>
+#include <LLGL/Container/Map.h>
 #include <type_traits>
 #include "GeometryUtils.h"
 #include "Stopwatch.h"
@@ -35,19 +35,22 @@
  * Global helper functions
  */
 
+using LLGL::map;
+using LLGL::vector;
+
 // Let the user choose a renderer module (using std::cin).
-std::string GetSelectedRendererModule(int argc, char* argv[]);
+string GetSelectedRendererModule(int argc, char* argv[]);
 
 // Load image from file, create texture, upload image into texture, and generate MIP-maps.
 LLGL::Texture* LoadTextureWithRenderer(
     LLGL::RenderSystem& renderSys,
-    const std::string&  filename,
+    const string&       filename,
     long                bindFlags   = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
     LLGL::Format        format      = LLGL::Format::RGBA8UNorm
 );
 
 // Save texture image to a PNG file.
-bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
+bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const string& filename, std::uint32_t mipLevel = 0);
 
 
 /*
@@ -91,20 +94,20 @@ protected:
     {
         ShaderDescWrapper(
             LLGL::ShaderType    type,
-            const std::string&  filename
+            const string&       filename
         );
 
         ShaderDescWrapper(
             LLGL::ShaderType    type,
-            const std::string&  filename,
-            const std::string&  entryPoint,
-            const std::string&  profile
+            const string&       filename,
+            const string&       entryPoint,
+            const string&       profile
         );
 
         LLGL::ShaderType    type;
-        std::string         filename;
-        std::string         entryPoint;
-        std::string         profile;
+        string              filename;
+        string              entryPoint;
+        string              profile;
     };
 
 private:
@@ -211,7 +214,7 @@ private:
         const ShaderDescWrapper&                    shaderDesc,
         const LLGL::ArrayView<LLGL::VertexFormat>&  vertexFormats,
         const LLGL::VertexFormat&                   streamOutputFormat,
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+        const vector<LLGL::FragmentAttribute>& fragmentAttribs,
         const LLGL::ShaderMacro*                    defines,
         bool                                        patchClippingOrigin
     );
@@ -229,7 +232,7 @@ protected:
     // Loads a shader from file with fragment attributes.
     LLGL::Shader* LoadShader(
         const ShaderDescWrapper&                    shaderDesc,
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs,
+        const vector<LLGL::FragmentAttribute>& fragmentAttribs,
         const LLGL::ShaderMacro*                    defines             = nullptr
     );
 
@@ -250,7 +253,7 @@ protected:
     // Loads a fragment shader with standard filename convention.
     LLGL::Shader* LoadStandardFragmentShader(
         const char*                                 entryPoint      = "PS",
-        const std::vector<LLGL::FragmentAttribute>& fragmentAttribs = {},
+        const vector<LLGL::FragmentAttribute>& fragmentAttribs = {},
         const LLGL::ShaderMacro*                    defines         = nullptr
     );
 
@@ -261,20 +264,20 @@ protected:
     );
 
     // Loads a shader pipeline with vertex and fragment shaders and with standard filename convention.
-    ShaderPipeline LoadStandardShaderPipeline(const std::vector<LLGL::VertexFormat>& vertexFormats);
+    ShaderPipeline LoadStandardShaderPipeline(const vector<LLGL::VertexFormat>& vertexFormats);
 
     // Throws an exception if the specified PSO creation failed.
     bool ReportPSOErrors(const LLGL::PipelineState* pso);
 
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
     LLGL::Texture* LoadTexture(
-        const std::string&  filename,
-        long                bindFlags   = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
-        LLGL::Format        format      = LLGL::Format::RGBA8UNorm
+        const string&  filename,
+        long           bindFlags   = (LLGL::BindFlags::Sampled | LLGL::BindFlags::ColorAttachment),
+        LLGL::Format   format      = LLGL::Format::RGBA8UNorm
     );
 
     // Save texture image to a PNG file.
-    bool SaveTexture(LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel = 0);
+    bool SaveTexture(LLGL::Texture& texture, const string& filename, std::uint32_t mipLevel = 0);
 
     // Captures the current framebuffer into a new texture.
     LLGL::Texture* CaptureFramebuffer(LLGL::CommandBuffer& commandBuffer, const LLGL::RenderTarget* resolutionSource = nullptr);
@@ -324,7 +327,7 @@ protected:
 protected:
 
     // Returns the name of the renderer module (e.g. "OpenGL" or "Direct3D11").
-    static const std::string& GetModuleName();
+    static const string& GetModuleName();
 
 protected:
 

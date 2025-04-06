@@ -11,7 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/UTF8String.h>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL

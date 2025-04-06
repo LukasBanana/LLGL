@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
         rendererDesc.moduleName = "OpenGLES3";
         rendererDesc.androidApp = androidApp;
         #else
-        const std::string rendererModule = GetSelectedRendererModule(argc, argv);
+        const string rendererModule = GetSelectedRendererModule(argc, argv);
         rendererDesc.moduleName = rendererModule;
         #endif
 
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
         #if ENABLE_CACHED_PSO
 
         // Try to read PSO cache from file
-        const std::string cacheFilename = "GraphicsPSO." + rendererModule + ".cache";
+        const string cacheFilename = "GraphicsPSO." + rendererModule + ".cache";
         bool hasInitialCache = false;
 
         LLGL::Blob pipelineCacheBlob = LLGL::Blob::CreateFromFile(cacheFilename);

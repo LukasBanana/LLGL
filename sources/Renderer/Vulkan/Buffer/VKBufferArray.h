@@ -11,7 +11,7 @@
 
 #include <LLGL/BufferArray.h>
 #include "../Vulkan.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -29,21 +29,21 @@ class VKBufferArray final : public BufferArray
         VKBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer objects.
-        inline const std::vector<VkBuffer>& GetBuffers() const
+        inline const vector<VkBuffer>& GetBuffers() const
         {
             return buffers_;
         }
 
         // Returns the array of offsets.
-        inline const std::vector<VkDeviceSize>& GetOffsets() const
+        inline const vector<VkDeviceSize>& GetOffsets() const
         {
             return offsets_;
         }
 
     private:
 
-        std::vector<VkBuffer>       buffers_;
-        std::vector<VkDeviceSize>   offsets_;
+        vector<VkBuffer>       buffers_;
+        vector<VkDeviceSize>   offsets_;
 
 };
 

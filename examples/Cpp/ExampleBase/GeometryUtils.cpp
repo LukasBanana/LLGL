@@ -19,17 +19,17 @@
 * Global helper functions
 */
 
-std::vector<TexturedVertex> LoadObjModel(const std::string& filename)
+vector<TexturedVertex> LoadObjModel(const string& filename)
 {
-    std::vector<TexturedVertex> vertices;
+    vector<TexturedVertex> vertices;
     LoadObjModel(vertices, filename);
     return vertices;
 }
 
-TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::string& filename, unsigned verticesPerFace)
+TriangleMesh LoadObjModel(vector<TexturedVertex>& vertices, const string& filename, unsigned verticesPerFace)
 {
     // Read obj file
-    std::vector<char> fileContent = ReadAsset(filename);
+    vector<char> fileContent = ReadAsset(filename);
     if (fileContent.empty())
         LLGL_THROW_RUNTIME_ERROR("failed to load model from file: \"%s\"", filename.c_str());
 
@@ -37,22 +37,22 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
     TriangleMesh mesh;
     mesh.firstVertex = static_cast<std::uint32_t>(vertices.size());
 
-    std::vector<Gs::Vector3f> coords, normals;
-    std::vector<Gs::Vector2f> texCoords;
+    vector<Gs::Vector3f> coords, normals;
+    vector<Gs::Vector2f> texCoords;
 
     // Convert file content into a stream (this code used to read the file via std::ifstream)
     std::stringstream stream;
     std::copy(fileContent.begin(), fileContent.end(), std::ostream_iterator<char>{ stream });
 
     // Read each line
-    std::string line;
+    string line;
     while (std::getline(stream, line))
     {
         std::stringstream s;
         s << line;
 
         // Parse line
-        std::string mode;
+        string mode;
         s >> mode;
 
         if (mode == "v")
@@ -116,7 +116,7 @@ TriangleMesh LoadObjModel(std::vector<TexturedVertex>& vertices, const std::stri
     return mesh;
 }
 
-std::vector<Gs::Vector3f> GenerateCubeVertices()
+vector<Gs::Vector3f> GenerateCubeVertices()
 {
     return
     {
@@ -125,7 +125,7 @@ std::vector<Gs::Vector3f> GenerateCubeVertices()
     };
 }
 
-std::vector<std::uint32_t> GenerateCubeTriangleIndices()
+vector<std::uint32_t> GenerateCubeTriangleIndices()
 {
     return
     {
@@ -138,7 +138,7 @@ std::vector<std::uint32_t> GenerateCubeTriangleIndices()
     };
 }
 
-std::vector<TexturedVertex> GenerateTexturedCubeVertices()
+vector<TexturedVertex> GenerateTexturedCubeVertices()
 {
     return
     {
@@ -181,7 +181,7 @@ std::vector<TexturedVertex> GenerateTexturedCubeVertices()
     };
 }
 
-std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
+vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
 {
     return
     {
@@ -194,10 +194,10 @@ std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
     };
 }
 
-std::vector<std::uint32_t> GenerateTexturedCubeQuadIndices(std::uint32_t numVertices, std::uint32_t firstVertex)
+vector<std::uint32_t> GenerateTexturedCubeQuadIndices(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     // Assume the vertices are already laid out as quads. Generate indices 0/1/3/2 for each quad.
-    std::vector<std::uint32_t> indices;
+    vector<std::uint32_t> indices;
     indices.resize(numVertices);
 
     for_range(i, numVertices)
@@ -251,9 +251,9 @@ static void GenerateTangentSpace(TangentSpaceVertex& v0, TangentSpaceVertex& v1,
     NormalizeTangents(v2, tangent0, tangent1);
 }
 
-std::vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayView<TexturedVertex>& vertices)
+vector<TangentSpaceVertex> GenerateTangentSpaceVertices(const LLGL::ArrayView<TexturedVertex>& vertices)
 {
-    std::vector<TangentSpaceVertex> outp;
+    vector<TangentSpaceVertex> outp;
     outp.resize(vertices.size());
 
     for (std::size_t i = 0, n = outp.size(); i + 3 <= n; i += 3)
@@ -290,9 +290,9 @@ static void GenerateTangentSpaceQuad(TangentSpaceVertex& v0, TangentSpaceVertex&
     NormalizeTangents(v3, tangent0, tangent1);
 }
 
-std::vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::ArrayView<TexturedVertex>& vertices)
+vector<TangentSpaceVertex> GenerateTangentSpaceQuadVertices(const LLGL::ArrayView<TexturedVertex>& vertices)
 {
-    std::vector<TangentSpaceVertex> outp;
+    vector<TangentSpaceVertex> outp;
     outp.resize(vertices.size());
 
     for (std::size_t i = 0, n = outp.size(); i + 4 <= n; i += 4)

@@ -11,8 +11,8 @@
 #include "GLCoreExtensions.h"
 #include <LLGL/Utils/ForRange.h>
 #include <functional>
-#include <string>
-#include <map>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Map.h>
 
 
 namespace LLGL
@@ -20,7 +20,7 @@ namespace LLGL
 
 
 // OpenGL extension map type: Maps the extension name to boolean indicating whether or not the extension was loaded successully.
-using GLExtensionMap = std::map<std::string, bool>;
+using GLExtensionMap = map<string, bool>;
 
 /* --- Internal functions --- */
 
@@ -42,12 +42,12 @@ bool LoadGLProc(T& procAddr, const char* procName)
     return (procAddr != nullptr);
 }
 
-static void ExtractExtensionsFromString(GLExtensionMap& extensions, const std::string& extString)
+static void ExtractExtensionsFromString(GLExtensionMap& extensions, const string& extString)
 {
     size_t first = 0, last = 0;
 
     /* Find next extension name in string */
-    while ( ( last = extString.find(' ', first) ) != std::string::npos )
+    while ( ( last = extString.find(' ', first) ) != string::npos )
     {
         /* Store current extension name in hash-map */
         auto name = extString.substr(first, last - first);
@@ -1008,10 +1008,10 @@ static void IncludeImpliedExtensions(GLExtensionMap& extensions)
 #endif // /__APPLE__
 
 // Global member to store if the extension have already been loaded
-static bool                     g_OpenGLExtensionsLoaded = false;
-static GLExtensionMap           g_OpenGLExtensionsMap;
-static std::set<const char*>    g_supportedOpenGLExtensions;
-static std::set<const char*>    g_loadedOpenGLExtensions;
+static bool                 g_OpenGLExtensionsLoaded = false;
+static GLExtensionMap       g_OpenGLExtensionsMap;
+static set<const char*>     g_supportedOpenGLExtensions;
+static set<const char*>     g_loadedOpenGLExtensions;
 
 bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
 {
@@ -1119,7 +1119,7 @@ bool LoadSupportedOpenGLExtensions(bool isCoreProfile, bool abortOnFailure)
         }
     };
 
-    auto EnableExtension = [&](const std::string& extName, GLExt extensionID) -> void
+    auto EnableExtension = [&](const string& extName, GLExt extensionID) -> void
     {
         /* Try to enable OpenGL extension */
         if (g_OpenGLExtensionsMap.find(extName) != g_OpenGLExtensionsMap.end())
@@ -1260,12 +1260,12 @@ bool AreOpenGLExtensionsLoaded()
     return g_OpenGLExtensionsLoaded;
 }
 
-const std::set<const char*>& GetSupportedOpenGLExtensions()
+const set<const char*>& GetSupportedOpenGLExtensions()
 {
     return g_supportedOpenGLExtensions;
 }
 
-const std::set<const char*>& GetLoadedOpenGLExtensions()
+const set<const char*>& GetLoadedOpenGLExtensions()
 {
     return g_loadedOpenGLExtensions;
 }

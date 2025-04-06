@@ -29,7 +29,7 @@ class GLBufferWithVAO : public GLBuffer
         void BuildVertexArray(const ArrayView<VertexAttribute>& vertexAttribs);
 
         // Returns the list of vertex attributes.
-        inline const std::vector<VertexAttribute>& GetVertexAttribs() const
+        inline const vector<VertexAttribute>& GetVertexAttribs() const
         {
             return vertexAttribs_;
         }
@@ -42,8 +42,8 @@ class GLBufferWithVAO : public GLBuffer
 
     private:
 
-        std::vector<VertexAttribute>    vertexAttribs_;
-        GLSharedContextVertexArray      vertexArray_;
+        vector<VertexAttribute>    vertexAttribs_;
+        GLSharedContextVertexArray vertexArray_;
 
 };
 

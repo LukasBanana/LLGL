@@ -16,7 +16,7 @@
 #include "GLResourceType.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLEmulatedSampler.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -28,7 +28,7 @@ class GLStateManager;
 // GL resource binding for heap resources (part of a ResourceHeap).
 struct GLHeapResourceBinding
 {
-    std::string     name;
+    string     name;
 
     // Interface for BindingIterator<>
     ResourceType    type        = ResourceType::Undefined;
@@ -83,43 +83,43 @@ class GLPipelineLayout final : public PipelineLayout
         void BindStaticSamplers(GLStateManager& stateMngr) const;
 
         // Returns the copied list of heap binding descriptors.
-        inline const std::vector<GLHeapResourceBinding>& GetHeapBindings() const
+        inline const vector<GLHeapResourceBinding>& GetHeapBindings() const
         {
             return heapBindings_;
         }
 
         // Returns the list of dynamic GL resource bindings.
-        inline const std::vector<GLPipelineResourceBinding>& GetBindings() const
+        inline const vector<GLPipelineResourceBinding>& GetBindings() const
         {
             return bindings_;
         }
 
         // Returns the list of static sampler binding slots.
-        inline const std::vector<GLuint>& GetStaticSamplerSlots() const
+        inline const vector<GLuint>& GetStaticSamplerSlots() const
         {
             return staticSamplerSlots_;
         }
 
         // Returns the list of combined texture-sampler binding slots.
-        inline const std::vector<GLuint>& GetCombinedSamplerSlots() const
+        inline const vector<GLuint>& GetCombinedSamplerSlots() const
         {
             return combinedSamplerSlots_;
         }
 
         // Returns the list of dynamic resource names. Only used by GLShaderBindingLayout.
-        inline ArrayView<std::string> GetBindingNames() const
+        inline ArrayView<string> GetBindingNames() const
         {
-            return ArrayView<std::string>{ resourceNames_.data() + (resourceNames_.size() - bindings_.size()), bindings_.size() };
+            return ArrayView<string>{ resourceNames_.data() + (resourceNames_.size() - bindings_.size()), bindings_.size() };
         }
 
         // Returns the list of combined texture-sampler names. Only used by GLShaderBindingLayout.
-        inline ArrayView<std::string> GetCombinedSamplerNames() const
+        inline ArrayView<string> GetCombinedSamplerNames() const
         {
-            return ArrayView<std::string>{ resourceNames_.data(), resourceNames_.size() - bindings_.size() };
+            return ArrayView<string>{ resourceNames_.data(), resourceNames_.size() - bindings_.size() };
         }
 
         // Returns the copied list of uniform descriptors.
-        inline const std::vector<UniformDescriptor>& GetUniforms() const
+        inline const vector<UniformDescriptor>& GetUniforms() const
         {
             return uniforms_;
         }
@@ -156,14 +156,14 @@ class GLPipelineLayout final : public PipelineLayout
 
     private:
 
-        std::vector<std::string>                resourceNames_; // Dynamic resource and static sampler names; Used by GLShaderBindingLayout
-        std::vector<GLHeapResourceBinding>      heapBindings_;
-        std::vector<GLPipelineResourceBinding>  bindings_;
-        std::vector<GLuint>                     staticSamplerSlots_;
-        std::vector<GLSamplerSPtr>              staticSamplers_;
-        std::vector<GLEmulatedSamplerSPtr>      staticEmulatedSamplers_;
-        std::vector<UniformDescriptor>          uniforms_;
-        std::vector<GLuint>                     combinedSamplerSlots_;
+        vector<string>                resourceNames_; // Dynamic resource and static sampler names; Used by GLShaderBindingLayout
+        vector<GLHeapResourceBinding>      heapBindings_;
+        vector<GLPipelineResourceBinding>  bindings_;
+        vector<GLuint>                     staticSamplerSlots_;
+        vector<GLSamplerSPtr>              staticSamplers_;
+        vector<GLEmulatedSamplerSPtr>      staticEmulatedSamplers_;
+        vector<UniformDescriptor>          uniforms_;
+        vector<GLuint>                     combinedSamplerSlots_;
         const GLbitfield                        barriers_               = 0;
         const bool                              hasNamedBindings_       = false;
 

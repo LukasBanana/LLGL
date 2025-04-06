@@ -16,7 +16,7 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Container/StringLiteral.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <utility>
 
 
@@ -485,7 +485,7 @@ struct PipelineLayoutDescriptor
     \see ResourceViewDescriptor
     \see ResourceHeap::GetNumDescriptorSets
     */
-    std::vector<BindingDescriptor>                  heapBindings;
+    vector<BindingDescriptor>                  heapBindings;
 
     /**
     \brief List of individual layout resource bindings.
@@ -493,13 +493,13 @@ struct PipelineLayoutDescriptor
     \remarks Individual bindings are limited to binding the entire resource as opposed to heap bindigs that can also bind a subresource view.
     \see CommandBuffer::SetResource
     */
-    std::vector<BindingDescriptor>                  bindings;
+    vector<BindingDescriptor>                  bindings;
 
     /**
     \brief List of static sampler states with their binding points.
     \remarks These sampler states are immutable and are automatically bound with each pipeline state.
     */
-    std::vector<StaticSamplerDescriptor>            staticSamplers;
+    vector<StaticSamplerDescriptor>            staticSamplers;
 
     /**
     \brief List of shader uniforms that can be written dynamically.
@@ -516,7 +516,7 @@ struct PipelineLayoutDescriptor
     Only static samplers are not counted towards root parameters.
     \see CommandBuffer::SetUniforms
     */
-    std::vector<UniformDescriptor>                  uniforms;
+    vector<UniformDescriptor>                  uniforms;
 
     /**
     \brief List of combined texture-samplers.
@@ -526,7 +526,7 @@ struct PipelineLayoutDescriptor
     this is required unless each texture binding in the pipeline layout has its own sampler binding at the same binding slot.
     \note Only supported with: OpenGL (Vulkan will be supported next).
     */
-    std::vector<CombinedTextureSamplerDescriptor>   combinedTextureSamplers;
+    vector<CombinedTextureSamplerDescriptor>   combinedTextureSamplers;
 
     /**
     \brief Specifies optional resource barrier flags. By default 0.

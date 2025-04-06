@@ -15,7 +15,7 @@
 #include "VKPipelineLayoutPermutation.h"
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -116,7 +116,7 @@ class VKPipelineState : public PipelineState
         VKPipelineLayoutPermutationSPtr     pipelineLayoutPerm_;
         const VKPipelineLayout*             pipelineLayout_     = nullptr;
         VkPipelineBindPoint                 bindPoint_          = VK_PIPELINE_BIND_POINT_MAX_ENUM;
-        std::vector<VkPushConstantRange>    uniformRanges_;     // Push constant ranges; One range for each uniform descriptor. See UniformDescriptor.
+        vector<VkPushConstantRange>         uniformRanges_;     // Push constant ranges; One range for each uniform descriptor. See UniformDescriptor.
         Report                              report_;
 
 };

@@ -16,7 +16,7 @@
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/DynamicVector.h>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL

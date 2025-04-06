@@ -9,7 +9,7 @@
 #include "SpirvModule.h"
 #include "../../Core/CoreUtils.h"
 #include "../../Core/Assertion.h"
-#include <string>
+#include <LLGL/Container/String.h>
 #include <LLGL/Utils/ForRange.h>
 
 

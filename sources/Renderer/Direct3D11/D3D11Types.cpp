@@ -8,7 +8,7 @@
 #include "D3D11Types.h"
 #include "../DXCommon/DXCore.h"
 #include <stdexcept>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL

@@ -9,8 +9,8 @@
 #define LLGLEXAMPLES_FILE_UTILS_H
 
 
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 #include <type_traits>
 #include <LLGL/RenderingDebuggerFlags.h>
 
@@ -18,6 +18,9 @@
 /*
  * Global helper functions
  */
+
+using LLGL::vector;
+using LLGL::string;
 
 // Helper class to abstract reading assets for multiple platforms.
 class AssetReader
@@ -31,7 +34,7 @@ class AssetReader
         AssetReader& operator = (AssetReader&&) = default;
 
         // Take ownership of the specified content to read an asset.
-        AssetReader(std::vector<char>&& content);
+        AssetReader(vector<char>&& content);
 
         // Returns true if this asset reader has any content.
         bool IsValid() const;
@@ -54,21 +57,21 @@ class AssetReader
 
     public:
 
-        std::vector<char>   content_;
+        vector<char>   content_;
         std::size_t         readPos_ = 0;
 
 };
 
 // Returns the content of the specified asset.
 // If the file could not be found, an empty container is returned and an error is reported to the log.
-std::vector<char> ReadAsset(const std::string& name, std::string* outFullPath = nullptr);
+vector<char> ReadAsset(const string& name, string* outFullPath = nullptr);
 
 // Reads the specified asset as text file and returns each line in an array.
-std::vector<std::string> ReadTextLines(const std::string& name, std::string* outFullPath = nullptr);
+vector<string> ReadTextLines(const string& name, string* outFullPath = nullptr);
 
 // Writes the specified FrameProfile as a JSON body string.
 // This can be loaded up in Goolge Chrome's Trace Viewer (see https://google.github.io/trace-viewer/).
-std::string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile);
+string WriteFrameProfileToJson(const LLGL::FrameProfile& frameProfile);
 
 // Writes the specified FrameProfile to a JSON file.
 bool WriteFrameProfileToJsonFile(const LLGL::FrameProfile& frameProfile, const char* filename);

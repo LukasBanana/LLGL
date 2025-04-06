@@ -78,9 +78,9 @@ static bool ParseGLVersionString(const GLubyte* s, GLint& outMajor, GLint& outMi
     return true;
 }
 
-static std::vector<ShadingLanguage> GLQueryShadingLanguages()
+static vector<ShadingLanguage> GLQueryShadingLanguages()
 {
-    std::vector<ShadingLanguage> languages;
+    vector<ShadingLanguage> languages;
     languages.reserve(16);
 
     if (HasExtension(GLExt::ARB_shader_objects))
@@ -109,7 +109,7 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
-static std::vector<Format> GetDefaultSupportedGLTextureFormats()
+static vector<Format> GetDefaultSupportedGLTextureFormats()
 {
     return
     {
@@ -135,7 +135,7 @@ static void GLGetRenderingAttribs(RenderingCapabilities& caps)
     caps.shadingLanguages   = GLQueryShadingLanguages();
 }
 
-static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
+static void GLGetSupportedTextureFormats(vector<Format>& textureFormats)
 {
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
@@ -164,7 +164,7 @@ static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 
     const std::uint32_t numCompressedTexFormats = GLGetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
 
-    std::vector<GLint> compressedTexFormats(numCompressedTexFormats);
+    vector<GLint> compressedTexFormats(numCompressedTexFormats);
     glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, compressedTexFormats.data());
 
     for (GLint internalFormat : compressedTexFormats)

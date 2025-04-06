@@ -11,7 +11,7 @@
 
 #include "D3D11StagingBuffer.h"
 #include <d3d12.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -67,7 +67,7 @@ class D3D11StagingBufferPool
         ID3D11Device*                   device_             = nullptr;
         ID3D11DeviceContext*            context_            = nullptr;
 
-        std::vector<D3D11StagingBuffer> chunks_;
+        vector<D3D11StagingBuffer>      chunks_;
         std::size_t                     chunkIdx_           = 0;
         UINT                            chunkSize_          = 0;
         D3D11_USAGE                     usage_              = D3D11_USAGE_STAGING;

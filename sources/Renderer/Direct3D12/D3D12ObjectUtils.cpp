@@ -7,7 +7,7 @@
 
 #include "D3D12ObjectUtils.h"
 #include "../DXCommon/DXCore.h"
-#include <string>
+#include <LLGL/Container/String.h>
 #include <cstring>
 
 
@@ -35,7 +35,7 @@ void D3D12SetObjectNameSubscript(ID3D12Object* obj, const char* name, const char
     {
         if (name != nullptr)
         {
-            std::string nameWithSubscript = name;
+            string nameWithSubscript = name;
             nameWithSubscript += subscript;
             const std::size_t nameLen = nameWithSubscript.size();
             obj->SetPrivateData(DXGetD3DDebugObjectNameGUID(), static_cast<UINT>(nameLen), nameWithSubscript.c_str());
@@ -50,20 +50,20 @@ void D3D12SetObjectNameIndexed(ID3D12Object* obj, const char* name, std::uint32_
     if (name != nullptr)
     {
         /* Append subscript to label */
-        const std::string subscript = std::to_string(index);
+        const string subscript = std::to_string(index);
         D3D12SetObjectNameSubscript(obj, name, subscript.c_str());
     }
     else
         D3D12SetObjectName(obj, nullptr);
 }
 
-std::string D3D12GetObjectName(ID3D12Object* obj)
+string D3D12GetObjectName(ID3D12Object* obj)
 {
     if (obj != nullptr)
     {
         UINT nameLen = 0;
         obj->GetPrivateData(DXGetD3DDebugObjectNameGUID(), &nameLen, nullptr);
-        std::string name;
+        string name;
         name.resize(nameLen);
         obj->GetPrivateData(DXGetD3DDebugObjectNameGUID(), &nameLen, &name[0]);
         return name;

@@ -19,7 +19,7 @@
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
 #include <algorithm>
-#include <set>
+#include <LLGL/Container/Set.h>
 
 #if LLGL_VK_ENABLE_SPIRV_REFLECT
 #   include "../../SPIRV/SpirvReflect.h"
@@ -30,7 +30,7 @@ namespace LLGL
 {
 
 
-static VKPtr<VkShaderModule> CreateVkShaderModule(VkDevice device, const std::vector<std::uint32_t>& shaderCode)
+static VKPtr<VkShaderModule> CreateVkShaderModule(VkDevice device, const vector<std::uint32_t>& shaderCode)
 {
     VkShaderModuleCreateInfo createInfo;
     {
@@ -511,7 +511,7 @@ bool VKShader::ReflectLocalSize(Extent3D& outLocalSize) const
 
 bool VKShader::ReflectPushConstants(
     const ArrayView<UniformDescriptor>& inUniformDescs,
-    std::vector<VKUniformRange>&        outUniformRanges) const
+    vector<VKUniformRange>&             outUniformRanges) const
 {
     /* Initialize output container with zero-ranges */
     outUniformRanges.resize(inUniformDescs.size());
@@ -558,7 +558,7 @@ bool VKShader::ReflectLocalSize(Extent3D& /*outLocalSize*/) const
 
 bool VKShader::ReflectPushConstants(
     const ArrayView<UniformDescriptor>& inUniformDescs,
-    std::vector<VKUniformRange>&        outUniformRanges) const
+    vector<VKUniformRange>&             outUniformRanges) const
 {
     return false; // dummy
 }
@@ -594,7 +594,7 @@ void VKShader::BuildInputLayout(std::size_t numVertexAttribs, const VertexAttrib
 
     inputLayout_.bindingDescs.reserve(numVertexAttribs);
 
-    std::set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
+    set<VkVertexInputBindingDescription, VKCompareVertexBindingDesc> bindingDescSet;
 
     for_range(i, numVertexAttribs)
     {
@@ -661,7 +661,7 @@ bool VKShader::CompileSource(const ShaderDescriptor& shaderDesc)
 bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
 {
     /* Get shader binary */
-    std::vector<char>   fileContent;
+    vector<char>   fileContent;
     const char*         binaryBuffer = nullptr;
     std::size_t         binaryLength = 0;
 
@@ -689,7 +689,7 @@ bool VKShader::LoadBinary(const ShaderDescriptor& shaderDesc)
     else
     {
         const std::uint32_t* words = reinterpret_cast<const std::uint32_t*>(binaryBuffer);
-        shaderCode_ = std::vector<std::uint32_t>(words, words + binaryLength/sizeof(std::uint32_t));
+        shaderCode_ = vector<std::uint32_t>(words, words + binaryLength/sizeof(std::uint32_t));
     }
 
     /* Store shader entry point (by default "main" for GLSL) */

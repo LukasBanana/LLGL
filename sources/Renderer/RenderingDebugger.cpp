@@ -11,7 +11,7 @@
 #include <LLGL/Container/Strings.h>
 #include "../Core/StringUtils.h"
 #include "../Platform/Debug.h"
-#include <map>
+#include <LLGL/Container/Map.h>
 
 
 namespace LLGL
@@ -35,7 +35,7 @@ struct CompareStringLess
 };
 
 template <typename T>
-using UTF8StringMap = std::map<UTF8String, T, CompareStringLess>;
+using UTF8StringMap = map<UTF8String, T, CompareStringLess>;
 
 struct RenderingDebugger::Pimpl
 {
@@ -92,7 +92,7 @@ bool RenderingDebugger::GetBreakOnError() const
 void RenderingDebugger::Errorf(const ErrorType type, const char* format, ...)
 {
     /* Print formatted string */
-    std::string message;
+    string message;
     LLGL_STRING_PRINTF(message, format);
 
     /* Check if there is already an entry for the exact same message */
@@ -117,7 +117,7 @@ void RenderingDebugger::Errorf(const ErrorType type, const char* format, ...)
 void RenderingDebugger::Warningf(const WarningType type, const char* format, ...)
 {
     /* Print formatted string */
-    std::string message;
+    string message;
     LLGL_STRING_PRINTF(message, format);
 
     /* Check if there is already an entry for the exact same message */
@@ -156,13 +156,13 @@ void RenderingDebugger::RecordProfile(const FrameProfile& profile)
 
 void RenderingDebugger::PostError(const ErrorType type, const StringView& message)
 {
-    const std::string str(message.begin(), message.end());
+    const string str(message.begin(), message.end());
     Errorf(type, "%s", str.c_str());
 }
 
 void RenderingDebugger::PostWarning(const WarningType type, const StringView& message)
 {
-    const std::string str(message.begin(), message.end());
+    const string str(message.begin(), message.end());
     Warningf(type, "%s", str.c_str());
 }
 

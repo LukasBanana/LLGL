@@ -31,7 +31,7 @@ ShaderResourceReflection* FetchOrInsertResource(
 template <typename TSignatureParameterDesc>
 static void DXConvertD3DParamDescToVertexAttrib(VertexAttribute& dst, const TSignatureParameterDesc& src)
 {
-    dst.name            = std::string(src.SemanticName);
+    dst.name            = string(src.SemanticName);
     dst.format          = DXGetSignatureParameterType(src.ComponentType, src.Mask);
     dst.semanticIndex   = src.SemanticIndex;
     dst.systemValue     = DXTypes::Unmap(src.SystemValueType);
@@ -83,7 +83,7 @@ HRESULT DXReflectShaderVertexAttributes(
 template <typename TSignatureParameterDesc>
 static void DXConvertD3DParamDescToFragmentAttrib(FragmentAttribute& dst, const TSignatureParameterDesc& src)
 {
-    dst.name        = std::string(src.SemanticName);
+    dst.name        = string(src.SemanticName);
     dst.format      = DXGetSignatureParameterType(src.ComponentType, src.Mask);
     dst.location    = src.SemanticIndex;
     dst.systemValue = DXTypes::Unmap(src.SystemValueType);
@@ -222,7 +222,7 @@ HRESULT DXReflectShaderConstantBuffer(
                 /* Add new uniform descriptor to reflection output */
                 UniformDescriptor uniformDesc;
                 {
-                    uniformDesc.name        = std::string(varDesc.Name); // Make copy of string, since reflection object will be released
+                    uniformDesc.name        = string(varDesc.Name); // Make copy of string, since reflection object will be released
                     uniformDesc.type        = DXMapD3DShaderTypeToUniformType(typeDesc);
                     uniformDesc.arraySize   = typeDesc.Elements;
                 }

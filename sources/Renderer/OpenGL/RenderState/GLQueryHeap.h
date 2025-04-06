@@ -11,7 +11,7 @@
 
 #include <LLGL/QueryHeap.h>
 #include "../OpenGL.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -40,7 +40,7 @@ class GLQueryHeap final : public QueryHeap
         }
 
         // Returns the list of hardware query IDs.
-        inline const std::vector<GLuint>& GetIDs() const
+        inline const vector<GLuint>& GetIDs() const
         {
             return ids_;
         }
@@ -53,8 +53,8 @@ class GLQueryHeap final : public QueryHeap
 
     private:
 
-        std::vector<GLuint> ids_;
-        std::uint32_t       groupSize_  = 1;
+        vector<GLuint>  ids_;
+        std::uint32_t   groupSize_  = 1;
 
 };
 

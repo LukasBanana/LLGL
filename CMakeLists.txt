@@ -902,6 +902,10 @@ if(LLGL_VK_ENABLE_SPIRV_REFLECT)
     message(STATUS "Including Submodule: SPIRV-Headers")
 endif()
 
+if(LLGL_CUSTOM_ALLOCATOR)
+    message(STATUS "STL allocator will have custom allocator. Is up to the user to implement a custom allocator 'llgl_allocator'")
+endif()
+
 if(NOT "${SUMMARY_FLAGS}" STREQUAL "")
     message(STATUS "Options: ${SUMMARY_FLAGS}")
 endif()

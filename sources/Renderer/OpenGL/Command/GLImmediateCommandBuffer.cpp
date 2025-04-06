@@ -354,7 +354,7 @@ void GLImmediateCommandBuffer::SetResource(std::uint32_t descriptor, Resource& r
     if (binding.combiners > 0)
     {
         /* Bind resource at one or more slots for combined texture-samplers */
-        const std::vector<GLuint>& combinedSamplerSlots = pipelineLayoutGL->GetCombinedSamplerSlots();
+        const vector<GLuint>& combinedSamplerSlots = pipelineLayoutGL->GetCombinedSamplerSlots();
         BindCombinedResource(binding.type, &(combinedSamplerSlots[binding.slot]), binding.combiners, resource);
     }
     else

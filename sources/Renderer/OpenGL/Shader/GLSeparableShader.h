@@ -41,7 +41,7 @@ class GLSeparableShader final : public GLShader
         void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr);
 
         // Queries the program info log and appends it to the output text.
-        void QueryInfoLog(std::string& text, bool& hasErrors);
+        void QueryInfoLog(string& text, bool& hasErrors);
 
     private:
 
@@ -68,7 +68,7 @@ class GLSeparableShader final : public GLShader
         GLSeparableShader(const ShaderDescriptor& desc);
 
         void BindResourceSlots(const GLShaderBindingLayout& bindingLayout, const GLShaderBufferInterfaceMap* bufferInterfaceMap = nullptr);
-        void QueryInfoLog(std::string& text, bool& hasErrors);
+        void QueryInfoLog(string& text, bool& hasErrors);
 
 };
 

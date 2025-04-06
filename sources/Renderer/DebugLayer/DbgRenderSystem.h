@@ -120,7 +120,7 @@ class DbgRenderSystem final : public RenderSystem
         template <typename T, typename TBase>
         void ReleaseDbg(HWObjectContainer<T>& cont, TBase& entry);
 
-        std::vector<ResourceViewDescriptor> GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews);
+        vector<ResourceViewDescriptor> GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews);
 
     private:
 

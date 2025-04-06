@@ -26,8 +26,8 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 #include <functional>
 
 
@@ -300,7 +300,7 @@ struct RendererInfo
     UTF8String              shadingLanguageName;
 
     //! List of enabled renderer extensions (e.g. "GL_ARB_direct_state_access" or "VK_EXT_conditional_rendering").
-    std::vector<UTF8String> extensionNames;
+    vector<UTF8String> extensionNames;
 
     /**
     \brief Arbitrary string used to identify invalidated pipeline caches.
@@ -310,7 +310,7 @@ struct RendererInfo
     \see RenderSystem::CreatePipelineCache
     \see RenderingFeatures::hasPipelineCaching
     */
-    std::vector<char>       pipelineCacheID;
+    vector<char>       pipelineCacheID;
 };
 
 /**
@@ -324,8 +324,8 @@ struct RenderSystemDescriptor
     RenderSystemDescriptor(const RenderSystemDescriptor&) = default;
     RenderSystemDescriptor& operator = (const RenderSystemDescriptor&) = default;
 
-    //! Constructor to initialize the descriptor with the module name from an std::string.
-    inline RenderSystemDescriptor(const std::string& moduleName) :
+    //! Constructor to initialize the descriptor with the module name from an string.
+    inline RenderSystemDescriptor(const string& moduleName) :
         moduleName { moduleName }
     {
     }
@@ -895,13 +895,13 @@ struct RenderingCapabilities
     \see Shader::Compile
     \see Shader::LoadBinary
     */
-    std::vector<ShadingLanguage>    shadingLanguages;
+    vector<ShadingLanguage>    shadingLanguages;
 
     /**
     \brief Specifies the list of supported hardware texture formats.
     \see Format
     */
-    std::vector<Format>             textureFormats;
+    vector<Format>             textureFormats;
 
     /**
     \brief Specifies all supported hardware features.
@@ -927,7 +927,7 @@ struct RenderingCapabilities
 \see ValidateRenderingCaps
 \ingroup group_callbacks
 */
-using ValidateRenderingCapsFunc = std::function<bool(const std::string& info, const std::string& attrib)>;
+using ValidateRenderingCapsFunc = std::function<bool(const string& info, const string& attrib)>;
 
 /**
 \brief Validates the presence of the specified required rendering capabilities.
@@ -953,7 +953,7 @@ myRequirements.limits.maxComputeShaderWorkGroupSize[2]  = 8;
 LLGL::ValidateRenderingCaps(
     myRenderer->GetRenderingCaps(),
     myRequirements,
-    [](const std::string& info, const std::string& attrib) {
+    [](const string& info, const string& attrib) {
         ::fprintf(stderr, "%s: %s\n", info.c_str(), attrib.c_str());
         return true;
     }
