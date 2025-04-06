@@ -11,7 +11,7 @@
 
 #include "VKStagingBuffer.h"
 #include <LLGL/RenderSystemFlags.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -52,7 +52,7 @@ class VKStagingBufferPool
 
         VKDeviceMemoryManager*          deviceMemoryMngr_   = nullptr;
 
-        std::vector<VKStagingBuffer>    chunks_;
+        vector<VKStagingBuffer>         chunks_;
         std::size_t                     chunkIdx_           = 0;
         VkDeviceSize                    chunkSize_          = 0;
 

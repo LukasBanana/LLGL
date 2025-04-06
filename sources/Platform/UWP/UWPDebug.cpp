@@ -10,7 +10,7 @@
 #include "UWPModule.h"
 #include <stdio.h>
 #include <limits.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <algorithm>
 #include <LLGL/Utils/ForRange.h>
 

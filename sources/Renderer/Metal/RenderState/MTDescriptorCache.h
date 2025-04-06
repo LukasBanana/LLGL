@@ -13,7 +13,7 @@
 
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/ArrayView.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -87,7 +87,7 @@ class MTDescriptorCache
     private:
 
         ArrayView<MTDynamicResourceLayout>  layouts_;
-        std::vector<id>                     bindings_;
+        vector<id>                     bindings_;
         std::uint64_t                       dirtyBindings_[4]   = {};
         std::uint8_t                        dirtyRange_[2]      = {};
 

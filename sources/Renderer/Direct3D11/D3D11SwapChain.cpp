@@ -270,7 +270,7 @@ void D3D11SwapChain::ResolveSubresources(ID3D11DeviceContext* context)
 bool D3D11SwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 {
     /* Store current debug names */
-    std::string debugNames[5];
+    string debugNames[5];
     if (hasDebugName_)
         StoreDebugNames(debugNames);
 
@@ -505,7 +505,7 @@ void D3D11SwapChain::CreateResolutionDependentResources()
     }
 }
 
-void D3D11SwapChain::StoreDebugNames(std::string (&debugNames)[5])
+void D3D11SwapChain::StoreDebugNames(string (&debugNames)[5])
 {
     debugNames[0] = D3D11GetObjectName(colorBuffer_.Get());
     debugNames[1] = D3D11GetObjectName(colorBufferMS_.Get());
@@ -517,7 +517,7 @@ void D3D11SwapChain::StoreDebugNames(std::string (&debugNames)[5])
     }
 }
 
-void D3D11SwapChain::RestoreDebugNames(const std::string (&debugNames)[5])
+void D3D11SwapChain::RestoreDebugNames(const string (&debugNames)[5])
 {
     D3D11SetObjectName(colorBuffer_.Get(), debugNames[0].c_str());
     D3D11SetObjectName(colorBufferMS_.Get(), debugNames[1].c_str());

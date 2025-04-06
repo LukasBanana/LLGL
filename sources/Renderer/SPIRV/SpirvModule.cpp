@@ -30,8 +30,8 @@ static SpirvResult ReadSpirvHeader(const std::uint32_t* words, std::size_t wordC
  * SpirvModule class
  */
 
-SpirvModule::SpirvModule(std::vector<value_type>&& data) :
-    words_ { std::forward<std::vector<value_type>&&>(data) }
+SpirvModule::SpirvModule(vector<value_type>&& data) :
+    words_ { std::forward<vector<value_type>&&>(data) }
 {
 }
 

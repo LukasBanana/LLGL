@@ -93,7 +93,7 @@ void GLProgramPipeline::BindResourceSlots(const GLShaderBindingLayout& bindingLa
 void GLProgramPipeline::QueryInfoLogs(Report& report)
 {
     bool hasErrors = false;
-    std::string log;
+    string log;
 
     for_range(i, GetSignature().GetNumShaders())
         separableShaders_[i]->QueryInfoLog(log, hasErrors);
@@ -101,7 +101,7 @@ void GLProgramPipeline::QueryInfoLogs(Report& report)
     report.Reset(std::move(log), hasErrors);
 }
 
-void GLProgramPipeline::QueryTexBufferNames(std::set<std::string>& outSamplerBufferNames, std::set<std::string>& outImageBufferNames) const
+void GLProgramPipeline::QueryTexBufferNames(set<string>& outSamplerBufferNames, set<string>& outImageBufferNames) const
 {
     outSamplerBufferNames.clear();
     outImageBufferNames.clear();

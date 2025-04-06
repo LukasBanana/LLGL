@@ -31,7 +31,7 @@ class Example_ShadowMapping : public ExampleBase
     const LLGL::Extent2D        shadowMapResolution     = { 256, 256 };
     LLGL::RenderTarget*         shadowMapRenderTarget   = nullptr;
 
-    std::vector<TriangleMesh>   meshes;
+    vector<TriangleMesh>        meshes;
 
     Gs::Vector3f                boxPosition             = { 0, 0, 0 };
     float                       viewDistanceToBox       = 1.25f;
@@ -84,7 +84,7 @@ private:
         vertexFormat.SetStride(sizeof(TexturedVertex));
 
         // Load 3D models
-        std::vector<TexturedVertex> vertices;
+        vector<TexturedVertex> vertices;
         meshes.push_back(LoadObjModel(vertices, "SimpleRoom.obj"));
         meshes.push_back(LoadObjModel(vertices, "WiredBox.obj"));
 

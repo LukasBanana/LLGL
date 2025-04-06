@@ -213,12 +213,12 @@ class Example_HelloGame : public ExampleBase
 
     struct TileRow
     {
-        std::vector<Tile> tiles;
+        vector<Tile> tiles;
     };
 
     struct TileGrid
     {
-        std::vector<TileRow>    rows;
+        vector<TileRow>    rows;
         int                     gridSize[2] = {}; // Bounding box in grid coordinates
 
         void Resize(int width, int height)
@@ -302,12 +302,12 @@ class Example_HelloGame : public ExampleBase
 
     struct Level
     {
-        std::string             name;
+        string                  name;
         LLGL::ColorRGBub        wallColors[2];
         TileGrid                floor;
         TileGrid                walls;
-        std::vector<Decor>      trees;
-        std::vector<Instance>   meshInstances;
+        vector<Decor>           trees;
+        vector<Instance>        meshInstances;
         InstanceRange           meshInstanceDirtyRange;
         InstanceRange           tileInstanceRange;
         InstanceRange           treeInstanceRange;
@@ -559,7 +559,7 @@ class Example_HelloGame : public ExampleBase
     {
         static constexpr std::uint32_t  cbufferNumInstances = 64u;      // This must match MAX_NUM_INSTANCES in ESSL shaders
 
-        std::vector<LLGL::Buffer*>      segments;                       // Buffer segments
+        vector<LLGL::Buffer*>      segments;                       // Buffer segments
         std::uint64_t                   sizePerSegment      = 0;        // Size (in bytes) per segment
         std::uint32_t                   capacity            = 0;        // Number of instances the instance buffer can hold
         std::uint64_t                   bufferLimit         = 0;
@@ -598,7 +598,7 @@ class Example_HelloGame : public ExampleBase
                 numInstances = std::max<std::uint32_t>(numInstances, cbufferNumInstances);
 
             // Check if number of instances will exceed limit
-            std::string bufferName;
+            string bufferName;
             const std::uint64_t bufferSize = sizeof(Instance) * numInstances;
 
             sizePerSegment = std::min<std::uint64_t>(bufferLimit, (isCbuffer ? sizeof(Instance) * cbufferNumInstances : bufferSize));
@@ -713,7 +713,7 @@ class Example_HelloGame : public ExampleBase
         }
     };
 
-    std::vector<Level>  levels;
+    vector<Level>  levels;
     int                 currentLevelIndex           = -1;
     Level*              currentLevel                = nullptr;
     Level*              nextLevel                   = nullptr;
@@ -795,7 +795,7 @@ private:
         };
 
         // Load 3D models
-        std::vector<TexturedVertex> vertices;
+        vector<TexturedVertex> vertices;
         mdlPlayer   = LoadObjModel(vertices, "HelloGame_Player.obj");
         mdlBlock    = LoadObjModel(vertices, "HelloGame_Block.obj");
         mdlTree     = LoadObjModel(vertices, "HelloGame_Tree.obj");
@@ -863,7 +863,7 @@ private:
         return vertexFormat;
     }
 
-    static std::string BytesToString(std::uint64_t val)
+    static string BytesToString(std::uint64_t val)
     {
         char buf[128] = { '\0' };
         if (val / 1024 / 1024 / 1024 > 0)
@@ -874,7 +874,7 @@ private:
             ::sprintf(buf, "%.2f KiB", static_cast<double>(val) / 1024.0);
         else
             ::sprintf(buf, "%" PRIu64 " Bytes", val);
-        return std::string(buf);
+        return string(buf);
     }
 
     void CreateShaders(const LLGL::VertexFormat& vertexFormat)
@@ -1115,7 +1115,7 @@ private:
         instance.color[3] = 1.0f;
     }
 
-    void GenerateTileInstances(TileGrid& grid, std::vector<Instance>& meshInstances, std::uint32_t& instanceCounter, float posY, const Gradient* gradient)
+    void GenerateTileInstances(TileGrid& grid, vector<Instance>& meshInstances, std::uint32_t& instanceCounter, float posY, const Gradient* gradient)
     {
         int gridPos[2];
 
@@ -1134,7 +1134,7 @@ private:
         }
     }
 
-    void GenerateDecorInstances(std::vector<Decor>& decors, std::vector<Instance>& meshInstances, std::uint32_t& instanceCounter, const Gradient* gradient)
+    void GenerateDecorInstances(vector<Decor>& decors, vector<Instance>& meshInstances, std::uint32_t& instanceCounter, const Gradient* gradient)
     {
         for (Decor& decor : decors)
         {
@@ -1174,11 +1174,11 @@ private:
     void LoadLevels()
     {
         // Load level files
-        const std::vector<std::string> levelsFileLines = ReadTextLines("HelloGame.levels.txt");
+        const vector<string> levelsFileLines = ReadTextLines("HelloGame.levels.txt");
 
-        std::string name;
-        std::string wallGradient;
-        std::vector<std::string> currentGrid;
+        string name;
+        string wallGradient;
+        vector<string> currentGrid;
         float timeOfDay = 0.0f;
 
         auto HexToInt = [](char c) -> int
@@ -1193,7 +1193,7 @@ private:
                 return -1;
         };
 
-        auto FloatFromString = [](const std::string& s) -> float
+        auto FloatFromString = [](const string& s) -> float
         {
             std::stringstream sstr(s);
             float val = 0.0f;
@@ -1255,9 +1255,9 @@ private:
 
             for_range(i, currentGrid.size())
             {
-                const std::string& row = currentGrid[i];
+                const string& row = currentGrid[i];
                 const std::size_t rowStart = row.find_first_of(".#@");
-                if (rowStart != std::string::npos)
+                if (rowStart != string::npos)
                 {
                     gridOffset[0] = std::min<int>(gridOffset[0], static_cast<int>(rowStart));
                     gridOffset[1] = std::min<int>(gridOffset[1], static_cast<int>(i));
@@ -1274,7 +1274,7 @@ private:
             initialTile.instanceIndex = 0;
 
             int gridPosY = newLevel.gridSize[1] + gridOffset[1];
-            for (const std::string& row : currentGrid)
+            for (const string& row : currentGrid)
             {
                 --gridPosY;
                 int gridPosX = -gridOffset[0];
@@ -1320,7 +1320,7 @@ private:
             name.clear();
         };
 
-        for (const std::string& line : levelsFileLines)
+        for (const string& line : levelsFileLines)
         {
             if (line.empty())
                 FlushLevelConstruct();

@@ -150,6 +150,7 @@ option(LLGL_BUILD_TESTS "Include test projects" OFF)
 option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
 option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
+option(LLGL_CUSTOM_ALLOCATOR "Custom STL Allocator" OFF)
 
 if(NOT LLGL_UWP_PLATFORM)
     if(EMSCRIPTEN)
@@ -544,6 +545,10 @@ if(LLGL_UNITY_BUILD)
     ADD_DEFINE(LLGL_UNITY_BUILD)
 endif()
 
+if(LLGL_CUSTOM_ALLOCATOR)
+    ADD_DEFINE(LLGL_CUSTOM_ALLOCATOR)
+endif()
+
 if(LLGL_WASM_PLATFORM)
     set(SUMMARY_TARGET_ARCH "wasm")
 elseif(LLGL_MOBILE_PLATFORM)
@@ -900,6 +905,10 @@ endif()
 
 if(LLGL_VK_ENABLE_SPIRV_REFLECT)
     message(STATUS "Including Submodule: SPIRV-Headers")
+endif()
+
+if(LLGL_CUSTOM_ALLOCATOR)
+    message(STATUS "STL allocator will have custom allocator. Is up to the user to implement a custom allocator 'llgl_allocator'")
 endif()
 
 if(NOT "${SUMMARY_FLAGS}" STREQUAL "")

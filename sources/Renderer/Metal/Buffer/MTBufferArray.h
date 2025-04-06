@@ -12,7 +12,7 @@
 #import <Metal/Metal.h>
 
 #include <LLGL/BufferArray.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -31,21 +31,21 @@ class MTBufferArray final : public BufferArray
         MTBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer IDs.
-        inline const std::vector<NativeType>& GetIDArray() const
+        inline const vector<NativeType>& GetIDArray() const
         {
             return idArray_;
         }
 
         // Returns the array of buffer offsets.
-        inline const std::vector<NSUInteger>& GetOffsets() const
+        inline const vector<NSUInteger>& GetOffsets() const
         {
             return offsets_;
         }
 
     private:
 
-        std::vector<NativeType> idArray_;
-        std::vector<NSUInteger> offsets_;
+        vector<NativeType> idArray_;
+        vector<NSUInteger> offsets_;
 
 };
 

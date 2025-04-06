@@ -57,7 +57,7 @@ void GL2XSharedContextVertexArray::Finalize()
         return;
 
     /* Validate attribute indices are unique and fill the entire range [0, N) */
-    std::vector<bool> locationsTaken;
+    vector<bool> locationsTaken;
     locationsTaken.resize(attribs_.size(), false);
 
     for (const GLVertexAttribute& attr : attribs_)

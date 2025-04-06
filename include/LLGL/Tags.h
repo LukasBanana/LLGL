@@ -21,7 +21,7 @@ namespace LLGL
 LLGL::ColorRGBAf color{ LLGL::UninitializeTag{} };
 
 // Explicitly uninitialized color elements in a container.
-std::vector<LLGL::ColorRGBAf> color;
+vector<LLGL::ColorRGBAf> color;
 color.resize(1024, LLGL::ColorRGBAf{ LLGL::UninitializeTag{} });
 \endcode
 */

@@ -10,7 +10,7 @@
 #include <LLGL/Platform/Platform.h>
 #include <chrono>
 #include <sstream>
-#include <map>
+#include <LLGL/Container/Map.h>
 
 
 class Example_Fonts : public ExampleBase
@@ -25,7 +25,7 @@ class Example_Fonts : public ExampleBase
     LLGL::Sampler*              linearSampler       = nullptr;
 
     struct Font;
-    std::vector<Font>           fonts;
+    vector<Font>                fonts;
     std::size_t                 selectedFontProfile = 1; // 0 = small fonts, 1 = large fonts
 
     // Vertex for a font glyph
@@ -80,7 +80,7 @@ class Example_Fonts : public ExampleBase
         DrawShadow          = (1 << 3),
     };
 
-    std::vector<Vertex> vertexBatch;                    // Dynamic array list for glyph batch
+    vector<Vertex> vertexBatch;                    // Dynamic array list for glyph batch
     std::uint32_t       currentBatchSize    = 0;        // Number of glyphs in the current batch
     std::uint32_t       numBatches          = 0;
     LLGL::Texture*      currentAtlasTexture = nullptr;
@@ -173,7 +173,7 @@ private:
     {
         Font font;
 
-        const std::string fontAtlasName = std::string(fontName) + ".atlas-" + std::to_string(fontSize);
+        const string fontAtlasName = string(fontName) + ".atlas-" + std::to_string(fontSize);
 
         // Load glyph texture as alpha-only texture (automatically interprets color input as alpha channel for transparency)
         font.atlasTexture = LoadTexture(
@@ -197,10 +197,10 @@ private:
         fonts.push_back(std::move(font));
     }
 
-    bool BuildGlyphSet(Font& font, const std::string& mapFilename, char firstChar, char lastChar, std::uint32_t atlasWidth, std::uint32_t atlasHeight)
+    bool BuildGlyphSet(Font& font, const string& mapFilename, char firstChar, char lastChar, std::uint32_t atlasWidth, std::uint32_t atlasHeight)
     {
         // Read glyph map from text file
-        std::vector<std::string> lines = ReadTextLines(mapFilename);
+        vector<string> lines = ReadTextLines(mapFilename);
         if (lines.empty())
         {
             LLGL::Log::Errorf("Failed to read font map: %s\n", mapFilename.c_str());
@@ -212,10 +212,10 @@ private:
             int x0, y0, x1, y1, offset[2], spacing;
         };
 
-        std::map<char, GlyphMapping> mappings;
+        map<char, GlyphMapping> mappings;
 
         // Read glyph mapping, i.e. bounding box within texture atlas, offset, and spacing, line by line
-        for (const std::string& ln : lines)
+        for (const string& ln : lines)
         {
             // Ignore empty lines and comments (staging with '#')
             if (ln.empty() || ln.front() == '#')
@@ -396,7 +396,7 @@ private:
         return DrawFontPrimary(font, text, x, y, color);
     }
 
-    int DrawFont(const Font& font, const std::string& text, int x, int y, const LLGL::ColorRGBAub& color, long flags = 0)
+    int DrawFont(const Font& font, const string& text, int x, int y, const LLGL::ColorRGBAub& color, long flags = 0)
     {
         return DrawFont(font, text.c_str(), x, y, color, flags);
     }
@@ -473,7 +473,7 @@ private:
 
         // Draw swap-chain configuration
         DrawFont(
-            fntA, std::string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
+            fntA, string("Vsync (Space bar): ") + (config.vsync ? "Enabled" : "Disabled"),
             paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
         paragraphPosY += fntA.fontHeight + textMargin;
@@ -488,7 +488,7 @@ private:
 
         // Draw rendering configuration
         DrawFont(
-            fntA, std::string("Draw Shadow (S): ") + (config.shadow ? "Enabled" : "Disabled"),
+            fntA, string("Draw Shadow (S): ") + (config.shadow ? "Enabled" : "Disabled"),
             paragraphMargin, paragraphPosY, colorYellow, fontFlags
         );
         paragraphPosY += fntA.fontHeight + textMargin;
@@ -501,7 +501,7 @@ private:
         );
 
         // Draw paragraph word by word
-        static const std::string paragraph =
+        static const string paragraph =
         (
             "This example demonstrates how to efficiently render text onto "
             "the screen using a font atlas and batched draw calls. "
@@ -511,14 +511,14 @@ private:
 
         int paragraphPosX = paragraphMargin;
         paragraphPosY += fntA.fontHeight + paragraphMargin;
-        std::string word;
+        string word;
 
         for (std::size_t start = 0, end = 0; start < paragraph.size(); start = end)
         {
             // Draw next word
             end = paragraph.find(' ', start);
 
-            if (end != std::string::npos)
+            if (end != string::npos)
             {
                 end++;
                 word = paragraph.substr(start, end - start);

@@ -15,7 +15,7 @@
 #include <LLGL/CommandBufferFlags.h>
 #include "../OpenGL.h"
 #include "../../../Core/Assertion.h"
-#include <stack>
+#include <LLGL/Container/Stack.h>
 #include <cstdint>
 
 
@@ -428,12 +428,12 @@ class GLStateManager
 
         bool                                frontFacingDirtyBit_        = false;
 
-        std::stack<CapabilityStackEntry>    capabilitiesStack_;
-        std::stack<BufferStackEntry>        bufferStack_;
-        std::stack<TextureStackEntry>       textureState_;
-        std::stack<FramebufferStackEntry>   framebufferStack_;
-        std::stack<RenderbufferStackEntry>  renderbufferStack_;
-        std::stack<ShaderProgramStackEntry> shaderProgramStack_;
+        stack<CapabilityStackEntry>    capabilitiesStack_;
+        stack<BufferStackEntry>        bufferStack_;
+        stack<TextureStackEntry>       textureState_;
+        stack<FramebufferStackEntry>   framebufferStack_;
+        stack<RenderbufferStackEntry>  renderbufferStack_;
+        stack<ShaderProgramStackEntry> shaderProgramStack_;
 
 };
 

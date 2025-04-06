@@ -11,8 +11,8 @@
 
 #include <LLGL/RenderTarget.h>
 #include "NullTexture.h"
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -46,12 +46,12 @@ class NullRenderTarget final : public RenderTarget
 
     private:
 
-        std::string                                 label_;
-        std::vector<NullTexture*>                   colorAttachments_;
-        std::vector<NullTexture*>                   resolveAttachments_;
-        NullTexture*                                depthStencilAttachment_     = nullptr;
-        Format                                      depthStencilFormat_         = Format::Undefined;
-        std::vector<std::unique_ptr<NullTexture>>   intermediateAttachments_;
+        string                                 label_;
+        vector<NullTexture*>                   colorAttachments_;
+        vector<NullTexture*>                   resolveAttachments_;
+        NullTexture*                           depthStencilAttachment_     = nullptr;
+        Format                                 depthStencilFormat_         = Format::Undefined;
+        vector<std::unique_ptr<NullTexture>>   intermediateAttachments_;
 
 };
 

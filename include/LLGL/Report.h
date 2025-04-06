@@ -11,7 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL
@@ -42,7 +42,7 @@ class LLGL_EXPORT Report final
         Report(const StringView& text, bool hasErrors);
 
         //! Constructs the report by taking the ownersip of the specified string.
-        Report(std::string&& text, bool hasErrors);
+        Report(string&& text, bool hasErrors);
 
         //! Copy constructor.
         Report(const Report& rhs);
@@ -83,7 +83,7 @@ class LLGL_EXPORT Report final
         void Reset(const StringView& text, bool hasErrors);
 
         //! Overrides the report by taking the ownership of the specified string.
-        void Reset(std::string&& text, bool hasErrors);
+        void Reset(string&& text, bool hasErrors);
 
         /**
         \brief Appends a formatted message to this report. The previous error flag remains unchanged.

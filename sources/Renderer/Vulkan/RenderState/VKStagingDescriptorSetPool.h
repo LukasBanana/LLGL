@@ -10,7 +10,7 @@
 
 
 #include "VKStagingDescriptorPool.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -42,10 +42,10 @@ class VKStagingDescriptorSetPool
 
     private:
 
-        VkDevice                                device_                 = VK_NULL_HANDLE;
-        std::vector<VKStagingDescriptorPool>    descriptorPools_;
-        std::size_t                             descriptorPoolIndex_    = 0;
-        std::uint32_t                           capacityLevel_          = 0;
+        VkDevice                        device_                 = VK_NULL_HANDLE;
+        vector<VKStagingDescriptorPool> descriptorPools_;
+        std::size_t                     descriptorPoolIndex_    = 0;
+        std::uint32_t                   capacityLevel_          = 0;
 
 };
 

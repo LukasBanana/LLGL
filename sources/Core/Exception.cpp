@@ -24,7 +24,7 @@ namespace LLGL
 {
 
 
-static void AddOptionalOrigin(std::string& s, const char* origin)
+static void AddOptionalOrigin(string& s, const char* origin)
 {
     if (origin != nullptr && *origin != '\0')
     {
@@ -38,7 +38,7 @@ static void AddOptionalOrigin(std::string& s, const char* origin)
 LLGL_EXPORT void Trap(Exception exception, const char* origin, const char* format, ...)
 {
     /* Build full report string */
-    std::string report;
+    string report;
     AddOptionalOrigin(report, origin);
 
     LLGL_STRING_PRINTF(report, format);
@@ -89,7 +89,7 @@ LLGL_EXPORT void TrapAssertionFailed(const char* origin, const char* expr, const
 {
     if (details != nullptr && *details != '\0')
     {
-        std::string detailsStr;
+        string detailsStr;
         LLGL_STRING_PRINTF(detailsStr, details);
 
         if (!detailsStr.empty())
@@ -161,7 +161,7 @@ LLGL_EXPORT void TrapParamExceededMaximum(const char* origin, const char* paramN
 [[noreturn]]
 LLGL_EXPORT void TrapReport(const char* origin, const Report& report)
 {
-    std::string text = report.GetText();
+    string text = report.GetText();
     for (std::size_t n = text.size(); n > 0 && (text[n - 1] == '\n' || text[n - 1] == '\r'); --n)
         text.pop_back();
     Trap(Exception::RuntimeError, origin, "%s", text.c_str());
@@ -171,7 +171,7 @@ LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, .
 {
     #if LLGL_EXCEPTIONS_SUPPORTED
 
-    std::string errorStr;
+    string errorStr;
     LLGL_STRING_PRINTF(errorStr, format);
     throw std::runtime_error(errorStr);
 
@@ -179,7 +179,7 @@ LLGL_EXPORT std::nullptr_t ReportException(Report* report, const char* format, .
 
     if (report != nullptr)
     {
-        std::string errorStr;
+        string errorStr;
         LLGL_STRING_PRINTF(errorStr, format);
         report->Errorf("%s\n", errorStr.c_str());
     }

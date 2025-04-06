@@ -96,7 +96,7 @@ bool D3D12Shader::GetStreamOutputDesc(D3D12_STREAM_OUTPUT_DESC& layoutDesc) cons
     return false;
 }
 
-HRESULT D3D12Shader::ReflectAndCacheConstantBuffers(const std::vector<D3D12ConstantBufferReflection>** outConstantBuffers)
+HRESULT D3D12Shader::ReflectAndCacheConstantBuffers(const vector<D3D12ConstantBufferReflection>** outConstantBuffers)
 {
     if (cbufferReflectionResult_ == S_FALSE)
     {
@@ -258,7 +258,7 @@ static bool IsProfileDxcAppropriate(const char* target)
 bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
 {
     /* Get source code */
-    std::string fileContent;
+    string fileContent;
     const char* sourceCode      = nullptr;
     SIZE_T      sourceLength    = 0;
     const char* sourceName      = nullptr;
@@ -302,7 +302,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         }
 
         /* Get DXC compiler arguments */
-        std::vector<LPCWSTR> compilerArgs = DXGetDxcCompilerArgs(flags);
+        vector<LPCWSTR> compilerArgs = DXGetDxcCompilerArgs(flags);
 
         compilerArgs.push_back(L"-E");
         const std::wstring entryWide = ToWideString(entry);
@@ -312,7 +312,7 @@ bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
         const std::wstring targetWide = ToWideString(target);
         compilerArgs.push_back(targetWide.c_str());
 
-        std::vector<std::wstring> definesWide;
+        vector<std::wstring> definesWide;
         if (defines != nullptr)
         {
             /* Append macro definitions as compiler arguments "-D<NAME>" or "-D<NAME>=<VALUE>" */
@@ -456,7 +456,7 @@ HRESULT D3D12Shader::ReflectShaderByteCode(ShaderReflection& reflection) const
     return S_OK;
 }
 
-HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferReflection>& outConstantBuffers) const
+HRESULT D3D12Shader::ReflectConstantBuffers(vector<D3D12ConstantBufferReflection>& outConstantBuffers) const
 {
     HRESULT hr = S_OK;
 
@@ -495,7 +495,7 @@ HRESULT D3D12Shader::ReflectConstantBuffers(std::vector<D3D12ConstantBufferRefle
             if (FAILED(hr))
                 return hr;
 
-            std::vector<D3D12ConstantReflection> fieldsInfo;
+            vector<D3D12ConstantReflection> fieldsInfo;
 
             for_range(fieldIndex, shaderBufferDesc.Variables)
             {

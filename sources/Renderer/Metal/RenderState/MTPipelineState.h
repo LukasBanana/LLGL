@@ -57,7 +57,7 @@ class MTPipelineState : public PipelineState
     protected:
 
         // Writes the report with the specified message and error bit.
-        void ResetReport(std::string&& text, bool hasErrors = false);
+        void ResetReport(string&& text, bool hasErrors = false);
 
         // Returns true if this PSO needs a constants cache.
         bool NeedsConstantsCache() const;

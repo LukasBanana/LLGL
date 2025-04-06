@@ -16,7 +16,7 @@
 #include "../Shader/VKShader.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <memory>
 
 
@@ -29,15 +29,15 @@ class VKPipelineLayout;
 
 struct VKLayoutBindingTable
 {
-    std::vector<VKLayoutBinding> heapBindings;
-    std::vector<VKLayoutBinding> dynamicBindings;
+    vector<VKLayoutBinding> heapBindings;
+    vector<VKLayoutBinding> dynamicBindings;
 };
 
 struct VKLayoutPermutationParameters
 {
-    std::vector<VkDescriptorSetLayoutBinding>   setLayoutHeapBindings;
-    std::vector<VkDescriptorSetLayoutBinding>   setLayoutDynamicBindings;
-    std::vector<VkPushConstantRange>            pushConstantRanges;
+    vector<VkDescriptorSetLayoutBinding>   setLayoutHeapBindings;
+    vector<VkDescriptorSetLayoutBinding>   setLayoutDynamicBindings;
+    vector<VkPushConstantRange>            pushConstantRanges;
     std::uint32_t                               numImmutableSamplers = 0;
 };
 
@@ -96,10 +96,10 @@ class VKPipelineLayoutPermutation
     private:
 
         void CreateBindingSetLayout(
-            VkDevice                                    device,
-            std::vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
-            std::vector<VKLayoutBinding>&               outBindings,
-            VKDescriptorSetLayout&                      outSetLayout
+            VkDevice                               device,
+            vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
+            vector<VKLayoutBinding>&               outBindings,
+            VKDescriptorSetLayout&                 outSetLayout
         );
 
         VKPtr<VkPipelineLayout> CreateVkPipelineLayout(VkDevice device, VkDescriptorSetLayout setLayoutImmutableSamplers) const;
@@ -119,7 +119,7 @@ class VKPipelineLayoutPermutation
         std::unique_ptr<VKDescriptorCache>  descriptorCache_;
 
         VKLayoutBindingTable                bindingTable_;
-        std::vector<VkPushConstantRange>    pushConstantRanges_;
+        vector<VkPushConstantRange>         pushConstantRanges_;
         std::uint32_t                       numImmutableSamplers_       = 0;
 
 };

@@ -247,7 +247,7 @@ void AndroidGLContext::LoadExternalContext(EGLContext context)
     if (eglGetConfigs(display_, nullptr, 0, &numConfigs) == EGL_FALSE)
         LLGL_TRAP("eglGetConfigs failed to retrieve number of configurations (%s)", EGLErrorToString());
 
-    std::vector<EGLConfig> configs;
+    vector<EGLConfig> configs;
     configs.resize(numConfigs);
     if (eglGetConfigs(display_, configs.data(), static_cast<EGLint>(configs.size()), &numConfigs) == EGL_FALSE)
         LLGL_TRAP("eglGetConfigs failed to retrieve display configurations (%s)", EGLErrorToString());

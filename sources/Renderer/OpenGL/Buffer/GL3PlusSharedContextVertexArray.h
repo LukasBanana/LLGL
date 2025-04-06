@@ -13,7 +13,7 @@
 #include <LLGL/Container/ArrayView.h>
 #include "GLVertexAttribute.h"
 #include "GLVertexArrayObject.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -57,9 +57,9 @@ class GL3PlusSharedContextVertexArray
 
     private:
 
-        std::vector<GLVertexAttribute>  attribs_;
-        std::vector<GLContextVAO>       contextDependentVAOs_;
-        std::string                     debugName_;
+        vector<GLVertexAttribute>  attribs_;
+        vector<GLContextVAO>       contextDependentVAOs_;
+        string                     debugName_;
 
 };
 

@@ -15,7 +15,7 @@
 #include <LLGL/FragmentAttribute.h>
 #include <LLGL/Deprecated.h>
 #include <cstddef>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -239,7 +239,7 @@ struct VertexShaderAttributes
     In other words, a shader must not declare any vertex attributes that are not contained in the currently bound vertex buffer.
     \see BufferDescriptor::vertexAttribs
     */
-    std::vector<VertexAttribute> inputAttribs;
+    vector<VertexAttribute> inputAttribs;
 
     /**
     \brief Vertex (or geometry or tessellation-evaluation) shader stream-output attributes.
@@ -254,7 +254,7 @@ struct VertexShaderAttributes
     \see RenderingFeatures::hasStreamOutputs
     \see CommandBuffer::BeginStreamOutput
     */
-    std::vector<VertexAttribute> outputAttribs;
+    vector<VertexAttribute> outputAttribs;
 };
 
 /**
@@ -265,7 +265,7 @@ struct VertexShaderAttributes
 struct FragmentShaderAttributes
 {
     //! Fragment shader output attributes.
-    std::vector<FragmentAttribute> outputAttribs;
+    vector<FragmentAttribute> outputAttribs;
 };
 
 /**

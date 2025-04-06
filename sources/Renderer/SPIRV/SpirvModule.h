@@ -11,7 +11,7 @@
 
 #include "SpirvIterator.h"
 #include <LLGL/Container/ArrayView.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -25,7 +25,7 @@ class SpirvModule
     public:
 
         using value_type        = std::uint32_t;
-        using size_type         = typename std::vector<value_type>::size_type;
+        using size_type         = typename vector<value_type>::size_type;
         using iterator          = SpirvForwardIterator;
         using const_iterator    = SpirvConstForwardIterator;
 
@@ -35,7 +35,7 @@ class SpirvModule
         SpirvModule(SpirvModule&&) = default;
         SpirvModule& operator = (SpirvModule&&) = default;
 
-        SpirvModule(std::vector<value_type>&& data);
+        SpirvModule(vector<value_type>&& data);
         SpirvModule(const void* data, size_type size);
         SpirvModule(const ArrayView<value_type>& words);
 
@@ -48,13 +48,13 @@ class SpirvModule
         std::uint32_t WordOffset(const const_iterator& iter) const;
 
         // Returns the container of 32-bit words.
-        inline std::vector<value_type>& Words()
+        inline vector<value_type>& Words()
         {
             return words_;
         }
 
         // Returns the container of 32-bit words.
-        inline const std::vector<value_type>& Words() const
+        inline const vector<value_type>& Words() const
         {
             return words_;
         }
@@ -93,7 +93,7 @@ class SpirvModule
 
     private:
 
-        std::vector<value_type> words_;
+        vector<value_type> words_;
 
 };
 

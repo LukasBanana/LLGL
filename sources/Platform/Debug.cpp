@@ -18,7 +18,7 @@ namespace LLGL
 
 LLGL_EXPORT void DebugPrintf(const char* format, ...)
 {
-    std::string str;
+    string str;
     LLGL_STRING_PRINTF(str, format);
     DebugPuts(str.c_str());
 }

@@ -142,11 +142,11 @@ class VKRenderTarget final : public RenderTarget
         VKRenderPass                    defaultRenderPass_;
         VKRenderPass                    secondaryRenderPass_;
 
-        std::vector<AttachmentView>     attachmentViews_;
+        vector<AttachmentView>          attachmentViews_;
 
         VKDepthStencilBuffer            depthStencilBuffer_;
         Format                          depthStencilFormat_     = Format::Undefined;    // Format either from internal depth-stencil buffer or attachmed texture.
-        std::vector<VKColorBufferPtr>   colorBuffers_;                                  // Internal color buffers for multi-sampling
+        vector<VKColorBufferPtr>        colorBuffers_;                                  // Internal color buffers for multi-sampling
 
         std::uint32_t                   numColorAttachments_    = 0;
         VkSampleCountFlagBits           sampleCountBits_        = VK_SAMPLE_COUNT_1_BIT;

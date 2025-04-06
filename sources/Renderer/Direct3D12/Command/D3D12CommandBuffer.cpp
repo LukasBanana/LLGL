@@ -816,9 +816,9 @@ void D3D12CommandBuffer::SetUniforms(std::uint32_t first, const void* data, std:
     if (boundPipelineLayout_ == nullptr || boundPipelineState_ == nullptr)
         return /*E_POINTER*/;
 
-    const std::uint32_t                             dataSizeInWords = dataSize / 4;
-    const std::uint32_t                             maxNumUniforms  = boundPipelineLayout_->GetNumUniforms();
-    const std::vector<D3D12RootConstantLocation>&   rootConstantMap = boundPipelineState_->GetRootConstantMap();
+    const std::uint32_t                         dataSizeInWords = dataSize / 4;
+    const std::uint32_t                         maxNumUniforms  = boundPipelineLayout_->GetNumUniforms();
+    const vector<D3D12RootConstantLocation>&    rootConstantMap = boundPipelineState_->GetRootConstantMap();
 
     for (auto words = reinterpret_cast<const UINT*>(data), wordsEnd = words + dataSizeInWords; words != wordsEnd; ++first)
     {

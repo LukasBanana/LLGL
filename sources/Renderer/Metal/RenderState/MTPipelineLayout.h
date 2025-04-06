@@ -16,7 +16,7 @@
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/Container/ArrayView.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -39,17 +39,17 @@ class MTPipelineLayout final : public PipelineLayout
         void SetStaticFragmentSamplers(id<MTLRenderCommandEncoder> renderEncoder) const;
         void SetStaticKernelSamplers(id<MTLComputeCommandEncoder> computeEncoder) const;
 
-        inline const std::vector<BindingDescriptor>& GetHeapBindings() const
+        inline const vector<BindingDescriptor>& GetHeapBindings() const
         {
             return heapBindings_;
         }
 
-        inline const std::vector<MTDynamicResourceLayout>& GetDynamicBindings() const
+        inline const vector<MTDynamicResourceLayout>& GetDynamicBindings() const
         {
             return dynamicBindings_;
         }
 
-        inline const std::vector<UniformDescriptor>& GetUniforms() const
+        inline const vector<UniformDescriptor>& GetUniforms() const
         {
             return uniforms_;
         }
@@ -71,12 +71,12 @@ class MTPipelineLayout final : public PipelineLayout
 
     private:
 
-        std::vector<BindingDescriptor>          heapBindings_;
-        std::vector<MTDynamicResourceLayout>    dynamicBindings_;
-        std::vector<UniformDescriptor>          uniforms_;
+        vector<BindingDescriptor>          heapBindings_;
+        vector<MTDynamicResourceLayout>    dynamicBindings_;
+        vector<UniformDescriptor>          uniforms_;
 
-        std::vector<id<MTLSamplerState>>        staticSamplerStates_;
-        std::vector<NSUInteger>                 staticSamplerIndices_;
+        vector<id<MTLSamplerState>>        staticSamplerStates_;
+        vector<NSUInteger>                 staticSamplerIndices_;
         std::uint32_t                           numStaticSamplerPerStage_[MTShaderStage_Count];
         std::uint32_t                           numStaticSamplers_                              = 0;
 

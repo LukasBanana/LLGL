@@ -16,7 +16,7 @@
 #include "../../../Core/Assertion.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <algorithm>
 #include <LLGL/Utils/ForRange.h>
 

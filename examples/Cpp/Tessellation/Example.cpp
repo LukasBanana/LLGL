@@ -97,7 +97,7 @@ public:
 
         // Load cube model with minor pre-tessellation.
         // A cube with only 8 vertices would only allow a rough tessellation depending on the displacement map.
-        std::vector<TexturedVertex> texuturedVertices;
+        vector<TexturedVertex> texuturedVertices;
         model = LoadObjModel(texuturedVertices, "UVCube2x.obj", 4);
 
         // Create buffers for a simple 3D cube model

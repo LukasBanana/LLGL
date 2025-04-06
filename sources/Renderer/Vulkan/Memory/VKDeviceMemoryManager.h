@@ -15,7 +15,7 @@
 #include "../../ContainerTypes.h"
 #include "VKDeviceMemory.h"
 #include "VKDeviceMemoryRegion.h"
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <memory>
 
 
@@ -66,7 +66,7 @@ class VKDeviceMemoryManager
 
         #ifdef LLGL_DEBUG
 
-        void PrintBlocks(std::ostream& s, const std::string& title = "") const;
+        void PrintBlocks(std::ostream& s, const string& title = "") const;
 
         #endif
 

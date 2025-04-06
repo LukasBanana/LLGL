@@ -46,7 +46,7 @@ namespace LLGL
     LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, UTF8String(FEATURE) + " not supported")
 
 #define LLGL_DBG_LABEL(DESC) \
-    ((DESC).debugName != nullptr ? std::string{ (DESC).debugName } : std::string{})
+    ((DESC).debugName != nullptr ? string{ (DESC).debugName } : string{})
 
 #define LLGL_DBG_CAST(TYPE, OBJ)                                                                \
     (                                                                                           \

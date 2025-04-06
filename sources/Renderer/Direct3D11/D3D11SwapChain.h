@@ -83,8 +83,8 @@ class D3D11SwapChain final : public SwapChain
 
         void CreateResolutionDependentResources();
 
-        void StoreDebugNames(std::string (&debugNames)[5]);
-        void RestoreDebugNames(const std::string (&debugNames)[5]);
+        void StoreDebugNames(string (&debugNames)[5]);
+        void RestoreDebugNames(const string (&debugNames)[5]);
 
     private:
 

@@ -14,7 +14,7 @@
 #include "../Texture/VKSampler.h"
 #include "../../CheckedCast.h"
 #include <LLGL/Utils/ForRange.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <algorithm>
 
 
@@ -271,10 +271,10 @@ static bool AreLayoutBindingsSorted(const ArrayView<VKLayoutBinding>& bindings)
 void VKDescriptorCache::BuildCopyDescriptors(ArrayView<VKLayoutBinding> bindings)
 {
     /* Sort list by binding slots to build array of consecutive descriptors for each entry in the copy descriptor array */
-    std::vector<VKLayoutBinding> sortedBindings;
+    vector<VKLayoutBinding> sortedBindings;
     if (!AreLayoutBindingsSorted(bindings))
     {
-        sortedBindings = std::vector<VKLayoutBinding>(bindings.begin(), bindings.end());
+        sortedBindings = vector<VKLayoutBinding>(bindings.begin(), bindings.end());
         std::sort(
             sortedBindings.begin(), sortedBindings.end(),
             [](const VKLayoutBinding& lhs, const VKLayoutBinding& rhs) -> bool

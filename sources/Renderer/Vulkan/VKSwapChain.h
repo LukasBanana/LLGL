@@ -18,7 +18,7 @@
 #include "Texture/VKDepthStencilBuffer.h"
 #include "Texture/VKColorBuffer.h"
 #include <memory>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -114,8 +114,8 @@ class VKSwapChain final : public SwapChain
 
         void CreateResolutionDependentResources(const Extent2D& resolution);
 
-        VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
-        VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const;
+        VkSurfaceFormatKHR PickSwapSurfaceFormat(const vector<VkSurfaceFormatKHR>& surfaceFormats) const;
+        VkPresentModeKHR PickSwapPresentMode(const vector<VkPresentModeKHR>& presentModes, std::uint32_t vsyncInterval) const;
         VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, const Extent2D& resolution) const;
         VkFormat PickDepthStencilFormat(int depthBits, int stencilBits) const;
         std::uint32_t PickSwapChainSize(std::uint32_t swapBuffers) const;
@@ -140,9 +140,9 @@ class VKSwapChain final : public SwapChain
         VkSurfaceFormatKHR                  swapChainFormat_                            = {};
         std::uint32_t                       swapChainSamples_                           = 1;
         VkExtent2D                          swapChainExtent_                            = { 0, 0 };
-        std::vector<VkImage>                swapChainImages_;
-        std::vector<VKPtr<VkImageView>>     swapChainImageViews_;
-        std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
+        vector<VkImage>                     swapChainImages_;
+        vector<VKPtr<VkImageView>>          swapChainImageViews_;
+        vector<VKPtr<VkFramebuffer>>        swapChainFramebuffers_;
 
         std::uint32_t                       numPreferredColorBuffers_                   = 2;
         std::uint32_t                       numColorBuffers_                            = 0;
@@ -153,7 +153,7 @@ class VKSwapChain final : public SwapChain
         VKRenderPass                        secondaryRenderPass_;
         VkFormat                            depthStencilFormat_                         = VK_FORMAT_UNDEFINED;
         VKDepthStencilBuffer                depthStencilBuffer_;
-        std::vector<VKColorBuffer>          colorBuffers_;
+        vector<VKColorBuffer>               colorBuffers_;
 
         VkQueue                             graphicsQueue_                              = VK_NULL_HANDLE;
         VkQueue                             presentQueue_                               = VK_NULL_HANDLE;

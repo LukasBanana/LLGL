@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Container/SmallVector.h>
-#include <string>
+#include <LLGL/Container/String.h>
 #include <d3d12.h>
 
 

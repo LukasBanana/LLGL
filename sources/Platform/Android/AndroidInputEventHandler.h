@@ -10,7 +10,7 @@
 
 
 #include <android_native_app_glue.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <mutex>
 #include <cstdint>
 #include <float.h>
@@ -45,7 +45,7 @@ class AndroidInputEventHandler
     private:
 
         std::mutex                  lock_;
-        std::vector<AndroidCanvas*> canvases_;
+        vector<AndroidCanvas*> canvases_;
         float                       prevMotionPos_[2] = { -FLT_MAX, -FLT_MAX };
 
 };

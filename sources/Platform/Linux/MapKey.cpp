@@ -6,7 +6,7 @@
  */
 
 #include "MapKey.h"
-#include <map>
+#include <LLGL/Container/Map.h>
 #include <X11/Xutil.h>
 
 
@@ -16,7 +16,7 @@ namespace LLGL
 
 #define KEYPAIR(KEYSYM, KEY) { KEYSYM, Key::KEY }
 
-static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
+static map<KeySym, Key> GenerateLinuxKeyCodeMap()
 {
     return
     {
@@ -145,7 +145,7 @@ static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
     };
 };
 
-static std::map<KeySym, Key> g_linuxKeyCodeMap = GenerateLinuxKeyCodeMap();
+static map<KeySym, Key> g_linuxKeyCodeMap = GenerateLinuxKeyCodeMap();
 
 #undef KEYPAIR
 

@@ -11,9 +11,10 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <Gauss/Vector3.h>
 
+using LLGL::vector;
 
 // Perlin noise generator class.
 class PerlinNoise
@@ -32,24 +33,24 @@ class PerlinNoise
 
         // Generates a perlin noise pattern into the output buffer.
         void GenerateBuffer(
-            std::vector<float>& buffer,
-            std::uint32_t       width,
-            std::uint32_t       height,
-            std::uint32_t       depth,
-            std::uint32_t       frequency,
-            std::uint32_t       octaves     = 5,
-            float               persistence = 0.5f
+            vector<float>&  buffer,
+            std::uint32_t   width,
+            std::uint32_t   height,
+            std::uint32_t   depth,
+            std::uint32_t   frequency,
+            std::uint32_t   octaves     = 5,
+            float           persistence = 0.5f
         );
 
         // Generates a perlin noise pattern into the output buffer.
         void GenerateBuffer(
-            std::vector<std::uint8_t>&  buffer,
-            std::uint32_t               width,
-            std::uint32_t               height,
-            std::uint32_t               depth,
-            std::uint32_t               frequency,
-            std::uint32_t               octaves     = 5,
-            float                       persistence = 0.5f
+            vector<std::uint8_t>&   buffer,
+            std::uint32_t           width,
+            std::uint32_t           height,
+            std::uint32_t           depth,
+            std::uint32_t           frequency,
+            std::uint32_t           octaves     = 5,
+            float                   persistence = 0.5f
         );
 
     private:

@@ -12,7 +12,7 @@
 #if defined(LLGL_OS_WASM)
 #   include <EGL/egl.h>
 #endif
-#include <set>
+#include <LLGL/Container/Set.h>
 
 
 namespace LLGL
@@ -21,8 +21,8 @@ namespace LLGL
 
 // Global member to store if the extension have already been loaded
 static bool                     g_WebGLExtensionsLoaded = false;
-static std::set<const char*>    g_supportedWebGLExtensions;
-static std::set<const char*>    g_loadedWebGLExtensions;
+static set<const char*>    g_supportedWebGLExtensions;
+static set<const char*>    g_loadedWebGLExtensions;
 
 static void EnableWebGLExtension(GLExt ext, const char* name)
 {
@@ -111,12 +111,12 @@ bool AreOpenGLExtensionsLoaded()
     return g_WebGLExtensionsLoaded;
 }
 
-const std::set<const char*>& GetSupportedOpenGLExtensions()
+const set<const char*>& GetSupportedOpenGLExtensions()
 {
     return g_supportedWebGLExtensions;
 }
 
-const std::set<const char*>& GetLoadedOpenGLExtensions()
+const set<const char*>& GetLoadedOpenGLExtensions()
 {
     return g_loadedWebGLExtensions;
 }

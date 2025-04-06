@@ -29,7 +29,7 @@ VKDescriptorSetLayout::VKDescriptorSetLayout(VKDescriptorSetLayout&& rhs) noexce
 {
 }
 
-void VKDescriptorSetLayout::GetLayoutBindings(std::vector<VKLayoutBinding>& outBindings) const
+void VKDescriptorSetLayout::GetLayoutBindings(vector<VKLayoutBinding>& outBindings) const
 {
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
     const std::size_t numBindings = setLayoutBindings_.size();
@@ -51,7 +51,7 @@ void VKDescriptorSetLayout::GetLayoutBindings(std::vector<VKLayoutBinding>& outB
     }
 }
 
-void VKDescriptorSetLayout::Initialize(VkDevice device, std::vector<VkDescriptorSetLayoutBinding>&& setLayoutBindings)
+void VKDescriptorSetLayout::Initialize(VkDevice device, vector<VkDescriptorSetLayoutBinding>&& setLayoutBindings)
 {
     setLayoutBindings_ = std::move(setLayoutBindings);
     SanitizeBindingSlots();
@@ -109,7 +109,7 @@ int VKDescriptorSetLayout::CompareSWO(const VKDescriptorSetLayout& lhs, const VK
     return VKDescriptorSetLayout::CompareSWO(lhs, rhs.setLayoutBindings_);
 }
 
-int VKDescriptorSetLayout::CompareSWO(const VKDescriptorSetLayout& lhs, const std::vector<VkDescriptorSetLayoutBinding>& rhs)
+int VKDescriptorSetLayout::CompareSWO(const VKDescriptorSetLayout& lhs, const vector<VkDescriptorSetLayoutBinding>& rhs)
 {
     LLGL_COMPARE_SEPARATE_MEMBERS_SWO(lhs.setLayoutBindings_.size(), rhs.size());
 

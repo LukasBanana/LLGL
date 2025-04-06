@@ -58,7 +58,7 @@ void D3D11VertexShader::BuildInputLayout(ID3D11Device* device, UINT numVertexAtt
     LLGL_ASSERT(GetType() == ShaderType::Vertex, "cannot build input layout for non-vertex-shader");
 
     /* Setup input element descriptors */
-    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+    vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
     inputElements.resize(numVertexAttribs);
 
     for_range(i, numVertexAttribs)

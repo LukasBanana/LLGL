@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/Report.h>
-#include <string>
+#include <LLGL/Container/String.h>
 #include <stdarg.h>
 #include "StringUtils.h"
 
@@ -17,7 +17,7 @@ namespace LLGL
 
 struct Report::Pimpl
 {
-    std::string text;
+    string text;
     bool        hasErrors;
 };
 
@@ -32,11 +32,11 @@ Report::Report(const char* text, bool hasErrors) :
 }
 
 Report::Report(const StringView& text, bool hasErrors) :
-    pimpl_ { new Report::Pimpl{ std::string(text.begin(), text.end()), hasErrors } }
+    pimpl_ { new Report::Pimpl{ string(text.begin(), text.end()), hasErrors } }
 {
 }
 
-Report::Report(std::string&& text, bool hasErrors) :
+Report::Report(string&& text, bool hasErrors) :
     pimpl_ { new Report::Pimpl{ std::move(text), hasErrors } }
 {
 }
@@ -82,14 +82,14 @@ void Report::Reset(const StringView& text, bool hasErrors)
 {
     if (pimpl_ != nullptr)
     {
-        pimpl_->text        = std::string(text.begin(), text.end());
+        pimpl_->text        = string(text.begin(), text.end());
         pimpl_->hasErrors   = hasErrors;
     }
     else
-        pimpl_ = new Report::Pimpl{ std::string(text.begin(), text.end()), hasErrors };
+        pimpl_ = new Report::Pimpl{ string(text.begin(), text.end()), hasErrors };
 }
 
-void Report::Reset(std::string&& text, bool hasErrors)
+void Report::Reset(string&& text, bool hasErrors)
 {
     if (pimpl_ != nullptr)
     {
