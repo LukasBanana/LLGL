@@ -150,6 +150,7 @@ option(LLGL_BUILD_TESTS "Include test projects" OFF)
 option(LLGL_BUILD_EXAMPLES "Include example projects" OFF)
 
 option(LLGL_BUILD_RENDERER_NULL "Include Null renderer project" ON)
+option(LLGL_CUSTOM_ALLOCATOR "Custom STL Allocator" OFF)
 
 if(NOT LLGL_UWP_PLATFORM)
     if(EMSCRIPTEN)
@@ -542,6 +543,10 @@ endif()
 
 if(LLGL_UNITY_BUILD)
     ADD_DEFINE(LLGL_UNITY_BUILD)
+endif()
+
+if(LLGL_CUSTOM_ALLOCATOR)
+    ADD_DEFINE(LLGL_CUSTOM_ALLOCATOR)
 endif()
 
 if(LLGL_WASM_PLATFORM)
