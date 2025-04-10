@@ -43,6 +43,7 @@ void VKDescriptorSetLayout::GetLayoutBindings(std::vector<VKLayoutBinding>& outB
                 {
                     /*dstBinding:*/         setLayoutBindings_[i].binding,
                     /*dstArrayElement:*/    arrayElement,
+                    /*barrierSlot:*/        ~0u,
                     /*descriptorType:*/     setLayoutBindings_[i].descriptorType,
                     /*stageFlags:*/         setLayoutBindings_[i].stageFlags
                 }

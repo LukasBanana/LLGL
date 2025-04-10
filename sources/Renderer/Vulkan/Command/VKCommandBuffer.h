@@ -32,6 +32,7 @@ class VKRenderPass;
 class VKQueryHeap;
 class VKSwapChain;
 class VKPipelineState;
+class VKPipelineBarrier;
 
 class VKCommandBuffer final : public CommandBuffer
 {
@@ -120,6 +121,7 @@ class VKCommandBuffer final : public CommandBuffer
         );
 
         void FlushDescriptorCache();
+        void SubmitAutoPipelineBarrier();
 
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();
@@ -199,6 +201,7 @@ class VKCommandBuffer final : public CommandBuffer
         VkPipelineBindPoint             pipelineBindPoint_                              = VK_PIPELINE_BIND_POINT_MAX_ENUM;
         const VKLayoutBindingTable*     boundBindingTable_                              = nullptr;
         VKPipelineState*                boundPipelineState_                             = nullptr;
+        VKPipelineBarrier*              boundPipelineBarrier_                           = nullptr;
 
         std::uint32_t                   maxDrawIndirectCount_                           = 0;
 
