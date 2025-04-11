@@ -50,7 +50,7 @@ LLGL_C_EXPORT void llglFlushDebuggerProfile(LLGLRenderingDebugger debugger, LLGL
     LLGL_ASSERT_PTR(outFrameProfile);
 
     static thread_local FrameProfile internalFrameProfile;
-    static thread_local std::vector<LLGLProfileTimeRecord> internalProfileTimeRecords;
+    static thread_local vector<LLGLProfileTimeRecord> internalProfileTimeRecords;
     LLGL_PTR(RenderingDebugger, debugger)->FlushProfile(&internalFrameProfile);
 
     static_assert(

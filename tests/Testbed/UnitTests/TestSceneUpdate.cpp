@@ -132,7 +132,7 @@ DEF_TEST( SceneUpdate )
     }
 
     // Match entire color buffer and create delta heat map
-    const std::string colorBufferName = "SceneUpdate_Frame" + std::to_string(frame);
+    const string colorBufferName = "SceneUpdate_Frame" + std::to_string(frame);
 
     SaveCapture(readbackTex, colorBufferName);
 

@@ -11,9 +11,9 @@
 #include "C99EventListenerContainer.h"
 #include "../sources/Core/CoreUtils.h"
 #include "../sources/Core/Exception.h"
-#include <vector>
-#include <string>
 #include <string.h>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 #include <algorithm>
 
 
@@ -103,7 +103,7 @@ using WindowEventListenerContainer = EventListenerContainer<InternalWindowEventL
 
 #undef LLGL_CALLBACK_WRAPPER
 
-static std::vector<std::unique_ptr<Window>> g_Windows;
+static vector<std::unique_ptr<Window>> g_Windows;
 static WindowEventListenerContainer         g_WindowEventListenerContainer;
 
 static void ConvertWindowDesc(WindowDescriptor& dst, const LLGLWindowDescriptor& src)
@@ -118,7 +118,7 @@ static void ConvertWindowDesc(WindowDescriptor& dst, const LLGLWindowDescriptor&
 
 static void ConvertWindowDesc(LLGLWindowDescriptor& dst, const WindowDescriptor& src)
 {
-    static thread_local std::string internalTitle;
+    static thread_local string internalTitle;
     internalTitle = src.title.c_str();
     dst.title               = internalTitle.c_str();
     dst.position            = { src.position.x, src.position.y };

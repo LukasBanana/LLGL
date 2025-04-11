@@ -9,7 +9,7 @@
 #include "Ext/GLExtensions.h"
 #include "Ext/GLExtensionRegistry.h"
 #include "RenderState/GLStateManager.h"
-#include <string>
+#include <LLGL/Container/String.h>
 #include <cstring> // std::strlen
 
 
@@ -48,7 +48,7 @@ void GLSetObjectLabelSubscript(GLenum identifier, GLuint name, const char* label
     if (label != nullptr)
     {
         /* Append subscript to label */
-        std::string labelWithSubscript = label;
+        string labelWithSubscript = label;
 
         labelWithSubscript += '[';
         labelWithSubscript += subscript;
@@ -65,7 +65,7 @@ void GLSetObjectLabelIndexed(GLenum identifier, GLuint name, const char* label, 
     if (label != nullptr)
     {
         /* Append subscript to label */
-        std::string subscript = std::to_string(index);
+        string subscript = std::to_string(index);
         GLSetObjectLabelSubscript(identifier, name, label, subscript.c_str());
     }
     else

@@ -11,7 +11,7 @@
 
 #include <LLGL/SwapChain.h>
 #include "RenderState/DbgRenderPass.h"
-#include <string>
+#include <LLGL/Container/String.h>
 #include <memory>
 #include <functional>
 
@@ -52,7 +52,7 @@ class DbgSwapChain final : public SwapChain
 
         SwapChain&                  instance;
         const SwapChainDescriptor   desc;
-        std::string                 label;
+        string                      label;
 
     private:
 

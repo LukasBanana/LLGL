@@ -34,7 +34,7 @@ class Example_PBR : public ExampleBase
     LLGL::ResourceHeap*         resourceHeapMeshes  = nullptr;
     LLGL::ResourceHeap*         resourceHeapSkybox  = nullptr;
 
-    std::vector<TriangleMesh>   meshes;
+    vector<TriangleMesh>   meshes;
 
     struct Settings
     {
@@ -96,7 +96,7 @@ private:
         vertexFormat.AppendAttribute({ "texCoord",  LLGL::Format::RG32Float  });
 
         // Load 3D models
-        std::vector<TexturedVertex> vertices;
+        vector<TexturedVertex> vertices;
         meshes.push_back(LoadObjModel(vertices, "UVSphere.obj"));
         meshes.push_back(LoadObjModel(vertices, "WiredBox.obj"));
 
@@ -203,7 +203,7 @@ private:
         pipelineMeshes = renderer->CreatePipelineState(pipelineDescMeshes);
     }
 
-    bool LoadImageSlice(const std::string& filename, std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
+    bool LoadImageSlice(const string& filename, std::uint32_t& texWidth, std::uint32_t& texHeight, vector<std::uint8_t>& imageData)
     {
         // Print information about current texture
         LLGL::Log::Printf("load image: \"%s\"\n", filename.c_str());
@@ -235,7 +235,7 @@ private:
         return true;
     }
 
-    void FillImageSlice(std::uint32_t& texWidth, std::uint32_t& texHeight, std::vector<std::uint8_t>& imageData)
+    void FillImageSlice(std::uint32_t& texWidth, std::uint32_t& texHeight, vector<std::uint8_t>& imageData)
     {
         // Initialize texture size with default value if necessary
         if (texWidth == 0)
@@ -252,14 +252,14 @@ private:
     }
 
     // Loads multiple images into one texture array or cube-map array
-    LLGL::Texture* LoadTextureArray(const LLGL::TextureType texType, const std::initializer_list<std::string>& texFilenames)
+    LLGL::Texture* LoadTextureArray(const LLGL::TextureType texType, const std::initializer_list<string>& texFilenames)
     {
         // Load image data
         std::uint32_t texWidth = 0, texHeight = 0;
-        std::vector<std::uint8_t> imageData;
+        vector<std::uint8_t> imageData;
         std::uint32_t numImageSlices = 0;
 
-        for (const std::string& filename : texFilenames)
+        for (const string& filename : texFilenames)
         {
             if (filename.empty())
             {
@@ -379,7 +379,7 @@ private:
         resourceHeapSkybox->SetDebugName("resourceHeapSkybox");
 
         // Create resource heap for meshes
-        std::vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes =
+        vector<LLGL::ResourceViewDescriptor> resourceViewsMeshes =
         {
             constantBuffer,
             linearSampler,

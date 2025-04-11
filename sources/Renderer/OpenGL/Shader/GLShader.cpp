@@ -15,7 +15,7 @@
 #include "../../../Core/Exception.h"
 #include "../../../Core/ReportUtils.h"
 #include <LLGL/Utils/ForRange.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <stdexcept>
 #include <algorithm>
 
@@ -168,7 +168,7 @@ void GLShader::PatchShaderSourceWithOptions(
     }
 }
 
-void GLShader::ReportStatusAndLog(bool status, const std::string& log)
+void GLShader::ReportStatusAndLog(bool status, const string& log)
 {
     ResetReportWithNewline(report_, log.c_str(), !status);
 }

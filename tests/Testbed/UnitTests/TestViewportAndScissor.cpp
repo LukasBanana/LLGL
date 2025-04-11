@@ -210,7 +210,7 @@ DEF_TEST( ViewportAndScissor )
 
     for_range(i, psoCount)
     {
-        const std::string colorBufferName = "ViewportAndScissor_" + std::string(frameNames[i]);
+        const string colorBufferName = "ViewportAndScissor_" + string(frameNames[i]);
 
         // Evaluate at fixed points
         const bool wasScissorEnabled = (psoList[i] != psoNoScissor);

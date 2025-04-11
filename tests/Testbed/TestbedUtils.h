@@ -9,12 +9,12 @@
 #define LLGL_TESTBED_UTILS_H
 
 
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 // Returns true if the specified string ends with the specified ending.
 bool StringEndsWith(const char* str, const char* end);
-bool StringEndsWith(const std::string& str, const std::string& end);
+bool StringEndsWith(const string& str, const string& end);
 
 
 #endif

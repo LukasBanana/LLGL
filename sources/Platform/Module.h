@@ -13,7 +13,7 @@
 #include <LLGL/NonCopyable.h>
 #include <LLGL/Report.h>
 #include <memory>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 namespace LLGL
@@ -34,7 +34,7 @@ class LLGL_EXPORT Module : public NonCopyable
     public:
 
         // Converts the module name into a specific filename (e.g. "OpenGL" to "LLGL_OpenGL.dll" on Windows).
-        static std::string GetModuleFilename(const char* moduleName);
+        static string GetModuleFilename(const char* moduleName);
 
         // Returns true if the specified module is available.
         static bool IsAvailable(const char* moduleFilename);

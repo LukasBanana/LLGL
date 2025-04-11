@@ -12,8 +12,8 @@
 #include <LLGL/Utils/ForRange.h>
 #include <locale>
 #include <codecvt> //TODO: replace this as it's deprecated in C++17
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 #include <initializer_list>
 #include <algorithm>
 
@@ -32,8 +32,8 @@ DEF_RITEST( ContainerDynamicArray )
         const std::size_t dataSize = arr.size();
         if (::memcmp(arr.data(), cmpData, dataSize) != 0)
         {
-            const std::string arrStr = TestbedContext::FormatByteArray(arr.data(), dataSize, sizeof(char));
-            const std::string cmpStr = TestbedContext::FormatByteArray(cmpData, dataSize, sizeof(char));
+            const string arrStr = TestbedContext::FormatByteArray(arr.data(), dataSize, sizeof(char));
+            const string cmpStr = TestbedContext::FormatByteArray(cmpData, dataSize, sizeof(char));
             Log::Errorf(
                 "Mismatch between DynamicByteArray '%s{%u}' [%s] and initial data [%s]\n",
                 name, static_cast<unsigned>(arr.size()), arrStr.c_str(), cmpStr.c_str()
@@ -64,8 +64,8 @@ DEF_RITEST( ContainerDynamicArray )
         const std::size_t dataSize = arr.size()*sizeof(int);
         if (::memcmp(arr.data(), cmpData, dataSize) != 0)
         {
-            const std::string arrStr = TestbedContext::FormatByteArray(arr.data(), dataSize, sizeof(int));
-            const std::string cmpStr = TestbedContext::FormatByteArray(cmpData, dataSize, sizeof(int));
+            const string arrStr = TestbedContext::FormatByteArray(arr.data(), dataSize, sizeof(int));
+            const string cmpStr = TestbedContext::FormatByteArray(cmpData, dataSize, sizeof(int));
             Log::Errorf(
                 "Mismatch between DynamicArray<int> '%s{%u}' [%s] and initial data [%s]\n",
                 name, static_cast<unsigned>(arr.size()), arrStr.c_str(), cmpStr.c_str()
@@ -109,8 +109,8 @@ DEF_RITEST( ContainerDynamicArray )
         const std::size_t dataSize = arr.size()*sizeof(int);
         if (::memcmp(arr.data(), cmpData, dataSize) != 0)
         {
-            const std::string arrStr = TestbedContext::FormatByteArray(arr.data(), dataSize, sizeof(TrivialStruct));
-            const std::string cmpStr = TestbedContext::FormatByteArray(cmpData, dataSize, sizeof(TrivialStruct));
+            const string arrStr = TestbedContext::FormatByteArray(arr.data(), dataSize, sizeof(TrivialStruct));
+            const string cmpStr = TestbedContext::FormatByteArray(cmpData, dataSize, sizeof(TrivialStruct));
             Log::Errorf(
                 "Mismatch between DynamicArray<TrivialStruct> '%s{%u}' [%s] and initial data [%s]\n",
                 name, static_cast<unsigned>(arr.size()), arrStr.c_str(), cmpStr.c_str()
@@ -144,8 +144,8 @@ DEF_RITEST( ContainerSmallVector )
     {
         if (::memcmp(vec, cmp, size) != 0)
         {
-            const std::string vecStr = TestbedContext::FormatByteArray(vec, size, 4);
-            const std::string cmpStr = TestbedContext::FormatByteArray(cmp, size, 4);
+            const string vecStr = TestbedContext::FormatByteArray(vec, size, 4);
+            const string cmpStr = TestbedContext::FormatByteArray(cmp, size, 4);
             Log::Errorf(
                 "Mismatch between SmallVector '%s' [%s] and initial data [%s]\n",
                 name, vecStr.c_str(), cmpStr.c_str()
@@ -196,7 +196,7 @@ DEF_RITEST( ContainerSmallVector )
 
     // Test inserting elements beyond static capacity
     SmallVector<int, 2> iv2_n;
-    std::vector<int> iv_std;
+    vector<int> iv_std;
 
     for (int i = 0; i < 1024; ++i)
     {
@@ -268,12 +268,12 @@ DEF_RITEST( ContainerUTF8String )
     }
 
     SmallVector<wchar_t> su3UTF16 = su3.to_utf16();
-    std::wstring su3Wide = su3UTF16.data();
+    wstring su3Wide = su3UTF16.data();
     const wchar_t* su3WideExpected = L"Hello \x4E16\x754C\x3002";
     if (su3Wide != su3WideExpected)
     {
-        const std::string su3Ansi           = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(su3Wide);
-        const std::string su3AnsiExpected   = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(su3WideExpected);
+        const string su3Ansi           = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(su3Wide);
+        const string su3AnsiExpected   = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.to_bytes(su3WideExpected);
         Log::Errorf(
             "Mismatch between UTF8String concatenation 'su3Wide' \"%s\" and initial value \"%s\"\n",
             su3Ansi.c_str(), su3AnsiExpected.c_str()
@@ -308,7 +308,7 @@ DEF_RITEST( ContainerUTF8String )
         sa6 = subA;
         sa6 += subB;
 
-        const std::string sa6Expected = std::string(subA.begin(), subA.end()) + std::string(subB.begin(), subB.end());
+        const string sa6Expected = string(subA.begin(), subA.end()) + string(subB.begin(), subB.end());
 
         if (sa6.size() != subA.size() + subB.size() || ::memcmp(sa6.data(), sa6Expected.data(), sa6Expected.size()) != 0)
         {
@@ -434,7 +434,7 @@ DEF_RITEST( ContainerStringLiteral )
 
     // Test absence of ambiguity (Compile-time only test)
     {
-        StringLiteral l6{ std::string("Test") };
+        StringLiteral l6{ string("Test") };
         StringLiteral l7{ l6 };
     }
 
@@ -447,7 +447,7 @@ template <typename T>
 TestResult TestStringSort(const std::initializer_list<const char*> inStrings, bool sanityCheck, const char* llglStringTypeName)
 {
     // Fill both STL and LLGL string containers
-    std::vector<std::string> stdStrings;
+    vector<string> stdStrings;
     DynamicVector<T> llglStrings;
 
     stdStrings.reserve(inStrings.size());
@@ -478,10 +478,10 @@ TestResult TestStringSort(const std::initializer_list<const char*> inStrings, bo
         constexpr std::size_t chartColumnDist = 20; // Distance between beginning of "STL strings:" and "LLGL strings:"
         const char* caption =
         (
-            "std::string         %s\n"
+            "string         %s\n"
             "-----------         %s\n"
         );
-        const std::string llglStringTypeUnderline(::strlen(llglStringTypeName), '-');
+        const string llglStringTypeUnderline(::strlen(llglStringTypeName), '-');
 
         if (printAsErrors)
             Log::Errorf(caption, llglStringTypeName, llglStringTypeUnderline.c_str());
@@ -490,9 +490,9 @@ TestResult TestStringSort(const std::initializer_list<const char*> inStrings, bo
 
         for_range(i, stdStrings.size())
         {
-            const std::string lhs{ stdStrings[i].data(), stdStrings[i].size() };
-            const std::string rhs{ llglStrings[i].data(), llglStrings[i].size() };
-            const std::string spaces(lhs.size() < chartColumnDist ? chartColumnDist - lhs.size() : 1, ' ');
+            const string lhs{ stdStrings[i].data(), stdStrings[i].size() };
+            const string rhs{ llglStrings[i].data(), llglStrings[i].size() };
+            const string spaces(lhs.size() < chartColumnDist ? chartColumnDist - lhs.size() : 1, ' ');
 
             if (printAsErrors)
                 Log::Errorf("%s%s%s\n", lhs.c_str(), spaces.c_str(), rhs.c_str());

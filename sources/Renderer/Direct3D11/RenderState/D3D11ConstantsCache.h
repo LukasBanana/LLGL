@@ -15,7 +15,7 @@
 #include <LLGL/Container/SmallVector.h>
 #include "../Shader/D3D11Shader.h"
 #include <cstdint>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <d3d11.h>
 #include <memory>
 
@@ -69,7 +69,7 @@ class D3D11ConstantsCache
         {
             UINT                            shaderRegister; // Constant buffer binding slot
             long                            stageFlags;
-            std::vector<ConstantRegister>   constants;
+            vector<ConstantRegister>   constants;
         };
 
     private:

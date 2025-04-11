@@ -12,11 +12,11 @@
 #include <stb/stb_image.h>
 
 
-bool ImageReader::LoadFromFile(const std::string& filename, LLGL::Format format)
+bool ImageReader::LoadFromFile(const string& filename, LLGL::Format format)
 {
     // Read image asset
-    std::string assetPath;
-    std::vector<char> content = ReadAsset(filename, &assetPath);
+    string assetPath;
+    vector<char> content = ReadAsset(filename, &assetPath);
     if (content.empty())
         return false;
 
@@ -35,7 +35,7 @@ bool ImageReader::LoadFromFile(const std::string& filename, LLGL::Format format)
         return false;
     }
 
-    data_ = std::vector<char>
+    data_ = vector<char>
     {
         reinterpret_cast<const char*>(imageData),
         reinterpret_cast<const char*>(imageData + w*h*formatAttribs.components)
@@ -68,7 +68,7 @@ LLGL::ImageView ImageReader::GetImageView() const
     return imageView;
 }
 
-void ImageReader::AppendImageDataTo(std::vector<char>& outBuffer)
+void ImageReader::AppendImageDataTo(vector<char>& outBuffer)
 {
     const std::size_t outBufferOffset = outBuffer.size();
     outBuffer.resize(outBufferOffset + data_.size());

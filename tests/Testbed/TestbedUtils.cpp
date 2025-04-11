@@ -19,7 +19,7 @@ bool StringEndsWith(const char* str, const char* end)
     return StringEndsWithPrimary(str, ::strlen(str), end, ::strlen(end));
 }
 
-bool StringEndsWith(const std::string& str, const std::string& end)
+bool StringEndsWith(const string& str, const string& end)
 {
     return StringEndsWithPrimary(str.c_str(), str.size(), end.c_str(), end.size());
 }

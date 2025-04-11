@@ -144,9 +144,9 @@ public:
 
     // Generates the grid geometry for the cloth with triangle strip topology
     void GenerateClothGeometry(
-        std::vector<ParticleBase>&  verticesBase,
-        std::vector<Gs::Vector4f>&  verticesPos,
-        std::vector<std::uint32_t>& indices)
+        vector<ParticleBase>&  verticesBase,
+        vector<Gs::Vector4f>&  verticesPos,
+        vector<std::uint32_t>& indices)
     {
         const auto invSegsU = 1.0f / static_cast<float>(clothSegmentsU);
         const auto invSegsV = 1.0f / static_cast<float>(clothSegmentsV);
@@ -275,10 +275,10 @@ public:
         };
 
         // Generate vertex and index data and store number of vertices and indices for draw commands
-        std::vector<ParticleBase> verticesBase;
-        std::vector<Gs::Vector4f> verticesPos;
-        std::vector<Gs::Vector4f> zeroVectors;
-        std::vector<std::uint32_t> indices;
+        vector<ParticleBase> verticesBase;
+        vector<Gs::Vector4f> verticesPos;
+        vector<Gs::Vector4f> zeroVectors;
+        vector<std::uint32_t> indices;
 
         GenerateClothGeometry(verticesBase, verticesPos, indices);
 
@@ -448,7 +448,7 @@ public:
     void CreateGraphicsPipeline()
     {
         // Create graphics shader
-        std::vector<LLGL::VertexFormat> usedVertexFormats;
+        vector<LLGL::VertexFormat> usedVertexFormats;
         #ifndef ENABLE_STORAGE_TEXTURES
         usedVertexFormats = { vertexFormat };
         #endif

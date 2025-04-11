@@ -131,8 +131,8 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
     RenderSystem::AssertCreateBufferArray(numBuffers, bufferArray);
 
     /* Create temporary buffer array with buffer instances */
-    std::vector<Buffer*>    bufferInstanceArray(numBuffers);
-    std::vector<DbgBuffer*> bufferDbgArray(numBuffers);
+    vector<Buffer*>    bufferInstanceArray(numBuffers);
+    vector<DbgBuffer*> bufferDbgArray(numBuffers);
 
     for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
@@ -312,9 +312,9 @@ void DbgRenderSystem::Release(Sampler& sampler)
 /* ----- Resource Views ----- */
 
 // private
-std::vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews)
+vector<ResourceViewDescriptor> DbgRenderSystem::GetResourceViewInstanceCopy(const ArrayView<ResourceViewDescriptor>& resourceViews)
 {
-    std::vector<ResourceViewDescriptor> instanceResourceViews;
+    vector<ResourceViewDescriptor> instanceResourceViews;
     instanceResourceViews.reserve(resourceViews.size());
 
     for_range(i, resourceViews.size())
@@ -700,7 +700,7 @@ void DbgRenderSystem::ValidateCPUAccessFlags(long flags, long validFlags, const 
 {
     if ((flags & (~validFlags)) != 0)
     {
-        const std::string contextLabel = (contextDesc != nullptr ? " for " + std::string(contextDesc) : "");
+        const string contextLabel = (contextDesc != nullptr ? " for " + string(contextDesc) : "");
         LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown CPU access flags specified%s", contextLabel.c_str());
     }
 }
@@ -709,7 +709,7 @@ void DbgRenderSystem::ValidateMiscFlags(long flags, long validFlags, const char*
 {
     if ((flags & (~validFlags)) != 0)
     {
-        const std::string contextLabel = (contextDesc != nullptr ? " for " + std::string(contextDesc) : "");
+        const string contextLabel = (contextDesc != nullptr ? " for " + string(contextDesc) : "");
         LLGL_DBG_WARN(WarningType::ImproperArgument, "unknown miscellaneous flags specified%s", contextLabel.c_str());
     }
 }
@@ -926,7 +926,7 @@ void DbgRenderSystem::ValidateBufferView(DbgBuffer& bufferDbg, const BufferViewD
     const std::uint64_t minAlignment = GetMinAlignmentForBufferBinding(bindingDesc, limits);
     if (minAlignment > 0 && (viewDesc.offset % minAlignment != 0 || viewDesc.size % minAlignment != 0))
     {
-        const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? "(set " + std::to_string(bindingDesc.slot.set) + ')' : "");
+        const string bindingSetLabel = (bindingDesc.slot.set != 0 ? "(set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "buffer view '%s' at slot %u%s does not satisfy minimum alignment of %" PRIu64 " %s",
@@ -1526,9 +1526,9 @@ void DbgRenderSystem::ValidateAttachmentDesc(const AttachmentDescriptor& attachm
     }
 }
 
-static std::string GetBindingSlotLabel(const BindingSlot& slot)
+static string GetBindingSlotLabel(const BindingSlot& slot)
 {
-    std::string label = "slot ";
+    string label = "slot ";
     label += std::to_string(slot.index);
     if (slot.set > 0)
     {
@@ -1539,9 +1539,9 @@ static std::string GetBindingSlotLabel(const BindingSlot& slot)
     return label;
 }
 
-static std::string GetBindingDescLabel(const BindingDescriptor& bindingDesc)
+static string GetBindingDescLabel(const BindingDescriptor& bindingDesc)
 {
-    std::string label;
+    string label;
     if (!bindingDesc.name.empty())
     {
         label += '\"';
@@ -1570,7 +1570,7 @@ static bool IsStreamOutputCompatibleFormat(const Format format)
 void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
 {
     /* Validate shader output-stream attributes */
-    std::unordered_map<std::string, std::size_t> attribNameToIndexMap;
+    std::unordered_map<string, std::size_t> attribNameToIndexMap;
     std::unordered_map<SystemValue, std::size_t, EnumHasher<SystemValue>> attribSVToIndexMap;
 
     struct BufferStrideRef
@@ -1580,13 +1580,13 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
     };
     BufferStrideRef bufferStridesRefs[LLGL_MAX_NUM_SO_BUFFERS];
 
-    const std::string shaderLabelPrefix =
+    const string shaderLabelPrefix =
     (
         shaderDesc.debugName != nullptr && *shaderDesc.debugName != '\0'
-            ? "shader '" + std::string(shaderDesc.debugName) + "': "
+            ? "shader '" + string(shaderDesc.debugName) + "': "
             : ""
     );
-    std::string attribLabel;
+    string attribLabel;
 
     for_range(i, shaderDesc.vertex.outputAttribs.size())
     {
@@ -1595,7 +1595,7 @@ void DbgRenderSystem::ValidateShaderDesc(const ShaderDescriptor& shaderDesc)
         /* Construct label for each attribute */;
         attribLabel = shaderLabelPrefix + "stream-output attribute [" + std::to_string(i) + "]";
         if (attrib.systemValue == SystemValue::Undefined && !attrib.name.empty())
-            attribLabel += " '" + std::string(attrib.name.c_str()) + "'";
+            attribLabel += " '" + string(attrib.name.c_str()) + "'";
 
         /* Validate attribute format */
         if (const char* formatIdent = ToString(attrib.format))
@@ -1704,7 +1704,7 @@ void DbgRenderSystem::ValidatePipelineLayoutDesc(const PipelineLayoutDescriptor&
     {
         if (binding.arraySize > 1)
         {
-            const std::string bindingLabel = GetBindingDescLabel(binding);
+            const string bindingLabel = GetBindingDescLabel(binding);
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "individual binding %s has array size of %u, but only heap-bindings can have an array size other than 0 or 1",
@@ -1837,7 +1837,7 @@ void DbgRenderSystem::ValidateBufferForBinding(const DbgBuffer& bufferDbg, const
 {
     if ((bufferDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
     {
-        const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
+        const string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "binding flags mismatch between buffer resource at %u%s and binding descriptor",
@@ -1850,7 +1850,7 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
 {
     if ((textureDbg.desc.bindFlags & bindingDesc.bindFlags) != bindingDesc.bindFlags)
     {
-        const std::string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
+        const string bindingSetLabel = (bindingDesc.slot.set != 0 ? " (set " + std::to_string(bindingDesc.slot.set) + ')' : "");
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "binding flags mismatch between texture resource at %u%s and binding descriptor",
@@ -1860,9 +1860,9 @@ void DbgRenderSystem::ValidateTextureForBinding(const DbgTexture& textureDbg, co
 }
 
 // Converts the specified color mask into a string representation (e.g. "RGBA" or "R_G_").
-static std::string ColorMaskToString(std::uint8_t colorMask)
+static string ColorMaskToString(std::uint8_t colorMask)
 {
-    std::string s;
+    string s;
     s.reserve(4);
 
     s += ((colorMask & ColorMaskFlags::R) != 0 ? 'R' : '_');
@@ -1893,7 +1893,7 @@ void DbgRenderSystem::ValidateBlendTargetDescriptor(const BlendTargetDescriptor&
 {
     if (blendTargetDesc.colorMask != 0)
     {
-        const std::string colorMaskLabel = ColorMaskToString(blendTargetDesc.colorMask);
+        const string colorMaskLabel = ColorMaskToString(blendTargetDesc.colorMask);
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "cannot use color mask {%s} of blend target [%zu] without a fragment shader",
@@ -2112,7 +2112,7 @@ void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescrip
                 !pipelineLayoutDbg->desc.heapBindings.empty())
             {
                 const char* psoDebugName = pipelineStateDesc.debugName;
-                const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
+                const string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + string(psoDebugName) + '\'' : "");
                 LLGL_DBG_ERROR(
                     ErrorType::UndefinedBehavior,
                     "failed to reflect shader code in PSO%s with mix of heap- and individual bindings; "
@@ -2314,7 +2314,7 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
     if (pipelineLayout.desc.uniforms.empty())
         return;
 
-    std::vector<ShaderReflection> reflections;
+    vector<ShaderReflection> reflections;
 
     auto FindResourceInPreviousReflectionsByName = [&reflections](const LLGL::StringLiteral& name) -> const ShaderResourceReflection*
     {
@@ -2332,8 +2332,8 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
         return nullptr;
     };
 
-    std::set<std::string> reflectedUniformNames;
-    const std::string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + std::string(psoDebugName) + '\'' : "");
+    set<string> reflectedUniformNames;
+    const string psoLabel = (psoDebugName != nullptr && *psoDebugName != '\0' ? " '" + string(psoDebugName) + '\'' : "");
 
     for (DbgShader* shader : shaders)
     {
@@ -2378,8 +2378,8 @@ void DbgRenderSystem::ValidatePipelineStateUniforms(const DbgPipelineLayout& pip
                     }
                     else if (otherResource->binding.slot != resource.binding.slot)
                     {
-                        const std::string lhsSlotLabel = GetBindingSlotLabel(resource.binding.slot);
-                        const std::string rhsSlotLabel = GetBindingSlotLabel(otherResource->binding.slot);
+                        const string lhsSlotLabel = GetBindingSlotLabel(resource.binding.slot);
+                        const string rhsSlotLabel = GetBindingSlotLabel(otherResource->binding.slot);
                         LLGL_DBG_ERROR(
                             ErrorType::InvalidArgument,
                             "slot mismatch for resource binding \"%s\" in %s shader (%s) and %s shader (%s)",

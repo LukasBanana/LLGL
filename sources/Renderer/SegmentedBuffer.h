@@ -13,7 +13,7 @@
 #include "../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
 #include <string.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <type_traits>
 #include <cstdint>
 #include <limits.h>
@@ -83,7 +83,7 @@ class SegmentedBufferAllocator
         SegmentedBufferAllocator& operator = (SegmentedBufferAllocator&&) = default;
 
         // Constructs the allocator with a buffer and segment size.
-        inline SegmentedBufferAllocator(std::vector<TBaseType>& buffer, std::size_t payloadSize) :
+        inline SegmentedBufferAllocator(vector<TBaseType>& buffer, std::size_t payloadSize) :
             buffer_ { buffer                                                                  },
             offset_ { buffer.size() * sizeof(TBaseType)                                       },
             size_   { GetAlignedSize(payloadSize + sizeof(TSegmentHeader), sizeof(TBaseType)) }
@@ -131,7 +131,7 @@ class SegmentedBufferAllocator
 
     private:
 
-        std::vector<TBaseType>& buffer_;
+        vector<TBaseType>& buffer_;
         std::size_t             offset_;
         std::size_t             size_;
 
@@ -234,7 +234,7 @@ class SegmentedBuffer
 
         std::size_t             stride_         = 0;
         std::size_t             payloadOffset_  = 0;
-        std::vector<value_type> buffer_;
+        vector<value_type> buffer_;
 
 };
 

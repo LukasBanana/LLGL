@@ -130,7 +130,7 @@ DEF_TEST( StencilBuffer )
     const int deltaStencilValue = std::abs(static_cast<int>(readbackStencilValue) - static_cast<int>(stencilRef));
 
     // Match entire depth and create delta heat map
-    std::vector<std::uint8_t> readbackStencilBuffer;
+    vector<std::uint8_t> readbackStencilBuffer;
     readbackStencilBuffer.resize(texDesc.extent.width * texDesc.extent.height, 0);
     {
         dstImageView.format     = ImageFormat::Stencil;

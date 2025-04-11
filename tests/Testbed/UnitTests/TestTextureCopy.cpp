@@ -58,7 +58,7 @@ DEF_TEST( TextureCopy )
         };
 
         // Create source texture
-        const std::string srcTexName = std::string("src.") + name;
+        const string srcTexName = string("src.") + name;
         TextureDescriptor srcTexDesc;
         {
             srcTexDesc.type         = type;
@@ -71,7 +71,7 @@ DEF_TEST( TextureCopy )
         CREATE_TEXTURE(srcTex, srcTexDesc, srcTexName.c_str(), nullptr);
 
         // Create intermediate texture to copy into
-        const std::string interTexName = std::string("inter.") + name;
+        const string interTexName = string("inter.") + name;
         TextureDescriptor interTexDesc;
         {
             interTexDesc.type           = ToNonArrayTextureType(type);
@@ -84,7 +84,7 @@ DEF_TEST( TextureCopy )
         CREATE_TEXTURE(interTex, interTexDesc, interTexName.c_str(), nullptr);
 
         // Create destination texture to read the results from
-        const std::string dstTexName = std::string("dst.") + name;
+        const string dstTexName = string("dst.") + name;
         TextureDescriptor dstTexDesc;
         {
             dstTexDesc.type         = type;
@@ -141,8 +141,8 @@ DEF_TEST( TextureCopy )
                 // Evaluate results
                 if (::memcmp(colorsRgbaUb8.data(), outputData, sizeof(outputData)) != 0)
                 {
-                    const std::string inputDataStr = TestbedContext::FormatByteArray(colorsRgbaUb8.data(), sizeof(colorsRgbaUb8[0]) * colorsRgbaUb8.size(), 4);
-                    const std::string outputDataStr = TestbedContext::FormatByteArray(outputData, sizeof(outputData), 4);
+                    const string inputDataStr = TestbedContext::FormatByteArray(colorsRgbaUb8.data(), sizeof(colorsRgbaUb8[0]) * colorsRgbaUb8.size(), 4);
+                    const string outputDataStr = TestbedContext::FormatByteArray(outputData, sizeof(outputData), 4);
                     Log::Errorf(
                         "Mismatch between data of texture %s [MIP %u, Layer %u] and copy result:\n"
                         " -> Expected: [%s]\n"

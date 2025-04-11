@@ -189,7 +189,7 @@ class LLGL_EXPORT BasicStringLiteral
 
         /**
         \brief Returns the raw pointer of this string literal.
-        \remarks This points to a NUL-terminated string like \c std::string does.
+        \remarks This points to a NUL-terminated string like \c string does.
         */
         const_pointer c_str() const noexcept
         {

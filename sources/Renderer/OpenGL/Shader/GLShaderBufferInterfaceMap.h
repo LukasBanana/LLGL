@@ -9,7 +9,7 @@
 #define LLGL_GL_SHADER_BUFFER_INTERFACE_MAP_H
 
 
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <LLGL/Container/ArrayView.h>
 #include "../RenderState/GLPipelineLayout.h"
 
@@ -107,7 +107,7 @@ class GLShaderBufferInterfaceMap
 
     private:
 
-        std::vector<GLBufferInterface>  bufferMap_;                         // Maps a buffer binding to a shader interface type
+        vector<GLBufferInterface>  bufferMap_;                         // Maps a buffer binding to a shader interface type
         std::size_t                     numSSBOs_                   : 15;   // Number of actual SSBOs in this bitmap
         std::size_t                     numHeapEntries_             : 15;
         std::size_t                     hasHeapSSBOEntriesOnly_     : 1;

@@ -9,8 +9,8 @@
 #include <LLGL-C/Shader.h>
 #include <LLGL/Utils/ForRange.h>
 #include "C99Internal.h"
-#include <vector>
-#include <string>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 
 
 // namespace LLGL {
@@ -20,12 +20,12 @@ using namespace LLGL;
 
 struct ShaderReflectionC99Wrapper
 {
-    std::vector<LLGLShaderResourceReflection>   resources;
-    std::vector<LLGLUniformDescriptor>          uniforms;
-    std::vector<std::string>                    names;
-    std::vector<LLGLVertexAttribute>            vertexInputAttribs;
-    std::vector<LLGLVertexAttribute>            vertexOutputAttribs;
-    std::vector<LLGLFragmentAttribute>          fragmentOutputAttribs;
+    vector<LLGLShaderResourceReflection>   resources;
+    vector<LLGLUniformDescriptor>          uniforms;
+    vector<string>                    names;
+    vector<LLGLVertexAttribute>            vertexInputAttribs;
+    vector<LLGLVertexAttribute>            vertexOutputAttribs;
+    vector<LLGLFragmentAttribute>          fragmentOutputAttribs;
 };
 
 LLGL_C_EXPORT LLGLReport llglGetShaderReport(LLGLShader shader)

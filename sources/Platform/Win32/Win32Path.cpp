@@ -28,9 +28,9 @@ LLGL_EXPORT UTF8String GetWorkingDir()
     {
         /* Override content of string including the NUL-terminator, which is allowed since C++11 */
         #ifdef UNICODE
-        std::wstring path;
+        wstring path;
         #else
-        std::string path;
+        string path;
         #endif
         path.resize(static_cast<std::size_t>(pathLen - 1));
         ::GetCurrentDirectory(pathLen, &path[0]);

@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
         auto layout = renderer->CreatePipelineLayout(LLGL::Parse("heap{cbuffer(Settings@0):vert:frag}"));
 
         // Shaders
-        auto CreateSeparateShader = [&renderer, &vertexFormat](LLGL::ShaderType type, std::string filename)
+        auto CreateSeparateShader = [&renderer, &vertexFormat](LLGL::ShaderType type, string filename)
         {
             filename = "Shaders/" + filename;
             auto shaderDesc = LLGL::ShaderDescFromFile(type, filename.c_str(), nullptr, nullptr, LLGL::ShaderCompileFlags::SeparateShader);

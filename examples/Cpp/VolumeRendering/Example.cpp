@@ -88,7 +88,7 @@ private:
         vertexFormat.SetStride(sizeof(TexturedVertex));
 
         // Load 3D models
-        std::vector<TexturedVertex> vertices;
+        vector<TexturedVertex> vertices;
         mesh = LoadObjModel(vertices, "Suzanne.obj");
 
         // Create vertex, index, and constant buffer
@@ -164,7 +164,7 @@ private:
     void CreateTextures()
     {
         // Generate 3D perlin noise texture
-        std::vector<std::uint8_t> imageData;
+        vector<std::uint8_t> imageData;
         {
             perlinNoise.GenerateBuffer(imageData, noiseTextureSize, noiseTextureSize, noiseTextureSize, 4);
         }

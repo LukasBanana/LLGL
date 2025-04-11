@@ -14,7 +14,7 @@
 #include <LLGL/Format.h>
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/Constants.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 #include <cstdint>
 
 
@@ -839,7 +839,7 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewports
     */
-    std::vector<Viewport>   viewports;
+    vector<Viewport>   viewports;
 
     /**
     \brief Specifies an optional list of static scissor rectangles. If empty, the scissors must be set dynamically with the command buffer.
@@ -847,7 +847,7 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissors
     */
-    std::vector<Scissor>    scissors;
+    vector<Scissor>    scissors;
 
     //! Specifies the depth state for the depth-stencil stage.
     DepthDescriptor         depth;

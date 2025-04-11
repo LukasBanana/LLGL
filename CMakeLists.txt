@@ -143,7 +143,7 @@ option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_EXCEPTIONS "Enable C++ exceptions" OFF)
 
-option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. std::vector over SmallVector<T>" OFF)
+option(LLGL_PREFER_STL_CONTAINERS "Prefers C++ STL containers over custom containers, e.g. vector over SmallVector<T>" OFF)
 
 option(LLGL_BUILD_STATIC_LIB "Build LLGL as static library" OFF)
 option(LLGL_BUILD_TESTS "Include test projects" OFF)

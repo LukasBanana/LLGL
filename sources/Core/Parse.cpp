@@ -9,8 +9,8 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Report.h>
-#include <vector>
-#include <string>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 #include <cstring>
 #include <cmath>
 #include "Exception.h"
@@ -344,7 +344,7 @@ static bool ParseValueFromDictionary(Parser& parser, const Dictionary<T>& dict, 
         }
     }
 
-    std::string tokStr{ tok.begin(), tok.end() };
+    string tokStr{ tok.begin(), tok.end() };
     parser.report.Errorf("unknown %s: %s", valueName, tokStr.c_str());
     return false;
 }
@@ -356,7 +356,7 @@ static bool ReturnWithParseError(Parser& parser, const char* format)
     const StringView prevTok = parser.Token(-1);
     if (!prevTok.empty())
     {
-        std::string prevTokStr{ prevTok.begin(), prevTok.end() };
+        string prevTokStr{ prevTok.begin(), prevTok.end() };
         parser.report.Errorf("%s; last token = '%s'", format, prevTokStr.c_str());
     }
     else
@@ -366,7 +366,7 @@ static bool ReturnWithParseError(Parser& parser, const char* format)
 
 static bool ReturnWithParseError(Parser& parser, const char* format, const StringView& tok)
 {
-    std::string tokStr{ tok.begin(), tok.end() };
+    string tokStr{ tok.begin(), tok.end() };
     parser.report.Errorf(format, tokStr.c_str());
     return false;
 }
@@ -643,7 +643,7 @@ static bool ParseLayoutSignatureResourceBinding(Parser& parser, PipelineLayoutDe
     if (!parser.Accept("("))
         return ReturnWithParseError(parser, "expected open bracket '(' after resource type");
 
-    std::vector<BindingDescriptor> intermediateBindings;
+    vector<BindingDescriptor> intermediateBindings;
 
     while (parser.Feed() && !parser.Match(")"))
     {
@@ -982,7 +982,7 @@ static void RaiseParsingError(const Parser& parser, const char* descName)
     {
         /* Raise token error */
         StringView errorToken = parser.Token();
-        const std::string errorTokenStr{ errorToken.begin(), errorToken.end() };
+        const string errorTokenStr{ errorToken.begin(), errorToken.end() };
         LLGL_TRAP("parsing %s failed at token '%s'", descName, errorTokenStr.c_str());
     }
 }
@@ -1007,7 +1007,7 @@ static bool ParseSamplerDescAddress(Parser& parser, SamplerDescriptor& outDesc)
         {
             if ((axes & axis) != 0)
             {
-                std::string tokStr{ tok.begin(), tok.end() };
+                string tokStr{ tok.begin(), tok.end() };
                 parser.report.Errorf("duplicate sampler address mode %s axis: %s", axisName, tokStr.c_str());
                 return false;
             }
@@ -1628,7 +1628,7 @@ LLGL_EXPORT ParseContext Parse(const char* format, ...)
 {
     if (std::strchr(format, '%') != nullptr)
     {
-        std::string s;
+        string s;
         LLGL_STRING_PRINTF(s, format);
         return ParseContext{ UTF8String{ s.c_str() } };
     }

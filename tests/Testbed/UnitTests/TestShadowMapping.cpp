@@ -150,7 +150,7 @@ DEF_TEST( ShadowMapping )
             shadowMapDesc.extent        = { resolution.width, resolution.height, 1u };
             shadowMapDesc.mipLevels     = 1;
         }
-        const std::string name = std::string("shadowTex-") + ToString(format);
+        const string name = string("shadowTex-") + ToString(format);
         result = CreateTexture(shadowMapDesc, name.c_str(), &resources.tex);
         if (result != TestResult::Passed)
             return result;
@@ -161,7 +161,7 @@ DEF_TEST( ShadowMapping )
             rtDesc.resolution               = resolution;
             rtDesc.depthStencilAttachment   = resources.tex;
         }
-        const std::string rtName = std::string("shadowTarget-") + ToString(format);
+        const string rtName = string("shadowTarget-") + ToString(format);
         result = CreateRenderTarget(rtDesc, rtName.c_str(), &resources.target);
         if (result != TestResult::Passed)
             return result;
@@ -192,7 +192,7 @@ DEF_TEST( ShadowMapping )
     if (opt.fastTest && cfg.slow)
         return (frame + 1 < numFrames ? TestResult::ContinueSkipFrame : result);
 
-    const std::string colorBufferName = "ShadowMapping_" + std::string(ToString(cfg.format)) + "_" + std::to_string(cfg.width) + "x" + std::to_string(cfg.height);
+    const string colorBufferName = "ShadowMapping_" + string(ToString(cfg.format)) + "_" + std::to_string(cfg.width) + "x" + std::to_string(cfg.height);
 
     const std::uint64_t t0 = Timer::Tick();
 
@@ -261,7 +261,7 @@ DEF_TEST( ShadowMapping )
         {
             for (int x = 0; x < 2; ++x)
             {
-                const std::string meshLabel = "Cube(" + std::to_string(x) + "," + std::to_string(y) + ")";
+                const string meshLabel = "Cube(" + std::to_string(x) + "," + std::to_string(y) + ")";
                 cmdBuffer->PushDebugGroup(meshLabel.c_str());
                 TransformWorldMatrix(
                     sceneConstants.wMatrix,
@@ -304,7 +304,7 @@ DEF_TEST( ShadowMapping )
 
         for (std::size_t i = 0; i < sizeof(viewportConfigs)/sizeof(viewportConfigs[0]); ++i)
         {
-            const std::string viewportLabel = "Viewport[" + std::to_string(i) + "]";
+            const string viewportLabel = "Viewport[" + std::to_string(i) + "]";
             cmdBuffer->PushDebugGroup(viewportLabel.c_str());
 
             // Render shadow map

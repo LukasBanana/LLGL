@@ -10,7 +10,7 @@
 
 
 #include <Windows.h>
-#include <vector>
+#include <LLGL/Container/Vector.h>
 
 
 namespace LLGL
@@ -41,7 +41,7 @@ class Win32RawInputRegistry
 
     private:
 
-        std::vector<HWND>   wndHandles_;
+        vector<HWND>   wndHandles_;
         HWND                activeWndForInputDevices_   = nullptr;
 
 };

@@ -10,8 +10,8 @@
 #include <LLGL/Utils/ForRange.h>
 #include "C99Internal.h"
 #include <string.h>
-#include <vector>
-#include <string>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 
 
 // namespace LLGL {
@@ -23,7 +23,7 @@ extern CommandQueue* g_CurrentCmdQueue;
 
 static int gl_CurrentRenderSystemID = 0;
 static RenderSystem* g_CurrentRenderSystem = NULL;
-static std::vector<RenderSystemPtr> g_RenderSystems;
+static vector<RenderSystemPtr> g_RenderSystems;
 
 #define LLGL_ASSERT_RENDER_SYSTEM() \
     LLGL_ASSERT_PTR(g_CurrentRenderSystem)
@@ -121,7 +121,7 @@ LLGL_C_EXPORT const char* llglGetRendererName()
 
 struct RendererInfoC99Wrapper
 {
-    std::vector<const char*> extensionNames;
+    vector<const char*> extensionNames;
 };
 
 static void ConvertRendererInfo(RendererInfoC99Wrapper& wrapper, LLGLRendererInfo& dst, const RendererInfo& src)
@@ -148,8 +148,8 @@ LLGL_C_EXPORT void llglGetRendererInfo(LLGLRendererInfo* outInfo)
 
 struct RenderingCapabilitiesC99Wrapper
 {
-    std::vector<LLGLShadingLanguage>    shadingLanguages;
-    std::vector<LLGLFormat>             textureFormats;
+    vector<LLGLShadingLanguage>    shadingLanguages;
+    vector<LLGLFormat>             textureFormats;
 };
 
 static void ConvertRenderingCaps(RenderingCapabilitiesC99Wrapper& wrapper, LLGLRenderingCapabilities& dst, const RenderingCapabilities& src)

@@ -14,22 +14,22 @@
 
 DEF_RITEST( ImageConversions )
 {
-    const std::string imagePath = "../Media/Textures/";
-    const std::string refPath   = "Reference/";
-    const std::string outputDir = opt.outputDir;
+    const string imagePath = "../Media/Textures/";
+    const string refPath   = "Reference/";
+    const string outputDir = opt.outputDir;
 
-    auto MakeOutputFilename = [](const std::string& filename, ImageFormat format, unsigned threadCount) -> std::string
+    auto MakeOutputFilename = [](const string& filename, ImageFormat format, unsigned threadCount) -> string
     {
-        std::string s = filename.substr(0, filename.find_last_of('.'));
+        string s = filename.substr(0, filename.find_last_of('.'));
         s += '-';
         s += ToString(format);
         s += '-';
-        s += (threadCount == LLGL_MAX_THREAD_COUNT ? std::string("Max") : std::to_string(threadCount));
+        s += (threadCount == LLGL_MAX_THREAD_COUNT ? string("Max") : std::to_string(threadCount));
         s += ".png";
         return s;
     };
 
-    auto TestConversion = [&](const std::string& filename, unsigned threadCount, double& outTime) -> TestResult
+    auto TestConversion = [&](const string& filename, unsigned threadCount, double& outTime) -> TestResult
     {
         Image img = TestbedContext::LoadImageFromFile(imagePath + filename, opt.verbose);
 
@@ -48,7 +48,7 @@ DEF_RITEST( ImageConversions )
                 totalTime += (endTime - startTime);                                                         \
                 if (img.GetDataSize() != (SIZE))                                                            \
                 {                                                                                           \
-                    const std::string name = MakeOutputFilename(filename, img.GetFormat(), threadCount);    \
+                    const string name = MakeOutputFilename(filename, img.GetFormat(), threadCount);    \
                     Log::Errorf(                                                                            \
                         Log::ColorFlags::StdError,                                                          \
                         "Mismatch between image size '%s' (%u bytes) and expected size (%u bytes)\n",       \

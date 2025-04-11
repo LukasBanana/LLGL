@@ -17,7 +17,7 @@ namespace LLGL
  * ======= Protected: =======
  */
 
-void Display::FinalizeDisplayModes(std::vector<DisplayMode>& displayMode)
+void Display::FinalizeDisplayModes(vector<DisplayMode>& displayMode)
 {
     /* Sort display mode descriptors in ascending order (with, height, frequency) */
     std::sort(displayMode.begin(), displayMode.end(), CompareSWO);

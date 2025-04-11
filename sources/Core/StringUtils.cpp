@@ -38,9 +38,9 @@ namespace LLGL
 
 #ifdef LLGL_OS_ANDROID
 
-static std::vector<char> ReadFileBufferPrimary(const char* filename)
+static vector<char> ReadFileBufferPrimary(const char* filename)
 {
-    std::vector<char> content;
+    vector<char> content;
 
     if (filename != nullptr && *filename != '\0')
     {
@@ -68,13 +68,13 @@ static std::vector<char> ReadFileBufferPrimary(const char* filename)
     return content;
 }
 
-LLGL_EXPORT std::string ReadFileString(const char* filename)
+LLGL_EXPORT string ReadFileString(const char* filename)
 {
-    const std::vector<char> content = ReadFileBufferPrimary(filename);
-    return std::string(content.begin(), content.end());
+    const vector<char> content = ReadFileBufferPrimary(filename);
+    return string(content.begin(), content.end());
 }
 
-LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
+LLGL_EXPORT vector<char> ReadFileBuffer(const char* filename)
 {
     return ReadFileBufferPrimary(filename);
 }
@@ -91,14 +91,14 @@ static UTF8String GetPlatformAppropriateFilename(const char* filename)
     #endif
 }
 
-LLGL_EXPORT std::string ReadFileString(const char* filename)
+LLGL_EXPORT string ReadFileString(const char* filename)
 {
     /* Read file content into string */
     const UTF8String path = GetPlatformAppropriateFilename(filename);
     std::ifstream file{ path.c_str() };
     if (file.good())
     {
-        return std::string
+        return string
         {
             ( std::istreambuf_iterator<char>(file) ),
             ( std::istreambuf_iterator<char>() )
@@ -107,7 +107,7 @@ LLGL_EXPORT std::string ReadFileString(const char* filename)
     return "";
 }
 
-LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
+LLGL_EXPORT vector<char> ReadFileBuffer(const char* filename)
 {
     /* Read file content into buffer */
     const UTF8String path = GetPlatformAppropriateFilename(filename);
@@ -115,7 +115,7 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
     if (file.good())
     {
         const std::size_t fileSize = static_cast<std::size_t>(file.tellg());
-        std::vector<char> buffer(fileSize);
+        vector<char> buffer(fileSize);
 
         file.seekg(0);
         file.read(buffer.data(), fileSize);
@@ -127,33 +127,33 @@ LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename)
 
 #endif // /LLGL_OS_ANDROID
 
-static std::wstring ToWideStringPrimary(const char* str, std::size_t len)
+static wstring ToWideStringPrimary(const char* str, std::size_t len)
 {
-    std::wstring wstr;
+    wstring wstr;
     wstr.resize(len);
     for_range(i, len)
         wstr[i] = static_cast<wchar_t>(str[i]);
     return wstr;
 }
 
-LLGL_EXPORT std::wstring ToWideString(const std::string& str)
+LLGL_EXPORT wstring ToWideString(const string& str)
 {
     return ToWideStringPrimary(str.c_str(), str.size());
 }
 
-LLGL_EXPORT std::wstring ToWideString(const char* str)
+LLGL_EXPORT wstring ToWideString(const char* str)
 {
     return ToWideStringPrimary(str, std::strlen(str));
 }
 
-void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2)
+void StringPrintf(string& str, const char* format, va_list args1, va_list args2)
 {
     const int len = ::vsnprintf(nullptr, 0, format, args1);
     if (len > 0)
     {
         /*
         Since C++11 we can override the last character with '\0' ourselves,
-        so it's safe to let ::vsnprintf override std::string from [0, size()] inclusive.
+        so it's safe to let ::vsnprintf override string from [0, size()] inclusive.
         */
         const std::size_t formatLen = static_cast<std::size_t>(len);
         const std::size_t appendOff = str.size();

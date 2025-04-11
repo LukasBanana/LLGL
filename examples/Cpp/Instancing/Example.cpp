@@ -88,7 +88,7 @@ private:
         return a + (b - a) * rnd;
     }
 
-    std::vector<LLGL::VertexFormat> CreateBuffers()
+    vector<LLGL::VertexFormat> CreateBuffers()
     {
         // Initialize per-vertex data (4 vertices for the plane of each plant)
         static const float grassSize    = 100.0f;
@@ -122,7 +122,7 @@ private:
             Gs::Matrix4f    wMatrix;    // World matrix
         };
 
-        std::vector<Instance> instanceData(numPlantInstances + 1);
+        vector<Instance> instanceData(numPlantInstances + 1);
 
         for (std::size_t i = 0; i < numPlantInstances; ++i)
         {
@@ -209,9 +209,9 @@ private:
 
     void CreateTextures()
     {
-        std::string filename;
+        string filename;
 
-        std::vector<char> arrayImageBuffer;
+        vector<char> arrayImageBuffer;
 
         // Load all array images
         std::uint32_t width = 0, height = 0;
@@ -285,7 +285,7 @@ private:
         samplers[0] = renderer->CreateSampler(samplerDesc);
     }
 
-    void CreatePipelines(const std::vector<LLGL::VertexFormat>& vertexFormats)
+    void CreatePipelines(const vector<LLGL::VertexFormat>& vertexFormats)
     {
         // Create shaders
         vertexShader    = LoadStandardVertexShader("VS", vertexFormats);

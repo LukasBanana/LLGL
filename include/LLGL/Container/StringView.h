@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Export.h>
-#include <string>
+#include <LLGL/Container/String.h>
 #include <cstddef>
 #include <iterator>
 #include <algorithm>
@@ -114,7 +114,7 @@ class LLGL_EXPORT BasicStringView
 
         /**
         \brief Returns the raw pointer of this string view.
-        \remarks This does not necessarily point to a NUL-terminated string like \c std::string does.
+        \remarks This does not necessarily point to a NUL-terminated string like \c string does.
         A string view only covers a range from the first to the last character of a string whose memory is managed elsewhere.
         */
         const_pointer data() const noexcept

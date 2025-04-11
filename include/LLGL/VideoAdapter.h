@@ -12,8 +12,8 @@
 #include <LLGL/Deprecated.h>
 #include <LLGL/Export.h>
 #include <LLGL/DisplayFlags.h>
-#include <vector>
-#include <string>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/String.h>
 #include <cstdint>
 
 
@@ -26,16 +26,16 @@ namespace LLGL
 //! \deprecated Since 0.04b; Write custom structure instead!
 struct LLGL_DEPRECATED("LLGL::VideoOutputDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoOutputDescriptor
 {
-    std::vector<DisplayMode> displayModes;
+    vector<DisplayMode> displayModes;
 };
 
 //! \deprecated Since 0.04b; Write custom structure instead!
 struct LLGL_DEPRECATED("LLGL::VideoAdapterDescriptor is deprecated since 0.04b; Write a custom structure instead!") VideoAdapterDescriptor
 {
-    std::wstring                        name;
-    std::string                         vendor;
-    std::uint64_t                       videoMemory = 0;
-    std::vector<VideoOutputDescriptor>  outputs;
+    wstring                        name;
+    string                         vendor;
+    std::uint64_t                  videoMemory = 0;
+    vector<VideoOutputDescriptor>  outputs;
 };
 
 

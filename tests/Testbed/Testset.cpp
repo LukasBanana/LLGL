@@ -92,9 +92,9 @@ static std::uint8_t RandomUint8()
     return static_cast<std::uint8_t>(::rand() % 256);
 }
 
-std::vector<LLGL::ColorRGBAub> GenerateColorsRgbaUb(std::size_t count)
+vector<LLGL::ColorRGBAub> GenerateColorsRgbaUb(std::size_t count)
 {
-    std::vector<LLGL::ColorRGBAub> colors;
+    vector<LLGL::ColorRGBAub> colors;
     colors.resize(count);
     for_range(i, count)
     {
@@ -111,9 +111,9 @@ static float RandomFloat32()
     return (static_cast<float>(::rand()) / static_cast<float>(RAND_MAX));
 }
 
-std::vector<float> GenerateFloats(std::size_t count)
+vector<float> GenerateFloats(std::size_t count)
 {
-    std::vector<float> colors;
+    vector<float> colors;
     count *= 2;
     colors.resize(count);
     for_range(i, count)

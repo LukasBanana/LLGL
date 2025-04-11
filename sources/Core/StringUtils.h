@@ -13,8 +13,8 @@
 #include <LLGL/Container/ArrayView.h>
 #include <LLGL/Container/UTF8String.h>
 #include "Exception.h"
-#include <string>
-#include <vector>
+#include <LLGL/Container/String.h>
+#include <LLGL/Container/Vector.h>
 #include <stdarg.h>
 
 
@@ -113,17 +113,17 @@ inline std::size_t StrLength(const T* s)
 /* ----- Functions ----- */
 
 // Reads the specified text file into a string.
-LLGL_EXPORT std::string ReadFileString(const char* filename);
+LLGL_EXPORT string ReadFileString(const char* filename);
 
 // Reads the specified binary file into a buffer.
-LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
+LLGL_EXPORT vector<char> ReadFileBuffer(const char* filename);
 
 // Converts the UTF8 input string to UTF16 string.
-LLGL_EXPORT std::wstring ToWideString(const std::string& str);
-LLGL_EXPORT std::wstring ToWideString(const char* str);
+LLGL_EXPORT wstring ToWideString(const string& str);
+LLGL_EXPORT wstring ToWideString(const char* str);
 
 // Writes a formatted string into an STL string.
-LLGL_EXPORT void StringPrintf(std::string& str, const char* format, va_list args1, va_list args2);
+LLGL_EXPORT void StringPrintf(string& str, const char* format, va_list args1, va_list args2);
 
 struct FormattedTableColumn
 {

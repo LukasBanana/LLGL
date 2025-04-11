@@ -11,8 +11,8 @@
 
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/RenderingDebugger.h>
-#include <vector>
-#include <stack>
+#include <LLGL/Container/Vector.h>
+#include <LLGL/Container/Stack.h>
 
 
 namespace LLGL
@@ -53,8 +53,8 @@ class DbgQueryTimerPool
         CommandQueue&                       commandQueue_;
         CommandBuffer&                      commandBuffer_;
 
-        std::vector<QueryHeap*>             queryHeaps_;
-        std::stack<std::size_t>             pendingRecordStack_;
+        vector<QueryHeap*>                  queryHeaps_;
+        stack<std::size_t>                  pendingRecordStack_;
         std::uint32_t                       currentQuery_       = 0;
         std::uint32_t                       currentQueryHeap_   = 0;
 

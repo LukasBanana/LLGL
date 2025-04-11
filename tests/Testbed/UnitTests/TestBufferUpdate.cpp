@@ -95,7 +95,7 @@ DEF_TEST( BufferUpdate )
     }
     CREATE_BUFFER(buf4Large, buf4LargeDesc, "buf4Large", nullptr);
 
-    std::vector<std::uint32_t> buf4LargeData;
+    vector<std::uint32_t> buf4LargeData;
     buf4LargeData.resize(static_cast<std::size_t>(buf4LargeDesc.size) / sizeof(std::uint32_t), 0xF000BAAA); // Initialize with test value
 
     cmdBuffer->Begin();
@@ -105,7 +105,7 @@ DEF_TEST( BufferUpdate )
     cmdBuffer->End();
 
     // Read feedback data
-    std::vector<std::uint32_t> buf4LargeReadback;
+    vector<std::uint32_t> buf4LargeReadback;
     buf4LargeReadback.resize(buf4LargeData.size(), 0xDEADBEEF); // Initialize with different value
 
     renderer->ReadBuffer(*buf4Large, 0, buf4LargeReadback.data(), buf4LargeReadback.size() * sizeof(std::uint32_t));

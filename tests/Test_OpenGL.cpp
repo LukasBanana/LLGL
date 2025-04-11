@@ -11,7 +11,7 @@
 #include <LLGL/Trap.h>
 #include <Gauss/Gauss.h>
 #include <memory>
-#include <string>
+#include <LLGL/Container/String.h>
 
 
 #define TEST_RENDER_TARGET      0
@@ -107,7 +107,7 @@ int main()
         //const auto& renderCaps = renderer->GetRenderingCaps();
 
         // Setup window title
-        window->SetTitle("LLGL OpenGL Test ( " + std::string(renderer->GetName()) + " )");
+        window->SetTitle("LLGL OpenGL Test ( " + string(renderer->GetName()) + " )");
 
         // Setup input controller
         LLGL::Input input{ *window };

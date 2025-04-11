@@ -65,7 +65,7 @@ namespace StaticModules
 {
 
 
-std::vector<std::string> GetStaticModules()
+vector<string> GetStaticModules()
 {
     return
     {
