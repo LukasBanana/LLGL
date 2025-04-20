@@ -83,7 +83,7 @@ static bool DECL_LOADVKEXT_PROC_INSTANCE(KHR_android_surface)
 
 #endif // /LLGL_OS_WIN32
 
-static bool DECL_LOADVKEXT_PROC(EXT_debug_marker)
+static bool DECL_LOADVKEXT_PROC_INSTANCE(EXT_debug_marker)
 {
     LOAD_VKPROC( vkDebugMarkerSetObjectTagEXT  );
     LOAD_VKPROC( vkDebugMarkerSetObjectNameEXT );
@@ -93,21 +93,26 @@ static bool DECL_LOADVKEXT_PROC(EXT_debug_marker)
     return true;
 }
 
+static bool DECL_LOADVKEXT_PROC_INSTANCE(EXT_debug_utils)
+{
+    LOAD_VKPROC( vkCmdBeginDebugUtilsLabelEXT    );
+    LOAD_VKPROC( vkCmdEndDebugUtilsLabelEXT      );
+    LOAD_VKPROC( vkCmdInsertDebugUtilsLabelEXT   );
+    LOAD_VKPROC( vkCreateDebugUtilsMessengerEXT  );
+    LOAD_VKPROC( vkDestroyDebugUtilsMessengerEXT );
+    LOAD_VKPROC( vkQueueBeginDebugUtilsLabelEXT  );
+    LOAD_VKPROC( vkQueueEndDebugUtilsLabelEXT    );
+    LOAD_VKPROC( vkQueueInsertDebugUtilsLabelEXT );
+    LOAD_VKPROC( vkSetDebugUtilsObjectNameEXT    );
+    LOAD_VKPROC( vkSetDebugUtilsObjectTagEXT     );
+    LOAD_VKPROC( vkSubmitDebugUtilsMessageEXT    );
+    return true;
+}
+
 static bool DECL_LOADVKEXT_PROC(EXT_conditional_rendering)
 {
     LOAD_VKPROC( vkCmdBeginConditionalRenderingEXT );
     LOAD_VKPROC( vkCmdEndConditionalRenderingEXT   );
-    return true;
-}
-
-static bool DECL_LOADVKEXT_PROC(EXT_transform_feedback)
-{
-    LOAD_VKPROC( vkCmdBindTransformFeedbackBuffersEXT );
-    LOAD_VKPROC( vkCmdBeginTransformFeedbackEXT       );
-    LOAD_VKPROC( vkCmdEndTransformFeedbackEXT         );
-    LOAD_VKPROC( vkCmdBeginQueryIndexedEXT            );
-    LOAD_VKPROC( vkCmdEndQueryIndexedEXT              );
-    LOAD_VKPROC( vkCmdDrawIndirectByteCountEXT        );
     return true;
 }
 
@@ -123,6 +128,17 @@ static bool DECL_LOADVKEXT_PROC(KHR_get_physical_device_properties2)
     return true;
 }
 
+static bool DECL_LOADVKEXT_PROC(EXT_transform_feedback)
+{
+    LOAD_VKPROC( vkCmdBindTransformFeedbackBuffersEXT );
+    LOAD_VKPROC( vkCmdBeginTransformFeedbackEXT       );
+    LOAD_VKPROC( vkCmdEndTransformFeedbackEXT         );
+    LOAD_VKPROC( vkCmdBeginQueryIndexedEXT            );
+    LOAD_VKPROC( vkCmdEndQueryIndexedEXT              );
+    LOAD_VKPROC( vkCmdDrawIndirectByteCountEXT        );
+    return true;
+}
+
 #undef DECL_LOADVKEXT_PROC_BASE
 #undef DECL_LOADVKEXT_PROC_INSTANCE
 #undef DECL_LOADVKEXT_PROC
@@ -131,18 +147,33 @@ static bool DECL_LOADVKEXT_PROC(KHR_get_physical_device_properties2)
 
 /* --- Common extension loading functions --- */
 
-bool VKLoadInstanceExtensions(VkInstance instance)
+bool VKLoadInstanceExtensions(VkInstance instance, const ArrayView<const char*>& supportedInstanceExtensions)
 {
     constexpr bool abortOnFailure = true;
 
-    auto LoadExtension = [instance, abortOnFailure](const char* extName, const LoadVKExtensionInstanceProc& extLoadingProc) -> void
+    auto IsSupported = [&supportedInstanceExtensions](const char* extName) -> bool
     {
-        /* Try to load Vulkan extension */
-        extLoadingProc(instance, extName, abortOnFailure);
+        for (const char* extension : supportedInstanceExtensions)
+        {
+            if (std::strcmp(extName, extension) == 0)
+                return true;
+        }
+        return false;
+    };
+
+    auto LoadExtension = [instance, &IsSupported, abortOnFailure](const VKExt extensionID, const char* extName, const LoadVKExtensionInstanceProc& extLoadingProc) -> void
+    {
+        /* Check if extensions is included in the list of supported extension names */
+        if (IsSupported(extName))
+        {
+            /* Try to load Vulkan extension */
+            if (extLoadingProc(instance, extName, abortOnFailure))
+                RegisterExtension(extensionID);
+        }
     };
 
     #define LOAD_VKEXT(NAME) \
-        LoadExtension("VK_" #NAME, Load_VK_##NAME)
+        LoadExtension(VKExt::NAME, "VK_" #NAME, Load_VK_##NAME)
 
     /* Load platform specific extensions */
     #if defined LLGL_OS_WIN32
@@ -153,18 +184,21 @@ bool VKLoadInstanceExtensions(VkInstance instance)
     LOAD_VKEXT( KHR_android_surface );
     #endif // /LLGL_OS_WIN32
 
+    LOAD_VKEXT( EXT_debug_marker );
+    LOAD_VKEXT( EXT_debug_utils  );
+
     #undef LOAD_VKEXT
 
     return true;
 }
 
-bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions)
+bool VKLoadDeviceExtensions(VkDevice device, const ArrayView<const char*>& supportedDeviceExtensions)
 {
     constexpr bool abortOnFailure = true;
 
-    auto IsSupported = [&supportedExtensions](const char* extName) -> bool
+    auto IsSupported = [&supportedDeviceExtensions](const char* extName) -> bool
     {
-        for (const char* extension : supportedExtensions)
+        for (const char* extension : supportedDeviceExtensions)
         {
             if (std::strcmp(extName, extension) == 0)
                 return true;
@@ -197,7 +231,6 @@ bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& sup
 
     /* Multi-vendor extensions */
     LOAD_VKEXT( KHR_get_physical_device_properties2 );
-    LOAD_VKEXT( EXT_debug_marker                    );
     LOAD_VKEXT( EXT_conditional_rendering           );
     LOAD_VKEXT( EXT_transform_feedback              );
 

@@ -36,6 +36,7 @@ VKTexture::VKTexture(
     const TextureDescriptor&    desc)
 :
     Texture        { desc.type, desc.bindFlags         },
+    device_        { device                            },
     image_         { device                            },
     imageView_     { device, vkDestroyImageView        },
     format_        { VKTypes::Map(desc.format)         },
@@ -44,6 +45,8 @@ VKTexture::VKTexture(
     /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
     image_.AllocateMemoryRegion(deviceMemoryMngr);
+    if (desc.debugName != nullptr)
+        SetDebugName(desc.debugName);
 }
 
 bool VKTexture::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
@@ -163,6 +166,13 @@ SubresourceFootprint VKTexture::GetSubresourceFootprint(std::uint32_t mipLevel) 
     SubresourceFootprint footprint = CalcPackedSubresourceFootprint(GetType(), GetFormat(), extent, mipLevel, GetNumArrayLayers());
     footprint.size = GetAlignedSize(footprint.size, static_cast<std::uint64_t>(image_.GetMemoryRequirements().alignment));
     return footprint;
+}
+
+void VKTexture::SetDebugName(const char* name)
+{
+    #if VK_EXT_debug_marker
+    VKSetDebugName(device_, VK_OBJECT_TYPE_IMAGE, reinterpret_cast<std::uint64_t>(GetVkImage()), name);
+    #endif
 }
 
 // Maps the TextureSwizzleRGBA::a component to a different value for the "Alpha" swizzle format

@@ -6,6 +6,8 @@
  */
 
 #include "VKCore.h"
+#include "Ext/VKExtensions.h"
+#include "Ext/VKExtensionRegistry.h"
 #include "../../Core/StringUtils.h"
 #include "../../Core/MacroUtils.h"
 #include "../../Core/Exception.h"
@@ -152,6 +154,26 @@ VkBool32 VKBoolean(bool value)
 {
     return (value ? VK_TRUE : VK_FALSE);
 }
+
+#if VK_EXT_debug_marker
+
+void VKSetDebugName(VkDevice device, VkObjectType type, std::uint64_t handle, const char* name)
+{
+    if (HasExtension(VKExt::EXT_debug_utils))
+    {
+        VkDebugUtilsObjectNameInfoEXT info;
+        {
+            info.sType          = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+            info.pNext          = nullptr;
+            info.objectType     = type;
+            info.objectHandle   = handle;
+            info.pObjectName    = name;
+        }
+        vkSetDebugUtilsObjectNameEXT(device, &info);
+    }
+}
+
+#endif // /VK_EXT_debug_marker
 
 
 /* ----- Query Functions ----- */

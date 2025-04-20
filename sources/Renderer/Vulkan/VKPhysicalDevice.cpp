@@ -35,13 +35,13 @@ static bool CheckDeviceExtensionSupport(
     VkPhysicalDevice                    physicalDevice,
     const char* const*                  requiredExtensions,
     std::size_t                         numRequiredExtensions,
-    std::vector<VkExtensionProperties>& supportedExtensions)
+    std::vector<VkExtensionProperties>& outSupportedExtensions)
 {
     /* Check if device supports all required extensions */
-    supportedExtensions = VKQueryDeviceExtensionProperties(physicalDevice);
+    outSupportedExtensions = VKQueryDeviceExtensionProperties(physicalDevice);
     std::set<std::string> unsupported(requiredExtensions, requiredExtensions + numRequiredExtensions);
 
-    for (const VkExtensionProperties& ext : supportedExtensions)
+    for (const VkExtensionProperties& ext : outSupportedExtensions)
     {
         if (unsupported.empty())
             break;
@@ -55,7 +55,7 @@ static bool CheckDeviceExtensionSupport(
 
 static bool IsPhysicalDeviceSuitable(
     VkPhysicalDevice                    physicalDevice,
-    std::vector<VkExtensionProperties>& supportedExtensions)
+    std::vector<VkExtensionProperties>& outSupportedExtensions)
 {
     /* Check if physical devices supports at least these extensions */
     std::vector<VkExtensionProperties> extensions;
@@ -69,7 +69,7 @@ static bool IsPhysicalDeviceSuitable(
     if (suitable)
     {
         /* Store all supported extensions */
-        supportedExtensions = std::move(extensions);
+        outSupportedExtensions = std::move(extensions);
         return true;
     }
 
@@ -87,12 +87,12 @@ static bool IsPreferredDeviceVendor(DeviceVendor vendor, long preferredDeviceFla
     }
 }
 
-bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, long preferredDeviceFlags)
+bool VKPhysicalDevice::PickPhysicalDevice(VkInstance instance, const ArrayView<const char*>& supportedInstanceExtensions, long preferredDeviceFlags)
 {
     /* Query all physical devices and pick suitable */
     std::vector<VkPhysicalDevice> physicalDevices = VKQueryPhysicalDevices(instance);
 
-    auto TryPickPhysicalDevice = [this](VkPhysicalDevice device) -> bool
+    auto TryPickPhysicalDevice = [this, &supportedInstanceExtensions](VkPhysicalDevice device) -> bool
     {
         if (!IsPhysicalDeviceSuitable(device, supportedExtensions_))
         {
@@ -366,21 +366,9 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice(VkDevice customLogicalDevice)
 {
     VKDevice device;
     if (customLogicalDevice != VK_NULL_HANDLE)
-    {
-        device.LoadLogicalDeviceWeakRef(
-            physicalDevice_,
-            customLogicalDevice
-        );
-    }
+        device.LoadLogicalDeviceWeakRef(physicalDevice_, customLogicalDevice);
     else
-    {
-        device.CreateLogicalDevice(
-            physicalDevice_,
-            &features_,
-            enabledExtensionNames_.data(),
-            static_cast<std::uint32_t>(enabledExtensionNames_.size())
-        );
-    }
+        device.CreateLogicalDevice(physicalDevice_, &features_, GetExtensionNames());
     return device;
 }
 

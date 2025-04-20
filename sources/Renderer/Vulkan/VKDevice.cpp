@@ -57,15 +57,16 @@ void VKDevice::WaitIdle()
 void VKDevice::CreateLogicalDevice(
     VkPhysicalDevice                    physicalDevice,
     const VkPhysicalDeviceFeatures2*    features,
-    const char* const*                  extensions,
-    std::uint32_t                       numExtensions)
+    const ArrayView<const char*>        extensions)
 {
     /* Initialize queue create description */
     queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
 
     SmallVector<VkDeviceQueueCreateInfo, 2> queueCreateInfos;
 
-    auto AddQueueFamily = [&queueCreateInfos](std::uint32_t family, float queuePriority)
+    const float queuePriority = 1.0f;
+
+    auto AddQueueFamily = [&queueCreateInfos, &queuePriority](std::uint32_t family)
     {
         VkDeviceQueueCreateInfo info;
         {
@@ -79,12 +80,10 @@ void VKDevice::CreateLogicalDevice(
         queueCreateInfos.push_back(info);
     };
 
-    constexpr float queuePriority = 1.0f;
-
-    AddQueueFamily(queueFamilyIndices_.graphicsFamily, queuePriority);
+    AddQueueFamily(queueFamilyIndices_.graphicsFamily);
 
     if (queueFamilyIndices_.graphicsFamily != queueFamilyIndices_.presentFamily)
-        AddQueueFamily(queueFamilyIndices_.presentFamily, queuePriority);
+        AddQueueFamily(queueFamilyIndices_.presentFamily);
 
     /* Create logical device */
     VkDeviceCreateInfo createInfo;
@@ -95,8 +94,8 @@ void VKDevice::CreateLogicalDevice(
         createInfo.pQueueCreateInfos        = queueCreateInfos.data();
         createInfo.enabledLayerCount        = 0;        // deprecated and ignored
         createInfo.ppEnabledLayerNames      = nullptr;  // deprecated and ignored
-        createInfo.enabledExtensionCount    = numExtensions;
-        createInfo.ppEnabledExtensionNames  = extensions;
+        createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames  = extensions.data();
 
         /* Must pass the feature flags either through the chain of pNext (Vulkan 1.1+), or only through pEnabledFeatures (Vulkan 1.0) */
         if (features->pNext != nullptr)

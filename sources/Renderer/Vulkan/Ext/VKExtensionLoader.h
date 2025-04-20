@@ -10,7 +10,7 @@
 
 
 #include "../Vulkan.h"
-#include <vector>
+#include <LLGL/Container/ArrayView.h>
 
 
 namespace LLGL
@@ -18,10 +18,10 @@ namespace LLGL
 
 
 // Loads all Vulkan extensions via the specified VkInstance handle.
-bool VKLoadInstanceExtensions(VkInstance instance);
+bool VKLoadInstanceExtensions(VkInstance instance, const ArrayView<const char*>& supportedInstanceExtensions);
 
 // Loads all Vulkan extensions via the specified VkDevice handle.
-bool VKLoadDeviceExtensions(VkDevice device, const std::vector<const char*>& supportedExtensions);
+bool VKLoadDeviceExtensions(VkDevice device, const ArrayView<const char*>& supportedDeviceExtensions);
 
 
 } // /namespace LLGL

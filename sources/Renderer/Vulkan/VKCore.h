@@ -80,6 +80,10 @@ std::string VKApiVersionToString(std::uint32_t version);
 // Converts the boolean value into a VkBool322 value.
 VkBool32 VKBoolean(bool value);
 
+#if VK_EXT_debug_marker
+// Sets the debug name of the specified Vulkan object.
+void VKSetDebugName(VkDevice device, VkObjectType type, std::uint64_t handle, const char* name);
+#endif
 
 
 /* ----- Query Functions ----- */

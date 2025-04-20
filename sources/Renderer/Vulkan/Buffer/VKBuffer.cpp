@@ -111,6 +111,7 @@ static std::uint32_t GetVKBufferStride(const BufferDescriptor& desc)
 
 VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
     Buffer            { desc.bindFlags                         },
+    device_           { device                                 },
     bufferObj_        { device                                 },
     bufferObjStaging_ { device                                 },
     bufferView_       { device, vkDestroyBufferView            },
@@ -135,6 +136,13 @@ VKBuffer::VKBuffer(VkDevice device, const BufferDescriptor& desc) :
         createInfo.pQueueFamilyIndices      = nullptr;
     }
     bufferObj_.CreateVkBuffer(device, createInfo);
+}
+
+void VKBuffer::SetDebugName(const char* name)
+{
+    #if VK_EXT_debug_marker
+    VKSetDebugName(device_, VK_OBJECT_TYPE_BUFFER, reinterpret_cast<std::uint64_t>(GetVkBuffer()), name);
+    #endif
 }
 
 bool VKBuffer::CreateBufferView(VkDevice device, VKPtr<VkBufferView>& outBufferView, VkDeviceSize offset, VkDeviceSize length)
