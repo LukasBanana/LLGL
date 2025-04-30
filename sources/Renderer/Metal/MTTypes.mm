@@ -153,7 +153,7 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;
         #endif
         case Format::D32Float:          return MTLPixelFormatDepth32Float;
-        case Format::D24UNormS8UInt:    return MTLPixelFormatDepth32Float_Stencil8; // MTLPixelFormatDepth24Unorm_Stencil8 not supported?
+        case Format::D24UNormS8UInt:    return MTLPixelFormatDepth24Unorm_Stencil8;
         case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
         /* --- Block compression (BC) formats --- */
