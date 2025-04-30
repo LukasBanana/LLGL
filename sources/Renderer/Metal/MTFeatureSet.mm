@@ -22,10 +22,10 @@ namespace LLGL
 static int FeatureSetToVersion(MTLFeatureSet fset)
 {
     #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
-    if (fset >= MTLFeatureSet_macOS_GPUFamily1_v4)
-        return 104; // 1.4
     if (fset >= MTLFeatureSet_macOS_GPUFamily2_v1)
         return 201; // 2.1
+    if (fset >= MTLFeatureSet_macOS_GPUFamily1_v4)
+        return 104; // 1.4
     #endif
 
     #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_13
