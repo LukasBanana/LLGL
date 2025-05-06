@@ -5,10 +5,14 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
-#include "LinuxGLSwapChainContext.h"
-#include "LinuxGLContext.h"
+#include "../GLSwapChainContext.h"
+#include "LinuxGLSwapChainContextX11.h"
+
+#if LLGL_LINUX_ENABLE_WAYLAND
+#include "LinuxGLSwapChainContextWayland.h"
+#endif
+
 #include "../../../../Core/CoreUtils.h"
-#include "../../../../Core/Exception.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -22,61 +26,37 @@ namespace LLGL
 
 std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
-    return MakeUnique<LinuxGLSwapChainContext>(static_cast<LinuxGLContext&>(context), surface);
+#if LLGL_LINUX_ENABLE_WAYLAND
+    NativeHandle nativeHandle = {};
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+
+    if (nativeHandle.type == NativeType::Wayland)
+    {
+        return MakeUnique<LinuxWaylandGLSwapChainContext>(static_cast<LinuxGLContextWayland&>(context), surface);
+    }
+    else
+    {
+        return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContextX11&>(context), surface);
+    }
+#else
+    return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContextX11&>(context), surface);
+#endif
 }
 
 bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
 {
-    return LinuxGLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxGLSwapChainContext*>(context));
-}
+#if LLGL_LINUX_ENABLE_WAYLAND
+    LinuxGLContext& linuxContext = LLGL_CAST(LinuxGLContext&, context->GetGLContext());
 
-
-/*
- * LinuxGLSwapChainContext class
- */
-
-LinuxGLSwapChainContext::LinuxGLSwapChainContext(LinuxGLContext& context, Surface& surface) :
-    GLSwapChainContext { context                 },
-    glc_               { context.GetGLXContext() }
-{
-    /* Get native window handle */
-    NativeHandle nativeHandle = {};
-    if (surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle)))
-    {
-        dpy_ = nativeHandle.display;
-        wnd_ = nativeHandle.window;
-    }
+    if (linuxContext.IsWayland())
+        return LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(static_cast<LinuxWaylandGLSwapChainContext*>(context));
     else
-        LLGL_TRAP("failed to get X11 Display and Window from swap-chain surface");
+        return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
+#else
+    return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
+#endif
 }
 
-bool LinuxGLSwapChainContext::HasDrawable() const
-{
-    return (wnd_ != 0);
 }
-
-bool LinuxGLSwapChainContext::SwapBuffers()
-{
-    glXSwapBuffers(dpy_, wnd_);
-    return true;
-}
-
-void LinuxGLSwapChainContext::Resize(const Extent2D& resolution)
-{
-    // dummy
-}
-
-bool LinuxGLSwapChainContext::MakeCurrentGLXContext(LinuxGLSwapChainContext* context)
-{
-    if (context)
-        return glXMakeCurrent(context->dpy_, context->wnd_, context->glc_);
-    else
-        return glXMakeCurrent(nullptr, 0, 0);
-}
-
-
-} // /namespace LLGL
-
-
 
 // ================================================================================

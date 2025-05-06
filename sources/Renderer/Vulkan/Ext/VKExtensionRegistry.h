@@ -25,6 +25,10 @@ enum class VKExt
     KHR_win32_surface,
     KHR_xlib_surface,
 
+#if LLGL_LINUX_ENABLE_WAYLAND
+    KHR_wayland_surface,
+#endif
+
     /* Khronos extensions */
     KHR_maintenance1,
     KHR_get_physical_device_properties2,

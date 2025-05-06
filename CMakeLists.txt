@@ -176,6 +176,10 @@ if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
 endif()
 
+if(UNIX AND NOT APPLE)
+    option(LLGL_LINUX_ENABLE_WAYLAND "Enable support for Wayland protocol" OFF)
+endif()
+
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.16")
     option(LLGL_UNITY_BUILD "Build LLGL modules as unity builds in batches. This can speedup compilation time." OFF)
 endif()
@@ -543,6 +547,10 @@ endif()
 
 if(LLGL_UNITY_BUILD)
     ADD_DEFINE(LLGL_UNITY_BUILD)
+endif()
+
+if (LLGL_LINUX_ENABLE_WAYLAND)
+    ADD_DEFINE(LLGL_LINUX_ENABLE_WAYLAND)
 endif()
 
 if(LLGL_WASM_PLATFORM)

@@ -79,6 +79,9 @@ static bool IsVulkanInstanceExtRequired(const StringView& name)
         || name == VK_KHR_WIN32_SURFACE_EXTENSION_NAME
         #elif defined LLGL_OS_LINUX
         || name == VK_KHR_XLIB_SURFACE_EXTENSION_NAME
+        #if LLGL_LINUX_ENABLE_WAYLAND
+        || name == VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME
+        #endif
         #elif defined LLGL_OS_ANDROID
         || name == VK_KHR_ANDROID_SURFACE_EXTENSION_NAME
         #elif defined LLGL_OS_MACOS || defined LLGL_OS_IOS

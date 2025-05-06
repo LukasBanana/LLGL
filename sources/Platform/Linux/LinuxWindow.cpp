@@ -147,9 +147,13 @@ bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
         auto* handle = static_cast<NativeHandle*>(nativeHandle);
-        handle->display = display_;
-        handle->window  = wnd_;
-        handle->visual  = visual_;
+        handle->x11.display = display_;
+        handle->x11.window  = wnd_;
+        handle->x11.visual  = visual_;
+        handle->type        = NativeType::X11;
+        handle->display     = display_;
+        handle->window      = wnd_;
+        handle->visual      = visual_;
         return true;
     }
     return false;
@@ -284,8 +288,8 @@ void LinuxWindow::OpenX11Window()
     {
         /* Get X11 display from context handle */
         LLGL_ASSERT(desc_.windowContextSize == sizeof(NativeHandle));
-        display_    = nativeHandle->display;
-        visual_     = nativeHandle->visual;
+        display_    = nativeHandle->x11.display;
+        visual_     = nativeHandle->x11.visual;
     }
     else
     {
@@ -299,10 +303,10 @@ void LinuxWindow::OpenX11Window()
         LLGL_TRAP("failed to open X11 display");
 
     /* Setup common parameters for window creation */
-    ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->window : DefaultRootWindow(display_));
-    int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
-    ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->visual->visual : DefaultVisual(display_, screen));
-    int         depth       = (nativeHandle != nullptr ? nativeHandle->visual->depth : DefaultDepth(display_, screen));
+    ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->x11.window : DefaultRootWindow(display_));
+    int         screen      = (nativeHandle != nullptr ? nativeHandle->x11.screen : DefaultScreen(display_));
+    ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->x11.visual->visual : DefaultVisual(display_, screen));
+    int         depth       = (nativeHandle != nullptr ? nativeHandle->x11.visual->depth : DefaultDepth(display_, screen));
     int         borderSize  = 0;
 
     /* Setup window attributes */
@@ -316,7 +320,7 @@ void LinuxWindow::OpenX11Window()
     if (nativeHandle)
     {
         valueMask |= CWColormap;
-        attribs.colormap = nativeHandle->colorMap;
+        attribs.colormap = nativeHandle->x11.colorMap;
     }
     else
         valueMask |= CWBackPixel;

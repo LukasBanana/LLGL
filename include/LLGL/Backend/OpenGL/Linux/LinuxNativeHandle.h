@@ -9,7 +9,12 @@
 #define LLGL_OPENGL_LINUX_NATIVE_HANDLE_H
 
 
+#include <LLGL/Deprecated.h>
 #include <GL/glx.h>
+
+#if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
+    #include <EGL/egl.h>
+#endif
 
 
 namespace LLGL
@@ -18,6 +23,10 @@ namespace LLGL
 namespace OpenGL
 {
 
+enum class RenderSystemNativeType : char {
+    GLX = 0,
+    EGL
+};
 
 /**
 \brief GNU/Linux native handle structure for the OpenGL render system.
@@ -26,7 +35,19 @@ namespace OpenGL
 */
 struct RenderSystemNativeHandle
 {
-    GLXContext context;
+    RenderSystemNativeType type;
+
+    union
+    {
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use glx instead.")
+        GLXContext context;
+        GLXContext glx;
+        #if LLGL_EXPOSE_WAYLAND || LLGL_LINUX_ENABLE_WAYLAND
+        EGLContext egl;
+        #else
+        void*      egl;
+        #endif
+    };
 };
 
 
