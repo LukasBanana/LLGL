@@ -186,7 +186,7 @@ void GLShaderProgram::BindAttribLocations(GLuint program, std::size_t numVertexA
 
 void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs)
 {
-    #if LLGL_OPENGL && EXT_gpu_shader4
+    #if LLGL_OPENGL && GL_EXT_gpu_shader4
     /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outpus anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
