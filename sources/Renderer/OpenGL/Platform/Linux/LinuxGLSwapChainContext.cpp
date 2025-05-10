@@ -14,6 +14,7 @@
 
 #include "../../../../Core/CoreUtils.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <wayland-egl-core.h>
 
 
 namespace LLGL
@@ -24,7 +25,7 @@ namespace LLGL
  * GLSwapChainContext class
  */
 
-std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
+std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface, bool wayland)
 {
     #if LLGL_LINUX_ENABLE_WAYLAND
     NativeHandle nativeHandle = {};

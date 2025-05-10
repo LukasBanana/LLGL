@@ -83,6 +83,14 @@ std::unique_ptr<GLContext> GLContext::Create(
     }
 }
 
+void LinuxGLContext::CreateProxyEGLContext(
+    const GLPixelFormat&                    pixelFormat,
+    const NativeHandle&                     nativeWindowHandle,
+    const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
+{
+    LLGL_ASSERT(nativeWindowHandle.type == NativeHandleType::Wayland);
+    LLGL_TRAP("TODO");
+}
 
 } // /namespace LLGL
 
