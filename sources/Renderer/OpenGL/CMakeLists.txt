@@ -243,7 +243,13 @@ if(LLGL_BUILD_RENDERER_OPENGL)
     endif()
 
     set(OpenGL_GL_PREFERENCE GLVND)
-    find_package(OpenGL REQUIRED COMPONENTS EGL)
+
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        find_package(OpenGL REQUIRED COMPONENTS EGL)
+    else()
+        find_package(OpenGL REQUIRED)
+    endif()
+
     if(OPENGL_FOUND)
         include_directories(${OPENGL_INCLUDE_DIR})
         
