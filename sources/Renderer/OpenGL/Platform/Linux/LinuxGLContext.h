@@ -46,9 +46,13 @@ class LinuxGLContext : public GLContext
         static ::XVisualInfo* ChooseVisual(::Display* display, int screen, const GLPixelFormat& pixelFormat, int& outSamples);
 
         // Returns the native X11 <GLXContext> object.
-        inline ::GLXContext GetGLXContext() const
+        inline void* GetGLXContext() const
         {
-            return glc_;
+            return api_.glx.context;
+        }
+
+        inline EGLConfig GetEGLConfig() const {
+            return api_.egl.config;
         }
 
     private:
@@ -64,23 +68,62 @@ class LinuxGLContext : public GLContext
             LinuxGLContext*                     sharedContext
         );
 
+        void CreateEGLContext(
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
+            const NativeHandle&                 nativeHandle,
+            LinuxGLContext*                     sharedContext
+        );
+
         void DeleteGLXContext();
+        void DeleteEGLContext();
 
         GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
         GLXContext CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
 
-        void CreateProxyContext(
+        EGLContext CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config);
+        EGLContext CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config);
+
+        void CreateProxyGLXContext(
+            const GLPixelFormat&                    pixelFormat,
+            const NativeHandle&                     nativeWindowHandle,
+            const OpenGL::RenderSystemNativeHandle& nativeContextHandle
+        );
+
+        void CreateProxyEGLContext(
             const GLPixelFormat&                    pixelFormat,
             const NativeHandle&                     nativeWindowHandle,
             const OpenGL::RenderSystemNativeHandle& nativeContextHandle
         );
 
     private:
+        enum class APIType : char {
+            GLX,
+            EGL
+        };
 
-        ::Display*      display_    = nullptr;
-        ::GLXContext    glc_        = nullptr;
-        int             samples_    = 1;
-        bool            isProxyGLC_ = false;
+        struct GLXData {
+            ::Display*       display;
+            ::GLXContext     context;
+        };
+
+        struct EGLData {
+            EGLDisplay       display;
+            EGLContext       context;
+            EGLConfig        config;
+        };
+
+        struct ApiData {
+            union {
+                GLXData glx;
+                EGLData egl;
+            };
+
+            APIType type;             
+        } api_;
+
+        int        samples_    = 1;
+        bool       isProxyGLC_ = false;
 
 };
 

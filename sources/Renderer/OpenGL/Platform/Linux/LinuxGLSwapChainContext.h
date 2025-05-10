@@ -12,7 +12,7 @@
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"
 #include <X11/Xlib.h>
-
+#include <wayland-client.h>
 
 namespace LLGL
 {
@@ -21,12 +21,12 @@ namespace LLGL
 class Surface;
 class LinuxGLContext;
 
-class LinuxGLSwapChainContext final : public GLSwapChainContext
+class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 {
 
     public:
 
-        LinuxGLSwapChainContext(LinuxGLContext& context, Surface& surface);
+        LinuxX11GLSwapChainContext(LinuxGLContext& context, Surface& surface);
 
         bool HasDrawable() const override;
         bool SwapBuffers() override;
@@ -34,7 +34,7 @@ class LinuxGLSwapChainContext final : public GLSwapChainContext
 
     public:
 
-        static bool MakeCurrentGLXContext(LinuxGLSwapChainContext* context);
+        static bool MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context);
 
     private:
 
@@ -44,6 +44,28 @@ class LinuxGLSwapChainContext final : public GLSwapChainContext
 
 };
 
+class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
+{
+
+    public:
+
+        LinuxWaylandGLSwapChainContext(LinuxGLContext& context, Surface& surface);
+
+        bool HasDrawable() const override;
+        bool SwapBuffers() override;
+        void Resize(const Extent2D& resolution) override;
+
+    public:
+
+        static bool MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext* context);
+
+    private:
+
+        EGLDisplay dpy_ = nullptr;
+        EGLSurface wnd_ = nullptr;
+        EGLContext         glc_ = nullptr;
+
+};
 
 } // /namespace LLGL
 

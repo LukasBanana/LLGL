@@ -23,22 +23,24 @@ namespace LLGL
 
 void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelFormat, NativeHandle& windowContext)
 {
-    /* Get X11 display */
-    windowContext.display = LinuxSharedX11Display::GetShared()->GetNative();
-    LLGL_ASSERT(windowContext.display != nullptr, "failed to obtain shared X11 display");
+    windowContext.type = NativeHandleType::X11;
 
-    windowContext.window = DefaultRootWindow(windowContext.display);
-    windowContext.screen = DefaultScreen(windowContext.display);
+    /* Get X11 display */
+    windowContext.x11.display = LinuxSharedX11Display::GetShared()->GetNative();
+    LLGL_ASSERT(windowContext.x11.display != nullptr, "failed to obtain shared X11 display");
+
+    windowContext.x11.window = DefaultRootWindow(windowContext.x11.display);
+    windowContext.x11.screen = DefaultScreen(windowContext.x11.display);
 
     /* Choose X11 visual for pixel format */
     int samples = 0;
-    windowContext.visual = LinuxGLContext::ChooseVisual(windowContext.display, windowContext.screen, pixelFormat, samples);
+    windowContext.x11.visual = LinuxGLContext::ChooseVisual(windowContext.x11.display, windowContext.x11.screen, pixelFormat, samples);
     pixelFormat.samples = samples;
-    if (!windowContext.visual)
+    if (!windowContext.x11.visual)
         LLGL_TRAP("failed to choose X11 visual for OpenGL");
 
     /* Create Colormap structure */
-    windowContext.colorMap = XCreateColormap(windowContext.display, windowContext.window, windowContext.visual->visual, AllocNone);
+    windowContext.x11.colorMap = XCreateColormap(windowContext.x11.display, windowContext.x11.window, windowContext.x11.visual->visual, AllocNone);
 }
 
 

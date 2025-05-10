@@ -22,6 +22,7 @@ DECL_VKPROC( vkCreateWin32SurfaceKHR );
 #elif defined LLGL_OS_LINUX
 
 DECL_VKPROC( vkCreateXlibSurfaceKHR );
+DECL_VKPROC( vkCreateWaylandSurfaceKHR );
 
 #elif defined LLGL_OS_ANDROID
 

@@ -21,6 +21,9 @@
 #   include <GL/gl.h>
 #   include <GL/glext.h>
 #   include <GL/glx.h>
+#   include <EGL/egl.h>
+#   include <EGL/eglext.h>
+
 #elif defined LLGL_OS_MACOS
 #   include "../../../../Platform/MacOS/MacOSCompatibility.h"
 #   if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7

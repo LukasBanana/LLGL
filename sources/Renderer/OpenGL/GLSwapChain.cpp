@@ -58,10 +58,17 @@ GLSwapChain::GLSwapChain(
 
     #ifdef LLGL_OS_LINUX
 
-    /* Set up surface for the swap-chain and pass native context handle */
-    NativeHandle windowContext = {};
-    ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
-    SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
+    wayland = surface->IsWayland();
+
+    if (wayland) {
+        /* Setup surface for the swap-chain */
+        SetOrCreateSurface(surface, UTF8String{}, desc);
+    } else {
+        /* Set up surface for the swap-chain and pass native context handle */
+        NativeHandle windowContext = {};
+        ChooseGLXVisualAndGetX11WindowContext(pixelFormat, windowContext);
+        SetOrCreateSurface(surface, UTF8String{}, desc, &windowContext, sizeof(windowContext));
+    }
 
     #else
 
@@ -78,8 +85,8 @@ GLSwapChain::GLSwapChain(
 
     /* Create platform dependent OpenGL context */
     context_ = contextMngr.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
-    swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface());
-    GLSwapChainContext::MakeCurrent(swapChainContext_.get());
+    swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface(), wayland);
+    GLSwapChainContext::MakeCurrent(swapChainContext_.get(), wayland);
 
     /* Get state manager and reset current framebuffer height */
     GetStateManager().ResetFramebufferHeight(framebufferHeight_);
@@ -143,12 +150,12 @@ bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
     if (swapChain)
     {
         /* Make OpenGL context of the specified render contex current and notify the state manager */
-        bool result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get());
+        bool result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get(), swapChain->wayland);
         GLStateManager::Get().ResetFramebufferHeight(swapChain->framebufferHeight_);
         return result;
     }
     else
-        return GLSwapChainContext::MakeCurrent(nullptr);
+        return GLSwapChainContext::MakeCurrent(nullptr, swapChain->wayland);
 }
 
 
@@ -171,7 +178,7 @@ bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 
 bool GLSwapChain::SetSwapInterval(int swapInterval)
 {
-    GLSwapChainContext::MakeCurrent(swapChainContext_.get());
+    GLSwapChainContext::MakeCurrent(swapChainContext_.get(), wayland);
     return GLContext::SetCurrentSwapInterval(swapInterval);
 }
 

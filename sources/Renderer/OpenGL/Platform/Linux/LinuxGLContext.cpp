@@ -19,6 +19,7 @@
 #include <LLGL/Log.h>
 #include <algorithm>
 
+#include <wayland-egl.h>
 
 namespace LLGL
 {
@@ -75,19 +76,35 @@ LinuxGLContext::LinuxGLContext(
     /* Create GLX or proxy context if a custom one is specified */
     NativeHandle nativeWindowHandle = {};
     surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
+
+    bool is_wayland = nativeWindowHandle.type == NativeHandleType::Wayland;
+
     if (customNativeHandle != nullptr)
     {
         isProxyGLC_ = true;
-        CreateProxyContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
+        if (is_wayland)
+            CreateProxyEGLContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
+        else
+            CreateProxyGLXContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
     }
     else
-        CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
+    {
+        if (is_wayland)
+            CreateEGLContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
+        else
+            CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
+    }
 }
 
 LinuxGLContext::~LinuxGLContext()
 {
-    if (!isProxyGLC_)
-        DeleteGLXContext();
+    if (!isProxyGLC_) {
+        if (api_.type == APIType::EGL) {
+            DeleteGLXContext();
+        } else if (api_.type == APIType::GLX) {
+            DeleteEGLContext();
+        }
+    }
 }
 
 int LinuxGLContext::GetSamples() const
@@ -100,7 +117,15 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(OpenGL::RenderSystemNativeHandle))
     {
         auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
-        nativeHandleGL->context = glc_;
+
+        if (api_.type == APIType::EGL) {
+            nativeHandleGL->egl = api_.egl.context;
+            nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::EGL;
+        } else if (api_.type == APIType::GLX) {
+            nativeHandleGL->glx = api_.glx.context;
+            nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::GLX;
+        }
+
         return true;
     }
     return false;
@@ -209,53 +234,199 @@ bool LinuxGLContext::SetSwapInterval(int interval)
     return false;
 }
 
+void LinuxGLContext::CreateEGLContext(
+    const GLPixelFormat&                pixelFormat,
+    const RendererConfigurationOpenGL&  profile,
+    const NativeHandle&                 nativeHandle,
+    LinuxGLContext*                     sharedContext)
+{
+    LLGL_ASSERT(nativeHandle.type == NativeHandleType::Wayland, "Window native handle type must be Wayland");
+
+    LLGL_ASSERT_PTR(nativeHandle.wayland.display);
+    LLGL_ASSERT_PTR(nativeHandle.wayland.window);
+
+    EGLContext glcShared = sharedContext != nullptr ? sharedContext->api_.egl.context : nullptr;
+
+    EGLDisplay display = eglGetDisplay(nativeHandle.wayland.display);
+    if (display == EGL_NO_DISPLAY)
+        LLGL_TRAP("Failed to get EGL display");
+
+    api_.egl.display = display;
+
+    if (eglInitialize(display, nullptr, nullptr) != EGL_TRUE)
+        LLGL_TRAP("Failed to initialize EGL");
+
+    /* Create intermediate GL context OpenGL context with Wayland lib */
+    EGLContext intermediateGlc = CreateEGLContextCompatibilityProfile(nullptr, &api_.egl.config);
+    if (intermediateGlc == EGL_NO_CONTEXT)
+        LLGL_TRAP("Failed to create EGL context with compatibility profile");
+
+    if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
+        Log::Errorf("eglMakeCurrent failed on EGL compatibility profile\n");
+
+    if (profile.contextProfile == OpenGLContextProfile::CoreProfile) {
+        api_.egl.context = CreateEGLContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits, &api_.egl.config);
+    }
+
+    if (api_.egl.context) {
+        if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
+            Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
+
+        /* Valid core profile created, so we can delete the intermediate GLX context */
+        eglDestroyContext(display, intermediateGlc);
+
+        /* Deduce color and depth-stencil formats */
+        SetDefaultColorFormat();
+        DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
+    } else {
+        /* No core profile created, so we use the intermediate GLX context */
+        api_.egl.context = intermediateGlc;
+
+        /* Set fixed color and depth-stencil formats as default values */
+        SetDefaultColorFormat();
+        SetDefaultDepthStencilFormat();
+    }
+}
+
+EGLContext LinuxGLContext::CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config) {
+    /* Query supported GL versions */
+    if (major == 0 && minor == 0)
+    {
+        /* Query highest possible GL version from intermediate context */
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+    }
+
+    if (major < 3)
+    {
+        /* Don't try to create a core profile when GL version is below 3.0 */
+        Log::Errorf("cannot create OpenGL core profile with GL version %d.%d\n", major, minor);
+        return nullptr;
+    }
+
+    EGLDisplay display = api_.egl.display;
+
+    /* Create core profile */
+    const int fbAttribs[] =
+    {
+        EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
+        EGL_RED_SIZE,          8,
+        EGL_GREEN_SIZE,        8,
+        EGL_BLUE_SIZE,         8,
+        EGL_ALPHA_SIZE,        8,
+        EGL_DEPTH_SIZE,        depthBits,
+        EGL_STENCIL_SIZE,      stencilBits,
+        EGL_NONE
+    };
+
+    EGLint numConfigs = 0;
+    
+    if ((eglGetConfigs(display, nullptr, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0))
+        LLGL_TRAP("Failed to get EGL configs");
+
+    if ((eglChooseConfig(display, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || (numConfigs != 1))
+        LLGL_TRAP("Failed to choose EGL config");
+
+    EGLint contextAttribs[] = {
+        EGL_CONTEXT_MAJOR_VERSION, major,
+        EGL_CONTEXT_MINOR_VERSION, minor,
+        EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
+        EGL_NONE
+    };
+
+    eglBindAPI(EGL_OPENGL_API);
+
+    return eglCreateContext(display, *config, glcShared, contextAttribs);
+}
+
+EGLContext LinuxGLContext::CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config) {
+    EGLDisplay display = api_.egl.display;
+
+    const int fbAttribs[] =
+    {
+        EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
+        EGL_RED_SIZE,          8,
+        EGL_GREEN_SIZE,        8,
+        EGL_BLUE_SIZE,         8,
+        EGL_ALPHA_SIZE,        8,
+        EGL_NONE
+    };
+
+    EGLint numConfigs = 0;
+    if (eglGetConfigs(display, nullptr, 0, &numConfigs) != EGL_TRUE || numConfigs == 0)
+        LLGL_TRAP("Failed to get EGL configs");
+
+    if ((eglChooseConfig(display, fbAttribs, config, 1, &numConfigs) != EGL_TRUE) || numConfigs != 1)
+        LLGL_TRAP("Failed to choose EGL config");
+
+    EGLint contextAttribs[] = {
+        EGL_CONTEXT_MAJOR_VERSION, 3,
+        EGL_CONTEXT_MINOR_VERSION, 3,
+        EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT,
+        EGL_NONE
+    };
+
+    eglBindAPI(EGL_OPENGL_API);
+
+    return eglCreateContext(display, *config, glcShared, contextAttribs);
+}
+
+
 void LinuxGLContext::CreateGLXContext(
     const GLPixelFormat&                pixelFormat,
     const RendererConfigurationOpenGL&  profile,
     const NativeHandle&                 nativeHandle,
     LinuxGLContext*                     sharedContext)
 {
-    LLGL_ASSERT_PTR(nativeHandle.display);
-    LLGL_ASSERT_PTR(nativeHandle.window);
+    LLGL_ASSERT(nativeHandle.type == NativeHandleType::X11, "Window native handle type must be X11");
 
-    GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
+    LLGL_ASSERT_PTR(nativeHandle.x11.display);
+    LLGL_ASSERT_PTR(nativeHandle.x11.window);
+
+    GLXContext glcShared = sharedContext != nullptr ? sharedContext->api_.glx.context : nullptr;
+
+    ::Display* display = nativeHandle.x11.display;
 
     /* Get X11 display, window, and visual information */
-    display_ = nativeHandle.display;
+    api_.glx.display = display;
 
     /* Ensure GLX is a supported X11 extension */
     int errorBase = 0, eventBase = 0;
-    if (glXQueryExtension(display_, &errorBase, &eventBase) == False)
+    if (glXQueryExtension(display, &errorBase, &eventBase) == False)
         LLGL_TRAP("GLX extension is not supported by X11 implementation");
 
     /* Get X11 visual information or choose it now */
-    ::XVisualInfo* visual = nativeHandle.visual;
+    ::XVisualInfo* visual = nativeHandle.x11.visual;
     if (visual == nullptr)
     {
-        visual = LinuxGLContext::ChooseVisual(display_, nativeHandle.screen, pixelFormat, samples_);
+        visual = LinuxGLContext::ChooseVisual(display, nativeHandle.x11.screen, pixelFormat, samples_);
         LLGL_ASSERT(visual != nullptr, "failed to choose X11VisualInfo");
     }
 
     /* Create intermediate GL context OpenGL context with X11 lib */
     GLXContext intermediateGlc = CreateGLXContextCompatibilityProfile(visual, nullptr);
 
-    if (glXMakeCurrent(display_, nativeHandle.window, intermediateGlc) != True)
+    if (glXMakeCurrent(display, nativeHandle.x11.window, intermediateGlc) != True)
         Log::Errorf("glXMakeCurrent failed on GLX compatibility profile\n");
 
     if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        glc_ = CreateGLXContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
+        api_.glx.context = CreateGLXContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits);
     }
 
-    if (glc_)
+    if (api_.glx.context)
     {
         /* Make new OpenGL context current */
-        if (glXMakeCurrent(display_, nativeHandle.window, glc_) != True)
+        if (glXMakeCurrent(display, nativeHandle.x11.window, api_.glx.context) != True)
             Log::Errorf("glXMakeCurrent failed on GLX core profile\n");
 
         /* Valid core profile created, so we can delete the intermediate GLX context */
-        glXDestroyContext(display_, intermediateGlc);
+        glXDestroyContext(display, intermediateGlc);
 
         /* Deduce color and depth-stencil formats */
         SetDefaultColorFormat();
@@ -264,7 +435,7 @@ void LinuxGLContext::CreateGLXContext(
     else
     {
         /* No core profile created, so we use the intermediate GLX context */
-        glc_ = intermediateGlc;
+        api_.glx.context = intermediateGlc;
 
         /* Set fixed color and depth-stencil formats as default values */
         SetDefaultColorFormat();
@@ -274,8 +445,13 @@ void LinuxGLContext::CreateGLXContext(
 
 void LinuxGLContext::DeleteGLXContext()
 {
-    glXMakeCurrent(display_, None, nullptr);
-    glXDestroyContext(display_, glc_);
+    glXMakeCurrent(api_.glx.display, None, nullptr);
+    glXDestroyContext(api_.glx.display, api_.glx.context);
+}
+
+void LinuxGLContext::DeleteEGLContext() {
+    eglMakeCurrent(api_.glx.display, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
+    eglDestroyContext(api_.glx.display, api_.glx.context);
 }
 
 GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
@@ -320,10 +496,10 @@ GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int
             None
         };
 
-        int screen = DefaultScreen(display_);
+        int screen = DefaultScreen(api_.glx.display);
 
         int fbCount = 0;
-        GLXFBConfig* fbcList = glXChooseFBConfig(display_, screen, fbAttribs, &fbCount);
+        GLXFBConfig* fbcList = glXChooseFBConfig(api_.glx.display, screen, fbAttribs, &fbCount);
 
         if (fbcList != nullptr && fbCount > 0)
         {
@@ -336,7 +512,7 @@ GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int
                 None
             };
 
-            GLXContext glc = glXCreateContextAttribsARB(display_, fbcList[0], nullptr, True, contextAttribs);
+            GLXContext glc = glXCreateContextAttribsARB(api_.glx.display, fbcList[0], nullptr, True, contextAttribs);
 
             XFree(fbcList);
 
@@ -353,22 +529,27 @@ GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int
 GLXContext LinuxGLContext::CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared)
 {
     /* Create compatibility profile */
-    return glXCreateContext(display_, visual, glcShared, GL_TRUE);
+    return glXCreateContext(api_.glx.display, visual, glcShared, GL_TRUE);
 }
 
-void LinuxGLContext::CreateProxyContext(
+void LinuxGLContext::CreateProxyGLXContext(
     const GLPixelFormat&                    pixelFormat,
     const NativeHandle&                     nativeWindowHandle,
     const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
 {
-    LLGL_ASSERT_PTR(nativeWindowHandle.display);
-    LLGL_ASSERT_PTR(nativeContextHandle.context);
+    LLGL_ASSERT(nativeWindowHandle.type == NativeHandleType::X11);
+    LLGL_ASSERT(nativeContextHandle.type == OpenGL::RenderSystemNativeHandleType::GLX);
+
+    LLGL_ASSERT_PTR(nativeWindowHandle.x11.display);
+    LLGL_ASSERT_PTR(nativeContextHandle.glx);
+
+    ::Display* display = static_cast<::Display*>(nativeWindowHandle.x11.display);
 
     /* Get X11 display, window, and visual information */
-    display_    = nativeWindowHandle.display;
-    glc_        = nativeContextHandle.context;
+    api_.glx.display    = display;
+    api_.glx.context    = nativeContextHandle.glx;
 
-    if (glXMakeCurrent(display_, nativeWindowHandle.window, glc_) != True)
+    if (glXMakeCurrent(display, nativeWindowHandle.x11.window, api_.glx.context) != True)
         Log::Errorf("glXMakeCurrent failed on custom GLX context\n");
 
     /* Deduce color and depth-stencil formats */
@@ -376,6 +557,14 @@ void LinuxGLContext::CreateProxyContext(
     DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
 }
 
+void LinuxGLContext::CreateProxyEGLContext(
+    const GLPixelFormat&                    pixelFormat,
+    const NativeHandle&                     nativeWindowHandle,
+    const OpenGL::RenderSystemNativeHandle& nativeContextHandle)
+{
+    LLGL_ASSERT(nativeWindowHandle.type == NativeHandleType::Wayland);
+    LLGL_TRAP("TODO");
+}
 
 } // /namespace LLGL
 

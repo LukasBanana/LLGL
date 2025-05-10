@@ -20,6 +20,8 @@
 #include <limits.h>
 #include <set>
 
+#include <vulkan/vulkan_wayland.h>
+
 
 namespace LLGL
 {
@@ -370,16 +372,32 @@ void VKSwapChain::CreateGpuSurface()
 
     #elif defined LLGL_OS_LINUX
 
-    VkXlibSurfaceCreateInfoKHR createInfo;
+    // Create Xlib surface
+    if (nativeHandle.type == NativeHandleType::X11)
     {
+        VkXlibSurfaceCreateInfoKHR createInfo;
         createInfo.sType    = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         createInfo.pNext    = nullptr;
         createInfo.flags    = 0;
-        createInfo.dpy      = nativeHandle.display;
-        createInfo.window   = nativeHandle.window;
+        createInfo.dpy      = nativeHandle.x11.display;
+        createInfo.window   = nativeHandle.x11.window;
+
+        VkResult result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+        VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
     }
-    VkResult result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
+    // Create Wayland surface
+    else if (nativeHandle.type == NativeHandleType::Wayland)
+    {
+        VkWaylandSurfaceCreateInfoKHR createInfo;
+        createInfo.sType    = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+        createInfo.pNext    = nullptr;
+        createInfo.flags    = 0;
+        createInfo.display  = nativeHandle.wayland.display;
+        createInfo.surface  = nativeHandle.wayland.window;
+
+        VkResult result = vkCreateWaylandSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+        VKThrowIfFailed(result, "failed to create Wayland surface for Vulkan swap-chain");
+    }
 
     #elif defined LLGL_OS_ANDROID
 

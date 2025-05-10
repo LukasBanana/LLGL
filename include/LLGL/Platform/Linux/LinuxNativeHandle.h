@@ -12,13 +12,12 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include <wayland-client.h>
 
 namespace LLGL
 {
 
-
-//! Linux native handle structure.
-struct NativeHandle
+struct X11NativeHandle
 {
     //! X11 display connection.
     ::Display*      display;
@@ -34,6 +33,29 @@ struct NativeHandle
 
     //! X11 screen index.
     int             screen;
+};
+
+struct WaylandNativeHandle
+{
+    struct wl_surface* window;
+    struct wl_display* display;
+};
+
+enum class NativeHandleType : char
+{
+    X11 = 0,
+    Wayland = 1
+};
+
+//! Linux native handle structure.
+struct NativeHandle
+{
+    union {
+        X11NativeHandle x11;
+        WaylandNativeHandle wayland;
+    };
+
+    NativeHandleType type;
 };
 
 

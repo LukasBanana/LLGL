@@ -24,6 +24,7 @@ enum class VKExt
     KHR_android_surface,
     KHR_win32_surface,
     KHR_xlib_surface,
+    KHR_wayland_surface,
 
     /* Khronos extensions */
     KHR_maintenance1,

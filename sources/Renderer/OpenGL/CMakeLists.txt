@@ -243,7 +243,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
     endif()
 
     set(OpenGL_GL_PREFERENCE GLVND)
-    find_package(OpenGL REQUIRED)
+    find_package(OpenGL REQUIRED COMPONENTS EGL)
     if(OPENGL_FOUND)
         include_directories(${OPENGL_INCLUDE_DIR})
         
@@ -256,6 +256,15 @@ if(LLGL_BUILD_RENDERER_OPENGL)
         endif()
         
         ADD_PROJECT_DEFINE(LLGL_OpenGL LLGL_OPENGL)
+        
+        if(OpenGL_EGL_FOUND)
+            include_directories(${OPENGL_EGL_INCLUDE_DIRS})
+            
+            target_link_libraries(LLGL_OpenGL LLGL OpenGL::EGL wayland-egl)
+        else()
+            message(FATAL_ERROR "LLGL_BUILD_RENDERER_OPENGL failed: missing EGL libraries")
+        endif()
+
     else()
         message(FATAL_ERROR "LLGL_BUILD_RENDERER_OPENGL failed: missing OpenGL libraries")
     endif()

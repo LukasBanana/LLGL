@@ -10,6 +10,7 @@
 
 
 #include <GL/glx.h>
+#include <EGL/egl.h>
 
 
 namespace LLGL
@@ -18,6 +19,10 @@ namespace LLGL
 namespace OpenGL
 {
 
+enum class RenderSystemNativeHandleType : char {
+    GLX,
+    EGL
+};
 
 /**
 \brief GNU/Linux native handle structure for the OpenGL render system.
@@ -26,7 +31,13 @@ namespace OpenGL
 */
 struct RenderSystemNativeHandle
 {
-    GLXContext context;
+    union
+    {
+        GLXContext glx;
+        EGLContext egl;
+    };
+
+    RenderSystemNativeHandleType type;
 };
 
 
