@@ -12,7 +12,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-client.h>
+#endif
 
 namespace LLGL
 {
@@ -35,11 +37,19 @@ struct X11NativeHandle
     int             screen;
 };
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+
 struct WaylandNativeHandle
 {
     struct wl_surface* window;
     struct wl_display* display;
 };
+
+#else
+
+struct WaylandNativeHandle{};
+
+#endif
 
 enum class NativeHandleType : char
 {

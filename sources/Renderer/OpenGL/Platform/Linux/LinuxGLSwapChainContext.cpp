@@ -21,22 +21,17 @@ namespace LLGL
  * GLSwapChainContext class
  */
 
-std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface, bool wayland)
+std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
-    if (wayland) {
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+    if (surface.IsWayland()) {
         return MakeUnique<LinuxWaylandGLSwapChainContext>(static_cast<LinuxGLContext&>(context), surface);
     } else {
         return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContext&>(context), surface);
     }
-}
-
-bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context, bool wayland)
-{
-    if (wayland) {
-        return LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(static_cast<LinuxWaylandGLSwapChainContext*>(context));
-    } else {
-        return LinuxX11GLSwapChainContext::MakeCurrentGLXContext(static_cast<LinuxX11GLSwapChainContext*>(context));
-    }
+#else
+    return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContext&>(context), surface);
+#endif
 }
 
 
@@ -77,16 +72,18 @@ void LinuxX11GLSwapChainContext::Resize(const Extent2D& resolution)
 
 bool LinuxX11GLSwapChainContext::MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context)
 {
-    if (context)
-        return glXMakeCurrent(context->dpy_, context->wnd_, context->glc_);
-    else
-        return glXMakeCurrent(nullptr, 0, 0);
+    return glXMakeCurrent(context->dpy_, context->wnd_, context->glc_);       
 }
 
+bool LinuxX11GLSwapChainContext::Destroy() {
+    return glXMakeCurrent(nullptr, 0, 0);
+}
 
 /*
  * LinuxWaylandGLSwapChainContext class
  */
+
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
 
 LinuxWaylandGLSwapChainContext::LinuxWaylandGLSwapChainContext(LinuxGLContext& context, Surface& surface) :
     GLSwapChainContext { context                 },
@@ -133,14 +130,16 @@ void LinuxWaylandGLSwapChainContext::Resize(const Extent2D& resolution)
     // dummy
 }
 
-bool LinuxWaylandGLSwapChainContext::MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext* context)
+bool LinuxWaylandGLSwapChainContext::MakeCurrentUnchecked()
 {
-    if (context)
-        return eglMakeCurrent(context->dpy_, context->wnd_, context->wnd_, context->glc_);
-    else
-        return eglMakeCurrent(nullptr, nullptr, nullptr, nullptr);
+    return eglMakeCurrent(dpy_, wnd_, wnd_, glc_);
 }
 
+bool LinuxWaylandGLSwapChainContext::Destroy() {
+    return eglMakeCurrent(nullptr, nullptr, nullptr, nullptr);
+}
+
+#endif
 
 } // /namespace LLGL
 

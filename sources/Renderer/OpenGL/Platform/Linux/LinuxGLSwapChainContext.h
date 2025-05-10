@@ -32,6 +32,9 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 
+        bool MakeCurrentUnchecked() override;
+        bool Destroy() override;
+
     public:
 
         static bool MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context);
@@ -44,6 +47,8 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 
 };
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+
 class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
 {
 
@@ -55,17 +60,21 @@ class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 
+        bool MakeCurrentUnchecked() override;
+        bool Destroy() override;
     public:
 
         static bool MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext* context);
 
     private:
 
-        EGLDisplay dpy_ = nullptr;
-        EGLSurface wnd_ = nullptr;
-        EGLContext         glc_ = nullptr;
+        EGLDisplay    dpy_ = nullptr;
+        EGLSurface    wnd_ = nullptr;
+        EGLContext    glc_ = nullptr;
 
 };
+
+#endif
 
 } // /namespace LLGL
 

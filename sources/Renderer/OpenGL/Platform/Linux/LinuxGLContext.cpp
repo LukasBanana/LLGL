@@ -77,6 +77,8 @@ LinuxGLContext::LinuxGLContext(
     NativeHandle nativeWindowHandle = {};
     surface.GetNativeHandle(&nativeWindowHandle, sizeof(nativeWindowHandle));
 
+    #ifdef LLGL_LINUX_ENABLE_WAYLAND
+
     bool is_wayland = nativeWindowHandle.type == NativeHandleType::Wayland;
 
     if (customNativeHandle != nullptr)
@@ -94,16 +96,34 @@ LinuxGLContext::LinuxGLContext(
         else
             CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
     }
+
+    #else
+
+    if (customNativeHandle != nullptr)
+    {
+        CreateProxyGLXContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
+    }
+    else
+    {
+        CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
+    }
+
+    #endif
 }
 
 LinuxGLContext::~LinuxGLContext()
 {
     if (!isProxyGLC_) {
+
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
         if (api_.type == APIType::EGL) {
             DeleteGLXContext();
         } else if (api_.type == APIType::GLX) {
             DeleteEGLContext();
         }
+        #else
+        DeleteGLXContext();
+        #endif
     }
 }
 
@@ -118,6 +138,8 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
     {
         auto* nativeHandleGL = static_cast<OpenGL::RenderSystemNativeHandle*>(nativeHandle);
 
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+
         if (api_.type == APIType::EGL) {
             nativeHandleGL->egl = api_.egl.context;
             nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::EGL;
@@ -125,6 +147,13 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
             nativeHandleGL->glx = api_.glx.context;
             nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::GLX;
         }
+
+        #else
+
+        nativeHandleGL->glx = api_.glx.context;
+        nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::GLX;
+
+        #endif
 
         return true;
     }
@@ -233,6 +262,8 @@ bool LinuxGLContext::SetSwapInterval(int interval)
 
     return false;
 }
+
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
 
 void LinuxGLContext::CreateEGLContext(
     const GLPixelFormat&                pixelFormat,
@@ -375,6 +406,7 @@ EGLContext LinuxGLContext::CreateEGLContextCompatibilityProfile(EGLContext glcSh
     return eglCreateContext(display, *config, glcShared, contextAttribs);
 }
 
+#endif
 
 void LinuxGLContext::CreateGLXContext(
     const GLPixelFormat&                pixelFormat,
@@ -449,10 +481,14 @@ void LinuxGLContext::DeleteGLXContext()
     glXDestroyContext(api_.glx.display, api_.glx.context);
 }
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+
 void LinuxGLContext::DeleteEGLContext() {
     eglMakeCurrent(api_.glx.display, EGL_NO_SURFACE, EGL_NO_SURFACE, nullptr);
     eglDestroyContext(api_.glx.display, api_.glx.context);
 }
+
+#endif
 
 GLXContext LinuxGLContext::CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits)
 {

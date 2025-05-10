@@ -51,9 +51,13 @@ class LinuxGLContext : public GLContext
             return api_.glx.context;
         }
 
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+
         inline EGLConfig GetEGLConfig() const {
             return api_.egl.config;
         }
+
+        #endif
 
     private:
 
@@ -68,15 +72,19 @@ class LinuxGLContext : public GLContext
             LinuxGLContext*                     sharedContext
         );
 
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
         void CreateEGLContext(
             const GLPixelFormat&                pixelFormat,
             const RendererConfigurationOpenGL&  profile,
             const NativeHandle&                 nativeHandle,
             LinuxGLContext*                     sharedContext
         );
+        #endif
 
         void DeleteGLXContext();
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
         void DeleteEGLContext();
+        #endif
 
         GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
         GLXContext CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
@@ -107,6 +115,8 @@ class LinuxGLContext : public GLContext
             ::GLXContext     context;
         };
 
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+
         struct EGLData {
             EGLDisplay       display;
             EGLContext       context;
@@ -121,6 +131,15 @@ class LinuxGLContext : public GLContext
 
             APIType type;             
         } api_;
+
+        #else
+        
+        struct ApiData {
+            GLXData glx;
+        } api_;
+
+        #endif
+
 
         int        samples_    = 1;
         bool       isProxyGLC_ = false;

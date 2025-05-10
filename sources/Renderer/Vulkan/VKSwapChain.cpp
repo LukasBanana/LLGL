@@ -385,6 +385,7 @@ void VKSwapChain::CreateGpuSurface()
         VkResult result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan swap-chain");
     }
+    #ifdef LLGL_LINUX_ENABLE_WAYLAND
     // Create Wayland surface
     else if (nativeHandle.type == NativeHandleType::Wayland)
     {
@@ -398,6 +399,7 @@ void VKSwapChain::CreateGpuSurface()
         VkResult result = vkCreateWaylandSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Wayland surface for Vulkan swap-chain");
     }
+    #endif
 
     #elif defined LLGL_OS_ANDROID
 
