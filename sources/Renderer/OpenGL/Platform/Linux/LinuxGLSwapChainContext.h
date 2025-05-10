@@ -13,7 +13,7 @@
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"
 #include <X11/Xlib.h>
-
+#include <wayland-client.h>
 
 namespace LLGL
 {
@@ -45,6 +45,28 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
 
 };
 
+class LinuxWaylandGLSwapChainContext final : public GLSwapChainContext
+{
+
+    public:
+
+        LinuxWaylandGLSwapChainContext(LinuxGLContext& context, Surface& surface);
+
+        bool HasDrawable() const override;
+        bool SwapBuffers() override;
+        void Resize(const Extent2D& resolution) override;
+
+    public:
+
+        static bool MakeCurrentEGLContext(LinuxWaylandGLSwapChainContext* context);
+
+    private:
+
+        EGLDisplay dpy_ = nullptr;
+        EGLSurface wnd_ = nullptr;
+        EGLContext         glc_ = nullptr;
+
+};
 
 } // /namespace LLGL
 

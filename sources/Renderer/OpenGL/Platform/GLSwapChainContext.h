@@ -50,10 +50,10 @@ class GLSwapChainContext
     public:
 
         // Creates a platform specific GLSwapChainContext instance.
-        static std::unique_ptr<GLSwapChainContext> Create(GLContext& context, Surface& surface);
+        static std::unique_ptr<GLSwapChainContext> Create(GLContext& context, Surface& surface, bool wayland);
 
         // Makes the specified swap-chain context link current. If null, no context is current.
-        static bool MakeCurrent(GLSwapChainContext* context);
+        static bool MakeCurrent(GLSwapChainContext* context, bool wayland);
 
     protected:
 
@@ -63,7 +63,7 @@ class GLSwapChainContext
     private:
 
         // Primary function to make the specified swap-chain context link current.
-        static bool MakeCurrentUnchecked(GLSwapChainContext* context);
+        static bool MakeCurrentUnchecked(GLSwapChainContext* context, bool wayland);
 
     private:
 
