@@ -25,7 +25,7 @@ namespace LLGL
  * GLSwapChainContext class
  */
 
-std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface, bool wayland)
+std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
     #if LLGL_LINUX_ENABLE_WAYLAND
     NativeHandle nativeHandle = {};
@@ -68,6 +68,7 @@ bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
     #endif
 }
 
+#endif
 
 } // /namespace LLGL
 

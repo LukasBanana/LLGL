@@ -93,8 +93,9 @@ GLSwapChain::GLSwapChain(
 
     /* Create platform dependent OpenGL context */
     context_ = contextMngr.AllocContext(&pixelFormat, /*acceptCompatibleFormat:*/ false, &GetSurface());
-    swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface(), wayland);
-    GLSwapChainContext::MakeCurrent(swapChainContext_.get(), wayland);
+    swapChainContext_ = GLSwapChainContext::Create(*context_, GetSurface());
+    // GLSwapChainContext::MakeCurrent(swapChainContext_.get(), wayland);
+    swapChainContext_->MakeCurrent();
 
     /* Get state manager and reset current framebuffer height */
     GetStateManager().ResetFramebufferHeight(framebufferHeight_);
@@ -153,17 +154,13 @@ bool GLSwapChain::SetVsyncInterval(std::uint32_t vsyncInterval)
     return SetSwapInterval(static_cast<int>(vsyncInterval));
 }
 
-bool GLSwapChain::MakeCurrent(GLSwapChain* swapChain)
+bool GLSwapChain::MakeCurrent(GLSwapChain& swapChain)
 {
-    if (swapChain)
-    {
-        /* Make OpenGL context of the specified render contex current and notify the state manager */
-        bool result = GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get(), swapChain->wayland);
-        GLStateManager::Get().ResetFramebufferHeight(swapChain->framebufferHeight_);
-        return result;
-    }
-    else
-        return GLSwapChainContext::MakeCurrent(nullptr, swapChain->wayland);
+    /* Make OpenGL context of the specified render contex current and notify the state manager */
+    // GLSwapChainContext::MakeCurrent(swapChain->swapChainContext_.get(), swapChain->wayland);
+    bool result = swapChain.swapChainContext_->MakeCurrent();
+    GLStateManager::Get().ResetFramebufferHeight(swapChain.framebufferHeight_);
+    return result;
 }
 
 
@@ -186,7 +183,7 @@ bool GLSwapChain::ResizeBuffersPrimary(const Extent2D& resolution)
 
 bool GLSwapChain::SetSwapInterval(int swapInterval)
 {
-    GLSwapChainContext::MakeCurrent(swapChainContext_.get(), wayland);
+    swapChainContext_->MakeCurrent();
     return GLContext::SetCurrentSwapInterval(swapInterval);
 }
 

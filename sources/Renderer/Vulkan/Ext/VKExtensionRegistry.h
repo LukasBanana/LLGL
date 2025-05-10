@@ -24,7 +24,10 @@ enum class VKExt
     KHR_android_surface,
     KHR_win32_surface,
     KHR_xlib_surface,
+
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
     KHR_wayland_surface,
+#endif
 
 #if LLGL_LINUX_ENABLE_WAYLAND
     KHR_wayland_surface,
