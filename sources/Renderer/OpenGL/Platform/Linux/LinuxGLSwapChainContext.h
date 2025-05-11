@@ -13,7 +13,10 @@
 #include "../GLSwapChainContext.h"
 #include "../../OpenGL.h"
 #include <X11/Xlib.h>
+
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-client.h>
+#endif
 
 namespace LLGL
 {
