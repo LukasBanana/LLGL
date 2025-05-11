@@ -2150,7 +2150,7 @@ void DbgRenderSystem::ValidateFragmentShaderOutput(DbgShader& fragmentShaderDbg,
         if (auto renderPassDbg = DbgGetWrapper<DbgRenderPass>(renderPass))
             ValidateFragmentShaderOutputWithRenderPass(fragmentShaderDbg, reflection.fragment, *renderPassDbg, hasDualSourceBlend);
         else
-            ValidateFragmentShaderOutputWithoutRenderPass(fragmentShaderDbg, reflection.fragment);
+            ValidateFragmentShaderOutputWithoutRenderPass(fragmentShaderDbg, reflection.fragment, hasDualSourceBlend);
     }
 }
 
@@ -2264,9 +2264,10 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithRenderPass(DbgShader& frag
     }
 }
 
-void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs)
+void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& fragmentShaderDbg, const FragmentShaderAttributes& fragmentAttribs, bool hasDualSourceBlend)
 {
     std::uint32_t numColorOutputAttribs = 0u;
+    std::uint32_t colorOutputSlots[2] = {};
 
     for (const FragmentAttribute& attrib : fragmentAttribs.outputAttribs)
     {
@@ -2277,11 +2278,17 @@ void DbgRenderSystem::ValidateFragmentShaderOutputWithoutRenderPass(DbgShader& f
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many color output attributes in fragment shader");
                 break;
             }
+
+            /* Keep track of first two color outputs to check for dual source blending compatibility */
+            if (numColorOutputAttribs < 2)
+                colorOutputSlots[numColorOutputAttribs] = attrib.location;
+
             ++numColorOutputAttribs;
         }
     }
 
-    if (numColorOutputAttribs > 1)
+    const bool hasDualSourceOutput = (numColorOutputAttribs == 2 && colorOutputSlots[0] == colorOutputSlots[1]);
+    if (numColorOutputAttribs > 1 && !(hasDualSourceBlend && hasDualSourceOutput))
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
