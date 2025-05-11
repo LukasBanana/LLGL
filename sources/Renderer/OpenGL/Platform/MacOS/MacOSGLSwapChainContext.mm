@@ -78,6 +78,8 @@ bool MacOSGLSwapChainContext::MakeCurrentUnchecked()
     #pragma clang diagnostic pop
 
     [ctx_ update];
+
+    return true;
 }
 
 
