@@ -24,11 +24,6 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     return MakeUnique<WasmGLSwapChainContext>(static_cast<WasmGLContext&>(context), surface);
 }
 
-bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
-{
-    return WasmGLSwapChainContext::MakeCurrentEGLContext(static_cast<WasmGLSwapChainContext*>(context));
-}
-
 
 /*
  * WasmGLSwapChainContext class
@@ -66,9 +61,9 @@ void WasmGLSwapChainContext::Resize(const Extent2D& resolution)
     // do nothing (WebGL context does not need to be resized)
 }
 
-bool WasmGLSwapChainContext::MakeCurrentEGLContext(WasmGLSwapChainContext* context)
+bool WasmGLSwapChainContext::MakeCurrentUnchecked()
 {
-    EMSCRIPTEN_RESULT result = emscripten_webgl_make_context_current(context->webGLContextHandle_);
+    EMSCRIPTEN_RESULT result = emscripten_webgl_make_context_current(webGLContextHandle_);
     LLGL_ASSERT(result == EMSCRIPTEN_RESULT_SUCCESS, "emscripten_webgl_make_context_current() failed");
     return true;
 }
