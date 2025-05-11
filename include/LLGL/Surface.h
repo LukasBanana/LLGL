@@ -111,7 +111,7 @@ class LLGL_EXPORT Surface : public Interface
         }
         \endcode
         */
-        static bool ProcessEvents();
+        virtual bool ProcessEvents() = 0;
 
 };
 

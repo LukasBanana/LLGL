@@ -135,6 +135,8 @@ struct WindowDescriptor
     \see windowContext
     */
     std::size_t     windowContextSize   = 0;
+
+    bool            wayland             = false;
 };
 
 
