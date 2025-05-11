@@ -5,19 +5,25 @@
  * Licensed under the terms of the BSD 3-Clause license (see LICENSE.txt).
  */
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+    #include <wayland-client.h>
+#endif
+
 #include "LinuxDisplay.h"
 #include "../../Core/CoreUtils.h"
 #include <X11/extensions/Xrandr.h>
 #include <dlfcn.h>
 
-
 namespace LLGL
 {
 
 
-static std::vector<std::unique_ptr<LinuxDisplay>>   g_displayList;
+static std::vector<std::unique_ptr<LinuxX11Display>>   g_x11DisplayList;
+static std::vector<std::unique_ptr<LinuxWaylandDisplay>>   g_waylandDisplayList;
+
 static std::vector<Display*>                        g_displayRefList;
 static Display*                                     g_primaryDisplay    = nullptr;
+
 
 LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
 {
@@ -25,24 +31,30 @@ LinuxSharedX11DisplaySPtr LinuxSharedX11Display::GetShared()
     return sharedX11Display;
 }
 
-static bool UpdateDisplayList()
+static bool UpdateX11DisplayList()
 {
     LinuxSharedX11DisplaySPtr sharedX11Display = LinuxSharedX11Display::GetShared();
 
     const int screenCount = ScreenCount(sharedX11Display->GetNative());
-    if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_displayList.size())
+    if (screenCount >= 0 && static_cast<std::size_t>(screenCount) != g_x11DisplayList.size())
     {
-        g_displayList.resize(static_cast<std::size_t>(screenCount));
+        g_x11DisplayList.resize(static_cast<std::size_t>(screenCount));
         for (int i = 0; i < screenCount; ++i)
         {
-            g_displayList[i] = MakeUnique<LinuxDisplay>(sharedX11Display, i);
+            g_x11DisplayList[i] = MakeUnique<LinuxX11Display>(sharedX11Display, i);
             if (i == DefaultScreen(sharedX11Display->GetNative()))
-                g_primaryDisplay = g_displayList[i].get();
+                g_primaryDisplay = g_x11DisplayList[i].get();
         }
         return true;
     }
 
     return false;
+}
+
+static bool UpdateWaylandDisplayList()
+{
+    // TODO
+    return true;
 }
 
 
@@ -83,6 +95,20 @@ void LinuxSharedX11Display::RetainLibGL()
     #endif
 }
 
+/*
+ * LinuxSharedWaylandDisplay class
+ */
+
+LinuxSharedWaylandDisplay::LinuxSharedWaylandDisplay() :
+    native_ { wl_display_connect(nullptr) }
+{
+    LLGL_ASSERT(native_, "failed to connect to Wayland compositor");
+}
+
+LinuxSharedWaylandDisplay::~LinuxSharedWaylandDisplay()
+{
+    wl_display_disconnect(native_);
+}
 
 /*
  * Display class
@@ -90,18 +116,18 @@ void LinuxSharedX11Display::RetainLibGL()
 
 std::size_t Display::Count()
 {
-    UpdateDisplayList();
-    return g_displayList.size();
+    UpdateX11DisplayList();
+    return g_x11DisplayList.size();
 }
 
 Display* const * Display::GetList()
 {
-    if (UpdateDisplayList() || g_displayRefList.empty())
+    if (UpdateX11DisplayList() || g_displayRefList.empty())
     {
         /* Update reference list and append null terminator to array */
         g_displayRefList.clear();
-        g_displayRefList.reserve(g_displayList.size() + 1);
-        for (const auto& display : g_displayList)
+        g_displayRefList.reserve(g_x11DisplayList.size() + 1);
+        for (const auto& display : g_x11DisplayList)
             g_displayRefList.push_back(display.get());
         g_displayRefList.push_back(nullptr);
     }
@@ -110,13 +136,13 @@ Display* const * Display::GetList()
 
 Display* Display::Get(std::size_t index)
 {
-    UpdateDisplayList();
-    return (index < g_displayList.size() ? g_displayList[index].get() : nullptr);
+    UpdateX11DisplayList();
+    return (index < g_x11DisplayList.size() ? g_x11DisplayList[index].get() : nullptr);
 }
 
 Display* Display::GetPrimary()
 {
-    UpdateDisplayList();
+    UpdateX11DisplayList();
     return g_primaryDisplay;
 }
 
@@ -180,23 +206,23 @@ Offset2D Display::GetCursorPosition()
  * LinuxDisplay class
  */
 
-LinuxDisplay::LinuxDisplay(const std::shared_ptr<LinuxSharedX11Display>& sharedX11Display, int screenIndex) :
+LinuxX11Display::LinuxX11Display(const std::shared_ptr<LinuxSharedX11Display>& sharedX11Display, int screenIndex) :
     sharedX11Display_ { sharedX11Display },
     screen_           { screenIndex      }
 {
 }
 
-bool LinuxDisplay::IsPrimary() const
+bool LinuxX11Display::IsPrimary() const
 {
     return (screen_ == DefaultScreen(GetNative()));
 }
 
-UTF8String LinuxDisplay::GetDeviceName() const
+UTF8String LinuxX11Display::GetDeviceName() const
 {
     return UTF8String{ DisplayString(GetNative()) };
 }
 
-Offset2D LinuxDisplay::GetOffset() const
+Offset2D LinuxX11Display::GetOffset() const
 {
     /* Get display offset from position of root window */
     XWindowAttributes attribs = {};
@@ -207,18 +233,18 @@ Offset2D LinuxDisplay::GetOffset() const
     };
 }
 
-float LinuxDisplay::GetScale() const
+float LinuxX11Display::GetScale() const
 {
     return 1.0f; // dummy
 }
 
-bool LinuxDisplay::ResetDisplayMode()
+bool LinuxX11Display::ResetDisplayMode()
 {
     //TODO
     return false;
 }
 
-bool LinuxDisplay::SetDisplayMode(const DisplayMode& displayMode)
+bool LinuxX11Display::SetDisplayMode(const DisplayMode& displayMode)
 {
     ::Display* dpy = GetNative();
     ::Window rootWnd = RootWindow(dpy, screen_);
@@ -245,7 +271,7 @@ bool LinuxDisplay::SetDisplayMode(const DisplayMode& displayMode)
     return false;
 }
 
-DisplayMode LinuxDisplay::GetDisplayMode() const
+DisplayMode LinuxX11Display::GetDisplayMode() const
 {
     DisplayMode displayMode;
 
@@ -269,7 +295,7 @@ DisplayMode LinuxDisplay::GetDisplayMode() const
     return displayMode;
 }
 
-std::vector<DisplayMode> LinuxDisplay::GetSupportedDisplayModes() const
+std::vector<DisplayMode> LinuxX11Display::GetSupportedDisplayModes() const
 {
     std::vector<DisplayMode> displayModes;
 
@@ -307,7 +333,7 @@ std::vector<DisplayMode> LinuxDisplay::GetSupportedDisplayModes() const
  * ======= Private: =======
  */
 
-::Display* LinuxDisplay::GetNative() const
+::Display* LinuxX11Display::GetNative() const
 {
     return sharedX11Display_->GetNative();
 }

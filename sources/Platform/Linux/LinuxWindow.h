@@ -17,26 +17,25 @@
 namespace LLGL
 {
 
-
-class LinuxWindow : public Window
-{
-
+class LinuxX11Window : public Window {
     public:
 
         #include <LLGL/Backend/Window.inl>
 
     public:
 
-        LinuxWindow(const WindowDescriptor& desc);
-        ~LinuxWindow();
+        LinuxX11Window(const WindowDescriptor& descriptor);
+        ~LinuxX11Window();
 
     public:
+
+        bool ProcessEvents() override;
 
         void ProcessEvent(XEvent& event);
 
     private:
 
-        void OpenX11Window();
+        void Open();
 
         void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);
@@ -45,10 +44,10 @@ class LinuxWindow : public Window
         void ProcessMotionEvent(XMotionEvent& event);
 
         void PostMouseKeyEvent(Key key, bool down);
-        
+
     private:
-    
         WindowDescriptor            desc_;
+        Offset2D                    prevMousePos_;
 
         LinuxSharedX11DisplaySPtr   sharedX11Display_;
 
@@ -59,11 +58,64 @@ class LinuxWindow : public Window
         ::XVisualInfo*              visual_             = nullptr;
         
         ::Atom                      closeWndAtom_;
-        
-        Offset2D                    prevMousePos_;
-
 };
 
+struct wayland_state {
+    struct wl_display* display;
+    struct wl_registry* registry;
+    struct wl_compositor* compositor;
+    struct wl_surface* surface;
+    struct wl_seat* seat;
+
+    struct wl_pointer* pointer;
+    uint32_t serial;
+    uint32_t pointerEnterSerial;
+
+    struct wl_keyboard* keyboard;
+
+    const char* tag;
+
+    bool hovered;
+};
+
+class LinuxWaylandWindow : public Window {
+    public:
+
+        #include <LLGL/Backend/Window.inl>
+
+    public:
+
+        LinuxWaylandWindow(const WindowDescriptor& descriptor);
+        ~LinuxWaylandWindow();
+
+    public:
+
+        bool ProcessEvents() override;
+
+        // void ProcessEvent(wl_);
+
+        wayland_state& GetWaylandState() {
+            return wl_;
+        }
+
+        void ProcessKeyEvent(XKeyEvent& event, bool down);
+        void ProcessMouseKeyEvent(uint32_t button, bool down);
+        void ProcessExposeEvent();
+        void ProcessClientMessage(XClientMessageEvent& event);
+        void ProcessMotionEvent(int xpos, int ypos);
+
+        void PostMouseKeyEvent(Key key, bool down);
+
+    private:
+
+        void Open();
+
+    private:
+        WindowDescriptor            desc_;
+        Offset2D                    prevMousePos_;
+
+        wayland_state wl_;
+};
 
 } // /namespace LLGL
 

@@ -13,6 +13,10 @@
 #include "../../Core/Exception.h"
 #include <X11/Xresource.h>
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+    #include <wayland-client.h>
+#endif
+
 
 namespace LLGL
 {
@@ -90,7 +94,7 @@ bool Surface::ProcessEvents()
         XNextEvent(display, &event);
         if (void* userData = LinuxX11Context::Find(display, event.xany.window))
         {
-            LinuxWindow* wnd = static_cast<LinuxWindow*>(userData);
+            LinuxX11Window* wnd = static_cast<LinuxX11Window*>(userData);
             wnd->ProcessEvent(event);
         }
     }
@@ -121,28 +125,32 @@ static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
-    return MakeUnique<LinuxWindow>(desc);
+    if (desc.wayland) {
+        return MakeUnique<LinuxWaylandWindow>(desc);
+    } else {
+        return MakeUnique<LinuxX11Window>(desc);
+    }
 }
 
 
 /*
- * LinuxWindow class
+ * LinuxX11Window class
  */
 
-LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
+LinuxX11Window::LinuxX11Window(const WindowDescriptor& desc) :
     desc_ { desc }
 {
-    OpenX11Window();
+    Open();
     LinuxX11Context::Save(display_, wnd_, this);
 }
 
-LinuxWindow::~LinuxWindow()
+LinuxX11Window::~LinuxX11Window()
 {
     LinuxX11Context::Remove(display_, wnd_);
     XDestroyWindow(display_, wnd_);
 }
 
-bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+bool LinuxX11Window::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
 {
     if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
     {
@@ -156,32 +164,32 @@ bool LinuxWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSi
     return false;
 }
 
-Extent2D LinuxWindow::GetContentSize() const
+Extent2D LinuxX11Window::GetContentSize() const
 {
     /* Return the size of the client area */
     return GetSize(true);
 }
 
-void LinuxWindow::SetPosition(const Offset2D& position)
+void LinuxX11Window::SetPosition(const Offset2D& position)
 {
     /* Move window and store new position */
     XMoveWindow(display_, wnd_, position.x, position.y);
     desc_.position = position;
 }
 
-Offset2D LinuxWindow::GetPosition() const
+Offset2D LinuxX11Window::GetPosition() const
 {
     XWindowAttributes attribs;
     XGetWindowAttributes(display_, wnd_, &attribs);
     return { attribs.x, attribs.y };
 }
 
-void LinuxWindow::SetSize(const Extent2D& size, bool useClientArea)
+void LinuxX11Window::SetSize(const Extent2D& size, bool useClientArea)
 {
     XResizeWindow(display_, wnd_, size.width, size.height);
 }
 
-Extent2D LinuxWindow::GetSize(bool useClientArea) const
+Extent2D LinuxX11Window::GetSize(bool useClientArea) const
 {
     XWindowAttributes attribs;
     XGetWindowAttributes(display_, wnd_, &attribs);
@@ -192,19 +200,19 @@ Extent2D LinuxWindow::GetSize(bool useClientArea) const
     };
 }
 
-void LinuxWindow::SetTitle(const UTF8String& title)
+void LinuxX11Window::SetTitle(const UTF8String& title)
 {
     XStoreName(display_, wnd_, title.c_str());
 }
 
-UTF8String LinuxWindow::GetTitle() const
+UTF8String LinuxX11Window::GetTitle() const
 {
     char* title = nullptr;
     XFetchName(display_, wnd_, &title);
     return title;
 }
 
-void LinuxWindow::Show(bool show)
+void LinuxX11Window::Show(bool show)
 {
     if (show)
     {
@@ -219,7 +227,7 @@ void LinuxWindow::Show(bool show)
         XSetInputFocus(display_, (show ? wnd_ : None), RevertToParent, CurrentTime);
 }
 
-bool LinuxWindow::IsShown() const
+bool LinuxX11Window::IsShown() const
 {
     XWindowAttributes attr;
     if (XGetWindowAttributes(display_, wnd_, &attr) == 0)
@@ -229,17 +237,17 @@ bool LinuxWindow::IsShown() const
     return attr.map_state == IsViewable;
 }
 
-void LinuxWindow::SetDesc(const WindowDescriptor& desc)
+void LinuxX11Window::SetDesc(const WindowDescriptor& desc)
 {
     //todo...
 }
 
-WindowDescriptor LinuxWindow::GetDesc() const
+WindowDescriptor LinuxX11Window::GetDesc() const
 {
     return desc_; //todo...
 }
 
-void LinuxWindow::ProcessEvent(XEvent& event)
+void LinuxX11Window::ProcessEvent(XEvent& event)
 {
     switch (event.type)
     {
@@ -282,7 +290,7 @@ void LinuxWindow::ProcessEvent(XEvent& event)
  * ======= Private: =======
  */
 
-void LinuxWindow::OpenX11Window()
+void LinuxX11Window::Open()
 {
     /* Get native context handle */
     const NativeHandle* nativeHandle = static_cast<const NativeHandle*>(desc_.windowContext);
@@ -290,6 +298,7 @@ void LinuxWindow::OpenX11Window()
     {
         /* Get X11 display from context handle */
         LLGL_ASSERT(desc_.windowContextSize == sizeof(NativeHandle));
+        LLGL_ASSERT(nativeHandle->type == NativeHandleType::X11, "Window native handle type must be X11");
         display_    = nativeHandle->x11.display;
         visual_     = nativeHandle->x11.visual;
     }
@@ -373,7 +382,7 @@ void LinuxWindow::OpenX11Window()
     XSetWMProtocols(display_, wnd_, &closeWndAtom_, 1);
 }
 
-void LinuxWindow::ProcessKeyEvent(XKeyEvent& event, bool down)
+void LinuxX11Window::ProcessKeyEvent(XKeyEvent& event, bool down)
 {
     auto key = MapKey(event);
     if (down)
@@ -382,7 +391,7 @@ void LinuxWindow::ProcessKeyEvent(XKeyEvent& event, bool down)
         PostKeyUp(key);
 }
 
-void LinuxWindow::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
+void LinuxX11Window::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
 {
     switch (event.button)
     {
@@ -404,7 +413,7 @@ void LinuxWindow::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
     }
 }
 
-void LinuxWindow::ProcessExposeEvent()
+void LinuxX11Window::ProcessExposeEvent()
 {
     XWindowAttributes attribs;
     XGetWindowAttributes(display_, wnd_, &attribs);
@@ -418,14 +427,14 @@ void LinuxWindow::ProcessExposeEvent()
     PostResize(size);
 }
 
-void LinuxWindow::ProcessClientMessage(XClientMessageEvent& event)
+void LinuxX11Window::ProcessClientMessage(XClientMessageEvent& event)
 {
     Atom atom = static_cast<Atom>(event.data.l[0]);
     if (atom == closeWndAtom_)
         PostQuit();
 }
 
-void LinuxWindow::ProcessMotionEvent(XMotionEvent& event)
+void LinuxX11Window::ProcessMotionEvent(XMotionEvent& event)
 {
     const Offset2D mousePos { event.x, event.y };
     PostLocalMotion(mousePos);
@@ -433,7 +442,7 @@ void LinuxWindow::ProcessMotionEvent(XMotionEvent& event)
     prevMousePos_ = mousePos;
 }
 
-void LinuxWindow::PostMouseKeyEvent(Key key, bool down)
+void LinuxX11Window::PostMouseKeyEvent(Key key, bool down)
 {
     if (down)
         PostKeyDown(key);
@@ -441,6 +450,260 @@ void LinuxWindow::PostMouseKeyEvent(Key key, bool down)
         PostKeyUp(key);
 }
 
+/*
+ * LinuxWaylandWindow class
+ */
+
+void SurfaceHandleEnter(void* userData, struct wl_surface* surface, struct wl_output* output)
+{
+    wayland_state* state = static_cast<wayland_state*>(userData);
+}
+
+void SurfaceHandleLeave(void* userData, struct wl_surface* surface, struct wl_output* output)
+{
+    wayland_state* state = static_cast<wayland_state*>(userData);
+}
+
+const static wl_surface_listener surfaceListener = {
+    SurfaceHandleEnter,
+    SurfaceHandleLeave
+};
+
+void PointerHandleEnter(void *userData,
+                        struct wl_pointer *wl_pointer,
+                        uint32_t serial,
+                        struct wl_surface *surface,
+                        wl_fixed_t surface_x,
+                        wl_fixed_t surface_y)
+{
+    if (!surface)
+        return;
+
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& state = window->GetWaylandState();
+
+    if (wl_proxy_get_tag(reinterpret_cast<struct wl_proxy*>(surface)) != &state.tag)
+        return;
+
+    state.serial = serial;
+    state.pointerEnterSerial = serial;
+    state.hovered = true;
+}
+
+void PointerHandleLeave(void *userData,
+		                struct wl_pointer *wl_pointer,
+		                uint32_t serial,
+		                struct wl_surface *surface)
+{
+    if (!surface)
+        return;
+
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& state = window->GetWaylandState();
+
+    if (wl_proxy_get_tag(reinterpret_cast<struct wl_proxy*>(surface)) != &state.tag)
+        return;
+
+    state.serial = serial;
+    state.hovered = false;
+}
+
+void PointerHandleMotion(void *userData,
+		                 struct wl_pointer *wl_pointer,
+		                 uint32_t time,
+		                 wl_fixed_t surface_x,
+		                 wl_fixed_t surface_y)
+{
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& state = window->GetWaylandState();
+
+    if (state.hovered) {
+        const int xpos = wl_fixed_to_int(surface_x);
+        const int ypos = wl_fixed_to_int(surface_y);
+
+        window->ProcessMotionEvent(xpos, ypos);
+    }
+}
+
+void PointerHandleButton(void *userData,
+		                 struct wl_pointer *wl_pointer,
+		                 uint32_t serial,
+		                 uint32_t time,
+		                 uint32_t button,
+		                 uint32_t state)
+{
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& wl = window->GetWaylandState();
+
+    if (!wl.hovered)
+        return;
+
+    wl.serial = serial;
+
+    window->ProcessMouseKeyEvent(button, state == WL_POINTER_BUTTON_STATE_PRESSED);
+}
+
+void PointerHandleAxis(void *userData,
+		               struct wl_pointer *wl_pointer,
+		               uint32_t time,
+		               uint32_t axis,
+		               wl_fixed_t value)
+{
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& wl = window->GetWaylandState();
+
+    if (!wl.hovered)
+        return;
+
+    // TODO
+}
+
+const static wl_pointer_listener pointerListener = {
+    PointerHandleEnter,
+    PointerHandleLeave,
+    PointerHandleMotion,
+    PointerHandleButton,
+    PointerHandleAxis
+};
+
+const static wl_keyboard_listener keyboardListener = {
+    
+};
+
+void SeatHandleCapabilities(void* userData, struct wl_seat* seat, uint32_t caps)
+{
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& state = window->GetWaylandState();
+
+    if ((caps & WL_SEAT_CAPABILITY_POINTER) && !state.pointer)
+    {
+        state.pointer = wl_seat_get_pointer(seat);
+        wl_pointer_add_listener(state.pointer, &pointerListener, window);
+    }
+    else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && state.pointer) {
+        wl_pointer_destroy(state.pointer);
+        state.pointer = nullptr;
+    }
+
+    if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !state.keyboard)
+    {
+        state.keyboard = wl_seat_get_keyboard(seat);
+        wl_keyboard_add_listener(state.keyboard, &keyboardListener, window);
+    }
+    else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && state.keyboard) {
+        wl_keyboard_destroy(state.keyboard);
+        state.keyboard = nullptr;
+    }
+}
+
+void SeatHandleName(void* userData, struct wl_seat* seat, const char* name)
+{
+}
+
+const static struct wl_seat_listener seatListener = {
+    SeatHandleCapabilities,
+    SeatHandleName
+};
+
+void RegistryHandleGlobal(void* userData,
+                          struct wl_registry* registry,
+                          uint32_t name,
+                          const char* interface,
+                          uint32_t version)
+{
+    LinuxWaylandWindow* window = static_cast<LinuxWaylandWindow*>(userData);
+    wayland_state& state = window->GetWaylandState();
+
+    if (strcmp(interface, wl_compositor_interface.name) == 0)
+    {
+        state.compositor = static_cast<struct wl_compositor*>(
+            wl_registry_bind(registry, name, &wl_compositor_interface, version)
+        );
+    }
+    else if ((strcmp(interface, wl_seat_interface.name) == 0) && !state.seat) {
+        state.seat = static_cast<struct wl_seat*>(
+            wl_registry_bind(registry, name, &wl_seat_interface, version)
+        );
+
+        wl_seat_add_listener(state.seat, &seatListener, window);
+    }
+}
+
+void RegistryHandleRemove(void* userData, struct wl_registry* registry, uint32_t name)
+{
+    wayland_state* state = static_cast<wayland_state*>(userData);
+}
+
+const static wl_registry_listener registryListener = {
+    RegistryHandleGlobal,
+    RegistryHandleRemove
+};
+
+LinuxWaylandWindow::LinuxWaylandWindow(const WindowDescriptor& desc) {
+    Open();
+}
+
+void LinuxWaylandWindow::Open()
+{
+    struct wl_display* display = wl_display_connect(nullptr);
+    if (!display)
+        LLGL_TRAP("Failed to connect to the Wayland display");
+
+    struct wl_registry* registry = wl_display_get_registry(display);
+
+    wl_registry_add_listener(registry, &registryListener, this);
+
+    wl_display_roundtrip(display);
+
+    if (!wl_.compositor)
+        LLGL_TRAP("Failed to get Wayland compositor");
+
+    wl_.tag = "LLGL";
+
+    wl_.surface = wl_compositor_create_surface(wl_.compositor);
+    wl_proxy_set_tag(reinterpret_cast<struct wl_proxy*>(wl_.surface), &wl_.tag);
+    wl_surface_add_listener(wl_.surface, &surfaceListener, &wl_);
+}
+
+void LinuxWaylandWindow::ProcessMotionEvent(int xpos, int ypos) {
+    const Offset2D mousePos { xpos, ypos };
+    PostLocalMotion(mousePos);
+    PostGlobalMotion({ mousePos.x - prevMousePos_.x, mousePos.y - prevMousePos_.y });
+    prevMousePos_ = mousePos;
+}
+
+bool LinuxWaylandWindow::GetNativeHandle(void* nativeHandle, std::size_t nativeHandleSize)
+{
+    if (nativeHandle != nullptr && nativeHandleSize == sizeof(NativeHandle))
+    {
+        auto* handle = static_cast<NativeHandle*>(nativeHandle);
+        handle->type = NativeHandleType::Wayland;
+        handle->wayland.display = wl_.display;
+        handle->wayland.window  = wl_.surface;
+        return true;
+    }
+    return false;
+}
+
+LinuxWaylandWindow::~LinuxWaylandWindow() {
+    if (wl_.surface)
+        wl_surface_destroy(wl_.surface);
+    if (wl_.compositor)
+        wl_compositor_destroy(wl_.compositor);
+    if (wl_.pointer)
+        wl_pointer_destroy(wl_.pointer);
+    if (wl_.keyboard)
+        wl_keyboard_destroy(wl_.keyboard);
+    if (wl_.seat)
+        wl_seat_destroy(wl_.seat);
+    if (wl_.registry)
+        wl_registry_destroy(wl_.registry);
+    if (wl_.display)
+    {
+        wl_display_flush(wl_.display);
+        wl_display_disconnect(wl_.display);
+    }
+}
 
 } // /namespace LLGL
 
