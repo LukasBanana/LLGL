@@ -235,6 +235,12 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 
 bool LinuxGLContext::SetSwapInterval(int interval)
 {
+
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+    if (api_.type == APIType::EGL) {
+        return (eglSwapInterval(api_.egl.display, interval) == EGL_TRUE);
+    } else if (api_.type == APIType::GLX) {
+#endif
     /* Load GL extension "GLX_SGI/MESA/EXT_swap_control" to set v-sync interval */
     LoadSwapIntervalProcs();
 
@@ -261,6 +267,9 @@ bool LinuxGLContext::SetSwapInterval(int interval)
         /* Fallback to SGI extension. This is known to *not* support interval=0 */
         return (glXSwapIntervalSGI(interval) == 0);
     }
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+    }
+#endif
 
     return false;
 }

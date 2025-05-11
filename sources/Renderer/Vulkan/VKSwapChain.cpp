@@ -20,7 +20,9 @@
 #include <limits.h>
 #include <set>
 
-#include <vulkan/vulkan_wayland.h>
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
+    #include <vulkan/vulkan_wayland.h>
+#endif
 
 
 namespace LLGL
