@@ -33,6 +33,9 @@ class AndroidGLSwapChainContext final : public GLSwapChainContext
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
 
+        bool MakeCurrentUnchecked() override;
+        bool Destroy() override;
+
     public:
 
         void InitEGLSurface(Surface& surface);

@@ -28,11 +28,6 @@ std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& contex
     return MakeUnique<AndroidGLSwapChainContext>(static_cast<AndroidGLContext&>(context), surface);
 }
 
-bool GLSwapChainContext::MakeCurrentUnchecked(GLSwapChainContext* context)
-{
-    return AndroidGLSwapChainContext::MakeCurrentEGLContext(static_cast<AndroidGLSwapChainContext*>(context));
-}
-
 
 /*
  * CanvasEventListener
@@ -63,14 +58,14 @@ void AndroidGLSwapChainContext::CanvasEventListener::OnInit(Canvas& sender)
 {
     /* Re-initialize the shared EGLSurface when the ANativeWindow is re-initialized */
     context_->InitEGLSurface(sender);
-    GLSwapChainContext::MakeCurrent(context_);
+    context_->MakeCurrentUnchecked();
 }
 
 void AndroidGLSwapChainContext::CanvasEventListener::OnDestroy(Canvas& /*sender*/)
 {
     /* Destroy the shared EGLSurface when the ANativeWindow is destroyed */
     context_->DestroyEGLSurface();
-    GLSwapChainContext::MakeCurrent(nullptr);
+    context_->Destroy();
 }
 
 
@@ -88,7 +83,7 @@ AndroidGLSwapChainContext::AndroidGLSwapChainContext(AndroidGLContext& context, 
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
     /* Get or create drawable surface */
-    if (context.GetSharedEGLSurface() && nativeHandle.window == context.GetSharedEGLSurface()->GetNativeWindow())
+    if (context.GetSharedEGLSurface() && nativeHandle.x11.window == context.GetSharedEGLSurface()->GetNativeWindow())
     {
         /* Share surface with main context */
         sharedSurface_ = context.GetSharedEGLSurface();
@@ -96,7 +91,7 @@ AndroidGLSwapChainContext::AndroidGLSwapChainContext(AndroidGLContext& context, 
     else
     {
         /* Create custom surface if different native window is specified */
-        sharedSurface_ = std::make_shared<AndroidSharedEGLSurface>(display_, context.GetEGLConfig(), nativeHandle.window);
+        sharedSurface_ = std::make_shared<AndroidSharedEGLSurface>(display_, context.GetEGLConfig(), nativeHandle.x11.window);
     }
 
     /* Register event listener to re-create EGLSurface when the app destroys and re-initializes the ANativeWindow during pausing/resuming the app */
@@ -123,7 +118,7 @@ void AndroidGLSwapChainContext::InitEGLSurface(Surface& surface)
 {
     NativeHandle nativeHandle = {};
     surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
-    sharedSurface_->InitEGLSurface(nativeHandle.window);
+    sharedSurface_->InitEGLSurface(nativeHandle.x11.window);
 }
 
 void AndroidGLSwapChainContext::DestroyEGLSurface()
@@ -131,15 +126,14 @@ void AndroidGLSwapChainContext::DestroyEGLSurface()
     sharedSurface_->DestroyEGLSurface();
 }
 
-bool AndroidGLSwapChainContext::MakeCurrentEGLContext(AndroidGLSwapChainContext* context)
+bool AndroidGLSwapChainContext::MakeCurrentUnchecked()
 {
-    if (context)
-    {
-        EGLSurface nativeSurface = context->sharedSurface_->GetEGLSurface();
-        return eglMakeCurrent(context->display_, nativeSurface, nativeSurface, context->context_);
-    }
-    else
-        return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    EGLSurface nativeSurface = sharedSurface_->GetEGLSurface();
+    return eglMakeCurrent(display_, nativeSurface, nativeSurface, context_);
+}
+
+bool AndroidGLSwapChainContext::Destroy() {
+    return eglMakeCurrent(eglGetDisplay(EGL_DEFAULT_DISPLAY), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 
