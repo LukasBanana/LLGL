@@ -32,7 +32,7 @@ class Win32GLSwapChainContext final : public GLSwapChainContext
         void Resize(const Extent2D& resolution) override;
 
         bool MakeCurrentUnchecked() override;
-        bool Destroy() override
+        bool Destroy() override;
 
     public:
 
