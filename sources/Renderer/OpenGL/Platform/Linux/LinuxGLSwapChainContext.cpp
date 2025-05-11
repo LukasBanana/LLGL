@@ -73,9 +73,9 @@ void LinuxX11GLSwapChainContext::Resize(const Extent2D& resolution)
     // dummy
 }
 
-bool LinuxX11GLSwapChainContext::MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context)
+bool LinuxX11GLSwapChainContext::MakeCurrentUnchecked()
 {
-    return glXMakeCurrent(context->dpy_, context->wnd_, context->glc_);       
+    return glXMakeCurrent(dpy_, wnd_, glc_);       
 }
 
 bool LinuxX11GLSwapChainContext::Destroy() {

@@ -38,10 +38,6 @@ class LinuxX11GLSwapChainContext final : public GLSwapChainContext
         bool MakeCurrentUnchecked() override;
         bool Destroy() override;
 
-    public:
-
-        static bool MakeCurrentGLXContext(LinuxX11GLSwapChainContext* context);
-
     private:
 
         ::Display*      dpy_ = nullptr;
