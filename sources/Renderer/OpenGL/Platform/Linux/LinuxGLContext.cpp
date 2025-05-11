@@ -19,7 +19,9 @@
 #include <LLGL/Log.h>
 #include <algorithm>
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-egl.h>
+#endif
 
 namespace LLGL
 {
