@@ -27,9 +27,15 @@ namespace LLGL
 std::unique_ptr<GLSwapChainContext> GLSwapChainContext::Create(GLContext& context, Surface& surface)
 {
 #ifdef LLGL_LINUX_ENABLE_WAYLAND
-    if (surface.IsWayland()) {
+    NativeHandle nativeHandle = {};
+    surface.GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
+
+    if (nativeHandle.type == NativeHandleType::Wayland)
+    {
         return MakeUnique<LinuxWaylandGLSwapChainContext>(static_cast<LinuxGLContext&>(context), surface);
-    } else {
+    }
+    else
+    {
         return MakeUnique<LinuxX11GLSwapChainContext>(static_cast<LinuxGLContext&>(context), surface);
     }
 #else

@@ -58,12 +58,16 @@ GLSwapChain::GLSwapChain(
 
     #ifdef LLGL_OS_LINUX
         #ifdef LLGL_OPENGL_WAYLAND
-        wayland = surface->IsWayland();
+        NativeHandle nativeHandle = {};
+        surface->GetNativeHandle(&nativeHandle, sizeof(nativeHandle));
 
-        if (wayland) {
+        if (nativeHandle.type == NativeHandleType::Wayland)
+        {
             /* Setup surface for the swap-chain */
             SetOrCreateSurface(surface, UTF8String{}, desc);
-        } else {
+        }
+        else
+        {
         #endif
             /* Set up surface for the swap-chain and pass native context handle */
             NativeHandle windowContext = {};

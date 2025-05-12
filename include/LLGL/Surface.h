@@ -88,15 +88,6 @@ class LLGL_EXPORT Surface : public Interface
         LLGL_DEPRECATED("Surface::ResetPixelFormat is deprecated since 0.04b; No need to reset pixel format anymore!")
         virtual void ResetPixelFormat();
 
-        /**
-        \brief Is the surface is using Wayland
-        \remarks Only works on Linux
-        \return True if the surface is using Wayland
-        */
-        virtual bool IsWayland() const {
-            return false;
-        }
-
     public:
 
         /**

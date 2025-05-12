@@ -71,10 +71,6 @@ class GLSwapChain final : public SwapChain
         std::unique_ptr<GLSwapChainContext> swapChainContext_;
         GLint                               framebufferHeight_ = 0;
 
-        #ifdef LLGL_OPENGL_WAYLAND
-        bool                                wayland            = false;
-        #endif
-
 };
 
 
