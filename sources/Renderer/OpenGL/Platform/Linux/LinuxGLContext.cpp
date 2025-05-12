@@ -81,19 +81,19 @@ LinuxGLContext::LinuxGLContext(
 
     #ifdef LLGL_LINUX_ENABLE_WAYLAND
 
-    bool is_wayland = nativeWindowHandle.type == NativeHandleType::Wayland;
+    bool isWayland = nativeWindowHandle.type == NativeHandleType::Wayland;
 
     if (customNativeHandle != nullptr)
     {
         isProxyGLC_ = true;
-        if (is_wayland)
+        if (isWayland)
             CreateProxyEGLContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
         else
             CreateProxyGLXContext(pixelFormat, nativeWindowHandle, *customNativeHandle);
     }
     else
     {
-        if (is_wayland)
+        if (isWayland)
             CreateEGLContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
         else
             CreateGLXContext(pixelFormat, profile, nativeWindowHandle, sharedContext);
@@ -118,9 +118,12 @@ LinuxGLContext::~LinuxGLContext()
     if (!isProxyGLC_) {
 
         #ifdef LLGL_LINUX_ENABLE_WAYLAND
-        if (api_.type == APIType::EGL) {
+        if (IsEGL())
+        {
             DeleteGLXContext();
-        } else if (api_.type == APIType::GLX) {
+        }
+        else
+        {
             DeleteEGLContext();
         }
         #else
@@ -142,10 +145,14 @@ bool LinuxGLContext::GetNativeHandle(void* nativeHandle, std::size_t nativeHandl
 
         #ifdef LLGL_LINUX_ENABLE_WAYLAND
 
-        if (api_.type == APIType::EGL) {
+        if (IsEGL())
+        {
             nativeHandleGL->egl = api_.egl.context;
             nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::EGL;
-        } else if (api_.type == APIType::GLX) {
+        }
+        else
+        {
+            nativeHandleGL->context = api_.glx.context;
             nativeHandleGL->glx = api_.glx.context;
             nativeHandleGL->type = OpenGL::RenderSystemNativeHandleType::GLX;
         }
@@ -237,9 +244,12 @@ bool LinuxGLContext::SetSwapInterval(int interval)
 {
 
 #ifdef LLGL_LINUX_ENABLE_WAYLAND
-    if (api_.type == APIType::EGL) {
+    if (IsEGL())
+    {
         return (eglSwapInterval(api_.egl.display, interval) == EGL_TRUE);
-    } else if (api_.type == APIType::GLX) {
+    }
+    else
+    {
 #endif
     /* Load GL extension "GLX_SGI/MESA/EXT_swap_control" to set v-sync interval */
     LoadSwapIntervalProcs();
@@ -306,11 +316,13 @@ void LinuxGLContext::CreateEGLContext(
     if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
         Log::Errorf("eglMakeCurrent failed on EGL compatibility profile\n");
 
-    if (profile.contextProfile == OpenGLContextProfile::CoreProfile) {
+    if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
+    {
         api_.egl.context = CreateEGLContextCoreProfile(glcShared, profile.majorVersion, profile.minorVersion, pixelFormat.depthBits, pixelFormat.stencilBits, &api_.egl.config);
     }
 
-    if (api_.egl.context) {
+    if (api_.egl.context)
+    {
         if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, intermediateGlc) != True)
             Log::Errorf("eglMakeCurrent failed on EGL core profile\n");
 
@@ -320,7 +332,9 @@ void LinuxGLContext::CreateEGLContext(
         /* Deduce color and depth-stencil formats */
         SetDefaultColorFormat();
         DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
-    } else {
+    }
+    else
+    {
         /* No core profile created, so we use the intermediate GLX context */
         api_.egl.context = intermediateGlc;
 
@@ -604,6 +618,7 @@ void LinuxGLContext::CreateProxyGLXContext(
     DeduceDepthStencilFormat(pixelFormat.depthBits, pixelFormat.stencilBits);
 }
 
+#ifdef LLGL_LINUX_ENABLE_WAYLAND
 void LinuxGLContext::CreateProxyEGLContext(
     const GLPixelFormat&                    pixelFormat,
     const NativeHandle&                     nativeWindowHandle,
@@ -612,6 +627,7 @@ void LinuxGLContext::CreateProxyEGLContext(
     LLGL_ASSERT(nativeWindowHandle.type == NativeHandleType::Wayland);
     LLGL_TRAP("TODO");
 }
+#endif
 
 } // /namespace LLGL
 

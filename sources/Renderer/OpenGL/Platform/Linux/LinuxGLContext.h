@@ -72,25 +72,10 @@ class LinuxGLContext : public GLContext
             LinuxGLContext*                     sharedContext
         );
 
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
-        void CreateEGLContext(
-            const GLPixelFormat&                pixelFormat,
-            const RendererConfigurationOpenGL&  profile,
-            const NativeHandle&                 nativeHandle,
-            LinuxGLContext*                     sharedContext
-        );
-        #endif
-
         void DeleteGLXContext();
-        #ifdef LLGL_LINUX_ENABLE_WAYLAND
-        void DeleteEGLContext();
-        #endif
 
         GLXContext CreateGLXContextCoreProfile(GLXContext glcShared, int major, int minor, int depthBits, int stencilBits);
         GLXContext CreateGLXContextCompatibilityProfile(XVisualInfo* visual, GLXContext glcShared);
-
-        EGLContext CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config);
-        EGLContext CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config);
 
         void CreateProxyGLXContext(
             const GLPixelFormat&                    pixelFormat,
@@ -98,11 +83,33 @@ class LinuxGLContext : public GLContext
             const OpenGL::RenderSystemNativeHandle& nativeContextHandle
         );
 
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        EGLContext CreateEGLContextCoreProfile(EGLContext glcShared, int major, int minor, int depthBits, int stencilBits, EGLConfig* config);
+        EGLContext CreateEGLContextCompatibilityProfile(EGLContext glcShared, EGLConfig* config);
+
+        void CreateEGLContext(
+            const GLPixelFormat&                pixelFormat,
+            const RendererConfigurationOpenGL&  profile,
+            const NativeHandle&                 nativeHandle,
+            LinuxGLContext*                     sharedContext
+        );
+
+        void DeleteEGLContext();
+
         void CreateProxyEGLContext(
             const GLPixelFormat&                    pixelFormat,
             const NativeHandle&                     nativeWindowHandle,
             const OpenGL::RenderSystemNativeHandle& nativeContextHandle
         );
+        #endif
+
+        #ifdef LLGL_LINUX_ENABLE_WAYLAND
+        inline bool IsEGL() const
+        {
+            return api_.type == APIType::EGL;
+        }
+        #endif
+
 
     private:
         enum class APIType : char {
