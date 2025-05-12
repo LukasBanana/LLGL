@@ -41,6 +41,12 @@ void GLSwapChain::ChooseGLXVisualAndGetX11WindowContext(GLPixelFormat& pixelForm
 
     /* Create Colormap structure */
     windowContext.x11.colorMap = XCreateColormap(windowContext.x11.display, windowContext.x11.window, windowContext.x11.visual->visual, AllocNone);
+
+    windowContext.display = windowContext.x11.display;
+    windowContext.window = windowContext.x11.window;
+    windowContext.visual = windowContext.x11.visual;
+    windowContext.colorMap = windowContext.x11.colorMap;
+    windowContext.screen = windowContext.x11.screen;
 }
 
 

@@ -12,6 +12,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include <LLGL/Deprecated.h>
+
 #ifdef LLGL_LINUX_ENABLE_WAYLAND
 #include <wayland-client.h>
 #endif
@@ -61,6 +63,26 @@ enum class NativeHandleType : char
 struct NativeHandle
 {
     union {
+        //! X11 display connection.
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.display instead.")
+        ::Display*      display;
+
+        //! X11 window object.
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.window instead.")
+        ::Window        window;
+
+        //! X11 visual information.
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.visual instead.")
+        ::XVisualInfo*  visual;
+
+        //! X11 colormap object. Used internally by the OpenGL backend.
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.colorMap instead.")
+        ::Colormap      colorMap;
+
+        //! X11 screen index.
+        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.screen instead.")
+        int             screen;
+
         X11NativeHandle x11;
         WaylandNativeHandle wayland;
     };
