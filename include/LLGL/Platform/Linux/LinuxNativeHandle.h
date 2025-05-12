@@ -63,25 +63,27 @@ enum class NativeHandleType : char
 struct NativeHandle
 {
     union {
-        //! X11 display connection.
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.display instead.")
-        ::Display*      display;
+        struct {
+            //! X11 display connection.
+            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.display instead.")
+            ::Display*      display;
 
-        //! X11 window object.
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.window instead.")
-        ::Window        window;
+            //! X11 window object.
+            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.window instead.")
+            ::Window        window;
 
-        //! X11 visual information.
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.visual instead.")
-        ::XVisualInfo*  visual;
+            //! X11 visual information.
+            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.visual instead.")
+            ::XVisualInfo*  visual;
 
-        //! X11 colormap object. Used internally by the OpenGL backend.
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.colorMap instead.")
-        ::Colormap      colorMap;
+            //! X11 colormap object. Used internally by the OpenGL backend.
+            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.colorMap instead.")
+            ::Colormap      colorMap;
 
-        //! X11 screen index.
-        LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.screen instead.")
-        int             screen;
+            //! X11 screen index.
+            LLGL_DEPRECATED("Deprecated since 0.04b; Use x11.screen instead.")
+            int             screen;
+        };
 
         X11NativeHandle x11;
         WaylandNativeHandle wayland;
