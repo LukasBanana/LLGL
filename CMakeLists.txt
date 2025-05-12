@@ -176,7 +176,7 @@ if(WIN32)
     option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project" ON)
 endif()
 
-if(LLGL_TARGET_PLATFORM STREQUAL "Linux")
+if(UNIX AND NOT APPLE)
     option(LLGL_LINUX_ENABLE_WAYLAND "Enable support for Wayland protocol" OFF)
 endif()
 
