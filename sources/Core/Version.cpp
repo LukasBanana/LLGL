@@ -7,7 +7,7 @@
 
 #include <LLGL/Version.h>
 #include "VersionMacros.h"
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

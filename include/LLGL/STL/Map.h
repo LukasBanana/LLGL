@@ -8,7 +8,7 @@
 #ifndef LLGL_MAP_H
 #define LLGL_MAP_H
 
-#include <LLGL/Container/STLAllocator.h>
+#include <LLGL/STL/STLAllocator.h>
 
 #include <map>
 #include <utility>

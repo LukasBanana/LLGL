@@ -15,8 +15,8 @@
 #include <LLGL/ImageFlags.h>
 #include "ComPtr.h"
 #include <dxgi.h>
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 #include <Windows.h>
 #include <d3dcommon.h>
 

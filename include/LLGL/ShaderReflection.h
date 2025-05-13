@@ -14,8 +14,8 @@
 #include <LLGL/BufferFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ShaderFlags.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 #include <cstdint>
 
 

@@ -15,7 +15,7 @@
 #include <LLGL/Utils/TypeNames.h>
 #include <d3d11.h>
 #include <cstdint>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

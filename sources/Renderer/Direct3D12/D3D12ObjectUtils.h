@@ -11,7 +11,7 @@
 
 #include <d3d12.h>
 #include <cstdint>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

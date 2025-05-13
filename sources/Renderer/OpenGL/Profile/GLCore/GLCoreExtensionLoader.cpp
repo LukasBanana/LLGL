@@ -11,8 +11,8 @@
 #include "GLCoreExtensions.h"
 #include <LLGL/Utils/ForRange.h>
 #include <functional>
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Map.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Map.h>
 
 
 namespace LLGL

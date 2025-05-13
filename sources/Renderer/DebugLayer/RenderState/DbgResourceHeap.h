@@ -11,7 +11,7 @@
 
 #include <LLGL/ResourceHeap.h>
 #include <LLGL/ResourceHeapFlags.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

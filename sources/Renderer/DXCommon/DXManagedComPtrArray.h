@@ -12,9 +12,9 @@
 #include "ComPtr.h"
 #include "../../Core/Assertion.h"
 #include <LLGL/Utils/ForRange.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 #include <algorithm>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

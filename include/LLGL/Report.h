@@ -11,7 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

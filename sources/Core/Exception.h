@@ -12,7 +12,7 @@
 #include <LLGL/Export.h>
 #include <LLGL/Container/StringView.h>
 #include <LLGL/Trap.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <cstddef>
 #include "MacroUtils.h"
 

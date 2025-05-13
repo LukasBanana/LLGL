@@ -7,7 +7,7 @@
 
 #include "D3D12ObjectUtils.h"
 #include "../DXCommon/DXCore.h"
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <cstring>
 
 

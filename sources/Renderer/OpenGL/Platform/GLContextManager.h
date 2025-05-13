@@ -12,7 +12,7 @@
 #include "GLContext.h"
 #include <LLGL/RendererConfiguration.h>
 #include <LLGL/Container/DynamicArray.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 #include <memory>
 #include <functional>
 

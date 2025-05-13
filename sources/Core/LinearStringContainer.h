@@ -11,7 +11,7 @@
 
 #include "StringUtils.h"
 #include <LLGL/Container/StringView.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 #include <string.h>
 
 

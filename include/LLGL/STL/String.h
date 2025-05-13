@@ -8,7 +8,7 @@
 #ifndef LLGL_STRING_H
 #define LLGL_STRING_H
 
-#include <LLGL/Container/STLAllocator.h>
+#include <LLGL/STL/STLAllocator.h>
 
 #include <string>
 

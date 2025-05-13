@@ -16,8 +16,8 @@
 #include "RenderState/DbgQueryHeap.h"
 #include "DbgQueryTimerPool.h"
 #include <cstdint>
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Stack.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Stack.h>
 
 
 namespace LLGL

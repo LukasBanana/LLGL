@@ -15,7 +15,7 @@
 #include "../../../Core/Assertion.h"
 #include "../../../Core/CoreUtils.h"
 #include <LLGL/Utils/ForRange.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <algorithm>
 
 

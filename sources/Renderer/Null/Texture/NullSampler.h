@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Sampler.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

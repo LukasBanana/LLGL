@@ -11,8 +11,8 @@
 
 #include <LLGL/ForwardDecls.h>
 #include <LLGL/RenderingDebugger.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/Stack.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/Stack.h>
 
 
 namespace LLGL

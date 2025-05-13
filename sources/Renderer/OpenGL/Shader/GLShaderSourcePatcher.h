@@ -9,7 +9,7 @@
 #define LLGL_GL_SHADER_SOURCE_PATCHER_H
 
 
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

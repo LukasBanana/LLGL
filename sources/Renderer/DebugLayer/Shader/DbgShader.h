@@ -11,7 +11,7 @@
 
 #include <LLGL/Shader.h>
 #include <LLGL/RenderingDebugger.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

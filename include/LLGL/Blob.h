@@ -11,8 +11,8 @@
 
 #include <LLGL/NonCopyable.h>
 #include <LLGL/Container/DynamicArray.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 #include <memory>
 
 

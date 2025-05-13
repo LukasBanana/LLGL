@@ -11,7 +11,7 @@
 
 #include <LLGL/PipelineState.h>
 #include <LLGL/PipelineStateFlags.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

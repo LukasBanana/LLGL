@@ -9,8 +9,8 @@
 #include <LLGL/Utils/ForRange.h>
 #include <LLGL/Container/Strings.h>
 #include <LLGL/Report.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 #include <cstring>
 #include <cmath>
 #include "Exception.h"

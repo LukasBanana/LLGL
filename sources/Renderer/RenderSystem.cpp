@@ -22,7 +22,7 @@
 
 #include <LLGL/RenderSystem.h>
 #include "RenderSystemRegistry.h"
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <unordered_map>
 
 #include "../Core/PrintfUtils.h"

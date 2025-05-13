@@ -12,8 +12,8 @@
 #include <LLGL/Deprecated.h>
 #include <LLGL/Export.h>
 #include <LLGL/DisplayFlags.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 #include <cstdint>
 
 

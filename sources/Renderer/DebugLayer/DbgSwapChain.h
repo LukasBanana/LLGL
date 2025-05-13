@@ -11,7 +11,7 @@
 
 #include <LLGL/SwapChain.h>
 #include "RenderState/DbgRenderPass.h"
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <memory>
 #include <functional>
 

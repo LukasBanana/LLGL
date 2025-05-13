@@ -10,8 +10,8 @@
 
 
 #include <LLGL/QueryHeap.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL

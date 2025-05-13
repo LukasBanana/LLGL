@@ -11,7 +11,7 @@
 #include <LLGL/Container/Strings.h>
 #include "../Core/StringUtils.h"
 #include "../Platform/Debug.h"
-#include <LLGL/Container/Map.h>
+#include <LLGL/STL/Map.h>
 
 
 namespace LLGL

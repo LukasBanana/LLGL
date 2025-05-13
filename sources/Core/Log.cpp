@@ -13,7 +13,7 @@
 #include "../Renderer/ContainerTypes.h"
 #include <mutex>
 #include <atomic>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <stdio.h>
 #include <stdarg.h>
 

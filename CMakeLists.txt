@@ -597,6 +597,7 @@ set(FilesMsvcNatvis ${PROJECT_SOURCE_DIR}/LLGL.natvis)
 find_source_files(FilesInclude                      "*.h"   "${PROJECT_INCLUDE_DIR}/LLGL")
 find_source_files(FilesIncludeBackend               "*.inl" "${PROJECT_INCLUDE_DIR}/LLGL/Backend")
 find_source_files(FilesIncludeContainer             "*.h"   "${PROJECT_INCLUDE_DIR}/LLGL/Container")
+find_source_files(FilesIncludeSTL                   "*.h"   "${PROJECT_INCLUDE_DIR}/LLGL/STL")
 find_source_files(FilesIncludeUtils                 "*.h"   "${PROJECT_INCLUDE_DIR}/LLGL/Utils")
 find_source_files(FilesIncludePlatformBase          "*.h"   "${PROJECT_INCLUDE_DIR}/LLGL/Platform")
 find_source_files(FilesCore                         CXX     "${PROJECT_SOURCE_DIR}/sources/Core")
@@ -660,6 +661,7 @@ source_group("NatVis" FILES ${FilesMsvcNatvis})
 source_group("Include"              FILES ${FilesInclude})
 source_group("Include\\Backend"     FILES ${FilesIncludeBackend})
 source_group("Include\\Container"   FILES ${FilesIncludeContainer})
+source_group("Include\\STL"         FILES ${FilesIncludeSTL})
 source_group("Include\\Utils"       FILES ${FilesIncludeUtils})
 source_group("Include\\Platform"    FILES ${FilesIncludePlatformBase} ${FilesIncludePlatform})
 
@@ -698,6 +700,7 @@ set(
     ${FilesInclude}
     ${FilesIncludeBackend}
     ${FilesIncludeContainer}
+    ${FilesIncludeSTL}
     ${FilesIncludeUtils}
     ${FilesIncludePlatformBase}
     ${FilesIncludePlatform}

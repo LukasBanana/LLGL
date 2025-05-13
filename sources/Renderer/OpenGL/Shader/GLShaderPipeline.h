@@ -12,8 +12,8 @@
 #include "GLShader.h"
 #include "GLPipelineSignature.h"
 #include <memory>
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Set.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Set.h>
 
 
 namespace LLGL

@@ -8,7 +8,7 @@
 #ifndef LLGL_VECTOR_H
 #define LLGL_VECTOR_H
 
-#include <LLGL/Container/STLAllocator.h>
+#include <LLGL/STL/STLAllocator.h>
 
 #include <vector>
 

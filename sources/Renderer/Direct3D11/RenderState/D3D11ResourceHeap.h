@@ -17,7 +17,7 @@
 #include "../../BindingIterator.h"
 #include "../../SegmentedBuffer.h"
 #include "../../DXCommon/DXManagedComPtrArray.h"
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 #include <functional>
 #include <initializer_list>
 #include "../Direct3D11.h"

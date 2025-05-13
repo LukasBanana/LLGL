@@ -9,7 +9,7 @@
 #define LLGL_GL_EXTENSION_LOADER_H
 
 
-#include <LLGL/Container/Set.h>
+#include <LLGL/STL/Set.h>
 
 
 namespace LLGL

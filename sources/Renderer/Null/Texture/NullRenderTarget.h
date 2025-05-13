@@ -11,8 +11,8 @@
 
 #include <LLGL/RenderTarget.h>
 #include "NullTexture.h"
-#include <LLGL/Container/String.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/String.h>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL

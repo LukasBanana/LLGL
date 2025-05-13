@@ -39,10 +39,10 @@
 
 #include "../ProxyPipelineCache.h"
 
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <memory>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/Set.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/Set.h>
 
 
 namespace LLGL

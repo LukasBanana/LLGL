@@ -11,7 +11,7 @@
 
 #include "RenderSystemModule.h"
 #include <LLGL/Container/SmallVector.h>
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL

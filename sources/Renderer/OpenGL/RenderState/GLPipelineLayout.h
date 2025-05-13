@@ -16,7 +16,7 @@
 #include "GLResourceType.h"
 #include "../Texture/GLSampler.h"
 #include "../Texture/GLEmulatedSampler.h"
-#include <LLGL/Container/Vector.h>
+#include <LLGL/STL/Vector.h>
 
 
 namespace LLGL

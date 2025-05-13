@@ -9,7 +9,7 @@
 #include "Ext/GLExtensions.h"
 #include "Ext/GLExtensionRegistry.h"
 #include "RenderState/GLStateManager.h"
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 #include <cstring> // std::strlen
 
 

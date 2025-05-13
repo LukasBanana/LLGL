@@ -13,7 +13,7 @@
 #include <LLGL/NonCopyable.h>
 #include <LLGL/Report.h>
 #include <memory>
-#include <LLGL/Container/String.h>
+#include <LLGL/STL/String.h>
 
 
 namespace LLGL
