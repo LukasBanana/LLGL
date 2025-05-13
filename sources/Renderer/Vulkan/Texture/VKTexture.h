@@ -11,7 +11,7 @@
 
 #include <LLGL/Texture.h>
 #include "VKDeviceImage.h"
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <cstdint>
 
@@ -45,6 +45,10 @@ class VKTexture final : public Texture
             VKDeviceMemoryManager&      deviceMemoryMngr,
             const TextureDescriptor&    desc
         );
+
+    public:
+
+        void SetDebugName(const char* name) override;
 
     public:
 
@@ -156,6 +160,7 @@ class VKTexture final : public Texture
 
     private:
 
+        VkDevice                device_             = VK_NULL_HANDLE;
         VKDeviceImage           image_;
         VKPtr<VkImageView>      imageView_;
 

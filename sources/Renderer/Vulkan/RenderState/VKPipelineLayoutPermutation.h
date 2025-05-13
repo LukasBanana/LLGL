@@ -97,6 +97,7 @@ class VKPipelineLayoutPermutation
 
         void CreateBindingSetLayout(
             VkDevice                               device,
+            const ArrayView<VKLayoutBinding>&      inBindings,
             vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
             vector<VKLayoutBinding>&               outBindings,
             VKDescriptorSetLayout&                 outSetLayout

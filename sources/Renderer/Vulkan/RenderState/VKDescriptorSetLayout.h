@@ -24,6 +24,7 @@ struct VKLayoutBinding
 {
     std::uint32_t           dstBinding;
     std::uint32_t           dstArrayElement;
+    std::uint32_t           barrierSlot;
     VkDescriptorType        descriptorType;
     VkPipelineStageFlags    stageFlags;
     long                    bindFlags;

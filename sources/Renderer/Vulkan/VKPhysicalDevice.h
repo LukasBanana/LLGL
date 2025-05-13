@@ -12,8 +12,9 @@
 #include "Vulkan.h"
 #include "VKDevice.h"
 #include <LLGL/RenderSystemFlags.h>
-#include <LLGL/Container/Vector.h>
-#include <LLGL/Container/Set.h>
+#include <LLGL/Container/ArrayView.h>
+#include <LLGL/STL/Vector.h>
+#include <LLGL/STL/Set.h>
 #include <cstring>
 
 
@@ -31,7 +32,7 @@ class VKPhysicalDevice
         /* ----- Common ----- */
 
         // Picks the physical Vulkan device by enumerating the available devices from the specified Vulkan instance.
-        bool PickPhysicalDevice(VkInstance instance, long preferredDeviceFlags = 0);
+        bool PickPhysicalDevice(VkInstance instance, const ArrayView<const char*>& supportedInstanceExtensions, long preferredDeviceFlags = 0);
 
         // Loads the physical Vulkan device from a custom native handle.
         void LoadPhysicalDeviceWeakRef(VkPhysicalDevice physicalDevice);

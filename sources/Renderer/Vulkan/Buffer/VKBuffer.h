@@ -29,6 +29,10 @@ class VKBuffer : public Buffer
 
     public:
 
+        void SetDebugName(const char* name) override;
+
+    public:
+
         VKBuffer(VkDevice device, const BufferDescriptor& desc);
 
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
@@ -114,6 +118,8 @@ class VKBuffer : public Buffer
         }
 
     private:
+
+        VkDevice            device_                 = VK_NULL_HANDLE;
 
         VKDeviceBuffer      bufferObj_;
         VKDeviceBuffer      bufferObjStaging_;

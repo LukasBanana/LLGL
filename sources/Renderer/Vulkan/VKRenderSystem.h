@@ -73,6 +73,7 @@ class VKRenderSystem final : public RenderSystem
 
     private:
 
+        void QuerySupportedInstanceExtensions();
         void CreateInstance(const RendererConfigurationVulkan* config);
         void CreateDebugReportCallback();
         bool PickPhysicalDevice(long preferredDeviceFlags, VkPhysicalDevice customPhysicalDevice = VK_NULL_HANDLE);
@@ -105,6 +106,8 @@ class VKRenderSystem final : public RenderSystem
         /* ----- Common objects ----- */
 
         VKPtr<VkInstance>                       instance_;
+        std::vector<VkExtensionProperties>      instanceExtensionProperties_;
+        std::vector<const char*>                supportedInstanceExtensions_;
 
         VKPhysicalDevice                        physicalDevice_;
         VKDevice                                device_;

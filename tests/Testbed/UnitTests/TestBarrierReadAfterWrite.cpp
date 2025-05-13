@@ -16,12 +16,6 @@ The test must validate that the correct memory barriers are inserted between the
 */
 DEF_TEST( BarrierReadAfterWrite )
 {
-    //TODO: not supported for Vulkan yet
-    if (renderer->GetRendererID() == RendererID::Vulkan)
-    {
-        return TestResult::Skipped;
-    }
-
     if (shaders[CSReadAfterWrite] == nullptr)
     {
         if (renderer->GetRendererID() == RendererID::Metal)
@@ -94,7 +88,7 @@ DEF_TEST( BarrierReadAfterWrite )
 
     // Create compute PSO
     PipelineLayoutDescriptor psoLayoutDesc = Parse(
-        "rwbuffer(buf1@1):comp,"
+        "rwtbuffer(buf1@1):comp,"
         "rwbuffer(buf2@2):comp,"
         "rwtexture(tex1@3):comp,"
         "rwtexture(tex2@4):comp,"
@@ -165,9 +159,9 @@ DEF_TEST( BarrierReadAfterWrite )
 
             cmdBuffer->Dispatch(1, 1, 1);
 
+            // Use explicit barriers only for frame 1
             if (frame > 0)
             {
-                // Use explicit barriers
                 Buffer* buffers[] = { buf1, buf2 };
                 Texture* textures[] = { tex1, tex2 };
                 cmdBuffer->ResourceBarrier(2, buffers, 2, textures);

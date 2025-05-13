@@ -11,6 +11,7 @@
 
 #include <LLGL/PipelineLayout.h>
 #include <LLGL/PipelineLayoutFlags.h>
+#include "VKPipelineBarrier.h"
 #include "VKDescriptorSetLayout.h"
 #include "VKPipelineLayoutPermutation.h"
 #include "VKDescriptorCache.h"
@@ -112,6 +113,12 @@ class VKPipelineLayout final : public PipelineLayout
             return descriptorCache_.get();
         }
 
+        // Returns the automatic pipeline barrier for this pipeline layout.
+        inline VKPipelineBarrier* GetAutoPipelineBarrier() const
+        {
+            return barrier_.get();
+        }
+
         // Returns the barrier flags this pipeline layout was created with. See PipelineLayoutDescriptor::barrierFlags.
         inline long GetBarrierFlags() const
         {
@@ -171,6 +178,8 @@ class VKPipelineLayout final : public PipelineLayout
             VKDescriptorSetLayout&                  outDescriptorSetLayout
         );
 
+        void AllocateDescriptorBarriers(std::vector<VKLayoutBinding>& bindings);
+
         void CreateImmutableSamplers(
             VkDevice                                    device,
             const ArrayView<StaticSamplerDescriptor>&   staticSamplers
@@ -218,6 +227,8 @@ class VKPipelineLayout final : public PipelineLayout
         VKLayoutBindingTable                bindingTable_;
         vector<VKPtr<VkSampler>>            immutableSamplers_;
         vector<UniformDescriptor>           uniformDescs_;
+
+        VKPipelineBarrierPtr                barrier_;
 
         long                                barrierFlags_   : 2; // BarrierFlags
         long                                flags_          : 1; // PSOLayoutFlags

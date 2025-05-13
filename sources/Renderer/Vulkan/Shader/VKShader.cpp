@@ -158,20 +158,6 @@ static const char* GetOptString(const char* s)
     return (s != nullptr ? s : "");
 }
 
-static long ShaderTypeToStageFlags(const ShaderType type)
-{
-    switch (type)
-    {
-        case ShaderType::Vertex:            return StageFlags::VertexStage;
-        case ShaderType::TessControl:       return StageFlags::TessControlStage;
-        case ShaderType::TessEvaluation:    return StageFlags::TessEvaluationStage;
-        case ShaderType::Geometry:          return StageFlags::GeometryStage;
-        case ShaderType::Fragment:          return StageFlags::FragmentStage;
-        case ShaderType::Compute:           return StageFlags::ComputeStage;
-        default:                            return 0;
-    }
-}
-
 #if LLGL_VK_ENABLE_SPIRV_REFLECT
 
 static Format SpvVectorTypeToFormat(const SpirvReflect::SpvType* type, std::uint32_t count)
@@ -466,7 +452,7 @@ bool VKShader::Reflect(ShaderReflection& reflection) const
     {
         const SpirvReflect::SpvUniform& var = it.second;
         if (ShaderResourceReflection* resource = FindOrAppendShaderResource(reflection, var))
-            resource->binding.stageFlags |= ShaderTypeToStageFlags(GetType());
+            resource->binding.stageFlags |= GetStageFlags(GetType());
     }
 
     /* Gather push constants */

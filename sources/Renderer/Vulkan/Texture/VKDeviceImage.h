@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Texture.h>
-#include <vulkan/vulkan.h>
+#include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <cstdint>
 

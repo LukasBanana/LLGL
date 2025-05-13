@@ -24,7 +24,7 @@ static std::uint32_t GetPoolIndex(VkDescriptorType type)
 
 void VKPoolSizeAccumulator::Accumulate(VkDescriptorType type, std::uint32_t count)
 {
-    const auto poolIndex = GetPoolIndex(type);
+    const std::uint32_t poolIndex = GetPoolIndex(type);
     countsPerType_[poolIndex] += count;
 }
 

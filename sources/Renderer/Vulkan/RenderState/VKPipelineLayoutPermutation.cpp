@@ -6,6 +6,7 @@
  */
 
 #include "VKPipelineLayoutPermutation.h"
+#include "VKPipelineLayout.h"
 #include "VKPoolSizeAccumulator.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
@@ -42,9 +43,25 @@ VKPipelineLayoutPermutation::VKPipelineLayoutPermutation(
 {
     /* Create Vulkan descriptor set layouts */
     if (!permutationParams.setLayoutHeapBindings.empty())
-        CreateBindingSetLayout(device, permutationParams.setLayoutHeapBindings, bindingTable_.heapBindings, setLayoutHeapBindings_);
+    {
+        CreateBindingSetLayout(
+            device,
+            owner->GetBindingTable().heapBindings,
+            permutationParams.setLayoutHeapBindings,
+            bindingTable_.heapBindings,
+            setLayoutHeapBindings_
+        );
+    }
     if (!permutationParams.setLayoutDynamicBindings.empty())
-        CreateBindingSetLayout(device, permutationParams.setLayoutDynamicBindings, bindingTable_.dynamicBindings, setLayoutDynamicBindings_);
+    {
+        CreateBindingSetLayout(
+            device,
+            owner->GetBindingTable().dynamicBindings,
+            permutationParams.setLayoutDynamicBindings,
+            bindingTable_.dynamicBindings,
+            setLayoutDynamicBindings_
+        );
+    }
 
     /* Create descriptor pool for dynamic descriptors and immutable samplers */
     if (!bindingTable_.dynamicBindings.empty() || numImmutableSamplers_ > 0)
@@ -85,12 +102,16 @@ int VKPipelineLayoutPermutation::CompareSWO(const VKPipelineLayoutPermutation& l
 
 void VKPipelineLayoutPermutation::CreateBindingSetLayout(
     VkDevice                               device,
+    const ArrayView<VKLayoutBinding>&      inBindings,
     vector<VkDescriptorSetLayoutBinding>   setLayoutBindings,
     vector<VKLayoutBinding>&               outBindings,
     VKDescriptorSetLayout&                 outSetLayout)
 {
     outSetLayout.Initialize(device, std::move(setLayoutBindings));
     outSetLayout.GetLayoutBindings(outBindings);
+    LLGL_ASSERT(inBindings.size() == outBindings.size());
+    for_range(i, inBindings.size())
+        outBindings[i].barrierSlot = inBindings[i].barrierSlot;
 }
 
 VKPtr<VkPipelineLayout> VKPipelineLayoutPermutation::CreateVkPipelineLayout(VkDevice device, VkDescriptorSetLayout setLayoutImmutableSamplers) const

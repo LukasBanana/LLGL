@@ -160,7 +160,7 @@
 #endif
 
 #if GL_ARB_program_interface_query || GL_ES_VERSION_3_1
-#   define LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
+#   define LLGL_GLEXT_PROGRAM_INTERFACE_QUERY 1
 #endif
 
 #if LLGL_OPENGL || GL_ES_VERSION_3_1

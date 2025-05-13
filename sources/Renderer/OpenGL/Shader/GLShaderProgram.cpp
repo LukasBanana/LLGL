@@ -186,7 +186,7 @@ void GLShaderProgram::BindAttribLocations(GLuint program, std::size_t numVertexA
 
 void GLShaderProgram::BindFragDataLocations(GLuint program, std::size_t numFragmentAttribs, const GLShaderAttribute* fragmentAttribs)
 {
-    #if LLGL_OPENGL && EXT_gpu_shader4
+    #if LLGL_OPENGL && GL_EXT_gpu_shader4
     /* Only bind if extension is supported, otherwise the sahder won't have multiple fragment outpus anyway */
     if (HasExtension(GLExt::EXT_gpu_shader4))
     {
@@ -588,7 +588,7 @@ static void GLQueryStreamOutputAttributes(GLuint program, ShaderReflection& refl
     #endif // /!LLGL_GL_ENABLE_OPENGL2X
 }
 
-#ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
+#if LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
 
 static bool GLGetProgramResourceProperties(
     GLuint          program,
@@ -600,7 +600,7 @@ static bool GLGetProgramResourceProperties(
 {
     if (HasExtension(GLExt::ARB_program_interface_query))
     {
-        glGetProgramResourceiv(program, programInterface, resourceIndex, /*propCount:*/ count, props, /*paramCount:*/ count, nullptr, params);
+        glGetProgramResourceiv(program, programInterface, resourceIndex, /*propCount:*/ count, props, /*bufSize:*/ count, nullptr, params);
         return true;
     }
     return false;
@@ -672,6 +672,52 @@ static void GLQueryBufferProperties(GLuint program, ShaderResourceReflection& re
     }
 }
 
+static void GLQueryFragmentAttributes(GLuint program, ShaderReflection& reflection)
+{
+    const GLenum props[3] = { GL_LOCATION, GL_LOCATION_INDEX, GL_TYPE };
+
+    GLint numFragAttribs = 0;
+    GLint maxNameLength = 0;
+    std::vector<char> blockName;
+    if (!GLQueryActiveResources(program, GL_PROGRAM_OUTPUT, numFragAttribs, maxNameLength, blockName))
+        return;
+
+    for_range(resourceIndex, static_cast<GLuint>(numFragAttribs))
+    {
+        GLint params[3] = { -1, -1, 0 };
+        if (!GLGetProgramResourceProperties(program, GL_PROGRAM_OUTPUT, resourceIndex, 3, props, params) || params[0] == -1)
+            return;
+
+        FragmentAttribute fragAttrib;
+        {
+            /* Query shader storage block name */
+            GLsizei nameLength = 0;
+            glGetProgramResourceName(program, GL_PROGRAM_OUTPUT, resourceIndex, maxNameLength, &nameLength, blockName.data());
+            fragAttrib.name = StringView(blockName.data(), static_cast<std::size_t>(nameLength));
+
+            /* Ignore matrix types; only use format, not rows */
+            fragAttrib.format = UnmapAttribType(static_cast<GLenum>(params[2])).format;
+
+            /* Take 'layout(location)'-property as output location */
+            fragAttrib.location = static_cast<std::uint32_t>(params[0]);
+
+            /* Assume color output in fragment shader for any custom declared output attribute */
+            fragAttrib.systemValue  = LLGL::SystemValue::Color;
+        }
+        reflection.fragment.outputAttribs.push_back(fragAttrib);
+    }
+
+    /* Sort output attributes by their location indices */
+    std::sort(
+        reflection.fragment.outputAttribs.begin(),
+        reflection.fragment.outputAttribs.end(),
+        [](const FragmentAttribute& lhs, const FragmentAttribute& rhs) -> bool
+        {
+            return (lhs.location < rhs.location);
+        }
+    );
+}
+
 #endif // /LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
 
 static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
@@ -707,7 +753,7 @@ static void GLQueryConstantBuffers(GLuint program, ShaderReflection& reflection)
             glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
             resource.constantBufferSize = static_cast<std::uint32_t>(blockSize);
 
-            #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
+            #if LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
             /* Query resource view properties */
             GLQueryBufferProperties(program, resource, GL_UNIFORM_BLOCK, i);
             #else
@@ -746,7 +792,7 @@ static void GLQueryStorageBuffers(GLuint program, ShaderReflection& reflection)
             glGetProgramResourceName(program, GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
             resource.binding.name = StringView(blockName.data(), static_cast<std::size_t>(nameLength));
 
-            #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
+            #if LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
             /* Query resource view properties */
             GLQueryBufferProperties(program, resource, GL_SHADER_STORAGE_BLOCK, i);
             #else
@@ -807,7 +853,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
 
                 resource.binding.slot = static_cast<std::uint32_t>(uniformValue);
 
-                #ifdef LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
+                #if LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
                 /* Query resource properties */
                 const GLenum props[] =
                 {
@@ -858,7 +904,7 @@ static void GLQueryUniforms(GLuint program, ShaderReflection& reflection)
 
 static void GLQueryWorkGroupSize(GLuint program, ShaderReflection& reflection)
 {
-    #ifdef GL_ARB_compute_shader
+    #if LLGL_GLEXT_COMPUTE_SHADER
     if (HasExtension(GLExt::ARB_compute_shader))
     {
         GLint params[3] = { 0 };
@@ -870,17 +916,21 @@ static void GLQueryWorkGroupSize(GLuint program, ShaderReflection& reflection)
             reflection.compute.workGroupSize.depth  = static_cast<std::uint32_t>(params[2]);
         }
     }
-    #endif // /GL_ARB_compute_shader
+    #endif // /LLGL_GLEXT_COMPUTE_SHADER
 }
 
 void GLShaderProgram::QueryReflection(GLuint program, GLenum shaderStage, ShaderReflection& reflection)
 {
     GLQueryVertexAttributes(program, reflection);
+    #if LLGL_GLEXT_PROGRAM_INTERFACE_QUERY
+    if (shaderStage == GL_FRAGMENT_SHADER)
+        GLQueryFragmentAttributes(program, reflection);
+    #endif
     GLQueryStreamOutputAttributes(program, reflection);
     GLQueryConstantBuffers(program, reflection);
     GLQueryStorageBuffers(program, reflection);
     GLQueryUniforms(program, reflection);
-    #ifdef GL_ARB_compute_shader
+    #if LLGL_GLEXT_COMPUTE_SHADER
     if (shaderStage == GL_COMPUTE_SHADER)
         GLQueryWorkGroupSize(program, reflection);
     #endif

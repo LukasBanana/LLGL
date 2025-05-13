@@ -10,6 +10,7 @@
 
 
 #include <LLGL/TextureFlags.h>
+#include <LLGL/Container/ArrayView.h>
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "VKCore.h"
@@ -38,8 +39,7 @@ class VKDevice
         void CreateLogicalDevice(
             VkPhysicalDevice                    physicalDevice,
             const VkPhysicalDeviceFeatures2*    features,
-            const char* const*                  extensions,
-            std::uint32_t                       numExtensions
+            const ArrayView<const char*>        extensions
         );
 
         void LoadLogicalDeviceWeakRef(VkPhysicalDevice physicalDevice, VkDevice device);

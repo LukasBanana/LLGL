@@ -27,6 +27,10 @@ class VKSampler final : public Sampler
 
     public:
 
+        void SetDebugName(const char* name) override;
+
+    public:
+
         VKSampler(VkDevice device, const SamplerDescriptor& desc);
 
         // Returns the Vulkan sampler object.
@@ -45,7 +49,8 @@ class VKSampler final : public Sampler
 
     private:
 
-        VKPtr<VkSampler> sampler_;
+        VkDevice            device_     = VK_NULL_HANDLE;
+        VKPtr<VkSampler>    sampler_;
 
 };
 
